@@ -35,7 +35,7 @@
 
 namespace SCIRun {
 
-ITKThresholdTool::ITKThresholdTool(Painter *painter) :
+ITKThresholdSegmentationLevelSetImageFilterTool::ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter) :
   BaseTool("ITK Threshold"),
   painter_(painter),
   seed_volume_(0),
@@ -44,7 +44,7 @@ ITKThresholdTool::ITKThresholdTool(Painter *painter) :
 }
 
 BaseTool::propagation_state_e 
-ITKThresholdTool::process_event
+ITKThresholdSegmentationLevelSetImageFilterTool::process_event
 (event_handle_t event)
 {
 
@@ -55,17 +55,13 @@ ITKThresholdTool::process_event
 
   if (dynamic_cast<FinishEvent *>(event.get_rep())) {
     if (painter_->current_volume_  == seed_volume_) {
-      painter_->get_vars()->insert
-        ("Painter::status_text",
-         "Cannot use same layers for source and seed", "string", true);
+      painter_->status_ = "Cannot use same layers for source and seed";
       painter_->redraw_all();
       return STOP_E;
     }
 
     if (!seed_volume_) {
-      painter_->get_vars()->insert
-        ("Painter::status_text",
-         "No seed layer set", "string", true);
+      painter_->status_ = "No seed layer set";
       painter_->redraw_all();
       return STOP_E;
     }
@@ -85,7 +81,7 @@ ITKThresholdTool::process_event
 }
 
 void
-ITKThresholdTool::cont()
+ITKThresholdSegmentationLevelSetImageFilterTool::cont()
 {
   cerr << "CONT\n";
   //  filter_->ReverseExpansionDirectionOff();
@@ -98,11 +94,10 @@ ITKThresholdTool::cont()
 
 
 void
-ITKThresholdTool::set_vars()
+ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
 {
   ASSERT(filter_);
-  string scope = "ITKThresholdTool::";
-#if 0
+  string scope = "ITKThresholdSegmentationLevelSetImageFilterTool::";
   Skinner::Variables *vars = painter_->get_vars();
   filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
   filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
@@ -117,26 +112,16 @@ ITKThresholdTool::set_vars()
   filter_->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
   filter_->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
   filter_->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
-  cerr << "curvature: " << filter_->GetCurvatureScaling() << std::endl;
-  cerr << "propagation: " << filter_->GetPropagationScaling() << std::endl;
-#endif
 }
   
 
 
 
 void
-ITKThresholdTool::finish()
+ITKThresholdSegmentationLevelSetImageFilterTool::finish()
 {
   NrrdDataHandle source_nrrdh = painter_->current_volume_->nrrd_handle_;
   filter_ = FilterType::New();
-
-#if 0
-  painter_->get_vars()->insert("ToolDialog::text", "ITK Threshold Segmentation Level Set Running...", "string", true);  
-  painter_->get_vars()->unset("ProgressBar::bar_height");
-  //  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
-  painter_->get_vars()->insert("progress_bar_total_width","500","string", true);
-#endif
 
   string name = "ITK Threshold Result";
   NrrdVolume *new_layer = new NrrdVolume(seed_volume_, name, 0);
@@ -165,22 +150,19 @@ ITKThresholdTool::finish()
   filter_->SetUpperThreshold(max);
 
 
-  string minmaxstr = ("Threshold min: " + to_string(min) +
-                      " Threshold max: " + to_string(max));
+  painter_->status_ = ("Threshold min: " + to_string(min) + 
+                       " Threshold max: " + to_string(max));
   
-  //  painter_->get_vars()->insert("Painter::status_text",
-  //                               minmaxstr, "string", true);
-
   set_vars();
 
-  ITKDatatypeHandle img_handle = painter_->nrrd_to_itk_image(source_nrrdh);
+  ITKDatatypeHandle img_handle = nrrd_to_itk_image(source_nrrdh);
   ITKImageFloat3D *imgp = 
     dynamic_cast<ITKImageFloat3D *>(img_handle->data_.GetPointer());
+  ASSERT(imgp);
   filter_->SetFeatureImage(imgp);
 
-
   painter_->filter_volume_ = new_layer;
-  painter_->filter_update_img_ = painter_->nrrd_to_itk_image(seed_nrrdh);
+  painter_->filter_update_img_ = nrrd_to_itk_image(seed_nrrdh);
 
   painter_->do_itk_filter<ITKImageFloat3D>(filter_, seed_nrrdh);
   new_layer->nrrd_handle_ = seed_nrrdh;

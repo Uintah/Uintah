@@ -97,6 +97,7 @@ SET(LEXOV_SRCS
   KeyToolSelectorTool.cc
   LayerButton.cc
   LayerMergeTool.cc
+  NrrdToITK.cc
   NrrdVolume.cc
   Painter.cc 
   PainterSignalTargets.cc 

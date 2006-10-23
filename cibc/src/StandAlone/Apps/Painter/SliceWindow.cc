@@ -50,7 +50,6 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -80,7 +79,6 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
   Skinner::Parent(variables), 
   painter_(painter),
   name_(variables->get_id()),
-  viewport_(0),
   slices_(),
   slice_map_(),
   paint_layer_(0),
@@ -96,6 +94,7 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
   mode_(0,0),
   show_guidelines_(0,1),
   cursor_pixmap_(-1),
+  color_(variables, "SliceWindow::color", Skinner::Color(0,0,0,0)),
   show_grid_(variables, "SliceWindow::GridVisible",1),
   show_slices_(variables, "SliceWindow::SlicesVisible",1),
   geom_switch_(0),
@@ -167,6 +166,54 @@ SliceWindow::render_guide_lines(Point mouse) {
 
   pop_gl_2d_view();
 
+}
+
+
+
+// renders vertical and horizontal bars that represent
+// selected slices in other dimensions
+void
+SliceWindow::render_slice_lines(SliceWindows &windows)
+{
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) return;
+  double upp = 100.0 / zoom_;    // World space units per one pixel
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  vector<int> zero_idx(vol->nrrd_handle_->nrrd_->dim, 0);
+  Point origin = vol->index_to_world(zero_idx);
+  for (unsigned int i = 0; i < windows.size(); ++i) {
+    SliceWindow *win = windows[i];
+    if (win == this) continue;
+    if (Dot(normal_, win->normal_) > 0.999) continue;
+    Vector span = Cross(normal_, win->normal_);
+    vector<double> span_index = vol->vector_to_index(span);
+    int span_axis = max_vector_magnitude_index(span_index);
+    vector<int> pos_idx = vol->world_to_index(win->center_);
+    vector<int> min_idx = pos_idx;
+    min_idx[span_axis] = 0;
+    vector<int> max_idx = pos_idx;
+    max_idx[span_axis] = vol->nrrd_handle_->nrrd_->axis[span_axis].size;
+    Point min = vol->index_to_world(min_idx);
+    Point max = vol->index_to_world(max_idx);
+    vector<int> one_idx = zero_idx;
+    one_idx[win->axis_+1] = 1;
+    double scale = (vol->index_to_world(one_idx) - origin).length();
+    Vector wid = win->normal_;
+    wid.normalize();
+    wid *= Max(upp, scale);
+    Skinner::Color color = win->color_;
+    glColor4dv(&(color.r));
+    glBegin(GL_QUADS);    
+    glVertex3dv(&min(0));
+    glVertex3dv(&max(0));
+    min = min + wid;
+    max = max + wid;
+    glVertex3dv(&max(0));
+    glVertex3dv(&min(0));
+    glEnd();
+  }
 }
 
 
@@ -1055,7 +1102,7 @@ SliceWindow::redraw(event_handle_t) {
   if (show_grid_()) 
     render_grid();
 
-  painter_->draw_slice_lines(*this);
+  render_slice_lines(painter_->windows_);
 
   event_handle_t redraw_window = new RedrawSliceWindowEvent(*this);
   painter_->tm_.propagate_event(redraw_window);

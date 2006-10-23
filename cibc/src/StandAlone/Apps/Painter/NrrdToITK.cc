@@ -6,7 +6,7 @@
 //  Copyright (c) 2006 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
-//  
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -25,50 +25,32 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ITKThresholdSegmentationLevelSetImageFilterTool.h
+//    File   : NrrdToITK.cc
 //    Author : McKay Davis
-//    Date   : Sat Oct 14 14:50:14 2006
+//    Date   : Sun Oct 22 23:09:46 2006
 
+#include <StandAlone/Apps/Painter/NrrdToITK.h>
+#include <Core/Containers/StringUtil.h>
 
-#ifndef LEXOV_ITKThresholdSegmentationLevelSetImageFilterTool_h
-#define LEXOV_ITKThresholdSegmentationLevelSetImageFilterTool_h
+SCIRun::ITKDatatypeHandle
+SCIRun::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
+  Nrrd *n = nrrd->nrrd_;
+  itk::Object::Pointer data = 0;
+  switch (n->type) {
+  case nrrdTypeChar: data = nrrd_to_itk_image<signed char>(n); break;
+  case nrrdTypeUChar: data = nrrd_to_itk_image<unsigned char>(n); break;
+  case nrrdTypeShort: data = nrrd_to_itk_image<signed short>(n); break;
+  case nrrdTypeUShort: data = nrrd_to_itk_image<unsigned short>(n); break;
+  case nrrdTypeInt: data = nrrd_to_itk_image<signed int>(n); break;
+  case nrrdTypeUInt: data = nrrd_to_itk_image<unsigned int>(n); break;
+  case nrrdTypeLLong: data = nrrd_to_itk_image<signed long long>(n); break;
+  case nrrdTypeULLong: data =nrrd_to_itk_image<unsigned long long>(n); break;
+  case nrrdTypeFloat: data = nrrd_to_itk_image<float>(n); break;
+  case nrrdTypeDouble: data = nrrd_to_itk_image<double>(n); break;
+  default: throw "nrrd_to_itk_image, cannot convert type" + to_string(n->type);
+  }
 
-#include <sci_defs/insight_defs.h>
-
-#ifdef HAVE_INSIGHT
-#include <string>
-#include <Core/Events/Tools/BaseTool.h>
-#include <Core/Datatypes/ITKDatatype.h>
-#include <itkImageToImageFilter.h>
-#include <itkCommand.h>
-#include <itkThresholdSegmentationLevelSetImageFilter.h>
-
-namespace SCIRun {
-
-class Painter;
-class NrrdVolume;
-typedef itk::Image<float,3> ITKImageFloat3D;
-
-class ITKThresholdSegmentationLevelSetImageFilterTool : public BaseTool {
-public:
-  ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter);
-  propagation_state_e process_event(event_handle_t);
-private:
-  void                finish();
-  void                cont();
-  void                set_vars();
-  Painter *           painter_;
-  NrrdVolume *        seed_volume_;
-  
-  
-  typedef itk::ThresholdSegmentationLevelSetImageFilter
-  < ITKImageFloat3D, ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter_;
-  
-};
-
+  SCIRun::ITKDatatype *result = new SCIRun::ITKDatatype();
+  result->data_ = data;
+  return result;
 }
-
-#endif // HAVE_INSIGHT
-
-#endif

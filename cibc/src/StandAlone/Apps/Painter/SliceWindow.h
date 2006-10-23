@@ -53,82 +53,84 @@ using std::vector;
 
 namespace SCIRun {
 
+class SliceWindow;
+typedef vector<SliceWindow *>	SliceWindows;
+
 class SliceWindow : public Skinner::Parent {
 public:
   SliceWindow(Skinner::Variables *, Painter *painter);
   virtual ~SliceWindow() {}
     
-  propagation_state_e                 process_event(event_handle_t event);
-  virtual int                         get_signal_id(const string &signalname) const;
-  CatcherFunction_t   Autoview;
-  CatcherFunction_t   zoom_in;
-  CatcherFunction_t   zoom_out;
-  CatcherFunction_t   redraw;
+  propagation_state_e   process_event(event_handle_t event);
+  virtual int           get_signal_id(const string &signalname) const;
+  CatcherFunction_t     Autoview;
+  CatcherFunction_t     zoom_in;
+  CatcherFunction_t     zoom_out;
+  CatcherFunction_t     redraw;
 
-  //    void                render_gl();
-  void                setup_gl_view();
-  void                push_gl_2d_view();
-  void                pop_gl_2d_view();
-  void		next_slice();
-  void		prev_slice();
+  void                  setup_gl_view();
+  void                  push_gl_2d_view();
+  void                  pop_gl_2d_view();
+  void                  next_slice();
+  void                  prev_slice();
 
-  Point		world_to_screen(const Point &);
-  Point		screen_to_world(unsigned int x, unsigned int y);
+  Point                 world_to_screen(const Point &);
+  Point                 screen_to_world(unsigned int x, unsigned int y);
   Vector		x_dir();
   Vector		y_dir();
-  int                 x_axis();
-  int                 y_axis();
+  int                   x_axis();
+  int                   y_axis();
 
-  void                render_text();
-  void		render_orientation_text();
-  void		render_grid();
-  void		render_frame(double,double,double,double,
-                             double *color1 = 0, double *color2=0);
-  void		render_guide_lines(Point);
-  void		render_progress_bar();
+  void                  render_text();
+  void                  render_orientation_text();
+  void                  render_grid();
+  void                  render_frame(double,double,double,double,
+                                     double *color1 = 0, double *color2=0);
+  void                  render_guide_lines(Point);
+  void                  render_progress_bar();
+  void                  render_slice_lines(SliceWindows &);
 
+  void                  set_probe();
+  void                  extract_slices();
+  void                  redraw();
+  void                  autoview(NrrdVolume *, double offset=10.0);
+  void                  set_axis(unsigned int);
+  GeomIndexedGroup*     get_geom_group();
 
-  void                set_probe();
-  void                extract_slices();
-  void                redraw();
-  void                autoview(NrrdVolume *, double offset=10.0);
-  void                set_axis(unsigned int);
-  GeomIndexedGroup*   get_geom_group();
-
-  Painter *           painter_;
+  Painter *             painter_;
   string		name_;
-  OpenGLViewport *	viewport_;
   VolumeSlices		slices_;
-  VolumeSliceMap      slice_map_;
+  VolumeSliceMap        slice_map_;
   VolumeSlice*          paint_layer_;
 
-  Point               center_;
-  Vector              normal_;
+  Point                 center_;
+  Vector                normal_;
 
-  UIint		slice_num_;
-  UIint		axis_;
+  UIint                 slice_num_;
+  UIint                 axis_;
   UIdouble		zoom_;
-  UIint		slab_min_;
-  UIint		slab_max_;
+  UIint                 slab_min_;
+  UIint                 slab_max_;
       
-  bool		redraw_;
-  bool                autoview_;
-  UIint		mode_;
-  UIint		show_guidelines_;
+  bool                  redraw_;
+  bool                  autoview_;
+  UIint                 mode_;
+  UIint                 show_guidelines_;
   int			cursor_pixmap_;
 
   GLdouble		gl_modelview_matrix_[16];
   GLdouble		gl_projection_matrix_[16];
-  GLint		gl_viewport_[4];
+  GLint                 gl_viewport_[4];
 
-  Skinner::Var<bool>  show_grid_;
-  Skinner::Var<bool>  show_slices_;
-  GeomHandle          geom_switch_;
-  GeomIndexedGroup *  geom_group_;
+  Skinner::Var<Skinner::Color>    color_;
+  Skinner::Var<bool>    show_grid_;
+  Skinner::Var<bool>    show_slices_;
+  GeomHandle            geom_switch_;
+  GeomIndexedGroup *    geom_group_;
 };
 
 
-typedef vector<SliceWindow *>	SliceWindows;
+
 
 }
 #endif

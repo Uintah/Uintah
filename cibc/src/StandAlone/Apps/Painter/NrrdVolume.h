@@ -40,6 +40,8 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Skinner/Variables.h>
+#include <StandAlone/Apps/Painter/NrrdToITK.h>
+#include <sci_defs/insight_defs.h>
 
 using std::vector;
 
@@ -60,6 +62,12 @@ public:
                        int mode = 0); // if 1, clears out volume
   ~NrrdVolume();
 
+
+#ifdef HAVE_INSIGHT
+  ITKDatatypeHandle   get_itk_image() 
+  { return nrrd_to_itk_image(nrrd_handle_); }
+#endif
+    
   bool                write(string filename);
 
   void                set_nrrd(NrrdDataHandle &);
@@ -271,6 +279,11 @@ NrrdVolume::set_value(const vector<int> &index, T value) {
   ASSERT(index_valid(index));
   nrrd_set_value(nrrd_handle_->nrrd_, index, value);
 }
+
+
+
+
+
 
 
 

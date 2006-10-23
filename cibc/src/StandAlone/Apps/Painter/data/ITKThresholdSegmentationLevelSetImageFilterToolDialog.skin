@@ -1,0 +1,95 @@
+<definition class="ITKThresholdSegmentationLevelSetImageFilterToolDialog">
+  <object class="Frame">
+    <var name="invert">1</var>
+    <var name="LabeledSpinnerBox::text_size" propagate="yes">15</var>
+
+    <object class="Texture">
+      <var name="file">BackgroundTile04.png</var>
+      <var name="color">#AAAAAAFF</var>
+      <var name="repeatx">1</var>
+      <var name="repeaty">1</var>
+    </object>
+
+    <object class="Grid">
+      <var name="rows">9</var>
+      <var name="cols">1</var>
+
+      <object class="Root::Text">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="text"> ITK Threshold Segmentation
+ Level Set Image Filter </var>
+        <var name="size">15</var>
+        <var name="fgcolor">#000000FF</var>
+        <var name="bgcolor">#FFFFFF80</var>
+        <var name="anchor">W</var>
+        <var name="offsetx">-2</var>
+        <var name="offsety">2</var>
+        <var name="shadow">1</var>
+      </object>
+      
+      
+      <object class="LabeledSpinnerBox">
+        <var name="row">3</var>
+        <var name="col">1</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Curvature
+     Scaling</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::curvatureScaling</var>
+      </object>
+      
+      <object class="LabeledSpinnerBox">                
+        <var name="row">4</var>
+        <var name="col">1</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Propagation
+        Scaling</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::propagationScaling</var>
+      </object>
+      
+      <object class="LabeledSpinnerBox">                
+        <var name="row">5</var>
+        <var name="col">1</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Edge Weight</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::edgeWeight</var>
+      </object>
+      <object class="Button">
+        <var name="row">6</var>
+        <var name="col">1</var>
+        
+        <var name="Button::color" propagate="yes">#EEEEEEFF</var>
+        <var name="Button::Text::text" propagate="yes">Set Seed Layer</var>
+        
+        <signal name="Button::clicked" 
+                target="Painter::SetLayer"></signal>
+        
+      </object>
+      
+      <object class="VCRControls">
+        <var name="row">7</var>
+        <var name="col">1</var>
+        <signal name="VCRControls::play"
+                target="Painter::FinishTool">
+          <var name="threaded">1</var>
+        </signal>
+        
+        <signal name="VCRControls::stop"
+                target="Painter::AbortFilterOn"/>
+        
+      </object>
+      
+      <object class="Button">
+        <var name="row">9</var>
+        <var name="col">1</var>
+        
+        <var name="Button::color" propagate="yes">#EEEEEEFF</var>
+        <var name="Button::Text::text" propagate="yes">Done</var>
+        
+        <signal name="Button::clicked" 
+                target="ToolDialog::Done">
+          <var name="varnum">4</var>
+        </signal>
+      </object>
+    </object>
+  </object>
+</definition>
+
+
