@@ -84,9 +84,13 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   if(linearInitialize){
     ps->getWithDefault("slope",slope,Vector(0,0,0));
   }
+  ps->getWithDefault("quadraticInitialize", quadraticInitialize, false);
+  if(quadraticInitialize){
+    ps->getWithDefault("coeff",coeff,Vector(0,0,0));
+  }
   
   uniformInitialize = true;
-  if(sinusoidalIntialize || linearInitialize){
+  if(sinusoidalIntialize || linearInitialize || quadraticInitialize){
     uniformInitialize = false;
   }
 }
@@ -323,9 +327,14 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
         
         Vector slope = region->slope;
-        cout << "slope " << slope  << endl;
         if(region->linearInitialize && slope.x()==0 && slope.y()==0 && slope.z()==0){
           throw ProblemSetupException("PassiveScalar: you need to specify a <slope> whenever you use linearInitialize", __FILE__, __LINE__);
+        }
+        
+        Vector coeff = region->coeff;
+        cout << " coeff " << coeff << endl;
+        if(region->quadraticInitialize && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
+          throw ProblemSetupException("PassiveScalar: you need to specify a <coeff> whenever you use quadraticInitialize", __FILE__, __LINE__);
         }
 
         Point lo = region->piece->getBoundingBox().lower();
@@ -345,6 +354,11 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             }
             if(region->linearInitialize){
               f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
+            }
+            if(region->quadraticInitialize){
+              f[c] = coeff.x() * d.x() * d.x() 
+                   + coeff.y() * d.y() * d.y() 
+                   + coeff.z() * d.z() * d.z();
             }
           }
         }
@@ -524,7 +538,10 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const ModelInfo* mi)
 {
-  if(d_test_conservation){
+  const Level* level = getLevel(patches);
+  int L = level->getIndex();
+  
+  if(d_test_conservation && L == 0){
     cout_doing << "PASSIVESCALAR::scheduleTestConservation " << endl;
     Task* t = scinew Task("PassiveScalar::testConservation", 
                      this,&PassiveScalar::testConservation, mi);
