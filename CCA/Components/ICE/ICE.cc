@@ -1744,7 +1744,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
                                    const MaterialSet* all_matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(d_conservationTest->onOff) {
+  if(d_conservationTest->onOff && levelIndex == 0) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleTestConservation" 
                << "\t\t\t\t\tL-"<< levelIndex<< endl;
     
