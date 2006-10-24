@@ -426,7 +426,7 @@ GeneratePointSamplesFromField::execute()
 	
 	PCMesh::Node::index_type pcindex = mesh->add_point(location);
 	field->resize_fdata();
-	field->set_value(i, pcindex);
+	field->set_value(static_cast<PCField::value_type>(i), pcindex);
       } else {
 	Point location;
 	double r;
