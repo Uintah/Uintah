@@ -628,7 +628,7 @@ NrrdVolume::write(string fname) {
   
   switch (nrrd_handle_->nrrd_->type) {
   case nrrdTypeUInt: return write_itk_image<unsigned int>(img, fname); break;
-  defualt:
+  default:
   case nrrdTypeFloat: return write_itk_image<float>(img, fname); break;
   }
   return false;
