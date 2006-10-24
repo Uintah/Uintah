@@ -29,6 +29,6 @@
 #ifndef Kepler_Core_Comm_NetInfo_h
 #define Kepler_Core_Comm_NetInfo_h
 
-#define SERV_PORT 9877    /* TCP and UDP client-servers */
+#define SERV_PORT 49154    /* TCP and UDP client-servers */
 
 #endif

@@ -74,12 +74,11 @@ private:
 void ServerTime::run()
 {
   throttle.start();
-  //Thread::yield();
   while (true) {
     std::cerr << "ServerTime::run()" << std::endl;
     throttle.wait_for_time(maxTime_);
-std::string state = (throttle.current_state() == Timer::Running) ? "Running" : "Stopped";
-std::cerr << "ServerTime::run(): wait done, throttle state=" << state << std::endl;
+    //std::string state = (throttle.current_state() == Timer::Running) ? "Running" : "Stopped";
+    //std::cerr << "ServerTime::run(): wait done, throttle state=" << state << std::endl;
     if (throttle.current_state() == Timer::Running) {
       GuiInterface *gui = GuiInterface::getSingleton();
       ASSERT(gui);
@@ -90,7 +89,7 @@ std::cerr << "ServerTime::run(): wait done, throttle state=" << state << std::en
   }
 }
 
-KeplerServer::KeplerServer(Network *n) : net(n), MAX_TIME_SECONDS(60.0), THREAD_STACK_SIZE(1024*2)
+KeplerServer::KeplerServer(Network *n, const double timeout) :  MAX_TIME_SECONDS(timeout), THREAD_STACK_SIZE(1024*2), net(n)
 {
   {
     Mutex m("lock workerCount init");
@@ -147,7 +146,9 @@ void KeplerServer::run()
   while (true) {
     std::cerr << "KeplerServer looping!" << std::endl;
     clientLength = sizeof(clientAddr);
+//std::cerr << "KeplerServer: try accept" << std::endl;
     connfd = Accept(listenfd, (SA *) &clientAddr, &clientLength);
+//std::cerr << "KeplerServer: accepted" << std::endl;
 
     servSem().down();
     ++(*KeplerServer::workerCount);
@@ -161,7 +162,7 @@ void KeplerServer::run()
 
     ProcessRequest *proc_req = new ProcessRequest(net, connfd, idleTime);
     Thread *pr = new Thread(proc_req, "process client request", 0, Thread::NotActivated);
-    //pr->setDaemon();
+    pr->setDaemon();
     pr->setStackSize(1024*512);
     pr->activate(false);
     pr->detach();
@@ -329,17 +330,21 @@ std::string ProcessRequest::Iterate(std::vector<std::string> doOnce, int size1, 
     //TODO do we care if there is no viewer that is getting the messages?
     //TODO worry about saving over existing images.  would be cool to prompt
     // the user if they are going to save over an image that exists already
-    if (picPath != "") {
+    if (! picPath.empty()) {
+      //std::cerr << "Save pictures!" << std::endl;
       name = picPath + "image" + to_string(i) + "" + picFormat;
 
       //when the viewer is done save the image
-      ViewerMessage *msg1 = scinew ViewerMessage
-        (MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, picFormat,"640","470");
+      // old size: 640x470
+      //ViewerMessage *msg1 = scinew ViewerMessage(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0", name, picFormat,"640","480");
+      ViewerMessage *msg1 = scinew ViewerMessage(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0", name, picFormat,"640","480");
       viewer->mailbox_.send(msg1);
 
-      ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
+      //ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
+      ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0");
       viewer->mailbox_.send(msg2);
-    }//else we do not try and save pictures
+
+    } //else we do not try and save pictures
 
   }
 
@@ -388,8 +393,7 @@ void ProcessRequest::processItrRequest(int sockfd)
   netFile = netFile.substr(0,netFile.size() - 1);
   ASSERT(gui);
 
-  // TODO: doesn't work!!!
-  if (KeplerServer::loadedNet != netFile) {
+  if (KeplerServer::loadedNet != netFile) { // TODO: useless comparison???
     temp = gui->eval("ClearCanvas 0");  //clear the net
     //temp seems to be 0 always
     //TODO this yield is probably due to scirun error that needs to be fixed
@@ -411,6 +415,7 @@ void ProcessRequest::processItrRequest(int sockfd)
     print_error("connection closed by peer");
   }
   picPath = std::string(line);
+  //std::cerr << "picPath=" << picPath << std::endl;
   picPath = picPath.substr(0,picPath.size()-1);
 
   //read in the imageFormat
