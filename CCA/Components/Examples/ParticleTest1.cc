@@ -49,6 +49,7 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
 			   this, &ParticleTest1::initialize);
+  sched->setPositionVar(lb_->pXLabel);
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
   task->computes(lb_->pParticleIDLabel);

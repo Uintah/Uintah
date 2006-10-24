@@ -76,8 +76,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
   log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport)
 {
   d_lasttime=Time::currentSeconds();
-  ss_ = 0;
-  rs_ = 0;
   reloc_new_posLabel_=0;
 
   if (timeout.active()) {    
@@ -104,10 +102,6 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
 
 MPIScheduler::~MPIScheduler()
 {
-  if( ss_ )
-    delete ss_;
-  if( rs_ )
-    delete rs_;
   if (timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
@@ -360,10 +354,16 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       //dbg.setActive(req->req->lookInOldTG);
       if (dbg.active()) {
         ostr << *req << ' ';
+        //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
         dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
       }
       const VarLabel* posLabel;
       OnDemandDataWarehouse* posDW;
+
+      // the load balancer is used to determine where data was in the old dw on the prev timestep -
+      // pass it in if the particle data is on the old dw
+      LoadBalancer* lb = 0;
+
       if(!reloc_new_posLabel_ && parentScheduler){
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
 	posLabel = parentScheduler->reloc_new_posLabel_;
@@ -371,14 +371,16 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output)
           posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
-        else
+        else {
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          lb = getLoadBalancer();
+        }
 	posLabel = reloc_new_posLabel_;
       }
       MPIScheduler* top = this;
       while(top->parentScheduler) top = top->parentScheduler;
 
-      dw->sendMPI(*top->ss_, *top->rs_, batch, posLabel, mpibuff, posDW, req);
+      dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
     }
     // Post the send
     if(mpibuff.count()>0){
@@ -397,11 +399,13 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 
       if( dbg.active()) {
 	cerrLock.lock();
-	dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
-            << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
+        //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
+          dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
+              << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
         //dbg.setActive(false);
       }
-      mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
+      //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
+        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
@@ -516,24 +520,35 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       }
       if (dbg.active()) {
         ostr << *req << ' ';
+        //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && batch->fromTask->getAssignedResourceIndex() == 43) 
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
       }
       
       OnDemandDataWarehouse* posDW;
+      const VarLabel* posLabel;
+
+      // the load balancer is used to determine where data was in the old dw on the prev timestep
+      // pass it in if the particle data is on the old dw
+      LoadBalancer* lb = 0;
       if(!reloc_new_posLabel_ && parentScheduler){
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+	posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output)
           posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
-        else
+        else {
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          lb = getLoadBalancer();
+        }
+	posLabel = reloc_new_posLabel_;
       }
 
       MPIScheduler* top = this;
       while(top->parentScheduler) top = top->parentScheduler;
 
-      dw->recvMPI(*top->rs_, mpibuff, batch, posDW, req);
+      dw->recvMPI(batch, posLabel, mpibuff, posDW, req, lb);
+
       if (!req->isNonDataDependency()) {
 	graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
       }
@@ -559,12 +574,14 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 
       if( dbg.active()) {
 	cerrLock.lock();
-	dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
+        //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43)
+        dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
             << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
-        //dbg.setActive(false);
+          //dbg.setActive(false);
       }
 
-      mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";      
+      //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43) 
+      mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
 		d_myworld->getComm(), &requestid);
       int bytes = count;
@@ -612,7 +629,8 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
     if (!keep_waiting)
       break;
   }
-  mpidbg << d_myworld->myrank() << " Done  waiting...\n";
+  if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2)
+    mpidbg << d_myworld->myrank() << " Done  waiting...\n";
 
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
@@ -668,12 +686,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     d_times.clear();
     //emitTime("time since last execute");
   }
-  if( ss_ )
-    delete ss_;
-  ss_ = scinew SendState;
-  if( rs_ )
-    delete rs_;
-  rs_ = scinew SendState;
   // We do not use many Bsends, so this doesn't need to be
   // big.  We make it moderately large anyway - memory is cheap.
   void* old_mpibuffer;

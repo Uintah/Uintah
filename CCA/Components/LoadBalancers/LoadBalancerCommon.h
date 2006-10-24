@@ -68,7 +68,7 @@ namespace Uintah {
 
      // for DynamicLoadBalancer mostly, but if we're called then it also means the 
      // grid might have changed and need to create a new perProcessorPatchSet
-     virtual bool possiblyDynamicallyReallocate(const GridP&, bool /*force*/);
+     virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
 
      //! Returns n - data gets output every n procs.
      virtual int getNthProc() { return d_outputNthProc; }

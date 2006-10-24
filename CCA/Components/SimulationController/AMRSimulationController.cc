@@ -504,12 +504,12 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
   
   if(d_restarting){
-    d_lb->possiblyDynamicallyReallocate(grid, true); 
+    d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::restart); 
     d_sim->restartInitialize();
   } else {
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     // for dynamic lb's, set up initial patch config
-    d_lb->possiblyDynamicallyReallocate(grid, true); 
+    d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init); 
 
     t = d_timeinfo->initTime;
     // Initialize the CFD and/or MPM data
@@ -552,7 +552,7 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
     return false;
   // for dynamic lb's, set up patch config after changing grid
  
-  d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
+  d_lb->possiblyDynamicallyReallocate(currentGrid, LoadBalancer::init); 
   if (d_myworld->myrank() == 0 && amrout.active()) {
     cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
     //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
@@ -618,7 +618,6 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 //______________________________________________________________________
 void AMRSimulationController::doRegridding(GridP& currentGrid)
 {
-
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
@@ -626,7 +625,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   d_sharedState->setRegridTimestep(false);
   
   if (currentGrid != oldGrid) {
-    d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
+    d_lb->possiblyDynamicallyReallocate(currentGrid, LoadBalancer::regrid); 
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
       d_sharedState->setRegridTimestep(true);

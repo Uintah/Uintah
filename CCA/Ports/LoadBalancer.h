@@ -105,13 +105,18 @@ WARNING
     virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) = 0;
 
     //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
-    virtual bool possiblyDynamicallyReallocate(const GridP&, bool /*force*/) = 0;
+    virtual bool possiblyDynamicallyReallocate(const GridP&, int state) = 0;
 
     //! Returns the value of n (every n procs it performs output tasks).
     virtual int getNthProc() { return 1; }
 
     //! Tells the load balancer on which procs data was output.
     virtual void restartInitialize(ProblemSpecP&, std::string file /*tsurl*/, const GridP&) {}
+    
+    // state variables
+    enum {
+      check = 0, init, regrid, restart
+    };
   private:
     LoadBalancer(const LoadBalancer&);
     LoadBalancer& operator=(const LoadBalancer&);

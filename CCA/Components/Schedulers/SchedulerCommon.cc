@@ -497,7 +497,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
     }
     // Store the ghost cell information of each of the requires
     // so we can predict the total allocation needed for each variable.
-    if (dep->numGhostCells > 0) {
+    if (dep->numGhostCells > 0 && dep->patches_dom == Task::NormalDomain) {
       constHandle<PatchSubset> dep_patches = dep->getPatchesUnderDomain(patches->getUnion());
       constHandle<MaterialSubset> dep_matls = dep->getMaterialsUnderDomain(matls->getUnion());
       m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls.get_rep(), dep_patches.get_rep(),
