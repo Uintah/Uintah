@@ -70,7 +70,6 @@ static DebugStream dbg( "OnDemandDataWarehouse", false );
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 extern DebugStream mpidbg;
-
 static Mutex ssLock( "send state lock" );
 
 // we want a particle message to have a unique tag per patch/matl/batch/dest.
@@ -277,11 +276,12 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
 }
 
 void
-OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* batch,
+OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
                                const VarLabel* pos_var,
                                BufferInfo& buffer,
                                OnDemandDataWarehouse* old_dw,
-                               const DetailedDep* dep)
+                               const DetailedDep* dep,
+                               LoadBalancer* lb)
 {
   if (dep->isNonDataDependency()) {
     // A non-data dependency -- send an empty message.
@@ -313,30 +313,33 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
       int dest = batch->toTasks.front()->getAssignedResourceIndex();
       ASSERTRANGE(dest, 0, d_myworld->size());
 
-      ssLock.lock();  // Dd: ??
-      // in a case where there is a sendset with a different ghost configuration
-      // than we want, there can be problems with dynamic load balancing, when patch
-      // used to be on this processor and now we only want ghost data from patch.  So
-      // check if dest previously sent us (during this timestep) this entire patch, 
-      // if so, just use that sendset
-      ParticleSubset* sendset = rs.find_sendset(dest, patch, matlIndex, patch->getLowIndex(), patch->getHighIndex(),
-                                                old_dw->d_generation);
-      if (sendset) {
-        fflush(stdout);
-        sendset = old_dw->getParticleSubset(matlIndex, patch, patch->getLowIndex(), patch->getHighIndex());
+      ParticleSubset* sendset = 0;
+      // first check to see if the receiving proc alrady has the (old) data
+      // if data is relocating (of a regrid or re-load-balance), then the other
+      // proc may already have it (since in most cases particle data comes from the old dw)
+      // if lb is non-null, that means the particle data is on the old dw
+      if (lb && lb->getOldProcessorAssignment(0, patch, 0) == dest) {
+        // just return - we don't need to know how many particles are there OR send any particle data
+        ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
+        sendset = old_dw->getParticleSubset(matlIndex, patch);
+        particles << d_myworld->myrank() << " NOT sending particles for patch " << patch->getID() << " matl " << matlIndex << " with " << sendset->numParticles() << " particles " << endl;
+
+        // though we don't even need to send the data if it's from the old DW, we need to keep the low and high in sync
+        // since there will be new dw sends with the old dw's subsets.
         low = patch->getLowIndex();
         high = patch->getHighIndex();
       }
-      else
-        sendset = ss.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
+      
+
+      ssLock.lock();  // Dd: ??
+
+      if (!sendset) {
+        sendset = old_dw->ss_.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
+      }
+      
       ssLock.unlock();  // Dd: ??
 
-      // See comment for d_timestepRestartPsets
-      if (!sendset && patch->getLowIndex() == low && patch->getHighIndex() == high)
-        sendset = d_timestepRestartPsets.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
-
       if(!sendset){
-
         mixedDebug << "sendset is NULL\n";
 
         ParticleSubset* pset = var->getParticleSubset();
@@ -370,13 +373,15 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
         
 
         int tag = PARTICLESET_TAG;
+        //if (d_myworld->myrank() == 43 && dest == 40)
         particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl;
         MPI_Bsend(&numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm());
+
         ssLock.lock();  // Dd: ??       
-        ss.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
-        if (patch->getLowIndex() == low && patch->getHighIndex() == high) {
-          d_timestepRestartPsets.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
-        }
+        old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
+        //if (patch->getLowIndex() == low && patch->getHighIndex() == high) {
+        //d_timestepRestartPsets.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
+        //}
         ssLock.unlock();  // Dd: ??
       }
         
@@ -386,7 +391,8 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
 
       // dbg << d_myworld->myrank() << " sendset has " << numParticles << " particles - patch " << patch->getID() << ' ' << "M: " << matlIndex << " GT: (" << gt << ',' << ngc << "), on dest: " << dest << "\n";
 
-      if( numParticles > 0){
+
+      if( numParticles > 0 && !(lb && lb->getOldProcessorAssignment(0, patch, 0) == dest && this == old_dw)){
          var->getMPIBuffer(buffer, sendset);
          buffer.addSendlist(var->getRefCounted());
          buffer.addSendlist(var->getParticleSubset());
@@ -417,10 +423,10 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
 }
 
 void
-OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
-                               DependencyBatch* batch,
+OnDemandDataWarehouse::recvMPI(DependencyBatch* batch, const VarLabel* pos_var,
+                               BufferInfo& buffer, 
                                OnDemandDataWarehouse* old_dw,
-                               const DetailedDep* dep)
+                               const DetailedDep* dep, LoadBalancer* lb)
 {
   if (dep->isNonDataDependency()) {
     // A non-data dependency -- send an empty message.
@@ -439,36 +445,41 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
     {
       IntVector low = dep->low;
       IntVector high = dep->high;
-
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
       int from=batch->fromTask->getAssignedResourceIndex();
-
+      
       // if we already have a subset for the entire patch, there's little point 
-      // in getting another one (and if we did, it would cause problems - see
+      // in getting another one (and if we did, it would cause synchronization problems - see
       // comment in sendMPI)
-
-      ParticleSubset* recvset;
-      if (old_dw->haveParticleSubset(matlIndex, patch, patch->getLowIndex(), patch->getHighIndex())) {
-        recvset = old_dw->getParticleSubset(matlIndex, patch, patch->getLowIndex(), patch->getHighIndex());
+      ParticleSubset* recvset = 0;      
+      if (lb && lb->getOldProcessorAssignment(0, patch, 0) == d_myworld->myrank()) {
+        // just return - we don't need to receive any data
+        ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
+        recvset = old_dw->getParticleSubset(matlIndex, patch);
         low = patch->getLowIndex();
         high = patch->getHighIndex();
+        particles << d_myworld->myrank() << " NOT recving particles for patch " << patch->getID() << " matl " << matlIndex << " with " << recvset->numParticles() << " particles" << endl;
       }
-      else {
-        recvset = rs.find_sendset(from, patch, matlIndex, low, high, old_dw->d_generation);
+
+      if (!recvset) {
+        recvset = old_dw->rs_.find_sendset(from, patch, matlIndex, low, high, old_dw->d_generation);
       }
 
       if(!recvset){
         int numParticles;
+
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
-	ASSERTRANGE(from, 0, d_myworld->size());
+        ASSERTRANGE(from, 0, d_myworld->size());
         int tag = PARTICLESET_TAG;
-
+        
+        //if (d_myworld->myrank() == 40 && from == 43)
         particles << d_myworld->myrank() << " " << getID() << " Posting PARTICLES receive for message " << tag << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << " " << low << " " << high << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << "\n";      
         MPI_Recv(&numParticles, 1, MPI_INT, from, tag, d_myworld->getComm(), &status);
-        //particles << d_myworld->myrank() << "   recved " << numParticles << " particles " << endl;
-        
+        //if (d_myworld->myrank() == 40 && from == 43)
+        particles << d_myworld->myrank() << "   recved " << numParticles << " particles " << endl;
+
         // sometime we have to force a receive to match a send.
         // in these cases just ignore this new subset
         ParticleSubset* psubset;
@@ -486,7 +497,7 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
         ParticleSubset* recvset = new ParticleSubset(psubset->getParticleSet(),
                                                      true, matlIndex, patch, 
                                                      low, high, 0);
-        rs.add_sendset(recvset, from, patch, matlIndex, low, high, old_dw->d_generation);
+        old_dw->rs_.add_sendset(recvset, from, patch, matlIndex, low, high, old_dw->d_generation);
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex,patch,low, high);
 
@@ -495,7 +506,8 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
       ASSERT(var != 0);
       var->allocate(pset);
       var->setForeign();
-      if(pset->numParticles() > 0){
+
+      if(pset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment(0, patch, 0) == d_myworld->myrank() && this == old_dw)){
         var->getMPIBuffer(buffer, pset);
       }
 
@@ -828,21 +840,32 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 {
   d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
+  ParticleSubset* subset = 0;
 
   psetDBType::key_type key(realPatch, matlIndex, low, high, getID());
   psetDBType::iterator iter = d_psetDB.find(key);
-  if(iter == d_psetDB.end()){
-    // if not found, look for an encompassing particle subset
+  if(iter != d_psetDB.end()){
+    subset = iter->second;
+  }
+  else {
+    int best_volume = INT_MAX;
+    // if not found, look for the smallest encompassing particle subset
     for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
       const PSPatchMatlGhost& pmg = iter->first;
       if (pmg.patch_ == realPatch && pmg.matl_ == matlIndex &&
           pmg.dwid_ == getID() && 
           low.x() >= pmg.low_.x() && low.y() >= pmg.low_.y() && low.z() >= pmg.low_.z() &&
-          high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z())
-        break;
+          high.x() <= pmg.high_.x() && high.y() <= pmg.high_.y() && high.z() <= pmg.high_.z()) {
+        IntVector range = pmg.high_ - pmg.low_;
+        int vol = range.x() * range.y() * range.z();
+        if (vol < best_volume) {
+          best_volume = vol;
+          subset = iter->second;
+        }
+      }
     }
     
-    if (iter == d_psetDB.end()){
+    if (!subset){
       printParticleSubsets();
       d_lock.readUnlock();
       ostringstream s;
@@ -852,7 +875,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
     }
   }
   d_lock.readUnlock();
-  return iter->second;
+  return subset;
 }
 
 ParticleSubset*
@@ -1013,12 +1036,14 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
           subset->addParticle(idx);
         }
       }
-
       totalParticles+=subset->numParticles();
       subsets.push_back(subset);
       vneighbors.push_back(neighbors[i]);
+
     }
   }
+
+  
   ParticleSet* newset = scinew ParticleSet(totalParticles);
   ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
                                                     matlIndex, relPatch,

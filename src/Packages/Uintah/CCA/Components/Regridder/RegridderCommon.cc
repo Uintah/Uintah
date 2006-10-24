@@ -402,7 +402,7 @@ void RegridderCommon::scheduleDilation(SchedulerP& sched, const LevelP& level)
     dilate_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None, 0);
   dilate_task->computes(d_dilatedCellsCreationOldLabel);
 #endif
-  dilate_task->computes(d_dilatedCellsCreationLabel);
+  dilate_task->computes(d_dilatedCellsCreationLabel, d_sharedState->refineFlagMaterials());
   sched->addTask(dilate_task, level->eachPatch(), d_sharedState->allMaterials());
 #if 0
   if (d_cellCreationDilation != d_cellDeletionDilation) {

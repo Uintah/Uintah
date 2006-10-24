@@ -71,26 +71,27 @@ namespace Uintah {
     virtual void problemSetup(ProblemSpecP& pspec, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
-    /// maintain lb state and call one of the assignPatches functions.
+    /// call one of the assignPatches functions.
     /// Will initially need to load balance (on first timestep), and thus  
     /// be called by the SimulationController before the first compile.  
     /// Afterwards, if needRecompile function tells us we need to check for 
-    /// load balancing, it will set d_state to checkLoadBalance, and then call
+    /// load balancing, and then call
     /// this function (not called from simulation controller.)  We will then 
     /// go through the motions of load balancing, and if it determines we need
     /// to load balance (that the gain is greater than some threshold), it will
-    /// set the patches to their new location, set d_state to postLoadBalance,
+    /// set the patches to their new location,
     /// return true, signifying that we need to recompile.
     /// However, if force is true, it will re-loadbalance regardless of the
     /// threshold.
-    virtual bool possiblyDynamicallyReallocate(const GridP& grid, bool force);
+    virtual bool possiblyDynamicallyReallocate(const GridP& grid, int state);
 
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
     //! Assigns the patches to the processors they ended up on in the previous
-    //! Simulation.
-    void restartInitialize(ProblemSpecP& pspec, string, const GridP& grid);
+    //! Simulation.  Returns true if we need to re-load balance (if we have a 
+    //! different number of procs than were saved to disk
+    virtual void restartInitialize(ProblemSpecP& pspec, string, const GridP& grid);
     
   private:
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
@@ -116,6 +117,11 @@ namespace Uintah {
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
     std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
 
+    // the assignment vectors are stored 0-n.  This stores the start patch number so we can
+    // detect if something has gone wrong when we go to look up what proc a patch is on.
+    int d_assignmentBasePatch;   
+    int d_oldAssignmentBasePatch;
+
     double d_lbInterval;
     double d_lastLbTime;
     
@@ -125,10 +131,6 @@ namespace Uintah {
     bool d_do_AMR;
     ProblemSpecP d_pspec;
     
-    enum {
-      idle = 0, postLoadBalance, checkLoadBalance, restartRegridLoadBalance
-    };
-    
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
@@ -136,8 +138,7 @@ namespace Uintah {
     bool d_timeRefineWeight;
     bool d_doSpaceCurve;
     bool d_collectParticles;
-    bool d_restartTimestep;
-    int d_state; //< idle, postLB, checkLB, initLB
+    bool d_checkAfterRestart;
   };
 } // End namespace Uintah
 

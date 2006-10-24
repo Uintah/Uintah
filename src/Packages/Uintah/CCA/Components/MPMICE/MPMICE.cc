@@ -2597,7 +2597,7 @@ MPMICE::refine(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      cout <<"Doing refine on patch "
+      cout_doing << d_myworld->myrank() << " Doing refine on patch "
            << patch->getID() << " material # = " << dwi << endl;
       
       // for now, create 0 heat flux
