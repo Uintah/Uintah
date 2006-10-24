@@ -29,6 +29,7 @@
 # Sources of OS classes
 
 SET(Core_OS_SRCS
+  FullFileName.cc
   Dir.cc
   sock.cc
   ProcessInfo.cc
