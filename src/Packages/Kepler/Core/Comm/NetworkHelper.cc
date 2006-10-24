@@ -25,13 +25,14 @@ int Accept(int fd, struct sockaddr *sa, socklen_t *salenptr)
   do {
     if ( (n = accept(fd, sa, salenptr)) < 0) {
 #ifdef  EPROTO
-      if (errno == EPROTO || errno == ECONNABORTED)
+      if (errno == EPROTO || errno == ECONNABORTED) {
 #else
-        if (errno == ECONNABORTED)
+        if (errno == ECONNABORTED) {
 #endif
           n = -2;
-        else
+        } else {
           print_error("accept error");
+        }
     }
   } while (n == -2);
 

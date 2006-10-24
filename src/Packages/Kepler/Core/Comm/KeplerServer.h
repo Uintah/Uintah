@@ -54,7 +54,7 @@ public:
     Detached,
   };
 
-  KeplerServer(Network *n);
+  KeplerServer(Network *n, const double timeout);
   ~KeplerServer();
   void run();
   static Semaphore& servSem();
