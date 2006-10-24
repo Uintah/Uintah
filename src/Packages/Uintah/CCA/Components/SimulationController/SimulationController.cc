@@ -61,6 +61,7 @@ namespace Uintah {
     d_prevWallTime = 0;
     //d_sumOfWallTimes = 0;
     //d_sumOfWallTimeSquares = 0;
+    d_movingAverage=0;
 
     d_restarting = false;
     d_combinePatches = false;
