@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="PrintMatrixIntoString" category="String">
+<component name="PrintStringIntoString" category="String">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
