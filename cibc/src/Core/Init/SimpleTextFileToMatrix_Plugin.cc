@@ -83,6 +83,12 @@ MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filen
 
     while( getline(inputfile,line,'\n'))
     {
+			if (line.size() > 0)
+			{
+				// block out comments
+				if ((line[0] == '#')||(line[0] == '%')) continue;
+			}
+		
       // replace comma's and tabs with white spaces
       for (size_t p = 0;p<line.size();p++)
       {
@@ -152,6 +158,12 @@ MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filen
     
     while( getline(inputfile,line,'\n'))
     {
+			if (line.size() > 0)
+			{
+				// block out comments
+				if ((line[0] == '#')||(line[0] == '%')) continue;
+			}
+					
       // replace comma's and tabs with white spaces
       for (size_t p = 0;p<line.size();p++)
       {

@@ -33,6 +33,7 @@ SET(Core_Init_SRCS
   NrrdToField_Plugin.cc 
   NrrdToMatrix_Plugin.cc 
   SimpleTextFileToMatrix_Plugin.cc 
+  SimpleTextFileToTriSurf_Plugin.cc 
 )
 
 ADD_LIBRARY(Core_Init ${Core_Init_SRCS})
@@ -41,7 +42,8 @@ TARGET_LINK_LIBRARIES(Core_Init
   Core_Algorithms_DataIO 
   Core_Algorithms_Converter 
   Core_Containers   
-  Core_Datatypes    
+  Core_Datatypes
+	Core_Basis    
   Core_Exceptions   
   Core_Geometry     
   Core_ImportExport 
