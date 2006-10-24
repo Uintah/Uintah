@@ -32,6 +32,8 @@
 #include <StandAlone/Apps/Painter/NrrdToITK.h>
 #include <Core/Containers/StringUtil.h>
 
+#ifdef HAVE_INSIGHT
+
 SCIRun::ITKDatatypeHandle
 SCIRun::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   Nrrd *n = nrrd->nrrd_;
@@ -54,3 +56,5 @@ SCIRun::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   result->data_ = data;
   return result;
 }
+
+#endif /* HAVE_INSIGHT */
