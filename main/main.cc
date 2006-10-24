@@ -156,7 +156,6 @@ parse_args( int argc, char *argv[] )
 
     else if (ends_with(string_tolower(arg),".srn"))
     {
-std::cerr << "main: load net " << arg << std::endl;
       NetworkIO::load_net(arg);
     }
     else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
