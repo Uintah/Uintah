@@ -7,7 +7,7 @@ itcl_class SCIRun_String_PrintStringIntoString {
 
     method ui {} {
     
-    		global $this-formatstring
+        global $this-formatstring
         
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -26,10 +26,9 @@ itcl_class SCIRun_String_PrintStringIntoString {
         pack $w.frame.string -side right -fill x -expand yes
 
         label $w.frame2.label -text "Available format strings :"
-        label $w.frame2.string -text "%a %d %e %f %g %i %x %E %F %G %A"
+        label $w.frame2.string -text "%s %s %c %C"
         pack $w.frame2.label -side top -anchor w
         pack $w.frame2.string -side top -anchor w
-
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w
