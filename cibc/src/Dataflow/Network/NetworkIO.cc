@@ -570,7 +570,11 @@ NetworkIO::process_filename(const string &orig)
     }
   }
 
-	for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '\\') filename[p] == '/';	
+  for (size_t p = 0 ; p<filename.size(); p++)
+  {
+    if (filename[p] == '\\') filename[p] = '/';	
+  }
+
   return (std::string("{")+filename+std::string("}"));
 }
 
