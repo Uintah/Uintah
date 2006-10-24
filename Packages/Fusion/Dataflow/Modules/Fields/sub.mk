@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/IsoValueController.cc \
 	$(SRCDIR)/NIMRODConverter.cc \
 	$(SRCDIR)/StreamlineAnalyzer.cc \
+	$(SRCDIR)/StreamlineAnalyzerLib.cc \
 	$(SRCDIR)/VULCANConverter.cc \
 #[INSERT NEW CODE FILE HERE]
 
