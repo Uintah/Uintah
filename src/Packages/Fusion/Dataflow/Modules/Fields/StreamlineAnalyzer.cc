@@ -27,7 +27,6 @@
 */
 
 
-
 /*
  *  StreamlineAnalyzer.cc:
  *
