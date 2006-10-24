@@ -500,7 +500,7 @@ Painter::filter_callback(itk::Object *object,
   itk::ProcessObject::Pointer process = 
     dynamic_cast<itk::ProcessObject *>(object);
   ASSERT(process);
-  double value = process->GetProgress();
+  //double value = process->GetProgress();
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
 

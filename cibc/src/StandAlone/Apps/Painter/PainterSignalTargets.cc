@@ -637,7 +637,7 @@ Painter::isosurface_label_volumes(NrrdVolumes &volumes, GeomGroup *group)
 BaseTool::propagation_state_e 
 Painter::ShowIsosurface(event_handle_t event)
 {
-  static int count = 0;
+  //static int count = 0;
   if (!current_volume_) return STOP_E;
   //  event_handle_t scene_event = = ;
 
