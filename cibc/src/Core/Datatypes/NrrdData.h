@@ -110,43 +110,43 @@ typedef LockingHandle<NrrdData> NrrdDataHandle;
 //  nrrdTypeDouble,
 
 
-SCISHARE unsigned int string_to_nrrd_type(const string &str);
+SCISHARE int string_to_nrrd_type(const string &str);
 
 template <class T>
-SCISHARE unsigned int get_nrrd_type();
+SCISHARE int get_nrrd_type();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<char>();
+SCISHARE int get_nrrd_type<char>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned char>();
+SCISHARE int get_nrrd_type<unsigned char>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<short>();
+SCISHARE int get_nrrd_type<short>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned short>();
+SCISHARE int get_nrrd_type<unsigned short>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<int>();
+SCISHARE int get_nrrd_type<int>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned int>();
+SCISHARE int get_nrrd_type<unsigned int>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<long long>();
+SCISHARE int get_nrrd_type<long long>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<unsigned long long>();
+SCISHARE int get_nrrd_type<unsigned long long>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<float>();
+SCISHARE int get_nrrd_type<float>();
 
 template <>
-SCISHARE unsigned int get_nrrd_type<Tensor>();
+SCISHARE int get_nrrd_type<Tensor>();
 
 template <class T>
-unsigned int get_nrrd_type()
+int get_nrrd_type()
 {
   return nrrdTypeDouble;
 }
