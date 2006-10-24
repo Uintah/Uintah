@@ -14,11 +14,13 @@
 \endhtmlonly
 
 \section start Getting Started
-\li \ref building
-\li \ref running
+\li <a href="https://code.sci.utah.edu/SCIRun2/index.php/Main_Page">Build and run</a>
+<!--
+** these need updating!
 \li \ref nightly
 \li \ref gui
 \li \ref faq
+-->
 
 \section intro SCIRun2 Framework and Meta-Component Model
 
