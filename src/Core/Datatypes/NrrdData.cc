@@ -630,70 +630,70 @@ void NrrdData::io(Piostream& stream)
 
 
 template <>
-unsigned int get_nrrd_type<Tensor>()
+int get_nrrd_type<Tensor>()
 {
   return nrrdTypeFloat;
 }
 
 
 template <>
-unsigned int get_nrrd_type<char>()
+int get_nrrd_type<char>()
 {
   return nrrdTypeChar;
 }
 
 
 template <>
-unsigned int get_nrrd_type<unsigned char>()
+int get_nrrd_type<unsigned char>()
 {
   return nrrdTypeUChar;
 }
 
 
 template <>
-unsigned int get_nrrd_type<short>()
+int get_nrrd_type<short>()
 {
   return nrrdTypeShort;
 }
 
 
 template <>
-unsigned int get_nrrd_type<unsigned short>()
+int get_nrrd_type<unsigned short>()
 {
   return nrrdTypeUShort;
 }
 
 
 template <>
-unsigned int get_nrrd_type<int>()
+int get_nrrd_type<int>()
 {
   return nrrdTypeInt;
 }
 
 
 template <>
-unsigned int get_nrrd_type<unsigned int>()
+int get_nrrd_type<unsigned int>()
 {
   return nrrdTypeUInt;
 }
 
 
 template <>
-unsigned int get_nrrd_type<long long>()
+int get_nrrd_type<long long>()
 {
   return nrrdTypeLLong;
 }
 
 
 template <>
-unsigned int get_nrrd_type<unsigned long long>()
+int get_nrrd_type<unsigned long long>()
 {
   return nrrdTypeULLong;
 }
 
 
 template <>
-unsigned int get_nrrd_type<float>()
+int get_nrrd_type<float>()
 {
   return nrrdTypeFloat;
 }
@@ -751,7 +751,7 @@ void get_nrrd_compile_type( const unsigned int type,
 }
 
 
-unsigned int
+int
 string_to_nrrd_type(const string &str)
 {
   if (str == "nrrdTypeChar")
