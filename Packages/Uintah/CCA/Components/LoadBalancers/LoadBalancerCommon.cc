@@ -126,9 +126,9 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
   
 }
 
-bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, bool force)
+bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
-  if (force) {
+  if (state != check) {
     // have it create a new patch set, and have the DLB version call this.
     // This is a good place to do it, as it is automatically called when the
     // grid changes.

@@ -22,7 +22,6 @@ using std::vector;
 using std::ofstream;
 
 class Task;
-class SendState;
 
 struct mpi_timing_info_s {
   double totalreduce;
@@ -130,8 +129,6 @@ WARNING
     Output*       oport_;
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
-    SendState*            ss_;
-    SendState*            rs_;
     
     MPIRelocate      reloc_;
     double           d_lasttime;

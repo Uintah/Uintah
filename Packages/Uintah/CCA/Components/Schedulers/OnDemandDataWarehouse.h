@@ -39,6 +39,7 @@ namespace Uintah {
   class Patch;
   class ProcessorGroup;
   class SendState;
+  class LoadBalancer;
 
 /**************************************
 
@@ -281,11 +282,10 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 
-   void sendMPI(SendState& ss, SendState& rs, DependencyBatch* batch,
-		const VarLabel* pos_var, BufferInfo& buffer, 
-                OnDemandDataWarehouse* old_dw, const DetailedDep* dep);
-   void recvMPI(SendState& rs, BufferInfo& buffer, DependencyBatch* batch,
-	        OnDemandDataWarehouse* old_dw, const DetailedDep* dep);
+   void sendMPI(DependencyBatch* batch,	const VarLabel* pos_var, BufferInfo& buffer, 
+                OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
+   void recvMPI(DependencyBatch* batch, const VarLabel* pos_var, BufferInfo& buffer,
+	        OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void reduceMPI(const VarLabel* label, const Level* level,
 		  const MaterialSubset* matls);
 
@@ -422,10 +422,17 @@ private:
    psetDBType                        d_delsetDB;
    psetAddDBType d_addsetDB;
 
+
+   // Keep track of when this DW sent some (and which) particle information to another processor
+   SendState  ss_;
+   SendState  rs_;
+
+   /*
    // On a timestep restart, sometimes (when an entire patch is sent) on the
    // first try of the timestep the receiving DW creates and stores ParticleSubset
    // which throws off the sending on the next iteration.  This will compensate.
    SendState                         d_timestepRestartPsets;
+   */
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
