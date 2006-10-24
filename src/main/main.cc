@@ -156,6 +156,7 @@ parse_args( int argc, char *argv[] )
 
     else if (ends_with(string_tolower(arg),".srn"))
     {
+std::cerr << "main: load net " << arg << std::endl;
       NetworkIO::load_net(arg);
     }
     else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
@@ -401,7 +402,7 @@ main(int argc, char *argv[], char **environment) {
   const char *portString = sci_getenv("KEPLER_CLIENT_PORT");
   if (portString) { //if we want to specify the port someday && string_to_int(portString, port)) {
     std::cerr << "Starting SPA server thread" << std::endl;
-    KeplerServer *keplerServer = new KeplerServer(net);
+    KeplerServer *keplerServer = new KeplerServer(net, 120.0);
     Thread *kt = new Thread(keplerServer, "Kepler/SPA Server", 0, Thread::Activated, 1024*1024);
     kt->detach();
     KeplerServer::servSem().up();
