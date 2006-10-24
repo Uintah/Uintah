@@ -72,6 +72,21 @@ itcl_class SCIRun_ChangeMesh_EditMeshBoundingBox {
 
 	pack $edit.l1 $edit.l2 -side top 
 
+
+	iwidgets::Labeledframe $w.scale -labelpos nw -labeltext "Widget Scale/Mode" 
+	set scale [$w.scale childsite]
+	
+	label  $scale.l1 -text "SCALE:"
+	button $scale.incr -text "++" -command "$this-c scale 1.25"
+	button $scale.incr2 -text "+" -command "$this-c scale 1.05"
+	button $scale.decr -text "-" -command "$this-c scale [expr 1.0/1.05]"
+	button $scale.decr2 -text "--" -command "$this-c scale [expr 1.0/1.25]"
+	label  $scale.l2 -text "MODE:"
+	button $scale.nextmode -text "NextMode" -command "$this-c nextmode"
+
+	pack $w.scale -side top -fill x -expand y
+	pack $scale.l1 $scale.incr $scale.incr2 $scale.decr $scale.decr2 $scale.l2 $scale.nextmode -side left -anchor w
+
 	makeSciButtonPanel $w $w $this \
 	    "\"Reset Widget\" \"$this reset\" \"\"" \
 	    "\"In to Out\" \"$this copy_attributes\" \"Copies the Input Field Attribute values\nto the Output Field Attribute text fields.\n(This is just for user convenience.)\" "

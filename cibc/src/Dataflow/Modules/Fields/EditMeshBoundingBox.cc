@@ -106,6 +106,8 @@ public:
 
   virtual void execute();
   virtual void widget_moved(bool, BaseWidget*);
+	
+	virtual void tcl_command(GuiArgs&, void*);
 };
 
 DECLARE_MAKER(EditMeshBoundingBox)
@@ -147,6 +149,47 @@ EditMeshBoundingBox::EditMeshBoundingBox(GuiContext* ctx)
   inputsizex_.set("---");
   inputsizey_.set("---");
   inputsizez_.set("---");
+}
+
+void
+EditMeshBoundingBox::tcl_command(GuiArgs& args, void* userdata)
+{
+  if(args.count() < 2)
+  {
+    args.error("EditMeshBoundingBox needs a minor command");
+    return;
+  }
+
+	if(args[1] == "scale")
+  {
+		std::cout << "called scale\n";
+    if (args.count() != 3)
+    {
+      args.error("widget needs user scale");
+      return;
+    }
+    double us;
+    if (!string_to_double(args[2], us))
+    {
+      args.error("widget can't parse user scale `"+args[2]+"'");
+      return;
+    }
+    if (box_) box_->SetScale(box_->GetScale()*us);
+  }
+  else if (args[1] == "nextmode")
+  {
+    if (args.count() != 2)
+    {
+      args.error("widget doesn't need a minor command");
+      return;
+    }
+    box_->NextMode();
+  }
+  else 
+  {
+    // Relay data to the Module class
+    Module::tcl_command(args, userdata);
+  }
 }
 
 
