@@ -132,7 +132,15 @@ VectorFieldOperatorAlgoT<VectorField>::execute(FieldHandle vectorfh, int op)
       double current_time;
       vectorField->get_property( prop_name, current_time);
       scalarField->set_property(prop_name.c_str(), current_time , true);
-    } else {
+    } else if( prop_name == "spatial_min" ){
+      Point spatial_min;
+      vectorField->get_property( prop_name, spatial_min);
+      scalarField->set_property(prop_name.c_str(), spatial_min , true);
+    } else if( prop_name == "spatial_max" ){
+      Point spatial_max;
+      vectorField->get_property( prop_name, spatial_max);
+      scalarField->set_property(prop_name.c_str(), spatial_max , true);
+    }else {
       cerr<<"Unknown field property: "<<prop_name<<", not transferred.\n";
     }
   }
