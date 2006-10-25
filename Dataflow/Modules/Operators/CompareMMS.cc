@@ -28,14 +28,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
-
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
-
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -85,60 +83,62 @@ CompareMMS::execute()
 //   typedef LatVolMesh< HexTrilinearLgn<Point> >                      LVMesh;
 //   typedef GenericField< LVMesh, CBDBasis, FData3d<double, LVMesh> > LVFieldCBD;
 
-
-
   FieldIPort *iport = (FieldIPort*)get_iport("Scalar Field");
-  if (!iport)
-  {
+  if (!iport){
     error("Error: unable to find (in xml file, I think) module input port named 'Scalar Field'");
     return;
   }
 
   // The input port (with data) is required.
   FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
-  {
+  if (!iport->get(fh) || !fh.get_rep()){
     remark("No input connected to the Scalar Field input port.");
     remark("Displaying exact solution.");
     get_gui()->eval( get_id() + " set_to_exact" );
     return;
   }
 
-  if (!fh->query_scalar_interface(this).get_rep())
-  {
+  if (!fh->query_scalar_interface(this).get_rep()){
     error("This module only works on scalar fields.");
     return;
   }
 
-  bool   found_properties;
-
+  bool found_properties;
   string field_name;
   double field_time;
-
-  found_properties = fh->get_property( "name", field_name );
-  found_properties = fh->get_property( "time",    field_time );
-
-  Point spacial_min, spacial_max;
-  found_properties = fh->get_property( "spacial_min", spacial_min );
-  found_properties = fh->get_property( "spacial_max", spacial_max );
-
-  cout << "field range is: " << spacial_min << " to " << spacial_max << "\n";
-
+  Point spatial_min, spatial_max;
   IntVector field_offset;
-  found_properties = fh->get_property( "offset", field_offset );
-
-  cout << "offset is " << field_offset << "\n";
-
+  vector<unsigned int> nCells;
+  
+  found_properties = fh->get_property( "name",        field_name );
+  found_properties = fh->get_property( "time",        field_time );
+  found_properties = fh->get_property( "spatial_min", spatial_min );
+  found_properties = fh->get_property( "spatial_max", spatial_max );
+  found_properties = fh->get_property( "offset",      field_offset );
+  found_properties = fh->mesh()->get_dim( nCells );
+  
+  cout <<"--------------------------CompareMMS" << endl;
+  cout << "Variable name: " << field_name << endl;
+  cout << "offset:        " << field_offset << endl;  
+  cout << "field spatial range: " << spatial_min << " to " << spatial_max << endl;
+  cout << "Cell index range: [0,0,0] to ["<<nCells[0] << ","<<nCells[1]<<","<<nCells[2] << "]" << endl;
+  // bulletproofing  
   if( !found_properties ) {
     cout << "This field did not include all the properties I expected...\n";
+  }
+  if(spatial_min.InInterval( spatial_max, DBL_EPSILON )){
+    error("CompareMMS: couldn't extract computational domain information");
   }
 
   CompareMMSAlgo::compare_field_type field_type;
 
-  if      ( field_name == "press_CC" )  field_type = CompareMMSAlgo::PRESSURE;
-  else if ( field_name == "vel_CC:1" ) field_type = CompareMMSAlgo::UVEL;
-  else if ( field_name == "vel_CC:2" ) field_type = CompareMMSAlgo::VVEL;
-  else {
+  if ( field_name == "press_CC" ){
+    field_type = CompareMMSAlgo::PRESSURE;
+  }else if ( field_name == "vel_CC:1" ){
+     field_type = CompareMMSAlgo::UVEL;
+  }else if ( field_name == "vel_CC:2" ){
+     field_type = CompareMMSAlgo::VVEL;
+  }else {
     string msg = "MMS currently only knows how to compare pressure and uVelocity... you have: " + field_name;
     field_type = CompareMMSAlgo::INVALID;
     error( msg );
@@ -149,32 +149,22 @@ CompareMMS::execute()
   gui_field_time_.set( field_time );
 
   if( gui_output_choice_.get() == 0 ) { // Just pass original Field through
-    
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference( fh );
-    
   } else {
-    
     const SCIRun::TypeDescription *td = fh->get_type_description();
     CompileInfoHandle ci = CompareMMSAlgo::get_compile_info(td);
     LockingHandle<CompareMMSAlgo> algo;
+    
     if(!module_dynamic_compile(ci, algo)) {
       error("CompareMMS cannot work on this Field: dynamic compilation failed.");
       return;
     }
     
     // handle showing the exact solution or the diff
-    
-    vector<unsigned int> dimensions;
-    bool result = fh->mesh()->get_dim( dimensions );
-    
-    if( !result ) {
-      error("dimensions not returned???\n");
-      return;
-    }
-    
-    
-    FieldHandle ofh = algo->compare(fh, dimensions,
+    FieldHandle ofh = algo->compare(fh, nCells, 
+                                    field_offset,
+                                    spatial_min, spatial_max,
                                     field_type,
                                     field_name, field_time,
                                     gui_output_choice_.get(),
@@ -186,15 +176,18 @@ CompareMMS::execute()
     fh->get_property( property_name, offset);
     ofh->set_property(property_name.c_str(), IntVector(offset) , true);
     string prefix = "Exact_";
-    if ( gui_output_choice_.get() == 2) prefix = "Diff_";
+    if ( gui_output_choice_.get() == 2){
+      prefix = "Diff_";
+    }
     ofh->set_property("varname", string(prefix+field_name.c_str()), true);
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference(ofh);
   } // end if gui_output_choice_ == 0;
+  cout <<"--------------------------CompareMMS" << endl;
 }
   
-
+//______________________________________________________________________
 CompileInfoHandle
 CompareMMSAlgo::get_compile_info(const SCIRun::TypeDescription *td)
 {
@@ -227,8 +220,6 @@ CompareMMSAlgo::get_compile_info(const SCIRun::TypeDescription *td)
   rval->add_namespace("Uintah");
   td->fill_compile_info(rval);
   return rval;
-
-
 }
 
 
