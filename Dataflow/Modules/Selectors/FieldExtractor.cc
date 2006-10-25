@@ -601,8 +601,8 @@ FieldExtractorAlgo::set_field_properties( Field* field,
   BBox b;
   qinfo.grid->getInteriorSpatialRange( b );
 
-  field->set_property( "spacial_min", b.min(), true);
-  field->set_property( "spacial_max", b.max(), true);
+  field->set_property( "spatial_min", b.min(), true);
+  field->set_property( "spatial_max", b.max(), true);
   field->set_property( "name",        string(qinfo.varname), true);
   field->set_property( "generation",  qinfo.generation, true);
   field->set_property( "timestep",    qinfo.timestep, true);
