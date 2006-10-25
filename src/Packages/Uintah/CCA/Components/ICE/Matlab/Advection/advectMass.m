@@ -1,10 +1,10 @@
 %_____________________________________________________________
 % Function:   advectMass
 % computes the advection of mass using vanLeer Limiter
-function[q_advected,gradLim,grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = advectMass( mass,ofs, rx,xvel_FC, dx, nCells)
+function[q_advected,gradLim,grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = advectMass( mass,ofs, rx,xvel_FC, dx, nCells, advOrder)
   
   [gradLim, grad_x, mass_vrtx_1, mass_vrtx_2] = gradientLimiter_Mass(mass, dx, nCells);
-  [mass_slab, gradLim, grad_x]                = qAverageFluxMass(mass, rx, grad_x, gradLim, nCells);
+  [mass_slab, gradLim, grad_x]                = qAverageFluxMass(mass, rx, grad_x, gradLim, nCells,advOrder);
   q_advected                                  = advectSlabs(xvel_FC, mass_slab, ofs, nCells,dx);
 
 end
@@ -30,11 +30,9 @@ function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCell
     
     % Test of backward differencing at the CFI
     if(dx(j+1) > dx(j))  % Right CFI 
-      fprintf('right interface j: %i \n',j);
       grad_x(j) = ( q(j) - q(j-1) )/dx(j); 
     end
     if(dx(j+1) < dx(j))  % Left CFI 
-      fprintf('left interface j: %i \n',j);
       grad_x(j) = ( q(j+1) - q(j) )/dx(j);
     end
 
@@ -50,24 +48,24 @@ function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCell
     q_min = min(q(j+1), q(j-1));
 
     %----------gradient limiter
-    smallNum = 1e-100;
-    frac1    = (q_max - q(j) + smallNum)/(q_vrtx_max - q(j) + smallNum );
-    alphaMax = max(0,frac1);
-    frac2    = (q(j) - q_min + smallNum)/(q(j) - q_vrtx_min + smallNum );
-    alphaMin = max(0,frac2);
+%     smallNum = 1e-100;
+%     frac1    = (q_max - q(j) + smallNum)/(q_vrtx_max - q(j) + smallNum );
+%     alphaMax = max(0,frac1);
+%     frac2    = (q(j) - q_min + smallNum)/(q(j) - q_vrtx_min + smallNum );
+%     alphaMin = max(0,frac2);
 
     %----------CFDLib gradient limiter
-    %frac = (q_max - q(j))/(max( (q_vrtx_max - q(j)), 1e-100) );
-    %alphaMax = max(0,frac);
-    %frac = (q(j) - q_min)/(max( (q(j) - q_vrtx_min), 1e-100) );
-    %alphaMin = max(0,frac) 
+    frac = (q_max - q(j))/(max( (q_vrtx_max - q(j)), 1e-100) );
+    alphaMax = max(0,frac);
+    frac = (q(j) - q_min)/(max( (q(j) - q_vrtx_min), 1e-100) );
+    alphaMin = max(0,frac);
 
     tmp        = min(1,alphaMax);
     gradLim(j) = min(tmp, alphaMin);
     
     %----------test of clamping the limiter at the CFI  
     if( (dx(j+1)/dx(j)) ~= 1)
-      fprintf(' j %i alpha: %e \n',j, alpha);
+      fprintf(' j %i alpha: %e turned off the gradient limiter\n',j, alpha);
       gradLim(j) = 0.0;
     end  
        
@@ -90,11 +88,17 @@ end
 %_____________________________________________________________
 % Function:  qAverageFluxMass
 % computes Q in the slab according to the reference. 
-function[q_slab, gradLim, grad_x] = qAverageFluxMass(q, rx, grad_x, gradLim, nCells)
+function[q_slab, gradLim, grad_x] = qAverageFluxMass(q, rx, grad_x, gradLim, nCells, advOrder)
   clear j;
-  fprintf( 'inside qAverageFluxRho \n');
+  fprintf( 'inside qAverageFluxMass: Order %i \n',advOrder);
+  
+  
   for( j =1:nCells)
-    q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);
-%   fprintf(' j %i  q_slab: %e q(j): %e grad_x(j): %e  gradLim(j): %e  rx(j): %e\n',j, q_slab(j),q(j), grad_x(j), gradLim(j), rx(j));
+    if(advOrder == 2)  %second order
+      q_slab(j) = q(j) + grad_x(j) * gradLim(j) * rx(j);
+    end
+    if(advOrder == 1)  %first order
+      q_slab(j) = q(j);
+    end
   end
 end
