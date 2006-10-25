@@ -1237,8 +1237,8 @@ proc popupInfoMenu { {subnet_num 0 } } {
 		# frame $saveframe.fname
 		# checkbutton $saveframe.fname.relativefiles -variable Subnet(Subnet${subnet_num}_relfilenames) -text "Save all filenames relative to the network location"
 		
-		pack $saveframe.fname -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
-		pack $saveframe.fname.relativefiles -side left
+		# pack $saveframe.fname -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
+		# pack $saveframe.fname.relativefiles -side left
 
     frame $infoframe.fname
     label $infoframe.fname.lname -text "User: " -padx 3 -pady 3

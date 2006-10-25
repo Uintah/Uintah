@@ -26,10 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-
-package require Iwidgets 3.0
-
 proc ComponentWizard { {window .componentWizard} } {
     set w $window 
     set d $window.data
