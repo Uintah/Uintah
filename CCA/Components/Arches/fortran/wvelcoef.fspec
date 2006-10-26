@@ -23,5 +23,5 @@ void wvelcoef(constSFCZVariable<double> ww, SFCZVariable<double> cesav,
      OffsetArray1<double> fac3w, OffsetArray1<double> fac4w,
      OffsetArray1<int> ktsdw, OffsetArray1<int> kbsdw,
      OffsetArray1<double> efac, OffsetArray1<double> wfac,
-     OffsetArray1<double> enfac, OffsetArray1<double> sfac,
+     OffsetArray1<double> nfac, OffsetArray1<double> sfac,
      IntVector idxLoW, IntVector idxHiW);

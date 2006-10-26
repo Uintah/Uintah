@@ -43,7 +43,7 @@ C	efac,wfac
 C		Interpolation factors for calculating value at
 C		P-node from values at its east and west cell faces
 C		respectively (i/p)
-C	enfac,sfac	
+C	nfac,sfac	
 C		Interpolation factors for calculating value at
 C		P-node from values at its north and south cell faces
 C		respectively (i/p)
@@ -154,7 +154,7 @@ C-----------------------------------------------------------------------
                GUP = DEN(I,J,K)*(EFAC(I)*UU(I+1,J,K)+WFAC(I)*UU(I,J,K))
                CPE = GUP*VOL/DXEP(I)
                CPW = GUP*VOL/DXPW(I)
-               GVP = DEN(I,J,K)*(ENFAC(J)*VV(I,J+1,K)+SFAC(J)*VV(I,J,K))
+               GVP = DEN(I,J,K)*(NFAC(J)*VV(I,J+1,K)+SFAC(J)*VV(I,J,K))
                CPN = GVP*VOL/DYNP(J)
                CPS = GVP*VOL/DYPS(J)
                GWP = DEN(I,J,K)*(TFAC(K)*WW(I,J,K+1)+BFAC(K)*WW(I,J,K))
