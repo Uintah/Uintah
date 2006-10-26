@@ -103,7 +103,7 @@ C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
                CPE = GP*VOL/SEW(I)
                CPW = GP*VOL/SEW(I-1)
-        GVP = ENFAC(J)*(0.5D0*GN+0.5D0*GNW)+SFAC(J)*(0.5D0*GS+0.5D0*GSW)
+        GVP = NFAC(J)*(0.5D0*GN+0.5D0*GNW)+SFAC(J)*(0.5D0*GS+0.5D0*GSW)
                CPN = GVP*VOL/DYNP(J)
                CPS = GVP*VOL/DYPS(J)
         GWP = TFAC(K)*(0.5D0*GT+0.5D0*GTW)+BFAC(K)*(0.5D0*GTP+0.5D0*GBW)

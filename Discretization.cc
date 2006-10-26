@@ -101,7 +101,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->dxpw, cellinfo->dynp, cellinfo->dyps,
 		  cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1u,
 		  cellinfo->fac2u, cellinfo->fac3u, cellinfo->fac4u,
-		  cellinfo->iesdu, cellinfo->iwsdu, cellinfo->enfac,
+		  cellinfo->iesdu, cellinfo->iwsdu, cellinfo->nfac,
 		  cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
 		  idxLoU, idxHiU);
   } else if (index == Arches::YDIR) {
@@ -172,7 +172,7 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->dzpbw, cellinfo->dzpb, cellinfo->fac1w,
 		  cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
 		  cellinfo->ktsdw, cellinfo->kbsdw, cellinfo->efac,
-		  cellinfo->wfac, cellinfo->enfac, cellinfo->sfac,
+		  cellinfo->wfac, cellinfo->nfac, cellinfo->sfac,
 		  idxLoW, idxHiW);
   }
 }
@@ -352,7 +352,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 		cellinfo->stb, cellinfo->cee, cellinfo->cwe, cellinfo->cww,
 		cellinfo->cnn, cellinfo->csn, cellinfo->css, cellinfo->ctt,
 		cellinfo->cbt, cellinfo->cbb, cellinfo->efac,
-		cellinfo->wfac,	cellinfo->enfac, cellinfo->sfac,
+		cellinfo->wfac,	cellinfo->nfac, cellinfo->sfac,
 		cellinfo->tfac, cellinfo->bfac,
 		cellinfo->dxpw, cellinfo->dxep, cellinfo->dyps,
 		cellinfo->dynp, cellinfo->dzpb, cellinfo->dztp,
