@@ -22,6 +22,6 @@ void uvelcoef(constSFCXVariable<double> uu, SFCXVariable<double> cesav,
      OffsetArray1<double> fac1u, OffsetArray1<double> fac2u,
      OffsetArray1<double> fac3u, OffsetArray1<double> fac4u,
      OffsetArray1<int> iesdu, OffsetArray1<int> iwsdu,
-     OffsetArray1<double> enfac, OffsetArray1<double> sfac,
+     OffsetArray1<double> nfac, OffsetArray1<double> sfac,
      OffsetArray1<double> tfac, OffsetArray1<double> bfac,
      IntVector idxLoU, IntVector idxHiU);

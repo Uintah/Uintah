@@ -1094,10 +1094,17 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	  double sewcur = cellinfo->sew[colX];
 	  double snscur = cellinfo->sns[colY];
 	  double stbcur = cellinfo->stb[colZ];
+          double efaccur = cellinfo->efac[colX];
+          double wfaccur = cellinfo->wfac[colX];
+          double nfaccur = cellinfo->nfac[colY];
+          double sfaccur = cellinfo->sfac[colY];
+          double tfaccur = cellinfo->tfac[colZ];
+          double bfaccur = cellinfo->bfac[colZ];
 
 	  double uep, uwp, unp, usp, utp, ubp;
 	  double vnp, vsp, vep, vwp, vtp, vbp;
 	  double wtp, wbp, wep, wwp, wnp, wsp;
+          double up, vp, wp;
 
 	  double uvelcur = uVel[currCell];
 	  double vvelcur = vVel[currCell];
@@ -1108,48 +1115,39 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 
 	  uep = uvelxp1;
 	  uwp = uvelcur;
-	  unp = 0.25*(uvelxp1 + uvelcur +
-		      uVel[IntVector(colX+1,colY+1,colZ)] +
-		      uVel[IntVector(colX,colY+1,colZ)]);
-	  usp = 0.25*(uvelxp1 + uvelcur +
-		      uVel[IntVector(colX+1,colY-1,colZ)] +
-		      uVel[IntVector(colX,colY-1,colZ)]);
-	  utp = 0.25*(uvelxp1 + uvelcur +
-		      uVel[IntVector(colX+1,colY,colZ+1)] + 
-		      uVel[IntVector(colX,colY,colZ+1)]);
-	  ubp = 0.25*(uvelxp1 + uvelcur + 
-		      uVel[IntVector(colX+1,colY,colZ-1)] + 
-		      uVel[IntVector(colX,colY,colZ-1)]);
+          up = efaccur * uvelxp1 + wfaccur * uvelcur;
+	  unp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY+1,colZ)] +
+		          wfaccur * uVel[IntVector(colX,colY+1,colZ)]);
+	  usp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY-1,colZ)] +
+		          wfaccur * uVel[IntVector(colX,colY-1,colZ)]);
+	  utp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY,colZ+1)] +
+		          wfaccur * uVel[IntVector(colX,colY,colZ+1)]);
+	  ubp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY,colZ-1)] + 
+		          wfaccur * uVel[IntVector(colX,colY,colZ-1)]);
 
 	  vnp = vvelyp1;
 	  vsp = vvelcur;
-	  vep = 0.25*(vvelyp1 + vvelcur +
-		      vVel[IntVector(colX+1,colY+1,colZ)] + 
-		      vVel[IntVector(colX+1,colY,colZ)]);
-	  vwp = 0.25*(vvelyp1 + vvelcur +
-		      vVel[IntVector(colX-1,colY+1,colZ)] + 
-		      vVel[IntVector(colX-1,colY,colZ)]);
-	  vtp = 0.25*(vvelyp1 + vvelcur + 
-		      vVel[IntVector(colX,colY+1,colZ+1)] + 
-		      vVel[IntVector(colX,colY,colZ+1)]);
-	  vbp = 0.25*(vvelyp1 + vvelcur +
-		      vVel[IntVector(colX,colY+1,colZ-1)] + 
-		      vVel[IntVector(colX,colY,colZ-1)]);
+          vp = nfaccur * vvelyp1 + sfaccur * vvelcur;
+	  vep = 0.5*(vp + nfaccur * vVel[IntVector(colX+1,colY+1,colZ)] + 
+		          sfaccur * vVel[IntVector(colX+1,colY,colZ)]);
+	  vwp = 0.5*(vp + nfaccur * vVel[IntVector(colX-1,colY+1,colZ)] + 
+		          sfaccur * vVel[IntVector(colX-1,colY,colZ)]);
+	  vtp = 0.5*(vp + nfaccur * vVel[IntVector(colX,colY+1,colZ+1)] + 
+		          sfaccur * vVel[IntVector(colX,colY,colZ+1)]);
+	  vbp = 0.5*(vp + nfaccur * vVel[IntVector(colX,colY+1,colZ-1)] + 
+		          sfaccur * vVel[IntVector(colX,colY,colZ-1)]);
 
 	  wtp = wvelzp1;
 	  wbp = wvelcur;
-	  wep = 0.25*(wvelzp1 + wvelcur + 
-		      wVel[IntVector(colX+1,colY,colZ+1)] + 
-		      wVel[IntVector(colX+1,colY,colZ)]);
-	  wwp = 0.25*(wvelzp1 + wvelcur +
-		      wVel[IntVector(colX-1,colY,colZ+1)] + 
-		      wVel[IntVector(colX-1,colY,colZ)]);
-	  wnp = 0.25*(wvelzp1 + wvelcur + 
-		      wVel[IntVector(colX,colY+1,colZ+1)] + 
-		      wVel[IntVector(colX,colY+1,colZ)]);
-	  wsp = 0.25*(wvelzp1 + wvelcur +
-		      wVel[IntVector(colX,colY-1,colZ+1)] + 
-		      wVel[IntVector(colX,colY-1,colZ)]);
+          wp = tfaccur * wvelzp1 + bfaccur * wvelcur;
+	  wep = 0.5*(wp + tfaccur * wVel[IntVector(colX+1,colY,colZ+1)] + 
+		          bfaccur * wVel[IntVector(colX+1,colY,colZ)]);
+	  wwp = 0.5*(wp + tfaccur * wVel[IntVector(colX-1,colY,colZ+1)] + 
+		          bfaccur * wVel[IntVector(colX-1,colY,colZ)]);
+	  wnp = 0.5*(wp + tfaccur * wVel[IntVector(colX,colY+1,colZ+1)] + 
+		          bfaccur * wVel[IntVector(colX,colY+1,colZ)]);
+	  wsp = 0.5*(wp + tfaccur * wVel[IntVector(colX,colY-1,colZ+1)] + 
+		          bfaccur * wVel[IntVector(colX,colY-1,colZ)]);
 
 	  //     calculate the grid strain rate tensor
 	  (SIJ[0])[currCell] = (uep-uwp)/sewcur;
@@ -1165,6 +1163,7 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	  double fuep, fuwp, funp, fusp, futp, fubp;
 	  double fvnp, fvsp, fvep, fvwp, fvtp, fvbp;
 	  double fwtp, fwbp, fwep, fwwp, fwnp, fwsp;
+          double fup, fvp, fwp;
 
 	  double fuvelcur = filterRhoU[currCell]/
 		            (0.5*(filterRho[currCell] +
@@ -1187,96 +1186,87 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 
 	  fuep = fuvelxp1;
 	  fuwp = fuvelcur;
-	  funp = 0.25*(fuvelxp1 + fuvelcur +
-		      filterRhoU[IntVector(colX+1,colY+1,colZ)]/ 
-		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		       filterRho[IntVector(colX+1,colY+1,colZ)])) +
-		      filterRhoU[IntVector(colX,colY+1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		       filterRho[IntVector(colX-1,colY+1,colZ)])));
-	  fusp = 0.25*(fuvelxp1 + fuvelcur +
-		      filterRhoU[IntVector(colX+1,colY-1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		       filterRho[IntVector(colX+1,colY-1,colZ)])) +
-		      filterRhoU[IntVector(colX,colY-1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		       filterRho[IntVector(colX-1,colY-1,colZ)])));
-	  futp = 0.25*(fuvelxp1 + fuvelcur +
-		      filterRhoU[IntVector(colX+1,colY,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		       filterRho[IntVector(colX+1,colY,colZ+1)])) +
-		      filterRhoU[IntVector(colX,colY,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		       filterRho[IntVector(colX-1,colY,colZ+1)])));
-	  fubp = 0.25*(fuvelxp1 + fuvelcur + 
-		      filterRhoU[IntVector(colX+1,colY,colZ-1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		       filterRho[IntVector(colX+1,colY,colZ-1)])) +
-		      filterRhoU[IntVector(colX,colY,colZ-1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		       filterRho[IntVector(colX-1,colY,colZ-1)])));
+          fup = efaccur * fuvelxp1 + wfaccur * fuvelcur;
+	  funp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY+1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		             filterRho[IntVector(colX+1,colY+1,colZ)])) +
+		            wfaccur * filterRhoU[IntVector(colX,colY+1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		             filterRho[IntVector(colX-1,colY+1,colZ)])));
+	  fusp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY-1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		             filterRho[IntVector(colX+1,colY-1,colZ)])) +
+		            wfaccur * filterRhoU[IntVector(colX,colY-1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		             filterRho[IntVector(colX-1,colY-1,colZ)])));
+	  futp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		             filterRho[IntVector(colX+1,colY,colZ+1)])) +
+		            wfaccur * filterRhoU[IntVector(colX,colY,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		             filterRho[IntVector(colX-1,colY,colZ+1)])));
+	  fubp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY,colZ-1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		             filterRho[IntVector(colX+1,colY,colZ-1)])) +
+		            wfaccur * filterRhoU[IntVector(colX,colY,colZ-1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		             filterRho[IntVector(colX-1,colY,colZ-1)])));
 
 	  fvnp = fvvelyp1;
 	  fvsp = fvvelcur;
-	  fvep = 0.25*(fvvelyp1 + fvvelcur +
-		      filterRhoV[IntVector(colX+1,colY+1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		       filterRho[IntVector(colX+1,colY+1,colZ)])) +
-		      filterRhoV[IntVector(colX+1,colY,colZ)]/
-		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		       filterRho[IntVector(colX+1,colY-1,colZ)])));
-	  fvwp = 0.25*(fvvelyp1 + fvvelcur +
-		      filterRhoV[IntVector(colX-1,colY+1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		       filterRho[IntVector(colX-1,colY+1,colZ)])) +
-		      filterRhoV[IntVector(colX-1,colY,colZ)]/
-		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		       filterRho[IntVector(colX-1,colY-1,colZ)])));
-	  fvtp = 0.25*(fvvelyp1 + fvvelcur + 
-		      filterRhoV[IntVector(colX,colY+1,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		       filterRho[IntVector(colX,colY+1,colZ+1)])) +
-		      filterRhoV[IntVector(colX,colY,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		       filterRho[IntVector(colX,colY-1,colZ+1)])));
-	  fvbp = 0.25*(fvvelyp1 + fvvelcur +
-		      filterRhoV[IntVector(colX,colY+1,colZ-1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		       filterRho[IntVector(colX,colY+1,colZ-1)])) +
-		      filterRhoV[IntVector(colX,colY,colZ-1)]/
-		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		       filterRho[IntVector(colX,colY-1,colZ-1)])));
+          fvp = nfaccur * fvvelyp1 + sfaccur * fvvelcur;
+	  fvep = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX+1,colY+1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		             filterRho[IntVector(colX+1,colY+1,colZ)])) +
+		            sfaccur * filterRhoV[IntVector(colX+1,colY,colZ)]/
+		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		             filterRho[IntVector(colX+1,colY-1,colZ)])));
+	  fvwp = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX-1,colY+1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		             filterRho[IntVector(colX-1,colY+1,colZ)])) +
+		            sfaccur * filterRhoV[IntVector(colX-1,colY,colZ)]/
+		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		             filterRho[IntVector(colX-1,colY-1,colZ)])));
+	  fvtp = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX,colY+1,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		             filterRho[IntVector(colX,colY+1,colZ+1)])) +
+		            sfaccur * filterRhoV[IntVector(colX,colY,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		             filterRho[IntVector(colX,colY-1,colZ+1)])));
+	  fvbp = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX,colY+1,colZ-1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		             filterRho[IntVector(colX,colY+1,colZ-1)])) +
+		            sfaccur * filterRhoV[IntVector(colX,colY,colZ-1)]/
+		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		             filterRho[IntVector(colX,colY-1,colZ-1)])));
 
 	  fwtp = fwvelzp1;
 	  fwbp = fwvelcur;
-	  fwep = 0.25*(fwvelzp1 + fwvelcur + 
-		      filterRhoW[IntVector(colX+1,colY,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		       filterRho[IntVector(colX+1,colY,colZ+1)])) +
-		      filterRhoW[IntVector(colX+1,colY,colZ)]/
-		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		       filterRho[IntVector(colX+1,colY,colZ-1)])));
-	  fwwp = 0.25*(fwvelzp1 + fwvelcur +
-		      filterRhoW[IntVector(colX-1,colY,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		       filterRho[IntVector(colX-1,colY,colZ+1)])) +
-		      filterRhoW[IntVector(colX-1,colY,colZ)]/
-		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		       filterRho[IntVector(colX-1,colY,colZ-1)])));
-	  fwnp = 0.25*(fwvelzp1 + fwvelcur + 
-		      filterRhoW[IntVector(colX,colY+1,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		       filterRho[IntVector(colX,colY+1,colZ+1)])) +
-		      filterRhoW[IntVector(colX,colY+1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		       filterRho[IntVector(colX,colY+1,colZ-1)])));
-	  fwsp = 0.25*(fwvelzp1 + fwvelcur +
-		      filterRhoW[IntVector(colX,colY-1,colZ+1)]/
-		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		       filterRho[IntVector(colX,colY-1,colZ+1)])) +
-		      filterRhoW[IntVector(colX,colY-1,colZ)]/
-		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		       filterRho[IntVector(colX,colY-1,colZ-1)])));
+          fwp = tfaccur * fwvelzp1 + bfaccur * fwvelcur;
+	  fwep = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX+1,colY,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		             filterRho[IntVector(colX+1,colY,colZ+1)])) +
+		            bfaccur * filterRhoW[IntVector(colX+1,colY,colZ)]/
+		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		             filterRho[IntVector(colX+1,colY,colZ-1)])));
+	  fwwp = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX-1,colY,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		             filterRho[IntVector(colX-1,colY,colZ+1)])) +
+		            bfaccur * filterRhoW[IntVector(colX-1,colY,colZ)]/
+		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		             filterRho[IntVector(colX-1,colY,colZ-1)])));
+	  fwnp = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX,colY+1,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		             filterRho[IntVector(colX,colY+1,colZ+1)])) +
+		            bfaccur * filterRhoW[IntVector(colX,colY+1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		             filterRho[IntVector(colX,colY+1,colZ-1)])));
+	  fwsp = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX,colY-1,colZ+1)]/
+		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		             filterRho[IntVector(colX,colY-1,colZ+1)])) +
+		            bfaccur * filterRhoW[IntVector(colX,colY-1,colZ)]/
+		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		             filterRho[IntVector(colX,colY-1,colZ-1)])));
 
 	  //     calculate the filtered strain rate tensor
 	  (filterSIJ[0])[currCell] = (fuep-fuwp)/sewcur;

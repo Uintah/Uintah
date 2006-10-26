@@ -41,6 +41,12 @@ CellInformation::CellInformation(const Patch* patch)
     yy[ii] = level->getCellPosition(IntVector(locationLo.x(), ii, locationLo.z())).y();
   for (int ii = locationLo.z(); ii < locationHi.z(); ii++)
     zz[ii] = level->getCellPosition(IntVector(locationLo.x(), locationLo.y(), ii)).z();
+  /*for (int ii = locationLo.x(); ii < locationHi.x(); ii++)
+    xx[ii] = xx[ii]*xx[ii]*xx[ii];
+  for (int ii = locationLo.y(); ii < locationHi.y(); ii++)
+    yy[ii] = yy[ii]*yy[ii]*yy[ii];
+  for (int ii = locationLo.z(); ii < locationHi.z(); ii++)
+    zz[ii] = zz[ii]*zz[ii]*zz[ii];*/
 
   //  allocate memory for x-dim arrays
   dxep.resize(domLo.x(), domHi.x());
@@ -78,7 +84,7 @@ CellInformation::CellInformation(const Patch* patch)
   cnnv.resize(domLo.y(), domHi.y());
   cssv.resize(domLo.y(), domHi.y());
   csnv.resize(domLo.y(), domHi.y());
-  enfac.resize(domLo.y(), domHi.y());
+  nfac.resize(domLo.y(), domHi.y());
   sfac.resize(domLo.y(), domHi.y());
   fac1v.resize(domLo.y(), domHi.y());
   fac2v.resize(domLo.y(), domHi.y());
@@ -126,7 +132,7 @@ CellInformation::CellInformation(const Patch* patch)
 	     dxepu, dynpv, dztpw, dxpw, dyps, dzpb, dxpwu, dypsv, dzpbw,
 	     cee, cwe, cww, ceeu, cweu, cwwu, cnn, csn, css,
 	     cnnv, csnv, cssv, ctt, cbt, cbb, cttw, cbtw, cbbw,
-	     xx, xu, yy, yv, zz, zw, efac, wfac, enfac, sfac, tfac, bfac,
+	     xx, xu, yy, yv, zz, zw, efac, wfac, nfac, sfac, tfac, bfac,
 	     fac1u, fac2u, fac3u, fac4u, fac1v, fac2v, fac3v, fac4v,
 	     fac1w, fac2w, fac3w, fac4w, iesdu, iwsdu, jnsdv, jssdv, 
 	     ktsdw, kbsdw,xminus,xplus,yminus,yplus,zminus,zplus);
