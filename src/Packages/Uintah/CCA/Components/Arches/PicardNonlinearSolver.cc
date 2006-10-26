@@ -1136,6 +1136,18 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
 
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(oldUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -1172,18 +1184,18 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idxU]);
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idxU]);
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idxV]);
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idxV]);
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idxW]);
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idxW]);
+	  double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+			 cellinfo->efac[ii] * oldUVel[idxU];
+	  double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
+			cellinfo->efac[ii] * uHatVel_FCX[idxU];
+	  double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
+			 cellinfo->nfac[jj] * oldVVel[idxV];
+	  double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+			cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+	  double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
+			 cellinfo->tfac[kk] * oldWVel[idxW];
+	  double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+			cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1202,18 +1214,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idxU] + 
-			      oldUVel[idxU]);
-	  double uhat = 0.5*(uHatVel_FCX[idxU] +
-			     uHatVel_FCX[idxU]);
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idxV]);
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idxV]);
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idxW]);
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idxW]);
+	  double old_u = oldUVel[idxU];
+	  double uhat = uHatVel_FCX[idxU];
+	  double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
+			 cellinfo->nfac[jj] * oldVVel[idxV];
+	  double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+			cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+	  double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
+			 cellinfo->tfac[kk] * oldWVel[idxW];
+	  double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+			cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1231,18 +1241,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idx]);
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idx]);
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idxV]);
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idxV]);
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idxW]);
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idxW]);
+	  double old_u = oldUVel[idx];
+	  double uhat = uHatVel_FCX[idx];
+	  double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
+			 cellinfo->nfac[jj] * oldVVel[idxV];
+	  double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+			cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+	  double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
+			 cellinfo->tfac[kk] * oldWVel[idxW];
+	  double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+			cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1260,18 +1268,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idxU]);
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idxU]);
-	  double old_v = 0.5*(oldVVel[idxV] +
-			      oldVVel[idxV]);
-	  double vhat = 0.5*(vHatVel_FCY[idxV] +
-			     vHatVel_FCY[idxV]);
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idxW]);
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idxW]);
+	  double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+			 cellinfo->efac[ii] * oldUVel[idxU];
+	  double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
+			cellinfo->efac[ii] * uHatVel_FCX[idxU];
+	  double old_v = oldVVel[idxV];
+	  double vhat = vHatVel_FCY[idxV];
+	  double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
+			 cellinfo->tfac[kk] * oldWVel[idxW];
+	  double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+			cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1289,18 +1295,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idxU]);
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idxU]);
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idx]);
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idx]);
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idxW]);
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idxW]);
+	  double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+			 cellinfo->efac[ii] * oldUVel[idxU];
+	  double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
+			cellinfo->efac[ii] * uHatVel_FCX[idxU];
+	  double old_v = oldVVel[idx];
+	  double vhat = vHatVel_FCY[idx];
+	  double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
+			 cellinfo->tfac[kk] * oldWVel[idxW];
+	  double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+			cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1318,18 +1322,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idxU]);
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idxU]);
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idxV]);
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idxV]);
-	  double old_w = 0.5*(oldWVel[idxW] +
-			      oldWVel[idxW]);
-	  double what = 0.5*(wHatVel_FCZ[idxW] +
-			     wHatVel_FCZ[idxW]);
+	  double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+			 cellinfo->efac[ii] * oldUVel[idxU];
+	  double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
+			cellinfo->efac[ii] * uHatVel_FCX[idxU];
+	  double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
+			 cellinfo->nfac[jj] * oldVVel[idxV];
+	  double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+			cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+	  double old_w = oldWVel[idxW];
+	  double what = wHatVel_FCZ[idxW];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1347,18 +1349,16 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double old_u = 0.5*(oldUVel[idx] + 
-			      oldUVel[idxU]);
-	  double uhat = 0.5*(uHatVel_FCX[idx] +
-			     uHatVel_FCX[idxU]);
-	  double old_v = 0.5*(oldVVel[idx] +
-			      oldVVel[idxV]);
-	  double vhat = 0.5*(vHatVel_FCY[idx] +
-			     vHatVel_FCY[idxV]);
-	  double old_w = 0.5*(oldWVel[idx] +
-			      oldWVel[idx]);
-	  double what = 0.5*(wHatVel_FCZ[idx] +
-			     wHatVel_FCZ[idx]);
+	  double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+			 cellinfo->efac[ii] * oldUVel[idxU];
+	  double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
+			cellinfo->efac[ii] * uHatVel_FCX[idxU];
+	  double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
+			 cellinfo->nfac[jj] * oldVVel[idxV];
+	  double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+			cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+	  double old_w = oldWVel[idx];
+	  double what = wHatVel_FCZ[idx];
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -1381,17 +1381,6 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(div_constraint, d_lab->d_divConstraintLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     new_dw->allocateAndPut(newCCVel, d_lab->d_newCCVelocityLabel,
@@ -1458,12 +1447,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;
@@ -1494,12 +1483,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idxU] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;
@@ -1525,12 +1513,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idx]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = newUVel[idx];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;
@@ -1557,12 +1544,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idxV] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;
@@ -1588,12 +1574,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idx]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = newVVel[idx];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;
@@ -1620,12 +1605,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idxW] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = newWVel[idxW];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;
@@ -1651,12 +1635,11 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idx]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = newWVel[idx];
 	  
 	  newCCVel[idx] = Vector(new_u,new_v,new_w);
 	  newCCUVel[idx] = new_u;

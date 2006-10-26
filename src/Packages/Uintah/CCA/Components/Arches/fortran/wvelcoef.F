@@ -99,10 +99,10 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
-         GUP = EFAC(I)*(0.5D0*GE+0.5D0*GEB)+WFAC(I)*(0.5D0*GW+0.5D0*GWB)
+        GUP = EFAC(I)*(0.5D0*GE+0.5D0*GEB)+WFAC(I)*(0.5D0*GW+0.5D0*GWB)
                CPE = GUP*VOL/DXEP(I)
                CPW = GUP*VOL/DXPW(I)
-        GVP = ENFAC(J)*(0.5D0*GN+0.5D0*GNB)+SFAC(J)*(0.5D0*GS+0.5D0*GSB)
+        GVP = NFAC(J)*(0.5D0*GN+0.5D0*GNB)+SFAC(J)*(0.5D0*GS+0.5D0*GSB)
                CPN = GVP*VOL/DYNP(J)
                CPS = GVP*VOL/DYPS(J)
                CPT = GPB*VOL/STB(K)

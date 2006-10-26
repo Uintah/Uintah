@@ -93,7 +93,7 @@ struct CellInformation : public RefCounted {
   OffsetArray1<double> cnnv;
   OffsetArray1<double> cssv;
   OffsetArray1<double> csnv;
-  OffsetArray1<double> enfac;
+  OffsetArray1<double> nfac;
   OffsetArray1<double> sfac;
   // z-direction
   OffsetArray1<double> ctt;
