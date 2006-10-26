@@ -1,5 +1,4 @@
 void cellg(IntVector domainLow, IntVector domainHigh,
-     IntVector indexLow, IntVector indexHigh,
      IntVector indexLowU, IntVector indexHighU,
      IntVector indexLowV, IntVector indexHighV,
      IntVector indexLowW, IntVector indexHighW,
@@ -41,5 +40,7 @@ void cellg(IntVector domainLow, IntVector domainHigh,
      OffsetArray1<double> fac3w, OffsetArray1<double> fac4w,
      OffsetArray1<int> iesdu, OffsetArray1<int> iwsdu,
      OffsetArray1<int> jnsdv, OffsetArray1<int> jssdv,
-     OffsetArray1<int> ktsdw, OffsetArray1<int> kbsdw);
+     OffsetArray1<int> ktsdw, OffsetArray1<int> kbsdw,
+     bool xminus, bool xplus, bool yminus, bool yplus,
+     bool zminus, bool zplus);
 

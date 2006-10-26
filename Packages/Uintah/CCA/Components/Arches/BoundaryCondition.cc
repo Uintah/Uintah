@@ -3137,7 +3137,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
 			            constvars->density[xminusCell]);
 
            vars->uVelRhoHat[currCell] -= 2.0*delta_t*constvars->pressure[currCell]/
-				(cellinfo->sew[colX] * avdenlow);
+				(cellinfo->dxpw[colX] * avdenlow);
 
            vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
 
@@ -3158,7 +3158,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
 			         constvars->density[currCell]);
 
            vars->uVelRhoHat[xplusCell] += 2.0*delta_t*constvars->pressure[currCell]/
-				(cellinfo->sew[colX] * avden);
+				(cellinfo->dxpw[colX+1] * avden);
 
            vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
         }
@@ -3179,7 +3179,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
 			            constvars->density[yminusCell]);
 
            vars->vVelRhoHat[currCell] -= 2.0*delta_t*constvars->pressure[currCell]/
-				(cellinfo->sns[colY] * avdenlow);
+				(cellinfo->dyps[colY] * avdenlow);
 
            vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
 
@@ -3200,7 +3200,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
 			         constvars->density[currCell]);
 
            vars->vVelRhoHat[yplusCell] += 2.0*delta_t*constvars->pressure[currCell]/
-				(cellinfo->sns[colY] * avden);
+				(cellinfo->dyps[colY+1] * avden);
 
            vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
 
@@ -3222,7 +3222,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
 			            constvars->density[zminusCell]);
 
            vars->wVelRhoHat[currCell] -= 2.0*delta_t*constvars->pressure[currCell]/
-				(cellinfo->stb[colZ] * avdenlow);
+				(cellinfo->dzpb[colZ] * avdenlow);
 
            vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
 
@@ -3243,7 +3243,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
 			         constvars->density[currCell]);
 
            vars->wVelRhoHat[zplusCell] += 2.0*delta_t*constvars->pressure[currCell]/
-				(cellinfo->stb[colZ] * avden);
+				(cellinfo->dzpb[colZ+1] * avden);
 
            vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
 
