@@ -2057,7 +2057,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
 
     //__________________________________
     // Only set the refinement flags for certain materials
-    for(int i = 0; i< d_thresholdVars.size(); i++ ){
+    for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
       thresholdVar data = d_thresholdVars[i];
       string name  = data.name;
       int matl     = data.matl;
