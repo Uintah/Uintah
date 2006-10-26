@@ -14,9 +14,8 @@ c     Local Variables :
 c*********************************************************************
       integer iBegGhost, jBegGhost, kBegGhost
       integer iEndGhost, jEndGhost, kEndGhost
-      integer IST, JST, KST, IEND, JEND, KEND
       integer ISTU, JSTV, KSTW, IENDU, JENDV, KENDW
-      integer i, j, k, ii, jj, kk
+      integer i, j, k
       double precision ESD, PESD, WSD, WWSD
       double precision SSD, PNSD, RNSD, SSSD
       double precision TSD, BSD, PTSD, BBSD
@@ -31,12 +30,6 @@ c*********************************************************************
       iEndGhost = domainHigh(1)
       jEndGhost = domainHigh(2)
       kEndGhost = domainHigh(3)
-      IST = indexLow(1)
-      JST = indexLow(2)
-      KST = indexLow(3)
-      IEND = indexHigh(1)
-      JEND = indexHigh(2)
-      KEND = indexHigh(3)
       ISTU = indexLowU(1)
       JSTV = indexLowV(2)
       KSTW = indexLowW(3)
@@ -50,74 +43,74 @@ c if abs values of variables can be that small
 C-----------------------------------------------------------------------
 c     INIT to ZERO
 C-----------------------------------------------------------------------
-      do 10 ii = iBegGhost, iEndGhost
-         dxep(ii) = 0.0D0
-         dxpw(ii) = 0.0D0
-         sew(ii) = 0.0D0
-         xu(ii) = 0.0D0
-         dxpwu(ii) = 0.0D0
-         dxepu(ii) = 0.0D0
-         sewu(ii) = 0.0D0
-         cee(ii) = 0.0D0
-         cww(ii) = 0.0D0
-         cwe(ii) = 0.0D0
-         ceeu(ii) = 0.0D0
-         cwwu(ii) = 0.0D0
-         cweu(ii) = 0.0D0
-         efac(ii) = 0.0D0
-         wfac(ii) = 0.0D0
-         fac1u(ii) = 0.0D0
-         fac2u(ii) = 0.0D0
-         iesdu(ii) = 0
-         fac3u(ii) = 0.0D0
-         fac4u(ii) = 0.0D0
-         iwsdu(ii) = 0
+      do 10 i = iBegGhost, iEndGhost
+         dxep(i) = 0.0D0
+         dxpw(i) = 0.0D0
+         sew(i) = 0.0D0
+         xu(i) = 0.0D0
+         dxpwu(i) = 0.0D0
+         dxepu(i) = 0.0D0
+         sewu(i) = 0.0D0
+         cee(i) = 0.0D0
+         cww(i) = 0.0D0
+         cwe(i) = 0.0D0
+         ceeu(i) = 0.0D0
+         cwwu(i) = 0.0D0
+         cweu(i) = 0.0D0
+         efac(i) = 0.0D0
+         wfac(i) = 0.0D0
+         fac1u(i) = 0.0D0
+         fac2u(i) = 0.0D0
+         iesdu(i) = 0
+         fac3u(i) = 0.0D0
+         fac4u(i) = 0.0D0
+         iwsdu(i) = 0
  10   continue
-      do 20 jj = jBegGhost, jEndGhost
-         dynp(jj) = 0.0D0
-         dyps(jj) = 0.0D0
-         sns(jj) = 0.0D0
-         yv(jj) = 0.0D0
-         dynpv(jj) = 0.0D0
-         dypsv(jj) = 0.0D0
-         snsv(jj) = 0.0D0
-         cnn(jj) = 0.0D0
-         css(jj) = 0.0D0
-         csn(jj) = 0.0D0
-         cnnv(jj) = 0.0D0
-         cssv(jj) = 0.0D0
-         csnv(jj) = 0.0D0
-         nfac(jj) = 0.0D0
-         sfac(jj) = 0.0D0
-         fac1v(jj) = 0.0D0
-         fac2v(jj) = 0.0D0
-         jnsdv(jj) = 0
-         fac3v(jj) = 0.0D0
-         fac4v(jj) = 0.0D0
-         jssdv(jj) = 0
+      do 20 j = jBegGhost, jEndGhost
+         dynp(j) = 0.0D0
+         dyps(j) = 0.0D0
+         sns(j) = 0.0D0
+         yv(j) = 0.0D0
+         dynpv(j) = 0.0D0
+         dypsv(j) = 0.0D0
+         snsv(j) = 0.0D0
+         cnn(j) = 0.0D0
+         css(j) = 0.0D0
+         csn(j) = 0.0D0
+         cnnv(j) = 0.0D0
+         cssv(j) = 0.0D0
+         csnv(j) = 0.0D0
+         nfac(j) = 0.0D0
+         sfac(j) = 0.0D0
+         fac1v(j) = 0.0D0
+         fac2v(j) = 0.0D0
+         jnsdv(j) = 0
+         fac3v(j) = 0.0D0
+         fac4v(j) = 0.0D0
+         jssdv(j) = 0
  20   continue
-      do 30 kk = kBegGhost, kEndGhost
-         dztp(kk) = 0.0D0
-         dzpb(kk) = 0.0D0
-         stb(kk) = 0.0D0
-         zw(kk) = 0.0D0
-         dztpw(kk) = 0.0D0
-         dzpbw(kk) = 0.0D0
-         stbw(kk) = 0.0D0
-         ctt(kk) = 0.0D0
-         cbb(kk) = 0.0D0
-         cbt(kk) = 0.0D0
-         cttw(kk) = 0.0D0
-         cbbw(kk) = 0.0D0
-         cbtw(kk) = 0.0D0
-         tfac(kk) = 0.0D0
-         bfac(kk) = 0.0D0
-         fac1w(kk) = 0.0D0
-         fac2w(kk) = 0.0D0
-         ktsdw(kk) = 0
-         fac3w(kk) = 0.0D0
-         fac4w(kk) = 0.0D0
-         kbsdw(kk) = 0
+      do 30 k = kBegGhost, kEndGhost
+         dztp(k) = 0.0D0
+         dzpb(k) = 0.0D0
+         stb(k) = 0.0D0
+         zw(k) = 0.0D0
+         dztpw(k) = 0.0D0
+         dzpbw(k) = 0.0D0
+         stbw(k) = 0.0D0
+         ctt(k) = 0.0D0
+         cbb(k) = 0.0D0
+         cbt(k) = 0.0D0
+         cttw(k) = 0.0D0
+         cbbw(k) = 0.0D0
+         cbtw(k) = 0.0D0
+         tfac(k) = 0.0D0
+         bfac(k) = 0.0D0
+         fac1w(k) = 0.0D0
+         fac2w(k) = 0.0D0
+         ktsdw(k) = 0
+         fac3w(k) = 0.0D0
+         fac4w(k) = 0.0D0
+         kbsdw(k) = 0
  30   continue
 
 
@@ -131,8 +124,17 @@ C-----------------------------------------------------------------------
         DXEP(I) = XX(I+1)-XX(I)
         DXPW(I+1) = DXEP(I)
   150 CONTINUE
-      DXPW(iBegGhost) = DXPW(IST)
-      DXEP(iEndGhost) = DXEP(IEND)
+      if (xminus) then
+        DXPW(iBegGhost) = DXPW(iBegGhost+1)
+      else
+        DXPW(iBegGhost) = XX(iBegGhost)-XX(iBegGhost-1)
+      end if
+      if (xplus) then
+        DXEP(iEndGhost) = DXEP(iEndGhost-1)
+      else
+        DXEP(iEndGhost) = XX(iEndGhost+1)-XX(iEndGhost)
+      end if
+
       DO 300 I = iBegGhost,iEndGhost
         SEW(I) = PT5*(DXEP(I)+DXPW(I))
   300 CONTINUE
@@ -142,13 +144,29 @@ C-----------------------------------------------------------------------
       DO 450 I = iBegGhost+1,iEndGhost
         XU(I) = PT5*(XX(I)+XX(I-1))
   450 CONTINUE
-      XU(iBegGhost) = (THREE*XX(iBegGhost)-XX(iBegGhost+1))/TWO
+      if (xminus) then
+        XU(iBegGhost) = (THREE*XX(iBegGhost)-XX(iBegGhost+1))/TWO
+      else
+        XU(iBegGhost) = PT5*(XX(iBegGhost)+XX(iBegGhost-1))
+      end if
+
       DO 500 I = iBegGhost,iEndGhost-1
         DXEPU(I) = XU(I+1)-XU(I)
         DXPWU(I+1) = DXEPU(I)
   500 CONTINUE
-      DXPWU(iBegGhost) = DXEPU(iBegGhost)
-      DXEPU(iEndGhost) = DXPWU(iEndGhost)
+      if (xminus) then
+        DXPWU(iBegGhost) = DXEPU(iBegGhost)
+      else
+        DXPWU(iBegGhost) = XU(iBegGhost)-
+     -                     PT5*(XX(iBegGhost-1)+XX(iBegGhost-2))
+      end if
+      if (xplus) then
+        DXEPU(iEndGhost) = DXPWU(iEndGhost)
+      else
+        DXEPU(iEndGhost) = PT5*(XX(iEndGhost+1)+XX(iEndGhost))-
+     -                     XU(iEndGhost)
+      end if
+
       DO 550 I = iBegGhost,iEndGhost
         SEWU(I) = PT5*(DXEPU(I)+DXPWU(I))
   550 CONTINUE
@@ -168,10 +186,15 @@ C-----------------------------------------------------------------------
       DO 781 I = iBegGhost,iEndGhost
          EFAC(I) = (XX(I)-XU(I))/SEW(I)
  781  CONTINUE
-      DO 782 I = iBegGhost,IEND
+      DO 782 I = iBegGhost,iEndGhost-1
          WFAC(I) = (XU(I+1)-XX(I))/SEW(I)
  782  CONTINUE
-      WFAC(iEndGhost) = WFAC(IEND)
+      if (xplus) then
+        WFAC(iEndGhost) = WFAC(iEndGhost-1)
+      else
+        WFAC(iEndGhost) = (PT5*(XX(iEndGhost+1)+XX(iEndGhost))-
+     -                     XX(iEndGhost))/SEW(iEndGhost)
+      end if
 
 *     factors for differencing schemes: u-cell
 
@@ -215,8 +238,17 @@ C-----------------------------------------------------------------------
         DYNP(J) = YY(J+1)-YY(J)
         DYPS(J+1) = DYNP(J)
   200 CONTINUE
-      DYPS(jBegGhost) = DYPS(JST)
-      DYNP(jEndGhost) = DYNP(JEND)
+      if (yminus) then
+        DYPS(jBegGhost) = DYPS(jBegGhost+1)
+      else
+        DYPS(jBegGhost) = YY(jBegGhost)-YY(jBegGhost-1)
+      end if
+      if (yplus) then
+        DYNP(jEndGhost) = DYNP(jEndGhost-1)
+      else
+        DYNP(jEndGhost) = YY(jEndGhost+1)-YY(jEndGhost)
+      end if
+
       DO 350 J = jBegGhost,jEndGhost
         SNS(J) = PT5*(DYNP(J)+DYPS(J))
   350 CONTINUE
@@ -226,13 +258,29 @@ C-----------------------------------------------------------------------
       DO 601 J = jBegGhost+1,jEndGhost
          YV(J) = PT5*(YY(J)+YY(J-1))
  601  CONTINUE
-      YV(jBegGhost) = (THREE*YY(jBegGhost)-YY(jBegGhost+1))/TWO
+      if (yminus) then
+        YV(jBegGhost) = (THREE*YY(jBegGhost)-YY(jBegGhost+1))/TWO
+      else
+        YV(jBegGhost) = PT5*(YY(jBegGhost)+YY(jBegGhost-1))
+      end if
+
       DO 650 J = jBegGhost,jEndGhost-1
         DYNPV(J) = YV(J+1)-YV(J)
         DYPSV(J+1) = DYNPV(J)
   650 CONTINUE
-      DYPSV(jBegGhost) = DYNPV(jBegGhost)
-      DYNPV(jEndGhost) = DYPSV(jEndGhost)
+      if (yminus) then
+        DYPSV(jBegGhost) = DYNPV(jBegGhost)
+      else
+        DYPSV(jBegGhost) = YV(jBegGhost)-
+     -                     PT5*(YY(jBegGhost-1)+YY(jBegGhost-2))
+      end if
+      if (yplus) then
+        DYNPV(jEndGhost) = DYPSV(jEndGhost)
+      else
+        DYNPV(jEndGhost) = PT5*(YY(jEndGhost+1)+YY(jEndGhost))-
+     -                     YV(jEndGhost)
+      end if
+
       DO 700 J = jBegGhost,jEndGhost
         SNSV(J) = PT5*(DYNPV(J)+DYPSV(J))
   700 CONTINUE
@@ -252,10 +300,15 @@ C-----------------------------------------------------------------------
       DO 786 J = jBegGhost,jEndGhost
          NFAC(J) = (YY(J)-YV(J))/SNS(J)
  786  CONTINUE
-      DO 787 J = jBegGhost,JEND
+      DO 787 J = jBegGhost,jEndGhost-1
          SFAC(J) = (YV(J+1)-YY(J))/SNS(J)
  787  CONTINUE
-      SFAC(jEndGhost) = SFAC(JEND)
+      if (yplus) then
+        SFAC(jEndGhost) = SFAC(jEndGhost-1)
+      else
+        SFAC(jEndGhost) = (PT5*(YY(jEndGhost+1)+YY(jEndGhost))-
+     -                     YY(jEndGhost))/SNS(jEndGhost)
+      end if
 
 *     factors for differencing schemes: v-cell
 
@@ -300,8 +353,17 @@ C-----------------------------------------------------------------------
         DZTP(K) = ZZ(K+1)-ZZ(K)
         DZPB(K+1) = DZTP(K)
   250 CONTINUE
-      DZPB(kBegGhost) = DZPB(KST) 
-      DZTP(kEndGhost) = DZTP(KEND) 
+      if (zminus) then
+        DZPB(kBegGhost) = DZPB(kBegGhost+1) 
+      else
+        DZPB(kBegGhost) = ZZ(kBegGhost)-ZZ(kBegGhost-1)
+      end if
+      if (zplus) then
+        DZTP(kEndGhost) = DZTP(kEndGhost-1) 
+      else
+        DZTP(kEndGhost) = ZZ(kEndGhost+1)-ZZ(kEndGhost)
+      end if
+
       DO 400 K = kBegGhost,kEndGhost
         STB(K) = PT5*(DZTP(K)+DZPB(K))
   400 CONTINUE
@@ -311,13 +373,29 @@ C-----------------------------------------------------------------------
       DO 725 K = kBegGhost+1,kEndGhost
          ZW(K) = PT5*(ZZ(K)+ZZ(K-1))
   725 CONTINUE
-      ZW(kBegGhost) = (THREE*ZZ(kBegGhost)-ZZ(kBegGhost+1))/TWO
+      if (zminus) then
+        ZW(kBegGhost) = (THREE*ZZ(kBegGhost)-ZZ(kBegGhost+1))/TWO
+      else
+        ZW(kBegGhost) = PT5*(ZZ(kBegGhost)+ZZ(kBegGhost-1))
+      end if
+
       DO 750 K = kBegGhost,kEndGhost-1
         DZTPW(K) = ZW(K+1)-ZW(K)
         DZPBW(K+1) = DZTPW(K)
   750 CONTINUE
-      DZPBW(kBegGhost) = DZTPW(kBegGhost)
-      DZTPW(kEndGhost) = DZPBW(kEndGhost)
+      if (zminus) then
+        DZPBW(kBegGhost) = DZTPW(kBegGhost)
+      else
+        DZPBW(kBegGhost) = ZW(kBegGhost)-
+     -                     PT5*(ZZ(kBegGhost-1)+ZZ(kBegGhost-2))
+      end if
+      if (zplus) then
+        DZTPW(kEndGhost) = DZPBW(kEndGhost)
+      else
+        DZTPW(kEndGhost) = PT5*(ZZ(kEndGhost+1)+ZZ(kEndGhost))-
+     -                     ZW(kEndGhost)
+      end if
+
       DO 775 K = kBegGhost,kEndGhost
         STBW(K) = PT5*(DZTPW(K)+DZPBW(K))
   775 CONTINUE
@@ -337,14 +415,18 @@ C-----------------------------------------------------------------------
       DO 791 K = kBegGhost,kEndGhost
          TFAC(K) = (ZZ(K)-ZW(K))/STB(K)
  791  CONTINUE
-      DO 792 K = kBegGhost,KEND
+      DO 792 K = kBegGhost,kEndGhost-1
          BFAC(K) = (ZW(K+1)-ZZ(K))/STB(K)
  792  CONTINUE
-      BFAC(kEndGhost) = BFAC(KEND)
+      if (zplus) then
+        BFAC(kEndGhost) = BFAC(kEndGhost-1)
+      else
+        BFAC(kEndGhost) = (PT5*(ZZ(kEndGhost+1)+ZZ(kEndGhost))-
+     -                     ZZ(kEndGhost))/STB(kEndGhost)
+      end if
 
 *     factors for differencing schemes: w-cell
 
-C$DIR NO_RECURRENCE
       DO 900 K = KSTW,KENDW
         TSD = PT5*(ZW(K+1)+ZW(K))
         BSD = PT5*(ZW(K)+ZW(K-1))
@@ -361,24 +443,21 @@ C$DIR NO_RECURRENCE
           FAC2W(K) = (ZZ(K)-TSD)/DZPB(K)
           KTSDW(K) = -1
         END IF
-        IF (K.NE.KSTW) THEN
-          IF (BBSD.LE.ZERO) THEN
-            FAC3W(K) = (ZZ(K)-BSD)/DZPB(K)
-            FAC4W(K) = (BSD-ZZ(K-1))/DZPB(K)
-            KBSDW(K) = 0
-          ELSE
-            FAC3W(K) = (BSD-ZZ(K-2))/DZPB(K-1)
-            FAC4W(K) = (ZZ(K-1)-BSD)/DZPB(K-1)
-            KBSDW(K) = -2
-          END IF
+        IF (BBSD.LE.ZERO) THEN
+          FAC3W(K) = (ZZ(K)-BSD)/DZPB(K)
+          FAC4W(K) = (BSD-ZZ(K-1))/DZPB(K)
+          KBSDW(K) = 0
+        ELSE
+          FAC3W(K) = (BSD-ZZ(K-2))/DZPB(K-1)
+          FAC4W(K) = (ZZ(K-1)-BSD)/DZPB(K-1)
+          KBSDW(K) = -2
         END IF
         if (abs(fac1w(k)).lt.local_small) fac1w(k)=0.0D0
         if (abs(fac2w(k)).lt.local_small) fac2w(k)=0.0D0
         if (abs(fac3w(k)).lt.local_small) fac3w(k)=0.0D0
         if (abs(fac4w(k)).lt.local_small) fac4w(k)=0.0D0
   900 CONTINUE
-      FAC3W(KST) = FAC1W(KEND)
-      FAC4W(KST) = FAC2W(KEND)
+
       RETURN
       END
 
