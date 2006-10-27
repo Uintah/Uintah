@@ -147,11 +147,11 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
   while (function.size() && isspace(function[function.size()-1])) function.resize(function.size()-1);
 
   int hoffset = 0;
-  SCIRun::Handle<TensorVectorMath::ArrayEngineAlgo> algo;
+  SCIRun::Handle<DataArrayMath::ArrayEngineAlgo> algo;
     
   while (1) 
   {
-    SCIRun::CompileInfoHandle ci = TensorVectorMath::ArrayEngineAlgo::get_compile_info(Input,Output,function,hoffset);
+    SCIRun::CompileInfoHandle ci = DataArrayMath::ArrayEngineAlgo::get_compile_info(Input,Output,function,hoffset);
     if (!SCIRun::DynamicCompilation::compile(ci, algo, pr_)) 
     {
       pr_->compile_error(ci->filename_);
@@ -172,7 +172,7 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
 
 } // end namespace
 
-namespace TensorVectorMath {
+namespace DataArrayMath {
 
 SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
         SCIRunAlgo::ArrayObjectList& Input, SCIRunAlgo::ArrayObjectList& Output,
@@ -227,7 +227,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   // Code for the function.
   std::string fcn;
   
-  fcn = std::string("namespace TensorVectorMath {\ntemplate <class DATATYPE>\n") +
+  fcn = std::string("namespace DataArrayMath {\ntemplate <class DATATYPE>\n") +
     "class " + template_name + " : public ArrayEngineAlgo\n" +
     "{\nvirtual void function(SCIRunAlgo::ArrayObjectList& input_," + 
     "SCIRunAlgo::ArrayObjectList& output_, int size_)\n  {\n";
@@ -235,38 +235,38 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   
   for (size_t p = 0; p< Input.size(); p++)
   {
-    if (Input[p].ismatrixscalar())  fcn += "    TensorVectorMath::Scalar " + Input[p].getname() + ";\n";
-    if (Input[p].ismatrixvector())  fcn += "    TensorVectorMath::Vector " + Input[p].getname() + ";\n";
-    if (Input[p].iscmatrixtensor()) fcn += "    TensorVectorMath::Tensor " + Input[p].getname() + ";\n";
-    if (Input[p].iscmatrixscalar()) fcn += "    TensorVectorMath::Scalar " + Input[p].getname() + ";\n";
-    if (Input[p].iscmatrixvector()) fcn += "    TensorVectorMath::Vector " + Input[p].getname() + ";\n";
-    if (Input[p].ismatrixtensor())  fcn += "    TensorVectorMath::Tensor " + Input[p].getname() + ";\n";
-    if (Input[p].isfieldscalar())   fcn += "    TensorVectorMath::Scalar " + Input[p].getname() + ";\n";
-    if (Input[p].isfieldvector())   fcn += "    TensorVectorMath::Vector " + Input[p].getname() + ";\n";
-    if (Input[p].isfieldtensor())   fcn += "    TensorVectorMath::Tensor " + Input[p].getname() + ";\n";
-    if (Input[p].islocation())    { fcn += "    TensorVectorMath::Scalar " + Input[p].getxname() + ";\n";
-                                    fcn += "    TensorVectorMath::Scalar " + Input[p].getyname() + ";\n";
-                                    fcn += "    TensorVectorMath::Scalar " + Input[p].getzname() + ";\n";
-                                    fcn += "    TensorVectorMath::Vector " + Input[p].getname() + ";\n"; }
-    if (Input[p].isindex())       { fcn += "    TensorVectorMath::Scalar " + Input[p].getname() + ";\n";                                   
-                                    fcn += "    TensorVectorMath::Scalar " + Input[p].getsizename() + " = static_cast<TensorVectorMath::Scalar>(size_);\n"; }
+    if (Input[p].ismatrixscalar())  fcn += "    DataArrayMath::Scalar " + Input[p].getname() + ";\n";
+    if (Input[p].ismatrixvector())  fcn += "    DataArrayMath::Vector " + Input[p].getname() + ";\n";
+    if (Input[p].iscmatrixtensor()) fcn += "    DataArrayMath::Tensor " + Input[p].getname() + ";\n";
+    if (Input[p].iscmatrixscalar()) fcn += "    DataArrayMath::Scalar " + Input[p].getname() + ";\n";
+    if (Input[p].iscmatrixvector()) fcn += "    DataArrayMath::Vector " + Input[p].getname() + ";\n";
+    if (Input[p].ismatrixtensor())  fcn += "    DataArrayMath::Tensor " + Input[p].getname() + ";\n";
+    if (Input[p].isfieldscalar())   fcn += "    DataArrayMath::Scalar " + Input[p].getname() + ";\n";
+    if (Input[p].isfieldvector())   fcn += "    DataArrayMath::Vector " + Input[p].getname() + ";\n";
+    if (Input[p].isfieldtensor())   fcn += "    DataArrayMath::Tensor " + Input[p].getname() + ";\n";
+    if (Input[p].islocation())    { fcn += "    DataArrayMath::Scalar " + Input[p].getxname() + ";\n";
+                                    fcn += "    DataArrayMath::Scalar " + Input[p].getyname() + ";\n";
+                                    fcn += "    DataArrayMath::Scalar " + Input[p].getzname() + ";\n";
+                                    fcn += "    DataArrayMath::Vector " + Input[p].getname() + ";\n"; }
+    if (Input[p].isindex())       { fcn += "    DataArrayMath::Scalar " + Input[p].getname() + ";\n";                                   
+                                    fcn += "    DataArrayMath::Scalar " + Input[p].getsizename() + " = static_cast<DataArrayMath::Scalar>(size_);\n"; }
     if (Input[p].iselement())     { std::ostringstream oss; oss << p;
-                                    fcn += "    TensorVectorMath::Element " + Input[p].getname() + ";\n";
+                                    fcn += "    DataArrayMath::Element " + Input[p].getname() + ";\n";
                                     fcn += "    input_["+oss.str()+"].getelement("+Input[p].getname() +");\n";  }                                  
   }
 
   for (size_t p = 0; p< Output.size(); p++)
   {
-    if (Output[p].iscmatrixscalar()) fcn += "    TensorVectorMath::Scalar " + Output[p].getname() + ";\n";
-    if (Output[p].iscmatrixvector()) fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
-    if (Output[p].iscmatrixtensor()) fcn += "    TensorVectorMath::Tensor " + Output[p].getname() + ";\n";
-    if (Output[p].ismatrixscalar())  fcn += "    TensorVectorMath::Scalar " + Output[p].getname() + ";\n";
-    if (Output[p].ismatrixvector())  fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
-    if (Output[p].ismatrixtensor())  fcn += "    TensorVectorMath::Tensor " + Output[p].getname() + ";\n";
-    if (Output[p].isfieldscalar())   fcn += "    TensorVectorMath::Scalar " + Output[p].getname() + ";\n";
-    if (Output[p].isfieldvector())   fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
-    if (Output[p].isfieldtensor())   fcn += "    TensorVectorMath::Tensor " + Output[p].getname() + ";\n";
-    if (Output[p].islocation())      fcn += "    TensorVectorMath::Vector " + Output[p].getname() + ";\n";
+    if (Output[p].iscmatrixscalar()) fcn += "    DataArrayMath::Scalar " + Output[p].getname() + ";\n";
+    if (Output[p].iscmatrixvector()) fcn += "    DataArrayMath::Vector " + Output[p].getname() + ";\n";
+    if (Output[p].iscmatrixtensor()) fcn += "    DataArrayMath::Tensor " + Output[p].getname() + ";\n";
+    if (Output[p].ismatrixscalar())  fcn += "    DataArrayMath::Scalar " + Output[p].getname() + ";\n";
+    if (Output[p].ismatrixvector())  fcn += "    DataArrayMath::Vector " + Output[p].getname() + ";\n";
+    if (Output[p].ismatrixtensor())  fcn += "    DataArrayMath::Tensor " + Output[p].getname() + ";\n";
+    if (Output[p].isfieldscalar())   fcn += "    DataArrayMath::Scalar " + Output[p].getname() + ";\n";
+    if (Output[p].isfieldvector())   fcn += "    DataArrayMath::Vector " + Output[p].getname() + ";\n";
+    if (Output[p].isfieldtensor())   fcn += "    DataArrayMath::Tensor " + Output[p].getname() + ";\n";
+    if (Output[p].islocation())      fcn += "    DataArrayMath::Vector " + Output[p].getname() + ";\n";
   }
   
   fcn += "\n\n";
@@ -324,7 +324,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   // Add in the include path to compile this obj
   ci->add_include(include_path);
   ci->add_post_include(fcn);
-  ci->add_namespace("TensorVectorMath");
+  ci->add_namespace("DataArrayMath");
 
   return(ci);
 }

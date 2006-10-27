@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FieldsCreate_ClipFieldByFunction {
+itcl_class ModelCreation_CreateField_ClipFieldByFunction {
     inherit Module
     constructor {config} {
         set name ClipFieldByFunction

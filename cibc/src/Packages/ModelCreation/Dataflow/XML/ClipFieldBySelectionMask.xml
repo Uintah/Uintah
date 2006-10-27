@@ -32,7 +32,7 @@
 -->
 
 
-<component name="ClipFieldBySelectionMask" category="FieldsCreate">
+<component name="ClipFieldBySelectionMask" category="CreateField">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

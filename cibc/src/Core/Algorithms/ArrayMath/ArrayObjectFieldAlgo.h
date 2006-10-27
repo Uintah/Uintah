@@ -90,13 +90,13 @@ using namespace SCIRun;
 
 class SCISHARE ArrayObjectFieldDataAlgo : public SCIRun::DynamicAlgoBase {
   public:
-    virtual void getnextscalar(TensorVectorMath::Scalar& scalar);
-    virtual void getnextvector(TensorVectorMath::Vector& vector);
-    virtual void getnexttensor(TensorVectorMath::Tensor& tensor);
+    virtual void getnextscalar(DataArrayMath::Scalar& scalar);
+    virtual void getnextvector(DataArrayMath::Vector& vector);
+    virtual void getnexttensor(DataArrayMath::Tensor& tensor);
 
-    virtual void setnextscalar(TensorVectorMath::Scalar& scalar);
-    virtual void setnextvector(TensorVectorMath::Vector& vector);
-    virtual void setnexttensor(TensorVectorMath::Tensor& tensor);
+    virtual void setnextscalar(DataArrayMath::Scalar& scalar);
+    virtual void setnextvector(DataArrayMath::Vector& vector);
+    virtual void setnexttensor(DataArrayMath::Tensor& tensor);
 
     virtual bool isscalar();
     virtual bool isvector();
@@ -115,8 +115,8 @@ class SCISHARE ArrayObjectFieldDataAlgo : public SCIRun::DynamicAlgoBase {
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldDataScalarAlgoT : public ArrayObjectFieldDataAlgo {
   public:
-    virtual void getnextscalar(TensorVectorMath::Scalar& scalar);
-    virtual void setnextscalar(TensorVectorMath::Scalar& scalar);
+    virtual void getnextscalar(DataArrayMath::Scalar& scalar);
+    virtual void setnextscalar(DataArrayMath::Scalar& scalar);
     virtual bool isscalar();
     virtual int  size();
 
@@ -162,7 +162,7 @@ bool ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::setfield(SCIRun::FieldHandle ha
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::getnextscalar(TensorVectorMath::Scalar& scalar)
+void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::getnextscalar(DataArrayMath::Scalar& scalar)
 {
   typename FIELD::value_type t;
   if (field_->basis_order() == -1) { scalar = 0.0; return; }
@@ -172,7 +172,7 @@ void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::getnextscalar(TensorVectorMath:
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::setnextscalar(TensorVectorMath::Scalar& scalar)
+void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::setnextscalar(DataArrayMath::Scalar& scalar)
 {
   if (field_->basis_order() == -1) { return; }
   typename FIELD::value_type t = static_cast<typename FIELD::value_type>(scalar);
@@ -200,8 +200,8 @@ int ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::size()
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldDataVectorAlgoT : public ArrayObjectFieldDataAlgo {
   public:
-    virtual void getnextvector(TensorVectorMath::Vector& vector);
-    virtual void setnextvector(TensorVectorMath::Vector& vector);
+    virtual void getnextvector(DataArrayMath::Vector& vector);
+    virtual void setnextvector(DataArrayMath::Vector& vector);
     virtual bool isvector();
     virtual int  size();
 
@@ -246,17 +246,17 @@ bool ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::setfield(SCIRun::FieldHandle ha
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::getnextvector(TensorVectorMath::Vector& vector)
+void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::getnextvector(DataArrayMath::Vector& vector)
 {
   SCIRun::Vector v;
   if (field_->basis_order() == -1) { vector = 0.0; return; }
   field_->value(v,(*it_));
-  vector = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+  vector = DataArrayMath::Vector(v.x(),v.y(),v.z());
   ++it_;  
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::setnextvector(TensorVectorMath::Vector& vector)
+void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::setnextvector(DataArrayMath::Vector& vector)
 {
   if (field_->basis_order() == -1) { return; }
   SCIRun::Vector v(vector.x(),vector.y(),vector.z());
@@ -284,8 +284,8 @@ int ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::size()
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldDataTensorAlgoT : public ArrayObjectFieldDataAlgo {
   public:
-    virtual void getnexttensor(TensorVectorMath::Tensor& tensor);
-    virtual void setnexttensor(TensorVectorMath::Tensor& tensor);
+    virtual void getnexttensor(DataArrayMath::Tensor& tensor);
+    virtual void setnexttensor(DataArrayMath::Tensor& tensor);
     virtual bool istensor();
     virtual int  size();
 
@@ -329,7 +329,7 @@ bool ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::setfield(SCIRun::FieldHandle ha
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::getnexttensor(TensorVectorMath::Tensor& tensor)
+void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::getnexttensor(DataArrayMath::Tensor& tensor)
 {
   // The SCIRun Tensor class is very limited and badly designed, hence we use a newly
   // designed class with more possiblities, we just convert between both.
@@ -338,12 +338,12 @@ void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::getnexttensor(TensorVectorMath:
 
   SCIRun::Tensor t;
   field_->value(t,(*it_));
-  tensor = TensorVectorMath::Tensor(t.mat_[0][0],t.mat_[1][0],t.mat_[2][0],t.mat_[1][1],t.mat_[2][1],t.mat_[2][2]);
+  tensor = DataArrayMath::Tensor(t.mat_[0][0],t.mat_[1][0],t.mat_[2][0],t.mat_[1][1],t.mat_[2][1],t.mat_[2][2]);
   ++it_;  
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::setnexttensor(TensorVectorMath::Tensor& tensor)
+void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::setnexttensor(DataArrayMath::Tensor& tensor)
 {
   if (field_->basis_order() == -1) { return; }
   field_->set_value(SCIRun::Tensor(tensor.getdataptr()),(*it_));
@@ -371,8 +371,8 @@ int ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::size()
 
 class SCISHARE ArrayObjectFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
   public:
-    virtual void getnextlocation(TensorVectorMath::Vector& vector) = 0;
-    virtual void setnextlocation(TensorVectorMath::Vector& vector) = 0;
+    virtual void getnextlocation(DataArrayMath::Vector& vector) = 0;
+    virtual void setnextlocation(DataArrayMath::Vector& vector) = 0;
  
     virtual int  size() = 0;
     virtual bool setfield(SCIRun::FieldHandle handle) = 0;
@@ -386,7 +386,7 @@ class SCISHARE ArrayObjectFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
 
 class SCISHARE ArrayObjectSetFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
   public:
-    virtual void setnextlocation(TensorVectorMath::Vector& vector) = 0;
+    virtual void setnextlocation(DataArrayMath::Vector& vector) = 0;
     virtual int  size() = 0;
     virtual bool setfield(SCIRun::FieldHandle handle) = 0;
     virtual void reset() = 0;
@@ -401,8 +401,8 @@ class SCISHARE ArrayObjectSetFieldLocationAlgo : public SCIRun::DynamicAlgoBase 
 template<class FIELD>
 class SCISHARE ArrayObjectFieldLocationAlgoT : public ArrayObjectFieldLocationAlgo {
   public:
-    virtual void getnextlocation(TensorVectorMath::Vector& vector);
-    virtual void setnextlocation(TensorVectorMath::Vector& vector);
+    virtual void getnextlocation(DataArrayMath::Vector& vector);
+    virtual void setnextlocation(DataArrayMath::Vector& vector);
    
     virtual int  size();
     virtual bool setfield(SCIRun::FieldHandle handle);    
@@ -444,16 +444,16 @@ bool ArrayObjectFieldLocationAlgoT<FIELD>::setfield(SCIRun::FieldHandle handle)
 }
 
 template<class FIELD>
-void ArrayObjectFieldLocationAlgoT<FIELD>::getnextlocation(TensorVectorMath::Vector& location)
+void ArrayObjectFieldLocationAlgoT<FIELD>::getnextlocation(DataArrayMath::Vector& location)
 {
   SCIRun::Point p;
   mesh_->get_point(p,(*it_));
-  location = TensorVectorMath::Vector(p.x(),p.y(),p.z());
+  location = DataArrayMath::Vector(p.x(),p.y(),p.z());
   ++it_;  
 }
 
 template<class FIELD>
-void ArrayObjectFieldLocationAlgoT<FIELD>::setnextlocation(TensorVectorMath::Vector& location)
+void ArrayObjectFieldLocationAlgoT<FIELD>::setnextlocation(DataArrayMath::Vector& location)
 {
   mesh_->set_point(SCIRun::Point(location.x(),location.y(),location.z()),(*it_));
   ++it_;
@@ -474,8 +474,8 @@ int ArrayObjectFieldLocationAlgoT<FIELD>::size()
 template<class FIELD>
 class SCISHARE ArrayObjectFieldLocationNodeAlgoT : public ArrayObjectFieldLocationAlgo {
   public:
-    virtual void getnextlocation(TensorVectorMath::Vector& vector);
-    virtual void setnextlocation(TensorVectorMath::Vector& vector);
+    virtual void getnextlocation(DataArrayMath::Vector& vector);
+    virtual void setnextlocation(DataArrayMath::Vector& vector);
    
     virtual int  size();
     virtual bool setfield(SCIRun::FieldHandle handle);    
@@ -516,16 +516,16 @@ bool ArrayObjectFieldLocationNodeAlgoT<FIELD>::setfield(SCIRun::FieldHandle hand
 }
 
 template<class FIELD>
-void ArrayObjectFieldLocationNodeAlgoT<FIELD>::getnextlocation(TensorVectorMath::Vector& location)
+void ArrayObjectFieldLocationNodeAlgoT<FIELD>::getnextlocation(DataArrayMath::Vector& location)
 {
   SCIRun::Point p;
   mesh_->get_point(p,(*it_));
-  location = TensorVectorMath::Vector(p.x(),p.y(),p.z());
+  location = DataArrayMath::Vector(p.x(),p.y(),p.z());
   ++it_;  
 }
 
 template<class FIELD>
-void ArrayObjectFieldLocationNodeAlgoT<FIELD>::setnextlocation(TensorVectorMath::Vector& location)
+void ArrayObjectFieldLocationNodeAlgoT<FIELD>::setnextlocation(DataArrayMath::Vector& location)
 {
 }
 
@@ -543,8 +543,8 @@ int ArrayObjectFieldLocationNodeAlgoT<FIELD>::size()
 template<class FIELD>
 class SCISHARE ArrayObjectFieldLocationElemAlgoT : public ArrayObjectFieldLocationAlgo {
   public:
-    virtual void getnextlocation(TensorVectorMath::Vector& vector);
-    virtual void setnextlocation(TensorVectorMath::Vector& vector);
+    virtual void getnextlocation(DataArrayMath::Vector& vector);
+    virtual void setnextlocation(DataArrayMath::Vector& vector);
     virtual int  size();
     virtual bool setfield(SCIRun::FieldHandle handle);    
     virtual void reset();
@@ -583,16 +583,16 @@ bool ArrayObjectFieldLocationElemAlgoT<FIELD>::setfield(SCIRun::FieldHandle hand
 }
 
 template<class FIELD>
-void ArrayObjectFieldLocationElemAlgoT<FIELD>::getnextlocation(TensorVectorMath::Vector& location)
+void ArrayObjectFieldLocationElemAlgoT<FIELD>::getnextlocation(DataArrayMath::Vector& location)
 {
   SCIRun::Point p;
   mesh_->get_center(p,(*it_));
-  location = TensorVectorMath::Vector(p.x(),p.y(),p.z());
+  location = DataArrayMath::Vector(p.x(),p.y(),p.z());
   ++it_;  
 }
 
 template<class FIELD>
-void ArrayObjectFieldLocationElemAlgoT<FIELD>::setnextlocation(TensorVectorMath::Vector& location)
+void ArrayObjectFieldLocationElemAlgoT<FIELD>::setnextlocation(DataArrayMath::Vector& location)
 {
 }
 
@@ -638,13 +638,13 @@ bool ArrayObjectFieldCreateAlgoT<FIELD>::createfield(SCIRun::FieldHandle input,S
 
 class SCISHARE ArrayObjectFieldElemAlgo : public SCIRun::DynamicAlgoBase {
   public:
-    virtual void getcenter(TensorVectorMath::Vector& node);
-    virtual void getsize(TensorVectorMath::Scalar& size);
-    virtual void getlength(TensorVectorMath::Scalar& length);
-    virtual void getarea(TensorVectorMath::Scalar& area);
-    virtual void getvolume(TensorVectorMath::Scalar& volume);
-    virtual void getdimension(TensorVectorMath::Scalar& dim);
-    virtual void getnormal(TensorVectorMath::Vector& normal);
+    virtual void getcenter(DataArrayMath::Vector& node);
+    virtual void getsize(DataArrayMath::Scalar& size);
+    virtual void getlength(DataArrayMath::Scalar& length);
+    virtual void getarea(DataArrayMath::Scalar& area);
+    virtual void getvolume(DataArrayMath::Scalar& volume);
+    virtual void getdimension(DataArrayMath::Scalar& dim);
+    virtual void getnormal(DataArrayMath::Vector& normal);
     
     virtual bool ispoint();
     virtual bool isline();
@@ -659,14 +659,14 @@ class SCISHARE ArrayObjectFieldElemAlgo : public SCIRun::DynamicAlgoBase {
     
     static SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle field);
 
-    void get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec);
-    void get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec);
+    void get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec);
+    void get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec);
 
 
 };
@@ -676,8 +676,8 @@ class SCISHARE ArrayObjectFieldElemAlgo : public SCIRun::DynamicAlgoBase {
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldElemPointAlgoT : public ArrayObjectFieldElemAlgo {
   public:
-    virtual void getcenter(TensorVectorMath::Vector& node);
-    virtual void getdimension(TensorVectorMath::Scalar& dim);
+    virtual void getcenter(DataArrayMath::Vector& node);
+    virtual void getdimension(DataArrayMath::Scalar& dim);
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
@@ -736,15 +736,15 @@ void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::next()
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::getcenter(TensorVectorMath::Vector& node)
+void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::getcenter(DataArrayMath::Vector& node)
 {
   SCIRun::Point p;
   mesh_->get_center(p,*it_);
-  node =TensorVectorMath:: Vector(p.x(),p.y(),p.z());
+  node =DataArrayMath:: Vector(p.x(),p.y(),p.z());
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::getdimension(TensorVectorMath::Scalar& dim)
+void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::getdimension(DataArrayMath::Scalar& dim)
 {
   dim = 0.0;
 }
@@ -754,10 +754,10 @@ void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::getdimension(TensorVectorMath::S
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldElemLineAlgoT : public ArrayObjectFieldElemAlgo {
   public:
-    virtual void getcenter(TensorVectorMath::Vector& node);
-    virtual void getsize(TensorVectorMath::Scalar& size);
-    virtual void getlength(TensorVectorMath::Scalar& length);
-    virtual void getdimension(TensorVectorMath::Scalar& dim);
+    virtual void getcenter(DataArrayMath::Vector& node);
+    virtual void getsize(DataArrayMath::Scalar& size);
+    virtual void getlength(DataArrayMath::Scalar& length);
+    virtual void getdimension(DataArrayMath::Scalar& dim);
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
@@ -815,27 +815,27 @@ void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::next()
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getcenter(TensorVectorMath::Vector& node)
+void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getcenter(DataArrayMath::Vector& node)
 {
   SCIRun::Point p;
   mesh_->get_center(p,*it_);
-  node = TensorVectorMath::Vector(p.x(),p.y(),p.z());
+  node = DataArrayMath::Vector(p.x(),p.y(),p.z());
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getdimension(TensorVectorMath::Scalar& dim)
+void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getdimension(DataArrayMath::Scalar& dim)
 {
   dim = 1.0;
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getlength(TensorVectorMath::Scalar& length)
+void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getlength(DataArrayMath::Scalar& length)
 {
   length = mesh_->get_length(*it_);
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getsize(TensorVectorMath::Scalar& size)
+void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getsize(DataArrayMath::Scalar& size)
 {
   size = mesh_->get_size(*it_);
 }
@@ -845,12 +845,12 @@ void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getsize(TensorVectorMath::Scalar&
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldElemSurfAlgoT : public ArrayObjectFieldElemAlgo {
   public:
-    virtual void getcenter(TensorVectorMath::Vector& node);
-    virtual void getsize(TensorVectorMath::Scalar& size);
-    virtual void getlength(TensorVectorMath::Scalar& length);
-    virtual void getarea(TensorVectorMath::Scalar& area);
-    virtual void getdimension(TensorVectorMath::Scalar& dim);
-    virtual void getnormal(TensorVectorMath::Vector& normal);
+    virtual void getcenter(DataArrayMath::Vector& node);
+    virtual void getsize(DataArrayMath::Scalar& size);
+    virtual void getlength(DataArrayMath::Scalar& length);
+    virtual void getarea(DataArrayMath::Scalar& area);
+    virtual void getdimension(DataArrayMath::Scalar& dim);
+    virtual void getnormal(DataArrayMath::Vector& normal);
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
@@ -907,21 +907,21 @@ void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::next()
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getcenter(TensorVectorMath::Vector& node)
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getcenter(DataArrayMath::Vector& node)
 {
   SCIRun::Point p;
   mesh_->get_center(p,*it_);
-  node = TensorVectorMath::Vector(p.x(),p.y(),p.z());
+  node = DataArrayMath::Vector(p.x(),p.y(),p.z());
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getdimension(TensorVectorMath::Scalar& dim)
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getdimension(DataArrayMath::Scalar& dim)
 {
   dim = 1.0;
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getlength(TensorVectorMath::Scalar& length)
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getlength(DataArrayMath::Scalar& length)
 {
   typename FIELD::mesh_type::Edge::array_type a;
   mesh_->synchronize(SCIRun::Mesh::EDGES_E);
@@ -934,19 +934,19 @@ void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getlength(TensorVectorMath::Scala
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getarea(TensorVectorMath::Scalar& area)
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getarea(DataArrayMath::Scalar& area)
 {
   area = mesh_->get_area(*it_);
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getsize(TensorVectorMath::Scalar& size)
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getsize(DataArrayMath::Scalar& size)
 {
   size = mesh_->get_size(*it_);
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getnormal(TensorVectorMath::Vector& normal)
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getnormal(DataArrayMath::Vector& normal)
 {
   ArrayObjectFieldElemAlgo::get_normal(mesh_,it_,normal);
 }
@@ -958,12 +958,12 @@ void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getnormal(TensorVectorMath::Vecto
 template<class FIELD, class LOC>
 class SCISHARE ArrayObjectFieldElemVolumeAlgoT : public ArrayObjectFieldElemAlgo {
   public:
-    virtual void getcenter(TensorVectorMath::Vector& node);
-    virtual void getsize(TensorVectorMath::Scalar& size);
-    virtual void getlength(TensorVectorMath::Scalar& length);
-    virtual void getarea(TensorVectorMath::Scalar& area);
-    virtual void getvolume(TensorVectorMath::Scalar& area);
-    virtual void getdimension(TensorVectorMath::Scalar& dim);
+    virtual void getcenter(DataArrayMath::Vector& node);
+    virtual void getsize(DataArrayMath::Scalar& size);
+    virtual void getlength(DataArrayMath::Scalar& length);
+    virtual void getarea(DataArrayMath::Scalar& area);
+    virtual void getvolume(DataArrayMath::Scalar& area);
+    virtual void getdimension(DataArrayMath::Scalar& dim);
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
@@ -1020,27 +1020,27 @@ void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::next()
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getcenter(TensorVectorMath::Vector& node)
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getcenter(DataArrayMath::Vector& node)
 {
   SCIRun::Point p;
   mesh_->get_center(p,*it_);
-  node = TensorVectorMath::Vector(p.x(),p.y(),p.z());
+  node = DataArrayMath::Vector(p.x(),p.y(),p.z());
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getdimension(TensorVectorMath::Scalar& dim)
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getdimension(DataArrayMath::Scalar& dim)
 {
   dim = 3.0;
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getlength(TensorVectorMath::Scalar& length)
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getlength(DataArrayMath::Scalar& length)
 {
   length = 0.0;
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getarea(TensorVectorMath::Scalar& area)
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getarea(DataArrayMath::Scalar& area)
 {
   typename FIELD::mesh_type::Face::array_type a;
   mesh_->synchronize(SCIRun::Mesh::FACES_E);
@@ -1053,13 +1053,13 @@ void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getarea(TensorVectorMath::Scala
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getvolume(TensorVectorMath::Scalar& volume)
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getvolume(DataArrayMath::Scalar& volume)
 {
   volume = mesh_->get_volume(*it_);
 }
 
 template<class FIELD, class LOC>
-void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getsize(TensorVectorMath::Scalar& size)
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::getsize(DataArrayMath::Scalar& size)
 {
   size = mesh_->get_size(*it_);
 }

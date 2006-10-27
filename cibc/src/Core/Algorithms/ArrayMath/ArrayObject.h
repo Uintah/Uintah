@@ -74,32 +74,32 @@ class SCISHARE ArrayObject {
     // impossible, but harder to organize. But who knows if we need more speed
     // we could upgrade the code.
         
-    inline void getnextmatrixscalar(TensorVectorMath::Scalar& scalar);
-    inline void getnextmatrixvector(TensorVectorMath::Vector& vector);
-    inline void getnextmatrixtensor(TensorVectorMath::Tensor& tensor);
-    inline void getmatrixscalar(TensorVectorMath::Scalar& scalar);
-    inline void getmatrixvector(TensorVectorMath::Vector& vector);
-    inline void getmatrixtensor(TensorVectorMath::Tensor& tensor);
+    inline void getnextmatrixscalar(DataArrayMath::Scalar& scalar);
+    inline void getnextmatrixvector(DataArrayMath::Vector& vector);
+    inline void getnextmatrixtensor(DataArrayMath::Tensor& tensor);
+    inline void getmatrixscalar(DataArrayMath::Scalar& scalar);
+    inline void getmatrixvector(DataArrayMath::Vector& vector);
+    inline void getmatrixtensor(DataArrayMath::Tensor& tensor);
 
-    inline void setnextmatrixscalar(TensorVectorMath::Scalar& scalar);
-    inline void setnextmatrixvector(TensorVectorMath::Vector& vector);
-    inline void setnextmatrixtensor(TensorVectorMath::Tensor& tensor);
-    inline void setmatrixscalar(TensorVectorMath::Scalar& scalar);
-    inline void setmatrixvector(TensorVectorMath::Vector& vector);
-    inline void setmatrixtensor(TensorVectorMath::Tensor& tensor);
+    inline void setnextmatrixscalar(DataArrayMath::Scalar& scalar);
+    inline void setnextmatrixvector(DataArrayMath::Vector& vector);
+    inline void setnextmatrixtensor(DataArrayMath::Tensor& tensor);
+    inline void setmatrixscalar(DataArrayMath::Scalar& scalar);
+    inline void setmatrixvector(DataArrayMath::Vector& vector);
+    inline void setmatrixtensor(DataArrayMath::Tensor& tensor);
 
-    inline void getnextfieldscalar(TensorVectorMath::Scalar& scalar);
-    inline void getnextfieldvector(TensorVectorMath::Vector& vector);
-    inline void getnextfieldtensor(TensorVectorMath::Tensor& tensor);
+    inline void getnextfieldscalar(DataArrayMath::Scalar& scalar);
+    inline void getnextfieldvector(DataArrayMath::Vector& vector);
+    inline void getnextfieldtensor(DataArrayMath::Tensor& tensor);
 
-    inline void setnextfieldscalar(TensorVectorMath::Scalar& scalar);
-    inline void setnextfieldvector(TensorVectorMath::Vector& vector);
-    inline void setnextfieldtensor(TensorVectorMath::Tensor& tensor);
+    inline void setnextfieldscalar(DataArrayMath::Scalar& scalar);
+    inline void setnextfieldvector(DataArrayMath::Vector& vector);
+    inline void setnextfieldtensor(DataArrayMath::Tensor& tensor);
     
-    inline void getnextfieldlocation(TensorVectorMath::Vector& vector);
-    inline void setnextfieldlocation(TensorVectorMath::Vector& vector);
+    inline void getnextfieldlocation(DataArrayMath::Vector& vector);
+    inline void setnextfieldlocation(DataArrayMath::Vector& vector);
 
-    inline void getelement(TensorVectorMath::Element& elem);
+    inline void getelement(DataArrayMath::Element& elem);
 
     inline bool ismatrixscalar();
     inline bool ismatrixvector();
@@ -290,78 +290,78 @@ inline void ArrayObject::reset()
   if (field_.get_rep() == 0) fielddataalgo_->reset();
 }
 
-inline void ArrayObject::getnextmatrixscalar(TensorVectorMath::Scalar& scalar)
+inline void ArrayObject::getnextmatrixscalar(DataArrayMath::Scalar& scalar)
 {
   scalar = data_[idx_++];
 }
 
-inline void ArrayObject::getmatrixscalar(TensorVectorMath::Scalar& scalar)
+inline void ArrayObject::getmatrixscalar(DataArrayMath::Scalar& scalar)
 {
   scalar = data_[0];  
 }
 
-inline void ArrayObject::getnextmatrixvector(TensorVectorMath::Vector& vector)
+inline void ArrayObject::getnextmatrixvector(DataArrayMath::Vector& vector)
 {
-  vector = TensorVectorMath::Vector(data_[idx_],data_[idx_+1],data_[idx_+2]); 
+  vector = DataArrayMath::Vector(data_[idx_],data_[idx_+1],data_[idx_+2]); 
   idx_+=3;
 }
 
-inline void ArrayObject::getmatrixvector(TensorVectorMath::Vector& vector)
+inline void ArrayObject::getmatrixvector(DataArrayMath::Vector& vector)
 {
-  vector = TensorVectorMath::Vector(data_[0],data_[1],data_[2]); 
+  vector = DataArrayMath::Vector(data_[0],data_[1],data_[2]); 
 }
 
-inline void ArrayObject::getnextmatrixtensor(TensorVectorMath::Tensor& tensor)
+inline void ArrayObject::getnextmatrixtensor(DataArrayMath::Tensor& tensor)
 {
  if (ncols_ == 6)
  {
-    tensor = TensorVectorMath::Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+3],data_[idx_+4],data_[idx_+5]); 
+    tensor = DataArrayMath::Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+3],data_[idx_+4],data_[idx_+5]); 
     idx_+=6;  
   }
   else
   {
-    tensor = TensorVectorMath::Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+4],data_[idx_+5],data_[idx_+8]); 
+    tensor = DataArrayMath::Tensor(data_[idx_],data_[idx_+1],data_[idx_+2],data_[idx_+4],data_[idx_+5],data_[idx_+8]); 
     idx_+=9; 
   } 
 }
 
-inline void ArrayObject::getmatrixtensor(TensorVectorMath::Tensor& tensor)
+inline void ArrayObject::getmatrixtensor(DataArrayMath::Tensor& tensor)
 {
  if (ncols_ == 6)
  {
-    tensor = TensorVectorMath::Tensor(data_[0],data_[1],data_[2],data_[3],data_[4],data_[5]); 
+    tensor = DataArrayMath::Tensor(data_[0],data_[1],data_[2],data_[3],data_[4],data_[5]); 
   }
   else
   {
-    tensor = TensorVectorMath::Tensor(data_[0],data_[1],data_[2],data_[4],data_[5],data_[8]); 
+    tensor = DataArrayMath::Tensor(data_[0],data_[1],data_[2],data_[4],data_[5],data_[8]); 
   } 
 }
 
-inline void ArrayObject::setnextmatrixscalar(TensorVectorMath::Scalar& scalar)
+inline void ArrayObject::setnextmatrixscalar(DataArrayMath::Scalar& scalar)
 {
   data_[idx_++] = scalar;
 }
 
-inline void ArrayObject::setmatrixscalar(TensorVectorMath::Scalar& scalar)
+inline void ArrayObject::setmatrixscalar(DataArrayMath::Scalar& scalar)
 {
   data_[0] = scalar;
 }
 
-inline void ArrayObject::setnextmatrixvector(TensorVectorMath::Vector& vector)
+inline void ArrayObject::setnextmatrixvector(DataArrayMath::Vector& vector)
 {
     data_[idx_++] = vector.x();
     data_[idx_++] = vector.y();
     data_[idx_++] = vector.z();
 }
 
-inline void ArrayObject::setmatrixvector(TensorVectorMath::Vector& vector)
+inline void ArrayObject::setmatrixvector(DataArrayMath::Vector& vector)
 {
     data_[0] = vector.x();
     data_[1] = vector.y();
     data_[2] = vector.z();
 }
 
-inline void ArrayObject::setnextmatrixtensor(TensorVectorMath::Tensor& tensor)
+inline void ArrayObject::setnextmatrixtensor(DataArrayMath::Tensor& tensor)
 {
   if (ncols_ == 6)
   {
@@ -386,7 +386,7 @@ inline void ArrayObject::setnextmatrixtensor(TensorVectorMath::Tensor& tensor)
   }  
 }
 
-inline void ArrayObject::setmatrixtensor(TensorVectorMath::Tensor& tensor)
+inline void ArrayObject::setmatrixtensor(DataArrayMath::Tensor& tensor)
 {
   if (ncols_ == 6)
   {
@@ -411,49 +411,49 @@ inline void ArrayObject::setmatrixtensor(TensorVectorMath::Tensor& tensor)
   }  
 }
 
-inline void ArrayObject::getnextfieldscalar(TensorVectorMath::Scalar& scalar)
+inline void ArrayObject::getnextfieldscalar(DataArrayMath::Scalar& scalar)
 {
   fielddataalgo_->getnextscalar(scalar);
 }
 
-inline void ArrayObject::getnextfieldvector(TensorVectorMath::Vector& vector)
+inline void ArrayObject::getnextfieldvector(DataArrayMath::Vector& vector)
 {
   fielddataalgo_->getnextvector(vector);
 }
 
-inline void ArrayObject::getnextfieldtensor(TensorVectorMath::Tensor& tensor)
+inline void ArrayObject::getnextfieldtensor(DataArrayMath::Tensor& tensor)
 {
   fielddataalgo_->getnexttensor(tensor);
 }
 
-inline void ArrayObject::setnextfieldscalar(TensorVectorMath::Scalar& scalar)
+inline void ArrayObject::setnextfieldscalar(DataArrayMath::Scalar& scalar)
 {
   fielddataalgo_->setnextscalar(scalar);
 }
 
-inline void ArrayObject::setnextfieldvector(TensorVectorMath::Vector& vector)
+inline void ArrayObject::setnextfieldvector(DataArrayMath::Vector& vector)
 {
   fielddataalgo_->setnextvector(vector);
 }
 
-inline void ArrayObject::setnextfieldtensor(TensorVectorMath::Tensor& tensor)
+inline void ArrayObject::setnextfieldtensor(DataArrayMath::Tensor& tensor)
 {
   fielddataalgo_->setnexttensor(tensor);
 }
 
-inline void ArrayObject::getnextfieldlocation(TensorVectorMath::Vector& vector)
+inline void ArrayObject::getnextfieldlocation(DataArrayMath::Vector& vector)
 {
   fieldlocationalgo_->getnextlocation(vector);
 }
 
-inline void ArrayObject::setnextfieldlocation(TensorVectorMath::Vector& vector)
+inline void ArrayObject::setnextfieldlocation(DataArrayMath::Vector& vector)
 {
   fieldlocationalgo_->setnextlocation(vector);
 }
 
-inline void ArrayObject::getelement(TensorVectorMath::Element& elem)
+inline void ArrayObject::getelement(DataArrayMath::Element& elem)
 {
-  elem = TensorVectorMath::Element(fieldelementalgo_);
+  elem = DataArrayMath::Element(fieldelementalgo_);
 }
 
 } // end namespace

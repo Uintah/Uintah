@@ -27,7 +27,7 @@
 #
 
 
-itcl_class ModelCreation_FieldsCreate_MergeMeshes {
+itcl_class ModelCreation_CreateField_MergeMeshes {
     inherit Module
     constructor {config} {
         set name MergeMeshes

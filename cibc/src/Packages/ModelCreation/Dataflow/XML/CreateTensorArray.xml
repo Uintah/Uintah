@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="CreateTensorArray" category="DataArrayMath">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module creates a N by 9 matrix describing tensors. The tensors are 
+      constructed out of two orthogonal N by 3 arrays describing the 
+      eigenvectors for the system and 3 column vectors describing the eigen values.
+    </summary>
+    <description>
+    <p>
+      This module can be used to compute the conductivity tensors of a field, based on the eigen vector decomposition of for instance DTI data. 
+      Each of the inputs can be matrix with N rows or with 1 row, in the latter case that value is assumed to be the same for all tensors.
+      The first two inputs are the first two eigen vectors (the third is computed internally using a cross product). These are given as N by 3 arrays, where each row describes a [X,Y,Z] direction vector. 
+      The three remaining inputs are the eigen values (or the conductivities  ) for the corresponding direction. This can be a scalar value to mark that this value is the same for all or this can be vector with N values, describing an individual value for each tensor.
+      The output is a N by 9 matrix with the tensor entries on the rows of the matrix.
+    </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>EigenVector1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>EigenVector2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>EigenValue1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>EigenValue2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>EigenValue3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>TensorArray</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
+

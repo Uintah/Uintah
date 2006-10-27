@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="SplitFieldByConnectedRegion" category="FieldsCreate" optional="false">
+<component name="SplitFieldByConnectedRegion" category="CreateField" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

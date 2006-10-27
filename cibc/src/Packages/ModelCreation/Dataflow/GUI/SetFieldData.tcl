@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FieldsData_SetFieldData {
+itcl_class ModelCreation_ChangeFieldData_SetFieldData {
     inherit Module
     constructor {config} {
         set name SetFieldData

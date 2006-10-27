@@ -36,7 +36,7 @@ std::string tvm_help_field;
 
 extern "C" void * ModelCreationInit(void *param) 
 {
-  TensorVectorMath::ArrayEngineHelp Help;
+  DataArrayMath::ArrayEngineHelp Help;
   tvm_help_matrix = Help.gethelp(false);
   tvm_help_field  = Help.gethelp(true);
 

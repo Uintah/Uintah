@@ -29,12 +29,12 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/SelectionMask
 
 SET(Packages_ModelCreation_Dataflow_Modules_SelectionMask_SRCS
-  SelectionMaskAND.cc
-  SelectionMaskOR.cc
-  SelectionMaskXOR.cc
-  SelectionMaskNOT.cc
-  SelectionMaskToIndices.cc
-  IndicesToSelectionMask.cc
+  DoSelectionMaskAND.cc
+  DoSelctionMaskOR.cc
+  DoSelctionMaskXOR.cc
+  DoSelectionMaskNOT.cc
+  ConvertSelectionMaskToIndices.cc
+  ConvertIndicesToSelectionMask.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_SelectionMask ${Packages_ModelCreation_Dataflow_Modules_SelectionMask_SRCS})

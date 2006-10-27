@@ -29,7 +29,7 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/DataStreaming
 
 SET(Packages_ModelCreation_Dataflow_Modules_DataStreaming_SRCS
-  StreamMatrix.cc
+  StreamMatrixFromDisk.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_DataStreaming ${Packages_ModelCreation_Dataflow_Modules_DataStreaming_SRCS})

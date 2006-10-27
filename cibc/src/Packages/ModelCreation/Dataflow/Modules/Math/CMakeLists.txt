@@ -30,12 +30,12 @@
 
 SET(Packages_ModelCreation_Dataflow_Modules_Math_SRCS
   ResizeMatrix.cc
-  ReverseCuthillMcKee.cc
-  CuthillMcKee.cc
-  ApplyRowOperation.cc
-  ApplyColumnOperation.cc
+  ReverseReorderMatrixByCuthillMcKee.cc
+  ReorderMatrixByCuthillMcKee.cc
+  ReportMatrixRowMeasure.cc
+  ReportMatrixColumnMeasure.cc
   AppendMatrix.cc
-  SelectSubMatrix.cc
+  GetSubMatrix.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_Math ${Packages_ModelCreation_Dataflow_Modules_Math_SRCS})

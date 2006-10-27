@@ -13,12 +13,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/SelectionMask
 
 SRCS     += \
-  	$(SRCDIR)/SelectionMaskAND.cc\
-  	$(SRCDIR)/SelectionMaskOR.cc\
-  	$(SRCDIR)/SelectionMaskXOR.cc\
-  	$(SRCDIR)/SelectionMaskNOT.cc\
-  	$(SRCDIR)/SelectionMaskToIndices.cc\
-  	$(SRCDIR)/IndicesToSelectionMask.cc\
+  	$(SRCDIR)/DoSelectionMaskAND.cc\
+  	$(SRCDIR)/DoSelctionMaskOR.cc\
+  	$(SRCDIR)/DoSelctionMaskXOR.cc\
+  	$(SRCDIR)/DoSelectionMaskNOT.cc\
+  	$(SRCDIR)/ConvertSelectionMaskToIndices.cc\
+  	$(SRCDIR)/ConvertIndicesToSelectionMask.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

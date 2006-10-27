@@ -54,11 +54,11 @@ using namespace SCIRun;
 
 // Mapping Method to nodes (nodal values)
 
-class NodalMappingAlgo : public DynamicAlgoBase
+class MapFieldDataOntoFieldNodesAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual bool NodalMapping(ProgressReporter *pr,
+  virtual bool MapFieldDataOntoFieldNodes(ProgressReporter *pr,
                        int numproc, FieldHandle src,
                        FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod, double def_value);
@@ -95,11 +95,11 @@ public:
 };
 
 
-class GradientModalMappingAlgo : public DynamicAlgoBase
+class MapFieldDataGradientOntoFieldAlgo : public DynamicAlgoBase
 {
 public:
 
-  virtual bool GradientModalMapping(ProgressReporter *pr,
+  virtual bool MapFieldDataGradientOntoField(ProgressReporter *pr,
                        int numproc, FieldHandle src,
                        FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod,
@@ -111,10 +111,10 @@ public:
 // Templated class for Nodal Mapping
 
 template <class MAPPING, class FSRC, class FDST, class FOUT>
-class NodalMappingAlgoT : public NodalMappingAlgo
+class MapFieldDataOntoFieldNodesAlgoT : public MapFieldDataOntoFieldNodesAlgo
 {
 public:
-  virtual bool NodalMapping(ProgressReporter *pr,
+  virtual bool MapFieldDataOntoFieldNodes(ProgressReporter *pr,
                        int numproc, FieldHandle src,
                        FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod,
@@ -172,10 +172,10 @@ public:
 
 // Modal version
 template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
-class GradientModalMappingAlgoT : public GradientModalMappingAlgo
+class MapFieldDataGradientOntoFieldAlgoT : public MapFieldDataGradientOntoFieldAlgo
 {
 public:
-  virtual bool GradientModalMapping(ProgressReporter *pr,
+  virtual bool MapFieldDataGradientOntoField(ProgressReporter *pr,
                        int numproc, FieldHandle src,
                        FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod,
@@ -200,10 +200,10 @@ public:
 };
 
 template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
-class GradientModalMappingNormAlgoT : public GradientModalMappingAlgo
+class MapFieldDataGradientOntoFieldNormAlgoT : public MapFieldDataGradientOntoFieldAlgo
 {
 public:
-  virtual bool GradientModalMapping(ProgressReporter *pr,
+  virtual bool MapFieldDataGradientOntoField(ProgressReporter *pr,
                        int numproc, FieldHandle src,
                        FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod,
@@ -231,7 +231,7 @@ public:
 
 
 template <class MAPPING, class FSRC, class FDST, class FOUT>
-bool NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::NodalMapping(ProgressReporter *pr,
+bool MapFieldDataOntoFieldNodesAlgoT<MAPPING,FSRC,FDST,FOUT>::MapFieldDataOntoFieldNodes(ProgressReporter *pr,
                        int numproc, FieldHandle src,FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod, double def_value) 
 {
@@ -239,28 +239,28 @@ bool NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::NodalMapping(ProgressReporter *p
   FSRC* ifield = dynamic_cast<FSRC*>(src.get_rep());
   if (ifield == 0)
   {
-    pr->error("NodalMapping: No input source field was given");
+    pr->error("MapFieldDataOntoFieldNodes: No input source field was given");
     return (false);
   }
 
   typename FSRC::mesh_type* imesh = dynamic_cast<typename FSRC::mesh_type*>(src->mesh().get_rep());
   if (imesh == 0)
   {
-    pr->error("NodalMapping: No mesh is associated with input source field");
+    pr->error("MapFieldDataOntoFieldNodes: No mesh is associated with input source field");
     return (false);  
   }
 
   FDST* dfield = dynamic_cast<FDST*>(dst.get_rep());
   if (dfield == 0)
   {
-    pr->error("NodalMapping: No input destination field was given");
+    pr->error("MapFieldDataOntoFieldNodes: No input destination field was given");
     return (false);
   }
 
   typename FDST::mesh_type* dmesh = dynamic_cast<typename FDST::mesh_type*>(dst->mesh().get_rep());
   if (dmesh == 0)
   {
-    pr->error("NodalMapping: No mesh is associated with input destination field");
+    pr->error("MapFieldDataOntoFieldNodes: No mesh is associated with input destination field");
     return (false);  
   }
 
@@ -268,7 +268,7 @@ bool NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::NodalMapping(ProgressReporter *p
   output = dynamic_cast<Field *>(scinew FOUT(dmesh));
   if (output.get_rep() == 0)
   {
-    pr->error("NodalMapping: Could no allocate output field");
+    pr->error("MapFieldDataOntoFieldNodes: Could no allocate output field");
     return (false);
   }
   
@@ -294,14 +294,14 @@ bool NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::NodalMapping(ProgressReporter *p
   if (numproc > 0) { np = numproc; }
   IData.numproc = np;
    
-  Thread::parallel(this,&NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::parallel,np,&IData);
+  Thread::parallel(this,&MapFieldDataOntoFieldNodesAlgoT<MAPPING,FSRC,FDST,FOUT>::parallel,np,&IData);
     
   return (IData.retval);
 }
 
 
 template <class MAPPING, class FSRC, class FDST, class FOUT>
-void NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
+void MapFieldDataOntoFieldNodesAlgoT<MAPPING,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Node::iterator it, eit;
   typename FOUT::mesh_type::Node::size_type s;
@@ -654,7 +654,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
 // GradientModal version
 
 template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
-bool GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientModalMapping(ProgressReporter *pr,
+bool MapFieldDataGradientOntoFieldAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::MapFieldDataGradientOntoField(ProgressReporter *pr,
                        int numproc, FieldHandle src,FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod,
                        std::string integrationmethod,
@@ -663,35 +663,35 @@ bool GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientModal
   FSRC* ifield = dynamic_cast<FSRC*>(src.get_rep());
   if (ifield == 0)
   {
-    pr->error("GradientModalMapping: No input source field was given");
+    pr->error("MapFieldDataGradientOntoField: No input source field was given");
     return (false);
   }
 
   typename FSRC::mesh_type* imesh = dynamic_cast<typename FSRC::mesh_type*>(src->mesh().get_rep());
   if (imesh == 0)
   {
-    pr->error("GradientModalMapping: No mesh is associated with input source field");
+    pr->error("MapFieldDataGradientOntoField: No mesh is associated with input source field");
     return (false);  
   }
 
   FDST* dfield = dynamic_cast<FDST*>(dst.get_rep());
   if (dfield == 0)
   {
-    pr->error("GradientModalMapping: No input destination field was given");
+    pr->error("MapFieldDataGradientOntoField: No input destination field was given");
     return (false);
   }
 
   typename FDST::mesh_type* dmesh = dynamic_cast<typename FDST::mesh_type*>(dst->mesh().get_rep());
   if (dmesh == 0)
   {
-    pr->error("GradientModalMapping: No mesh is associated with input destination field");
+    pr->error("MapFieldDataGradientOntoField: No mesh is associated with input destination field");
     return (false);  
   }
 
   output = dynamic_cast<Field *>(scinew FOUT(dmesh));
   if (output.get_rep() == 0)
   {
-    pr->error("GradientModalMapping: Could no allocate output field");
+    pr->error("MapFieldDataGradientOntoField: Could no allocate output field");
     return (false);
   }
   
@@ -715,7 +715,7 @@ bool GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientModal
   if (numproc > 0) { np = numproc; }
   IData.numproc = np;
    
-  Thread::parallel(this,&GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
+  Thread::parallel(this,&MapFieldDataGradientOntoFieldAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
         
   return (IData.retval);
 }
@@ -723,7 +723,7 @@ bool GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientModal
 
 
 template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
-void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
+void MapFieldDataGradientOntoFieldAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
   typename FOUT::mesh_type::Elem::size_type s;
@@ -940,7 +940,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
   {
     if (procnum == 0)
     {
-      idata->pr->error("GradientModalMapping: Filter method is unknown");
+      idata->pr->error("MapFieldDataGradientOntoField: Filter method is unknown");
       idata->retval = false;
     }
     return;
@@ -954,7 +954,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
 
 
 template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
-bool GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientModalMapping(ProgressReporter *pr,
+bool MapFieldDataGradientOntoFieldNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::MapFieldDataGradientOntoField(ProgressReporter *pr,
                        int numproc, FieldHandle src,FieldHandle dst, FieldHandle& output, 
                        std::string mappingmethod,
                        std::string integrationmethod,
@@ -963,35 +963,35 @@ bool GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientM
   FSRC* ifield = dynamic_cast<FSRC*>(src.get_rep());
   if (ifield == 0)
   {
-    pr->error("GradientModalMapping: No input source field was given");
+    pr->error("MapFieldDataGradientOntoField: No input source field was given");
     return (false);
   }
 
   typename FSRC::mesh_type* imesh = dynamic_cast<typename FSRC::mesh_type*>(src->mesh().get_rep());
   if (imesh == 0)
   {
-    pr->error("GradientModalMapping: No mesh is associated with input source field");
+    pr->error("MapFieldDataGradientOntoField: No mesh is associated with input source field");
     return (false);  
   }
 
   FDST* dfield = dynamic_cast<FDST*>(dst.get_rep());
   if (dfield == 0)
   {
-    pr->error("GradientModalMapping: No input destination field was given");
+    pr->error("MapFieldDataGradientOntoField: No input destination field was given");
     return (false);
   }
 
   typename FDST::mesh_type* dmesh = dynamic_cast<typename FDST::mesh_type*>(dst->mesh().get_rep());
   if (dmesh == 0)
   {
-    pr->error("GradientModalMapping: No mesh is associated with input destination field");
+    pr->error("MapFieldDataGradientOntoField: No mesh is associated with input destination field");
     return (false);  
   }
 
   output = dynamic_cast<Field *>(scinew FOUT(dmesh));
   if (output.get_rep() == 0)
   {
-    pr->error("GradientModalMapping: Could no allocate output field");
+    pr->error("MapFieldDataGradientOntoField: Could no allocate output field");
     return (false);
   }
   
@@ -1015,7 +1015,7 @@ bool GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientM
   if (numproc > 0) { np = numproc; }
   IData.numproc = np;
    
-  Thread::parallel(this,&GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
+  Thread::parallel(this,&MapFieldDataGradientOntoFieldNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
         
   return (IData.retval);
 }
@@ -1023,7 +1023,7 @@ bool GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::GradientM
 
 
 template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
-void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
+void MapFieldDataGradientOntoFieldNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
   typename FOUT::mesh_type::Elem::size_type s;
@@ -1246,7 +1246,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
   {
     if (procnum == 0)
     {
-      idata->pr->error("GradientModalMapping: Filter method is unknown");
+      idata->pr->error("MapFieldDataGradientOntoField: Filter method is unknown");
       idata->retval = false;
     }
     return;

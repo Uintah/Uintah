@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FieldsCreate_CollectFields {
+itcl_class ModelCreation_CreateField_CollectFields {
     inherit Module
     constructor {config} {
         set name CollectFields

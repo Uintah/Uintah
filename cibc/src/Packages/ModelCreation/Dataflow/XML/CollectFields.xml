@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="CollectFields" category="FieldsCreate" optional="false">
+<component name="CollectFields" category="CreateField" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

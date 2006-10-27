@@ -13,7 +13,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/DataStreaming
 
 SRCS     += \
-	$(SRCDIR)/StreamMatrix.cc\
+	$(SRCDIR)/StreamMatrixFromDisk.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

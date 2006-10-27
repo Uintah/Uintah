@@ -32,30 +32,30 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-void ArrayObjectFieldDataAlgo::getnextscalar(TensorVectorMath::Scalar& scalar)
+void ArrayObjectFieldDataAlgo::getnextscalar(DataArrayMath::Scalar& scalar)
 {
   scalar = 0.0;
 }
 
-void ArrayObjectFieldDataAlgo::getnextvector(TensorVectorMath::Vector& vector)
+void ArrayObjectFieldDataAlgo::getnextvector(DataArrayMath::Vector& vector)
 {
-  vector = TensorVectorMath::Vector(0.0,0.0,0.0);
+  vector = DataArrayMath::Vector(0.0,0.0,0.0);
 }
 
-void ArrayObjectFieldDataAlgo::getnexttensor(TensorVectorMath::Tensor& tensor)
+void ArrayObjectFieldDataAlgo::getnexttensor(DataArrayMath::Tensor& tensor)
 {
-  tensor = TensorVectorMath::Tensor(0.0);
+  tensor = DataArrayMath::Tensor(0.0);
 }
 
-void ArrayObjectFieldDataAlgo::setnextscalar(TensorVectorMath::Scalar& scalar)
-{
-}
-
-void ArrayObjectFieldDataAlgo::setnextvector(TensorVectorMath::Vector& vector)
+void ArrayObjectFieldDataAlgo::setnextscalar(DataArrayMath::Scalar& scalar)
 {
 }
 
-void ArrayObjectFieldDataAlgo::setnexttensor(TensorVectorMath::Tensor& tensor)
+void ArrayObjectFieldDataAlgo::setnextvector(DataArrayMath::Vector& vector)
+{
+}
+
+void ArrayObjectFieldDataAlgo::setnexttensor(DataArrayMath::Tensor& tensor)
 {
 }
 
@@ -260,34 +260,34 @@ SCIRun::CompileInfoHandle
   return(ci);
 }
 
-void ArrayObjectFieldElemAlgo::getcenter(TensorVectorMath::Vector& node)
+void ArrayObjectFieldElemAlgo::getcenter(DataArrayMath::Vector& node)
 {
-  node = TensorVectorMath::Vector(0.0,0.0,0.0);
+  node = DataArrayMath::Vector(0.0,0.0,0.0);
 }
 
-void ArrayObjectFieldElemAlgo::getsize(TensorVectorMath::Scalar& size)
+void ArrayObjectFieldElemAlgo::getsize(DataArrayMath::Scalar& size)
 {
   size = 0.0;
 }
 
-void ArrayObjectFieldElemAlgo::getlength(TensorVectorMath::Scalar& length)
+void ArrayObjectFieldElemAlgo::getlength(DataArrayMath::Scalar& length)
 {
   length = 0.0;
 }
 
-void ArrayObjectFieldElemAlgo::getarea(TensorVectorMath::Scalar& area)
+void ArrayObjectFieldElemAlgo::getarea(DataArrayMath::Scalar& area)
 {
   area = 0.0;
 }
 
-void ArrayObjectFieldElemAlgo::getvolume(TensorVectorMath::Scalar& volume)
+void ArrayObjectFieldElemAlgo::getvolume(DataArrayMath::Scalar& volume)
 {
   volume = 0.0;
 }
 
-void ArrayObjectFieldElemAlgo::getnormal(TensorVectorMath::Vector& normal)
+void ArrayObjectFieldElemAlgo::getnormal(DataArrayMath::Vector& normal)
 {
-  normal = TensorVectorMath::Vector(0.0,0.0,0.0);
+  normal = DataArrayMath::Vector(0.0,0.0,0.0);
 }
 
 
@@ -334,7 +334,7 @@ int ArrayObjectFieldElemAlgo::size()
 }
 
  
-void ArrayObjectFieldElemAlgo::getdimension(TensorVectorMath::Scalar& dim)
+void ArrayObjectFieldElemAlgo::getdimension(DataArrayMath::Scalar& dim)
 {
   dim = 0.0;
 }    
@@ -380,7 +380,7 @@ SCIRun::CompileInfoHandle ArrayObjectFieldElemAlgo::get_compile_info(SCIRun::Fie
   return(ci);
 }
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec)
 {
   TriSurfMesh<TriLinearLgn<Point> >::Node::array_type nodes;
   mesh->get_nodes(nodes,*it);
@@ -392,18 +392,18 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point
     mesh->get_center(p2,nodes[1]);
     mesh->get_center(p3,nodes[2]);
     
-    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
-    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
-    vec = TensorVectorMath::cross(vec1,vec2);    
+    DataArrayMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    DataArrayMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = DataArrayMath::cross(vec1,vec2);    
   }
   else
   {
-    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+    vec = DataArrayMath::Vector(0.0,0.0,0.0);
   }
 }
 
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::array_type nodes;
   mesh->get_nodes(nodes,*it);
@@ -415,17 +415,17 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<P
     mesh->get_center(p2,nodes[1]); 
     mesh->get_center(p3,nodes[2]); 
     
-    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
-    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
-    vec = TensorVectorMath::cross(vec1,vec2);    
+    DataArrayMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    DataArrayMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = DataArrayMath::cross(vec1,vec2);    
   }
   else
   {
-    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+    vec = DataArrayMath::Vector(0.0,0.0,0.0);
   }
 }
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::array_type nodes;
   mesh->get_nodes(nodes,*it);
@@ -437,17 +437,17 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinea
     mesh->get_center(p2,nodes[1]);
     mesh->get_center(p3,nodes[2]);
     
-    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
-    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
-    vec = TensorVectorMath::cross(vec1,vec2);    
+    DataArrayMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    DataArrayMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = DataArrayMath::cross(vec1,vec2);    
   }
   else
   {
-    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+    vec = DataArrayMath::Vector(0.0,0.0,0.0);
   }
 }
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Face::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Face::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::array_type nodes;
   mesh->get_nodes(nodes,*it);
@@ -459,47 +459,47 @@ void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Poin
     mesh->get_center(p2,nodes[1]);
     mesh->get_center(p3,nodes[2]);
     
-    TensorVectorMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
-    TensorVectorMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
-    vec = TensorVectorMath::cross(vec1,vec2);    
+    DataArrayMath::Vector vec1(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    DataArrayMath::Vector vec2(p3.x()-p1.x(),p3.y()-p1.y(),p3.z()-p1.z());
+    vec = DataArrayMath::cross(vec1,vec2);    
   }
   else
   {
-    vec = TensorVectorMath::Vector(0.0,0.0,0.0);
+    vec = DataArrayMath::Vector(0.0,0.0,0.0);
   }
 }
 
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::TriSurfMesh<TriLinearLgn<Point> > *mesh,SCIRun::TriSurfMesh<TriLinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::Vector v;
   mesh->synchronize(SCIRun::Mesh::NORMALS_E);
   mesh->get_normal(v,*it);
-  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+  vec = DataArrayMath::Vector(v.x(),v.y(),v.z());
 }
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::Vector v;
   mesh->synchronize(SCIRun::Mesh::NORMALS_E);
   mesh->get_normal(v,*it);
-  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+  vec = DataArrayMath::Vector(v.x(),v.y(),v.z());
 }
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::StructQuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::Vector v;
   mesh->synchronize(SCIRun::Mesh::NORMALS_E);
   mesh->get_normal(v,*it);
-  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+  vec = DataArrayMath::Vector(v.x(),v.y(),v.z());
 }
 
-void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::iterator& it,TensorVectorMath::Vector& vec)
+void ArrayObjectFieldElemAlgo::get_normal(SCIRun::ImageMesh<QuadBilinearLgn<Point> > *mesh,SCIRun::ImageMesh<QuadBilinearLgn<Point> >::Node::iterator& it,DataArrayMath::Vector& vec)
 {
   SCIRun::Vector v;
   mesh->synchronize(SCIRun::Mesh::NORMALS_E);
   mesh->get_normal(v,*it);
-  vec = TensorVectorMath::Vector(v.x(),v.y(),v.z());
+  vec = DataArrayMath::Vector(v.x(),v.y(),v.z());
 }
 
 } // namespace ModelCreation

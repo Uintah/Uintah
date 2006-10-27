@@ -32,14 +32,14 @@
 #include <Core/Algorithms/Fields/GetBoundingBox.h>
 #include <Core/Algorithms/Fields/ClearAndChangeFieldBasis.h>
 #include <Core/Algorithms/Fields/ClipBySelectionMask.h>
-#include <Core/Algorithms/Fields/ConvertToTetVol.h>
-#include <Core/Algorithms/Fields/ConvertToTriSurf.h>
-#include <Core/Algorithms/Fields/CurrentDensityMapping.h>
-#include <Core/Algorithms/Fields/DomainBoundary.h>
+#include <Core/Algorithms/Fields/ConvertMeshToTetVol.h>
+#include <Core/Algorithms/Fields/ConvertMeshToTriSurf.h>
+#include <Core/Algorithms/Fields/MapCurrentDensityOntoField.h>
+#include <Core/Algorithms/Fields/GetDomainBoundary.h>
 #include <Core/Algorithms/Fields/DistanceField.h>
-#include <Core/Algorithms/Fields/FieldDataElemToNode.h>
-#include <Core/Algorithms/Fields/FieldDataNodeToElem.h>
-#include <Core/Algorithms/Fields/FieldBoundary.h>
+#include <Core/Algorithms/Fields/MapFieldDataFromElemToNode.h>
+#include <Core/Algorithms/Fields/MapFieldDataFromNodeToElem.h>
+#include <Core/Algorithms/Fields/GetFieldBoundary.h>
 #include <Core/Algorithms/Fields/FindClosestNodeByValue.h>
 #include <Core/Algorithms/Fields/FindClosestNode.h>
 #include <Core/Algorithms/Fields/GatherFields.h>
@@ -47,23 +47,23 @@
 #include <Core/Algorithms/Fields/GetFieldDataMinMax.h>
 #include <Core/Algorithms/Fields/GetFieldMeasure.h>
 #include <Core/Algorithms/Fields/GetFieldInfo.h>
-#include <Core/Algorithms/Fields/IsInsideField.h>
-#include <Core/Algorithms/Fields/IndicesToData.h>
-#include <Core/Algorithms/Fields/LinkFieldBoundary.h>
-#include <Core/Algorithms/Fields/LinkToCompGrid.h>
-#include <Core/Algorithms/Fields/LinkToCompGridByDomain.h>
-#include <Core/Algorithms/Fields/MappingMatrixToField.h>
+#include <Core/Algorithms/Fields/CalculateIsInsideField.h>
+#include <Core/Algorithms/Fields/ConvertIndicesToFieldData.h>
+#include <Core/Algorithms/Fields/CalculateLinkBetweenOppositeFieldBoundaries.h>
+#include <Core/Algorithms/Fields/CreateLinkBetweenMeshAndCompGrid.h>
+#include <Core/Algorithms/Fields/CreateLinkBetweenMeshAndCompGridByDomain.h>
+#include <Core/Algorithms/Fields/ConvertMappingMatrixToFieldData.h>
 #include <Core/Algorithms/Fields/Mapping.h>
 #include <Core/Algorithms/Fields/MergeFields.h>
 #include <Core/Algorithms/Fields/MergeMeshes.h>
 #include <Core/Algorithms/Fields/RemoveUnusedNodes.h>
-#include <Core/Algorithms/Fields/ScaleField.h>
+#include <Core/Algorithms/Fields/ScaleFieldMeshAndData.h>
 #include <Core/Algorithms/Fields/SetFieldData.h>
-#include <Core/Algorithms/Fields/SplitFieldByDomain.h>
+#include <Core/Algorithms/Fields/SplitAndMergeFieldByDomain.h>
 #include <Core/Algorithms/Fields/SplitByConnectedRegion.h>
 #include <Core/Algorithms/Fields/TransformMeshWithTransform.h>
 #include <Core/Algorithms/Fields/ToPointCloud.h>
-#include <Core/Algorithms/Fields/Unstructure.h>
+#include <Core/Algorithms/Fields/ConvertToUnstructuredMesh.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -99,20 +99,24 @@ bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output
   return(algo.ClipBySelectionMask(pr_,input,output,selmask,interpolant));
 }
 
-bool FieldsAlgo::ClipFieldByField(FieldHandle input, FieldHandle& output, FieldHandle objfield, MatrixHandle &interpolant)
+bool 
+FieldsAlgo::ClipFieldByMesh(FieldHandle input, FieldHandle& output, 
+			    FieldHandle objfield, MatrixHandle &interpolant)
 {
   MatrixHandle mask;
   FieldHandle  temp;
-  if(!(IsInsideField(input,temp,objfield,"char","constant"))) return (false);
+  if(!(CalculateIsInsideField(input, temp, objfield, "char", "constant"))) {
+    return (false);
+  }
   if(!(GetFieldData(temp,mask))) return (false);
-  return(ClipFieldBySelectionMask(input,output,mask,interpolant));
+  return(ClipFieldBySelectionMask(input, output, mask, interpolant));
 }
 
 
-bool FieldsAlgo::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle& mapping)
+bool FieldsAlgo::GetFieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle& mapping)
 {
-  FieldBoundaryAlgo algo;
-  return(algo.FieldBoundary(pr_,input,output,mapping));
+  GetFieldBoundaryAlgo algo;
+  return(algo.GetFieldBoundary(pr_,input,output,mapping));
 }
 
 
@@ -151,91 +155,109 @@ bool FieldsAlgo::SetFieldData(FieldHandle input, FieldHandle& output, MatrixHand
 }
 
 
-bool FieldsAlgo::FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method)
+bool 
+FieldsAlgo::MapFieldDataFromNodeToElem(FieldHandle input, FieldHandle& output, 
+				       std::string method)
 {
-  FieldDataNodeToElemAlgo algo;
-  return(algo.FieldDataNodeToElem(pr_,input,output,method));
+  MapFieldDataFromNodeToElemAlgo algo;
+  return(algo.MapFieldDataFromNodeToElem(pr_,input,output,method));
 }
 
 
-bool FieldsAlgo::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method)
+bool FieldsAlgo::MapFieldDataFromElemToNode(FieldHandle input, FieldHandle& output, std::string method)
 {
-  FieldDataElemToNodeAlgo algo;
-  return(algo.FieldDataElemToNode(pr_,input,output,method));
+  MapFieldDataFromElemToNodeAlgo algo;
+  return(algo.MapFieldDataFromElemToNode(pr_,input,output,method));
 }
 
-bool FieldsAlgo::FindClosestNodeByValue(FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value)
+bool FieldsAlgo::FindClosestNodeByValue(FieldHandle input, 
+					std::vector<unsigned int>& output, 
+					FieldHandle& points, double value)
 {
   FindClosestNodeByValueAlgo algo;
   return(algo.FindClosestNodeByValue(pr_,input,output,points,value));
 }
 
-bool FieldsAlgo::FindClosestNode(FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points)
+bool FieldsAlgo::FindClosestNode(FieldHandle input, 
+				 std::vector<unsigned int>& output, 
+				 FieldHandle& points)
 {
   FindClosestNodeAlgo algo;
   return(algo.FindClosestNode(pr_,input,output,points));
 }
 
 
-bool FieldsAlgo::DomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary, bool disconnect)
+bool 
+FieldsAlgo::GetDomainBoundary(FieldHandle input,FieldHandle& output, 
+			      MatrixHandle DomainLink, double minrange, 
+			      double maxrange, bool userange, 
+			      bool addouterboundary, bool innerboundaryonly, 
+			      bool noinnerboundary, bool disconnect)
 {
   if (disconnect)
   {
-    DomainBoundary2Algo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));  
+    GetDomainBoundary2Algo algo;
+    return(algo.GetDomainBoundary(pr_, input, output, DomainLink, minrange,
+				  maxrange, userange, addouterboundary, 
+				  innerboundaryonly, noinnerboundary));  
   }
   else
   {
-    DomainBoundaryAlgo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
+    GetDomainBoundaryAlgo algo;
+    return(algo.GetDomainBoundary(pr_, input, output, DomainLink, minrange,
+				  maxrange, userange, addouterboundary,
+				  innerboundaryonly, noinnerboundary));
   }
 }
 
 
-bool FieldsAlgo::IndexedDomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary, bool disconnect)
+bool 
+FieldsAlgo::ConvertMeshToTetVol(FieldHandle input, FieldHandle& output)
 {
-  if (disconnect)
-  {
-    DomainBoundary4Algo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));  
-  }
-  else
-  {
-    DomainBoundary3Algo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
-  }
+  ConvertMeshToTetVolAlgo algo;
+  return(algo.ConvertMeshToTetVol(pr_, input, output));
 }
 
 
-bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
+bool 
+FieldsAlgo::ConvertMeshToTriSurf(FieldHandle input, FieldHandle& output)
 {
-  ConvertToTetVolAlgo algo;
-  return(algo.ConvertToTetVol(pr_,input,output));
+  ConvertMeshToTriSurfAlgo algo;
+  return(algo.ConvertMeshToTriSurf(pr_, input, output));
 }
 
-
-bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
+bool 
+FieldsAlgo::CalculateIsInsideField(FieldHandle input, FieldHandle& output, 
+				   FieldHandle objectfield, 
+				   std::string output_type, 
+				   std::string basis_type,
+				   bool partial_inside,
+				   double outval, double inval)
 {
-  ConvertToTriSurfAlgo algo;
-  return(algo.ConvertToTriSurf(pr_,input,output));
-}
-
-bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle objectfield, std::string output_type, std::string basis_type,bool partial_inside,double outval, double inval)
-{
-  IsInsideFieldAlgo algo;
+  CalculateIsInsideFieldAlgo algo;
   output = 0;
-  return(algo.IsInsideField(pr_,input,output,objectfield,inval,outval,output_type,basis_type,partial_inside));
+  return(algo.CalculateIsInsideField(pr_, input, output, objectfield,
+				     inval, outval, output_type, 
+				     basis_type, partial_inside));
 }
 
-bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type,std::string basis_type,bool partial_inside,double outval)
+bool 
+FieldsAlgo::CalculateInsideWhichField(FieldHandle input, 
+				      FieldHandle& output, 
+				      std::vector<FieldHandle> objectfields, 
+				      std::string output_type,
+				      std::string basis_type,
+				      bool partial_inside,
+				      double outval)
 {
-  IsInsideFieldAlgo algo;
+  CalculateIsInsideFieldAlgo algo;
   output = 0;
   for (unsigned int p = 1; p <= objectfields.size(); p++)
   {
-    if (!(algo.IsInsideField(pr_, input, output, objectfields[p-1],
-                             static_cast<double>(p), outval, output_type,
-                             basis_type, partial_inside)))
+    if (!(algo.CalculateIsInsideField(pr_, input, output, objectfields[p-1],
+				      static_cast<double>(p), outval, 
+				      output_type,
+				      basis_type, partial_inside)))
     {
       output = 0;
       return (false);
@@ -245,44 +267,85 @@ bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vec
 }
 
 
-bool FieldsAlgo::IndicesToData(FieldHandle input, FieldHandle& output, MatrixHandle data)
+bool 
+FieldsAlgo::ConvertIndicesToFieldData(FieldHandle input, FieldHandle& output, 
+				      MatrixHandle data)
 {
-  IndicesToDataAlgo algo;
-  return(algo.IndicesToData(pr_,input,output,data));
+  ConvertIndicesToFieldDataAlgo algo;
+  return(algo.ConvertIndicesToFieldData(pr_, input, output, data));
 }
 
 
-bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, MatrixHandle& NodeLink, MatrixHandle& ElemLink, double tol, bool linkx, bool linky, bool linkz)
+bool 
+FieldsAlgo::CalculateLinkBetweenOppositeFieldBoundaries(FieldHandle input, 
+							MatrixHandle& NodeLink,
+							MatrixHandle& ElemLink,
+							double tol, 
+							bool linkx, 
+							bool linky, 
+							bool linkz)
 {
-  LinkFieldBoundaryAlgo algo;
-  return(algo.LinkFieldBoundary(pr_,input,NodeLink,ElemLink,tol,linkx,linky,linkz));
+  CalculateLinkBetweenOppositeFieldBoundariesAlgo algo;
+  return(algo.CalculateLinkBetweenOppositeFieldBoundaries(pr_, input, NodeLink,
+							  ElemLink, tol, linkx,
+							  linky, linkz));
 }
 
-bool FieldsAlgo::LinkToCompGrid(MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom)
+bool 
+FieldsAlgo::CreateLinkBetweenMeshAndCompGrid(MatrixHandle NodeLink, 
+					     MatrixHandle& GeomToComp, 
+					     MatrixHandle& CompToGeom)
 {
-  LinkToCompGridAlgo algo;
-  return (!(algo.LinkToCompGrid(pr_, NodeLink, GeomToComp, CompToGeom)));
+  CreateLinkBetweenMeshAndCompGridAlgo algo;
+  return (!(algo.CreateLinkBetweenMeshAndCompGrid(pr_, NodeLink, GeomToComp, 
+						  CompToGeom)));
 }
 
-bool FieldsAlgo::LinkToCompGridByDomain(FieldHandle Geometry, MatrixHandle NodeLink, MatrixHandle& GeomToComp, MatrixHandle& CompToGeom)
+bool 
+FieldsAlgo::CreateLinkBetweenMeshAndCompGridByDomain(FieldHandle Geometry, 
+						     MatrixHandle NodeLink, 
+						     MatrixHandle& GeomToComp, 
+						     MatrixHandle& CompToGeom)
 {
-  LinkToCompGridByDomainAlgo algo;
-  return (algo.LinkToCompGridByDomain(pr_,Geometry,NodeLink,GeomToComp,CompToGeom));
+  CreateLinkBetweenMeshAndCompGridByDomainAlgo algo;
+  return (algo.CreateLinkBetweenMeshAndCompGridByDomain(pr_, Geometry, 
+							NodeLink, GeomToComp,
+							CompToGeom));
 }
 
 
-bool FieldsAlgo::CurrentDensityMapping(int numproc, FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm)
+bool 
+FieldsAlgo::MapCurrentDensityOntoField(int numproc, FieldHandle pot, 
+				       FieldHandle con, FieldHandle dst, 
+				       FieldHandle& output, 
+				       std::string mappingmethod,
+				       std::string integrationmethod, 
+				       std::string integrationfilter, 
+				       bool multiply_with_normal, 
+				       bool calcnorm)
 {
-  CurrentDensityMappingAlgo algo;
-  return (algo.CurrentDensityMapping(pr_,numproc,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm));
+  MapCurrentDensityOntoFieldAlgo algo;
+  return (algo.MapCurrentDensityOntoField(pr_, numproc, pot, con, dst, output,
+					  mappingmethod, integrationmethod,
+					  integrationfilter, 
+					  multiply_with_normal, calcnorm));
 }
 
-bool FieldsAlgo::CurrentDensityMapping(FieldHandle pot, FieldHandle con, FieldHandle dst,  FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm)
+bool 
+FieldsAlgo::MapCurrentDensityOntoField(FieldHandle pot, FieldHandle con, 
+				       FieldHandle dst,  FieldHandle& output, 
+				       std::string mappingmethod,
+				       std::string integrationmethod, 
+				       std::string integrationfilter, 
+				       bool multiply_with_normal, 
+				       bool calcnorm)
 {
-  CurrentDensityMappingAlgo algo;
-  return (algo.CurrentDensityMapping(pr_,0,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm));
+  MapCurrentDensityOntoFieldAlgo algo;
+  return (algo.MapCurrentDensityOntoField(pr_, 0, pot, con, dst, output, 
+					  mappingmethod, integrationmethod,
+					  integrationfilter, 
+					  multiply_with_normal,
+					  calcnorm));
 }
 
 
@@ -301,36 +364,64 @@ bool FieldsAlgo::ModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& out
 }
 
 
-bool FieldsAlgo::GradientModalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool calcnorm)
+bool 
+FieldsAlgo::MapFieldDataGradientOntoField(int numproc, FieldHandle src, 
+					  FieldHandle dst, FieldHandle& output,
+					  std::string mappingmethod,
+					  std::string integrationmethod, 
+					  std::string integrationfilter, 
+					  bool calcnorm)
 {
-  GradientModalMappingAlgo algo;
-  return (algo.GradientModalMapping(pr_,numproc,src,dst,output,mappingmethod,integrationmethod,integrationfilter,calcnorm));
+  MapFieldDataGradientOntoFieldAlgo algo;
+  return (algo.MapFieldDataGradientOntoField(pr_, numproc, src, dst, output, 
+					     mappingmethod, integrationmethod,
+					     integrationfilter, calcnorm));
 }
 
-bool FieldsAlgo::GradientModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool calcnorm)
+bool 
+FieldsAlgo::MapFieldDataGradientOntoField(FieldHandle src, FieldHandle dst, 
+					  FieldHandle& output, 
+					  std::string mappingmethod,
+					  std::string integrationmethod, 
+					  std::string integrationfilter, 
+					  bool calcnorm)
 {
-  GradientModalMappingAlgo algo;
-  return (algo.GradientModalMapping(pr_,0,src,dst,output,mappingmethod,integrationmethod,integrationfilter,calcnorm));
+  MapFieldDataGradientOntoFieldAlgo algo;
+  return (algo.MapFieldDataGradientOntoField(pr_, 0, src, dst, output,
+					     mappingmethod, integrationmethod,
+					     integrationfilter, calcnorm));
 }
 
-bool FieldsAlgo::NodalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value)
+bool 
+FieldsAlgo::MapFieldDataOntoFieldNodes(int numproc, FieldHandle src, 
+				       FieldHandle dst, FieldHandle& output, 
+				       std::string mappingmethod, 
+				       double def_value)
 {
-  NodalMappingAlgo algo;
-  return (algo.NodalMapping(pr_,numproc,src,dst,output,mappingmethod,def_value));
+  MapFieldDataOntoFieldNodesAlgo algo;
+  return (algo.MapFieldDataOntoFieldNodes(pr_, numproc, src, dst, output,
+					  mappingmethod, def_value));
 }
 
-bool FieldsAlgo::NodalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value)
+bool 
+FieldsAlgo::MapFieldDataOntoFieldNodes(FieldHandle src, FieldHandle dst, 
+				       FieldHandle& output, 
+				       std::string mappingmethod, 
+				       double def_value)
 {
-  NodalMappingAlgo algo;
-  return (algo.NodalMapping(pr_,0,src,dst,output,mappingmethod,def_value));
+  MapFieldDataOntoFieldNodesAlgo algo;
+  return (algo.MapFieldDataOntoFieldNodes(pr_, 0, src, dst, output,
+					  mappingmethod, def_value));
 }
 
-bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
+bool 
+FieldsAlgo::ConvertMappingMatrixToFieldData(FieldHandle input, 
+					    FieldHandle& output, 
+					    MatrixHandle mappingmatrix)
 {
-  MappingMatrixToFieldAlgo algo;
-  return(algo.MappingMatrixToField(pr_,input,output,mappingmatrix));
+  ConvertMappingMatrixToFieldDataAlgo algo;
+  return(algo.ConvertMappingMatrixToFieldData(pr_, input, output, 
+					      mappingmatrix));
 }
 
 bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
@@ -338,7 +429,7 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
   output = input;
   if (!input->mesh()->is_editable()) 
   {
-    if(!Unstructure(input,output))
+    if(!ConvertToUnstructuredMesh(input,output))
     {
       error("MakeEditable: Could not unstructure the mesh");
       return(false);
@@ -389,12 +480,12 @@ bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double toler
 }
 
 
-bool FieldsAlgo::SplitFieldByDomain(FieldHandle input, FieldHandle& output)
+bool FieldsAlgo::SplitAndMergeFieldByDomain(FieldHandle input, FieldHandle& output)
 {
   FieldHandle input_editable;
   if (!MakeEditable(input,input_editable)) return (false);
-  SplitFieldByDomainAlgo algo;
-  return(algo.SplitFieldByDomain(pr_,input_editable,output));
+  SplitAndMergeFieldByDomainAlgo algo;
+  return(algo.SplitAndMergeFieldByDomain(pr_,input_editable,output));
 }
 
 
@@ -422,10 +513,10 @@ bool FieldsAlgo::TransformField(FieldHandle input,FieldHandle& output,Transform&
 }
 
 
-bool FieldsAlgo::Unstructure(FieldHandle input,FieldHandle& output)
+bool FieldsAlgo::ConvertToUnstructuredMesh(FieldHandle input,FieldHandle& output)
 {
-  UnstructureAlgo algo;
-  return(algo.Unstructure(pr_,input,output));
+  ConvertToUnstructuredMeshAlgo algo;
+  return(algo.ConvertToUnstructuredMesh(pr_,input,output));
 }
 
 
@@ -435,10 +526,14 @@ bool FieldsAlgo::ClearAndChangeFieldBasis(FieldHandle input,FieldHandle& output,
   return(algo.ClearAndChangeFieldBasis(pr_,input,output,newbasis));
 }
 
-bool FieldsAlgo::ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh, bool scale_from_center)
+bool 
+FieldsAlgo::ScaleFieldMeshAndData(FieldHandle input, FieldHandle& output, 
+				  double scaledata, double scalemesh, 
+				  bool scale_from_center)
 {
-  ScaleFieldAlgo algo;
-  return(algo.ScaleField(pr_,input,output,scaledata,scalemesh,scale_from_center));
+  ScaleFieldMeshAndDataAlgo algo;
+  return(algo.ScaleFieldMeshAndData(pr_, input, output, scaledata, scalemesh,
+				    scale_from_center));
 }
 
 bool FieldsAlgo::BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output)
@@ -474,7 +569,7 @@ bool FieldsAlgo::DistanceField(FieldHandle input, FieldHandle& output, FieldHand
   {
     FieldHandle dobject;
     MatrixHandle dummy;
-    FieldBoundary(object,dobject,dummy);
+    GetFieldBoundary(object,dobject,dummy);
     if (dobject.get_rep() == 0)
     {
       error("DistanceField: Could not compute field boundary");
@@ -486,7 +581,7 @@ bool FieldsAlgo::DistanceField(FieldHandle input, FieldHandle& output, FieldHand
   else if (object->mesh()->dimensionality() == 2)
   {
     // Some how find_closest_face has not been implemented for other fields
-    // The following will call Unstructure internally
+    // The following will call ConvertToUnstructuredMesh internally
     if(!(MakeEditable(object,object))) return (false);
     DistanceFieldFaceAlgo algo;
     return(algo.DistanceField(pr_,input,output,object));

@@ -1,8 +1,8 @@
-itcl_class ModelCreation_FieldsData_SelectAndSetFieldsData {
+itcl_class ModelCreation_ChangeFieldData_SelectAndSetChangeFieldData {
    inherit Module
 
     constructor {config} {
-        set name SelectAndSetFieldsData
+        set name SelectAndSetChangeFieldData
         set_defaults
     }
 

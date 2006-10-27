@@ -31,13 +31,13 @@
 #include <Core/Algorithms/ArrayMath/ArrayObject.h>
 #include <Core/Algorithms/ArrayMath/ArrayEngine.h>
 
-// TensorVectorMath (TVM) is my namespace in which all Scalar, Vector, and Tensor math is defined.
+// DataArrayMath (TVM) is my namespace in which all Scalar, Vector, and Tensor math is defined.
 // The classes in this namespace have a definition which is more in line with
 // how functions are written in Algebra or Matlab than the native SCIRun Tensor
 // and Vector classes. Hence all calculations are performed in this specially
 // constructed namespace, to enhance the usability of SCIRun. 
 // The TVMHelp system contains an almost complete list of functions that are
-// defined in the TensorVectorMath, so when new functions are added, one does 
+// defined in the DataArrayMath, so when new functions are added, one does 
 // not need to update the GUI, but the module dynamically looks up the available
 // functions when it is created.
 
@@ -256,7 +256,7 @@ SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
 
   if( args[1] == "gethelp" )
   {
-    TensorVectorMath::ArrayEngineHelp Help;
+    DataArrayMath::ArrayEngineHelp Help;
     get_gui()->lock();
     get_gui()->eval("global " + get_id() +"-help");
     get_gui()->eval("set " + get_id() + "-help {" + Help.gethelp(true) +"}");

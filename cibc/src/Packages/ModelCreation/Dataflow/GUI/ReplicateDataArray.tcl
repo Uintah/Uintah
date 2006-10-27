@@ -1,4 +1,4 @@
-itcl_class ModelCreation_TensorVectorMath_ReplicateDataArray {
+itcl_class ModelCreation_DataArrayMath_ReplicateDataArray {
     inherit Module
     constructor {config} {
         set name ReplicateDataArray

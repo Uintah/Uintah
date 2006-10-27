@@ -28,7 +28,7 @@
 
 #include <Core/Algorithms/ArrayMath/ArrayEngineHelp.h>
 
-namespace TensorVectorMath {
+namespace DataArrayMath {
 
 void ArrayEngineHelp::createhelplist()
 {

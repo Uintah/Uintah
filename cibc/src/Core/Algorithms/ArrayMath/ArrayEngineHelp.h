@@ -36,7 +36,7 @@
 
 #include <Core/Algorithms/ArrayMath/share.h>
 
-namespace TensorVectorMath {
+namespace DataArrayMath {
 
 class ArrayEngineHelpEntry {
   public:

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CBDSetupSimulation" category="ContinuousBiDomain" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Bundle all the information needed to build a CardioWave simulation.
+    </summary>
+    <description>
+      <p>
+      Bundle all the information needed to build a CardioWave simulation.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>DomainBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>MembraneBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>StimulusBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>ReferenceBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>Parameters</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
+    </inputs>
+    <outputs>
+      <port>
+        <name>SimulationBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

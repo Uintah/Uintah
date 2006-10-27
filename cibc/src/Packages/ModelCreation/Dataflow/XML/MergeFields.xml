@@ -33,7 +33,7 @@
 
 
 
-<component name="MergeFields" category="FieldsCreate">
+<component name="MergeFields" category="CreateField">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

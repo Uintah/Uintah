@@ -32,7 +32,7 @@
 -->
 
 
-<component name="ClipFieldByFunction" category="FieldsCreate">
+<component name="ClipFieldByFunction" category="CreateField">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

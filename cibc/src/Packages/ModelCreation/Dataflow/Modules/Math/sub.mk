@@ -13,13 +13,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/Math
 
 SRCS     += \
-	$(SRCDIR)/ResizeMatrix.cc\
-	$(SRCDIR)/ReverseCuthillMcKee.cc\
-	$(SRCDIR)/CuthillMcKee.cc\
-	$(SRCDIR)/ApplyRowOperation.cc\
-	$(SRCDIR)/ApplyColumnOperation.cc\
 	$(SRCDIR)/AppendMatrix.cc\
-	$(SRCDIR)/SelectSubMatrix.cc\
+	$(SRCDIR)/GetSubMatrix.cc\
+	$(SRCDIR)/ReorderMatrixByCuthillMcKee.cc\
+	$(SRCDIR)/ReorderMatrixByReverseCuthillMcKee.cc\
+	$(SRCDIR)/ReportMatrixColumnMeasure.cc\
+	$(SRCDIR)/ReportMatrixRowMeasure.cc\
+	$(SRCDIR)/ResizeMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

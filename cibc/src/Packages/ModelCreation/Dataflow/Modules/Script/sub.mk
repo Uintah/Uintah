@@ -14,8 +14,8 @@ SRCDIR   := Packages/ModelCreation/Dataflow/Modules/Script
 
 SRCS     += \
 	$(SRCDIR)/ParameterList.cc\
-	$(SRCDIR)/ParameterListMatrix.cc\
-	$(SRCDIR)/ParameterListString.cc\
+	$(SRCDIR)/ManageParameterMatrix.cc\
+	$(SRCDIR)/ManageParameterString.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

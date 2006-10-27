@@ -30,8 +30,8 @@
 
 SET(Packages_ModelCreation_Dataflow_Modules_FiniteElements_SRCS
   BuildFEMatrix.cc
-  LinkToCompGrid.cc
-  LinkToCompGridByDomain.cc
+  CreateLinkBetweenMeshAndCompGrid.cc
+  CreateLinkBetweenMeshAndCompGridByDomain.cc
   CreateFEDirichletBC.cc
 )
 
