@@ -34,12 +34,6 @@ using namespace std;
 
 using namespace Uintah;
 using namespace SCIRun;
-#define use_fortran
-#ifdef use_fortran
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_1loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_2loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inc_dynamic_3loop_fort.h>
-#endif
 
 // flag to enable filter check
 // need even grid size, unfiltered values are +-1; filtered value should be 0
@@ -299,11 +293,6 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     int startX = indexLow.x();
     int endX = indexHigh.x()+1;
 
-#ifdef use_fortran
-    fort_inc_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
-	uVel,vVel,wVel,cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	indexLow,indexHigh);
-#else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -383,7 +372,6 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 	}
       }
     }
-#endif
     if (xminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
 	for (int colY = startY; colY < endY; colY ++) {
@@ -856,13 +844,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     if (xplus) endX--;
 
   TAU_PROFILE_START(compute1);
-#ifdef use_fortran
-    IntVector start(startX, startY, startZ);
-    IntVector end(endX - 1, endY - 1, endZ -1);
-    fort_inc_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
-	ccuVel,ccvVel,ccwVel,IsI,betaIJ[0],betaIJ[1],betaIJ[2],
-	betaIJ[3],betaIJ[4],betaIJ[5],UU,UV,UW,VV,VW,WW,start,end);
-#else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -901,7 +882,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	}
       }
     }
-#endif
   TAU_PROFILE_STOP(compute1);
 #ifndef PetscFilter
     if (xminus) { 
@@ -1488,14 +1468,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 #endif  
   TAU_PROFILE_START(compute2);
-#ifdef use_fortran
-    fort_inc_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
-	IsI, IsImag, betaHATIJ[0],betaHATIJ[1],betaHATIJ[2],
-	betaHATIJ[3],betaHATIJ[4],betaHATIJ[5],filterUVel,
-	filterVVel,filterWVel,filterUU, filterVV, filterWW,
-	filterUV, filterUW, filterVW, MLI,MMI,indexLow,indexHigh);
-#else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1596,7 +1568,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	}
       }
     }
-#endif
   TAU_PROFILE_STOP(compute2);
   TAU_PROFILE_START(compute3);
     startZ = indexLow.z();

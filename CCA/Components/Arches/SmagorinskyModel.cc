@@ -106,6 +106,12 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -141,6 +147,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
+    constCCVariable<double> uVelocityCC;
+    constCCVariable<double> vVelocityCC;
+    constCCVariable<double> wVelocityCC;
     constCCVariable<double> density;
     CCVariable<double> viscosity;
     constCCVariable<double> voidFraction;
@@ -158,6 +167,12 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
@@ -190,8 +205,9 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
 #endif      
-    fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
-		   idxLo, idxHi,
+    fort_smagmodel(uVelocity, vVelocity, wVelocity,
+		   uVelocityCC, vVelocityCC, wVelocityCC,
+		   density, viscosity, idxLo, idxHi,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
 		   mol_viscos, CF, d_factorMesh, d_filterl);
 
