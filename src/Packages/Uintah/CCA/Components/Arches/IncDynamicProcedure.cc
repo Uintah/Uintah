@@ -326,7 +326,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 	  ubp = 0.5*uVelCC[IntVector(colX,colY,colZ-1)];
 
 	  vnp = vVel[IntVector(colX,colY+1,colZ)];
-	  vsp = Vel[currCell];
+	  vsp = vVel[currCell];
           // colX,coly,colZ component cancels out when computing derivative,
           // so it has been ommited
 	  vep = 0.5*vVelCC[IntVector(colX+1,colY,colZ)];
