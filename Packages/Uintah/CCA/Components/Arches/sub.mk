@@ -111,17 +111,6 @@ $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/scalcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_fort.h
-$(SRCDIR)/IncDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/inc_dynamic_1loop_fort.h
-$(SRCDIR)/IncDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/inc_dynamic_2loop_fort.h
-$(SRCDIR)/IncDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/inc_dynamic_3loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_1loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_2loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_3loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_4loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_5loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_6loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_7loop_fort.h
-$(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_8loop_fort.h
 $(SRCDIR)/PressureSolver.$(OBJEXT): $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/PressureSolver.$(OBJEXT): $(SRCDIR)/fortran/normpress_fort.h
 $(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_scalar_fort.h

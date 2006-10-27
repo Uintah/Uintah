@@ -59,18 +59,7 @@ SRCS += \
 	$(SRCDIR)/vvelsrc.F \
 	$(SRCDIR)/wallbc.F \
 	$(SRCDIR)/wvelcoef.F \
-	$(SRCDIR)/wvelsrc.F \
-	$(SRCDIR)/inc_dynamic_1loop.F \
-	$(SRCDIR)/inc_dynamic_2loop.F \
-	$(SRCDIR)/inc_dynamic_3loop.F \
-	$(SRCDIR)/comp_dynamic_1loop.F \
-	$(SRCDIR)/comp_dynamic_2loop.F \
-	$(SRCDIR)/comp_dynamic_3loop.F \
-	$(SRCDIR)/comp_dynamic_4loop.F \
-	$(SRCDIR)/comp_dynamic_5loop.F \
-	$(SRCDIR)/comp_dynamic_6loop.F \
-	$(SRCDIR)/comp_dynamic_7loop.F \
-	$(SRCDIR)/comp_dynamic_8loop.F
+	$(SRCDIR)/wvelsrc.F 
 
 PSELIBS := 
 
@@ -129,17 +118,6 @@ $(SRCDIR)/vvelsrc.$(OBJEXT): $(SRCDIR)/vvelsrc_fort.h
 $(SRCDIR)/wallbc.$(OBJEXT): $(SRCDIR)/wallbc_fort.h
 $(SRCDIR)/wvelcoef.$(OBJEXT): $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.$(OBJEXT): $(SRCDIR)/wvelsrc_fort.h
-$(SRCDIR)/inc_dynamic_1loop.$(OBJEXT): $(SRCDIR)/inc_dynamic_1loop_fort.h
-$(SRCDIR)/inc_dynamic_2loop.$(OBJEXT): $(SRCDIR)/inc_dynamic_2loop_fort.h
-$(SRCDIR)/inc_dynamic_3loop.$(OBJEXT): $(SRCDIR)/inc_dynamic_3loop_fort.h
-$(SRCDIR)/comp_dynamic_1loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_1loop_fort.h
-$(SRCDIR)/comp_dynamic_2loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_2loop_fort.h
-$(SRCDIR)/comp_dynamic_3loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_3loop_fort.h
-$(SRCDIR)/comp_dynamic_4loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_4loop_fort.h
-$(SRCDIR)/comp_dynamic_5loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_5loop_fort.h
-$(SRCDIR)/comp_dynamic_6loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_6loop_fort.h
-$(SRCDIR)/comp_dynamic_7loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_7loop_fort.h
-$(SRCDIR)/comp_dynamic_8loop.$(OBJEXT): $(SRCDIR)/comp_dynamic_8loop_fort.h
 $(SRCDIR)/intrusion_computevel.$(OBJEXT): $(SRCDIR)/intrusion_computevel_fort.h
 $(SRCDIR)/mmbcvelocity_momex.$(OBJEXT): $(SRCDIR)/mmbcvelocity_momex_fort.h
 $(SRCDIR)/mmbcenthalpy_energyex.$(OBJEXT): $(SRCDIR)/mmbcenthalpy_energyex_fort.h
