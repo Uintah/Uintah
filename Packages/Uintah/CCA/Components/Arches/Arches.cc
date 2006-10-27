@@ -1201,6 +1201,18 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
 
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
@@ -1228,12 +1240,12 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
@@ -1251,12 +1263,11 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idxU] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
@@ -1273,12 +1284,11 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idx]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = newUVel[idx];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
@@ -1295,12 +1305,11 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idxV] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = newVVel[idxV];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
@@ -1317,12 +1326,11 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idx]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = newVVel[idx];
+	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+			 cellinfo->tfac[kk] * newWVel[idxW];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
@@ -1339,12 +1347,11 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idxW] +
-			      newWVel[idxW]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = newWVel[idxW];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
@@ -1361,12 +1368,11 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 	  IntVector idxV(ii,jj+1,kk);
 	  IntVector idxW(ii,jj,kk+1);
 	  
-	  double new_u = 0.5*(newUVel[idx] +
-			      newUVel[idxU]);
-	  double new_v = 0.5*(newVVel[idx] +
-			      newVVel[idxV]);
-	  double new_w = 0.5*(newWVel[idx] +
-			      newWVel[idx]);
+	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+			 cellinfo->efac[ii] * newUVel[idxU];
+	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+			 cellinfo->nfac[jj] * newVVel[idxV];
+	  double new_w = newWVel[idx];
 	  
 	  newCCUVel[idx] = new_u;
 	  newCCVVel[idx] = new_v;
