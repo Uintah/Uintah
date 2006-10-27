@@ -201,6 +201,12 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoULabel,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel, 
@@ -906,6 +912,9 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
     constSFCZVariable<double> wVel;
+    constCCVariable<double> uVelCC;
+    constCCVariable<double> vVelCC;
+    constCCVariable<double> wVelCC;
     constSFCXVariable<double> filterRhoU;
     constSFCYVariable<double> filterRhoV;
     constSFCZVariable<double> filterRhoW;
@@ -924,6 +933,12 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(uVelCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(filterRhoU, d_lab->d_filterRhoULabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel, matlIndex, patch,
@@ -1072,50 +1087,33 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	  double uep, uwp, unp, usp, utp, ubp;
 	  double vnp, vsp, vep, vwp, vtp, vbp;
 	  double wtp, wbp, wep, wwp, wnp, wsp;
-          double up, vp, wp;
 
-	  double uvelcur = uVel[currCell];
-	  double vvelcur = vVel[currCell];
-	  double wvelcur = wVel[currCell];
-	  double uvelxp1 = uVel[IntVector(colX+1,colY,colZ)];
-	  double vvelyp1 = vVel[IntVector(colX,colY+1,colZ)];
-	  double wvelzp1 = wVel[IntVector(colX,colY,colZ+1)];
+	  uep = uVel[IntVector(colX+1,colY,colZ)];
+	  uwp = uVel[currCell];
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  unp = 0.5*uVelCC[IntVector(colX,colY+1,colZ)];
+	  usp = 0.5*uVelCC[IntVector(colX,colY-1,colZ)];
+	  utp = 0.5*uVelCC[IntVector(colX,colY,colZ+1)];
+	  ubp = 0.5*uVelCC[IntVector(colX,colY,colZ-1)];
 
-	  uep = uvelxp1;
-	  uwp = uvelcur;
-          up = efaccur * uvelxp1 + wfaccur * uvelcur;
-	  unp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY+1,colZ)] +
-		          wfaccur * uVel[IntVector(colX,colY+1,colZ)]);
-	  usp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY-1,colZ)] +
-		          wfaccur * uVel[IntVector(colX,colY-1,colZ)]);
-	  utp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY,colZ+1)] +
-		          wfaccur * uVel[IntVector(colX,colY,colZ+1)]);
-	  ubp = 0.5*(up + efaccur * uVel[IntVector(colX+1,colY,colZ-1)] + 
-		          wfaccur * uVel[IntVector(colX,colY,colZ-1)]);
+	  vnp = vVel[IntVector(colX,colY+1,colZ)];
+	  vsp = Vel[currCell];
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  vep = 0.5*vVelCC[IntVector(colX+1,colY,colZ)];
+	  vwp = 0.5*vVelCC[IntVector(colX-1,colY,colZ)];
+	  vtp = 0.5*vVelCC[IntVector(colX,colY,colZ+1)];
+	  vbp = 0.5*vVelCC[IntVector(colX,colY,colZ-1)];
 
-	  vnp = vvelyp1;
-	  vsp = vvelcur;
-          vp = nfaccur * vvelyp1 + sfaccur * vvelcur;
-	  vep = 0.5*(vp + nfaccur * vVel[IntVector(colX+1,colY+1,colZ)] + 
-		          sfaccur * vVel[IntVector(colX+1,colY,colZ)]);
-	  vwp = 0.5*(vp + nfaccur * vVel[IntVector(colX-1,colY+1,colZ)] + 
-		          sfaccur * vVel[IntVector(colX-1,colY,colZ)]);
-	  vtp = 0.5*(vp + nfaccur * vVel[IntVector(colX,colY+1,colZ+1)] + 
-		          sfaccur * vVel[IntVector(colX,colY,colZ+1)]);
-	  vbp = 0.5*(vp + nfaccur * vVel[IntVector(colX,colY+1,colZ-1)] + 
-		          sfaccur * vVel[IntVector(colX,colY,colZ-1)]);
-
-	  wtp = wvelzp1;
-	  wbp = wvelcur;
-          wp = tfaccur * wvelzp1 + bfaccur * wvelcur;
-	  wep = 0.5*(wp + tfaccur * wVel[IntVector(colX+1,colY,colZ+1)] + 
-		          bfaccur * wVel[IntVector(colX+1,colY,colZ)]);
-	  wwp = 0.5*(wp + tfaccur * wVel[IntVector(colX-1,colY,colZ+1)] + 
-		          bfaccur * wVel[IntVector(colX-1,colY,colZ)]);
-	  wnp = 0.5*(wp + tfaccur * wVel[IntVector(colX,colY+1,colZ+1)] + 
-		          bfaccur * wVel[IntVector(colX,colY+1,colZ)]);
-	  wsp = 0.5*(wp + tfaccur * wVel[IntVector(colX,colY-1,colZ+1)] + 
-		          bfaccur * wVel[IntVector(colX,colY-1,colZ)]);
+	  wtp = wVel[IntVector(colX,colY,colZ+1)];
+	  wbp = wVel[currCell];
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  wep = 0.5*wVelCC[IntVector(colX+1,colY,colZ)];
+	  wwp = 0.5*wVelCC[IntVector(colX-1,colY,colZ)];
+	  wnp = 0.5*wVelCC[IntVector(colX,colY+1,colZ)];
+	  wsp = 0.5*wVelCC[IntVector(colX,colY-1,colZ)];
 
 	  //     calculate the grid strain rate tensor
 	  (SIJ[0])[currCell] = (uep-uwp)/sewcur;
@@ -1131,110 +1129,105 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	  double fuep, fuwp, funp, fusp, futp, fubp;
 	  double fvnp, fvsp, fvep, fvwp, fvtp, fvbp;
 	  double fwtp, fwbp, fwep, fwwp, fwnp, fwsp;
-          double fup, fvp, fwp;
 
-	  double fuvelcur = filterRhoU[currCell]/
-		            (0.5*(filterRho[currCell] +
-			     filterRho[IntVector(colX-1,colY,colZ)]));
-	  double fvvelcur = filterRhoV[currCell]/
-		            (0.5*(filterRho[currCell] +
-			     filterRho[IntVector(colX,colY-1,colZ)]));
-	  double fwvelcur = filterRhoW[currCell]/
-		            (0.5*(filterRho[currCell] +
-			     filterRho[IntVector(colX,colY,colZ-1)]));
-	  double fuvelxp1 = filterRhoU[IntVector(colX+1,colY,colZ)]/
-		            (0.5*(filterRho[currCell] +
-			     filterRho[IntVector(colX+1,colY,colZ)]));
-	  double fvvelyp1 = filterRhoV[IntVector(colX,colY+1,colZ)]/
-		            (0.5*(filterRho[currCell] +
-			     filterRho[IntVector(colX,colY+1,colZ)]));
-	  double fwvelzp1 = filterRhoW[IntVector(colX,colY,colZ+1)]/
-		            (0.5*(filterRho[currCell] +
-			     filterRho[IntVector(colX,colY,colZ+1)]));
+	  fuep = filterRhoU[IntVector(colX+1,colY,colZ)]/
+		 (0.5*(filterRho[currCell] +
+		  filterRho[IntVector(colX+1,colY,colZ)]));
+	  fuwp = filterRhoU[currCell]/
+		 (0.5*(filterRho[currCell] +
+		  filterRho[IntVector(colX-1,colY,colZ)]));
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  funp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY+1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		       filterRho[IntVector(colX+1,colY+1,colZ)])) +
+		      wfaccur * filterRhoU[IntVector(colX,colY+1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		       filterRho[IntVector(colX-1,colY+1,colZ)])));
+	  fusp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY-1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		       filterRho[IntVector(colX+1,colY-1,colZ)])) +
+		      wfaccur * filterRhoU[IntVector(colX,colY-1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		       filterRho[IntVector(colX-1,colY-1,colZ)])));
+	  futp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		       filterRho[IntVector(colX+1,colY,colZ+1)])) +
+		      wfaccur * filterRhoU[IntVector(colX,colY,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		       filterRho[IntVector(colX-1,colY,colZ+1)])));
+	  fubp = 0.5*(efaccur * filterRhoU[IntVector(colX+1,colY,colZ-1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		       filterRho[IntVector(colX+1,colY,colZ-1)])) +
+		      wfaccur * filterRhoU[IntVector(colX,colY,colZ-1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		       filterRho[IntVector(colX-1,colY,colZ-1)])));
 
-	  fuep = fuvelxp1;
-	  fuwp = fuvelcur;
-          fup = efaccur * fuvelxp1 + wfaccur * fuvelcur;
-	  funp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY+1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		             filterRho[IntVector(colX+1,colY+1,colZ)])) +
-		            wfaccur * filterRhoU[IntVector(colX,colY+1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		             filterRho[IntVector(colX-1,colY+1,colZ)])));
-	  fusp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY-1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		             filterRho[IntVector(colX+1,colY-1,colZ)])) +
-		            wfaccur * filterRhoU[IntVector(colX,colY-1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		             filterRho[IntVector(colX-1,colY-1,colZ)])));
-	  futp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		             filterRho[IntVector(colX+1,colY,colZ+1)])) +
-		            wfaccur * filterRhoU[IntVector(colX,colY,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		             filterRho[IntVector(colX-1,colY,colZ+1)])));
-	  fubp = 0.5*(fup + efaccur * filterRhoU[IntVector(colX+1,colY,colZ-1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		             filterRho[IntVector(colX+1,colY,colZ-1)])) +
-		            wfaccur * filterRhoU[IntVector(colX,colY,colZ-1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		             filterRho[IntVector(colX-1,colY,colZ-1)])));
+	  fvnp = filterRhoV[IntVector(colX,colY+1,colZ)]/
+		 (0.5*(filterRho[currCell] +
+		  filterRho[IntVector(colX,colY+1,colZ)]));
+	  fvsp = filterRhoV[currCell]/
+		 (0.5*(filterRho[currCell] +
+		  filterRho[IntVector(colX,colY-1,colZ)]));
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  fvep = 0.5*(nfaccur * filterRhoV[IntVector(colX+1,colY+1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		       filterRho[IntVector(colX+1,colY+1,colZ)])) +
+		      sfaccur * filterRhoV[IntVector(colX+1,colY,colZ)]/
+		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		       filterRho[IntVector(colX+1,colY-1,colZ)])));
+	  fvwp = 0.5*(nfaccur * filterRhoV[IntVector(colX-1,colY+1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		       filterRho[IntVector(colX-1,colY+1,colZ)])) +
+		      sfaccur * filterRhoV[IntVector(colX-1,colY,colZ)]/
+		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		       filterRho[IntVector(colX-1,colY-1,colZ)])));
+	  fvtp = 0.5*(nfaccur * filterRhoV[IntVector(colX,colY+1,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		       filterRho[IntVector(colX,colY+1,colZ+1)])) +
+		      sfaccur * filterRhoV[IntVector(colX,colY,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
+		       filterRho[IntVector(colX,colY-1,colZ+1)])));
+	  fvbp = 0.5*(nfaccur * filterRhoV[IntVector(colX,colY+1,colZ-1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		       filterRho[IntVector(colX,colY+1,colZ-1)])) +
+		      sfaccur * filterRhoV[IntVector(colX,colY,colZ-1)]/
+		      (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
+		       filterRho[IntVector(colX,colY-1,colZ-1)])));
 
-	  fvnp = fvvelyp1;
-	  fvsp = fvvelcur;
-          fvp = nfaccur * fvvelyp1 + sfaccur * fvvelcur;
-	  fvep = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX+1,colY+1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		             filterRho[IntVector(colX+1,colY+1,colZ)])) +
-		            sfaccur * filterRhoV[IntVector(colX+1,colY,colZ)]/
-		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		             filterRho[IntVector(colX+1,colY-1,colZ)])));
-	  fvwp = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX-1,colY+1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		             filterRho[IntVector(colX-1,colY+1,colZ)])) +
-		            sfaccur * filterRhoV[IntVector(colX-1,colY,colZ)]/
-		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		             filterRho[IntVector(colX-1,colY-1,colZ)])));
-	  fvtp = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX,colY+1,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		             filterRho[IntVector(colX,colY+1,colZ+1)])) +
-		            sfaccur * filterRhoV[IntVector(colX,colY,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
-		             filterRho[IntVector(colX,colY-1,colZ+1)])));
-	  fvbp = 0.5*(fvp + nfaccur * filterRhoV[IntVector(colX,colY+1,colZ-1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		             filterRho[IntVector(colX,colY+1,colZ-1)])) +
-		            sfaccur * filterRhoV[IntVector(colX,colY,colZ-1)]/
-		            (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
-		             filterRho[IntVector(colX,colY-1,colZ-1)])));
-
-	  fwtp = fwvelzp1;
-	  fwbp = fwvelcur;
-          fwp = tfaccur * fwvelzp1 + bfaccur * fwvelcur;
-	  fwep = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX+1,colY,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		             filterRho[IntVector(colX+1,colY,colZ+1)])) +
-		            bfaccur * filterRhoW[IntVector(colX+1,colY,colZ)]/
-		            (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
-		             filterRho[IntVector(colX+1,colY,colZ-1)])));
-	  fwwp = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX-1,colY,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		             filterRho[IntVector(colX-1,colY,colZ+1)])) +
-		            bfaccur * filterRhoW[IntVector(colX-1,colY,colZ)]/
-		            (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
-		             filterRho[IntVector(colX-1,colY,colZ-1)])));
-	  fwnp = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX,colY+1,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		             filterRho[IntVector(colX,colY+1,colZ+1)])) +
-		            bfaccur * filterRhoW[IntVector(colX,colY+1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
-		             filterRho[IntVector(colX,colY+1,colZ-1)])));
-	  fwsp = 0.5*(fwp + tfaccur * filterRhoW[IntVector(colX,colY-1,colZ+1)]/
-		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		             filterRho[IntVector(colX,colY-1,colZ+1)])) +
-		            bfaccur * filterRhoW[IntVector(colX,colY-1,colZ)]/
-		            (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
-		             filterRho[IntVector(colX,colY-1,colZ-1)])));
+	  fwtp = filterRhoW[IntVector(colX,colY,colZ+1)]/
+		 (0.5*(filterRho[currCell] +
+		  filterRho[IntVector(colX,colY,colZ+1)]));
+	  fwbp = filterRhoW[currCell]/
+		 (0.5*(filterRho[currCell] +
+		  filterRho[IntVector(colX,colY,colZ-1)]));
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  fwep = 0.5*(tfaccur * filterRhoW[IntVector(colX+1,colY,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		       filterRho[IntVector(colX+1,colY,colZ+1)])) +
+		      bfaccur * filterRhoW[IntVector(colX+1,colY,colZ)]/
+		      (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
+		       filterRho[IntVector(colX+1,colY,colZ-1)])));
+	  fwwp = 0.5*(tfaccur * filterRhoW[IntVector(colX-1,colY,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		       filterRho[IntVector(colX-1,colY,colZ+1)])) +
+		      bfaccur * filterRhoW[IntVector(colX-1,colY,colZ)]/
+		      (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
+		       filterRho[IntVector(colX-1,colY,colZ-1)])));
+	  fwnp = 0.5*(tfaccur * filterRhoW[IntVector(colX,colY+1,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		       filterRho[IntVector(colX,colY+1,colZ+1)])) +
+		      bfaccur * filterRhoW[IntVector(colX,colY+1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
+		       filterRho[IntVector(colX,colY+1,colZ-1)])));
+	  fwsp = 0.5*(tfaccur * filterRhoW[IntVector(colX,colY-1,colZ+1)]/
+		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		       filterRho[IntVector(colX,colY-1,colZ+1)])) +
+		      bfaccur * filterRhoW[IntVector(colX,colY-1,colZ)]/
+		      (0.5*(filterRho[IntVector(colX,colY-1,colZ)] +
+		       filterRho[IntVector(colX,colY-1,colZ-1)])));
 
 	  //     calculate the filtered strain rate tensor
 	  (filterSIJ[0])[currCell] = (fuep-fuwp)/sewcur;
@@ -1249,63 +1242,48 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 
 	  double scalarxp, scalarxm, scalaryp;
 	  double scalarym, scalarzp, scalarzm;
-	  double scalarcurr;
 	  double fscalarxp, fscalarxm, fscalaryp;
 	  double fscalarym, fscalarzp, fscalarzm;
-	  double fscalarcurr;
 	  double enthalpyxp, enthalpyxm, enthalpyyp;
 	  double enthalpyym, enthalpyzp, enthalpyzm;
-	  double enthalpycurr;
 	  double fenthalpyxp, fenthalpyxm, fenthalpyyp;
 	  double fenthalpyym, fenthalpyzp, fenthalpyzm;
-	  double fenthalpycurr;
 	  double reactScalarxp, reactScalarxm, reactScalaryp;
 	  double reactScalarym, reactScalarzp, reactScalarzm;
-	  double reactScalarcurr;
 	  double freactScalarxp, freactScalarxm, freactScalaryp;
 	  double freactScalarym, freactScalarzp, freactScalarzm;
-	  double freactScalarcurr;
 
           if (d_dynScalarModel) {
             if (d_calcScalar) {
 	      scalarcurr = scalar[currCell];
 
-	      scalarxm = 0.5*(scalarcurr+
-			      scalar[IntVector(colX-1,colY,colZ)]);
-	      scalarxp = 0.5*(scalarcurr+
-			      scalar[IntVector(colX+1,colY,colZ)]);
-	      scalarym = 0.5*(scalarcurr+
-			      scalar[IntVector(colX,colY-1,colZ)]);
-	      scalaryp = 0.5*(scalarcurr+
-			      scalar[IntVector(colX,colY+1,colZ)]);
-	      scalarzm = 0.5*(scalarcurr+
-			      scalar[IntVector(colX,colY,colZ-1)]);
-	      scalarzp = 0.5*(scalarcurr+
-			      scalar[IntVector(colX,colY,colZ+1)]);
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	      scalarxm = 0.5*scalar[IntVector(colX-1,colY,colZ)];
+	      scalarxp = 0.5*scalar[IntVector(colX+1,colY,colZ)];
+	      scalarym = 0.5*scalar[IntVector(colX,colY-1,colZ)];
+	      scalaryp = 0.5*scalar[IntVector(colX,colY+1,colZ)];
+	      scalarzm = 0.5*scalar[IntVector(colX,colY,colZ-1)];
+	      scalarzp = 0.5*scalar[IntVector(colX,colY,colZ+1)];
 
 	      (scalarGrad[0])[currCell] = (scalarxp-scalarxm)/sewcur;
 	      (scalarGrad[1])[currCell] = (scalaryp-scalarym)/snscur;
 	      (scalarGrad[2])[currCell] = (scalarzp-scalarzm)/stbcur;
 
-	      fscalarcurr = filterRhoF[currCell]/filterRho[currCell];
 
-	      fscalarxm = 0.5*(fscalarcurr+
-			      filterRhoF[IntVector(colX-1,colY,colZ)]/
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	      fscalarxm = 0.5*(filterRhoF[IntVector(colX-1,colY,colZ)]/
 		              filterRho[IntVector(colX-1,colY,colZ)]);
-	      fscalarxp = 0.5*(fscalarcurr+
-			      filterRhoF[IntVector(colX+1,colY,colZ)]/
+	      fscalarxp = 0.5*(filterRhoF[IntVector(colX+1,colY,colZ)]/
 			      filterRho[IntVector(colX+1,colY,colZ)]);
-	      fscalarym = 0.5*(fscalarcurr+
-			      filterRhoF[IntVector(colX,colY-1,colZ)]/
+	      fscalarym = 0.5*(filterRhoF[IntVector(colX,colY-1,colZ)]/
 			      filterRho[IntVector(colX,colY-1,colZ)]);
-	      fscalaryp = 0.5*(fscalarcurr+
-			      filterRhoF[IntVector(colX,colY+1,colZ)]/
+	      fscalaryp = 0.5*(filterRhoF[IntVector(colX,colY+1,colZ)]/
 			      filterRho[IntVector(colX,colY+1,colZ)]);
-	      fscalarzm = 0.5*(fscalarcurr+
-			      filterRhoF[IntVector(colX,colY,colZ-1)]/
+	      fscalarzm = 0.5*(filterRhoF[IntVector(colX,colY,colZ-1)]/
 			      filterRho[IntVector(colX,colY,colZ-1)]);
-	      fscalarzp = 0.5*(fscalarcurr+
-			      filterRhoF[IntVector(colX,colY,colZ+1)]/
+	      fscalarzp = 0.5*(filterRhoF[IntVector(colX,colY,colZ+1)]/
 			      filterRho[IntVector(colX,colY,colZ+1)]);
 
 	      (filterScalarGrad[0])[currCell] = (fscalarxp-fscalarxm)/sewcur;
@@ -1313,44 +1291,34 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	      (filterScalarGrad[2])[currCell] = (fscalarzp-fscalarzm)/stbcur;
             }
             if (d_calcEnthalpy) {
-	      enthalpycurr = enthalpy[currCell];
 
-	      enthalpyxm = 0.5*(enthalpycurr+
-			      enthalpy[IntVector(colX-1,colY,colZ)]);
-	      enthalpyxp = 0.5*(enthalpycurr+
-			      enthalpy[IntVector(colX+1,colY,colZ)]);
-	      enthalpyym = 0.5*(enthalpycurr+
-			      enthalpy[IntVector(colX,colY-1,colZ)]);
-	      enthalpyyp = 0.5*(enthalpycurr+
-			      enthalpy[IntVector(colX,colY+1,colZ)]);
-	      enthalpyzm = 0.5*(enthalpycurr+
-			      enthalpy[IntVector(colX,colY,colZ-1)]);
-	      enthalpyzp = 0.5*(enthalpycurr+
-			      enthalpy[IntVector(colX,colY,colZ+1)]);
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	      enthalpyxm = 0.5*enthalpy[IntVector(colX-1,colY,colZ)];
+	      enthalpyxp = 0.5*enthalpy[IntVector(colX+1,colY,colZ)];
+	      enthalpyym = 0.5*enthalpy[IntVector(colX,colY-1,colZ)];
+	      enthalpyyp = 0.5*enthalpy[IntVector(colX,colY+1,colZ)];
+	      enthalpyzm = 0.5*enthalpy[IntVector(colX,colY,colZ-1)];
+	      enthalpyzp = 0.5*enthalpy[IntVector(colX,colY,colZ+1)];
 
 	      (enthalpyGrad[0])[currCell] = (enthalpyxp-enthalpyxm)/sewcur;
 	      (enthalpyGrad[1])[currCell] = (enthalpyyp-enthalpyym)/snscur;
 	      (enthalpyGrad[2])[currCell] = (enthalpyzp-enthalpyzm)/stbcur;
 
-	      fenthalpycurr = filterRhoE[currCell]/filterRho[currCell];
 
-	      fenthalpyxm = 0.5*(fenthalpycurr+
-			      filterRhoE[IntVector(colX-1,colY,colZ)]/
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	      fenthalpyxm = 0.5*(filterRhoE[IntVector(colX-1,colY,colZ)]/
 		              filterRho[IntVector(colX-1,colY,colZ)]);
-	      fenthalpyxp = 0.5*(fenthalpycurr+
-			      filterRhoE[IntVector(colX+1,colY,colZ)]/
+	      fenthalpyxp = 0.5*(filterRhoE[IntVector(colX+1,colY,colZ)]/
 			      filterRho[IntVector(colX+1,colY,colZ)]);
-	      fenthalpyym = 0.5*(fenthalpycurr+
-			      filterRhoE[IntVector(colX,colY-1,colZ)]/
+	      fenthalpyym = 0.5*(filterRhoE[IntVector(colX,colY-1,colZ)]/
 			      filterRho[IntVector(colX,colY-1,colZ)]);
-	      fenthalpyyp = 0.5*(fenthalpycurr+
-			      filterRhoE[IntVector(colX,colY+1,colZ)]/
+	      fenthalpyyp = 0.5*(filterRhoE[IntVector(colX,colY+1,colZ)]/
 			      filterRho[IntVector(colX,colY+1,colZ)]);
-	      fenthalpyzm = 0.5*(fenthalpycurr+
-			      filterRhoE[IntVector(colX,colY,colZ-1)]/
+	      fenthalpyzm = 0.5*(filterRhoE[IntVector(colX,colY,colZ-1)]/
 			      filterRho[IntVector(colX,colY,colZ-1)]);
-	      fenthalpyzp = 0.5*(fenthalpycurr+
-			      filterRhoE[IntVector(colX,colY,colZ+1)]/
+	      fenthalpyzp = 0.5*(filterRhoE[IntVector(colX,colY,colZ+1)]/
 			      filterRho[IntVector(colX,colY,colZ+1)]);
 
 	      (filterEnthalpyGrad[0])[currCell] = (fenthalpyxp-fenthalpyxm)/
@@ -1361,20 +1329,15 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 		                                  stbcur;
             }
             if (d_calcReactingScalar) {
-	      reactScalarcurr = reactScalar[currCell];
 
-	      reactScalarxm = 0.5*(reactScalarcurr+
-			      reactScalar[IntVector(colX-1,colY,colZ)]);
-	      reactScalarxp = 0.5*(reactScalarcurr+
-			      reactScalar[IntVector(colX+1,colY,colZ)]);
-	      reactScalarym = 0.5*(reactScalarcurr+
-			      reactScalar[IntVector(colX,colY-1,colZ)]);
-	      reactScalaryp = 0.5*(reactScalarcurr+
-			      reactScalar[IntVector(colX,colY+1,colZ)]);
-	      reactScalarzm = 0.5*(reactScalarcurr+
-			      reactScalar[IntVector(colX,colY,colZ-1)]);
-	      reactScalarzp = 0.5*(reactScalarcurr+
-			      reactScalar[IntVector(colX,colY,colZ+1)]);
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	      reactScalarxm = 0.5*reactScalar[IntVector(colX-1,colY,colZ)];
+	      reactScalarxp = 0.5*reactScalar[IntVector(colX+1,colY,colZ)];
+	      reactScalarym = 0.5*reactScalar[IntVector(colX,colY-1,colZ)];
+	      reactScalaryp = 0.5*reactScalar[IntVector(colX,colY+1,colZ)];
+	      reactScalarzm = 0.5*reactScalar[IntVector(colX,colY,colZ-1)];
+	      reactScalarzp = 0.5*reactScalar[IntVector(colX,colY,colZ+1)];
 
 	      (reactScalarGrad[0])[currCell] = (reactScalarxp-reactScalarxm)/
 		                               sewcur;
@@ -1383,25 +1346,20 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	      (reactScalarGrad[2])[currCell] = (reactScalarzp-reactScalarzm)/
 		                               stbcur;
 
-	      freactScalarcurr = filterRhoRF[currCell]/filterRho[currCell];
 
-	      freactScalarxm = 0.5*(freactScalarcurr+
-			      filterRhoRF[IntVector(colX-1,colY,colZ)]/
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	      freactScalarxm = 0.5*(filterRhoRF[IntVector(colX-1,colY,colZ)]/
 		              filterRho[IntVector(colX-1,colY,colZ)]);
-	      freactScalarxp = 0.5*(freactScalarcurr+
-			      filterRhoRF[IntVector(colX+1,colY,colZ)]/
+	      freactScalarxp = 0.5*(filterRhoRF[IntVector(colX+1,colY,colZ)]/
 			      filterRho[IntVector(colX+1,colY,colZ)]);
-	      freactScalarym = 0.5*(freactScalarcurr+
-			      filterRhoRF[IntVector(colX,colY-1,colZ)]/
+	      freactScalarym = 0.5*(filterRhoRF[IntVector(colX,colY-1,colZ)]/
 			      filterRho[IntVector(colX,colY-1,colZ)]);
-	      freactScalaryp = 0.5*(freactScalarcurr+
-			      filterRhoRF[IntVector(colX,colY+1,colZ)]/
+	      freactScalaryp = 0.5*(filterRhoRF[IntVector(colX,colY+1,colZ)]/
 			      filterRho[IntVector(colX,colY+1,colZ)]);
-	      freactScalarzm = 0.5*(freactScalarcurr+
-			      filterRhoRF[IntVector(colX,colY,colZ-1)]/
+	      freactScalarzm = 0.5*(filterRhoRF[IntVector(colX,colY,colZ-1)]/
 			      filterRho[IntVector(colX,colY,colZ-1)]);
-	      freactScalarzp = 0.5*(freactScalarcurr+
-			      filterRhoRF[IntVector(colX,colY,colZ+1)]/
+	      freactScalarzp = 0.5*(filterRhoRF[IntVector(colX,colY,colZ+1)]/
 			      filterRho[IntVector(colX,colY,colZ+1)]);
 
 	      (filterReactScalarGrad[0])[currCell] = 
