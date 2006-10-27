@@ -30,8 +30,8 @@
 
 SET(Packages_ModelCreation_Dataflow_Modules_Script_SRCS
   ParameterList.cc
-  ParameterListMatrix.cc
-  ParameterListString.cc
+  ManageParameterMatrix.cc
+  ManageParameterString.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_Script ${Packages_ModelCreation_Dataflow_Modules_Script_SRCS})

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ConvertMatrixToString" category="Converter" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      ConvertMatrixToString prints the contents of a matrix into a string.
+    </summary>
+    <description>
+      <p>       
+      ConvertMatrixToString prints the contents of a matrix into a string.
+      For a dense matrix it outputs all the rows and columns of the
+      matrix. For a sparse matrix only the non zero elements are
+      printed.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>String</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

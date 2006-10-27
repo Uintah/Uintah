@@ -13,10 +13,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/Converter
 
 SRCS     += \
-	$(SRCDIR)/MatrixToString.cc\
-	$(SRCDIR)/MatrixToField.cc\
-	$(SRCDIR)/NrrdToField.cc\
-	$(SRCDIR)/MatricesToDipoleField.cc\
+	$(SRCDIR)/ConvertMatrixToString.cc\
+	$(SRCDIR)/ConvertMatrixToField.cc\
+	$(SRCDIR)/ConvertNrrdToField.cc\
+	$(SRCDIR)/ConvertMatricesToDipoleField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

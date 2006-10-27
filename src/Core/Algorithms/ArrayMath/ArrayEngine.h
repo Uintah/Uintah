@@ -81,7 +81,7 @@ class SCISHARE ArrayEngine {
 }
 
 
-namespace TensorVectorMath {
+namespace DataArrayMath {
 
 class SCISHARE ArrayEngineAlgo : public SCIRun::DynamicAlgoBase
 {

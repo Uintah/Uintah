@@ -13,29 +13,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FieldsData
 
 SRCS     += \
-	$(SRCDIR)/ComputeFieldData.cc\
-	$(SRCDIR)/ComputeFieldsData.cc\
-	$(SRCDIR)/CreateFieldData.cc\
-	$(SRCDIR)/DistanceToBoundary.cc\
-	$(SRCDIR)/DistanceToField.cc\
-	$(SRCDIR)/FieldDataElemToNode.cc\
-	$(SRCDIR)/FieldDataNodeToElem.cc\
-	$(SRCDIR)/IsInsideField.cc\
-	$(SRCDIR)/SelectAndSetFieldData.cc\
-	$(SRCDIR)/SelectAndSetFieldsData.cc\
+	$(SRCDIR)/ModalMapping.cc\
 	$(SRCDIR)/SelectByFieldData.cc\
 	$(SRCDIR)/SelectByFieldsData.cc\
-	$(SRCDIR)/SignedDistanceToField.cc\
-	$(SRCDIR)/MappingMatrixToField.cc\
-	$(SRCDIR)/GetFieldData.cc\
-  $(SRCDIR)/SetFieldData.cc\
-	$(SRCDIR)/IndicesToData.cc\
-	$(SRCDIR)/NodalMapping.cc\
-	$(SRCDIR)/ModalMapping.cc\
-	$(SRCDIR)/CurrentDensityMapping.cc\
-	$(SRCDIR)/IsInsideFields.cc\
-	$(SRCDIR)/GradientModalMapping.cc\
-	$(SRCDIR)/FieldDataMeasure.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -47,8 +27,8 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Packages/ModelCreation/Core/Fields \
         Core/Algorithms/Converter \
         Core/Algorithms/Fields \
-        Core/Algorithms/ArrayMath 
-        
+        Core/Algorithms/ArrayMath
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

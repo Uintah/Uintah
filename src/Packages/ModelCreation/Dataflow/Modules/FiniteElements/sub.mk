@@ -14,9 +14,9 @@ SRCDIR   := Packages/ModelCreation/Dataflow/Modules/FiniteElements
 
 SRCS     += \
 	$(SRCDIR)/BuildFEMatrix.cc\
-	$(SRCDIR)/LinkToCompGrid.cc\
-	$(SRCDIR)/LinkToCompGridByDomain.cc\
 	$(SRCDIR)/CreateFEDirichletBC.cc\
+	$(SRCDIR)/CreateLinkBetweenMeshAndCompGridByDomain.cc\
+	$(SRCDIR)/CreateLinkBetweenMeshAndCompGrid.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -25,8 +25,8 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Dataflow/TkExtensions \
         Core/Algorithms/Fields \
-        Core/Algorithms/Math 
-        
+        Core/Algorithms/Math
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

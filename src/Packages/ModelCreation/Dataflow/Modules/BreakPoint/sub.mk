@@ -13,10 +13,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/BreakPoint
 
 SRCS     += \
-	$(SRCDIR)/BundleBreakPoint.cc\
-	$(SRCDIR)/FieldBreakPoint.cc\
-	$(SRCDIR)/MatrixBreakPoint.cc\
-	$(SRCDIR)/StringBreakPoint.cc\
+	$(SRCDIR)/InsertBundleBreakPoint.cc\
+	$(SRCDIR)/InsertFieldBreakPoint.cc\
+	$(SRCDIR)/InsertMatrixBreakPoint.cc\
+	$(SRCDIR)/InsertStringBreakPoint.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

@@ -169,7 +169,7 @@ int main(int argc, char *argv[], char **environment)
           std::cout << "TESTING: " << input->get_name() << "\n";
           
           // Test the algorithm
-          if (!(falgo.ConvertToTetVol(input,output)))
+          if (!(falgo.ConvertMeshToTetVol(input,output)))
           {
             std::cerr << "ERROR: ConvertToTetVol Algorithm failed.\n";
             exit (1);
@@ -241,7 +241,7 @@ int main(int argc, char *argv[], char **environment)
           std::cout << "TESTING: " << input->get_name() << "\n";
           
           // Test the algorithm
-          if (!(falgo.ConvertToTriSurf(input,output)))
+          if (!(falgo.ConvertMeshToTriSurf(input,output)))
           {
             std::cerr << "ERROR: ConvertToTriSurf Algorithm failed.\n";
             exit (1);
@@ -317,7 +317,7 @@ int main(int argc, char *argv[], char **environment)
           std::cout << "TESTING: " << input->get_name() << "\n";
           
           // Test the algorithm
-          if (!(falgo.FieldBoundary(input,output,mapping)))
+          if (!(falgo.GetFieldBoundary(input,output,mapping)))
           {
             std::cerr << "ERROR: FieldBoundary Algorithm failed.\n";
             exit (1);
@@ -392,7 +392,7 @@ int main(int argc, char *argv[], char **environment)
           std::cout << "TESTING: " << input->get_name() << "\n";
           
           // Test the algorithm
-          if (!(falgo.Unstructure(input,output)))
+          if (!(falgo.ConvertToUnstructuredMesh(input,output)))
           {
             std::cerr << "ERROR: Unstructure Algorithm failed.\n";
             exit (1);

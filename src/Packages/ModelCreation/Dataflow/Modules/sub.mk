@@ -12,20 +12,21 @@ SRCDIR := Packages/ModelCreation/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/BreakPoint\
-	$(SRCDIR)/DataInfo\
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Script\
-  $(SRCDIR)/SelectionMask\
-	$(SRCDIR)/FieldsData\
-	$(SRCDIR)/FieldsCreate\
-	$(SRCDIR)/FieldsProperty\
-	$(SRCDIR)/FieldsGeometry\
-	$(SRCDIR)/FieldsExample\
-	$(SRCDIR)/FiniteElements\
+	$(SRCDIR)/ChangeFieldData\
+	$(SRCDIR)/ChangeMesh\
 	$(SRCDIR)/Converter\
-	$(SRCDIR)/Math\
+	$(SRCDIR)/CreateField\
+	$(SRCDIR)/DataArrayMath\
+	$(SRCDIR)/DataIO\
 	$(SRCDIR)/DataStreaming\
-	$(SRCDIR)/TensorVectorMath\
+	$(SRCDIR)/ExampleFields\
+	$(SRCDIR)/FieldProperty\
+	$(SRCDIR)/FieldsData\
+	$(SRCDIR)/FiniteElements\
+	$(SRCDIR)/Math\
+	$(SRCDIR)/ReportInfo\
+	$(SRCDIR)/Script\
+	$(SRCDIR)/SelectionMask\
 	$(SRCDIR)/Time\
 #[INSERT NEW CATEGORY DIR HERE]
 

@@ -29,7 +29,7 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/Time
 
 SET(Packages_ModelCreation_Dataflow_Modules_Time_SRCS
-  TimeToWeights.cc
+  ConvertTimeToWeightedIndices.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_Time ${Packages_ModelCreation_Dataflow_Modules_Time_SRCS})

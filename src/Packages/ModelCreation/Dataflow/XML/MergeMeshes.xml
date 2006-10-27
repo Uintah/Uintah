@@ -33,7 +33,7 @@
 
 
 
-<component name="MergeMeshes" category="FieldsCreate">
+<component name="MergeMeshes" category="CreateField">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

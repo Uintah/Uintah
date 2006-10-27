@@ -1,4 +1,4 @@
-itcl_class ModelCreation_TensorVectorMath_CreateDataArray {
+itcl_class ModelCreation_DataArrayMath_CreateDataArray {
     inherit Module
 
     constructor {config} {

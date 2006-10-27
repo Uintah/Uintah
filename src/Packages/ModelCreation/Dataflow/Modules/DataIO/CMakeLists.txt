@@ -29,20 +29,20 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/DataIO
 
 SET(Packages_ModelCreation_Dataflow_Modules_DataIO_SRCS
-  BundleReader.cc
-  BundleWriter.cc
-  ColorMap2Reader.cc
-  ColorMap2Writer.cc
-  ColorMapReader.cc
-  ColorMapWriter.cc
-  FieldReader.cc
-  FieldWriter.cc
-  MatrixReader.cc
-  MatrixWriter.cc
-  PathReader.cc
-  PathWriter.cc
-  StringReader.cc
-  StringWriter.cc
+  ReadBundle.cc
+  WriteBundle.cc
+  ReadColorMap2D.cc
+  WriteColorMap2D.cc
+  ReadColorMap.cc
+  WriteColorMap.cc
+  ReadField.cc
+  WriteField.cc
+  ReadMatrix.cc
+  WriteMatrix.cc
+  ReadPath.cc
+  WritePath.cc
+  ReadString.cc
+  WriteString.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_DataIO ${Packages_ModelCreation_Dataflow_Modules_DataIO_SRCS})

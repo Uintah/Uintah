@@ -29,10 +29,10 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/BreakPoint
 
 SET(Packages_ModelCreation_Dataflow_Modules_BreakPoint_SRCS
-  BundleBreakPoint.cc
-  FieldBreakPoint.cc
-  MatrixBreakPoint.cc
-  StringBreakPoint.cc
+  InsertBundleBreakPoint.cc
+  InsertFieldBreakPoint.cc
+  InsertMatrixBreakPoint.cc
+  InsertStringBreakPoint.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_BreakPoint ${Packages_ModelCreation_Dataflow_Modules_BreakPoint_SRCS})

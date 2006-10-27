@@ -51,7 +51,7 @@
 #undef isinf
 #endif
 
-namespace TensorVectorMath {
+namespace DataArrayMath {
 
 typedef double Scalar;
 
@@ -1343,31 +1343,31 @@ inline Vector& Vector::operator-=(const Vector& vec)
 
 inline Vector Vector::operator^(const double d) const
 {
-  return(Vector(TensorVectorMath::pow(d_[0],d),
-    TensorVectorMath::pow(d_[1],d),
-    TensorVectorMath::pow(d_[2],d)));
+  return(Vector(DataArrayMath::pow(d_[0],d),
+    DataArrayMath::pow(d_[1],d),
+    DataArrayMath::pow(d_[2],d)));
 }
 
 inline Vector Vector::operator^(const Vector& vec) const
 {
-  return(Vector(TensorVectorMath::pow(d_[0],vec.d_[0]),
-    TensorVectorMath::pow(d_[1],vec.d_[1]),
-    TensorVectorMath::pow(d_[2],vec.d_[2])));
+  return(Vector(DataArrayMath::pow(d_[0],vec.d_[0]),
+    DataArrayMath::pow(d_[1],vec.d_[1]),
+    DataArrayMath::pow(d_[2],vec.d_[2])));
 }
 
 inline Vector& Vector::operator^=(const double d)
 {
-  d_[0] = TensorVectorMath::pow(d_[0],d); 
-  d_[1] = TensorVectorMath::pow(d_[1],d); 
-  d_[2] = TensorVectorMath::pow(d_[2],d); 
+  d_[0] = DataArrayMath::pow(d_[0],d); 
+  d_[1] = DataArrayMath::pow(d_[1],d); 
+  d_[2] = DataArrayMath::pow(d_[2],d); 
   return(*this);
 }
 
 inline Vector& Vector::operator^=(const Vector& vec)
 {
-  d_[0] = TensorVectorMath::pow(d_[0],vec.d_[0]); 
-  d_[1] = TensorVectorMath::pow(d_[1],vec.d_[1]); 
-  d_[2] = TensorVectorMath::pow(d_[2],vec.d_[2]); 
+  d_[0] = DataArrayMath::pow(d_[0],vec.d_[0]); 
+  d_[1] = DataArrayMath::pow(d_[1],vec.d_[1]); 
+  d_[2] = DataArrayMath::pow(d_[2],vec.d_[2]); 
   return(*this);
 }
 
@@ -1383,19 +1383,19 @@ inline Vector Vector::clone() const
 
 inline double Vector::length() const
 {
-  return(TensorVectorMath::sqrt(d_[0]*d_[0] + d_[1]*d_[1] +d_[2]*d_[2]));
+  return(DataArrayMath::sqrt(d_[0]*d_[0] + d_[1]*d_[1] +d_[2]*d_[2]));
 }
 
 inline double Vector::norm() const
 {
-  return(TensorVectorMath::sqrt(d_[0]*d_[0] + d_[1]*d_[1] +d_[2]*d_[2]));
+  return(DataArrayMath::sqrt(d_[0]*d_[0] + d_[1]*d_[1] +d_[2]*d_[2]));
 }
     
 inline double Vector::maxnorm() const
 {
-  double a = TensorVectorMath::abs(d_[0]);
-  if (a < TensorVectorMath::abs(d_[1])) a = TensorVectorMath::abs(d_[1]);
-  if (a < TensorVectorMath::abs(d_[2])) a = TensorVectorMath::abs(d_[2]);
+  double a = DataArrayMath::abs(d_[0]);
+  if (a < DataArrayMath::abs(d_[1])) a = DataArrayMath::abs(d_[1]);
+  if (a < DataArrayMath::abs(d_[2])) a = DataArrayMath::abs(d_[2]);
   return(a);
 }
 
@@ -1417,128 +1417,128 @@ inline double Vector::min() const
 
 inline Vector Vector::sin() const
 {
-  return(Vector(TensorVectorMath::sin(d_[0]),
-    TensorVectorMath::sin(d_[1]),TensorVectorMath::sin(d_[2])));
+  return(Vector(DataArrayMath::sin(d_[0]),
+    DataArrayMath::sin(d_[1]),DataArrayMath::sin(d_[2])));
 }
 
 inline Vector Vector::cos() const
 {
-  return(Vector(TensorVectorMath::cos(d_[0]),
-    TensorVectorMath::cos(d_[1]),TensorVectorMath::cos(d_[2])));
+  return(Vector(DataArrayMath::cos(d_[0]),
+    DataArrayMath::cos(d_[1]),DataArrayMath::cos(d_[2])));
 }
     
 inline Vector Vector::sinh() const    
 {
-  return(Vector(TensorVectorMath::sinh(d_[0]),
-    TensorVectorMath::sinh(d_[1]),TensorVectorMath::sinh(d_[2])));
+  return(Vector(DataArrayMath::sinh(d_[0]),
+    DataArrayMath::sinh(d_[1]),DataArrayMath::sinh(d_[2])));
 }
 
 inline Vector Vector::cosh() const   
 {
-  return(Vector(TensorVectorMath::cosh(d_[0]),
-    TensorVectorMath::cosh(d_[1]),TensorVectorMath::cosh(d_[2])));
+  return(Vector(DataArrayMath::cosh(d_[0]),
+    DataArrayMath::cosh(d_[1]),DataArrayMath::cosh(d_[2])));
 }
 
 inline Vector Vector::tan() const    
 {
-  return(Vector(TensorVectorMath::tan(d_[0]),
-    TensorVectorMath::tan(d_[1]),TensorVectorMath::tan(d_[2])));
+  return(Vector(DataArrayMath::tan(d_[0]),
+    DataArrayMath::tan(d_[1]),DataArrayMath::tan(d_[2])));
 }
 
 inline Vector Vector::asin() const
 {
-  return(Vector(TensorVectorMath::asin(d_[0]),
-    TensorVectorMath::asin(d_[1]),TensorVectorMath::asin(d_[2])));
+  return(Vector(DataArrayMath::asin(d_[0]),
+    DataArrayMath::asin(d_[1]),DataArrayMath::asin(d_[2])));
 }
 
 inline Vector Vector::acos() const
 {
-  return(Vector(TensorVectorMath::acos(d_[0]),
-    TensorVectorMath::acos(d_[1]),TensorVectorMath::acos(d_[2])));
+  return(Vector(DataArrayMath::acos(d_[0]),
+    DataArrayMath::acos(d_[1]),DataArrayMath::acos(d_[2])));
 }
     
 inline Vector Vector::asinh() const    
 {
-  return(Vector(TensorVectorMath::asinh(d_[0]),
-    TensorVectorMath::asinh(d_[1]),TensorVectorMath::asinh(d_[2])));
+  return(Vector(DataArrayMath::asinh(d_[0]),
+    DataArrayMath::asinh(d_[1]),DataArrayMath::asinh(d_[2])));
 }
 
 inline Vector Vector::acosh() const   
 {
-  return(Vector(TensorVectorMath::acosh(d_[0]),
-    TensorVectorMath::acosh(d_[1]),TensorVectorMath::acosh(d_[2])));
+  return(Vector(DataArrayMath::acosh(d_[0]),
+    DataArrayMath::acosh(d_[1]),DataArrayMath::acosh(d_[2])));
 }
 
 inline Vector Vector::atan() const    
 {
-  return(Vector(TensorVectorMath::atan(d_[0]),
-    TensorVectorMath::atan(d_[1]),TensorVectorMath::atan(d_[2])));
+  return(Vector(DataArrayMath::atan(d_[0]),
+    DataArrayMath::atan(d_[1]),DataArrayMath::atan(d_[2])));
 }
 
 inline Vector Vector::log() const    
 {
-  return(Vector(TensorVectorMath::log(d_[0]),
-    TensorVectorMath::log(d_[1]),TensorVectorMath::log(d_[2])));
+  return(Vector(DataArrayMath::log(d_[0]),
+    DataArrayMath::log(d_[1]),DataArrayMath::log(d_[2])));
 }
 
 inline Vector Vector::log10() const   
 {
-  return(Vector(TensorVectorMath::log10(d_[0]),
-    TensorVectorMath::log10(d_[1]),TensorVectorMath::log10(d_[2])));
+  return(Vector(DataArrayMath::log10(d_[0]),
+    DataArrayMath::log10(d_[1]),DataArrayMath::log10(d_[2])));
 }
 
 inline Vector Vector::log2() const    
 {
-  return(Vector(TensorVectorMath::log2(d_[0]),
-    TensorVectorMath::log2(d_[1]),TensorVectorMath::log2(d_[2])));
+  return(Vector(DataArrayMath::log2(d_[0]),
+    DataArrayMath::log2(d_[1]),DataArrayMath::log2(d_[2])));
 }
 
 inline Vector Vector::abs() const    
 {
-  return(Vector(TensorVectorMath::abs(d_[0]),
-    TensorVectorMath::abs(d_[1]),TensorVectorMath::abs(d_[2])));
+  return(Vector(DataArrayMath::abs(d_[0]),
+    DataArrayMath::abs(d_[1]),DataArrayMath::abs(d_[2])));
 }
 
 inline Vector Vector::sqrt() const    
 {
-  return(Vector(TensorVectorMath::sqrt(d_[0]),
-    TensorVectorMath::sqrt(d_[1]),TensorVectorMath::sqrt(d_[2])));
+  return(Vector(DataArrayMath::sqrt(d_[0]),
+    DataArrayMath::sqrt(d_[1]),DataArrayMath::sqrt(d_[2])));
 }
 
 inline Vector Vector::pow(double p) const
 {
-  return(Vector(TensorVectorMath::pow(d_[0],p),
-    TensorVectorMath::pow(d_[1],p),TensorVectorMath::pow(d_[2],p)));
+  return(Vector(DataArrayMath::pow(d_[0],p),
+    DataArrayMath::pow(d_[1],p),DataArrayMath::pow(d_[2],p)));
 }
 
 inline Vector Vector::cbrt() const
 {
-  return(Vector(TensorVectorMath::cbrt(d_[0]),
-    TensorVectorMath::cbrt(d_[1]),TensorVectorMath::cbrt(d_[2])));
+  return(Vector(DataArrayMath::cbrt(d_[0]),
+    DataArrayMath::cbrt(d_[1]),DataArrayMath::cbrt(d_[2])));
 }
 
 inline Vector Vector::exp() const
 {
-  return(Vector(TensorVectorMath::exp(d_[0]),
-    TensorVectorMath::exp(d_[1]),TensorVectorMath::exp(d_[2])));
+  return(Vector(DataArrayMath::exp(d_[0]),
+    DataArrayMath::exp(d_[1]),DataArrayMath::exp(d_[2])));
 }
 
 inline Vector Vector::ceil() const
 {
-  return(Vector(TensorVectorMath::ceil(d_[0]),
-    TensorVectorMath::ceil(d_[1]),TensorVectorMath::ceil(d_[2])));
+  return(Vector(DataArrayMath::ceil(d_[0]),
+    DataArrayMath::ceil(d_[1]),DataArrayMath::ceil(d_[2])));
 }
 
 inline Vector Vector::floor() const
 {
-  return(Vector(TensorVectorMath::floor(d_[0]),
-    TensorVectorMath::floor(d_[1]),TensorVectorMath::floor(d_[2])));
+  return(Vector(DataArrayMath::floor(d_[0]),
+    DataArrayMath::floor(d_[1]),DataArrayMath::floor(d_[2])));
 }
 
 inline Vector Vector::round() const
 {
-  return(Vector(TensorVectorMath::round(d_[0]),
-    TensorVectorMath::round(d_[1]),TensorVectorMath::round(d_[2])));
+  return(Vector(DataArrayMath::round(d_[0]),
+    DataArrayMath::round(d_[1]),DataArrayMath::round(d_[2])));
 }
 
 inline Vector Vector::normalize() const
@@ -1553,9 +1553,9 @@ inline Vector Vector::findnormal1() const
 {
   double a0,a1,a2;
   double b0,b1,b2;
-  a0 = TensorVectorMath::abs(d_[0]); 
-  a1 = TensorVectorMath::abs(d_[1]); 
-  a2 = TensorVectorMath::abs(d_[2]);
+  a0 = DataArrayMath::abs(d_[0]); 
+  a1 = DataArrayMath::abs(d_[1]); 
+  a2 = DataArrayMath::abs(d_[2]);
   
   if ((a0==0.0)&&(a1==0.0)&&(a2==0.0))
   {
@@ -1590,23 +1590,23 @@ inline Vector Vector::findnormal2() const
 
 inline double Vector::isnan() const
 {
-  if ((TensorVectorMath::isnan(d_[0]))||(TensorVectorMath::isnan(d_[1]))||
-    (TensorVectorMath::isnan(d_[2]))) return(1.0);
+  if ((DataArrayMath::isnan(d_[0]))||(DataArrayMath::isnan(d_[1]))||
+    (DataArrayMath::isnan(d_[2]))) return(1.0);
   return(0.0);
 }
     
 inline double Vector::isinf() const
 {
-  if ((TensorVectorMath::isinf(d_[0]))||(TensorVectorMath::isinf(d_[1]))||
-    (TensorVectorMath::isinf(d_[2]))) return(1.0);
+  if ((DataArrayMath::isinf(d_[0]))||(DataArrayMath::isinf(d_[1]))||
+    (DataArrayMath::isinf(d_[2]))) return(1.0);
   return(0.0);
 }
 
 inline double Vector::isfinite() const
 {
-  if ((TensorVectorMath::isfinite(d_[0]))&&
-    (TensorVectorMath::isfinite(d_[1]))&&
-    (TensorVectorMath::isfinite(d_[2]))) return(1.0);
+  if ((DataArrayMath::isfinite(d_[0]))&&
+    (DataArrayMath::isfinite(d_[1]))&&
+    (DataArrayMath::isfinite(d_[2]))) return(1.0);
   return(0.0);
 }
 
@@ -1696,9 +1696,9 @@ inline Tensor::Tensor(double* ptr, int size)
 
 inline Tensor::Tensor(Vector e1, Vector e2, double s1, double s2, double s3)
 {
-  eigvec1_ = TensorVectorMath::normalize(e1);
-  eigvec2_ = TensorVectorMath::normalize(e2);
-  eigvec3_ = TensorVectorMath::cross(e1,e2);
+  eigvec1_ = DataArrayMath::normalize(e1);
+  eigvec2_ = DataArrayMath::normalize(e2);
+  eigvec3_ = DataArrayMath::cross(e1,e2);
   eigval1_ = s1;
   eigval2_ = s2;
   eigval3_ = s3;
@@ -1708,9 +1708,9 @@ inline Tensor::Tensor(Vector e1, Vector e2, double s1, double s2, double s3)
 
 inline Tensor::Tensor(Vector e1, Vector e2, double s1, double s2)
 {
-  eigvec1_ = TensorVectorMath::normalize(e1);
-  eigvec2_ = TensorVectorMath::normalize(e2);
-  eigvec3_ = TensorVectorMath::cross(e1,e2);
+  eigvec1_ = DataArrayMath::normalize(e1);
+  eigvec2_ = DataArrayMath::normalize(e2);
+  eigvec3_ = DataArrayMath::cross(e1,e2);
   eigval1_ = s1;
   eigval2_ = s2;
   eigval3_ = s2;
@@ -1721,9 +1721,9 @@ inline Tensor::Tensor(Vector e1, Vector e2, double s1, double s2)
 
 inline Tensor::Tensor(Vector e1, Vector e2, Vector e3, double s1, double s2, double s3)
 {
-  eigvec1_ = TensorVectorMath::normalize(e1);
-  eigvec2_ = TensorVectorMath::normalize(e2);
-  eigvec3_ = TensorVectorMath::normalize(e3);
+  eigvec1_ = DataArrayMath::normalize(e1);
+  eigvec2_ = DataArrayMath::normalize(e2);
+  eigvec3_ = DataArrayMath::normalize(e3);
   eigval1_ = s1;
   eigval2_ = s2;
   eigval3_ = s3;
@@ -1745,10 +1745,10 @@ inline Tensor::Tensor(double s1)
 
 inline Tensor::Tensor(Vector e1, double s1, double s2)
 {
-  e1 = TensorVectorMath::normalize(e1);
+  e1 = DataArrayMath::normalize(e1);
   eigvec1_ = e1;
-  eigvec2_ = TensorVectorMath::findnormal1(e1);
-  eigvec2_ = TensorVectorMath::findnormal2(e1);
+  eigvec2_ = DataArrayMath::findnormal1(e1);
+  eigvec2_ = DataArrayMath::findnormal2(e1);
   eigval1_ = s1;
   eigval2_ = s2;
   eigval3_ = s2;
@@ -1839,7 +1839,7 @@ inline double Tensor::quality()
 inline double Tensor::frobenius()
 {
  if (!has_eigs_) compute_eigs();
- return(TensorVectorMath::sqrt(eigval1_*eigval1_+eigval2_*eigval2_+eigval3_*eigval3_));
+ return(DataArrayMath::sqrt(eigval1_*eigval1_+eigval2_*eigval2_+eigval3_*eigval3_));
 }
 
 inline double Tensor::frobenius2()
@@ -1853,7 +1853,7 @@ inline double Tensor::fracanisotropy()
  if (!has_eigs_) compute_eigs();
  double S = eigval1_*eigval1_+eigval2_*eigval2_+eigval3_*eigval3_;
  double B = eigval1_*eigval2_+eigval1_*eigval3_+eigval2_*eigval3_; 
- return(TensorVectorMath::sqrt((S-B)/S));
+ return(DataArrayMath::sqrt((S-B)/S));
 }
 
 inline Vector Tensor::vec1() const
@@ -2089,43 +2089,43 @@ inline Tensor& Tensor::operator-=(const Tensor& ten)
 
 inline Tensor Tensor::operator^(const double d) const
 {
-  return(Tensor(TensorVectorMath::pow(d_[0],d),
-    TensorVectorMath::pow(d_[1],d),
-    TensorVectorMath::pow(d_[2],d),
-    TensorVectorMath::pow(d_[3],d),
-    TensorVectorMath::pow(d_[4],d),
-    TensorVectorMath::pow(d_[5],d)));
+  return(Tensor(DataArrayMath::pow(d_[0],d),
+    DataArrayMath::pow(d_[1],d),
+    DataArrayMath::pow(d_[2],d),
+    DataArrayMath::pow(d_[3],d),
+    DataArrayMath::pow(d_[4],d),
+    DataArrayMath::pow(d_[5],d)));
 }
 
 inline Tensor Tensor::operator^(const Tensor& ten) const
 {
-  return(Tensor(TensorVectorMath::pow(d_[0],ten.d_[0]),
-    TensorVectorMath::pow(d_[1],ten.d_[1]),
-    TensorVectorMath::pow(d_[2],ten.d_[2]),
-    TensorVectorMath::pow(d_[3],ten.d_[3]),
-    TensorVectorMath::pow(d_[4],ten.d_[4]),
-    TensorVectorMath::pow(d_[5],ten.d_[5])));
+  return(Tensor(DataArrayMath::pow(d_[0],ten.d_[0]),
+    DataArrayMath::pow(d_[1],ten.d_[1]),
+    DataArrayMath::pow(d_[2],ten.d_[2]),
+    DataArrayMath::pow(d_[3],ten.d_[3]),
+    DataArrayMath::pow(d_[4],ten.d_[4]),
+    DataArrayMath::pow(d_[5],ten.d_[5])));
 }
 
 inline Tensor& Tensor::operator^=(const double d)
 {
-  d_[0] = TensorVectorMath::pow(d_[0],d); 
-  d_[1] = TensorVectorMath::pow(d_[1],d); 
-  d_[2] = TensorVectorMath::pow(d_[2],d); 
-  d_[3] = TensorVectorMath::pow(d_[3],d); 
-  d_[4] = TensorVectorMath::pow(d_[4],d); 
-  d_[5] = TensorVectorMath::pow(d_[5],d); 
+  d_[0] = DataArrayMath::pow(d_[0],d); 
+  d_[1] = DataArrayMath::pow(d_[1],d); 
+  d_[2] = DataArrayMath::pow(d_[2],d); 
+  d_[3] = DataArrayMath::pow(d_[3],d); 
+  d_[4] = DataArrayMath::pow(d_[4],d); 
+  d_[5] = DataArrayMath::pow(d_[5],d); 
   return(*this);
 }
 
 inline Tensor& Tensor::operator^=(const Tensor& ten)
 {
-  d_[0] = TensorVectorMath::pow(d_[0],ten.d_[0]); 
-  d_[1] = TensorVectorMath::pow(d_[1],ten.d_[1]); 
-  d_[2] = TensorVectorMath::pow(d_[2],ten.d_[2]); 
-  d_[3] = TensorVectorMath::pow(d_[3],ten.d_[3]); 
-  d_[4] = TensorVectorMath::pow(d_[4],ten.d_[4]); 
-  d_[5] = TensorVectorMath::pow(d_[5],ten.d_[5]); 
+  d_[0] = DataArrayMath::pow(d_[0],ten.d_[0]); 
+  d_[1] = DataArrayMath::pow(d_[1],ten.d_[1]); 
+  d_[2] = DataArrayMath::pow(d_[2],ten.d_[2]); 
+  d_[3] = DataArrayMath::pow(d_[3],ten.d_[3]); 
+  d_[4] = DataArrayMath::pow(d_[4],ten.d_[4]); 
+  d_[5] = DataArrayMath::pow(d_[5],ten.d_[5]); 
   return(*this);
 }
 
@@ -2142,12 +2142,12 @@ inline Tensor Tensor::clone() const
 
 inline double Tensor::norm() const
 {
-  double a = TensorVectorMath::abs(d_[0]);
-  if (a < TensorVectorMath::abs(d_[1])) a = TensorVectorMath::abs(d_[1]);
-  if (a < TensorVectorMath::abs(d_[2])) a = TensorVectorMath::abs(d_[2]);
-  if (a < TensorVectorMath::abs(d_[3])) a = TensorVectorMath::abs(d_[3]);
-  if (a < TensorVectorMath::abs(d_[4])) a = TensorVectorMath::abs(d_[4]);
-  if (a < TensorVectorMath::abs(d_[5])) a = TensorVectorMath::abs(d_[5]);
+  double a = DataArrayMath::abs(d_[0]);
+  if (a < DataArrayMath::abs(d_[1])) a = DataArrayMath::abs(d_[1]);
+  if (a < DataArrayMath::abs(d_[2])) a = DataArrayMath::abs(d_[2]);
+  if (a < DataArrayMath::abs(d_[3])) a = DataArrayMath::abs(d_[3]);
+  if (a < DataArrayMath::abs(d_[4])) a = DataArrayMath::abs(d_[4]);
+  if (a < DataArrayMath::abs(d_[5])) a = DataArrayMath::abs(d_[5]);
   return(a);
 }
 
@@ -2175,149 +2175,149 @@ inline double Tensor::min() const
 
 inline Tensor Tensor::sin() const
 {
-  return(Tensor(TensorVectorMath::sin(d_[0]),TensorVectorMath::sin(d_[1]),
-    TensorVectorMath::sin(d_[2]),TensorVectorMath::sin(d_[3]),
-    TensorVectorMath::sin(d_[4]),TensorVectorMath::sin(d_[5])));
+  return(Tensor(DataArrayMath::sin(d_[0]),DataArrayMath::sin(d_[1]),
+    DataArrayMath::sin(d_[2]),DataArrayMath::sin(d_[3]),
+    DataArrayMath::sin(d_[4]),DataArrayMath::sin(d_[5])));
 }
 
 inline Tensor Tensor::cos() const
 {
-  return(Tensor(TensorVectorMath::cos(d_[0]),TensorVectorMath::cos(d_[1]),
-    TensorVectorMath::cos(d_[2]),TensorVectorMath::cos(d_[3]),
-    TensorVectorMath::cos(d_[4]),TensorVectorMath::cos(d_[5])));
+  return(Tensor(DataArrayMath::cos(d_[0]),DataArrayMath::cos(d_[1]),
+    DataArrayMath::cos(d_[2]),DataArrayMath::cos(d_[3]),
+    DataArrayMath::cos(d_[4]),DataArrayMath::cos(d_[5])));
 }
     
 inline Tensor Tensor::sinh() const    
 {
-  return(Tensor(TensorVectorMath::sinh(d_[0]),TensorVectorMath::sinh(d_[1]),
-    TensorVectorMath::sinh(d_[2]),TensorVectorMath::sinh(d_[3]),
-    TensorVectorMath::sinh(d_[4]),TensorVectorMath::sinh(d_[5])));
+  return(Tensor(DataArrayMath::sinh(d_[0]),DataArrayMath::sinh(d_[1]),
+    DataArrayMath::sinh(d_[2]),DataArrayMath::sinh(d_[3]),
+    DataArrayMath::sinh(d_[4]),DataArrayMath::sinh(d_[5])));
 }
 
 inline Tensor Tensor::cosh() const   
 {
-  return(Tensor(TensorVectorMath::cosh(d_[0]),TensorVectorMath::cosh(d_[1]),
-    TensorVectorMath::cosh(d_[2]),TensorVectorMath::cosh(d_[3]),
-    TensorVectorMath::cosh(d_[4]),TensorVectorMath::cosh(d_[5])));
+  return(Tensor(DataArrayMath::cosh(d_[0]),DataArrayMath::cosh(d_[1]),
+    DataArrayMath::cosh(d_[2]),DataArrayMath::cosh(d_[3]),
+    DataArrayMath::cosh(d_[4]),DataArrayMath::cosh(d_[5])));
 }
 
 inline Tensor Tensor::tan() const    
 {
-  return(Tensor(TensorVectorMath::tan(d_[0]),TensorVectorMath::tan(d_[1]),
-    TensorVectorMath::tan(d_[2]),TensorVectorMath::tan(d_[3]),
-    TensorVectorMath::tan(d_[4]),TensorVectorMath::tan(d_[5])));
+  return(Tensor(DataArrayMath::tan(d_[0]),DataArrayMath::tan(d_[1]),
+    DataArrayMath::tan(d_[2]),DataArrayMath::tan(d_[3]),
+    DataArrayMath::tan(d_[4]),DataArrayMath::tan(d_[5])));
 }
 
 inline Tensor Tensor::asin() const
 {
-  return(Tensor(TensorVectorMath::asin(d_[0]),TensorVectorMath::asin(d_[1]),
-    TensorVectorMath::asin(d_[2]),TensorVectorMath::asin(d_[3]),
-    TensorVectorMath::asin(d_[4]),TensorVectorMath::asin(d_[5])));
+  return(Tensor(DataArrayMath::asin(d_[0]),DataArrayMath::asin(d_[1]),
+    DataArrayMath::asin(d_[2]),DataArrayMath::asin(d_[3]),
+    DataArrayMath::asin(d_[4]),DataArrayMath::asin(d_[5])));
 }
 
 inline Tensor Tensor::acos() const
 {
-  return(Tensor(TensorVectorMath::acos(d_[0]),TensorVectorMath::acos(d_[1]),
-    TensorVectorMath::acos(d_[2]),TensorVectorMath::acos(d_[3]),
-    TensorVectorMath::acos(d_[4]),TensorVectorMath::acos(d_[5])));
+  return(Tensor(DataArrayMath::acos(d_[0]),DataArrayMath::acos(d_[1]),
+    DataArrayMath::acos(d_[2]),DataArrayMath::acos(d_[3]),
+    DataArrayMath::acos(d_[4]),DataArrayMath::acos(d_[5])));
 }
     
 inline Tensor Tensor::asinh() const    
 {
-  return(Tensor(TensorVectorMath::asinh(d_[0]),TensorVectorMath::asinh(d_[1]),
-    TensorVectorMath::asinh(d_[2]),TensorVectorMath::asinh(d_[3]),
-    TensorVectorMath::asinh(d_[4]),TensorVectorMath::asinh(d_[5])));
+  return(Tensor(DataArrayMath::asinh(d_[0]),DataArrayMath::asinh(d_[1]),
+    DataArrayMath::asinh(d_[2]),DataArrayMath::asinh(d_[3]),
+    DataArrayMath::asinh(d_[4]),DataArrayMath::asinh(d_[5])));
 }
 
 inline Tensor Tensor::acosh() const   
 {
-  return(Tensor(TensorVectorMath::acosh(d_[0]),TensorVectorMath::acosh(d_[1]),
-    TensorVectorMath::acosh(d_[2]),TensorVectorMath::acosh(d_[3]),
-    TensorVectorMath::acosh(d_[4]),TensorVectorMath::acosh(d_[5])));
+  return(Tensor(DataArrayMath::acosh(d_[0]),DataArrayMath::acosh(d_[1]),
+    DataArrayMath::acosh(d_[2]),DataArrayMath::acosh(d_[3]),
+    DataArrayMath::acosh(d_[4]),DataArrayMath::acosh(d_[5])));
 }
 
 inline Tensor Tensor::atan() const    
 {
-  return(Tensor(TensorVectorMath::atan(d_[0]),TensorVectorMath::atan(d_[1]),
-    TensorVectorMath::atan(d_[2]),TensorVectorMath::atan(d_[3]),
-    TensorVectorMath::atan(d_[4]),TensorVectorMath::atan(d_[5])));
+  return(Tensor(DataArrayMath::atan(d_[0]),DataArrayMath::atan(d_[1]),
+    DataArrayMath::atan(d_[2]),DataArrayMath::atan(d_[3]),
+    DataArrayMath::atan(d_[4]),DataArrayMath::atan(d_[5])));
 }
 
 inline Tensor Tensor::log() const    
 {
-  return(Tensor(TensorVectorMath::log(d_[0]),TensorVectorMath::log(d_[1]),
-    TensorVectorMath::log(d_[2]),TensorVectorMath::log(d_[3]),
-    TensorVectorMath::log(d_[4]),TensorVectorMath::log(d_[5])));
+  return(Tensor(DataArrayMath::log(d_[0]),DataArrayMath::log(d_[1]),
+    DataArrayMath::log(d_[2]),DataArrayMath::log(d_[3]),
+    DataArrayMath::log(d_[4]),DataArrayMath::log(d_[5])));
 }
 
 inline Tensor Tensor::log10() const   
 {
-  return(Tensor(TensorVectorMath::log10(d_[0]),TensorVectorMath::log10(d_[1]),
-    TensorVectorMath::log10(d_[2]),TensorVectorMath::log10(d_[3]),
-    TensorVectorMath::log10(d_[4]),TensorVectorMath::log10(d_[5])));
+  return(Tensor(DataArrayMath::log10(d_[0]),DataArrayMath::log10(d_[1]),
+    DataArrayMath::log10(d_[2]),DataArrayMath::log10(d_[3]),
+    DataArrayMath::log10(d_[4]),DataArrayMath::log10(d_[5])));
 }
 
 inline Tensor Tensor::log2() const    
 {
-  return(Tensor(TensorVectorMath::log2(d_[0]),TensorVectorMath::log2(d_[1]),
-    TensorVectorMath::log2(d_[2]),TensorVectorMath::log2(d_[3]),
-    TensorVectorMath::log2(d_[4]),TensorVectorMath::log2(d_[5])));
+  return(Tensor(DataArrayMath::log2(d_[0]),DataArrayMath::log2(d_[1]),
+    DataArrayMath::log2(d_[2]),DataArrayMath::log2(d_[3]),
+    DataArrayMath::log2(d_[4]),DataArrayMath::log2(d_[5])));
 }
 
 inline Tensor Tensor::abs() const    
 {
-  return(Tensor(TensorVectorMath::abs(d_[0]),TensorVectorMath::abs(d_[1]),
-    TensorVectorMath::abs(d_[2]),TensorVectorMath::abs(d_[3]),
-    TensorVectorMath::abs(d_[4]),TensorVectorMath::abs(d_[5])));
+  return(Tensor(DataArrayMath::abs(d_[0]),DataArrayMath::abs(d_[1]),
+    DataArrayMath::abs(d_[2]),DataArrayMath::abs(d_[3]),
+    DataArrayMath::abs(d_[4]),DataArrayMath::abs(d_[5])));
 }
 
 inline Tensor Tensor::sqrt() const    
 {
-  return(Tensor(TensorVectorMath::sqrt(d_[0]),TensorVectorMath::sqrt(d_[1]),
-    TensorVectorMath::sqrt(d_[2]),TensorVectorMath::sqrt(d_[3]),
-    TensorVectorMath::sqrt(d_[4]),TensorVectorMath::sqrt(d_[5])));
+  return(Tensor(DataArrayMath::sqrt(d_[0]),DataArrayMath::sqrt(d_[1]),
+    DataArrayMath::sqrt(d_[2]),DataArrayMath::sqrt(d_[3]),
+    DataArrayMath::sqrt(d_[4]),DataArrayMath::sqrt(d_[5])));
 }
 
 inline Tensor Tensor::pow(double p) const
 {
-  return(Tensor(TensorVectorMath::pow(d_[0],p),TensorVectorMath::pow(d_[1],p),
-  TensorVectorMath::pow(d_[2],p),TensorVectorMath::pow(d_[3],p),
-  TensorVectorMath::pow(d_[4],p),TensorVectorMath::pow(d_[5],p)));
+  return(Tensor(DataArrayMath::pow(d_[0],p),DataArrayMath::pow(d_[1],p),
+  DataArrayMath::pow(d_[2],p),DataArrayMath::pow(d_[3],p),
+  DataArrayMath::pow(d_[4],p),DataArrayMath::pow(d_[5],p)));
 }
 
 inline Tensor Tensor::cbrt() const
 {
-  return(Tensor(TensorVectorMath::cbrt(d_[0]),TensorVectorMath::cbrt(d_[1]),
-    TensorVectorMath::cbrt(d_[2]),TensorVectorMath::cbrt(d_[3]),
-    TensorVectorMath::cbrt(d_[4]),TensorVectorMath::cbrt(d_[5])));
+  return(Tensor(DataArrayMath::cbrt(d_[0]),DataArrayMath::cbrt(d_[1]),
+    DataArrayMath::cbrt(d_[2]),DataArrayMath::cbrt(d_[3]),
+    DataArrayMath::cbrt(d_[4]),DataArrayMath::cbrt(d_[5])));
 }
 
 inline Tensor Tensor::exp() const
 {
-  return(Tensor(TensorVectorMath::exp(d_[0]),TensorVectorMath::exp(d_[1]),
-    TensorVectorMath::exp(d_[2]),TensorVectorMath::exp(d_[3]),
-    TensorVectorMath::exp(d_[4]),TensorVectorMath::exp(d_[5])));
+  return(Tensor(DataArrayMath::exp(d_[0]),DataArrayMath::exp(d_[1]),
+    DataArrayMath::exp(d_[2]),DataArrayMath::exp(d_[3]),
+    DataArrayMath::exp(d_[4]),DataArrayMath::exp(d_[5])));
 }
 
 inline Tensor Tensor::ceil() const
 {
-  return(Tensor(TensorVectorMath::ceil(d_[0]),TensorVectorMath::ceil(d_[1]),
-    TensorVectorMath::ceil(d_[2]),TensorVectorMath::ceil(d_[3]),
-    TensorVectorMath::ceil(d_[4]),TensorVectorMath::ceil(d_[5])));
+  return(Tensor(DataArrayMath::ceil(d_[0]),DataArrayMath::ceil(d_[1]),
+    DataArrayMath::ceil(d_[2]),DataArrayMath::ceil(d_[3]),
+    DataArrayMath::ceil(d_[4]),DataArrayMath::ceil(d_[5])));
 }
 
 inline Tensor Tensor::floor() const
 {
-  return(Tensor(TensorVectorMath::floor(d_[0]),TensorVectorMath::floor(d_[1]),
-    TensorVectorMath::floor(d_[2]),TensorVectorMath::floor(d_[3]),
-    TensorVectorMath::floor(d_[4]),TensorVectorMath::floor(d_[5])));
+  return(Tensor(DataArrayMath::floor(d_[0]),DataArrayMath::floor(d_[1]),
+    DataArrayMath::floor(d_[2]),DataArrayMath::floor(d_[3]),
+    DataArrayMath::floor(d_[4]),DataArrayMath::floor(d_[5])));
 }
 
 inline Tensor Tensor::round() const
 {
-  return(Tensor(TensorVectorMath::round(d_[0]),TensorVectorMath::round(d_[1]),
-    TensorVectorMath::round(d_[2]),TensorVectorMath::round(d_[3]),
-    TensorVectorMath::round(d_[4]),TensorVectorMath::round(d_[5])));
+  return(Tensor(DataArrayMath::round(d_[0]),DataArrayMath::round(d_[1]),
+    DataArrayMath::round(d_[2]),DataArrayMath::round(d_[3]),
+    DataArrayMath::round(d_[4]),DataArrayMath::round(d_[5])));
 }
 
 inline Tensor Tensor::normalize() const
@@ -2335,27 +2335,27 @@ inline Tensor Tensor::inv()
 
 inline double Tensor::isnan() const
 {
-  if ((TensorVectorMath::isnan(d_[0]))||(TensorVectorMath::isnan(d_[1]))||
-    (TensorVectorMath::isnan(d_[2]))||(TensorVectorMath::isnan(d_[3]))||
-    (TensorVectorMath::isnan(d_[4]))||(TensorVectorMath::isnan(d_[5]))) 
+  if ((DataArrayMath::isnan(d_[0]))||(DataArrayMath::isnan(d_[1]))||
+    (DataArrayMath::isnan(d_[2]))||(DataArrayMath::isnan(d_[3]))||
+    (DataArrayMath::isnan(d_[4]))||(DataArrayMath::isnan(d_[5]))) 
     return(1.0);
   return(0.0);
 }
     
 inline double Tensor::isinf() const
 {
-  if ((TensorVectorMath::isinf(d_[0]))||(TensorVectorMath::isinf(d_[1]))||
-    (TensorVectorMath::isinf(d_[2]))||(TensorVectorMath::isinf(d_[3]))||
-    (TensorVectorMath::isinf(d_[4]))||(TensorVectorMath::isinf(d_[5]))) 
+  if ((DataArrayMath::isinf(d_[0]))||(DataArrayMath::isinf(d_[1]))||
+    (DataArrayMath::isinf(d_[2]))||(DataArrayMath::isinf(d_[3]))||
+    (DataArrayMath::isinf(d_[4]))||(DataArrayMath::isinf(d_[5]))) 
     return(1.0);
   return(0.0);
 }
 
 inline double Tensor::isfinite() const
 {
-  if ((TensorVectorMath::isfinite(d_[0]))&&(TensorVectorMath::isfinite(d_[1]))
-    &&(TensorVectorMath::isfinite(d_[2]))&&(TensorVectorMath::isfinite(d_[3]))
-    &&(TensorVectorMath::isfinite(d_[4]))&&(TensorVectorMath::isfinite(d_[5]))) 
+  if ((DataArrayMath::isfinite(d_[0]))&&(DataArrayMath::isfinite(d_[1]))
+    &&(DataArrayMath::isfinite(d_[2]))&&(DataArrayMath::isfinite(d_[3]))
+    &&(DataArrayMath::isfinite(d_[4]))&&(DataArrayMath::isfinite(d_[5]))) 
     return(1.0);
   return(0.0);
 }

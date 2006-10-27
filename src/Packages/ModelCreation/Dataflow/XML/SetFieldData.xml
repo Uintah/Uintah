@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="SetFieldData" category="FieldsData" optional="false">
+<component name="SetFieldData" category="ChangeFieldData" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

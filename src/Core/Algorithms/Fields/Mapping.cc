@@ -32,20 +32,20 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool NodalMappingAlgo::NodalMapping(ProgressReporter *pr,
+bool MapFieldDataOntoFieldNodesAlgo::MapFieldDataOntoFieldNodes(ProgressReporter *pr,
                        int numproc, FieldHandle fsrc,
                        FieldHandle fdst, FieldHandle& fout, 
                        std::string mappingmethod, double def_value)
 {
   if (fsrc.get_rep() == 0)
   {
-    pr->error("NodalMapping: No input source field");
+    pr->error("MapFieldDataOntoFieldNodes: No input source field");
     return (false);
   }
 
   if (fdst.get_rep() == 0)
   {
-    pr->error("NodalMapping: No input destination field");
+    pr->error("MapFieldDataOntoFieldNodes: No input destination field");
     return (false);
   }
 
@@ -58,7 +58,7 @@ bool NodalMappingAlgo::NodalMapping(ProgressReporter *pr,
   
   if ((fi_src.is_nonlinear())||(fi_dst.is_nonlinear()))
   {
-    pr->error("NodalMapping: This function has not yet been defined for non-linear elements");
+    pr->error("MapFieldDataOntoFieldNodes: This function has not yet been defined for non-linear elements");
     return (false);
   }
 
@@ -83,7 +83,7 @@ bool NodalMappingAlgo::NodalMapping(ProgressReporter *pr,
   else if (mappingmethod == "ClosestInterpolatedData")
   {
     mapping = "ClosestInterpolatedData<"+fi_src.get_field_name() + " >";
-    pr->error("NodalMapping: This method has not yet been fully implemented");
+    pr->error("MapFieldDataOntoFieldNodes: This method has not yet been fully implemented");
     return (false);
   }
   else if (mappingmethod == "InterpolatedData")
@@ -92,15 +92,15 @@ bool NodalMappingAlgo::NodalMapping(ProgressReporter *pr,
   }
   else
   {
-    pr->error("NodalMapping: This method has not yet been fully implemented");
+    pr->error("MapFieldDataOntoFieldNodes: This method has not yet been fully implemented");
     return (false);  
   }
   
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGONodalMapping."+mappingmethod+"."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+".",
-    "NodalMappingAlgo","NodalMappingAlgoT",
+    "ALGOMapFieldDataOntoFieldNodes."+mappingmethod+"."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+".",
+    "MapFieldDataOntoFieldNodesAlgo","MapFieldDataOntoFieldNodesAlgoT",
     mapping+ "," + fi_src.get_field_name() + "," + fi_dst.get_field_name() + "," + fi_out.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
@@ -114,7 +114,7 @@ bool NodalMappingAlgo::NodalMapping(ProgressReporter *pr,
   if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   // Handle dynamic compilation
   
-  SCIRun::Handle<NodalMappingAlgo> algo;
+  SCIRun::Handle<MapFieldDataOntoFieldNodesAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
@@ -122,7 +122,7 @@ bool NodalMappingAlgo::NodalMapping(ProgressReporter *pr,
     return(false);
   }
 
-  return(algo->NodalMapping(pr,numproc,fsrc,fdst,fout,mappingmethod,def_value)); 
+  return(algo->MapFieldDataOntoFieldNodes(pr,numproc,fsrc,fdst,fout,mappingmethod,def_value)); 
 }
 
 
@@ -195,7 +195,7 @@ bool ModalMappingAlgo::ModalMapping(ProgressReporter *pr,
   
   if (fi_out.is_pnt_element())
   {
-    pr->error("ModalMapping: The output mesh is an point cloud. Use NodalMapping to map onto a pointcloud");
+    pr->error("ModalMapping: The output mesh is an point cloud. Use MapFieldDataOntoFieldNodes to map onto a pointcloud");
     return (false);
   }
   
@@ -319,7 +319,9 @@ bool ModalMappingAlgo::ModalMapping(ProgressReporter *pr,
 
 
 
-bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
+bool 
+MapFieldDataGradientOntoFieldAlgo::MapFieldDataGradientOntoField(
+		       ProgressReporter *pr,
                        int numproc, FieldHandle fsrc,
                        FieldHandle fdst, FieldHandle& fout, 
                        std::string mappingmethod,
@@ -329,13 +331,13 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
 {
   if (fsrc.get_rep() == 0)
   {
-    pr->error("GradientModalMapping: No input source field");
+    pr->error("MapFieldDataGradientOntoField: No input source field");
     return (false);
   }
 
   if (fdst.get_rep() == 0)
   {
-    pr->error("GradientModalMapping: No input destination field");
+    pr->error("MapFieldDataGradientOntoField: No input destination field");
     return (false);
   }
 
@@ -348,19 +350,19 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
   
   if ((fi_src.is_nonlinear())||(fi_dst.is_nonlinear()))
   {
-    pr->error("GradientModalMapping: This function has not yet been defined for non-linear elements");
+    pr->error("MapFieldDataGradientOntoField: This function has not yet been defined for non-linear elements");
     return (false);
   }
 
   if (!(fi_src.is_scalar()))
   {
-    pr->error("GradientModalMapping: SCIRun does currently not have a class to store gradients of Vectors and Tensors");
+    pr->error("MapFieldDataGradientOntoField: SCIRun does currently not have a class to store gradients of Vectors and Tensors");
     return (false);
   }
   
   if (!(fi_src.is_linearmesh()))
   {
-    pr->error("GradientModalMapping: This function calculates the gradient per element. As the element has constant basis. All gradients are zero");
+    pr->error("MapFieldDataGradientOntoField: This function calculates the gradient per element. As the element has constant basis. All gradients are zero");
     return (false);
   }
   
@@ -380,13 +382,13 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
   }
   else
   {
-    pr->error("GradientModalMapping: This method has not yet been fully implemented");
+    pr->error("MapFieldDataGradientOntoField: This method has not yet been fully implemented");
     return (false);  
   }
   
   if (fi_out.is_pnt_element())
   {
-    pr->error("GradientModalMapping: The output mesh is a point cloud, this module has not yet been implemented for pointclouds");
+    pr->error("MapFieldDataGradientOntoField: The output mesh is a point cloud, this module has not yet been implemented for pointclouds");
     return (false);
   }
   
@@ -467,7 +469,7 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
   }
   else
   {
-    pr->error("GradientModalMapping: Integration/Interpolation sample node definition is unknown");
+    pr->error("MapFieldDataGradientOntoField: Integration/Interpolation sample node definition is unknown");
     return (false);
   }
   
@@ -479,8 +481,8 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
   if (calcnorm) std::cout << "calcnorm\n";
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOGradientModalMapping"+algotype+"."+mappingmethod+"."+integrationmethod+"."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+".",
-    "GradientModalMappingAlgo","GradientModalMapping"+algotype+"AlgoT",
+    "ALGOMapFieldDataGradientOntoField"+algotype+"."+mappingmethod+"."+integrationmethod+"."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+".",
+    "MapFieldDataGradientOntoFieldAlgo","MapFieldDataGradientOntoField"+algotype+"AlgoT",
     mapping+ "," + integrator + "," + fi_src.get_field_name() + "," + fi_dst.get_field_name() + "," + fi_out.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
@@ -502,7 +504,7 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
   if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   // Handle dynamic compilation
   
-  SCIRun::Handle<GradientModalMappingAlgo> algo;
+  SCIRun::Handle<MapFieldDataGradientOntoFieldAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
@@ -510,7 +512,7 @@ bool GradientModalMappingAlgo::GradientModalMapping(ProgressReporter *pr,
     return(false);
   }
 
-  return(algo->GradientModalMapping(pr,numproc,fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,calcnorm)); 
+  return(algo->MapFieldDataGradientOntoField(pr,numproc,fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,calcnorm)); 
 }
 
 

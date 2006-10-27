@@ -27,7 +27,7 @@
 #
 
 
-itcl_class ModelCreation_FieldsCreate_MergeFields {
+itcl_class ModelCreation_CreateField_MergeFields {
     inherit Module
     constructor {config} {
         set name MergeFields

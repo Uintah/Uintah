@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="InsertBundleBreakPoint" category="BreakPoint" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      BreakPoint of Bundle flow. This module will buffer all input when it
+      is blocked and will copy the input to the output when it is unblocked. 
+    </summary>
+    <description>
+      <p>
+      BreakPoint of Bundle flow. This module will buffer all input when it
+      is blocked and will copy the input to the output when it is unblocked.       
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Bundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Bundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

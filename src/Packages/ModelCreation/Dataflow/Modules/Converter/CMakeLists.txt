@@ -29,10 +29,10 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/Converter
 
 SET(Packages_ModelCreation_Dataflow_Modules_Converter_SRCS
-  MatrixToString.cc
-  MatrixToField.cc
-  NrrdToField.cc
-  MatricesToDipoleField.cc
+  ConvertMatrixToString.cc
+  ConvertMatrixToField.cc
+  ConvertNrrdToField.cc
+  ConvertMatricesToDipoleField.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_Converter ${Packages_ModelCreation_Dataflow_Modules_Converter_SRCS})

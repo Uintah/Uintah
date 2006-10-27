@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="CreateDataArray" category="TensorVectorMath">
+<component name="CreateDataArray" category="DataArrayMath">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

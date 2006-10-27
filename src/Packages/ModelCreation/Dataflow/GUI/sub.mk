@@ -13,74 +13,73 @@ SRCDIR := Packages/ModelCreation/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/BundleReader.tcl\
-	$(SRCDIR)/BundleWriter.tcl\
+	$(SRCDIR)/AppendMatrix.tcl\
+	$(SRCDIR)/CalculateDataArray.tcl\
+	$(SRCDIR)/CalculateFieldData.tcl\
+	$(SRCDIR)/CalculateFieldsData.tcl\
+	$(SRCDIR)/CalculateInsideWhichField.tcl\
+	$(SRCDIR)/CalculateIsInsideField.tcl\
+	$(SRCDIR)/CalculateLinkBetweenOppositeFieldBoundaries.tcl\
+        $(SRCDIR)/CalculateMeshNodes.tcl\
 	$(SRCDIR)/ClipFieldByFunction.tcl\
-	$(SRCDIR)/ColorMapReader.tcl\
-	$(SRCDIR)/ColorMapWriter.tcl\
-	$(SRCDIR)/ColorMap2Reader.tcl\
-	$(SRCDIR)/ColorMap2Writer.tcl\
-  $(SRCDIR)/DomainBoundary.tcl\
-	$(SRCDIR)/ComputeDataArray.tcl\
-	$(SRCDIR)/ComputeFieldData.tcl\
-	$(SRCDIR)/ComputeFieldsData.tcl\
-	$(SRCDIR)/ComputeFieldNodes.tcl\
-	$(SRCDIR)/ComputeFieldsNodes.tcl\
+	$(SRCDIR)/CollectFields.tcl\
+	$(SRCDIR)/ConvertMatrixToField.tcl\
+	$(SRCDIR)/ConvertNrrdToField.tcl\
+	$(SRCDIR)/ConvertTimeToWeightedIndices.tcl\
 	$(SRCDIR)/CreateDataArray.tcl\
 	$(SRCDIR)/CreateFieldData.tcl\
-	$(SRCDIR)/DataArrayInfo.tcl\
-	$(SRCDIR)/FieldDataElemToNode.tcl\
-	$(SRCDIR)/FieldDataNodeToElem.tcl\
-	$(SRCDIR)/FieldInfo.tcl\
-	$(SRCDIR)/FieldReader.tcl\
-	$(SRCDIR)/FieldWriter.tcl\
-	$(SRCDIR)/FieldGetMatrixProperty.tcl\
-	$(SRCDIR)/FieldGetStringProperty.tcl\
-	$(SRCDIR)/FieldSetMatrixProperty.tcl\
-	$(SRCDIR)/FieldSetStringProperty.tcl\
-  $(SRCDIR)/IsInsideField.tcl\
-  $(SRCDIR)/IsInsideFields.tcl\
-	$(SRCDIR)/LinkFieldBoundary.tcl\
-	$(SRCDIR)/MatrixInfo.tcl\
-	$(SRCDIR)/MatrixReader.tcl\
-	$(SRCDIR)/MatrixToField.tcl\
-	$(SRCDIR)/MatrixWriter.tcl\
+	$(SRCDIR)/GenerateSphericalSurface.tcl\
+	$(SRCDIR)/GetDomainBoundary.tcl\
+	$(SRCDIR)/GetMatrixFromFieldProperties.tcl\
+	$(SRCDIR)/GetStringFromFieldProperties.tcl\
+	$(SRCDIR)/InsertBundleBreakPoint.tcl\
+	$(SRCDIR)/InsertFieldBreakPoint.tcl\
+	$(SRCDIR)/InsertMatrixBreakPoint.tcl\
+	$(SRCDIR)/InsertMatrixIntoFieldProperties.tcl\
+	$(SRCDIR)/InsertStringBreakPoint.tcl\
+        $(SRCDIR)/InsertStringIntoFieldProperties.tcl\
+        $(SRCDIR)/ManageParameterMatrix.tcl\
+	$(SRCDIR)/ManageParameterString.tcl\
+	$(SRCDIR)/MapCurrentDensityOntoField.tcl\
+	$(SRCDIR)/MapFieldDataFromElemToNode.tcl\
+	$(SRCDIR)/MapFieldDataFromNodeToElem.tcl\
+	$(SRCDIR)/MapFieldDataGradientOntoField.tcl\
+	$(SRCDIR)/MapFieldDataOntoFieldNodes.tcl\
 	$(SRCDIR)/MergeFields.tcl\
 	$(SRCDIR)/MergeMeshes.tcl\
-	$(SRCDIR)/MergeNodes.tcl\
-	$(SRCDIR)/NrrdToField.tcl\
+	$(SRCDIR)/MergeMeshNodes.tcl\
+	$(SRCDIR)/ModalMapping.tcl\
 	$(SRCDIR)/ParameterList.tcl\
-	$(SRCDIR)/ParameterListMatrix.tcl\
-	$(SRCDIR)/ParameterListString.tcl\
-	$(SRCDIR)/PathReader.tcl\
-	$(SRCDIR)/PathWriter.tcl\
+	$(SRCDIR)/ReadBundle.tcl\
+	$(SRCDIR)/ReadColorMap2D.tcl\
+	$(SRCDIR)/ReadColorMap.tcl\
+	$(SRCDIR)/ReadField.tcl\
+	$(SRCDIR)/ReadMatrix.tcl\
+	$(SRCDIR)/ReadPath.tcl\
+	$(SRCDIR)/ReadString.tcl\
 	$(SRCDIR)/ReplicateDataArray.tcl\
+	$(SRCDIR)/ReportDataArrayInfo.tcl\
+	$(SRCDIR)/ReportDataArrayMeasure.tcl\
+	$(SRCDIR)/ReportFieldDataMeasures.tcl\
+	$(SRCDIR)/ReportFieldInfo.tcl\
+	$(SRCDIR)/ReportMatrixColumnMeasure.tcl\
+	$(SRCDIR)/ReportMatrixInfo.tcl\
+	$(SRCDIR)/ReportMatrixRowMeasure.tcl\
 	$(SRCDIR)/ResizeMatrix.tcl\
+	$(SRCDIR)/ScaleFieldMeshAndData.tcl\
 	$(SRCDIR)/SelectAndSetFieldData.tcl\
 	$(SRCDIR)/SelectAndSetFieldsData.tcl\
-	$(SRCDIR)/SelectByFieldData.tcl\
+        $(SRCDIR)/SelectByFieldData.tcl\
 	$(SRCDIR)/SelectByFieldsData.tcl\
-	$(SRCDIR)/SphericalSurface.tcl\
-	$(SRCDIR)/StringReader.tcl\
-	$(SRCDIR)/StringWriter.tcl\
-	$(SRCDIR)/ScaleField.tcl\
-	$(SRCDIR)/DataArrayMeasure.tcl\
-	$(SRCDIR)/StreamMatrix.tcl\
-	$(SRCDIR)/ApplyRowOperation.tcl\
-	$(SRCDIR)/ApplyColumnOperation.tcl\
-	$(SRCDIR)/CollectFields.tcl\
 	$(SRCDIR)/SetFieldData.tcl\
-  $(SRCDIR)/TimeToWeights.tcl\
-	$(SRCDIR)/NodalMapping.tcl\
-	$(SRCDIR)/ModalMapping.tcl\
-	$(SRCDIR)/CurrentDensityMapping.tcl\
-	$(SRCDIR)/GradientModalMapping.tcl\
-	$(SRCDIR)/FieldDataMeasure.tcl\
-	$(SRCDIR)/BundleBreakPoint.tcl\
-	$(SRCDIR)/FieldBreakPoint.tcl\
-	$(SRCDIR)/MatrixBreakPoint.tcl\
-	$(SRCDIR)/StringBreakPoint.tcl\
-	$(SRCDIR)/AppendMatrix.tcl\
+	$(SRCDIR)/StreamMatrixFromDisk.tcl\
+	$(SRCDIR)/WriteBundle.tcl\
+	$(SRCDIR)/WriteColorMap2D.tcl\
+	$(SRCDIR)/WriteColorMap.tcl\
+	$(SRCDIR)/WriteField.tcl\
+	$(SRCDIR)/WriteMatrix.tcl\
+	$(SRCDIR)/WritePath.tcl\
+	$(SRCDIR)/WriteString.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

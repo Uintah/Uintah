@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="ReplicateDataArray" category="TensorVectorMath">
+<component name="ReplicateDataArray" category="DataArrayMath">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

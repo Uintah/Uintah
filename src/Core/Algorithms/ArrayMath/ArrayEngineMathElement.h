@@ -33,7 +33,7 @@
 #include <Core/Algorithms/ArrayMath/ArrayEngineMath.h>
 #include <Core/Algorithms/ArrayMath/ArrayObjectFieldAlgo.h>
 
-namespace TensorVectorMath {
+namespace DataArrayMath {
 
 class Element {
   public:

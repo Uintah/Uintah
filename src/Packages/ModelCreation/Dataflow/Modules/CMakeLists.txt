@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules
 
-SUBDIRS(BreakPoint DataInfo DataIO Script SelectionMask FieldsData FieldsCreate FieldsProperty FieldsGeometry FieldsExample FiniteElements Converter Math DataStreaming TensorVectorMath Time)
+SUBDIRS(BreakPoint DataInfo DataIO Script SelectionMask FieldsData FieldsCreate FieldsProperty FieldsGeometry FieldsExample FiniteElements Converter Math DataStreaming DataArrayMath Time)
 
