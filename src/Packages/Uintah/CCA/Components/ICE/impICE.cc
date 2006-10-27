@@ -1017,7 +1017,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   double vol = dx.x() * dx.y() * dx.z();
   solver_parameters->setResidualNormalizationFactor(vol);
   
-  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
+  while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !restart) {
   //__________________________________
   // recompile the subscheduler
     if (counter == 0 && d_recompileSubsched) {
@@ -1113,7 +1113,6 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
     if(restart){
       ParentNewDW->abortTimestep();
       ParentNewDW->restartTimestep();
-      return;
     }
   }  // outer iteration loop
   
