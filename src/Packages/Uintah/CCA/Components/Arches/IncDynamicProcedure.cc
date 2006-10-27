@@ -123,6 +123,12 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
         
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -239,6 +245,9 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
     constSFCZVariable<double> wVel;
+    constCCVariable<double> uVelCC;
+    constCCVariable<double> vVelCC;
+    constCCVariable<double> wVelCC;
     constCCVariable<double> den;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
@@ -250,6 +259,12 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(uVelCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(vVelCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(wVelCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -301,57 +316,33 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
 	  double vnp, vsp, vep, vwp, vtp, vbp;
 	  double wnp, wsp, wep, wwp, wtp, wbp;
 
-	  double uvelcur = uVel[currCell];
-	  double vvelcur = vVel[currCell];
-	  double wvelcur = wVel[currCell];
-	  double uvelxp1 = uVel[IntVector(colX+1,colY,colZ)];
-	  double vvelyp1 = vVel[IntVector(colX,colY+1,colZ)];
-	  double wvelzp1 = wVel[IntVector(colX,colY,colZ+1)];
+	  uep = uVel[IntVector(colX+1,colY,colZ)];
+	  uwp = uVel[currCell];
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  unp = 0.5*uVelCC[IntVector(colX,colY+1,colZ)];
+	  usp = 0.5*uVelCC[IntVector(colX,colY-1,colZ)];
+	  utp = 0.5*uVelCC[IntVector(colX,colY,colZ+1)];
+	  ubp = 0.5*uVelCC[IntVector(colX,colY,colZ-1)];
 
-	  uep = uvelxp1;
-	  uwp = uvelcur;
-	  unp = 0.25*(uvelxp1 + uvelcur
-		      + uVel[IntVector(colX+1,colY+1,colZ)] 
-		      + uVel[IntVector(colX,colY+1,colZ)]);
-	  usp = 0.25*(uvelxp1 + uvelcur +
-		      uVel[IntVector(colX+1,colY-1,colZ)] +
-		      uVel[IntVector(colX,colY-1,colZ)]);
-	  utp = 0.25*(uvelxp1 + uvelcur +
-		      uVel[IntVector(colX+1,colY,colZ+1)] + 
-		      uVel[IntVector(colX,colY,colZ+1)]);
-	  ubp = 0.25*(uvelxp1 + uvelcur + 
-		      uVel[IntVector(colX+1,colY,colZ-1)] + 
-		      uVel[IntVector(colX,colY,colZ-1)]);
+	  vnp = vVel[IntVector(colX,colY+1,colZ)];
+	  vsp = Vel[currCell];
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  vep = 0.5*vVelCC[IntVector(colX+1,colY,colZ)];
+	  vwp = 0.5*vVelCC[IntVector(colX-1,colY,colZ)];
+	  vtp = 0.5*vVelCC[IntVector(colX,colY,colZ+1)];
+	  vbp = 0.5*vVelCC[IntVector(colX,colY,colZ-1)];
 
-	  vnp = vvelyp1;
-	  vsp = vvelcur;
-	  vep = 0.25*(vvelyp1 + vvelcur +
-		      vVel[IntVector(colX+1,colY+1,colZ)] + 
-		      vVel[IntVector(colX+1,colY,colZ)]);
-	  vwp = 0.25*(vvelyp1 + vvelcur +
-		      vVel[IntVector(colX-1,colY+1,colZ)] + 
-		      vVel[IntVector(colX-1,colY,colZ)]);
-	  vtp = 0.25*(vvelyp1 + vvelcur + 
-		      vVel[IntVector(colX,colY+1,colZ+1)] + 
-		      vVel[IntVector(colX,colY,colZ+1)]);
-	  vbp = 0.25*(vvelyp1 + vvelcur +
-		      vVel[IntVector(colX,colY+1,colZ-1)] + 
-		      vVel[IntVector(colX,colY,colZ-1)]);
+	  wtp = wVel[IntVector(colX,colY,colZ+1)];
+	  wbp = wVel[currCell];
+          // colX,coly,colZ component cancels out when computing derivative,
+          // so it has been ommited
+	  wep = 0.5*wVelCC[IntVector(colX+1,colY,colZ)];
+	  wwp = 0.5*wVelCC[IntVector(colX-1,colY,colZ)];
+	  wnp = 0.5*wVelCC[IntVector(colX,colY+1,colZ)];
+	  wsp = 0.5*wVelCC[IntVector(colX,colY-1,colZ)];
 
-	  wtp = wvelzp1;
-	  wbp = wvelcur;
-	  wep = 0.25*(wvelzp1 + wvelcur + 
-		      wVel[IntVector(colX+1,colY,colZ+1)] + 
-		      wVel[IntVector(colX+1,colY,colZ)]);
-	  wwp = 0.25*(wvelzp1 + wvelcur +
-		      wVel[IntVector(colX-1,colY,colZ+1)] + 
-		      wVel[IntVector(colX-1,colY,colZ)]);
-	  wnp = 0.25*(wvelzp1 + wvelcur + 
-		      wVel[IntVector(colX,colY+1,colZ+1)] + 
-		      wVel[IntVector(colX,colY+1,colZ)]);
-	  wsp = 0.25*(wvelzp1 + wvelcur +
-		      wVel[IntVector(colX,colY-1,colZ+1)] + 
-		      wVel[IntVector(colX,colY-1,colZ)]);
 
 	  //     calculate the grid strain rate tensor
 
