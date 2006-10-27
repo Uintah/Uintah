@@ -49,12 +49,14 @@ C--------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
-               scalare = pt5*(Scalar(i,j,k)+Scalar(i+1,j,k))
-               scalarw = pt5*(Scalar(i,j,k)+Scalar(i-1,j,k))
-               scalarn = pt5*(Scalar(i,j,k)+Scalar(i,j+1,k))
-               scalars = pt5*(Scalar(i,j,k)+Scalar(i,j-1,k))
-               scalart = pt5*(Scalar(i,j,k)+Scalar(i,j,k+1))
-               scalarb = pt5*(Scalar(i,j,k)+Scalar(i,j,k-1))
+c i,j,k component cancels out when computing derivative,
+c so it has been ommited
+               scalare = pt5*Scalar(i+1,j,k)
+               scalarw = pt5*Scalar(i-1,j,k)
+               scalarn = pt5*Scalar(i,j+1,k)
+               scalars = pt5*Scalar(i,j-1,k)
+               scalart = pt5*Scalar(i,j,k+1)
+               scalarb = pt5*Scalar(i,j,k-1)
                dfdx = (scalare - scalarw)/sew(I)
                dfdy = (scalarn - scalars)/sns(J)
                dfdz = (scalart - scalarb)/stb(K)
