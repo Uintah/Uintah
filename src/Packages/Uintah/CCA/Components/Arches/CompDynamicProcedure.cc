@@ -36,17 +36,6 @@ using namespace std;
 
 using namespace Uintah;
 using namespace SCIRun;
-//#define use_fortran
-#ifdef use_fortran
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_1loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_2loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_3loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_4loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_5loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_6loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_7loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_8loop_fort.h>
-#endif
 
 // flag to enable filter check
 // need even grid size, unfiltered values are +-1; filtered value should be 0
@@ -1066,27 +1055,6 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
 
-#ifdef use_fortran
-    fort_comp_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
-        filterSIJ[0],filterSIJ[1],filterSIJ[2],
-	filterSIJ[3],filterSIJ[4],filterSIJ[5],
-	uVel,vVel,wVel, filterRhoU, filterRhoV, filterRhoW, filterRho,
-	cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	indexLow,indexHigh);
-    if (d_dynScalarModel)
-    fort_comp_dynamic_6loop( scalarGrad[0], scalarGrad[1], scalarGrad[2],
-	filterScalarGrad[0], filterScalarGrad[1], filterScalarGrad[2],
-	enthalpyGrad[0], enthalpyGrad[1], enthalpyGrad[2],
-	filterEnthalpyGrad[0], filterEnthalpyGrad[1], filterEnthalpyGrad[2],
-	reactScalarGrad[0], reactScalarGrad[1], reactScalarGrad[2],
-	filterReactScalarGrad[0], filterReactScalarGrad[1],
-	filterReactScalarGrad[2],
-	filterRho,
-	scalar,filterRhoF, enthalpy, filterRhoE, reactScalar, filterRhoRF,
-	cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	indexLow,indexHigh, d_calcScalar,
-        d_calcEnthalpy, d_calcReactingScalar);
-#else
     for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1447,7 +1415,6 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 	}
       }
     }
-#endif
   }
 }
 
@@ -1773,27 +1740,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     if (xplus) endX--;
 
   TAU_PROFILE_START(compute1);
-#ifdef use_fortran
-    IntVector start(startX, startY, startZ);
-    IntVector end(endX - 1, endY - 1, endZ -1);
-    fort_comp_dynamic_1loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
-	ccUVel,ccVVel,ccWVel,den,
-	IsI,betaIJ[0],betaIJ[1],betaIJ[2],betaIJ[3],betaIJ[4],betaIJ[5],
-	rhoU,rhoV,rhoW,rhoUU,rhoUV,rhoUW,rhoVV,rhoVW,rhoWW,
-	start,end);
-    if (d_dynScalarModel)
-    fort_comp_dynamic_4loop(ccUVel,ccVVel,ccWVel,
-        den,scalar,enthalpy,reactScalar,
-	scalarGrad[0], scalarGrad[1],scalarGrad[2],
-	enthalpyGrad[0], enthalpyGrad[1],enthalpyGrad[2],
-	reactScalarGrad[0], reactScalarGrad[1],reactScalarGrad[2], IsI,
-	scalarBeta[0],scalarBeta[1],scalarBeta[2],
-	enthalpyBeta[0],enthalpyBeta[1],enthalpyBeta[2],
-	reactScalarBeta[0],reactScalarBeta[1],reactScalarBeta[2],
-	rhoFU,rhoFV,rhoFW,rhoEU,rhoEV,rhoEW,rhoRFU,rhoRFV,rhoRFW,
-	start,end,d_calcScalar,
-        d_calcEnthalpy,d_calcReactingScalar);
-#else
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -1870,7 +1816,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	}
       }
     }
-#endif
   TAU_PROFILE_STOP(compute1);
     Array3<double> filterRhoUU(patch->getLowIndex(), patch->getHighIndex());
     filterRhoUU.initialize(0.0);
@@ -1977,49 +1922,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	Time::currentSeconds()-start_turbTime << " seconds\n";
   TAU_PROFILE_START(compute2);
 #endif
-#ifdef use_fortran
-    fort_comp_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
-	IsI, IsImag, betaHATIJ[0],betaHATIJ[1],betaHATIJ[2],
-	betaHATIJ[3],betaHATIJ[4],betaHATIJ[5],
-	filterRho, filterRhoU,
-	filterRhoV,filterRhoW,filterRhoUU, filterRhoVV, filterRhoWW,
-	filterRhoUV, filterRhoUW, filterRhoVW, 
-	MLI,MMI, indexLow,indexHigh);
-    if (d_dynScalarModel) {
-     if (d_calcScalar) {
-       fort_comp_dynamic_5loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
-	filterScalarGrad[0],filterScalarGrad[1],filterScalarGrad[2],
-	scalarBetaHat[0],scalarBetaHat[1],scalarBetaHat[2],
-	filterRho, filterRhoU,
-	filterRhoV,filterRhoW,
-	filterRhoF,filterRhoFU,filterRhoFV,filterRhoFW,
-	scalarNum, scalarDenom,indexLow,indexHigh);
-     }
-     if (d_calcEnthalpy) {
-       fort_comp_dynamic_7loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
-	filterEnthalpyGrad[0],filterEnthalpyGrad[1],filterEnthalpyGrad[2],
-	enthalpyBetaHat[0],enthalpyBetaHat[1],enthalpyBetaHat[2],
-	filterRho, filterRhoU,
-	filterRhoV,filterRhoW,
-	filterRhoE,filterRhoEU,filterRhoEV,filterRhoEW,
-	enthalpyNum, enthalpyDenom,indexLow,indexHigh);
-     }
-     if (d_calcReactingScalar) {
-       fort_comp_dynamic_8loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
-	SHATIJ[0],SHATIJ[1],SHATIJ[2],SHATIJ[3],SHATIJ[4],SHATIJ[5],
-	filterReactScalarGrad[0],filterReactScalarGrad[1],
-	filterReactScalarGrad[2],
-	reactScalarBetaHat[0],reactScalarBetaHat[1],reactScalarBetaHat[2],
-	filterRho, filterRhoU,
-	filterRhoV,filterRhoW,
-	filterRhoRF,filterRhoRFU,filterRhoRFV,filterRhoRFW,
-	reactScalarNum, reactScalarDenom,indexLow,indexHigh);
-     }
-    }
-#else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -2201,7 +2103,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	}
       }
     }
-#endif
   TAU_PROFILE_STOP(compute2);
 
   }
