@@ -41,7 +41,9 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Skinner/Variables.h>
 #include <StandAlone/Apps/Painter/NrrdToITK.h>
+#include <StandAlone/Apps/Painter/VolumeSlice.h>
 #include <sci_defs/insight_defs.h>
+#include <Core/Geom/IndexedGroup.h>
 
 using std::vector;
 
@@ -49,6 +51,7 @@ using std::vector;
 namespace SCIRun {
 
 class Painter;
+class VolumeSlice;
 
 class NrrdVolume { 
 public:
@@ -76,6 +79,9 @@ public:
   NrrdVolume *        create_child_label_volume(unsigned int label=0);
   unsigned int        compute_label_mask(unsigned int label = 0);
 
+  // Generates a VolumeSlice class if Plane intersects the volume,
+  // Returns 0 if the Plane does not intersect the volume
+  VolumeSliceHandle   get_volume_slice(const Plane &);
 
   void                reset_data_range();
   Point               index_to_world(const vector<int> &index);
@@ -102,6 +108,8 @@ public:
   int                 max_index(unsigned int axis);
 
   bool                inside_p(const Point &p);
+  ColorMapHandle      get_colormap();
+  GeomIndexedGroup*   get_geom_group();
 
   Painter *           painter_;
   NrrdVolume *        parent_;
@@ -126,6 +134,16 @@ public:
   bool                keep_;
   Skinner::Var<bool>  visible_;
   bool                expand_;
+  GeomHandle          geom_switch_;
+  GeomHandle          geom_group_;
+
+
+  // This next function must be called inside an opengl context, becuase
+  // it may call a geometry class desctructor that is deletes GL elements
+  // that are bound to a gl context, and thus the context must be current
+  void                purge_unused_slices();
+  VolumeSlices_t      all_slices_;
+  //  VolumeSliceGroups_t slice_groups_;
 };
 
 typedef vector<NrrdVolume *>		NrrdVolumes;

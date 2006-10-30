@@ -71,21 +71,56 @@
 
 namespace SCIRun {
 
-VolumeSlice::VolumeSlice(Painter *painter,
-                              NrrdVolume *volume, 
-                              SliceWindow *window,
-                              Point &p, Vector &n) :
-  painter_(painter),
+VolumeSlice::VolumeSlice(NrrdVolume *volume,
+                         const Plane &plane,
+                         NrrdDataHandle nrrd) :
+  lock("Volume Slice"),
+  ref_cnt(0),
   volume_(volume),
-  window_(window),
-  nrrd_dirty_(true),
-  tex_dirty_(false),
+  plane_(plane),
+  nrrd_handle_(nrrd),
+  tex_dirty_(true),
   pos_(),
   xdir_(),
   ydir_(),
-  plane_(p,n),
-  texture_(0)
+  outline_(0),
+  texture_(0),
+  geom_texture_(0)
 {
+  vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
+  unsigned int ax = axis();
+
+  // Lower-Left origin corner for slice quad,
+  // project into plane of window, to ensure volumes with different sample
+  // spacings share same plane in view space.
+  pos_ = plane_.project(volume_->min(ax, sindex[ax]));
+  vector<int> index(volume_->nrrd_handle_->nrrd_->dim,0);
+
+  Point origin = volume_->min(ax, 0);
+  int primary = (ax == 1) ? 2 : 1;
+  index[primary] = volume_->nrrd_handle_->nrrd_->axis[primary].size;
+  xdir_ = volume_->index_to_world(index) - origin;
+  index[primary] = 0;
+
+  int secondary = (ax == 3) ? 2 : 3;
+  index[secondary] = volume_->nrrd_handle_->nrrd_->axis[secondary].size;
+  ydir_ = volume_->index_to_world(index) - origin;
+
+
+  if (!nrrd_handle_.get_rep()) {
+    extract_nrrd_slice_from_volume();
+  }
+
+  if (!nrrd_handle_.get_rep()) {
+    return;
+  }
+
+  ColorMapHandle cmap = volume_->get_colormap();
+  texture_ = new ColorMappedNrrdTextureObj(nrrd_handle_, cmap);
+  outline_ = new NrrdBitmaskOutline(nrrd_handle_);
+  geom_texture_ = new GeomColorMappedNrrdTextureObj(texture_);
+  tex_dirty_ = true;
+  
 }
 
 
@@ -102,95 +137,311 @@ VolumeSlice::axis() {
 }
 
 
+#define NRRD_EXEC(__nrrd_command__) \
+  if (__nrrd_command__) { \
+    char *err = biffGetDone(NRRD); \
+    cerr << string("Error on line #")+to_string(__LINE__) + \
+	    string(" executing nrrd command: \n")+ \
+            string(#__nrrd_command__)+string("\n")+ \
+            string("Message: ")+string(err); \
+    free(err); \
+    return; \
+  }
+
+
+
+
 void
-VolumeSlice::bind()
-{
-  if (tex_dirty_) { 
-    texture_ = 0; 
+VolumeSlice::extract_nrrd_slice_from_volume() {  
+  vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
+  unsigned int ax = axis();
+
+  int min_slice = sindex[ax];
+  int max_slice = sindex[ax];
+  int slice = sindex[ax];  
+  if (slice < 0 || slice >= volume_->nrrd_handle_->nrrd_->axis[ax].size) {
+    return;
   }
 
+  volume_->mutex_->lock();
+  nrrd_handle_ = new NrrdData;
+  Nrrd *dst = nrrd_handle_->nrrd_;
+  Nrrd *src = volume_->nrrd_handle_->nrrd_;
+  ASSERT(src);
 
-  if (!texture_.get_rep()) {
-    vector<int> index = volume_->world_to_index(plane_.project(Point(0,0,0)));
-    unsigned int ax = axis();
-    unsigned int slice = index[ax];
-    volume_->mutex_->lock();
-    if (slice>=0 && slice < volume_->nrrd_handle_->nrrd_->axis[ax].size)
-      texture_ = scinew ColorMappedNrrdTextureObj(volume_->nrrd_handle_, 
-                                                  ax,
-                                                  slice, 
-                                                  slice);
-    volume_->mutex_->unlock();
-
-    tex_dirty_ = true;
+  if (min_slice != max_slice) {
+    size_t *min = new size_t[src->dim];
+    size_t *max = new size_t[src->dim];
+    for (unsigned int i = 0; i < src->dim; i++) {
+      min[i] = 0;
+      max[i] = src->axis[i].size-1;
+    }
+    min[ax] = Min(min_slice, max_slice);
+    max[ax] = Max(min_slice, max_slice);
+    NrrdDataHandle tmp1_handle = new NrrdData;
+    NRRD_EXEC(nrrdCrop(tmp1_handle->nrrd_, src, min, max));
+    NRRD_EXEC(nrrdProject(dst, tmp1_handle->nrrd_, ax, 
+                          nrrdMeasureMax, nrrdTypeDefault));
+  } else {
+    NRRD_EXEC(nrrdSlice(dst, src, ax, min_slice));
   }
-
-
-  if (texture_.get_rep() && tex_dirty_) {
-    texture_->set_label(volume_->label_);
-    texture_->set_clut_minmax(volume_->clut_min_, volume_->clut_max_);
-    ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_);
-    texture_->set_colormap(cmap);
-    GeomColorMappedNrrdTextureObj *slice = 
-      new GeomColorMappedNrrdTextureObj(texture_);
-    GeomSkinnerVarSwitch *gswitch = 
-      new GeomSkinnerVarSwitch(slice, volume_->visible_);
-    window_->get_geom_group()->addObj(gswitch, axis());
-  }
-
-
-  tex_dirty_ = false;
-
-  return;
+  volume_->mutex_->unlock();
 }
 
+
+
+
+static GLubyte stripe[4*32] = { 
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+  
+  0x33, 0x33, 0x33, 0x33,
+  0x66, 0x66, 0x66, 0x66,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x99, 0x99, 0x99, 0x99,
+};
+
+
+static GLubyte stripe2[4*36] = { 
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+
+  0x33, 0x33, 0x33, 0x33,
+  0x99, 0x99, 0x99, 0x99,
+  0xCC, 0xCC, 0xCC, 0xCC,
+  0x66, 0x66, 0x66, 0x66,
+};
+
+
+
+static GLubyte stripe3[4*36] = { 
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x22, 0x22, 0x22, 0x22,
+  0x44, 0x44, 0x44, 0x44,
+  0x88, 0x88, 0x88, 0x88,
+
+};
+    
+
+static GLubyte stripe4[4*36] = { 
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+  0x11, 0x11, 0x11, 0x11,
+  0x88, 0x88, 0x88, 0x88,
+  0x44, 0x44, 0x44, 0x44,
+  0x22, 0x22, 0x22, 0x22,
+
+};
 
 
 void
 VolumeSlice::draw()
 {
   if (!volume_->visible_) return;
-  if (nrrd_dirty_) {
-    set_coords();
-    nrrd_dirty_ = false;
-    tex_dirty_ = true;
-  }
+  if (!nrrd_handle_.get_rep()) return;
+  if (!texture_.get_rep() || !outline_.get_rep()) return;
 
-  float a = volume_->opacity_;
-  glColor4f(a,a,a,a);
+  //  float a = volume_->opacity_;
+  //  glColor4f(a,a,a,a);
   glDisable(GL_CULL_FACE);
-  glDisable(GL_LIGHTING);
   glEnable(GL_BLEND);
+  glDisable(GL_LIGHTING);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  //  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   CHECK_OPENGL_ERROR();  
 
-  bind();
-  if (texture_.get_rep())
-    texture_->draw_quad(&pos_, &xdir_, &ydir_);
+
+  if (tex_dirty_) {
+    tex_dirty_ = false;
+    texture_->set_label(volume_->label_);
+    texture_->set_clut_minmax(volume_->clut_min_, volume_->clut_max_);
+    ColorMapHandle cmap = volume_->get_colormap();
+    texture_->set_colormap(cmap);
+    outline_->set_colormap(cmap);
+  }
+   
+  int depth = 0;
+  NrrdVolume *parent = volume_;
+  while (parent->parent_) {
+    parent = parent->parent_;
+    depth++;
+  }
+  if (texture_.get_rep()) {    
+    if (volume_->label_) {
+      GLubyte *pattern = stripe4;
+      switch (depth % 4) {
+      case 0: pattern = stripe4; break;
+      case 1: pattern = stripe4+8; break;
+      case 2: pattern = stripe3; break;
+      default:
+      case 3: pattern = stripe3+8; break;
+      }
+
+      glPolygonStipple(pattern);
+      glEnable(GL_POLYGON_STIPPLE);
+    }
+    texture_->set_opacity(volume_->opacity_);
+    texture_->set_coords(pos_, xdir_, ydir_);
+    texture_->draw_quad();
+    if (volume_->label_) {
+      glDisable(GL_POLYGON_STIPPLE);
+    }    
+  }
+  
+  if (volume_->label_ && outline_.get_rep()) {
+    outline_->set_coords(pos_, xdir_, ydir_);
+    outline_->draw_lines(3.0, volume_->label_);
+  }
 }
 
-
-
-void
-VolumeSlice::set_coords() {  
-  vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
-  unsigned int ax = axis();
-
-  Point origin = volume_->min(ax, 0);
-  pos_ = volume_->min(ax, sindex[ax]);
-  vector<int> index(volume_->nrrd_handle_->nrrd_->dim,0);
-
-  int primary = (ax == 1) ? 2 : 1;
-  index[primary] = volume_->nrrd_handle_->nrrd_->axis[primary].size;
-  xdir_ = volume_->index_to_world(index) - origin;
-  index[primary] = 0;
-
-  int secondary = (ax == 3) ? 2 : 3;
-  index[secondary] = volume_->nrrd_handle_->nrrd_->axis[secondary].size;
-  ydir_ = volume_->index_to_world(index) - origin;
-}
 
 }

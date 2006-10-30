@@ -58,61 +58,28 @@ namespace SCIRun {
 using std::string;
 
 
-class SCISHARE BBoxSet {
-public:
-  BBoxSet();
-  BBoxSet(BBox &bbox);
-  BBoxSet(BBoxSet &bbox);
-  ~BBoxSet();
-
-  typedef vector<BBox> BBoxes;
-
-  void          add(BBox &);
-  void          add(BBoxSet &);
-
-  void          sub(BBox &);
-  void          sub(BBoxSet &);
-
-  void          reset();
-
-  void          set(BBox &);
-  void          set(BBoxSet &);
-
-  BBox          get();
-  vector<BBox>  get_boxes();
-
-
-private:
-  BBoxes         boxes_;
-};
- 
-
 class SCISHARE ColorMappedNrrdTextureObj {
 public:
-  Mutex &lock;
+  Mutex lock;
   int ref_cnt;
 
-  ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd_handle, 
-                            int axis, 
-                            int min_slice, int max_slice,
-                            int time = 0);
-
+  ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd_handle,
+                            ColorMapHandle &);
   ~ColorMappedNrrdTextureObj();
 
   void                  set_label(unsigned int);
   void                  set_colormap(ColorMapHandle &cmap);
   void                  set_clut_minmax(float min, float max);
-  void                  set_dirty() { nrrd_dirty_ = true; }
-  void			draw_quad(Point *min=0, Vector *xdir=0, Vector *ydir=0);
-  bool                  dirty_p() { return nrrd_dirty_; }
+  void                  set_dirty() { dirty_ = true; }
+  void                  set_coords(const Point &, 
+                                   const Vector &,
+                                   const Vector &);  
+  void			draw_quad();
   void                  get_bounds(BBox&);
-
   void                  apply_colormap(int, int, int, int, int border=0);
-  ColorMapHandle        colormap_;
-  NrrdDataHandle	nrrd_handle_;
-
+  void                  set_opacity(float op) { opacity_ = op; } 
 private:
-  void                  create_data();
+  friend class GeomColorMappedNrrdTextureObj;
   bool			bind(int x, int y);
 
   template <class T> 
@@ -147,18 +114,19 @@ private:
                                                     const float *rgba,
                                                     unsigned char bit);
 
-
-  bool  		nrrd_dirty_;
-  vector<bool>		dirty_;
-  BBoxSet               dirty_region_;
+  typedef vector<pair<unsigned int, unsigned int> > divisions_t;
+  ColorMapHandle        colormap_;
+  NrrdDataHandle	nrrd_handle_;
+  bool  		dirty_;
+  vector<bool>		texture_id_dirty_;
   vector<unsigned int>  texture_id_;
-  vector<pair<unsigned int, unsigned int> >  xdiv_;
-  vector<pair<unsigned int, unsigned int> >  ydiv_;
+  divisions_t           xdiv_;
+  divisions_t           ydiv_;
   float                 clut_min_;
   float                 clut_max_;
   float *               data_;
-  bool                  own_data_;
   unsigned int          label_;
+  float                 opacity_;
   Point                 min_;
   Vector                xdir_;
   Vector                ydir_;

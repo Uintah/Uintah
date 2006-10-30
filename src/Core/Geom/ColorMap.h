@@ -67,59 +67,61 @@ class SCISHARE ColorMap : public PropertyManager,
 {
 public:
   ColorMap(const ColorMap&);
-
+  ColorMap(const float *);
   ColorMap(const vector<Color>& rgb,
 	   const vector<float>& rgbT,
 	   const vector<float>& alphas,
 	   const vector<float>& alphaT,
 	   unsigned int resolution = 256);
   virtual ~ColorMap();
-  virtual ColorMap*	clone();
+  virtual ColorMap*             clone();
+  static ColorMap *             create_pseudo_random(int seed = 0);
+  static ColorMap *             create_greyscale();
 
-
-  const vector<Color> &get_rgbs() { return rawRampColor_; }
-  const vector<float> &get_rgbT() { return rawRampColorT_; }
-  const vector<float> &get_alphas() { return rawRampAlpha_; }
-  const vector<float> &get_alphaT() { return rawRampAlphaT_; }
+  const vector<Color> &         get_rgbs() { return rawRampColor_; }
+  const vector<float> &         get_rgbT() { return rawRampColorT_; }
+  const vector<float> &         get_alphas() { return rawRampAlpha_; }
+  const vector<float> &         get_alphaT() { return rawRampAlphaT_; }
 
   // Functions for handling the color scale of the data.
-  bool                  IsScaled() { return is_scaled_; }
-  void			Scale(double newmin, double newmax)
+  bool                          IsScaled() { return is_scaled_; }
+  void                          Scale(double newmin, double newmax)
   { min_ = newmin; max_ = newmax; is_scaled_ = true; }
-  void			ResetScale() 
+  void                          ResetScale() 
   { min_ = -1.0; max_ = 1.0; is_scaled_ = false; }
-  virtual double	getMin() const;
-  virtual double	getMax() const;
+  virtual double                getMin() const { return min_; }
+  virtual double                getMax() const { return max_; }
 
-  void                  set_units(const string &u) { units_ = u; }
-  string                units() { return units_; }
+  void                          set_units(const string &u) { units_ = u; }
+  string                        units() { return units_; }
 
   // Lookup which color value would be associated with in the colormap.
-  const MaterialHandle&	lookup(double value) const;
+  const MaterialHandle&         lookup(double value) const;
 
   // Lookup a color in the colormap by a value that has already been fitted
   // to the min/max of the colormap (value should be between 1 and ncolors).
-  const MaterialHandle&	lookup2(double value) const;
+  const MaterialHandle&         lookup2(double value) const;
 
-  const Color &		getColor(double t);
-  double		getAlpha(double t);
+  const Color &                 getColor(double t);
+  double                        getAlpha(double t);
 
-  const float *         get_rgba() { return rawRGBA_; }
-  unsigned int          resolution() { return resolution_; }
+  const float *                 get_rgba() { return rawRGBA_; }
+  unsigned int                  resolution() { return resolution_; }
 
 public:
 
   // Persistent representation.
-  virtual void		io(Piostream&);
-  static PersistentTypeID type_id;
+  virtual void                  io(Piostream&);
+  static PersistentTypeID       type_id;
 
 private:
-  friend class GeomColorMap;
-
+  static Persistent *           maker();
+  void                          build_rgba_from_ramp();
+  void                          build_ramp_from_rgba();
+  void                          build_materials_from_rgba();
+  
+  //  friend class GeomColorMap;
   ColorMap();
-  void			Build1d();
-
-  static Persistent *maker();
 
   vector<float>			rawRampAlpha_;
   vector<float>			rawRampAlphaT_;
@@ -127,14 +129,14 @@ private:
   vector<float>			rawRampColorT_;
 
   unsigned int                  resolution_;
-  float*         		rawRGBA_;
+  float         		rawRGBA_[256*4];
   string			units_;
 
   double			min_;
   double			max_;
   bool                          is_scaled_;
 
-  vector<MaterialHandle>	colors_;
+  vector<MaterialHandle>	materials_;
 };
 
 

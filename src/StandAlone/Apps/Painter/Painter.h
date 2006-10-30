@@ -156,7 +156,6 @@ private:
 
   // Methods for drawing to the GL window
   void			redraw_all();
-  void			draw_slice_lines(SliceWindow &);  
   void			extract_all_window_slices();
   void                  set_probe();
 
@@ -228,8 +227,7 @@ private:
   CatcherFunction_t     ITKGradientMagnitude;
   CatcherFunction_t     ITKBinaryDilateErode;
   CatcherFunction_t     ITKCurvatureAnisotropic;
-  CatcherFunction_t     ITKConfidenceConnected;
-  CatcherFunction_t     ITKThresholdLevelSet;
+  CatcherFunction_t     start_ITKConfidenceConnectedImageFilterTool;
   CatcherFunction_t     start_ITKThresholdSegmentationLevelSetImageFilterTool;
 
   CatcherFunction_t     ShowVolumeRendering;

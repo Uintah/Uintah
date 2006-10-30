@@ -34,6 +34,7 @@
 
 #include <Core/Geometry/Plane.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
+#include <Core/Geom/NrrdBitmaskOutline.h>
 #include <map>
 #include <vector>
 
@@ -45,33 +46,47 @@ class NrrdVolume;
 class SliceWindow;
 
 struct VolumeSlice {
-  VolumeSlice(Painter *, NrrdVolume *, SliceWindow * window,
-              Point &p, Vector &normal);
+  // For LockingHandle
+  Mutex                 lock;
+  int                   ref_cnt;
+
+  VolumeSlice(NrrdVolume *, 
+              const Plane &,
+              NrrdDataHandle nrrd=0);
   
   void                  bind();
   void                  draw();
   unsigned int          axis();
   void                  set_tex_dirty();
-  void                  set_coords();
+  const Plane &         get_plane() { return plane_; }
 
-  Painter *             painter_;
   NrrdVolume *          volume_;
-  SliceWindow *         window_;
+  NrrdDataHandle        nrrd_handle_;
   
-  bool                  nrrd_dirty_;
   bool                  tex_dirty_;
   
   Point                 pos_;
   Vector                xdir_;
   Vector                ydir_;
-  Plane                 plane_;
   
-  ColorMappedNrrdTextureObjHandle     texture_;  
+  NrrdBitmaskOutlineHandle              outline_;
+  ColorMappedNrrdTextureObjHandle       texture_;
+  GeomHandle                            geom_texture_;
+
+private:
+  void                  extract_nrrd_slice_from_volume();
+  Plane                 plane_;
+
+
+
 };
 
-typedef std::vector<VolumeSlice *>              VolumeSlices;
-typedef std::vector<VolumeSlices>		NrrdVolumeSlices;
-typedef std::map<NrrdVolume *, VolumeSlice*>    VolumeSliceMap;
+typedef LockingHandle<VolumeSlice> VolumeSliceHandle;
+typedef std::vector<VolumeSliceHandle> VolumeSlices_t;
+typedef map<string, VolumeSlices_t> VolumeSliceGroups_t;    
+typedef map<int, VolumeSlices_t> VolumeSlicesAlongAxis_t;
+typedef map<int, VolumeSlicesAlongAxis_t> VolumeSliceCache_t;
+
 
 }
 

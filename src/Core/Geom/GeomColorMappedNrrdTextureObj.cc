@@ -45,19 +45,23 @@ Persistent *make_GeomColorMappedNrrdTextureObj() {
   return scinew GeomColorMappedNrrdTextureObj();
 }
 
-PersistentTypeID GeomColorMappedNrrdTextureObj::type_id("GeomColorMappedNrrdTextureObj", "GeomObj", make_GeomColorMappedNrrdTextureObj);
+PersistentTypeID 
+GeomColorMappedNrrdTextureObj::type_id
+("GeomColorMappedNrrdTextureObj", "GeomObj", 
+ make_GeomColorMappedNrrdTextureObj);
 
 GeomColorMappedNrrdTextureObj::GeomColorMappedNrrdTextureObj
 (ColorMappedNrrdTextureObjHandle &cmnto)
   : GeomObj(),
-    cmnto_(0),
-    alpha_cutoff_(0.0)
+    cmnto_(cmnto),
+    alpha_cutoff_(0.0),
+    offset_(0.0)
 {  
-  cmnto_ = cmnto;
 }
 
-GeomColorMappedNrrdTextureObj::GeomColorMappedNrrdTextureObj( const GeomColorMappedNrrdTextureObj &copy ) : GeomObj(copy),
-                                                                                                            cmnto_(copy.cmnto_)
+GeomColorMappedNrrdTextureObj::GeomColorMappedNrrdTextureObj
+(const GeomColorMappedNrrdTextureObj &copy ) : GeomObj(copy),
+                                               cmnto_(copy.cmnto_)
 {  
 }
 
@@ -70,6 +74,11 @@ GeomColorMappedNrrdTextureObj::~GeomColorMappedNrrdTextureObj()
 void
 GeomColorMappedNrrdTextureObj::set_alpha_cutoff(double alpha) {
   alpha_cutoff_ = alpha;
+}
+
+void
+GeomColorMappedNrrdTextureObj::set_offset(double offset) {
+  offset_ = offset;
 }
 
 
@@ -87,10 +96,18 @@ GeomColorMappedNrrdTextureObj::draw(DrawInfoOpenGL* di,
     di->ambient_scale_ = old_ambient;
     return;
   }
-  glColor4f(1.0, 1.0, 1.0, 1.0);
+  //  glColor4f(1.0, 1.0, 1.0, 1.0);
   glEnable(GL_ALPHA_TEST);  
   glAlphaFunc(GL_GREATER, 0.1);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+
+  Vector view(di->view_.lookat() - di->view_.eyep());
+  double d = 1.0/view.length() - 1.0;
+  // very scientific, don't change :-o
+  glPolygonOffset(d*offset_, offset_);
   cmnto_->draw_quad();
+  glPolygonOffset(0.0, 0.0);
+  glDisable(GL_POLYGON_OFFSET_FILL);
   glDisable(GL_ALPHA_TEST);  
   di->ambient_scale_ = old_ambient;
   post_draw(di);

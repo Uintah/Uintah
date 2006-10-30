@@ -86,6 +86,7 @@ namespace SCIRun {
       PointerSignal *ps = dynamic_cast<PointerSignal *>(event.get_rep());
       PointerEvent *pointer = ps->get_pointer_event();
       Signal *signal = 0;
+      event_handle_t result = 0;
       ASSERT(pointer);
 
       bool inside = get_region().inside(pointer->get_x(), pointer->get_y());
@@ -95,38 +96,32 @@ namespace SCIRun {
 
       if (inside && pressed &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) 
-        {
-          //          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
-          //          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
-
-          signal = 
-            dynamic_cast<Signal *>(throw_signal("button_1_clicked").get_rep());
-        }
+      {
+        result = throw_signal("button_1_clicked");
+      }
       
-//       if (!inside && pressed) {
-//         cerr << "Button clicked outside box\n";
-//         signal = dynamic_cast<Signal *>
-//           (throw_signal("button_clicked_outside_box").get_rep());
-//       }
-
-
+#if 0
       if (inside && pressed &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_3_E)) 
-        {
-          //          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
-          //          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
-
-          signal = 
-            dynamic_cast<Signal *>(throw_signal("button_2_clicked").get_rep());
-        } 
+      {
+        result = throw_signal("button_2_clicked");
+      } 
+#endif
         
       if ((pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
-        signal = 
-          dynamic_cast<Signal *>(throw_signal("button_1_released").get_rep());
+        result = throw_signal("button_1_released");
       }
 
-      return signal ? signal->get_signal_result() : CONTINUE_E;
+
+      if (result.get_rep()) {
+        signal = dynamic_cast<Signal *>(result.get_rep());
+        if (signal) {
+          return signal->get_signal_result();
+        }
+      }
+
+      return CONTINUE_E;
     }
 
     int

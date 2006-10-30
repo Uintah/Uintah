@@ -43,19 +43,16 @@ namespace SCIRun {
     public:
       Colormap1D(Variables *);
       virtual ~Colormap1D();
-      virtual propagation_state_e       process_event(event_handle_t);
       virtual MinMax                    minmax(unsigned int);
-
       static string                     class_name() { return "Colormap1D"; }
       static DrawableMakerFunc_t        maker;
       virtual int                       get_signal_id(const string &) const;
 
     private:
-      
-
-      void                              draw_gl();
+      CatcherFunction_t                 redraw;
       NrrdDataHandle                    nrrd_handle_;
-      ColorMappedNrrdTextureObj *       tex_;
+      ColorMapHandle                    colormap_;
+      ColorMappedNrrdTextureObjHandle   tex_;
     };
   }
 }

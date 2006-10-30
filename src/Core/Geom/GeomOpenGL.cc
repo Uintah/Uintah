@@ -833,14 +833,14 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     // Send Cmap
     glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
-                 cmap_->rawRGBA_);
+                 cmap_->get_rgba());
 
 #ifdef GL_CLAMP_TO_EDGE
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 #else
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 #endif
-    if (cmap_->resolution_ == 256)
+    if (cmap_->resolution() == 256)
     {
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -857,7 +857,7 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glMatrixMode(GL_TEXTURE);
     glPushMatrix();
 
-    const double r = cmap_->resolution_ / 256.0;
+    const double r = cmap_->resolution() / 256.0;
     glScaled(r / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
     glTranslated(-cmap_->getMin(), 0.0, 0.0);
 

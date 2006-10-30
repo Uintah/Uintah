@@ -25,7 +25,7 @@
               target="GLWindow::mark_redraw"/>
 
       <signal name="FocusRegion::focus"
-              target="Button::unfocus"/>
+              target="Button::focus"/>
       
       <signal name="FocusRegion::unfocus" target="Arithmetic::set_value">
         <var name="variable">$Frame::size</var>
@@ -78,7 +78,6 @@
               <var name="col">2</var>
               
               <var name="text">$Button::Text::text</var>
-              <var name="cell-height">30</var>
               <var name="size">$Button::Text::size</var>
               <var name="fgcolor">$Button::Text::fgcolor</var>
               <var name="bgcolor">$Button::Text::bgcolor</var>

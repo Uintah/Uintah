@@ -91,6 +91,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Lighting.cc		    		\
 	$(SRCDIR)/Material.cc		    		\
 	$(SRCDIR)/NrrdTextureObj.cc	    		\
+	$(SRCDIR)/NrrdBitmaskOutline.cc	    		\
 	$(SRCDIR)/OpenGLContext.cc	    		\
 	$(SRCDIR)/OpenGLViewport.cc	    		\
 	$(SRCDIR)/OSXOpenGLContext.cc	    		\

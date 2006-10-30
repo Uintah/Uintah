@@ -39,9 +39,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -262,6 +264,16 @@ Plane::get(double (&abcd)[4]) const
   abcd[2] = n.z();
   abcd[3] = d;
 }
+
+
+bool
+Plane::operator==(const Plane &rhs) const { 
+  double cosine = Dot(this->n, rhs.n);
+  double d1 = this->eval_point(Point(0,0,0));
+  double d2 = rhs.eval_point(Point(0,0,0));
+  return (Abs(double(d1-d2)) < 0.000001) && (Abs(double(cosine-1.0)) < 0.00001); 
+}
+
 
 } // End namespace SCIRun
 

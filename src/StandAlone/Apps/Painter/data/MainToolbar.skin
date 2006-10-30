@@ -196,58 +196,7 @@
 
 
           </object>
-          <object class="FrameButton">
-            <var name="col">5</var>
-            <var name="row">1</var>
-            <var name="cell-height">$buttonwidth</var>
-            <var name="cell-width">50</var>
-            <var name="Button::Text::text" propagate="yes">ITK</var>
-            <var name="Button::color" propagate="yes">$main_color</var>
 
-            <signal name="Button::clicked" 
-                    target="VisibilityGroup::show_VisibleItem">
-              <var name="id">ITKCurvatureAnisotropicDiffusionImageFilterToolDialog</var>
-              <var name="group">ToolsVisibleGroup</var>
-            </signal>
-
-            <signal name="Button::focus" 
-                    target="Arithmetic::set_value">
-              <var name="variable">$Painter::status</var>
-              <var name="value">ITK</var>
-            </signal>
-
-            <signal name="Button::focus"
-                    target="GLWindow::mark_redraw"/>
-
-            <signal name="Button::unfocus" 
-                    target="Arithmetic::set_value">
-              <var name="variable">$Painter::status</var>
-              <var name="value"></var>
-            </signal>
-
-            <signal name="Button::unfocus"
-                    target="GLWindow::redraw_drawable"/>
-
-
-          </object>
-
-          <object class="FrameButton">
-            <var name="col">6</var>
-            <var name="row">1</var>
-            <var name="cell-height">$buttonwidth</var>
-            <var name="cell-width">25</var>
-            <var name="Button::Text::text" propagate="yes">T</var>
-            <var name="Button::color" propagate="yes">$main_color</var>
-
-            <signal name="Button::clicked" 
-                    target="Painter::start_ITKThresholdSegmentationLevelSetImageFilterTool"/>
-
-            <signal name="Button::clicked" 
-                    target="VisibilityGroup::show_VisibleItem">
-              <var name="id">ITKThresholdSegmentationLevelSetImageFilterToolDialog</var>
-              <var name="group">ToolsVisibleGroup</var>
-            </signal>
-          </object>
         </object>
       </object>
     </object>      

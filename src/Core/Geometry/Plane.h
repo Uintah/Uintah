@@ -66,6 +66,8 @@ public:
     Vector normal() const;
     void get(double (&abcd)[4]) const;
 
+  // Not a great ==, doesnt take into account for floating point error.
+  bool operator==(const Plane &rhs) const; 
    // changes the plane ( n and d )
    
    void ChangePlane( const Point &p1, const Point &p2, const Point &p3 );
