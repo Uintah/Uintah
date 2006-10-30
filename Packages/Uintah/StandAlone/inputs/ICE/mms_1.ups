@@ -158,14 +158,14 @@
             <box label="wholeDomain">             </box>
             <box label="scalarSlug">
               <min>         [-0.0,-0.0,-0.0]       </min>
-              <max>         [ 0.5, 0.5, 0.0]       </max>
+              <max>         [ 0.5, 0.5, 0.5]       </max>
             </box>
             </difference>
-            <scalar>    0.00   </scalar>
+            <scalar>    0.00           </scalar>
          </geom_object>
           <geom_object>
-            <box label="scalarSlug">     </box>
-            <scalar>    1.00   </scalar>
+            <box label="scalarSlug">   </box>
+            <scalar>    1.00           </scalar>
          </geom_object>
        </scalar>
       </Model>
