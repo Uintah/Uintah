@@ -154,7 +154,8 @@ ConvertNrrdsToTexture::execute()
   // Check to see if the input nrrd has changed.
   if( vnrrd_last_generation_ != vHandle->generation  ||
       (gui_vminval_.get() != vminval_) || 
-      (gui_vmaxval_.get() != vmaxval_))
+      (gui_vmaxval_.get() != vmaxval_) ||
+      tHandle_.get_rep() == 0)
   {
     vnrrd_last_generation_ = vHandle->generation;
 
@@ -162,6 +163,7 @@ ConvertNrrdsToTexture::execute()
     vmaxval_ = gui_vmaxval_.get();
 
     update = true;
+    if (tHandle_.get_rep() == 0) { tHandle_ = scinew Texture(); }
   }
 
   // The gradient nrrd input is optional.
@@ -293,7 +295,7 @@ ConvertNrrdsToTexture::execute()
   }
 
   if( update ) {
-
+    
     CompileInfoHandle ci =
       NrrdTextureBuilderAlgo::get_compile_info(vHandle->nrrd_->type,
 					       gHandle.get_rep() ? 

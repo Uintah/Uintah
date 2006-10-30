@@ -220,14 +220,16 @@ ConvertFieldsToTexture::execute()
   // Check to see if the input scalar field or the range has changed.
   if( vfield_last_generation_ != vHandle->generation  ||
       (gui_vminval_.get() != vminval_) || 
-      (gui_vmaxval_.get() != vmaxval_)) {
-
+      (gui_vmaxval_.get() != vmaxval_) ||
+      tHandle_.get_rep() == 0)
+  {
     vfield_last_generation_ = vHandle->generation;
     
     vminval_ = gui_vminval_.get();
     vmaxval_ = gui_vmaxval_.get();
     
     update = true;
+    if (tHandle_.get_rep() == 0) { tHandle_ = scinew Texture(); }
   }
 
   // The gradient field input is optional.
