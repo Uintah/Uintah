@@ -188,6 +188,7 @@ private:
   NrrdVolume *          copy_current_volume(const string &, int mode=0);
 
   void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
+  string		unique_layer_name(const string &str) { return str; }
 
 #ifdef HAVE_INSIGHT
   template <class ImageT>
@@ -339,7 +340,8 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
   
   if (nrrd_handle.get_rep()) {
     ITKDatatypeHandle img_handle = nrrd_to_itk_image(nrrd_handle);  
-    ImageType *imgp = dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
+    ImageType *imgp = 
+      dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
     
     if (imgp == 0) 
       return false;

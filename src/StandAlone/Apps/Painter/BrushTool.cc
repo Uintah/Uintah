@@ -136,7 +136,7 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     return CONTINUE_E;
   }
 
-  if (b == 1) {
+  if (b == 1 || (b == 3 && vol->label_)) {
     window_ = painter_->cur_window_;
     slice_ = 0;
     for (unsigned int i = 0; i < window_->slices_.size(); ++i) {
@@ -158,7 +158,13 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
         if (parent)
           label_mask_ |= parent->label_;
       }
-      value_ = vol->label_ | label_mask_;
+
+      if (b == 1) {
+	value_ = label_mask_ | vol->label_;
+      } else {
+	value_ = label_mask_;
+        label_mask_ = label_mask_ | vol->label_;
+      }
     } else {
       label_mask_ = 0;
     }
@@ -206,7 +212,7 @@ BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
     return CONTINUE_E;
   }
 
-  if (b == 1) {
+  if (b == 1 || (slice_.get_rep() && b == 3 && slice_->volume_->label_)) {
     NrrdVolume *vol = slice_->volume_;
     ASSERT(vol);
     vector<int> window_center = vol->world_to_index(window_->center_);
@@ -258,7 +264,8 @@ BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
   if (!vol->index_valid(index)) {
     return CONTINUE_E;
   }
-  if (b == 1) {
+  //  if (b == 1) {
+  if (b == 1 || (slice_.get_rep() && b == 3 && slice_->volume_->label_)) {
     index.erase(index.begin()+axis_);
     line(slice_->nrrd_handle_->nrrd_, radius_, 
          last_index_[1], last_index_[2],
@@ -373,7 +380,7 @@ BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, value_, label_mask_);//nrrd_get_value(nrrd,index);
+            nrrd_set_value(nrrd, index, value_, label_mask_);
           }
         }
 }

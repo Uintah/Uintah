@@ -59,7 +59,7 @@ nrrd_to_itk_image(Nrrd *n)
   ASSERT(n);
   ASSERT(n->type == get_nrrd_type<PixType>());
   ASSERT(n->dim == 4);
-
+  
   const unsigned int dimension = 3;
   typedef itk::ImportImageFilter < PixType , 3 > ImportFilterType;
   typename ImportFilterType::Pointer importFilter = ImportFilterType::New();
@@ -95,7 +95,7 @@ nrrd_to_itk_image(Nrrd *n)
   importFilter->SetSpacing(spacing);
   importFilter->SetImportPointer((PixType *)n->data, count, false);
   importFilter->Update();
-
+  
   return importFilter->GetOutput();
 }
 

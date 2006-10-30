@@ -740,4 +740,29 @@ NrrdVolume::get_geom_group()
 }
 
 
+NrrdDataHandle
+NrrdVolume::extract_label_as_bit() 
+{
+  Nrrd *n = nrrd_handle_->nrrd_;
+  if (!label_ || !n || n->type != nrrdTypeUInt) return 0;
+
+  NrrdData *newnrrdh = new NrrdData();
+  nrrdCopy(newnrrdh->nrrd_, n);
+  unsigned int *data = (unsigned int *)newnrrdh->nrrd_->data;
+  ASSERT(data);
+  unsigned int count = 1;
+  for(unsigned int i=0; i < n->dim-1; i++) {
+    count *= n->axis[i+1].size;
+  }
+  
+  unsigned int bit = 0;
+  while (!(label_ & (1 << bit))) bit++;
+  
+  for (unsigned int i = 0; i < count; ++i) {
+    data[i] = (data[i] >> bit) & 1;
+  }
+
+  return newnrrdh;
+}
+
 }

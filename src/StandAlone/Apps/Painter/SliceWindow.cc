@@ -97,6 +97,7 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
   color_(variables, "SliceWindow::color", Skinner::Color(0,0,0,0)),
   show_grid_(variables, "SliceWindow::GridVisible",1),
   show_slices_(variables, "SliceWindow::SlicesVisible",1),
+  groupname_(variables, "SliceWindow::Group","default"),
   geom_switch_(0),
   geom_group_(0)
 
@@ -187,6 +188,7 @@ SliceWindow::render_slice_lines(SliceWindows &windows)
   for (unsigned int i = 0; i < windows.size(); ++i) {
     SliceWindow *win = windows[i];
     if (win == this) continue;
+    if (win->groupname_() != this->groupname_()) continue;
     if (Dot(normal_, win->normal_) > 0.999) continue;
 
     // The span vector spans the volume edge to edge

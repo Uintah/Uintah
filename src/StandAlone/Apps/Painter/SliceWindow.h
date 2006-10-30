@@ -129,6 +129,7 @@ public:
   Skinner::Var<Skinner::Color>    color_;
   Skinner::Var<bool>    show_grid_;
   Skinner::Var<bool>    show_slices_;
+  Skinner::Var<string>  groupname_;
   GeomHandle            geom_switch_;
   GeomIndexedGroup *    geom_group_;
 

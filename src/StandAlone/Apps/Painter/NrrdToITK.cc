@@ -34,9 +34,13 @@
 
 #ifdef HAVE_INSIGHT
 
-SCIRun::ITKDatatypeHandle
-SCIRun::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
+namespace SCIRun {
+
+
+ITKDatatypeHandle
+nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   Nrrd *n = nrrd->nrrd_;
+
   itk::Object::Pointer data = 0;
   switch (n->type) {
   case nrrdTypeChar: data = nrrd_to_itk_image<signed char>(n); break;
@@ -52,9 +56,11 @@ SCIRun::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   default: throw "nrrd_to_itk_image, cannot convert type" + to_string(n->type);
   }
 
-  SCIRun::ITKDatatype *result = new SCIRun::ITKDatatype();
+  ITKDatatype *result = new SCIRun::ITKDatatype();
   result->data_ = data;
   return result;
+}
+
 }
 
 #endif /* HAVE_INSIGHT */
