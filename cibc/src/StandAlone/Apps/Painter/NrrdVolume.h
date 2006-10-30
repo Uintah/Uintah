@@ -110,6 +110,7 @@ public:
   bool                inside_p(const Point &p);
   ColorMapHandle      get_colormap();
   GeomIndexedGroup*   get_geom_group();
+  NrrdDataHandle      extract_label_as_bit();
 
   Painter *           painter_;
   NrrdVolume *        parent_;
@@ -254,11 +255,8 @@ nrrd_set_value(Nrrd *nrrd,
     } break;
   case nrrdTypeUInt: {
     unsigned int *slicedata = (unsigned int *)nrrd->data;
-    //    if (!label_mask)
-    //      slicedata[position] = (unsigned int)val;
-      //    else 
-    if ((label_mask & slicedata[position]) == label_mask) 
-      slicedata[position] |= (unsigned int)val;
+    if (slicedata[position] == label_mask) 
+      slicedata[position] = (unsigned int)val;
     } break;
   case nrrdTypeLLong: {
     signed long long *slicedata = (signed long long *)nrrd->data;

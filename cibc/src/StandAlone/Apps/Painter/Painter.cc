@@ -500,44 +500,27 @@ Painter::filter_callback(itk::Object *object,
   itk::ProcessObject::Pointer process = 
     dynamic_cast<itk::ProcessObject *>(object);
   ASSERT(process);
-  //double value = process->GetProgress();
+  double value = process->GetProgress();
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
-
-    
-    // progress bar is broken!
-
-//     double total = get_vars()->get_double("Painter::progress_bar_total_width");
-//     get_vars()->insert("Painter::progress_bar_done_width", 
-//                        to_string(value * total), "string", true);
-    
-//     get_vars()->insert("Painter::progress_bar_text", 
-//                        to_string(round(value * 100))+ " %  ", "string", true);
-
     if (filter_volume_ && filter_update_img_.get_rep()) {
-      //      typedef Painter::ITKImageFloat3D ImageType;
-      //      typedef itk::ImageToImageFilter<ImageType, ImageType> FilterType;
       typedef itk::ThresholdSegmentationLevelSetImageFilter
         < ITKImageFloat3D, ITKImageFloat3D > FilterType;
-      
       
       FilterType *filter = dynamic_cast<FilterType *>(object);
       ASSERT(filter);
       volume_lock_.lock();
       filter_update_img_->data_ = filter->GetOutput();
-      //filter_update_img_->data_ = filter->GetFeatureImage();
-      filter_volume_->nrrd_handle_ = itk_image_to_nrrd<float>(filter_update_img_);
+      filter_volume_->nrrd_handle_ = 
+	itk_image_to_nrrd<float>(filter_update_img_);
       volume_lock_.unlock();
       if (volume_texture_.get_rep()) {
-        NrrdTextureBuilderAlgo::build_static(volume_texture_,
-                                             current_volume_->nrrd_handle_, 0, 255,
-                                             0, 0, 255, 128);
+        NrrdTextureBuilderAlgo::build_static
+	  (volume_texture_,current_volume_->nrrd_handle_, 0, 255,
+	   0, 0, 255, 128);
       }
-
-      //        volume_texture_->set_dirty(true);
-
-      set_all_slices_tex_dirty();
-      redraw_all();
+      extract_all_window_slices();
+      //set_all_slices_tex_dirty();
     }
 
     redraw_all();
@@ -548,14 +531,12 @@ Painter::filter_callback(itk::Object *object,
 
   if (typeid(itk::IterationEvent) == typeid(event))
   {
-    //    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
+    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
   }
+
   if (abort_filter_) {
-    //    abort_filter_ = false;
     process->AbortGenerateDataOn();
   }
-
-
 }
 
 void
