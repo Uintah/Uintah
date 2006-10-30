@@ -39,9 +39,6 @@ SET(Dataflow_Modules_Render_SRCS
   SynchronizeGeometry.cc
   ViewWindow.cc
   ViewSlices.cc
-  ViewAndEditSlices.cc
-  ViewAndEditSlicesTools.cc
-  ViewAndEditSlicesBrushTool.cc
   ViewScene.cc
   glMath.cc
 )

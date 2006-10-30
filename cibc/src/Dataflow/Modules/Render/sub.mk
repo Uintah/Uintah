@@ -51,9 +51,6 @@ SRCS     += \
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/ViewSlices.cc\
-	$(SRCDIR)/ViewAndEditSlices.cc\
-	$(SRCDIR)/ViewAndEditSlicesTools.cc\
-	$(SRCDIR)/ViewAndEditSlicesBrushTool.cc\
 	$(SRCDIR)/ViewScene.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]

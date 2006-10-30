@@ -139,7 +139,6 @@ SRCS := \
         $(SRCDIR)/ReadPath.tcl \
         $(SRCDIR)/PathWidget.tcl \
         $(SRCDIR)/WritePath.tcl \
-        $(SRCDIR)/ViewAndEditSlices.tcl \
         $(SRCDIR)/TransformPlanarMesh.tcl \
         $(SRCDIR)/BuildPointCloudToLatVolMappingMatrix.tcl \
         $(SRCDIR)/PointWidget.tcl \
