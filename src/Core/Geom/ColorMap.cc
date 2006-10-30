@@ -222,7 +222,7 @@ ColorMap::build_ramp_from_rgba()
   rawRampColor_.resize(size);
   rawRampColorT_.resize(size);
 
-  for (unsigned int i = 0; i < size; i++)
+  for (int i = 0; i < size; i++)
   {
     const float t = i / (size-1.0);
     rawRampAlphaT_[i] = t;
@@ -239,7 +239,7 @@ ColorMap::build_materials_from_rgba() {
   materials_.resize(size);
   const Color ambient(0.0, 0.0, 0.0);
   const Color specular(0.7, 0.7, 0.7);
-  for (unsigned int i = 0; i < size; i++)
+  for (int i = 0; i < size; i++)
   {
     Color diffuse(rawRGBA_[i*4], rawRGBA_[i*4+1], rawRGBA_[i*4+2]);
     materials_[i] = new Material(ambient, diffuse, specular, 10);

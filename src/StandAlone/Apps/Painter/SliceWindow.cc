@@ -746,14 +746,15 @@ SliceWindow::render_text()
 
 
 void
-SliceWindow::render_slices() {
+SliceWindow::render_slices()
+{
   if (recompute_slices_) {
     recompute_slices_ = false;
     NrrdVolumes volumes;
     painter_->build_volume_list(volumes);
 
     if (slices_.size() != volumes.size()) {
-      for (int i = 0; i < volumes.size(); ++i) {
+      for (unsigned int i = 0; i < volumes.size(); ++i) {
         if (volumes[i] == painter_->current_volume_) {
           center_ = painter_->current_volume_->center();
         }
@@ -763,7 +764,8 @@ SliceWindow::render_slices() {
     slices_.clear();
     double offset = 0.0;
         
-    for (int i = 0; i < volumes.size(); ++i) {
+    for (unsigned int i = 0; i < volumes.size(); ++i)
+    {
       NrrdVolume *volume = volumes[i];
       VolumeSliceHandle slice = 
         volume->get_volume_slice(Plane(center_, normal_));

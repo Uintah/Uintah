@@ -699,12 +699,13 @@ NrrdVolume::get_volume_slice(const Plane &plane) {
 }
 
 void
-NrrdVolume::purge_unused_slices() {
+NrrdVolume::purge_unused_slices()
+{
   NrrdVolume *parent = this;
   while (parent->parent_) parent = parent->parent_;
 
   VolumeSlices_t new_all_slices;
-  for (int j = 0; j < parent->all_slices_.size(); ++j) {      
+  for (unsigned int j = 0; j < parent->all_slices_.size(); ++j) {      
     if (parent->all_slices_[j]->ref_cnt > 1) {
       new_all_slices.push_back(parent->all_slices_[j]);
     }

@@ -41,8 +41,8 @@ namespace SCIRun {
     Colormap1D::Colormap1D(Variables *variables) :
       Parent(variables),
       nrrd_handle_(new NrrdData()),
-      tex_(0),
-      colormap_(ColorMap::create_pseudo_random(101))
+      colormap_(ColorMap::create_pseudo_random(101)),
+      tex_(0)
     {
       Nrrd *nrrd = nrrd_handle_->nrrd_;
       if (nrrdAlloc_va(nrrd, nrrdTypeFloat, 4, 1, 256,1, 1)) {
@@ -82,6 +82,8 @@ namespace SCIRun {
       Vector ydir(0,region.height(), 0);
       tex_->set_coords(min, xdir, ydir);
       tex_->draw_quad();
+
+      return CONTINUE_E;
     }
 
     Drawable *

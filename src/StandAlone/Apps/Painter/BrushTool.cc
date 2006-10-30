@@ -139,7 +139,7 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
   if (b == 1) {
     window_ = painter_->cur_window_;
     slice_ = 0;
-    for (int i = 0; i < window_->slices_.size(); ++i) {
+    for (unsigned int i = 0; i < window_->slices_.size(); ++i) {
       if (window_->slices_[i]->volume_ == vol) {
         slice_ = window_->slices_[i];
       }
