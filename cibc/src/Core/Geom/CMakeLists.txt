@@ -86,7 +86,8 @@ SET(Core_Geom_SRCS
   Light.cc		    		
   Lighting.cc		    		
   Material.cc		    		
-  NrrdTextureObj.cc	    		
+  NrrdTextureObj.cc
+  NrrdBitmaskOutline.cc  		
   OpenGLViewport.cc	    		
   OpenGLContext.cc	    		
   OSXOpenGLContext.cc

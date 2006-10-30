@@ -3,6 +3,7 @@
 
     <xi:include href="MainMenuBar.skin" parse="xml"/>  
     <xi:include href="ViewMenu.skin" parse="xml"/>  
+    <xi:include href="ITKMenu.skin" parse="xml"/>  
     <xi:include href="MainFileMenu.skin" parse="xml"/>  
     
     <object class="Box">
@@ -10,6 +11,7 @@
       <object class="Root::MenuManager">
         <object class="ViewMenu" id="ViewMenu1"/>
         <object class="MainFileMenu" id="MainFileMenu"/>
+        <object class="ITKMenu" id="ITKMenu1"/>
 
 
         <object class="Grid">

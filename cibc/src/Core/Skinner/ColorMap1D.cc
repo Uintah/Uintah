@@ -41,7 +41,8 @@ namespace SCIRun {
     Colormap1D::Colormap1D(Variables *variables) :
       Parent(variables),
       nrrd_handle_(new NrrdData()),
-      tex_(0)
+      tex_(0),
+      colormap_(ColorMap::create_pseudo_random(101))
     {
       Nrrd *nrrd = nrrd_handle_->nrrd_;
       if (nrrdAlloc_va(nrrd, nrrdTypeFloat, 4, 1, 256,1, 1)) {
@@ -55,9 +56,11 @@ namespace SCIRun {
       for (int i = 0; i < 255; ++i) {
         data[i] = float(i);
       }
-      tex_ = new ColorMappedNrrdTextureObj(nrrd_handle_, 2, 0, 0, 0);
+
+      tex_ = new ColorMappedNrrdTextureObj(nrrd_handle_, colormap_);
       tex_->set_clut_minmax(0,255.0);
       tex_->apply_colormap(0,0,255,1, 0);
+      REGISTER_CATCHER_TARGET(Colormap1D::redraw);
     }
 
     Colormap1D::~Colormap1D()
@@ -70,35 +73,16 @@ namespace SCIRun {
       return SPRING_MINMAX;
     }
 
-    void
-    Colormap1D::draw_gl()
+    BaseTool::propagation_state_e
+    Colormap1D::redraw(event_handle_t)
     {
       const RectRegion &region = get_region();
       Point min(region.x1(), region.y1(), 0);
       Vector xdir(region.width(), 0, 0);      
       Vector ydir(0,region.height(), 0);
-
-      tex_->draw_quad(&min, &xdir, &ydir);
+      tex_->set_coords(min, xdir, ydir);
+      tex_->draw_quad();
     }
-
-
-    
-    BaseTool::propagation_state_e
-    Colormap1D::process_event(event_handle_t event)
-    {
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      bool draw = (window && window->get_window_state() == WindowEvent::REDRAW_E);
-
-      if (draw) {
-        draw_gl();
-      }
-
-      //      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-      //      KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
-      
-      return Parent::process_event(event);
-    }
-
 
     Drawable *
     Colormap1D::maker(Variables *vars) 

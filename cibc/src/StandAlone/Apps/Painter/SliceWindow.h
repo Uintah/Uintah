@@ -61,12 +61,14 @@ public:
   SliceWindow(Skinner::Variables *, Painter *painter);
   virtual ~SliceWindow() {}
     
-  propagation_state_e   process_event(event_handle_t event);
   virtual int           get_signal_id(const string &signalname) const;
   CatcherFunction_t     Autoview;
   CatcherFunction_t     zoom_in;
   CatcherFunction_t     zoom_out;
   CatcherFunction_t     redraw;
+  CatcherFunction_t     do_PointerEvent;
+  CatcherFunction_t     process_event;
+
 
   void                  setup_gl_view();
   void                  push_gl_2d_view();
@@ -92,6 +94,7 @@ public:
 
   void                  set_probe();
   void                  extract_slices();
+  void                  render_slices();
   void                  redraw();
   void                  autoview(NrrdVolume *, double offset=10.0);
   void                  set_axis(unsigned int);
@@ -99,24 +102,25 @@ public:
 
   Painter *             painter_;
   string		name_;
-  VolumeSlices		slices_;
-  VolumeSliceMap        slice_map_;
-  VolumeSlice*          paint_layer_;
+  VolumeSlices_t	slices_;
+  typedef map<NrrdVolume *, VolumeSliceHandle> VolumeSliceMap_t ;
+  bool                  purge_volumes_;
+  bool                  recompute_slices_;
 
   Point                 center_;
   Vector                normal_;
 
-  UIint                 slice_num_;
-  UIint                 axis_;
+  int                   axis_;
   UIdouble		zoom_;
   UIint                 slab_min_;
   UIint                 slab_max_;
       
-  bool                  redraw_;
+  //  bool                  redraw_;
   bool                  autoview_;
-  UIint                 mode_;
+  //  UIint                 mode_;
   UIint                 show_guidelines_;
   int			cursor_pixmap_;
+  unsigned int          pdown_;
 
   GLdouble		gl_modelview_matrix_[16];
   GLdouble		gl_projection_matrix_[16];
@@ -127,6 +131,7 @@ public:
   Skinner::Var<bool>    show_slices_;
   GeomHandle            geom_switch_;
   GeomIndexedGroup *    geom_group_;
+
 };
 
 

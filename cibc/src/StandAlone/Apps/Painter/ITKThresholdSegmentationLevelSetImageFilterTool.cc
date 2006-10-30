@@ -123,21 +123,19 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
   NrrdDataHandle source_nrrdh = painter_->current_volume_->nrrd_handle_;
   filter_ = FilterType::New();
 
-  string name = "ITK Threshold Result";
-  NrrdVolume *new_layer = new NrrdVolume(seed_volume_, name, 0);
+  NrrdVolume *new_layer = new NrrdVolume(seed_volume_, "ITK Threshold Result", 0);
   new_layer->colormap_ = 1;
   new_layer->data_min_ = -4.0;
   new_layer->data_max_ = 4.0;
   new_layer->clut_min_ = 4.0/255.0;
   new_layer->clut_max_ = 4.0;
 
-  //  new_layer->clut_min_ = -4.0;//0.5/255.0;
-  //  new_layer->clut_max_ = 4.0;//0.5;
+  painter_->set_all_slices_tex_dirty();
+  painter_->extract_all_window_slices();
   painter_->volumes_.push_back(new_layer);
   
   NrrdDataHandle seed_nrrdh = new_layer->nrrd_handle_;
 
-  name = "ITK Threshold Seed";
   pair<double, double> mean = painter_->compute_mean_and_deviation
     (source_nrrdh->nrrd_, seed_nrrdh->nrrd_);
 
@@ -168,6 +166,7 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
   new_layer->nrrd_handle_ = seed_nrrdh;
 
   painter_->set_all_slices_tex_dirty();
+  painter_->extract_all_window_slices();
   painter_->redraw_all();
 }
 

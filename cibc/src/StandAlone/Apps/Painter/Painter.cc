@@ -93,7 +93,7 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   volumes_(),
   current_volume_(0),
   undo_volume_(0),
-  colormaps_(),
+  colormaps_(1, ColorMap::create_greyscale()),
   anatomical_coordinates_(0, 1),
   volume_lock_("Volume"),
   volume_texture_(0),
@@ -150,11 +150,9 @@ Painter::redraw_all()
 ColorMapHandle
 Painter::get_colormap(int id)
 {
-  if (!id) return 0;
-  id = Clamp(id-1, 0, colormaps_.size());
-  if (id < (int)colormaps_.size())
-    return colormaps_[id];
-  return 0;
+  ASSERT(colormaps_.size());
+  id = Clamp(id, 0, colormaps_.size()-1);
+  return colormaps_[id];
 }
     
 
@@ -355,12 +353,14 @@ Painter::set_probe() {
 
 void
 Painter::set_all_slices_tex_dirty() {
-  for (SliceWindows::iterator i = windows_.begin(); i != windows_.end(); ++i) {
-    for (VolumeSlices::iterator s = (*i)->slices_.begin();
-         s != (*i)->slices_.end(); ++s) {
-      (*s)->set_tex_dirty();
+  volume_lock_.lock();
+  for (NrrdVolumes::iterator i = volumes_.begin(); i != volumes_.end(); ++i) {
+    for (VolumeSlices_t::iterator j = (*i)->all_slices_.begin();
+         j != (*i)->all_slices_.end(); ++j) {
+      (*j)->set_tex_dirty();
     }
   }
+  volume_lock_.unlock();
 }
 
 

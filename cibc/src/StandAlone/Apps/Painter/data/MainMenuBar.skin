@@ -23,7 +23,6 @@
           </signal>
         </object>
         
-<!--
         <object class="MenuButton">
           <var name="row">1</var>
           <var name="col">2</var>
@@ -33,7 +32,16 @@
             <var name="id">ViewMenu1</var>
           </signal>
         </object>
--->
+
+        <object class="MenuButton">
+          <var name="row">1</var>
+          <var name="col">3</var>
+          <var name="Button::Text::text" propagate="yes"> ITK...</var>
+          <signal name="Button::clicked" 
+                  target="MenuManager::show_MenuList">
+            <var name="id">ITKMenu1</var>
+          </signal>
+        </object>
         
         <object class="MenuButton">
           <var name="row">1</var>
@@ -44,6 +52,7 @@
             <var name="URL" propagate="yes">http://lexov.org/Help</var>
           </signal>
         </object>
+
       </object>
     </object>    
   </object>      

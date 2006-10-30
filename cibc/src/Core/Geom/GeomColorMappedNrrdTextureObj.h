@@ -43,12 +43,14 @@ namespace SCIRun {
 class SCISHARE GeomColorMappedNrrdTextureObj : public GeomObj {
   ColorMappedNrrdTextureObjHandle cmnto_;
   double alpha_cutoff_;
+  double offset_;
 public:
   GeomColorMappedNrrdTextureObj() {};
   GeomColorMappedNrrdTextureObj(ColorMappedNrrdTextureObjHandle &);
   GeomColorMappedNrrdTextureObj(const GeomColorMappedNrrdTextureObj&);
   virtual ~GeomColorMappedNrrdTextureObj();
   void set_alpha_cutoff(double alpha);
+  void set_offset(double offset);
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
   virtual void draw(DrawInfoOpenGL*, Material*, double time);

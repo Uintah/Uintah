@@ -50,6 +50,7 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Events/SceneGraphEvent.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Skinner/GeomSkinnerVarSwitch.h>
 
 namespace SCIRun {
 
@@ -243,9 +244,10 @@ NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
     opacity_ = 1.0;
   }
 #endif
+  build_index_to_world_matrix();
   mutex_->unlock();
   reset_data_range();
-  build_index_to_world_matrix();
+
 
 }
 
@@ -667,5 +669,74 @@ NrrdVolume::create_float_nrrd_from_label()
 }
 
 #endif
+
+
+VolumeSliceHandle
+NrrdVolume::get_volume_slice(const Plane &plane) {
+  NrrdVolume *parent = this;
+  VolumeSlices_t::iterator siter = parent->all_slices_.begin();
+  VolumeSlices_t::iterator send = parent->all_slices_.end();  
+  for (; siter != send; ++siter) {
+    if ((*siter)->get_plane() == plane) {
+      return (*siter);
+    }
+  }
+
+  while (parent->parent_) parent = parent->parent_;
+  if (this != parent) {
+    VolumeSlices_t::iterator siter = parent->all_slices_.begin();
+    VolumeSlices_t::iterator send = parent->all_slices_.end();  
+    for (; siter != send; ++siter) {
+      if ((*siter)->get_plane() == plane) {
+        all_slices_.push_back(new VolumeSlice(this, plane, (*siter)->nrrd_handle_));
+        return all_slices_.back();
+        //        return (*siter);
+      }
+    }
+  } 
+  all_slices_.push_back(new VolumeSlice(this, plane));
+  return all_slices_.back();
+}
+
+void
+NrrdVolume::purge_unused_slices() {
+  NrrdVolume *parent = this;
+  while (parent->parent_) parent = parent->parent_;
+
+  VolumeSlices_t new_all_slices;
+  for (int j = 0; j < parent->all_slices_.size(); ++j) {      
+    if (parent->all_slices_[j]->ref_cnt > 1) {
+      new_all_slices.push_back(parent->all_slices_[j]);
+    }
+  }
+  parent->all_slices_ = new_all_slices;
+}
+
+
+ColorMapHandle
+NrrdVolume::get_colormap() {
+  if (!colormap_ && label_) 
+    return ColorMap::create_pseudo_random(5);
+
+  return painter_->get_colormap(colormap_);
+}    
+
+
+GeomIndexedGroup *
+NrrdVolume::get_geom_group() 
+{
+  if (!geom_group_.get_rep()) {
+    geom_group_ = new GeomIndexedGroup();
+    geom_switch_ = new GeomSkinnerVarSwitch(geom_group_, visible_);
+    event_handle_t add_geom_switch_event = 
+      new SceneGraphEvent(geom_switch_, name_);
+    EventManager::add_event(add_geom_switch_event);
+  }
+  GeomIndexedGroup *ret_val = 
+    dynamic_cast<GeomIndexedGroup *>(geom_group_.get_rep());
+
+  return ret_val;
+}
+
 
 }

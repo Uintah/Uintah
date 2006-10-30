@@ -69,32 +69,29 @@ namespace SCIRun {
       } 
       string signalname = "";
       Signal *signal = 0;
+      event_handle_t result;
 
       if (pointer) {
         signalname = class_()+"::do_PointerEvent";
         event_handle_t psignal = new PointerSignal(signalname, pointer);
-        signal = dynamic_cast<Signal *>(SignalThrower::throw_signal(psignal).get_rep());
-        ASSERT(signal);
-      } else {
-
-        if (key) {
+        result = SignalThrower::throw_signal(psignal);
+      } else if (key) {
           signalname = class_()+"::do_KeyEvent";
           event_handle_t ksignal = new KeySignal(signalname, key);
-          signal = dynamic_cast<Signal *>(SignalThrower::throw_signal(ksignal).get_rep());
-          ASSERT(signal);
-        } else {         
+          result = SignalThrower::throw_signal(ksignal);
+      } else if (window && 
+                 window->get_window_state() == WindowEvent::REDRAW_E) {
+        signalname = class_()+"::redraw";
+        result = throw_signal(signalname);
+      }
 
-          if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-            signalname = class_()+"::redraw";
-            signal = dynamic_cast<Signal *>(throw_signal(signalname).get_rep());
-            ASSERT(signal);
-          }
+      if (result.get_rep()) {
+        signal = dynamic_cast<Signal *>(result.get_rep());
+        if (signal) {
+          return signal->get_signal_result();
         }
       }
 
-      if (signal) {
-        return signal->get_signal_result();
-      }
       return CONTINUE_E;
     }
 

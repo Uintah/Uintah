@@ -46,6 +46,7 @@
 #include <Core/Geometry/Plane.h>
 
 #include <Core/Geom/share.h>
+#include <Core/Geom/View.h>
 
 #include <map>
 #include <list>
@@ -104,7 +105,8 @@ public:
   Material*     current_matl_;
   int           ignore_matl_;
   GLUquadric*   qobj_;
-  Vector        view_;  // view vector...
+  //  Vector        view_;  // view vector...
+  View          view_;
   int           axis_;     // which axis you are working with...
   int           dir_;      // direction +/- -> depends on the view...
   double        ambient_scale_;

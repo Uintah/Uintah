@@ -126,7 +126,7 @@ GeomHandle GeomIndexedGroup::getObj(int id)
     return (*iter).second;
   }
   else {
-    cerr << "couldn't find object in GeomIndexedGroup::getObj!\n";
+    //    cerr << "couldn't find object in GeomIndexedGroup::getObj!\n";
   }
   return 0;
 }
@@ -139,7 +139,7 @@ void GeomIndexedGroup::delObj(int id)
     objs.erase(iter);
   }
   else {
-    cerr << "invalid id in GeomIndexedGroup::delObj()!\n";
+    //   cerr << "invalid id in GeomIndexedGroup::delObj()!\n";
   }
 }
 

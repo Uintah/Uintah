@@ -43,6 +43,7 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
+#include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <algorithm>
 
@@ -66,18 +67,18 @@ GeomColormapInterface::~GeomColormapInterface()
 }
 
 
+// Used by maker function above
 ColorMap::ColorMap()
   : rawRampAlpha_(),
     rawRampAlphaT_(),
     rawRampColor_(),
     rawRampColorT_(),
     resolution_(0),
-    rawRGBA_(0),
     units_(),
     min_(-1.0),
     max_(1.0),
     is_scaled_(false),
-    colors_()
+    materials_()
 {
 }
 
@@ -88,13 +89,15 @@ ColorMap::ColorMap(const ColorMap& copy)
     rawRampColor_(copy.rawRampColor_),
     rawRampColorT_(copy.rawRampColorT_),
     resolution_(copy.resolution_),
-    rawRGBA_(0),
     min_(copy.min_),
     max_(copy.max_),
     is_scaled_(copy.is_scaled_),
-    colors_()
+    materials_()
 {
-  Build1d();
+  for (unsigned int i = 0; i < 256*4; ++i) {
+    rawRGBA_[i] = copy.rawRGBA_[i];
+  }
+  build_materials_from_rgba();
 }
 
 
@@ -108,22 +111,38 @@ ColorMap::ColorMap(const vector<Color>& rgb,
    rawRampColor_(rgb),
    rawRampColorT_(rgbT),
    resolution_(res),
-   rawRGBA_(0),
    min_(-1.0),
    max_(1.0),
    is_scaled_(false),
-   colors_()
+   materials_()
 {
-  Build1d();
+  build_rgba_from_ramp();
+  build_materials_from_rgba();
+}
+
+
+ColorMap::ColorMap(const float *rgba)
+ : rawRampAlpha_(0),
+   rawRampAlphaT_(0),
+   rawRampColor_(0),
+   rawRampColorT_(0),
+   resolution_(0),
+   min_(-1.0),
+   max_(1.0),
+   is_scaled_(false),
+   materials_()
+{
+  for (unsigned int i = 0; i < 256*4; ++i) {
+    rawRGBA_[i] = rgba[i];
+  }
+ 
+  build_ramp_from_rgba();
+  build_materials_from_rgba();
 }
 
 
 ColorMap::~ColorMap()
 {
-  if (rawRGBA_)
-    delete[] rawRGBA_;
-  
-  colors_.clear();
 }
 
 
@@ -133,23 +152,16 @@ ColorMap* ColorMap::clone()
 }
 
 
+
+
+// This function builds the raw rgba float array from the ramped
+// colormap specified in the constructor
 void
-ColorMap::Build1d()
+ColorMap::build_rgba_from_ramp()
 {
-  unsigned int i;
-  const unsigned int size = resolution_;
-
-  if (rawRGBA_) { delete[] rawRGBA_; }
-  rawRGBA_ = scinew float[256 * 4];
-
-  colors_.resize(size);
-  
-  const Color ambient(0.0, 0.0, 0.0);
-  const Color specular(0.7, 0.7, 0.7);
-
-  for (i = 0; i < size; i++)
+  for (unsigned int i = 0; i < resolution_; i++)
   {
-    const float t = i / (size-1.0);
+    const float t = i / (resolution_-1.0);
     vector<float>::iterator loc;
     
     Color diffuse;
@@ -184,36 +196,71 @@ ColorMap::Build1d()
     rawRGBA_[i*4+1] = diffuse.g();
     rawRGBA_[i*4+2] = diffuse.b();
     rawRGBA_[i*4+3] = alpha;
-
-    colors_[i] = scinew Material(ambient, diffuse, specular, 10);
-    colors_[i]->transparency = alpha;
   }
 
   // Pad out rawRGBA_ to texture size.
-  for (i = size; i < 256; i++)
+  for (unsigned int i = resolution_; i < 256; i++)
   {
-    rawRGBA_[i*4+0] = rawRGBA_[(size-1)*4+0];
-    rawRGBA_[i*4+1] = rawRGBA_[(size-1)*4+1];
-    rawRGBA_[i*4+2] = rawRGBA_[(size-1)*4+2];
-    rawRGBA_[i*4+3] = rawRGBA_[(size-1)*4+3];
+    rawRGBA_[i*4+0] = rawRGBA_[(resolution_-1)*4+0];
+    rawRGBA_[i*4+1] = rawRGBA_[(resolution_-1)*4+1];
+    rawRGBA_[i*4+2] = rawRGBA_[(resolution_-1)*4+2];
+    rawRGBA_[i*4+3] = rawRGBA_[(resolution_-1)*4+3];
   }  
+}
+
+
+
+// This builds a ramp with regular intervals from the rgba
+// array
+void
+ColorMap::build_ramp_from_rgba()
+{
+  const int size = 256;
+  resolution_ = size;
+  rawRampAlpha_.resize(size);
+  rawRampAlphaT_.resize(size);  
+  rawRampColor_.resize(size);
+  rawRampColorT_.resize(size);
+
+  for (unsigned int i = 0; i < size; i++)
+  {
+    const float t = i / (size-1.0);
+    rawRampAlphaT_[i] = t;
+    rawRampColorT_[i] = t;
+    rawRampColor_[i] = Color(rawRGBA_[i*4], rawRGBA_[i*4+1], rawRGBA_[i*4+2]);
+    rawRampAlpha_[i] = rawRGBA_[i*4+3];
+  }
+}
+
+
+void
+ColorMap::build_materials_from_rgba() {
+  const int size = 256;
+  materials_.resize(size);
+  const Color ambient(0.0, 0.0, 0.0);
+  const Color specular(0.7, 0.7, 0.7);
+  for (unsigned int i = 0; i < size; i++)
+  {
+    Color diffuse(rawRGBA_[i*4], rawRGBA_[i*4+1], rawRGBA_[i*4+2]);
+    materials_[i] = new Material(ambient, diffuse, specular, 10);
+    materials_[i]->transparency = rawRGBA_[i*4+3];
+  }
 }
 
 
 const Color &
 ColorMap::getColor(double t)
 {
-  return colors_[int(t*(colors_.size()-1))]->diffuse;
+  return materials_[int(t*(materials_.size()-1))]->diffuse;
 }
 
 double
 ColorMap::getAlpha(double t)
 {
-  return colors_[int(t*(colors_.size()-1))]->transparency;
+  return materials_[int(t*(materials_.size()-1))]->transparency;
 }
 
 #define COLORMAP_VERSION 6
-
 
 void
 ColorMap::io(Piostream& stream)
@@ -237,7 +284,7 @@ ColorMap::io(Piostream& stream)
     // Bad guess, better than nothing.
     resolution_ = 256;
   }
-  Pio(stream, colors_);
+  Pio(stream, materials_);
   if ( version > 2 )
     Pio(stream, units_);
   if ( version > 1 )
@@ -249,7 +296,8 @@ ColorMap::io(Piostream& stream)
       
     if ( stream.reading() )
     {
-      Build1d();
+      build_rgba_from_ramp();
+      build_materials_from_rgba();
     }
   }
   stream.end_class();
@@ -259,42 +307,57 @@ ColorMap::io(Piostream& stream)
 const MaterialHandle&
 ColorMap::lookup(double value) const
 {
-  int idx=int((colors_.size()-1)*(value-min_)/(max_-min_));
-  if(idx<0)
-    idx=0;
-  else if(idx > (int)colors_.size()-1)
-    idx=colors_.size()-1;
-  return colors_[idx];
+  int idx = int((materials_.size()-1)*(value-min_)/(max_-min_));
+  idx = Clamp(idx, 0, (int)materials_.size()-1);
+  return materials_[idx];
 }
 
 
 const MaterialHandle&
 ColorMap::lookup2(double nvalue) const
 {
-  int idx;
-  idx=int((colors_.size()-1)*nvalue);
-
-  if(idx<0)
-    idx=0;
-  else if(idx > (int)colors_.size()-1)
-    idx=colors_.size()-1;
-  return colors_[idx];
+  int idx = int((materials_.size()-1)*nvalue);
+  idx = Clamp(idx, 0, (int)materials_.size()-1);
+  return materials_[idx];
 }
 
 
-double
-ColorMap::getMin() const
+ColorMap *
+ColorMap::create_pseudo_random(int mult)
 {
-  return min_;
+  float rgba[256*4];
+  if (mult == 0) mult = 65537; 
+  unsigned int seed = 1;
+  for (int i = 0; i < 256*4; ++i) {
+    seed = seed * mult;
+    switch (i%4) {
+    case 0: /* Red   */ rgba[i] = (seed % 7)  / 6.0; break;
+    case 1: /* Green */ rgba[i] = (seed % 11) / 10.0; break;
+    case 2: /* Blue  */ rgba[i] = (seed % 17) / 16.0; break;
+    default:
+    case 3: /* Alpha */ rgba[i] = 1.0; break;
+    }
+  }
+  rgba[3] = 0.0;
+
+  return new ColorMap(rgba);
 }
 
 
-double
-ColorMap::getMax() const
+ColorMap *
+ColorMap::create_greyscale()
 {
-  return max_;
-}
+  float rgba[256*4];
+  for (int c = 0; c < 256*4; ++c) {
+    rgba[c] = (c % 4 == 3) ? 1.0f : (c/4) / 255.0f;
+  }
 
+  // Sets the alpha of black to be 0
+  // Thus making the minimum value in the colormap transparent
+  rgba[3] = 0.0;
+
+  return new ColorMap(rgba);
+}
 
 } // End namespace SCIRun
 

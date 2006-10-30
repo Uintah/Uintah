@@ -1069,6 +1069,7 @@ OpenGLViewer::redraw_frame()
     }
   }
 
+  drawinfo_->view_                  = view_;
   drawinfo_->ambient_scale_         = ambient_scale_;	     
   drawinfo_->diffuse_scale_         = diffuse_scale_;	     
   drawinfo_->specular_scale_        = specular_scale_;	     

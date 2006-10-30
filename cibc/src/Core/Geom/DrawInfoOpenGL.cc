@@ -337,6 +337,7 @@ void
 DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/,
                            Point& /*eyep*/, Point& /*lookat*/ )
 {
+#if 0
   double model_mat[16]; // this is the modelview matrix
 
   glGetDoublev(GL_MODELVIEW_MATRIX,model_mat);
@@ -385,6 +386,7 @@ DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/,
       dir_=-1;
     }
   }
+#endif
 }
 
 

@@ -124,7 +124,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKGradientMagnitude);
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
   REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
-  REGISTER_CATCHER_TARGET(Painter::ITKConfidenceConnected);
+  REGISTER_CATCHER_TARGET(Painter::start_ITKConfidenceConnectedImageFilterTool);
   REGISTER_CATCHER_TARGET(Painter::start_ITKThresholdSegmentationLevelSetImageFilterTool);
 
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
@@ -537,7 +537,7 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
 
 
 BaseTool::propagation_state_e 
-Painter::ITKConfidenceConnected(event_handle_t event) {
+Painter::start_ITKConfidenceConnectedImageFilterTool(event_handle_t event) {
 #ifndef HAVE_INSIGHT
   cerr << "Insight not compiled\n";
   return STOP_E;

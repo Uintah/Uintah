@@ -158,6 +158,7 @@
                 </signal>
               </object>
             </object>
+
             <object class="VisibilityGroup::VisibleItem" 
                     id="ITKThresholdSegmentationLevelSetImageFilterToolDialog">
               <var name="group">ToolsVisibleGroup</var>
@@ -185,6 +186,41 @@
                 </signal>
               </object>
             </object>
+
+
+            <object class="VisibilityGroup::VisibleItem" 
+                    id="ITKConfidenceConnectedImageFilterToolDialog">
+              <var name="group">ToolsVisibleGroup</var>
+              <var name="visible">0</var>
+              
+              <xi:include href="ITKConfidenceConnectedImageFilterToolDialog.skin" parse="xml"/>
+              
+              <signal name="VisibleItem::made_visible" 
+                      target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="FocusGrab::Ungrab"/>
+
+              <object class="ITKConfidenceConnectedImageFilterToolDialog">
+                <signal name="ToolDialog::Cancel" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+
+                <signal name="ToolDialog::Done" 
+                        target="Painter::FinishTool"/>
+                <signal name="ToolDialog::Done" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+              </object>
+            </object>
+
+
+
           </object>
         </definition>
       </object>

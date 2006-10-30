@@ -29,44 +29,45 @@
 # Sources of Core/Algorithms/Fields classes
 SET(Core_Algorithms_Fields_SRCS
   ApplyMappingMatrix.cc
-  GetBoundingBox.cc
+  CalculateFieldData.cc
+  CalculateIsInsideField.cc
+  CalculateLinkBetweenOppositeFieldBoundaries.cc
   ClearAndChangeFieldBasis.cc
-  ConvertToTetVol.cc
-  ConvertToTriSurf.cc
-  DomainBoundary.cc
   ClipAtIndeces.cc
   ClipBySelectionMask.cc
-  IndicesToData.cc
+  ClipFieldByFunction.cc
+  ConvertIndicesToFieldData.cc
+  ConvertMappingMatrixToFieldData.cc
+  ConvertMeshToTetVol.cc
+  ConvertMeshToTriSurf.cc
+  ConvertToUnstructuredMesh.cc
+  CreateLinkBetweenMeshAndCompGridByDomain.cc
+  CreateLinkBetweenMeshAndCompGrid.cc
   DistanceField.cc
   FieldsAlgo.cc
-  FieldBoundary.cc
-  FieldDataNodeToElem.cc
-  FieldDataElemToNode.cc
-  FindClosestNode.cc
   FindClosestNodeByValue.cc
+  FindClosestNode.cc
+  GatherFields.cc
+  GetBoundingBox.cc
+  GetDomainBoundary.cc
+  GetFieldBoundary.cc
   GetFieldData.cc
   GetFieldDataMinMax.cc
   GetFieldInfo.cc
   GetFieldMeasure.cc
-  IsInsideField.cc
-  LinkFieldBoundary.cc
-  LinkToCompGrid.cc
-  LinkToCompGridByDomain.cc
-  GatherFields.cc
+  MapCurrentDensityOntoField.cc
+  MapFieldDataFromElemToNode.cc
+  MapFieldDataFromNodeToElem.cc
+  Mapping.cc
   MergeFields.cc
   MergeMeshes.cc
   RemoveUnusedNodes.cc
-  ScaleField.cc
-  SplitByConnectedRegion.cc
-  SplitFieldByDomain.cc
+  ScaleFieldMeshAndData.cc
   SetFieldData.cc
-  MappingMatrixToField.cc
-  Mapping.cc
-  CurrentDensityMapping.cc
-  CalculateFieldData.cc
-  TransformMeshWithTransform.cc
+  SplitAndMergeFieldByDomain.cc
+  SplitByConnectedRegion.cc
   ToPointCloud.cc
-  Unstructure.cc
+  TransformMeshWithTransform.cc
 )
 
 ADD_LIBRARY(Core_Algorithms_Fields ${Core_Algorithms_Fields_SRCS})

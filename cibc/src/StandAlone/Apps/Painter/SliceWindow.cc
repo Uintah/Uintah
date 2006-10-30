@@ -63,6 +63,7 @@
 #include <Core/Geom/FontManager.h>
 #include <Core/Geom/GeomColorMappedNrrdTextureObj.h>
 #include <Core/Skinner/Variables.h>
+#include <Core/Skinner/Signals.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/SceneGraphEvent.h>
 #include <Core/Util/FileUtils.h>
@@ -80,20 +81,19 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
   painter_(painter),
   name_(variables->get_id()),
   slices_(),
-  slice_map_(),
-  paint_layer_(0),
+  purge_volumes_(false),
+  recompute_slices_(false),
   center_(0,0,0),
   normal_(0,0,0),
-  slice_num_(0,0), 
   axis_(2),
   zoom_(0,100.0),
   slab_min_(0,0),
   slab_max_(0,0),
-  redraw_(true),
+  //  redraw_(true),
   autoview_(true),
-  mode_(0,0),
   show_guidelines_(0,1),
   cursor_pixmap_(-1),
+  pdown_(0),
   color_(variables, "SliceWindow::color", Skinner::Color(0,0,0,0)),
   show_grid_(variables, "SliceWindow::GridVisible",1),
   show_slices_(variables, "SliceWindow::SlicesVisible",1),
@@ -105,6 +105,7 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
   set_axis(axis());
   //  axis_ = axis;
   REGISTER_CATCHER_TARGET(SliceWindow::redraw);
+  REGISTER_CATCHER_TARGET(SliceWindow::do_PointerEvent);
   REGISTER_CATCHER_TARGET(SliceWindow::Autoview);
   REGISTER_CATCHER_TARGET(SliceWindow::zoom_in);
   REGISTER_CATCHER_TARGET(SliceWindow::zoom_out);
@@ -187,87 +188,65 @@ SliceWindow::render_slice_lines(SliceWindows &windows)
     SliceWindow *win = windows[i];
     if (win == this) continue;
     if (Dot(normal_, win->normal_) > 0.999) continue;
+
+    // The span vector spans the volume edge to edge
     Vector span = Cross(normal_, win->normal_);
     vector<double> span_index = vol->vector_to_index(span);
     int span_axis = max_vector_magnitude_index(span_index);
+
     vector<int> pos_idx = vol->world_to_index(win->center_);
+
+    // The lower left corner of the quad, assuming horizontal span
     vector<int> min_idx = pos_idx;
     min_idx[span_axis] = 0;
+    Point min = vol->index_to_world(min_idx);
+
+    // The lower right corner of the quad, assuming horizontal span
     vector<int> max_idx = pos_idx;
     max_idx[span_axis] = vol->nrrd_handle_->nrrd_->axis[span_axis].size;
-    Point min = vol->index_to_world(min_idx);
     Point max = vol->index_to_world(max_idx);
+
     vector<int> one_idx = zero_idx;
     one_idx[win->axis_+1] = 1;
     double scale = (vol->index_to_world(one_idx) - origin).length();
     Vector wid = win->normal_;
     wid.normalize();
     wid *= Max(upp, scale);
+    Point min2 = min + wid;
+    Point max2 = max + wid;
+
     Skinner::Color color = win->color_;
+    color.a = 1.0;
     glColor4dv(&(color.r));
     glBegin(GL_QUADS);    
     glVertex3dv(&min(0));
     glVertex3dv(&max(0));
-    min = min + wid;
-    max = max + wid;
-    glVertex3dv(&max(0));
+    glVertex3dv(&max2(0));
+    glVertex3dv(&min2(0));
+
     glVertex3dv(&min(0));
+    glVertex3dv(&min2(0));
+
+    double ascale = Max(8.0, zoom_ / 100.0);
+    Point ula = min2 - ascale*x_dir() + ascale*y_dir();
+    Point lla = min  - ascale*x_dir() - ascale*y_dir();
+
+    glVertex3dv(&ula(0));
+    glVertex3dv(&lla(0));
+
+
+    glVertex3dv(&max(0));
+    Point lra = max  + ascale*x_dir() - ascale*y_dir();
+    glVertex3dv(&lra(0));
+    Point ura = max2 + ascale*x_dir() + ascale*y_dir();
+    glVertex3dv(&ura(0));
+    glVertex3dv(&max2(0));
+
+
     glEnd();
+
   }
 }
-
-
-
-// renders vertical and horizontal bars that represent
-// selected slices in other dimensions
-void
-Painter::draw_slice_lines(SliceWindow &window)
-{
-  if (!current_volume_) return;
-  double upp = 100.0 / window.zoom_;    // World space units per one pixel
-
-  //  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
-  //  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.8 };
-  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
-
-  // Vector scale = current_volume_->scale();
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  vector<int> zero_idx(current_volume_->nrrd_handle_->nrrd_->dim, 0);
-  for (unsigned int win = 0; win < windows_.size(); ++win) {
-      SliceWindow &window2 = *(windows_[win]);
-      if (&window == &window2) continue;
-      if (Dot(window.normal_, window2.normal_) > 0.999) continue;
-      Vector span = Cross(window.normal_, window2.normal_);
-      vector<double> span_index = current_volume_->vector_to_index(span);
-      int span_axis = max_vector_magnitude_index(span_index);
-
-      vector<int> pos_idx = current_volume_->world_to_index(window2.center_);
-      vector<int> min_idx = pos_idx;
-      min_idx[span_axis] = 0;
-      vector<int> max_idx = pos_idx;
-      max_idx[span_axis] = current_volume_->nrrd_handle_->nrrd_->axis[span_axis].size;
-      Point min = current_volume_->index_to_world(min_idx);
-      Point max = current_volume_->index_to_world(max_idx);
-      vector<int> one_idx = zero_idx;
-      one_idx[window2.axis_+1] = 1;
-      double scale = (current_volume_->index_to_world(one_idx) - 
-                      current_volume_->index_to_world(zero_idx)).length();
-      Vector wid = window2.normal_;
-      wid.normalize();
-      wid *= Max(upp, scale);
-      glColor4dv(red);
-      glBegin(GL_QUADS);    
-      glVertex3dv(&min(0));
-      glVertex3dv(&max(0));
-      min = min + wid;
-      max = max + wid;
-      glVertex3dv(&max(0));
-      glVertex3dv(&min(0));
-      glEnd();
-  }
-}
-
 
 
 
@@ -752,8 +731,10 @@ SliceWindow::render_text()
     }
   }
 
+#if 0
   if (mode_ == slab_e) str = "SLAB - "+str;
   else if (mode_ == mip_e) str = "MIP - "+str;
+#endif
 
   font2.set_shadow_offset(2,-2);
   font2.render(str, region_.width() - 2, 2,
@@ -762,47 +743,81 @@ SliceWindow::render_text()
                TextRenderer::REVERSE);
 #endif
 }
+
+
 void
-SliceWindow::extract_slices() {
+SliceWindow::render_slices() {
+  if (recompute_slices_) {
+    recompute_slices_ = false;
+    NrrdVolumes volumes;
+    painter_->build_volume_list(volumes);
 
-  NrrdVolumes volumes;
-  painter_->build_volume_list(volumes);
+    if (slices_.size() != volumes.size()) {
+      for (int i = 0; i < volumes.size(); ++i) {
+        if (volumes[i] == painter_->current_volume_) {
+          center_ = painter_->current_volume_->center();
+        }
+      }
+    }
+    
+    slices_.clear();
+    double offset = 0.0;
+        
+    for (int i = 0; i < volumes.size(); ++i) {
+      NrrdVolume *volume = volumes[i];
+      VolumeSliceHandle slice = 
+        volume->get_volume_slice(Plane(center_, normal_));
+      slices_.push_back(slice);
+      volume->purge_unused_slices();
+      int objid = axis_*(volume->label_+1);
+      GeomIndexedGroup *ggroup = volume->get_geom_group();
+      GeomHandle oldgeom = ggroup->getObj(objid);
+      if (oldgeom.get_rep()) {
+        ggroup->delObj(objid);
+      }
+      
+      
+      GeomHandle newgeom = slice->geom_texture_;
+      if (newgeom.get_rep()) {
+        GeomColorMappedNrrdTextureObj *gcmnto = 
+          dynamic_cast<GeomColorMappedNrrdTextureObj *>(newgeom.get_rep());
 
-  for (unsigned int s = slices_.size(); s < slices_.size(); ++s) {
-    delete slices_[s];
+        gcmnto->set_offset(offset);
+        offset += 1.0;
+        ggroup->addObj(newgeom, objid);
+      }
+
+    }
   }
 
-  if (slices_.size() > volumes.size())
-    slices_.resize(volumes.size());
-  
-  for (unsigned int s = slices_.size(); s < volumes.size(); ++s) {
+  for (unsigned int s = 0; s < slices_.size(); ++s) {
+    slices_[s]->draw();
+  }
+}
+
+
+
+
+
+
+
+void
+SliceWindow::extract_slices() {
+  recompute_slices_ = true;
+
+# if 0    // TODO: What does this do?
+  for (unsigned int s = 0; s < volumes.size(); ++s) {
     if (volumes[s] == painter_->current_volume_) {
       center_ = painter_->current_volume_->center();
     }
-    VolumeSlice *slice = new VolumeSlice(painter_,volumes[s],this,center_,normal_);
-    slices_.push_back(slice);
-  }
 
-  slice_map_.clear();
-  for (unsigned int s = 0; s < volumes.size(); ++s) {
     if (volumes[s] == painter_->current_volume_ &&
         !painter_->current_volume_->inside_p(center_)) {
       int ax = axis_;
       center_(ax) = painter_->current_volume_->center()(ax);
     }
-
-    slice_map_[volumes[s]] = slices_[s];
-    slices_[s]->volume_ = volumes[s];
-    slices_[s]->plane_ = Plane(center_, normal_);
-    slices_[s]->nrrd_dirty_ = true;
   }
-
-  
-
-  if (paint_layer_) {
-    delete paint_layer_;
-    paint_layer_ = 0;
-  }
+#endif
 }
 
 
@@ -814,39 +829,58 @@ SliceWindow::set_axis(unsigned int axis) {
                    axis == 1 ? 1 : 0,
                    axis == 2 ? 1 : 0);
   extract_slices();
-  redraw_ = true;
+  //  redraw_ = true;
+}
+
+void
+SliceWindow::set_probe() {
+  if (painter_->cur_window_ == this) return;
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) return;
+  Point newcenter = center_;
+  newcenter(axis_) = painter_->pointer_pos_(axis_);
+  vector<double> nindex = vol->point_to_index(newcenter);
+  if (nindex[axis_+1] >= 0 && nindex[axis_+1] < vol->max_index(axis_+1)) {
+    center_ = newcenter;
+    extract_slices();
+  }
 }
 
 
 void
 SliceWindow::prev_slice()
 {
-  NrrdVolume *volume = painter_->current_volume_;
-  if (!volume) return;
-  vector<double> delta = volume->vector_to_index(normal_);
+
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) return;
+  vector<double> delta = vol->vector_to_index(normal_);
   unsigned int index = max_vector_magnitude_index(delta);
   delta[index] /= fabs(delta[index]);
-  Point new_center = center_ - volume->index_to_vector(delta);
-  if (!painter_->current_volume_->inside_p(new_center)) return;
-  center_ = new_center;
-  extract_slices();
-  painter_->redraw_all();
+  Point newcenter = center_ - vol->index_to_vector(delta);
+  vector<double> nindex = vol->point_to_index(newcenter);
+  if (nindex[axis_+1] >= 0 && nindex[axis_+1] < vol->max_index(axis_+1)) {
+    center_ = newcenter;
+    extract_slices();
+    painter_->redraw_all();
+  }
 }
 
 
 void
 SliceWindow::next_slice()
 {
-  NrrdVolume *volume = painter_->current_volume_;
-  if (!volume) return;
-  vector<double> delta = volume->vector_to_index(-normal_);
+  NrrdVolume *vol = painter_->current_volume_;
+  if (!vol) return;
+  vector<double> delta = vol->vector_to_index(-normal_);
   unsigned int index = max_vector_magnitude_index(delta);
   delta[index] /= fabs(delta[index]);
-  Point new_center = center_ - volume->index_to_vector(delta);
-  if (!painter_->current_volume_->inside_p(new_center)) return;
-  center_ = new_center;
-  extract_slices();
-  painter_->redraw_all();
+  Point newcenter = center_ - vol->index_to_vector(delta);
+  vector<double> nindex = vol->point_to_index(newcenter);
+  if (nindex[axis_+1] >= 0 && nindex[axis_+1] < vol->max_index(axis_+1)) {
+    center_ = newcenter;
+    extract_slices();
+    painter_->redraw_all();
+  }
 }
 
 BaseTool::propagation_state_e
@@ -908,15 +942,6 @@ SliceWindow::y_dir()
 }
 
 
-void
-SliceWindow::set_probe() {
-  if (!painter_->current_volume_) return;
-  if (painter_->cur_window_ != this &&
-      painter_->current_volume_->inside_p(painter_->pointer_pos_)) {
-    center_(axis_) = painter_->pointer_pos_(axis_);
-    extract_slices();
-  }
-}
 
 BaseTool::propagation_state_e
 SliceWindow::Autoview(event_handle_t) {
@@ -960,47 +985,64 @@ SliceWindow::autoview(NrrdVolume *volume, double offset) {
   }
   redraw();
 }
-   
+
+BaseTool::propagation_state_e
+SliceWindow::do_PointerEvent(event_handle_t event) {
+  Skinner::PointerSignal *ps = 
+    dynamic_cast<Skinner::PointerSignal *>(event.get_rep());
+  ASSERT(ps);
+  PointerEvent *pointer = ps->get_pointer_event();
+  ASSERT(pointer);
+
+  unsigned int bmask = (PointerEvent::BUTTON_1_E |
+                        PointerEvent::BUTTON_2_E |
+                        PointerEvent::BUTTON_3_E |
+                        PointerEvent::BUTTON_4_E |
+                        PointerEvent::BUTTON_5_E);
+  
+
+  if (get_region().inside(pointer->get_x(), pointer->get_y())) {
+    painter_->cur_window_ = this;
+    painter_->pointer_pos_ = screen_to_world(pointer->get_x(), 
+                                             pointer->get_y());
+  } else if (pdown_ && painter_->cur_window_ == this) {
+    unsigned int state = PointerEvent::BUTTON_RELEASE_E;
+    state |= pointer->get_pointer_state() & bmask;
+    PointerEvent *pup =       
+      new PointerEvent(state, pointer->get_x(), pointer->get_y(),
+                       pointer->get_target(), 0);
+    event_handle_t event = pup;
+    painter_->tm_.propagate_event(event);
+    pdown_ = 0;
+  }
+     
+
+  if (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) {
+    pdown_ |= pointer->get_pointer_state() & bmask;
+  }
+
+  if (pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) {
+    pdown_ = 0;
+  }
+
+
+
+  return CONTINUE_E;
+}
+
 
 BaseTool::propagation_state_e
 SliceWindow::process_event(event_handle_t event) {
-  PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-  const Skinner::RectRegion &region = get_region();
-  if (pointer) {
-//     Point pointer_point(pointer->get_x(), pointer->get_y(),0);
-//     Point min(region_.x1(), region_.y1(),0);
-//     Point max(region_.x2(), region_.y2(),0);
-    if (pointer->get_x() >= region.x1()  &&
-        pointer->get_x() < region.x2()  &&
-        pointer->get_y() >= region.y1()  &&
-        pointer->get_y() < region.y2()) {
-      //      if (region.inside(pointer->get_x(), pointer->get_y())) {
-      painter_->cur_window_ = this;
-      painter_->pointer_pos_ = screen_to_world(pointer->get_x(), 
-                                               pointer->get_y());
-    }
-  }
+  BaseTool::propagation_state_e state = Parent::process_event(event);
 
   if (painter_->cur_window_ == this) {
     painter_->tm_.propagate_event(event);
   }
 
-#if 0
-  WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-  if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-    render_gl();
-
-    
-  }
-#endif
-  
-  
-  return Parent::process_event(event);
-
-  //  return BaseTool::CONTINUE_E;
+  return state;
 }
 
-
+   
 
 GeomIndexedGroup *
 SliceWindow::get_geom_group() {
@@ -1008,7 +1050,7 @@ SliceWindow::get_geom_group() {
     geom_group_ = new GeomIndexedGroup();
     geom_switch_ = new GeomSkinnerVarSwitch(geom_group_, show_slices_);
     event_handle_t add_geom_switch_event = 
-      new SceneGraphEvent(geom_switch_, get_id());
+      new SceneGraphEvent(geom_switch_, get_id()+" Transparent");
     EventManager::add_event(add_geom_switch_event);
   }
   return geom_group_;
@@ -1091,13 +1133,8 @@ SliceWindow::redraw(event_handle_t) {
   }
   CHECK_OPENGL_ERROR();
 
-
-  for (unsigned int s = 0; s < slices_.size(); ++s) {
-    if (paint_layer_ && slices_[s]->volume_ == paint_layer_->volume_)
-      paint_layer_->draw();
-    else 
-      slices_[s]->draw();
-  }
+  // Render the individual slices
+  render_slices();
 
   if (show_grid_()) 
     render_grid();
@@ -1106,15 +1143,15 @@ SliceWindow::redraw(event_handle_t) {
 
   event_handle_t redraw_window = new RedrawSliceWindowEvent(*this);
   painter_->tm_.propagate_event(redraw_window);
-  render_text();
+  CHECK_OPENGL_ERROR();
+
+  //  render_text();
 
   //if (painter_->cur_window_ == this) {
   //    Point windowpos(event_.x_, event_.y_, 0);
   //    window.render_guide_lines(windowpos);
   //}
 
-
-  CHECK_OPENGL_ERROR();
   painter_->volume_lock_.unlock();
   glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
   glMatrixMode(GL_MODELVIEW);
@@ -1125,23 +1162,6 @@ SliceWindow::redraw(event_handle_t) {
 
   return CONTINUE_E;
 }
-
-
-#if 0
-void
-SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
-                                           double x, double y)
-{
-  string str = text->get_string();
-  int hei = text->height();
-  for (unsigned int i = 0; i < str.length(); ++i) 
-  {
-    text->set(str.substr(i, 1));
-    text->draw(x,y, FreeTypeTextTexture::n);
-    y -= 2 + hei;
-  }
-}
-#endif
 
 
 }
