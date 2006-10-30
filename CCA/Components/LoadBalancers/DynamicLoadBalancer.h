@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/CCA/Ports/SFC.h>
 #include <set>
 #include <string>
 
@@ -110,7 +111,7 @@ namespace Uintah {
     void collectParticles(const GridP& grid, std::vector<PatchInfo>& allParticles);
 
     // calls space-filling curve on level, and stores results in pre-allocated output
-    void useSFC(const LevelP& level, unsigned* output);
+    void useSFC(const LevelP& level, DistributedIndex* output);
     bool thresholdExceeded(const std::vector<double>& patch_costs);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
