@@ -48,14 +48,14 @@ void MPMPetscSolver::initialize()
 {
   // store in a vector so we can customize the settings easily
   vector<char*> args;
-#  ifdef DEBUG_PETSC
+#ifdef DEBUG_PETSC
   args.push_back("ImpMPM::problemSetup");
   args.push_back("-on_error_attach_debugger");
-#  endif
-#  ifdef LOG
+#endif
+#ifdef LOG
   args.push_back("-log_summary");
   args.push_back("-log_info");
-#    if 0
+#if 0
   args.push_back("-log_exclude_actions");
   args.push_back("-log_exclude_objects");
   args.push_back("-log_info");
@@ -63,8 +63,8 @@ void MPMPetscSolver::initialize()
   args.push_back("-trdump");
   args.push_back("-trmalloc_log");
   args.push_back("-log_summary");
-#    endif
-#  endif
+#endif
+#endif
 
   int argc = args.size();
   char** argv = 0;
@@ -81,7 +81,7 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-mat_spooles_ordering","BestOfNDandMS");
   PetscOptionsSetValue("-mat_spooles_symmetryflag","0");
 #endif
-  PetscOptionsSetValue("-options_table", PETSC_NULL);
+//  PetscOptionsSetValue("-options_table", PETSC_NULL);
 //  PetscOptionsSetValue("-log_summary", PETSC_NULL);
 //  PetscOptionsSetValue("-log_info", PETSC_NULL);
 //  PetscOptionsSetValue("-trmalloc", PETSC_NULL);
