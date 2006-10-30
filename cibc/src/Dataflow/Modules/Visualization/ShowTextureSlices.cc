@@ -370,7 +370,7 @@ ShowTextureSlices::execute()
     double vmin = tex_->vmin();
     double vmax = tex_->vmax();
     outcmap->Scale(vmin, vmax);
-    send_output_handle("Texture", outcmap);
+    send_output_handle("ColorMap", outcmap);
   }
 }
 
