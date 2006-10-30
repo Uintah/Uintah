@@ -503,9 +503,11 @@ OpenGL::redraw_loop()
 
 void
 OpenGL::render_and_save_image( int x, int y,
-                               const string & fname, const string & ftype )
+                               const string & fname, const string & ftype_ref )
                                
 {
+  string ftype = ftype_ref;
+  
 #if defined(HAVE_PNG) && HAVE_PNG
   bool use_convert = false;
   bool write_png = false;
@@ -540,6 +542,12 @@ OpenGL::render_and_save_image( int x, int y,
     } else {
       write_png = true;
     }
+  }
+#else
+  if (ftype != "raw" && ftype != "ppm")
+  {
+    cout << "Trying to write unsupported format.  Using PPM instead.\n";
+    ftype = "ppm";
   }
 #endif
 
