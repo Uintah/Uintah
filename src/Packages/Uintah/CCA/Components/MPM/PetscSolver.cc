@@ -550,9 +550,10 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   }
   
 
+
+#if (PETSC_VERSION_MINOR == 3)
   PetscScalar* y = new PetscScalar[d_DOF.size()];
   PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
-#if (PETSC_VERSION_MINOR == 3)
   VecScale(d_t,-1.);
   VecGetValues(d_t,d_DOF.size(),indices,y);
   VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
@@ -560,22 +561,35 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
 #endif
 #if (PETSC_VERSION_MINOR == 2)
-  PetscScalar minus_one=-1.;
+  PetscInt nlocal_t,nlocal_flux;
+  PetscScalar minus_one = -1.;
   VecScale(&minus_one,d_t);
   PetscScalar* d_t_tmp;
   PetscScalar* d_flux_tmp;
   VecGetArray(d_t,&d_t_tmp);
   VecGetArray(d_flux,&d_flux_tmp);
-  for (int i = 0; i < (int)d_DOF.size();i++) {
-	y[i] = d_t_tmp[indices[i]];
+  VecGetLocalSize(d_t,&nlocal_t);
+  VecGetLocalSize(d_flux,&nlocal_flux);
+  PetscScalar* y = new PetscScalar[d_DOF.size()];
+  PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
+  PetscInt low_t,high_t;
+  VecGetOwnershipRange(d_t,&low_t,&high_t);
+  PetscInt low_flux,high_flux;
+  VecGetOwnershipRange(d_flux,&low_flux,&high_flux);
+
+  for (int i = 0; i < (int) d_DOF.size();i++) {
+    int offset = indices[i] - low_t;
+    y[i] = d_t_tmp[offset];
   }
-  for (int i = 0; i < (int)d_DOFFlux.size();i++) {
-	y_flux[i] = d_flux_tmp[indices_flux[i]];
+  for (int i = 0; i < (int) d_DOFFlux.size();i++) {
+    int offset = indices_flux[i] - low_flux;
+    y_flux[i] = d_flux_tmp[offset];
   }
   VecRestoreArray(d_t,&d_t_tmp);
   VecRestoreArray(d_flux,&d_flux_tmp);
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
   VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
+
 #endif
 
   delete[] y;
