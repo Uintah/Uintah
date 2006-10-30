@@ -120,7 +120,7 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
 
     if (d_myworld->myrank() == 0) {
       int totalRecv = 0;
-      for (int i = 0; i < recvcounts.size(); i++) {
+      for (unsigned int i = 0; i < recvcounts.size(); i++) {
         totalRecv += recvcounts[i]; 
       }
     }
@@ -235,11 +235,11 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
   }
 }
 
-void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
+void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
 {
   // output needs to be at least the number of patches in the level
 
-  vector<unsigned> indices; //output
+  vector<DistributedIndex> indices; //output
   vector<int> recvcounts(d_myworld->size(), 0);
 
   // positions will be in float triplets
@@ -274,7 +274,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
      }
   }
   
-  if(level->numPatches()<1000)  //do in serial
+  if( (false && level->numPatches()<1000) || d_myworld->size()==1)  //do in serial
   {
     for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
     {
@@ -320,7 +320,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
       curve.SetCenter(center[dimensions[0]]);
       curve.GenerateCurve(SERIAL);
     }
-    memcpy(output,&indices[0],sizeof(unsigned int)*level->numPatches());
+    memcpy(output,&indices[0],sizeof(DistributedIndex)*level->numPatches());
   }
   else  //calculate in parallel
   {
@@ -399,12 +399,16 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
     // gather it all into one array
     vector<int> displs(d_myworld->size(), 0);
 
+    for (unsigned i = 0; i < recvcounts.size(); i++)
+    {
+       recvcounts[i]*=sizeof(DistributedIndex);
+    }
     for (unsigned i = 1; i < recvcounts.size(); i++)
     {
        displs[i] = recvcounts[i-1] + displs[i-1];
     }
-    MPI_Allgatherv(&indices[0], indices.size(), MPI_UNSIGNED, output, &recvcounts[0], 
-                   &displs[0], MPI_UNSIGNED, d_myworld->getComm());
+    MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, output, &recvcounts[0], 
+                   &displs[0], MPI_BYTE, d_myworld->getComm());
   } 
   /*
   for (int i = 0; i < level->numPatches(); i++) 
@@ -454,7 +458,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   vector<double> groupCost(1,0);
   vector<double> avgCostPerProc(1,0);
   vector<int> groupSize(1,0);
-  vector<unsigned> sfc(numPatches);
+  vector<DistributedIndex> sfc(numPatches);
 
   if (d_levelIndependent) {
     groupCost.resize(grid->numLevels());
@@ -509,7 +513,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   
 
   // TODO - bring back excessive patch clumps?
-  
   startingPatch = 0;
   for (unsigned i = 0; i < groupCost.size(); i++) {
     int currentProc = 0;
@@ -518,7 +521,9 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) {
       int index;
       if (d_doSpaceCurve) {
-        index = sfc[p] + startingPatch;
+        //index = sfc[p] + startingPatch;
+        index = (int)ceil( double(sfc[p].p*groupSize[i]) /d_myworld->size() ) +sfc[p].i + startingPatch;
+        //cout << d_myworld->myrank() << ": mapping " << sfc[p].p << ":" << sfc[p].i << " to " << index << endl;
       }
       else {
         // not attempting space-filling curve
@@ -530,9 +535,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       // assign the patch to a processor.  When we advance procs,
       // re-update the cost, so we use all procs (and don't go over)
       double patchCost = patch_costs[index];
-      if (currentProcCost > avgCostPerProc[i] ||
-          (currentProcCost + patchCost > avgCostPerProc[i] *1.1&&
-           currentProcCost >=  .7*avgCostPerProc[i])) {
+
+      double imb1=abs(currentProcCost-avgCostPerProc[i]);
+      double imb2=abs(currentProcCost+patchCost-avgCostPerProc[i]);
+              
+      if (imb1<imb2) {
         // move to next proc and add this patch
         currentProc++;
         d_tempAssignment[index] = currentProc;
