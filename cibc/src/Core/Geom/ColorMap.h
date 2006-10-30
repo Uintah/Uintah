@@ -76,6 +76,7 @@ public:
   virtual ~ColorMap();
   virtual ColorMap*             clone();
   static ColorMap *             create_pseudo_random(int seed = 0);
+  static ColorMap *             create_rainbow(double mult = 1.0);
   static ColorMap *             create_greyscale();
 
   const vector<Color> &         get_rgbs() { return rawRampColor_; }
