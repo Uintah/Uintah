@@ -637,7 +637,7 @@ ClipVolumeByIsovalueWithRefinementAlgoHex<FIELD>::execute(ProgressReporter *repo
   unsigned int loopcnt = 0;
   typename FIELD::mesh_type::Elem::size_type sz;
   mesh->size(sz);
-  unsigned int looptotal = static_cast<unsigned int>(sz);
+  //unsigned int looptotal = static_cast<unsigned int>(sz);
   
   while (bi != ei)
   {
