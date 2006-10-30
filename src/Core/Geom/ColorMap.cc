@@ -321,7 +321,6 @@ ColorMap::lookup2(double nvalue) const
   return materials_[idx];
 }
 
-
 ColorMap *
 ColorMap::create_pseudo_random(int mult)
 {
@@ -337,6 +336,31 @@ ColorMap::create_pseudo_random(int mult)
     default:
     case 3: /* Alpha */ rgba[i] = 1.0; break;
     }
+  }
+  rgba[3] = 0.0;
+
+  return new ColorMap(rgba);
+}
+
+
+ColorMap *
+ColorMap::create_rainbow(double mult)
+{
+  float rgba[256*4];
+  double spacing = 360.0/255.0;
+  double hue = 180;
+  double dhue = spacing * mult;
+  for (int i = 0; i < 256; ++i) {
+    
+    Color col(HSVColor(hue, 1.0, 1.0));
+                       //                       (i % 3) / 3.0 + 1.0/3.0, 
+                       //(i % 4) / 4.0 + 1.0/4.0 ));
+    hue += dhue + 180.0;
+    
+    rgba[i*4+0] = col.r();
+    rgba[i*4+1] = col.g();
+    rgba[i*4+2] = col.b();
+    rgba[i*4+3] = 1.0;
   }
   rgba[3] = 0.0;
 
