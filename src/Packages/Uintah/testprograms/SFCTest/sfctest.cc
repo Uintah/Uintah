@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 	ProcessorGroup *d_myworld=Uintah::Parallel::getRootProcessorGroup();
 	MPI_Comm Comm=d_myworld->getComm();	
 	vector<LOCS> locs;
-	vector<unsigned int> orders;
+	vector<DistributedIndex> orders;
 	
 	
 	int ref=3;
@@ -112,22 +112,33 @@ int main(int argc, char** argv)
 	finish=timer->currentSeconds();
 	ttime=finish-start;
 
+  double sum;
 
-	double sum;
-	
-	MPI_Reduce(&ttime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-	ttime=sum/P;
-	MPI_Reduce(&sertime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-	sertime=sum/P;
-	MPI_Reduce(&ptime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-	ptime=sum/P;
-	MPI_Reduce(&cleantime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-	cleantime=sum/P;
-	MPI_Reduce(&gtime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-	gtime=sum/P;
-	
-	if(rank==0)
-		cout << N << " " << n << " " << ttime << " " << sertime << " " << ptime << " " << cleantime << " " << gtime <<  endl;
+  double times[TIMERS];
+
+  MPI_Reduce(&timers[0],&times[0],TIMERS,MPI_DOUBLE,MPI_SUM,0,Comm);
+  MPI_Reduce(&ttime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
+
+  for(int i=0;i<TIMERS;i++)
+  {
+    times[i]=times[i]/P/repeat;
+  }
+  ttime=sum/P/repeat;
+
+  if(rank==0)
+  {
+    cout << P << " " << N << " " << n << " " << mode << " " << ttime << " ";
+    double sum=0;
+    for(int i=0;i<TIMERS;i++)
+    {
+      cout << times[i] << " ";
+      sum+=times[i];
+    }
+    cout << sum << endl;
+  }
+
+  
+
 #endif
 
 	Uintah::Parallel::finalizeManager();
