@@ -536,8 +536,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       // re-update the cost, so we use all procs (and don't go over)
       double patchCost = patch_costs[index];
 
-      double imb1=abs(currentProcCost-avgCostPerProc[i]);
-      double imb2=abs(currentProcCost+patchCost-avgCostPerProc[i]);
+      double imb1=fabs(currentProcCost-avgCostPerProc[i]);
+      double imb2=fabs(currentProcCost+patchCost-avgCostPerProc[i]);
               
       if (imb1<imb2) {
         // move to next proc and add this patch
