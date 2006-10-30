@@ -1665,7 +1665,7 @@ if test $IS_WIN = "yes"; then
 fi
 
 if test $CC_DEPEND_MODE = unknown; then
-  AC_MSG_ERROR(Cannot determine dependency generation flag)
+  AC_MSG_ERROR(Cannot determine dependency generation flag. You might have specified bad '--enable-optimize=' flags on your configure line)
 fi
 
 AC_MSG_RESULT([$CC_DEPEND_REGEN (mode: $CC_DEPEND_MODE, ext: $CC_DEPEND_EXT)])

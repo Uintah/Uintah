@@ -9607,8 +9607,8 @@ if test $IS_WIN = "yes"; then
 fi
 
 if test $CC_DEPEND_MODE = unknown; then
-  { { echo "$as_me:$LINENO: error: Cannot determine dependency generation flag" >&5
-echo "$as_me: error: Cannot determine dependency generation flag" >&2;}
+  { { echo "$as_me:$LINENO: error: Cannot determine dependency generation flag. You might have specified bad '--enable-optimize=' flags on your configure line" >&5
+echo "$as_me: error: Cannot determine dependency generation flag. You might have specified bad '--enable-optimize=' flags on your configure line" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -53880,7 +53880,7 @@ if test "$with_opengl"; then
   _sci_lib="$_sci_lib $with_opengl/lib"
   _sci_inc="$_sci_inc $with_opengl/include"
 else
-  _sci_lib_t="/usr/X11R6"
+  _sci_lib_t="usr/X11R6"
 
 ##
 ## BASE_LIB_PATH:
