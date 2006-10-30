@@ -107,7 +107,7 @@ TendBmat::execute()
   bool we_own_the_data;
   vector<double> *mat=0;
   Nrrd *nin;
-  if (get_input_handle("nin", nrrd_handle))
+  if (get_input_handle("nin", nrrd_handle, false))
   {
     we_own_the_data = false;
     nin = nrrd_handle->nrrd_;
