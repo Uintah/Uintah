@@ -166,7 +166,7 @@ CreateGeometricTransform::execute()
   // get the input matrix if there is one
   MatrixHandle input_matrix_H;
   Transform input_transform;
-  if (!get_input_handle("Matrix", input_matrix_H, false))
+  if (get_input_handle("Matrix", input_matrix_H, false))
   {
     input_transform = input_matrix_H->toTransform();
   }
