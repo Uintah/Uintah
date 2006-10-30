@@ -46,10 +46,10 @@ namespace SCIRun {
 NrrdBitmaskOutline::NrrdBitmaskOutline(NrrdDataHandle &nin_handle) :
   lock("NrrdBitmaskOutline"),
   ref_cnt(0),
-  bit_verts_(32, 0),
+  nrrd_handle_(nin_handle),
   line_coords_(32, 0),
   point_coords_(32, 0),
-  nrrd_handle_(nin_handle),
+  bit_verts_(32, 0),
   colormap_(ColorMap::create_pseudo_random(201)),
   dirty_(true)
 {
@@ -347,9 +347,9 @@ NrrdBitmaskOutline::compute_iso_glyphs_2D(int x1, int y1, int x2, int y2,
 
 
   const int row_width = nrrd_handle_->nrrd_->axis[1].size;
-  const int region_start = row_width * y1 + x1;
-  const int region_width = x2 - x1;
-  const int region_height = y2 - y1;
+  //const int region_start = row_width * y1 + x1;
+  //  const int region_width = x2 - x1;
+  //const int region_height = y2 - y1;
 
   const int max_pos = (nrrd_handle_->nrrd_->axis[1].size * 
                        nrrd_handle_->nrrd_->axis[2].size);
@@ -518,12 +518,10 @@ NrrdBitmaskOutline::compute_iso_glyphs(int x1, int y1, int x2, int y2, int borde
       vector<vector<bool> > &isoglyphs2D = isoglyphs2D_[*biter][dir];
       vector<pair<size_t, size_t> > &isoglyphs = isoglyphs_[*biter][dir];
       if (clear) isoglyphs.clear();
-      const size_t rows = isoglyphs2D.size();
-      for (unsigned int row = y1; row < y2; ++row) {
-        const size_t cols = isoglyphs2D[row].size();
-        for (unsigned int col = x1; col < x2; ++col) {
+      for (int row = y1; row < y2; ++row) {
+        for (int col = x1; col < x2; ++col) {
           if (isoglyphs2D[row][col]) {
-            isoglyphs.push_back(make_pair(col,row));
+            isoglyphs.push_back(make_pair(col, row));
           }
         }
       }

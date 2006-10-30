@@ -130,7 +130,6 @@ private:
   Point                 min_;
   Vector                xdir_;
   Vector                ydir_;
-
 };
 
 

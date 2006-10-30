@@ -76,10 +76,8 @@ struct VolumeSlice {
 private:
   void                  extract_nrrd_slice_from_volume();
   Plane                 plane_;
-
-
-
 };
+
 
 typedef LockingHandle<VolumeSlice> VolumeSliceHandle;
 typedef std::vector<VolumeSliceHandle> VolumeSlices_t;

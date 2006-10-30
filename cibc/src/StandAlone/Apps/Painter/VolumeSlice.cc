@@ -77,7 +77,6 @@ VolumeSlice::VolumeSlice(NrrdVolume *volume,
   lock("Volume Slice"),
   ref_cnt(0),
   volume_(volume),
-  plane_(plane),
   nrrd_handle_(nrrd),
   tex_dirty_(true),
   pos_(),
@@ -85,7 +84,8 @@ VolumeSlice::VolumeSlice(NrrdVolume *volume,
   ydir_(),
   outline_(0),
   texture_(0),
-  geom_texture_(0)
+  geom_texture_(0),
+  plane_(plane)
 {
   vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
   unsigned int ax = axis();
@@ -190,7 +190,7 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
 
 
 
-
+#if 0
 static GLubyte stripe[4*32] = { 
   0x33, 0x33, 0x33, 0x33,
   0x66, 0x66, 0x66, 0x66,
@@ -280,8 +280,7 @@ static GLubyte stripe2[4*36] = {
   0xCC, 0xCC, 0xCC, 0xCC,
   0x66, 0x66, 0x66, 0x66,
 };
-
-
+#endif
 
 static GLubyte stripe3[4*36] = { 
   0x11, 0x11, 0x11, 0x11,
