@@ -205,7 +205,7 @@ void Wave::computeStableTimestep(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     double delt = patch->dCell().minComponent();
     const Level* level = getLevel(patches);
-    new_dw->put(delt_vartype(level->adjustDelt(delt)), sharedState_->get_delt_label());
+    new_dw->put(delt_vartype(delt), sharedState_->get_delt_label(), level);
   }
 }
 

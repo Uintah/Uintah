@@ -88,8 +88,7 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
   }
 
-  new_dw->put(delt_vartype(getLevel(patches)->adjustDelt(999.0)), 
-              lb->delTLabel);
+  new_dw->put(delt_vartype(999.0), lb->delTLabel, getLevel(patches));
 
 }
 

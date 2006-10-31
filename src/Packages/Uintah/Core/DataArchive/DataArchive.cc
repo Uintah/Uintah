@@ -243,19 +243,12 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
     throw InternalError("DataArchive::queryGrid:Cannot find Grid in timestep",
                         __FILE__, __LINE__);
   int numLevels = -1234;
-  bool lockstepGrid = false;
   GridP grid = scinew Grid;
-  gridnode->get("lockstep", lockstepGrid);
-  grid->setLockstep(lockstepGrid);
   for(ProblemSpecP n = gridnode->getFirstChild(); n != 0; n=n->getNextSibling()){
     if(n->getNodeName() == "numLevels") {
       if(!n->get(numLevels))
         throw InternalError("DataArchive::queryGrid:Error parsing numLevels",
                             __FILE__, __LINE__);
-    } else if(n->getNodeName() == "time_refinement_ratio") {
-      // this one's obsolete,  but keep it for some old udas...
-    } else if(n->getNodeName() == "lockstep") {
-      // this one's referenced above, but we don't want a warning...
     } else if(n->getNodeName() == "Level"){
       Point anchor;
       if(!n->get("anchor", anchor))
