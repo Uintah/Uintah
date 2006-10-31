@@ -182,8 +182,7 @@ namespace Uintah
   {
     const Level* level = getLevel(patches);
     double delt = level->dCell().x();
-    delt = level->adjustDelt(delt);
-    new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label());
+    new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label(), level);
   }
 
   void RegridderTest::timeAdvance ( const ProcessorGroup*,

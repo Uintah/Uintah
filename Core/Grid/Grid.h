@@ -71,11 +71,6 @@ WARNING
     Level* addLevel(const SCIRun::Point& anchor,
                     const SCIRun::Vector& dcell, int id=-1);
    
-    // needs to be set in Grid::problemSetup, when the Regridder creates a Grid, or when 
-    // the DataArchiver loads a Grid from the uda.
-    inline void setLockstep(bool lockstep) { d_lockstepAMRGrid = lockstep; }
-    inline bool isLockstep() const { return d_lockstepAMRGrid; }
-    
     void performConsistencyCheck() const;
     void printStatistics() const;
 

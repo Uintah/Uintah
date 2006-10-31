@@ -571,7 +571,6 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
   rdbg << "CreateGrid2 BGN\n";
 
   Grid* newGrid = scinew Grid();
-  newGrid->setLockstep(oldGrid->isLockstep());
   ProblemSpecP grid_ps = ups->findBlock("Grid");
 
   for (int levelIdx=0; levelIdx < (int)d_patches.size(); levelIdx++) {

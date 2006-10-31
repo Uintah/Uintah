@@ -59,11 +59,7 @@ class Regridder;
       //! Set up, compile, and execute initial timestep
       void doInitialTimestep(GridP& grid, double& t);
 
-      //! Does regridding based on initialization timestep
-      //! Return true if a new grid is created.
-      bool doInitialTimestepRegridding(GridP& grid);
-
-      void doRegridding(GridP& grid);
+      bool doRegridding(GridP& grid, bool initialTimestep);
 
       void recompile(double t, double delt, GridP& currentGrid, int totalFine);
 
@@ -83,6 +79,15 @@ class Regridder;
       //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
       //! (to exsecute once) recursively.
       void subCycleExecute(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
+
+      void scheduleComputeStableTimestep(const GridP& grid,
+                                         SchedulerP&);
+      void coarsenDelt(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset* /*matls*/,
+                       DataWarehouse* /*old_dw*/,
+                       DataWarehouse* new_dw);
+
    };
 
 } // End namespace Uintah

@@ -102,11 +102,6 @@ WARNING
      // use this to get the progress ratio of an AMR subcycle
      double getSubCycleProgress(DataWarehouse* fineNewDW);
 
-     // if we have a "special" lockstep component, have it take care of its own
-     // task graph scheduling rather than have the SimController do it
-     virtual bool useLockstepTimeAdvance() { return false;}
-     virtual void scheduleLockstepTimeAdvance(const GridP& grid, SchedulerP& sched);
-
      //////////
      // ask the component if it needs to be recompiled
      virtual bool needRecompile(double /*time*/, double /*dt*/,

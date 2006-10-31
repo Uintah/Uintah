@@ -802,8 +802,6 @@ namespace Uintah {
       virtual bool needRecompile(double time, double dt,
                                  const GridP& grid);
                                  
-      virtual bool useLockstepTimeAdvance();
-     
       // Debugging switches
       bool switchDebug_Initialize;
       bool switchDebug_equil_press;
@@ -841,7 +839,6 @@ namespace Uintah {
       int  d_surroundingMatl_indx;
       bool d_impICE;
       bool d_recompile;
-      bool d_useLockStep;
       bool d_canAddICEMaterial;
       bool d_with_mpm;
       

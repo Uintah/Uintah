@@ -80,13 +80,6 @@ SimulationInterface::addMaterial(const ProblemSpecP& /*params*/, GridP& /*grid*/
 }
 
 void
-SimulationInterface::scheduleLockstepTimeAdvance(const GridP& /*grid*/, SchedulerP& /*sched*/)
-{
-  throw InternalError("scheduleLockstepTimeAdvance is not implemented for this component",
-                      __FILE__, __LINE__);
-}
-
-void
 SimulationInterface::scheduleInitializeAddedMaterial(const LevelP&
                                                      coarseLevel,
                                                      SchedulerP& /*sched*/)

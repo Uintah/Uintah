@@ -76,7 +76,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
-  d_useLockStep         = false; 
   d_doRefluxing         = false;
   d_add_heat            = false;
   d_impICE              = false;
@@ -782,6 +781,11 @@ _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
+  if (d_sharedState->isLockstepAMR()) {
+    if (level->getIndex() == 0)
+      scheduleLockstepTimeAdvance(level->getGrid(), sched);
+    return;
+  }
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
   if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
@@ -1958,12 +1962,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     d_initialDt = 10000.0;
 
     const Level* level = getLevel(patches);
-    GridP grid = level->getGrid();
-    for(int i=1;i<=level->getIndex();i++) {     // REFINE
-      delt *= level->getTimeRefinementRatio();
-    }
-    
-  
     //__________________________________
     //  Bullet proofing
     if(delt < 1e-20) { 
@@ -1972,7 +1970,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
            << "):ComputeStableTimestep: delT < 1e-20 on cell " << badCell;
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
-    new_dw->put(delt_vartype(delt), lb->delTLabel);
+    new_dw->put(delt_vartype(delt), lb->delTLabel, level);
   }  // patch loop
 }
 
@@ -2828,6 +2826,9 @@ template<class T> void ICE::computeVelFace(int dir,
     IntVector L = R + adj_offset; 
 
     double rho_FC = rho_CC[L] + rho_CC[R];
+    if (rho_FC <= 0) {
+      cout << d_myworld->myrank() << " L: " << L << rho_CC[L] << " R: " << R << rho_CC[R] << endl;
+    }
     ASSERT(rho_FC > 0.0);
     //__________________________________
     // interpolation to the face
@@ -5759,11 +5760,6 @@ ICE::refineBoundaries(const Patch*, SFCYVariable<double>&,
 			    int, double)
 {
   throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
-}
-
-bool ICE::useLockstepTimeAdvance() 
-{ 
-  return d_useLockStep;
 }
 
 void

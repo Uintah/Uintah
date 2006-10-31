@@ -286,8 +286,9 @@ namespace Uintah {
       double delt_fine = newdelt;
       for(int i=0;i<grid->numLevels();i++){
         const Level* level = grid->getLevel(i).get_rep();
-        if(i != 0)
-          delt_fine /= level->getTimeRefinementRatio();
+        if(i != 0 && !d_sharedState->isLockstepAMR()) {
+          delt_fine /= level->getRefinementRatioMaxDim();
+        }
         d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
                                          level);
       }
