@@ -101,10 +101,6 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   abort_filter_(false),
   status_(variables, "Painter::status", "")
 {
-#ifdef HAVE_INSIGHT
-  filter_update_img_ = 0;
-#endif
-
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
   tm_.add_tool(new KeyToolSelectorTool(this), 51);
 
@@ -503,23 +499,31 @@ Painter::filter_callback(itk::Object *object,
   double value = process->GetProgress();
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
-    if (filter_volume_ && filter_update_img_.get_rep()) {
+    if (filter_volume_) {
+      cerr << "HERE!";
+      return;
       typedef itk::ThresholdSegmentationLevelSetImageFilter
         < ITKImageFloat3D, ITKImageFloat3D > FilterType;
       
       FilterType *filter = dynamic_cast<FilterType *>(object);
       ASSERT(filter);
       volume_lock_.lock();
-      filter_update_img_->data_ = filter->GetOutput();
-      filter_volume_->nrrd_handle_ = 
-	itk_image_to_nrrd<float>(filter_update_img_);
+      ITKDatatypeHandle imgh = new ITKDatatype();
+      imgh->data_ = filter->GetOutput();
+      ITKImageFloat3D *img = dynamic_cast<ITKImageFloat3D *>(imgh->data_.GetPointer());
+      cerr << "img: " << img << std::endl;
+      NrrdDataHandle nrrd = itk_image_to_nrrd<float>(imgh);
+      cerr << "nrrd: " << nrrd->nrrd_ << std::endl;
+      //      nrrdCopy(filter_volume_->nrrd_handle_->nrrd_, nrrd->nrrd_);
+      filter_volume_->nrrd_handle_ = nrrd;
       volume_lock_.unlock();
-      if (volume_texture_.get_rep()) {
-        NrrdTextureBuilderAlgo::build_static
-	  (volume_texture_,current_volume_->nrrd_handle_, 0, 255,
-	   0, 0, 255, 128);
-      }
-      extract_all_window_slices();
+
+      //      if (volume_texture_.get_rep()) {
+      //  NrrdTextureBuilderAlgo::build_static
+      //	  (volume_texture_,current_volume_->nrrd_handle_, 0, 255,
+      //	   0, 0, 255, 128);
+      //    }
+      //      extract_all_window_slices();
       //set_all_slices_tex_dirty();
     }
 

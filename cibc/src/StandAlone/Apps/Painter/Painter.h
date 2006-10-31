@@ -192,8 +192,8 @@ private:
 
 #ifdef HAVE_INSIGHT
   template <class ImageT>
-  bool                  do_itk_filter(itk::ImageToImageFilter<ImageT,ImageT> *,
-                                      NrrdDataHandle &nrrd);
+  NrrdDataHandle        do_itk_filter
+  (itk::ImageToImageFilter<ImageT,ImageT> *, NrrdDataHandle &nrrd);
   void                  filter_callback(itk::Object *, 
                                         const itk::EventObject &);
   void                  filter_callback_const (const itk::Object *, 
@@ -266,11 +266,6 @@ private:
   bool                  abort_filter_;
   Skinner::Var<string>  status_;
 
-#ifdef HAVE_INSIGHT
-  ITKDatatypeHandle     filter_update_img_;
-#endif
-
-
 };
 
 
@@ -308,8 +303,9 @@ public:
 
 
 
-int nrrd_type_size(Nrrd *);
-int nrrd_data_size(Nrrd *);
+unsigned int nrrd_type_size(Nrrd *);
+unsigned int nrrd_data_size(Nrrd *);
+unsigned int nrrd_size(Nrrd *);
 
 
 
@@ -327,7 +323,7 @@ unsigned int max_vector_magnitude_index(vector<T> array) {
 #ifdef HAVE_INSIGHT
 
 template <class ImageType>
-bool
+NrrdDataHandle
 Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
                        NrrdDataHandle &nrrd_handle) 
 {
@@ -344,7 +340,7 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
       dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
     
     if (imgp == 0) 
-      return false;
+      return 0;
     
     filter->SetInput(imgp);
   }
@@ -355,21 +351,19 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
     if (!abort_filter_) {
       cerr << "ITK Exception: \n";
       err.Print(cerr);
-      return false;
+      return 0;
     } else {
       abort_filter_ = false;
     }
   } catch (...) {
     cerr << "ITK Filter error!\n";
-    return false;
+    return 0;
   }
   
   SCIRun::ITKDatatypeHandle output_img = new SCIRun::ITKDatatype();
   output_img->data_ = filter->GetOutput();
 
-  nrrd_handle = itk_image_to_nrrd<typename ImageType::PixelType>(output_img);
-
-  return true;
+  return itk_image_to_nrrd<typename ImageType::PixelType>(output_img);
 }
 #endif
 

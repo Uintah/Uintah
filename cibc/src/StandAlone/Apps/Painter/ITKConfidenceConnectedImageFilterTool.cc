@@ -33,21 +33,13 @@
 #include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
 #include <sci_gl.h>
 
-#ifdef _WIN32
-#  define SCISHARE __declspec(dllimport)
-#else
-#  define SCISHARE
-#endif
-
-
 #ifdef HAVE_INSIGHT
 #  include <itkConfidenceConnectedImageFilter.h>
 
-
-
 namespace SCIRun {
 
-ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilterTool(Painter *painter) :
+ITKConfidenceConnectedImageFilterTool::
+ITKConfidenceConnectedImageFilterTool(Painter *painter) :
   BaseTool("ITK Confidence Connected\nImage Filter"),
   PointerTool("ITK Confidence Connected\nImage Filter"),
   painter_(painter),
@@ -88,14 +80,6 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   if (!volume_->index_valid(seed_))
     return;
 
-#if 0
-  painter_->get_vars()->insert("ToolDialog::text", 
-                     " ITK Confidence Connected Filter Running...",
-                     "string", true);
-
-  painter_->redraw_all();
-#endif
-  
   typedef itk::ConfidenceConnectedImageFilter
     < ITKImageFloat3D, ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();
@@ -104,22 +88,34 @@ ITKConfidenceConnectedImageFilterTool::finish() {
     seed_point[i] = seed_[i+1];
   }
   
-  filter->SetSeed(seed_point);
-  filter->SetNumberOfIterations(numberOfIterations_());
-  filter->SetMultiplier(multiplier_());
-  filter->SetReplaceValue(replaceValue_());
-  filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_());
+  filter->AddSeed(seed_point);
+
+  filter->SetNumberOfIterations(numberOfIterations_);
+  filter->SetMultiplier(multiplier_);
+  filter->SetReplaceValue(replaceValue_);
+  filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_);
 
   string name = "Confidence Connected";
-  NrrdVolume *vol = new NrrdVolume(volume_, name, 2);
-  painter_->volumes_.push_back(vol);
+  NrrdDataHandle nrrdh = volume_->nrrd_handle_;
+  nrrdh.detach();
+  NrrdVolume *vol = new NrrdVolume(painter_, name, nrrdh);
   vol->colormap_ = 1;
   vol->clut_min_ = vol->data_min_ = 0.5;
   vol->clut_max_ = vol->data_max_ = 1.0;
-  painter_->current_volume_ = vol;
 
-  painter_->do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
-  painter_->set_all_slices_tex_dirty();
+  painter_->volumes_.push_back(vol);
+  painter_->rebuild_layer_buttons();
+  painter_->extract_all_window_slices();
+
+
+  //  painter_->current_volume_ = vol;
+  painter_->filter_volume_ = vol;
+
+  vol->nrrd_handle_ = 
+    painter_->do_itk_filter<ITKImageFloat3D>(filter, volume_->nrrd_handle_);
+
+
+  painter_->extract_all_window_slices();
   painter_->redraw_all();
 }
 

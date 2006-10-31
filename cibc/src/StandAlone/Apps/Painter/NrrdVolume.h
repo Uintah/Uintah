@@ -111,6 +111,8 @@ public:
   ColorMapHandle      get_colormap();
   GeomIndexedGroup*   get_geom_group();
   NrrdDataHandle      extract_label_as_bit();
+  NrrdDataHandle      extract_bit_as_float(float value=1.0);
+
 
   Painter *           painter_;
   NrrdVolume *        parent_;
