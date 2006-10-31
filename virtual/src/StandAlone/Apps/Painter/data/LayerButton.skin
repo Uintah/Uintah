@@ -1,0 +1,233 @@
+<definition class="LayerButton" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <object class="Painter::LayerButton">
+    <var name="visible">0</var>
+    <var name="LayerButton::num" type="int" overwrite="no">1</var>
+    <var name="LayerButton::expand" type="bool" overwrite="no" propagate="yes">1</var>
+    <var name="LayerButton::background_color" propagate="yes">#00000000</var>
+    <var name="LayerButton::visible" propagate="yes">1</var>
+    <var name="LayerButton::indent" propagate="yes">10</var>
+    <var name="LayerButton::expand_width" propagate="yes">10</var>
+    <var name="row">$LayerButton::num</var>
+    <var name="col">1</var>
+    <var name="thumbnail_height" propagate="yes">45</var>
+    <var name="button_width" propagate="yes">20</var>
+    <var name="button_height" propagate="yes">20</var>
+    <var name="cell-height">$thumbnail_height</var>
+
+    <var name="LayerButton::name" propagate="yes">Layer</var>
+    
+    <object class="Box" id="background">
+      <var name="color">$LayerButton::background_color</var>
+      <signal name="button_1_clicked" target="LayerButton::select"/>
+      <signal name="button_1_clicked" target="GLWindow::redraw"/>
+
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">3</var>
+        
+        <object class="Collection">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-height">3</var>
+          <var name="cell-width">$LayerButton::indent</var>
+        </object>
+
+        <object class="Collection">
+          <var name="row">3</var>
+          <var name="col">1</var>
+          <var name="cell-height">3</var>
+        </object>
+        
+
+        <object class="Collection">
+          <var name="row">2</var>
+          <var name="col">3</var>
+          <var name="cell-width">0</var>
+        </object>
+
+<!--
+        <object class="ShadowedBox">
+          <var name="row">2</var>
+          <var name="col">4</var>
+          <var name="cell-width">$thumbnail_height</var>
+
+          <definition class="ShadowedBox::child">
+            <object class="Box">
+              <var name="color">#FFFFFFFF</var>
+            </object>
+          </definition>
+        </object>
+-->
+
+        <object class="Grid">
+          <var name="row">2</var>
+          <var name="col">2</var>
+
+          <var name="rows">2</var>
+          <var name="cols">15</var>
+
+          <xi:include href="ArrowButton.skin" parse="xml"/>
+
+          <object class="Root::FocusRegion">
+            <var name="row-begin">1</var>
+            <var name="row-end">1</var>
+            <var name="col-begin">1</var>
+            <var name="col-end">15</var>
+            <var name="TextEntry::focused" propagate="yes">0</var>
+            <var name="focus">$TextEntry::focused</var>
+            <object class="Root::ViewSubRegion">
+              <object class="TextEntry">
+                <var name="size">20</var>
+                <var name="text">$LayerButton::name</var>
+                <var name="fgcolor">#000000FF</var>
+                <var name="bgcolor">#FFFFFFFF</var>
+                <var name="shadow">1</var>
+                <var name="offsetx">-1</var>
+                <var name="offsety">1</var>
+                <var name="cursor">$TextEntry::focused</var>
+                <var name="cursor">1</var>
+                <var name="anchor">W</var>
+              </object>
+            </object>
+          </object>
+
+          <object class="ExpandButton">
+            <var name="CheckButton::state" 
+                 propagate="yes">$LayerButton::expand</var>
+            
+            <var name="row">2</var>
+            <var name="col">1</var>
+            <var name="cell-width">$LayerButton::expand_width</var>
+            <var name="cell-height">$button_height</var>
+            <signal name="Button::clicked"
+                    target="Painter::RebuildLayers"/>
+            <signal name="Button::clicked"
+                    target="GLWindow::mark_redraw"/>
+          </object>
+
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">4</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">C</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::CreateLabelVolume">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+
+            <signal name="Button::clicked" 
+                    target="Root::Stop"/>
+            
+          </object>
+
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">5</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">D</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::DeleteLayer">
+              <var name="name">$LayerButton::name</var>            
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+
+            <signal name="Button::clicked" 
+                    target="Root::Stop"/>
+            
+          </object>
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">6</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">N</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::NewLayer">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+            
+          </object>
+
+
+          <object class="ImageFrameButton">
+            <var name="row">2</var>
+            <var name="col">2</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            
+            <var name="CheckButton::state" propagate="yes">$LayerButton::visible</var>
+            <signal name="Button::clicked" 
+                    target="SliceWindow::SlicesVisibleChanged"/>
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+            
+          </object>
+
+
+
+          <object class="Grid">
+            <var name="row">2</var>
+            <var name="col">3</var>            
+
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+
+            <var name="rows">2</var>
+            <var name="cols">1</var>
+
+            <object class="ArrowButton">
+              <var name="row">1</var>
+              <var name="col">1</var>            
+              <var name="ArrowButton::degrees" propagate="yes">90</var>
+              
+              <signal name="Button::clicked" 
+                      target="LayerButton::up">
+              </signal>
+              
+              <signal name="Button::clicked" 
+                      target="GLWindow::mark_redraw"/>
+              
+              <signal name="Button::clicked" 
+                      target="Root::Stop"/>
+              
+            </object>
+            
+            
+            <object class="ArrowButton">
+              <var name="row">2</var>
+              <var name="col">1</var>
+              <var name="ArrowButton::degrees" propagate="yes">270</var>
+              
+              <signal name="Button::clicked" 
+                      target="LayerButton::down">
+              </signal>
+              <signal name="Button::clicked" 
+                      target="GLWindow::mark_redraw"/>
+              
+              <signal name="Button::clicked" 
+                      target="Root::Stop"/>
+              
+              
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+
+
+</definition>

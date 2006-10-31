@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{65 6 407 383}" creationDate="{Thu Mar 16 2006}" creationTime="{10:39:35}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
+      <position x="66" y="6"/>
+      <var name="filename" val="scisub_datadir/sphere/sphere-voltage.tvd.fld"/>
+    </module>
+    <module category="Converters" id="m2" name="ConvertRasterFieldToNrrd" package="Teem">
+      <position x="65" y="84"/>
+      <var name="label" val="{sphere-voltages}"/>
+    </module>
+    <module category="MiscField" gui_visible="yes" id="m3" name="ReportFieldInfo" package="SCIRun">
+      <position x="240" y="84"/>
+      <var name="ui_geometry" val="{464x263+62+72}"/>
+    </module>
+    <module category="MiscField" gui_visible="yes" id="m4" name="ReportFieldInfo" package="SCIRun">
+      <position x="241" y="326"/>
+      <var name="ui_geometry" val="{464x263+59+54}"/>
+    </module>
+    <module category="Converters" id="m5" name="ConvertNrrdToRasterField" package="Teem">
+      <position x="65" y="246"/>
+    </module>
+    <module category="Misc" id="m6" name="ReportNrrdInfo" package="Teem">
+      <position x="239" y="165"/>
+    </module>
+    <module category="UnuNtoZ" gui_visible="yes" id="m7" name="UnuQuantize" package="Teem">
+      <position x="65" y="166"/>
+      <note>{
+}</note>
+      <var name="minf" val="{-5.93}"/>
+      <var name="maxf" val="{4.74}"/>
+      <var name="ui_geometry" val="{314x181+56+36}"/>
+    </module>
+    <module category="Misc" gui_visible="yes" id="m8" name="ReportNrrdInfo" package="Teem">
+      <position x="242" y="246"/>
+      <var name="ui_geometry" val="{451x513+53+18}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m1" fromport="0" id="c1" to="m3" toport="0"/>
+    <connection from="m1" fromport="0" id="c2" to="m2" toport="0"/>
+    <connection from="m2" fromport="2" id="c3" to="m6" toport="0"/>
+    <connection from="m2" fromport="2" id="c4" to="m7" toport="0"/>
+    <connection from="m5" fromport="0" id="c5" to="m4" toport="0"/>
+    <connection from="m7" fromport="0" id="c6" to="m8" toport="0"/>
+    <connection from="m7" fromport="0" id="c7" to="m5" toport="2"/>
+    <connection from="m1" fromport="0" id="c8" to="m5" toport="3"/>
+  </connections>
+</network>

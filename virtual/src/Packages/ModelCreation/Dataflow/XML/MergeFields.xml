@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="MergeFields" category="CreateField">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+        MergeFields glues any number of input fields into one output field.
+    </summary>
+    <description>
+      <p>
+      This module is intended to replace GatherFields and fix a number of problems
+      associate with the old module.
+      </p>
+    
+      <p>
+      This module takes in an arbitrary number of input fields and
+      gathers them all up into one output field.  If the input
+      fields all have the same editable mesh type then the output
+      field will also be of the same type.  If the meshes are not
+      editable or of different mesh types then only their points
+      will be gathered up and a single PointCloudField will be
+      produced.
+      </p>
+
+      <p>
+      The module has the option to merge nodes together when they are at the
+      same physical location. Often due to numeric round off, they are at a 
+      slightly different position. Hence the module allows to set a tolerance
+      which is used to determine whether two nodes are in fact the same. The 
+      tolerance is a simple measure in distance that is applied to see whether
+      nodes are the same.
+      </p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="yes">
+     <port>
+       <name>Field</name>
+       <datatype>SCIRun::Field</datatype>
+     </port>
+    </inputs>
+    <outputs>
+     <port>
+       <name>Field</name>
+       <datatype>SCIRun::Field</datatype>
+     </port>
+    </outputs>
+  </io>
+</component>

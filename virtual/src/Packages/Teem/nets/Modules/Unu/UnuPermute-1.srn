@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{35 21 290 356}" creationDate="{Thu Mar 16 2006}" creationTime="{10:39:05}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <note>{}</note>
+  <modules>
+    <module category="UnuNtoZ" gui_visible="yes" id="m1" name="UnuPermute" package="Teem">
+      <position x="56" y="209"/>
+      <var name="dim" val="{3}"/>
+      <var name="axis1" val="{2}"/>
+      <var name="axis2" val="{1}"/>
+      <var name="ui_geometry" val="{314x167+56+36}"/>
+    </module>
+    <module category="NewField" id="m2" name="CreateLatVol" package="SCIRun">
+      <position x="35" y="21"/>
+      <var name="sizex" val="{4}"/>
+      <var name="sizey" val="{8}"/>
+      <var name="sizez" val="{16}"/>
+      <var name="padpercent" val="{0}"/>
+      <var name="data-at" val="{Nodes}"/>
+    </module>
+    <module category="Converters" id="m3" name="ConvertRasterFieldToNrrd" package="Teem">
+      <position x="47" y="104"/>
+    </module>
+    <module category="Misc" gui_visible="yes" id="m4" name="ReportNrrdInfo" package="Teem">
+      <position x="125" y="299"/>
+      <var name="ui_geometry" val="{451x513+53+18}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m2" fromport="0" id="c1" to="m3" toport="0"/>
+    <connection from="m3" fromport="2" id="c2" to="m1" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m4" toport="0"/>
+  </connections>
+</network>

@@ -1,0 +1,179 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{45 12 526 541}" creationDate="{Thu Mar 16 2006}" creationTime="{10:37:05}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <note>{}</note>
+  <modules>
+    <module category="NewField" id="m1" name="CreateLatVol" package="SCIRun">
+      <position x="53" y="12"/>
+      <var name="sizex" val="{9}"/>
+      <var name="sizey" val="{9}"/>
+      <var name="sizez" val="{9}"/>
+      <var name="padpercent" val="{0.0}"/>
+      <var name="data-at" val="{Nodes}"/>
+    </module>
+    <module category="ChangeMesh" id="m2" name="ConvertHexVolToTetVol" package="SCIRun">
+      <position x="53" y="92"/>
+    </module>
+    <module category="ChangeFieldData" id="m3" name="CalculateFieldData" package="SCIRun">
+      <position x="53" y="169"/>
+      <var name="function" val="{result = x*x + y*y + z*z;
+
+
+
+}"/>
+      <var name="outputdatatype" val="{input}"/>
+    </module>
+    <module category="NewField" gui_visible="yes" id="m4" name="ClipVolumeByIsovalue" package="SCIRun">
+      <position x="45" y="250"/>
+      <var name="isoval" val="{1.2}"/>
+      <var name="lte" val="{1}"/>
+      <var name="ui_geometry" val="{314x129+56+36}"/>
+    </module>
+    <module category="Visualization" id="m5" name="ShowField" package="SCIRun">
+      <position x="208" y="413"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="normalize-vectors" val="{}"/>
+      <var name="has_scalar_data" val="{1}"/>
+      <var name="text-show-data" val="{0}"/>
+      <var name="text-show-nodes" val="{1}"/>
+      <var name="edge_display_type" val="{Cylinders}"/>
+      <var name="node_scale" val="{0.03}"/>
+      <var name="edge_scale" val="{0.0084}"/>
+      <var name="scalars_scale" val="{0.3}"/>
+      <var name="show_progress" val="{}"/>
+    </module>
+    <module category="Render" id="m6" name="ViewScene" package="SCIRun">
+      <position x="208" y="497"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x615+53+18"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{8.28379750459}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{-1.46094760571}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{-6.35331186078}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{0}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{0}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{0}"/>
+      <var name="ViewWindow_0-view-up-x" val="{-0.16653087956}"/>
+      <var name="ViewWindow_0-view-up-y" val="{-0.985989538013}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.00959672240454}"/>
+      <var name="ViewWindow_0-view-fov" val="{20}"/>
+      <var name="ViewWindow_0-view-eyep_offset-x" val="{}"/>
+      <var name="ViewWindow_0-view-eyep_offset-y" val="{}"/>
+      <var name="ViewWindow_0-view-eyep_offset-z" val="{}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{1}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-pos" val="{}"/>
+      <var name="ViewWindow_0-clip-num" val="{}"/>
+      <var name="ViewWindow_0-clip-visible" val="{}"/>
+      <var name="ViewWindow_0-clip-selected" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-1" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-2" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-3" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-4" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-5" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-6" val="{}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+    </module>
+    <module category="NewField" id="m7" name="ClipFieldByFunction" package="SCIRun">
+      <position x="48" y="330"/>
+      <var name="clipmode" val="{cell}"/>
+      <var name="clipfunction" val="{x &lt; 0}"/>
+      <var name="u0" val="{0.0}"/>
+      <var name="u1" val="{0.0}"/>
+      <var name="u2" val="{0.0}"/>
+      <var name="u3" val="{0.0}"/>
+      <var name="u4" val="{0.0}"/>
+      <var name="u5" val="{0.0}"/>
+    </module>
+    <module category="Visualization" id="m8" name="CreateStandardColorMaps" package="SCIRun">
+      <position x="331" y="136"/>
+    </module>
+    <module category="Visualization" id="m9" name="RescaleColorMap" package="SCIRun">
+      <position x="239" y="254"/>
+      <var name="main_frame" val="{}"/>
+      <var name="isFixed" val="{0}"/>
+      <var name="min" val="{0.0}"/>
+      <var name="max" val="{3}"/>
+      <var name="makeSymmetric" val="{0}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m7" fromport="0" id="c1" to="m5" toport="0"/>
+    <connection from="m4" fromport="0" id="c2" to="m7" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m3" fromport="0" id="c4" to="m4" toport="0"/>
+    <connection from="m2" fromport="0" id="c5" to="m3" toport="0"/>
+    <connection from="m8" fromport="0" id="c6" to="m9" toport="0"/>
+    <connection from="m5" fromport="0" id="c7" to="m6" toport="0"/>
+    <connection from="m3" fromport="0" id="c8" to="m9" toport="1"/>
+    <connection from="m9" fromport="0" id="c9" to="m5" toport="1"/>
+  </connections>
+</network>

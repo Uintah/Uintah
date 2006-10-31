@@ -1,0 +1,216 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{11 8 540 683}" creationDate="{Thu Jul 20 2006}" creationTime="{16:09:23}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.3">
+  <note>{}</note>
+  <modules>
+    <module category="NewField" id="m1" name="CreateLatVol" package="SCIRun">
+      <position x="106" y="8"/>
+      <var name="sizex" val="{64}"/>
+      <var name="sizey" val="{64}"/>
+      <var name="sizez" val="{64}"/>
+      <var name="padpercent" val="{0.0}"/>
+      <var name="data-at" val="{Nodes}"/>
+    </module>
+    <module category="Render" id="m2" name="ViewScene" package="SCIRun">
+      <position x="214" y="639"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x639+404+127"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{6.60573556843}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{6.76991766798}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{-7.05365233527}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.772558188739}"/>
+      <var name="ViewWindow_0-view-up-y" val="{-0.100628143793}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.626919310349}"/>
+      <var name="ViewWindow_0-view-fov" val="{20.0}"/>
+      <var name="ViewWindow_0-view-eyep_offset-x" val="{}"/>
+      <var name="ViewWindow_0-view-eyep_offset-y" val="{}"/>
+      <var name="ViewWindow_0-view-eyep_offset-z" val="{}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{1}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{                0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{                0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{                0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-autoav" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-pos" val="{}"/>
+      <var name="ViewWindow_0-clip-num" val="{}"/>
+      <var name="ViewWindow_0-clip-visible" val="{}"/>
+      <var name="ViewWindow_0-clip-selected" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-1" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-1" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-2" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-2" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-3" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-3" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-4" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-4" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-5" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-5" val="{}"/>
+      <var name="ViewWindow_0-clip-visible-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-x-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-y-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-z-6" val="{}"/>
+      <var name="ViewWindow_0-clip-normal-d-6" val="{}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{0}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+      <var name="&quot;ViewWindow_0-VolumeRenderer Transparent (1)&quot;" val="{1}"/>
+    </module>
+    <module category="ChangeFieldData" id="m3" name="CalculateFieldData" package="SCIRun">
+      <position x="38" y="79"/>
+      <var name="function" val="{result = sqrt(x*x + y*y + z*z);
+}"/>
+      <var name="outputdatatype" val="{input}"/>
+    </module>
+    <module category="Visualization" id="m4" name="ShowTextureVolume" package="SCIRun">
+      <position x="223" y="564"/>
+      <var name="sampling_rate_hi" val="{4.0}"/>
+      <var name="sampling_rate_lo" val="{1.0}"/>
+      <var name="gradient_min" val="{0.0}"/>
+      <var name="gradient_max" val="{0.0}"/>
+      <var name="adaptive" val="{1}"/>
+      <var name="cmap_size" val="{8}"/>
+      <var name="sw_raster" val="{1}"/>
+      <var name="render_style" val="{0}"/>
+      <var name="alpha_scale" val="{0.0}"/>
+      <var name="interp_mode" val="{1}"/>
+      <var name="shading" val="{0}"/>
+      <var name="ambient" val="{0.5}"/>
+      <var name="diffuse" val="{0.5}"/>
+      <var name="specular" val="{0.0}"/>
+      <var name="shine" val="{30}"/>
+      <var name="light" val="{0}"/>
+      <var name="blend_res" val="{8}"/>
+      <var name="multi_level" val="{1}"/>
+      <var name="use_stencil" val="{0}"/>
+      <var name="invert_opacity" val="{0}"/>
+      <var name="num_clipping_planes" val="{0}"/>
+      <var name="show_clipping_widgets" val="{1}"/>
+      <var name="level_on" val="{}"/>
+      <var name="level_vals" val="{}"/>
+      <var name="ui_geometry" val="{336x522+426+310}"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m5" name="CreateAndEditColorMap2D" package="SCIRun">
+      <position x="375" y="481"/>
+      <var name="panx" val="{0.0}"/>
+      <var name="pany" val="{0.0}"/>
+      <var name="scale_factor" val="{1.0}"/>
+      <var name="histo" val="{0.5}"/>
+      <var name="selected_widget" val="{1}"/>
+      <var name="name-0" val="{Generic}"/>
+      <var name="0-color-r" val="{1.0}"/>
+      <var name="0-color-g" val="{1.0}"/>
+      <var name="0-color-b" val="{1.0}"/>
+      <var name="0-color-a" val="{1.0}"/>
+      <var name="state-0" val="{t 0.167969 0.278906 1.00391 0.0398437 0.5}"/>
+      <var name="shadeType-0" val="{0}"/>
+      <var name="on-0" val="{1}"/>
+      <var name="name-1" val="{Generic}"/>
+      <var name="1-color-r" val="{1.0}"/>
+      <var name="1-color-g" val="{1.0}"/>
+      <var name="1-color-b" val="{0.699999988079}"/>
+      <var name="1-color-a" val="{1.0}"/>
+      <var name="state-1" val="{r 0 0.638672 0.0546875 0.0703125 1.11719 0.5}"/>
+      <var name="shadeType-1" val="{0}"/>
+      <var name="on-1" val="{1}"/>
+      <var name="ui_geometry" val="{648x681+627+322}"/>
+      <var name="marker" val="{end}"/>
+    </module>
+    <module category="Converters" id="m6" name="ConvertRasterFieldToNrrd" package="Teem">
+      <position x="11" y="169"/>
+      <var name="label" val="{unknown}"/>
+    </module>
+    <module category="Visualization" id="m7" name="ConvertNrrdsToTexture" package="SCIRun">
+      <position x="159" y="481"/>
+      <var name="vmin" val="{0.0}"/>
+      <var name="vmax" val="{255.0}"/>
+      <var name="gmin" val="{0.0}"/>
+      <var name="gmax" val="{255.0}"/>
+      <var name="mmin" val="{0.0}"/>
+      <var name="mmax" val="{1.0}"/>
+      <var name="is_fixed" val="{0}"/>
+      <var name="card_mem" val="{256}"/>
+      <var name="card_mem_auto" val="{1}"/>
+      <var name="is_uchar" val="{1}"/>
+    </module>
+    <module category="UnuNtoZ" id="m8" name="UnuQuantize" package="Teem">
+      <position x="298" y="403"/>
+      <var name="realmin" val="{0.686140656471}"/>
+      <var name="realmax" val="{0.999999403954}"/>
+      <var name="nbits" val="{8}"/>
+    </module>
+    <module category="Misc" id="m9" name="BuildTextureWithGradientsFromNrrds" package="Teem">
+      <position x="190" y="280"/>
+      <var name="realmin" val="{0.0274928699614}"/>
+      <var name="realmax" val="{1.73205080757}"/>
+      <var name="valuesonly" val="{1}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m1" fromport="0" id="c1" to="m3" toport="0"/>
+    <connection from="m3" fromport="0" id="c2" to="m6" toport="0"/>
+    <connection from="m7" fromport="0" id="c3" to="m4" toport="0"/>
+    <connection from="m4" fromport="0" id="c4" to="m2" toport="0"/>
+    <connection from="m6" fromport="2" id="c5" to="m9" toport="0"/>
+    <connection from="m9" fromport="0" id="c6" to="m7" toport="0"/>
+    <connection from="m9" fromport="1" id="c7" to="m8" toport="0"/>
+    <connection from="m8" fromport="0" id="c8" to="m7" toport="1"/>
+    <connection from="m5" fromport="0" id="c9" to="m4" toport="2"/>
+  </connections>
+</network>

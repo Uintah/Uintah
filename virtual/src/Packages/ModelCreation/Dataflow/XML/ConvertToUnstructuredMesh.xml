@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ConvertToUnstructuredMesh" category="ChangeMesh">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module converts a field with a regular mesh into a field
+      with an unstructured mesh.
+    </summary>
+    <description>
+      <p>
+      This module converts a mesh underlying a field from a representation in
+      which the connectivity of the nodes is based on a regular grid to a
+      representation in which the connectivity is not based on a regular grid.
+      This module can be used for modules that do n ot yet deal with regular
+      meshes. 
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
+

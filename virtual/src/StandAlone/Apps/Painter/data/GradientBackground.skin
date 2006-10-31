@@ -1,0 +1,10 @@
+<definition class="GradientBackground">
+  <object class="Collection">
+    <var name="GradientBackground::bottom-color" overwrite="no" propagate="yes">#FF0000FF</var>
+    <object class="Gradient">
+      <var name="bottom-color">$GradientBackground::bottom-color</var>
+      <var name="top-color" type="color">$grey</var>
+    </object>
+    <object class="GradientBackground::child"/>
+  </object>
+</definition>

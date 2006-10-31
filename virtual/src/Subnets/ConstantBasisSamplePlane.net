@@ -1,0 +1,62 @@
+# SCIRun Network v1.25.0
+
+
+set name {ConstantBasisSamplePlane}
+set bbox {10 25 345 158}
+set creationDate {Tue Nov 15 2005}
+set creationTime {13:59:52}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {380x333+506+206}
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m1 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 184 99]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 104]
+
+# Create a SCIRun->FieldsData->DirectMapping Module
+set m3 [addModuleAtPosition "SCIRun" "FieldsData" "DirectMapping" 10 34]
+
+# Create a SCIRun->FieldsCreate->SamplePlane Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 184 25]
+
+# Create the Connections between Modules
+set c1 [addConnection $m4 0 $m1 0]
+set c2 [addConnection $m3 0 $m2 0]
+set c3 [addConnection $m2 0 Subnet 0]
+set c4 [addConnection Subnet 0 $m4 0]
+set c5 [addConnection Subnet 0 $m3 0]
+set c6 [addConnection $m1 0 $m3 1]
+set c7 [addConnection $m1 1 Subnet 1]
+set c8 [addConnection Subnet 1 $m2 1]
+
+# Set GUI variables for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set $m1-ui_geometry {438x163+143+474}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m2-nodes-on {0}
+set $m2-edges-on {0}
+set $m2-use-transparency {1}
+set $m2-has_scalar_data {1}
+set $m2-active_tab {Faces}
+set $m2-node_scale {0.03}
+set $m2-edge_scale {0.015}
+set $m2-scalars_scale {0.3}
+set $m2-ui_geometry {364x635+340+138}
+
+# Set GUI variables for the SCIRun->FieldsData->DirectMapping Module
+set $m3-interpolation_basis {constant}
+set $m3-ui_geometry {396x294+93+456}
+
+# Set GUI variables for the SCIRun->FieldsCreate->SamplePlane Module
+set $m4-sizex {203}
+set $m4-sizey {203}
+set $m4-auto_size {1}
+set $m4-axis {2}
+set $m4-data-at {Faces}
+set $m4-ui_geometry {342x332+514+160}
+
+
+::netedit scheduleok

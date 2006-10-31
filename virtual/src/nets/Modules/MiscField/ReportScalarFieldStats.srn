@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{65 28 245 195}" creationDate="{Thu Mar 16 2006}" creationTime="{10:35:22}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="MiscField" gui_visible="yes" id="m1" name="ReportScalarFieldStats" package="SCIRun">
+      <position x="80" y="138"/>
+      <var name="min" val="{-5.25315}"/>
+      <var name="max" val="{4.31926}"/>
+      <var name="mean" val="{0.010225262958}"/>
+      <var name="median" val="{0.0695561}"/>
+      <var name="sigma" val="{1.14433536611}"/>
+      <var name="ui_geometry" val="{468x387+53+18}"/>
+    </module>
+    <module category="DataIO" id="m2" name="ReadField" package="SCIRun">
+      <position x="65" y="28"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-voltage.tvd.fld"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m2" fromport="0" id="c1" to="m1" toport="0"/>
+  </connections>
+</network>

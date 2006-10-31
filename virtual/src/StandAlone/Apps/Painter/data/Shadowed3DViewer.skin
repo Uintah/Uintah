@@ -1,0 +1,139 @@
+<definition class="Shadowed3DViewer">
+  <object class="ShadowedFocusBox">
+    <var name="Shadowed3DViewer::show_tools" propagate="yes" overwrite="no">0</var>
+    <var name="LabeledGradientBackground::text_bgcolor" overwrite="no" propagate="yes">#33333333</var>  
+    <var name="LabeledGradientBackground::text_fgcolor" overwrite="no" propagate="yes">#FFFFFF99</var>  
+
+    <signal name="ShadowedFocusBox::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$LabeledGradientBackground::text_bgcolor</var>
+      <var name="value">#000000FF</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$LabeledGradientBackground::text_fgcolor</var>
+      <var name="value">#FFFFFFFF</var>
+    </signal>
+
+    <signal name="ShadowedFocusBox::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$Shadowed3DViewer::show_tools</var>
+      <var name="value">1</var>
+    </signal>
+
+
+    <signal name="ShadowedFocusBox::unfocus" 
+            target="Arithmetic::set_value">
+        <var name="variable">$LabeledGradientBackground::text_bgcolor</var>
+        <var name="value">#33333399</var>
+    </signal>
+    
+    <signal name="ShadowedFocusBox::unfocus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$LabeledGradientBackground::text_fgcolor</var>
+      <var name="value">#FFFFFF99</var>
+    </signal>
+
+    <signal name="ShadowedFocusBox::unfocus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$Shadowed3DViewer::show_tools</var>
+      <var name="value">0</var>
+    </signal>
+
+
+    
+    <definition class="ShadowedFocusBox::child">
+      <object class="LabeledGradientBackground">
+        <var name="GradientBackground::bottom-color" 
+             type="color" propagate="yes">#99999999</var>
+        <var name="LabeledGradientBackground::text" 
+             propagate="yes">3D Viewer</var>
+        
+
+        <var name="size" propagate="yes">50</var>
+        <var name="shadow" propagate="yes">1</var>
+        <var name="offsetx" propagate="yes">-5</var>
+        <var name="offsety" propagate="yes">5</var>
+        <var name="bgcolor" propagate="yes">#00000060</var>
+        
+        <definition class="LabeledGradientBackground::child">
+          <object class="Root::MenuManager">
+            <object class="Box">
+              <var name="mousex" type="int" propagate="yes">0</var>
+              <var name="mousey" type="int" propagate="yes">0</var>
+              <var name="color" propagate="yes">#00000000</var>
+              
+              <signal name="button_2_clicked" target="MenuManager::show_MenuList">
+                <var name="id">SceneGraphMenu</var>
+                <var name="x">$mousex</var>
+                <var name="y">$mousey</var>
+              </signal>
+              
+              <object class="SceneGraph">
+
+                <object class="Grid">                
+                  <var name="cols">2</var>
+                  <var name="rows">1</var>     
+                  <object class="Root::FocusRegion">
+                    <var name="col">2</var>
+                    <var name="row">1</var>
+                    <var name="cell-width">25</var>
+                    
+                    <signal name="FocusRegion::focus"
+                            target="FocusGrab::Grab"/>
+                    
+                    <signal name="FocusRegion::unfocus"
+                            target="FocusGrab::Ungrab"/>
+                    
+                    
+                  <object class="Grid">
+                    <var name="visible">$Shadowed3DViewer::show_tools</var>
+                    <var name="col">2</var>
+                    <var name="row">1</var>
+                    <var name="cell-width">25</var>
+                    
+                    <var name="cols">1</var>
+                    <var name="rows">10</var>
+                    <object class="FrameButton">
+                      <var name="col">1</var>
+                      <var name="row">10</var>
+                      <var name="cell-height">25</var>
+                      <var name="Button::Text::text" propagate="yes">A</var>
+
+                      <signal name="Button::clicked" 
+                              target="SceneGraph::Autoview"/>
+                      <signal name="Button::clicked" 
+                              target="GLWindow::mark_redraw"/>
+                      
+                    </object>
+<!--
+                    <object class="FrameButton">
+                      <var name="col">1</var>
+                      <var name="row">9</var>
+                      <var name="cell-height">25</var>
+                      <var name="Button::Text::text" propagate="yes">+</var>
+                      <signal name="Button::clicked" 
+                              target="SliceWindow::zoom_in"/>
+                    </object>
+                    
+                    <object class="FrameButton">
+                      <var name="col">1</var>
+                      <var name="row">8</var>
+                      <var name="cell-height">25</var>
+                      <var name="Button::Text::text" propagate="yes">-</var>
+                      <signal name="Button::clicked" 
+                              target="SliceWindow::zoom_out"/>
+                    </object>                     
+-->
+                  </object>
+                </object>  
+                </object>            
+              </object>
+            </object>
+          </object>
+        </definition>
+      </object>
+    </definition>      
+  </object>
+</definition>

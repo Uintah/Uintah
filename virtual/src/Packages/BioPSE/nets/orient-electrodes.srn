@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{45 7 746 540}" creationDate="{Thu Mar 16 2006}" creationTime="{11:07:04}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
+      <position x="45" y="42"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld"/>
+    </module>
+    <module category="Visualization" id="m2" name="ShowField" package="SCIRun">
+      <position x="45" y="178"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="active_tab" val="{Edges}"/>
+      <var name="edge_scale" val="{0.01}"/>
+    </module>
+    <module category="DataIO" id="m3" name="ReadField" package="SCIRun">
+      <position x="400" y="7"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcd.fld"/>
+    </module>
+    <module category="ChangeFieldData" id="m4" name="CalculateNodeNormals" package="SCIRun">
+      <position x="400" y="182"/>
+    </module>
+    <module category="Visualization" id="m5" name="ShowField" package="SCIRun">
+      <position x="198" y="384"/>
+      <var name="nodes-as-disks" val="{1}"/>
+      <var name="vectors-on" val="{1}"/>
+      <var name="normalize-vectors" val="{0}"/>
+      <var name="node_display_type" val="{Disks}"/>
+      <var name="active_tab" val="{Vectors}"/>
+      <var name="node_scale" val="{0.04}"/>
+      <var name="vectors_scale" val="{0.1}"/>
+    </module>
+    <module category="Render" id="m6" name="ViewScene" package="SCIRun">
+      <position x="545" y="496"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x615+53+18"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-6.5}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{1.8}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{9.7}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{0}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{0}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{0}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.0}"/>
+      <var name="ViewWindow_0-view-up-y" val="{1.0}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.0}"/>
+      <var name="ViewWindow_0-view-fov" val="{16.5}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{1}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0.0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+    </module>
+    <module category="NewField" id="m7" name="GenerateSinglePointProbeFromField" package="SCIRun">
+      <position x="223" y="101"/>
+    </module>
+    <module category="ChangeFieldData" id="m8" name="CalculateNodeNormals" package="SCIRun">
+      <position x="400" y="251"/>
+    </module>
+    <module category="DataIO" id="m9" name="WriteField" package="SCIRun">
+      <position x="400" y="383"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcv.fld"/>
+      <var name="filetype" val="{ASCII}"/>
+      <var name="exporttype" val="{Binary}"/>
+      <var name="increment" val="{0}"/>
+      <var name="current" val="{0}"/>
+    </module>
+    <module category="DataIO" id="m10" name="ReadField" package="SCIRun">
+      <position x="581" y="8"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-dipole.pcv.fld"/>
+    </module>
+    <module category="Visualization" id="m11" name="ShowAndEditDipoles" package="BioPSE">
+      <position x="581" y="94"/>
+      <var name="widgetSizeGui_" val="{0.07}"/>
+      <var name="scaleModeGui_" val="{fixed}"/>
+      <var name="showLastVecGui_" val="{1}"/>
+      <var name="showLinesGui_" val="{0}"/>
+    </module>
+    <module category="NewField" id="m12" name="GetFieldBoundary" package="SCIRun">
+      <position x="45" y="109"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m1" fromport="0" id="c1" to="m12" toport="0"/>
+    <connection from="m3" fromport="0" id="c2" to="m7" toport="0"/>
+    <connection from="m3" fromport="0" id="c3" to="m4" toport="0"/>
+    <connection from="m10" fromport="0" id="c4" to="m11" toport="0"/>
+    <connection from="m12" fromport="0" id="c5" to="m2" toport="0"/>
+    <connection from="m4" fromport="0" id="c6" to="m8" toport="0"/>
+    <connection from="m8" fromport="0" id="c7" to="m9" toport="0"/>
+    <connection from="m8" fromport="0" id="c8" to="m5" toport="0"/>
+    <connection from="m5" fromport="0" id="c9" to="m6" toport="0"/>
+    <connection from="m7" fromport="1" id="c10" to="m4" toport="1"/>
+    <connection from="m7" fromport="1" id="c11" to="m8" toport="1"/>
+    <connection from="m2" fromport="0" id="c12" to="m6" toport="1"/>
+    <connection from="m7" fromport="0" id="c13" to="m6" toport="2"/>
+    <connection from="m11" fromport="1" id="c14" to="m6" toport="3"/>
+  </connections>
+</network>

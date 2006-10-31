@@ -1,0 +1,20 @@
+/*!
+\page nightly Nightly build results from the SVN code repository
+
+The SVN version of the SCIRun2 software is built each night and the results are
+compiled in the log files referenced below.  These logs will give you an idea
+of the state of the code on any given day.  It is a good idea to check these
+logs before attempting to build SCIRun2 from a new SVN checkout.
+
+\htmlonly
+<ul>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/nightly.txt">build script</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/svn_log.txt">svn checkout output</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/configure_log.txt">configure script output</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/config.log">config.log</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/configVars.mk">configuration variables</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/build_log.txt">build output</a>
+<li> <a href="http://www.sci.utah.edu/~ayla/cca/nightly_build_logs/doxygen.log">doxygen output</a>
+</ul>
+\endhtmlonly
+*/

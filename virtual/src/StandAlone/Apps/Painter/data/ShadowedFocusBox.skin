@@ -1,0 +1,39 @@
+<definition class="ShadowedFocusBox">
+  <object class="Root::FocusRegion">
+    <var name="ShadowedBox::inside" propagate="yes">#888888FF</var>
+    
+    <signal name="FocusRegion::focus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$ShadowedBox::inside</var>
+      <var name="value">#000000FF</var>
+    </signal>
+
+    <signal name="FocusRegion::focus"
+            target="ShadowedFocusBox::focus"/>
+
+    <signal name="FocusRegion::focus"
+            target="GLWindow::redraw_drawable"/>
+
+    <signal name="FocusRegion::unfocus" 
+            target="Arithmetic::set_value">
+      <var name="variable">$ShadowedBox::inside</var>
+      <var name="value">#888888FF</var>
+    </signal>
+
+    <signal name="FocusRegion::unfocus"
+            target="ShadowedFocusBox::unfocus"/>
+
+    <signal name="FocusRegion::unfocus"
+            target="GLWindow::redraw_drawable"/>
+
+    
+    <object class="Box">
+      <var name="color">$main_color</var>
+      <object class="ShadowedBox">
+        <definition class="ShadowedBox::child">
+          <object class="ShadowedFocusBox::child"/>
+        </definition>
+      </object>
+    </object>
+  </object>
+</definition>

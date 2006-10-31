@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CalculateLinkBetweenOppositeFieldBoundaries" category="ChangeMesh" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module will build a table which will indicate which nodes at the edges are connected to the opposite edges.
+
+    </summary>
+    <description>
+      <p>        This module will build a table which will indicate which nodes at the edges are connected to the opposite edges. </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>NodeLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>ElemLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

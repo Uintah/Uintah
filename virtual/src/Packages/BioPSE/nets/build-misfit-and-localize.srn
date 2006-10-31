@@ -1,0 +1,320 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{84 8 1092 793}" creationDate="{Thu Mar 16 2006}" creationTime="{11:06:51}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
+      <position x="283" y="8"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld"/>
+    </module>
+    <module category="NewField" gui_visible="yes" id="m2" name="GeneratePointSamplesFromFieldOrWidget" package="SCIRun">
+      <position x="283" y="68"/>
+      <var name="endpoints" val="{0}"/>
+      <var name="numseeds" val="{4}"/>
+      <var name="rngseed" val="{3}"/>
+      <var name="dist" val="{uniscat}"/>
+      <var name="whichtab" val="{Random}"/>
+      <var name="ui_geometry" val="{350x269+65+90}"/>
+    </module>
+    <module category="Math" gui_visible="yes" id="m3" name="ReportColumnMatrixMisfit" package="SCIRun">
+      <position x="102" y="618"/>
+      <var name="have_ui" val="{1}"/>
+      <var name="pTCL" val="{1}"/>
+      <var name="ui_geometry" val="{499x836+62+72}"/>
+    </module>
+    <module category="Render" id="m4" name="ViewScene" package="SCIRun">
+      <position x="594" y="749"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x615+53+18"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-6.5}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{1.8}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{9.7}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{0}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{0}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{0}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.0}"/>
+      <var name="ViewWindow_0-view-up-y" val="{1.0}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.0}"/>
+      <var name="ViewWindow_0-view-fov" val="{16.5}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{1}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0.0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+    </module>
+    <module category="Visualization" id="m5" name="ShowAndEditDipoles" package="BioPSE">
+      <position x="668" y="77"/>
+      <var name="widgetSizeGui_" val="{0.05}"/>
+      <var name="scaleModeGui_" val="{fixed}"/>
+      <var name="showLastVecGui_" val="{1}"/>
+      <var name="showLinesGui_" val="{-2147483647}"/>
+    </module>
+    <module category="Visualization" id="m6" name="ShowAndEditDipoles" package="BioPSE">
+      <position x="482" y="231"/>
+      <var name="widgetSizeGui_" val="{0.035}"/>
+      <var name="scaleModeGui_" val="{fixed}"/>
+      <var name="showLastVecGui_" val="{-2147483647}"/>
+      <var name="showLinesGui_" val="{-2147483647}"/>
+    </module>
+    <module category="Math" id="m7" name="SolveMinNormLeastSqSystem" package="SCIRun">
+      <position x="84" y="533"/>
+    </module>
+    <module category="Math" id="m8" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="84" y="382"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{18380}"/>
+      <var name="selectable_inc" val="{18381}"/>
+      <var name="selectable_units" val="{Units}"/>
+      <var name="range_max" val="{0}"/>
+      <var name="execmode" val="{play}"/>
+    </module>
+    <module category="Math" id="m9" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="265" y="377"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{18380}"/>
+      <var name="selectable_inc" val="{18381}"/>
+      <var name="selectable_units" val="{Units}"/>
+      <var name="range_max" val="{0}"/>
+      <var name="execmode" val="{play}"/>
+    </module>
+    <module category="Math" id="m10" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="448" y="371"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{18380}"/>
+      <var name="selectable_inc" val="{18381}"/>
+      <var name="selectable_units" val="{Units}"/>
+      <var name="range_max" val="{0}"/>
+      <var name="execmode" val="{play}"/>
+    </module>
+    <module category="Inverse" gui_visible="yes" id="m11" name="OptimizeDipole" package="BioPSE">
+      <position x="283" y="144"/>
+      <var name="ui_geometry" val="{195x50+59+54}"/>
+    </module>
+    <module category="DataIO" id="m12" name="ReadField" package="SCIRun">
+      <position x="668" y="10"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-dipole.pcv.fld"/>
+    </module>
+    <module category="DataIO" id="m13" name="ReadMatrix" package="SCIRun">
+      <position x="647" y="292"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat"/>
+    </module>
+    <module category="Math" id="m14" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="102" y="291"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{2}"/>
+      <var name="selectable_inc" val="{3}"/>
+      <var name="selectable_units" val="{Units}"/>
+      <var name="range_max" val="{0}"/>
+      <var name="execmode" val="{play}"/>
+    </module>
+    <module category="Math" id="m15" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="283" y="292"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{2}"/>
+      <var name="selectable_inc" val="{3}"/>
+      <var name="selectable_units" val="{Units}"/>
+      <var name="range_min" val="{1}"/>
+      <var name="range_max" val="{1}"/>
+      <var name="execmode" val="{play}"/>
+    </module>
+    <module category="Math" id="m16" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="466" y="293"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{2}"/>
+      <var name="selectable_inc" val="{3}"/>
+      <var name="selectable_units" val="{Units}"/>
+      <var name="range_min" val="{2}"/>
+      <var name="range_max" val="{2}"/>
+      <var name="execmode" val="{play}"/>
+    </module>
+    <module category="Visualization" id="m17" name="ShowField" package="SCIRun">
+      <position x="630" y="382"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="def-color-r" val="{0.3}"/>
+      <var name="def-color-g" val="{0.7}"/>
+      <var name="def-color-b" val="{0.3}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="node_scale" val="{0.036}"/>
+      <var name="edge_scale" val="{0.03}"/>
+      <var name="show_progress" val="{-2147483647}"/>
+    </module>
+    <module category="Math" id="m18" name="GetColumnMatrixFromMatrix" package="SCIRun">
+      <position x="683" y="455"/>
+      <var name="row_or_col" val="{col}"/>
+    </module>
+    <module category="Forward" id="m19" name="ApplyFEMCurrentSource" package="BioPSE">
+      <position x="650" y="144"/>
+    </module>
+    <module category="DataIO" id="m20" name="ReadField" package="SCIRun">
+      <position x="452" y="8"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcv.fld"/>
+    </module>
+    <module category="Visualization" id="m21" name="ShowField" package="SCIRun">
+      <position x="648" y="671"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="normalize-vectors" val="{}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="node_scale" val="{0.036}"/>
+      <var name="edge_scale" val="{0.03}"/>
+      <var name="show_progress" val="{-2147483647}"/>
+      <var name="node-resolution" val="{15}"/>
+    </module>
+    <module category="ChangeFieldData" id="m22" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
+      <position x="701" y="212"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module category="Visualization" id="m23" name="CreateStandardColorMaps" package="SCIRun">
+      <position x="852" y="515"/>
+      <var name="mapName" val="{Old Rainbow}"/>
+      <var name="minRes" val="{12}"/>
+      <var name="resolution" val="{255}"/>
+    </module>
+    <module category="Visualization" id="m24" name="RescaleColorMap" package="SCIRun">
+      <position x="852" y="577"/>
+      <var name="main_frame" val="{}"/>
+      <var name="isFixed" val="{0}"/>
+      <var name="min" val="{-0.265176}"/>
+      <var name="max" val="{1.21133}"/>
+      <var name="makeSymmetric" val="{0}"/>
+    </module>
+    <module category="Visualization" id="m25" name="ShowField" package="SCIRun">
+      <position x="416" y="671"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="nodes-as-disks" val="{1}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="vectors-on" val="{1}"/>
+      <var name="normalize-vectors" val="{0}"/>
+      <var name="has_vector_data" val="{1}"/>
+      <var name="data_display_type" val="{Disks}"/>
+      <var name="node_scale" val="{0.05}"/>
+      <var name="edge_scale" val="{0.03}"/>
+      <var name="vectors_scale" val="{0.045}"/>
+      <var name="show_progress" val="{-2147483647}"/>
+      <var name="data-resolution" val="{20}"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m26" name="ExtractIsosurface" package="SCIRun">
+      <position x="909" y="501"/>
+      <var name="isoval-min" val="{3.4244525618e-16}"/>
+      <var name="isoval-max" val="{0.999196242664}"/>
+      <var name="isoval" val="{0.03797}"/>
+      <var name="isoval-typed" val="{0.03797}"/>
+      <var name="quantity-range" val="{colormap}"/>
+      <var name="isoval-list" val="{0}"/>
+      <var name="build_trisurf" val="{0}"/>
+      <var name="active_tab" val="{MC}"/>
+      <var name="ui_geometry" val="{328x522+56+36}"/>
+    </module>
+    <module category="ChangeFieldData" id="m27" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
+      <position x="416" y="611"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module category="ChangeFieldData" id="m28" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
+      <position x="909" y="436"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module category="LeadField" id="m29" name="CalculateMisfitField" package="BioPSE">
+      <position x="927" y="373"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m11" fromport="0" id="c1" to="m14" toport="0"/>
+    <connection from="m11" fromport="0" id="c2" to="m15" toport="0"/>
+    <connection from="m11" fromport="0" id="c3" to="m16" toport="0"/>
+    <connection from="m11" fromport="1" id="c4" to="m6" toport="0"/>
+    <connection from="m11" fromport="2" id="c5" to="m17" toport="0"/>
+    <connection from="m5" fromport="1" id="c6" to="m4" toport="0"/>
+    <connection from="m1" fromport="0" id="c7" to="m19" toport="0"/>
+    <connection from="m1" fromport="0" id="c8" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c9" to="m28" toport="0"/>
+    <connection from="m12" fromport="0" id="c10" to="m5" toport="0"/>
+    <connection from="m20" fromport="0" id="c11" to="m22" toport="0"/>
+    <connection from="m20" fromport="0" id="c12" to="m27" toport="0"/>
+    <connection from="m13" fromport="0" id="c13" to="m29" toport="0"/>
+    <connection from="m13" fromport="0" id="c14" to="m8" toport="0"/>
+    <connection from="m13" fromport="0" id="c15" to="m9" toport="0"/>
+    <connection from="m13" fromport="0" id="c16" to="m10" toport="0"/>
+    <connection from="m13" fromport="0" id="c17" to="m18" toport="0"/>
+    <connection from="m2" fromport="0" id="c18" to="m11" toport="0"/>
+    <connection from="m22" fromport="0" id="c19" to="m21" toport="0"/>
+    <connection from="m27" fromport="0" id="c20" to="m25" toport="0"/>
+    <connection from="m28" fromport="0" id="c21" to="m26" toport="0"/>
+    <connection from="m8" fromport="0" id="c22" to="m7" toport="0"/>
+    <connection from="m7" fromport="1" id="c23" to="m3" toport="0"/>
+    <connection from="m23" fromport="0" id="c24" to="m24" toport="0"/>
+    <connection from="m19" fromport="1" id="c25" to="m18" toport="1"/>
+    <connection from="m29" fromport="0" id="c26" to="m28" toport="1"/>
+    <connection from="m5" fromport="0" id="c27" to="m19" toport="1"/>
+    <connection from="m6" fromport="1" id="c28" to="m4" toport="1"/>
+    <connection from="m1" fromport="0" id="c29" to="m11" toport="1"/>
+    <connection from="m22" fromport="0" id="c30" to="m24" toport="1"/>
+    <connection from="m9" fromport="0" id="c31" to="m7" toport="1"/>
+    <connection from="m14" fromport="0" id="c32" to="m8" toport="1"/>
+    <connection from="m15" fromport="0" id="c33" to="m9" toport="1"/>
+    <connection from="m16" fromport="0" id="c34" to="m10" toport="1"/>
+    <connection from="m18" fromport="0" id="c35" to="m29" toport="1"/>
+    <connection from="m18" fromport="0" id="c36" to="m22" toport="1"/>
+    <connection from="m18" fromport="0" id="c37" to="m3" toport="1"/>
+    <connection from="m7" fromport="1" id="c38" to="m27" toport="1"/>
+    <connection from="m24" fromport="0" id="c39" to="m21" toport="1"/>
+    <connection from="m24" fromport="0" id="c40" to="m25" toport="1"/>
+    <connection from="m20" fromport="0" id="c41" to="m25" toport="2"/>
+    <connection from="m3" fromport="0" id="c42" to="m11" toport="2"/>
+    <connection from="m10" fromport="0" id="c43" to="m7" toport="2"/>
+    <connection from="m17" fromport="0" id="c44" to="m4" toport="2"/>
+    <connection from="m18" fromport="0" id="c45" to="m7" toport="3"/>
+    <connection from="m7" fromport="0" id="c46" to="m11" toport="3"/>
+    <connection from="m21" fromport="0" id="c47" to="m4" toport="3"/>
+    <connection from="m25" fromport="0" id="c48" to="m4" toport="4"/>
+    <connection from="m26" fromport="1" id="c49" to="m4" toport="5"/>
+  </connections>
+</network>

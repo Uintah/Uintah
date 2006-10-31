@@ -1,0 +1,85 @@
+<definition class="FileDialog">
+  <object class="Box">
+    <var name="FileDialog::visible" overwrite="no" propagate="yes">0</var>
+    <var name="FileDialog::focus" overwrite="yes" propagate="yes">0</var>
+    <var name="visible">$FileDialog::visible</var>
+    <var name="color">#00000066</var>
+
+    <object class="GrabFocusRegion">
+      <var name="focus">$FileDialog::focus</var>
+<!--
+      <signal name="FocusRegion::focus"
+              target="FocusGrab::Grab"/>-->
+      
+      <object class="Grid" id="FileDialogGrid">
+        <var name="visible">$FileDialog::visible</var>
+        <var name="rows">2</var>
+        <var name="cols">3</var>
+        <object class="FileLoadBox">
+
+          <var name="visible">$FileDialog::visible</var>
+          <var name="row">1</var>
+          <var name="col">2</var>
+          <var name="cell-width">500</var>
+          <var name="FileLoadBox::text" propagate="yes">$FileDialog::text</var>
+          <var name="cell-height">$Animation::variable-1</var>
+          <signal name="FileLoadBox::CancelButtonPress" 
+                  target="Animation::AnimateVariableDescending">
+            <var name="varnum">1</var>
+          </signal>
+          
+          <signal name="FileLoadBox::CancelButtonPress" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FileDialog::visible</var>
+            <var name="value">0</var>
+          </signal>                   
+
+          <signal name="FileLoadBox::CancelButtonPress" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FileDialog::focus</var>
+            <var name="value">0</var>
+          </signal>                   
+          
+          <signal name="FileLoadBox::CancelButtonPress" 
+                  target="FocusGrab::Ungrab"/>
+
+          
+          <signal name="FileLoadBox::CancelButtonPress" 
+                  target="GLWindow::mark_redraw"></signal>
+          
+          
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="FileDialog::OK"/>
+
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="Animation::AnimateVariableDescending" >
+            <var name="varnum">1</var>
+          </signal>
+          
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FileDialog::visible</var>
+            <var name="value">0</var>
+          </signal>                   
+
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FileDialog::focus</var>
+            <var name="value">0</var>
+          </signal>                   
+
+
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="FocusGrab::Ungrab"/>
+
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="FileDialog::Done"></signal>
+          
+          <signal name="FileLoadBox::OKButtonPress" 
+                  target="GLWindow::mark_redraw" ></signal>
+          
+        </object>
+      </object>          
+    </object>
+  </object>
+</definition>

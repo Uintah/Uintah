@@ -1,0 +1,292 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{12 10 684 689}" creationDate="{Thu Mar 16 2006}" creationTime="{10:40:17}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <subnet category="subnet" id="m1" name="TransferFuncHisto" package="subnet">
+      <network bbox="{740 19 923 387}" creationDate="{Thu Mar 16 2006}" creationTime="{10:40:18}" geometry="{418x403+0+0}" name="{TransferFuncHisto}" version="contained">
+        <note>{}</note>
+        <modules>
+          <module category="UnuAtoM" id="m1" name="UnuHeq" package="Teem">
+            <position x="740" y="206"/>
+            <var name="bins" val="{3000}"/>
+            <var name="sbins" val="{1}"/>
+          </module>
+          <module category="UnuAtoM" id="m2" name="UnuGamma" package="Teem">
+            <position x="740" y="268"/>
+            <var name="gamma" val="{0.5}"/>
+          </module>
+          <module category="UnuNtoZ" id="m3" name="UnuQuantize" package="Teem">
+            <position x="740" y="330"/>
+            <var name="minf" val="{0.0}"/>
+            <var name="maxf" val="{8.70234}"/>
+            <var name="realmin" val="{0.0}"/>
+            <var name="realmax" val="{10.0816755295}"/>
+            <var name="nbits" val="{8}"/>
+          </module>
+          <module category="UnuAtoM" id="m4" name="UnuJhisto" package="Teem">
+            <position x="758" y="19"/>
+            <var name="bins" val="{512 256}"/>
+            <var name="mins" val="{nan nan}"/>
+            <var name="maxs" val="{nan nan}"/>
+            <var name="type" val="{nrrdTypeFloat}"/>
+          </module>
+          <module category="UnuAtoM" id="m5" name="Unu2op" package="Teem">
+            <position x="740" y="81"/>
+            <var name="operator" val="{+}"/>
+          </module>
+          <module category="UnuAtoM" id="m6" name="Unu1op" package="Teem">
+            <position x="740" y="142"/>
+            <var name="operator" val="{log}"/>
+          </module>
+        </modules>
+        <connections>
+          <connection from="m6" fromport="0" id="c1" to="m1" toport="0"/>
+          <connection from="m5" fromport="0" id="c2" to="m6" toport="0"/>
+          <connection from="m2" fromport="0" id="c3" to="m3" toport="0"/>
+          <connection from="m1" fromport="0" id="c4" to="m2" toport="0"/>
+          <connection from="m3" fromport="0" id="c5" to="Subnet" toport="0"/>
+          <connection from="Subnet" fromport="0" id="c6" to="m4" toport="1"/>
+          <connection from="m4" fromport="0" id="c7" to="m5" toport="1"/>
+          <connection from="Subnet" fromport="1" id="c8" to="m4" toport="2"/>
+        </connections>
+      </network>
+      <position x="431" y="432"/>
+    </subnet>
+    <module category="DataIO" id="m2" name="ReadNrrd" package="Teem">
+      <position x="12" y="10"/>
+      <note color="{white}" position="{e}">{Input Scalar Nrrd Volume
+}</note>
+      <var name="filename" val="scisub_datadir/volume/tooth.nhdr"/>
+    </module>
+    <module category="UnuNtoZ" id="m3" name="UnuQuantize" package="Teem">
+      <position x="12" y="345"/>
+      <note color="{white}" position="{n}">{Quantize to UChar
+(min-&gt;0, max-&gt;255)}</note>
+      <var name="minf" val="{0.0}"/>
+      <var name="maxf" val="{4095.0}"/>
+      <var name="realmin" val="{4.0}"/>
+      <var name="realmax" val="{1284.0}"/>
+      <var name="nbits" val="{8}"/>
+    </module>
+    <module category="UnuNtoZ" id="m4" name="UnuQuantize" package="Teem">
+      <position x="519" y="369"/>
+      <note color="{white}" position="{none}">{GM_UC}</note>
+      <var name="minf" val="{0.0}"/>
+      <var name="maxf" val="{255.0}"/>
+      <var name="realmin" val="{0.0}"/>
+      <var name="realmax" val="{313.601043701}"/>
+      <var name="nbits" val="{8}"/>
+    </module>
+    <module category="UnuAtoM" id="m5" name="UnuJoin" package="Teem">
+      <position x="220" y="432"/>
+      <note color="{white}" position="{none}">{NV_UC}</note>
+      <var name="dim" val="{4}"/>
+    </module>
+    <module category="UnuNtoZ" id="m6" name="UnuQuantize" package="Teem">
+      <position x="220" y="352"/>
+      <note color="{white}" position="{none}">{N_UC}</note>
+      <var name="minf" val="{0.0}"/>
+      <var name="maxf" val="{2180.43}"/>
+      <var name="realmin" val="{-280.147058824}"/>
+      <var name="realmax" val="{273.801075269}"/>
+      <var name="nbits" val="{8}"/>
+    </module>
+    <module category="Visualization" id="m7" name="ConvertNrrdsToTexture" package="SCIRun">
+      <position x="220" y="495"/>
+      <var name="vmin" val="{0.0}"/>
+      <var name="vmax" val="{1.0}"/>
+      <var name="gmin" val="{0.0}"/>
+      <var name="gmax" val="{1.0}"/>
+      <var name="is_fixed" val="{0}"/>
+      <var name="card_mem" val="{256}"/>
+      <var name="card_mem_auto" val="{1}"/>
+      <var name="is_uchar" val="{1}"/>
+    </module>
+    <module category="UnuNtoZ" id="m8" name="UnuProject" package="Teem">
+      <position x="449" y="292"/>
+      <note color="{white}" position="{n}">{Gradient Magnitude}</note>
+      <var name="measure" val="{9}"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m9" name="CreateAndEditColorMap2D" package="SCIRun">
+      <position x="413" y="496"/>
+      <var name="panx" val="{0.0}"/>
+      <var name="pany" val="{0.0}"/>
+      <var name="scale_factor" val="{1.0}"/>
+      <var name="histo" val="{0.5}"/>
+      <var name="selected_widget" val="{3}"/>
+      <var name="num-entries" val="{4}"/>
+      <var name="faux" val="{1}"/>
+      <var name="name-0" val="{Generic}"/>
+      <var name="0-color-r" val="{0.8}"/>
+      <var name="0-color-g" val="{0.17}"/>
+      <var name="0-color-b" val="{0.17}"/>
+      <var name="0-color-a" val="{1.0}"/>
+      <var name="state-0" val="{r 0 0.0429688 0.335938 0.367187 0.453125 0.427807}"/>
+      <var name="shadeType-0" val="{0}"/>
+      <var name="on-0" val="{1}"/>
+      <var name="name-1" val="{Generic}"/>
+      <var name="1-color-r" val="{0.82}"/>
+      <var name="1-color-g" val="{0.84}"/>
+      <var name="1-color-b" val="{0.33}"/>
+      <var name="1-color-a" val="{0.600000023842}"/>
+      <var name="state-1" val="{t 0.462891 0.0679688 0.554687 0.295832 0.304965}"/>
+      <var name="shadeType-1" val="{0}"/>
+      <var name="on-1" val="{1}"/>
+      <var name="ui_geometry" val="{648x681+53+18}"/>
+      <var name="name-2" val="{Generic}"/>
+      <var name="2-color-r" val="{0.38}"/>
+      <var name="2-color-g" val="{0.4}"/>
+      <var name="2-color-b" val="{1.0}"/>
+      <var name="2-color-a" val="{0.72000002861}"/>
+      <var name="state-2" val="{r 0 0.607422 0.222656 0.277344 0.300781 0.465753}"/>
+      <var name="shadeType-2" val="{1936028769}"/>
+      <var name="on-2" val="{1936028769}"/>
+      <var name="name-3" val="{Generic}"/>
+      <var name="3-color-r" val="{1.0}"/>
+      <var name="3-color-g" val="{1.0}"/>
+      <var name="3-color-b" val="{1.0}"/>
+      <var name="3-color-a" val="{0.810000002384}"/>
+      <var name="state-3" val="{r 0 0.443359 0.722656 0.367188 0.253906 0.515625}"/>
+      <var name="shadeType-3" val="{1936028769}"/>
+      <var name="on-3" val="{1936028769}"/>
+      <var name="marker" val="{end}"/>
+    </module>
+    <module category="Visualization" id="m10" name="ShowTextureVolume" package="SCIRun">
+      <position x="262" y="581"/>
+      <var name="sampling_rate_hi" val="{4.0}"/>
+      <var name="sampling_rate_lo" val="{1.0}"/>
+      <var name="gradient_min" val="{0.0}"/>
+      <var name="gradient_max" val="{0.0}"/>
+      <var name="adaptive" val="{1}"/>
+      <var name="cmap_size" val="{8}"/>
+      <var name="sw_raster" val="{1}"/>
+      <var name="render_style" val="{0}"/>
+      <var name="alpha_scale" val="{-0.554}"/>
+      <var name="interp_mode" val="{1}"/>
+      <var name="shading" val="{1}"/>
+      <var name="ambient" val="{0.5}"/>
+      <var name="diffuse" val="{0.5}"/>
+      <var name="specular" val="{0.388}"/>
+      <var name="shine" val="{24}"/>
+      <var name="light" val="{0}"/>
+      <var name="blend_res" val="{8}"/>
+      <var name="multi_level" val="{1}"/>
+      <var name="use_stencil" val="{0}"/>
+      <var name="invert_opacity" val="{0}"/>
+      <var name="num_clipping_planes" val="{2}"/>
+      <var name="show_clipping_widgets" val="{1}"/>
+      <var name="level_on" val="{}"/>
+      <var name="level_vals" val="{}"/>
+    </module>
+    <module category="Render" id="m11" name="ViewScene" package="SCIRun">
+      <position x="262" y="645"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x579+626+201"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{417.235601338}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{563.693009978}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{290.988837413}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{48.1111739144}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{49.4766298905}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{81.9254385316}"/>
+      <var name="ViewWindow_0-view-up-x" val="{-0.0486826532828}"/>
+      <var name="ViewWindow_0-view-up-y" val="{-0.345995679435}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.936972245631}"/>
+      <var name="ViewWindow_0-view-fov" val="{20.0}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{1}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0.0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+    </module>
+    <module category="UnuAtoM" id="m12" name="UnuCrop" package="Teem">
+      <position x="12" y="73"/>
+      <var name="num-axes" val="{3}"/>
+      <var name="uis" val="{3}"/>
+      <var name="maxAxis0" val="{102}"/>
+      <var name="absmaxAxis0" val="{102}"/>
+      <var name="maxAxis1" val="{93}"/>
+      <var name="absmaxAxis1" val="{93}"/>
+      <var name="maxAxis2" val="{160}"/>
+      <var name="absmaxAxis2" val="{160}"/>
+    </module>
+    <module category="UnuNtoZ" id="m13" name="UnuResample" package="Teem">
+      <position x="12" y="136"/>
+      <var name="filtertype" val="{tent}"/>
+      <var name="dim" val="{3}"/>
+      <var name="uis" val="{3}"/>
+      <var name="resampAxis0" val="{128}"/>
+      <var name="resampAxis1" val="{128}"/>
+      <var name="resampAxis2" val="{128}"/>
+    </module>
+    <module category="Misc" id="m14" name="BuildNrrdGradients" package="Teem">
+      <position x="237" y="213"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m7" fromport="0" id="c1" to="m10" toport="0"/>
+    <connection from="m10" fromport="0" id="c2" to="m11" toport="0"/>
+    <connection from="m2" fromport="0" id="c3" to="m12" toport="0"/>
+    <connection from="m14" fromport="0" id="c4" to="m8" toport="0"/>
+    <connection from="m14" fromport="0" id="c5" to="m6" toport="0"/>
+    <connection from="m12" fromport="0" id="c6" to="m13" toport="0"/>
+    <connection from="m5" fromport="0" id="c7" to="m7" toport="0"/>
+    <connection from="m8" fromport="0" id="c8" to="m4" toport="0"/>
+    <connection from="m6" fromport="0" id="c9" to="m5" toport="0"/>
+    <connection from="m13" fromport="0" id="c10" to="m1" toport="0"/>
+    <connection from="m13" fromport="0" id="c11" to="m14" toport="0"/>
+    <connection from="m13" fromport="0" id="c12" to="m3" toport="0"/>
+    <connection from="m1" fromport="0" id="c13" to="m9" toport="1"/>
+    <connection from="m8" fromport="0" id="c14" to="m1" toport="1"/>
+    <connection from="m3" fromport="0" id="c15" to="m5" toport="1"/>
+    <connection from="m4" fromport="0" id="c16" to="m7" toport="1"/>
+    <connection from="m9" fromport="0" id="c17" to="m10" toport="2"/>
+  </connections>
+</network>

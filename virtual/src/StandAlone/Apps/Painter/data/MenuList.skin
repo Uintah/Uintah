@@ -1,0 +1,28 @@
+<definition class="MenuList">
+  <object class="MenuManager::MenuList">
+    <var name="ThisMenuID" propagate="yes">$id</var>
+
+    <object class="Root::FocusRegion">
+      <var name="focus">0</var>
+      <signal name="FocusRegion::focus"
+              target="FocusGrab::Grab"/>
+
+      <signal name="FocusRegion::unfocus"
+              target="FocusGrab::Ungrab"/>
+
+      <signal name="FocusRegion::unfocus"
+              target="MenuManager::hide_MenuList">
+        <var name="id">$ThisMenuID</var>
+      </signal>
+              
+      
+      <object class="Frame">
+        <var name="invert">1</var>
+        <var name="width">2</var>
+        <var name="height">2</var>            
+        <object class="MenuList::child"/>
+      </object>
+    </object>
+  </object>
+</definition>
+  

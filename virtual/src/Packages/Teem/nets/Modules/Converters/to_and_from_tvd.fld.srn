@@ -1,0 +1,162 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{44 19 725 606}" creationDate="{Thu Mar 16 2006}" creationTime="{10:39:56}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
+      <position x="44" y="19"/>
+      <var name="filename" val="scisub_datadir/sphere/sphere-voltage.tvd.fld"/>
+    </module>
+    <module category="Converters" id="m2" name="ConvertRasterFieldToNrrd" package="Teem">
+      <position x="267" y="254"/>
+    </module>
+    <module category="Converters" id="m3" name="ConvertNrrdToRasterField" package="Teem">
+      <position x="267" y="322"/>
+    </module>
+    <module category="Render" id="m4" name="ViewScene" package="SCIRun">
+      <position x="249" y="562"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x615+53+18"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-10.709}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{3.07655}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{-3.84684}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{                0}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{                0}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{                0}"/>
+      <var name="ViewWindow_0-view-up-x" val="{-0.368639}"/>
+      <var name="ViewWindow_0-view-up-y" val="{-0.132779}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.920041}"/>
+      <var name="ViewWindow_0-view-fov" val="{1.99092}"/>
+      <var name="ViewWindow_0-view-eyep_offset-x" val="{}"/>
+      <var name="ViewWindow_0-view-eyep_offset-y" val="{}"/>
+      <var name="ViewWindow_0-view-eyep_offset-z" val="{}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{0}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
+      <var name="ViewWindow_0-inertia_y" val="{0}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{1}"/>
+      <var name="ViewWindow_0-pos" val="{}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m5" name="ShowField" package="SCIRun">
+      <position x="267" y="420"/>
+      <var name="use-transparency" val="{1}"/>
+      <var name="normalize-vectors" val="{}"/>
+      <var name="def-color-r" val="{0.19}"/>
+      <var name="def-color-g" val="{0.68}"/>
+      <var name="def-color-b" val="{0.73}"/>
+      <var name="def-color-a" val="{0.7}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="node_scale" val="{0.0103}"/>
+      <var name="edge_scale" val="{0.015}"/>
+      <var name="show_progress" val="{}"/>
+      <var name="node-resolution" val="{4}"/>
+      <var name="ui_geometry" val="{370x669+68+108}"/>
+    </module>
+    <module category="MiscField" gui_visible="yes" id="m6" name="ReportFieldInfo" package="SCIRun">
+      <position x="76" y="254"/>
+      <var name="ui_geometry" val="{464x263+65+90}"/>
+    </module>
+    <module category="MiscField" gui_visible="yes" id="m7" name="ReportFieldInfo" package="SCIRun">
+      <position x="73" y="402"/>
+      <var name="ui_geometry" val="{464x263+62+72}"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m8" name="ShowField" package="SCIRun">
+      <position x="44" y="477"/>
+      <var name="use-transparency" val="{1}"/>
+      <var name="normalize-vectors" val="{}"/>
+      <var name="def-color-r" val="{0.08}"/>
+      <var name="def-color-g" val="{0.08}"/>
+      <var name="def-color-b" val="{0.81}"/>
+      <var name="def-color-a" val="{0.5}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="node_scale" val="{0.028}"/>
+      <var name="edge_scale" val="{0.015}"/>
+      <var name="show_progress" val="{}"/>
+      <var name="node-resolution" val="{4}"/>
+      <var name="ui_geometry" val="{370x669+59+54}"/>
+    </module>
+    <module category="Visualization" gui_visible="yes" id="m9" name="CreateStandardColorMaps" package="SCIRun">
+      <position x="530" y="165"/>
+      <var name="positionList" val="{{18 19} {89 19} {227 12} {424 4} {532 2}}"/>
+      <var name="nodeList" val="{256 257 258 259 260}"/>
+      <var name="width" val="{390}"/>
+      <var name="height" val="{40}"/>
+      <var name="mapName" val="{Darkhue}"/>
+      <var name="reverse" val="{1}"/>
+      <var name="minRes" val="{19}"/>
+      <var name="resolution" val="{255}"/>
+      <var name="realres" val="{255}"/>
+      <var name="ui_geometry" val="{402x495+56+36}"/>
+    </module>
+    <module category="Visualization" id="m10" name="RescaleColorMap" package="SCIRun">
+      <position x="530" y="254"/>
+      <var name="main_frame" val="{}"/>
+      <var name="isFixed" val="{0}"/>
+      <var name="min" val="{-5.25315}"/>
+      <var name="max" val="{4.31926}"/>
+      <var name="makeSymmetric" val="{0}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m1" fromport="0" id="c1" to="m6" toport="0"/>
+    <connection from="m1" fromport="0" id="c2" to="m8" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m9" fromport="0" id="c4" to="m10" toport="0"/>
+    <connection from="m8" fromport="0" id="c5" to="m4" toport="0"/>
+    <connection from="m3" fromport="0" id="c6" to="m7" toport="0"/>
+    <connection from="m3" fromport="0" id="c7" to="m5" toport="0"/>
+    <connection from="m1" fromport="0" id="c8" to="m10" toport="1"/>
+    <connection from="m10" fromport="0" id="c9" to="m5" toport="1"/>
+    <connection from="m10" fromport="0" id="c10" to="m8" toport="1"/>
+    <connection from="m5" fromport="0" id="c11" to="m4" toport="1"/>
+    <connection from="m2" fromport="2" id="c12" to="m3" toport="2"/>
+    <connection from="m1" fromport="0" id="c13" to="m3" toport="3"/>
+  </connections>
+</network>

@@ -1,0 +1,85 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+
+# Makefile fragment for this subdirectory
+
+# *** NOTE ***
+# Do not remove or modify the comment line:
+# #[INSERT NEW ?????? HERE]
+# It is required by the module maker to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Module"
+# documentation on how to do it correctly.
+
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
+SRCDIR   := Dataflow/Modules/Math
+
+SRCS     += \
+	$(SRCDIR)/AppendMatrix.cc\
+	$(SRCDIR)/BuildNoiseColumnMatrix.cc\
+	$(SRCDIR)/CreateGeometricTransform.cc\
+	$(SRCDIR)/ConvertMatrixType.cc\
+	$(SRCDIR)/ChooseMatrix.cc\
+	$(SRCDIR)/ReportColumnMatrixMisfit.cc\
+	$(SRCDIR)/EvaluateLinAlgBinary.cc\
+	$(SRCDIR)/EvaluateLinAlgUnary.cc\
+	$(SRCDIR)/EvaluateLinAlgGeneral.cc\
+        $(SRCDIR)/ReportMatrixInfo.cc\
+        $(SRCDIR)/GetColumnMatrixFromMatrix.cc\
+        $(SRCDIR)/SolveMinNormLeastSqSystem.cc\
+	$(SRCDIR)/SolveLinearSystem.cc\
+	$(SRCDIR)/GetSubmatrix.cc\
+	$(SRCDIR)/ConvertMaskVectorToMappingMatrix.cc\
+	$(SRCDIR)/ConvertMappingMatrixToMaskVector.cc\
+	$(SRCDIR)/CreateMatrix.cc\
+#[INSERT NEW CODE FILE HERE]
+
+PSELIBS := \
+	Core/Datatypes     \
+	Core/Exceptions    \
+	Core/Geom          \
+	Core/GeomInterface \
+	Core/Geometry      \
+	Core/Containers    \
+	Dataflow/GuiInterface  \
+	Core/Math          \
+	Core/Persistent    \
+	Core/Thread        \
+	Dataflow/TkExtensions  \
+	Core/Util          \
+	Dataflow/Network   \
+	Dataflow/Widgets
+
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(PETSC_UNI_LIBRARY) $(TEEM_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+ifeq ($(LARGESOS),no)
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+endif

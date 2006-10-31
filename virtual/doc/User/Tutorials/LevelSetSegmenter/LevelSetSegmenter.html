@@ -1,0 +1,800 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<!-- 
+  This is supposed to be a valid xhtml file!
+  Please visit http://validator.w3.org after editing this file (That
+  includes *you* Ted).
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+      name="generator" />
+
+    <title>
+      LevelSetSegmenter Tutorial
+    </title>
+
+    <style type="text/css">
+      body {
+      background: #999999;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      }
+      div.body {
+      background: #CCCCCC;
+      margin-left: 8%;
+      padding-left: 2%;
+      margin-right: 8%;
+      padding-right: 2%;
+      padding-bottom: 2%;
+      padding-top: 2%;
+      }
+      caption {
+      margin-top: 1em;
+      }
+      table {
+      border-collapse: collapse;
+      margin-bottom: 1em;
+      }
+      th {
+      text-align: left;
+      }
+      th, td {
+      border: thin solid #999999;
+      padding: 2px;
+      }
+    </style>
+
+  </head>
+
+  <body>
+    <div class="body">
+      <center>
+	<img src="images/lss-banner-main.jpg" height="204" width="600"
+	  usemap="lss-banner-main" border="0" alt="Top Banner"/>
+	<map id="lss-banner-main" name="lss-banner-main">
+	  <area shape="rect" coords="405,170,497,194" href="http://www.sci.utah.edu" alt="SCI Web Site" />
+	  <area shape="rect" coords="510,172,590,193" href="http://software.sci.utah.edu"  alt="SCI Software Site" />
+	</map>
+	<br/>
+      </center>
+      <h2>
+	Contents
+      </h2>
+      <h3>
+	Sections
+      </h3>
+      <ol>
+	<li value="1">
+	  <a href="#section_1">Introduction</a>
+	</li>
+	<li value="2">
+	  <a href="#section_2">Getting Started</a> 
+	  <ol>
+	    <li value="1">
+	      <a href="#section_2_1">Launching LevelSetSegmenter</a>
+	    </li>
+	    <li value="2">
+	      <a href="#section_2_2">User Interface Organization</a>
+	    </li>
+	  </ol>
+	</li>
+	<li value="3">
+	  <a href="#section_3">Loading Data</a>
+	</li>
+	<li value="4">
+	  <a href="#section_4">Pre-Processing</a>
+	  <ol>
+	  <li><a href="#section_4_1">Cropping</a></li>
+	  <li><a href="#section_4_2">Smoothing</a></li>
+          </ol>
+	</li>
+	<li value="5">
+	  <a href="#section_5">Segmentation</a>
+	  <ol>
+		<li><a href="#section_5_1">Tuning the Speed Image</a></li>
+		<li><a href="#section_5_2">Creating the Seed Image</a></li>
+		<li><a href="#section_5_3">Segmenting the Slice</a></li>
+         </ol>
+	</li>
+	<li value="6">
+	  <a href="#section_6">Volume Rendering and Saving Results</a>
+	</li>
+      </ol>
+
+      <a name="section_1" id="section_1"/>
+      <h2>Section 1&mdash;Introduction</h2>
+
+      <p>
+      LevelSetSegmenter is a program that segments three dimensional scalar data. Users load a volume, crop it if needed, smooth it, and then segment it slice by slice using the ThresholdLevelSetSegmentationImageFilter from the <a href="http://www.itk.org/Doxygen/html/classitk_1_1ThresholdSegmentationLevelSetImageFilter.html">Insight Toolkit</a>. The resulting segmented volume can then be volume rendered using SCIRun's new volume rendering modules.
+      </p>
+
+      <a name="section_2" id="section_2"/>
+      <h2>Section 2&mdash;Getting Started</h2> 
+      <p>
+	This section demonstrates how to start LevelSetSegmenter. Subsequent
+	sections demonstrate how to load, crop, smooth, and segment data.
+      </p>
+
+      <h3>
+	<a name="section_2_1" id="section_2_1">2.1 Launching
+	  LevelSetSegmenter</a>
+      </h3> 
+      <p>
+	To launch the LevelSetSegmenter application, change the current
+	working directory (using the <b>cd</b> command) to the
+	directory containing the
+	LevelSetSegmenter executable.  
+	</p>
+      <p>
+	Type <tt>./LevelSetSegmenter</tt> to start the program.  LevelSetSegmenter takes
+	a few moments to start up, then launches a user interface window
+	shown in <a href="#figure_1">Figure 1</a>.  
+      </p> 
+
+      <a name="figure_1" id="figure_1"></a>
+      <center>
+	<a href="figures/load.gif">
+	  <img border="1"
+	    src="figures/load-small.gif" width="600" height="439" alt="Figure 1: LevelSetSegmenter
+	    Interface Window (Initial State)."/> 
+	</a>
+	<br/>
+	<b>Figure 1: LevelSetSegmenter Interface Window initial
+	  state  <br />Click on image for a larger view</b>
+      </center>
+      <br />
+      <br />
+
+      <p>
+      The LevelSetSegmenter can also be started with three optional arguments: a load file, a binary save file, and a floating point save file.  One, two, or all three of these arguments can be given but they must be in the above order.
+      </p>
+      <p>
+      The load file can be a NRRD formatted file (See the <a href="http://teem.sourceforge.net/nrrd/index.html">NRRD web site</a> for information on this data format), or a single Analyze file.  <b>NOTE:</b> The LevelSetSegmenter can also read in dicom files using the application user interface but is unable to load them in via the command line at this time.
+      </p>
+      <p>The binary and floating point save files must be in either Analyze or META format.
+      </p>
+
+      <p>
+      An example of starting the application with arguments would be to use something like the following command:
+      </p>
+      <p>
+      <tt>./LevelSetSegmenter /usr/sci/data/king_filt.hdr ~/binary.hdr ~/float.hdr</tt>
+      </p>
+
+      <h3>
+	<a name="section_2_2" id="section_2_2">2.2 User
+	  Interface Organization</a>
+      </h3>
+      <p>
+      LevelSetSegmenter's user interface, shown in <a href="#figure_1">
+      Figure 1</a>, contains two main panes.  The left pane is the Processing
+      Pane.  It guides the user through processing the data (loading, cropping,
+      smoothing, segmenting, volume rendering). 
+      </p>
+      <p>
+      The right pane is the Visualization Pane and contains four 
+      viewing windows. The top left window will contain the original
+      data, with the current seed or segmentation in red, and will be 
+      referred to as the Segmentation window.  The top
+      right window will contain the original data with the speed image
+      in red and blue as an overlay, and will further be referred to as
+      the Speed window.  The bottom left window will contain
+      a slice by slice view of the original or smoothed data, called the Slice
+      window,  and the bottom right window will contain any volume rendering images.
+      </p>
+
+      <p>
+	The panes may be "detached" from one another by clicking on the
+	pane detachment/attachment controls&mdash;these are the vertical dashed
+	lines separating the panes.  When separated, the panes appear as shown
+	in <a href="#figure_2">Figure 2</a> <a name="figure_2"
+	  id="figure_2"></a>.  Detaching the Rendering window allows it to
+	be viewed at maximum resolution.  Panes are re-attached by 
+	clicking on the pane detachment/attachment controls.
+      </p>
+
+      <center>
+	<a href="figures/panes.gif"><img border="1"
+	    src="figures/panes-small.gif" width="623" height="432" alt="Figure 2: LevelSetSegmenter
+	    Interface Window (Panel Detached From View Window)."/> 
+	</a>
+	<br/>
+	<b>Figure 2: LevelSetSegmenter Interface Window.  Detached panels.
+	  <br /> Click on image for a larger view.</b>
+      </center>
+      <br/>
+
+      <p>
+	The Processing Pane has two top-level menus: File and Help, as
+	shown in <a href="#figure_3">Figures 3</a> and <a
+	  href="#figure_4">4</a>. 
+      </p>
+
+      <p>
+	File menu items Save Session... and Load Session... allow the
+	user to stop and resume LevelSetSegmenter sessions.  After loading a
+	saved session with Load Session..., resume processing and
+	visualization by clicking Execute.
+      </p>
+
+      <p>
+	Help menu item Show Tooltips toggles tooltips. "Hovering" the
+	mouse pointer over a control
+	displays a tooltip describing a control.
+      </p>
+
+      <a name="figure_3" id="figure_3"></a>
+      <center>
+	<img border="1"
+	  src="figures/file.gif" alt="Figure 3: File Menu."/>
+	<br/>
+	<b>Figure 3: File Menu.</b>
+      </center>
+
+      <br/><br/><br/>
+
+      <a name="figure_4" id="figure_4"></a>
+      <center>
+	<img border="1"
+	  src="figures/help.gif" alt="Figure: Help Menu."/>
+	<br/>
+	<b>Figure 4: Help Menu.</b>
+      </center>
+      <br/>
+
+      <p>
+	The bottom of the Processing Pane contains a Progress
+	Indicator, a text description indicating the current
+	state of the application, and suggests the next processing
+	step.
+      </p>
+
+      <p>
+	The Progress Indicator  indicates an error if an error occurs.  Clicking
+	on the Progress Indicator displays an error log.
+      </p>
+
+      <a name="section_3" id="section_3"/>
+      <h2>
+	Section 3&mdash;Loading Data
+      </h2>
+
+      <p>
+	LevelSetSegmenter supports the NRRD, Analyze, and DICOM data 
+	formats. One option for loading data is to specify the filename 
+	as a command line argument when starting the app. 
+	</p>
+	<p>
+	When loading a NRRD file, use the Browse button to invoke a 
+	file selection dialog like the one shown in <a href="#figure_5">
+	Figure 5</a>. After selecting the desired file,
+	click the Set button in the file selection dialog.  The UI will close.
+      </p>
+
+      <a name="figure_5" id="figure_5"/>
+      <center>
+	<img border="1"
+	  src="figures/load-browse.gif" 
+	  alt="Figure: NRRD File Load Dialog."/>
+	<br/>
+	<b>Figure 5: NRRD File Load Dialog.</b>
+      </center>
+      <br/><br/>
+
+      <p>
+      To load a series of dicom files, change the Data file Format tab to 
+      Dicom and open the file dialog by pressing the Dicom Loader button. 
+      This interface allows the user to specify a directory where a series
+      of dicom files are located.  After specifying a directory, a list of
+      available series will appear in the left window, and a list of files
+      corresponding with the currently selected series appears on the right.
+      The user can click a single series or individual files and then select
+      the Add Data button.  The selected data will appear in the bottom window.
+      When the user is done loading the desired files, click Close to hide
+      the dialog.
+      </p>
+
+      <p>
+      To load an Analyze file, change the Data file Format tab to Analyze
+      and open the Analyze dialog by pressing the Analyze Loader button.
+      A dialog similar to the one shown in <a href="#figure_6">Figure 6</a>
+      will appear. 
+      Use the Browse button to browse to an Analyze file.  Click the Add
+      Data button to add the data to the list of selected data at the bottom.
+      For the LevelSetSegmenter, either load a single 3D analyze file, or
+      several 2D slice Analyze files. Click the Close button to dismiss the 
+      dialog.
+      </p>
+
+      <a name="figure_6" id="figure_6"/>
+      <center>
+	<img border="1"
+	  src="figures/analyze-load-browse.gif" 
+	  alt="Figure: Analyze File Load Dialog."/>
+	<br/>
+	<b>Figure 6: Analyze File Load Dialog.</b>
+      </center>
+      <br/><br/>
+
+      <p>
+	After selecting a 3D volume, click the Processing Pane's Load
+	button.  The volume is loaded and an image appears
+	in the Slice window as shown in <a href="#figure_7">Figure 7</a>. 
+	This image shows the 
+	original data in a slice by slice mode looking down the Z axis.  
+	The smoothing will be done on each Z slice as well as each 2D Z slice
+	will be passed to be segmented. To change which axis is processed,
+	use the radiobuttons labeled View Slices Along.
+      </p>
+      <a name="figure_7" id="figure_7"></a>
+      <center>
+	<a href="figures/data-loaded.gif">
+	  <img border="1"
+	    src="figures/data-loaded-small.gif" width="600" height="439" alt="Figure 7: LevelSetSegmenter After Loading Data"/> 
+	</a>
+	<br/>
+	<b>Figure 7: LevelSetSegmenter Interface Window after loading data  <br />Click on image for a larger view</b>
+      </center>
+      <br/>
+      <br/>
+
+      <p>
+      To scroll through the volume's slices, change the slice slider along the 
+	bottom of the Slice window or use the  '&lt;' and '&gt;' keys. 
+      </p>
+
+      <p>
+      <center>
+      <table>
+      <tr>
+      <td bgcolor="green">Control</td>
+      <td bgcolor="green">Effect</td>
+      </tr>
+      <tr>
+      <td>Keys &lt: and &gt;</td>
+      <td>Previous and next slice</td>
+      </tr>
+      <tr>
+      <td>Keys + and -</td>
+      <td>Zoom in and out</td>
+      </tr>
+      <tr>
+      <td>Arrow keys</td>
+      <td>Move slice left, right, up, down in pane</td>
+      </tr><tr>
+      <td>Mouse scroll wheel</td>
+      <td>Previous or next slice</td></tr><tr>
+      <td>Shift+mouse scroll wheel</td>
+      <td>Zoom in and out</td></tr>
+      </table>
+      <b>Table 1: Slice window controls.</b>
+      </center>
+      <br/>
+      </p>
+
+      <p>
+      Notice the Volume Statistics frame updates with information, 
+      mainly the number of samples of the loaded volume, the range of
+      data values, and a histogram of the data.  
+      </p>
+
+      <a name="section_4" id="section_4"/>
+      <h2>
+	Section 4&mdash;Pre-Processing
+      </h2> 
+      <p>
+      After loading the data, click the Next button at the bottom of
+      the Processing Pane to change to the Smooth Tab as shown in
+      <a href="#figure_8">Figure 8</a>. This tab controls all of the
+      pre-processing that can be done to the volume to prepare for 
+      segmentation.
+      </p>
+
+      <a name="figure_8" id="figure_8"></a>
+      <center>
+	<img border="1"
+	  src="figures/smooth-tab.gif"
+	  alt="Figure: Smooth Tab."/>
+	<br/>
+	<b>Figure 8: Smooth Tab.</b>
+      </center>
+      <br/><br/>
+
+      <a name="section_4_1" id="section_4_1"/>
+      <h3>
+	Section 4.1&mdash;Cropping
+      </h3> 
+
+      <p>
+        Sometimes it may be useful to crop the original data to a 
+	specific region of interest, or to crop the volume while
+	tweaking smoothing parameters to reduce the processing time.
+	By default, the volume will not be cropped.
+      </p>
+      <p>
+       To crop the volume, turn on the cropping widget by clicking the 
+       Show Crop Widget checkbox. A green box will appear over the entire
+       volume in the Slice window as shown in <a href="#figure_9">Figure 9</a>.
+       The extents of the cropping boxes present a visual indication of
+       data remaining after the application of the cropping filter.  A
+       cropping box can be resized by clicking and dragging a box's
+       corner or side.  A box can be moved by clicking and dragging its
+       interior.  
+      </p>
+
+      <a name="figure_9" id="figure_9"></a>
+      <center>
+	<img border="1"
+	  src="figures/initial-crop.jpg"
+	  alt="Figure: Initial Crop Widget State"/>
+	<br/>
+	<b>Figure 9: Initial Crop Widget State</b>
+      </center>
+      <br/><br/>
+
+      <p>
+      As the crop widget is resized, notice the values in the Processing
+      Pane change to reflect the position of the widget.  Users can
+      manually change the values using the entry boxes in the Processing
+      Pane and when hitting Enter in the box, the widget will update.
+      </p>
+      <p>
+      When the desired region has been selected, click the Crop button.
+      The new volume will appear in the Slice window as shown in 
+      <a href="#figure_10">Figure 10</a>.
+      </p>
+
+      <a name="figure_10" id="figure_10"></a>
+      <center>
+	<img border="0"
+	  src="figures/final-crop.gif"
+	  alt="Figure: Cropping Interactions"/>
+	<br/>
+	<b>Figure 10: Cropping Interactions</b>
+      </center>
+      <br/><br/>  
+
+      <a name="section_4_2" id="section_4_2"/>
+      <h3>Section 4.2&mdash;Smoothing
+      </h3>
+
+      <p>
+      Notice that once a crop has been performed, the radiobutton in the
+      Smoothing frame changes from Smooth Entire Volume, to Smooth Region
+      of Interest.  The user can continue to process the cropped volume
+      (i.e. smooth it and then segment just the cropped region), or once
+      the smoothing parameters have been determined, change the smoothing
+      radiobutton to Smooth Entire Volume.
+      </p>
+
+      <p>
+      By default, no smoothing is done to the volume.  Smoothing filters
+      currently available in the LevelSetSegmenter are the
+      <a href="http://www.itk.org/Doxygen/html/classitk_1_1GradientAnisotropicDiffusionImageFilter.html">GradientAnisotropicDiffusionImageFilter</a>,
+      <a href="http://www.itk.org/Doxygen/html/classitk_1_1CurvatureAnisotropicDiffusionImageFilter.html">CurvatureAnisotropicDiffusionImageFilter</a>,
+      and the <a href="http://www.itk.org/Doxygen/html/classitk_1_1DiscreteGaussianImageFilter.html">DiscreteGaussianImageFilter</a> 
+      from the <a href="http://www.itk.org">Insight Toolkit</a>. Use the
+      option menu to select the desired filter.  Notice that the interface
+      changes to be specific to the selected smoothing method.  
+      </p>
+
+      <p>
+      Selecting the Gaussian filter, with a variance of 10 and a Maximum 
+      Error of 0.001, and pressing the Reset button produces the resulting
+      volume as shown in <a href="#figure_11">Figure 11</a>.
+
+      <a name="figure_11" id="figure_11"></a>
+      <center>
+	<img border="0"
+	  src="figures/gaussian.gif"
+	  alt="Figure: Applying the DiscreteGaussian filter to the volume."/>
+	<br/>
+	<b>Figure 11: Applying the DiscreteGaussian filter to the volume.</b>
+      </center>
+      <br/><br/>
+
+      <p>
+      To use the
+      original volume as the input to the smoothing filter, select the Reset
+      button.  If the user has all ready done at least one smoothing pass,
+      and wants the output of the smoothing filter to be the input to 
+      another pass of smoothing, select the Go button.  The Go button allows
+      smoothing to be additive in respect to the last smoothing pass.
+      </p>
+
+      <p>
+      To make the edges even more clear, use the GradientAnistropicDiffusion
+      filter.  By selecting this filter now, with a time step of 0.0625,
+      with 10 iterations, and a conductance of 0.5, and then using the Go
+      button to feed the blurred volume into the filter, the resulting
+      volume looks like <a href="#figure_12">Figure 12</a>.
+      </p>
+
+      <a name="figure_12" id="figure_12"></a>
+      <center>
+	<img border="0"
+	  src="figures/gradient.gif"
+	  alt="Figure: Applying the GradientAnisotropicDiffusion to the blurred volume using the Go button."/>
+	<br/>
+	<b>Figure 12: Applying the GradientAnisotropicDiffusion to the blurred volume using the Go button.</b>
+      </center>
+      <br/><br/>
+
+      <p>
+      To compare the original data, with the smoothed data, toggle between
+      the Show Original and Show Smoothed radiobuttons in the Smoothing
+      frame. Click the Next button to move on to segmentation.
+      </p>
+      
+
+      <a name="section_5" id="section_5"/>
+      <h2>Section 5&mdash;Segmentation
+      </h2>
+
+      <p>
+      When first changing to the Segmentation Tab, notice that images
+      now appear in the top viewing windows.  The top left window, the
+      Segmentation window, will show the current slice, current seed, and
+      current segmentation.  The right window, the Speed window, will show
+      the Speed image which will help the user to adjust the Level Set
+      parameters for a good segmentation. The Segmentation Tab looks like
+      <a href="#figure_13">Figure 13</a>, with the main parts being the 
+      current slice, the level set parameters, the seeding method options,
+      and the segmentation controls.
+      </p>
+
+      <a name="figure_13" id="figure_13"></a>
+      <center>
+	<img border="0"
+	  src="figures/segmentation-tab.gif"
+	  alt="Figure: Segmentation Tab."/>
+	<br/>
+	<b>Figure 13: Segmentation Tab.</b>
+      </center>
+      <br/><br/>
+
+      <p>
+      At the top of the Segmentation Tab, are the current slice widgets.
+      To the left is an indicator representing the state of the current slice.
+      A red circle means that no segmentation has been committed for the 
+      current slice.  When a slice is committed, the indicator will turn
+      green meaning the segmentation shown and the segmentation in the commit
+      volume are in sync.  After committing a segmentation, if the user
+      then runs the level set segmentation process again, the indicator
+      will turn yellow meaning that the commit volume and the currently
+      viewed segmentation are out of sync. 
+      </p>
+      <p>
+      After obtaining the desired 
+      segmentation and committing it to the final volume (which will be
+      discussed later in this chapter), change the current working slice
+      by changing the Segmenting Slice value and pressing the Change Slice
+      button.
+      </p>
+
+      <a name="section_5_1" id="section_5_1"/>
+      <h3>Section 5.1&mdash;Tuning the Speed Image
+      </h3>
+
+      <p>
+      By tuning the level set paramters, and updating the Speed image,
+      users can set the level set parameters to be reasonable values
+      for their segmentation.  Try adjusting the upper and lower thresholds
+      and selecting the Update Speed Image button and notice how the Speed
+      window changes.  Areas of red show where growth will occur and areas
+      of blue show where the segmentation will shrink.  Setting the Reverse
+      Expansion Direction to on, will reverse the behavior - causing areas of
+      red to shrink and areas of blue to grow.  For more information regarding
+      the level set Equation Term Weights see the <a href="http://www.itk.org/Doxygen/html/classitk_1_1ThresholdSegmentationLevelSetImageFilter.html">
+      Level Set documentation</a>.
+      </p>
+
+      <p>
+      To pull out the region of white in our current slice, change the
+      lower and upper thresholds to 176 and 183 respectively. After
+      pressing the Update Speed Image button, the following speed image
+      will appear in the Speed window as shown in <a href="#figure_14">
+      Figure 14</a>.
+      </p>
+
+      <a name="figure_14" id="figure_14"></a>
+      <center>
+	<img border="0"
+	  src="figures/speed.gif"
+	  alt="Figure: Speed Image with lower and upper thresholds of 168 and 183."/>
+	<br/>
+	<b>Figure 14: Speed Image with lower and upper thresholds of 168 and 183.</b>
+      </center>
+      <br/><br/>
+
+      <a name="section_5_2" id="section_5_2"/>
+      <h3>Section 5.2&mdash;Creating the Seed Image
+      </h3>
+
+      <p>
+      The options for seeding the segmentation are using the previous,
+      current, or next segmentation, using a binary thresholded volume,
+      or using seed points only.  These options are found in the Initial
+      Segmentation frame. Note that users cannot use a current segmentation
+      if they haven't all ready committed one for the current slice. Also
+      note that seed points will always be used in conjunction with the
+      selected seeding method.  To remove seed points, set the number
+      of seed points to 0.
+      </p>
+
+      <p>
+      To add/subtract seed points, press the '+'/'-' buttons.  Positive
+      seeds points will add to the current seed while negative seed points
+      will subtract the region under the ring widget from the current seed.
+      Positive seed points are shown as red ring widgets while negative
+      seed points are blue widgets.  Note that as additional seed points
+      are added, they will appear overlapping eachother in the bottom 
+      left corner of the Segmentation viewer image.  Press the Shift key while
+      clicking on a seed point widget and drag the widget to the desired
+      location.  Shift click on the green indicators around a seed point
+      to resize the seed point ring.
+      </p>
+
+      <p>
+      After selecting the desired seeding method combination, click the
+      Update Initial Segmentation button to see the seed image.  For example,
+      after adding six positive seed rings, the following seed image will
+      be the result, <a href="#figure_15">Figure 15</a>.
+      </p>
+
+
+      <a name="figure_15" id="figure_15"></a>
+      <center>
+	<img border="0"
+	  src="figures/seeds.gif"
+	  alt="Figure: Six positive seed points."/>
+	<br/>
+	<b>Figure 15: Six positive seed points.</b>
+      </center>
+      <br/><br/>
+
+      <a name="section_5_3" id="section_5_3"/>
+      <h3>Section 5.3&mdash;Segmenting the Slice
+      </h3>
+
+      <p>
+      Before starting the segmentation, set the Maximum Number of Iterations
+       and the Maximum RMS Error.  Just as the smoothing section had a
+       Reset and Go button, so does the segmentation section.  Reset
+       will take the seed volume as specified in the Initial Segmentation
+       frame as the input seed, while Go will take the last segmentation 
+       pass on the current slice as the input seed.  In using Go, with
+       each pass, users can feed seeds that more closely match the desired
+       segmentation into the level set filter. After each filter iteration,
+       the Segmentation window will update with the current segmentation.
+      </p>
+
+      <p>
+      If the segmentation is taking longer and not producing the desired
+      result, users can hit the Stop button to stop the segmentation process.
+      </p>
+
+      <p>
+      After running the above six seeds with 100 iterations and a maximum
+      error of 0.02, the segmentation intermediate outputs are shown in 
+      <a href="#figure_16">Figure 16</a> in the Segmentation window.
+      </p>
+
+      <a name="figure_16" id="figure_16"></a>
+      <center>
+	<img border="0"
+	  src="figures/segmentation.gif"
+	  alt="Figure: Segmentation intermediate outputs."/>
+	<br/>
+	<b>Figure 16: Segmentation intermediate outputs.</b>
+      </center>
+      <br/><br/>
+
+      <p>
+      To commit this segmentation to the final volume, click the
+      yellow Commit button in the Segment frame.  Notice that the
+      slice indicator at the top of the tab turns to green denoting
+      that the current segmentation is in sync with what has been 
+      committed.      
+      </p>
+
+      <p>
+      To change to the next slice, increment the Segmenting Slice to
+      1 and hit the Change Slice button.  All three viewing windows
+      will change.
+      </p>
+      
+      <p>
+      Continue segmenting each slice.  The Use Previous seeding method 
+      may be most useful.  Remember to commit your segmentations for
+      each slice.
+      </p>
+
+      <a name="section_6" id="section_6"/>
+      <h2>Section 6&mdash;Volume Rendering and Saving Results
+      </h2>
+
+      <p>
+      Notice that after the first commit, the Update Volume Rendering
+      button is enabled, as well as the Save Binary and Save Float buttons.
+      For best results with volume rendering, do not press the Update
+      Volume Rendering button until all of the slices have been segmented
+      and committed. Once the entire volume has been segmented, click the
+      Update Volume Rendering button and a volume rendering will appear
+      in the Volume Rendering window in the bottom right as shown in 
+      <a href="#figure_17">Figure 17</a>. To toggle between viewing the
+      segmentation and the background, use the Show Segmentation and
+      Show Background radiobuttons respectively.
+      </p>
+
+      <a name="figure_17" id="figure_17"></a>
+      <center>
+	<img border="0"
+	  src="figures/volume-rendering.jpg"
+	  alt="Figure: Volume Rendering"/>
+	<br/>
+	<b>Figure 17: Volume Rendering</b>
+      </center>
+      <br/><br/>
+
+      <p><b>
+      Note that this tutorial is only using a volume with 5 slices.
+      </b></p>
+
+      <p>
+      There are two options for saving out results.  First is the binary
+      volume, where segmented regions contain a value of 1 and background
+      contains a value of 0.  This file should either be an analyze (.hdr) or 
+      META (.mhd or .mha) file.  To specify the filename, type it into the
+      entry or use the Browse button to navigate to it.  To resave the
+      volume, click the Save Binary button. 
+      </p>
+
+      <p>
+      The Level Set filter produces a float volume as ouput.  To save
+      this volume, do the same as saving the binary output, but use the 
+      float volume controls.
+      </p>
+
+      <p>Future versions of the LevelSetSegmenter will allow users to 
+      load in previously saved segmentations into the app and continue
+      to refine the segmentation.
+      </p>
+
+
+      <center>
+	<img src="images/footer.gif" alt="Bottom Banner"/><br />
+      </center>
+    </div>
+  </body>
+</html>

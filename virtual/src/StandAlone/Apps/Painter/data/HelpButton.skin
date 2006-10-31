@@ -1,0 +1,30 @@
+
+  <definition class="HelpButton">
+    <object class="Collection">
+      <object class="Box">
+        <var name="color">#000000</var>
+        <signal name="button_1_clicked"
+                target="Quit"/>
+
+      </object>
+      <object class="Grid">
+        <var name="rows">1</var>
+        <var name="cols">2</var>
+        
+        <var name="Button::color" propagate="yes">#44FF44FF</var>
+        <var name="Button::height" propagate="yes">35</var>
+        <var name="Button::Text::text" propagate="yes">?</var>
+        <var name="Button::Text::size" propagate="yes">43</var>
+        <var name="Button::Text::fgcolor" propagate="yes">#003300FF</var>
+        <var name="Button::Text::bgcolor" propagate="yes">#FFFFFFFF</var>
+        <object class="Button">
+          <var name="row">1</var>
+          <var name="col">2</var>
+          <var name="cell-width">45</var>
+          <signal name="Button::clicked"
+                  target="Quit"/>
+        </object>
+      </object>
+    </object>
+  </definition>
+  

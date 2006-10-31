@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{9 5 581 222}" creationDate="{Thu Mar 16 2006}" creationTime="{10:40:30}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="WriteNrrd" package="Teem">
+      <position x="9" y="165"/>
+      <var name="filename" val="/tmp/sphere.nd"/>
+    </module>
+    <module category="DataIO" id="m2" name="ReadField" package="SCIRun">
+      <position x="10" y="5"/>
+      <var name="filename" val="scisub_datadir/sphere/sphere-voltage.tvd.fld"/>
+    </module>
+    <module category="Converters" id="m3" name="ConvertRasterFieldToNrrd" package="Teem">
+      <position x="10" y="88"/>
+      <var name="label" val="{sphere}"/>
+    </module>
+    <module category="DataIO" id="m4" name="ReadNrrd" package="Teem">
+      <position x="216" y="5"/>
+      <var name="filename" val="/tmp/sphere.nd"/>
+    </module>
+    <module category="Converters" id="m5" name="ConvertNrrdToRasterField" package="Teem">
+      <position x="216" y="83"/>
+    </module>
+    <module category="MiscField" id="m6" name="ReportFieldInfo" package="SCIRun">
+      <position x="216" y="164"/>
+    </module>
+    <module category="Misc" id="m7" name="ReportNrrdInfo" package="Teem">
+      <position x="416" y="86"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m2" fromport="0" id="c1" to="m3" toport="0"/>
+    <connection from="m3" fromport="2" id="c2" to="m1" toport="0"/>
+    <connection from="m5" fromport="0" id="c3" to="m6" toport="0"/>
+    <connection from="m4" fromport="0" id="c4" to="m7" toport="0"/>
+    <connection from="m4" fromport="0" id="c5" to="m5" toport="2"/>
+    <connection from="m2" fromport="0" id="c6" to="m5" toport="3"/>
+  </connections>
+</network>

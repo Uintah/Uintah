@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <var name="program_name" propagate="yes">LeXoV</var>
+  <var name="full_program_name" propagate="yes">Beta version 0.9</var>
+
+  <var name="Painter::brush_radius" type="double" propagate="yes">5.0</var>
+  <var name="Painter::brush_softness" type="double"  propagate="yes">0.0</var>
+  <var name="Painter::brush_value" type="double" propagate="yes">256.0</var>
+
+  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations" type="int" propagate="yes">5</var>
+  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep" type="double" propagate="yes">0.0625</var>
+  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::conductanceParameter" type="double" propagate="yes">5.0</var>
+
+
+  <var name="ITKConfidenceConnectedImageFilterTool::numberOfIterations" type="int" propagate="yes">3</var>
+  <var name="ITKConfidenceConnectedImageFilterTool::multiplier" type="double" propagate="yes">2.0</var>
+  <var name="ITKConfidenceConnectedImageFilterTool::replaceValue" type="double" propagate="yes">1.0</var>
+  <var name="ITKConfidenceConnectedImageFilterTool::initialNeighborhoodRadius" type="int" propagate="yes">1</var>
+
+  <var name="ITKBinaryDilateErode::radius" propagate="yes">3</var>
+  <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
+  <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::curvatureScaling"
+       type="double" propagate="yes">1.1</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::propagationScaling"
+       type="double" propagate="yes">1.0</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::edgeWeight" 
+       type="double" propagate="yes">0.0</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::numberOfIterations" 
+       type="int" propagate="yes">5000</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::maximumRMSError" 
+       type="double" propagate="yes">0</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::reverseExpansionDirection" 
+       type="bool" propagate="yes">1</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::isoSurfaceValue" 
+       type="double" propagate="yes">0.5</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::smoothingIterations" 
+       type="int" propagate="yes">0.0</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::smoothingTimeStep" 
+       type="double" propagate="yes">0.0</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::smoothingConductance" 
+       type="double" propagate="yes">0.0</var>
+
+
+  <var name="volume_visible" propagate="yes">1</var>
+
+  <var name="Painter::crop::min::x" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::min::y" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::min::z" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::max::x" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::max::y" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::max::z" type="double" propagate="yes">0</var>
+
+
+  <var name="Resample::x" type="double" propagate="yes">100</var>
+  <var name="Resample::y" type="double" propagate="yes">100</var>
+  <var name="Resample::z" type="double" propagate="yes">100</var>
+
+  <var name="Resample::percent_x" type="double" propagate="yes">100</var>
+  <var name="Resample::precent_y" type="double" propagate="yes">100</var>
+  <var name="Resample::percent_z" type="double" propagate="yes">100</var>
+
+
+  <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
+  <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
+
+  <var name="main_color" propagate="yes">#AAAAB0FF</var>
+  <var name="main_color_dark" propagate="yes">#AAAAB080</var>
+  <var name="hilite_shadow" propagate="yes">#AAAAB080</var>
+  <var name="hilite_shadow" propagate="yes">#FFFF90FF</var>
+  <var name="grey" propagate="yes">#444444FF</var>
+  <var name="grey2" propagate="yes">#777777FF</var>
+  <var name="grey3" propagate="yes">#AAAAAAFF</var>
+  <var name="light_red" propagate="yes">#882222BB</var>
+  <var name="light_green" propagate="yes">#33993388</var>
+  <var name="light_blue" propagate="yes">#33339988</var>
+  <var name="dark_blue" propagate="yes">#444466FF</var>
+
+  <var name="button_color" propagate="yes">#BBBBFFFF</var>
+  <var name="button_color" propagate="yes">#FFFFFFFF</var>
+  <var name="main-color" propagate="yes">#EEEEEEDD</var>
+
+  <var name="grey" propagate="yes">$main-color</var>
+  <var name="grey2" propagate="yes">$main-color</var>
+  <var name="grey3" propagate="yes">$main-color</var>
+
+  <var name="clear" propagate="yes">#00000000</var>
+  <var name="black50" propagate="yes">#00000080</var>
+  <var name="black90" propagate="yes">#000000BB</var>
+  <var name="Window::borders" propagate="yes">1</var>
+  <var name="SessionLoadDialog::visible" propagate="yes">0</var>
+  <var name="SessionSaveDialog::visible" propagate="yes">0</var>
+  <var name="LayerLoadDialog::visible" propagate="yes">0</var>
+  <var name="LayerSaveDialog::visible" propagate="yes">0</var>
+  <var name="QuitDialog::visible" propagate="yes">0</var>
+
+  <xi:include href="GrabFocusRegion.skin" parse="xml"/>  
+  <xi:include href="ShadowedBox.skin" parse="xml"/>  
+  <xi:include href="Button2.skin" parse="xml"/>
+  <xi:include href="ImageButton.skin" parse="xml"/>
+  <xi:include href="ImageFrameButton.skin" parse="xml"/>
+  <xi:include href="TextCheckButton.skin" parse="xml"/>
+  <xi:include href="SliceFrame.skin" parse="xml"/>
+  <xi:include href="FrameButton.skin" parse="xml"/>
+
+  <xi:include href="StatusBar.skin" parse="xml"/>
+  <xi:include href="MenuList.skin" parse="xml"/>
+
+  <xi:include href="Shadowed3DViewer.skin" parse="xml"/>
+  <xi:include href="FileDialog.skin" parse="xml"/>  
+
+  <xi:include href="ShadowedFocusBox.skin" parse="xml"/>
+  <xi:include href="NicePainterWindow.skin" parse="xml"/>
+  <xi:include href="ShadowedPainterWindow.skin" parse="xml"/>
+
+  <xi:include href="FourView.skin" parse="xml"/>
+  <xi:include href="16View.skin" parse="xml"/>
+  <xi:include href="3DView.skin" parse="xml"/>
+  <xi:include href="Four3DView.skin" parse="xml"/>
+  <xi:include href="4X4CenterView.skin" parse="xml"/>
+
+  <xi:include href="MainWindow.skin" parse="xml"/>
+
+  <xi:include href="ThreeView.skin" parse="xml"/>
+  <xi:include href="ToolDialog.skin" parse="xml"/>
+  <xi:include href="MenuButton.skin" parse="xml"/>
+  <xi:include href="HelpButton.skin" parse="xml"/>  
+  <xi:include href="FileLoadBox.skin" parse="xml"/>
+  <xi:include href="QuitDialog.skin" parse="xml"/>
+  <xi:include href="SpinnerBox.skin" parse="xml"/>
+  <xi:include href="ExpandButton.skin" parse="xml"/>
+
+  <xi:include href="LabeledSpinnerBox.skin" parse="xml"/>
+  <xi:include href="MainToolbar.skin" parse="xml"/>
+  <xi:include href="GradientBackground.skin" parse="xml"/>
+  <xi:include href="VCRControls.skin" parse="xml"/>
+  <xi:include href="ITKThresholdDialog.skin" parse="xml"/>
+  <xi:include href="LabeledGradientBackground.skin" parse="xml"/>
+  <xi:include href="BrushToolDialog.skin" parse="xml"/>
+  <xi:include href="Tools.skin" parse="xml"/>
+  <xi:include href="ToolButtons.skin" parse="xml"/>
+  <xi:include href="Layers.skin" parse="xml"/>
+  <xi:include href="Splash.skin" parse="xml"/>
+  <xi:include href="ResampleDialog.skin" parse="xml"/>
+  <xi:include href="CropToolDialog.skin" parse="xml"/>
+  <xi:include href="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog.skin" parse="xml"/>
+  <xi:include href="ITKConfidenceConnectedImageFilterToolDialog.skin" parse="xml"/>
+  
+  
+
+  
+  <!--
+      ***** Definitions Over
+      ***** Objects Begin
+  -->
+  <object class="Root::Arithmetic">
+    <object class="Animation">
+      <var name="variable-1-seconds">0.25</var>
+      <var name="variable-1-begin">0</var>
+      <var name="variable-1-end">150</var>
+      <var name="Animation::variable-1" type="double" propagate="yes">0</var>
+      
+      <var name="variable-2-seconds">0.25</var>
+      <var name="variable-2-begin">0</var>
+      <var name="variable-2-end">150</var>      
+      <var name="Animation::variable-2" propagate="yes">0</var>
+      
+      <var name="variable-3-seconds">0.25</var>
+      <var name="variable-3-begin">0</var>
+      <var name="variable-3-end">150</var>      
+      <var name="Animation::variable-3" propagate="yes">0</var>
+
+      <var name="variable-4-seconds">0.25</var>
+      <var name="variable-4-begin">0</var>
+      <var name="variable-4-end">225</var>      
+      <var name="Animation::variable-4" propagate="yes">0</var>
+
+      <var name="variable-5-seconds">0.25</var>
+      <var name="variable-5-begin">0</var>
+      <var name="variable-5-end">225</var>      
+      <var name="Animation::variable-5" propagate="yes">0</var>
+
+      <var name="variable-6-seconds">0.25</var>
+      <var name="variable-6-begin">0</var>
+      <var name="variable-6-end">225</var>      
+      <var name="Animation::variable-6" propagate="yes">0</var>
+
+      <var name="variable-7-seconds">0.25</var>
+      <var name="variable-7-begin">0</var>
+      <var name="variable-7-end">225</var>      
+      <var name="Animation::variable-7" propagate="yes">0</var>
+
+      <var name="variable-8-seconds">0.25</var>
+      <var name="variable-8-begin">0</var>
+      <var name="variable-8-end">225</var>      
+      <var name="Animation::variable-8" propagate="yes">0</var>
+
+      <var name="variable-9-seconds">0.25</var>
+      <var name="variable-9-begin">0</var>
+      <var name="variable-9-end">225</var>      
+      <var name="Animation::variable-9" propagate="yes">0</var>
+
+      <var name="variable-10-seconds">0.25</var>
+      <var name="variable-10-begin">0</var>
+      <var name="variable-10-end">225</var>      
+      <var name="Animation::variable-10" propagate="yes">0</var>
+      
+
+      <object class="Painter">
+        <var name="clut_ww_wl" propagate="yes"/>
+        <var name="Painter::status" propagate="yes"/>
+        <var name="cursor_value" propagate="yes" type="double">0.0</var>
+
+        <object class="Root::FocusRegion">
+          <object class="Root::VisibilityGroup">
+            <var name="Painter::progress_bar_text"
+                 propagate="yes"></var>
+            <var name="Painter::progress_bar_total_width"
+                 propagate="yes">500</var>
+            <var name="Painter::progress_bar_done_width"
+                 propagate="yes">0</var>
+            
+            <var name="ToolDialog::text" 
+                 propagate="yes" 
+                 overwrite="no"></var>
+            
+            <var name="ToolDialog::button_height" 
+                 propagate="yes"
+                 overwrite="no">40</var>
+            
+            <var name="value" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            
+            <var name="clut_min_max" 
+                 propagate="yes"
+                 overwrite="no"></var>
+
+
+            
+            <var name="xyz_pos" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            
+            <var name="sca_pos" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            
+            <object class="Root::GLWindow">
+              <var name="id">$program_name</var>
+              <var name="width" type="int">1100</var>
+              <var name="height" type="int">800</var>
+              <var name="posx" type="int">120</var>
+              <var name="posy" type="int">50</var>
+              <var name="border" type="bool">$Window::borders</var>
+              <object class="MainWindow"/>
+            </object>
+            
+            
+<!--            
+            <object class="Root::GLWindow" id="Tools">
+              <var name="id">Tools</var>
+              <var name="width" type="int">255</var>
+              <var name="height" type="int">400</var>
+              <var name="posx" type="int">920</var>
+              <var name="posy" type="int">0</var>
+              <var name="border" type="bool">$Window::borders</var>
+              
+              <object class="Tools"/>
+            </object>
+
+
+            <object class="Root::GLWindow" id="Buttons">
+              <var name="id">Buttons</var>
+              <var name="width" type="int">255</var>
+              <var name="height" type="int">400</var>
+              <var name="posx" type="int">920</var>
+              <var name="posy" type="int">450</var>
+              <var name="border" type="bool">$Window::borders</var>
+              
+              <object class="ToolButtons"/>
+            </object> 
+-->
+           
+<!--
+            <object class="Root::GLWindow" id="Layers">
+              <var name="id">Layers</var>
+              <var name="width" type="int">275</var>
+              <var name="height" type="int">800</var>
+              <var name="posx" type="int">1350</var>
+              <var name="posy" type="int">0</var>
+              <var name="border" type="bool">$Window::borders</var>
+              <object class="Layers"/>
+            </object>
+    -->        
+            
+            <object class="Root::GLWindow" id="Splash">
+              <var name="id">Splash</var>
+              <var name="width" type="int">800</var>
+              <var name="height" type="int">200</var>
+              <var name="posx" type="int">300</var>
+              <var name="posy" type="int">325</var>
+              <var name="border" type="bool">1</var>
+              
+              <signal name="GLWindow::Destructor"
+                      target="Root::GLWindow_Destructor"/>
+              
+              <object class="Splash"/>
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+
+</skinner>
+
+

@@ -1,0 +1,28 @@
+<definition class="LabeledGradientBackground">
+  <object class="Collection">
+    <var name="LabeledGradientBackground::text" 
+         overwrite="no" propagate="yes">ABC123</var>  
+    <var name="LabeledGradientBackground::text_bgcolor" 
+         overwrite="no" propagate="yes">#000000FF</var>  
+    <var name="LabeledGradientBackground::text_fgcolor" 
+         overwrite="no" propagate="yes">#FFFFFFFF</var>  
+    
+    <definition class="GradientBackground::child">
+      <object class="LabeledGradientBackground::child"/>
+    </definition>
+    
+    <object class="GradientBackground"/>
+    
+    <object class="Root::Text">
+      <var name="text">$LabeledGradientBackground::text</var>  
+      <var name="fgcolor">$LabeledGradientBackground::text_fgcolor</var>  
+      <var name="bgcolor">$LabeledGradientBackground::text_bgcolor</var>  
+      <var name="size">30</var>  
+      <var name="anchor">S</var>
+      <var name="shadow" >1</var>
+      <var name="offsetx" >-5</var>
+      <var name="offsety" >5</var>
+      
+    </object>
+  </object>
+</definition>
