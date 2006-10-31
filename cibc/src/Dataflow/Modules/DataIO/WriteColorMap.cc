@@ -67,7 +67,7 @@ DECLARE_MAKER(WriteColorMap)
 WriteColorMap::WriteColorMap(GuiContext* ctx)
   : GenericWriter<ColorMapHandle>("WriteColorMap", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
-    gui_exporttype_(get_ctx()->subVar("exporttype"), "Binary")
+    gui_exporttype_(get_ctx()->subVar("exporttype"), "")
 {
   ColorMapIEPluginManager mgr;
   vector<string> exporters;
@@ -130,7 +130,8 @@ WriteColorMap::execute()
 
   exporting_ = !(ft == "" ||
 		 ft == "SCIRun ColorMap Binary" ||
-		 ft == "SCIRun ColorMap ASCII");
+		 ft == "SCIRun ColorMap ASCII" ||
+                 ft == "Binary");
 
   // Determine if we're ASCII or Binary
   string ab = "Binary";

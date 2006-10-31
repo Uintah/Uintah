@@ -68,7 +68,7 @@ DECLARE_MAKER(WriteMatrix)
 WriteMatrix::WriteMatrix(GuiContext* ctx)
   : GenericWriter<MatrixHandle>("WriteMatrix", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
-    gui_exporttype_(get_ctx()->subVar("exporttype"), "Binary"),
+    gui_exporttype_(get_ctx()->subVar("exporttype"), ""),
     split_(get_ctx()->subVar("split"), 0)
 {
   MatrixIEPluginManager mgr;
@@ -131,7 +131,8 @@ WriteMatrix::execute()
 
   exporting_ = !(ft == "" ||
 		 ft == "SCIRun Matrix Binary" ||
-		 ft == "SCIRun Matrix ASCII");
+		 ft == "SCIRun Matrix ASCII" ||
+                 ft == "Binary");
 
   // Determine if we're ASCII or Binary
   string ab = "Binary";

@@ -78,7 +78,7 @@ DECLARE_MAKER(WriteField)
 WriteField::WriteField(GuiContext* ctx)
   : GenericWriter<FieldHandle>("WriteField", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
-    gui_exporttype_(get_ctx()->subVar("exporttype"), "Binary"),
+    gui_exporttype_(get_ctx()->subVar("exporttype"), ""),
     gui_increment_(get_ctx()->subVar("increment"), 0),
     gui_current_(get_ctx()->subVar("current"), 0)
 {
@@ -140,7 +140,8 @@ WriteField::execute()
 
   exporting_ = !(ft == "" ||
 		 ft == "SCIRun Field Binary" ||
-		 ft == "SCIRun Field ASCII");
+		 ft == "SCIRun Field ASCII" ||
+                 ft == "Binary");
 
   // Determine if we're ASCII or Binary
   string ab = "Binary";
