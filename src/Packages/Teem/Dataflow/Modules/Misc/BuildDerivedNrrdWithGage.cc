@@ -30,10 +30,10 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class MiscProbe : public Module {
+class BuildDerivedNrrdWithGage : public Module {
 public:
-  MiscProbe(SCIRun::GuiContext *ctx);
-  virtual ~MiscProbe();
+  BuildDerivedNrrdWithGage(SCIRun::GuiContext *ctx);
+  virtual ~BuildDerivedNrrdWithGage();
   virtual void execute();
 
 private:
@@ -59,9 +59,9 @@ private:
   GuiString ddNumParm3_;
 }; 
   
-DECLARE_MAKER(MiscProbe)
-MiscProbe::MiscProbe(SCIRun::GuiContext *ctx)
-  : Module("MiscProbe", ctx, Source, "Misc", "Teem"),
+DECLARE_MAKER(BuildDerivedNrrdWithGage)
+BuildDerivedNrrdWithGage::BuildDerivedNrrdWithGage(SCIRun::GuiContext *ctx)
+  : Module("BuildDerivedNrrdWithGage", ctx, Source, "Misc", "Teem"),
   field_kind_(get_ctx()->subVar("field_kind_")),
   otype_(get_ctx()->subVar("otype_")),
   quantity_(get_ctx()->subVar("quantity_")),
@@ -88,13 +88,13 @@ MiscProbe::MiscProbe(SCIRun::GuiContext *ctx)
 }
 
 
-MiscProbe::~MiscProbe()
+BuildDerivedNrrdWithGage::~BuildDerivedNrrdWithGage()
 {
 }
 
 
 void
-MiscProbe::execute()
+BuildDerivedNrrdWithGage::execute()
 {
   update_state(NeedData);
 
@@ -356,7 +356,7 @@ MiscProbe::execute()
 
 
 void
-MiscProbe::setMiscKind(gageKind *& kind, gageKind *newkind)
+BuildDerivedNrrdWithGage::setMiscKind(gageKind *& kind, gageKind *newkind)
 {
   kind = newkind;
 }

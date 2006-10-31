@@ -1,7 +1,7 @@
-itcl_class Teem_Misc_MiscProbe {
+itcl_class Teem_Misc_BuildDerivedNrrdWithGage {
     inherit Module
     constructor {config} {
-        set name MiscProbe
+        set name BuildDerivedNrrdWithGage
         set_defaults
     }
     

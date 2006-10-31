@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="MiscProbe" category="Misc">
+<component name="BuildDerivedNrrdWithGage" category="Misc">
   <overview>
     <authors>
       <author>Anastasia Mironova</author>
