@@ -168,6 +168,8 @@ public:
   bool isRegridTimestep() { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
+  bool isLockstepAMR() { return d_lockstepAMR; }
+
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 
@@ -176,6 +178,7 @@ public:
 
   SimulationTime* d_simTime;
 
+  bool d_lockstepAMR;
 private:
 
   void registerMaterial(Material*);

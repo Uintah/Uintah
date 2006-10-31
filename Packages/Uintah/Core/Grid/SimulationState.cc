@@ -63,6 +63,11 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     }
   }
 
+  d_lockstepAMR = false;
+  ProblemSpecP amr = ps->findBlock("AMR");
+  if (amr)
+    amr->get("useLockStep", d_lockstepAMR);
+
   all_mpm_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;

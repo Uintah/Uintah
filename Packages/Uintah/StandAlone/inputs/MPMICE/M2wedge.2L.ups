@@ -156,7 +156,7 @@
         <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>
         <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
       </Regridder>
-      <time_refinement_ratio>    1 </time_refinement_ratio>
+      <useLockStep>       true  </useLockStep>
     </AMR>
     <MPM>
       <time_integrator>explicit</time_integrator>

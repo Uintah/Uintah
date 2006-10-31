@@ -36,8 +36,6 @@ Grid::Grid()
   ares_ = 0;
   bres_ = 0;
   cres_ = 0;
-
-  d_lockstepAMRGrid = false;
 }
 
 Grid::~Grid()

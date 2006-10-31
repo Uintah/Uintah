@@ -261,8 +261,7 @@ void TransIsoHyper::computeStableTimestep(const Patch* patch,
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
-              lb->delTLabel);
+  new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
 Vector TransIsoHyper::getInitialFiberDir()
@@ -542,8 +541,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)),
-                lb->delTLabel);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     delete interpolator;
   }
@@ -586,8 +584,7 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
       pstretch[idx] = 1.0;
       pfail[idx] = 0.0;
     }
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
-                lb->delTLabel);
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

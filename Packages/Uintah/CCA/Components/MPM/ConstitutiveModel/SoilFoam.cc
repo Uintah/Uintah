@@ -262,11 +262,9 @@ void SoilFoam::computeStableTimestep(const Patch* patch,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     if(delT_new < 1.e-12)
-      // don't use adjustDelt here because of DBL_MAX
-      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
+      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel, patch->getLevel());
     else
-      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
-                  lb->delTLabel);
+      new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
 void SoilFoam::computeStressTensor(const PatchSubset* patches,
@@ -474,8 +472,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
-                lb->delTLabel);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
 
     delete interpolator;
@@ -512,8 +509,7 @@ void SoilFoam::carryForward(const PatchSubset* patches,
       p_sv_min_new[idx] = p_sv_min[idx];
     }*/
 
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
-                lb->delTLabel);
+    new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

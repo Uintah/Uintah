@@ -264,8 +264,9 @@ OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
 {
   d_lock.readLock();
   
-   if( d_varDB.exists(label, matlIndex, patch) ||
-       d_levelDB.exists(label, matlIndex, patch->getLevel()) ) {
+  // level-independent reduction vars can be stored with a null level
+   if( (patch && d_varDB.exists(label, matlIndex, patch)) ||
+       d_levelDB.exists(label, matlIndex, patch?patch->getLevel():0) ) {
 
      d_lock.readUnlock();
      return true;

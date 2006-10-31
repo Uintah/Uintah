@@ -1212,7 +1212,6 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       vector<vector<int> > procOnLevel(numLevels);
 
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
-      gridElem->appendElement("lockstep", grid->isLockstep());
       gridElem->appendElement("numLevels", numLevels);
       for(int l = 0;l<numLevels;l++){
         LevelP level = grid->getLevel(l);
