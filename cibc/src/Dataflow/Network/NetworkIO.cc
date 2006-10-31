@@ -260,8 +260,10 @@ NetworkIO::gui_set_module_note(const string &mod_id, const string &pos,
   string mod = get_mod_id(mod_id);
   string cmmd = "set Notes(" + mod + ") " + note;
   gui->eval(cmmd);
-  cmmd = "set Notes(" + mod + "-Position) " + pos;
-  gui->eval(cmmd);
+  if (pos.size()) {
+    cmmd = "set Notes(" + mod + "-Position) " + pos;
+    gui->eval(cmmd);
+  }
   if (col.size()) {
     cmmd = "set Notes(" + mod + "-Color) " + col;
     gui->eval(cmmd);
@@ -278,10 +280,14 @@ NetworkIO::gui_set_connection_note(const string &con_id, const string &pos,
   string con = cmap[con_id];
   string cmmd = "set Notes(" + con + ") " + note;
   gui->eval(cmmd);
-  cmmd = "set Notes(" + con + "-Position) " + pos;
-  gui->eval(cmmd);
-  cmmd = "set Notes(" + con + "-Color) " + col;
-  gui->eval(cmmd);
+  if (pos.size()) {
+    cmmd = "set Notes(" + con + "-Position) " + pos;
+    gui->eval(cmmd);
+  }
+  if (col.size()) {
+    cmmd = "set Notes(" + con + "-Color) " + col;
+    gui->eval(cmmd);
+  }
 }
 
 void 
