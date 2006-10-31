@@ -260,8 +260,10 @@ NetworkIO::gui_set_module_note(const string &mod_id, const string &pos,
   gui->eval(cmmd);
   cmmd = "set Notes(" + mod + "-Position) " + pos;
   gui->eval(cmmd);
-  cmmd = "set Notes(" + mod + "-Color) " + col;
-  gui->eval(cmmd);
+  if (col.size()) {
+    cmmd = "set Notes(" + mod + "-Color) " + col;
+    gui->eval(cmmd);
+  }
 }
 
 void 
