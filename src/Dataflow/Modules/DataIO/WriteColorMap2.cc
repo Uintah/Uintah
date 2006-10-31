@@ -67,7 +67,7 @@ DECLARE_MAKER(WriteColorMap2)
 WriteColorMap2::WriteColorMap2(GuiContext* ctx)
   : GenericWriter<ColorMap2Handle>("WriteColorMap2", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
-    gui_exporttype_(get_ctx()->subVar("exporttype"))
+    gui_exporttype_(get_ctx()->subVar("exporttype"), "")
 {
   string exporttypes = "{";
   exporttypes += "{{SCIRun ColorMap2 Binary} {.cmap} } ";
