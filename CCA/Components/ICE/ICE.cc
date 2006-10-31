@@ -2826,9 +2826,6 @@ template<class T> void ICE::computeVelFace(int dir,
     IntVector L = R + adj_offset; 
 
     double rho_FC = rho_CC[L] + rho_CC[R];
-    if (rho_FC <= 0) {
-      cout << d_myworld->myrank() << " L: " << L << rho_CC[L] << " R: " << R << rho_CC[R] << endl;
-    }
     ASSERT(rho_FC > 0.0);
     //__________________________________
     // interpolation to the face
