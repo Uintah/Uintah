@@ -413,6 +413,11 @@ Painter::LoadVolume(event_handle_t event) {
 
   volumes_.push_back(volume);
   current_volume_ = volume;
+
+  for (int i = 0; i < windows_.size(); ++ i) {
+    windows_[i]->center_ = volume->center();
+  }
+
   extract_all_window_slices();
   rebuild_layer_buttons();
   redraw_all();
@@ -904,6 +909,11 @@ Painter::LoadSession(event_handle_t event) {
   
   SessionReader reader(this);
   if (reader.load_session(filename)) {
+    if (current_volume_) 
+      for (int i = 0; i < windows_.size(); ++ i) {
+        windows_[i]->center_ = current_volume_->center();
+      }
+
     status_ =  "Successfully loaded sesion: "+filename;
   } else {
     status_ =  "Error loading session "+filename;

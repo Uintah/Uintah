@@ -121,18 +121,14 @@ ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
 void
 ITKThresholdSegmentationLevelSetImageFilterTool::finish()
 {
+  painter_->volume_lock_.lock();
   NrrdVolume *vol = painter_->current_volume_;
 
-
-  NrrdDataHandle uint_bit_nrrdh  = seed_volume_->extract_label_as_bit();
-  NrrdDataHandle seed_nrrdh = new NrrdData();
-  nrrdConvert(seed_nrrdh->nrrd_, uint_bit_nrrdh->nrrd_, nrrdTypeFloat);
-  uint_bit_nrrdh = 0;
   string newname = 
     painter_->unique_layer_name(vol->name_+" ITK Threshold Result");
-
-  NrrdVolume *new_layer = new NrrdVolume(painter_, newname, seed_nrrdh);
-
+  NrrdDataHandle extracted_nrrd = seed_volume_->extract_bit_as_float(1000.0);
+  NrrdVolume *new_layer = new NrrdVolume(painter_, newname, extracted_nrrd);
+  
   new_layer->colormap_ = 1;
   new_layer->data_min_ = -4.0;
   new_layer->data_max_ = 4.0;
@@ -143,16 +139,17 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
   painter_->rebuild_layer_buttons();
   painter_->extract_all_window_slices();
   
-
-
   pair<double, double> mean = painter_->compute_mean_and_deviation
-    (vol->nrrd_handle_->nrrd_, seed_nrrdh->nrrd_);
+    (painter_->current_volume_->nrrd_handle_->nrrd_, 
+     new_layer->nrrd_handle_->nrrd_);
+  painter_->volume_lock_.unlock();
 
   double factor = 2.5;
   double min = mean.first - factor*mean.second;
   double max = mean.first + factor*mean.second;
   painter_->status_ = 
-    ("Threshold min: " + to_string(min) + " Threshold max: " + to_string(max));
+    ("Threshold min: "+to_string(min)+" Threshold max: "+to_string(max));
+
 
   filter_ = FilterType::New();
   filter_->SetLowerThreshold(min);
@@ -160,14 +157,13 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
   
   set_vars();
 
-  ITKImageFloat3D *imgp = 
-    dynamic_cast<ITKImageFloat3D *>(vol->get_itk_image()->data_.GetPointer());
-  ASSERT(imgp);
-  filter_->SetFeatureImage(imgp);
+  filter_->SetFeatureImage
+    (dynamic_cast<ITKImageFloat3D *>
+     (painter_->current_volume_->get_itk_image()->data_.GetPointer()));
 
   painter_->filter_volume_ = new_layer;
-  painter_->filter_update_img_ = new_layer->get_itk_image();
-  painter_->do_itk_filter<ITKImageFloat3D>(filter_, seed_nrrdh);
+
+  painter_->do_itk_filter<ITKImageFloat3D>(filter_, new_layer->nrrd_handle_);
 
   painter_->extract_all_window_slices();
   painter_->redraw_all();

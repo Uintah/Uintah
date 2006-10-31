@@ -755,13 +755,6 @@ SliceWindow::render_slices()
     NrrdVolumes volumes;
     painter_->build_volume_list(volumes);
 
-    if (slices_.size() != volumes.size()) {
-      for (unsigned int i = 0; i < volumes.size(); ++i) {
-        if (volumes[i] == painter_->current_volume_) {
-          center_ = painter_->current_volume_->center();
-        }
-      }
-    }
     
     slices_.clear();
     double offset = 0.0;

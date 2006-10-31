@@ -92,28 +92,27 @@ NrrdVolume::~NrrdVolume() {
 
 
 
-int
+unsigned int
 nrrd_type_size(Nrrd *nrrd)
 {
-  int val = 0;
   switch (nrrd->type) {
-  case nrrdTypeChar: val = sizeof(char); break;
-  case nrrdTypeUChar: val = sizeof(unsigned char); break;
-  case nrrdTypeShort: val = sizeof(short); break;
-  case nrrdTypeUShort: val = sizeof(unsigned short); break;
-  case nrrdTypeInt: val = sizeof(int); break;
-  case nrrdTypeUInt: val = sizeof(unsigned int); break;
-  case nrrdTypeLLong: val = sizeof(signed long long); break;
-  case nrrdTypeULLong: val = sizeof(unsigned long long); break;
-  case nrrdTypeFloat: val = sizeof(float); break;
-  case nrrdTypeDouble: val = sizeof(double); break;
-  default: throw "Unsupported data type: "+to_string(nrrd->type);
+  case nrrdTypeChar: return sizeof(char); break;
+  case nrrdTypeUChar: return sizeof(unsigned char); break;
+  case nrrdTypeShort: return sizeof(short); break;
+  case nrrdTypeUShort: return sizeof(unsigned short); break;
+  case nrrdTypeInt: return sizeof(int); break;
+  case nrrdTypeUInt: return sizeof(unsigned int); break;
+  case nrrdTypeLLong: return sizeof(signed long long); break;
+  case nrrdTypeULLong: return sizeof(unsigned long long); break;
+  case nrrdTypeFloat: return sizeof(float); break;
+  case nrrdTypeDouble: return sizeof(double); break;
+  default: throw "Unsupported data type: "+to_string(nrrd->type); break;
   }
-  return val;
+  return 0;
 }
 
 
-int
+unsigned int
 nrrd_size(Nrrd *nrrd)
 {
   if (!nrrd->dim) return 0;
@@ -124,7 +123,7 @@ nrrd_size(Nrrd *nrrd)
 }
 
 
-int
+unsigned int
 nrrd_data_size(Nrrd *nrrd)
 {
   return nrrd_size(nrrd) * nrrd_type_size(nrrd);
@@ -147,6 +146,7 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
   clut_max_(copy->clut_max_),
   data_min_(copy->data_min_),
   data_max_(copy->data_max_),
+  label_(copy->label_),
   colormap_(copy->colormap_),
   stub_axes_(copy->stub_axes_),
   transform_(),
@@ -673,6 +673,7 @@ NrrdVolume::create_float_nrrd_from_label()
 
 VolumeSliceHandle
 NrrdVolume::get_volume_slice(const Plane &plane) {
+  //  return new VolumeSlice(this, plane);
   NrrdVolume *parent = this;
   VolumeSlices_t::iterator siter = parent->all_slices_.begin();
   VolumeSlices_t::iterator send = parent->all_slices_.end();  
@@ -717,7 +718,7 @@ NrrdVolume::purge_unused_slices()
 ColorMapHandle
 NrrdVolume::get_colormap() {
   if (!colormap_ && label_) 
-    return ColorMap::create_pseudo_random(5);
+    return ColorMap::create_rainbow(20.0);
 
   return painter_->get_colormap(colormap_);
 }    
@@ -763,6 +764,32 @@ NrrdVolume::extract_label_as_bit()
   }
 
   return newnrrdh;
+}
+
+
+
+NrrdDataHandle
+NrrdVolume::extract_bit_as_float(float value) {
+  NrrdDataHandle nrrdh = new NrrdData();
+  Nrrd *dst = nrrdh->nrrd_;
+  Nrrd *src = nrrd_handle_->nrrd_;
+  
+  nrrdBasicInfoCopy(dst, src, 0);
+  nrrdAxisInfoCopy(dst, src, 0, 0);
+
+  unsigned int num = nrrd_size(src);
+
+  float *dstdata = new float[num];  
+  dst->data = dstdata;
+  dst->type = nrrdTypeFloat;
+
+  unsigned int *srcdata = (unsigned int *)(src->data);
+  unsigned int mask = label_;
+  for (unsigned int i = 0; i < num; ++i) {
+    dstdata[i] = (srcdata[i] & mask) ? value : 0.0f;
+  }
+
+  return nrrdh;
 }
 
 }
