@@ -81,10 +81,6 @@ BuildDerivedNrrdWithGage::BuildDerivedNrrdWithGage(SCIRun::GuiContext *ctx)
   ddNumParm2_(get_ctx()->subVar("ddNumParm2_")),
   ddNumParm3_(get_ctx()->subVar("ddNumParm3_"))
 {
-  string result;
-  string input = "{Scalar Vector}";
-  get_gui()->eval(get_id() + " set_list " + input, result);
-  printf("result is %s\n", result.c_str());
 }
 
 
