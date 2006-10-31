@@ -442,7 +442,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   }
 
   vector<PatchInfo> allParticles(numPatches, PatchInfo(0,0,0));
-  if (d_collectParticles && (d_processorAssignment.size() != 0))
+  if (d_collectParticles && (d_processorAssignment.size() != 0) && d_scheduler->get_dw(0) != 0)
     collectParticles(grid, allParticles);
   else {
     for (int i = 0; i < numPatches; i++) {

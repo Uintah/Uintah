@@ -781,8 +781,6 @@ void AMRSimulationController::coarsenDelt(const ProcessorGroup*,
       new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
       delt = deltvar;
       new_dw->put(delt_vartype(delt*multiplier), d_sharedState->get_delt_label());
-      if (d_myworld->myrank() == 0)
-        cout << " DELT: L " << i << " got " << delt << " put " << delt*multiplier << endl;
     }
   }
     
