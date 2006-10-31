@@ -8,7 +8,6 @@ itcl_class Teem_Misc_BuildDerivedNrrdWithGage {
     method set_defaults {} {
 	    
 	    global $this-field_kind_
-	    global $this-field_kind_list
 	    global $this-otype_
 	    global $this-quantity_
 	    global $this-valuesType_
@@ -29,7 +28,6 @@ itcl_class Teem_Misc_BuildDerivedNrrdWithGage {
 	    global $this-quantityDescListScl_
 	    
 	    set $this-field_kind_ "Scalar"
-	    set $this-field_kind_list ""
 	    set $this-otype_ "double"
 	    set $this-quantity_ "value"
 	    set $this-valuesType_ "cubic"
@@ -348,15 +346,6 @@ itcl_class Teem_Misc_BuildDerivedNrrdWithGage {
 	}
     }
 
-    method set_list { list } {
-	global $list
-        set w .ui[modname]
-
-	global $this-field_kind_list
-	set $this-field_kind_list $list
-	puts "got this: [set $this-field_kind_list]"
-    }
-    
     #update the variable associated with the value of the measure(quantity) menu
     method update_quantity_menu {} {
 	global $this-quantity_
@@ -443,7 +432,6 @@ itcl_class Teem_Misc_BuildDerivedNrrdWithGage {
 	pack $w.f -padx 2 -pady 2 -side top -expand yes
 	
 	global $this-field_kind_
-	global $this-field_kind_list
 	global $this-otype_
 	
 	#frame describing the field kind
