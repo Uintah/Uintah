@@ -65,7 +65,6 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   ice_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
   ice_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
   ice_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
-  ice_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
   ice_ps->getWithDefault( "orderOf_CFI_Interpolation",   
                            d_orderOf_CFI_Interpolation, d_orderOfInterpolation);
 
@@ -159,7 +158,8 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   sched->overrideVariableBehavior("gamma",        true, true, false);
   sched->overrideVariableBehavior("vol_frac_CC",  true, true, false);
   sched->overrideVariableBehavior("sp_vol_CC",    false, true, false);
-  sched->overrideVariableBehavior("temp_CC",      false, true, false);
+  if (d_with_mpm)
+    sched->overrideVariableBehavior("temp_CC",      true, true, false);
 
   //We need these variables from OldDW to use between tasks, but do not
   // schedule datacopy
