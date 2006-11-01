@@ -37,6 +37,7 @@
 #include <Core/Events/keysyms.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Geom/TextRenderer.h>
 #include <Core/Containers/StringUtil.h>
 
@@ -77,7 +78,7 @@ namespace SCIRun {
         int code = key->get_keyval();
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
-
+        cursor_position_ = Clamp(cursor_position_,0, str.length());
         if (code == SCIRun_Return) {
           throw_signal("TextEntry::enter");
         } else if (code == SCIRun_Tab) {
@@ -97,12 +98,10 @@ namespace SCIRun {
         }
         
         if (character.length()) {
-          string temp = str;
-          temp.insert(cursor_position_, character);
           if (numeric_) {
+            double val;
             string temp = str;
             temp.insert(cursor_position_, character);
-            double val;
             if (string_to_double(temp, val)) {
               str = temp;
               cursor_position_++;
@@ -112,6 +111,7 @@ namespace SCIRun {
             cursor_position_++;
           }
         }
+
         renderer_->set_cursor_position(cursor_position_);
         get_vars()->set_by_string("text", str);
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
