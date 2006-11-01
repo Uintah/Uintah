@@ -505,6 +505,11 @@ ENDIF(TEEM_LIBRARY)
 
 # sci_defs/compile_defs.h
 # DV Not needed eventually?
+
+# Set Make for MAKE_COMMAND in compile_defs.h
+# DV Fix Make sure this works for win
+SET(MAKE ${CMAKE_BUILD_TOOL})
+
 IF(WIN32 AND NOT CYGWIN)
   SET (PATH_TO_VC "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7" CACHE PATH "Path to Visual Studio")
   SET (PATH_TO_PSDK "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7/PlatformSDK" CACHE PATH "Path to PSDK")
