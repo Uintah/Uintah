@@ -80,7 +80,7 @@ Transform::Transform(const Transform& copy)
 
 Transform::Transform(const Point& p, const Vector& i, 
                      const Vector& j, const Vector& k){
-  load_frame(p, i, j, k);
+  load_basis(p, i, j, k);
 }
 
 Transform::~Transform()
@@ -94,7 +94,7 @@ Transform::load_basis(const Point &p,
                       const Vector &z)
 {
   load_frame(p,x,y,z);
-  post_translate(-(p.asVector()));
+  pre_translate(p.asVector());
   compute_imat();
 }
 

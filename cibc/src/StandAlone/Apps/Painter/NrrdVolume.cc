@@ -247,6 +247,7 @@ NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
   }
 #endif
   build_index_to_world_matrix();
+  dirty_ = true;
   mutex_->unlock();
   reset_data_range();
 
