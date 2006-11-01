@@ -406,7 +406,8 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   filter->SetDilateValue(get_vars()->get_double(name+"::dilateValue"));
 
   NrrdVolume *vol = current_volume_;
-  do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
+  vol->nrrd_handle_ = 
+    do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
   redraw_all();
 #endif
   return CONTINUE_E;
@@ -477,8 +478,8 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
   volumes_.push_back(vol);
 
-  do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
-  do_itk_filter<FilterType2>(filter2, vol->nrrd_handle_);
+  vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
+  vol->nrrd_handle_ = do_itk_filter<FilterType2>(filter2, vol->nrrd_handle_);
 
   set_all_slices_tex_dirty();
   redraw_all();
@@ -505,13 +506,14 @@ Painter::ITKGradientMagnitude(event_handle_t) {
 
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
   volumes_.push_back(vol);
-
-  do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
+  current_volume_ = vol;
+  rebuild_layer_buttons();
+  filter_volume_ = vol;
+  vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
   vol->reset_data_range();
  
-  current_volume_ = vol;
-  
-  set_all_slices_tex_dirty();
+  vol->dirty_ = true;
+  extract_all_window_slices();
   redraw_all();
 #endif
   return CONTINUE_E;
@@ -541,13 +543,19 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   filter->SetConductanceParameter
     (get_vars()->get_double(prefix+"conductanceParameter"));
 
-  NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
+  name = unique_layer_name(name);
+  NrrdDataHandle nrrdh = current_volume_->nrrd_handle_;
+  nrrdh.detach();
+  NrrdVolume *vol = new NrrdVolume(this, name, nrrdh);
   volumes_.push_back(vol);
-  
-  do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
-  
   current_volume_ = vol;
-  set_all_slices_tex_dirty();
+  filter_volume_ = vol;
+  rebuild_layer_buttons();
+  
+  vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, current_volume_->nrrd_handle_);
+  
+  vol->dirty_;
+  extract_all_window_slices();
   redraw_all();
   return CONTINUE_E;
 #endif
