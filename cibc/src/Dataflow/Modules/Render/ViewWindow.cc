@@ -915,7 +915,7 @@ ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       y_axis.normalize();
       eye_dist_ = z_axis.normalize();
 
-      prev_trans_.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+      prev_trans_.load_frame(x_axis, y_axis, z_axis);
 
       ball_->Init();
       ball_->Place(center,rad);
@@ -1089,7 +1089,7 @@ ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       y_axis.normalize();
       tmpview.up(y_axis); // having this correct could fix something?
 
-      prev_trans_.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+      prev_trans_.load_frame(x_axis, y_axis, z_axis);
 
       ball_->Init();
       ball_->Place(center,rad);

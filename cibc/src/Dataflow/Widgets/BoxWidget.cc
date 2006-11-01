@@ -890,7 +890,7 @@ BoxWidget::get_clipper()
 
   // Rotate * Scale * Translate.
   Transform t;
-  t.load_frame(center, (right-center), (down-center), (in-center));
+  t.load_frame((right-center), (down-center), (in-center));
   t.pre_translate(Vector(center.x(), center.y(), center.z()));
   t.invert();
 

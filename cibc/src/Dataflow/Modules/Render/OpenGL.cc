@@ -390,8 +390,7 @@ OpenGL::redraw_loop()
 	x_axis.normalize();
 	y_axis.normalize();
 	view_window_->eye_dist_ = z_axis.normalize();
-	view_window_->prev_trans_.load_frame(Point(0.0,0.0,0.0),
-					     x_axis,y_axis,z_axis);
+	view_window_->prev_trans_.load_frame(x_axis,y_axis,z_axis);
       }
 	
 
