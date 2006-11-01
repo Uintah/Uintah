@@ -93,14 +93,13 @@ Transform::load_basis(const Point &p,
                       const Vector &y,
                       const Vector &z)
 {
-  load_frame(p,x,y,z);
+  load_frame(x,y,z);
   pre_translate(p.asVector());
   compute_imat();
 }
 
 void
-Transform::load_frame(const Point&,
-                      const Vector& x, 
+Transform::load_frame(const Vector& x, 
                       const Vector& y, 
                       const Vector& z)
 {
@@ -233,8 +232,7 @@ Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p)
   Vector su(Cross(p.normal(),sv));
   Transform r;  // the rotation to take the z-axis to the shear normal
   // and the y-axis to the projected shear vector
-  Point dummy;
-  r.load_frame(dummy, su, sv, p.normal());
+  r.load_frame(su, sv, p.normal());
   //    r.invert();
   Transform sh;
   double a[16];

@@ -76,7 +76,7 @@ Quaternion::Quaternion(Vector i, Vector u){
       k.normalize();
       j.normalize();
       Transform rm;
-      rm.load_frame(Point(0,0,0), i, j, k);
+      rm.load_frame(i, j, k);
       from_matrix(rm);
     }
   }

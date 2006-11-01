@@ -284,12 +284,11 @@ EditMeshBoundingBox::build_widget(FieldHandle f, bool reset)
 
     // Translate * Rotate * Scale.
     Transform r;
-    Point unused;
     box_initial_transform_.load_identity();
     box_initial_transform_.pre_scale(Vector((right-center).length(),
 					    (down-center).length(),
 					    (in-center).length()));
-    r.load_frame(unused, (right-center).normal(),
+    r.load_frame((right-center).normal(),
 		 (down-center).normal(),
 		 (in-center).normal());
     box_initial_transform_.pre_trans(r);
@@ -387,12 +386,11 @@ EditMeshBoundingBox::execute()
     Point in(center +sizez/2.);
 
     Transform r;
-    Point unused;
     field_initial_transform_.load_identity();
     field_initial_transform_.pre_scale(Vector((right-center).length(),
 					      (down-center).length(),
 					      (in-center).length()));
-    r.load_frame(unused, (right-center).normal(),
+    r.load_frame((right-center).normal(),
 		 (down-center).normal(),
 		 (in-center).normal());
     field_initial_transform_.pre_trans(r);
@@ -438,14 +436,13 @@ EditMeshBoundingBox::execute()
   Point center, right, down, in;
   box_->GetPosition(center, right, down, in);
   Transform t, r;
-  Point unused;
   t.load_identity();
   t.pre_scale(Vector((right-center).length(),
        (down-center).length(),
        (in-center).length()));
-  r.load_frame(unused, (right-center).normal(),
-	 (down-center).normal(),
-	 (in-center).normal());
+  r.load_frame((right-center).normal(),
+               (down-center).normal(),
+               (in-center).normal());
   t.pre_trans(r);
   t.pre_translate(center.asVector());
 

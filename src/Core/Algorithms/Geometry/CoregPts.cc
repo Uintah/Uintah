@@ -219,11 +219,11 @@ CoregPtsAnalytic::computeTrans()
 
     Transform temp;
     double d[16];
-    temp.load_frame(Point(0,0,0), a01, a21, a20);
+    temp.load_frame(a01, a21, a20);
     temp.get_trans(&(d[0]));
     Ba.set(d);
 
-    Bpt.load_frame(Point(0,0,0), p01, p21, p20);
+    Bpt.load_frame(p01, p21, p20);
 
     //  Bpt.load_identity();
     //  Ba.load_identity();

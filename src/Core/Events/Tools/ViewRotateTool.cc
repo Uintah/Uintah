@@ -95,7 +95,7 @@ ViewRotateTool::pointer_down(int which, int x, int y, unsigned int, int time)
   y_axis.normalize();
   eye_dist_ = z_axis.normalize();
 
-  prev_trans_.load_frame(Point(0.0, 0.0, 0.0), x_axis, y_axis, z_axis);
+  prev_trans_.load_frame(x_axis, y_axis, z_axis);
 
   ball_->Init();
   ball_->Place(center,rad);

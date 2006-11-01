@@ -223,7 +223,7 @@ CreateGeometricTransform::execute()
     
     // find the difference between widget_pose(_inv) and the current pose
     if (!ignoring_widget_changes_gui_.get()) {
-      local_transform.load_frame(C,R-C,D-C,I-C);
+      local_transform.load_frame(R-C,D-C,I-C);
       local_transform.post_trans(widget_pose_inv_trans_);
       local_transform.post_translate(-widget_pose_center_.vector());
       local_transform.pre_translate(C.vector());
@@ -231,7 +231,7 @@ CreateGeometricTransform::execute()
     local_transform.post_trans(latest_widget_trans_);
     latest_widget_trans_=local_transform;
     widget_pose_center_=C;
-    widget_pose_inv_trans_.load_frame(C,R-C,D-C,I-C);
+    widget_pose_inv_trans_.load_frame(R-C,D-C,I-C);
     widget_pose_inv_trans_.invert();
   }
   DenseMatrix *matrix_transform=scinew DenseMatrix(4,4);
