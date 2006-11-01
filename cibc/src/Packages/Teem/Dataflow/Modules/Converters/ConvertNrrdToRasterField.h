@@ -1587,7 +1587,7 @@ ConvertNrrdToRasterFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
 
   // If the data was vector or tensor it will have an extra axis.
   // It is axis 0.  Make sure sizes along each dim still match.
-  if (inrrd->dim != (int)dims.size()) {
+  if (inrrd->dim != dims.size()) {
     return false;
   }
 
