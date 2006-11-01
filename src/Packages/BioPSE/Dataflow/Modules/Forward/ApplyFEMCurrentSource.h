@@ -237,7 +237,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
         PR->error("Source field and Mapping matrix size mismatch.");
         return;
       }
-      if (nsize != hMapping->ncols())
+      if (nsize != (unsigned int)hMapping->ncols())
       {
         PR->error("Mesh field and Mapping matrix size mismatch.");
         return;
@@ -259,7 +259,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
 
     if (!hMapping.get_rep())
     {
-      if ((int)sourceNode >= nsize || (int)sinkNode >= nsize)
+      if (sourceNode >= nsize || sinkNode >= nsize)
       {
         PR->error("SourceNode or SinkNode was out of mesh range.");
         return;
