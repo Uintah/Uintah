@@ -85,7 +85,7 @@ VolumeOps::float_to_bit(NrrdDataHandle &inh, float ref, unsigned int mask)
   unsigned int n = VolumeOps::nrrd_elem_count(inh);
   float *src = (float *)inh->nrrd_->data;
   unsigned int *dst = (unsigned int *)nrrdh->nrrd_->data;
-  for (int i = 0; i < n; ++i, ++src, ++dst) {
+  for (unsigned int i = 0; i < n; ++i, ++src, ++dst) {
     if (*src >= ref) {
       *dst |= mask; 
     }

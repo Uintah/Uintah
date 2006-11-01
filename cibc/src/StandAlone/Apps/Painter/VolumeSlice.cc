@@ -80,15 +80,15 @@ VolumeSlice::VolumeSlice(NrrdVolume *volume,
   ref_cnt(0),
   volume_(volume),
   nrrd_handle_(nrrd),
-  tex_dirty_(true),
-  pos_(),
-  xdir_(),
-  ydir_(),
   outline_(0),
   texture_(0),
   geom_texture_(0),
   plane_(plane),
-  label_(label)
+  label_(label),
+  tex_dirty_(true),
+  pos_(),
+  xdir_(),
+  ydir_()
 {
   vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
   unsigned int ax = axis();
@@ -164,7 +164,8 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
   int min_slice = sindex[ax];
   int max_slice = sindex[ax];
   int slice = sindex[ax];  
-  if (slice < 0 || slice >= volume_->nrrd_handle_->nrrd_->axis[ax].size) {
+  if (slice < 0 || slice >= (int)volume_->nrrd_handle_->nrrd_->axis[ax].size)
+  {
     return;
   }
 

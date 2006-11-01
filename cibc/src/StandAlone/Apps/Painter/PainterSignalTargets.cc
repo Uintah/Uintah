@@ -427,7 +427,7 @@ Painter::LoadVolume(event_handle_t event) {
   volumes_.push_back(volume);
   current_volume_ = volume;
 
-  for (int i = 0; i < windows_.size(); ++ i) {
+  for (unsigned int i = 0; i < windows_.size(); ++ i) {
     windows_[i]->center_ = volume->center();
   }
 
@@ -934,7 +934,7 @@ Painter::LoadSession(event_handle_t event) {
   SessionReader reader(this);
   if (reader.load_session(filename)) {
     if (current_volume_) 
-      for (int i = 0; i < windows_.size(); ++ i) {
+      for (unsigned int i = 0; i < windows_.size(); ++ i) {
         windows_[i]->center_ = current_volume_->center();
       }
 
