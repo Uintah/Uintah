@@ -95,7 +95,7 @@ OSXOpenGLContext::create_context(int x,
   win_flags &= GetAvailableWindowAttributes(kDocumentWindowClass);
 
   CreateNewWindow(kDocumentWindowClass, win_flags, &win_rect, &window_);
-  SetWindowTitleWithCFString(window_, CFSTR("LeXoV"));
+  SetWindowTitleWithCFString(window_, CFSTR("Seg3D"));
 
   ProcessSerialNumber id;
   GetCurrentProcess(&id);

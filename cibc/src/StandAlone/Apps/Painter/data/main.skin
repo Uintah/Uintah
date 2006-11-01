@@ -3,8 +3,8 @@
 
 <skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
 
-  <var name="program_name" propagate="yes">LeXoV</var>
-  <var name="full_program_name" propagate="yes">Beta version 0.9</var>
+  <var name="program_name" propagate="yes">Seg3D</var>
+  <var name="full_program_name" propagate="yes">Beta version 0.91</var>
 
   <var name="Painter::brush_radius" type="double" propagate="yes">5.0</var>
   <var name="Painter::brush_softness" type="double"  propagate="yes">0.0</var>
