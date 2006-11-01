@@ -207,7 +207,7 @@
           <var name="font">AustralianSunset.ttf</var>
           <var name="font">Astronaut.ttf</var>
           <var name="font">AmigaForever.ttf</var>
-          <var name="size">100</var>
+          <var name="size">80</var>
           <var name="anchor">S</var>
           <var name="extruded">1</var>
           <var name="extruded">1</var>
@@ -232,7 +232,7 @@
           <var name="font">AustralianSunset.ttf</var>
           <var name="font">Astronaut.ttf</var>
           <var name="font">AmigaForever.ttf</var>
-          <var name="size">100</var>
+          <var name="size">80</var>
           <var name="anchor">S</var>
           <var name="shadow">1</var>
           <var name="fgcolor">#FFFFFFFF</var>
