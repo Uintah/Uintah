@@ -75,7 +75,7 @@ int eorder[12][4] = {
 
 template <class T>
 GeomHandle
-fast_lat_mc_real(Nrrd *nrrd, T *data, double ival, unsigned int mask)
+fast_lat_mc_real_masked(Nrrd *nrrd, T *data, double ival, unsigned int mask)
 {
   const size_t isize = nrrd->axis[1].size;
   const size_t jsize = nrrd->axis[2].size;
@@ -83,7 +83,7 @@ fast_lat_mc_real(Nrrd *nrrd, T *data, double ival, unsigned int mask)
 
   const size_t ijsize = isize * jsize;
 
-  GeomFastTriangles *triangles = scinew GeomTranspTriangles;
+  GeomFastTriangles *triangles = scinew GeomFastTriangles;
 
   for (unsigned int k = 0; k < ksize-1; k++)
   {
@@ -129,12 +129,69 @@ fast_lat_mc_real(Nrrd *nrrd, T *data, double ival, unsigned int mask)
 }
 
 
+
+
+template <class T>
+GeomHandle
+fast_lat_mc_real(Nrrd *nrrd, T *data, double ival)
+{
+  const size_t isize = nrrd->axis[1].size;
+  const size_t jsize = nrrd->axis[2].size;
+  const size_t ksize = nrrd->axis[3].size;
+
+  const size_t ijsize = isize * jsize;
+
+  GeomFastTriangles *triangles = scinew GeomFastTriangles;
+
+  for (unsigned int k = 0; k < ksize-1; k++)
+  {
+    for (unsigned int j = 0; j < jsize-1; j++)
+    {
+      for (unsigned int i = 0; i < isize-1; i++)
+      {
+        int code = 0;
+        double value[8];
+        for (int a = 7; a >= 0 ; a--)
+        {
+          value[a] = (double)(data[(i+norder[a][0]) +
+                                   (j+norder[a][1]) * isize +
+                                   (k+norder[a][2]) * ijsize]);
+          code = code * 2 + (value[a] < ival);
+        }
+
+        TRIANGLE_CASES *tcase = &triCases[code];
+        int *vertex = tcase->edges;
+        
+        int v = 0;
+        while (vertex[v] != -1)
+        {
+          Point p[3];
+          for (int a = 0; a < 3; a++)
+          {
+            const int va = vertex[v++];
+            p[a].x(i + eorder[va][0]);
+            p[a].y(j + eorder[va][1]);
+            p[a].z(k + eorder[va][2]);
+            const int v1 = edge_tab[va][0];
+            const int v2 = edge_tab[va][1];
+            const double d = (value[v1] - ival) / (value[v1] - value[v2]);
+            p[a](eorder[va][3]) += d;
+          }
+          triangles->add(p[0], p[1], p[2]);
+        }
+      }
+    }
+  }
+
+  return triangles;
+}
+
+
 SCISHARE GeomHandle
 fast_lat_mc(Nrrd *nrrd, double ival, unsigned int mask)
 {
   switch (nrrd->type)
   {
-#if 0
   case nrrdTypeChar:
     return fast_lat_mc_real(nrrd, (char *)nrrd->data, ival);
   case nrrdTypeUChar:
@@ -145,10 +202,11 @@ fast_lat_mc(Nrrd *nrrd, double ival, unsigned int mask)
     return fast_lat_mc_real(nrrd, (unsigned short *)nrrd->data, ival);
   case nrrdTypeInt:
     return fast_lat_mc_real(nrrd, (int *)nrrd->data, ival);
-#endif
   case nrrdTypeUInt:
-    return fast_lat_mc_real(nrrd, (unsigned int *)nrrd->data, ival, mask);
-#if 0
+    if (mask) 
+      return fast_lat_mc_real_masked(nrrd,(unsigned int*)nrrd->data,ival,mask);
+    else 
+      return fast_lat_mc_real(nrrd, (unsigned int *)nrrd->data, ival);
   case nrrdTypeLLong:
     return fast_lat_mc_real(nrrd, (long long *)nrrd->data, ival);
   case nrrdTypeULLong:
@@ -157,7 +215,6 @@ fast_lat_mc(Nrrd *nrrd, double ival, unsigned int mask)
     return fast_lat_mc_real(nrrd, (float *)nrrd->data, ival);
   case nrrdTypeDouble:
     return fast_lat_mc_real(nrrd, (double *)nrrd->data, ival);
-#endif
   default:
     throw "Unknown nrrd type, cannot isosurface.";
   }

@@ -10,8 +10,9 @@
       <object class="Root::Text">
         <var name="row">1</var>
         <var name="col">1</var>
-        <var name="text">ITK ConfidenceConnected
-Image Filter</var>
+        <var name="cell-height">35</var>
+        <var name="text"> ITK Confidence Connected
+ Image Filter</var>
         <var name="size">15</var>
         <var name="fgcolor">#000000FF</var>
         <var name="bgcolor">#FFFFFF80</var>
@@ -23,46 +24,51 @@ Image Filter</var>
      
 
       <object class="LabeledSpinnerBox">
-        <var name="row">2</var>
+        <var name="row">3</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Iterations: </var>
         <var name="LabeledSpinnerBox::variable" 
              propagate="yes">$ITKConfidenceConnectedImageFilterTool::numberOfIterations</var>
       </object>
 
       <object class="LabeledSpinnerBox">
-        <var name="row">3</var>
+        <var name="row">4</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Multiplier: </var>
         <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKConfidenceConnectedImageFilterTool::multiplier</var>
       </object>
       
       <object class="LabeledSpinnerBox">
-            <var name="row">4</var>
-            <var name="col">1</var>
-            <var name="LabeledSpinnerBox::text" propagate="yes">Replace Value: </var>
-            <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKConfidenceConnectedImageFilterTool::replaceValue</var>
-      </object>
-      
-      
-      <object class="Button">
-        <var name="row">9</var>
+        <var name="row">5</var>
         <var name="col">1</var>
-        
-        <var name="Button::color" propagate="yes">#FFEEEEFF</var>
-        <var name="Button::Text::text" propagate="yes">Cancel</var>
-        
-        <signal name="Button::clicked" 
-                target="ToolDialog::Cancel"/>
-        
+        <var name="cell-height">35</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Replace Value: </var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKConfidenceConnectedImageFilterTool::replaceValue</var>
       </object>
       
+      
+      <object class="VCRControls">
+        <var name="row">6</var>
+        <var name="col">1</var>
+        <var name="cell-height">35</var>
+        <signal name="VCRControls::play"
+                target="Painter::FinishTool">
+          <var name="threaded">1</var>
+        </signal>
+        
+        <signal name="VCRControls::stop"
+                target="Painter::AbortFilterOn"/>
+        
+      </object>
+
       <object class="Button">
         <var name="row">10</var>
         <var name="col">1</var>
-        
+        <var name="cell-height">35</var>
         <var name="Button::color" propagate="yes">#EEFFEEFF</var>
-        <var name="Button::Text::text" propagate="yes">Execute</var>
+        <var name="Button::Text::text" propagate="yes">Done</var>
         
         <signal name="Button::clicked" 
                 target="ToolDialog::Done"></signal>

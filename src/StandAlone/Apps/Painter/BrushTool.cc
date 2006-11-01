@@ -89,7 +89,7 @@ BrushTool::BrushTool(Painter *painter) :
   value_(painter->get_vars(), "Painter::brush_value", 256.0),
   last_index_(),
   radius_(painter->get_vars(), "Painter::brush_radius"),
-  draw_cursor_(0)
+  draw_cursor_(1)
 {
   painter_->create_undo_volume();
   if (painter_->current_volume_) {
@@ -252,14 +252,16 @@ BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
 BaseTool::propagation_state_e
 BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
 {
+  painter_->redraw_all();
   if (!window_ || !slice_.get_rep()) {
     return CONTINUE_E;
   }
-
+  
   NrrdVolume *vol = slice_->volume_;
   if (!vol) {
     return CONTINUE_E;
   }
+
   vector<int> index = vol->world_to_index(painter_->pointer_pos_);
   if (!vol->index_valid(index)) {
     return CONTINUE_E;
@@ -290,7 +292,7 @@ BrushTool::draw_gl(SliceWindow &window)
   if (!draw_cursor_) return;
   if (&window != painter_->cur_window_) return;
   painter_->redraw_all();
-  draw_cursor_ = false;
+  //  draw_cursor_ = false;
   NrrdVolume *vol = painter_->current_volume_;
   if (!vol) return;
   glColor4f(1.0, 0.0, 0.0, 1.0);

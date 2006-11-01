@@ -80,8 +80,11 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   if (!volume_->index_valid(seed_))
     return;
 
+  typedef itk::Image<unsigned int, 3> ITKImage;
+
   typedef itk::ConfidenceConnectedImageFilter
-    < ITKImageFloat3D, ITKImageFloat3D > FilterType;
+    < ITKImageFloat3D, ITKImage > FilterType;
+
   FilterType::Pointer filter = FilterType::New();
   FilterType::IndexType seed_point;
   for(unsigned int i = 0; i < seed_point.GetIndexDimension(); i++) {
@@ -96,25 +99,19 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_);
 
   string name = "Confidence Connected";
-  NrrdDataHandle nrrdh = volume_->nrrd_handle_;
-  nrrdh.detach();
-  NrrdVolume *vol = new NrrdVolume(painter_, name, nrrdh);
-  vol->colormap_ = 1;
-  vol->clut_min_ = vol->data_min_ = 0.5;
-  vol->clut_max_ = vol->data_max_ = 1.0;
-
-  painter_->volumes_.push_back(vol);
-  painter_->rebuild_layer_buttons();
-  painter_->extract_all_window_slices();
-
-
-  //  painter_->current_volume_ = vol;
+  //  NrrdDataHandle nrrdh = volume_->create_clear_nrrd();
+  //  NrrdVolume *vol = new NrrdVolume(painter_, name, nrrdh);
+  //  vol->label_ = 1;
+  //  vol->colormap_ = 1;
+  //  vol->clut_min_ = vol->data_min_ = 0.5;
+  //  vol->clut_max_ = vol->data_max_ = 1.0;
+  painter_->CreateLabelVolume(0);
+  NrrdVolume *vol = painter_->current_volume_;
   painter_->filter_volume_ = vol;
-
   vol->nrrd_handle_ = 
-    painter_->do_itk_filter<ITKImageFloat3D>(filter, volume_->nrrd_handle_);
+    painter_->do_itk_filter<FilterType>(filter, volume_->nrrd_handle_);
 
-
+  vol->set_dirty();
   painter_->extract_all_window_slices();
   painter_->redraw_all();
 }

@@ -32,6 +32,7 @@
 #include <StandAlone/Apps/Painter/ITKThresholdSegmentationLevelSetImageFilterTool.h>
 #ifdef HAVE_INSIGHT
 #include <StandAlone/Apps/Painter/Painter.h>
+#include <StandAlone/Apps/Painter/VolumeOps.h>
 
 namespace SCIRun {
 
@@ -90,7 +91,7 @@ ITKThresholdSegmentationLevelSetImageFilterTool::cont()
   filter_->Modified();
   NrrdDataHandle temp = 0;
   set_vars();
-  painter_->do_itk_filter<ITKImageFloat3D>(filter_, temp);
+  painter_->do_itk_filter<FilterType>(filter_, temp);
 }
 
 
@@ -126,10 +127,17 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
 
   string newname = 
     painter_->unique_layer_name(vol->name_+" ITK Threshold Result");
-  NrrdDataHandle extracted_nrrd = seed_volume_->extract_bit_as_float(1000.0);
-  NrrdVolume *new_layer = new NrrdVolume(painter_, newname, extracted_nrrd);
+  NrrdDataHandle extracted_nrrd = 
+    VolumeOps::bit_to_float(seed_volume_->nrrd_handle_, 
+                            seed_volume_->label_, 1000.0);
+
+  NrrdDataHandle clear_volume = 
+    VolumeOps::create_clear_nrrd(extracted_nrrd, nrrdTypeFloat);
   
-  new_layer->colormap_ = 1;
+  NrrdVolume *new_layer = 
+    new NrrdVolume(painter_, newname, extracted_nrrd);//clear_volume);
+  new_layer->label_ = 2;
+  new_layer->colormap_ = 0;
   new_layer->data_min_ = -4.0;
   new_layer->data_max_ = 4.0;
   new_layer->clut_min_ = 4.0/255.0;
@@ -163,9 +171,17 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
 
   painter_->filter_volume_ = new_layer;
 
-  painter_->do_itk_filter<ITKImageFloat3D>(filter_, new_layer->nrrd_handle_);
+  NrrdDataHandle nouth = 
+    painter_->do_itk_filter<FilterType>(filter_, extracted_nrrd);
+  painter_->volume_lock_.lock();
+  ASSERT(nouth.get_rep());
 
+  new_layer->nrrd_handle_ = 
+    VolumeOps::float_to_bit(nouth, 0, new_layer->label_);
+  new_layer->set_dirty();
+  painter_->volume_lock_.unlock();
   painter_->extract_all_window_slices();
+
   painter_->redraw_all();
 }
 

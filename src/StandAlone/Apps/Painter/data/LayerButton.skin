@@ -111,7 +111,7 @@
             <var name="col">4</var>            
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>
-            <var name="Button::Text::text" propagate="yes">C</var>
+            <var name="Button::Text::text" propagate="yes">L</var>
 
             <signal name="Button::clicked" 
                     target="Painter::CreateLabelVolume">
@@ -131,7 +131,8 @@
             <var name="col">5</var>            
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>
-            <var name="Button::Text::text" propagate="yes">D</var>
+            <var name="Button::Text::text" propagate="yes">X</var>
+            <var name="Button::Text::fgcolor" propagate="yes">#660000FF</var>
 
             <signal name="Button::clicked" 
                     target="Painter::DeleteLayer">

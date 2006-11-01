@@ -237,7 +237,7 @@ void
 ColorMap::build_materials_from_rgba() {
   const int size = 256;
   materials_.resize(size);
-  const Color ambient(0.0, 0.0, 0.0);
+  const Color ambient(1.0, 1.0, 1.0);
   const Color specular(0.7, 0.7, 0.7);
   for (int i = 0; i < size; i++)
   {
@@ -348,7 +348,7 @@ ColorMap::create_rainbow(double mult)
 {
   float rgba[256*4];
   double spacing = 360.0/255.0;
-  double hue = 180;
+  double hue = 90;
   double dhue = spacing * mult;
   for (int i = 0; i < 256; ++i) {
     

@@ -43,15 +43,6 @@
     </object>
 
 
-    <object class="ShadowedPainterWindow">
-      <var name="row">2</var>
-      <var name="col">4</var>
-      <var name="axis" propagate="yes">0</var>
-      <var name="GradientBackground::bottom-color"
-           type="color" propagate="yes">$light_red</var>
-      <var name="NicePainterWindow::name" 
-           propagate="yes">Sagittal</var>
-    </object>
 
     <object class="ShadowedPainterWindow">
       <var name="row">4</var>
@@ -70,6 +61,16 @@
       <var name="GradientBackground::bottom-color" 
            type="color" propagate="yes">$light_blue</var>
       <var name="NicePainterWindow::name" propagate="yes">Coronal</var>
+    </object>
+
+    <object class="ShadowedPainterWindow">
+      <var name="row">2</var>
+      <var name="col">4</var>
+      <var name="axis" propagate="yes">0</var>
+      <var name="GradientBackground::bottom-color"
+           type="color" propagate="yes">$light_red</var>
+      <var name="NicePainterWindow::name" 
+           propagate="yes">Sagittal</var>
     </object>
 
 

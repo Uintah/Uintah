@@ -368,40 +368,18 @@ Painter::find_volume_by_name(const string &name) {
   return 0;
 }
 
-
-void
-Painter::copy_current_layer() {
-  if (current_volume_) {
-    string base = current_volume_->name_;
-    string::size_type pos = base.find_last_not_of(" 0123456789");
-    base = base.substr(0, pos+1);
-    int i = 0;
-    string name = base + " "+to_string(++i);
-    while (find_volume_by_name(name))
-      name = base + " "+to_string(++i);
-    current_volume_ = copy_current_volume(name,0);
-    rebuild_layer_buttons();
-    extract_all_window_slices();
-    redraw_all();
-
-  }
+string
+Painter::unique_layer_name(string base) {
+  string::size_type pos = base.find_last_not_of(" 0123456789");
+  base = base.substr(0, pos+1);
+  int i = 0;
+  string name = base + " "+to_string(++i);
+  while (find_volume_by_name(name))
+    name = base + " "+to_string(++i);
+  return name;
 }
 
 
-void
-Painter::new_current_layer() {
-  if (current_volume_) {
-    string base = "New Layer";
-    int i = 0;
-    string name = base + " "+to_string(++i);
-    while (find_volume_by_name(name))
-      name = base + " "+to_string(++i);
-    current_volume_ = copy_current_volume(name,1);
-    rebuild_layer_buttons();
-    extract_all_window_slices();
-    redraw_all();
-  }
-}
 
 
 void
@@ -473,76 +451,10 @@ Painter::compute_mean_and_deviation(Nrrd *nrrd, Nrrd *mask) {
   
          
 
-NrrdVolume *
-Painter::copy_current_volume(const string &name, int mode) {
-  if (!current_volume_) return 0;
-  NrrdVolume *vol = new NrrdVolume(current_volume_, name, mode);
-  volumes_.push_back(vol);
-  vol->clut_min_ = vol->data_max_/255.0;
-  vol->clut_max_ = vol->data_max_;
-  rebuild_layer_buttons();
-  extract_all_window_slices();
-  redraw_all();
-  return vol;
-}
-  
-
 
 #ifdef HAVE_INSIGHT
-void
-Painter::filter_callback(itk::Object *object,
-                         const itk::EventObject &event)
-{
-  itk::ProcessObject::Pointer process = 
-    dynamic_cast<itk::ProcessObject *>(object);
-  ASSERT(process);
-  double value = process->GetProgress();
-  if (typeid(itk::ProgressEvent) == typeid(event))
-  {
-    if (filter_volume_) {
-      cerr << "HERE!";
-      return;
-      typedef itk::ThresholdSegmentationLevelSetImageFilter
-        < ITKImageFloat3D, ITKImageFloat3D > FilterType;
-      
-      FilterType *filter = dynamic_cast<FilterType *>(object);
-      ASSERT(filter);
-      volume_lock_.lock();
-      ITKDatatypeHandle imgh = new ITKDatatype();
-      imgh->data_ = filter->GetOutput();
-      ITKImageFloat3D *img = dynamic_cast<ITKImageFloat3D *>(imgh->data_.GetPointer());
-      cerr << "img: " << img << std::endl;
-      NrrdDataHandle nrrd = itk_image_to_nrrd<float>(imgh);
-      cerr << "nrrd: " << nrrd->nrrd_ << std::endl;
-      //      nrrdCopy(filter_volume_->nrrd_handle_->nrrd_, nrrd->nrrd_);
-      filter_volume_->nrrd_handle_ = nrrd;
-      volume_lock_.unlock();
 
-      //      if (volume_texture_.get_rep()) {
-      //  NrrdTextureBuilderAlgo::build_static
-      //	  (volume_texture_,current_volume_->nrrd_handle_, 0, 255,
-      //	   0, 0, 255, 128);
-      //    }
-      //      extract_all_window_slices();
-      //set_all_slices_tex_dirty();
-    }
-
-    redraw_all();
-
-  }
-
-
-
-  if (typeid(itk::IterationEvent) == typeid(event))
-  {
-    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
-  }
-
-  if (abort_filter_) {
-    process->AbortGenerateDataOn();
-  }
-}
-
+#if 0
 void
 Painter::filter_callback_const(const itk::Object *object,
                                const itk::EventObject &event)
@@ -561,6 +473,7 @@ Painter::filter_callback_const(const itk::Object *object,
     std::cerr << "Const Filter Iteration: " << value * 100.0 << "%\n";
   }
 }
+#endif
 #endif // HAVE_INSIGHT
 
 

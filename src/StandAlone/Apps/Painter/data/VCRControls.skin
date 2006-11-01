@@ -1,7 +1,7 @@
 <definition class="VCRControls" state="normal">
   <object class="Grid">
     <var name="rows">1</var>
-    <var name="cols">6</var>
+    <var name="cols">5</var>
     <var name="VCRControls::button_width" propagate="yes" overwrite="no">30</var>
     <var name="VCRControls::button_height" propagate="yes" overwrite="no">30</var>
     <object class="ImageButton">
@@ -37,7 +37,7 @@
               target="VCRControls::play"/>
     </object>
 
-
+<!--
     <object class="ImageButton">
       <var name="cell-height">$VCRControls::button_width</var>
       <var name="cell-width">$VCRControls::button_width</var>
@@ -49,6 +49,7 @@
               target="VCRControls::step_forward"/>
 
     </object>
+-->
 
 
   </object>

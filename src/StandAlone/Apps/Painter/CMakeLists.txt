@@ -108,6 +108,7 @@ SET(LEXOV_SRCS
   SessionReader.cc
   SessionWriter.cc
   SliceWindow.cc
+  VolumeOps.cc
   VolumeSlice.cc
   ZoomTool.cc
   main.cc 

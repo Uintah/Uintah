@@ -86,6 +86,14 @@ NrrdBitmaskOutline::draw_lines(float width, unsigned int mask)
   const size_t ydim =  nrrd_handle_->nrrd_->axis[2].size;
   if (!xdim*ydim) return;
 
+  if (mask) {
+    unsigned int bit = 0;
+    while (!(mask & (1<<bit))) ++bit;
+    bit_priority_[0] = bit;
+    bit_priority_[1] = -1;
+  }
+
+
   if (dirty_) {
     compute_iso_lines<unsigned int>();    
     dirty_ = false;
@@ -102,12 +110,6 @@ NrrdBitmaskOutline::draw_lines(float width, unsigned int mask)
   Point p1, p2;  
   const float *rgba = colormap_->get_rgba();
   
-  if (mask) {
-    unsigned int bit = 0;
-    while (!(mask & (1<<bit))) ++bit;
-    bit_priority_[0] = bit;
-    bit_priority_[1] = -1;
-  }
 
   for (signed char *biter = bit_priority_; *biter >= 0; ++biter) {
     glColor4fv(rgba+4*(*biter+1));
