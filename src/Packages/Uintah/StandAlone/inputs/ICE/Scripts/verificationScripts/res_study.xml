@@ -1,0 +1,99 @@
+<start>
+
+<Test>
+
+<Meta>
+<Title>base_case_run</Title>
+<upsFile>mms_1.ups</upsFile>
+<pbsFile>mms_longrun.pbs</pbsFile>
+</Meta>
+
+<content>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,-0.05]    </lower>
+              <upper>        [6.28318530717959,6.28318530717959, 0.05]    </upper>
+              <extraCells>   [0,0,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>   [50,50,1]          </resolution>
+           </Box>
+           <periodic>       [1,1,0]           </periodic>
+       </Level>
+</content>
+
+</Test>
+
+
+<Test>
+
+<Meta>
+<Title>res_25</Title>
+<upsFile>mms_1.ups</upsFile>
+<pbsFile>mms_longrun.pbs</pbsFile>
+</Meta>
+
+<content>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,-0.05]    </lower>
+              <upper>        [6.28318530717959,6.28318530717959, 0.05]    </upper>
+              <extraCells>   [0,0,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>   [25,25,1]          </resolution>
+           </Box>
+           <periodic>       [1,1,0]           </periodic>
+       </Level>
+</content>
+
+</Test>
+
+
+<Test>
+
+<Meta>
+<Title>res_100</Title>
+<upsFile>mms_1.ups</upsFile>
+<pbsFile>mms_longrun.pbs</pbsFile>
+</Meta>
+
+<content>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,-0.05]    </lower>
+              <upper>        [6.28318530717959,6.28318530717959, 0.05]    </upper>
+              <extraCells>   [0,0,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>   [100,100,1]          </resolution>
+           </Box>
+           <periodic>       [1,1,0]           </periodic>
+       </Level>
+</content>
+
+</Test>
+
+<Test>
+
+<Meta>
+<Title>res_150</Title>
+<upsFile>mms_1.ups</upsFile>
+<pbsFile>mms_longrun.pbs</pbsFile>
+</Meta>
+
+<content>
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,-0.05]    </lower>
+              <upper>        [6.28318530717959,6.28318530717959, 0.05]    </upper>
+              <extraCells>   [0,0,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>   [150,150,1]          </resolution>
+           </Box>
+           <periodic>       [1,1,0]           </periodic>
+       </Level>
+</content>
+
+</Test>
+
+
+</start>
+
