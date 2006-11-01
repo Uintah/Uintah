@@ -668,11 +668,11 @@ Painter::ShowIsosurface(event_handle_t event)
   ASSERT(signal);
                 
   Matrix &tmat = current_volume_->transform_;
-  Transform transform(Point(0,0,0), 
+  Transform transform(current_volume_->min(), 
                       Vector(tmat.get(1,1), 0, 0),
                       Vector(0, tmat.get(2,2), 0),
                       Vector(0, 0, tmat.get(3,3)));
-                      
+  
   GeomGroup *group = new GeomGroup();
   isosurface_label_volumes(volumes_, group);
   GeomTransform *everything = new GeomTransform(group, transform);
