@@ -76,12 +76,6 @@ IF(WITH_ITK)
   ENDIF(ITK_FOUND)
 ENDIF(WITH_ITK)
 
-# Create on-the-fly-libs stuff
-CONFIGURE_FILE (
-  "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/Makefile.in"
-  "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
-)
-
 # TCL include directories
 SET(TCL_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tcl CACHE PATH "Path to tcl source")
 SET(TCL_INCLUDE1 ${TCL_SRC_PATH}/generic)
@@ -115,6 +109,52 @@ FIND_PATH(TK_INCLUDE tk.h
            /include)
 
 INCLUDE_DIRECTORIES(${TK_INCLUDE1} ${TK_INCLUDE2})
+
+# Create on-the-fly-libs stuff
+# DV Fix - these shouldn't necesarily point to thirdparty
+SET(INC_SCI_THIRDPARTY_H "-I${SCIRUN_THIRDPARTY_PATH}/include")
+SET(INC_TCL_H "-I${SCIRUN_THIRDPARTY_PATH}/include")
+IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(INC_TK_H "-I${SCIRUN_THIRDPARTY_PATH}/src/tk/generic -I${SCIRUN_THIRDPARTY_PATH}/src/tk/mac")
+ELSE(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(INC_TK_H "-I${SCIRUN_THIRDPARTY_PATH}/src/tk/generic -I${SCIRUN_THIRDPARTY_PATH}/src/tk/unix")
+ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+SET(INC_ITCL_H "-I${SCIRUN_THIRDPARTY_PATH}/include")
+SET(INC_BLT_H "-I${SCIRUN_THIRDPARTY_PATH}/include")
+SET(INC_XML2_H "-I${SCIRUN_THIRDPARTY_PATH}/include/libxml2")
+
+SET(scirun_obj_dataflow_dir ${PROJECT_BINARY_DIR})
+#SET(scirun_core_obj_dir ${scirun_obj_dir})
+
+SET(IS_OSX "no")
+SET(IS_WIN "no")
+SET(IS_AIX "no")
+
+SET(CFLAGS "-Wall -g ")
+
+IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(SO_OR_A_FILE "dylib" CACHE STRING "library extension")
+  SET(IS_OSX "yes")
+  SET(SOFLAGS "${CFLAGS} -shared -L${LIBRARY_OUTPUT_PATH}")
+ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+IF(CMAKE_SYSTEM_NAME MATCHES AIX)
+  SET(SO_OR_A_FILE "a" CACHE STRING "library extension")
+  SET(IS_AIX "yes")
+  SET(SOFLAGS "${CFLAGS} -shared -L${LIBRARY_OUTPUT_PATH}")
+ENDIF(CMAKE_SYSTEM_NAME MATCHES AIX)
+IF(WIN32 AND NOT CYGWIN)
+  SET(SO_OR_A_FILE "dll" CACHE STRING "library extension")
+  SET(IS_WIN "yes")
+  SET(SOFLAGS "${CFLAGS} -shared -LIBPATH:${LIBRARY_OUTPUT_PATH}")
+ELSE(WIN32 AND NOT CYGWIN)
+  SET(SO_OR_A_FILE "so" CACHE STRING "library extension")
+  SET(SOFLAGS "${CFLAGS} -shared -L${LIBRARY_OUTPUT_PATH}")
+ENDIF(WIN32 AND NOT CYGWIN)
+
+CONFIGURE_FILE (
+  "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/cmake_Makefile.in"
+  "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
+)
 
 IF(WIN32)
   IF(NOT BUILD_SHARED_LIBS)
