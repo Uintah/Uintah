@@ -76,9 +76,9 @@ KeyToolSelectorTool::key_press(string, int keyval,
     //  case SCIRun_b:        tm_.add_tool(new BrushTool(painter_),25); break;
     //  case SCIRun_l:        tm_.add_tool(new StatisticsTool(painter_),100); break;
 
-  case SCIRun_c:        painter_->copy_current_layer(); break;
+  case SCIRun_c:        painter_->CopyLayer(0); break;
   case SCIRun_x:        painter_->DeleteLayer(0); break;
-  case SCIRun_v:        painter_->new_current_layer(); break;
+  case SCIRun_v:        painter_->NewLayer(0);break;
 
   case SCIRun_r:        painter_->reset_clut();
   case SCIRun_Left:     painter_->move_layer_down(painter_->current_volume_);break;

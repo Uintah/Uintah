@@ -58,7 +58,10 @@ public:
   // Constructor
   NrrdVolume	      (Painter *painter, 
                        const string &name,
-                       NrrdDataHandle &);
+                       NrrdDataHandle &nrrdh,
+                       const unsigned int label = 0);
+
+  // Depreciated, please remove
   // Copy Constructor
   NrrdVolume          (NrrdVolume *copy, 
                        const string &name, 
@@ -75,7 +78,10 @@ public:
 
   void                set_nrrd(NrrdDataHandle &);
   NrrdDataHandle      get_nrrd();
-  NrrdVolume *        create_label_volume();
+  void                set_dirty(bool d = true) { dirty_ = d; }
+
+  NrrdVolume *        create_label_volume(unsigned int label=1, 
+                                          NrrdDataHandle nrrdh = 0);
   NrrdVolume *        create_child_label_volume(unsigned int label=0);
   unsigned int        compute_label_mask(unsigned int label = 0);
 
@@ -84,22 +90,27 @@ public:
   VolumeSliceHandle   get_volume_slice(const Plane &);
 
   void                reset_data_range();
+
+  // Methods to transform between index and world space
+  void                build_index_to_world_matrix();
   Point               index_to_world(const vector<int> &index);
   Point               index_to_point(const vector<double> &index);
   vector<int>         world_to_index(const Point &p);
   vector<double>      point_to_index(const Point &p);
   vector<double>      vector_to_index(const Vector &v);
   Vector              index_to_vector(const vector<double> &);
-  void                build_index_to_world_matrix();
   bool                index_valid(const vector<int> &index);
+  Point               center(int axis = -1, int slice = -1);
+  Point               min(int axis = -1, int slice = -1);
+  Point               max(int axis = -1, int slice = -1);
+
+
+  // Voxel getter/setters
   template<class T>
   void                get_value(const vector<int> &index, T &value);
   template<class T>
   void                set_value(const vector<int> &index, T value);
 
-  Point               center(int axis = -1, int slice = -1);
-  Point               min(int axis = -1, int slice = -1);
-  Point               max(int axis = -1, int slice = -1);
 
   Vector              scale();
   double              scale(unsigned int axis);
@@ -111,7 +122,11 @@ public:
   ColorMapHandle      get_colormap();
   GeomIndexedGroup*   get_geom_group();
   NrrdDataHandle      extract_label_as_bit();
-  NrrdDataHandle      extract_bit_as_float(float value=1.0);
+  NrrdDataHandle      extract_bit_from_float(float ref = 0.0);
+  NrrdDataHandle      create_clear_nrrd(unsigned int type = 0);
+
+  int                 bit();
+  
 
 
   Painter *           painter_;
@@ -145,6 +160,7 @@ public:
   // it may call a geometry class desctructor that is deletes GL elements
   // that are bound to a gl context, and thus the context must be current
   void                purge_unused_slices();
+  bool                dirty_;
   VolumeSlices_t      all_slices_;
   //  VolumeSliceGroups_t slice_groups_;
 };

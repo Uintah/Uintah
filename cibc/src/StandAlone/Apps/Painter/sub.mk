@@ -92,6 +92,7 @@ SRCS := $(SRCDIR)/AutoviewTool.cc \
 	$(SRCDIR)/SessionReader.cc \
 	$(SRCDIR)/SessionWriter.cc \
 	$(SRCDIR)/VolumeSlice.cc \
+	$(SRCDIR)/VolumeOps.cc \
 	$(SRCDIR)/ZoomTool.cc \
         $(SRCDIR)/main.cc \
 

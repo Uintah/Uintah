@@ -45,14 +45,16 @@ class Painter;
 class NrrdVolume;
 class SliceWindow;
 
-struct VolumeSlice {
+class VolumeSlice {
+public:
   // For LockingHandle
   Mutex                 lock;
   int                   ref_cnt;
 
   VolumeSlice(NrrdVolume *, 
               const Plane &,
-              NrrdDataHandle nrrd=0);
+              NrrdDataHandle nrrd ,
+              unsigned int label);
   
   void                  bind();
   void                  draw();
@@ -63,12 +65,6 @@ struct VolumeSlice {
   NrrdVolume *          volume_;
   NrrdDataHandle        nrrd_handle_;
   
-  bool                  tex_dirty_;
-  
-  Point                 pos_;
-  Vector                xdir_;
-  Vector                ydir_;
-  
   NrrdBitmaskOutlineHandle              outline_;
   ColorMappedNrrdTextureObjHandle       texture_;
   GeomHandle                            geom_texture_;
@@ -76,6 +72,14 @@ struct VolumeSlice {
 private:
   void                  extract_nrrd_slice_from_volume();
   Plane                 plane_;
+  unsigned int          label_;
+  bool                  tex_dirty_;
+  
+  Point                 pos_;
+  Vector                xdir_;
+  Vector                ydir_;
+  
+
 };
 
 

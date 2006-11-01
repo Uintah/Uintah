@@ -30,6 +30,7 @@
 //    Date   : Fri Oct 13 15:35:55 2006
 
 #include <StandAlone/Apps/Painter/Painter.h>
+#include <StandAlone/Apps/Painter/VolumeOps.h>
 #include <sci_comp_warn_fixes.h>
 #include <stdlib.h>
 #include <math.h>
@@ -73,7 +74,8 @@ namespace SCIRun {
 
 VolumeSlice::VolumeSlice(NrrdVolume *volume,
                          const Plane &plane,
-                         NrrdDataHandle nrrd) :
+                         NrrdDataHandle nrrd,
+                         unsigned int label) :
   lock("Volume Slice"),
   ref_cnt(0),
   volume_(volume),
@@ -85,7 +87,8 @@ VolumeSlice::VolumeSlice(NrrdVolume *volume,
   outline_(0),
   texture_(0),
   geom_texture_(0),
-  plane_(plane)
+  plane_(plane),
+  label_(label)
 {
   vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
   unsigned int ax = axis();
@@ -109,6 +112,8 @@ VolumeSlice::VolumeSlice(NrrdVolume *volume,
 
   if (!nrrd_handle_.get_rep()) {
     extract_nrrd_slice_from_volume();
+  } else {
+    cerr << "";
   }
 
   if (!nrrd_handle_.get_rep()) {
@@ -185,6 +190,11 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
   } else {
     NRRD_EXEC(nrrdSlice(dst, src, ax, min_slice));
   }
+
+  if (label_ && dst->type == nrrdTypeFloat) {
+    nrrd_handle_ = VolumeOps::float_to_bit(nrrd_handle_, 0, label_);
+  }
+
   volume_->mutex_->unlock();
 }
 

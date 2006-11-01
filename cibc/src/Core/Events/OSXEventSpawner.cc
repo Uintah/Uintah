@@ -251,7 +251,6 @@ key_event_callback(EventHandlerCallRef nextHandler,
   if (carbon_modifiers & 0x0200) modifiers |= EventModifiers::SHIFT_E;
   if (carbon_modifiers & 0x0800) modifiers |= EventModifiers::M1_E;//Option key
   if (carbon_modifiers & 0x1000) modifiers |= EventModifiers::CONTROL_E;
-  cerr << "mod: " << carbon_modifiers << std::endl;
   sci_event->set_modifiers(modifiers);
 
   // Send it to our own event manager

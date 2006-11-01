@@ -164,8 +164,6 @@ private:
   NrrdVolume *          load_volume(string);
   bool                  save_volume(string filename, NrrdVolume *);
   
-  void                  copy_current_layer();
-  void                  new_current_layer();
   void                  set_all_slices_tex_dirty();
   ColorMapHandle        get_colormap(int);
   void                  rebuild_layer_buttons();
@@ -185,19 +183,20 @@ private:
   void                  undo_volume();
   NrrdVolume *          find_volume_by_name(const string &);
   pair<double, double>  compute_mean_and_deviation(Nrrd *, Nrrd *);
-  NrrdVolume *          copy_current_volume(const string &, int mode=0);
 
   void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
-  string		unique_layer_name(const string &str) { return str; }
+  string		unique_layer_name(string);
 
 #ifdef HAVE_INSIGHT
-  template <class ImageT>
-  NrrdDataHandle        do_itk_filter
-  (itk::ImageToImageFilter<ImageT,ImageT> *, NrrdDataHandle &nrrd);
+  template <class FilterType>
+  NrrdDataHandle        do_itk_filter (FilterType *, NrrdDataHandle &);
+
+  template <class FilterType>
   void                  filter_callback(itk::Object *, 
                                         const itk::EventObject &);
-  void                  filter_callback_const (const itk::Object *, 
-                                               const itk::EventObject &);
+
+  //  void                  filter_callback_const (const itk::Object *, 
+  //                                               const itk::EventObject &);
 #endif
   
   CatcherFunction_t     InitializeSignalCatcherTargets;
@@ -322,26 +321,28 @@ unsigned int max_vector_magnitude_index(vector<T> array) {
 
 #ifdef HAVE_INSIGHT
 
-template <class ImageType>
+template <class FilterType>
 NrrdDataHandle
-Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
+Painter::do_itk_filter(FilterType *filter,
                        NrrdDataHandle &nrrd_handle) 
 {
+  typedef typename FilterType::InputImageType ImageInT;
+  typedef typename FilterType::OutputImageType ImageOutT;
+
   typedef typename itk::MemberCommand< Painter > RedrawCommandType;
   typename RedrawCommandType::Pointer callback = RedrawCommandType::New();
-  callback->SetCallbackFunction(this, &Painter::filter_callback);
-  callback->SetCallbackFunction(this, &Painter::filter_callback_const);
+  callback->SetCallbackFunction
+    (this, &Painter::filter_callback<FilterType>);
+  //  callback->SetCallbackFunction(this, &Painter::filter_callback_const);
   filter->AddObserver(itk::ProgressEvent(), callback);
   filter->AddObserver(itk::IterationEvent(), callback);
   
   if (nrrd_handle.get_rep()) {
     ITKDatatypeHandle img_handle = nrrd_to_itk_image(nrrd_handle);  
-    ImageType *imgp = 
-      dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
-    
-    if (imgp == 0) 
+    ImageInT *imgp = dynamic_cast<ImageInT*>(img_handle->data_.GetPointer());
+    if (imgp == 0) {
       return 0;
-    
+    }    
     filter->SetInput(imgp);
   }
 
@@ -363,8 +364,63 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
   SCIRun::ITKDatatypeHandle output_img = new SCIRun::ITKDatatype();
   output_img->data_ = filter->GetOutput();
 
-  return itk_image_to_nrrd<typename ImageType::PixelType>(output_img);
+  return itk_image_to_nrrd<typename ImageOutT::PixelType>(output_img);
 }
+
+
+template <class FilterType>
+void
+Painter::filter_callback(itk::Object *object,
+                         const itk::EventObject &event)
+{
+  typedef typename FilterType::InputImageType ImageInT;
+  typedef typename FilterType::OutputImageType ImageOutT;
+
+  itk::ProcessObject::Pointer process = 
+    dynamic_cast<itk::ProcessObject *>(object);
+  ASSERT(process);
+  double value = process->GetProgress();
+  if (typeid(itk::ProgressEvent) == typeid(event))
+  {
+    std::cerr << "Filter progress: " << value * 100.0 << "%\n";
+    if (filter_volume_) {
+      FilterType *filter = dynamic_cast<FilterType *>(object);
+      ASSERT(filter);
+      volume_lock_.lock();
+      ITKDatatypeHandle imgh = new ITKDatatype();
+      imgh->data_ = filter->GetOutput();
+      ImageOutT *img = dynamic_cast<ImageOutT *>(imgh->data_.GetPointer());
+      if (!img) return;
+      typedef typename FilterType::OutputImageType::PixelType OutT;
+      filter_volume_->nrrd_handle_ = itk_image_to_nrrd<OutT>(imgh);
+      filter_volume_->set_dirty();
+      volume_lock_.unlock();
+      extract_all_window_slices();
+      
+      //      if (volume_texture_.get_rep()) {
+      //  NrrdTextureBuilderAlgo::build_static
+      //	  (volume_texture_,current_volume_->nrrd_handle_, 0, 255,
+      //	   0, 0, 255, 128);
+      //    }
+      //      extract_all_window_slices();
+      //set_all_slices_tex_dirty();
+    }
+
+    redraw_all();
+
+  }
+
+
+  if (typeid(itk::IterationEvent) == typeid(event))
+  {
+    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
+  }
+
+  if (abort_filter_) {
+    process->AbortGenerateDataOn();
+  }
+}
+
 #endif
 
 template <class T>

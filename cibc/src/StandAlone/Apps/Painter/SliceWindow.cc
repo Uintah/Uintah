@@ -754,7 +754,6 @@ SliceWindow::render_slices()
     recompute_slices_ = false;
     NrrdVolumes volumes;
     painter_->build_volume_list(volumes);
-
     
     slices_.clear();
     double offset = 0.0;
@@ -762,6 +761,7 @@ SliceWindow::render_slices()
     for (unsigned int i = 0; i < volumes.size(); ++i)
     {
       NrrdVolume *volume = volumes[i];
+      if (volume->dirty_) volume->purge_unused_slices();
       VolumeSliceHandle slice = 
         volume->get_volume_slice(Plane(center_, normal_));
       slices_.push_back(slice);
@@ -801,20 +801,6 @@ SliceWindow::render_slices()
 void
 SliceWindow::extract_slices() {
   recompute_slices_ = true;
-
-# if 0    // TODO: What does this do?
-  for (unsigned int s = 0; s < volumes.size(); ++s) {
-    if (volumes[s] == painter_->current_volume_) {
-      center_ = painter_->current_volume_->center();
-    }
-
-    if (volumes[s] == painter_->current_volume_ &&
-        !painter_->current_volume_->inside_p(center_)) {
-      int ax = axis_;
-      center_(ax) = painter_->current_volume_->center()(ax);
-    }
-  }
-#endif
 }
 
 

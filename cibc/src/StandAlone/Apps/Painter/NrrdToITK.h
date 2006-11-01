@@ -145,7 +145,6 @@ itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
       ((nrrd->axis[i+1].size-1) * nrrd->axis[i+1].spacing));
     nrrd->axis[i+1].kind = nrrdKindDomain;
   }
-  
   return nrrd_data;
 }
 
