@@ -26,8 +26,8 @@ CellInformation::CellInformation(const Patch* patch)
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
   IntVector idxLoV = patch->getSFCYFORTLowIndex();
   IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector idxLoW = patch->getCellFORTLowIndex();
-  IntVector idxHiW = patch->getCellFORTHighIndex();
+  IntVector idxLoW = patch->getSFCZFORTLowIndex();
+  IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
   // grid cell information
   xx.resize(locationLo.x(), locationHi.x());
@@ -142,3 +142,4 @@ CellInformation::CellInformation(const Patch* patch)
 CellInformation::~CellInformation()
 {
 }
+
