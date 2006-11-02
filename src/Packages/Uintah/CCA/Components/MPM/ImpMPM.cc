@@ -1127,15 +1127,13 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel, Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
-  t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
   t->requires(Task::NewDW,lb->gVolumeLabel,d_sharedState->getAllInOneMatl(),
                                  Task::OutOfDomain, Ghost::None);
-
+  t->modifies(lb->gInternalForceLabel);
   t->computes(lb->gStressForSavingLabel);
+
   if (!d_bndy_traction_faces.empty()) {
-                                                                                
-    for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
-        ftit!=d_bndy_traction_faces.end();ftit++) {
+    for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin()); ftit!=d_bndy_traction_faces.end();ftit++) {
       t->computes(lb->BndyForceLabel[*ftit]);       // node based
       t->computes(lb->BndyContactAreaLabel[*ftit]); // node based
     }
@@ -2370,41 +2368,49 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      constParticleVariable<Point>   px;
-      constParticleVariable<double>  pvol;
-      constParticleVariable<Matrix3> pstress;
-
       new_dw->allocateAndPut(int_force[m],lb->gInternalForceLabel,  dwi, patch);
       int_force[m].initialize(Vector(0,0,0));
 
-      DataWarehouse* parent_old_dw = 
-        new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+      if(!mpm_matl->getIsRigid()){
 
-      ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch,
+        DataWarehouse* parent_old_dw = 
+          new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+
+        ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch,
                                               Ghost::AroundNodes,1,lb->pXLabel);
 
-      parent_old_dw->get(px,   lb->pXLabel,    pset);
-      new_dw->get(pvol,    lb->pVolumeDeformedLabel,  pset);
-      new_dw->get(pstress, lb->pStressLabel_preReloc, pset);
+        constParticleVariable<Point>   px;
+        constParticleVariable<double>  pvol;
+        constParticleVariable<Matrix3> pstress;
 
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
-        
-        for (int k = 0; k < 8; k++){
-          if(patch->containsNode(ni[k])){
-           Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-           int_force[m][ni[k]] -= (div * pstress[idx])  * pvol[idx];    
+        parent_old_dw->get(px,   lb->pXLabel,               pset);
+        new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
+        new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
+
+        Matrix3 stressvol;
+
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+
+          // Get the node indices that surround the cell
+          interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+
+          stressvol  = pstress[idx]*pvol[idx];
+
+          for (int k = 0; k < 8; k++){
+            if(patch->containsNode(ni[k])){
+              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                                            d_S[k].z()*oodx[2]);
+              int_force[m][ni[k]] -= (div * pstress[idx])  * pvol[idx];
+            }
           }
         }
-      }
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-        IntVector n = *iter;
-        INT_FORCE[n]+=int_force[m][n];
-      }
+        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+          IntVector n = *iter;
+          INT_FORCE[n]+=int_force[m][n];
+        }
+      }  // if matl isn't rigid
     }  // matls
 
     for(int m = 0; m < numMPMMatls; m++){
@@ -2498,8 +2504,8 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       d_solver->assembleVector();
       if(isnan(Q)){
         cout << "RHS contains a nan, restarting timestep" << endl;
-        parent_new_dw->abortTimestep();
-        parent_new_dw->restartTimestep();
+        new_dw->abortTimestep();
+        new_dw->restartTimestep();
         return;
       }
      } // first time through non-rigid
@@ -3070,6 +3076,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // This task is done for visualization only
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -3080,62 +3087,67 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
     NCVariable<Matrix3>       GSTRESS;
     new_dw->allocateTemporary(GSTRESS, patch, Ghost::None,0);
+    NCVariable<Vector> INT_FORCE;
+    new_dw->allocateTemporary(INT_FORCE,     patch,Ghost::None,0);
+    INT_FORCE.initialize(Vector(0,0,0));
 
     GSTRESS.initialize(Matrix3(0.));
     StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
-
-#if 0
-    StaticArray<constNCVariable<double> >     gmass(numMatls);
-#endif
-
     StaticArray<constNCVariable<double> >     gvolume(numMatls);
-    StaticArray<constNCVariable<Vector> >     gintforce(numMatls);
+    StaticArray<NCVariable<Vector> >          int_force(numMatls);
 
     Vector dx = patch->dCell();
+    double oodx[3];
+    oodx[0] = 1.0/dx.x();
+    oodx[1] = 1.0/dx.y();
+    oodx[2] = 1.0/dx.z();
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      constParticleVariable<Point>   px;
-      constParticleVariable<double>  pvol;
-      constParticleVariable<Matrix3> pstress;
-
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                              Ghost::AroundNodes,1,lb->pXLabel);
-      old_dw->get(px,          lb->pXLabel,               pset);
-      new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
-      new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
-
-
-      new_dw->get(gvolume[m],  lb->gVolumeLabel, dwi, patch,Ghost::None,0);
-      new_dw->get(gintforce[m],lb->gInternalForceLabel,
-                                                 dwi, patch,Ghost::None,0);
-      new_dw->allocateAndPut(gstress[m],lb->gStressForSavingLabel,dwi, patch);
-
+      new_dw->getModifiable(int_force[m],lb->gInternalForceLabel,  dwi, patch);
+      new_dw->allocateAndPut(gstress[m], lb->gStressForSavingLabel,dwi, patch);
+      new_dw->get(gvolume[m], lb->gVolumeLabel, dwi, patch,Ghost::None,0);
       gstress[m].initialize(Matrix3(0.));
+      int_force[m].initialize(Vector(0.));
 
-      Matrix3 stressvol;
+      if(!mpm_matl->getIsRigid()){
 
-      for(ParticleSubset::iterator iter = pset->begin();
+       constParticleVariable<Point>   px;
+       constParticleVariable<double>  pvol;
+       constParticleVariable<Matrix3> pstress;
+
+       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                              Ghost::AroundNodes,1,lb->pXLabel);
+       old_dw->get(px,          lb->pXLabel,               pset);
+       new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
+       new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
+
+       Matrix3 stressvol;
+
+       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S);
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S);
 
         stressvol  = pstress[idx]*pvol[idx];
 
         for (int k = 0; k < 8; k++){
           if(patch->containsNode(ni[k])){
            gstress[m][ni[k]]       += stressvol * S[k];
+           Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);           int_force[m][ni[k]] -= div * stressvol;
           }
         }
-      }
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+       }
+       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         GSTRESS[c] += (gstress[m][c]);
-      }
+        INT_FORCE[c]+=int_force[m][c];
+       }
+     }  // if matl isn't rigid
     }  // Loop over matls
 
     // gstress will be normalized by gvolume (same for all matls)
@@ -3143,6 +3155,13 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstress[m][c] = GSTRESS[c]/(gvolume[m][c]+1.e-200);
+      }
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      if(!mpm_matl->getIsRigid()){
+       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+         IntVector n = *iter;
+         int_force[m][n]=INT_FORCE[n];
+       }
       }
     }  // Loop over matls
 
@@ -3179,7 +3198,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
             for (int k = projlow.z(); k<projhigh.z(); k++) {
               IntVector ijk(i,j,k);
               // flip sign so that pushing on boundary gives positive force
-              bndyForce[face] -= gintforce[m][ijk];
+              bndyForce[face] -= int_force[m][ijk];
                                                                                 
               double celldepth  = dx[face/2];
               bndyArea [face] += gvolume[m][ijk]/celldepth;
@@ -3196,8 +3215,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
-  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
-      ftit!=d_bndy_traction_faces.end();ftit++) {
+  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin()); ftit!=d_bndy_traction_faces.end();ftit++) {
     new_dw->put(sumvec_vartype(bndyForce[*ftit]),lb->BndyForceLabel[*ftit]);
     new_dw->put(sum_vartype(bndyArea[*ftit]),lb->BndyContactAreaLabel[*ftit]);
   }
