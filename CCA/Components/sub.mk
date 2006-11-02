@@ -15,10 +15,10 @@ ICE            = $(SRCDIR)/ICE
 ifneq ($(IS_WIN),yes)
 # disable ARCHES on windows for now, as we don't know what to do about fortran yet..
 # don't indent these, or fake* will probably fail 
-ARCHES         = $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
-MPMARCHES      = $(SRCDIR)/MPMArches
+#ARCHES        = $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
+#MPMARCHES     = $(SRCDIR)/MPMArches
 endif
-#DUMMY_LIB     = $(SRCDIR)/Dummy
+DUMMY_LIB      = $(SRCDIR)/Dummy
 
 SUBDIRS := \
         $(SRCDIR)/DataArchiver \
