@@ -34,7 +34,7 @@
 #include <Packages/CardioWaveInterface/Core/Model/BuildMembraneTable.h>
 #include <Packages/CardioWaveInterface/Core/Model/BuildStimulusTable.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 using namespace ModelCreation;

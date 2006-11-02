@@ -1,4 +1,4 @@
-itcl_class CardioWave_ContinuousBiDomain_CBDSetupSimulation {
+itcl_class CardioWaveInterface_ContinuousBiDomain_CBDSetupSimulation {
     inherit Module
     constructor {config} {
         set name CBDSetupSimulation

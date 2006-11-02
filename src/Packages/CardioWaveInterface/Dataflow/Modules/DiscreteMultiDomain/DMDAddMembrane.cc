@@ -46,7 +46,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -76,7 +76,7 @@ private:
 DECLARE_MAKER(DMDAddMembrane)
 
 DMDAddMembrane::DMDAddMembrane(GuiContext* ctx)
-  : Module("DMDAddMembrane", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+  : Module("DMDAddMembrane", ctx, Source, "DiscreteMultiDomain", "CardioWaveInterface"),
     guimembranenames_(get_ctx()->subVar("mem-names")),
     guimembranename_(get_ctx()->subVar("mem-name")),
     guimembraneparam_(get_ctx()->subVar("mem-param")),

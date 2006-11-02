@@ -46,7 +46,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -66,7 +66,7 @@ private:
 DECLARE_MAKER(DMDAddReference)
 
 DMDAddReference::DMDAddReference(GuiContext* ctx)
-  : Module("DMDAddReference", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+  : Module("DMDAddReference", ctx, Source, "DiscreteMultiDomain", "CardioWaveInterface"),
     guiusefieldvalue_(get_ctx()->subVar("usefieldvalue")),
     guireferencevalue_(get_ctx()->subVar("referencevalue")),
     guireferencedomain_(get_ctx()->subVar("referencedomain")),

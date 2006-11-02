@@ -45,7 +45,7 @@
 #include <algorithm>
 #include <sci_hash_map.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 

@@ -28,7 +28,7 @@
 
 #include <Packages/CardioWaveInterface/Core/Model/BuildMembraneTable.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -83,7 +83,7 @@ bool BuildMembraneTableAlgo::BuildMembraneTable(ProgressReporter *pr, FieldHandl
     fi.get_field_name()+","+fi2.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("CardioWave");
+  ci->add_namespace("CardioWaveInterface");
   ci->add_namespace("SCIRun");
 
   fi.fill_compile_info(ci);

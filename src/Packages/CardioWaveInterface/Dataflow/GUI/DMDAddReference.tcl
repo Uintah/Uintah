@@ -1,4 +1,4 @@
-itcl_class CardioWave_DiscreteMultiDomain_DMDAddReference {
+itcl_class CardioWaveInterface_DiscreteMultiDomain_DMDAddReference {
     inherit Module
     constructor {config} {
         set name DMDAddReference

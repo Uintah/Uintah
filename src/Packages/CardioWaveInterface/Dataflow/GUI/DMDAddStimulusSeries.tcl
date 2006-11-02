@@ -1,4 +1,4 @@
-itcl_class CardioWave_DiscreteMultiDomain_DMDAddStimulusSeries {
+itcl_class CardioWaveInterface_DiscreteMultiDomain_DMDAddStimulusSeries {
     inherit Module
     constructor {config} {
         set name DMDAddStimulusSeries
