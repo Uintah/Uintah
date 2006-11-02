@@ -216,6 +216,7 @@
     <AMR>
        <ICE>
          <orderOfInterpolation>1  </orderOfInterpolation>
+         <do_Refluxing>  false </do_Refluxing>
          <Refinement_Criteria_Thresholds>
          </Refinement_Criteria_Thresholds>
        </ICE>
