@@ -1804,10 +1804,10 @@ LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
   if (ii<0 && ii>(-MIN_ELEMENT_VAL)) ii=0;
   if (jj<0 && jj>(-MIN_ELEMENT_VAL)) jj=0;
   if (kk<0 && kk>(-MIN_ELEMENT_VAL)) kk=0;
-
-  const unsigned int i = (unsigned int)floor(ii);
-  const unsigned int j = (unsigned int)floor(jj);
-  const unsigned int k = (unsigned int)floor(kk);
+	
+  const int i = static_cast<int>(floor(ii));
+  const int j = static_cast<int>(floor(jj));
+  const int k = static_cast<int>(floor(kk));
 
   if (i < (ni_-1) && i >= 0 &&
       j < (nj_-1) && j >= 0 &&
