@@ -42,7 +42,7 @@
 #include <dirent.h>
 #endif
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 

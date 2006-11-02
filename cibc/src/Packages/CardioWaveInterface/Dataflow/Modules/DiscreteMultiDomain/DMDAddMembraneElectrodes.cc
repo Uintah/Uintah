@@ -43,7 +43,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -57,7 +57,7 @@ public:
 
 DECLARE_MAKER(DMDAddMembraneElectrodes)
 DMDAddMembraneElectrodes::DMDAddMembraneElectrodes(GuiContext* ctx)
-  : Module("DMDAddMembraneElectrodes", ctx, Source, "DiscreteMultiDomain", "CardioWave")
+  : Module("DMDAddMembraneElectrodes", ctx, Source, "DiscreteMultiDomain", "CardioWaveInterface")
 {
 }
 

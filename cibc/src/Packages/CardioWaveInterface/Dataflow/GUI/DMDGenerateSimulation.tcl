@@ -1,4 +1,4 @@
-itcl_class CardioWave_DiscreteMultiDomain_DMDGenerateSimulation {
+itcl_class CardioWaveInterface_DiscreteMultiDomain_DMDGenerateSimulation {
     inherit Module
     constructor {config} {
         set name DMDGenerateSimulation

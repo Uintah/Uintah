@@ -48,7 +48,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -101,7 +101,7 @@ private:
 
 DECLARE_MAKER(DMDSetupSimulation)
 DMDSetupSimulation::DMDSetupSimulation(GuiContext* ctx)
-  : Module("DMDSetupSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+  : Module("DMDSetupSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWaveInterface"),
     guisolvernames_(get_ctx()->subVar("solver-names")),
     guisolvername_(get_ctx()->subVar("solver-name")),
     guisolverparam_(get_ctx()->subVar("solver-param")),

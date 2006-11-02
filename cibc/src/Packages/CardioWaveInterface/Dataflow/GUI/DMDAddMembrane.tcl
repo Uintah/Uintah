@@ -1,4 +1,4 @@
-itcl_class CardioWave_DiscreteMultiDomain_DMDAddMembrane {
+itcl_class CardioWaveInterface_DiscreteMultiDomain_DMDAddMembrane {
     inherit Module
     constructor {config} {
         set name DMDAddMembrane

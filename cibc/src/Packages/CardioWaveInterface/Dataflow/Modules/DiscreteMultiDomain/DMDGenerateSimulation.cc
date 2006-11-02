@@ -39,7 +39,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -60,7 +60,7 @@ private:
 
 DECLARE_MAKER(DMDGenerateSimulation)
 DMDGenerateSimulation::DMDGenerateSimulation(GuiContext* ctx)
-  : Module("DMDGenerateSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+  : Module("DMDGenerateSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWaveInterface"),
     gui_filename_(ctx->subVar("filename")),
     gui_enable_debug_(ctx->subVar("usedebug")),
     gui_build_visualization_bundle_(ctx->subVar("buildvisbundle")),

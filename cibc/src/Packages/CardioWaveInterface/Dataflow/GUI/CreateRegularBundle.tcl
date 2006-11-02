@@ -1,4 +1,4 @@
-itcl_class CardioWave_TissueModel_CreateRegularBundle {
+itcl_class CardioWaveInterface_TissueModel_CreateRegularBundle {
     inherit Module
     constructor {config} {
         set name CreateRegularBundle

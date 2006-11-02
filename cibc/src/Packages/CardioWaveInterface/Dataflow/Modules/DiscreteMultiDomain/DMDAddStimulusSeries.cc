@@ -47,7 +47,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -72,7 +72,7 @@ private:
 DECLARE_MAKER(DMDAddStimulusSeries)
 
 DMDAddStimulusSeries::DMDAddStimulusSeries(GuiContext* ctx)
-  : Module("DMDAddStimulusSeries", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
+  : Module("DMDAddStimulusSeries", ctx, Source, "DiscreteMultiDomain", "CardioWaveInterface"),
     guidomain_(get_ctx()->subVar("stim-domain")),
     guicurrent_(get_ctx()->subVar("stim-current")),
     guistart_(get_ctx()->subVar("stim-start")),

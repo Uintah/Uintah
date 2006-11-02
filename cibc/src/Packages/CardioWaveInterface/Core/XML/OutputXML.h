@@ -32,7 +32,7 @@
 #include <string>
 #include <list>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 class OutputItem {
   public:
