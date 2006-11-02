@@ -73,8 +73,8 @@ public:
   static int polynomial_order() { return 3; }
 
   //! get weight factors at parametric coordinate 
-  inline
-  static void get_weights(const std::vector<double> &coords, double *w) 
+  template <class VECTOR>
+  static void get_weights(const VECTOR &coords, double *w) 
   {
     const double x = coords[0];
     w[0] = (x-1)*(x-1)*(1 + 2*x);
@@ -84,8 +84,8 @@ public:
   }
   
   //! get value at parametric coordinate
-  template <class ElemData>
-  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
+  template <class ElemData, class VECTOR>
+  T interpolate(const VECTOR &coords, const ElemData &cd) const
   {
     double w[4];
     get_weights(coords, w); 
@@ -96,8 +96,8 @@ public:
   }
   
   //! get derivative weight factors at parametric coordinate 
-  inline
-  static void get_derivate_weights(const std::vector<double> &coords, double *w) 
+  template <class VECTOR>
+  static void get_derivate_weights(const VECTOR &coords, double *w) 
   {
     const double x = coords[0];
     w[0] = 6*(-1 + x)*x;
@@ -107,23 +107,23 @@ public:
   }
 
   //! get first derivative at parametric coordinate
-  template <class ElemData>
+  template <class ElemData, class VECTOR>
   void derivate(const std::vector<double> &coords, const ElemData &cd, 
-		std::vector<T> &derivs) const
+		VECTOR &derivs) const
   {
     const double x=coords[0]; 
  
     derivs.resize(1);
 
-    derivs[0] = T(6*(-1 + x)*x * cd.node0() 
+    derivs[0] = static_cast<typename VECTOR::value_type>(6*(-1 + x)*x * cd.node0() 
 		  +(1 - 4*x + 3*x*x) * this->derivs_[cd.node0_index()][0] 
 		  -6*(-1 + x)*x * cd.node1() 
 		  +x*(-2 + 3*x) * this->derivs_[cd.node1_index()][0]);
   }
 
   //! get parametric coordinate for value within the element
-  template <class ElemData>
-  bool get_coords(std::vector<double> &coords, const T& value, 
+  template <class ElemData, class VECTOR>
+  bool get_coords(VECTOR &coords, const T& value, 
 		  const ElemData &cd) const  
   {
     CrvLocate< CrvCubicHmt<T> > CL;

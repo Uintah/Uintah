@@ -25,6 +25,7 @@
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
@@ -65,6 +66,8 @@ public:
   { return operator()(0, 0, idx); }    
   const value_type &operator[](typename Msh::Node::index_type idx) const
   { return operator()(idx.k_,idx.j_,idx.i_); }    
+  const value_type &operator[](SCIRun::Mesh::index_type idx) const
+  { return Array3<Data>::operator()(idx); }
 
   value_type &operator[](typename Msh::Cell::index_type idx)
   { return operator()(idx.k_,idx.j_,idx.i_); } 
@@ -74,6 +77,8 @@ public:
   { return operator()(0, 0, idx); }    
   value_type &operator[](typename Msh::Node::index_type idx)
   { return operator()(idx.k_,idx.j_,idx.i_); }    
+  value_type &operator[](SCIRun::Mesh::index_type idx)
+  { return Array3<Data>::operator()(idx); }
 
   void resize(const typename Msh::Node::size_type &size) 
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
@@ -206,6 +211,8 @@ public:
   { return operator()(0, idx); }
   const value_type &operator[](typename Msh::Node::index_type idx) const
   { return operator()(idx.j_, idx.i_); }
+  const value_type &operator[](SCIRun::Mesh::index_type idx) const
+  { return Array2<Data>::operator()(static_cast<unsigned int>(idx)); }
 
   value_type &operator[](typename Msh::Cell::index_type idx)
   { return operator()(0, idx); } 
@@ -215,6 +222,8 @@ public:
   { return operator()(0, idx); }
   value_type &operator[](typename Msh::Node::index_type idx)
   { return operator()(idx.j_, idx.i_); }
+  value_type &operator[](SCIRun::Mesh::index_type idx)
+  { return Array2<Data>::operator()(static_cast<unsigned int>(idx)); }
 
   void resize(const typename Msh::Node::size_type &size)
   { Array2<Data>::resize(size.j_, size.i_); }

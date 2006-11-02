@@ -32,6 +32,7 @@
  * DATE: 17 SEP 2005
  */ 
  
+#include <Core/Algorithms/Regression/RegressionAlgo.h> 
 #include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -68,6 +69,8 @@ private:
   GuiString data_;
   GuiInt    fieldnamecount_;
   GuiString update_all_data_;
+  
+  BundleHandle oldbundle_;
 };
 
 
@@ -104,6 +107,8 @@ void ParameterList::execute()
 
   std::string parname, partype, pardata;
    
+  SCIRunAlgo::RegressionAlgo ralgo(this);
+   
   for (size_t p = 0; p < datalist.size(); p++)
   {
     // Cycle to through all parameters and add then to bundle.
@@ -120,6 +125,14 @@ void ParameterList::execute()
       double *dataptr = matrix->get_data_pointer();
       dataptr[0] = 0.0;
       if (pardata == "true") dataptr[0] = 1.0;
+      
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isMatrix(parname))
+      {
+        MatrixHandle oldmatrix = oldbundle_->getMatrix(parname);
+        if (ralgo.CompareMatrices(matrix,oldmatrix)) matrix = oldmatrix;
+      }      
+      
       bundle->setMatrix(parname,matrix);
     }
 
@@ -129,6 +142,14 @@ void ParameterList::execute()
       double *dataptr = matrix->get_data_pointer();
       std::istringstream iss(pardata);
       iss >> dataptr[0];
+
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isMatrix(parname))
+      {
+        MatrixHandle oldmatrix = oldbundle_->getMatrix(parname);
+        if (ralgo.CompareMatrices(matrix,oldmatrix)) matrix = oldmatrix;
+      }      
+
       bundle->setMatrix(parname,matrix);
     }
     
@@ -143,6 +164,14 @@ void ParameterList::execute()
         std::istringstream iss(subdata[r]);
         iss >> dataptr[r];
       }
+
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isMatrix(parname))
+      {
+        MatrixHandle oldmatrix = oldbundle_->getMatrix(parname);
+        if (ralgo.CompareMatrices(matrix,oldmatrix)) matrix = oldmatrix;
+      }      
+
       bundle->setMatrix(parname,matrix);
     }
     
@@ -168,6 +197,14 @@ void ParameterList::execute()
         std::istringstream iss6(subdata[5]);
         iss6 >> dataptr[8];
       }
+
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isMatrix(parname))
+      {
+        MatrixHandle oldmatrix = oldbundle_->getMatrix(parname);
+        if (ralgo.CompareMatrices(matrix,oldmatrix)) matrix = oldmatrix;
+      }      
+
       
       bundle->setMatrix(parname,matrix);
     }
@@ -183,22 +220,47 @@ void ParameterList::execute()
         std::istringstream iss(subdata[r]);
         iss >> dataptr[r];
       }
+
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isMatrix(parname))
+      {
+        MatrixHandle oldmatrix = oldbundle_->getMatrix(parname);
+        if (ralgo.CompareMatrices(matrix,oldmatrix)) matrix = oldmatrix;
+      }      
+
       bundle->setMatrix(parname,matrix);
     }
     
     if (partype == "string")
     {
       StringHandle str = scinew String(pardata);
+
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isString(parname))
+      {
+        StringHandle oldstring = oldbundle_->getString(parname);
+        if (ralgo.CompareStrings(str,oldstring)) str = oldstring;
+      }      
+
       bundle->setString(parname,str);
     }    
     
     if (partype == "filename")
     {
       StringHandle str = scinew String(pardata);
+
+      if (oldbundle_.get_rep())
+      if (oldbundle_->isString(parname))
+      {
+        StringHandle oldstring = oldbundle_->getString(parname);
+        if (ralgo.CompareStrings(str,oldstring)) str = oldstring;
+      }      
+
       bundle->setString(parname,str);
     }    
   } 
 
+  oldbundle_ = bundle;
   send_output_handle("ParameterList", bundle);
 }
 

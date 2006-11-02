@@ -122,7 +122,7 @@ class SCISHARE ArrayObjectFieldDataScalarAlgoT : public ArrayObjectFieldDataAlgo
 
     virtual bool  setfield(SCIRun::FieldHandle handle);    
     virtual void  reset();
-    virtual void reset(unsigned int offset);
+    virtual void  reset(unsigned int offset);
     
   private:
     typename LOC::iterator it_;

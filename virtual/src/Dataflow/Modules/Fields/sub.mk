@@ -116,6 +116,7 @@ PSELIBS := \
 	Core/Algorithms/Fields   \
 	Core/Algorithms/Visualization   \
 	Core/Algorithms/Geometry \
+	Core/Algorithms/Util \
 	Core/Basis               \
 	Core/Datatypes           \
 	Core/Exceptions          \

@@ -26,22 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-/*
- *  PointCloudMesh.h: countour mesh
- *
- *  Written by:
- *   Chris Moulding
- *   Department of Computer Science
- *   University of Utah
- *   January 2001
- *
- *  Copyright (C) 2001 SCI Group
- *
- */
-
-#ifndef SCI_project_PointCloudMesh_h
-#define SCI_project_PointCloudMesh_h 1
+#ifndef CORE_DATATYPES_POINTCLOUDMESH_H
+#define CORE_DATATYPES_POINTCLOUDMESH_H 1
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
@@ -229,7 +215,7 @@ public:
   { ASSERTFAIL("PointCloudField::get_weights for cells isn't supported"); }
 
   void get_random_point(Point &p,
-                        const typename Elem::index_type &i,
+                        const typename Elem::index_type i,
                         MusilRNG &rng) const
   { get_center(p, i); }
 
@@ -259,11 +245,14 @@ public:
   virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idpc;
+  static MeshTypeID mesh_idpc;
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
   Basis& get_basis() { return basis_; }
+  virtual int basis_order() { return (basis_.polynomial_order()); }
+
 
   void pwl_approx_edge(vector<vector<double> > &,
                        typename Elem::index_type,
@@ -293,9 +282,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     J.resize(1);
     J[0].x(0.0L);
@@ -312,7 +302,48 @@ public:
   { return node_type_description(); }
 
   // returns a PointCloudMesh
-  static Persistent *maker() { return new PointCloudMesh(); }
+  static Persistent *maker() { return scinew PointCloudMesh(); }
+  static MeshHandle mesh_maker() { return scinew PointCloudMesh(); }
+
+
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  virtual bool has_virtual_interface() const;
+
+  virtual void size(VNode::size_type& size) const;
+  virtual void size(VElem::size_type& size) const;
+  
+  virtual void get_nodes(VNode::array_type& nodes, VElem::index_type i) const;    
+  virtual void get_elems(VElem::array_type& elems, VNode::index_type i) const;
+  
+  virtual void get_center(Point &point, VNode::index_type i) const;
+  virtual void get_center(Point &point, VElem::index_type i) const;
+  
+  virtual double get_size(VNode::index_type i) const;
+  virtual double get_size(VElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(VNode::index_type &i, const Point &point) const;
+  virtual bool locate(VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+
+  virtual void get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const;
+
+  virtual void set_point(const Point &point, VNode::index_type i);
+  virtual void get_points(vector<Point>& points) const;
+
+  virtual void add_node(const Point &point,VNode::index_type &i);
+  virtual void add_elem(const VNode::array_type &nodes,VElem::index_type &i);
 
 private:
   //! the nodes
@@ -326,8 +357,13 @@ private:
 
 template <class Basis>
 PersistentTypeID
-PointCloudMesh<Basis>::type_id(type_name(-1), "Mesh",
-                               PointCloudMesh<Basis>::maker);
+PointCloudMesh<Basis>::type_idpc(type_name(-1), "Mesh",
+                                 PointCloudMesh<Basis>::maker);
+
+template <class Basis>
+MeshTypeID
+PointCloudMesh<Basis>::mesh_idpc(type_name(-1), 
+                                 PointCloudMesh<Basis>::mesh_maker);
 
 
 template <class Basis>
@@ -657,6 +693,197 @@ PointCloudMesh<Basis>::cell_type_description()
   return td;
 }
 
+
+//---------------------------------------
+// VIRTUAL INTERFACE FUNCTIONS
+  
+  
+template <class Basis>
+bool 
+PointCloudMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::size(VNode::size_type& sz) const
+{
+  typename Node::index_type s; size(s); sz = VNode::index_type(s);
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::size(VElem::size_type& sz) const
+{
+  typename Elem::index_type s; size(s); sz = VElem::index_type(s);
+}
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                                 VElem::index_type i) const
+{
+  nodes.resize(1); nodes[0] = static_cast<VNode::index_type>(i);
+}
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::get_elems(VElem::array_type& elems, 
+                                 VNode::index_type i) const
+{
+  elems.resize(1); elems[0] = static_cast<VElem::index_type>(i);
+}
+
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::get_center(Point &p, Mesh::VNode::index_type idx) const
+{
+  p = points_[idx]; 
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::get_center(Point &p, Mesh::VElem::index_type idx) const
+{
+  p = points_[idx]; 
+}
+
+
+template <class Basis>
+double
+PointCloudMesh<Basis>::get_size(VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+PointCloudMesh<Basis>::get_size(VElem::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::get_weights(const Point& p,VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename Node::index_type idx;
+  if (locate(idx, p))
+  {
+    nodes.resize(1);
+    weights.resize(1);
+    nodes[0] = static_cast<VNode::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    weights.resize(0);
+    nodes.resize(0);
+  }
+}
+
+
+template <class Basis>
+void
+PointCloudMesh<Basis>::get_weights(const Point& p,VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename Node::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    weights.resize(0);
+    elems.resize(0);
+  }
+}
+
+
+template <class Basis>
+bool 
+PointCloudMesh<Basis>::locate(VNode::index_type &vi, const Point &point) const
+{
+  typename Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+PointCloudMesh<Basis>::locate(VElem::index_type &vi, const Point &point) const
+{
+  typename Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+PointCloudMesh<Basis>::get_coords(vector<double> &coords, const Point &point, VElem::index_type i) const
+{
+  return(get_coords(coords,point,typename Elem::index_type(i)));
+}  
+  
+template <class Basis>
+void 
+PointCloudMesh<Basis>::interpolate(Point &p, const vector<double> &coords, VElem::index_type i) const
+{
+  interpolate(p,coords,typename Elem::index_type(i));
+}
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, VElem::index_type i) const
+{
+  derivate(coords,typename Elem::index_type(i),p);
+}
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::get_points(vector<Point>& points) const
+{
+  points = points_; 
+}
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::set_point(const Point &point, VNode::index_type i)
+{
+  points_[i] = point;
+}
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::add_node(const Point &point,VNode::index_type &vi)
+{
+  vi = static_cast<VNode::index_type>(add_node(point));
+}  
+  
+template <class Basis>
+void 
+PointCloudMesh<Basis>::add_elem(const VNode::array_type &nodes,VElem::index_type &vi)
+{
+  typename Node::array_type nnodes;
+  convert_vector(nnodes,nodes);
+  vi = static_cast<VElem::index_type>(add_elem(nnodes));
+}  
+
+template <class Basis>
+void 
+PointCloudMesh<Basis>::get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const
+{
+  get_random_point(p,typename Elem::index_type(i),rng);
+}
 
 } // namespace SCIRun
 

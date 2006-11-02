@@ -580,6 +580,7 @@ DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b) const
     }
     b[i]=sum;
   }
+}
 #endif
 }
 

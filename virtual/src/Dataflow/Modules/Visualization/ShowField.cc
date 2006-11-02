@@ -45,6 +45,7 @@
 #include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
+#include <Core/Algorithms/Util/FieldInformation.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
@@ -349,42 +350,28 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   // Test for vector data possibility
   if (fld_handle.get_rep() == 0) { return false; }
 
-  bool hsd = false;
-  bool hvd = false;
-  bool htd = false;
-  nodes_as_disks_.reset();
+  FieldInformation fi(fld_handle);
+  
+  bool hsd = fi.is_scalar();
+  bool hvd = fi.is_vector();
+  bool htd = fi.is_tensor();
+
   bool disks = false;
-  bool result = false;
-  if (fld_handle->query_scalar_interface(this).get_rep() != 0)
-  {
-    hsd = true;
-    result = true;
-  }
-  else if (fld_handle->query_vector_interface(this).get_rep() != 0)
-  {
-    hvd = true;
-    if (fld_handle->basis_order() == 1)
-    {
-      disks = true;
-    }
-    result = true;
-  }
-  else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
-  {
-    htd = true;
-    result = true;
-  }
-  if (nodes_as_disks_.get() != disks)
-  {
-    nodes_as_disks_.set(disks);
-  }
+  if (hvd) if (fld_handle->basis_order() == 1) disks = true;
 
   has_scalar_data_.set(hsd);
   has_vector_data_.set(hvd);
   has_tensor_data_.set(htd);
 
-  return result;
+  nodes_as_disks_.reset();
+  if (nodes_as_disks_.get() != disks)
+  {
+    nodes_as_disks_.set(disks);
+  }
+
+  return (hsd|hvd|htd);
 }
+
 
 
 bool
@@ -392,70 +379,102 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
 				 FieldHandle vfld_handle,
 				 bool recompile_nonvector)
 {
-  const TypeDescription *ftd = fld_handle->get_type_description();
-  const TypeDescription *ltd = fld_handle->order_type_description();
   // description for just the data in the field
   cur_field_data_basis_type_ = 
     fld_handle->get_type_description(Field::BASIS_TD_E)->get_name();
 
   if (recompile_nonvector)
   {
-    // Get the Algorithm.
-    CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
-    if (!module_dynamic_compile(ci, renderer_))
+    if(fld_handle->has_virtual_interface())
     {
-      field_generation_ = -1;
-      mesh_generation_ = -1;
-      vector_generation_ = -1;
-      return false;
+      renderer_ = scinew RenderFieldVirtual();
+    }
+    else
+    {
+      const TypeDescription *ftd = fld_handle->get_type_description();
+      const TypeDescription *ltd = fld_handle->order_type_description();
+      CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
+      if (!module_dynamic_compile(ci, renderer_))
+      {
+        field_generation_ = -1;
+        mesh_generation_ = -1;
+        vector_generation_ = -1;
+        return false;
+      }
+    }
+  }
+  
+  FieldInformation vfi(vfld_handle);
+
+  if (vfld_handle.get_rep() && vfi.is_scalar())
+  {
+    if (vfld_handle->has_virtual_interface() && fld_handle->has_virtual_interface())
+    {
+      data_scalar_renderer_ = scinew RenderScalarFieldVirtual();
+    }
+    else
+    {  
+      const TypeDescription *ftd = fld_handle->get_type_description();
+      const TypeDescription *ltd = fld_handle->order_type_description();
+      const TypeDescription *vftd = vfld_handle->get_type_description();
+      CompileInfoHandle dci =
+        RenderScalarFieldBase::get_compile_info(vftd, ftd, ltd);
+      if (!module_dynamic_compile(dci, data_scalar_renderer_))
+      {
+        field_generation_ = -1;
+        mesh_generation_ = -1;
+        vector_generation_ = -1;
+        data_scalar_renderer_ = 0;
+        return false;
+      }
     }
   }
 
-  if (vfld_handle.get_rep() &&
-      vfld_handle->query_scalar_interface(this).get_rep())
+  if (vfld_handle.get_rep() && vfi.is_vector())
   {
-    const TypeDescription *vftd = vfld_handle->get_type_description();
-    CompileInfoHandle dci =
-      RenderScalarFieldBase::get_compile_info(vftd, ftd, ltd);
-    if (!module_dynamic_compile(dci, data_scalar_renderer_))
+    if (vfld_handle->has_virtual_interface() && fld_handle->has_virtual_interface())
     {
-      field_generation_ = -1;
-      mesh_generation_ = -1;
-      vector_generation_ = -1;
-      data_scalar_renderer_ = 0;
-      return false;
+      data_vector_renderer_ = scinew RenderVectorFieldVirtual();
+    }
+    else
+    {  
+      const TypeDescription *ftd = fld_handle->get_type_description();
+      const TypeDescription *ltd = fld_handle->order_type_description();
+      const TypeDescription *vftd = vfld_handle->get_type_description();
+      CompileInfoHandle dci =
+        RenderVectorFieldBase::get_compile_info(vftd, ftd, ltd);
+      if (!module_dynamic_compile(dci, data_vector_renderer_))
+      {
+        field_generation_ = -1;
+        mesh_generation_ = -1;
+        vector_generation_ = -1;
+        data_vector_renderer_ = 0;
+        return false;
+      }
     }
   }
 
-  if (vfld_handle.get_rep() &&
-      vfld_handle->query_vector_interface(this).get_rep())
+  if (vfld_handle.get_rep() && vfi.is_tensor())
   {
-    const TypeDescription *vftd = vfld_handle->get_type_description();
-    CompileInfoHandle dci =
-      RenderVectorFieldBase::get_compile_info(vftd, ftd, ltd);
-    if (!module_dynamic_compile(dci, data_vector_renderer_))
+    if (vfld_handle->has_virtual_interface() && fld_handle->has_virtual_interface())
     {
-      field_generation_ = -1;
-      mesh_generation_ = -1;
-      vector_generation_ = -1;
-      data_vector_renderer_ = 0;
-      return false;
+      data_tensor_renderer_ = scinew RenderTensorFieldVirtual();
     }
-  }
-
-  if (vfld_handle.get_rep() &&
-      vfld_handle->query_tensor_interface(this).get_rep())
-  {
-    const TypeDescription *vftd = vfld_handle->get_type_description();
-    CompileInfoHandle dci =
-      RenderTensorFieldBase::get_compile_info(vftd, ftd, ltd);
-    if (!module_dynamic_compile(dci, data_tensor_renderer_))
-    {
-      field_generation_ = -1;
-      mesh_generation_ = -1;
-      vector_generation_ = -1;
-      data_tensor_renderer_ = 0;
-      return false;
+    else
+    {  
+      const TypeDescription *ftd = fld_handle->get_type_description();
+      const TypeDescription *ltd = fld_handle->order_type_description();
+      const TypeDescription *vftd = vfld_handle->get_type_description();
+      CompileInfoHandle dci =
+        RenderTensorFieldBase::get_compile_info(vftd, ftd, ltd);
+      if (!module_dynamic_compile(dci, data_tensor_renderer_))
+      {
+        field_generation_ = -1;
+        mesh_generation_ = -1;
+        vector_generation_ = -1;
+        data_tensor_renderer_ = 0;
+        return false;
+      }
     }
   }
 
@@ -602,50 +621,70 @@ ShowField::execute()
   FieldHandle fld_handle;
   if (!get_input_handle("Field", fld_handle, false))
   {
-    if( !in_power_app() )
-      error("Input field is empty.");
+    if( !in_power_app()) error("Input field is empty.");
     return;
   }
 
   FieldHandle vfld_handle;
   if (get_input_handle("Orientation Field", vfld_handle, false))
   {
-    if (vfld_handle->basis_order() != fld_handle->basis_order()) {
+    if (vfld_handle->basis_order() != fld_handle->basis_order()) 
+    {
       error("The Color and Orientation Fields must share the same data location.");
       error_ = true;
       return;
     }
-
-    if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep()) {
-      // If not the same mesh make sure they are the same type.
-      if( fld_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() !=
-	  vfld_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() ||
-	  fld_handle->get_type_description(Field::MESH_TD_E)->get_name() !=
-	  vfld_handle->get_type_description(Field::MESH_TD_E)->get_name() ) {
-	error("The input fields must have the same mesh type.");
-	error_ = true;
-	return;
+  }
+  
+  // Get the information on the types of the fields
+  FieldInformation fi(fld_handle);
+  FieldInformation vfi2(vfld_handle);  // If handle is empty no data is stored
+  
+  
+  if (vfld_handle.get_rep())
+  {
+    if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep()) 
+    {
+      if (fi.get_mesh_type_id() != vfi2.get_mesh_type_id())
+      {
+        error("The input fields must have the same mesh type.");
+        error_ = true;
+        return;
       }
 
       // Code to replace the old FieldCountAlgorithm
-      SCIRunAlgo::FieldsAlgo algo(this);
+
       int num_nodes0, num_nodes1;
       int num_elems0, num_elems1;
-      if (!(algo.GetFieldInfo(fld_handle,num_nodes0,num_elems0))) return;
-      if (!(algo.GetFieldInfo(vfld_handle,num_nodes1,num_elems1))) return;
+              
+      if ( fld_handle->has_virtual_interface() && vfld_handle->has_virtual_interface())
+      {
+        num_nodes0 = fld_handle->mesh()->num_nodes();
+        num_nodes1 = vfld_handle->mesh()->num_nodes();
+        num_elems0 = fld_handle->mesh()->num_elems();
+        num_elems1 = vfld_handle->mesh()->num_elems();
+      }
+      else
+      {
+        SCIRunAlgo::FieldsAlgo algo(this);
 
-      if( num_nodes0 != num_nodes1 || num_elems0 != num_elems1 ) {
-	error("The input meshes must have the same number of nodes and elements.");
-	error_ = true;
-	return;
-      } else {
-	warning("The input fields do not have the same mesh but appear to be the same otherwise.");
+        if (!(algo.GetFieldInfo(fld_handle,num_nodes0,num_elems0))) return;
+        if (!(algo.GetFieldInfo(vfld_handle,num_nodes1,num_elems1))) return;
+      }
+      
+      if( num_nodes0 != num_nodes1 || num_elems0 != num_elems1 ) 
+      {
+        error("The input meshes must have the same number of nodes and elements.");
+        error_ = true;
+        return;
+      } 
+      else 
+      {
+        warning("The input fields do not have the same mesh but appear to be the same otherwise.");
       }
     }
   }
-  else if (fld_handle->query_scalar_interface(this).get_rep() ||
-	   fld_handle->query_vector_interface(this).get_rep() ||
-	   fld_handle->query_tensor_interface(this).get_rep())
+  else if (fi.is_svt())
   {
     vfld_handle = fld_handle;
   }
@@ -654,6 +693,8 @@ ShowField::execute()
     vfld_handle = 0;
     warning("No Scalar, Vector, or Tensor data found, drawing mesh geometry only.");
   }
+
+  FieldInformation vfi(vfld_handle);  // If handle is empty no data is stored
 
   update_state(Completed);
 
@@ -704,10 +745,9 @@ ShowField::execute()
   }
   data_resolution_ = gui_data_resolution_.get();
 
-  const TypeDescription *td = 
-    fld_handle->get_type_description(Field::MESH_TD_E);
-  if (color_map_changed && faces_usetexture_.get() &&
-      (td->get_name().find("ImageMesh") != string::npos)) {
+
+  if (color_map_changed && faces_usetexture_.get() && fi.is_image())
+  {
     faces_dirty_ = true;
   }
 
@@ -810,9 +850,13 @@ ShowField::execute()
   if (fname != "" && fname[fname.size()-1] != ' ') { fname = fname + " "; }
   approx_div_.reset();
   normalize_vectors_.reset();
+  
+  // Dynamic algorithm starts here
+  
   if (renderer_.get_rep())
   {
     if (faces_normals_.get()) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
+ 
     renderer_->render(fld_handle,
 		      do_nodes, do_edges, do_faces,
 		      color_map_, def_material_,
@@ -829,47 +873,52 @@ ShowField::execute()
 		      faces_usetexture_.get());
   }
 
+
+
   // Cleanup.
-  if (do_nodes || color_map_changed) {
+  if (do_nodes || color_map_changed) 
+  {
     nodes_dirty_ = false;
-    if (renderer_.get_rep() && nodes_on) {
+    if (renderer_.get_rep() && nodes_on) 
+    {
       const char *name = nodes_transparency_.get()?"Transparent Nodes":"Nodes";
       if (node_id_) ogeom_->delObj(node_id_);
 
-      GeomHandle gmat =
-	scinew GeomMaterial(renderer_->node_switch_, def_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      GeomHandle gmat = scinew GeomMaterial(renderer_->node_switch_, def_material_);
+      GeomHandle geom =	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       node_id_ = ogeom_->addObj(geom, fname + name);
     }
   }
-  if (do_edges || color_map_changed) {
+  
+  if (do_edges || color_map_changed) 
+  {
     edges_dirty_ = false;
-    if (renderer_.get_rep() && edges_on) {
+    if (renderer_.get_rep() && edges_on)
+    {
       const char *name = edges_transparency_.get()?"Transparent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
-      GeomHandle gmat =
-	scinew GeomMaterial(renderer_->edge_switch_, def_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      GeomHandle gmat = scinew GeomMaterial(renderer_->edge_switch_, def_material_);
+      GeomHandle geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       edge_id_ = ogeom_->addObj(geom, fname + name);
     }
   }
-  if (do_faces || color_map_changed) {
+  
+  if (do_faces || color_map_changed) 
+  {
     faces_dirty_ = false;
     if (renderer_.get_rep() && faces_on)
     {
       const char *name = faces_transparency_.get()?"Transparent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
-      GeomHandle gmat =
-	scinew GeomMaterial(renderer_->face_switch_, def_material_);
+      GeomHandle gmat = scinew GeomMaterial(renderer_->face_switch_, def_material_);
       GeomHandle geom;
-      if (faces_usetexture_.get() &&
-	  dynamic_cast<IMesh *>(fld_handle->mesh().get_rep()))
+      if (faces_usetexture_.get() && dynamic_cast<IMesh *>(fld_handle->mesh().get_rep()))
       {
-	geom = scinew GeomSwitch(gmat);
-      } else {
-	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+        geom = scinew GeomSwitch(gmat);
+      } 
+      else 
+      {
+        geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       }
       face_id_ = ogeom_->addObj(geom, fname + name);
     }
@@ -877,16 +926,12 @@ ShowField::execute()
   if (do_data || color_map_changed)
   {
     data_dirty_ = false;
-    if (vfld_handle.get_rep() &&
-        vfld_handle->query_vector_interface().get_rep() &&
-	data_vector_renderer_.get_rep() &&
-	vectors_on_.get())
+    if (vfi.is_vector() && data_vector_renderer_.get_rep() && vectors_on_.get())
     {
       if (data_id_) ogeom_->delObj(data_id_);
       if (do_data)
       {
-	data_geometry_ =
-	  data_vector_renderer_->render_data(vfld_handle,
+        data_geometry_ = data_vector_renderer_->render_data(vfld_handle,
 					     fld_handle,
 					     color_map_,
 					     def_material_,
@@ -896,21 +941,16 @@ ShowField::execute()
 					     bidirectional_.get(),
 					     data_resolution_);
       }
+      
       const string vdname = (vdt=="Needles")?"Transparent Vectors":"Vectors";
-      GeomHandle gmat =
-	scinew GeomMaterial(data_geometry_, def_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      GeomHandle gmat = scinew GeomMaterial(data_geometry_, def_material_);
+      GeomHandle geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       data_id_ = ogeom_->addObj(geom, fname + vdname);
     }
-    else if (vfld_handle.get_rep() &&
-             vfld_handle->query_tensor_interface().get_rep() &&
-	     data_tensor_renderer_.get_rep() &&
-	     tensors_on_.get())
+    else if (vfi.is_tensor() && data_tensor_renderer_.get_rep() && tensors_on_.get())
     {
       if (data_id_) ogeom_->delObj(data_id_);
-      GeomHandle data =
-	data_tensor_renderer_->render_data(vfld_handle,
+      GeomHandle data = data_tensor_renderer_->render_data(vfld_handle,
 					   fld_handle,
 					   color_map_,
 					   def_material_,
@@ -920,17 +960,14 @@ ShowField::execute()
 					   tensors_emphasis_.get());
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
-    else if (vfld_handle.get_rep() &&
-             vfld_handle->query_scalar_interface().get_rep() &&
-	     data_scalar_renderer_.get_rep() &&
-	     scalars_on_.get())
+    else if (vfi.is_scalar() && data_scalar_renderer_.get_rep() && scalars_on_.get())
     {
       if (data_id_) ogeom_->delObj(data_id_);
       const bool transp = scalars_transparency_.get();
       if (do_data)
       {
-	const bool udc = scalars_usedefcolor_.get();
-	data_geometry_ = data_scalar_renderer_->render_data(vfld_handle,
+        const bool udc = scalars_usedefcolor_.get();
+        data_geometry_ = data_scalar_renderer_->render_data(vfld_handle,
 							    fld_handle,
 							    color_map_,
 							    def_material_,
@@ -940,24 +977,22 @@ ShowField::execute()
 							    transp);
       }
 
-      GeomHandle gmat =
-	scinew GeomMaterial(data_geometry_, def_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      GeomHandle gmat = scinew GeomMaterial(data_geometry_, def_material_);
+      GeomHandle geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       data_id_ = ogeom_->addObj(geom, fname + (transp?"Transparent Scalars":"Scalars"));
     }
   }
-  if (do_text || color_map_changed) {
+  if (do_text || color_map_changed) 
+  {
     text_dirty_ = false;
-    if (renderer_.get_rep() && text_on_.get()) {
+    if (renderer_.get_rep() && text_on_.get()) 
+    {
       if (text_id_) ogeom_->delObj(text_id_);
-      text_material_->diffuse =
-	Color(text_color_r_.get(), text_color_g_.get(), text_color_b_.get());
+      text_material_->diffuse = Color(text_color_r_.get(), text_color_g_.get(), text_color_b_.get());
 
       if (do_text)
       {
-	text_geometry_ =
-	  renderer_->render_text(fld_handle,
+        text_geometry_ = renderer_->render_text(fld_handle,
 				 color_map_.get_rep(),
 				 text_use_default_color_.get(),
 				 text_backface_cull_.get(),
@@ -971,18 +1006,19 @@ ShowField::execute()
 				 text_show_cells_.get());
       }
 
-      const char *name =
-	text_backface_cull_.get()?"Culled Text Data":"Text Data";
-      GeomHandle gmat =
-	scinew GeomMaterial(text_geometry_, text_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      const char *name =	text_backface_cull_.get()?"Culled Text Data":"Text Data";
+      GeomHandle gmat = scinew GeomMaterial(text_geometry_, text_material_);
+      GeomHandle geom =	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       text_id_ = ogeom_->addObj(geom, fname + name);
     }
   }
 
   ogeom_->flushViews();
 }
+
+
+
+
 
 void
 ShowField::set_default_display_values() 

@@ -34,26 +34,26 @@ using namespace SCIRun;
 
 bool GetFieldBoundaryAlgo::GetFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle& mapping)
 {
+  // Check whether we have an input field
   if (input.get_rep() == 0)
   {
-    pr->error("GetFieldBoundary: No input field");
+    pr->error("FieldBoundary: No input field");
     return (false);
   }
 
-  // no precompiled version available, so compile one
-
+  // Figure out what the input type and output type have to be
   FieldInformation fi(input);
   FieldInformation fo(input);
   
   if (fi.is_nonlinear())
   {
-    pr->error("GetFieldBoundary: This function has not yet been defined for non-linear elements");
+    pr->error("FieldBoundary: This function has not yet been defined for non-linear elements");
     return (false);
   }
   
   if (!(fi.is_volume()||fi.is_surface()||fi.is_curve()))
   {
-    pr->error("GetFieldBoundary: this function is only defined for curve, surface and volume data");
+    pr->error("FieldBoundary: this function is only defined for curve, surface and volume data");
     return (false);
   }
   
@@ -80,7 +80,23 @@ bool GetFieldBoundaryAlgo::GetFieldBoundary(ProgressReporter *pr, FieldHandle in
     return (false);
   }
 
-  // Setup dynamic files
+  ////////////////////////////////////////////////
+  // VIRTUAL VERSION OF THIS ALGORITHM
+
+  std::cout << "fi.interface="<< fi.has_virtual_interface() <<"\n";
+  std::cout << "fo.interface="<< fo.has_virtual_interface() <<"\n";
+
+  if (fi.has_virtual_interface() && fo.has_virtual_interface())
+  {
+    output = Create_Field(fo);
+    
+    if (UseScalarInterface(fi,fo)) return (GetFieldBoundaryV<double>(pr,input,output,mapping));
+    if (UseVectorInterface(fi,fo)) return (GetFieldBoundaryV<Vector>(pr,input,output,mapping));
+    if (UseTensorInterface(fi,fo)) return (GetFieldBoundaryV<Tensor>(pr,input,output,mapping));
+  }
+
+  ////////////////////////////////////////////////
+  // DYNAMIC COMPILATION VERSION OF THIS ALGORITHM
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "ALGOGetFieldBoundary."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
@@ -101,11 +117,13 @@ bool GetFieldBoundaryAlgo::GetFieldBoundary(ProgressReporter *pr, FieldHandle in
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
-
+  
+  std::cout << "Finished dynamic compilation\n";
   return(algo->GetFieldBoundary(pr,input,output,mapping));
+
 }
 
 } // End namespace SCIRunAlgo

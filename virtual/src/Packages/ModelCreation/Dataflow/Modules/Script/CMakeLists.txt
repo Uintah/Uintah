@@ -49,6 +49,7 @@ TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_Script
   Core_Bundle
   Core_Geometry
   Core_GeomInterface
+  Core_Algorithms_Regression
   Dataflow_TkExtensions
   ${TK_LIBRARY}
   ${GL_LIBRARY}

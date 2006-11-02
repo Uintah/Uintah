@@ -71,8 +71,8 @@ namespace SCIRun {
 using namespace std;
 
 typedef PointCloudMesh<ConstantBasis<Point> >                   PCMesh;
-typedef ConstantBasis<string>                                   DatBasis;
-typedef GenericField<PCMesh, DatBasis, vector<string> >         PCField;  
+typedef ConstantBasis<char>                                   DatBasis;
+typedef GenericField<PCMesh, DatBasis, vector<char> >         PCField;  
 
 SCISHARE FieldHandle
 TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
@@ -127,7 +127,7 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
 
   for (unsigned int i=0; i < strings.size(); i++)
   {
-    pc->set_value(strings[i], PCMesh::Node::index_type(i));
+    //    pc->set_value(strings[i], PCMesh::Node::index_type(i));
   }
 
   return FieldHandle(pc);
@@ -157,8 +157,8 @@ TextPointCloudString_writer(ProgressReporter *pr,
     Point c;
     mesh->get_center(c, *itr);
     
-    ptsstream << c.x() << " " << c.y() << " " << c.z() << " " 
-	      << pcfs->value(*itr) << "\n";
+    //    ptsstream << c.x() << " " << c.y() << " " << c.z() << " " 
+    // << pcfs->value(*itr) << "\n";
     
     ++itr;
   }

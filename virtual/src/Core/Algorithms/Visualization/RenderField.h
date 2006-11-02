@@ -61,6 +61,7 @@
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/ImageMesh.h>
+#include <Core/Algorithms/Util/FieldInformation.h>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -281,6 +282,130 @@ protected:
 			       int precision,
 			       bool render_locations);
 };
+
+
+class RenderFieldVirtual : public RenderFieldBase
+{
+public:
+  //! virtual interface. 
+  virtual void render(FieldHandle fh,  
+          bool nodes, bool edges, bool faces,
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          const string &ndt, const string &edt, 
+          double ns, double es, double vs, bool normalize, 
+          int sphere_resolution, int cylinder_resolution,
+          bool use_normals,
+          bool node_transparency,
+          bool edge_transparency,
+          bool face_transparency,
+          bool node_force_def_color,
+          bool edge_force_def_color,
+          bool face_force_def_color,
+          unsigned approx_div,
+          bool face_usetexture);
+
+
+  virtual GeomHandle render_text(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          bool backface_cull_p,
+          int fontsize,
+          int precision,
+          bool render_locations,
+          bool render_data,
+          bool render_nodes,
+          bool render_edges,
+          bool render_faces,
+bool render_cells);
+
+protected:
+  GeomHandle render_nodes(Field *fld, 
+          const string &node_display_mode,
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          bool force_def_color,
+          double node_scale,
+          int node_resolution,
+          bool use_transparency);
+  GeomHandle render_edges(Field *fld,
+          const string &edge_display_mode,
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          bool force_def_color,
+          double edge_scale,
+          int cylinder_resolution,
+          bool transparent_p, unsigned div);
+  GeomHandle render_edges_linear(Field *fld,
+          const string &edge_display_mode,
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          bool force_def_color,
+          double edge_scale,
+          int cylinder_resolution,
+          bool transparent_p);
+  GeomHandle render_faces(Field *fld, 
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          bool force_def_color,
+          bool use_normals,
+          bool use_transparency, unsigned div,
+          bool use_texture_for_face = false);
+  GeomHandle render_faces_linear(Field *fld, 
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          bool force_def_color,
+          bool use_normals,
+          bool use_transparency,
+          bool use_texture_for_face = false);      
+         
+  virtual GeomHandle render_texture_face(Field *fld, 
+          ColorMapHandle color_handle,
+          MaterialHandle def_mat,
+          bool force_def_color,
+          bool use_normals,
+          bool use_transparency);
+
+  GeomHandle render_text_data(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          bool backface_cull_p,
+          int fontsize,
+          int precision);
+  GeomHandle render_text_data_nodes(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          bool backface_cull_p,
+          int fontsize,
+          int precision);
+  GeomHandle render_text_nodes(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          bool backface_cull_p,
+          int fontsize,
+          int precision,
+          bool render_locations);
+  GeomHandle render_text_edges(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          int fontsize,
+          int precision,
+          bool render_locations);
+  GeomHandle render_text_faces(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          int fontsize,
+          int precision,
+          bool render_locations);
+  GeomHandle render_text_cells(FieldHandle fld,
+          bool use_color_map,
+          bool use_default_material,
+          int fontsize,
+          int precision,
+          bool render_locations);
+};
+
+
 
 
 template <class T>
@@ -3242,6 +3367,23 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 }
 
 
+class RenderVectorFieldVirtual : public RenderVectorFieldBase
+{
+public:
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 bool force_def_color,
+				 const string &data_display_mode,
+				 double scale,
+				 double linewidth,
+				 bool normalize,
+				 bool bidirectional,
+				 int resolution);
+};
+
+
 
 //! RenderTensorFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
@@ -3448,6 +3590,21 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   }
   return data_switch;
 }
+
+
+class SCISHARE RenderTensorFieldVirtual : public RenderTensorFieldBase
+{
+public:
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 bool force_def_color,
+				 const string &data_display_mode,
+				 double scale,
+				 int resolution,
+				 double zo_emphasis);
+};
 
 
 //! RenderScalarFieldBase supports the dynamically loadable algorithm concept.
@@ -3662,6 +3819,25 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   }
   return data_switch;
 }
+
+
+class SCISHARE RenderScalarFieldVirtual : public RenderScalarFieldBase
+{
+public:
+  virtual GeomHandle render_data(FieldHandle vfld_handle,
+				 FieldHandle cfld_handle,
+				 ColorMapHandle cmap,
+				 MaterialHandle default_material,
+				 bool force_def_color,
+				 const string &data_display_mode,
+				 double scale,
+				 int resolution,
+				 bool transparent_p);
+};
+
+
+
+
 
 
 struct RenderParams 

@@ -203,6 +203,7 @@ public:
   SCISHARE friend std::ostream& operator<<(std::ostream& os, const Vector& p);
   SCISHARE friend std::istream& operator>>(std::istream& os, Vector& p);
 
+
 }; // end class Vector
 
 } // End namespace SCIRun

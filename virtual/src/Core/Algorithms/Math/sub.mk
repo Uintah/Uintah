@@ -23,7 +23,7 @@ PSELIBS :=  Core/Datatypes Core/Util Core/Containers      \
             Core/Geom Core/Geometry \
             Core/Algorithms/Util    \
             Core/Persistent         \
-            Core/Basis Core/Bundle
+            Core/Basis Core/Bundle Core/Math
 
 LIBS := $(TEEM_LIBRARY)
 

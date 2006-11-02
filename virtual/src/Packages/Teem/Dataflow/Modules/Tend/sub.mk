@@ -66,12 +66,14 @@ SRCS     += \
         $(SRCDIR)/TendShrink.cc\
 
 PSELIBS := \
+        Core/Basis         \
         Core/Containers    \
         Core/Datatypes     \
         Core/Exceptions    \
         Core/Geom          \
         Core/GeomInterface \
         Core/Geometry      \
+        Core/Math          \
         Dataflow/GuiInterface  \
         Core/Persistent    \
         Core/Thread        \

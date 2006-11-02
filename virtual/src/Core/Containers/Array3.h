@@ -99,6 +99,7 @@ template<class T> void Pio(Piostream& stream, Array3<T>*& array);
 
 template<class T> class Array3 {
   T*** objs;
+  T* obj;
   int dm1;
   int dm2;
   int dm3;
@@ -135,6 +136,30 @@ public:
     ASSERTL3(d3>=0 && d3<dm3);
     return objs[d1][d2][d3];
   }
+
+  //////////
+  // Access the underlying data array as a 1D memory block 
+  // Note: for performance reasons we do not do an assert here  
+  inline const T& operator()(unsigned int d) const
+  {
+    return obj[d];
+  }
+
+  inline T& operator()(unsigned int d)
+  {
+    return obj[d];
+  }
+
+  inline const T& operator[](unsigned int d) const
+  {
+    return obj[d];
+  }
+
+  inline T& operator[](unsigned int d)
+  {
+    return obj[d];
+  }
+
     
   //////////
   //Array2 Copy Method
@@ -164,6 +189,7 @@ public:
   void get_onedim_byte( unsigned char *v );
 
   inline T*** get_dataptr() {return objs;}
+  inline T*   get_datablock_ptr() {return obj;}
 
   //////////
   //read/write from a separate raw file
@@ -192,26 +218,34 @@ template<class T>
 Array3<T>::Array3()
 {
   objs=0;
+  obj=0;
   dm1 = dm2 = dm3 = 0;
 }
 
 template<class T>
 void Array3<T>::allocate()
 {
-  if( dm1 && dm2 && dm3 ){
+  if( dm1 && dm2 && dm3 )
+  {
     objs=new T**[dm1];
     T** p=new T*[dm1*dm2];
     T* pp=new T[dm1*long(dm2*dm3)];
-    for(int i=0;i<dm1;i++){
+    obj = pp; // quick pointer into datablock
+    for(int i=0;i<dm1;i++)
+    {
       objs[i]=p;
       p+=dm2;
-      for(int j=0;j<dm2;j++){
-	objs[i][j]=pp;
-	pp+=dm3;
+      for(int j=0;j<dm2;j++)
+      {
+        objs[i][j]=pp;
+        pp+=dm3;
       }
     }
-  } else {
+  } 
+  else 
+  {
     objs = 0;
+    obj = 0;
   }
 }
 
@@ -222,7 +256,8 @@ void Array3<T>::resize(int d1, int d2, int d3)
   dm1=d1;
   dm2=d2;
   dm3=d3;
-  if(objs){
+  if(objs)
+  {
     delete[] objs[0][0];
     delete[] objs[0];
     delete[] objs;
@@ -254,7 +289,7 @@ void Array3<T>::initialize(const T& t)
   for(int i=0;i<dm1;i++){
     for(int j=0;j<dm2;j++){
       for(int k=0;k<dm3;k++){
-	objs[i][j][k]=t;
+        objs[i][j][k]=t;
       }
     }
   }
@@ -324,7 +359,7 @@ void Pio(Piostream& stream, Array3<T>& data)
   for(int i=0;i<data.dm1;i++){
     for(int j=0;j<data.dm2;j++){
       for(int k=0;k<data.dm3;k++){
-	Pio(stream, data.objs[i][j][k]);
+        Pio(stream, data.objs[i][j][k]);
       }
     }
   }

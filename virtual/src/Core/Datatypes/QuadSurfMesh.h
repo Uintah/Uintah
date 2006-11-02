@@ -26,23 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-/*
- *  QuadSurfMesh.h: Templated Mesh defined on an Irregular Grid
- *
- *  Written by:
- *   Michael Callahan
- *   Department of Computer Science
- *   University of Utah
- *   January 2001
- *
- *  Copyright (C) 2001 SCI Group
- *
- */
-
-
-#ifndef SCI_project_QuadSurfMesh_h
-#define SCI_project_QuadSurfMesh_h 1
+#ifndef CORE_DATATYPES_QUADSURFMESH_H
+#define CORE_DATATYPES_QUADSURFMESH_H 1
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
@@ -176,6 +161,8 @@ public:
   virtual QuadSurfMesh *clone() { return new QuadSurfMesh(*this); }
   virtual ~QuadSurfMesh();
 
+  virtual int basis_order() { return (basis_.polynomial_order()); }
+
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
 
@@ -196,52 +183,101 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i) const { index = i; }
-  void to_index(typename Edge::index_type &index, unsigned int i) const { index = i; }
-  void to_index(typename Face::index_type &index, unsigned int i) const { index = i; }
-  void to_index(typename Cell::index_type &index, unsigned int i) const { index = i; }
+  void to_index(typename Node::index_type &index, unsigned int i) const 
+  { index = i; }
+  void to_index(typename Edge::index_type &index, unsigned int i) const 
+  { index = i; }
+  void to_index(typename Face::index_type &index, unsigned int i) const 
+  { index = i; }
+  void to_index(typename Cell::index_type &index, unsigned int i) const 
+  { index = i; }
 
-  void get_nodes(typename Node::array_type &array, typename Edge::index_type idx) const;
-  void get_nodes(typename Node::array_type &array, typename Face::index_type idx) const;
-  void get_nodes(typename Node::array_type &array, typename Cell::index_type idx) const;
-  void get_edges(typename Edge::array_type &array, typename Face::index_type idx) const;
-  void get_edges(typename Edge::array_type &array, typename Cell::index_type idx) const;
-  void get_faces(typename Face::array_type &array, typename Cell::index_type idx) const;
-
-  void get_faces(typename Face::array_type &a,
-                 typename Face::index_type f) const
-  { a.push_back(f); }
-
-  //! get the parent element(s) of the given index
-  void get_elems(typename Elem::array_type &result,
+  //! Get the child elements of the given index.
+  void get_nodes(typename Node::array_type &array, 
                  typename Node::index_type idx) const
-  {
-    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
-	      "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
-    result.clear();
-    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
-      result.push_back(node_neighbors_[idx][i]/4);
-  }
-  void get_elems(typename Elem::array_type &result,
-                 typename Edge::index_type idx) const {}
-  void get_elems(typename Elem::array_type &result,
-                 typename Face::index_type idx) const {}
+  { array.resize(1); array[0]= idx; }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Edge::index_type idx) const
+  { get_nodes_from_edge(array,idx); }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Face::index_type idx) const
+  { get_nodes_from_face(array,idx); }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_nodes has not been implemented for cells"); }
 
+  void get_edges(typename Edge::array_type &array, 
+                 typename Node::index_type idx) const
+  { get_edges_from_node(array,idx); }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Edge::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Face::index_type idx) const
+  { get_edges_from_face(array,idx); }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_edges has not been implemented for cells"); }
 
+  void get_faces(typename Face::array_type &array, 
+                 typename Node::index_type idx) const
+  { get_faces_from_node(array,idx); }
+  void get_faces(typename Face::array_type &array, 
+                 typename Edge::index_type idx) const
+  { get_faces_from_edge(array,idx); }
+  void get_faces(typename Face::array_type &array, 
+                 typename Face::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_faces(typename Face::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_faces has not been implemented for cells"); }
 
+  void get_cells(typename Cell::array_type &array, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Edge::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_cells has not been implemented"); }
 
-  //! Wrapper to get the derivative elements from this element.
-  void get_delems(typename DElem::array_type &result,
-                  typename Elem::index_type idx) const
-  {
-    get_edges(result, idx);
-  }
+  void get_elems(typename Elem::array_type &array, 
+                 typename Node::index_type idx) const
+  { get_faces_from_node(array,idx); }
+  void get_elems(typename Elem::array_type &array, 
+                 typename Edge::index_type idx) const
+  { get_faces_from_edge(array,idx); }
+  void get_elems(typename Elem::array_type &array, 
+                 typename Face::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_elems(typename Face::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_elems has not been implemented for cells"); }
+
+  void get_delems(typename DElem::array_type &array, 
+                  typename Node::index_type idx) const
+  { get_edges_from_node(array,idx); }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Edge::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Face::index_type idx) const
+  { get_edges_from_face(array,idx); }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Cell::index_type idx) const
+  { ASSERTFAIL("QuadSurfMesh: get_delems has not been implemented for cells"); }
 
   bool get_neighbor(typename Face::index_type &neighbor,
                     typename Face::index_type from,
                     typename Edge::index_type idx) const;
 
   void get_neighbors(typename Face::array_type &array, typename Face::index_type idx) const;
+  void get_neighbors(vector<typename Node::index_type> &array, typename Node::index_type idx) const
+  { ASSERTFAIL("Get neighbors has not been implemented for QuadSurfMesh"); }
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(typename Node::index_type /*idx*/) const { return 0; }
@@ -341,7 +377,9 @@ public:
   virtual bool has_normals() const { return true; }
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idqs;
+  static MeshTypeID mesh_idqs;
+  
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
@@ -355,12 +393,13 @@ public:
   typename Elem::index_type add_quad(const Point &p0, const Point &p1,
                 const Point &p2, const Point &p3);
   typename Elem::index_type add_elem(typename Node::array_type a);
-  void node_reserve(size_t s) { points_.reserve(s); }
-  void elem_reserve(size_t s) { faces_.reserve(s*4); }
+  virtual void node_reserve(size_t s) { points_.reserve(s); }
+  virtual void elem_reserve(size_t s) { faces_.reserve(s*4); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 2; }
   virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
   typename Node::index_type add_point(const Point &p);
+  typename Node::index_type add_node(const Point &p);
 
   virtual bool          synchronize(unsigned int);
 
@@ -408,9 +447,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -424,9 +464,193 @@ public:
   { return face_type_description(); }
 
   // returns a QuadSurfMesh
-  static Persistent *maker() { return new QuadSurfMesh<Basis>(); }
+  static Persistent *maker() { return scinew QuadSurfMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return scinew QuadSurfMesh<Basis>(); }
+  
 
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  virtual bool has_virtual_interface() const;
+  
+  virtual void size(Mesh::VNode::size_type& size) const;
+  virtual void size(Mesh::VEdge::size_type& size) const;
+  virtual void size(Mesh::VFace::size_type& size) const;
+  virtual void size(Mesh::VElem::size_type& size) const;
+  virtual void size(Mesh::VDElem::size_type& size) const;
+  
+  virtual void get_nodes(VNode::array_type& nodes, VEdge::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VFace::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VElem::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VDElem::index_type i) const;
+  
+  virtual void get_edges(VEdge::array_type& edges, VFace::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VElem::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VDElem::index_type i) const;
+
+  virtual void get_faces(VFace::array_type& faces, VNode::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VEdge::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VElem::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VDElem::index_type i) const;
+  
+  virtual void get_elems(VElem::array_type& elems, VNode::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VEdge::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VFace::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VDElem::index_type i) const;
+
+  virtual void get_delems(VDElem::array_type& delems, VFace::index_type i) const;
+  virtual void get_delems(VDElem::array_type& delems, VElem::index_type i) const;
+
+  virtual void get_center(Point &point, VNode::index_type i) const;
+  virtual void get_center(Point &point, VEdge::index_type i) const;
+  virtual void get_center(Point &point, VFace::index_type i) const;
+  virtual void get_center(Point &point, VElem::index_type i) const;
+  virtual void get_center(Point &point, VDElem::index_type i) const;
+
+  virtual double get_size(VNode::index_type i) const;
+  virtual double get_size(VEdge::index_type i) const;
+  virtual double get_size(VFace::index_type i) const;
+  virtual double get_size(VElem::index_type i) const;
+  virtual double get_size(VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(VNode::index_type &i, const Point &point) const;
+  virtual bool locate(VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+
+  virtual void get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const;
+  virtual void set_point(const Point &point, VNode::index_type i);
+  
+  virtual void get_points(vector<Point>& points) const;
+
+  virtual void add_node(const Point &point,VNode::index_type &i);
+  virtual void add_elem(const VNode::array_type &nodes,VElem::index_type &i);
+
+  virtual bool get_neighbor(VElem::index_type &neighbor, 
+                       VElem::index_type from, VDElem::index_type delem) const;
+  virtual void get_neighbors(VElem::array_type &elems, 
+                                                    VElem::index_type i) const;
+  virtual void get_neighbors(VNode::array_type &nodes, 
+                                                    VNode::index_type i) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                               VElem::index_type ci, unsigned int which_edge, 
+                               unsigned int div_per_unit) const;
+  virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                               VElem::index_type ci, unsigned int which_face, 
+                              unsigned int div_per_unit) const;
+                              
+  virtual void get_normal(Vector& norm,VNode::index_type i) const;  
+  
 private:
+
+  //////////////////////////////////////////////////////////////
+  // These functions are templates and are used to define the
+  // dynamic compilation interface and the virtual interface
+  // as they both use different datatypes as indices and arrays
+  // the following functions have been templated and are inlined
+  // at the places where they are needed.
+  //
+  // Secondly these templates allow for the use of the stack vector
+  // as well as the STL vector. When an algorithm supports non linear
+  // functions an STL vector is a better choice, in the other cases
+  // often a StackVector is enough (The latter improves performance).
+   
+  template<class ARRAY, class INDEX>
+  inline void get_nodes_from_edge(ARRAY& array, INDEX i) const
+  {
+    ASSERTMSG(synchronized_ & EDGES_E,
+              "QuadSurfMesh: Must call synchronize EDGES_E on QuadSurfMesh first");
+    static int table[8][2] = { {0, 1}, {1, 2}, {2, 3}, {3, 0} };
+
+    const int idx = edges_[i];
+    const int off = idx % 4;
+    const int node = idx - off;
+    array.resize(2);
+    array[0] = static_cast<typename ARRAY::value_type>(faces_[node + table[off][0]]);
+    array[1] = static_cast<typename ARRAY::value_type>(faces_[node + table[off][1]]);
+  }
+  
+  
+  template<class ARRAY, class INDEX>
+  inline void get_nodes_from_face(ARRAY& array, INDEX idx) const
+  {  
+    ASSERTMSG(synchronized_ & FACES_E,
+            "QuadSurfMesh: Must call synchronize FACES_E on QuadSurfMesh first");
+    array.resize(4);
+    array[0] = static_cast<typename ARRAY::value_type>(faces_[idx * 4 + 0]);
+    array[1] = static_cast<typename ARRAY::value_type>(faces_[idx * 4 + 1]);
+    array[2] = static_cast<typename ARRAY::value_type>(faces_[idx * 4 + 2]);
+    array[3] = static_cast<typename ARRAY::value_type>(faces_[idx * 4 + 3]);
+    order_face_nodes(array[0],array[1],array[2],array[3]);
+  }
+  
+  
+  template<class ARRAY, class INDEX>
+  inline void get_edges_from_face(ARRAY& array, INDEX idx) const
+  {
+    ASSERTMSG(synchronized_ & EDGES_E,
+            "QuadSurfMesh: Must call synchronize EDGES_E on QuadSurfMesh first");
+
+    array.clear();
+
+    unsigned int i;
+    for (i=0; i < 4; i++)
+    {
+      const int a = idx * 4 + i;
+      const int b = a - a % 4 + (a+1) % 4;
+      int j = (int)edges_.size()-1;
+      for (; j >= 0; j--)
+      {
+        const int c = edges_[j];
+        const int d = c - c % 4 + (c+1) % 4;
+        if (faces_[a] == faces_[c] && faces_[b] == faces_[d] ||
+            faces_[a] == faces_[d] && faces_[b] == faces_[c])
+        {
+          array.push_back(static_cast<typename ARRAY::value_type>(j));
+          break;
+        }
+      }
+    }
+  }
+  
+  
+  template<class ARRAY, class INDEX>
+  inline void get_faces_from_node(ARRAY& array, INDEX idx) const
+  {
+    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+	      "QuadSurfMesh: Must call synchronize NODE_NEIGHBORS_E on QuadSurfMesh first");
+    array.resize(node_neighbors_[idx].size());    
+    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
+      array[i] = static_cast<typename ARRAY::value_type>(node_neighbors_[idx][i]/4);
+  }
+  
+ 
+  template<class ARRAY, class INDEX>
+  inline void get_faces_from_edge(ARRAY& array, INDEX idx) const
+  {
+    ASSERTFAIL("QuadSurfMesh: get_faces(faces,edge) has not been implemented");
+  }
+
+
+  template<class ARRAY, class INDEX>
+  inline void get_edges_from_node(ARRAY& array, INDEX idx) const
+  {
+    ASSERTFAIL("QuadSurfMesh: get_edges(edges,node) has not been implemented");
+  }
+
+
+
+
 
   const Point &point(typename Node::index_type i) const { return points_[i]; }
 
@@ -437,8 +661,75 @@ private:
   void                  compute_edge_neighbors();
   void                  compute_grid();
 
-  bool order_face_nodes(typename Node::index_type& n1,typename Node::index_type& n2,
-                        typename Node::index_type& n3,typename Node::index_type& n4) const;
+  template <class NODE>
+  bool order_face_nodes(NODE& n1,NODE& n2, NODE& n3, NODE& n4) const
+  {
+    // Check for degenerate or misformed face
+    // Opposite faces cannot be equal
+    if ((n1 == n3)||(n2==n4)) return (false);
+
+    // Face must have three unique identifiers otherwise it was condition
+    // n1==n3 || n2==n4 would be met.
+    
+    if (n1==n2)
+    {
+      if (n3==n4) return (false); // this is a line not a face
+      NODE t;
+      // shift one position to left
+      t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
+      return (true);
+    }
+    else if (n2 == n3)
+    {
+      if (n1==n4) return (false); // this is a line not a face
+      NODE t;
+      // shift two positions to left
+      t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
+      return (true);
+    }
+    else if (n3 == n4)
+    {
+      NODE t;
+      // shift one positions to right
+      t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
+      return (true);
+    }
+    else if (n4 == n1)
+    {
+      // proper order
+      return (true);
+    }
+    else
+    {
+      if ((n1 < n2)&&(n1 < n3)&&(n1 < n4))
+      {
+        // proper order
+        return (true);
+      }
+      else if ((n2 < n3)&&(n2 < n4))
+      {
+        NODE t;
+        // shift one position to left
+        t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
+        return (true);    
+      }
+      else if (n3 < n4)
+      {
+        NODE t;
+        // shift two positions to left
+        t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
+        return (true);    
+      }
+      else
+      {
+        NODE t;
+        // shift one positions to right
+        t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
+        return (true);    
+      }
+    }
+  }
+
 
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
@@ -504,8 +795,12 @@ private:
 
 template <class Basis>
 PersistentTypeID
-QuadSurfMesh<Basis>::type_id(type_name(-1), "Mesh",
-                             QuadSurfMesh<Basis>::maker);
+QuadSurfMesh<Basis>::type_idqs(type_name(-1), "Mesh",
+                               QuadSurfMesh<Basis>::maker);
+
+template <class Basis>
+MeshTypeID
+QuadSurfMesh<Basis>::mesh_idqs(type_name(-1), QuadSurfMesh<Basis>::mesh_maker);
 
 
 
@@ -702,77 +997,6 @@ QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Cell::iterator &itr) const
   ASSERTMSG(synchronized_ & CELLS_E,
             "Must call synchronize CELLS_E on QuadSurfMesh first");
   itr = 0;
-}
-
-
-template <class Basis>
-void
-QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
-                               typename Edge::index_type eidx) const
-{
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on QuadSurfMesh first");
-  static int table[8][2] =
-  {
-    {0, 1},
-    {1, 2},
-    {2, 3},
-    {3, 0},
-  };
-
-  const int idx = edges_[eidx];
-  const int off = idx % 4;
-  const int node = idx - off;
-  array.clear();
-  array.push_back(faces_[node + table[off][0]]);
-  array.push_back(faces_[node + table[off][1]]);
-}
-
-
-template <class Basis>
-void
-QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
-                               typename Face::index_type idx) const
-{
-  ASSERTMSG(synchronized_ & FACES_E,
-            "Must call synchronize FACES_E on QuadSurfMesh first");
-  array.clear();
-  array.push_back(faces_[idx * 4 + 0]);
-  array.push_back(faces_[idx * 4 + 1]);
-  array.push_back(faces_[idx * 4 + 2]);
-  array.push_back(faces_[idx * 4 + 3]);
-  order_face_nodes(array[0],array[1],array[2],array[3]);
-}
-
-
-template <class Basis>
-void
-QuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
-                               typename Face::index_type idx) const
-{
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on TriSurfMesh first");
-
-  array.clear();
-
-  unsigned int i;
-  for (i=0; i < 4; i++)
-  {
-    const int a = idx * 4 + i;
-    const int b = a - a % 4 + (a+1) % 4;
-    int j = (int)edges_.size()-1;
-    for (; j >= 0; j--)
-    {
-      const int c = edges_[j];
-      const int d = c - c % 4 + (c+1) % 4;
-      if (faces_[a] == faces_[c] && faces_[b] == faces_[d] ||
-          faces_[a] == faces_[d] && faces_[b] == faces_[c])
-      {
-        array.push_back(j);
-        break;
-      }
-    }
-  }
 }
 
 
@@ -1152,79 +1376,6 @@ QuadSurfMesh<Basis>::add_find_point(const Point &p, double err)
 
 
 template <class Basis>
-bool
-QuadSurfMesh<Basis>::order_face_nodes(typename Node::index_type& n1,
-                                    typename Node::index_type& n2,
-                                    typename Node::index_type& n3,
-                                    typename Node::index_type& n4) const
-{
-  // Check for degenerate or misformed face
-  // Opposite faces cannot be equal
-  if ((n1 == n3)||(n2==n4)) return (false);
-
-  // Face must have three unique identifiers otherwise it was condition
-  // n1==n3 || n2==n4 would be met.
-  
-  if (n1==n2)
-  {
-    if (n3==n4) return (false); // this is a line not a face
-    typename Node::index_type t;
-    // shift one position to left
-    t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
-    return (true);
-  }
-  else if (n2 == n3)
-  {
-    if (n1==n4) return (false); // this is a line not a face
-    typename Node::index_type t;
-    // shift two positions to left
-    t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
-    return (true);
-  }
-  else if (n3 == n4)
-  {
-    typename Node::index_type t;
-    // shift one positions to right
-    t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
-    return (true);
-  }
-  else if (n4 == n1)
-  {
-    // proper order
-    return (true);
-  }
-  else
-  {
-    if ((n1 < n2)&&(n1 < n3)&&(n1 < n4))
-    {
-      // proper order
-      return (true);
-    }
-    else if ((n2 < n3)&&(n2 < n4))
-    {
-      typename Node::index_type t;
-      // shift one position to left
-      t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
-      return (true);    
-    }
-    else if (n3 < n4)
-    {
-      typename Node::index_type t;
-      // shift two positions to left
-      t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
-      return (true);    
-    }
-    else
-    {
-      typename Node::index_type t;
-      // shift one positions to right
-      t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
-      return (true);    
-    }
-  }
-}
-
-template <class Basis>
 typename QuadSurfMesh<Basis>::Elem::index_type
 QuadSurfMesh<Basis>::add_quad(typename Node::index_type a,
                               typename Node::index_type b,
@@ -1474,6 +1625,14 @@ QuadSurfMesh<Basis>::add_point(const Point &p)
   return static_cast<typename Node::index_type>((int)points_.size() - 1);
 }
 
+template <class Basis>
+typename QuadSurfMesh<Basis>::Node::index_type
+QuadSurfMesh<Basis>::add_node(const Point &p)
+{
+  points_.push_back(p);
+  return static_cast<typename Node::index_type>((int)points_.size() - 1);
+}
+
 
 template <class Basis>
 typename QuadSurfMesh<Basis>::Elem::index_type
@@ -1662,6 +1821,439 @@ QuadSurfMesh<Basis>::cell_type_description()
   }
   return td;
 }
+
+
+
+// Virtual interface
+
+template <class Basis>
+bool
+QuadSurfMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+  
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::size(VNode::size_type& sz) const
+{
+  typename Node::index_type s; size(s); sz = VNode::index_type(s);
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::size(VEdge::size_type& sz) const
+{
+  typename Edge::index_type s; size(s); sz = VEdge::index_type(s);
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::size(VFace::size_type& sz) const
+{
+  typename Face::index_type s; size(s); sz = VFace::index_type(s);
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::size(VDElem::size_type& sz) const
+{
+  typename DElem::index_type s; size(s); sz = VDElem::index_type(s);
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::size(VElem::size_type& sz) const
+{
+  typename Elem::index_type s; size(s); sz = VElem::index_type(s);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                               VEdge::index_type i) const
+{
+  get_nodes_from_edge(nodes,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                               VFace::index_type i) const
+{
+  get_nodes_from_face(nodes,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                               VElem::index_type i) const
+{
+  get_nodes_from_face(nodes,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                               VDElem::index_type i) const
+{
+  get_nodes_from_edge(nodes,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                               VFace::index_type i) const
+{
+  get_edges_from_face(edges,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                               VElem::index_type i) const
+{
+  get_edges_from_face(edges,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                               VDElem::index_type i) const
+{
+  edges.resize(1); edges[0] = static_cast<VEdge::index_type>(i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                               VNode::index_type i) const
+{
+  get_faces_from_node(faces,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                               VEdge::index_type i) const
+{
+  get_faces_from_edge(faces,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                               VElem::index_type i) const
+{
+  faces.resize(1); faces[0] = static_cast<VFace::index_type>(i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                               VDElem::index_type i) const
+{
+  get_faces_from_edge(faces,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                               VNode::index_type i) const
+{
+  get_faces_from_node(elems,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                               VEdge::index_type i) const
+{
+  get_faces_from_edge(elems,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                               VFace::index_type i) const
+{
+  elems.resize(1); elems[0] = static_cast<VElem::index_type>(i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                               VDElem::index_type i) const
+{
+  get_faces_from_edge(elems,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_delems(VDElem::array_type& delems, 
+                                VFace::index_type i) const
+{
+  get_edges_from_face(delems,i);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_delems(VDElem::array_type& delems, 
+                                VElem::index_type i) const
+{
+  get_edges_from_face(delems,i);
+}
+
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_center(Point &p, Mesh::VNode::index_type idx) const
+{
+  p = points_[idx]; 
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_center(Point &p,Mesh::VEdge::index_type idx) const
+{
+  get_center(p, typename Edge::index_type(idx));
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_center(Point &p, Mesh::VFace::index_type idx) const
+{
+  get_center(p, typename Face::index_type(idx));
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_center(Point &p, Mesh::VElem::index_type idx) const
+{
+  get_center(p, typename Elem::index_type(idx));
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_center(Point &p, Mesh::VDElem::index_type idx) const
+{
+  get_center(p, typename DElem::index_type(idx));
+}
+
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_weights(const Point& p,VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename Face::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    get_nodes_from_face(nodes,idx);
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(basis_.dofs());
+      basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+QuadSurfMesh<Basis>::get_weights(const Point& p,VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+QuadSurfMesh<Basis>::locate(VNode::index_type &vi, const Point &point) const
+{
+  typename Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+QuadSurfMesh<Basis>::locate(VElem::index_type &vi, const Point &point) const
+{
+  typename Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+QuadSurfMesh<Basis>::get_coords(vector<double> &coords, const Point &point,
+                                                    VElem::index_type i) const
+{
+  return(get_coords(coords,point,typename Elem::index_type(i)));
+}  
+  
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  interpolate(p,coords,typename Elem::index_type(i));
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  derivate(coords,typename Elem::index_type(i),p);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_points(vector<Point>& points) const
+{
+  points = points_; 
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::set_point(const Point &point, VNode::index_type i)
+{
+  points_[i] = point;
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::add_node(const Point &point,VNode::index_type &vi)
+{
+  vi = static_cast<VNode::index_type>(add_point(point));
+}  
+  
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::add_elem(const VNode::array_type &nodes,VElem::index_type &vi)
+{
+  typename Node::array_type nnodes;
+  convert_vector(nnodes,nodes);
+  vi = static_cast<VElem::index_type>(add_elem(nnodes));
+}  
+
+
+template <class Basis>
+bool 
+QuadSurfMesh<Basis>::get_neighbor(VElem::index_type &neighbor, 
+                        VElem::index_type from, VDElem::index_type delem) const
+{
+  typename Elem::index_type n;
+  bool ret = get_neighbor(n,typename Elem::index_type(from),
+                            typename DElem::index_type(delem));
+  neighbor = static_cast<VElem::index_type>(n);
+  return (ret);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_neighbors(VElem::array_type &varray, 
+                                 VElem::index_type i) const
+{
+  typename Elem::array_type array;
+  get_neighbors(array,typename Elem::index_type(i));
+  convert_vector(varray,array);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_neighbors(VNode::array_type &varray, 
+                                 VNode::index_type i) const
+{
+  vector<typename Node::index_type> array;
+  get_neighbors(array,typename Node::index_type(i));
+  convert_vector(varray,array);
+}
+
+template <class Basis>
+double
+QuadSurfMesh<Basis>::get_size(VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+QuadSurfMesh<Basis>::get_size(VEdge::index_type i) const
+{
+  return (get_size(typename Edge::index_type(i)));
+}
+
+template <class Basis>
+double
+QuadSurfMesh<Basis>::get_size(VFace::index_type i) const
+{
+  return (get_size(typename Face::index_type(i)));
+}
+
+template <class Basis>
+double
+QuadSurfMesh<Basis>::get_size(VElem::index_type i) const
+{
+  return (get_size(typename Elem::index_type(i)));
+}
+
+template <class Basis>
+double
+QuadSurfMesh<Basis>::get_size(VDElem::index_type i) const
+{
+  return (get_size(typename DElem::index_type(i)));
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                                  VElem::index_type ci, unsigned int which_face,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_face(which_face, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const
+{
+  get_random_point(p,typename Elem::index_type(i),rng);
+}
+
+template <class Basis>
+void 
+QuadSurfMesh<Basis>::get_normal(Vector& norm,VNode::index_type i) const
+{
+  get_normal(norm,typename Node::index_type(i));
+}  
 
 
 } // namespace SCIRun

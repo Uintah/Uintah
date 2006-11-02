@@ -82,7 +82,7 @@ double CrvIntegral(FIELD *field, FBASIS& f)
   for(int i=0; i<f.GaussianNum; i++) {
     double val;
     coords[0]=f.GaussianPoints[i][0];
-    field->interpolate(val, coords, 0);
+    field->interpolate(val, coords, typename FIELD::mesh_type::Elem::index_type(0));
     vol+=f.GaussianWeights[i]*val;
   }
   return vol;
@@ -99,7 +99,7 @@ double FaceIntegral(FIELD *field, FBASIS& f)
     double val;
     coords[0]=f.GaussianPoints[i][0];
     coords[1]=f.GaussianPoints[i][1];
-    field->interpolate(val, coords, 0);
+    field->interpolate(val, coords, typename FIELD::mesh_type::Elem::index_type(0));
     vol+=f.GaussianWeights[i]*val;
   }
   return vol;
@@ -117,7 +117,7 @@ double CellIntegral(FIELD *field, FBASIS& f)
     coords[0]=f.GaussianPoints[i][0];
     coords[1]=f.GaussianPoints[i][1];
     coords[2]=f.GaussianPoints[i][2];
-    field->interpolate(val, coords, 0);
+    field->interpolate(val, coords, typename FIELD::mesh_type::Elem::index_type(0));
     vol+=f.GaussianWeights[i]*val;
   }
   return vol;
@@ -240,14 +240,14 @@ void Test()
     coords[i]=drand48();
   Point p;
   
-  mesh->interpolate(p, coords, 0);
+  mesh->interpolate(p, coords, typename MESH::Elem::index_type(0));
   cout << "Transform L->G ";
   for(unsigned int i=0; i<coords.size();i++)
     cout << coords[0];
   cout << " => " << p << endl;
 
   vector<double> lc(MBASIS::domain_dimension());
-  bool rc=mesh->get_coords(lc, p, 0);
+  bool rc=mesh->get_coords(lc, p, typename MESH::Elem::index_type(0));
   cout << "Transform G->L " << p << " => ";
   if (rc) {
     for(unsigned int i=0; i<coords.size();i++)

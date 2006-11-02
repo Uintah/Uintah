@@ -82,6 +82,8 @@ public:
   { return new StructQuadSurfMesh<Basis>(*this); }
   virtual ~StructQuadSurfMesh() {}
 
+  virtual int basis_order() { return (this->basis_.polynomial_order()); }
+
   //! get the mesh statistics
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
@@ -93,7 +95,8 @@ public:
     normals_.resize(dims[0], dims[1]);
   }
 
-  virtual int topology_geometry() const { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
+  virtual int topology_geometry() const 
+          { return (Mesh::STRUCTURED | Mesh::IRREGULAR); }
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(const typename ImageMesh<Basis>::Node::index_type &) const
@@ -321,9 +324,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename ImageMesh<Basis>::Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     this->basis_.derivate(coords, ed, J);
@@ -333,7 +337,8 @@ public:
   virtual bool is_editable() const { return false; }
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idsqs;
+  static MeshTypeID mesh_idsqs;
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
@@ -347,7 +352,55 @@ public:
   { return face_type_description(); }
 
   // returns a StructQuadSurfMesh
-  static Persistent *maker() { return new StructQuadSurfMesh<Basis>(); }
+  static Persistent *maker() { return scinew StructQuadSurfMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return scinew StructQuadSurfMesh<Basis>(); }
+  static MeshHandle structquadsurf_maker(unsigned int x ,unsigned int y) 
+    { return scinew StructQuadSurfMesh<Basis>(x,y); }
+
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  
+  virtual bool has_virtual_interface() const;
+  
+  //! Get the center of a certain mesh element
+  virtual void get_center(Point &point, Mesh::VNode::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VEdge::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VFace::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VElem::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VDElem::index_type i) const;
+
+  virtual double get_size(Mesh::VNode::index_type i) const;
+  virtual double get_size(Mesh::VEdge::index_type i) const;
+  virtual double get_size(Mesh::VFace::index_type i) const;
+  virtual double get_size(Mesh::VElem::index_type i) const;
+  virtual double get_size(Mesh::VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,Mesh::VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,Mesh::VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(Mesh::VNode::index_type &i, const Point &point) const;
+  virtual bool locate(Mesh::VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                              Mesh::VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                              Mesh::VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                              Mesh::VElem::index_type i) const;
+
+  virtual void set_point(Point &p, Mesh::VNode::index_type i);
+  virtual void get_random_point(Point &p, Mesh::VElem::index_type i,
+                                                          MusilRNG &rng) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                          Mesh::VElem::index_type ci, unsigned int which_edge, 
+                          unsigned int div_per_unit) const;
+  virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                          Mesh::VElem::index_type ci, unsigned int which_face, 
+                          unsigned int div_per_unit) const;
+
 
 protected:
   void compute_normals();
@@ -363,14 +416,20 @@ protected:
   Array2<Vector> normals_; //! normalized per node
   Mutex          normal_lock_;
   unsigned int   synchronized_;
+  
 };
 
 
 template <class Basis>
 PersistentTypeID
-StructQuadSurfMesh<Basis>::type_id(StructQuadSurfMesh<Basis>::type_name(-1),
+StructQuadSurfMesh<Basis>::type_idsqs(StructQuadSurfMesh<Basis>::type_name(-1),
                                    "Mesh", maker);
 
+template <class Basis>
+MeshTypeID
+StructQuadSurfMesh<Basis>::mesh_idsqs(StructQuadSurfMesh<Basis>::type_name(-1),
+                              StructQuadSurfMesh<Basis>::mesh_maker,
+                              StructQuadSurfMesh<Basis>::structquadsurf_maker);
 
 template <class Basis>
 StructQuadSurfMesh<Basis>::StructQuadSurfMesh()
@@ -759,7 +818,7 @@ StructQuadSurfMesh<Basis>::locate(
 template <class Basis>
 void
 StructQuadSurfMesh<Basis>::set_point(const Point &point,
-                                     const typename ImageMesh<Basis>::Node::index_type &index)
+                      const typename ImageMesh<Basis>::Node::index_type &index)
 {
   points_(index.i_, index.j_) = point;
 }
@@ -829,10 +888,10 @@ StructQuadSurfMesh<Basis>::compute_normals()
 
   while (nif_iter != nif_iter_end)
   {
-    vector<typename ImageMesh<Basis>::Face::index_type> v = node_in_faces((*nif_iter).i_,
-                                                        (*nif_iter).j_);
-    typename vector<typename ImageMesh<Basis>::Face::index_type>::const_iterator fiter =
-      v.begin();
+    vector<typename ImageMesh<Basis>::Face::index_type> v = 
+                        node_in_faces((*nif_iter).i_, (*nif_iter).j_);
+    typename vector<typename ImageMesh<Basis>::Face::index_type>::const_iterator 
+          fiter = v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end())
     {
@@ -981,6 +1040,233 @@ StructQuadSurfMesh<Basis>::cell_type_description()
                                 TypeDescription::MESH_E);
   }
   return td;
+}
+
+
+
+// VIRTUAL IMPLEMENTATION OF FUNCTIONS
+
+template <class Basis>
+bool
+StructQuadSurfMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_center(Point &p, 
+                                            Mesh::VNode::index_type idx) const
+{
+  typename ImageMesh<Basis>::Node::index_type i;
+  to_index(i,idx);
+  get_center(p,i); 
+}
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_center(Point &p,
+                                      Mesh::Mesh::VEdge::index_type idx) const
+{
+  typename ImageMesh<Basis>::Edge::index_type i;
+  to_index(i,idx);
+  get_center(p,i);
+}
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_center(Point &p, 
+                                      Mesh::Mesh::VFace::index_type idx) const
+{
+  typename ImageMesh<Basis>::Face::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_center(Point &p, 
+                                      Mesh::Mesh::VElem::index_type idx) const
+{
+  typename ImageMesh<Basis>::Elem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_center(Point &p, 
+                                      Mesh::Mesh::VDElem::index_type idx) const
+{
+  typename ImageMesh<Basis>::DElem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_weights(const Point& p,
+                Mesh::VNode::array_type& nodes, vector<double>& weights) const
+{
+  typename ImageMesh<Basis>::Elem::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    this->get_nodes(nodes,Mesh::VFace::index_type(idx));
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(this->basis_.dofs());
+      this->basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::get_weights(const Point& p,
+                Mesh::VElem::array_type& elems, vector<double>& weights) const
+{
+  typename ImageMesh<Basis>::Elem::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<Mesh::VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+StructQuadSurfMesh<Basis>::locate(Mesh::VNode::index_type &vi, 
+                                                      const Point &point) const
+{
+  typename ImageMesh<Basis>::Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<Mesh::VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+StructQuadSurfMesh<Basis>::locate(Mesh::VElem::index_type &vi, 
+                                                      const Point &point) const
+{
+  typename ImageMesh<Basis>::Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<Mesh::VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+StructQuadSurfMesh<Basis>::get_coords(vector<double> &coords, 
+                          const Point &point, Mesh::VElem::index_type i) const
+{
+  typename ImageMesh<Basis>::Elem::index_type vi;
+  to_index(vi,i);
+  return(get_coords(coords,point,vi));
+}  
+  
+template <class Basis>
+void 
+StructQuadSurfMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                              Mesh::VElem::index_type i) const
+{
+  typename ImageMesh<Basis>::Elem::index_type vi;
+  to_index(vi,i);
+  interpolate(p,coords,vi);
+}
+
+template <class Basis>
+void 
+StructQuadSurfMesh<Basis>::derivate(vector<Point> &p, 
+                  const vector<double> &coords, Mesh::VElem::index_type i) const
+{
+  typename ImageMesh<Basis>::Elem::index_type vi;
+  to_index(vi,i);
+  derivate(coords,vi,p);
+}
+
+template <class Basis>
+double
+StructQuadSurfMesh<Basis>::get_size(Mesh::VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+StructQuadSurfMesh<Basis>::get_size(Mesh::VEdge::index_type i) const
+{
+  typename ImageMesh<Basis>::Edge::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructQuadSurfMesh<Basis>::get_size(Mesh::VFace::index_type i) const
+{
+  typename ImageMesh<Basis>::Face::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructQuadSurfMesh<Basis>::get_size(Mesh::VElem::index_type i) const
+{
+  typename ImageMesh<Basis>::Elem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructQuadSurfMesh<Basis>::get_size(Mesh::VDElem::index_type i) const
+{
+  typename ImageMesh<Basis>::DElem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+void 
+StructQuadSurfMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  Mesh::VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  this->basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+StructQuadSurfMesh<Basis>::pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                                  Mesh::VElem::index_type ci, unsigned int which_face,
+                                  unsigned int div_per_unit) const
+{
+  this->basis_.approx_face(which_face, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+StructQuadSurfMesh<Basis>::get_random_point(Point &p, Mesh::VElem::index_type i,
+                                                          MusilRNG &rng) const
+{
+  typename ImageMesh<Basis>::Elem::index_type vi; to_index(vi,i);
+  get_random_point(p,vi,rng);
+}
+
+template <class Basis>
+void
+StructQuadSurfMesh<Basis>::set_point(Point& p, Mesh::VNode::index_type i)
+{
+  points_[i] = p;
 }
 
 } // namespace SCIRun

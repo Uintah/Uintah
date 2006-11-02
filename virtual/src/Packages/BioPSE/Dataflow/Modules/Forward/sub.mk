@@ -76,6 +76,7 @@ PSELIBS := \
         Core/Datatypes     \
         Core/Exceptions    \
         Core/Geom          \
+        Core/Math          \
         Core/Geometry      \
         Core/GeomInterface \
         Dataflow/GuiInterface  \

@@ -49,23 +49,23 @@ public:
   static int polynomial_order() { return 0; }
 
   //! get value at parametric coordinate 
-  template <class ElemData>
-  T interpolate(const std::vector<double> &coords, const ElemData &cd) const
+  template <class ElemData, class VECTOR>
+  T interpolate(const VECTOR &coords, const ElemData &cd) const
   {
     ASSERTFAIL("interpolate not supported by basis");
   }
   
   //! get first derivative at parametric coordinate
-  template <class ElemData>
-  void derivate(const std::vector<double> &coords, const ElemData &cd, 
-		std::vector<T> &derivs) const
+  template <class ElemData, class VECTOR1, class VECTOR2>
+  void derivate(const VECTOR1 &coords, const ElemData &cd, 
+		VECTOR2 &derivs) const
   {
     ASSERTFAIL("derivate not supported by basis");
   }
 
   //! get parametric coordinate for value within the element
-  template <class ElemData>
-  bool get_coords(std::vector<double> &coords, const T& value, 
+  template <class ElemData, class VECTOR>
+  bool get_coords(VECTOR &coords, const T& value, 
 		  const ElemData &cd) const
   {
     ASSERTFAIL("get_coords not supported by basis");

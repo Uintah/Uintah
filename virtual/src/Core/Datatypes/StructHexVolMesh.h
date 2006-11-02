@@ -88,6 +88,7 @@ public:
   { return new StructHexVolMesh<Basis>(*this); }
   virtual ~StructHexVolMesh() {}
 
+  virtual int basis_order() { return (this->basis_.polynomial_order()); }
 
   class ElemData
   {
@@ -178,6 +179,7 @@ public:
   private:
     const StructHexVolMesh<Basis>          &mesh_;
     const typename LatVolMesh<Basis>::Cell::index_type  index_;
+    
   };
 
   friend class ElemData;
@@ -216,14 +218,14 @@ public:
                     typename LatVolMesh<Basis>::Cell::index_type &i) const
   { return get_size(i); };
 
-  bool locate(typename LatVolMesh<Basis>::Node::index_type &, const Point &);
+  bool locate(typename LatVolMesh<Basis>::Node::index_type &, const Point &) const;
   bool locate(typename LatVolMesh<Basis>::Edge::index_type &,
               const Point &) const
   { return false; }
   bool locate(typename LatVolMesh<Basis>::Face::index_type &,
               const Point &) const
   { return false; }
-  bool locate(typename LatVolMesh<Basis>::Cell::index_type &, const Point &);
+  bool locate(typename LatVolMesh<Basis>::Cell::index_type &, const Point &) const;
 
 
   int get_weights(const Point &,
@@ -264,9 +266,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename LatVolMesh<Basis>::Cell::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     this->basis_.derivate(coords, ed, J);
@@ -275,7 +278,8 @@ public:
   virtual bool synchronize(unsigned int);
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idshv;
+  static MeshTypeID mesh_idshv;
   static  const string type_name(int n = -1);
 
   virtual const TypeDescription *get_type_description() const;
@@ -287,7 +291,54 @@ public:
   { return elem_type_description(); }
 
   // returns a StructHexVolMesh
-  static Persistent *maker() { return new StructHexVolMesh<Basis>(); }
+  static Persistent *maker() { return scinew StructHexVolMesh<Basis>(); }
+  static MeshHandle mesh_maker()  { return scinew StructHexVolMesh<Basis>(); }
+  static MeshHandle structhexvol_maker(unsigned int x, unsigned int y, unsigned int z) { return scinew StructHexVolMesh<Basis>(x,y,z); }
+
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  
+  virtual bool has_virtual_interface() const;
+  
+  //! Get the center of a certain mesh element
+  virtual void get_center(Point &point, Mesh::VNode::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VEdge::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VFace::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VCell::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VElem::index_type i) const;
+  virtual void get_center(Point &point, Mesh::VDElem::index_type i) const;
+
+  virtual double get_size(Mesh::VNode::index_type i) const;
+  virtual double get_size(Mesh::VEdge::index_type i) const;
+  virtual double get_size(Mesh::VFace::index_type i) const;
+  virtual double get_size(Mesh::VCell::index_type i) const;
+  virtual double get_size(Mesh::VElem::index_type i) const;
+  virtual double get_size(Mesh::VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,Mesh::VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,Mesh::VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(Mesh::VNode::index_type &i, const Point &point) const;
+  virtual bool locate(Mesh::VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    Mesh::VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    Mesh::VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    Mesh::VElem::index_type i) const;
+
+  virtual void set_point(Point &p, Mesh::VNode::index_type i);
+  virtual void get_random_point(Point &p, Mesh::VElem::index_type i,MusilRNG &rng) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                               Mesh::VElem::index_type ci, unsigned int which_edge, 
+                               unsigned int div_per_unit) const;
+  virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                               Mesh::VElem::index_type ci, unsigned int which_face, 
+                              unsigned int div_per_unit) const;
 
 private:
   void compute_grid();
@@ -310,23 +361,27 @@ private:
 
   LockingHandle<SearchGrid>           grid_;
   Mutex                               grid_lock_; // Bad traffic!
-  typename LatVolMesh<Basis>::Cell::index_type           locate_cache_;
-
+ 
   unsigned int   synchronized_;
 };
 
 
 template <class Basis>
 PersistentTypeID
-StructHexVolMesh<Basis>::type_id(StructHexVolMesh<Basis>::type_name(-1),
+StructHexVolMesh<Basis>::type_idshv(StructHexVolMesh<Basis>::type_name(-1),
                                  "Mesh", maker);
+
+template <class Basis>
+MeshTypeID
+StructHexVolMesh<Basis>::mesh_idshv(StructHexVolMesh<Basis>::type_name(-1),
+                                  StructHexVolMesh<Basis>::mesh_maker,
+                                  StructHexVolMesh<Basis>::structhexvol_maker);
 
 
 template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh():
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
 {
 }
@@ -340,7 +395,6 @@ StructHexVolMesh<Basis>::StructHexVolMesh(unsigned int i,
   points_(i, j, k),
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
 {
 }
@@ -351,7 +405,6 @@ StructHexVolMesh<Basis>::StructHexVolMesh(const StructHexVolMesh<Basis> &copy):
   LatVolMesh<Basis>(copy),
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
 {
   points_.copy( copy.points_ );
@@ -571,13 +624,11 @@ template <class Basis>
 bool
 StructHexVolMesh<Basis>::locate(
                             typename LatVolMesh<Basis>::Cell::index_type &cell,
-                            const Point &p)
+                            const Point &p) const
 {
   if (this->basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
-  // Check last cell found first.  Copy cache to cell first so that we
-  // don't care about thread safeness, such that worst case on
-  // context switch is that cache is not found.
-  cell = locate_cache_;
+
+
   if (cell > typename LatVolMesh<Basis>::Cell::index_type(this, 0, 0, 0) &&
       cell < typename LatVolMesh<Basis>::Cell::index_type(this, this->ni_ -1,
                                                           this->nj_ - 1,
@@ -598,7 +649,6 @@ StructHexVolMesh<Basis>::locate(
 
       if( inside8_p(idx, p) ) {
         cell = idx;
-        locate_cache_ = cell;
         return true;
       }
       ++iter;
@@ -611,7 +661,7 @@ StructHexVolMesh<Basis>::locate(
 
 template <class Basis>
 bool
-StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &node, const Point &p)
+StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &node, const Point &p) const
 {
   node.mesh_ = this;
   typename LatVolMesh<Basis>::Cell::index_type ci;
@@ -790,9 +840,10 @@ StructHexVolMesh<Basis>::pyramid_volume(const typename LatVolMesh<Basis>::Node::
 }
 
 
-extern
-double
-tri_area(const Point &a, const Point &b, const Point &c);
+inline double tri_area(const Point &a, const Point &b, const Point &c)
+{
+  return (0.5*Cross((a-b),(b-c)).length());
+}
 
 template <class Basis>
 void
@@ -1167,6 +1218,246 @@ StructHexVolMesh<Basis>::cell_type_description()
   }
   return td;
 }
+
+
+
+// VIRTUAL IMPLEMENTATION OF FUNCTIONS
+
+template <class Basis>
+bool
+StructHexVolMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_center(Point &p, Mesh::VNode::index_type idx) const
+{
+  typename LatVolMesh<Basis>::Node::index_type i;
+  to_index(i,idx);
+  get_center(p,i); 
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_center(Point &p,Mesh::Mesh::VEdge::index_type idx) const
+{
+  typename LatVolMesh<Basis>::Edge::index_type i;
+  to_index(i,idx);
+  get_center(p,i);
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_center(Point &p, Mesh::Mesh::VFace::index_type idx) const
+{
+  typename LatVolMesh<Basis>::Face::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_center(Point &p, Mesh::Mesh::VCell::index_type idx) const
+{
+  typename LatVolMesh<Basis>::Cell::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_center(Point &p, Mesh::Mesh::VElem::index_type idx) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_center(Point &p, Mesh::Mesh::VDElem::index_type idx) const
+{
+  typename LatVolMesh<Basis>::DElem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_weights(const Point& p,Mesh::VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename LatVolMesh<Basis>::Cell::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    this->get_nodes(nodes,Mesh::VCell::index_type(idx));
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(this->basis_.dofs());
+      this->basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::get_weights(const Point& p,Mesh::VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename LatVolMesh<Basis>::Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<Mesh::VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+StructHexVolMesh<Basis>::locate(Mesh::VNode::index_type &vi, const Point &point) const
+{
+  typename LatVolMesh<Basis>::Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<Mesh::VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+StructHexVolMesh<Basis>::locate(Mesh::VElem::index_type &vi, const Point &point) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<Mesh::VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+StructHexVolMesh<Basis>::get_coords(vector<double> &coords, const Point &point, 
+                                                    Mesh::VElem::index_type i) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type vi;
+  to_index(vi,i);
+  return(get_coords(coords,point,vi));
+}  
+  
+template <class Basis>
+void 
+StructHexVolMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                                    Mesh::VElem::index_type i) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type vi;
+  to_index(vi,i);
+  interpolate(p,coords,vi);
+}
+
+template <class Basis>
+void 
+StructHexVolMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    Mesh::VElem::index_type i) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type vi;
+  to_index(vi,i);
+  derivate(coords,vi,p);
+}
+
+template <class Basis>
+double
+StructHexVolMesh<Basis>::get_size(Mesh::VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+StructHexVolMesh<Basis>::get_size(Mesh::VEdge::index_type i) const
+{
+  typename LatVolMesh<Basis>::Edge::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructHexVolMesh<Basis>::get_size(Mesh::VFace::index_type i) const
+{
+  typename LatVolMesh<Basis>::Face::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructHexVolMesh<Basis>::get_size(Mesh::VCell::index_type i) const
+{
+  typename LatVolMesh<Basis>::Cell::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructHexVolMesh<Basis>::get_size(Mesh::VElem::index_type i) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+StructHexVolMesh<Basis>::get_size(Mesh::VDElem::index_type i) const
+{
+  typename LatVolMesh<Basis>::DElem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+
+template <class Basis>
+void 
+StructHexVolMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  Mesh::VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  this->basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+StructHexVolMesh<Basis>::pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                                  Mesh::VElem::index_type ci, unsigned int which_face,
+                                  unsigned int div_per_unit) const
+{
+  this->basis_.approx_face(which_face, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+StructHexVolMesh<Basis>::get_random_point(Point &p, Mesh::VElem::index_type i,
+                                                          MusilRNG &rng) const
+{
+  typename LatVolMesh<Basis>::Elem::index_type vi; to_index(vi,i);
+  get_random_point(p,vi,rng);
+}
+
+template <class Basis>
+void
+StructHexVolMesh<Basis>::set_point(Point& p, Mesh::VNode::index_type i)
+{
+  points_[i] = p;
+}
+
+
 
 } // namespace SCIRun
 

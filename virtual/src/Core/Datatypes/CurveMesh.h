@@ -26,22 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-/*
- *  CurveMesh.h: countour mesh
- *
- *  Written by:
- *   Chris Moulding
- *   Department of Computer Science
- *   University of Utah
- *   January 2001
- *
- *  Copyright (C) 2001 SCI Group
- *
- */
-
-#ifndef SCI_project_CurveMesh_h
-#define SCI_project_CurveMesh_h 1
+#ifndef CORE_DATATYPES_CURVEMESH_H
+#define CORE_DATATYPES_CURVEMESH_H 1
 
 #include <Core/Geometry/Point.h>
 #include <Core/Datatypes/Mesh.h>
@@ -128,11 +114,11 @@ public:
 
     inline
     const Point &node0() const {
-      return mesh_.nodes_[mesh_.edges_[index_].first];
+      return mesh_.points_[mesh_.edges_[index_].first];
     }
     inline
     const Point &node1() const {
-      return mesh_.nodes_[mesh_.edges_[index_].second];
+      return mesh_.points_[mesh_.edges_[index_].second];
     }
 
     // the following designed to coordinate with ::get_edges
@@ -153,7 +139,7 @@ public:
     synchronize_lock_("CurveMesh sync lock")
   {}
   CurveMesh(const CurveMesh &copy) :
-    nodes_(copy.nodes_),
+    points_(copy.points_),
     edges_(copy.edges_),
     basis_(copy.basis_),
     synchronized_(copy.synchronized_),
@@ -169,6 +155,8 @@ public:
   virtual CurveMesh *clone() { return new CurveMesh(*this); }
   virtual ~CurveMesh() {}
 
+  virtual int basis_order() { return (basis_.polynomial_order()); }
+ 
   Basis& get_basis() { return basis_; }
 
   bool get_dim(vector<unsigned int>&) const { return false;  }
@@ -200,58 +188,87 @@ public:
   virtual BBox get_bounding_box() const;
   //? FIX_ME mjc validate this with various basis fns.
   virtual void transform(const Transform &t);
-
-  //! get the child elements of the given index
-  void get_nodes(typename Node::array_type &a,
-                 typename Edge::index_type i) const
-  { a.resize(2); a[0] = edges_[i].first; a[1] = edges_[i].second; }
-
-  void get_edges(typename Edge::array_type &a,
-                 typename Edge::index_type i) const
-  { a.push_back(i); }
-
-  void get_nodes(typename Node::array_type &,
-                 typename Face::index_type) const {}
-  void get_nodes(typename Node::array_type &,
-                 typename Cell::index_type) const {}
-  void get_edges(typename Edge::array_type &,
-                 typename Face::index_type) const {}
-  void get_edges(typename Edge::array_type &,
-                 typename Cell::index_type) const {}
-
-  // Stub, used by ShowField.
-  void get_faces(typename Face::array_type &,
-                 typename Elem::index_type) const {}
-
-  //! Get the parent element(s) of the given node index.
-  void get_elems(typename Elem::array_type &result,
+  
+    
+  //! Get the child elements of the given index.
+  void get_nodes(typename Node::array_type &array, 
                  typename Node::index_type idx) const
-  {
-    result.clear();
-    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
-      result.push_back(node_neighbors_[idx][i]);
-  }
+  { array.resize(1); array[0]= idx; }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Edge::index_type idx) const
+  { get_nodes_from_edge(array,idx); }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_nodes has not been implemented for faces"); }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_nodes has not been implemented for cells"); }
 
-  void get_elems(typename Elem::array_type &result,
-                 typename Edge::index_type idx) const {}
-  void get_elems(typename Elem::array_type &result,
-                 typename Face::index_type idx) const {}
-                 
-  //! Wrapper to get the derivative elements from this element.
-  void get_delems(typename DElem::array_type &result,
-                  typename Elem::index_type idx) const
-  {
-    get_nodes(result, idx);
-  }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Node::index_type idx) const
+  { get_edges_from_node(array,idx); }
+  void get_edges(typename Edge::array_type &array,
+                 typename Edge::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("CurveSurfMesh: get_nodes has not been implemented for faces"); }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("CurveSurfMesh: get_edges has not been implemented for cells"); }
 
-  //! Defined get_nodes(Node::array, DElem::index_type)
-  void get_nodes(typename Node::array_type &a,
-                 typename Node::index_type i) const
-  {
-    a.clear();
-    a.push_back(i);
-  }
+  void get_faces(typename Face::array_type &array, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_faces has not been implemented"); }
+  void get_faces(typename Face::array_type &array,
+                 typename Edge::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_faces has not been implemented"); }
+  void get_faces(typename Face::array_type &array, 
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_faces has not been implemented"); }
+  void get_faces(typename Face::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_faces has not been implemented"); }
 
+  void get_cells(typename Cell::array_type &array, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Edge::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_cells has not been implemented"); }
+
+  void get_elems(typename Elem::array_type &array, 
+                 typename Node::index_type idx) const
+  { get_edges_from_node(array,idx); }
+  void get_elems(typename Elem::array_type &array, 
+                 typename Edge::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_elems(typename Elem::array_type &array, 
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_elems has not been implemented for cells"); }
+  void get_elems(typename Face::array_type &array,
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_elems has not been implemented for cells"); }
+
+  void get_delems(typename DElem::array_type &array, 
+                  typename Node::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Edge::index_type idx) const
+  { get_nodes_from_edge(array,idx); }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Face::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_delems has not been implemented for faces"); }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Cell::index_type idx) const
+  { ASSERTFAIL("CurveMesh: get_delems has not been implemented for cells"); }
+        
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords,
@@ -286,9 +303,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -296,7 +314,7 @@ public:
 
   //! get the center point (in object space) of an element
   void get_center(Point &result, typename Node::index_type idx) const
-  { result = nodes_[idx]; }
+  { result = points_[idx]; }
   void get_center(Point &, typename Edge::index_type) const;
   void get_center(Point &, typename Face::index_type) const {}
   void get_center(Point &, typename Cell::index_type) const {}
@@ -323,6 +341,9 @@ public:
   void get_neighbors(vector<typename Node::index_type> &/*array*/,
                      typename Node::index_type /*idx*/) const
   { ASSERTFAIL("CurveMesh::get_neighbor for nodes needs to be implemented"); }
+  void get_neighbors(vector<typename Elem::index_type> &/*array*/,
+                     typename Elem::index_type /*idx*/) const
+  { ASSERTFAIL("CurveMesh::get_neighbor for nodes needs to be implemented"); }
 
   int get_valence(typename Node::index_type idx) const;
   int get_valence(typename Edge::index_type /*idx*/) const { return 0; }
@@ -346,7 +367,7 @@ public:
   void get_point(Point &result, typename Node::index_type idx) const
   { get_center(result,idx); }
   void set_point(const Point &point, typename Node::index_type index)
-  { nodes_[index] = point; }
+  { points_[index] = point; }
 
   void get_random_point(Point &, typename Elem::index_type, MusilRNG &r) const;
 
@@ -360,8 +381,8 @@ public:
   //! use these to build up a new contour mesh
   typename Node::index_type add_node(const Point &p)
   {
-    nodes_.push_back(p);
-    return static_cast<under_type>(nodes_.size() - 1);
+    points_.push_back(p);
+    return static_cast<under_type>(points_.size() - 1);
   }
   typename Node::index_type add_point(const Point &point)
   { return add_node(point); }
@@ -377,7 +398,7 @@ public:
     edges_.push_back(index_pair_type(a[0],a[1]));
     return static_cast<under_type>(edges_.size()-1);
   }
-  void node_reserve(size_t s) { nodes_.reserve(s); }
+  void node_reserve(size_t s) { points_.reserve(s); }
   void elem_reserve(size_t s) { edges_.reserve(s*2); }
 
   virtual bool is_editable() const { return true; }
@@ -387,7 +408,8 @@ public:
   virtual bool synchronize(unsigned int mask);
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idc;
+  static MeshTypeID mesh_idc;
   static  const string type_name(int n = -1);
 
   virtual const TypeDescription *get_type_description() const;
@@ -401,11 +423,115 @@ public:
 
   // returns a CurveMesh
   static Persistent *maker() { return new CurveMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return scinew CurveMesh<Basis>(); }
+
+
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  virtual bool has_virtual_interface() const;
+
+  virtual void size(VNode::size_type& size) const;
+  virtual void size(VEdge::size_type& size) const;
+  virtual void size(VElem::size_type& size) const;
+  virtual void size(VDElem::size_type& size) const;
+  
+  virtual void get_nodes(VNode::array_type& nodes, VEdge::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VElem::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VDElem::index_type i) const;
+
+  virtual void get_edges(VEdge::array_type& edges, VNode::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VElem::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VDElem::index_type i) const;
+  
+  virtual void get_elems(VElem::array_type& elems, VNode::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VEdge::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VDElem::index_type i) const;
+
+  virtual void get_delems(VDElem::array_type& delems, VElem::index_type i) const;
+
+  virtual void get_center(Point &point, VNode::index_type i) const;
+  virtual void get_center(Point &point, VEdge::index_type i) const;
+  virtual void get_center(Point &point, VElem::index_type i) const;
+  virtual void get_center(Point &point, VDElem::index_type i) const;
+
+  virtual double get_size(VNode::index_type i) const;
+  virtual double get_size(VEdge::index_type i) const;
+  virtual double get_size(VElem::index_type i) const;
+  virtual double get_size(VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(VNode::index_type &i, const Point &point) const;
+  virtual bool locate(VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+
+  virtual void get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const;
+  virtual void set_point(const Point &point, VNode::index_type i);
+  
+  virtual void get_points(vector<Point>& points) const;
+
+  virtual void add_node(const Point &point,VNode::index_type &i);
+  virtual void add_elem(const VNode::array_type &nodes,VElem::index_type &i);
+
+  virtual bool get_neighbor(VElem::index_type &neighbor, 
+                       VElem::index_type from, VDElem::index_type delem) const;
+  virtual void get_neighbors(VElem::array_type &elems, 
+                                                    VElem::index_type i) const;
+  virtual void get_neighbors(VNode::array_type &nodes, 
+                                                    VNode::index_type i) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                               VElem::index_type ci, unsigned int which_edge, 
+                               unsigned int div_per_unit) const;
+
+private:
+
+  //////////////////////////////////////////////////////////////
+  // These functions are templates and are used to define the
+  // dynamic compilation interface and the virtual interface
+  // as they both use different datatypes as indices and arrays
+  // the following functions have been templated and are inlined
+  // at the places where they are needed.
+  //
+  // Secondly these templates allow for the use of the stack vector
+  // as well as the STL vector. When an algorithm supports non linear
+  // functions an STL vector is a better choice, in the other cases
+  // often a StackVector is enough (The latter improves performance).
+   
+  template<class ARRAY, class INDEX>
+  inline void get_nodes_from_edge(ARRAY& array, INDEX idx) const
+  {
+    array.resize(2); 
+    array[0] = static_cast<typename ARRAY::value_type>(edges_[idx].first); 
+    array[1] = static_cast<typename ARRAY::value_type>(edges_[idx].second);
+  }
+  
+  template<class ARRAY, class INDEX>
+  inline void get_edges_from_node(ARRAY& array, INDEX idx) const
+  {
+    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+      "CurveMesh: Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
+    
+    array.resize(node_neighbors_[idx].size());
+    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
+      array[i] = 
+        static_cast<typename ARRAY::value_type>(node_neighbors_[idx][i]);
+  }
+  
 
 private:
   void                    compute_node_neighbors();
 
-  vector<Point>           nodes_;
+  vector<Point>           points_;
   vector<index_pair_type> edges_;
   Basis                   basis_;
 
@@ -518,8 +644,11 @@ CurveMesh<Basis>::cell_type_description()
 
 template <class Basis>
 PersistentTypeID
-CurveMesh<Basis>::type_id(type_name(-1), "Mesh", CurveMesh<Basis>::maker);
+CurveMesh<Basis>::type_idc(type_name(-1), "Mesh", CurveMesh<Basis>::maker);
 
+template <class Basis>
+MeshTypeID
+CurveMesh<Basis>::mesh_idc(type_name(-1), CurveMesh<Basis>::mesh_maker);
 
 template <class Basis>
 BBox
@@ -533,7 +662,7 @@ CurveMesh<Basis>::get_bounding_box() const
 
   while (i != ie)
   {
-    result.extend(nodes_[*i]);
+    result.extend(points_[*i]);
     ++i;
   }
 
@@ -545,8 +674,8 @@ template <class Basis>
 void
 CurveMesh<Basis>::transform(const Transform &t)
 {
-  vector<Point>::iterator itr = nodes_.begin();
-  vector<Point>::iterator eitr = nodes_.end();
+  vector<Point>::iterator itr = points_.begin();
+  vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
   {
     *itr = t.project(*itr);
@@ -627,14 +756,14 @@ CurveMesh<Basis>::locate(typename Node::index_type &idx, const Point &p) const
     return false;
   }
 
-  double closest = (p-nodes_[*ni]).length2();
+  double closest = (p-points_[*ni]).length2();
 
   ++ni;
   for (; ni != nie; ++ni)
   {
-    if ( (p-nodes_[*ni]).length2() < closest )
+    if ( (p-points_[*ni]).length2() < closest )
     {
-      closest = (p-nodes_[*ni]).length2();
+      closest = (p-points_[*ni]).length2();
       idx = *ni;
     }
   }
@@ -667,8 +796,8 @@ CurveMesh<Basis>::locate(typename Edge::index_type &idx, const Point &p) const
   {
     get_nodes(nra,*ei);
 
-    n1 = nodes_[nra[0]];
-    n2 = nodes_[nra[1]];
+    n1 = points_[nra[0]];
+    n2 = points_[nra[1]];
 
     dist1 = (p-n1).length();
     dist2 = (p-n2).length();
@@ -739,8 +868,8 @@ CurveMesh<Basis>::get_random_point(Point &p,
                                    typename Elem::index_type ei,
                                    MusilRNG &rng) const
 {
-  const Point &p0 = nodes_[edges_[ei].first];
-  const Point &p1 = nodes_[edges_[ei].second];
+  const Point &p0 = points_[edges_[ei].first];
+  const Point &p1 = points_[edges_[ei].second];
 
   p = p0 + (p1 - p0) * rng();
 }
@@ -765,7 +894,7 @@ void
 CurveMesh<Basis>::compute_node_neighbors()
 {
   node_neighbors_.clear();
-  node_neighbors_.resize(nodes_.size());
+  node_neighbors_.resize(points_.size());
   unsigned int i, num_elems = edges_.size();
   for (i = 0; i < num_elems; i++)
   {
@@ -787,7 +916,7 @@ CurveMesh<Basis>::io(Piostream& stream)
   Mesh::io(stream);
 
   // IO data members, in order
-  Pio(stream, nodes_);
+  Pio(stream, points_);
   Pio(stream, edges_);
   if (version >= 2) {
     basis_.io(stream);
@@ -830,7 +959,7 @@ template <class Basis>
 void
 CurveMesh<Basis>::end(typename CurveMesh<Basis>::Node::iterator &itr) const
 {
-  itr = static_cast<typename Node::iterator>(nodes_.size());
+  itr = static_cast<typename Node::iterator>(points_.size());
 }
 
 
@@ -886,7 +1015,7 @@ template <class Basis>
 void
 CurveMesh<Basis>::size(typename CurveMesh<Basis>::Node::size_type &s) const
 {
-  s = (unsigned)nodes_.size();
+  s = (unsigned)points_.size();
 }
 
 
@@ -913,6 +1042,345 @@ CurveMesh<Basis>::size(typename CurveMesh<Basis>::Cell::size_type &s) const
   s = 0;
 }
 
+
+// Virtual interface functions
+
+template <class Basis>
+bool
+CurveMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+  
+
+template <class Basis>
+void
+CurveMesh<Basis>::size(VNode::size_type& sz) const
+{
+  typename Node::index_type s; size(s); sz = VNode::index_type(s);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::size(VEdge::size_type& sz) const
+{
+  typename Edge::index_type s; size(s); sz = VEdge::index_type(s);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::size(VDElem::size_type& sz) const
+{
+  typename DElem::index_type s; size(s); sz = VDElem::index_type(s);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::size(VElem::size_type& sz) const
+{
+  typename Elem::index_type s; size(s); sz = VElem::index_type(s);
+}
+
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                            VEdge::index_type i) const
+{
+  get_nodes_from_edge(nodes,i);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                            VElem::index_type i) const
+{
+  get_nodes_from_edge(nodes,i);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                            VDElem::index_type i) const
+{
+  nodes.resize(1); nodes[0] = static_cast<VNode::index_type>(i);  
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                            VNode::index_type i) const
+{
+  get_edges_from_node(edges,i);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                            VElem::index_type i) const
+{
+  edges.resize(1); edges[0] = static_cast<VEdge::index_type>(i);  
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                            VDElem::index_type i) const
+{
+  get_edges_from_node(edges,i);
+}  
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_elems(VElem::array_type& elems, 
+                            VNode::index_type i) const
+{
+  get_edges_from_node(elems,i);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_elems(VElem::array_type& elems, 
+                            VEdge::index_type i) const
+{
+  elems.resize(1); elems[0] = static_cast<VElem::index_type>(i);  
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_elems(VElem::array_type& elems, 
+                            VDElem::index_type i) const
+{
+  get_edges_from_node(elems,i);
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_delems(VDElem::array_type& delems, 
+                             VElem::index_type i) const
+{
+  get_nodes_from_edge(delems,i);
+}
+
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_center(Point &p, Mesh::VNode::index_type idx) const
+{
+  p = points_[idx]; 
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_center(Point &p,Mesh::VEdge::index_type idx) const
+{
+  get_center(p, typename Edge::index_type(idx));
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_center(Point &p, Mesh::VElem::index_type idx) const
+{
+  get_center(p, typename Elem::index_type(idx));
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_center(Point &p, Mesh::VDElem::index_type idx) const
+{
+  get_center(p, typename DElem::index_type(idx));
+}
+
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_weights(const Point& p,VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename Edge::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    get_nodes_from_edge(nodes,idx);
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(basis_.dofs());
+      basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+CurveMesh<Basis>::get_weights(const Point& p,VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename Edge::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+CurveMesh<Basis>::locate(VNode::index_type &vi, const Point &point) const
+{
+  typename Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+CurveMesh<Basis>::locate(VElem::index_type &vi, const Point &point) const
+{
+  typename Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+CurveMesh<Basis>::get_coords(vector<double> &coords, const Point &point,
+                                                    VElem::index_type i) const
+{
+  return(get_coords(coords,point,typename Elem::index_type(i)));
+}  
+  
+template <class Basis>
+void 
+CurveMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  interpolate(p,coords,typename Elem::index_type(i));
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  derivate(coords,typename Elem::index_type(i),p);
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::get_points(vector<Point>& points) const
+{
+  points = points_; 
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::set_point(const Point &point, VNode::index_type i)
+{
+  points_[i] = point;
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::add_node(const Point &point,VNode::index_type &vi)
+{
+  vi = static_cast<VNode::index_type>(add_point(point));
+}  
+  
+template <class Basis>
+void 
+CurveMesh<Basis>::add_elem(const VNode::array_type &nodes,VElem::index_type &vi)
+{
+  typename Node::array_type nnodes;
+  convert_vector(nnodes,nodes);
+  vi = static_cast<VElem::index_type>(add_elem(nnodes));
+}  
+
+
+template <class Basis>
+bool 
+CurveMesh<Basis>::get_neighbor(VElem::index_type &neighbor, 
+                        VElem::index_type from, VDElem::index_type delem) const
+{
+  typename Elem::index_type n;
+  bool ret = get_neighbor(n,typename Elem::index_type(from),
+                            typename DElem::index_type(delem));
+  neighbor = static_cast<VElem::index_type>(n);
+  return (ret);
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::get_neighbors(VElem::array_type &varray, 
+                                 VElem::index_type i) const
+{
+  typename Elem::array_type array;
+  get_neighbors(array,typename Elem::index_type(i));
+  convert_vector(varray,array);
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::get_neighbors(VNode::array_type &varray, 
+                                 VNode::index_type i) const
+{
+  vector<typename Node::index_type> array;
+  get_neighbors(array,typename Node::index_type(i));
+  convert_vector(varray,array);
+}
+
+template <class Basis>
+double
+CurveMesh<Basis>::get_size(VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+CurveMesh<Basis>::get_size(VEdge::index_type i) const
+{
+  return (get_size(typename Edge::index_type(i)));
+}
+
+template <class Basis>
+double
+CurveMesh<Basis>::get_size(VElem::index_type i) const
+{
+  return (get_size(typename Elem::index_type(i)));
+}
+
+template <class Basis>
+double
+CurveMesh<Basis>::get_size(VDElem::index_type i) const
+{
+  return (get_size(typename DElem::index_type(i)));
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+CurveMesh<Basis>::get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const
+{
+  get_random_point(p,typename Elem::index_type(i),rng);
+}
 
 } // namespace SCIRun
 

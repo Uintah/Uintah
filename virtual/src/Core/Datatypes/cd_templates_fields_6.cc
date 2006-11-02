@@ -95,10 +95,12 @@ typedef CrvLinearLgn<unsigned long>         FDCrulongBasis;
 typedef StructCurveMesh<CrvLinearLgn<Point> > CMesh;
 PersistentTypeID backwards_compat_SCM("StructCurveMesh", "Mesh",
 				      CMesh::maker, CMesh::maker);
+template class StructCurveMesh<CrvLinearLgn<Point> >;
 
 //NoData
 template class GenericField<CMesh, NDBasis, vector<double> >; 
 
+/*
 //Constant
 template class GenericField<CMesh, CFDTensorBasis, vector<Tensor> >;       
 template class GenericField<CMesh, CFDVectorBasis, vector<Vector> >;       
@@ -124,6 +126,7 @@ template class GenericField<CMesh, FDCruintBasis,   vector<unsigned int> >;
 template class GenericField<CMesh, FDCrushortBasis, vector<unsigned short> >;
 template class GenericField<CMesh, FDCrucharBasis,  vector<unsigned char> >;
 template class GenericField<CMesh, FDCrulongBasis,  vector<unsigned long> >;
+
 
 PersistentTypeID 
 backwards_compat_SCFT("StructCurveField<Tensor>", "Field",
@@ -210,6 +213,7 @@ typedef QuadBilinearLgn<unsigned long>         FDQulongBasis;
 typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
 PersistentTypeID backwards_compat_SQM("StructQuadSurfMesh", "Mesh",
 				      SQMesh::maker, SQMesh::maker);
+//template class StructQuadSurfMesh<QuadBilinearLgn<Point> >;
 
 //NoData
 template class GenericField<SQMesh, NDBasis, FData2d<double,SQMesh> >;
@@ -333,6 +337,7 @@ typedef HexTrilinearLgn<unsigned long>         FDHulongBasis;
 typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHMesh;
 PersistentTypeID backwards_compat_SHVM("StructHexVolMesh", "Mesh",
 				       SHMesh::maker, SHMesh::maker);
+//template class StructHexVolMesh<HexTrilinearLgn<Point> >;
 
 //Constant
 template class GenericField<SHMesh, CFDTensorBasis, FData3d<Tensor,SHMesh> >;
@@ -437,7 +442,7 @@ backwards_compat_SHVFul("StructHexVolField<unsigned_long>", "Field",
 			FData3d<unsigned long, SHMesh> >::maker,
 			GenericField<SHMesh, CFDulongBasis, 
 			FData3d<unsigned long, SHMesh> >::maker);
-
+*/
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif

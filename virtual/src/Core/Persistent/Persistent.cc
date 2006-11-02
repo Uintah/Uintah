@@ -122,8 +122,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 
   if (dummy != table->end())
   {
-    if ((*dummy).second->maker != maker 
-	|| ((*dummy).second->parent != parentName))
+    if ((*dummy).second->maker != maker || ((*dummy).second->parent != parentName))
     {
       printf( "WARNING: duplicate type in Persistent Object Type Database: %s\n",
               type.c_str() );
@@ -132,9 +131,9 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     }
   }
   
-#if DEBUG
+//#if DEBUG
   printf("putting in table: PersistentTypeID: %s %s\n", typeName.c_str(), parentName.c_str() );
-#endif
+//#endif
 
   (*table)[type] = this;
   persistentTypeIDMutex.unlock();
@@ -143,12 +142,22 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 
 PersistentTypeID::~PersistentTypeID()
 {
+/*
+  // This function does not seem to work properly
+  // Since it is only used when cleaning up SCIRun
+  // Deallocating memory at this point is not of
+  // the highest importance.
+  
+  persistentTypeIDMutex.lock();
+
   Piostream::MapStringPersistentTypeID::iterator iter;
 
   if (table == NULL)
   {
     printf( "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n" );
     printf( "         For: %s, %s\n", type.c_str(), parent.c_str() );
+    persistentTypeIDMutex.unlock();
+
     return;
   }
 
@@ -168,6 +177,8 @@ PersistentTypeID::~PersistentTypeID()
     delete table;
     table = 0;
   }
+  persistentTypeIDMutex.unlock();
+*/
 }
 
 

@@ -859,6 +859,8 @@ public:
   virtual ~MaskedLatVolMesh() {}
 
   Basis &get_basis() { return  LatVolMesh<Basis>::get_basis(); }
+  virtual int basis_order() { return (this->basis_.polynomial_order()); }
+  
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
@@ -902,9 +904,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     typename LatVolMesh<Basis>::Elem::index_type i(this, idx.i_,
                                                    idx.j_, idx.k_);
@@ -1036,7 +1039,8 @@ public:
   { ASSERTFAIL("This mesh type does not have element normals."); }
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idmlv;
+  static MeshTypeID mesh_idmlv;
   static  const string type_name(int n = -1);
 
   virtual const TypeDescription *get_type_description() const;
@@ -1053,6 +1057,13 @@ public:
 
   // returns a MaskedLatVolMesh
   static Persistent *maker() { return new MaskedLatVolMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return new MaskedLatVolMesh<Basis>(); }
+  static MeshHandle mesh_maker(unsigned int x, unsigned int y, unsigned int z, const Point& min, const Point& max) { return new MaskedLatVolMesh<Basis>(x,y,z,min,max); }
+
+  //! VIRTUAL INTERFACE FUNCTIONS
+  
+  virtual bool has_virtual_interface() const { return (false); }
+
 
 private:
   unsigned int  synchronized_;
@@ -1090,9 +1101,15 @@ private:
 
 template <class Basis>
 PersistentTypeID
-MaskedLatVolMesh<Basis>::type_id(type_name(-1),
+MaskedLatVolMesh<Basis>::type_idmlv(type_name(-1),
                                  LatVolMesh<Basis>::type_name(-1),
                                  maker);
+
+template <class Basis>
+MeshTypeID
+MaskedLatVolMesh<Basis>::mesh_idmlv(type_name(-1),
+                                 MaskedLatVolMesh<Basis>::mesh_maker,
+                                 MaskedLatVolMesh<Basis>::latvol_maker);
 
 template <class Basis>
 MaskedLatVolMesh<Basis>::MaskedLatVolMesh():

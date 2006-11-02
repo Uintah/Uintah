@@ -128,20 +128,22 @@ Scheduler::main_loop()
 {
   // Dispatch events.
   int done=0;
-  while(!done){
+  while(!done)
+  {
     MessageBase* msg=mailbox.receive();
     // Dispatch message..
-    switch (msg->type) {
+    switch (msg->type) 
+    {
     case MessageTypes::MultiSend:
       {
-	//cerr << "Got multisend\n";
-	Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
-	multisend_real(mmsg->p1);
-	// Do not re-execute sender
+        //cerr << "Got multisend\n";
+        Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
+        multisend_real(mmsg->p1);
+        // Do not re-execute sender
 
-	// do_scheduling on the module instance bound to
-	// the output port p1 (the first arg in Multisend() call)
-	do_scheduling_real(mmsg->p1->get_module()); 
+        // do_scheduling on the module instance bound to
+        // the output port p1 (the first arg in Multisend() call)
+        do_scheduling_real(mmsg->p1->get_module()); 
       }
       break;
 

@@ -338,7 +338,11 @@ public:
     : min_i_(copy.min_i_), min_j_(copy.min_j_),
       ni_(copy.get_ni()), nj_(copy.get_nj()), transform_(copy.transform_) {}
   virtual ImageMesh *clone() { return new ImageMesh(*this); }
-  virtual ~ImageMesh() {}
+  virtual ~ImageMesh() {
+    std::cout << "imagemehs destructor\n";
+  }
+
+  virtual int basis_order() { return (basis_.polynomial_order()); }
 
   Basis& get_basis() { return basis_; }
 
@@ -381,9 +385,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -425,10 +430,10 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i);
-  void to_index(typename Edge::index_type &index, unsigned int i) { index= i; }
-  void to_index(typename Face::index_type &index, unsigned int i);
-  void to_index(typename Cell::index_type &index, unsigned int i) { index= i; }
+  void to_index(typename Node::index_type &index, unsigned int i) const;
+  void to_index(typename Edge::index_type &index, unsigned int i) const { index= i; }
+  void to_index(typename Face::index_type &index, unsigned int i) const;
+  void to_index(typename Cell::index_type &index, unsigned int i) const{ index= i; }
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
@@ -520,9 +525,9 @@ public:
   void get_center(Point &, const typename Face::index_type &) const;
   void get_center(Point &, typename Cell::index_type) const {}
 
-  bool locate(typename Node::index_type &, const Point &);
+  bool locate(typename Node::index_type &, const Point &) const;
   bool locate(typename Edge::index_type &, const Point &) const { return false; }
-  bool locate(typename Face::index_type &, const Point &);
+  bool locate(typename Face::index_type &, const Point &) const;
   bool locate(typename Cell::index_type &, const Point &) const { return false; }
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
@@ -538,7 +543,9 @@ public:
   void get_random_point(Point &, const typename Elem::index_type &, MusilRNG &rng) const;
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idim;
+  static MeshTypeID mesh_idim;
+  
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
@@ -560,7 +567,9 @@ public:
   static const TypeDescription* face_index_type_description();
 
   // returns a ImageMesh
-  static Persistent *maker() { return new ImageMesh<Basis>(); }
+  static Persistent *maker() { return scinew ImageMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return scinew ImageMesh<Basis>();}
+  static MeshHandle image_maker(unsigned int x, unsigned int y, const Point& min, const Point& max) { return scinew ImageMesh<Basis>(x,y,min,max); }
 
 protected:
 
@@ -580,12 +589,94 @@ protected:
   //! The basis class
   Basis                  basis_;
 
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  
+  virtual bool has_virtual_interface() const;
+  
+  virtual void size(Mesh::VNode::size_type& size) const;
+  virtual void size(Mesh::VEdge::size_type& size) const;
+  virtual void size(Mesh::VFace::size_type& size) const;
+  virtual void size(Mesh::VElem::size_type& size) const;
+  virtual void size(Mesh::VDElem::size_type& size) const;
+  
+  virtual void get_nodes(VNode::array_type& nodes, VEdge::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VFace::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VElem::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VDElem::index_type i) const;
+  
+  virtual void get_edges(VEdge::array_type& edges, VFace::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VElem::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VDElem::index_type i) const;
+
+  virtual void get_faces(VFace::array_type& faces, VNode::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VEdge::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VElem::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VDElem::index_type i) const;
+  
+  virtual void get_elems(VElem::array_type& elems, VNode::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VEdge::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VFace::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VDElem::index_type i) const;
+
+  virtual void get_delems(VDElem::array_type& delems, VEdge::index_type i) const;
+  virtual void get_delems(VDElem::array_type& delems, VFace::index_type i) const;
+  virtual void get_delems(VDElem::array_type& delems, VElem::index_type i) const;
+
+  //! Get the center of a certain mesh element
+  virtual void get_center(Point &point, VNode::index_type i) const;
+  virtual void get_center(Point &point, VEdge::index_type i) const;
+  virtual void get_center(Point &point, VFace::index_type i) const;
+  virtual void get_center(Point &point, VElem::index_type i) const;
+  virtual void get_center(Point &point, VDElem::index_type i) const;
+
+  virtual double get_size(VNode::index_type i) const;
+  virtual double get_size(VEdge::index_type i) const;
+  virtual double get_size(VFace::index_type i) const;
+  virtual double get_size(VElem::index_type i) const;
+  virtual double get_size(VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(VNode::index_type &i, const Point &point) const;
+  virtual bool locate(VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+
+  virtual void get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const;
+
+  virtual bool get_neighbor(VElem::index_type &neighbor, 
+                       VElem::index_type from, VDElem::index_type delem) const;
+  virtual void get_neighbors(VElem::array_type &elems, 
+                                                    VElem::index_type i) const;
+  virtual void get_neighbors(VNode::array_type &nodes, 
+                                                    VNode::index_type i) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                               VElem::index_type ci, unsigned int which_edge, 
+                               unsigned int div_per_unit) const;
+  virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                               VElem::index_type ci, unsigned int which_face, 
+                              unsigned int div_per_unit) const;
+
 };
 
 
 template <class Basis>
 PersistentTypeID
-ImageMesh<Basis>::type_id(type_name(-1),"Mesh", maker);
+ImageMesh<Basis>::type_idim(type_name(-1),"Mesh", maker);
+
+template <class Basis>
+MeshTypeID
+ImageMesh<Basis>::mesh_idim(type_name(-1),ImageMesh<Basis>::mesh_maker,ImageMesh<Basis>::image_maker);
 
 
 template<class Basis>
@@ -784,11 +875,11 @@ ImageMesh<Basis>::get_elems(typename Face::array_type &array, typename Edge::ind
   }
   else
   {
-    idx -= offset;
+    idx = idx - offset;
     const unsigned int i = idx/(nj_-1); 
     const unsigned int j = idx - i*(nj_-1);
     if (i < (ni_-1)) array.push_back(IFaceIndex(this,i,j));
-    if (i > 0) array.push_back(IFaceIndex(this,i-1));  
+    if (i > 0) array.push_back(IFaceIndex(this,i-1,j));  
   }
 }
 
@@ -947,7 +1038,7 @@ ImageMesh<Basis>::get_center(Point &result,
 
 template<class Basis>
 bool
-ImageMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
+ImageMesh<Basis>::locate(typename Face::index_type &face, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
   const Point r = transform_.unproject(p);
@@ -971,7 +1062,7 @@ ImageMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
 
 template<class Basis>
 bool
-ImageMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
+ImageMesh<Basis>::locate(typename Node::index_type &node, const Point &p) const
 {
   const Point r = transform_.unproject(p);
 
@@ -1181,7 +1272,7 @@ ImageMesh<Basis>::size(typename ImageMesh::Node::size_type &s) const
 
 template<class Basis>
 void
-ImageMesh<Basis>::to_index(typename ImageMesh::Node::index_type &idx, unsigned int a)
+ImageMesh<Basis>::to_index(typename ImageMesh::Node::index_type &idx, unsigned int a) const
 {
   const unsigned int i = a % ni_;
   const unsigned int j = a / ni_;
@@ -1240,7 +1331,7 @@ ImageMesh<Basis>::size(typename ImageMesh::Face::size_type &s) const
 
 template<class Basis>
 void
-ImageMesh<Basis>::to_index(typename ImageMesh::Face::index_type &idx, unsigned int a)
+ImageMesh<Basis>::to_index(typename ImageMesh::Face::index_type &idx, unsigned int a) const
 {
   const unsigned int i = a % (ni_-1);
   const unsigned int j = a / (ni_-1);
@@ -1371,6 +1462,700 @@ ImageMesh<Basis>::cell_type_description()
   return td;
 }
 
+//-------------------------------------
+// VIRTUAL IMPLEMENTATION OF FUNCTIONS
+
+template <class Basis>
+bool
+ImageMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::size(VNode::size_type& sz) const
+{
+  sz = static_cast<VNode::size_type>(ni_*nj_);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::size(VEdge::size_type& sz) const
+{
+  sz = static_cast<VEdge::size_type>((ni_-1) * (nj_) + (ni_) * (nj_ -1));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::size(VFace::size_type& sz) const
+{
+  sz = static_cast<VFace::size_type>((ni_-1)*(nj_-1));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::size(VDElem::size_type& sz) const
+{
+  sz = static_cast<VDElem::size_type>((ni_-1) * (nj_) + (ni_) * (nj_ -1));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::size(VElem::size_type& sz) const
+{
+  sz = static_cast<VElem::size_type>((ni_-1)*(nj_-1));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VEdge::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  array.resize(2);
+
+  const int j_idx = xidx - (ni_-1) * nj_;
+  if (j_idx >= 0)
+  {
+    const int i = j_idx / (nj_ - 1);
+    const int j = j_idx % (nj_ - 1);
+    array[0] = VNode::index_type(i+ni_*j);
+    array[1] = VNode::index_type(i+ni_*(j+1));
+  }
+  else
+  {
+    const int i = idx % (ni_ - 1);
+    const int j = idx / (ni_ - 1);
+    array[0] = VNode::index_type(i+ni_*j);
+    array[1] = VNode::index_type(i+1+ni_*j);
+  }
+}
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VFace::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.resize(4);
+  array[0] = VNode::index_type(i+ni_*j);
+  array[1] = VNode::index_type(i+1+ni_*j);
+  array[2] = VNode::index_type(i+1+ni_*(j+1));
+  array[3] = VNode::index_type(i+ni_*(j+1));
+}
+
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.resize(4);
+  array[0] = VNode::index_type(i+ni_*j);
+  array[1] = VNode::index_type(i+1+ni_*j);
+  array[2] = VNode::index_type(i+1+ni_*(j+1));
+  array[3] = VNode::index_type(i+ni_*(j+1));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VDElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  array.resize(2);
+
+  const int j_idx = xidx - (ni_-1) * nj_;
+  if (j_idx >= 0)
+  {
+    const int i = j_idx / (nj_ - 1);
+    const int j = j_idx % (nj_ - 1);
+    array[0] = VNode::index_type(i+ni_*j);
+    array[1] = VNode::index_type(i+ni_*(j+1));
+  }
+  else
+  {
+    const int i = idx % (ni_ - 1);
+    const int j = idx / (ni_ - 1);
+    array[0] = VNode::index_type(i+ni_*j);
+    array[1] = VNode::index_type(i+1+ni_*j);
+  }
+}
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VFace::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.resize(4);
+
+  const int j_idx = (ni_-1) * nj_;
+
+  array[0] = VEdge::index_type(i+j*(ni_-1));
+  array[1] = VEdge::index_type(i+(j+1)*(ni_-1));
+  array[2] = VEdge::index_type(i*(nj_-1)+j+j_idx);
+  array[3] = VEdge::index_type((i+1)*(nj_-1)+j+j_idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VDElem::index_type idx) const
+{
+  array.resize(1); array[0] = VEdge::index_type(idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.resize(4);
+
+  const int j_idx = (ni_-1) * nj_;
+
+  array[0] = VEdge::index_type(i+j*(ni_-1));
+  array[1] = VEdge::index_type(i+(j+1)*(ni_-1));
+  array[2] = VEdge::index_type(i*(nj_-1)+j+j_idx);
+  array[3] = VEdge::index_type((i+1)*(nj_-1)+j+j_idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_faces(VFace::array_type &array,
+                             VNode::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % ni_;
+  const unsigned int j = xidx / ni_;
+  
+  array.reserve(4);
+  array.clear();
+
+  const unsigned int i0 = i > 0 ? i-1 : 0;
+  const unsigned int j0 = j > 0 ? j-1 : 0;
+
+  const unsigned int i1 = i < ni_-1 ? i+1 : ni_-1;
+  const unsigned int j1 = j < nj_-1 ? j+1 : nj_-1;
+
+  const unsigned int mj = (ni_-1);
+  unsigned int ii, jj;
+  for (jj = j0; jj < j1; jj++)
+    for (ii = i0; ii < i1; ii++)
+      array.push_back(VFace::index_type(ii+jj*mj));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_faces(VFace::array_type &array,
+                             VEdge::index_type idx) const
+{
+  unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset = (ni_-1)*nj_;
+  const unsigned int mj = (ni_-1);
+  if (xidx < offset)
+  {
+    const unsigned int j = xidx/(ni_-1); 
+    const unsigned int i = xidx - j*(ni_-1);
+    if (j < (nj_-1)) array.push_back(VFace::index_type(i+mj*j));
+    if (j > 0) array.push_back(VFace::index_type(i+mj*(j-1)));  
+  }
+  else
+  {
+    xidx = xidx - offset;
+    const unsigned int i = xidx/(nj_-1); 
+    const unsigned int j = xidx - i*(nj_-1);
+    if (i < (ni_-1)) array.push_back(VFace::index_type(i+mj*j));
+    if (i > 0) array.push_back(VFace::index_type(i-1+mj*j));  
+  }
+}
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_faces(VFace::array_type &array,
+                             VElem::index_type idx) const
+{
+  array.resize(1); array[0] = static_cast<VFace::index_type>(idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_faces(VFace::array_type &array,
+                             VDElem::index_type idx) const
+{
+  unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset = (ni_-1)*nj_;
+  const unsigned int mj = (ni_-1);
+  if (xidx < offset)
+  {
+    const unsigned int j = xidx/(ni_-1); 
+    const unsigned int i = xidx - j*(ni_-1);
+    if (j < (nj_-1)) array.push_back(VFace::index_type(i+mj*j));
+    if (j > 0) array.push_back(VFace::index_type(i+mj*(j-1)));  
+  }
+  else
+  {
+    xidx = xidx - offset;
+    const unsigned int i = xidx/(nj_-1); 
+    const unsigned int j = xidx - i*(nj_-1);
+    if (i < (ni_-1)) array.push_back(VFace::index_type(i+mj*j));
+    if (i > 0) array.push_back(VFace::index_type(i-1+mj*j));  
+  }  
+}
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_elems(VElem::array_type &array,
+                             VNode::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % ni_;
+  const unsigned int j = xidx / ni_;
+  
+  array.reserve(4);
+  array.clear();
+
+  const unsigned int i0 = i > 0 ? i-1 : 0;
+  const unsigned int j0 = j > 0 ? j-1 : 0;
+
+  const unsigned int i1 = i < ni_-1 ? i+1 : ni_-1;
+  const unsigned int j1 = j < nj_-1 ? j+1 : nj_-1;
+
+  const unsigned int mj = (ni_-1);
+  unsigned int ii, jj;
+  for (jj = j0; jj < j1; jj++)
+    for (ii = i0; ii < i1; ii++)
+      array.push_back(VElem::index_type(ii+jj*mj));
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_elems(VElem::array_type &array,
+                             VEdge::index_type idx) const
+{
+  unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset = (ni_-1)*nj_;
+  const unsigned int mj = (ni_-1);
+  if (xidx < offset)
+  {
+    const unsigned int j = xidx/(ni_-1); 
+    const unsigned int i = xidx - j*(ni_-1);
+    if (j < (nj_-1)) array.push_back(VElem::index_type(i+mj*j));
+    if (j > 0) array.push_back(VElem::index_type(i+mj*(j-1)));  
+  }
+  else
+  {
+    xidx = xidx - offset;
+    const unsigned int i = xidx/(nj_-1); 
+    const unsigned int j = xidx - i*(nj_-1);
+    if (i < (ni_-1)) array.push_back(VElem::index_type(i+mj*j));
+    if (i > 0) array.push_back(VElem::index_type(i-1+mj*j));  
+  }  
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_elems(VElem::array_type &array,
+                             VFace::index_type idx) const
+{
+  array.resize(1); array[0] = static_cast<VElem::index_type>(idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_elems(VElem::array_type &array,
+                             VDElem::index_type idx) const
+{
+  unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset = (ni_-1)*nj_;
+  const unsigned int mj = (ni_-1);
+  if (xidx < offset)
+  {
+    const unsigned int j = xidx/(ni_-1); 
+    const unsigned int i = xidx - j*(ni_-1);
+    if (j < (nj_-1)) array.push_back(VElem::index_type(i+mj*j));
+    if (j > 0) array.push_back(VElem::index_type(i+mj*(j-1)));  
+  }
+  else
+  {
+    xidx = xidx - offset;
+    const unsigned int i = xidx/(nj_-1); 
+    const unsigned int j = xidx - i*(nj_-1);
+    if (i < (ni_-1)) array.push_back(VElem::index_type(i+mj*j));
+    if (i > 0) array.push_back(VElem::index_type(i-1+mj*j));  
+  }  
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_delems(VDElem::array_type &array,
+                              VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.resize(4);
+
+  const int j_idx = (ni_-1) * nj_;
+
+  array[0] = VDElem::index_type(i+j*(ni_-1));
+  array[1] = VDElem::index_type(i+(j+1)*(ni_-1));
+  array[2] = VDElem::index_type(i*(nj_-1)+j+j_idx);
+  array[3] = VDElem::index_type((i+1)*(nj_-1)+j+j_idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_delems(VDElem::array_type &array,
+                              VFace::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.resize(4);
+
+  const int j_idx = (ni_-1) * nj_;
+
+  array[0] = VDElem::index_type(i+j*(ni_-1));
+  array[1] = VDElem::index_type(i+(j+1)*(ni_-1));
+  array[2] = VDElem::index_type(i*(nj_-1)+j+j_idx);
+  array[3] = VDElem::index_type((i+1)*(nj_-1)+j+j_idx);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_delems(VDElem::array_type &array,
+                              VEdge::index_type idx) const
+{
+  array.resize(1); array[0] = static_cast<VDElem::index_type>(idx);
+}
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_center(Point &p, VNode::index_type idx) const
+{
+  typename Node::index_type i;
+  to_index(i,idx);
+  get_center(p,i); 
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_center(Point &p,Mesh::VEdge::index_type idx) const
+{
+  typename Edge::index_type i;
+  to_index(i,idx);
+  get_center(p,i);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_center(Point &p, Mesh::VFace::index_type idx) const
+{
+  typename Face::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_center(Point &p, Mesh::VElem::index_type idx) const
+{
+  typename Elem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_center(Point &p, Mesh::VDElem::index_type idx) const
+{
+  typename DElem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_weights(const Point& p,VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename Face::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    get_nodes(nodes,VFace::index_type(idx));
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(basis_.dofs());
+      basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+ImageMesh<Basis>::get_weights(const Point& p,VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+ImageMesh<Basis>::locate(VNode::index_type &vi, const Point &point) const
+{
+  typename Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+ImageMesh<Basis>::locate(VElem::index_type &vi, const Point &point) const
+{
+  typename Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+ImageMesh<Basis>::get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const
+{
+  typename Elem::index_type vi;
+  to_index(vi,i);
+  return(get_coords(coords,point,vi));
+}  
+  
+template <class Basis>
+void 
+ImageMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  typename Elem::index_type vi;
+  to_index(vi,i);
+  interpolate(p,coords,vi);
+}
+
+template <class Basis>
+void 
+ImageMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  typename Elem::index_type vi;
+  to_index(vi,i);
+  derivate(coords,vi,p);
+}
+
+template <class Basis>
+bool 
+ImageMesh<Basis>::get_neighbor(VElem::index_type &neighbor, 
+                        VElem::index_type from, VDElem::index_type delem) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(from);
+  const unsigned int xdelem = static_cast<const unsigned int>(delem);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  const int j_idx = (ni_-1) * nj_;
+  
+  if (xdelem == i+j*(ni_-1))
+  {
+    if (j <= 0) return (false);
+    neighbor = VElem::index_type(i+(j-1)*(ni_-1));
+    return (true);
+  }
+
+  if (xdelem == i+(j+1)*(ni_-1))
+  {
+    if (j >= nj_-2) return (false);
+    neighbor = VElem::index_type(i+(j+1)*(ni_-1));
+    return (true);
+  }
+
+  if (xdelem == i*(nj_-1)+j+j_idx)
+  {
+    if (i <= 0) return (false);
+    neighbor = VElem::index_type(i-1+j*(ni_-1));
+    return (true);
+  }
+
+  if (xdelem == (i+1)*(nj_-1)+j+j_idx)
+  {
+    if (i >= ni_-2) return (false);
+    neighbor = VElem::index_type(i+1+j*(ni_-1));
+    return (true);
+  }
+
+  return (false);
+}
+
+template <class Basis>
+void 
+ImageMesh<Basis>::get_neighbors(VElem::array_type &array, 
+                                                    VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int j = xidx / (ni_-1);
+  
+  array.reserve(4);
+  array.clear();
+
+  const unsigned int mj = ni_-1;
+  if (i > 0) array.push_back(VElem::index_type((i-1)+mj*j));
+  if (i < ni_-2) array.push_back(VElem::index_type((i+1)+mj*j));
+
+  if (j > 0) array.push_back(VElem::index_type(i+mj*(j-1)));
+  if (j < nj_-2) array.push_back(VElem::index_type(i+mj*(j+1)));
+}
+
+template <class Basis>
+void 
+ImageMesh<Basis>::get_neighbors(VNode::array_type &array, 
+                                                    VNode::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % ni_;
+  const unsigned int j = xidx / ni_;
+  
+  array.reserve(4);
+  array.clear();
+
+  const unsigned int mj = ni_;
+  if (i > 0) array.push_back(VNode::index_type((i-1)+mj*j));
+  if (i < ni_-1) array.push_back(VNode::index_type((i+1)+mj*j));
+
+  if (j > 0) array.push_back(VNode::index_type(i+mj*(j-1)));
+  if (j < nj_-1) array.push_back(VNode::index_type(i+mj*(j+1)));
+}
+
+template <class Basis>
+double
+ImageMesh<Basis>::get_size(VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+ImageMesh<Basis>::get_size(VEdge::index_type i) const
+{
+  typename Edge::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+ImageMesh<Basis>::get_size(VFace::index_type i) const
+{
+  typename Face::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+ImageMesh<Basis>::get_size(VElem::index_type i) const
+{
+  typename Elem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+ImageMesh<Basis>::get_size(VDElem::index_type i) const
+{
+  typename DElem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+void 
+ImageMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+ImageMesh<Basis>::pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                                  VElem::index_type ci, unsigned int which_face,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_face(which_face, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+ImageMesh<Basis>::get_random_point(Point &p, VElem::index_type i,
+                                                          MusilRNG &rng) const
+{
+  typename Elem::index_type vi; to_index(vi,i);
+  get_random_point(p,vi,rng);
+}
+
 } // namespace SCIRun
 
-#endif // SCI_project_ImageMesh_h
+#endif

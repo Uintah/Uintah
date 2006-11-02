@@ -27,21 +27,8 @@
 */
 
 
-/*
- *  LatVolMesh.h: Templated Mesh defined on a 3D Regular Grid
- *
- *  Written by:
- *   Michael Callahan
- *   Department of Computer Science
- *   University of Utah
- *   January 2001
- *
- *  Copyright (C) 2001 SCI Group
- *
- */
-
-#ifndef SCI_project_LatVolMesh_h
-#define SCI_project_LatVolMesh_h 1
+#ifndef CORE_DATATYPES_LATVOLMESH_H
+#define CORE_DATATYPES_LATVOLMESH_H 1
 
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -83,9 +70,9 @@ public:
     }
 
     // Make sure mesh_ is valid before calling these convience accessors
-    unsigned ni() const { ASSERT(mesh_); return mesh_->get_ni(); }
-    unsigned nj() const { ASSERT(mesh_); return mesh_->get_nj(); }
-    unsigned nk() const { ASSERT(mesh_); return mesh_->get_nk(); }
+    unsigned int ni() const { ASSERT(mesh_); return mesh_->get_ni(); }
+    unsigned int nj() const { ASSERT(mesh_); return mesh_->get_nj(); }
+    unsigned int nk() const { ASSERT(mesh_); return mesh_->get_nk(); }
 
     unsigned i_, j_, k_;
 
@@ -96,7 +83,7 @@ public:
   struct CellIndex : public LatIndex
   {
     CellIndex() : LatIndex() {}
-    CellIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    CellIndex(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : LatIndex(m, i,j,k) {}
 
     operator unsigned() const {
@@ -109,7 +96,7 @@ public:
   struct NodeIndex : public LatIndex
   {
     NodeIndex() : LatIndex() {}
-    NodeIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    NodeIndex(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : LatIndex(m, i,j,k) {}
     static string type_name(int i=-1) {
       ASSERT(i < 1);
@@ -122,7 +109,7 @@ public:
   {
   public:
     LatSize() : i_(0), j_(0), k_(0) {}
-    LatSize(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
+    LatSize(unsigned int i, unsigned int j, unsigned int k) : i_(i), j_(j), k_(k) {}
 
     operator unsigned() const { return i_*j_*k_; }
 
@@ -137,20 +124,20 @@ public:
   struct CellSize : public LatSize
   {
     CellSize() : LatSize() {}
-    CellSize(unsigned i, unsigned j, unsigned k) : LatSize(i,j,k) {}
+    CellSize(unsigned int i, unsigned int j, unsigned int k) : LatSize(i,j,k) {}
   };
 
   struct NodeSize : public LatSize
   {
     NodeSize() : LatSize() {}
-    NodeSize(unsigned i, unsigned j, unsigned k) : LatSize(i,j,k) {}
+    NodeSize(unsigned int i, unsigned int j, unsigned int k) : LatSize(i,j,k) {}
   };
 
 
   struct LatIter : public LatIndex
   {
     LatIter() : LatIndex() {}
-    LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    LatIter(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : LatIndex(m, i, j, k) {}
 
     const LatIndex &operator *() { return *this; }
@@ -171,7 +158,7 @@ public:
   struct NodeIter : public LatIter
   {
     NodeIter() : LatIter() {}
-    NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    NodeIter(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : LatIter(m, i, j, k) {}
 
     const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
@@ -204,7 +191,7 @@ public:
   struct CellIter : public LatIter
   {
     CellIter() : LatIter() {}
-    CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
+    CellIter(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k)
       : LatIter(m, i, j, k) {}
 
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
@@ -249,8 +236,8 @@ public:
     RangeNodeIter() : NodeIter() {}
     // Pre: min, and max are both valid iterators over this mesh
     //      min.A <= max.A where A is (i_, j_, k_)
-    RangeNodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
-                  unsigned max_i, unsigned max_j, unsigned max_k)
+    RangeNodeIter(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k,
+                  unsigned int max_i, unsigned int max_j, unsigned int max_k)
       : NodeIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
         max_i_(max_i), max_j_(max_j), max_k_(max_k)
     {}
@@ -300,9 +287,9 @@ public:
 
   private:
     // The minimum extents
-    unsigned min_i_, min_j_, min_k_;
+    unsigned int min_i_, min_j_, min_k_;
     // The maximum extents
-    unsigned max_i_, max_j_, max_k_;
+    unsigned int max_i_, max_j_, max_k_;
 
     RangeNodeIter operator++(int)
     {
@@ -317,8 +304,8 @@ public:
     RangeCellIter() : CellIter() {}
     // Pre: min, and max are both valid iterators over this mesh
     //      min.A <= max.A where A is (i_, j_, k_)
-    RangeCellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k,
-                  unsigned max_i, unsigned max_j, unsigned max_k)
+    RangeCellIter(const LatVolMesh *m, unsigned int i, unsigned int j, unsigned int k,
+                  unsigned int max_i, unsigned int max_j, unsigned int max_k)
       : CellIter(m, i, j, k), min_i_(i), min_j_(j), min_k_(k),
         max_i_(max_i), max_j_(max_j), max_k_(max_k)
     {}
@@ -437,44 +424,44 @@ public:
 
     // the following designed to coordinate with ::get_nodes
     inline
-    unsigned node0_index() const {
+    unsigned int node0_index() const {
       return (index_.i_ + mesh_.get_ni()*index_.j_ +
               mesh_.get_ni()*mesh_.get_nj()*index_.k_);
     }
     inline
-    unsigned node1_index() const {
+    unsigned int node1_index() const {
       return (index_.i_+ 1 + mesh_.get_ni()*index_.j_ +
               mesh_.get_ni()*mesh_.get_nj()*index_.k_);
     }
     inline
-    unsigned node2_index() const {
+    unsigned int node2_index() const {
       return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) +
               mesh_.get_ni()*mesh_.get_nj()*index_.k_);
 
     }
     inline
-    unsigned node3_index() const {
+    unsigned int node3_index() const {
       return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) +
               mesh_.get_ni()*mesh_.get_nj()*index_.k_);
     }
     inline
-    unsigned node4_index() const {
+    unsigned int node4_index() const {
       return (index_.i_ + mesh_.get_ni()*index_.j_ +
               mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
     inline
-    unsigned node5_index() const {
+    unsigned int node5_index() const {
       return (index_.i_ + 1 + mesh_.get_ni()*index_.j_ +
               mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
 
     inline
-    unsigned node6_index() const {
+    unsigned int node6_index() const {
       return (index_.i_ + 1 + mesh_.get_ni()*(index_.j_ + 1) +
               mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
     inline
-    unsigned node7_index() const {
+    unsigned int node7_index() const {
       return (index_.i_ + mesh_.get_ni()*(index_.j_ + 1) +
               mesh_.get_ni()*mesh_.get_nj()*(index_.k_ + 1));
     }
@@ -534,11 +521,11 @@ public:
     nj_(1),
     nk_(1)
   {}
-  LatVolMesh(unsigned x, unsigned y, unsigned z,
+  LatVolMesh(unsigned int x, unsigned int y, unsigned int z,
              const Point &min, const Point &max);
   LatVolMesh(LatVolMesh* /* mh */,  // FIXME: Is this constructor broken?
-             unsigned mx, unsigned my, unsigned mz,
-             unsigned x, unsigned y, unsigned z) :
+             unsigned int mx, unsigned int my, unsigned int mz,
+             unsigned int x, unsigned int y, unsigned int z) :
     min_i_(mx),
     min_j_(my),
     min_k_(mz),
@@ -559,14 +546,16 @@ public:
   virtual LatVolMesh *clone() { return new LatVolMesh(*this); }
   virtual ~LatVolMesh() {}
 
+  virtual int basis_order() { return (basis_.polynomial_order()); }
+
   Basis &get_basis() { return basis_; }
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords,
                        typename Elem::index_type ci,
-                       unsigned which_edge,
-                       unsigned div_per_unit) const
+                       unsigned int which_edge,
+                       unsigned int div_per_unit) const
   {
     // Needs to match unit_edges in Basis/HexTrilinearLgn.cc
     // compare get_nodes order to the basis order
@@ -578,8 +567,8 @@ public:
   //! piecewise linear approximation of an face.
   void pwl_approx_face(vector<vector<vector<double> > > &coords,
                        typename Elem::index_type ci,
-                       unsigned which_face,
-                       unsigned div_per_unit) const
+                       unsigned int which_face,
+                       unsigned int div_per_unit) const
   {
     // Needs to match unit_edges in Basis/HexTrilinearLgn.cc
     // compare get_nodes order to the basis order
@@ -603,22 +592,23 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Cell::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
   }
 
   //! get the mesh statistics
-  unsigned get_min_i() const { return min_i_; }
-  unsigned get_min_j() const { return min_j_; }
-  unsigned get_min_k() const { return min_k_; }
+  unsigned int get_min_i() const { return min_i_; }
+  unsigned int get_min_j() const { return min_j_; }
+  unsigned int get_min_k() const { return min_k_; }
   bool get_min(vector<unsigned int>&) const;
-  unsigned get_ni() const { return ni_; }
-  unsigned get_nj() const { return nj_; }
-  unsigned get_nk() const { return nk_; }
+  unsigned int get_ni() const { return ni_; }
+  unsigned int get_nj() const { return nj_; }
+  unsigned int get_nk() const { return nk_; }
   bool get_dim(vector<unsigned int>&) const;
   Vector diagonal() const;
 
@@ -627,13 +617,13 @@ public:
   virtual void get_canonical_transform(Transform &t);
 
   //! set the mesh statistics
-  void set_min_i(unsigned i) {min_i_ = i; }
-  void set_min_j(unsigned j) {min_j_ = j; }
-  void set_min_k(unsigned k) {min_k_ = k; }
+  void set_min_i(unsigned int i) {min_i_ = i; }
+  void set_min_j(unsigned int j) {min_j_ = j; }
+  void set_min_k(unsigned int k) {min_k_ = k; }
   void set_min(vector<unsigned int> mins);
-  void set_ni(unsigned i) { ni_ = i; }
-  void set_nj(unsigned j) { nj_ = j; }
-  void set_nk(unsigned k) { nk_ = k; }
+  void set_ni(unsigned int i) { ni_ = i; }
+  void set_nj(unsigned int j) { nj_ = j; }
+  void set_nk(unsigned int k) { nk_ = k; }
   void set_dim(vector<unsigned int> dims);
 
   void begin(typename Node::iterator &) const;
@@ -651,12 +641,12 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i);
-  void to_index(typename Edge::index_type &index, unsigned int i)
+  void to_index(typename Node::index_type &index, unsigned int i) const;
+  void to_index(typename Edge::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Face::index_type &index, unsigned int i)
+  void to_index(typename Face::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Cell::index_type &index, unsigned int i);
+  void to_index(typename Cell::index_type &index, unsigned int i) const;
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
@@ -723,12 +713,12 @@ public:
   int get_valence(typename Face::index_type idx) const;
   int get_valence(const typename Cell::index_type &idx) const;
 
-  bool locate(typename Node::index_type &, const Point &);
+  bool locate(typename Node::index_type &, const Point &) const;
   bool locate(typename Edge::index_type &, const Point &) const
   { return false; }
   bool locate(typename Face::index_type &, const Point &) const
   { return false; }
-  bool locate(typename Cell::index_type &, const Point &);
+  bool locate(typename Cell::index_type &, const Point &) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
   int get_weights(const Point & , typename Edge::array_type & , double * )
@@ -750,7 +740,9 @@ public:
                         MusilRNG &rng) const;
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idlv;
+  static MeshTypeID mesh_idlv;
+  
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
   static const TypeDescription* cell_type_description();
@@ -771,7 +763,9 @@ public:
   virtual int topology_geometry() const { return (STRUCTURED | REGULAR); }
 
   // returns a LatVolMesh
-  static Persistent *maker() { return new LatVolMesh(); }
+  static Persistent *maker() { return scinew LatVolMesh(); }
+  static MeshHandle mesh_maker() { return scinew LatVolMesh(); }
+  static MeshHandle latvol_maker(unsigned int x, unsigned int y, unsigned int z, const Point& min, const Point& max) { return scinew LatVolMesh(x,y,z,min,max); }
 
 protected:
 
@@ -783,6 +777,97 @@ protected:
 
   Transform transform_;
   Basis     basis_;
+  
+  
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  
+  virtual bool has_virtual_interface() const;
+  
+  virtual void size(Mesh::VNode::size_type& size) const;
+  virtual void size(Mesh::VEdge::size_type& size) const;
+  virtual void size(Mesh::VFace::size_type& size) const;
+  virtual void size(Mesh::VCell::size_type& size) const;
+  virtual void size(Mesh::VElem::size_type& size) const;
+  virtual void size(Mesh::VDElem::size_type& size) const;
+  
+  virtual void get_nodes(VNode::array_type& nodes, VEdge::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VFace::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VCell::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VElem::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VDElem::index_type i) const;
+  
+  virtual void get_edges(VEdge::array_type& edges, VFace::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VCell::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VElem::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VDElem::index_type i) const;
+
+  virtual void get_faces(VFace::array_type& faces, VCell::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VElem::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VDElem::index_type i) const;
+
+  virtual void get_cells(VCell::array_type& cells, VNode::index_type i) const;  
+  virtual void get_cells(VCell::array_type& cells, VEdge::index_type i) const;  
+  virtual void get_cells(VCell::array_type& cells, VFace::index_type i) const;  
+  virtual void get_cells(VCell::array_type& cells, VElem::index_type i) const;  
+  virtual void get_cells(VCell::array_type& cells, VDElem::index_type i) const;  
+  
+  virtual void get_elems(VElem::array_type& elems, VNode::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VEdge::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VFace::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VCell::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VDElem::index_type i) const;
+
+  virtual void get_delems(VDElem::array_type& delems, VFace::index_type i) const;
+  virtual void get_delems(VDElem::array_type& delems, VCell::index_type i) const;
+  virtual void get_delems(VDElem::array_type& delems, VElem::index_type i) const;
+
+  //! Get the center of a certain mesh element
+  virtual void get_center(Point &point, VNode::index_type i) const;
+  virtual void get_center(Point &point, VEdge::index_type i) const;
+  virtual void get_center(Point &point, VFace::index_type i) const;
+  virtual void get_center(Point &point, VCell::index_type i) const;
+  virtual void get_center(Point &point, VElem::index_type i) const;
+  virtual void get_center(Point &point, VDElem::index_type i) const;
+
+  virtual double get_size(VNode::index_type i) const;
+  virtual double get_size(VEdge::index_type i) const;
+  virtual double get_size(VFace::index_type i) const;
+  virtual double get_size(VCell::index_type i) const;
+  virtual double get_size(VElem::index_type i) const;
+  virtual double get_size(VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(VNode::index_type &i, const Point &point) const;
+  virtual bool locate(VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+
+  virtual void get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const;
+
+  virtual bool get_neighbor(VElem::index_type &neighbor, 
+                       VElem::index_type from, VDElem::index_type delem) const;
+  virtual void get_neighbors(VElem::array_type &elems, 
+                                                    VElem::index_type i) const;
+  virtual void get_neighbors(VNode::array_type &nodes, 
+                                                    VNode::index_type i) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                               VElem::index_type ci, unsigned int which_edge, 
+                               unsigned int div_per_unit) const;
+  virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                               VElem::index_type ci, unsigned int which_face, 
+                              unsigned int div_per_unit) const;
+  
 };
 
 
@@ -921,11 +1006,15 @@ LatVolMesh<Basis>::cell_index_type_description()
 
 template <class Basis>
 PersistentTypeID
-LatVolMesh<Basis>::type_id(type_name(-1), "Mesh", LatVolMesh<Basis>::maker);
+LatVolMesh<Basis>::type_idlv(type_name(-1), "Mesh", LatVolMesh<Basis>::maker);
+
+template <class Basis>
+MeshTypeID
+LatVolMesh<Basis>::mesh_idlv(type_name(-1), LatVolMesh<Basis>::mesh_maker, LatVolMesh<Basis>::latvol_maker);
 
 
 template <class Basis>
-LatVolMesh<Basis>::LatVolMesh(unsigned i, unsigned j, unsigned k,
+LatVolMesh<Basis>::LatVolMesh(unsigned int i, unsigned int j, unsigned int k,
                               const Point &min, const Point &max)
   : min_i_(0), min_j_(0), min_k_(0),
     ni_(i), nj_(j), nk_(k)
@@ -1290,7 +1379,7 @@ LatVolMesh<Basis>::get_elems(typename Cell::array_type &result,
   result.clear();
   const unsigned int offset1 = (ni_-1)*nj_*nk_;
   const unsigned int offset2 = offset1 + ni_*(nj_-1)*nk_;
-  unsigned idx = eidx;
+  unsigned int idx = eidx;
 
   if (idx < offset1)
   {
@@ -1385,7 +1474,7 @@ LatVolMesh<Basis>::get_elems(typename Cell::array_type &result,
   result.clear();
   const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
   const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
-  unsigned idx = fidx;
+  unsigned int idx = fidx;
 
   if (idx < offset1)
   {
@@ -1789,7 +1878,7 @@ LatVolMesh<Basis>::get_size(const typename Cell::index_type &idx) const
 
 template <class Basis>
 bool
-LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
+LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   const Point r = transform_.unproject(p);
@@ -1829,7 +1918,7 @@ LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 
 template <class Basis>
 bool
-LatVolMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
+LatVolMesh<Basis>::locate(typename Node::index_type &node, const Point &p) const
 {
   const Point r = transform_.unproject(p);
 
@@ -2004,7 +2093,7 @@ LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Node::size_type &s) const
 template <class Basis>
 void
 LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Node::index_type &idx,
-                            unsigned int a)
+                            unsigned int a) const
 {
   const unsigned int i = a % ni_;
   const unsigned int jk = a / ni_;
@@ -2093,7 +2182,7 @@ LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Cell::size_type &s) const
 template <class Basis>
 void
 LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Cell::index_type &idx,
-                            unsigned int a)
+                            unsigned int a) const
 {
   const unsigned int i = a % (ni_-1);
   const unsigned int jk = a / (ni_-1);
@@ -2139,6 +2228,1301 @@ LatVolMesh<Basis>::get_valence(const typename Cell::index_type &i) const
 }
 
 
+// VIRTUAL IMPLEMENTATION OF FUNCTIONS
+
+template <class Basis>
+bool
+LatVolMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(VNode::size_type& sz) const
+{
+  sz = VNode::size_type(ni_*nj_*nk_);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(VEdge::size_type& sz) const
+{
+  sz = VEdge::size_type(((ni_-1) * nj_ * nk_) + (ni_ * (nj_-1) * nk_) + (ni_ * nj_ * (nk_-1)));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(VFace::size_type& sz) const
+{
+  sz = VFace::size_type((ni_-1) * (nj_-1) * nk_ + ni_ * (nj_ - 1 ) * (nk_ - 1) + (ni_ - 1) * nj_ * (nk_ - 1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(VCell::size_type& sz) const
+{
+  sz = VCell::size_type((ni_-1)*(nj_-1)*(nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(VDElem::size_type& sz) const
+{
+  sz = VDElem::size_type((ni_-1) * (nj_-1) * nk_ + ni_ * (nj_ - 1 ) * (nk_ - 1) + (ni_ - 1) * nj_ * (nk_ - 1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::size(VElem::size_type& sz) const
+{
+  sz = VElem::size_type((ni_-1)*(nj_-1)*(nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VEdge::index_type idx) const
+{
+  array.resize(2);
+  const unsigned int xidx = static_cast<unsigned int>(idx);
+  
+  if (xidx < (ni_ - 1) * nj_ * nk_)
+  {
+    const int i = xidx % (ni_ - 1);
+    const int jk = xidx / (ni_ - 1);
+    const int j = jk % nj_;
+    const int k = jk / nj_;
+    const int a = i+j*ni_+(ni_*nj_)*k;
+    array[0] = VNode::index_type(a);
+    array[1] = VNode::index_type(a+1);
+  }
+  else
+  {
+    const unsigned int yidx = xidx - (ni_ - 1) * nj_ * nk_;
+    if (yidx < (ni_ * (nj_ - 1) * nk_))
+    {
+      const int j = yidx % (nj_ - 1);
+      const int ik = yidx / (nj_ - 1);
+      const int i = ik / nk_;
+      const int k = ik % nk_;
+
+      const int a = i+j*ni_+(ni_*nj_)*k;
+      array[0] = VNode::index_type(a);
+      array[1] = VNode::index_type(a+ni_);
+    }
+    else
+    {
+      const unsigned int zidx = yidx - (ni_ * (nj_ - 1) * nk_);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % ni_;
+      const int j = ij / ni_;
+
+      const int a = i+j*ni_+(ni_*nj_)*k;
+      array[0] = VNode::index_type(a);
+      array[1] = VNode::index_type(a+(nj_*ni_));
+    }
+  }
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VFace::index_type idx) const
+{
+  array.resize(4);
+
+  const unsigned int xidx = static_cast<unsigned int>(idx);
+  if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
+  {
+    const unsigned int i = xidx % (ni_ - 1);
+    const unsigned int jk = xidx / (ni_ - 1);
+    const unsigned int j = jk % (nj_ - 1);
+    const unsigned int k = jk / (nj_ - 1);
+    const unsigned int nij_ = ni_*nj_; 
+    const unsigned int a = i+j*ni_+k*nij_;
+    array[0] = VNode::index_type(a);
+    array[1] = VNode::index_type(a+1);
+    array[2] = VNode::index_type(a+ni_+1);
+    array[3] = VNode::index_type(a+ni_);
+  }
+  else
+  {
+    const unsigned int yidx = xidx - (ni_ - 1) * (nj_ - 1) * nk_;
+    if (yidx < ni_ * (nj_ - 1) * (nk_ - 1))
+    {
+      const unsigned int j = yidx % (nj_ - 1);
+      const unsigned int ik = yidx / (nj_ - 1);
+      const unsigned int k = ik % (nk_ - 1);
+      const unsigned int i = ik / (nk_ - 1);
+      
+      const unsigned int nij_ = ni_*nj_; 
+      const unsigned int a = i+j*ni_+k*nij_;
+      array[0] = VNode::index_type(a);
+      array[1] = VNode::index_type(a+ni_);
+      array[2] = VNode::index_type(a+ni_+nij_);
+      array[3] = VNode::index_type(a+nij_);    
+    }
+    else
+    {
+      const unsigned int zidx = yidx - ni_ * (nj_ - 1) * (nk_ - 1);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % (ni_ - 1);
+      const int j = ij / (ni_ - 1);
+
+      const unsigned int nij_ = ni_*nj_; 
+      const unsigned int a = i+j*ni_+k*nij_;
+      array[0] = VNode::index_type(a);
+      array[1] = VNode::index_type(a+nij_);
+      array[2] = VNode::index_type(a+nij_+1);
+      array[3] = VNode::index_type(a+1); 
+    }
+  }
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VCell::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+
+  array.resize(8);
+  const unsigned int nij_ = ni_*nj_;
+  const unsigned int a = i+ni_*j+nij_*k;
+  array[0] = VNode::index_type(a);
+  array[1] = VNode::index_type(a+1);
+  array[2] = VNode::index_type(a+1+ni_);
+  array[3] = VNode::index_type(a+ni_);
+  array[4] = VNode::index_type(a+nij_);
+  array[5] = VNode::index_type(a+1+nij_);
+  array[6] = VNode::index_type(a+1+ni_+nij_);
+  array[7] = VNode::index_type(a+ni_+nij_);
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+
+  array.resize(8);
+  const unsigned int nij_ = ni_*nj_;
+  const unsigned int a = i+ni_*j+nij_*k;
+  array[0] = VNode::index_type(a);
+  array[1] = VNode::index_type(a+1);
+  array[2] = VNode::index_type(a+1+ni_);
+  array[3] = VNode::index_type(a+ni_);
+  array[4] = VNode::index_type(a+nij_);
+  array[5] = VNode::index_type(a+1+nij_);
+  array[6] = VNode::index_type(a+1+ni_+nij_);
+  array[7] = VNode::index_type(a+ni_+nij_);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_nodes(VNode::array_type &array,
+                             VDElem::index_type idx) const
+{
+  array.resize(4);
+
+  const unsigned int xidx = static_cast<unsigned int>(idx);
+  if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
+  {
+    const unsigned int i = xidx % (ni_ - 1);
+    const unsigned int jk = xidx / (ni_ - 1);
+    const unsigned int j = jk % (nj_ - 1);
+    const unsigned int k = jk / (nj_ - 1);
+    const unsigned int nij_ = ni_*nj_; 
+    const unsigned int a = i+j*ni_+k*nij_;
+    array[0] = VNode::index_type(a);
+    array[1] = VNode::index_type(a+1);
+    array[2] = VNode::index_type(a+ni_+1);
+    array[3] = VNode::index_type(a+ni_);
+  }
+  else
+  {
+    const unsigned int yidx = xidx - (ni_ - 1) * (nj_ - 1) * nk_;
+    if (yidx < ni_ * (nj_ - 1) * (nk_ - 1))
+    {
+      const unsigned int j = yidx % (nj_ - 1);
+      const unsigned int ik = yidx / (nj_ - 1);
+      const unsigned int k = ik % (nk_ - 1);
+      const unsigned int i = ik / (nk_ - 1);
+      
+      const unsigned int nij_ = ni_*nj_; 
+      const unsigned int a = i+j*ni_+k*nij_;
+      array[0] = VNode::index_type(a);
+      array[1] = VNode::index_type(a+ni_);
+      array[2] = VNode::index_type(a+ni_+nij_);
+      array[3] = VNode::index_type(a+nij_);    
+    }
+    else
+    {
+      const unsigned int zidx = yidx - ni_ * (nj_ - 1) * (nk_ - 1);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % (ni_ - 1);
+      const int j = ij / (ni_ - 1);
+
+      const unsigned int nij_ = ni_*nj_; 
+      const unsigned int a = i+j*ni_+k*nij_;
+      array[0] = VNode::index_type(a);
+      array[1] = VNode::index_type(a+nij_);
+      array[2] = VNode::index_type(a+nij_+1);
+      array[3] = VNode::index_type(a+1); 
+    }
+  }
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VFace::index_type idx) const
+{
+  array.resize(4);
+  const unsigned int num_i_faces = (ni_-1)*(nj_-1)*nk_;  // lie in ij plane ijk
+  const unsigned int num_j_faces = ni_*(nj_-1)*(nk_-1);  // lie in jk plane jki
+  const unsigned int num_k_faces = (ni_-1)*nj_*(nk_-1);  // lie in ki plane kij
+
+  const unsigned int num_i_edges = (ni_-1)*nj_*nk_; // ijk
+  const unsigned int num_j_edges = ni_*(nj_-1)*nk_; // jki
+
+  unsigned int facei, facej, facek;
+  unsigned int face = static_cast<unsigned int>(idx);
+
+  if (face < num_i_faces)
+  {
+    facei = face % (ni_-1);
+    facej = (face / (ni_-1)) % (nj_-1);
+    facek = face / ((ni_-1)*(nj_-1));
+    array[0] = VEdge::index_type(facei+facej*(ni_-1)+facek*(ni_-1)*(nj_));
+    array[1] = VEdge::index_type(facei+(facej+1)*(ni_-1)+facek*(ni_-1)*(nj_));
+    array[2] = VEdge::index_type(num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1));
+    array[3] = VEdge::index_type(num_i_edges + (facei+1)*(nj_-1)*(nk_)+facej+facek*(nj_-1));
+  }
+  else if (face - num_i_faces < num_j_faces)
+  {
+    face -= num_i_faces;
+    facei = face / ((nj_-1) *(nk_-1));
+    facej = face % (nj_-1);
+    facek = (face / (nj_-1)) % (nk_-1);
+    array[0] = VEdge::index_type(num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1));
+    array[1] = VEdge::index_type(num_i_edges + facei*(nj_-1)*(nk_)+facej+(facek+1)*(nj_-1));
+    array[2] = VEdge::index_type((num_i_edges + num_j_edges + facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek));
+    array[3] = VEdge::index_type((num_i_edges + num_j_edges + facei*(nk_-1)+(facej+1)*(ni_)*(nk_-1)+facek));
+  }
+  else if (face - num_i_faces - num_j_faces < num_k_faces)
+  {
+    face -= (num_i_faces + num_j_faces);
+    facei = (face / (nk_-1)) % (ni_-1);
+    facej = face / ((ni_-1) * (nk_-1));
+    facek = face % (nk_-1);
+    array[0] = VEdge::index_type(facei+facej*(ni_-1)+facek*(ni_-1)*(nj_));
+    array[1] = VEdge::index_type(facei+facej*(ni_-1)+(facek+1)*(ni_-1)*(nj_));
+    array[2] = VEdge::index_type((num_i_edges + num_j_edges + facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek));
+    array[3] = VEdge::index_type((num_i_edges + num_j_edges + (facei+1)*(nk_-1)+facej*(ni_)*(nk_-1)+facek));
+  }
+  else 
+  {
+    ASSERTFAIL("LatVolMesh<Basis>::get_edges(Edge, Face) Face idx out of bounds");
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VDElem::index_type idx) const
+{
+  array.resize(4);
+  const unsigned int num_i_faces = (ni_-1)*(nj_-1)*nk_;  // lie in ij plane ijk
+  const unsigned int num_j_faces = ni_*(nj_-1)*(nk_-1);  // lie in jk plane jki
+  const unsigned int num_k_faces = (ni_-1)*nj_*(nk_-1);  // lie in ki plane kij
+
+  const unsigned int num_i_edges = (ni_-1)*nj_*nk_; // ijk
+  const unsigned int num_j_edges = ni_*(nj_-1)*nk_; // jki
+
+  unsigned int facei, facej, facek;
+  unsigned int face = static_cast<unsigned int>(idx);
+
+  if (face < num_i_faces)
+  {
+    facei = face % (ni_-1);
+    facej = (face / (ni_-1)) % (nj_-1);
+    facek = face / ((ni_-1)*(nj_-1));
+    array[0] = VEdge::index_type(facei+facej*(ni_-1)+facek*(ni_-1)*(nj_));
+    array[1] = VEdge::index_type(facei+(facej+1)*(ni_-1)+facek*(ni_-1)*(nj_));
+    array[2] = VEdge::index_type(num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1));
+    array[3] = VEdge::index_type(num_i_edges + (facei+1)*(nj_-1)*(nk_)+facej+facek*(nj_-1));
+  }
+  else if (face - num_i_faces < num_j_faces)
+  {
+    face -= num_i_faces;
+    facei = face / ((nj_-1) *(nk_-1));
+    facej = face % (nj_-1);
+    facek = (face / (nj_-1)) % (nk_-1);
+    array[0] = VEdge::index_type(num_i_edges + facei*(nj_-1)*(nk_)+facej+facek*(nj_-1));
+    array[1] = VEdge::index_type(num_i_edges + facei*(nj_-1)*(nk_)+facej+(facek+1)*(nj_-1));
+    array[2] = VEdge::index_type((num_i_edges + num_j_edges + facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek));
+    array[3] = VEdge::index_type((num_i_edges + num_j_edges + facei*(nk_-1)+(facej+1)*(ni_)*(nk_-1)+facek));
+  }
+  else if (face - num_i_faces - num_j_faces < num_k_faces)
+  {
+    face -= (num_i_faces + num_j_faces);
+    facei = (face / (nk_-1)) % (ni_-1);
+    facej = face / ((ni_-1) * (nk_-1));
+    facek = face % (nk_-1);
+    array[0] = VEdge::index_type(facei+facej*(ni_-1)+facek*(ni_-1)*(nj_));
+    array[1] = VEdge::index_type(facei+facej*(ni_-1)+(facek+1)*(ni_-1)*(nj_));
+    array[2] = VEdge::index_type((num_i_edges + num_j_edges + facei*(nk_-1)+facej*(ni_)*(nk_-1)+facek));
+    array[3] = VEdge::index_type((num_i_edges + num_j_edges + (facei+1)*(nk_-1)+facej*(ni_)*(nk_-1)+facek));
+  }
+  else 
+  {
+    ASSERTFAIL("LatVolMesh<Basis>::get_edges(Edge, Face) Face idx out of bounds");
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VCell::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.resize(12);
+  const unsigned int j_start= (ni_-1)*nj_*nk_;
+  const unsigned int k_start = ni_*(nj_-1)*nk_ + j_start;
+
+  array[0] = VEdge::index_type(i+j*(ni_-1)+k*(ni_-1)*(nj_));
+  array[1] = VEdge::index_type(i+(j+1)*(ni_-1)+k*(ni_-1)*(nj_));
+  array[2] = VEdge::index_type(i+j*(ni_-1)+(k+1)*(ni_-1)*(nj_));
+  array[3] = VEdge::index_type(i+(j+1)*(ni_-1)+(k+1)*(ni_-1)*(nj_));
+
+  array[4] = VEdge::index_type(j_start+i*(nj_-1)*(nk_)+j+k*(nj_-1));
+  array[5] = VEdge::index_type(j_start+(i+1)*(nj_-1)*(nk_)+j+k*(nj_-1));
+  array[6] = VEdge::index_type(j_start+i*(nj_-1)*(nk_)+j+(k+1)*(nj_-1));
+  array[7] = VEdge::index_type(j_start+(i+1)*(nj_-1)*(nk_)+j+(k+1)*(nj_-1));
+
+  array[8] =  VEdge::index_type(k_start+i*(nk_-1)+j*(ni_)*(nk_-1)+k);
+  array[9] =  VEdge::index_type(k_start+(i+1)*(nk_-1)+j*(ni_)*(nk_-1)+k);
+  array[10] = VEdge::index_type(k_start+i*(nk_-1)+(j+1)*(ni_)*(nk_-1)+k);
+  array[11] = VEdge::index_type(k_start+(i+1)*(nk_-1)+(j+1)*(ni_)*(nk_-1)+k);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_edges(VEdge::array_type &array,
+                             VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.resize(12);
+  const unsigned int j_start= (ni_-1)*nj_*nk_;
+  const unsigned int k_start = ni_*(nj_-1)*nk_ + j_start;
+
+  array[0] = VEdge::index_type(i+j*(ni_-1)+k*(ni_-1)*(nj_));
+  array[1] = VEdge::index_type(i+(j+1)*(ni_-1)+k*(ni_-1)*(nj_));
+  array[2] = VEdge::index_type(i+j*(ni_-1)+(k+1)*(ni_-1)*(nj_));
+  array[3] = VEdge::index_type(i+(j+1)*(ni_-1)+(k+1)*(ni_-1)*(nj_));
+
+  array[4] = VEdge::index_type(j_start+i*(nj_-1)*(nk_)+j+k*(nj_-1));
+  array[5] = VEdge::index_type(j_start+(i+1)*(nj_-1)*(nk_)+j+k*(nj_-1));
+  array[6] = VEdge::index_type(j_start+i*(nj_-1)*(nk_)+j+(k+1)*(nj_-1));
+  array[7] = VEdge::index_type(j_start+(i+1)*(nj_-1)*(nk_)+j+(k+1)*(nj_-1));
+
+  array[8] =  VEdge::index_type(k_start+i*(nk_-1)+j*(ni_)*(nk_-1)+k);
+  array[9] =  VEdge::index_type(k_start+(i+1)*(nk_-1)+j*(ni_)*(nk_-1)+k);
+  array[10] = VEdge::index_type(k_start+i*(nk_-1)+(j+1)*(ni_)*(nk_-1)+k);
+  array[11] = VEdge::index_type(k_start+(i+1)*(nk_-1)+(j+1)*(ni_)*(nk_-1)+k);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_faces(VFace::array_type &array,
+                             VCell::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.resize(6);
+
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+
+  array[0] = VFace::index_type(i+(j+k*(nj_-1))*(ni_-1));
+  array[1] = VFace::index_type(i+(j+(k+1)*(nj_-1))*(ni_-1));
+
+  array[2] = VFace::index_type(offset1+j+(k+i*(nk_-1))*(nj_-1));
+  array[3] = VFace::index_type(offset1+j+(k+(i+1)*(nk_-1))*(nj_-1));
+
+  array[4] = VFace::index_type(offset2+k+(i+j*(ni_-1))*(nk_-1));
+  array[5] = VFace::index_type(offset2+k+(i+(j+1)*(ni_-1))*(nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_faces(VFace::array_type &array,
+                             VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.resize(6);
+
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+
+  array[0] = VFace::index_type(i+(j+k*(nj_-1))*(ni_-1));
+  array[1] = VFace::index_type(i+(j+(k+1)*(nj_-1))*(ni_-1));
+
+  array[2] = VFace::index_type(offset1+j+(k+i*(nk_-1))*(nj_-1));
+  array[3] = VFace::index_type(offset1+j+(k+(i+1)*(nk_-1))*(nj_-1));
+
+  array[4] = VFace::index_type(offset2+k+(i+j*(ni_-1))*(nk_-1));
+  array[5] = VFace::index_type(offset2+k+(i+(j+1)*(ni_-1))*(nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_faces(VFace::array_type &array,
+                             VDElem::index_type idx) const
+{
+  array.resize(1); array[0] = static_cast<VFace::index_type>(idx);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_cells(VCell::array_type &array,
+                             VNode::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+
+  const unsigned int ii = xidx % ni_;
+  const unsigned int jk = xidx / ni_;
+  const unsigned int jj = jk % nj_;
+  const unsigned int kk = jk / nj_;
+  
+  array.reserve(8);
+  array.clear();
+  const unsigned int i0 = ii ? ii-1 : 0;
+  const unsigned int j0 = jj ? jj- 1 : 0;
+  const unsigned int k0 = kk ? kk- 1 : 0;
+
+  const unsigned int i1 = ii < ni_-1 ? ii+1 : ni_-1;
+  const unsigned int j1 = jj < nj_-1 ? jj+1 : nj_-1;
+  const unsigned int k1 = kk < nk_-1 ? kk+1 : nk_-1;
+
+  unsigned int i, j, k;
+  for (k = k0; k < k1; k++)
+    for (j = j0; j < j1; j++)
+      for (i = i0; i < i1; i++)
+      {
+        array.push_back(VCell::index_type(i+j*(ni_-1)+k*(ni_-1)*(nj_-1)));
+      }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_cells(VCell::array_type &array,
+                             VEdge::index_type eidx) const
+{
+  array.reserve(4);
+  array.clear();
+  
+  const unsigned int offset1 = (ni_-1)*nj_*nk_;
+  const unsigned int offset2 = offset1 + ni_*(nj_-1)*nk_;
+  unsigned int idx = eidx;
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+  
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_)*(ni_-1)); idx -= k*(nj_)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (j > 0)
+    {
+      if (k < (nk_-1)) array.push_back(VCell::index_type(i+mj*(j-1)+mk*k));
+      if (k > 0) array.push_back(VCell::index_type(i+mj*(j-1)+mk*(k-1)));
+    }
+    if (j < (nj_-1))
+    {
+      if (k < (nk_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));
+      if (k > 0) array.push_back(VCell::index_type(i+mj*j+mk*(k-1)));
+    }
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_)); idx -= j*(nk_-1)*(ni_);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (i > 0)
+    {
+      if (j < (nj_-1)) array.push_back(VCell::index_type((i-1)+mj*j+mk*k));    
+      if (j > 0) array.push_back(VCell::index_type((i-1)+mj*(j-1)+mk*k));
+    }
+    if (i < (ni_-1))
+    {
+      if (j < (nj_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));    
+      if (j > 0) array.push_back(VCell::index_type(i+mj*(j-1)+mk*k));
+    }
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_)*(nj_-1)); idx -= i*(nk_)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (k > 0)
+    {
+      if (i < (nk_-1)) array.push_back(VCell::index_type(i+mj*j+mk*(k-1)));
+      if (i > 0) array.push_back(VCell::index_type((i-1)+mj*j+mk*(k-1)));
+    }
+
+    if (k < (nk_-1))
+    {
+      if (i < (ni_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));        
+      if (i > 0) array.push_back(VCell::index_type((i-1)+mj*j+mk*k));
+    }
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_cells(VCell::array_type &array,
+                             VFace::index_type fidx) const
+{
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+  unsigned int idx = fidx;
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_-1)*(ni_-1)); idx -= k*(nj_-1)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (k < (nk_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));
+    if (k > 0) array.push_back(VCell::index_type(i+mj*j+mk*(k-1)));
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_-1)); idx -= j*(nk_-1)*(ni_-1);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (j < (nj_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));    
+    if (j > 0) array.push_back(VCell::index_type(i+mj*(j-1)+mk*k));
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_-1)*(nj_-1)); idx -= i*(nk_-1)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (i < (ni_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));        
+    if (i > 0) array.push_back(VCell::index_type((i-1)+mj*j+mk*k));
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_cells(VCell::array_type &array,
+                             VElem::index_type idx) const
+{
+  array.resize(1); array[0] = VCell::index_type(idx);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_cells(VCell::array_type &array,
+                             VDElem::index_type fidx) const
+{
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+  unsigned int idx = fidx;
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_-1)*(ni_-1)); idx -= k*(nj_-1)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (k < (nk_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));
+    if (k > 0) array.push_back(VCell::index_type(i+mj*j+mk*(k-1)));
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_-1)); idx -= j*(nk_-1)*(ni_-1);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (j < (nj_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));    
+    if (j > 0) array.push_back(VCell::index_type(i+mj*(j-1)+mk*k));
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_-1)*(nj_-1)); idx -= i*(nk_-1)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (i < (ni_-1)) array.push_back(VCell::index_type(i+mj*j+mk*k));        
+    if (i > 0) array.push_back(VCell::index_type((i-1)+mj*j+mk*k));
+  }
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_elems(VElem::array_type &array,
+                             VNode::index_type idx) const
+{
+  const unsigned int ii = idx % ni_;
+  const unsigned int jk = idx / ni_;
+  const unsigned int jj = jk % nj_;
+  const unsigned int kk = jk / nj_;
+  
+  array.reserve(8);
+  array.clear();
+  const unsigned int i0 = ii ? ii-1 : 0;
+  const unsigned int j0 = jj ? jj- 1 : 0;
+  const unsigned int k0 = kk ? kk- 1 : 0;
+
+  const unsigned int i1 = ii < ni_-1 ? ii+1 : ni_-1;
+  const unsigned int j1 = jj < nj_-1 ? jj+1 : nj_-1;
+  const unsigned int k1 = kk < nk_-1 ? kk+1 : nk_-1;
+
+  unsigned int i, j, k;
+  for (k = k0; k < k1; k++)
+    for (j = j0; j < j1; j++)
+      for (i = i0; i < i1; i++)
+      {
+        array.push_back(VElem::index_type(i+j*(ni_-1)+k*(ni_-1)*(nj_-1)));
+      }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_elems(VElem::array_type &array,
+                             VEdge::index_type eidx) const
+{
+  array.reserve(4);
+  array.clear();
+  
+  const unsigned int offset1 = (ni_-1)*nj_*nk_;
+  const unsigned int offset2 = offset1 + ni_*(nj_-1)*nk_;
+  unsigned int idx = eidx;
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+  
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_)*(ni_-1)); idx -= k*(nj_)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (j > 0)
+    {
+      if (k < (nk_-1)) array.push_back(VElem::index_type(i+mj*(j-1)+mk*k));
+      if (k > 0) array.push_back(VElem::index_type(i+mj*(j-1)+mk*(k-1)));
+    }
+    if (j < (nj_-1))
+    {
+      if (k < (nk_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));
+      if (k > 0) array.push_back(VElem::index_type(i+mj*j+mk*(k-1)));
+    }
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_)); idx -= j*(nk_-1)*(ni_);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (i > 0)
+    {
+      if (j < (nj_-1)) array.push_back(VElem::index_type((i-1)+mj*j+mk*k));    
+      if (j > 0) array.push_back(VElem::index_type((i-1)+mj*(j-1)+mk*k));
+    }
+    if (i < (ni_-1))
+    {
+      if (j < (nj_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));    
+      if (j > 0) array.push_back(VElem::index_type(i+mj*(j-1)+mk*k));
+    }
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_)*(nj_-1)); idx -= i*(nk_)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (k > 0)
+    {
+      if (i < (nk_-1)) array.push_back(VElem::index_type(i+mj*j+mk*(k-1)));
+      if (i > 0) array.push_back(VElem::index_type((i-1)+mj*j+mk*(k-1)));
+    }
+
+    if (k < (nk_-1))
+    {
+      if (i < (ni_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));        
+      if (i > 0) array.push_back(VElem::index_type((i-1)+mj*j+mk*k));
+    }
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_elems(VElem::array_type &array,
+                             VFace::index_type fidx) const
+{
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+  unsigned int idx = fidx;
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_-1)*(ni_-1)); idx -= k*(nj_-1)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (k < (nk_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));
+    if (k > 0) array.push_back(VElem::index_type(i+mj*j+mk*(k-1)));
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_-1)); idx -= j*(nk_-1)*(ni_-1);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (j < (nj_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));    
+    if (j > 0) array.push_back(VElem::index_type(i+mj*(j-1)+mk*k));
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_-1)*(nj_-1)); idx -= i*(nk_-1)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (i < (ni_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));        
+    if (i > 0) array.push_back(VElem::index_type((i-1)+mj*j+mk*k));
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_elems(VElem::array_type &array,
+                             VCell::index_type idx) const
+{
+  array.resize(1); array[0] = VElem::index_type(idx);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_elems(VElem::array_type &array,
+                             VDElem::index_type fidx) const
+{
+  array.reserve(2);
+  array.clear();
+  
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+  unsigned int idx = fidx;
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+
+  if (idx < offset1)
+  {
+    unsigned int k = idx/((nj_-1)*(ni_-1)); idx -= k*(nj_-1)*(ni_-1);
+    unsigned int j = idx/(ni_-1); idx -= j*(ni_-1);
+    unsigned int i = idx;
+
+    if (k < (nk_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));
+    if (k > 0) array.push_back(VElem::index_type(i+mj*j+mk*(k-1)));
+  }
+  else if (idx >= offset2)
+  {
+    idx -= offset2;
+    unsigned int j = idx/((nk_-1)*(ni_-1)); idx -= j*(nk_-1)*(ni_-1);
+    unsigned int i = idx/(nk_-1); idx -= i*(nk_-1);
+    unsigned int k = idx;
+
+    if (j < (nj_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));    
+    if (j > 0) array.push_back(VElem::index_type(i+mj*(j-1)+mk*k));
+  }
+  else
+  {
+    idx -= offset1;
+    unsigned int i = idx/((nk_-1)*(nj_-1)); idx -= i*(nk_-1)*(nj_-1);
+    unsigned int k = idx/(nj_-1); idx -= k*(nj_-1);
+    unsigned int j = idx;
+
+    if (i < (ni_-1)) array.push_back(VElem::index_type(i+mj*j+mk*k));        
+    if (i > 0) array.push_back(VElem::index_type((i-1)+mj*j+mk*k));
+  }
+
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_delems(VDElem::array_type &array,
+                              VCell::index_type idx) const
+{
+  const unsigned int i = idx % (ni_-1);
+  const unsigned int jk = idx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.resize(6);
+
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+
+  array[0] = VDElem::index_type(i+(j+k*(nj_-1))*(ni_-1));
+  array[1] = VDElem::index_type(i+(j+(k+1)*(nj_-1))*(ni_-1));
+
+  array[2] = VDElem::index_type(offset1+j+(k+i*(nk_-1))*(nj_-1));
+  array[3] = VDElem::index_type(offset1+j+(k+(i+1)*(nk_-1))*(nj_-1));
+
+  array[4] = VDElem::index_type(offset2+k+(i+j*(ni_-1))*(nk_-1));
+  array[5] = VDElem::index_type(offset2+k+(i+(j+1)*(ni_-1))*(nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_delems(VDElem::array_type &array,
+                              VElem::index_type idx) const
+{
+  const unsigned int i = idx % (ni_-1);
+  const unsigned int jk = idx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.resize(6);
+
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+
+  array[0] = VDElem::index_type(i+(j+k*(nj_-1))*(ni_-1));
+  array[1] = VDElem::index_type(i+(j+(k+1)*(nj_-1))*(ni_-1));
+
+  array[2] = VDElem::index_type(offset1+j+(k+i*(nk_-1))*(nj_-1));
+  array[3] = VDElem::index_type(offset1+j+(k+(i+1)*(nk_-1))*(nj_-1));
+
+  array[4] = VDElem::index_type(offset2+k+(i+j*(ni_-1))*(nk_-1));
+  array[5] = VDElem::index_type(offset2+k+(i+(j+1)*(ni_-1))*(nk_-1));
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_delems(VDElem::array_type &array,
+                              VFace::index_type idx) const
+{
+  array.resize(1); array[0] = VDElem::index_type(idx);
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &p, VNode::index_type idx) const
+{
+  typename Node::index_type i;
+  to_index(i,idx);
+  get_center(p,i); 
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &p,Mesh::VEdge::index_type idx) const
+{
+  typename Edge::index_type i;
+  to_index(i,idx);
+  get_center(p,i);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &p, Mesh::VFace::index_type idx) const
+{
+  typename Face::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &p, Mesh::VCell::index_type idx) const
+{
+  typename Cell::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &p, Mesh::VElem::index_type idx) const
+{
+  typename Elem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_center(Point &p, Mesh::VDElem::index_type idx) const
+{
+  typename DElem::index_type i;
+  to_index(i,idx);
+  get_center(p, i);
+}
+
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_weights(const Point& p,VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename Cell::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    get_nodes(nodes,VCell::index_type(idx));
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(basis_.dofs());
+      basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+LatVolMesh<Basis>::get_weights(const Point& p,VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+LatVolMesh<Basis>::locate(VNode::index_type &vi, const Point &point) const
+{
+  typename Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+LatVolMesh<Basis>::locate(VElem::index_type &vi, const Point &point) const
+{
+  typename Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+LatVolMesh<Basis>::get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const
+{
+  typename Elem::index_type vi;
+  to_index(vi,i);
+  return(get_coords(coords,point,vi));
+}  
+  
+template <class Basis>
+void 
+LatVolMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  typename Elem::index_type vi;
+  to_index(vi,i);
+  interpolate(p,coords,vi);
+}
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  typename Elem::index_type vi;
+  to_index(vi,i);
+  derivate(coords,vi,p);
+}
+
+template <class Basis>
+bool 
+LatVolMesh<Basis>::get_neighbor(VElem::index_type &neighbor, 
+                        VElem::index_type from, VDElem::index_type delem) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(from);
+  const unsigned int xdelem = static_cast<const unsigned int>(delem);
+
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
+
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+  
+  if (xdelem == (i+(j+k*(nj_-1))*(ni_-1))) 
+  {
+    if (k <= 0) return (false);
+    neighbor = static_cast<VElem::index_type>(i+mj*j+mk*(k-1));
+    return (true);
+  }
+
+  if (xdelem == (i+(j+(k+1)*(nj_-1))*(ni_-1))) 
+  {
+    if (k >= nk_-2) return (false);
+    neighbor = static_cast<VElem::index_type>(i+mj*j+mk*(k+1));
+    return (true);
+  }
+
+  if (xdelem == (offset1+j+(k+i*(nk_-1))*(nj_-1))) 
+  {
+    if (i <= 0) return (false);
+    neighbor = static_cast<VElem::index_type>((i-1)+mj*j+mk*k);
+    return (true);
+  }
+
+  if (xdelem == (offset1+j+(k+(i+1)*(nk_-1))*(nj_-1))) 
+  {
+    if (i >= ni_-2) return (false);
+    neighbor = static_cast<VElem::index_type>((i+1)+mj*j+mk*k);
+    return (true);
+  }
+
+  if (xdelem == (offset2+k+(i+j*(ni_-1))*(nk_-1))) 
+  {
+    if (j <= 0) return (false);
+    neighbor = static_cast<VElem::index_type>(i+mj*(j-1)+mk*k);
+    return (true);
+  }
+
+  if (xdelem == (offset2+k+(i+(j+1)*(ni_-1))*(nk_-1))) 
+  {
+    if (j >= nj_-2) return (false);
+    neighbor = static_cast<VElem::index_type>(i+mj*(j+1)+mk*k);
+    return (true);
+  }  
+
+  return (false);
+}
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::get_neighbors(VElem::array_type &array, 
+                                                    VElem::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % (ni_-1);
+  const unsigned int jk = xidx / (ni_-1);
+  const unsigned int j = jk % (nj_-1);
+  const unsigned int k = jk / (nj_-1);
+  
+  array.reserve(6);
+  array.clear();
+  
+  const unsigned int mj = ni_-1;
+  const unsigned int mk = (ni_-1)*(nj_-1);
+  if (i > 0) array.push_back(static_cast<VElem::index_type>((i-1)+j*mj+k*mk));
+  if (i < ni_-2) array.push_back(static_cast<VElem::index_type>((i+1)+j*mj+k*mk));
+  if (j > 0) array.push_back(static_cast<VElem::index_type>(i+(j-1)*mj+k*mk));
+  if (j < nj_-2) array.push_back(static_cast<VElem::index_type>(i+(j+1)*mj+k*mk));
+  if (k > 0) array.push_back(static_cast<VElem::index_type>(i+j*mj+(k-1)*mk));
+  if (k < nk_-2) array.push_back(static_cast<VElem::index_type>(i+j*mj+(k+1)*mk));
+}
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::get_neighbors(VNode::array_type &array, 
+                                                    VNode::index_type idx) const
+{
+  const unsigned int xidx = static_cast<const unsigned int>(idx);
+  const unsigned int i = xidx % ni_;
+  const unsigned int jk = xidx / ni_;
+  const unsigned int j = jk % nj_;
+  const unsigned int k = jk / nj_;
+  
+  array.reserve(6);
+  array.clear();
+  
+  const unsigned int mj = ni_;
+  const unsigned int mk = ni_*nj_;
+  if (i > 0) array.push_back(static_cast<VNode::index_type>((i-1)+j*mj+k*mk));
+  if (i < ni_-1) array.push_back(static_cast<VNode::index_type>((i+1)+j*mj+k*mk));
+  if (j > 0) array.push_back(static_cast<VNode::index_type>(i+(j-1)*mj+k*mk));
+  if (j < nj_-1) array.push_back(static_cast<VNode::index_type>(i+(j+1)*mj+k*mk));
+  if (k > 0) array.push_back(static_cast<VNode::index_type>(i+j*mj+(k-1)*mk));
+  if (k < nk_-1) array.push_back(static_cast<VNode::index_type>(i+j*mj+(k+1)*mk));
+}
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(VEdge::index_type i) const
+{
+  typename Edge::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(VFace::index_type i) const
+{
+  typename Face::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(VCell::index_type i) const
+{
+  typename Cell::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(VElem::index_type i) const
+{
+  typename Elem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+template <class Basis>
+double
+LatVolMesh<Basis>::get_size(VDElem::index_type i) const
+{
+  typename DElem::index_type vi; to_index(vi,i);
+  return (get_size(vi));
+}
+
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                                  VElem::index_type ci, unsigned int which_face,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_face(which_face, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::get_random_point(Point &p, VElem::index_type i,
+                                                          MusilRNG &rng) const
+{
+  typename Elem::index_type vi; to_index(vi,i);
+  get_random_point(p,vi,rng);
+}
+
 } // namespace SCIRun
 
-#endif // SCI_project_LatVolMesh_h
+#endif 
+
+

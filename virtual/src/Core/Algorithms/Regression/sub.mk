@@ -41,7 +41,7 @@ SRCS     += \
 PSELIBS := Core/Containers Core/Exceptions Core/Thread \
 	   Core/Datatypes Core/Basis Core/Geom Core/Util \
      Core/Algorithms/Util Core/Bundle Core/Geometry \
-     Core/Algorithms/DataIO Core/OS
+     Core/Algorithms/DataIO Core/OS Core/Math
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
 
