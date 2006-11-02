@@ -197,51 +197,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                             all_matls,
                                                             "afterAdvection");                                         
   }
-  //__________________________________
-  //  coarsen
-  if(d_doAMR){
-    for(int L = maxLevel-1; L> 0; L--){ // from finer to coarser levels
-      LevelP coarseLevel = grid->getLevel(L-1);
-      scheduleCoarsen(coarseLevel, sched);
-    }
-  }
-  //__________________________________
-  //   finalize timestep  
-  for(int L = 0; L<maxLevel; L++){
-    LevelP level = grid->getLevel(L);
-    const PatchSet* patches = level->eachPatch();
-    scheduleConservedtoPrimitive_Vars(    sched, patches, ice_matls_sub,
-                                                          all_matls,
-                                                          "finalizeTimestep");
-                                                          
-    if(d_analysisModule){                                                        
-      d_analysisModule->scheduleDoAnalysis( sched, level);
-    }                                                          
-                                                          
-    scheduleTestConservation(             sched, patches, ice_matls_sub,
-                                                          all_matls);
-  }
-  
-  //__________________________________
-  //   refine CFI
-  if(d_doAMR){
-    for(int L = 1; L<maxLevel; L++){   // from coarser to finer levels
-      LevelP fineLevel = grid->getLevel(L);
-      scheduleRefineInterface(fineLevel, sched, true, true);
-    }
-  }
-
-#if 0
-    if(d_canAddICEMaterial){
-      //  This checks to see if the model on THIS patch says that it's
-      //  time to add a new material
-      scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
-
-      //  This one checks to see if the model on ANY patch says that it's
-      //  time to add a new material
-      scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
-    }
-#endif
     cout_doing << "---------------------------------------------------------"<<endl;
 }
 
