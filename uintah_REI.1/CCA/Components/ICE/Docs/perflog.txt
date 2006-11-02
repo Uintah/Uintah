@@ -1,0 +1,197 @@
+performanceTest.ups - 1 processor
+
+3.48523		    Initial - 12/10/2003
+2.81833		    -Ofast
+
+
+../src/configure --enable-package=Uintah   '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF -OPT:Olimit=0' --disable-sci-malloc --enable-assertion-level=0 --enable-64bit --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b
+
+performanceTest.ups with SecondOrder instead of SecondOrderCE (muse)
+1.0309		    Initial - Ofast:Steve
+
+
+1.04718 +- 0.00437761     12/11/03 AverageTime:  Todd 
+1.04527 +- 0.00429063
+1.04616 +- 0.00452359
+1.04581 +- 0.00455898
+1.04605 +- 0.00438844
+1.04814 +- 0.00491556
+1.05112 +- 0.00657578
+1.04707 +- 0.00435573 
+1.04807 +- 0.00425899
+                          12/11/03  Todd
+1.04757 +- 0.00428568      computeEquilibrationPress(): moving speedSound calc out of inner loop
+1.04634 +- 0.00452325      (not committed)
+1.04625 +- 0.00445028
+1.0464 +- 0.0041933
+1.04624 +- 0.00431574
+1.04604 +- 0.00444515
+
+
+------------------------------------------------------------------
+BUILD - 12/08/2003 - Each number is the average of four runs.
+
+performanceTest.ups[SecondOrder]
+
+0.74649 s  -  O3_INLINE_NORMAL
+0.74261 s  -  O3_INLINE_100000
+0.74296 s  -  O3_INLINE_50000
+1.03701 s  -  OFAST
+1.07343 s  -  O3_IPA_FASTFLOAT
+1.31273 s  -  O3_FASTFLOAT
+1.30971 s  -  O3_NORMAL
+
+
+performanceTest.ups[SecondOrderCE]
+
+2.16266 s  -  O3_INLINE_NORMAL
+2.24165 s  -  O3_INLINE_100000
+2.25430 s  -  O3_INLINE_50000
+2.86697 s  -  OFAST
+2.84582 s  -  O3_IPA_FASTFLOAT
+3.21249 s  -  O3_FASTFLOAT
+3.21309 s  -  O3_NORMAL
+
+
+OPTIMIZATION DEFINITIONS:
+
+O3_INLINE_NORMAL  =  '-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3'
+
+O3_INLINE_100000  =  '-O3 -INLINE:=ON:all:max_pu_size_inline=100000 -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3'
+
+O3_INLINE_50000   =  '-O3 -INLINE:=ON:all:max_pu_size_inline=50000 -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3'
+
+OFAST  =  '-Ofast -G0 -OPT:div_split=OFF'
+
+O3_IPA_FASTFLOAT  =  '-O3 -IPA -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3'
+
+O3_FASTFLOAT      =  '-O3 -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3'
+
+O3_NORMAL         =  '-O3 -G0 -OPT:div_split=OFF'
+
+
+
+--------------------------------------------------------------
+../src/configure '--enable-64bit' '--enable-package=Uintah'
+'--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r14k
+-OPT:Olimit=0:roundoff=3' '--disable-sci-malloc'
+'--enable-assertion-level=0'
+
+BUILD - 12/16/2003 - best of 3            Steve
+performanceTest.ups[SecondOrder]
+
+0.751596 s - initial
+0.729891 s - optimize face loop in SecondOrderAdvector
+0.719778 s - const Intvector& c = *iter, inline saveFaceFluxes
+0.702516 s - d_OAFS from StaticArray to facedata
+0.664768 s - reduce [c] operators in qAverageFlux
+0.65881  s - more reduce [c] operators in qAverageFlux
+0.631359 s - reduce [c] operators in inFluxOutFluxVolume
+0.629641 s - replaced the face iterator and conditional with getBoundaryFaces iterator in qAverageFlux
+0.63201  s - replaced IntVector c = *iter with const IntVector& c = *iter;  Globally in ICE.cc (not committed)
+0.629128 s - reduced [c] operators in addExchangeToMomentumAndEnergy()
+
+performanceTest.ups[FirstOrder]          Todd (best of 3)
+0.47503  s   -initial
+0.443406 s  - reduced [c] operators in FirstOrder:advectSlabs and influxOutfluxVolume
+0.441607 s  - const IntVector& c = *iter
+
+performanceTest.ups[FirstOrderCE]
+0.873683 s  - intital
+0.831357 s - reduce [c] operators in FirstOrderCE:inFluxOutFluxVolume
+0.806311 s - reduce [c] operators in FirstOrderCE:advect
+
+
+peformanceTest.ups[SecondOrderCE]
+2.42356
+2.42139 s  - const IntVector& c = *iter
+2.38269 s - reduce [c] operators in SecondOrderCE:inFluxOutFluxVolume
+1.81267 s - d_OAFS from StaticArray to facedata
+1.7854  s - reduce further [c] operators in SecondOrderCE:inFluxOutFluxVolume
+
+
+
+-------------------------------------------------------------------------------
+BUILD - 12/17/2003 - LINUX TESTS (EXTRA INLINE FLAG DOESN'T HELP)
+
+performanceTest[SecondOrderCE]
+
+FASTEST    MEAN4RUNS  OPTION
+-----------------------------------------
+1.74358 s  1.74578 s  OFAST W/CHANGES AS OF 12/22/2003
+1.82382 s  1.82882 s  OFAST W/CHANGES AS OF 12/17/2003
+2.04459 s  2.07559 s  OFAST
+2.04224	s  2.06849 s  O3
+2.04180 s  2.04264 s  OFAST_INLINE2000
+2.02428 s  2.05045 s  OFAST_INLINE1000
+4.90501 s  4.91520 s  OFAST_INLINE100
+5.77771 s  5.81380 s  OFAST_INLINE0
+
+
+performanceTest[SecondOrder]
+
+FASTEST    MEAN4RUNS  OPTION
+-----------------------------------------
+0.44820 s  0.44875 s  OFAST W/CHANGES AS OF 12/22/2003
+0.48879 s  0.48935 s  OFAST W/CHANGES AS OF 12/17/2003
+0.57505 s  0.57665 s  OFAST
+0.59217 s  0.59256 s  O3
+0.59546 s  0.59668 s  OFAST_INLINE2000
+0.57636 s  0.59367 s  OFAST_INLINE1000
+1.68763 s  1.68819 s  OFAST_INLINE100
+2.24340 s  2.25085 s  OFAST_INLINE0
+
+
+OFAST_INLINE1000    = '-O3 -march=pentium4 -msse -msse2 -finline-limit=2000'
+OFAST_INLINE1000    = '-O3 -march=pentium4 -msse -msse2 -finline-limit=1000'
+OFAST_INLINE100     = '-O3 -march=pentium4 -msse -msse2 -finline-limit=100'
+OFAST_INLINE0       = '-O3 -march=pentium4 -msse -msse2 -finline-limit=0'
+OFAST               = '-O3 -march=pentium4 -msse -msse2'
+O3                  = '-O3'
+-------------------------------------------------------------------------------
+12/21/03   Todd
+../../src/configure --enable-64bit --enable-package=Uintah --enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r14k -OPT:Olimit=0:roundoff=3 --disable-sci-malloc --enable-assertion-level=0
+
+performanceTest[SecondOrderCE] Best of 3 on muse
+1.77649 s -initial
+
+1.64971 s - changed gradientLimiter(), q_CCMaxMin(), q_vertexMaxMin() and gradQ to
+            pointwise operations
+            
+1.58174 s - further elimination of [c] operators in SecondOrderCEAdvector::qAverageFlux(
+
+
+performanceTest[SecondOrder]
+0.626804 s - initial
+0.566595 s - changed gradientLimiter(), q_CCMaxMin(), q_vertexMaxMin() and gradQ to
+            pointwise operations
+
+0.564265  - changed r_out_(x,y,z) from CCVariable<fflux> to CCVariable<faceData<Vector> >
+            (not committed)
+
+
+0.572064 - steves version
+0.571975 - const Vector& in gradQ
+0.571667 - rearranged gradQ
+         - SecondOrder seems to be done without more drastic measures
+
+FirstOrder
+0.44659 - steves version
+0.43308 - pulled constants out of loops in advectSlabs
+0.428396 - moved velocity computation in addExchangeToMomentumAndEnergy
+0.424983 - moved more constants around in addExchangeToMomentumAndEnergy
+
+
+
+
+------------------------------------------------------------------
+9/16/04 - Exchange in 5 matl JP8
+Time for 20x80x20 on muse for 10 timesteps (average per timestep)
+19.7811 - Original (after some of Jim's JWL changes and backing out FastMatrix)
+18.4857 - rearranged loops
+17.6934 - dual-column solve, etc.
+
+TODO:
+Specialized FastMatrix code for unrolled loops
+Specialize offset for vel_FC exchange...
+Don't update matrix in backsolve?
