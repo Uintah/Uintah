@@ -47,7 +47,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -71,7 +71,7 @@ private:
 DECLARE_MAKER(CBDAddStimulus)
 
 CBDAddStimulus::CBDAddStimulus(GuiContext* ctx)
-  : Module("CBDAddStimulus", ctx, Source, "ContinuousBiDomain", "CardioWave"),
+  : Module("CBDAddStimulus", ctx, Source, "ContinuousBiDomain", "CardioWaveInterface"),
     guidomain_(get_ctx()->subVar("stim-domain")),
     guicurrent_(get_ctx()->subVar("stim-current")),
     guistart_(get_ctx()->subVar("stim-start")),

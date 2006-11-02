@@ -49,7 +49,7 @@
 using namespace std;
 using namespace SCIRun;
 
-namespace CardioWave 
+namespace CardioWaveInterface 
 {
 
 extern MatrixHandle CWMatrix_reader(ProgressReporter *pr, const char *filename);

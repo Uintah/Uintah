@@ -34,7 +34,7 @@
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -48,7 +48,7 @@ public:
 DECLARE_MAKER(CBDCreateDomain)
 
 CBDCreateDomain::CBDCreateDomain(GuiContext* ctx)
-  : Module("CBDCreateDomain", ctx, Source, "ContinuousBiDomain", "CardioWave")
+  : Module("CBDCreateDomain", ctx, Source, "ContinuousBiDomain", "CardioWaveInterface")
 {
 }
 

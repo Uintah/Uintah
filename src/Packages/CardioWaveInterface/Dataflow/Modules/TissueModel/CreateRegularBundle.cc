@@ -36,7 +36,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -69,7 +69,7 @@ private:
 
 DECLARE_MAKER(CreateRegularBundle)
 CreateRegularBundle::CreateRegularBundle(GuiContext* ctx)
-  : Module("CreateRegularBundle", ctx, Source, "TissueModel", "CardioWave"),
+  : Module("CreateRegularBundle", ctx, Source, "TissueModel", "CardioWaveInterface"),
   cellsx_(ctx->subVar("cells-x")),
   cellsy_(ctx->subVar("cells-y")),
   cellsz_(ctx->subVar("cells-z")),

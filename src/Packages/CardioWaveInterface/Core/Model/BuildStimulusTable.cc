@@ -28,7 +28,7 @@
 
 #include <Packages/CardioWaveInterface/Core/Model/BuildStimulusTable.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -86,7 +86,7 @@ bool BuildStimulusTableAlgo::BuildStimulusTable(ProgressReporter *pr,  FieldHand
     fi.get_field_name()+","+fi2.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("CardioWave");
+  ci->add_namespace("CardioWaveInterface");
   ci->add_namespace("SCIRun");
 
   fi.fill_compile_info(ci);

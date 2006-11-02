@@ -62,7 +62,7 @@
 
 using namespace SCIRun;
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 class CardioWaveConverter {
   public:

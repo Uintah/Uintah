@@ -1,4 +1,4 @@
-itcl_class CardioWave_ContinuousBiDomain_CBDAddMembrane {
+itcl_class CardioWaveInterface_ContinuousBiDomain_CBDAddMembrane {
     inherit Module
     constructor {config} {
         set name CBDAddMembrane

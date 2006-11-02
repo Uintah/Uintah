@@ -35,7 +35,7 @@
 #include <Packages/CardioWaveInterface/Core/TissueModels/RegularBundle.h>
 #include <vector>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
