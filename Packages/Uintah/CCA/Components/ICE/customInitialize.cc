@@ -130,5 +130,32 @@ void customInitialization(const Patch* patch,
       temp_CC[c]= press_CC[c]/ ( (gamma - 1.0) * cv * rho_CC[c] );
     }
   } // mms_1
+  
+  //__________________________________
+  // method of manufactured solution 2
+  // See:  "Code Verification by the MMS SAND2000-1444
+  // This is a steady state solution
+  // This has not been verifed.
+  
+  if(cib->which == "mms_2"){
+    double cv = ice_matl->getSpecificHeat();
+    double gamma = ice_matl->getGamma();
+    
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      Point pt = patch->cellPosition(c);
+      double x = pt.x(); 
+      double y = pt.y();
+    
+      press_CC[c] = rho_CC[c] * ( -0.5 * (exp(2*x) +  exp(2*y) )
+                                  + exp(x+y) * cos(x+y));
+
+      vel_CC[c].x( exp(x) * sin(y) + exp(y) * sin(x));
+      vel_CC[c].y( exp(x) * cos(y) - exp(y) * cos(x));
+      
+      // back out temperature from the perfect gas law
+      temp_CC[c]= press_CC[c]/ ( (gamma - 1.0) * cv * rho_CC[c] );
+    }
+  } // mms_1
 }
 } // end uintah namespace
