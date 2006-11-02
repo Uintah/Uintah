@@ -24,15 +24,11 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#undef CONSIDER_FAILURE
+
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
-
-//#define VERONDA_WESTMANN
-#undef VERONDA_WESTMANN
-
-#define MOONEY_RIVLIN
-//#undef MOONEY_RIVLIN 
 
 // _________________this is a transversely isotropic hyperelastic material [JW]
 //__________________see Material 18 in LSDYNA manual
@@ -460,11 +456,11 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     double c4 = d_initialData.c4;
     double c5 = d_initialData.c5;
     double lambda_star = d_initialData.lambda_star;
-    double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;
-    double third = -1./3.;
-    double cc2 = 2.*third;
+    double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;//c6 = y-intercept
     double rho_orig = matl->getInitialDensity();
-
+#ifdef CONSIDER_FAILURE
+    double failure = d_initialData.failure;
+#endif
     double y1 = d_initialData.y1;// visco
     double y2 = d_initialData.y2;
     double y3 = d_initialData.y3;
@@ -541,28 +537,11 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         leftCauchyGreentilde_new = deformationGradient_new[idx]
                      * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
-//        Mooney Rivlin
-#ifdef MOONEY_RIVLIN
-        double dWdI1 = c1;
-        double dWdI2 = c2;
-        double d2WdI1dI1 = 0.;
-#endif
-
-//        Veronda Westmann
-#ifdef VERONDA_WESTMANN
-        double dWdI1 = c1*c2*exp(c2*(I1tilde-3.));
-        double dWdI2 = -.5*c1*c2;
-        double d2WdI1dI1 = c1*c2*c2*exp(c2*(I1tilde-3.));
-#endif
-
-        double d2WdI1dI2 = 0.;
-        double d2WdI2dI2 = 0.;
-
         //________________________________strain energy derivatives
         if (lambda_tilde < 1.){
           dWdI4tilde = 0.;
           d2WdI4tilde2 = 0.;
-          shear = 2.*dWdI1+dWdI2;
+          shear = 2.*c1+c2;
         }
         else if (lambda_tilde < lambda_star) {
           dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
@@ -571,32 +550,247 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
              -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
             /(lambda_tilde*lambda_tilde*lambda_tilde);
 
-          shear = 2.*dWdI1+dWdI2+I4tilde*
-                         (4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                        -2.*dWdI4tilde*lambda_tilde);
+          shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+                                    -2.*dWdI4tilde*lambda_tilde);
         }
         else {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
           d2WdI4tilde2 = -0.25*c6
             /(lambda_tilde*lambda_tilde*lambda_tilde*lambda_tilde);
-
-          shear = 2.*dWdI1+dWdI2+I4tilde*
-                         (4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
-                                        -2.*dWdI4tilde*lambda_tilde);
+          shear = 2.*c1+c2+I4tilde*(4.*d2WdI4tilde2*lambda_tilde*lambda_tilde
+                                    -2.*dWdI4tilde*lambda_tilde);
         }
 
 	//_________________________________stiffness and stress vars.
+	double K = Bulk;
+        double cc1 = d2WdI4tilde2*I4tilde*I4tilde;
+        double cc2MR = (4./3.)*(1./J)*(c1*I1tilde+2.*c2*I2tilde);
+        double cc2FC = (4./3.)*(1./J)*dWdI4tilde*I4tilde;
+
         Matrix3 RB = leftCauchyGreentilde_new;
         Matrix3 RB2 = leftCauchyGreentilde_new*leftCauchyGreentilde_new;
         Matrix3 I = Identity;
-        Matrix3 devsMR = (RB*(dWdI1+dWdI2*I1tilde)
-                       + RB2*(-dWdI2)+I*(dWdI1*I1tilde+2*dWdI2*I2tilde))*(2./J)*(-2./3.);
+        Matrix3 devsMR = (RB*(c1+c2*I1tilde)
+                       + RB2*(-c2)+I*(c1*I1tilde+2*c2*I2tilde))*(2./J)*(-2./3.);
         Matrix3 devsFC = (DY-I*(1./3.))*dWdI4tilde*I4tilde*(2./J)*(-2./3.);
-        Matrix3 termMR = RB*(1./J)*dWdI2*I1tilde-RB2*(1./J)*dWdI2;
+        Matrix3 termMR = RB*(1./J)*c2*I1tilde-RB2*(1./J)*c2;
 	
-        deviatoric_stress = (leftCauchyGreentilde_new*(dWdI1+dWdI2*I1tilde)
-             - leftCauchyGreentilde_new*leftCauchyGreentilde_new*dWdI2
-             - Identity*(1./3.)*(dWdI1*I1tilde+2.*dWdI2*I2tilde))*2./J;
+	double D[6][6]; //stiffness matrix
+
+        //________________________________Failure+Stress+Stiffness
+        fail[idx] = 0.;
+#ifdef CONSIDER_FAILURE
+        if (failure == 1){
+        double crit_shear = d_initialData.crit_shear;
+        double crit_stretch = d_initialData.crit_stretch;
+        double matrix_failed,fiber_failed;
+        matrix_failed = 0.;
+        fiber_failed = 0.;
+
+        fac = fac1*y1 + fac2*y2 + fac3*y3 + fac4*y4 + fac5*y5 + fac6*y6 + 1.;
+        //_____________________Mooney Rivlin deviatoric term +failure of matrix
+        Matrix3 RCG = deformationGradient_new[idx].Transpose()
+                     *deformationGradient_new[idx];
+        double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
+        double Q,R,Dis;
+        double pi = 3.1415926535897932384;
+        double I1 = RCG.Trace();
+        double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
+        double I3 = RCG.Determinant();
+        Q = (1./9.)*(3.*I2-pow(I1,2));
+        R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
+        Dis = pow(Q,3)+pow(R,2);
+        if (Dis <= 1.e-5 && Dis >= 0.)
+          {if (R >= -1.e-5 && R<= 1.e-5)
+            e1 = e2 = e3 = I1/3.;
+          else
+            {
+              e1 = 2.*pow(R,1./3.)+I1/3.;
+              e3 = -pow(R,1./3.)+I1/3.;
+              if (e1 < e3) swap(e1,e3);
+              e2=e3;
+            }
+          }
+          else
+          {double theta = acos(R/pow(-Q,3./2.));
+          e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
+          e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
+          e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
+          if (e1 < e2) swap(e1,e2);
+          if (e1 < e3) swap(e1,e3);
+          if (e2 < e3) swap(e2,e3);
+          };
+        double max_shear_strain = (e1-e3)/2.;
+        if (max_shear_strain > crit_shear || fail_old[idx] == 1. || fail_old[idx] == 3.)
+          {deviatoric_stress = Identity*0.;
+          fail[idx] = 1.;
+          matrix_failed = 1.;
+          }
+        else
+         {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+          }
+        //________________________________fiber stress term + failure of fibers
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
+          {fiber_stress = Identity*0.;
+          fail[idx] = 2.;
+          fiber_failed =1.;
+          }
+        else
+          {fiber_stress = (DY*dWdI4tilde*I4tilde
+                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+          }
+        if ( (matrix_failed + fiber_failed) == 2. || fail_old[idx] == 3.)
+          fail[idx] = 3.;
+        //________________________________hydrostatic pressure term
+        if (fail[idx] == 1.0 ||fail[idx] == 3.0) {
+          pressure = Identity*0.;
+	  p = 0.;
+	  }
+        else {
+            p = Bulk*log(J)/J; // p -= qVisco;
+            if (p >= -1.e-5 && p <= 1.e-5)
+              p = 0.;
+            pressure = Identity*p;
+        }
+        //_______________________________Cauchy stress
+        ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
+
+        pstress[idx] = history1[idx]*y1+history2[idx]*y2+history3[idx]*y3
+                     + history4[idx]*y4+history5[idx]*y5+history6[idx]*y6
+                     + ElasticStress[idx];
+
+        //________________________________STIFFNESS
+        //________________________________________________________vol. term
+        double cvol[6][6];//failure already recorded into p
+        for(int i=0;i<6;i++){
+         for(int j=0;j<6;j++){
+           cvol[i][j] =  0.;
+         }
+        }
+        cvol[0][0] = K*(1./J)-2*p;
+        cvol[0][1] = K*(1./J);
+        cvol[0][2] = K*(1./J);
+        cvol[1][1] = K*(1./J)-2*p;
+        cvol[1][2] = K*(1./J);
+        cvol[2][2] = K*(1./J)-2*p;
+        cvol[3][3] = -p;
+        cvol[4][4] = -p;
+        cvol[5][5] = -p;
+
+        //________________________________________________________Mooney-Rivlin term
+        double cMR[6][6];
+	if (fail[idx] == 1.0 || fail[idx] == 3.0) {
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            cMR[i][j] =  0.;
+          }
+         }
+	}
+	else {
+	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)-(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(0,0)+devsMR(0,0)
+                        +(-4./3.)*(termMR(0,0)+termMR(0,0));
+         cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)-(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
+                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
+                        +(-4./3.)*(termMR(0,0)+termMR(1,1));
+         cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)-(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
+                        +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
+                        +(-4./3.)*(termMR(0,0)+termMR(2,2));
+         cMR[1][1] = (4./J)*c2*RB(1,1)*RB(1,1)-(4./J)*c2*(RB(1,1)*RB(1,1)+RB(1,1)*RB(1,1))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(1,1)+devsMR(1,1)
+                        +(-4./3.)*(termMR(1,1)+termMR(1,1));
+         cMR[1][2] = (4./J)*c2*RB(1,1)*RB(2,2)-(4./J)*c2*(RB(1,2)*RB(1,2)+RB(1,2)*RB(1,2))
+                        +(-1./3.)*cc2MR+devsMR(1,1)+devsMR(2,2)
+                        +(-4./3.)*(termMR(1,1)+termMR(2,2));
+         cMR[2][2] = (4./J)*c2*RB(2,2)*RB(2,2)-(4./J)*c2*(RB(2,2)*RB(2,2)+RB(2,2)*RB(2,2))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde+devsMR(2,2)+devsMR(2,2)
+                        +(-4./3.)*(termMR(2,2)+termMR(2,2));
+         cMR[0][3] = (4./J)*c2*RB(0,0)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(0,1)+RB(0,1)*RB(0,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+         cMR[0][4] = (4./J)*c2*RB(0,0)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(0,2)+RB(0,2)*RB(0,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+         cMR[0][5] = (4./J)*c2*RB(0,0)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(0,0)+RB(0,0)*RB(0,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+         cMR[1][3] = (4./J)*c2*RB(1,1)*RB(0,1)-(4./J)*c2*(RB(1,0)*RB(1,1)+RB(1,1)*RB(1,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+         cMR[1][4] = (4./J)*c2*RB(1,1)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(1,2)+RB(1,2)*RB(1,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+         cMR[1][5] = (4./J)*c2*RB(1,1)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(1,0)+RB(1,0)*RB(1,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+         cMR[2][3] = (4./J)*c2*RB(2,2)*RB(0,1)-(4./J)*c2*(RB(2,0)*RB(2,1)+RB(2,1)*RB(2,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+         cMR[2][4] = (4./J)*c2*RB(2,2)*RB(1,2)-(4./J)*c2*(RB(2,1)*RB(2,2)+RB(2,2)*RB(2,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+         cMR[2][5] = (4./J)*c2*RB(2,2)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(2,0)+RB(2,0)*RB(2,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+         cMR[3][3] = (4./J)*c2*RB(0,1)*RB(0,1)-(4./J)*c2*(RB(0,0)*RB(1,1)+RB(0,1)*RB(1,0))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+         cMR[3][4] = (4./J)*c2*RB(0,1)*RB(1,2)-(4./J)*c2*(RB(0,1)*RB(1,2)+RB(0,2)*RB(1,1));
+
+         cMR[3][5] = (4./J)*c2*RB(0,1)*RB(2,0)-(4./J)*c2*(RB(0,2)*RB(1,0)+RB(0,0)*RB(1,2));
+
+         cMR[4][4] = (4./J)*c2*RB(1,2)*RB(1,2)-(4./J)*c2*(RB(1,1)*RB(2,2)+RB(1,2)*RB(2,1))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+         cMR[4][5] = (4./J)*c2*RB(1,2)*RB(2,0)-(4./J)*c2*(RB(1,2)*RB(2,0)+RB(1,0)*RB(2,2));
+
+         cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)-(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+	}
+        //_______________________________________fiber contribution term
+
+        double cFC[6][6];
+	if (fail[idx] == 2.0 || fail[idx] == 3.0) {
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            cFC[i][j] =  0.;
+          }
+         }
+	}
+	else {
+         cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
+                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
+         cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
+                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(1,1))+(4./J)*cc1*DY(0,0)*DY(1,1);
+         cFC[0][2] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(2,2)
+                        +(-4./3.)*(1./J)*cc1*(DY(0,0)+DY(2,2))+(4./J)*cc1*DY(0,0)*DY(2,2);
+         cFC[1][1] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(1,1)+devsFC(1,1)
+                        +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(1,1))+(4./J)*cc1*DY(1,1)*DY(1,1);
+         cFC[1][2] = (-1./3.)*cc2FC+devsFC(1,1)+devsFC(2,2)
+                        +(-4./3.)*(1./J)*cc1*(DY(1,1)+DY(2,2))+(4./J)*cc1*DY(1,1)*DY(2,2);
+         cFC[2][2] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(2,2)+devsFC(2,2)
+                        +(-4./3.)*(1./J)*cc1*(DY(2,2)+DY(2,2))+(4./J)*cc1*DY(2,2)*DY(2,2);
+         cFC[0][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(0,0)*DY(0,1);
+         cFC[0][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(0,0)*DY(1,2);
+         cFC[0][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(0,0)*DY(2,0);
+         cFC[1][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(1,1)*DY(0,1);
+         cFC[1][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(1,1)*DY(1,2);
+         cFC[1][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(1,1)*DY(2,0);
+         cFC[2][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)+(4./J)*cc1*DY(2,2)*DY(0,1);
+         cFC[2][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(2,2)*DY(1,2);
+         cFC[2][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(2,2)*DY(2,0);
+         cFC[3][3] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(0,1)*DY(0,1);
+         cFC[3][4] = (4./J)*cc1*DY(0,1)*DY(1,2);
+         cFC[3][5] = (4./J)*cc1*DY(0,1)*DY(2,0);
+         cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(1,2)*DY(1,2);
+         cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
+         cFC[5][5] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
+	}
+
+        //________________________________________________________the STIFFNESS
+
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            D[i][j]=(cvol[i][j]+cMR[i][j]+cFC[i][j])*fac;
+          }
+         }
+      }
+      else {
+#endif
+        deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+             - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+             - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
         fiber_stress = (DY*dWdI4tilde*I4tilde
                         - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
         p = Bulk*log(J)/J; // p -= qVisco;
@@ -605,165 +799,6 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         pressure = Identity*p;
         
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
-
-//        cout << "fiber_stressB = " << fiber_stress << endl;
-//        cout << "pressureB = " << p << endl;
-//        cout << "deviatoricB = " << deviatoric_stress << endl;
-//        cout << "ElasticStressB[idx] = " << ElasticStress[idx](1,1) << endl;
-
-        // All of the following, through the calculation of dsave
-        // comes from NIKE3D, material model 18
-        double pd44 = dWdI4tilde;
-        double xinv1=I1tilde;
-        double xinv2=I2tilde;
-        double xinv4=I4tilde;
-        double bts1 = RB2(0,0);
-        double bts2 = RB2(1,1);
-        double bts3 = RB2(2,2);
-        double bts4 = RB2(0,1);
-        double bts5 = RB2(1,2);
-        double bts6 = RB2(0,2);
-        double bt1 = RB(0,0);
-        double bt2 = RB(1,1);
-        double bt3 = RB(2,2);
-        double bt4 = RB(0,1);
-        double bt5 = RB(1,2);
-        double bt6 = RB(0,2);
-        double pd1 = dWdI1;
-        double pd2 = dWdI2;
-        double pd4 = dWdI4tilde;
-        double pd11 = d2WdI1dI1;
-        double pd12 = d2WdI1dI2;
-        double pd22 = d2WdI2dI2;
-        double tangc = (1./J)*pd44*xinv4*xinv4;
-        double trbts = bts1 + bts2 + bts3;
-        double ch1 = pd2 + pd11 + xinv1 * ( 2.*pd12 + pd22 );
-        double ch2 = -xinv1*pd22 - pd12;
-        double ch3 = pd22;
-        double ch4 = -pd2;
-        double ch14 = ch1 + ch4;
-        double cc4 = 4./J;
-        double cc3 = cc4*third;
-
-//   ... the cc1 term is of the form ...
-//   ... 4/(3J) (dWtilde/dCtilde:Ctilde)[I - 1/3(1 X 1)] ...
-        double cc1 = -third*cc3* ( pd1*xinv1 + 2.*pd2*xinv2 + pd4*xinv4 );
-
-//   ... the cc5 term is of the form ...
-//   ... (4/9J) (Ctilde : d2Wtilde/dCtilde dCtilde : Ctilde) (1 X 1) ...
-        double cc5 = cc3*third*(   xinv1*( xinv1*ch1 + 6.*ch2 )
-                       + trbts*( ch3*trbts + ch4 ) + pd44*xinv4*xinv4  );
-
-        double caci1 = ch2*xinv1;
-        double caci2 = xinv1*ch1 + 3.*ch2;
-        double caci3 = ch3*trbts + ch4;
-
-        double ax=deformed_fiber_vector.x();
-        double ay=deformed_fiber_vector.y();
-        double az=deformed_fiber_vector.z();
-
-//   ... A:II ...
-//   ... note addition here of contribution to ...
-//   ... d2Wtilde / dCtilde dCtilde : Ctilde from I4 ...
-
-        double aci1 = caci1 + bt1*caci2 + bts1*caci3 + tangc*ax*ax;
-        double aci2 = caci1 + bt2*caci2 + bts2*caci3 + tangc*ay*ay;
-        double aci3 = caci1 + bt3*caci2 + bts3*caci3 + tangc*az*az;
-        double aci4 =         bt4*caci2 + bts4*caci3 + tangc*ax*ay;
-        double aci5 =         bt5*caci2 + bts5*caci3 + tangc*ay*az;
-        double aci6 =         bt6*caci2 + bts6*caci3 + tangc*ax*az;
-
-//   ... deviatoric stress ...
-        double trsig = third*ElasticStress[idx].Trace();
-        double sigd1 = ElasticStress[idx](0,0) + trsig;
-        double sigd2 = ElasticStress[idx](1,1) + trsig;
-        double sigd3 = ElasticStress[idx](2,2) + trsig;
-        double sigd4 = ElasticStress[idx](0,1);
-        double sigd5 = ElasticStress[idx](1,2);
-        double sigd6 = ElasticStress[idx](0,2);
-
-//   ... cc2*(sig') + cc3*(A:II) ...
-//
-//   ... this term is of the form
-//       -2/3*(dev(sig) X 1 + 1 X dev(sig))
-//       -4/(3J)*(d2Wtilde/dCtilde dCtilde : 1
-//       + 1 : d2Wtilde/dCtilde dCtilde) ...
-        aci1 = cc2*sigd1 + cc3*aci1;
-        aci2 = cc2*sigd2 + cc3*aci2;
-        aci3 = cc2*sigd3 + cc3*aci3;
-        aci4 = cc2*sigd4 + cc3*aci4;
-        aci5 = cc2*sigd5 + cc3*aci5;
-        aci6 = cc2*sigd6 + cc3*aci6;
-
-//   ... material tangent stiffness ...
-//
-//   ... NOTE - the last two (and now three) lines of each
-//       component of the spatial elasticity tensor computed
-//       below are derived from the term
-//       (4/J)d2Wtilde / dCtilde dCtilde ...
-//
-//  !!!!!!!!!!!!!!!!!!!!!!!!
-        tangc = tangc*J;
-        double dsave[6][6]; //stiffness matrix
-
-        double K=Bulk;
-
-        dsave[0][0] =   K*(1./J)-2*p - 2.*cc1 + 2.*aci1 + cc5
-                    + cc4*( bt1*( bt1*ch14 + 2.*ch2 )
-                    + ch3*bts1*bts1 + tangc*ax*ax*ax*ax  );
-
-        dsave[0][1] =    K*(1./J) + cc1 +  aci1 + aci2  + cc5
-                    + cc4*( ch1*bt1*bt2 + ch2*( bt1+bt2 )
-                    + ch3*bts1*bts2 + ch4*bt4*bt4 + tangc*ax*ax*ay*ay  );
-        dsave[0][2] =    K*(1./J) + cc1 + aci1 + aci3 + cc5
-                    + cc4*( ch1*bt1*bt3 + ch2*( bt1+bt3 )
-                    + ch3*bts1*bts3 + ch4*bt6*bt6 + tangc*ax*ax*az*az  );
-        dsave[1][1] =   K*(1./J)-2*p - 2.*cc1 + 2.*aci2 + cc5
-                    + cc4*( bt2*( bt2*ch14 + 2.*ch2 )
-                    + ch3*bts2*bts2 + tangc*ay*ay*ay*ay  );
-        dsave[1][2] =    K*(1./J) + cc1 + aci2 + aci3 + cc5
-                    + cc4*( ch1*bt2*bt3 + ch2*( bt2+bt3 )
-                    + ch3*bts2*bts3 + ch4*bt5*bt5 + tangc*ay*ay*az*az  );
-        dsave[2][2] =   K*(1./J)-2*p - 2.*cc1 + 2.*aci3 + cc5
-                    + cc4*( bt3*( bt3*ch14 + 2.*ch2 )
-                    + ch3*bts3*bts3 + tangc*az*az*az*az  );
-
-        dsave[0][3] = aci4 + cc4*( bt4*( ch2 + bt1*ch14 )
-                    + ch3*bts1*bts4 + tangc*ax*ax*ax*ay  );
-        dsave[0][4] = aci5 + cc4*( bt5*( ch2 + ch1*bt1 )
-                    + ch3*bts1*bts5 + ch4*bt4*bt6 + tangc*ax*ax*ay*az  );
-        dsave[0][5] = aci6 + cc4*( bt6*( ch2 + bt1*ch14 )
-                    + ch3*bts1*bts6 + tangc*ax*ax*ax*az  );
-        dsave[1][3] = aci4 + cc4*( bt4*( ch2 + bt2*ch14 )
-                    + ch3*bts2*bts4 + tangc*ay*ay*ax*ay  );
-        dsave[1][4] = aci5 + cc4*( bt5*( ch2 + bt2*ch14 )
-                    + ch3*bts2*bts5 + tangc*ay*ay*ay*az  );
-        dsave[1][5] = aci6 + cc4*( bt6*( ch2 + bt2*ch1 )
-                    + ch3*bts2*bts6 + ch4*bt4*bt5 + tangc*ay*ay*ax*az  );
-        dsave[2][3] = aci4 + cc4*( bt4*( ch2 + bt3*ch1 )
-                    + ch3*bts3*bts4 + ch4*bt5*bt6 + tangc*az*az*ax*ay  );
-        dsave[2][4] = aci5 + cc4*( bt5*( ch2 + bt3*ch14 )
-                    + ch3*bts3*bts5 + tangc*az*az*ay*az  );
-        dsave[2][5] = aci6 + cc4*( bt6*( ch2 + bt3*ch14 )
-                    + ch3*bts3*bts6 + tangc*az*az*ax*az  );
-
-        cc1  = -1.5*cc1;
-        ch4  = 0.5*ch4;
-        ch14 = ch1 + ch4;
-
-        dsave[3][3] = -p + cc1 + cc4*( bt4*bt4*ch14 +
-                     ch3*bts4*bts4 + ch4*bt1*bt2 + tangc*ax*ay*ax*ay  );
-        dsave[3][4] =  cc4*( bt4*bt5*ch14 +
-                     ch3*bts4*bts5 + ch4*bt6*bt2 + tangc*ax*ay*ay*az  );
-        dsave[3][5] =  cc4*( bt4*bt6*ch14 +
-                     ch3*bts4*bts6 + ch4*bt1*bt5 + tangc*ax*ay*ax*az  );
-        dsave[4][4] = -p + cc1 + cc4*( bt5*bt5*ch14 +
-                     ch3*bts5*bts5 + ch4*bt3*bt2 + tangc*ay*az*ay*az  );
-        dsave[4][5] =  cc4*( bt5*bt6*ch14 +
-                     ch3*bts5*bts6 + ch4*bt4*bt3 + tangc*ay*az*ax*az  );
-        dsave[5][5] = -p + cc1 + cc4*( bt6*bt6*ch14 +
-                     ch3*bts6*bts6 + ch4*bt3*bt1 + tangc*ax*az*ax*az  );
-
 
 	//_________________________________viscoelastic terms
         double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.,fac=1.;
@@ -835,9 +870,155 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                      + history4[idx]*y4+history5[idx]*y5+history6[idx]*y6
                      + ElasticStress[idx];
 
-        double kmat[24][24];
-        BtDB(B,dsave,kmat);
+        //________________________________STIFFNESS
+        //________________________________________________________vol. term
+        double cvol[6][6];
+        for(int i=0;i<6;i++){
+         for(int j=0;j<6;j++){
+           cvol[i][j] =  0.;
+         }
+        }
+        cvol[0][0] = K*(1./J)-2*p;
+        cvol[0][1] = K*(1./J);
+        cvol[0][2] = K*(1./J);
+        cvol[1][1] = K*(1./J)-2*p;
+        cvol[1][2] = K*(1./J);
+        cvol[2][2] = K*(1./J)-2*p;
+        cvol[3][3] = -p;
+        cvol[4][4] = -p;
+        cvol[5][5] = -p;
+        //___________________________________________________Mooney-Rivlin term
+        double cMR[6][6];
+         cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)
+                   -(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
+                   +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
+                   +devsMR(0,0)+devsMR(0,0) +(-4./3.)*(termMR(0,0)+termMR(0,0));
+         cMR[0][1] = (4./J)*c2*RB(0,0)*RB(1,1)
+                    -(4./J)*c2*(RB(0,1)*RB(0,1)+RB(0,1)*RB(0,1))
+                    +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(1,1)
+                    +(-4./3.)*(termMR(0,0)+termMR(1,1));
+         cMR[0][2] = (4./J)*c2*RB(0,0)*RB(2,2)
+                   -(4./J)*c2*(RB(0,2)*RB(0,2)+RB(0,2)*RB(0,2))
+                   +(-1./3.)*cc2MR+devsMR(0,0)+devsMR(2,2)
+                   +(-4./3.)*(termMR(0,0)+termMR(2,2));
+         cMR[1][1] = (4./J)*c2*RB(1,1)*RB(1,1)
+                   -(4./J)*c2*(RB(1,1)*RB(1,1)+RB(1,1)*RB(1,1))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
+                        +devsMR(1,1)+devsMR(1,1)
+                        +(-4./3.)*(termMR(1,1)+termMR(1,1));
+         cMR[1][2] = (4./J)*c2*RB(1,1)*RB(2,2)
+                   -(4./J)*c2*(RB(1,2)*RB(1,2)+RB(1,2)*RB(1,2))
+                        +(-1./3.)*cc2MR+devsMR(1,1)+devsMR(2,2)
+                        +(-4./3.)*(termMR(1,1)+termMR(2,2));
+         cMR[2][2] = (4./J)*c2*RB(2,2)*RB(2,2)
+                   -(4./J)*c2*(RB(2,2)*RB(2,2)+RB(2,2)*RB(2,2))
+                        +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
+                        +devsMR(2,2)+devsMR(2,2)
+                        +(-4./3.)*(termMR(2,2)+termMR(2,2));
+         cMR[0][3] = (4./J)*c2*RB(0,0)*RB(0,1)
+                   -(4./J)*c2*(RB(0,0)*RB(0,1)+RB(0,1)*RB(0,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+         cMR[0][4] = (4./J)*c2*RB(0,0)*RB(1,2)
+                   -(4./J)*c2*(RB(0,1)*RB(0,2)+RB(0,2)*RB(0,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+         cMR[0][5] = (4./J)*c2*RB(0,0)*RB(2,0)
+                   -(4./J)*c2*(RB(0,2)*RB(0,0)+RB(0,0)*RB(0,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+         cMR[1][3] = (4./J)*c2*RB(1,1)*RB(0,1)
+                   -(4./J)*c2*(RB(1,0)*RB(1,1)+RB(1,1)*RB(1,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+         cMR[1][4] = (4./J)*c2*RB(1,1)*RB(1,2)
+                   -(4./J)*c2*(RB(1,1)*RB(1,2)+RB(1,2)*RB(1,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+         cMR[1][5] = (4./J)*c2*RB(1,1)*RB(2,0)
+                   -(4./J)*c2*(RB(1,2)*RB(1,0)+RB(1,0)*RB(1,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+         cMR[2][3] = (4./J)*c2*RB(2,2)*RB(0,1)
+                   -(4./J)*c2*(RB(2,0)*RB(2,1)+RB(2,1)*RB(2,0))
+                        +devsMR(0,1)+(-4./3.)*termMR(0,1);
+         cMR[2][4] = (4./J)*c2*RB(2,2)*RB(1,2)
+                   -(4./J)*c2*(RB(2,1)*RB(2,2)+RB(2,2)*RB(2,1))
+                        +devsMR(1,2)+(-4./3.)*termMR(1,2);
+         cMR[2][5] = (4./J)*c2*RB(2,2)*RB(2,0)
+                   -(4./J)*c2*(RB(2,2)*RB(2,0)+RB(2,0)*RB(2,2))
+                        +devsMR(2,0)+(-4./3.)*termMR(2,0);
+         cMR[3][3] = (4./J)*c2*RB(0,1)*RB(0,1)
+                   -(4./J)*c2*(RB(0,0)*RB(1,1)+RB(0,1)*RB(1,0))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+         cMR[3][4] = (4./J)*c2*RB(0,1)*RB(1,2)
+                   -(4./J)*c2*(RB(0,1)*RB(1,2)+RB(0,2)*RB(1,1));
+         cMR[3][5] = (4./J)*c2*RB(0,1)*RB(2,0)
+                   -(4./J)*c2*(RB(0,2)*RB(1,0)+RB(0,0)*RB(1,2));
+         cMR[4][4] = (4./J)*c2*RB(1,2)*RB(1,2)
+                   -(4./J)*c2*(RB(1,1)*RB(2,2)+RB(1,2)*RB(2,1))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
+         cMR[4][5] = (4./J)*c2*RB(1,2)*RB(2,0)
+                   -(4./J)*c2*(RB(1,2)*RB(2,0)+RB(1,0)*RB(2,2));
+         cMR[5][5] = (4./J)*c2*RB(2,0)*RB(2,0)
+                   -(4./J)*c2*(RB(2,2)*RB(0,0)+RB(2,0)*RB(0,2))
+                        +(1./2.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde;
 
+        //__________________________________________fiber contribution term
+        double cFC[6][6];
+         cFC[0][0] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(0,0)+devsFC(0,0)
+                   +(-4./3.)*(1./J)*cc1*(DY(0,0)
+                   +DY(0,0))+(4./J)*cc1*DY(0,0)*DY(0,0);
+         cFC[0][1] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(1,1)
+                   +(-4./3.)*(1./J)*cc1*(DY(0,0)
+                   +DY(1,1))+(4./J)*cc1*DY(0,0)*DY(1,1);
+         cFC[0][2] = (-1./3.)*cc2FC+devsFC(0,0)+devsFC(2,2)
+                   +(-4./3.)*(1./J)*cc1*(DY(0,0)
+                   +DY(2,2))+(4./J)*cc1*DY(0,0)*DY(2,2);
+         cFC[1][1] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(1,1)+devsFC(1,1)
+                   +(-4./3.)*(1./J)*cc1*(DY(1,1)
+                   +DY(1,1))+(4./J)*cc1*DY(1,1)*DY(1,1);
+         cFC[1][2] = (-1./3.)*cc2FC+devsFC(1,1)+devsFC(2,2)
+                   +(-4./3.)*(1./J)*cc1*(DY(1,1)
+                   +DY(2,2))+(4./J)*cc1*DY(1,1)*DY(2,2);
+         cFC[2][2] = (2./3.)*cc2FC+(4./9.)*(1./J)*cc1+devsFC(2,2)+devsFC(2,2)
+                   +(-4./3.)*(1./J)*cc1*(DY(2,2)
+                   +DY(2,2))+(4./J)*cc1*DY(2,2)*DY(2,2);
+         cFC[0][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)
+                   +(4./J)*cc1*DY(0,0)*DY(0,1);
+         cFC[0][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)
+                   +(4./J)*cc1*DY(0,0)*DY(1,2);
+         cFC[0][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)
+                   +(4./J)*cc1*DY(0,0)*DY(2,0);
+         cFC[1][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)
+                   +(4./J)*cc1*DY(1,1)*DY(0,1);
+         cFC[1][4] = devsFC(1,2)+(-4./3.)*(1./J)*cc1*DY(1,2)
+                   +(4./J)*cc1*DY(1,1)*DY(1,2);
+         cFC[1][5] = devsFC(2,0)+(-4./3.)*(1./J)*cc1*DY(2,0)
+                   +(4./J)*cc1*DY(1,1)*DY(2,0);
+         cFC[2][3] = devsFC(0,1)+(-4./3.)*(1./J)*cc1*DY(0,1)
+                   +(4./J)*cc1*DY(2,2)*DY(0,1);
+         cFC[2][4] = devsFC(1,2)
+                   +(-4./3.)*(1./J)*cc1*DY(1,2)+(4./J)*cc1*DY(2,2)*DY(1,2);
+         cFC[2][5] = devsFC(2,0)
+                   +(-4./3.)*(1./J)*cc1*DY(2,0)+(4./J)*cc1*DY(2,2)*DY(2,0);
+         cFC[3][3] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1
+                   +(4./J)*cc1*DY(0,1)*DY(0,1);
+         cFC[3][4] = (4./J)*cc1*DY(0,1)*DY(1,2);
+         cFC[3][5] = (4./J)*cc1*DY(0,1)*DY(2,0);
+         cFC[4][4] = (1./2.)*cc2FC+(4./9.)*(1./J)*cc1
+                   +(4./J)*cc1*DY(1,2)*DY(1,2);
+         cFC[4][5] = (4./J)*cc1*DY(1,2)*DY(2,0);
+         cFC[5][5] = (1./2.)*cc2FC
+                   +(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
+         //______________________________________________________the STIFFNESS
+         for(int i=0;i<6;i++){
+          for(int j=0;j<6;j++){
+            D[i][j]=(cvol[i][j]+cMR[i][j]+cFC[i][j])*fac;
+          }
+         }
+#ifdef CONSIDER_FAILURE
+	}
+#endif
+
+        // kmat = B.transpose()*D*B*volold
+        double kmat[24][24];
+        BtDB(B,D,kmat);
+        // kgeo = Bnl.transpose*sig*Bnl*volnew;
         double sig[3][3];
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
@@ -959,7 +1140,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      double c5 = d_initialData.c5;
      double lambda_star = d_initialData.lambda_star;
      double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;
-
+#ifdef CONSIDER_FAILURE
+     double failure = d_initialData.failure;
+#endif
      double y1 = d_initialData.y1;// visco
      double y2 = d_initialData.y2;
      double y3 = d_initialData.y3;
@@ -1029,18 +1212,6 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                *(1./lambda_tilde*pow(J,-(1./3.)));
         Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
-//      Mooney Rivlin
-#ifdef MOONEY_RIVLIN
-      double dWdI1 = c1;
-      double dWdI2 = c2;
-#endif
-
-//      Veronda Westmann
-#ifdef VERONDA_WESTMANN
-        double dWdI1 = c1*c2*exp(c2*(I1tilde-3.));
-        double dWdI2 = -.5*c1*c2;
-#endif
-
         //________________________________left Cauchy Green (B) tilde
         leftCauchyGreentilde_new = deformationGradient_new[idx]
                      * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
@@ -1055,22 +1226,99 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         else {
           dWdI4tilde = 0.5*(c5+c6/lambda_tilde)/lambda_tilde;
         }
-        deviatoric_stress = (leftCauchyGreentilde_new*(dWdI1+dWdI2*I1tilde)
-             - leftCauchyGreentilde_new*leftCauchyGreentilde_new*dWdI2
-             - Identity*(1./3.)*(dWdI1*I1tilde+2.*dWdI2*I2tilde))*2./J;
-        fiber_stress = (DY*dWdI4tilde*I4tilde
-                        - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-        p = Bulk*log(J)/J; // p -= qVisco;
-        if (p >= -1.e-5 && p <= 1.e-5)
-          p = 0.;
-        pressure = Identity*p;
-        //Cauchy stress
+      //________________________________Failure and stress terms
+      fail[idx] = 0.;
+#ifdef CONSIDER_FAILURE
+      if (failure == 1){
+        double crit_shear = d_initialData.crit_shear;
+        double crit_stretch = d_initialData.crit_stretch;
+        double matrix_failed = 0.;
+        double fiber_failed = 0.;
+        //____________________Mooney Rivlin deviatoric term +failure of matrix
+        Matrix3 RCG;
+        RCG = deformationGradient_new[idx].Transpose()
+             *deformationGradient_new[idx];
+        double e1,e2,e3;//eigenvalues of C=symm.+pos.def.->Dis<=0
+        double Q,R,Dis;
+        double pi = 3.1415926535897932384;
+        double I1 = RCG.Trace();
+        double I2 = .5*(I1*I1 -(RCG*RCG).Trace());
+        double I3 = RCG.Determinant();
+        Q = (1./9.)*(3.*I2-pow(I1,2));
+        R = (1./54.)*(-9.*I1*I2+27.*I3+2.*pow(I1,3));
+        Dis = pow(Q,3)+pow(R,2);
+        if (Dis <= 1.e-5 && Dis >= 0.)
+          {if (R >= -1.e-5 && R<= 1.e-5)
+            e1 = e2 = e3 = I1/3.;
+          else
+            {
+              e1 = 2.*pow(R,1./3.)+I1/3.;
+              e3 = -pow(R,1./3.)+I1/3.;
+              if (e1 < e3) swap(e1,e3);
+              e2=e3;
+            }
+          }
+        else
+          {double theta = acos(R/pow(-Q,3./2.));
+          e1 = 2.*pow(-Q,1./2.)*cos(theta/3.)+I1/3.;
+          e2 = 2.*pow(-Q,1./2.)*cos(theta/3.+2.*pi/3.)+I1/3.;
+          e3 = 2.*pow(-Q,1./2.)*cos(theta/3.+4.*pi/3.)+I1/3.;
+          if (e1 < e2) swap(e1,e2);
+          if (e1 < e3) swap(e1,e3);
+          if (e2 < e3) swap(e2,e3);
+          };
+        double max_shear_strain = (e1-e3)/2.;
+        if (max_shear_strain > crit_shear || fail_old[idx] == 1. || fail_old[idx] == 3.)
+          {deviatoric_stress = Identity*0.;
+          fail[idx] = 1.;
+          matrix_failed = 1.;
+          }
+        else
+          {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+          }
+        //________________________________fiber stress term + failure of fibers
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
+          {fiber_stress = Identity*0.;
+          fail[idx] = 2.;
+          fiber_failed =1.;
+          }
+        else
+          {fiber_stress = (DY*dWdI4tilde*I4tilde
+                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+          }
+        if ( (matrix_failed + fiber_failed) == 2.|| fail_old[idx] == 3.)
+          fail[idx] = 3.;
+        //________________________________hydrostatic pressure term
+        if (fail[idx] == 1.0 ||fail[idx] == 3.0)
+          pressure = Identity*0.;
+        else
+          {
+            p = Bulk*log(J)/J; // p -= qVisco;
+            if (p >= -1.e-5 && p <= 1.e-5)
+              p = 0.;
+            pressure = Identity*p;
+          }
+        //_______________________________Cauchy stress
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
-
-//        cout << "fiber_stress = " << fiber_stress << endl;
-//        cout << "pressure = " << p << endl;
-//        cout << "deviatoric = " << deviatoric_stress << endl;
-//        cout << "ElasticStress = " << ElasticStress[idx](1,1) << endl;
+      }
+      else {
+#endif
+          deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+          fiber_stress = (DY*dWdI4tilde*I4tilde
+                          - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+          p = Bulk*log(J)/J; // p -= qVisco;
+          if (p >= -1.e-5 && p <= 1.e-5)
+            p = 0.;
+          pressure = Identity*p;
+          //Cauchy stress
+          ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
+#ifdef CONSIDER_FAILURE
+        }
+#endif
 
         //_________________________________viscoelastic terms
         double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.;
