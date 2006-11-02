@@ -336,7 +336,7 @@ public:
     public:
       lessFace(const vector<under_type> &cells) :
         cells_(cells) {};
-      lessFace() {}; // make visual c++ happy
+
       static bool lessthen(const vector<under_type> &cells, index_type fi1, index_type fi2)
       {
         const int f1_offset = fi1 % PRISM_NFACES;
@@ -619,6 +619,8 @@ public:
 
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
+  virtual int basis_order() { return (basis_.polynomial_order()); }
+
 
   bool get_dim(vector<unsigned int>&) const { return false;  }
 
@@ -806,7 +808,8 @@ public:
 
   //! Persistent IO
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idpv;
+  static MeshTypeID mesh_idpv;
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
@@ -898,9 +901,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Cell::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -914,6 +918,7 @@ public:
   { return cell_type_description(); }
 
   static Persistent* maker() { return scinew PrismVolMesh<Basis>; }
+  static MeshHandle mesh_maker() { return scinew PrismVolMesh<Basis>; }
 protected:
   const Point &point(typename Node::index_type idx) const { return points_[idx]; }
 
@@ -1055,8 +1060,12 @@ PrismVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor)
 
 template <class Basis>
 PersistentTypeID
-PrismVolMesh<Basis>::type_id(PrismVolMesh<Basis>::type_name(-1), "Mesh",
+PrismVolMesh<Basis>::type_idpv(PrismVolMesh<Basis>::type_name(-1), "Mesh",
                              PrismVolMesh<Basis>::maker);
+
+template <class Basis>
+MeshTypeID
+PrismVolMesh<Basis>::mesh_idpv(PrismVolMesh<Basis>::type_name(-1),PrismVolMesh<Basis>::mesh_maker);
 
 
 template <class Basis>

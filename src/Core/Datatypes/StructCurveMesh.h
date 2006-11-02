@@ -81,6 +81,8 @@ public:
   virtual StructCurveMesh *clone() { return new StructCurveMesh(*this); }
   virtual ~StructCurveMesh() {}
 
+  virtual int basis_order() { return (this->basis_.polynomial_order()); }
+
   //! get the mesh statistics
   double get_cord_length() const;
   virtual BBox get_bounding_box() const;
@@ -277,9 +279,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename ScanlineMesh<Basis>::Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     this->basis_.derivate(coords, ed, J);
@@ -290,8 +293,9 @@ public:
   virtual bool is_editable() const { return false; }
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-  static  const string type_name(int n = -1);
+  static PersistentTypeID type_idsc;
+  static MeshTypeID mesh_idsc;
+   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
@@ -301,7 +305,13 @@ public:
   { return edge_type_description(); }
 
   // returns a StructCurveMesh
-  static Persistent *maker() { return new StructCurveMesh<Basis>(); }
+  static Persistent *maker() { return scinew StructCurveMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return scinew StructCurveMesh<Basis>();}
+  static MeshHandle structcurve_maker(unsigned int x) { return scinew StructCurveMesh<Basis>(x);}
+
+  //! VIRTUAL INTERFACE FUNCTIONS
+  
+  virtual bool has_virtual_interface() const { return (false); }
 
 private:
 
@@ -312,8 +322,13 @@ private:
 
 template <class Basis>
 PersistentTypeID
-StructCurveMesh<Basis>::type_id(StructCurveMesh<Basis>::type_name(-1),
+StructCurveMesh<Basis>::type_idsc(StructCurveMesh<Basis>::type_name(-1),
                                 "Mesh", maker);
+
+template <class Basis>
+MeshTypeID
+StructCurveMesh<Basis>::mesh_idsc(StructCurveMesh<Basis>::type_name(-1),
+                                mesh_maker,structcurve_maker);
 
 template <class Basis>
 StructCurveMesh<Basis>::StructCurveMesh(unsigned int n)

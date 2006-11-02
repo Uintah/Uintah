@@ -21,7 +21,7 @@ SRCS     += $(SRCDIR)/ConverterAlgo.cc\
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
             Core/Exceptions Core/Thread Dataflow/GuiInterface \
             Core/Geom Core/Geometry Core/Algorithms/Util \
-            Core/Persistent Core/Basis Core/Bundle
+            Core/Persistent Core/Basis Core/Bundle Core/Math
             
 LIBS := $(M_LIBRARY) $(TEEM_LIBRARY)
 

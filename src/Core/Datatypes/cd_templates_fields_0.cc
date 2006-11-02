@@ -52,6 +52,9 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 
 using namespace SCIRun;
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+
+template class LatVolMesh<HexTrilinearLgn<Point> >;
+
 PersistentTypeID backwards_compat_LVM("LatVolMesh", "Mesh",
 				      LVMesh::maker,  
 				      LVMesh::maker);
@@ -190,6 +193,9 @@ backwards_compat_LVFul("LatVolField<unsigned_long>", "Field",
 
 
 typedef MaskedLatVolMesh<HexTrilinearLgn<Point> > MLVMesh;
+// THIS CLASS IS BROKEN
+// template class MaskedLatVolMesh<HexTrilinearLgn<Point> >;
+
 PersistentTypeID backwards_compat_MLVM("MaskedLatVolMesh", "Mesh",
 				      MLVMesh::maker, MLVMesh::maker);
 //NoData

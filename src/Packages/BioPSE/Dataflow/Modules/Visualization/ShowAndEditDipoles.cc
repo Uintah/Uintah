@@ -339,7 +339,7 @@ ShowAndEditDipoles::new_input_data(PCField *in)
  
     PCMesh::handle_type field_mesh = in->get_typed_mesh();
     Point p;
-    field_mesh->get_point(p,i);
+    field_mesh->get_point(p,PCMesh::Node::index_type(i));
     new_positions_[i]->set(p);
     widget_[i]->SetPosition(p);
     Vector v(in->fdata()[i]);

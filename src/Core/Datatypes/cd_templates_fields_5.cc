@@ -82,6 +82,8 @@ typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 PersistentTypeID backwards_compat_HVM("HexVolMesh", "Mesh",
 				      HVMesh::maker, HVMesh::maker);
 
+template class HexVolMesh<HexTrilinearLgn<Point> >;
+
 //NoData
 template class GenericField<HVMesh, NDBasis, vector<double> >;
 
@@ -185,6 +187,8 @@ backwards_compat_HVFul("HexVolField<unsigned_long>", "Field",
 typedef HexTricubicHmt<double>             HTCdoubleBasis;
 
 typedef HexVolMesh<HexTricubicHmt<Point> > HVCubMesh;
+template class HexVolMesh<HexTricubicHmt<Point> >;
+
 template class GenericField<HVCubMesh, NDBasis, vector<double> >; 
 template class GenericField<HVCubMesh, HTCdoubleBasis, vector<double> >; 
 
@@ -192,11 +196,15 @@ typedef HexTricubicHmtScaleFactors<double>             HTCSFdoubleBasis;
 typedef HexTricubicHmtScaleFactors<Vector>             HTCSFVectorBasis;
 
 typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVCubSFMesh;
+template class HexVolMesh<HexTricubicHmtScaleFactors<Point> >;
+
 template class GenericField<HVCubSFMesh, NDBasis, vector<double> >; 
 template class GenericField<HVCubSFMesh, HTCSFdoubleBasis, vector<double> >; 
 template class GenericField<HVCubSFMesh, HTCSFVectorBasis, vector<Vector> >; 
 
 typedef HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> > HVCubSFEMesh;
+template class HexVolMesh<HexTricubicHmtScaleFactorsEdges<Point> >;
+
 template class GenericField<HVCubSFEMesh, NDBasis, vector<double> >; 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

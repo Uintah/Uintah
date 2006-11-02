@@ -116,21 +116,21 @@ public:
   }
 
   //! get first derivative at parametric coordinate
-  template <class ElemData>
+  template <class ElemData, class VECTOR>
   void derivate(const std::vector<double> &coords, const ElemData &cd, 
-		std::vector<T> &derivs) const
+		VECTOR &derivs) const
   {
     const double x=coords[0], y=coords[1];  
 
     derivs.resize(2);
 
-    derivs[0]=T((-3 + 4*x + 4*y)*cd.node0()
+    derivs[0]=static_cast<typename VECTOR::value_type>((-3 + 4*x + 4*y)*cd.node0()
 		+(-1 + 4*x)*cd.node1()
 		-4*(-1 + 2*x + y)*this->nodes_[cd.edge0_index()]
 		+4*y*this->nodes_[cd.edge1_index()]
 		-4*y*this->nodes_[cd.edge2_index()]);
 
-    derivs[1]=T((-3 + 4*x + 4*y)*cd.node0()
+    derivs[1]=static_cast<typename VECTOR::value_type>((-3 + 4*x + 4*y)*cd.node0()
 		+(-1 +4*y)*cd.node2()
 		-4*x*this->nodes_[cd.edge0_index()]
 		+4*x*this->nodes_[cd.edge1_index()]

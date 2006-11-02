@@ -46,6 +46,7 @@ typedef LockingHandle<ScalarFieldInterface> ScalarFieldInterfaceHandle;
 typedef LockingHandle<VectorFieldInterface> VectorFieldInterfaceHandle;
 typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 
+
 class SCISHARE Field: public PropertyManager
 {
 public:
@@ -87,80 +88,151 @@ public:
   //! All instantiable classes need to define this.
   virtual bool is_scalar() const = 0;
 
-  virtual unsigned int data_size() const = 0;
+  virtual Mesh::size_type data_size() const = 0;
+  
+  // VIRTUAL INTERFACE FOR FIELDS
+  // value and set_value are available for each datatype supported so far
+  // by SCIRun.
+  // value& is not supported virtually as most of the values run through
+  // a casting operation
+  
+  virtual bool has_virtual_interface();
+  
+  virtual void resize_fdata();
+
+  virtual void get_value(char &val, Mesh::index_type i) const;
+  virtual void get_value(unsigned char &val, Mesh::index_type i) const;
+  virtual void get_value(short &val, Mesh::index_type i) const;
+  virtual void get_value(unsigned short &val, Mesh::index_type i) const;
+  virtual void get_value(int &val, Mesh::index_type i) const;
+  virtual void get_value(unsigned int &val, Mesh::index_type i) const;
+  virtual void get_value(long &val, Mesh::index_type i) const;
+  virtual void get_value(unsigned long &val, Mesh::index_type i) const;
+  virtual void get_value(long long &val, Mesh::index_type i) const;
+  virtual void get_value(unsigned long long &val, Mesh::index_type i) const;
+  virtual void get_value(float &val, Mesh::index_type i) const;
+  virtual void get_value(double &val, Mesh::index_type i) const;
+  virtual void get_value(Vector &val, Mesh::index_type i) const;
+  virtual void get_value(Tensor &val, Mesh::index_type i) const;
+
+  template<class T>  inline void get_value(T& val, Mesh::VNode::index_type idx) const
+  { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void get_value(T& val, Mesh::VEdge::index_type idx) const
+  { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void get_value(T& val, Mesh::VFace::index_type idx) const
+  { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void get_value(T& val, Mesh::VCell::index_type idx) const
+  { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void get_value(T& val, Mesh::VElem::index_type idx) const
+  { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void get_value(T& val, Mesh::VDElem::index_type idx) const
+  { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+
+  virtual void set_value(const char &val, Mesh::index_type i);
+  virtual void set_value(const unsigned char &val, Mesh::index_type i);
+  virtual void set_value(const short &val, Mesh::index_type i);
+  virtual void set_value(const unsigned short &val, Mesh::index_type i);
+  virtual void set_value(const int &val, Mesh::index_type i);
+  virtual void set_value(const unsigned int &val, Mesh::index_type i);
+  virtual void set_value(const long &val, Mesh::index_type i);
+  virtual void set_value(const unsigned long &val, Mesh::index_type i);
+  virtual void set_value(const long long &val, Mesh::index_type i);
+  virtual void set_value(const unsigned long long &val, Mesh::index_type i);
+  virtual void set_value(const float &val, Mesh::index_type i);
+  virtual void set_value(const double &val, Mesh::index_type i);
+  virtual void set_value(const Vector &val, Mesh::index_type i);
+  virtual void set_value(const Tensor &val, Mesh::index_type i);
+
+  template<class T>  inline void set_value(const T& val, Mesh::VNode::index_type idx)
+  { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void set_value(const T& val, Mesh::VEdge::index_type idx)
+  { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void set_value(const T& val, Mesh::VFace::index_type idx)
+  { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void set_value(const T& val, Mesh::VCell::index_type idx)
+  { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void set_value(const T& val, Mesh::VElem::index_type idx)
+  { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void set_value(const T& val, Mesh::VDElem::index_type idx)
+  { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
+  
+  
+  virtual void interpolate(char &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned char &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(short &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned short &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(int &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned int &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(long long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned long long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(float &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(double &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(Vector &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void interpolate(Tensor &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+
+  template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VNode::index_type idx) const
+  { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VEdge::index_type idx) const
+  { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VFace::index_type idx) const
+  { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VCell::index_type idx) const
+  { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VElem::index_type idx) const
+  { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VDElem::index_type idx) const
+  { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+
+  virtual void gradient(vector<char> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned char> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<short> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned short> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<int> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned int> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<long long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned long long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<float> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<double> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<Vector> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<Tensor> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+
+  template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VNode::index_type idx) const
+  { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VEdge::index_type idx) const
+  { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VFace::index_type idx) const
+  { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VCell::index_type idx) const
+  { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VElem::index_type idx) const
+  { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+  template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VDElem::index_type idx) const
+  { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+
 };
 
 typedef LockingHandle<Field> FieldHandle;
 
-
-template <class FIELD>
-static FieldHandle
-append_fields(vector<FIELD *> fields)
-{
-  typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
-
-  unsigned int offset = 0;
-  unsigned int i;
-  for (i=0; i < fields.size(); i++)
-  {
-    typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
-    typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
-    imesh->begin(nitr);
-    imesh->end(nitr_end);
-    while (nitr != nitr_end)
-    {
-      Point p;
-      imesh->get_center(p, *nitr);
-      omesh->add_point(p);
-      ++nitr;
-    }
-
-    typename FIELD::mesh_type::Elem::iterator eitr, eitr_end;
-    imesh->begin(eitr);
-    imesh->end(eitr_end);
-    while (eitr != eitr_end)
-    {
-      typename FIELD::mesh_type::Node::array_type nodes;
-      imesh->get_nodes(nodes, *eitr);
-      unsigned int j;
-      for (j = 0; j < nodes.size(); j++)
-      {
-	nodes[j] = ((unsigned int)nodes[j]) + offset;
-      }
-      omesh->add_elem(nodes);
-      ++eitr;
-    }
+class SCISHARE FieldTypeID {
+  public:
+    // Constructor
+    FieldTypeID(const string& type, 
+                FieldHandle (*field_maker)(),
+                FieldHandle (*field_maker_mesh)(MeshHandle));
     
-    typename FIELD::mesh_type::Node::size_type size;
-    imesh->size(size);
-    offset += (unsigned int)size;
-  }
+    string type;
+    FieldHandle (*field_maker)();
+    FieldHandle (*field_maker_mesh)(MeshHandle);
+};
 
-  FIELD *ofield = scinew FIELD(omesh);
-  offset = 0;
-  for (i=0; i < fields.size(); i++)
-  {
-    typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
-    typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
-    imesh->begin(nitr);
-    imesh->end(nitr_end);
-    while (nitr != nitr_end)
-    {
-      double val;
-      fields[i]->value(val, *nitr);
-      typename FIELD::mesh_type::Node::index_type
-	new_index(((unsigned int)(*nitr)) + offset);
-      ofield->set_value(val, new_index);
-      ++nitr;
-    }
 
-    typename FIELD::mesh_type::Node::size_type size;
-    imesh->size(size);
-    offset += (unsigned int)size;
-  }
+FieldHandle Create_Field(string type);
+FieldHandle Create_Field(string type,MeshHandle mesh);
 
-  return ofield;
-}
 
 } // end namespace SCIRun
 

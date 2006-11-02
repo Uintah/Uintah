@@ -27,25 +27,8 @@
 */
 
 
-/*
- *  TriSurfMesh.h: Templated Meshs defined on a 3D Regular Grid
- *
- *  Written by:
- *   Michael Callahan
- *   Department of Computer Science
- *   University of Utah
- *   January 2001
- *
- *  Copyright (C) 2001 SCI Group
- *
- *  Modified:
- *   Lorena Kreda, Northeastern University, October 2003
- *
- */
-
-
-#ifndef SCI_project_TriSurfMesh_h
-#define SCI_project_TriSurfMesh_h 1
+#ifndef CORE_DATATYPES_TRISURFMESH_H
+#define CORE_DATATYPES_TRISURFMESH_H 1
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
@@ -181,6 +164,8 @@ public:
   TriSurfMesh(const TriSurfMesh &copy);
   virtual TriSurfMesh *clone() { return new TriSurfMesh(*this); }
   virtual ~TriSurfMesh();
+  
+  virtual int basis_order() { return (basis_.polynomial_order()); }
 
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
@@ -208,39 +193,85 @@ public:
   void to_index(typename Face::index_type &index, unsigned int i) const { index = i; }
   void to_index(typename Cell::index_type &index, unsigned int i) const { index = i; }
 
+
   //! Get the child elements of the given index.
-  void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
-  void get_nodes(typename Node::array_type &, typename Face::index_type) const;
-  void get_nodes(typename Node::array_type &, typename Cell::index_type) const;
-  void get_edges(typename Edge::array_type &, typename Face::index_type) const;
-  void get_edges(typename Edge::array_type &, typename Cell::index_type) const;
-  void get_faces(typename Face::array_type &, typename Cell::index_type) const;
-  void get_faces(typename Face::array_type &a,
-                 typename Face::index_type f) const
-  { a.push_back(f); }
-
-  //! get the parent element(s) of the given index
-  void get_elems(typename Elem::array_type &result,
+  void get_nodes(typename Node::array_type &array, 
                  typename Node::index_type idx) const
-  {
-    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
-	      "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
-    result.clear();
-    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
-      result.push_back(node_neighbors_[idx][i]/3);
-  }
-  void get_elems(typename Elem::array_type &result,
-                 typename Edge::index_type idx) const {}
-  void get_elems(typename Elem::array_type &result,
-                 typename Face::index_type idx) const {}
+  { array.resize(1); array[0]= idx; }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Edge::index_type idx) const
+  { get_nodes_from_edge(array,idx); }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Face::index_type idx) const
+  { get_nodes_from_face(array,idx); }
+  void get_nodes(typename Node::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_nodes has not been implemented for cells"); }
 
+  void get_edges(typename Edge::array_type &array, 
+                 typename Node::index_type idx) const
+  { get_edges_from_node(array,idx); }
+  void get_edges(typename Edge::array_type &array, 
+                 typename Edge::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_edges(typename Edge::array_type &array,
+                 typename Face::index_type idx) const
+  { get_edges_from_face(array,idx); }
+  void get_edges(typename Edge::array_type &array,
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_edges has not been implemented for cells"); }
 
-  //! Wrapper to get the derivative elements from this element.
-  void get_delems(typename DElem::array_type &result,
-                  typename Elem::index_type idx) const
-  {
-    get_edges(result, idx);
-  }
+  void get_faces(typename Face::array_type &array,
+                 typename Node::index_type idx) const
+  { get_faces_from_node(array,idx); }
+  void get_faces(typename Face::array_type &array,
+                 typename Edge::index_type idx) const
+  { get_faces_from_edge(array,idx); }
+  void get_faces(typename Face::array_type &array,
+                 typename Face::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_faces(typename Face::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_faces has not been implemented for cells"); }
+
+  void get_cells(typename Cell::array_type &array, 
+                 typename Node::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Edge::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array,
+                 typename Face::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_cells has not been implemented"); }
+  void get_cells(typename Cell::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_cells has not been implemented"); }
+
+  void get_elems(typename Elem::array_type &array,
+                 typename Node::index_type idx) const
+  { get_faces_from_node(array,idx); }
+  void get_elems(typename Elem::array_type &array,
+                 typename Edge::index_type idx) const
+  { get_faces_from_edge(array,idx); }
+  void get_elems(typename Elem::array_type &array,
+                 typename Face::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_elems(typename Face::array_type &array, 
+                 typename Cell::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_elems has not been implemented for cells"); }
+
+  void get_delems(typename DElem::array_type &array,
+                  typename Node::index_type idx) const
+  { get_edges_from_node(array,idx); }
+  void get_delems(typename DElem::array_type &array,
+                  typename Edge::index_type idx) const
+  { array.resize(1); array[0]= idx; }
+  void get_delems(typename DElem::array_type &array, 
+                  typename Face::index_type idx) const
+  { get_edges_from_face(array,idx); }
+  void get_delems(typename DElem::array_type &array,
+                  typename Cell::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_delems has not been implemented for cells"); }
 
   bool get_neighbor(typename Face::index_type &neighbor,
                     typename Face::index_type face,
@@ -249,6 +280,9 @@ public:
                     unsigned int half_edge) const;
   void get_neighbors(vector<typename Node::index_type> &array,
                      typename Node::index_type idx) const;
+  void get_neighbors(vector<typename Elem::index_type> &array,
+                     typename Elem::index_type idx) const
+  { ASSERTFAIL("TriSurfMesh: get_neighbors has not yet been implemented"); }
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(typename Node::index_type /*idx*/) const { return 0.0; };
@@ -379,7 +413,8 @@ public:
   virtual bool has_normals() const { return true; }
 
   virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  static PersistentTypeID type_idts;
+  static MeshTypeID mesh_idts;
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
@@ -430,6 +465,7 @@ public:
                                             const Point &p);
 
 
+
   const Point &point(typename Node::index_type i) { return points_[i]; }
   Basis& get_basis() { return basis_; }
 
@@ -471,9 +507,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -494,19 +531,177 @@ public:
   { return face_type_description(); }
 
   // returns a TriSurfMesh
-  static Persistent *maker() { return new TriSurfMesh<Basis>(); }
+  static Persistent *maker() { return scinew TriSurfMesh<Basis>(); }
+  static MeshHandle mesh_maker() { return scinew TriSurfMesh<Basis>(); }
+  
+  
+public:
+  //! VIRTUAL INTERFACE FUNCTIONS
+  virtual bool has_virtual_interface() const;
 
+  virtual void size(VNode::size_type& size) const;
+  virtual void size(VEdge::size_type& size) const;
+  virtual void size(VFace::size_type& size) const;
+  virtual void size(VElem::size_type& size) const;
+  virtual void size(VDElem::size_type& size) const;
+  
+  virtual void get_nodes(VNode::array_type& nodes, VEdge::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VFace::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VElem::index_type i) const;
+  virtual void get_nodes(VNode::array_type& nodes, VDElem::index_type i) const;
+  
+  virtual void get_edges(VEdge::array_type& edges, VFace::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VElem::index_type i) const;
+  virtual void get_edges(VEdge::array_type& edges, VDElem::index_type i) const;
+
+  virtual void get_faces(VFace::array_type& faces, VNode::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VEdge::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VElem::index_type i) const;
+  virtual void get_faces(VFace::array_type& faces, VDElem::index_type i) const;
+  
+  virtual void get_elems(VElem::array_type& elems, VNode::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VEdge::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VFace::index_type i) const;
+  virtual void get_elems(VElem::array_type& elems, VDElem::index_type i) const;
+
+  virtual void get_delems(VDElem::array_type& delems, VFace::index_type i) const;
+  virtual void get_delems(VDElem::array_type& delems, VElem::index_type i) const;
+
+  virtual void get_center(Point &point, VNode::index_type i) const;
+  virtual void get_center(Point &point, VEdge::index_type i) const;
+  virtual void get_center(Point &point, VFace::index_type i) const;
+  virtual void get_center(Point &point, VElem::index_type i) const;
+  virtual void get_center(Point &point, VDElem::index_type i) const;
+
+  virtual double get_size(VNode::index_type i) const;
+  virtual double get_size(VEdge::index_type i) const;
+  virtual double get_size(VFace::index_type i) const;
+  virtual double get_size(VElem::index_type i) const;
+  virtual double get_size(VDElem::index_type i) const;
+  
+  virtual void get_weights(const Point& p,VNode::array_type& nodes,
+                                                vector<double>& weights) const;
+  virtual void get_weights(const Point& p,VElem::array_type& elems,
+                                                vector<double>& weights) const;
+                                                  
+  virtual bool locate(VNode::index_type &i, const Point &point) const;
+  virtual bool locate(VElem::index_type &i, const Point &point) const;
+
+  virtual bool get_coords(vector<double> &coords, const Point &point, 
+                                                    VElem::index_type i) const;  
+  virtual void interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+  virtual void derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const;
+
+  virtual void get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const;
+  virtual void set_point(const Point &point, VNode::index_type i);
+  
+  virtual void get_points(vector<Point>& points) const;
+
+  virtual void add_node(const Point &point,VNode::index_type &i);
+  virtual void add_elem(const VNode::array_type &nodes,VElem::index_type &i);
+
+  virtual bool get_neighbor(VElem::index_type &neighbor, 
+                       VElem::index_type from, VDElem::index_type delem) const;
+  virtual void get_neighbors(VElem::array_type &elems, 
+                                                    VElem::index_type i) const;
+  virtual void get_neighbors(VNode::array_type &nodes, 
+                                                    VNode::index_type i) const;
+
+  virtual void pwl_approx_edge(vector<vector<double> > &coords, 
+                               VElem::index_type ci, unsigned int which_edge, 
+                               unsigned int div_per_unit) const;
+  virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                               VElem::index_type ci, unsigned int which_face, 
+                              unsigned int div_per_unit) const;
+                              
+  virtual void get_normal(Vector& norm,VNode::index_type i) const;  
+  
 private:
-  void                  walk_face_orient(typename Face::index_type face,
-                                         vector<bool> &tested,
-                                         vector<bool> &flip);
+
+  //////////////////////////////////////////////////////////////
+  // These functions are templates and are used to define the
+  // dynamic compilation interface and the virtual interface
+  // as they both use different datatypes as indices and arrays
+  // the following functions have been templated and are inlined
+  // at the places where they are needed.
+  //
+  // Secondly these templates allow for the use of the stack vector
+  // as well as the STL vector. When an algorithm supports non linear
+  // functions an STL vector is a better choice, in the other cases
+  // often a StackVector is enough (The latter improves performance).
+   
+  template<class ARRAY, class INDEX>
+  inline void get_nodes_from_edge(ARRAY& array, INDEX idx) const
+  {
+    int a = edges_[idx];
+    int b = a - a % 3 + (a+1) % 3;
+    array.resize(2);
+    array[0] = static_cast<typename ARRAY::value_type>(faces_[a]);
+    array[1] = static_cast<typename ARRAY::value_type>(faces_[b]);
+  }
+  
+  
+  template<class ARRAY, class INDEX>
+  inline void get_nodes_from_face(ARRAY& array, INDEX idx) const
+  {  
+    array.resize(3);
+    array[0] = static_cast<typename ARRAY::value_type>(faces_[idx * 3 + 0]);
+    array[1] = static_cast<typename ARRAY::value_type>(faces_[idx * 3 + 1]);
+    array[2] = static_cast<typename ARRAY::value_type>(faces_[idx * 3 + 2]);
+  }
+  
+  
+  template<class ARRAY, class INDEX>
+  inline void get_edges_from_face(ARRAY& array, INDEX idx) const
+  {
+    ASSERTMSG(synchronized_ & EDGES_E,
+            "TriSurfMesh: Must call synchronize EDGES_E on TriSurfMesh first");
+
+    array.resize(3);
+
+    array[0] = static_cast<typename ARRAY::value_type>(halfedge_to_edge_[idx * 3 + 0]);
+    array[1] = static_cast<typename ARRAY::value_type>(halfedge_to_edge_[idx * 3 + 1]);
+    array[2] = static_cast<typename ARRAY::value_type>(halfedge_to_edge_[idx * 3 + 2]);  
+  }
+  
+  
+  template<class ARRAY, class INDEX>
+  inline void get_faces_from_node(ARRAY& array, INDEX idx) const
+  {
+    ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
+	      "TriSurfMesh: Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first");
+    
+    array.resize(node_neighbors_[idx].size());
+    for (unsigned int i = 0; i < node_neighbors_[idx].size(); ++i)
+      array[i] = static_cast<typename ARRAY::value_type>(node_neighbors_[idx][i]/3);
+  }
+  
+ 
+  template<class ARRAY, class INDEX>
+  inline void get_faces_from_edge(ARRAY& array, INDEX idx) const
+  {
+    ASSERTFAIL("TriSurfMesh: get_faces(faces,edge) has not been implemented");
+  }
+
+
+  template<class ARRAY, class INDEX>
+  inline void get_edges_from_node(ARRAY& array, INDEX idx) const
+  {
+    ASSERTFAIL("TriSurfMesh: get_edges(edges,node) has not been implemented");
+  }
+
+    
+  void walk_face_orient(typename Face::index_type face,
+                        vector<bool> &tested, vector<bool> &flip);
 
   // These require the synchronize_lock_ to be held before calling.
-  void                  compute_normals();
-  void                  compute_node_neighbors();
-  void                  compute_edges();
-  void                  compute_edge_neighbors(double err = 1.0e-8);
-  void                  compute_grid();
+  void compute_normals();
+  void compute_node_neighbors();
+  void compute_edges();
+  void compute_edge_neighbors(double err = 1.0e-8);
+  void compute_grid();
 
   //! Used to recompute data for individual cells.  Don't use these, they
   // are not synchronous.  Use create_cell_syncinfo instead.
@@ -622,7 +817,11 @@ struct less_int
 
 template <class Basis>
 PersistentTypeID
-TriSurfMesh<Basis>::type_id(TriSurfMesh<Basis>::type_name(-1), "Mesh", maker);
+TriSurfMesh<Basis>::type_idts(TriSurfMesh<Basis>::type_name(-1), "Mesh", maker);
+
+template <class Basis>
+MeshTypeID
+TriSurfMesh<Basis>::mesh_idts(TriSurfMesh<Basis>::type_name(-1), TriSurfMesh<Basis>::mesh_maker);
 
 
 template <class Basis>
@@ -839,59 +1038,6 @@ TriSurfMesh<Basis>::end(typename TriSurfMesh::Cell::iterator &itr) const
 
 
 template <class Basis>
-void
-TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
-                              typename Edge::index_type idx) const
-{
-  int a = edges_[idx];
-  int b = a - a % 3 + (a+1) % 3;
-  array.clear();
-  array.push_back(faces_[a]);
-  array.push_back(faces_[b]);
-}
-
-
-template <class Basis>
-void
-TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
-                              typename Face::index_type idx) const
-{
-  array.clear();
-  array.push_back(faces_[idx * 3 + 0]);
-  array.push_back(faces_[idx * 3 + 1]);
-  array.push_back(faces_[idx * 3 + 2]);
-}
-
-
-template <class Basis>
-void
-TriSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
-                              typename Cell::index_type cidx) const
-{
-  array.clear();
-  array.push_back(faces_[cidx * 3 + 0]);
-  array.push_back(faces_[cidx * 3 + 1]);
-  array.push_back(faces_[cidx * 3 + 2]);
-}
-
-
-template <class Basis>
-void
-TriSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
-                              typename Face::index_type idx) const
-{
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on TriSurfMesh first");
-
-  array.clear();
-
-  array.push_back(halfedge_to_edge_[idx * 3 + 0]);
-  array.push_back(halfedge_to_edge_[idx * 3 + 1]);
-  array.push_back(halfedge_to_edge_[idx * 3 + 2]);
-}
-
-
-template <class Basis>
 bool
 TriSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
                                  typename Face::index_type face,
@@ -923,7 +1069,6 @@ TriSurfMesh<Basis>::get_neighbor(unsigned int &nbr_half_edge,
   nbr_half_edge = edge_neighbors_[half_edge];
   return nbr_half_edge != MESH_NO_NEIGHBOR;
 }
-
 
 template <class Basis>
 void
@@ -2368,36 +2513,6 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
     bk--;ek++;
   } while (found) ;
 
-#if 0
-  // The old code, useful for debugging purposes.  Note that the old
-  // and new code don't necessarily return the same face because if
-  // you hit an edge or corner any of the edge or corner faces are
-  // valid.
-  double dmin2 = DBL_MAX;
-  Point result2;
-  typename Face::index_type face2;
-  for (unsigned int i = 0; i < faces_.size(); i+=3)
-  {
-    Point rtmp;
-    closest_point_on_tri(rtmp, p,
-                         points_[faces_[i  ]],
-                         points_[faces_[i+1]],
-                         points_[faces_[i+2]]);
-    const double dtmp = (p - rtmp).length2();
-    if (dtmp < dmin2)
-    {
-      result2 = rtmp;
-      face2 = i/3;
-      dmin2 = dtmp;
-    }
-  }
-  if (face != face2)
-  {
-    cout << "face != face2 (" << face << " " << face2 << "\n";
-    cout << "dmin = " << dmin << ", dmin2 = " << dmin2 << "\n";
-  }
-#endif
-
   return sqrt(dmin);
 }
 
@@ -2589,6 +2704,444 @@ TriSurfMesh<Basis>::cell_type_description()
   return td;
 }
 
+
+
+
+
+//---------------------------------------
+// VIRTUAL INTERFACE FUNCTIONS
+  
+  
+template <class Basis>
+bool 
+TriSurfMesh<Basis>::has_virtual_interface() const
+{
+  return (true);
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::size(VNode::size_type& sz) const
+{
+  typename Node::index_type s; size(s); sz = VNode::index_type(s);
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::size(VEdge::size_type& sz) const
+{
+  typename Edge::index_type s; size(s); sz = VEdge::index_type(s);
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::size(VFace::size_type& sz) const
+{
+  typename Face::index_type s; size(s); sz = VFace::index_type(s);
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::size(VDElem::size_type& sz) const
+{
+  typename DElem::index_type s; size(s); sz = VDElem::index_type(s);
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::size(VElem::size_type& sz) const
+{
+  typename Elem::index_type s; size(s); sz = VElem::index_type(s);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                              VEdge::index_type i) const
+{
+  get_nodes_from_edge(nodes,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                              VFace::index_type i) const
+{
+  get_nodes_from_face(nodes,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                              VElem::index_type i) const
+{
+  get_nodes_from_face(nodes,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_nodes(VNode::array_type& nodes, 
+                              VDElem::index_type i) const
+{
+  get_nodes_from_edge(nodes,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                              VFace::index_type i) const
+{
+  get_edges_from_face(edges,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                              VElem::index_type i) const
+{
+  get_edges_from_face(edges,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_edges(VEdge::array_type& edges, 
+                              VDElem::index_type i) const
+{
+  edges.resize(1); edges[0] = static_cast<VEdge::index_type>(i);;
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                              VNode::index_type i) const
+{
+  get_faces_from_node(faces,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                              VEdge::index_type i) const
+{
+  get_faces_from_edge(faces,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                              VElem::index_type i) const
+{
+  faces.resize(1); faces[0] = static_cast<VFace::index_type>(i);
+}
+
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_faces(VFace::array_type& faces, 
+                              VDElem::index_type i) const
+{
+  get_faces_from_edge(faces,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                              VNode::index_type i) const
+{
+  get_faces_from_node(elems,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                              VEdge::index_type i) const
+{
+  get_faces_from_edge(elems,i);
+}
+
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                              VFace::index_type i) const
+{
+  elems.resize(1); elems[0] = static_cast<VElem::index_type>(i);
+}
+
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_elems(VElem::array_type& elems, 
+                              VDElem::index_type i) const
+{
+  get_faces_from_edge(elems,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_delems(VDElem::array_type& delems,
+                               VFace::index_type i) const
+{
+  get_edges_from_face(delems,i);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_delems(VDElem::array_type& delems, 
+                               VElem::index_type i) const
+{
+  get_edges_from_face(delems,i);
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_center(Point &p, Mesh::VNode::index_type idx) const
+{
+  p = points_[idx]; 
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_center(Point &p,Mesh::VEdge::index_type idx) const
+{
+  get_center(p, typename Edge::index_type(idx));
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_center(Point &p, Mesh::VFace::index_type idx) const
+{
+  get_center(p, typename Face::index_type(idx));
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_center(Point &p, Mesh::VElem::index_type idx) const
+{
+  get_center(p, typename Elem::index_type(idx));
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_center(Point &p, Mesh::VDElem::index_type idx) const
+{
+  get_center(p, typename DElem::index_type(idx));
+}
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_weights(const Point& p,VNode::array_type& nodes,
+                                              vector<double>& weights) const
+{
+  typename Face::index_type idx;
+  
+  if (locate(idx, p))
+  {
+    get_nodes_from_face(nodes,idx);
+    vector<double> coords(3);
+    if (get_coords(coords, p, idx))
+    {
+      weights.resize(basis_.dofs());
+      basis_.get_weights(coords, &(weights[0]));
+    }
+  }
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::get_weights(const Point& p,VElem::array_type& elems,
+                                              vector<double>& weights) const
+{
+  typename Face::index_type idx;
+  if (locate(idx, p))
+  {
+    elems.resize(1);
+    weights.resize(1);
+    elems[0] = static_cast<VElem::index_type>(idx);
+    weights[0] = 1.0;
+  }
+  else
+  {
+    elems.resize(0);
+    weights.resize(0);
+  }
+}
+
+template <class Basis>
+bool 
+TriSurfMesh<Basis>::locate(VNode::index_type &vi, const Point &point) const
+{
+  typename Node::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VNode::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+TriSurfMesh<Basis>::locate(VElem::index_type &vi, const Point &point) const
+{
+  typename Elem::index_type i;
+  bool ret = locate(i,point);
+  vi = static_cast<VElem::index_type>(i);
+  return (ret);
+}
+
+template <class Basis>
+bool 
+TriSurfMesh<Basis>::get_coords(vector<double> &coords, const Point &point,
+                                                    VElem::index_type i) const
+{
+  return(get_coords(coords,point,typename Elem::index_type(i)));
+}  
+  
+template <class Basis>
+void 
+TriSurfMesh<Basis>::interpolate(Point &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  interpolate(p,coords,typename Elem::index_type(i));
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::derivate(vector<Point> &p, const vector<double> &coords, 
+                                                    VElem::index_type i) const
+{
+  derivate(coords,typename Elem::index_type(i),p);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_points(vector<Point>& points) const
+{
+  points = points_; 
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::set_point(const Point &point, VNode::index_type i)
+{
+  points_[i] = point;
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::add_node(const Point &point,VNode::index_type &vi)
+{
+  vi = static_cast<VNode::index_type>(add_point(point));
+}  
+  
+template <class Basis>
+void 
+TriSurfMesh<Basis>::add_elem(const VNode::array_type &nodes,VElem::index_type &vi)
+{
+  typename Node::array_type nnodes;
+  convert_vector(nnodes,nodes);
+  vi = static_cast<VElem::index_type>(add_elem(nnodes));
+}  
+
+
+template <class Basis>
+bool 
+TriSurfMesh<Basis>::get_neighbor(VElem::index_type &neighbor, 
+                        VElem::index_type from, VDElem::index_type delem) const
+{
+  typename Elem::index_type n;
+  bool ret = get_neighbor(n,typename Elem::index_type(from),
+                            typename DElem::index_type(delem));
+  neighbor = static_cast<VElem::index_type>(n);
+  return (ret);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_neighbors(VElem::array_type &varray, 
+                                 VElem::index_type i) const
+{
+  typename Elem::array_type array;
+  get_neighbors(array,typename Elem::index_type(i));
+  convert_vector(varray,array);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_neighbors(VNode::array_type &varray, 
+                                 VNode::index_type i) const
+{
+  vector<typename Node::index_type> array;
+  get_neighbors(array,typename Node::index_type(i));
+  convert_vector(varray,array);
+}
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::get_size(VNode::index_type i) const
+{
+  return (0.0);
+}
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::get_size(VEdge::index_type i) const
+{
+  return (get_size(typename Edge::index_type(i)));
+}
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::get_size(VFace::index_type i) const
+{
+  return (get_size(typename Face::index_type(i)));
+}
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::get_size(VElem::index_type i) const
+{
+  return (get_size(typename Elem::index_type(i)));
+}
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::get_size(VDElem::index_type i) const
+{
+  return (get_size(typename DElem::index_type(i)));
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::pwl_approx_edge(vector<vector<double> > &coords, 
+                                  VElem::index_type ci, unsigned int which_edge,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_edge(which_edge, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::pwl_approx_face(vector<vector<vector<double> > > &coords, 
+                                  VElem::index_type ci, unsigned int which_face,
+                                  unsigned int div_per_unit) const
+{
+  basis_.approx_face(which_face, div_per_unit, coords);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_random_point(Point &p, VElem::index_type i,MusilRNG &rng) const
+{
+  get_random_point(p,typename Elem::index_type(i),rng);
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::get_normal(Vector& norm,VNode::index_type i) const
+{
+  get_normal(norm,typename Node::index_type(i));
+}  
 
 } // namespace SCIRun
 

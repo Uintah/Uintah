@@ -36,7 +36,7 @@ SRCDIR   := Core/Algorithms/Visualization
 SRCS     += \
 	$(SRCDIR)/EdgeMC.cc             \
 	$(SRCDIR)/FastLatMC.cc          \
-        $(SRCDIR)/HexMC.cc		\
+  $(SRCDIR)/HexMC.cc		\
 	$(SRCDIR)/ExtractIsosurface.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/mcube2.cc		\
@@ -61,7 +61,9 @@ PSELIBS := \
 	Core/Persistent \
 	Core/Thread     \
 	Core/Util       \
-	Core/Volume
+	Core/Volume     \
+  Core/Algorithms/Util \
+  Core/Math
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

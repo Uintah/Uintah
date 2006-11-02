@@ -43,6 +43,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Algorithms/DataIO \
         Core/Algorithms/Math \
         Core/Basis \
+				Core/Math \
                 
 LIBS :=
 

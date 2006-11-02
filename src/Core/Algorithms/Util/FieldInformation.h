@@ -50,6 +50,7 @@ class SCISHARE FieldInformation {
     void        set_field_type(std::string);
 
     std::string get_mesh_type();
+    std::string get_mesh_type_id();
     void        set_mesh_type(std::string);
     
     std::string get_mesh_basis_type();
@@ -68,6 +69,7 @@ class SCISHARE FieldInformation {
     void        set_container_type(std::string);
 
     std::string get_field_name();
+    std::string get_field_type_id();
     std::string get_field_filename();
     
     void fill_compile_info(CompileInfoHandle &ci);
@@ -98,6 +100,7 @@ class SCISHARE FieldInformation {
     bool        is_short();
     bool        is_char();
     bool        is_dvt();
+    bool        is_svt();
     
     bool        is_regularmesh();
     bool        is_structuredmesh();
@@ -142,6 +145,10 @@ class SCISHARE FieldInformation {
     bool        make_vector();
     bool        make_tensor();
     
+    // This function tests whether the field and the mesh have a virtual interface
+    // and whether the mesh can be instantiated by Create_Field
+    bool        has_virtual_interface();
+    
     bool        operator==(const FieldInformation&) const;
     
   private:
@@ -163,6 +170,71 @@ class SCISHARE FieldInformation {
     std::string data_type_h;
     std::string container_type_h;
 };
+
+
+FieldHandle Create_Field(FieldInformation &info);
+FieldHandle Create_Field(FieldInformation &info,MeshHandle mesh);
+
+MeshHandle Create_Mesh(FieldInformation &info);
+MeshHandle Create_Mesh(FieldInformation &info,unsigned int x);
+MeshHandle Create_Mesh(FieldInformation &info,unsigned int x,const Point& min,const Point& max);
+MeshHandle Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y);
+MeshHandle Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y,const Point& min,const Point& max);
+MeshHandle Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y,unsigned int z);
+MeshHandle Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y,unsigned int z,const Point& min,const Point& max);
+
+inline bool UseScalarInterface(FieldInformation &info) 
+{ return(info.is_scalar()); }
+
+inline bool UseScalarInterface(FieldInformation &info,FieldInformation &info2)
+{ return(info.is_scalar()&info2.is_scalar()); }
+
+inline bool UseScalarInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3)
+{ return(info.is_scalar()&info2.is_scalar()&info3.is_scalar()); }
+
+inline bool UseScalarInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3,
+                        FieldInformation &info4)
+{ return(info.is_scalar()&info2.is_scalar()&info3.is_scalar()&info4.is_scalar()); }
+
+inline bool UseScalarInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3,
+                        FieldInformation &info4, FieldInformation &info5)
+{ return(info.is_scalar()&info2.is_scalar()&info3.is_scalar()&info4.is_scalar()&info5.is_scalar()); }
+
+
+inline bool UseVectorInterface(FieldInformation &info) 
+{ return(info.is_vector()); }
+
+inline bool UseVectorInterface(FieldInformation &info,FieldInformation &info2)
+{ return(info.is_vector()&info2.is_vector()); }
+
+inline bool UseVectorInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3)
+{ return(info.is_vector()&info2.is_vector()&info3.is_vector()); }
+
+inline bool UseVectorInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3,
+                        FieldInformation &info4)
+{ return(info.is_vector()&info2.is_vector()&info3.is_vector()&info4.is_vector()); }
+
+inline bool UseVectorInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3,
+                        FieldInformation &info4, FieldInformation &info5)
+{ return(info.is_vector()&info2.is_vector()&info3.is_vector()&info4.is_vector()&info5.is_vector()); }
+
+
+inline bool UseTensorInterface(FieldInformation &info) 
+{ return(info.is_tensor()); }
+
+inline bool UseTensorInterface(FieldInformation &info,FieldInformation &info2)
+{ return(info.is_tensor()&info2.is_tensor()); }
+
+inline bool UseTensorInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3)
+{ return(info.is_tensor()&info2.is_tensor()&info3.is_tensor()); }
+
+inline bool UseTensorInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3,
+                        FieldInformation &info4)
+{ return(info.is_tensor()&info2.is_tensor()&info3.is_tensor()&info4.is_tensor()); }
+
+inline bool UseTensorInterface(FieldInformation &info,FieldInformation &info2,FieldInformation &info3,
+                        FieldInformation &info4, FieldInformation &info5)
+{ return(info.is_tensor()&info2.is_tensor()&info3.is_tensor()&info4.is_tensor()&info5.is_tensor()); }
 
 } // end namespace
 

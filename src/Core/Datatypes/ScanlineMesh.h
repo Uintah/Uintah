@@ -149,6 +149,8 @@ public:
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
+  virtual int basis_order() { basis_.polynomial_order(); }
+
   //! get the mesh statistics
   unsigned get_min_i() const { return min_i_; }
   bool get_min(vector<unsigned int>&) const;
@@ -276,6 +278,7 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static MeshTypeID mesh_id;
   static  const string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
@@ -326,9 +329,10 @@ public:
   }
 
   // get the Jacobian matrix
+  template<class VECTOR>
   void derivate(const vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                VECTOR &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -342,8 +346,10 @@ public:
   { return edge_type_description(); }
 
   // returns a ScanlineMesh
-  static Persistent *maker() { return new ScanlineMesh(); }
-
+  static Persistent *maker() { return scinew ScanlineMesh(); }
+  static MeshHandle mesh_maker() { return scinew ScanlineMesh(); }
+  static MeshHandle scanline_maker(unsigned int x, const Point& min, const Point& max) { return scinew ScanlineMesh(x,min,max); }
+  
 protected:
 
   //! the min typename Node::index_type ( incase this is a subLattice )
@@ -365,6 +371,10 @@ template <class Basis>
 PersistentTypeID
 ScanlineMesh<Basis>::type_id(type_name(-1), "Mesh",
                              ScanlineMesh<Basis>::maker);
+
+template <class Basis>
+MeshTypeID
+ScanlineMesh<Basis>::mesh_id(type_name(-1), ScanlineMesh<Basis>::mesh_maker, ScanlineMesh<Basis>::scanline_maker);
 
 
 template <class Basis>

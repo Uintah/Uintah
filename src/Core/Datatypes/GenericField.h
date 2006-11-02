@@ -42,8 +42,10 @@
 #define Datatypes_GenericField_h
 
 #include <Core/Basis/Locate.h>
+#include <Core/Containers/StackVector.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/builtin.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/MeshTypes.h>
@@ -68,23 +70,154 @@ public:
   typedef FData                                            fdata_type;
   typedef LockingHandle<GenericField<Mesh, Basis, FData> > handle_type;
 
-  // only Pio should use this constructor
+  //! only Pio should use this constructor
   GenericField();
+  //! Use this constructor to actually have a field with a mesh
   GenericField(mesh_handle_type mesh);
 
   virtual ~GenericField();
 
+  //! Clone the field data, but not the mesh.
+  //! Use mesh_detach() first to clone the complete field
   virtual GenericField<Mesh, Basis, FData> *clone() const;
 
-  //! Required virtual functions from field base.
+  //! Obtain a Handle to the Mesh
   virtual MeshHandle mesh() const;
+  //! Clone the the mesh
   virtual void mesh_detach();
 
   virtual bool is_scalar() const;
+  
+  //! Get the size of the data stored in the data container
   virtual unsigned int data_size() const;
 
+  //! OBSOLETE
   virtual const TypeDescription *order_type_description() const;
 
+  //! Get the order of the field data
+  //! -1 = no data
+  //! 0 = constant data per element
+  //! 1 = linear data per element
+  //! >1 = non linear data per element
+  virtual int basis_order() const { return basis_.polynomial_order(); }
+
+  //! DIRECT ACCESS TO CONTAINER
+  //! NOTE: We may change containe types in the future
+  //! DIRECT ACCESS REQUIRES DYNAMIC COMPILATION
+  fdata_type& fdata();
+  const fdata_type& fdata() const;
+  
+  virtual void resize_fdata();
+
+  //! Get the classes on which this function relies:
+  //! Get the basis describing interpolation within an element
+  Basis& get_basis()  { return basis_; }
+  
+  //! Get the mesh describing how the elements fit together
+  const mesh_handle_type &get_typed_mesh() const;
+
+  //! Persistent I/O.
+  virtual void io(Piostream &stream);
+  
+  //! Tag the constructor of this class and put it in the Pio DataBase
+  static  PersistentTypeID type_id;
+  
+  //! Tag the constructor of this class and put it in the Field DataBase
+  static  FieldTypeID field_id;
+  
+  //! Function to retrieve the name of this field class
+  static  const string type_name(int n = -1);
+ 
+  //! A different way of tagging a class. Currently two systems are used next
+  //! to each other: type_name and get_type_description. Neither is perfect
+  virtual 
+  const TypeDescription* get_type_description(td_info_e td = FULL_TD_E) const;
+
+  // -- mutability --
+  virtual void freeze();
+  virtual void thaw();
+
+  //! Static functions to instantiate the field from Pio or using Create_Field()
+  static Persistent *maker();
+  static FieldHandle field_maker();  
+  static FieldHandle field_maker_mesh(MeshHandle mesh);
+  
+  //! Does the interface class have a complete virtual interface?
+  //! Not all classes have and those still rely on dynamic compilation
+  virtual bool has_virtual_interface();
+
+  //! FIELD FUNCTIONS THAT RELY ON VIRTUAL OVERLOADING OF THE FIELD CLASS (NO DYNAMIC COMPILATION NEEDED)
+
+  //! Get data from data location (Element or Node)
+  virtual void get_value(char &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(unsigned char &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(short &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(unsigned short &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(int &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(unsigned int &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(long &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(unsigned long &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(long long &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(unsigned long long &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(float &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(double &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(Vector &val, SCIRun::Mesh::index_type i) const;
+  virtual void get_value(Tensor &val, SCIRun::Mesh::index_type i) const;
+
+  //! Set data at data location (Element or Node)
+  virtual void set_value(const char &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const unsigned char &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const short &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const unsigned short &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const int &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const unsigned int &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const long &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const unsigned long &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const long long &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const unsigned long long &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const float &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const double &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const Vector &val, SCIRun::Mesh::index_type i);
+  virtual void set_value(const Tensor &val, SCIRun::Mesh::index_type i);
+
+  //! Compute value at arbitrary location
+  //! Using the field variable basis interpolate a gradient within the 
+  //! element, indicated at the paramentric coordinates coords.
+  virtual void interpolate(char &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned char &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(short &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned short &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(int &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned int &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(long long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(unsigned long long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(float &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(double &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(Vector &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void interpolate(Tensor &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+
+  //! Compute gradient at arbitrary location
+  //! Using the field variable basis interpolate a gradient within the 
+  //! element, indicated at the paramentric coordinates coords.
+  virtual void gradient(vector<char> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned char> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<short> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned short> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<int> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned int> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<long> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned long> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<long long> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<unsigned long long> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<float> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<double> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<Vector> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+  virtual void gradient(vector<Tensor> &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const;
+ 
+  //! FIELD FUNCTIONS THAT RELY ON DYNAMIC COMPILATION (NOT VIRTUAL)
+ 
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::Node::index_type i) const;
   bool value(value_type &val, typename mesh_type::Edge::index_type i) const;
@@ -103,7 +236,6 @@ public:
   const value_type &value(typename mesh_type::Face::index_type i) const;
   const value_type &value(typename mesh_type::Cell::index_type i) const;
 
-  virtual int basis_order() const { return basis_.polynomial_order(); }
   //! Using the field variable basis interpolate a value within the 
   //! element, indicated at the paramentric coordinates coords.
   void interpolate(value_type &val, const vector<double> &coords, 
@@ -114,35 +246,16 @@ public:
     val = basis_.interpolate(coords, fcd);
   }
 
+  //! Using the field variable basis interpolate a gradient within the 
+  //! element, indicated at the paramentric coordinates coords.
   void  gradient(vector<value_type>& grad, const vector<double>& coords,
           typename mesh_type::Elem::index_type ci ) const;
 
-  //! creates the matrix grad, you must delete it when finished.
+  //! OBSOLETE: Function is improper
+  //! NOTE: Do not use this function. Use gradient instead.
   void cell_gradient(typename mesh_type::Elem::index_type ci,
 		     DenseMatrix *&grad) const;
-
-  virtual void resize_fdata();
-
-  fdata_type& fdata();
-  const fdata_type& fdata() const;
-
-  Basis& get_basis()  { return basis_; }
-  const mesh_handle_type &get_typed_mesh() const;
-
-  //! Persistent I/O.
-  virtual void io(Piostream &stream);
-  static  PersistentTypeID type_id;
-  static  const string type_name(int n = -1);
  
-  virtual 
-  const TypeDescription* get_type_description(td_info_e td = FULL_TD_E) const;
-
-  // -- mutability --
-  virtual void freeze();
-  virtual void thaw();
-
-  static Persistent *maker();
-
 private:
   friend class ElemData;
 
@@ -158,7 +271,7 @@ private:
       index_(idx)
     {
       fld_.mesh_->get_nodes(nodes_, idx);
-      if (fld_.basis_order() > 1) {
+      if (fld_.basis_order_ > 1) {
         fld_.mesh_->get_edges(edges_, idx);
       }
     }
@@ -302,7 +415,11 @@ protected:
   //! Data container.
   fdata_type                   fdata_;
   Basis                        basis_;
+  
+  int basis_order_;
+  int mesh_dimensionality_;
 }; 
+
 
 
 template <class Mesh, class Basis, class FData>
@@ -326,28 +443,28 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::resize_fdata()
 {
-  if (basis_order() == 0 && mesh_->dimensionality() == 3)
+  if (basis_order_ == 0 && mesh_dimensionality_ == 3)
   {
     typename mesh_type::Cell::size_type ssize;
     mesh_->synchronize(Mesh::CELLS_E);
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
-  else if (basis_order() == 0 && mesh_->dimensionality() == 2)
+  else if (basis_order_ == 0 && mesh_dimensionality_ == 2)
   {
     typename mesh_type::Face::size_type ssize;
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
-  else if (basis_order() == 0 && mesh_->dimensionality() == 1)
+  else if (basis_order_ == 0 && mesh_dimensionality_ == 1)
   {
     typename mesh_type::Edge::size_type ssize;
     mesh_->synchronize(Mesh::EDGES_E);
     mesh_->size(ssize);
     fdata().resize(ssize);
   } 
-  else if (basis_order() == -1)
+  else if (basis_order_ == -1)
   {
     // do nothing (really, we want to resize to zero)
   }
@@ -373,8 +490,31 @@ GenericField<Mesh, Basis, FData>::maker()
 }
 
 template <class Mesh, class Basis, class FData>
+FieldHandle
+GenericField<Mesh, Basis, FData>::field_maker()
+{
+  return FieldHandle(scinew GenericField<Mesh, Basis, FData>());
+}
+
+
+template <class Mesh, class Basis, class FData>
+FieldHandle
+GenericField<Mesh, Basis, FData>::field_maker_mesh(MeshHandle mesh)
+{
+  mesh_handle_type mesh_handle = dynamic_cast<mesh_type *>(mesh.get_rep());
+  if (mesh_handle.get_rep()) return FieldHandle(scinew GenericField<Mesh, Basis, FData>(mesh_handle));
+  else return FieldHandle(0);
+}
+
+
+
+template <class Mesh, class Basis, class FData>
 PersistentTypeID 
 GenericField<Mesh, Basis, FData>::type_id(type_name(-1), "Field", maker);
+
+template <class Mesh, class Basis, class FData>
+FieldTypeID
+GenericField<Mesh, Basis, FData>::field_id(type_name(-1),field_maker,field_maker_mesh);
 
 
 template <class Mesh, class Basis, class FData>
@@ -412,10 +552,15 @@ GenericField<Mesh, Basis, FData>::GenericField() :
   mesh_(mesh_handle_type(scinew mesh_type())),
   fdata_(0) //workaround for default variable bug on sgi.
 {
-  if (basis_order() != -1 && mesh_.get_rep())
+  basis_order_ = basis_order();
+  mesh_dimensionality_ = -1;
+  if (mesh_.get_rep()) mesh_dimensionality_ = mesh_->dimensionality();
+  
+  if (basis_order_ != -1 && mesh_.get_rep())
   {
     resize_fdata();
   }
+  
 }
 
 template <class Mesh, class Basis, class FData>
@@ -424,7 +569,11 @@ GenericField<Mesh, Basis, FData>::GenericField(mesh_handle_type mesh) :
   mesh_(mesh),
   fdata_(0) //workaround for default variable bug on sgi.
 {
-  if (basis_order() != -1 && mesh_.get_rep())
+  basis_order_ = basis_order();
+  mesh_dimensionality_ = -1;
+  if (mesh_.get_rep()) mesh_dimensionality_ = mesh_->dimensionality();
+ 
+  if (basis_order_ != -1 && mesh_.get_rep())
   { 
     resize_fdata();
   }
@@ -471,7 +620,7 @@ template <class Mesh, class Basis, class FData>
 unsigned int
 GenericField<Mesh, Basis, FData>::data_size() const
 {
-  switch (basis_order())
+  switch (basis_order_)
   {
   case -1:
     return 0;
@@ -502,9 +651,9 @@ bool
 GenericField<Mesh, Basis, FData>::value(value_type &val, 
 				 typename mesh_type::Node::index_type i) const
 {
-  ASSERTL3(basis_order() >= 1 || mesh_->dimensionality() == 0);
+  ASSERTL3(basis_order_ >= 1 || mesh_dimensionality_ == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  if (!(basis_order() == 1 || mesh_->dimensionality() == 0)) return false;
+  if (!(basis_order_ == 1 || mesh_dimensionality_ == 0)) return false;
   val = fdata_[i]; return true;
 }
 
@@ -513,9 +662,9 @@ bool
 GenericField<Mesh, Basis, FData>::value(value_type &val, 
 				 typename mesh_type::Edge::index_type i) const
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 1);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 1);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  if (basis_order() != 0) return false;
+  if (basis_order_ != 0) return false;
   val = fdata_[i]; return true;
 }
 
@@ -524,9 +673,9 @@ bool
 GenericField<Mesh, Basis, FData>::value(value_type &val, 
 				 typename mesh_type::Face::index_type i) const
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 2);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 2);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  if (basis_order() != 0) return false;
+  if (basis_order_ != 0) return false;
   val = fdata_[i]; return true;
 }
 
@@ -535,9 +684,9 @@ bool
 GenericField<Mesh, Basis, FData>::value(value_type &val, 
 				 typename mesh_type::Cell::index_type i) const
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 3);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 3);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
-  if (basis_order() != 0) return false;
+  if (basis_order_ != 0) return false;
   val = fdata_[i]; return true;
 } 
 
@@ -547,7 +696,7 @@ void
 GenericField<Mesh, Basis, FData>::set_value(const value_type &val, 
 				      typename mesh_type::Node::index_type i)
 {
-  ASSERTL3(basis_order() >= 1 || mesh_->dimensionality() == 0);
+  ASSERTL3(basis_order_ >= 1 || mesh_dimensionality_ == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
@@ -556,7 +705,7 @@ void
 GenericField<Mesh, Basis, FData>::set_value(const value_type &val, 
 			       typename mesh_type::Edge::index_type i)
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 1);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 1);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
@@ -565,7 +714,7 @@ void
 GenericField<Mesh, Basis, FData>::set_value(const value_type &val, 
 				      typename mesh_type::Face::index_type i)
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 2);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 2);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
@@ -574,7 +723,7 @@ void
 GenericField<Mesh, Basis, FData>::set_value(const value_type &val, 
 				      typename mesh_type::Cell::index_type i)
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 3);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 3);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = val;
 }
@@ -584,7 +733,7 @@ const typename GenericField<Mesh, Basis, FData>::value_type &
 GenericField<Mesh, Basis, FData>::
 value(typename mesh_type::Node::index_type i) const
 {
-  ASSERTL3(basis_order() >= 1 || mesh_->dimensionality() == 0);
+  ASSERTL3(basis_order_ >= 1 || mesh_dimensionality_ == 0);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
@@ -594,7 +743,7 @@ const typename GenericField<Mesh, Basis, FData>::value_type &
 GenericField<Mesh, Basis, FData>::
 value(typename mesh_type::Edge::index_type i) const
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 1);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 1);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
@@ -603,7 +752,7 @@ const typename GenericField<Mesh, Basis, FData>::value_type &
 GenericField<Mesh, Basis, FData>::
 value(typename mesh_type::Face::index_type i) const 
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 2);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 2);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
@@ -612,7 +761,7 @@ const typename GenericField<Mesh, Basis, FData>::value_type &
 GenericField<Mesh, Basis, FData>::
 value(typename mesh_type::Cell::index_type i) const 
 {
-  ASSERTL3(basis_order() == 0 && mesh_->dimensionality() == 3);
+  ASSERTL3(basis_order_ == 0 && mesh_dimensionality_ == 3);
   CHECKARRAYBOUNDS(i, 0, fdata_.size());
   return fdata_[i];
 }
@@ -742,7 +891,7 @@ gradient(vector<value_type>& grad, const vector<double>& coords,
   // derivative is constant anywhere in the linear cell
   
   // get the mesh Jacobian for the element.
-  vector<Point> Jv;
+  StackVector<Point,3> Jv;
   mesh_->derivate(coords, ci, Jv);
 
   int dim = basis_.domain_dimension();
@@ -801,12 +950,27 @@ gradient(vector<value_type>& grad, const vector<double>& coords,
 
   InverseMatrix3x3(J,Ji);
   
-  vector<value_type> g;
+  StackVector<value_type,3> g;
   basis_.derivate(coords, fcd, g);  
 
-  grad[0] = static_cast<value_type>(g[0]*Ji[0])+static_cast<value_type>(g[1]*Ji[1])+static_cast<value_type>(g[2]*Ji[2]);
-  grad[1] = static_cast<value_type>(g[0]*Ji[3])+static_cast<value_type>(g[1]*Ji[4])+static_cast<value_type>(g[2]*Ji[5]);
-  grad[2] = static_cast<value_type>(g[0]*Ji[6])+static_cast<value_type>(g[1]*Ji[7])+static_cast<value_type>(g[2]*Ji[8]);
+  if (g.size() == 3)
+  {
+    grad[0] = static_cast<value_type>(g[0]*Ji[0])+static_cast<value_type>(g[1]*Ji[1])+static_cast<value_type>(g[2]*Ji[2]);
+    grad[1] = static_cast<value_type>(g[0]*Ji[3])+static_cast<value_type>(g[1]*Ji[4])+static_cast<value_type>(g[2]*Ji[5]);
+    grad[2] = static_cast<value_type>(g[0]*Ji[6])+static_cast<value_type>(g[1]*Ji[7])+static_cast<value_type>(g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = static_cast<value_type>(g[0]*Ji[0])+static_cast<value_type>(g[1]*Ji[1]);
+    grad[1] = static_cast<value_type>(g[0]*Ji[3])+static_cast<value_type>(g[1]*Ji[4]);
+    grad[2] = static_cast<value_type>(g[0]*Ji[6])+static_cast<value_type>(g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = static_cast<value_type>(g[0]*Ji[0]);
+    grad[1] = static_cast<value_type>(g[0]*Ji[3]);
+    grad[2] = static_cast<value_type>(g[0]*Ji[6]);  
+  }
 }
 
 
@@ -823,7 +987,7 @@ cell_gradient(typename mesh_type::Elem::index_type ci,
 	      DenseMatrix *&grad) const
 {
   // supported for linear, should be expanded to support higher order.
-  ASSERT(this->basis_order() == 1);
+  ASSERT(basis_order_ == 1);
 
   ElemData<field_type> fcd(*this, ci);
   // derivative is constant anywhere in the linear cell
@@ -914,8 +1078,8 @@ template <class Mesh, class Basis, class FData>
 const TypeDescription *
 GenericField<Mesh, Basis, FData>::order_type_description() const
 {
-  const int order = basis_order();
-  const int dim = mesh_->dimensionality();
+  const int order = basis_order_;
+  const int dim = mesh_dimensionality_;
   if (order == 0 && dim == 3) 
   {
     return Mesh::cell_type_description();
@@ -934,6 +1098,1527 @@ GenericField<Mesh, Basis, FData>::order_type_description() const
   }
 }
 
+
+template <class Mesh, class Basis, class FData>
+bool
+GenericField<Mesh, Basis, FData>::has_virtual_interface()
+{
+  return (mesh_->has_virtual_interface());
+}
+
+
+template <class T> inline T CastFData(const char &val);
+template <class T> inline T CastFData(const unsigned char &val);
+template <class T> inline T CastFData(const short &val);
+template <class T> inline T CastFData(const unsigned short &val);
+template <class T> inline T CastFData(const int &val);
+template <class T> inline T CastFData(const unsigned int &val);
+template <class T> inline T CastFData(const long &val);
+template <class T> inline T CastFData(const unsigned long &val);
+template <class T> inline T CastFData(const long long &val);
+template <class T> inline T CastFData(const unsigned long long &val);
+template <class T> inline T CastFData(const float &val);
+template <class T> inline T CastFData(const double &val);
+template <class T> inline T CastFData(const Vector &val);
+template <class T> inline T CastFData(const Tensor &val);
+
+template <class T> inline T CastFData(const char &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const char &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const char &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const unsigned char &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const unsigned char &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const unsigned char &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const short &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const short &val) {return (Vector(0,0,0));}
+template <> inline Tensor CastFData<Tensor>(const short &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const unsigned short &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const unsigned short &val) { return (Vector(0,0,0));}
+template <> inline Tensor CastFData<Tensor>(const unsigned short &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const int &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const int &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const int &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const unsigned int &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const unsigned int &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const unsigned int &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const long &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const long &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const long &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const unsigned long &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const unsigned long &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const unsigned long &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const long long &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const long long &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const long long &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const unsigned long long &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const unsigned long long &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const unsigned long long &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const float &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const float &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const float &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const double &val) { return (static_cast<T>(val)); }
+template <> inline Vector CastFData<Vector>(const double &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const double &val) { return (Tensor(static_cast<double>(val))); }
+
+template <class T> inline T CastFData(const Vector &val) { return (0); }
+template <> inline Vector CastFData<Vector>(const Vector &val) { return (val); }
+template <> inline Tensor CastFData<Tensor>(const Vector &val) { return (Tensor(0.0)); }
+
+template <class T> inline T CastFData(const Tensor &val) { return (0); }
+template <> inline Vector CastFData<Vector>(const Tensor &val) { return (Vector(0,0,0)); }
+template <> inline Tensor CastFData<Tensor>(const Tensor &val) { return (val); }
+
+
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(char &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<char>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(unsigned char &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<unsigned char>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(short &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<short>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(unsigned short &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<unsigned short>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(int &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<int>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(unsigned int &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<unsigned int>(fdata_[i]);
+}
+
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(long &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<int>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(unsigned long &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<unsigned int>(fdata_[i]);
+}
+
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(long long &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<long long>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(unsigned long long &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<unsigned long long>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(float &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<float>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(double &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<double>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(Vector &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<Vector>(fdata_[i]);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::get_value(Tensor &val, SCIRun::Mesh::index_type i) const
+{
+//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  val = CastFData<Tensor>(fdata_[i]);
+}
+
+
+
+
+
+
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const char &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const unsigned char &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const short &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const unsigned short &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const int &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const unsigned int &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const long &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const unsigned long &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const long long &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const unsigned long long &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const float &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const double &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const Vector &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::set_value(const Tensor &val, SCIRun::Mesh::index_type i)
+{
+  CHECKARRAYBOUNDS(i, 0, fdata_.size());
+  fdata_[i] = CastFData<value_type>(val);
+}
+
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(char &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<char>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(unsigned char &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<unsigned char>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(short &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<short>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(unsigned short &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<unsigned short>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(int &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<int>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(unsigned int &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<unsigned int>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<long>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(unsigned long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<unsigned long>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(long long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<long long>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(unsigned long long &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<unsigned long long>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(float &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<float>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(double &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<double>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(Vector &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<Vector>(basis_.interpolate(coords, fcd));
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::interpolate(Tensor &val, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx);
+  ElemData<field_type> fcd(*this, ei);
+  val = CastFData<Tensor>(basis_.interpolate(coords, fcd));
+}
+
+
+// NEED TO SIMPLIFY THIS FUNCTION, BUT IT WORKS FOR NOW
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<char> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<char>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<char>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<char>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<char>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<char>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<char>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<char>(g[0]*Ji[0]);
+    grad[1] = CastFData<char>(g[0]*Ji[3]);
+    grad[2] = CastFData<char>(g[0]*Ji[6]);  
+  }
+}
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<unsigned char> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<unsigned char>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<unsigned char>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<unsigned char>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<unsigned char>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<unsigned char>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<unsigned char>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<unsigned char>(g[0]*Ji[0]);
+    grad[1] = CastFData<unsigned char>(g[0]*Ji[3]);
+    grad[2] = CastFData<unsigned char>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<short> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<short>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<short>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<short>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<short>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<short>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<short>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<short>(g[0]*Ji[0]);
+    grad[1] = CastFData<short>(g[0]*Ji[3]);
+    grad[2] = CastFData<short>(g[0]*Ji[6]);  
+  }
+}
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<unsigned short> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<unsigned short>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<unsigned short>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<unsigned short>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<unsigned short>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<unsigned short>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<unsigned short>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<unsigned short>(g[0]*Ji[0]);
+    grad[1] = CastFData<unsigned short>(g[0]*Ji[3]);
+    grad[2] = CastFData<unsigned short>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<int> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<int>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<int>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<int>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<int>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<int>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<int>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<int>(g[0]*Ji[0]);
+    grad[1] = CastFData<int>(g[0]*Ji[3]);
+    grad[2] = CastFData<int>(g[0]*Ji[6]);  
+  }
+}
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<unsigned int> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<unsigned int>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<unsigned int>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<unsigned int>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<unsigned int>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<unsigned int>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<unsigned int>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<unsigned int>(g[0]*Ji[0]);
+    grad[1] = CastFData<unsigned int>(g[0]*Ji[3]);
+    grad[2] = CastFData<unsigned int>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<long> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<long>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<long>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<long>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<long>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<long>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<long>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<long>(g[0]*Ji[0]);
+    grad[1] = CastFData<long>(g[0]*Ji[3]);
+    grad[2] = CastFData<long>(g[0]*Ji[6]);  
+  }
+}
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<unsigned long> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<unsigned long>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<unsigned long>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<unsigned long>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<unsigned long>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<unsigned long>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<unsigned long>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<unsigned long>(g[0]*Ji[0]);
+    grad[1] = CastFData<unsigned long>(g[0]*Ji[3]);
+    grad[2] = CastFData<unsigned long>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<long long> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<long long>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<long long>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<long long>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<long long>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<long long>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<long long>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<long long>(g[0]*Ji[0]);
+    grad[1] = CastFData<long long>(g[0]*Ji[3]);
+    grad[2] = CastFData<long long>(g[0]*Ji[6]);  
+  }
+}
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<unsigned long long> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<unsigned long long>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<unsigned long long>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<unsigned long long>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<unsigned long long>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<unsigned long long>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<unsigned long long>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<unsigned long long>(g[0]*Ji[0]);
+    grad[1] = CastFData<unsigned long long>(g[0]*Ji[3]);
+    grad[2] = CastFData<unsigned long long>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<float> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<float>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<float>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<float>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<float>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<float>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<float>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<float>(g[0]*Ji[0]);
+    grad[1] = CastFData<float>(g[0]*Ji[3]);
+    grad[2] = CastFData<float>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<double> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<double>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<double>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<double>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<double>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<double>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<double>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<double>(g[0]*Ji[0]);
+    grad[1] = CastFData<double>(g[0]*Ji[3]);
+    grad[2] = CastFData<double>(g[0]*Ji[6]);  
+  }
+}
+
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<Vector> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<Vector>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<Vector>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<Vector>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<Vector>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<Vector>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<Vector>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<Vector>(g[0]*Ji[0]);
+    grad[1] = CastFData<Vector>(g[0]*Ji[3]);
+    grad[2] = CastFData<Vector>(g[0]*Ji[6]);  
+  }
+}
+
+template <class Mesh, class Basis, class FData>
+void 
+GenericField<Mesh, Basis, FData>::gradient(vector<Tensor> &grad, const vector<double> &coords, SCIRun::Mesh::index_type elem_idx) const
+{ 
+  grad.resize(3);
+
+  typename mesh_type::Elem::index_type ei;
+  mesh_->to_index(ei,elem_idx); 
+  ElemData<field_type> fcd(*this, ei);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  StackVector<Point,3> Jv;
+  mesh_->derivate(coords, ei, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = Jv[2].x(); J[7] = Jv[2].y(); J[8] = Jv[2].z();        
+  }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = Jv[1].x(); J[4] = Jv[1].y(); J[5] = Jv[1].z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();    
+  }
+  else
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x(); J[1] = Jv[0].y(); J[2] = Jv[0].z();
+    J[3] = J1.x(); J[4] = J1.y(); J[5] = J1.z();
+    J[6] = J2.x(); J[7] = J2.y(); J[8] = J2.z();          
+  }
+
+  InverseMatrix3x3(J,Ji);
+  StackVector<value_type,3> g;
+  basis_.derivate(coords, fcd, g);  
+  
+  if (g.size() == 3)
+  {
+    grad[0] = CastFData<Tensor>(g[0]*Ji[0]+g[1]*Ji[1]+g[2]*Ji[2]);
+    grad[1] = CastFData<Tensor>(g[0]*Ji[3]+g[1]*Ji[4]+g[2]*Ji[5]);
+    grad[2] = CastFData<Tensor>(g[0]*Ji[6]+g[1]*Ji[7]+g[2]*Ji[8]);
+  }
+  else if (g.size() == 2)
+  {
+    grad[0] = CastFData<Tensor>(g[0]*Ji[0]+g[1]*Ji[1]);
+    grad[1] = CastFData<Tensor>(g[0]*Ji[3]+g[1]*Ji[4]);
+    grad[2] = CastFData<Tensor>(g[0]*Ji[6]+g[1]*Ji[7]);
+  }
+  else if (g.size() == 1)
+  {
+    grad[0] = CastFData<Tensor>(g[0]*Ji[0]);
+    grad[1] = CastFData<Tensor>(g[0]*Ji[3]);
+    grad[2] = CastFData<Tensor>(g[0]*Ji[6]);  
+  }
+}
+
+
 } // end namespace SCIRun
+
+
+
+
+
 
 #endif // Datatypes_GenericField_h

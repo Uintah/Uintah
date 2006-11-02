@@ -28,7 +28,6 @@
 
 
 /*
- *  MeshTet.h: Templated Meshs defined on a 3D Regular Grid
  *
  *  Written by:
  *   Marty Cole
@@ -57,7 +56,8 @@ using std::vector;
 
 //! Base type for index types.
 template <class T>
-struct FieldIndexBase {
+class FieldIndexBase {
+public:
   typedef T value_type;
   
   FieldIndexBase(T i) :
@@ -65,7 +65,7 @@ struct FieldIndexBase {
 
   //! Required interface for an Index.
   operator T const &() const { return index_; }
-
+  
   std::ostream& str_render(std::ostream& os) const {
     os << index_;
     return os;
@@ -73,7 +73,6 @@ struct FieldIndexBase {
   
   T index_;
 };
-
 
 
 //! Distinct type for node index.

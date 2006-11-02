@@ -83,8 +83,8 @@ public:
   }
 
   //! get value at parametric coordinate 
-  template <class ElemData>
-  T interpolate(const std::vector<double> &, const ElemData &cd) const
+  template <class ElemData, class VECTOR>
+  T interpolate(const VECTOR &, const ElemData &cd) const
   {
     return cd.elem();
   }
@@ -99,14 +99,14 @@ public:
   }
 
   //! get first derivative at parametric coordinate
-  template <class ElemData>
-  void derivate(const std::vector<double> &coords, const ElemData &, 
-		std::vector<T> &derivs) const
+  template <class ElemData, class VECTOR1, class VECTOR2>
+  void derivate(const VECTOR1 &coords, const ElemData &, 
+		VECTOR2 &derivs) const
   {
-    std::vector<double>::size_type s=coords.size();
+    typename VECTOR1::size_type s=coords.size();
     derivs.resize(s);
-    for(std::vector<double>::size_type si=0; si<s; si++)
-      derivs[si] = T(0);
+    for(typename VECTOR1::size_type si=0; si<s; si++)
+      derivs[si] = static_cast<typename VECTOR2::value_type>(0);
   }
 
   //! get derivative weight factors at parametric coordinate 

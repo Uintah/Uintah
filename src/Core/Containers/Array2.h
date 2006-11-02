@@ -85,6 +85,7 @@ template<class T> void Pio(Piostream& stream, Array2<T>*& data);
 template<class T>
 class Array2 {
   T** objs;
+  T* obj;
   int dm1;
   int dm2;
   void allocate();
@@ -119,6 +120,20 @@ public:
     ASSERTL3(d2>=0 && d2<dm2);
     return objs[d1][d2];
   }
+  
+  //////////
+  // Access the underlying data array as a 1D memory block 
+  // Note: for performance reasons we do not do an assert here  
+
+  inline T& operator()(unsigned int d) const
+  {
+    return obj[d];
+  }
+
+  inline T& operator[](unsigned int d) const
+  {
+    return obj[d];
+  }
     
   //////////
   //Array2 Copy Method
@@ -141,6 +156,7 @@ public:
   void initialize(const T&);
 
   inline T** get_dataptr() {return objs;}
+  inline T*  get_datablock_ptr() {return obj;}
 
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
@@ -167,9 +183,11 @@ void Array2<T>::allocate()
 {
   if(dm1 == 0 || dm2 == 0){
     objs=0;
+    obj=0;
   } else {
     objs=new T*[dm1];
     T* p=new T[dm1*dm2];
+    obj = p;
     for(int i=0;i<dm1;i++){
       objs[i]=p;
       p+=dm2;

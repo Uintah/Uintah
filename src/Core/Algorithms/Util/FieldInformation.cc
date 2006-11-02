@@ -35,6 +35,8 @@ FieldInformation::FieldInformation(FieldHandle handle)
   std::string temp;
   // Get the name of the GenericField class
   // This should give GenericField
+  
+  if (handle.get_rep() == 0) return;
   field_type = handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name();
   field_type_h = handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_h_file_path(); 
   // Analyze the mesh type
@@ -525,6 +527,36 @@ FieldInformation::get_field_name()
 }
 
 std::string
+FieldInformation::get_field_type_id()
+{
+  // Deal with some SCIRun design flaw
+  std::string meshptr = "";
+  if ((container_type.find("2d") != std::string::npos)||(container_type.find("3d") != std::string::npos)) 
+    meshptr = "," + mesh_type + "<" + mesh_basis_type + "<" + point_type + ">" + ">";
+    
+  std::string field_template = field_type + "<" + mesh_type + "<" + 
+    mesh_basis_type + "<" + point_type + ">" + ">" + "," +
+    basis_type + "<" + data_type + ">" + "," + container_type + "<" +
+    data_type + meshptr + ">" + ">";
+  
+  for (std::string::size_type r=0; r< field_template.size(); r++) if (field_template[r] == ' ') field_template[r] = '_';  
+        
+  return(field_template);
+}
+
+
+std::string
+FieldInformation::get_mesh_type_id()
+{
+  std::string mesh_template =  mesh_type + "<" + mesh_basis_type + "<" + point_type + ">" + ">";
+  
+  for (std::string::size_type r=0; r< mesh_template.size(); r++) if (mesh_template[r] == ' ') mesh_template[r] = '_';  
+        
+  return(mesh_template);
+}
+
+
+std::string
 FieldInformation::get_field_filename()
 {
   return(DynamicAlgoBase::to_filename(get_field_name()));
@@ -644,7 +676,7 @@ FieldInformation::is_vector()
 bool
 FieldInformation::is_scalar()
 {
-  return((!is_tensor())&&(!is_vector()));
+  return((!is_tensor())&&(!is_vector())&&(data_type!=""));
 }
 
 bool
@@ -682,6 +714,13 @@ FieldInformation::is_dvt()
 {
   return(is_double()||is_vector()||is_tensor());
 }
+
+bool
+FieldInformation::is_svt()
+{
+  return(is_scalar()||is_vector()||is_tensor());
+}
+
 
 bool
 FieldInformation::is_structuredmesh()
@@ -985,6 +1024,92 @@ FieldInformation::operator==(const FieldInformation& fi) const
        (container_type == fi.container_type) ) return (true);
   return (false);
 }
+
+bool
+FieldInformation::has_virtual_interface()
+{
+  std::string type = get_field_type_id();
+  std::string meshtype = get_mesh_type_id();
+  
+  std::cout << "type="<<type<<"\n";
+  std::cout << "meshtype="<<meshtype<<"\n";
+  
+  MeshHandle meshtesthandle = Create_Mesh(meshtype);
+  if (meshtesthandle.get_rep() == 0) { std::cout << "Could not obtain mesh handle"; return (false); }
+  
+  FieldHandle testhandle = Create_Field(type,meshtesthandle);
+  if (testhandle.get_rep() == 0) { std::cout << "Could not obtain field handle"; return (false); }
+  if (testhandle->has_virtual_interface() == false) return (false);
+  return (true);
+}
+
+FieldHandle
+Create_Field(FieldInformation &info)
+{
+  std::string type = info.get_field_type_id();
+  std::string meshtype = info.get_mesh_type_id();
+  MeshHandle meshhandle = Create_Mesh(meshtype);
+  
+  if (meshhandle.get_rep() == 0) return (0);
+  return (Create_Field(type,meshhandle));              
+}
+
+FieldHandle
+Create_Field(FieldInformation &info, MeshHandle mesh)
+{
+  std::string type = info.get_field_type_id();
+  return (Create_Field(type,mesh));              
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type));
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info,unsigned int x)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type,x));
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info,unsigned int x,const Point& min,const Point& max)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type,x,min,max));
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type,x,y));
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y,const Point& min,const Point& max)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type,x,y,min,max));
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y,unsigned int z)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type,x,y,z));
+}
+
+MeshHandle 
+Create_Mesh(FieldInformation &info,unsigned int x,unsigned int y,unsigned int z,const Point& min,const Point& max)
+{
+  std::string type = info.get_mesh_type_id();
+  return (Create_Mesh(type,x,y,z,min,max));
+}
+
 
 } // end namespace
 
