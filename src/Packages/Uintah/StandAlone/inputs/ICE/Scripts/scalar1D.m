@@ -20,16 +20,24 @@ uda = 'impAdvectAMR.uda'
 desc = '1D uniform advection of a passive scalar, refinement ratio 2';
 desc2 = 'Linear CFI Interpolation, SecondOrder advection, Refluxing off';
 
-legendText = {'L-0','L-1', 'L-2'}
+legendText = {'L-0','L-1', 'L-2'};
 pDir = 1;                    
-symbol = {'+-','*-r','xg'}
+symbol = {'+-','*-r','xg'};
 mat      = 0;
+
+exactSolution = 'linear' %'sinusoidal'; %linear
+velocity    = 5;
+exactSolMin = 0.05;
+exactSolMax = 5.25;
+freq  = 1;
+slope = 1;
 
 numPlotCols = 1;
 numPlotRows = 1;
 
-plotScalarF = true;
-plotScalarFaceflux =false;
+plotScalarF        = true;
+plotScalarFaceflux = false;
+plotSumScalarF     = true;
 
 
 % lineExtract start and stop
@@ -45,9 +53,11 @@ nDumps = length(physicalTime) - 1;
 set(0,'DefaultFigurePosition',[0,0,900,600]);
 %_________________________________
 % Loop over all the timesteps
-for(ts = 1:nDumps )
-  ts = input('input timestep') 
-  time = sprintf('%d sec',physicalTime(ts));
+for(n = 1:nDumps )
+  %n = input('input timestep') 
+  ts = n-1;
+  
+  time = sprintf('%d sec',physicalTime(n));
   
   %find max number of levels
   c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i |grep "Number of levels" | grep -o \\[0-9\\] >& tmp',uda, ts,ts);
@@ -60,6 +70,23 @@ for(ts = 1:nDumps )
     c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i >& tmp ; grep "Level: index %i" tmp',uda, ts,ts, L-1);
     [levelExists{L}, result0]=unix(c0);
   end 
+  
+  %_________________________________
+  % Exact Solution
+  dist   = exactSolMax - exactSolMin;
+  offset = physicalTime(n) * velocity;
+  xmin   = exactSolMin + offset;
+  xmax   = exactSolMax + offset;
+  dx     = (xmax - xmin)/100;
+  x = xmin:dx:xmax;
+ 
+  if( strcmp(exactSolution,'linear'))
+    f = slope .* (x - xmin )/dist;
+  end
+  if(strcmp(exactSolution,'sinusoidal'))
+    f = sin( 2.0 * freq * pi .* (x - xmin )/dist);
+  end
+  
   
   %______________________________
   for(L = 1:maxLevel) 
@@ -78,12 +105,14 @@ for(ts = 1:nDumps )
         c6 = sprintf('lineextract -v scalar-f -l %i -cellCoords -timestep %i %s -o scalar-f.dat -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s6, r6]=unix(c6);
         scalar{1,L} = importdata('scalar-f.dat');
-        x = scalar{1,L}(:,pDir);
+        xx = scalar{1,L}(:,pDir);
         
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x,scalar{1,L}(:,4),symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,scalar{1,L}(:,4),symbol{L})
+        hold on;
+        plot(x,f);
         t = sprintf('%s Time: %s\n%s',desc, time,desc2)
         title(t);
-        axis([2.75 5.75 0.5 1])
+        %axis([2.75 5.75 0.5 1])
         
         ylabel('scalar');
         grid on;
@@ -100,7 +129,7 @@ for(ts = 1:nDumps )
         c6 = sprintf('lineextract -v scalar-f_X_FC_flux -l %i -cellCoords -timestep %i %s -o scalar-f_X_FC_flux.dat  -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s6, r6]=unix(c6);
         scalar{1,L} = importdata('scalar-f_X_FC_flux.dat');
-        x = scalar{1,L}(:,pDir);
+        xx = scalar{1,L}(:,pDir);
         
         if( L == maxLevel)
             tmp = scalar{1,L}(:,4) .* 2;
@@ -108,7 +137,7 @@ for(ts = 1:nDumps )
             tmp = scalar{1,L}(:,4);
         end
         
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x,tmp,symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,tmp,symbol{L})
         t = sprintf('%s Time: %s \n',desc, time,desc2)
        
         axis([0 10 0. 10])
@@ -126,21 +155,23 @@ for(ts = 1:nDumps )
 
     end  % if level exists
   end  % level loop
-  M(ts) = getframe(gcf);
+  M(n) = getframe(gcf);
 end  % timestep loop
 
 
 %____________________________
 %   sum_scalar_f
-figure(2)
-c = sprintf('%s/sum_scalar_f.dat',uda);
-sumscalar = importdata(c)
-t = sumscalar(:,1);
-plot(t,sumscalar(:,2))
-ylabel('sum_scalar_f');
-xlabel('time');
-t = sprintf('%s\n%s',desc,desc2)
-title(t);
+if(plotSumScalarF)
+  figure(2)
+  c = sprintf('%s/sum_scalar_f.dat',uda);
+  sumscalar = importdata(c)
+  t = sumscalar(:,1);
+  plot(t,sumscalar(:,2))
+  ylabel('sum_scalar_f');
+  xlabel('time');
+  t = sprintf('%s\n%s',desc,desc2)
+  title(t);
+end
 
 %__________________________________
 % show the move and make an avi file
