@@ -100,7 +100,7 @@ template class StructCurveMesh<CrvLinearLgn<Point> >;
 //NoData
 template class GenericField<CMesh, NDBasis, vector<double> >; 
 
-/*
+
 //Constant
 template class GenericField<CMesh, CFDTensorBasis, vector<Tensor> >;       
 template class GenericField<CMesh, CFDVectorBasis, vector<Vector> >;       
@@ -442,7 +442,7 @@ backwards_compat_SHVFul("StructHexVolField<unsigned_long>", "Field",
 			FData3d<unsigned long, SHMesh> >::maker,
 			GenericField<SHMesh, CFDulongBasis, 
 			FData3d<unsigned long, SHMesh> >::maker);
-*/
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
 #endif

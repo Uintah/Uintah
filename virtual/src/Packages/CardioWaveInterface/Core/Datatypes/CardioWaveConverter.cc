@@ -46,7 +46,7 @@
 using namespace std;
 using namespace SCIRun;
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 CardioWaveConverter::CardioWaveConverter()
 {

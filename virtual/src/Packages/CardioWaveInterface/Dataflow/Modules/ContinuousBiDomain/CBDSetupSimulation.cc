@@ -49,7 +49,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -94,7 +94,7 @@ private:
 
 DECLARE_MAKER(CBDSetupSimulation)
 CBDSetupSimulation::CBDSetupSimulation(GuiContext* ctx)
-  : Module("CBDSetupSimulation", ctx, Source, "ContinuousBiDomain", "CardioWave"),
+  : Module("CBDSetupSimulation", ctx, Source, "ContinuousBiDomain", "CardioWaveInterface"),
     guisolvernames_(get_ctx()->subVar("solver-names")),
     guisolvername_(get_ctx()->subVar("solver-name")),
     guisolverparam_(get_ctx()->subVar("solver-param")),

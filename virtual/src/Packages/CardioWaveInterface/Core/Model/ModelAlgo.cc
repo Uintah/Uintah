@@ -43,7 +43,7 @@
 #include <teem/air.h>
 #endif
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 using namespace SCIRunAlgo;

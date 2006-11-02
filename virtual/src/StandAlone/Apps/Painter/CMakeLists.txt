@@ -29,7 +29,7 @@
 # This is the root ITK CMakeLists file.  
 CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
 
-PROJECT(LeXoV)
+PROJECT(Seg3D)
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.

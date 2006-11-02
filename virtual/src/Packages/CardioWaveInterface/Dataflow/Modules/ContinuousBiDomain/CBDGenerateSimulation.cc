@@ -12,7 +12,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h> 
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 
@@ -32,7 +32,7 @@ private:
 
 DECLARE_MAKER(CBDGenerateSimulation)
 CBDGenerateSimulation::CBDGenerateSimulation(GuiContext* ctx)
-  : Module("CBDGenerateSimulation", ctx, Source, "ContinuousBiDomain", "CardioWave"),
+  : Module("CBDGenerateSimulation", ctx, Source, "ContinuousBiDomain", "CardioWaveInterface"),
     gui_filename_(ctx->subVar("filename")),
     gui_enable_debug_(ctx->subVar("enabledebug")),
     gui_build_visualization_bundle_(ctx->subVar("buildvisbundle"))

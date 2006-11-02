@@ -45,7 +45,7 @@
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
 
-namespace CardioWave {
+namespace CardioWaveInterface {
 
 using namespace SCIRun;
 using namespace ModelCreation;

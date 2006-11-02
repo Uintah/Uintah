@@ -1,4 +1,4 @@
-itcl_class CardioWave_DiscreteMultiDomain_DMDAddDomainElectrodes {
+itcl_class CardioWaveInterface_DiscreteMultiDomain_DMDAddDomainElectrodes {
     inherit Module
     constructor {config} {
         set name DMDAddDomainElectrodes
