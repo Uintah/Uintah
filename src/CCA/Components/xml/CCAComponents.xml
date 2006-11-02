@@ -88,4 +88,40 @@
   <library name="libCCA_Components_ZListWriter.so">
     <component name="SCIRun.ZListWriter" />
   </library>
+  <library name="libCCA_Components_TestEchoEvent.so">
+    <component name="SCIRun.TestEchoEvent" />
+  </library>
+  <library name="libCCA_Components_samplepe.so">
+    <component name="SCIRun.samplepe" />
+  </library>
+  <library name="libCCA_Components_TestCreateTopic.so">
+    <component name="SCIRun.TestCreateTopic" />
+  </library>
+  <library name="libCCA_Components_TestReleaseTopic.so">
+    <component name="SCIRun.TestReleaseTopic" />
+  </library>
+  <library name="libCCA_Components_TestGetTopic.so">
+    <component name="SCIRun.TestGetTopic" />
+  </library>
+  <library name="libCCA_Components_TestRegisterEventListener.so">
+    <component name="SCIRun.TestRegisterEventListener" />
+  </library>
+  <library name="libCCA_Components_TestUnregisterEventListener.so">
+    <component name="SCIRun.TestUnregisterEventListener" />
+  </library>
+  <library name="libCCA_Components_TestSendEvent.so">
+    <component name="SCIRun.TestSendEvent" />
+  </library>
+  <library name="libCCA_Components_TestProcessEvents.so">
+    <component name="SCIRun.TestProcessEvents" />
+  </library>
+  <library name="libCCA_Components_TestWildcardTopic.so">
+    <component name="SCIRun.TestWildcardTopic" />
+  </library>
+  <library name="libCCA_Components_TestCreateWildcardTopic.so">
+    <component name="SCIRun.TestCreateWildcardTopic" />
+  </library>
+  <library name="libCCA_Components_samploecomponent.so">
+    <component name="SCIRun.samploecomponent" />
+  </library>
 </metacomponentmodel>
