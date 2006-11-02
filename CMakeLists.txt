@@ -30,7 +30,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
 
 # DV Change to SCIRun Core or something?
-PROJECT(CIBC)
+PROJECT(CIBC_Core)
 
 #-----------------------------------------------------------------------------
 # SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
