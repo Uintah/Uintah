@@ -16,11 +16,15 @@
       </signal>
               
       
-      <object class="Frame">
+      <object class="ShadowedBox">
         <var name="invert">1</var>
         <var name="width">2</var>
-        <var name="height">2</var>            
-        <object class="MenuList::child"/>
+        <var name="height">2</var>
+        <var name="ShadowedBox::shadow_N_size" propagate="yes">0</var>
+        <var name="ShadowedBox::shadow_W_size" propagate="yes">1</var>
+        <definition class="ShadowedBox::child">
+          <object class="MenuList::child"/>
+        </definition>
       </object>
     </object>
   </object>

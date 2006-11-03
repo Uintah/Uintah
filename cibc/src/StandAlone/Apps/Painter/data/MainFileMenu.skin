@@ -4,10 +4,50 @@
     <var name="height">111</var>
     <definition class="MenuList::child">
       <object class="Grid">
-        <var name="rows">3</var>
+        <var name="rows">5</var>
         <var name="cols">1</var>
+
+
+
         <object class="MenuButton">
           <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="Button::Text::text"
+               propagate="yes">Load Layer...</var>
+          
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$LayerLoadDialog::visible</var>
+            <var name="value">1</var>
+          </signal>                   
+          
+          <signal name="Button::clicked" 
+                  target="Animation::AnimateVariableAscending">
+            <var name="varnum">1</var>
+          </signal>                   
+        </object>
+        
+        <object class="MenuButton">
+          <var name="row">2</var>
+          <var name="col">1</var>
+          <var name="Button::Text::text" 
+               propagate="yes">Save Layer...</var>
+
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$LayerSaveDialog::visible</var>
+            <var name="value">1</var>
+          </signal>                   
+          <signal name="Button::clicked" 
+                  target="Animation::AnimateVariableAscending">
+            <var name="varnum">1</var>
+          </signal>
+
+        </object>
+
+
+        <object class="MenuButton">
+          <var name="row">3</var>
           <var name="col">1</var>
           <var name="Button::Text::text" propagate="yes">Load Session...</var>
           
@@ -24,7 +64,7 @@
         </object>
         
         <object class="MenuButton">
-          <var name="row">2</var>
+          <var name="row">4</var>
           <var name="col">1</var>
           <var name="Button::Text::text" propagate="yes">Save Session...</var>
 
@@ -41,7 +81,7 @@
         </object>
         
         <object class="MenuButton">
-          <var name="row">3</var>
+          <var name="row">5</var>
           <var name="col">1</var>
           <var name="Button::Text::text" propagate="yes">Quit</var>
           
