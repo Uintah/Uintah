@@ -180,32 +180,6 @@ namespace SCIRun {
 
 
 
-    class RedrawFlagTool : public BaseTool
-    {
-    public:
-      RedrawFlagTool() : BaseTool("RedrawFlagTool"), redraw_(false) {}
-      virtual ~RedrawFlagTool() {}
-      
-      virtual propagation_state_e process_event(event_handle_t event) {
-        if (!redraw_) {
-          WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-          if (window && window->get_window_state() && WindowEvent::REDRAW_E) {
-            redraw_ = true;
-          }
-        }
-        
-        return BaseTool::CONTINUE_E;
-      }
-
-      bool          get_redraw() { return redraw_; }
-      void          set_redraw(bool redraw) { redraw_ = redraw; }
-      
-    private:
-      bool          redraw_;
-      
-    };
-
-
     ThrottledRedraw::ThrottledRedraw(Drawable *drawable, double hertz) :
       ThrottledRunnable(hertz),
       drawable_(drawable),
