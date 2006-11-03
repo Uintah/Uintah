@@ -47,6 +47,7 @@ namespace SCIRun {
       virtual MinMax                    get_minmax(unsigned int);
       virtual int                       get_signal_id(const string &) const;
     private:
+      Mutex				lock_;
       CatcherFunction_t                 close;
       CatcherFunction_t                 mark_redraw;
       CatcherFunction_t                 redraw_drawable;
