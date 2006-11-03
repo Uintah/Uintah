@@ -1,0 +1,69 @@
+<definition class="ToolMenu">
+  <object class="MenuList">
+    <var name="width">150</var>
+    <var name="height">100</var>
+    <definition class="MenuList::child">
+      <object class="Grid">
+        <var name="rows">4</var>
+        <var name="cols">1</var>
+
+
+        <object class="MenuButton">
+          <var name="col">1</var>
+          <var name="row">1</var>
+          <var name="Button::Text::text" propagate="yes">Autoview All</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::Autoview"/>
+          
+        </object>
+
+        <object class="MenuButton">
+          <var name="col">1</var>
+          <var name="row">2</var>
+          <var name="Button::Text::text" propagate="yes">Paint Brush</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::StartBrushTool"/>
+          <signal name="Button::clicked" 
+                  target="VisibilityGroup::show_VisibleItem">
+            <var name="id">BrushTool</var>
+            <var name="group">ToolsVisibleGroup</var>
+          </signal>
+          
+        </object>
+
+
+        <object class="MenuButton">
+          <var name="col">1</var>
+          <var name="row">3</var>
+          <var name="Button::Text::text" propagate="yes">Crop</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::StartCropTool"/>
+          <signal name="Button::clicked" 
+                  target="VisibilityGroup::show_VisibleItem">
+            <var name="id">CropTool</var>
+            <var name="group">ToolsVisibleGroup</var>
+          </signal>
+          
+        </object>
+
+
+        <object class="MenuButton">
+          <var name="col">1</var>
+          <var name="row">4</var>
+          <var name="Button::Text::text" propagate="yes">Isosurface</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::ShowIsosurface">
+            <var name="threaded">1</var>
+          </signal>
+          
+          
+        </object>
+      </object>
+    </definition>
+  </object>
+</definition>
+  
