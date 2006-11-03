@@ -315,6 +315,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecDuplicate(d_B,&d_flux);
 
   delete[] diag;
+  delete[] onnz;
 }
 
 
