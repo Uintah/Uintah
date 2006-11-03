@@ -958,7 +958,7 @@ ShowField::execute()
       {
 	text_geometry_ =
 	  renderer_->render_text(fld_handle,
-				 color_map_.get_rep(),
+				 color_map_,
 				 text_use_default_color_.get(),
 				 text_backface_cull_.get(),
 				 text_fontsize_.get(),

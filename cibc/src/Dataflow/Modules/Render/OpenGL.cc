@@ -949,7 +949,7 @@ OpenGL::redraw_frame()
       }
     }
   }
-
+  drawinfo_->view_                  = view;
   drawinfo_->ambient_scale_ = view_window_->gui_ambient_scale_.get();
   drawinfo_->diffuse_scale_ = view_window_->gui_diffuse_scale_.get();
   drawinfo_->specular_scale_ = view_window_->gui_specular_scale_.get();

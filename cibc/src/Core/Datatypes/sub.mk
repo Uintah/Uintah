@@ -58,7 +58,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_3.cc    	\
 	$(SRCDIR)/cd_templates_fields_4.cc    	\
 	$(SRCDIR)/cd_templates_fields_5.cc	\
-	$(SRCDIR)/cd_templates_fields_6.cc
+	$(SRCDIR)/cd_templates_fields_6.cc	\
 
 
 PSELIBS := \

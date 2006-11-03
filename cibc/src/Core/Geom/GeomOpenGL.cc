@@ -108,6 +108,7 @@
 #include <Core/Math/Trig.h>
 #include <Core/Math/TrigTable.h>
 #include <Core/Geometry/Plane.h>
+#include <Core/Geom/FontManager.h>
 
 #include <iostream>
 #include <algorithm>
@@ -6334,22 +6335,29 @@ void
 GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,0)) return;
+  glDisable(GL_TEXTURE_1D);
+  glPushAttrib(GL_LIST_BIT);
 
-  const int fontindex = 2;
-
-  if (!di->init_font(fontindex))
-  {
-    post_draw(di);
-    return;
+  if (! renderer_) {
+    renderer_ = FontManager::get_renderer(2);
   }
 
-  glColor3f(c.r(), c.g(), c.b());
-  glDisable(GL_LIGHTING);
-  glRasterPos3d( at.x(), at.y(), at.z() );
-  glPushAttrib (GL_LIST_BIT);
-  glListBase(di->fontbase_[fontindex]);
-  glCallLists(text.size(), GL_UNSIGNED_BYTE, (GLubyte *)text.c_str());
-  glPopAttrib ();
+  if (matl) {
+    renderer_->set_color(matl->diffuse.r(), matl->diffuse.g(), 
+			 matl->diffuse.b(), 1.0); 
+  }
+  vector<Point> v;
+  v.push_back(at);
+  double sf = renderer_->find_scale_factor(v, di->view_);
+
+  renderer_->set_color(c.r(), c.g(), c.b(), 1.0); 
+  renderer_->render(text, at.x(), 
+		    at.y(), at.z(), 
+		    di->view_, sf,
+		    TextRenderer::SW);
+ 
+
+  glPopAttrib();
   post_draw(di);
 }
 
@@ -6359,41 +6367,34 @@ void
 GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,0)) return;
+  glDisable(GL_TEXTURE_1D);
+  glPushAttrib(GL_LIST_BIT);
 
-  if (!di->init_font(fontindex_))
-  {
-    post_draw(di);
-    return;
+  if (! renderer_) {
+    renderer_ = FontManager::get_renderer(fontindex_);
   }
+
+  if (matl) {
+    renderer_->set_color(matl->diffuse.r(), matl->diffuse.g(), 
+			 matl->diffuse.b(), 1.0); 
+  }
+
+  double sf = renderer_->find_scale_factor(location_, di->view_);
 
   const bool coloring = color_.size() == location_.size();
-  bool indexing = false;
-  if (di->using_cmtexture_ && index_.size() == location_.size())
-  {
-    indexing = true;
-    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
-
-    glEnable(GL_TEXTURE_1D);
-    glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
-  }
-
-  glDisable(GL_LIGHTING);
-  glPushAttrib(GL_LIST_BIT);
   for (unsigned int i = 0; i < text_.size(); i++)
   {
-    if (coloring) { glColor3f(color_[i].r(), color_[i].g(), color_[i].b()); }
-    if (indexing) { glTexCoord1f(index_[i]); }
-
-    glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-    glListBase(di->fontbase_[fontindex_]);
-    glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
-                (GLubyte *)text_[i].c_str());
+    if (coloring) {
+      renderer_->set_color(color_[i].r(), color_[i].g(), 
+			   color_[i].b(), 1.0); 
+    }
+    renderer_->render(text_[i], location_[i].x(), 
+		      location_[i].y(), location_[i].z(), 
+		      di->view_, sf,
+		      TextRenderer::SW);
   }
-  glPopAttrib ();
 
-  glDisable(GL_TEXTURE_1D);
-
+  glPopAttrib();
   post_draw(di);
 }
 
@@ -6402,52 +6403,45 @@ GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-
   if (!pre_draw(di,matl,0)) return;
 
-  if (!di->init_font(fontindex_))
-  {
-    post_draw(di);
-    return;
-  }
-
-  const bool coloring = color_.size() == location_.size();
-  bool indexing = false;
-  if (di->using_cmtexture_ && index_.size() == location_.size())
-  {
-    indexing = true;
-    glColor3d(di->diffuse_scale_, di->diffuse_scale_, di->diffuse_scale_);
-
-    glEnable(GL_TEXTURE_1D);
-    glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
-  }
 
   glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
   glPushAttrib(GL_LIST_BIT);
 
+  if (! renderer_) {
+    renderer_ = FontManager::get_renderer(fontindex_);
+  }
+
+  if (matl) {
+    renderer_->set_color(matl->diffuse.r(), matl->diffuse.g(), 
+			 matl->diffuse.b(), 1.0); 
+  }
+
+  double sf = renderer_->find_scale_factor(location_, di->view_);
+
+  const bool coloring = color_.size() == location_.size();
   double mat[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, mat);
   const Vector view (mat[2], mat[6], mat[10]);
+
   for (unsigned int i = 0; i < text_.size(); i++)
   {
     if (Dot(view, normal_[i]) > 0)
     {
-      if (coloring) { glColor3f(color_[i].r(), color_[i].g(), color_[i].b()); }
-      if (indexing) { glTexCoord1f(index_[i]); }
-
-      glRasterPos3d( location_[i].x(), location_[i].y(), location_[i].z() );
-      glListBase(di->fontbase_[fontindex_]);
-      glCallLists(text_[i].size(), GL_UNSIGNED_BYTE,
-                  (GLubyte *)text_[i].c_str());
+      if (coloring) { 
+	renderer_->set_color(color_[i].r(), color_[i].g(), 
+			     color_[i].b(), 1.0); 
+      }
+      renderer_->render(text_[i], location_[i].x(), 
+			location_[i].y(), location_[i].z(), 
+			di->view_, sf,
+			TextRenderer::SW);
     }
   }
 
-  glPopAttrib ();
+  glPopAttrib();
   glEnable(GL_DEPTH_TEST);
-  glDisable(GL_TEXTURE_1D);
-
   post_draw(di);
 }
 
@@ -6825,7 +6819,12 @@ GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
   glDisable(GL_DEPTH_TEST);
   glRasterPos2d(0.55, -0.98);
 
+  Point eye = di->view_.eyep();
+  di->view_.eyep(Point(0.0, -5.0, 5.0));
+
   child_->draw(di,matl,t);
+
+  di->view_.eyep(eye);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
