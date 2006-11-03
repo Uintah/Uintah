@@ -47,12 +47,17 @@
 #include <Core/Thread/ConditionVariable.h>
 
 #include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Util/Socket.h>
+
+#include <geotiff.h>
+#include <geo_normalize.h>
+#include <geovalues.h>
+#include <tiffio.h>
+#include <xtiffio.h>
 
 #include <iostream>
 #include <fstream>
@@ -62,6 +67,14 @@
 namespace DDDAS {
 
 using namespace SCIRun;
+
+typedef ImageMesh<QuadBilinearLgn<Point> >                   IMesh;
+typedef QuadBilinearLgn<Vector>                              DBasisrgb;
+typedef GenericField<IMesh, DBasisrgb, FData2d<Vector, IMesh> > IFieldrgb;
+typedef QuadBilinearLgn<double>                              DBasisgs;
+typedef GenericField<IMesh, DBasisgs, FData2d<double, IMesh> > IFieldgs;
+
+
 class StreamReader;
 
 class Listener: public Runnable
@@ -97,6 +110,11 @@ public:
   void new_data_notify(const string fname, void *buf, size_t bytes);
 private:
   bool register_with_broker();
+  BBox get_bounds(GTIF *gtif, GTIFDefn *defn,
+		  int xsize, int ysize);
+
+  template <class Fld>
+  bool fill_image(Fld *fld, IMesh *im, int bpp, int spp, char *buf);
 
   //! GUI variables
   GuiString     brokerip_;
@@ -107,6 +125,7 @@ private:
   Listener     *listener_;
   Thread       *listener_thread_;
   bool          registered_;
+  FieldHandle   out_fld_h_;
 };
 
 class DataHandler: public Runnable
@@ -197,9 +216,6 @@ Listener::run()
 }
 
 
-
-
-
 DECLARE_MAKER(StreamReader);
 
 StreamReader::StreamReader(GuiContext* ctx) : 
@@ -210,7 +226,8 @@ StreamReader::StreamReader(GuiContext* ctx) :
   listenport_(get_ctx()->subVar("listenport"), 8835),
   listener_(0),
   listener_thread_(0),
-  registered_(false)
+  registered_(false),
+  out_fld_h_(0)
 {  
   cout << "(StreamReader::StreamReader) Inside" << endl;  
 
@@ -283,7 +300,49 @@ StreamReader::execute()
     }
   }
   cout << "(StreamReader::execute) Inside" << endl;
+
+  if (out_fld_h_.get_rep()) {
+    send_output_handle("Output Sample Field", out_fld_h_);
+    out_fld_h_ = 0;
+  }
 }
+
+
+double 
+get_value(char* buf, unsigned int idx, int bpp, int spp) 
+{  
+  if (spp == 1 && bpp == 8) {
+    unsigned char p = buf[idx];
+    cerr << "buf[" << idx << "]: " << (int)p << endl;
+    return (double)p / 255.0;
+  }
+
+  cerr << "WARNING: default get_value is 0" << endl;
+  return 0.0;
+}
+
+
+template <class Fld>
+bool 
+StreamReader::fill_image(Fld *fld, IMesh *im, int bpp, int spp, char *buf)
+{
+  IMesh::Node::iterator iter, end;
+  im->begin(iter);
+  im->end(end);
+  
+  unsigned int idx;
+  while (iter != end) {
+    typename Fld::value_type val = get_value(buf, idx, bpp, spp);
+    IMesh::Node::index_type ni = *iter;
+    fld->set_value(val, ni);
+
+    ++iter;
+    ++idx;
+  }
+  
+  return true;
+}
+
 
 
 void 
@@ -292,11 +351,138 @@ StreamReader::new_data_notify(const string fname, void *buf, size_t bytes)
   cerr << "got data, named: " << fname  << ", " << bytes 
        << " bytes long." << endl;
 
-  char *c = (char*)buf;
-  for (unsigned int i = 0; i < bytes; i++) {
-    cerr << c;
+  if (fname.find(".lgo") != string::npos) {
+    // handle the header file
+    string header(bytes, '\0');
+    char *c = (char*)buf;
+    for (unsigned int i = 0; i < bytes; i++) {
+      header[i] = *c;
+      c++;
+    }
+    
+    for (unsigned int i = 0; i < bytes; i++) {
+      cerr << header[i];
+    }
+    cerr << endl;
   }
-  cerr << endl << "done with output" << endl;
+
+  if (fname.find(".tif") != string::npos) {
+    const char* tmpfn = "/tmp/dddas.tif";
+    FILE *fd = fopen(tmpfn, "w");
+    size_t status = fwrite(buf, sizeof(char), bytes, fd);
+    fclose(fd);
+
+    TIFF* tif = XTIFFOpen(tmpfn, "r");
+    if (!tif) return;
+
+    GTIF* gtif = GTIFNew(tif);
+    GTIFDefn	defn;
+        
+    if(GTIFGetDefn(gtif, &defn))
+    {
+      cerr << "GTIFDefn success" << endl;
+      int xsize, ysize;
+      uint16 spp, bpp, photo;
+
+      TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &xsize);
+      TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &ysize);
+      TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bpp);
+      TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &spp);
+      TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photo);
+
+      BBox bb = get_bounds(gtif, &defn, xsize, ysize);
+      cerr << bb << endl;
+
+      int linesize = TIFFScanlineSize(tif);
+      char* slines = new char[linesize * ysize * bpp / 8];
+      for (int i = 0; i < ysize; i++)
+	TIFFReadScanline(tif, &slines[i * linesize], i, 0);
+ 
+// typedef ImageMesh<QuadBilinearLgn<Point> >                   IMesh;
+// typedef QuadBilinearLgn<Vector>                              DBasisrgb;
+// typedef GenericField<IMesh, DBasis, FData2d<Vector, IMesh> > IFieldrgb;
+// typedef QuadBilinearLgn<double>                              DBasisgs;
+// typedef GenericField<IMesh, DBasis, FData2d<double, IMesh> > IFieldgs;
+
+      IMesh* im = new IMesh(xsize, ysize, bb.min(), bb.max());
+     // 1 chan
+      if (spp == 1) {
+	IFieldgs *ifld = new IFieldgs(im);
+	fill_image(ifld, im, bpp, spp, slines);
+	out_fld_h_ = ifld;
+	want_to_execute();
+	
+	//      } else if (spp == 3) {
+
+      } else {
+	cerr << "ERROR: Not handling creating image field for " << spp 
+	     << " samples per pixel" << endl;
+      }
+      
+
+      cerr << "tiff size: (" << xsize << ", " << ysize << ")" << endl; 
+      cerr << "bits/pixel: " << bpp << endl;
+      cerr << "samples/pixel: " << spp << endl;
+      cerr << "photo: " << photo << endl;
+      cerr << "linesize " << linesize << endl;
+
+
+    } else {
+      cerr << "GTIFDefn Failed " << endl;
+      
+    }
+
+  }
+
+
+  cerr << endl << "recieved data: " << fname << endl;
+
+}
+
+
+BBox 
+StreamReader::get_bounds(GTIF *gtif, GTIFDefn *defn,
+			      int xsize, int ysize) 
+{
+  double x = 0.0;
+  double y = 0.0;
+  double tx = x;
+  double ty = y;
+
+  cerr << "Corner Coordinates:" << endl;
+  if(!GTIFImageToPCS(gtif, &tx, &ty)) 
+  {
+    cerr << "unable to transform points between pixel/line and PCS space"
+	 << endl;
+    return BBox();
+  }
+  BBox bb;
+  // uppper left
+//   tx = 0.0;
+//   ty = 0.0;
+//   GTIFImageToPCS(gtif, &tx, &ty);
+//   cerr << "UL" << tx << ", " << ty << endl;
+
+  tx = 0.0;
+  ty = ysize;
+  GTIFImageToPCS(gtif, &tx, &ty);
+  cerr << "LL" << tx << ", " << ty << endl;
+  bb.extend(Point(tx, ty, 0.0));
+
+  tx = xsize;
+  ty = 0.0;
+  GTIFImageToPCS(gtif, &tx, &ty);
+  cerr << "UR" << tx << ", " << ty << endl;
+  bb.extend(Point(tx, ty, 0.0));
+
+//   tx = xsize;
+//   ty = ysize;
+//   GTIFImageToPCS(gtif, &tx, &ty);
+//   cerr << "LR" << tx << ", " << ty << endl;
+
+  return bb;
+
+
 
 }
 
