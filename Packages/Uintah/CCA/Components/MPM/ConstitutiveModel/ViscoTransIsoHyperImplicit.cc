@@ -28,12 +28,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-//#define VERONDA_WESTMANN
-#undef VERONDA_WESTMANN
-
-#define MOONEY_RIVLIN
-//#undef MOONEY_RIVLIN 
-
 // _________________this is a transversely isotropic hyperelastic material [JW]
 //__________________see Material 18 in LSDYNA manual
 //__________________with strain-based failure criteria
@@ -45,6 +39,7 @@ ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,
 //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
 {  
   d_useModifiedEOS = false;
+  d_StrainEnergy = "MooneyRivlin";
 //______________________material properties
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("c1", d_initialData.c1);//Mooney Rivlin constant 1
@@ -70,6 +65,7 @@ ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,
   ps->require("t4", d_initialData.t4);
   ps->require("t5", d_initialData.t5);
   ps->require("t6", d_initialData.t6);
+  ps->get("StrainEnergy",d_StrainEnergy); // MooneyRivlin or VerondaWestmann
 
   pStretchLabel = VarLabel::create("p.stretch",
      ParticleVariable<double>::getTypeDescription());
@@ -541,19 +537,17 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         leftCauchyGreentilde_new = deformationGradient_new[idx]
                      * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
-//        Mooney Rivlin
-#ifdef MOONEY_RIVLIN
-        double dWdI1 = c1;
-        double dWdI2 = c2;
-        double d2WdI1dI1 = 0.;
-#endif
-
-//        Veronda Westmann
-#ifdef VERONDA_WESTMANN
-        double dWdI1 = c1*c2*exp(c2*(I1tilde-3.));
-        double dWdI2 = -.5*c1*c2;
-        double d2WdI1dI1 = c1*c2*c2*exp(c2*(I1tilde-3.));
-#endif
+        double dWdI1, dWdI2, d2WdI1dI1;
+        if(d_StrainEnergy=="MooneyRivlin"){
+          dWdI1 = c1;
+          dWdI2 = c2;
+          d2WdI1dI1 = 0.;
+        }
+        else if(d_StrainEnergy=="VerondaWestmann"){
+          dWdI1 = c1*c2*exp(c2*(I1tilde-3.));
+          dWdI2 = -.5*c1*c2;
+          d2WdI1dI1 = c1*c2*c2*exp(c2*(I1tilde-3.));
+        }
 
         double d2WdI1dI2 = 0.;
         double d2WdI2dI2 = 0.;
@@ -605,11 +599,6 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         pressure = Identity*p;
         
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
-
-//        cout << "fiber_stressB = " << fiber_stress << endl;
-//        cout << "pressureB = " << p << endl;
-//        cout << "deviatoricB = " << deviatoric_stress << endl;
-//        cout << "ElasticStressB[idx] = " << ElasticStress[idx](1,1) << endl;
 
         // All of the following, through the calculation of dsave
         // comes from NIKE3D, material model 18
@@ -1029,17 +1018,15 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                *(1./lambda_tilde*pow(J,-(1./3.)));
         Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
-//      Mooney Rivlin
-#ifdef MOONEY_RIVLIN
-      double dWdI1 = c1;
-      double dWdI2 = c2;
-#endif
-
-//      Veronda Westmann
-#ifdef VERONDA_WESTMANN
-        double dWdI1 = c1*c2*exp(c2*(I1tilde-3.));
-        double dWdI2 = -.5*c1*c2;
-#endif
+        double dWdI1,dWdI2;
+        if(d_StrainEnergy=="MoonyRivlin"){
+          dWdI1 = c1;
+          dWdI2 = c2;
+        }
+        else if(d_StrainEnergy=="VerondaWestmann"){
+          dWdI1 = c1*c2*exp(c2*(I1tilde-3.));
+          dWdI2 = -.5*c1*c2;
+        }
 
         //________________________________left Cauchy Green (B) tilde
         leftCauchyGreentilde_new = deformationGradient_new[idx]
@@ -1066,11 +1053,6 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         pressure = Identity*p;
         //Cauchy stress
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
-
-//        cout << "fiber_stress = " << fiber_stress << endl;
-//        cout << "pressure = " << p << endl;
-//        cout << "deviatoric = " << deviatoric_stress << endl;
-//        cout << "ElasticStress = " << ElasticStress[idx](1,1) << endl;
 
         //_________________________________viscoelastic terms
         double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.;
