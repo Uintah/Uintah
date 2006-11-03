@@ -44,6 +44,7 @@
 #define SCI_Geom_Text_h 1
 
 #include <Core/Geom/GeomObj.h>
+#include <Core/Geom/TextRenderer.h>
 #include <Core/Geometry/Transform.h>
 
 #include <Core/Datatypes/Color.h>
@@ -61,6 +62,7 @@ public:
   string fontsize;
   Point at;
   Color c;
+  TextRenderer  *renderer_;
 public:
   GeomText();
   GeomText(const GeomText&);
@@ -93,6 +95,8 @@ protected:
   vector<Point>  location_;
   vector<Color>  color_;
   vector<float>  index_;
+
+  TextRenderer  *renderer_;
 
 public:
   GeomTexts();

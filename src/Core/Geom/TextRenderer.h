@@ -43,6 +43,7 @@
 #define SCIRun_Dataflow_Modules_Render_TextRenderer_h
 
 #include <Core/Geom/FreeType.h>
+#include <Core/Geom/View.h>
 #include <string>
 #include <map>
 #include <set>
@@ -89,8 +90,16 @@ public:
 
   void			render(const string &,
                                float x, float y, 
-                               int flags = 0);
+                               int flags);
 
+  // rendering in a 3d scene.
+  void			render(const string &,
+                               float x, float y, float z, 
+                               const View &view, double sf, int flags);
+
+  double                find_scale_factor(const vector<Point> &p, 
+					  const View &v) const;
+  
   void                  set_cursor_position(unsigned int pos);
   
 private:
@@ -142,7 +151,8 @@ private:
                                     const Point &,
                                     const Vector &,
                                     const Vector &,
-                                    int &);
+                                    int &,
+				    bool clamp_vals = true);
 };
   
 }
