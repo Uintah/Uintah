@@ -416,7 +416,7 @@ void InterfaceWithMatlabEngineThread::run()
 DECLARE_MAKER(InterfaceWithMatlab)
 
 InterfaceWithMatlab::InterfaceWithMatlab(GuiContext *context) :
-  Module("InterfaceWithMatlab", context, Filter, "Interface", "InterfaceWithMatlabInterface"), 
+  Module("InterfaceWithMatlab", context, Filter, "Interface", "MatlabInterface"), 
   input_matrix_name_(context->subVar("input-matrix-name")),
   input_field_name_(context->subVar("input-field-name")),
   input_nrrd_name_(context->subVar("input-nrrd-name")),
@@ -904,7 +904,7 @@ bool InterfaceWithMatlab::open_matlab_engine()
     std::string sharehomedir = "yes";
     if (need_file_transfer_) sharehomedir = "no";
                
-		std::string status = "InterfaceWithMatlab engine running\n\nmatlabengine version: " + matlab_engine_->getversion() + "\nmatlabengine address: " +
+		std::string status = "Matlab engine running\n\nmatlabengine version: " + matlab_engine_->getversion() + "\nmatlabengine address: " +
 			matlab_engine_->getremoteaddress() + "\nmatlabengine session: " + matlab_engine_->getsession() + "\nmatlabengine filetransfer version :" +
       file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\nlocal temp directory: " + file_transfer_->local_file("") +
       "\nremote temp directory: " + file_transfer_->remote_file("") + "\n";
