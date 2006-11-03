@@ -285,9 +285,12 @@ Painter::NewLayer(event_handle_t event) {
   if (current_volume_->label_) {
     return CreateLabelChild(event);
   }
-
+#ifdef HAVE_INSIGHT
   NrrdDataHandle nrrdh = 
     VolumeOps::create_clear_nrrd(current_volume_->nrrd_handle_);
+#else
+  NrrdDataHandle nrrdh = 0;
+#endif
   string name = unique_layer_name(current_volume_->name_);
   volumes_.push_back(new NrrdVolume(this, name, nrrdh));
   rebuild_layer_buttons();
@@ -908,9 +911,13 @@ BaseTool::propagation_state_e
 Painter::CreateLabelVolume(event_handle_t event) {
   if (!current_volume_) return STOP_E;
   volume_lock_.lock();
+#ifdef HAVE_INSIGHT
   NrrdDataHandle nrrdh = 
-    VolumeOps::create_clear_nrrd(current_volume_->nrrd_handle_, nrrdTypeUInt);
-    string name = unique_layer_name(current_volume_->name_ + " Label");
+    VolumeOps::create_clear_nrrd(current_volume_->nrrd_handle_);
+#else
+  NrrdDataHandle nrrdh = 0;
+#endif
+  string name = unique_layer_name(current_volume_->name_ + " Label");
   volumes_.push_back(new NrrdVolume(this, name, nrrdh, 1));
   current_volume_ = volumes_.back();
   volume_lock_.unlock();

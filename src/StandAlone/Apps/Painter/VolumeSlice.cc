@@ -193,7 +193,10 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
   }
 
   if (label_ && dst->type == nrrdTypeFloat) {
+#ifdef HAVE_INSIGHT
     nrrd_handle_ = VolumeOps::float_to_bit(nrrd_handle_, 0, label_);
+#endif
+
   }
 
   volume_->mutex_->unlock();
