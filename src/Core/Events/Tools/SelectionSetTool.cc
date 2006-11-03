@@ -131,8 +131,11 @@ SelectionSetTool::render_selection_set()
   switch (mode_) {
 
   case NODES_E:
-    params_->do_nodes_ = true;
+    params_->do_nodes_ = false;
     params_->do_text_ = true;
+    params_->text_show_faces_ = false;
+    params_->text_show_nodes_ = true;
+    params_->text_fontsize_ = 4;
     params_->ns_ = 1.0;
     sel_vis = clip_nodes(sel_fld_, ssti_->get_selection_set());
     break;
@@ -162,23 +165,24 @@ SelectionSetTool::render_selection_set()
 
   case NODES_E:
     {
-      gmat = scinew GeomMaterial(params_->renderer_->node_switch_, 
-				 params_->def_material_);
-      geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						   params_->color_map_));
-      name = params_->nodes_transparency_ ? "Transparent Nodes" : "Nodes";
+//       gmat = scinew GeomMaterial(params_->renderer_->node_switch_, 
+// 				 params_->def_material_);
+//       geom = scinew GeomSwitch(new GeomColorMap(gmat, 
+// 						   params_->color_map_));
+//       name = params_->nodes_transparency_ ? "Transparent Nodes" : "Nodes";
 
-//       gmat = scinew GeomMaterial(params_->text_geometry_, params_->text_material_);
-//       geom = scinew GeomSwitch(new GeomColorMap(gmat, params_->color_map_));
-//       name = params_->text_backface_cull_ ? "Culled Text Data":"Text Data";
+      gmat = scinew GeomMaterial(params_->text_geometry_, 
+				 params_->text_material_);
+      geom = scinew GeomSwitch(new GeomColorMap(gmat, params_->color_map_));
+      name = params_->text_backface_cull_ ? "Culled Text Data":"Text Data";
     }
     break;
   case EDGES_E:
     {
       gmat = scinew GeomMaterial(params_->renderer_->edge_switch_, 
 				 params_->def_material_);
-      geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						   params_->color_map_));
+      geom = scinew GeomSwitch(new GeomColorMap(gmat, 
+						params_->color_map_));
       name = params_->edges_transparency_ ? "Transparent Edges" : "Edges";
     }
     break;
@@ -187,8 +191,8 @@ SelectionSetTool::render_selection_set()
     {
       gmat = scinew GeomMaterial(params_->renderer_->face_switch_, 
 				 params_->def_material_);
-      geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						   params_->color_map_));
+      geom = scinew GeomSwitch(new GeomColorMap(gmat, 
+						params_->color_map_));
       name = params_->faces_transparency_ ? "Transparent Faces" : "Faces";
     }
     break;
