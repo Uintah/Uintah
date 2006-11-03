@@ -28,7 +28,7 @@
 #
 
 
-itcl_class InterfaceWithMatlabInterface_Interface_InterfaceWithMatlab {
+itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
     inherit Module
 
     constructor {config} {
