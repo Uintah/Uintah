@@ -307,6 +307,8 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
          strcpy(hostname, "unknown???");
        ostringstream ts;
        ts << base << "-" << hostname << "-" << getpid();
+       if (*base)
+         free(base);
 
        string test_string = ts.str();
        const char* outbuf = test_string.c_str();
