@@ -22,8 +22,8 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Geom Core/Geometry Dataflow/TkExtensions \
 
 
-#INCLUDES += $(SCISOCK_INCLUDE)
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) #$(SCISOCK_LIBRARY)
+INCLUDES += $(LIBGEOTIFF_INCLUDE)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(LIBGEOTIFF_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
