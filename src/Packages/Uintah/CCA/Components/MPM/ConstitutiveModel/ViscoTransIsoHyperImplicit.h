@@ -28,8 +28,9 @@ namespace Uintah {
       private:
          // Create datatype for storing model parameters
 	  bool d_useModifiedEOS; 
+          string d_StrainEnergy;
 	  public:
-	  struct CMData {   //_________________________________________modified here
+	  struct CMData {   //______________________________modified here
 	  	double Bulk;
       		double c1;
       		double c2;
@@ -55,8 +56,8 @@ namespace Uintah {
       		double t6;
           };
     
-     const VarLabel* pStretchLabel;  // For diagnostic
-     const VarLabel* pStretchLabel_preReloc;  // For diagnostic
+    const VarLabel* pStretchLabel;  // For diagnostic
+    const VarLabel* pStretchLabel_preReloc;  // For diagnostic
     
     const VarLabel* pFailureLabel;  // fail_labels
     const VarLabel* pFailureLabel_preReloc;
@@ -174,7 +175,4 @@ namespace Uintah {
       };
 } // End namespace Uintah
       
-
-
 #endif  // __Visco_Trans_Iso_Hyper_Implicit_CONSTITUTIVE_MODEL_H__
-
