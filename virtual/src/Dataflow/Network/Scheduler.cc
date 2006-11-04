@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -128,22 +128,20 @@ Scheduler::main_loop()
 {
   // Dispatch events.
   int done=0;
-  while(!done)
-  {
+  while(!done){
     MessageBase* msg=mailbox.receive();
     // Dispatch message..
-    switch (msg->type) 
-    {
+    switch (msg->type) {
     case MessageTypes::MultiSend:
       {
-        //cerr << "Got multisend\n";
-        Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
-        multisend_real(mmsg->p1);
-        // Do not re-execute sender
+	//cerr << "Got multisend\n";
+	Module_Scheduler_Message* mmsg=(Module_Scheduler_Message*)msg;
+	multisend_real(mmsg->p1);
+	// Do not re-execute sender
 
-        // do_scheduling on the module instance bound to
-        // the output port p1 (the first arg in Multisend() call)
-        do_scheduling_real(mmsg->p1->get_module()); 
+	// do_scheduling on the module instance bound to
+	// the output port p1 (the first arg in Multisend() call)
+	do_scheduling_real(mmsg->p1->get_module()); 
       }
       break;
 
@@ -224,7 +222,7 @@ Scheduler::do_scheduling_real(Module* exclude)
   }
 
   report_execution_started();
-
+  
   // For all of the modules that need executing, execute the
   // downstream modules and arrange for the data to be sent to them
   // mm - this doesn't really execute them. It just adds modules to
@@ -236,57 +234,66 @@ Scheduler::do_scheduling_real(Module* exclude)
     Module* module = needexecute.front();
     needexecute.pop();
     // Add oports
+
+    module->lock_oports();
     int no=module->num_output_ports();
     int i;
     for (i=0;i<no;i++)
     {
-      OPort* oport=module->get_output_port(i);
+      OPortHandle oport;
+      module->get_oport_handle(i,oport);
       int nc=oport->nconnections();
       for (int c=0;c<nc;c++)
       {
-	Connection* conn=oport->connection(c);
-	IPort* iport=conn->iport;
-	Module* m=iport->get_module();
-	if (m != exclude && !m->need_execute_)
+        Connection* conn=oport->connection(c);
+        IPort* iport=conn->iport;
+        Module* m=iport->get_module();
+        if (m != exclude && !m->need_execute_)
         {
-	  m->need_execute_ = true;
-	  needexecute.push(m);
-	}
+          m->need_execute_ = true;
+          needexecute.push(m);
+        }
       }
     }
+    module->unlock_oports();
 
     // Now, look upstream.
+
+    module->lock_iports();
     int ni=module->num_input_ports();
     for (i=0;i<ni;i++)
     {
-      IPort* iport=module->get_input_port(i);
+      IPortHandle iport;
+      module->get_iport_handle(i,iport);
       if (iport->nconnections())
       {
-	Connection* conn=iport->connection(0);
-	OPort* oport=conn->oport;
-	Module* m=oport->get_module();
-	if (!m->need_execute_)
+        Connection* conn=iport->connection(0);
+        OPort* oport=conn->oport;
+        Module* m=oport->get_module();
+        if (!m->need_execute_)
         {
-	  if (m != exclude)
+          if (m != exclude)
           {
-	    if (module->sched_class_ != Module::ViewerSpecial)
+            if (module->sched_class_ != Module::ViewerSpecial)
             {
-	      // If this oport already has the data, add it
-	      // to the to_trigger list.
-	      if (oport->have_data())
+              // If this oport already has the data, add it
+              // to the to_trigger list.
+              if (oport->have_data())
               {
-		to_trigger.push_back(conn);
-	      }
+                to_trigger.push_back(conn);
+              }
               else
               {
-		m->need_execute_ = true;
-		needexecute.push(m);
-	      }
-	    }
-	  }
-	}
+                m->need_execute_ = true;
+                needexecute.push(m);
+              }
+            }
+          }
+        }
       }
     }
+    module->unlock_iports();
+
   }
 
   // Trigger the ports in the trigger list.
@@ -352,7 +359,6 @@ Scheduler::report_execution_finished(unsigned int serial)
   mailbox.send(scinew Module_Scheduler_Message(serial));
 }
 
-
 void
 Scheduler::report_execution_started()
 {
@@ -380,7 +386,6 @@ Scheduler::report_execution_started()
   }
   callback_lock_.unlock();
 }
-
 
 void
 Scheduler::report_execution_finished_real(unsigned int serial)
@@ -459,18 +464,6 @@ Scheduler::add_callback(SchedulerCallback cb, void *data, int priority)
 
 
 void
-Scheduler::remove_callback(SchedulerCallback cb, void *data)
-{
-  SCData sc;
-  sc.callback = cb;
-  sc.data = data;
-  callback_lock_.lock();
-  callbacks_.erase(std::remove_if(callbacks_.begin(), callbacks_.end(), sc),
-		   callbacks_.end());
-  callback_lock_.unlock();
-}
-
-void
 Scheduler::add_start_callback(SchedulerCallback cb, void *data, int priority)
 {
   SCData sc;
@@ -505,6 +498,19 @@ Scheduler::remove_start_callback(SchedulerCallback cb, void *data)
   start_callbacks_.erase(std::remove_if(start_callbacks_.begin(), 
 					start_callbacks_.end(), sc),
 			 start_callbacks_.end());
+  callback_lock_.unlock();
+}
+
+
+void
+Scheduler::remove_callback(SchedulerCallback cb, void *data)
+{
+  SCData sc;
+  sc.callback = cb;
+  sc.data = data;
+  callback_lock_.lock();
+  callbacks_.erase(std::remove_if(callbacks_.begin(), callbacks_.end(), sc),
+		   callbacks_.end());
   callback_lock_.unlock();
 }
 

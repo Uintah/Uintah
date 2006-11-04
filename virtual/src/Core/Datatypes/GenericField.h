@@ -108,6 +108,7 @@ public:
   const fdata_type& fdata() const;
   
   virtual void resize_fdata();
+  virtual void resize_fdata(size_t size);
 
   //! Get the classes on which this function relies:
   //! Get the basis describing interpolation within an element
@@ -476,6 +477,14 @@ GenericField<Mesh, Basis, FData>::resize_fdata()
     fdata().resize(ssize);
   }
 }
+
+template <class Mesh, class Basis, class FData>
+void
+GenericField<Mesh, Basis, FData>::resize_fdata(size_t size)
+{
+  fdata().resize(size);
+}
+
 
 
 // PIO

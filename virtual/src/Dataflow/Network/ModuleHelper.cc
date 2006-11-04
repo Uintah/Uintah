@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -87,36 +87,36 @@ ModuleHelper::run()
     for(;;)
     {
       MessageBase* msg = module->mailbox_.receive();
-      switch(msg->type) {
-      case MessageTypes::GoAway:
-	delete msg;
-	return;
+      switch(msg->type) 
+      {
+        case MessageTypes::GoAway:
+          delete msg;
+          return;
 
-      case MessageTypes::GoAwayWarn:
-	break;
+        case MessageTypes::GoAwayWarn:
+          break;
 
-      case MessageTypes::ExecuteModule:
-        module->do_execute();
-        module->do_synchronize();
-        module->sched_->report_execution_finished(msg);
-	break;
+        case MessageTypes::ExecuteModule:
+          module->do_execute();
+          module->do_synchronize();
+          module->sched_->report_execution_finished(msg);
+          break;
 
-      case MessageTypes::SynchronizeModule:
-        module->do_synchronize();
-        module->sched_->report_execution_finished(msg);
-        break;
+        case MessageTypes::SynchronizeModule:
+          module->do_synchronize();
+          module->sched_->report_execution_finished(msg);
+          break;
 
-      case MessageTypes::TriggerPort:
-	{
-	  Scheduler_Module_Message *smsg = (Scheduler_Module_Message*)msg;
-	  smsg->conn->oport->resend(smsg->conn);
-	}
-	break;
+        case MessageTypes::TriggerPort:
+          {
+            Scheduler_Module_Message *smsg = (Scheduler_Module_Message*)msg;
+            smsg->conn->oport->resend(smsg->conn);
+          }
+          break;
 
-      default:
-	cerr << "(ModuleHelper.cc) Illegal Message type: " << msg->type
-             << std::endl;
-	break;
+        default:
+          std::cerr << "(ModuleHelper.cc) Illegal Message type: " << msg->type << std::endl;
+          break;
       }
 
       delete msg;

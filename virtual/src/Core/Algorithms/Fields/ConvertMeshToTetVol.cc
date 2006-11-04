@@ -72,7 +72,33 @@ bool ConvertMeshToTetVolAlgo::ConvertMeshToTetVol(ProgressReporter *pr, FieldHan
   }
 
 
-  // Setup dynamic files
+  ////////////////////////////////////////////////
+  // VIRTUAL VERSION OF THIS ALGORITHM
+
+  std::cout << "fi has_virtual_interface=" << fi.has_virtual_interface();
+  std::cout << "fo has_virtual_interface=" << fo.has_virtual_interface();
+
+  if (fi.has_virtual_interface() && fo.has_virtual_interface())
+  {
+    output = Create_Field(fo);
+    
+    if (algotype == "ConvertLatVolToTetVolAlgoT")
+    {
+      if (UseScalarInterface(fi,fo)) return (ConvertLatVolToTetVolV<double>(pr,input,output));
+      if (UseVectorInterface(fi,fo)) return (ConvertLatVolToTetVolV<Vector>(pr,input,output));
+      if (UseTensorInterface(fi,fo)) return (ConvertLatVolToTetVolV<Tensor>(pr,input,output));
+    }
+    else
+    {
+      if (UseScalarInterface(fi,fo)) return (ConvertHexVolToTetVolV<double>(pr,input,output));
+      if (UseVectorInterface(fi,fo)) return (ConvertHexVolToTetVolV<Vector>(pr,input,output));
+      if (UseTensorInterface(fi,fo)) return (ConvertHexVolToTetVolV<Tensor>(pr,input,output));    
+    }
+  }
+
+  ////////////////////////////////////////////////
+  // DYNAMIC COMPILATION VERSION OF THIS ALGORITHM
+
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "ALGOConvertMeshToTetVol."+fi.get_field_filename()+"."+fo.get_field_filename()+".",

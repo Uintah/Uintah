@@ -174,13 +174,17 @@ Field::has_virtual_interface()
   return (false);
 }
 
-
 void
 Field::resize_fdata()
 {
   ASSERTFAIL("Field interface has no resize_fdata() function");
 }
 
+void 
+Field::resize_fdata(size_t size)
+{
+  ASSERTFAIL("Field interface has no resize_fdata() function");
+}
 
 void 
 Field::get_value(char &val, Mesh::index_type i) const

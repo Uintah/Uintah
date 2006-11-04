@@ -867,7 +867,8 @@ public:
   virtual void pwl_approx_face(vector<vector<vector<double> > > &coords, 
                                VElem::index_type ci, unsigned int which_face, 
                               unsigned int div_per_unit) const;
-  
+                              
+  virtual void get_dimensions(Mesh::dimension_type& dims);
 };
 
 
@@ -3520,6 +3521,17 @@ LatVolMesh<Basis>::get_random_point(Point &p, VElem::index_type i,
   typename Elem::index_type vi; to_index(vi,i);
   get_random_point(p,vi,rng);
 }
+
+template <class Basis>
+void 
+LatVolMesh<Basis>::get_dimensions(Mesh::dimension_type& dims)
+{
+  dims.resize(3);
+  dims[0] = ni_;
+  dims[1] = nj_;
+  dims[2] = nk_;
+}
+
 
 } // namespace SCIRun
 

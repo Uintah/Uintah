@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -103,7 +103,7 @@ class SCISHARE Scheduler : public Runnable
     }
   };
 
-  std::vector<SCData> callbacks_; // end of execution
+  std::vector<SCData> callbacks_;
   std::vector<SCData> start_callbacks_; // prior to execution of any module
   Mutex callback_lock_;
 
@@ -141,7 +141,7 @@ public:
   // These get called prior to execution of any module with the same priority
   // scheme as for end execution callbacks.
   void add_start_callback(SchedulerCallback cv, void *data, int priority = 0);
-  void remove_start_callback(SchedulerCallback cv, void *data);
+  void remove_start_callback(SchedulerCallback cv, void *data);  
 };
 
 
