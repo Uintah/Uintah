@@ -88,6 +88,8 @@ public:
   { Array3<Data>::resize(1, 1, size); }
   void resize(const typename Msh::Cell::size_type &size)
   { Array3<Data>::resize(size.k_, size.j_, size.i_); }
+  void resize(const size_t size)
+  { Array3<Data>::resize(1,1,size); }
 
   unsigned int size() const { return this->dim1() * this->dim2() * this->dim3(); }
 
@@ -233,6 +235,8 @@ public:
   { Array2<Data>::resize(size.j_, size.i_); }
   void resize(const typename Msh::Cell::size_type &size)
   { Array2<Data>::resize(1, size); }
+  void resize(const size_t size)
+  { Array2<Data>::resize(1,size); }
 
   unsigned int size() const { return this->dim1() * this->dim2(); }
 

@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -46,6 +46,7 @@
 #include <string>
 #include <vector>
 
+#include <Core/Thread/Mutex.h>
 #include <Dataflow/Network/share.h>
 
 namespace SCIRun {
@@ -55,6 +56,10 @@ class Module;
 
 class SCISHARE Port {
 public:
+
+  int ref_cnt;  // for LockingHandle
+  Mutex lock;   // for LockingHandle
+  
   Port(Module* module, const std::string& type_name,
        const std::string& port_name, const std::string& color_name);
   virtual ~Port();
@@ -112,6 +117,7 @@ public:
   virtual ~IPort();
 
   virtual void attach(Connection* conn);
+  virtual void deactivate();
 
 private:
   IPort(const IPort&);

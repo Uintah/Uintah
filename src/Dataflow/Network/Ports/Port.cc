@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -51,7 +51,7 @@ using namespace SCIRun;
 
 Port::Port(Module* module, const string& type_name,
 	   const string& port_name, const string& color_name)
-: module(module), which_port(-1), portstate(Off),
+: lock("port lock"), module(module), which_port(-1), portstate(Off),
   type_name(type_name), port_name(port_name), color_name(color_name)
 {
 }
@@ -172,7 +172,7 @@ OPort::update_light()
     case Off:
     default:
 	if(have_data()){
-	    color="darkslateblue";
+	    color="DarkOrange";
 	} else {
 	    color="black";
 	}
@@ -230,6 +230,10 @@ string
 Port::get_colorname()
 {
   return color_name;
+}
+
+void IPort::deactivate()
+{
 }
 
 void

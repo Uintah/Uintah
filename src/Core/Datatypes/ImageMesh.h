@@ -667,6 +667,7 @@ public:
                                VElem::index_type ci, unsigned int which_face, 
                               unsigned int div_per_unit) const;
 
+  virtual void get_dimensions(Mesh::dimension_type& dims);
 };
 
 
@@ -2154,6 +2155,16 @@ ImageMesh<Basis>::get_random_point(Point &p, VElem::index_type i,
 {
   typename Elem::index_type vi; to_index(vi,i);
   get_random_point(p,vi,rng);
+}
+
+
+template <class Basis>
+void 
+ImageMesh<Basis>::get_dimensions(Mesh::dimension_type& dims)
+{
+  dims.resize(2);
+  dims[0] = ni_;
+  dims[1] = nj_;
 }
 
 } // namespace SCIRun

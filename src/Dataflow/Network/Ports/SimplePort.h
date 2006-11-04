@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -78,9 +78,17 @@ public:
 
   int get(T&);
   bool changed();
+  
+  //! when the port is deleted from a network it is
+  //! deactivated. As another thread may keep a handle
+  //! to the port and may be waiting for data we need
+  //! to alter the state of the port. In this state
+  //! the port will not receive any new data
+  void deactivate();
 
 private:
   bool got_something_;
+  bool deactivated_;
 
   int generation_;
   int last_generation_;
@@ -136,7 +144,8 @@ SimpleIPort<T>::SimpleIPort(Module* module,
   : IPort(module, port_type_, portname, port_color_),
     mailbox("Port mailbox (SimpleIPort)", 2),
     generation_( -1 ),
-    last_generation_( -1 )
+    last_generation_( -1 ),
+    deactivated_(false)
 {
 }
 
@@ -215,6 +224,8 @@ SimpleOPort<T>::finish()
   {
     // Tell them that we didn't send anything.
     turn_on_light(Finishing);
+    
+    handle_ = 0; // flush whatever we have on the output port
     for (int i = 0; i < nconnections(); i++)
     {
       Connection* conn = connections[i];
@@ -325,9 +336,33 @@ SimpleOPort<T>::do_send(const T& data, SendType type, DerefType deref)
 
 
 template<class T>
+void
+SimpleIPort<T>::deactivate()
+{
+
+  lock.lock();
+  deactivated_ = true;
+  lock.unlock();
+ 
+  // free any waiting thread by sending
+  // a dummy message.
+  
+  SimplePortComm<T>* msg = scinew SimplePortComm<T>(); 
+  mailbox.send(msg);
+}
+
+
+template<class T>
 int
 SimpleIPort<T>::get(T& data)
 {
+  bool deactivated;
+
+  lock.lock();
+  deactivated = deactivated_;
+  lock.unlock();
+  if (deactivated) { return 0; }
+  
   if (nconnections() == 0) { return 0; }
   turn_on_light();
 

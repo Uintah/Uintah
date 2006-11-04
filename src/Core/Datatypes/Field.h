@@ -99,7 +99,8 @@ public:
   virtual bool has_virtual_interface();
   
   virtual void resize_fdata();
-
+  virtual void resize_fdata(size_t size);
+  
   virtual void get_value(char &val, Mesh::index_type i) const;
   virtual void get_value(unsigned char &val, Mesh::index_type i) const;
   virtual void get_value(short &val, Mesh::index_type i) const;

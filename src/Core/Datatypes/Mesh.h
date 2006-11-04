@@ -35,6 +35,7 @@
 #include <Core/Math/MusilRNG.h>
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/StackVector.h>
 #include <Core/Datatypes/FieldVIndex.h>
 #include <Core/Datatypes/FieldVIterator.h>
 
@@ -70,6 +71,7 @@ public:
   typedef unsigned int index_type;
   typedef unsigned int size_type;
   typedef std::vector<unsigned int> array_type;
+  typedef StackVector<unsigned int,3> dimension_type;
   
   class VNode { 
     public:
@@ -267,10 +269,14 @@ public:
   //! Get the basis order of the mesh (implemented in every mesh)
   virtual int basis_order();
 
+  //! Get the dimensions of the mesh.
+  //! This function will replace get_dim()
+  virtual void get_dimensions(dimension_type& dim);
 
   //----------------------------------------------------------------------
   // Functions that are based on the virtual ones
   // These functions recreate functions we used in dynamic compilation:
+
 
   inline void get_point(Point &point, VNode::index_type i) const
   { get_center(point,i); }

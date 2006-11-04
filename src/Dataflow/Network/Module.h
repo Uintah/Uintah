@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -46,6 +46,7 @@
 #include <Dataflow/Network/Ports/Port.h>
 #include <Core/Util/Assert.h>
 #include <Core/GeomInterface/Pickable.h>
+#include <Core/Thread/RecursiveMutex.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/FutureValue.h>
 #include <Dataflow/GuiInterface/GuiCallback.h>
@@ -103,6 +104,10 @@ class Scheduler;
 template<class T> class SimpleIPort;
 template<class T> class SimpleOPort;
 
+// Define Handles for thread safety.
+typedef LockingHandle<IPort> IPortHandle;
+typedef LockingHandle<OPort> OPortHandle;
+
 typedef IPort* (*iport_maker)(Module*, const string&);
 typedef OPort* (*oport_maker)(Module*, const string&);
 typedef Module* (*ModuleMaker)(GuiContext* ctx);
@@ -111,39 +116,86 @@ typedef std::pair<port_map_type::iterator,
 		  port_map_type::iterator> port_range_type;
 
 
+// PortManager class has been altered to be thread safe
+// so the module code as well as the network editor can
+// update the number of ports.
+// The PortManager will use Handle instead of pointers 
+// as well so we can delete a port on the network
+// while executing and not crash the network.
+
 template<class T> 
 class PortManager {
 private:
   port_map_type    namemap_;
   vector<T>        ports_;
-    
+  RecursiveMutex   lock_;   // Thread safety
+  
 public:
+  PortManager();
   int size();
   void add(const T &item);
   void remove(int item);
-  const T& operator[](int);
+  T operator[](int);
   port_range_type operator[](string);
+  T get_port(int);
+  std::vector<T> get_port_range(std::string item);  // atomic version of getting all handles with a certain name
+
+  void lock() { lock_.lock(); }
+  void unlock() { lock_.unlock(); }
 };
+
+template<class T>
+PortManager<T>::PortManager() :
+  lock_("port manager lock")
+{
+}
 
 template<class T>
 int
 PortManager<T>::size()
 { 
-  return ports_.size(); 
+  lock_.lock();
+  size_t s = ports_.size();
+  lock_.unlock();
+  return (static_cast<int>(s)); 
+}
+
+template<class T>
+T
+PortManager<T>::get_port(int item)
+{
+  lock_.lock();
+  T handle(0);
+  if (item < ports_.size()) 
+  {
+    handle = ports_[item];
+  }
+  lock_.unlock();
+  return(handle);
 }
 
 template<class T>
 void
 PortManager<T>::add(const T &item)
 { 
+  lock_.lock();
   namemap_.insert(pair<string, int>(item->get_portname(), ports_.size())); 
   ports_.push_back(item);
+  lock_.unlock();
 }
 
 template<class T>
 void
 PortManager<T>::remove(int item)
 {
+  lock_.lock();
+ 
+  if (ports_.size() <= item)
+  {
+    lock_.unlock();
+    throw "PortManager tried to remove a port that does not exist";
+  }
+
   string name = ports_[item]->get_portname();
   port_map_type::iterator erase_me;
 
@@ -156,22 +208,54 @@ PortManager<T>::remove(int item)
     
   ports_.erase(ports_.begin() + item);
   namemap_.erase(erase_me);
+  lock_.unlock();  
 }
 
 template<class T>
-const T&
+T
 PortManager<T>::operator[](int item)
 {
-  ASSERT(size() > item);
-  return ports_[item];
+  lock_.lock();
+
+  if (ports_.size() <= static_cast<size_t>(item))
+  {
+    lock_.unlock();
+    throw "PortManager tried to access a port that does not exist";
+  }
+
+  T t = ports_[item];
+  lock_.unlock();
+  return (t);
+
 }
 
 template<class T>
 port_range_type
 PortManager<T>::operator[](string item)
 {
-  return port_range_type(namemap_.equal_range(item));
+  lock_.lock();
+  port_range_type prt = static_cast<port_range_type>(namemap_.equal_range(item));
+  lock_.unlock();
+  return (prt);
 }
+
+template<class T>
+std::vector<T>
+PortManager<T>::get_port_range(std::string item)
+{
+  std::vector<T> ports;
+  lock_.lock();
+  port_range_type range = static_cast<port_range_type>(namemap_.equal_range(item));
+  port_map_type::iterator pi = range.first;
+  while (pi != range.second)
+  {
+    ports.push_back(ports_[pi->second]);
+    ++pi;
+  }
+  lock_.unlock();
+  return (ports);
+}
+
 
 class SCISHARE Module : public ProgressReporter, public ModulePickable, 
 			public GuiCallback
@@ -184,6 +268,7 @@ public:
     Iterator,
     ViewerSpecial
   };
+  
   Module(const std::string& name, GuiContext* ctx, SchedClass,
 	 const string& cat="unknown", const string& pack="unknown");
   virtual ~Module();
@@ -193,6 +278,7 @@ public:
   Network* get_network() {
     return network_;
   }
+  
   bool have_ui();
   void popup_ui();
   void delete_warn();
@@ -205,11 +291,13 @@ public:
   virtual void remark(const std::string&);
   virtual void compile_error(const std::string&);
   virtual void add_raw_message(const std::string&);
+  
   // This one isn't as thread safe as the other ProgressReporter functions.
   // Use add_raw_message or one of the others instead if possible.
   virtual std::ostream &msg_stream() { return msg_stream_; }
   virtual void msg_stream_flush();
 
+  //! This one should go when we have redone the PowerApps
   virtual bool in_power_app();
 
   //! Compilation progress.  Should probably have different name.
@@ -221,27 +309,36 @@ public:
   virtual void          update_progress(int current, int max);
   virtual void          increment_progress();
 
-  port_range_type get_input_ports(const string &name);
-  IPort* get_input_port(const string &name);
-  OPort* get_output_port(const string &name);
-  OPort* get_output_port(int idx);
-  IPort* get_input_port(int idx);
+  //! The next 12 functions are all deprecated:
+  //! Do not use these as they are not thread safe and return
+  //! a pointer instead of handle to an object they may be deleted
+  //! by another thread.
+  
+  //--------------------------------------------------------------------
+  // They are still here for compatibility of old modules
+  //
+  // Use get_input_handle(), get_dynamic_input_handles(), send_output_handle
+  // instead. These have been made thread safe
+  //--------------------------------------------------------------------
+      port_range_type get_iports(const string &name);
+      IPort* get_iport(const string &name);
+      OPort* get_oport(const string &name);
+      OPort* get_oport(int idx);
+      IPort* get_iport(int idx);
+      int num_input_ports();
+      int num_output_ports();
+      port_range_type get_input_ports(const string &name);
+      IPort* get_input_port(const string &name);
+      OPort* get_output_port(const string &name);
+      OPort* get_output_port(int idx);
+      IPort* get_input_port(int idx);
+  //--------------------------------------------------------------------
 
+  
   bool oport_cached(const string &name);
-
   bool oport_supports_cache_flag(int p);
   bool get_oport_cache_flag(int p);
   void set_oport_cache_flag(int p, bool val);
-
-  //! next 6 are Deprecated
-  port_range_type get_iports(const string &name);
-  IPort* get_iport(const string &name);
-  OPort* get_oport(const string &name);
-  OPort* get_oport(int idx);
-  IPort* get_iport(int idx);
-
-  int num_input_ports();
-  int num_output_ports();
 
   //! Used by widgets
   GuiInterface* get_gui();
@@ -257,6 +354,7 @@ public:
   virtual void set_context(Network* network);
 
   //! Callbacks
+  
   virtual void connection(Port::ConnectionState, int, bool);
   virtual void widget_moved(bool last, BaseWidget *widget);
 
@@ -275,6 +373,31 @@ public:
   int add_output_port_by_name(std::string name, std::string d_type);
   void want_to_execute();
 
+
+  // Get handles to ports, thread safety issues with
+  // network editing and execution at the same time
+  
+  template<class DP>
+  bool get_iport_handle(const string &name, DP& handle);
+
+  template<class DP>
+  bool get_iport_handles(const string &name, std::vector<DP>& handles);
+  
+  template<class DP>
+  bool get_oport_handle(const string &name, DP& handle);
+  
+  template<class DP>
+  bool get_iport_handle(int portnum, DP& handle);
+  
+  template<class DP>
+  bool get_oport_handle(int portnum, DP& handle);
+
+  void lock_iports() { iports_.lock(); }
+  void unlock_iports() { iports_.unlock(); }
+
+  void lock_oports() { oports_.lock(); }
+  void unlock_oports() { oports_.unlock(); }
+  
 protected:
 
   friend class ModuleHelper;
@@ -304,6 +427,9 @@ protected:
   GuiContext* get_ctx() { return ctx_; }
   void set_stack_size(unsigned long stack_size);
   void reset_vars();
+
+
+
 
   //! Get the handle for a single port.
   template<class DH>
@@ -360,10 +486,11 @@ protected:
   bool                   abort_flag_;
   CPUTimer               timer_;
   ostringstream          msg_stream_;
+  bool                   need_execute_;
   SchedClass             sched_class_;
 
   //! Used by the execute module;
-  //! True if either the gui vars or data has cahnged.
+  //! True if either the gui vars or data has changed.
   bool                   inputs_changed_;   
   //! Error during execution not related to checks.
   bool                   execute_error_;    
@@ -374,25 +501,25 @@ private:
   void add_iport(IPort*);
   void add_oport(OPort*);
 
-  bool                   need_execute_;
-
   GuiContext*            ctx_;
   State                  state_;
   MsgState               msg_state_;  
     		         
-  PortManager<OPort*>    oports_;
-  PortManager<IPort*>    iports_;
-  iport_maker            dynamic_port_maker_;
-  string                 lastportname_;
-  int                    first_dynamic_port_;
-  unsigned long          stacksize_;
-  ModuleHelper          *helper_;
-  Thread                *helper_thread_;
-  Network               *network_;
+  PortManager<OPortHandle>  oports_;
+  PortManager<IPortHandle>  iports_;
+  iport_maker               dynamic_port_maker_;
+  string                    lastportname_;
+  int                       first_dynamic_port_;
+  unsigned long             stacksize_;
+  ModuleHelper              *helper_;
+  Thread                    *helper_thread_;
+  Network                   *network_;
 		         
-  bool                   show_stats_;
+  bool                      show_stats_;
 		         
-  GuiString              log_string_;
+  GuiString                 log_string_;
+
+  RecursiveMutex            lock_;
 
   Module(const Module&);
   Module& operator=(const Module&);
@@ -406,16 +533,16 @@ Module::get_input_handle(std::string name,
 			 DH& handle,
 			 bool required)
 {
-  update_state(NeedData);
+//  update_state(NeedData);
 
   bool return_state = false;
 
-  SimpleIPort<DH> *dataport;
+  LockingHandle<SimpleIPort<DH> > dataport;
 
   handle = 0;
 
   //! We always require the port to be there.
-  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(name))) )
+  if (!(get_iport_handle(name,dataport)))
   {
     throw "Incorrect data type sent to input port '" + name +
       "' (dynamic_cast failed).";
@@ -440,6 +567,15 @@ Module::get_input_handle(std::string name,
     error( "No handle or representation for input port '" +
            name + "'."  );
   }
+  else
+  {
+    //! See if the data has changed. Note only change the boolean if
+    //! it is false this way it can be cascaded with other handle gets.
+    if( inputs_changed_ == false ) {
+      inputs_changed_ = dataport->changed();
+    }  
+  }
+
 
   return return_state;
 }
@@ -452,16 +588,15 @@ Module::get_input_handle(int num,
 			 DH& handle,
 			 bool required)
 {
-  update_state(NeedData);
+//  update_state(NeedData);
 
   bool return_state = false;
 
-  SimpleIPort<DH> *dataport;
-
+  LockingHandle< SimpleIPort<DH> > dataport;
   handle = 0;
 
   //! We always require the port to be there.
-  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(num))) )
+  if (!(get_iport_handle(num,dataport)))
   {
     std::ostringstream oss;
     oss << "port " << num;
@@ -489,6 +624,14 @@ Module::get_input_handle(int num,
     error( "No handle or representation for input port '" +
            name + "'."  );
   }
+  else
+  {
+    //! See if the data has changed. Note only change the boolean if
+    //! it is false this way it can be cascaded with other handle gets.
+    if( inputs_changed_ == false ) {
+      inputs_changed_ = dataport->changed();
+    }  
+  }
 
   return return_state;
 }
@@ -507,55 +650,45 @@ Module::get_dynamic_input_handles(std::string name,
 {
   bool return_state = false;
 
-  update_state(NeedData);
+//  update_state(NeedData);
 
   unsigned int nPorts = 0;
   handles.clear();
 
-  port_range_type range = get_iports( name );
-
-  //! If the code does not have the name correct this happens.
-  if( range.first == range.second )
+  std::vector<LockingHandle<SimpleIPort<DH> > > dataports;
+  
+  if (!(get_iport_handles(name,dataports)))
   {
     throw "Unable to initialize dynamic input port '" + name + "'.";
   }
   else
   {
-    port_map_type::iterator pi = range.first;
-    
-    while (pi != range.second)
+    for (size_t p=0; p < dataports.size(); p++)
     {
-      SimpleIPort<DH> *dataport;
-      dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second));
-      //! We always require the port to be there.
-      if(!dataport)
-      {
-	throw "Unable to get dynamic input port #" + to_string(nPorts) +
-          " ' " +name + "'.";
-      }
-      else
-      {
-	//! Get the handle and check for data.
-	DH handle;
+      //! Get the handle and check for data.
+      DH handle;
 
-	if (dataport->get(handle) && handle.get_rep())
+      if (dataports[p]->get(handle) && handle.get_rep())
+      {
+        handles.push_back(handle);
+  
+        //! See if the data has changed. Note only change the boolean if
+        //! it is false this way it can be cascaded with other handle gets.
+        if( inputs_changed_ == false ) 
         {
-	  handles.push_back(handle);
-	  
-	  //! See if the data has changed. Note only change the boolean if
-	  //! it is false this way it can be cascaded with other handle gets.
-	  if( inputs_changed_ == false ) {
-	    inputs_changed_ = dataport->changed();
-	  }
-	  return_state = true;
-
-	} else {
-	  handles.push_back(0);
-	}
-
-	++nPorts;
+          inputs_changed_ = dataports[p]->changed();
+        }
+        return_state = true;
+      } 
+      else 
+      {
+        if( inputs_changed_ == false ) 
+        {
+          inputs_changed_ = dataports[p]->changed();
+        }
+        handles.push_back(0);
       }
-      ++pi;
+      ++nPorts;
     }
   }
 
@@ -568,7 +701,7 @@ Module::get_dynamic_input_handles(std::string name,
     //data so report an error.
     if( data_required ) {
       error( "No handle or representation for dynamic input port #" +
-	     to_string(nPorts) + " ' " +name + "'." );
+      to_string(nPorts) + " ' " +name + "'." );
     }
     //! If we have no valid handles, make sure iteration over 
     //! the set of handles is empty.
@@ -590,10 +723,10 @@ Module::send_output_handle(string name, DH& handle,
   //! on this one.
   if (!handle.get_rep()) return false;
 
-  SimpleOPort<DH> *dataport;
+  LockingHandle<SimpleOPort<DH> > dataport;
 
   //! We always require the port to be there.
-  if ( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(name))) )
+  if (!(get_oport_handle(name,dataport)))
   {
     throw "Incorrect data type sent to output port '" + name +
       "' (dynamic_cast failed).";
@@ -619,10 +752,10 @@ Module::send_output_handle(int portnum, DH& handle,
   //! on this one.
   if (!handle.get_rep()) return false;
 
-  SimpleOPort<DH> *dataport;
+  LockingHandle<SimpleOPort<DH> > dataport;
 
   //! We always require the port to be there.
-  if ( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(portnum))) )
+  if (!(get_oport_handle(portnum,dataport)))
   {
     std::ostringstream oss;
     oss << portnum;
@@ -640,6 +773,76 @@ Module::send_output_handle(int portnum, DH& handle,
 }
 
 
+template<class DP>
+bool Module::get_iport_handle(const string &name, DP& handle)
+{
+  std::vector<IPortHandle> iports;
+  iports = iports_.get_port_range(name);
+  if (iports.size() == 0)
+  {
+    throw "Unable to initialize iport '" + name + "'.";  
+  }
+  handle = dynamic_cast<typename DP::pointer_type>(iports[0].get_rep());
+  return (handle.get_rep());
+}
+
+
+template<class DP>
+bool Module::get_iport_handles(const string &name, std::vector<DP>& handles)
+{
+  std::vector<IPortHandle> iports;
+  iports = iports_.get_port_range(name);
+  if (iports.size() == 0)
+  {
+    throw "Unable to initialize iport '" + name + "'.";  
+  }
+  
+  DP handle;
+  for (size_t p=0; p<iports.size();p++)
+  {
+    handle = dynamic_cast<typename DP::pointer_type>(iports[p].get_rep());
+    if (handle.get_rep()) handles.push_back(handle);
+  }
+
+  return (handles.size());
+}
+
+template<class DP>
+bool Module::get_oport_handle(const string &name, DP& handle)
+{
+
+  std::vector<OPortHandle> oports;
+  oports = oports_.get_port_range(name);
+  if (oports.size() == 0)
+  {
+    throw "Unable to initialize oport '" + name + "'.";  
+  }
+  handle = dynamic_cast<typename DP::pointer_type>(oports[0].get_rep());
+
+
+  return (handle.get_rep());
+}
+
+template<class DP>
+bool Module::get_iport_handle(int item, DP& handle)
+{
+
+  IPortHandle h = iports_[item];
+  handle = dynamic_cast<typename DP::pointer_type>(h.get_rep());
+
+
+  return (handle.get_rep());
+}
+
+template<class DP>
+bool Module::get_oport_handle(int item, DP& handle)
+{
+
+  OPortHandle h = oports_[item];
+  handle = dynamic_cast<typename DP::pointer_type>(h.get_rep());
+
+  return (handle.get_rep());
+}
 
 }
 

@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -149,10 +149,10 @@ Module::Module(const string& name, GuiContext* ctx,
   have_own_dispatch_(0),
   id_(ctx->getfullname()), 
   abort_flag_(0),
+  need_execute_(0),
   sched_class_(sched_class),
   inputs_changed_(false),
   execute_error_(false),
-  need_execute_(0),
   ctx_(ctx),
   state_(Completed),
   msg_state_(Reset), 
@@ -160,7 +160,8 @@ Module::Module(const string& name, GuiContext* ctx,
   helper_thread_(0),
   network_(0),
   show_stats_(true),
-  log_string_(ctx->subVar("log_string", false))
+  log_string_(ctx->subVar("log_string", false)),
+  lock_("Module lock")
 {
   stacksize_=0;
 
@@ -474,7 +475,8 @@ void
 Module::add_iport(IPort* port)
 {
   port->set_which_port(iports_.size());
-  iports_.add(port);
+  IPortHandle handle(port);
+  iports_.add(handle);
   gui_->execute("drawPorts "+id_+" i");
 }
 
@@ -482,7 +484,8 @@ void
 Module::add_oport(OPort* port)
 {
   port->set_which_port(oports_.size());
-  oports_.add(port);
+  OPortHandle handle(port);
+  oports_.add(handle);
   gui_->execute("drawPorts "+id_+" o");
 }
 
@@ -491,6 +494,7 @@ Module::remove_iport(int which)
 {
   // remove the indicated port, then
   // collapse the remaining ports together
+  iports_[which]->deactivate();
   iports_.remove(which);  
   gui_->execute("removePort {"+id_+" "+to_string(which)+" i}");
   // rename the collapsed ports and their connections
@@ -506,35 +510,37 @@ Module::remove_iport(int which)
 port_range_type
 Module::get_iports(const string &name)
 {
-  return iports_[name];
+  return (iports_[name]);
 }
 
 IPort*
 Module::get_iport(int item)
 {
-  return iports_[item];
+  IPortHandle h = iports_[item];
+  return (h.get_rep());
 }
 
 OPort*
 Module::get_oport(int item)
 {
-  return oports_[item];
+  OPortHandle h = oports_[item];
+  return (h.get_rep());
 }
 
 IPort*
 Module::get_iport(const string& name)
 {
-  IPort *p = get_input_port(name);
-  if (p == 0) throw "Unable to initialize iport '" + name + "'.";
-  return p;
+  IPortHandle h;
+  if (!(get_iport_handle(name,h))) throw "Unable to initialize oport '" + name + "'.";
+  return (h.get_rep());
 }
 
 OPort*
 Module::get_oport(const string& name)
 {
-  OPort *p = get_output_port(name);
-  if (p == 0) throw "Unable to initialize oport '" + name + "'.";
-  return p;
+  OPortHandle h;
+  if (!(get_oport_handle(name,h))) throw "Unable to initialize oport '" + name + "'.";
+  return (h.get_rep());
 }
 
 port_range_type
@@ -546,61 +552,66 @@ Module::get_input_ports(const string &name)
 IPort*
 Module::get_input_port(const string &name)
 {
-  if (iports_[name].first==iports_[name].second) {
-    return 0;
-  }
-  return get_input_port(iports_[name].first->second);
+  IPortHandle h;
+  get_iport_handle(name,h);
+  return (h.get_rep());
 }
 
 OPort*
 Module::get_output_port(const string &name)
 {
-  if (oports_[name].first == oports_[name].second)
-  {
-    return 0;
-  }
-  return get_output_port(oports_[name].first->second);
+  OPortHandle h;
+  get_oport_handle(name,h);
+  return (h.get_rep());
 }
 
 IPort*
 Module::get_input_port(int item)
 {
-  return iports_[item];
+  IPortHandle h;
+  get_iport_handle(item,h);
+  return (h.get_rep());
 }
 
 OPort*
 Module::get_output_port(int item)
 {
-  return oports_[item];
+  OPortHandle h;
+  get_oport_handle(item,h);
+  return (h.get_rep());
 }
+
 
 bool
 Module::oport_cached(const string &name)
 {
-  OPort *p = get_output_port(name);
-  if (p == 0) { throw "Unable to initialize oport '" + name + "'."; }
-  return p->have_data();
+  OPortHandle h;
+  if (!(get_oport_handle(name,h))) throw "Unable to initialize oport '" + name + "'.";
+  return (h->have_data());
 }
 
 bool
 Module::oport_supports_cache_flag(int p)
 {
-  if (p >= num_output_ports()) return false;
-  return get_oport(p)->cache_flag_supported();
+  OPortHandle h;
+  if (!(get_oport_handle(p,h))) return (false);
+  return (h->cache_flag_supported());
 }
 
 bool
 Module::get_oport_cache_flag(int p)
 {
-  ASSERT(p < num_output_ports());
-  return get_oport(p)->get_cache();
+  OPortHandle h;
+  if (!(get_oport_handle(p,h))) return (false);
+  return (h->get_cache());
 }
 
 void
 Module::set_oport_cache_flag(int p, bool val)
 {
-  ASSERT(p < num_output_ports());
-  get_oport(p)->set_cache(val);
+  OPortHandle h;
+  if (!(get_oport_handle(p,h))) return;
+  h->set_cache(val);
 }
 
 
@@ -998,11 +1009,13 @@ Module::do_execute()
 
   // Call the User's execute function.
   update_msg_state(Reset);
-  update_state(JustStarted);
   timer_.clear();
   timer_.start();
 
-  try {
+  update_state(JustStarted);
+
+  try 
+  {
     execute();
   }
   catch (const Exception &e)
@@ -1032,13 +1045,18 @@ Module::do_execute()
   update_state(Completed);
 
   // Call finish on all ports.
-  for (i=0;i<iports_.size(); i++)
+  size_t s = iports_.size();
+  for (i=0;i<s; i++)
   {
-    iports_[i]->finish();
+    IPortHandle h = iports_.get_port(i);
+    if (h.get_rep()) h->finish();
   }
-  for (i=0; i<oports_.size(); i++)
+  
+  s = oports_.size();
+  for (i=0; i<s; i++)
   {
-    oports_[i]->finish();
+    OPortHandle h = oports_.get_port(i);
+    if (h.get_rep()) h->finish();
   }
 }
 
@@ -1046,9 +1064,11 @@ Module::do_execute()
 void
 Module::do_synchronize()
 {
-  for (int i=0; i<oports_.size(); i++)
+  size_t s = oports_.size();
+  for (int i=0; i< s; i++)
   {
-    oports_[i]->synchronize();
+    OPortHandle h = oports_.get_port(i);
+    if (h.get_rep()) h->synchronize();
   }
 }
 
@@ -1119,10 +1139,10 @@ Module::send_output_handle( string port_name,
   // on this one.
   //if (!handle.get_rep()) return false;
 
-  GeometryOPort *dataport;
+  LockingHandle<GeometryOPort> dataport;
 
   // We always require the port to be there.
-  if ( !(dataport = dynamic_cast<GeometryOPort*>(get_oport(port_name))) ) {
+  if ( !(get_oport_handle(port_name,dataport))) {
     throw "Incorrect data type sent to output port '" + port_name +
       "' (dynamic_cast failed).";
     return false;
@@ -1149,10 +1169,10 @@ Module::send_output_handle( string port_name,
   // on this one.
   //if (!handles.size()==0) return false;
 
-  GeometryOPort *dataport;
+  LockingHandle<GeometryOPort> dataport;
 
   // We always require the port to be there.
-  if ( !(dataport = dynamic_cast<GeometryOPort*>(get_oport(port_name))) ) {
+  if ( !(get_oport_handle(port_name,dataport)) ) {
     throw "Incorrect data type sent to output port '" + port_name +
       "' (dynamic_cast failed).";
     return false;

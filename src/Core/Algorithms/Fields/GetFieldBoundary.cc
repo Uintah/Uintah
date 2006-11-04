@@ -83,9 +83,6 @@ bool GetFieldBoundaryAlgo::GetFieldBoundary(ProgressReporter *pr, FieldHandle in
   ////////////////////////////////////////////////
   // VIRTUAL VERSION OF THIS ALGORITHM
 
-  std::cout << "fi.interface="<< fi.has_virtual_interface() <<"\n";
-  std::cout << "fo.interface="<< fo.has_virtual_interface() <<"\n";
-
   if (fi.has_virtual_interface() && fo.has_virtual_interface())
   {
     output = Create_Field(fo);

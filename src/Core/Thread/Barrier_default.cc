@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
+   License for the specific language governing rights and limitations under
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -47,10 +47,9 @@
 namespace SCIRun {
 struct Barrier_private {
   Mutex mutex;
-  ConditionVariable cond0;
-  ConditionVariable cond1;
-  int cc;
+  ConditionVariable cond;
   int nwait;
+  
   Barrier_private();
   ~Barrier_private();
 };
@@ -61,8 +60,8 @@ using SCIRun::Barrier;
 
 Barrier_private::Barrier_private()
     : mutex("Barrier lock"),
-      cond0("Barrier condition 0"), cond1("Barrier condition 1"),
-      cc(0), nwait(0)
+      cond("Barrier condition"),
+      nwait(0)
 {
 }
 
@@ -83,25 +82,31 @@ Barrier::Barrier(const char* name)
 
 Barrier::~Barrier()
 {
-    delete priv_;
-    priv_=0;
+  delete priv_;
+  priv_=0;
 }
 
 void
 Barrier::wait(int n)
 {
-    int oldstate=Thread::couldBlock(name_);
-    priv_->mutex.lock();
-    ConditionVariable& cond=priv_->cc?priv_->cond0:priv_->cond1;
-    priv_->nwait++;
-    if(priv_->nwait == n){
-	// Wake everybody up...
-	priv_->nwait=0;
-	priv_->cc=1-priv_->cc;
-	cond.conditionBroadcast();
-    } else {
-	cond.wait(priv_->mutex);
-    }
-    priv_->mutex.unlock();
-    Thread::couldBlockDone(oldstate);
+  int oldstate=Thread::couldBlock(name_);
+
+  // Lock the counter and add one until
+  // we reached the number of processes
+  priv_->mutex.lock();
+  priv_->nwait++;
+  if(priv_->nwait == n)
+  {
+    // We are the last thread 
+    // now wake everybody up...
+    priv_->nwait=0;
+    priv_->cond.conditionBroadcast();
+  } 
+  else 
+  {
+    // Wait until the last one signals us
+    priv_->cond.wait(priv_->mutex);
+  }
+  priv_->mutex.unlock();
+  Thread::couldBlockDone(oldstate);
 }

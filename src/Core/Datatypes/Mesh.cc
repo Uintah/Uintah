@@ -817,11 +817,19 @@ Mesh::get_normal(Vector& norm,VNode::index_type i) const
   ASSERTFAIL("Mesh interface:get_normal has not been implemented");  
 }
 
-
 int
 Mesh::basis_order()
 {
   return (-1);
+}
+
+void
+Mesh::get_dimensions(dimension_type& dim)
+{
+  dim.resize(1);
+  VNode::size_type sz;
+  size(sz);
+  dim[0] = sz;
 }
 
 
