@@ -39,6 +39,7 @@
 #include <StandAlone/Apps/Painter/SessionReader.h>
 #include <StandAlone/Apps/Painter/SessionWriter.h>
 #include <StandAlone/Apps/Painter/VolumeOps.h>
+#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
 
 #include <sci_comp_warn_fixes.h>
 #include <iostream>
@@ -211,7 +212,7 @@ Painter::StartFloodFillTool(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::Autoview(event_handle_t) {
-  if (current_volume_) {
+  if (current_volume_.get_rep()) {
     SliceWindows::iterator window = windows_.begin();
     SliceWindows::iterator end = windows_.end();
     for (;window != end; ++window) {
@@ -228,8 +229,8 @@ Painter::Autoview(event_handle_t) {
 
 BaseTool::propagation_state_e 
 Painter::CopyLayer(event_handle_t) {
-  if (!current_volume_) return STOP_E;
-  NrrdDataHandle nrrdh = current_volume_->nrrd_handle_;
+  if (!current_volume_.get_rep()) return STOP_E;
+  NrrdDataHandle &nrrdh = current_volume_->nrrd_handle_;
   nrrdh.detach();
   string name = unique_layer_name(current_volume_->name_);
   volumes_.push_back(new NrrdVolume(this, name, nrrdh, current_volume_->label_));
@@ -240,7 +241,7 @@ Painter::CopyLayer(event_handle_t) {
 
 BaseTool::propagation_state_e 
 Painter::DeleteLayer(event_handle_t event) {
-  NrrdVolume *layer = current_volume_;
+  NrrdVolumeHandle &layer = current_volume_;
   if (event.get_rep()) {
     Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
     ASSERT(signal);
@@ -248,10 +249,10 @@ Painter::DeleteLayer(event_handle_t event) {
     layer = find_volume_by_name(vars->get_string("LayerButton::name"));
   }
 
-  if (!layer) return STOP_E;
+  if (!layer.get_rep()) return STOP_E;
 
-  NrrdVolume *parent = layer->parent_;
-  NrrdVolumes &volumes =  parent ? parent->children_ : volumes_;
+  NrrdVolumeHandle parent = layer->parent_;
+  NrrdVolumes &volumes =  parent.get_rep() ? parent->children_ : volumes_;
 
   NrrdVolumes newvolumes(volumes.size()-1, 0);
   int j = 0;
@@ -263,10 +264,10 @@ Painter::DeleteLayer(event_handle_t event) {
       newcur = i;
   }
   volumes = newvolumes;
-  delete layer;
+  layer = 0;
   if (newcur < volumes.size()) {
     current_volume_ = volumes[newcur];
-  } else if (parent) {
+  } else if (parent.get_rep()) {
     current_volume_ = parent;
   } else {
     current_volume_ = 0;
@@ -280,7 +281,7 @@ Painter::DeleteLayer(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::NewLayer(event_handle_t event) {
-  if (!current_volume_) return STOP_E;
+  if (!current_volume_.get_rep()) return STOP_E;
   
   if (current_volume_->label_) {
     return CreateLabelChild(event);
@@ -408,7 +409,7 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   filter->SetKernel(structuringElement);
   filter->SetDilateValue(get_vars()->get_double(name+"::dilateValue"));
 
-  NrrdVolume *vol = current_volume_;
+  NrrdVolumeHandle &vol = current_volume_;
   vol->nrrd_handle_ = 
     do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
   redraw_all();
@@ -423,8 +424,8 @@ Painter::LoadVolume(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
   string filename = signal->get_vars()->get_string("filename");
-  NrrdVolume *volume = load_volume<float>(filename);
-  if (!volume) {
+  NrrdVolumeHandle volume = load_volume<float>(filename);
+  if (!volume.get_rep()) {
     return STOP_E;
   }
 
@@ -478,7 +479,8 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   filter2->SetErodeValue
     (get_vars()->get_double(name+"::erodeValue"));
 
-  NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
+  NrrdVolumeHandle vol = 
+    new NrrdVolume(this, name, current_volume_->nrrd_handle_);
   volumes_.push_back(vol);
 
   vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
@@ -507,15 +509,17 @@ Painter::ITKGradientMagnitude(event_handle_t) {
     < ITKImageFloat3D, ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();
 
-  NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
+  volume_lock_.lock();
+  NrrdVolumeHandle vol = 
+    new NrrdVolume(this, name, current_volume_->nrrd_handle_);
   volumes_.push_back(vol);
   current_volume_ = vol;
+  volume_lock_.unlock();
   rebuild_layer_buttons();
-  filter_volume_ = vol;
-  vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
-  vol->reset_data_range();
+  Skinner::Variables *vars = new Skinner::Variables(name, get_vars());  
  
-  vol->dirty_ = true;
+  ITKFilterCallback<FilterType>(vars, vol, filter)();
+  vol->reset_data_range();
   extract_all_window_slices();
   redraw_all();
 #endif
@@ -635,16 +639,17 @@ extern SCISHARE GeomHandle fast_lat_mc(Nrrd *nrrd,
 void
 Painter::isosurface_label_volumes(NrrdVolumes &volumes, GeomGroup *group)
 {
-  volume_lock_.lock();
   for (unsigned int i = 0; i < volumes.size(); ++i) {
 
-    NrrdVolume *volume = volumes[i];
+    NrrdVolumeHandle volume = volumes[i];
     if (volume->label_) {
 
       GeomHandle isosurface;
-      if (volume->label_ && volume->nrrd_handle_->nrrd_->type == nrrdTypeUInt) 
+      NrrdDataHandle nrrdh = volume->nrrd_handle_;
+      if (volume->label_ && nrrdh->nrrd_->type == nrrdTypeUInt) 
       {
-        isosurface = fast_lat_mc(volume->nrrd_handle_->nrrd_, 
+
+        isosurface = fast_lat_mc(nrrdh->nrrd_, 
                                  volume->label_/2.0,
                                  volume->label_);
       } else {
@@ -662,7 +667,6 @@ Painter::isosurface_label_volumes(NrrdVolumes &volumes, GeomGroup *group)
     if (!volume->children_.empty())
       isosurface_label_volumes(volume->children_, group);
   }
-  volume_lock_.unlock();  
 }
 
 
@@ -672,7 +676,7 @@ BaseTool::propagation_state_e
 Painter::ShowIsosurface(event_handle_t event)
 {
   //static int count = 0;
-  if (!current_volume_) return STOP_E;
+  if (!current_volume_.get_rep()) return STOP_E;
   //  event_handle_t scene_event = = ;
 
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
@@ -698,7 +702,7 @@ Painter::ShowVolumeRendering(event_handle_t event)
 {
   event_handle_t scene_event = 0;
 
-  if (!current_volume_) return STOP_E;
+  if (!current_volume_.get_rep()) return STOP_E;
   NrrdDataHandle nrrd_handle = current_volume_->nrrd_handle_;
 
   
@@ -909,11 +913,11 @@ Painter::AbortFilterOn(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::CreateLabelVolume(event_handle_t event) {
-  if (!current_volume_) return STOP_E;
+  if (!current_volume_.get_rep()) return STOP_E;
   volume_lock_.lock();
 #ifdef HAVE_INSIGHT
   NrrdDataHandle nrrdh = 
-    VolumeOps::create_clear_nrrd(current_volume_->nrrd_handle_);
+    VolumeOps::create_clear_nrrd(current_volume_->nrrd_handle_, nrrdTypeUInt);
 #else
   NrrdDataHandle nrrdh = 0;
 #endif
@@ -930,7 +934,7 @@ Painter::CreateLabelVolume(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::CreateLabelChild(event_handle_t event) {
-  if (!current_volume_) return STOP_E;
+  if (!current_volume_.get_rep()) return STOP_E;
   current_volume_ = current_volume_->create_child_label_volume();
   //  volumes_.push_back();
   //  current_volume_ = volumes_.back();
@@ -948,7 +952,7 @@ Painter::LoadSession(event_handle_t event) {
   
   SessionReader reader(this);
   if (reader.load_session(filename)) {
-    if (current_volume_) 
+    if (current_volume_.get_rep()) 
       for (unsigned int i = 0; i < windows_.size(); ++ i) {
         windows_[i]->center_ = current_volume_->center();
       }
@@ -982,13 +986,13 @@ Painter::SaveSession(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::SaveVolume(event_handle_t event) {
-  if (!current_volume_) {
+  if (!current_volume_.get_rep()) {
     status_ = "No Layer Selected";
     return STOP_E;
   }
 
-  NrrdVolume *parent = current_volume_;
-  while (parent->parent_) parent = parent->parent_;
+  NrrdVolumeHandle parent = current_volume_;
+  while (parent->parent_.get_rep()) parent = parent->parent_;
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
   string filename = signal->get_vars()->get_string("filename");

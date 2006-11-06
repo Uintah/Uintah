@@ -50,8 +50,8 @@ BaseTool::propagation_state_e
 CLUTLevelsTool::pointer_down(int b, int x, int y,
                                       unsigned int m, int t)
 {
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol || !painter_->cur_window_) {
+  NrrdVolumeHandle &vol = painter_->current_volume_;
+  if (!vol.get_rep() || !painter_->cur_window_) {
     return CONTINUE_E;
   }
 
@@ -72,8 +72,8 @@ BaseTool::propagation_state_e
 CLUTLevelsTool::pointer_motion(int b, int x, int y, 
                                         unsigned int m, int t)
 {
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) {
+  NrrdVolumeHandle &vol = painter_->current_volume_;
+  if (!vol.get_rep()) {
     return CONTINUE_E;
   }
 

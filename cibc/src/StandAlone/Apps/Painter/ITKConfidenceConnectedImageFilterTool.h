@@ -63,7 +63,7 @@ private:
   void                  finish();
   Painter *             painter_;
   vector<int>           seed_;
-  NrrdVolume *          volume_;
+  NrrdVolumeHandle      volume_;
   string                prefix_;
   Skinner::Var<int>     numberOfIterations_;
   Skinner::Var<double>  multiplier_;

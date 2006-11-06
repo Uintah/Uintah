@@ -59,15 +59,13 @@ LayerButton::~LayerButton()
 
 BaseTool::propagation_state_e
 LayerButton::down(event_handle_t signalh) {
-  if (volume_)
-    painter_->move_layer_down(volume_);
+  painter_->move_layer_down(volume_);
   return CONTINUE_E;
 }
 
 BaseTool::propagation_state_e
 LayerButton::up(event_handle_t signalh) {
-  if (volume_)
-    painter_->move_layer_up(volume_);
+  painter_->move_layer_up(volume_);
   return CONTINUE_E;
 }
 

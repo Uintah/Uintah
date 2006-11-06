@@ -50,7 +50,7 @@ CropTool::CropTool(Painter *painter) :
   painter_(painter),
   pick_(0)
 {
-  ASSERT(painter_->current_volume_);
+  ASSERT(painter_->current_volume_.get_rep());
   minmax_[1] = painter_->current_volume_->max_index();
   minmax_[0] = vector<int>(minmax_[1].size(), 0);
   pick_minmax_[0] = minmax_[0];

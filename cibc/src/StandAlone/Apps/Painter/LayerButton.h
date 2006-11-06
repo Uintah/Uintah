@@ -56,7 +56,7 @@ private:
   Skinner::Var<bool>          expand_;
   Skinner::Var<double>        expand_width_;
   
-  NrrdVolume *                volume_;
+  NrrdVolumeHandle            volume_;
   CatcherFunction_t           up;
   CatcherFunction_t           down;
   CatcherFunction_t           kill;

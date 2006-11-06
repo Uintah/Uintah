@@ -33,8 +33,11 @@
 #ifdef HAVE_INSIGHT
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <StandAlone/Apps/Painter/VolumeOps.h>
+#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
+#include <Core/Util/Assert.h>
 
 namespace SCIRun {
+
 
 ITKThresholdSegmentationLevelSetImageFilterTool::ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter) :
   BaseTool("ITK Threshold"),
@@ -61,7 +64,7 @@ ITKThresholdSegmentationLevelSetImageFilterTool::process_event
       return STOP_E;
     }
 
-    if (!seed_volume_) {
+    if (!seed_volume_.get_rep()) {
       painter_->status_ = "No seed layer set";
       painter_->redraw_all();
       return STOP_E;
@@ -95,25 +98,28 @@ ITKThresholdSegmentationLevelSetImageFilterTool::cont()
 }
 
 
+#define SetFilterVarMacro(name, type) \
+  filter_->Set##name(painter_->get_vars()->get_##type(scope+#name));
+
+
+
 void
 ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
 {
-  ASSERT(filter_);
   string scope = "ITKThresholdSegmentationLevelSetImageFilterTool::";
-  Skinner::Variables *vars = painter_->get_vars();
-  filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
-  filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
-  filter_->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
-  filter_->SetNumberOfIterations(vars->get_int(scope+"numberOfIterations"));
-  filter_->SetMaximumRMSError(vars->get_double(scope+"maximumRMSError"));
-  if (vars->get_bool(scope+"reverseExpansionDirection")) 
+  SetFilterVarMacro(CurvatureScaling, double);
+  SetFilterVarMacro(PropagationScaling, double);
+  SetFilterVarMacro(EdgeWeight, double);
+  SetFilterVarMacro(NumberOfIterations, int);
+  SetFilterVarMacro(MaximumRMSError, double);
+  SetFilterVarMacro(IsoSurfaceValue, double);
+  SetFilterVarMacro(SmoothingIterations,int);
+  SetFilterVarMacro(SmoothingTimeStep, double);
+  SetFilterVarMacro(SmoothingConductance, double);
+  if (painter_->get_vars()->get_bool(scope+"ReverseExpansionDirection")) 
     filter_->ReverseExpansionDirectionOn();
   else 
     filter_->ReverseExpansionDirectionOff();
-  filter_->SetIsoSurfaceValue(vars->get_double(scope+"isoSurfaceValue"));
-  filter_->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
-  filter_->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
-  filter_->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
 }
   
 
@@ -123,7 +129,7 @@ void
 ITKThresholdSegmentationLevelSetImageFilterTool::finish()
 {
   painter_->volume_lock_.lock();
-  NrrdVolume *vol = painter_->current_volume_;
+  NrrdVolumeHandle &vol = painter_->current_volume_;
 
   string newname = 
     painter_->unique_layer_name(vol->name_+" ITK Threshold Result");
@@ -135,13 +141,7 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
     VolumeOps::create_clear_nrrd(extracted_nrrd, nrrdTypeFloat);
   
   NrrdVolume *new_layer = 
-    new NrrdVolume(painter_, newname, extracted_nrrd);//clear_volume);
-  new_layer->label_ = 2;
-  new_layer->colormap_ = 0;
-  new_layer->data_min_ = -4.0;
-  new_layer->data_max_ = 4.0;
-  new_layer->clut_min_ = 4.0/255.0;
-  new_layer->clut_max_ = 4.0;
+    new NrrdVolume(painter_, newname, extracted_nrrd, 2);
 
   painter_->volumes_.push_back(new_layer);
   painter_->rebuild_layer_buttons();
@@ -155,8 +155,8 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
   double factor = 2.5;
   double min = mean.first - factor*mean.second;
   double max = mean.first + factor*mean.second;
-  painter_->status_ = 
-    ("Threshold min: "+to_string(min)+" Threshold max: "+to_string(max));
+  painter_->status_ = ("Threshold min: " + to_string(min) + 
+                       " Threshold max: " + to_string(max));
 
 
   filter_ = FilterType::New();
@@ -169,18 +169,9 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
     (dynamic_cast<ITKImageFloat3D *>
      (painter_->current_volume_->get_itk_image()->data_.GetPointer()));
 
-  painter_->filter_volume_ = new_layer;
+  ITKFilterCallback<FilterType>(painter_->get_vars(),new_layer,filter_)();
 
-  NrrdDataHandle nouth = 
-    painter_->do_itk_filter<FilterType>(filter_, extracted_nrrd);
-  painter_->volume_lock_.lock();
-  ASSERT(nouth.get_rep());
-
-  new_layer->nrrd_handle_ = 
-    VolumeOps::float_to_bit(nouth, 0, new_layer->label_);
-  new_layer->set_dirty();
-  painter_->volume_lock_.unlock();
-  painter_->extract_all_window_slices();
+  new_layer->change_type_from_float_to_bit();
 
   painter_->redraw_all();
 }

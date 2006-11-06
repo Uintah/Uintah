@@ -169,7 +169,7 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
     return;
   }
 
-  volume_->mutex_->lock();
+  volume_->nrrd_handle_->lock.lock();
   nrrd_handle_ = new NrrdData;
   Nrrd *dst = nrrd_handle_->nrrd_;
   Nrrd *src = volume_->nrrd_handle_->nrrd_;
@@ -191,6 +191,7 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
   } else {
     NRRD_EXEC(nrrdSlice(dst, src, ax, min_slice));
   }
+  volume_->nrrd_handle_->lock.unlock();
 
   if (label_ && dst->type == nrrdTypeFloat) {
 #ifdef HAVE_INSIGHT
@@ -199,7 +200,6 @@ VolumeSlice::extract_nrrd_slice_from_volume() {
 
   }
 
-  volume_->mutex_->unlock();
 }
 
 
@@ -423,8 +423,8 @@ VolumeSlice::draw()
   }
    
   int depth = 0;
-  NrrdVolume *parent = volume_;
-  while (parent->parent_) {
+  NrrdVolumeHandle parent = volume_;
+  while (parent->parent_.get_rep()) {
     parent = parent->parent_;
     depth++;
   }

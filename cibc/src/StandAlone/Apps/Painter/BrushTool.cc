@@ -92,7 +92,7 @@ BrushTool::BrushTool(Painter *painter) :
   draw_cursor_(1)
 {
   painter_->create_undo_volume();
-  if (painter_->current_volume_) {
+  if (painter_->current_volume_.get_rep()) {
     value_ = painter_->current_volume_->clut_max_;
   }
 }
@@ -127,8 +127,8 @@ static int splatmod = 1;
 BaseTool::propagation_state_e
 BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
 {
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol || !painter_->cur_window_) {
+  NrrdVolumeHandle &vol = painter_->current_volume_;
+  if (!vol.get_rep() || !painter_->cur_window_) {
     return CONTINUE_E;
   }
 
@@ -140,7 +140,7 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     window_ = painter_->cur_window_;
     slice_ = 0;
     for (unsigned int i = 0; i < window_->slices_.size(); ++i) {
-      if (window_->slices_[i]->volume_ == vol) {
+      if (window_->slices_[i]->volume_->name_ == vol->name_) {
         slice_ = window_->slices_[i];
       }
     }
@@ -152,10 +152,10 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     }
     if (vol->label_) {
       label_mask_ = 0;
-      NrrdVolume *parent = vol;
-      while (parent->parent_) {
+      NrrdVolumeHandle parent = vol;
+      while (parent->parent_.get_rep()) {
         parent = parent->parent_;
-        if (parent)
+        if (parent.get_rep())
           label_mask_ |= parent->label_;
       }
 
@@ -216,7 +216,7 @@ BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
     NrrdVolume *vol = slice_->volume_;
     ASSERT(vol);
     vector<int> window_center = vol->world_to_index(window_->center_);
-    vol->mutex_->lock();
+    vol->lock.lock();
 
     if (vol->nrrd_handle_->nrrd_->content)
       vol->nrrd_handle_->nrrd_->content[0] = 0;
@@ -224,7 +224,7 @@ BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
                    vol->nrrd_handle_->nrrd_,
                    slice_->nrrd_handle_->nrrd_,
                    axis_, window_center[axis_])) {
-      vol->mutex_->unlock();
+      vol->lock.unlock();
       char *err = biffGetDone(NRRD);
 
       cerr << string("Error on line #") 
@@ -237,8 +237,7 @@ BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
       free(err);
       return QUIT_AND_STOP_E;
     }
-    //    painter_->current_volume_->nrrd_ = nout;
-    vol->mutex_->unlock();
+    vol->lock.unlock();
     
     //painter_->set_all_slices_tex_dirty();
     painter_->redraw_all();
@@ -293,8 +292,8 @@ BrushTool::draw_gl(SliceWindow &window)
   if (&window != painter_->cur_window_) return;
   painter_->redraw_all();
   //  draw_cursor_ = false;
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) return;
+  NrrdVolumeHandle &vol = painter_->current_volume_;
+  if (!vol.get_rep()) return;
   glColor4f(1.0, 0.0, 0.0, 1.0);
   glLineWidth(2.0);
   glBegin(GL_LINES);
@@ -382,7 +381,7 @@ BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, value_, label_mask_);
+            VolumeOps::nrrd_set_value(nrrd, index, value_, label_mask_);
           }
         }
 }

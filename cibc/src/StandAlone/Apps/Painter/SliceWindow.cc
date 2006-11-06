@@ -177,8 +177,8 @@ SliceWindow::render_guide_lines(Point mouse) {
 void
 SliceWindow::render_slice_lines(SliceWindows &windows)
 {
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) return;
+  NrrdVolumeHandle vol = painter_->current_volume_;
+  if (!vol.get_rep()) return;
   double upp = 100.0 / zoom_;    // World space units per one pixel
 
   glEnable(GL_BLEND);
@@ -750,17 +750,25 @@ SliceWindow::render_text()
 void
 SliceWindow::render_slices()
 {
+  for (unsigned int s = 0; s < slices_.size(); ++s) {
+    if (slices_[s]->volume_->dirty_) {
+      recompute_slices_ = true;
+      break;
+    }
+  }
+
   if (recompute_slices_) {
     recompute_slices_ = false;
     NrrdVolumes volumes;
-    painter_->build_volume_list(volumes);
+    NrrdVolumeHandle temp = 0;
+    painter_->build_volume_list(volumes,temp);
     
     slices_.clear();
     double offset = 0.0;
         
     for (unsigned int i = 0; i < volumes.size(); ++i)
     {
-      NrrdVolume *volume = volumes[i];
+      NrrdVolumeHandle volume = volumes[i];
       if (volume->dirty_) volume->purge_unused_slices();
       VolumeSliceHandle slice = 
         volume->get_volume_slice(Plane(center_, normal_));
@@ -818,8 +826,8 @@ SliceWindow::set_axis(unsigned int axis) {
 void
 SliceWindow::set_probe() {
   if (painter_->cur_window_ == this) return;
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) return;
+  NrrdVolumeHandle &vol = painter_->current_volume_;
+  if (!vol.get_rep()) return;
   Point newcenter = center_;
   newcenter(axis_) = painter_->pointer_pos_(axis_);
   vector<double> nindex = vol->point_to_index(newcenter);
@@ -834,8 +842,8 @@ void
 SliceWindow::prev_slice()
 {
 
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) return;
+  NrrdVolumeHandle &vol = painter_->current_volume_;
+  if (!vol.get_rep()) return;
   vector<double> delta = vol->vector_to_index(normal_);
   unsigned int index = max_vector_magnitude_index(delta);
   delta[index] /= fabs(delta[index]);
@@ -852,8 +860,8 @@ SliceWindow::prev_slice()
 void
 SliceWindow::next_slice()
 {
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol) return;
+  NrrdVolumeHandle vol = painter_->current_volume_;
+  if (!vol.get_rep()) return;
   vector<double> delta = vol->vector_to_index(-normal_);
   unsigned int index = max_vector_magnitude_index(delta);
   delta[index] /= fabs(delta[index]);
@@ -928,7 +936,7 @@ SliceWindow::y_dir()
 
 BaseTool::propagation_state_e
 SliceWindow::Autoview(event_handle_t) {
-  if (painter_->current_volume_) {
+  if (painter_->current_volume_.get_rep()) {
     autoview(painter_->current_volume_);
   }
   return CONTINUE_E;
@@ -936,7 +944,7 @@ SliceWindow::Autoview(event_handle_t) {
 
 
 void
-SliceWindow::autoview(NrrdVolume *volume, double offset) {
+SliceWindow::autoview(NrrdVolumeHandle &volume, double offset) {
   autoview_ = false;
   double wid = get_region().width() -  2*offset;
   double hei = get_region().height() - 2*offset;
@@ -944,7 +952,7 @@ SliceWindow::autoview(NrrdVolume *volume, double offset) {
   int xax = x_axis();
   int yax = y_axis();
 
-  if (volume) {
+  if (volume.get_rep()) {
     vector<int> zero(volume->nrrd_handle_->nrrd_->dim, 0);
     vector<int> index = zero;
     index[xax+1] = volume->nrrd_handle_->nrrd_->axis[xax+1].size;
@@ -1072,14 +1080,14 @@ SliceWindow::redraw(event_handle_t) {
 
   painter_->volume_lock_.lock();
 
-  NrrdVolume *vol = painter_->current_volume_;
+  NrrdVolumeHandle &vol = painter_->current_volume_;
 
   Skinner::Var<string> clut_ww_wl(painter_->get_vars(), "clut_ww_wl", "");
   Skinner::Var<double> value(painter_->get_vars(), "cursor_value", 0.0);
   string clut_min_max = "";
   string xyz_pos = "";
   string sca_pos = "";
-  if (vol) {
+  if (vol.get_rep()) {
     const float ww = vol->clut_max_ - vol->clut_min_;
     const float wl = vol->clut_min_ + ww/2.0;
     clut_ww_wl = "WL: " + to_string(wl) +  " -- WW: " + to_string(ww);

@@ -30,6 +30,7 @@
 //    Date   : Tue Sep 26 18:44:34 2006
 
 #include <StandAlone/Apps/Painter/Painter.h>
+#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
 #include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
 #include <sci_gl.h>
 
@@ -71,10 +72,9 @@ ITKConfidenceConnectedImageFilterTool::pointer_up
   return pointer_motion(b,x,y,m,t);
 }
 
-
 void
 ITKConfidenceConnectedImageFilterTool::finish() {
-  if (!volume_) 
+  if (!volume_.get_rep()) 
     return;
 
   if (!volume_->index_valid(seed_))
@@ -92,28 +92,18 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   }
   
   filter->AddSeed(seed_point);
-
+  
   filter->SetNumberOfIterations(numberOfIterations_);
   filter->SetMultiplier(multiplier_);
   filter->SetReplaceValue(replaceValue_);
   filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_);
 
-  string name = "Confidence Connected";
-  //  NrrdDataHandle nrrdh = volume_->create_clear_nrrd();
-  //  NrrdVolume *vol = new NrrdVolume(painter_, name, nrrdh);
-  //  vol->label_ = 1;
-  //  vol->colormap_ = 1;
-  //  vol->clut_min_ = vol->data_min_ = 0.5;
-  //  vol->clut_max_ = vol->data_max_ = 1.0;
   painter_->CreateLabelVolume(0);
-  NrrdVolume *vol = painter_->current_volume_;
-  painter_->filter_volume_ = vol;
-  vol->nrrd_handle_ = 
-    painter_->do_itk_filter<FilterType>(filter, volume_->nrrd_handle_);
-
-  vol->set_dirty();
-  painter_->extract_all_window_slices();
-  painter_->redraw_all();
+  Skinner::Variables *vars = 
+    new Skinner::Variables("ITKConfidenceConnectedImageFilterTool",
+                           painter_->get_vars());  
+  ITKFilterCallback<FilterType> filt(vars, painter_->current_volume_, filter);
+  filt(volume_->nrrd_handle_);
 }
 
 BaseTool::propagation_state_e
@@ -121,9 +111,9 @@ ITKConfidenceConnectedImageFilterTool::pointer_motion
 (int b, int x, int y, unsigned int m, int t)
 {
   if (b == 1 && !m) {
-    if (!volume_) 
+    if (!volume_.get_rep()) 
       volume_ = painter_->current_volume_;
-    if (volume_) {
+    if (volume_.get_rep()) {
       vector<int> newseed = volume_->world_to_index(painter_->pointer_pos_);
       if (volume_->index_valid(newseed)) 
         seed_ = newseed;
@@ -163,7 +153,7 @@ ITKConfidenceConnectedImageFilterTool::process_event
 void
 ITKConfidenceConnectedImageFilterTool::draw_gl(SliceWindow &window)
 {
-  if (!volume_ || !volume_->index_valid(seed_)) return;
+  if (!volume_.get_rep() || !volume_->index_valid(seed_)) return;
 
   vector<double> index(seed_.size());
   index[0] = seed_[0];
