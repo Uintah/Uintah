@@ -21,8 +21,9 @@
 //#include  <sys/uio.h>   /* for iovec{} and readv/writev */
 //#include  <sys/un.h>    /* for Unix domain sockets */
 
-#define LISTENQ 1024        /* 2nd argument to listen() */
-#define MAXLINE 4096      /* max text line length */
+#define LISTENQ     1024  /* 2nd argument to listen() */
+#define MAXLINE     4096  /* max text line length */
+#define MAXSOCKADDR  128  /* max socket address socket size */
 /* Following shortens all the type casts of pointer arguments */
 #define SA  struct sockaddr
 

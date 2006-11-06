@@ -41,8 +41,19 @@ int Accept(int fd, struct sockaddr *sa, socklen_t *salenptr)
 
 void Bind(int fd, const struct sockaddr *sa, socklen_t salen)
 {//TODO probably want to exit scirun if there is a bind error
-  if (bind(fd, sa, salen) < 0)
+  if (bind(fd, sa, salen) < 0) {
+    perror("error type");
     print_error("bind error");
+  }
+  union {
+    struct sockaddr sa;
+    char data[MAXSOCKADDR];
+  } un;
+  socklen_t len = MAXSOCKADDR;
+  if (getsockname(fd, (SA *) un.data, &len) < 0) {
+    perror("error type");
+    print_error("getsockname error");
+  }
 }
 
 void Connect(int fd, const struct sockaddr *sa, socklen_t salen)
