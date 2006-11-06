@@ -33,6 +33,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Algorithms/Converter \
         Core/Algorithms/Fields \
         Core/Algorithms/Math \
+				Core/OS \
         Packages/CardioWaveInterface/Core/XML \
         Packages/CardioWaveInterface/Core/Model
 
