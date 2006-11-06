@@ -97,8 +97,10 @@ public:
   //! Approximate edge for element by piecewise linear segments
   //! return: coords gives parametric coordinates of the approximation.
   //! Use interpolate with coordinates to get the world coordinates.
-  virtual void approx_edge(const unsigned edge, const unsigned div_per_unit, 
-			   std::vector<std::vector<double> > &coords) const
+  
+  template<class VECTOR>
+  void approx_edge(const unsigned edge, const unsigned div_per_unit, 
+			   std::vector<VECTOR > &coords) const
   {
     coords.resize(div_per_unit + 1);
 
@@ -113,7 +115,7 @@ public:
     const double dz = v1[2] - p1z;
 
     for(unsigned i = 0; i <= div_per_unit; i++) {
-      std::vector<double> &tmp = coords[i];
+      VECTOR &tmp = coords[i];
       tmp.resize(3);
       const double d = (double)i / (double)div_per_unit;
       tmp[0] = p1x + d * dx;
@@ -129,9 +131,10 @@ public:
   //! Approximate faces for element by piecewise linear elements
   //! return: coords gives parametric coordinates at the approximation point.
   //! Use interpolate with coordinates to get the world coordinates.
-  virtual void approx_face(const unsigned face, 
+  template <class VECTOR>
+  void approx_face(const unsigned face, 
 			   const unsigned div_per_unit, 
-			   std::vector<std::vector<std::vector<double> > > &coords) const
+			   std::vector<std::vector<VECTOR > > &coords) const
   {
     const double *v0 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_faces[face][0]];
     const double *v1 = HexTrilinearLgnUnitElement::unit_vertices[HexTrilinearLgnUnitElement::unit_faces[face][1]];
@@ -142,16 +145,16 @@ public:
     std::vector<std::vector<std::vector<double> > >::iterator citer = coords.begin();
     for(unsigned j = 0; j < div_per_unit; j++) {
       const double dj = (double)j / (double)div_per_unit;
-      std::vector<std::vector<double> > &jvec = *citer++;
+      std::vector<VECTOR > &jvec = *citer++;
       jvec.resize((div_per_unit + 1) * 2, std::vector<double>(3, 0.0));
-      std::vector<std::vector<double> >::iterator e = jvec.begin(); 
+      typename std::vector<VECTOR >::iterator e = jvec.begin(); 
       for(unsigned i=0; i <= div_per_unit; i++) {
         const double di = (double) i / (double)div_per_unit;
-        std::vector<double> &c0 = *e++;
+        VECTOR &c0 = *e++;
         c0[0] = v0[0] + dj * (v3[0] - v0[0]) + di * (v1[0] - v0[0]);
         c0[1] = v0[1] + dj * (v3[1] - v0[1]) + di * (v1[1] - v0[1]);
         c0[2] = v0[2] + dj * (v3[2] - v0[2]) + di * (v1[2] - v0[2]);
-        std::vector<double> &c1 = *e++;
+        VECTOR &c1 = *e++;
         c1[0] = v0[0] + (dj + d) * (v3[0] - v0[0]) + di * (v1[0] - v0[0]);
         c1[1] = v0[1] + (dj + d) * (v3[1] - v0[1]) + di * (v1[1] - v0[1]);
         c1[2] = v0[2] + (dj + d) * (v3[2] - v0[2]) + di * (v1[2] - v0[2]);
@@ -172,8 +175,8 @@ public:
   virtual ~HexLocate() {}
  
   //! find value in interpolation for given value
-  template <class ElemData>
-  bool get_coords(const ElemBasis *pEB, std::vector<double> &coords, 
+  template <class ElemData, class VECTOR>
+  bool get_coords(const ElemBasis *pEB, VECTOR &coords, 
 		  const T& value, const ElemData &cd) const  
   {      
     initial_guess(pEB, value, cd, coords);
@@ -182,7 +185,8 @@ public:
     return false;
   }
 
-  inline bool check_coords(const std::vector<double> &x) const  
+  template <class VECTOR>
+  inline bool check_coords(const VECTOR &x) const  
   {  
     if (x[0]>=-Dim3Locate<ElemBasis>::thresholdDist && 
 	x[0]<=Dim3Locate<ElemBasis>::thresholdDist1)
@@ -197,34 +201,38 @@ public:
   
 protected:
   //! find a reasonable initial guess 
-  template <class ElemData>
+  template <class ElemData, class VECTOR>
   void initial_guess(const ElemBasis *pElem, const T &val, const ElemData &cd, 
-		     std::vector<double> & guess) const
+		     VECTOR & guess) const
   {
     double dist = DBL_MAX;
 	
-    std::vector<double> coord(3);
+    VECTOR coord(3);
     std::vector<T> derivs(3);
     guess.resize(3);
 
     const int end = 3;
-    for (int x = 1; x < end; x++) {
+    for (int x = 1; x < end; x++) 
+    {
       coord[0] = x / (double) end;
-      for (int y = 1; y < end; y++) {
-	coord[1] = y / (double) end;
-	for (int z = 1; z < end; z++) {
-	  coord[2] = z / (double) end;
+      for (int y = 1; y < end; y++) 
+      {
+        coord[1] = y / (double) end;
+        for (int z = 1; z < end; z++) 
+        {
+          coord[2] = z / (double) end;
 
-	  double cur_d;
-	  if (compare_distance(pElem->interpolate(coord, cd), 
-			       val, cur_d, dist)) {
-	    pElem->derivate(coord, cd, derivs);
-	    if (!check_zero(derivs)) {
-	      dist = cur_d;
-	      guess = coord;
-	    }
-	  }
-	}
+          double cur_d;
+          if (compare_distance(pElem->interpolate(coord, cd), val, cur_d, dist)) 
+          {
+            pElem->derivate(coord, cd, derivs);
+            if (!check_zero(derivs)) 
+            {
+              dist = cur_d;
+              guess = coord;
+            }
+          }
+        }
       }
     }
   }

@@ -84,6 +84,7 @@ template<class T> void Pio(Piostream& stream, Array2<T>*& data);
 ****************************************/
 template<class T>
 class Array2 {
+
   T** objs;
   T* obj;
   int dm1;
@@ -100,6 +101,7 @@ class Array2 {
   //Assignment Operator
   Array2<T>& operator=(const Array2&);
 public:
+  typedef T value_type;
   //////////
   //Create a 0X0 Array
   Array2();
@@ -150,7 +152,9 @@ public:
   //////////
   //Resize Array
   void resize(int, int);
-    
+
+  inline size_t size() const { return (static_cast<size_t>(dm1*dm2)); }
+
   //////////
   //Initialize all values in an array
   void initialize(const T&);

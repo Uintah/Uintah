@@ -115,6 +115,8 @@ template<class T> class Array3 {
   //Assignment Operator
   Array3<T>& operator=(const Array3&);
 public:
+  typedef T value_type;
+
   //////////
   //Default Constructor
   Array3();
@@ -176,6 +178,8 @@ public:
   inline int dim3() const {return dm3;}
   
   inline long get_datasize() const { return dm1*long(dm2*dm3*sizeof(T)); }
+
+  inline size_t size() const { return (static_cast<size_t>(dm1*dm2*dm3)); }
     
   //////////
   //Re-size the Array

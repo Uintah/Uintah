@@ -87,6 +87,7 @@ template<class T> class Array1 {
   int nalloc;
   int default_grow_size;
 public:
+  typedef T value_type;
 
   //////////
   //Copy the array - this can be costly, so try to avoid it.

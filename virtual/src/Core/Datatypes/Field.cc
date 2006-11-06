@@ -187,66 +187,7 @@ Field::resize_fdata(size_t size)
 }
 
 void 
-Field::get_value(char &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(unsigned char &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(short &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(unsigned short &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
 Field::get_value(int &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(unsigned int &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(long &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(unsigned long &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-void 
-Field::get_value(long long &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(unsigned long long &val, Mesh::index_type i) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for get_value");
-}
-
-void 
-Field::get_value(float &val, Mesh::index_type i) const
 {
   ASSERTFAIL("Field interface has no virtual function implementation for get_value");
 }
@@ -270,69 +211,8 @@ Field::get_value(Tensor &val, Mesh::index_type i) const
 }
 
 
-
-void 
-Field::set_value(const char &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const unsigned char &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const short &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const unsigned short &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
 void 
 Field::set_value(const int &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const unsigned int &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const long &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const unsigned long &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const long long &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const unsigned long long &val, Mesh::index_type i)
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for set_value");
-}
-
-void 
-Field::set_value(const float &val, Mesh::index_type i)
 {
   ASSERTFAIL("Field interface has no virtual function implementation for set_value");
 }
@@ -356,71 +236,7 @@ Field::set_value(const Tensor &val, Mesh::index_type i)
 }
 
 
-void 
-Field::interpolate(char &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
 
-void 
-Field::interpolate(unsigned char &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(short &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(unsigned short &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(int &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(unsigned int &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(long &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(unsigned long &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(long long &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(unsigned long long &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-void 
-Field::interpolate(float &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
 
 void 
 Field::interpolate(double &val, const vector<double> &coords, Mesh::index_type elem_idx) const
@@ -438,73 +254,6 @@ void
 Field::interpolate(Tensor &val, const vector<double> &coords, Mesh::index_type elem_idx) const
 {
   ASSERTFAIL("Field interface has no virtual function implementation for interpolate");
-}
-
-
-void 
-Field::gradient(vector<char> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<unsigned char> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<short> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<unsigned short> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<int> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<unsigned int> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<unsigned long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<long long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<unsigned long long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
-}
-
-void 
-Field::gradient(vector<float> &val, const vector<double> &coords, Mesh::index_type elem_idx) const
-{
-  ASSERTFAIL("Field interface has no virtual function implementation for gradient");
 }
 
 void 
@@ -525,6 +274,11 @@ Field::gradient(vector<Tensor> &val, const vector<double> &coords, Mesh::index_t
   ASSERTFAIL("Field interface has no virtual function implementation for gradient");
 }
 
+bool 
+Field::fdata_operation(const std::string& op, FDataResult& result) const
+{
+  ASSERTFAIL("Field interface has no virtual function implementation for field operation");
+}
 
 // Additional definitions for the FieldInterface classes
 
