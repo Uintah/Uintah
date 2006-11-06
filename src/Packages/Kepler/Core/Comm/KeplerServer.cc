@@ -259,6 +259,7 @@ bool ProcessRequest::iter_callback(void *data)
 std::string ProcessRequest::Iterate(std::vector<std::string> doOnce, int size1, std::vector<std::string> iterate, int size2, int numParams, std::string picPath, std::string picFormat)
 {
   std::string name;
+  std::string imageName;
 
   //get a pointer to the viewer if we need it and check to see if its valid
   Viewer* viewer;
@@ -290,6 +291,8 @@ std::string ProcessRequest::Iterate(std::vector<std::string> doOnce, int size1, 
 
     //std::cout << "doOnce " << doOnce[i-1] << " " << doOnce[i] << " " << doOnce[i+1] << std::endl;
     modGui->set("::" + doOnce[i-1] + doOnce[i], doOnce[i+1]);
+    // kludge:
+    imageName = basename(doOnce[i+1]);
     i++;
   }
 
@@ -332,16 +335,22 @@ std::string ProcessRequest::Iterate(std::vector<std::string> doOnce, int size1, 
     // the user if they are going to save over an image that exists already
     if (! picPath.empty()) {
       //std::cerr << "Save pictures!" << std::endl;
-      name = picPath + "image" + to_string(i) + "" + picFormat;
+      int p = imageName.rfind(".");
+      imageName.erase(p);
+      name = picPath + imageName + to_string(i) + "" + picFormat;
+std::cerr << "Save pictures: " << name << std::endl;
 
       //when the viewer is done save the image
       // old size: 640x470
-      //ViewerMessage *msg1 = scinew ViewerMessage(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0", name, picFormat,"640","480");
-      ViewerMessage *msg1 = scinew ViewerMessage(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0", name, picFormat,"640","480");
+
+      gui->eval("SciRaise .uiSCIRun_Render_Viewer_0-ViewWindow_0");
+      gui->eval("focus .uiSCIRun_Render_Viewer_0-ViewWindow_0");
+
+      // should picFormat have leading '.'?
+      ViewerMessage *msg1 = scinew ViewerMessage(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0", name, "by_extension", "640","479");
       viewer->mailbox_.send(msg1);
 
-      //ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
-      ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0");
+      ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
       viewer->mailbox_.send(msg2);
 
     } //else we do not try and save pictures
@@ -397,7 +406,7 @@ void ProcessRequest::processItrRequest(int sockfd)
     temp = gui->eval("ClearCanvas 0");  //clear the net
     //temp seems to be 0 always
     //TODO this yield is probably due to scirun error that needs to be fixed
-    Thread::yield();  //necessary to avoid a "Error: bad window path name"
+    //Thread::yield();  //necessary to avoid a "Error: bad window path name"
     std::cout << "loaded net " << KeplerServer::loadedNet << "!" << netFile << std::endl;
     if (ends_with(netFile, ".net")) {
       temp = gui->eval("source " + netFile);
