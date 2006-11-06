@@ -35,6 +35,69 @@
 #include <Core/Containers/StringUtil.h>
 
 /**
+ * Trim newlines from end of string.
+ */
+void trimCString(const char* input, std::string& output)
+{
+  // similar to string_Cify in Core/Containers/StringUtil.cc, but with dir. separator fixes...
+  const std::string inputString(input);
+  output.clear();
+  for (string::size_type i = 0; i < inputString.size(); i++) {
+    switch(inputString[i]) {
+    case '\n':
+      // skip this character
+      continue;
+      break;
+
+    case '\r':
+      // skip this character
+      continue;
+      break;
+
+    case '\t':
+      output.push_back('\\');
+      output.push_back('t');
+      break;
+
+    case '\v':
+      output.push_back('\\');
+      output.push_back('v');
+      break;
+
+    case '\b':
+      output.push_back('\\');
+      output.push_back('b');
+      break;
+
+    case '\f':
+      output.push_back('\\');
+      output.push_back('f');
+      break;
+
+    case '\a':
+      output.push_back('\\');
+      output.push_back('a');
+      break;
+
+    case '"':
+      output.push_back('\\');
+      output.push_back('"');
+      break;
+
+    case '\\':
+     // we're transmitting paths, so assume that any control characters
+     // have been dealt with and any remaining '\\' are directory path
+     // separators
+      output.push_back('/');
+      break;
+
+    default:
+      output.push_back(inputString[i]);
+    }
+  }
+}
+
+/**
  * Turns input characters into a vector of strings
  * and returns the vector. sets size to be the number
  * of things that are in the vector.
@@ -53,14 +116,15 @@ bool processCString(const char* input, std::vector<std::string>& v, int& size)
   }
 
   // change the input into a string then vector
-  std::string temp(input);
+  std::string temp;
+  trimCString(input, temp);
+  // cut \n off the end of the last string
   v = SCIRun::split_string(temp,';');
-  if (temp == "\n") {
+  if (temp.empty()) {
     size = 0;  //case where we do not do anything
   } else {
     size = (int) v.size();
-    // cut \n off the end of the last string
-    v[size - 1] = v[size - 1].substr(0, v[size - 1].size() - 1);
+    //v[size - 1] = v[size - 1].substr(0, v[size - 1].size() - 1);
   }
   return true;
 }
