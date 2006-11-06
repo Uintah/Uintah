@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Murnahan.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Gruneisen.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Tillotson.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/SFEOS.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -47,6 +48,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       return(scinew Gruneisen(child));
     else if (mat_type == "Tillotson") 
       return(scinew Tillotson(child));
+    else if (mat_type == "SFEOS") 
+      return(scinew SFEOS(child));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 
