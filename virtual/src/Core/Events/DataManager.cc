@@ -180,6 +180,7 @@ DataManager::show_field(unsigned int fld_id)
   p.do_faces_ = true;
   p.do_edges_ = true;
   p.do_text_ = false;
+  p.text_show_faces_ = false;
   
   if (! render_field(fld_handle, p)) {
     cerr << "Error: render_field failed." << endl;
@@ -199,7 +200,7 @@ DataManager::show_field(unsigned int fld_id)
   if (! fld_handle->get_property("name", fname)) {
     fname = "Field";
   }
-  fname = fname + str.str();
+  // fname = fname + str.str();
 
   if (p.do_nodes_) 
   {

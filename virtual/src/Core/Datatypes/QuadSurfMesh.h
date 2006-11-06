@@ -737,6 +737,7 @@ private:
   vector<Point>                         points_;
   vector<typename Node::index_type>     faces_;
   vector<under_type>                    edges_;
+  vector<under_type>                 halfedge_to_edge_;  // halfedge->edge map
   typedef vector<vector<typename Elem::index_type> > NodeNeighborMap;
   NodeNeighborMap                       node_neighbors_;
   vector<under_type>                    edge_neighbors_;
@@ -858,6 +859,7 @@ QuadSurfMesh<Basis>::QuadSurfMesh(const QuadSurfMesh &copy)
   points_ = copy.points_;
 
   edges_ = copy.edges_;
+  halfedge_to_edge_ = copy.halfedge_to_edge_;
   synchronized_ |= copy.synchronized_ & EDGES_E;
 
   faces_ = copy.faces_;
@@ -998,7 +1000,6 @@ QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Cell::iterator &itr) const
             "Must call synchronize CELLS_E on QuadSurfMesh first");
   itr = 0;
 }
-
 
 template <class Basis>
 bool
@@ -1465,12 +1466,25 @@ typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
 
 #endif
 
+#ifdef HAVE_HASH_MAP
+
+#if defined(__ECC) || defined(_MSC_VER)
+typedef hash_map<pair<int, int>, list<int>, edgehash> EdgeMapType2;
+#else
+typedef hash_map<pair<int, int>, list<int>, edgehash, edgecompare> EdgeMapType2;
+#endif
+
+#else
+
+typedef map<pair<int, int>, list<int>, edgecompare> EdgeMapType2;
+
+#endif
 
 template <class Basis>
 void
 QuadSurfMesh<Basis>::compute_edges()
 {
-  EdgeMapType edge_map;
+  EdgeMapType2 edge_map;
 
   for( int i=(int)faces_.size()-1; i >= 0; i--)
   {
@@ -1485,15 +1499,24 @@ QuadSurfMesh<Basis>::compute_edges()
     if (n0 != n1)
     {
       pair<int, int> nodes(n0, n1);
-      edge_map[nodes] = i;
+      edge_map[nodes].push_front(i);
     }
   }
 
-  typename EdgeMapType::iterator itr;
-
+  typename EdgeMapType2::iterator itr;
+  edges_.clear();
+  edges_.reserve(edge_map.size());
+  halfedge_to_edge_.resize(faces_.size());
   for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
   {
-    edges_.push_back((*itr).second);
+    edges_.push_back((*itr).second.front());
+
+    list<int>::iterator litr = (*itr).second.begin();
+    while (litr != (*itr).second.end())
+    {
+      halfedge_to_edge_[*litr] = edges_.size()-1;
+      ++litr;
+    }
   }
 
   synchronized_ |= EDGES_E;

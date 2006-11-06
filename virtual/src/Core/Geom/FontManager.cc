@@ -114,7 +114,13 @@ FontManager::load_face(const string &filename) {
   return face;
 }
   
-
+TextRenderer *
+FontManager::get_sized_renderer(int fontindex, string name) { 
+  // This array maps to the xs, s, m, l, xl font settings 
+  // in the showfield text tab.
+  const double sizes[] = {14., 18., 24., 30., 36.};
+  return get_renderer(sizes[Clamp(fontindex,0,4)], name);
+}
 
 TextRenderer *
 FontManager::get_renderer(double points, string name) {

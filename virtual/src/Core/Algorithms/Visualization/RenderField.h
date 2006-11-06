@@ -130,7 +130,7 @@ public:
 		      bool face_usetexture) = 0;
 
   virtual GeomHandle render_text(FieldHandle fld,
-				 bool use_color_map,
+				 ColorMapHandle color_handle,
 				 bool use_default_material,
 				 bool backface_cull_p,
 				 int  fontsize,
@@ -185,7 +185,7 @@ public:
 
 
   virtual GeomHandle render_text(FieldHandle fld,
-				 bool use_color_map,
+				 ColorMapHandle color_handle,
 				 bool use_default_material,
 				 bool backface_cull_p,
 				 int fontsize,
@@ -245,18 +245,21 @@ protected:
                                          bool use_transparency);
 
   GeomHandle render_text_data(FieldHandle fld,
+			      ColorMapHandle color_handle,
 			      bool use_color_map,
 			      bool use_default_material,
 			      bool backface_cull_p,
 			      int fontsize,
 			      int precision);
   GeomHandle render_text_data_nodes(FieldHandle fld,
+				    ColorMapHandle color_handle,
 				    bool use_color_map,
 				    bool use_default_material,
 				    bool backface_cull_p,
 				    int fontsize,
 				    int precision);
   GeomHandle render_text_nodes(FieldHandle fld,
+			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       bool backface_cull_p,
@@ -264,18 +267,21 @@ protected:
 			       int precision,
 			       bool render_locations);
   GeomHandle render_text_edges(FieldHandle fld,
+			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       int fontsize,
 			       int precision,
 			       bool render_locations);
   GeomHandle render_text_faces(FieldHandle fld,
+			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       int fontsize,
 			       int precision,
 			       bool render_locations);
   GeomHandle render_text_cells(FieldHandle fld,
+			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       int fontsize,
@@ -307,7 +313,7 @@ public:
 
 
   virtual GeomHandle render_text(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
           bool use_default_material,
           bool backface_cull_p,
           int fontsize,
@@ -367,38 +373,44 @@ protected:
           bool use_transparency);
 
   GeomHandle render_text_data(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
+					bool use_colormap,
           bool use_default_material,
           bool backface_cull_p,
           int fontsize,
           int precision);
   GeomHandle render_text_data_nodes(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
+					bool use_colormap,
           bool use_default_material,
           bool backface_cull_p,
           int fontsize,
           int precision);
   GeomHandle render_text_nodes(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
+					bool use_colormap,
           bool use_default_material,
           bool backface_cull_p,
           int fontsize,
           int precision,
           bool render_locations);
   GeomHandle render_text_edges(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
+					bool use_colormap,
           bool use_default_material,
           int fontsize,
           int precision,
           bool render_locations);
   GeomHandle render_text_faces(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
+					bool use_colormap,
           bool use_default_material,
           int fontsize,
           int precision,
           bool render_locations);
   GeomHandle render_text_cells(FieldHandle fld,
-          bool use_color_map,
+          ColorMapHandle color_handle,
+					bool use_colormap,
           bool use_default_material,
           int fontsize,
           int precision,
@@ -1951,7 +1963,7 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
-				   bool use_color_map,
+				   ColorMapHandle color_handle,
 				   bool use_default_material,
 				   bool backface_cull_p,
 				   int fontsize,
@@ -1968,33 +1980,39 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 
   if (render_data)
   {
-    texts->add(render_text_data(field_handle, use_color_map,
+    texts->add(render_text_data(field_handle, color_handle, 
+				color_handle.get_rep(),
 				use_default_material,
 				backface_cull_p,
 				fontsize, precision));
   }
   if (render_nodes)
   {
-    texts->add(render_text_nodes(field_handle, use_color_map,
+    texts->add(render_text_nodes(field_handle, color_handle, 
+				 color_handle.get_rep(),
 				 use_default_material,
 				 backface_cull_p,
 				 fontsize, precision, render_locations));
   }
   if (render_edges)
   {
-    texts->add(render_text_edges(field_handle, use_color_map,
+    texts->add(render_text_edges(field_handle, color_handle, 
+				 color_handle.get_rep(),
 				 use_default_material,
 				 fontsize, precision, render_locations));
   }
   if (render_faces)
   {
-    texts->add(render_text_faces(field_handle, use_color_map,
+    texts->add(render_text_faces(field_handle, color_handle, 
+				 color_handle.get_rep(),
 				 use_default_material,
 				 fontsize, precision, render_locations));
   }
   if (render_cells)
   {
-    texts->add(render_text_cells(field_handle, use_color_map,
+
+    texts->add(render_text_cells(field_handle, color_handle, 
+				 color_handle.get_rep(),
 				 use_default_material,
 				 fontsize, precision, render_locations));
   }
@@ -2019,6 +2037,7 @@ SCISHARE void value_to_string(std::ostringstream &buffer, const unsigned char &v
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
+					ColorMapHandle color_handle, 
 					bool use_color_map,
 					bool use_default_material,
 					bool backface_cull_p,
@@ -2027,7 +2046,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 {
   if (backface_cull_p && field_handle->basis_order() == 1)
   {
-    return render_text_data_nodes(field_handle, use_color_map,
+    return render_text_data_nodes(field_handle, color_handle, use_color_map,
 				  use_default_material,
 				  backface_cull_p, fontsize,
 				  precision);
@@ -2087,7 +2106,13 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       {
 	double dval = 0.0;
 	to_double(val, dval);
-	texts->add(buffer.str(), p, dval);
+	// Compute the ColorMap index and retreive the color.
+	const double cmin = color_handle->getMin();
+	const double cmax = color_handle->getMax();
+	const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+	const Color &c = color_handle->getColor(index);
+
+	texts->add(buffer.str(), p, c);
       }
     }
     ++iter;
@@ -2100,6 +2125,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
+					      ColorMapHandle color_handle,
 					      bool use_color_map,
 					      bool use_default_material,
 					      bool backface_cull_p,
@@ -2192,15 +2218,21 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
       else
       {
 	double dval = 0.0;
-	to_double(val, dval);
+	to_double(val, dval);	
+	// Compute the ColorMap index and retreive the color.
+	const double cmin = color_handle->getMin();
+	const double cmax = color_handle->getMax();
+	const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+	const Color &c = color_handle->getColor(index);
+
 	if (culling_p)
 	{
 	  mesh->get_normal(n, *iter);
-	  ctexts->add(buffer.str(), p, n, dval);
+	  ctexts->add(buffer.str(), p, n, c);
 	}
 	else
 	{
-	  texts->add(buffer.str(), p, dval);
+	  texts->add(buffer.str(), p, c);
 	}
       }
     }
@@ -2215,6 +2247,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
+					 ColorMapHandle color_handle,
 					 bool use_color_map,
 					 bool use_default_material,
 					 bool backface_cull_p,
@@ -2265,7 +2298,6 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 
   ostringstream buffer;
   buffer.precision(precision);
-
   typename Fld::mesh_type::Node::iterator iter, end;
   mesh->begin(iter);
   mesh->end(end);
@@ -2319,14 +2351,19 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
       fld->value(val, *iter);
       double dval = 0.0;
       to_double(val, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
       if (culling_p)
       {
 	mesh->get_normal(n, *iter);
-	ctexts->add(buffer.str(), p, n, dval);
+	ctexts->add(buffer.str(), p, n, c);
       }
       else
       {
-	texts->add(buffer.str(), p, dval);
+	texts->add(buffer.str(), p, c);
       }
     }
 
@@ -2339,6 +2376,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
+					 ColorMapHandle color_handle,
 					 bool use_color_map,
 					 bool use_default_material,
 					 int fontsize,
@@ -2412,7 +2450,12 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
       fld->value(val, *iter);
       double dval = 0.0;
       to_double(val, dval);
-      texts->add(buffer.str(), p, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
+      texts->add(buffer.str(), p, c);
     }
  
     ++iter;
@@ -2423,6 +2466,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
+					 ColorMapHandle color_handle,
 					 bool use_color_map,
 					 bool use_default_material,
 					 int fontsize,
@@ -2496,7 +2540,12 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
       fld->value(val, *iter);
       double dval = 0.0;
       to_double(val, dval);
-      texts->add(buffer.str(), p, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
+      texts->add(buffer.str(), p, c);
     }
 
     ++iter;
@@ -2508,6 +2557,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 template <class Fld, class Loc>
 GeomHandle 
 RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
+					 ColorMapHandle color_handle,
 					 bool use_color_map,
 					 bool use_default_material,
 					 int fontsize,
@@ -2581,7 +2631,12 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
       fld->value(val, *iter);
       double dval = 0.0;
       to_double(val, dval);
-      texts->add(buffer.str(), p, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
+      texts->add(buffer.str(), p, c);
     }
 
     ++iter;
@@ -3843,7 +3898,7 @@ public:
 struct RenderParams 
 {
   void defaults() {
-    do_nodes_ = true;
+    do_nodes_ = false;
     do_edges_ = false;
     do_faces_ = false;
     do_text_ = false;
@@ -3882,7 +3937,7 @@ struct RenderParams
     text_show_data_ = false;
     text_show_nodes_ = false;
     text_show_edges_ = false;
-    text_show_faces_ = true;
+    text_show_faces_ = false;
     text_show_cells_ = false;
     text_geometry_ = 0;
   }

@@ -59,6 +59,10 @@ public:
   ~FontManager();
 
   static TextRenderer * get_renderer(double, string filename = "scirun.ttf");
+  //! For backwards compatibility, take a fontindex
+  //! and choose between 5 fixed font sizes
+  static TextRenderer * get_sized_renderer(int, string filename="scirun.ttf");
+
   static void           release_renderer(double, string filename="scirun.ttf");
   static void           release_renderer(TextRenderer *);
   static void		release_all();

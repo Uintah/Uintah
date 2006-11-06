@@ -168,7 +168,8 @@ TextRenderer::layout_text(const string &text,
                           const Point &anchor, 
                           const Vector &left, 
                           const Vector &up, 
-                          int &flags) 
+                          int &flags, 
+			  bool clamp_vals) 
 {
 #ifdef HAVE_FREETYPE
   unsigned int passes = 1;
@@ -369,11 +370,12 @@ TextRenderer::layout_text(const string &text,
   Vector fix = bbox.min().x()*left + bbox.max().y()*up;
   offset_ = offset_ + anchor.asVector() - fix;
 
-  for (unsigned int c = 0; c < total_glyphs; ++c) 
-    for (int v = 0; v < 4; ++v)
-      for (int o = 0; o < 3; ++o)
-        layout_[c].vertices_[v](o) = Floor(layout_[c].vertices_[v](o));
-        
+  if (clamp_vals) {
+    for (unsigned int c = 0; c < total_glyphs; ++c) 
+      for (int v = 0; v < 4; ++v)
+	for (int o = 0; o < 3; ++o)
+	  layout_[c].vertices_[v](o) = Floor(layout_[c].vertices_[v](o));
+  }
   return total_glyphs;
 #else
   return 0;
@@ -381,6 +383,130 @@ TextRenderer::layout_text(const string &text,
 }
 
 
+
+double
+TextRenderer::find_scale_factor(const vector<Point> &pnts, 
+				const View &view) const
+{
+  //loop through and find the closest point to the eye
+  vector<Point>::const_iterator iter = pnts.begin();
+  double dist = DBL_MAX;
+  Point close;
+  while (iter != pnts.end()) {
+    const Point& p = *iter++;
+    double d = (p - view.eyep()).length2();
+    if (d < dist) {
+      dist = d;
+      close = p;
+    }
+  }
+  
+  // calculate the scale factor for text at the closest point
+  GLint vmat[4];
+  glGetIntegerv(GL_VIEWPORT, vmat);
+
+  double mmat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mmat);
+  double pmat[16];
+  glGetDoublev(GL_PROJECTION_MATRIX, pmat);
+  
+  double wx, wy, wz;
+  Vector scene_up(mmat[1], mmat[5], mmat[9]);
+
+
+  Point end = close + (scene_up * 20.0);
+
+  gluProject(end.x(), end.y(), end.z(),
+	     mmat, pmat, vmat,
+	     &wx, &wy, &wz);
+
+  Point send(wx, wy, wz);
+
+  gluProject(close.x(), close.y(), close.z(),
+	     mmat, pmat, vmat,
+	     &wx, &wy, &wz);
+  
+  Point sbeg(wx, wy, wz);
+  Vector slen = send - sbeg;
+
+  return  20. / slen.length();
+}
+
+
+void
+TextRenderer::render(const string &text, float x, float y, float z, 
+		     const View &view, double sf, int flags)
+{
+#ifdef HAVE_FREETYPE
+  render_string_glyphs_to_texture(text);
+  CHECK_OPENGL_ERROR();
+  if (!texture_) return;
+
+  glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+  glLoadIdentity();
+
+  CHECK_OPENGL_ERROR();
+  glColor4d(1.0, 0.0, 0.0, 1.0);
+
+
+  GLint vmat[4];
+  glGetIntegerv(GL_VIEWPORT, vmat);
+
+  double mmat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mmat);
+  double pmat[16];
+  glGetDoublev(GL_PROJECTION_MATRIX, pmat);
+  
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  CHECK_OPENGL_ERROR();
+
+  glEnable(GL_TEXTURE_2D);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glDepthMask(GL_FALSE); // no zbuffering for now.
+
+  Vector scene_up(mmat[1], mmat[5], mmat[9]);
+  Point anchor(x, y, z);
+  Vector bbv = view.eyep() - anchor;
+  bbv.normalize();
+
+  Vector scene_right = Cross(scene_up, bbv);
+  scene_right.normalize();
+
+  scene_up  *= sf;
+  scene_right *= sf;
+
+  unsigned int num = layout_text(text, anchor, 
+				 scene_right, scene_up, flags, false);
+  glTranslated(x, y, z);
+  texture_->bind();
+  for (unsigned int c = 0; c < num; ++c) {
+    LayoutInfo &layout = layout_[c];
+    GlyphInfo *glyph = layout.glyph_info_;
+    //    ASSERT(glyph);
+    if (!glyph) {
+      continue;
+    }
+    //cerr << "layout->vert[" << c << "]: " << layout.vertices_[c] << endl;
+    glyph->texture_->set_color(layout.color_);
+    glyph->texture_->draw(4, layout.vertices_, glyph->tex_coords_);
+  }
+
+  glDisable(GL_TEXTURE_2D);
+  glDepthMask(GL_TRUE); // turn zbuff back on.
+  glDisable(GL_BLEND);
+
+  glMatrixMode(GL_TEXTURE);
+  glPopMatrix();
+
+  glMatrixMode(GL_MODELVIEW);               
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
+#endif
+}
 
 void
 TextRenderer::render(const string &text, float x, float y, int flags)
@@ -390,7 +516,7 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   CHECK_OPENGL_ERROR();
   if (!texture_) return;
 
-
+ 
   CHECK_OPENGL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -520,7 +646,7 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
 
   if (!texture_ || x_ + width > texture_->width()) {
     x_ = 0;
-    y_ += height_;
+    y_ += height_ + 1;
     height_ = 0;
   }
 
@@ -572,7 +698,7 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
     }
   }
 
-  x_ += width;
+  x_ += width + 1;
   FT_Done_Glyph(glyph);
   texture_->set_dirty();
   return glyph_info;

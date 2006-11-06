@@ -61,7 +61,7 @@ using std::ostream;
 
 static Persistent* make_GeomText()
 {
-    return scinew GeomText;
+  return scinew GeomText;
 }
 
 PersistentTypeID GeomText::type_id("GeomText", "GeomObj", make_GeomText);
@@ -72,24 +72,30 @@ GeomText::GeomText()
 }
 
 GeomText::GeomText( const string &text, const Point &at, const Color &c,
-		    const string &fontsize)
-  : GeomObj(), text(text), fontsize(fontsize), at(at), c(c)
+		    const string &fontsize) : 
+  GeomObj(), 
+  text(text), 
+  fontsize(fontsize), 
+  at(at), 
+  c(c),
+  renderer_(0)
 {
 }
 
 
 GeomText::GeomText(const GeomText& copy)
-: GeomObj(copy)
+  : GeomObj(copy)
 {
   text = copy.text;
   at = copy.at;
   c = copy.c;
+  renderer_ = copy.renderer_;
 }
 
 
 GeomObj* GeomText::clone()
 {
-    return scinew GeomText(*this);
+  return scinew GeomText(*this);
 }
 
 void GeomText::get_bounds(BBox& in_bb)
@@ -111,16 +117,16 @@ void
 GeomText::io(Piostream& stream)
 {
 
-    const int version = stream.begin_class("GeomText", GEOMTEXT_VERSION);
-    // Do the base class first...
-    GeomObj::io(stream);
-    Pio(stream, at);
-    Pio(stream, text);
-    if (version > 1)
-    {
-      Pio(stream, c);
-    }
-    stream.end_class();
+  const int version = stream.begin_class("GeomText", GEOMTEXT_VERSION);
+  // Do the base class first...
+  GeomObj::io(stream);
+  Pio(stream, at);
+  Pio(stream, text);
+  if (version > 1)
+  {
+    Pio(stream, c);
+  }
+  stream.end_class();
 }
 
 void
@@ -132,14 +138,15 @@ GeomText::moveTo(const Point& new_at) {
 
 static Persistent* make_GeomTexts()
 {
-    return scinew GeomTexts;
+  return scinew GeomTexts;
 }
 
 PersistentTypeID GeomTexts::type_id("GeomTexts", "GeomObj", make_GeomTexts);
 
-GeomTexts::GeomTexts()
-  : GeomObj(),
-    fontindex_(2)
+GeomTexts::GeomTexts() : 
+  GeomObj(),
+  fontindex_(2),
+  renderer_(0)
 {
 }
 
@@ -149,7 +156,8 @@ GeomTexts::GeomTexts(const GeomTexts& copy) :
   fontindex_(copy.fontindex_),
   text_(copy.text_),
   location_(copy.location_),
-  color_(copy.color_)
+  color_(copy.color_),
+  renderer_(copy.renderer_)
 {
 }
 
@@ -161,7 +169,7 @@ GeomTexts::~GeomTexts()
 
 GeomObj* GeomTexts::clone()
 {
-    return scinew GeomTexts(*this);
+  return scinew GeomTexts(*this);
 }
 
 
@@ -217,20 +225,20 @@ GeomTexts::add(const string &t, const Point &p, float index)
 void
 GeomTexts::io(Piostream& stream)
 {
-    const int version = stream.begin_class("GeomTexts", GEOMTEXTS_VERSION);
-    // Do the base class first.
-    GeomObj::io(stream);
-    Pio(stream, fontindex_);
-    Pio(stream, text_);
-    Pio(stream, location_);
-    Pio(stream, color_);
-    if (version > 1) { Pio(stream, index_); }
-    stream.end_class();
+  const int version = stream.begin_class("GeomTexts", GEOMTEXTS_VERSION);
+  // Do the base class first.
+  GeomObj::io(stream);
+  Pio(stream, fontindex_);
+  Pio(stream, text_);
+  Pio(stream, location_);
+  Pio(stream, color_);
+  if (version > 1) { Pio(stream, index_); }
+  stream.end_class();
 }
 
 static Persistent* make_GeomTextsCulled()
 {
-    return scinew GeomTextsCulled;
+  return scinew GeomTextsCulled;
 }
 
 PersistentTypeID GeomTextsCulled::type_id("GeomTextsCulled", "GeomTexts", make_GeomTextsCulled);
@@ -256,7 +264,7 @@ GeomTextsCulled::~GeomTextsCulled()
 
 GeomObj* GeomTextsCulled::clone()
 {
-    return scinew GeomTextsCulled(*this);
+  return scinew GeomTextsCulled(*this);
 }
 
 
@@ -291,11 +299,11 @@ GeomTextsCulled::add(const string &t, const Point &p,
 void
 GeomTextsCulled::io(Piostream& stream)
 {
-    stream.begin_class("GeomTextsCulled", GEOMCULLEDTEXTS_VERSION);
-    // Do the base class first...
-    GeomTexts::io(stream);
-    Pio(stream, normal_);
-    stream.end_class();
+  stream.begin_class("GeomTextsCulled", GEOMCULLEDTEXTS_VERSION);
+  // Do the base class first...
+  GeomTexts::io(stream);
+  Pio(stream, normal_);
+  stream.end_class();
 }
 
 
@@ -315,9 +323,9 @@ GeomTextTexture::GeomTextTexture(const string &fontfile)
     color_(Color(1,1,1)),
     anchor_(sw)
 #ifdef HAVE_FTGL
-    ,font_(scinew GeomFTGLFontRenderer(fontfile.c_str()))
+  ,font_(scinew GeomFTGLFontRenderer(fontfile.c_str()))
 #endif
-    ,up_hack_(false)
+  ,up_hack_(false)
 {
 }
 
@@ -336,9 +344,9 @@ GeomTextTexture::GeomTextTexture( const string &fontfile,
     anchor_(sw),
     own_font_(true)
 #ifdef HAVE_FTGL
-    ,font_(scinew GeomFTGLFontRenderer(fontfile.c_str()))
+  ,font_(scinew GeomFTGLFontRenderer(fontfile.c_str()))
 #endif
-    ,up_hack_(false)
+  ,up_hack_(false)
 {
 }
 
@@ -365,14 +373,14 @@ GeomTextTexture::GeomTextTexture( GeomFTGLFontRendererHandle font,
 
 
 GeomTextTexture::GeomTextTexture(const GeomTextTexture& copy)
-: GeomObj(copy)
+  : GeomObj(copy)
 {
 }
 
 
 GeomObj* GeomTextTexture::clone()
 {
-    return scinew GeomTextTexture(*this);
+  return scinew GeomTextTexture(*this);
 }
 
 void GeomTextTexture::get_bounds(BBox& in_bb)
@@ -526,7 +534,7 @@ GeomFTGLFontRenderer::GeomFTGLFontRenderer(const GeomFTGLFontRenderer& copy)
 
 GeomObj* GeomFTGLFontRenderer::clone()
 {
-    return scinew GeomFTGLFontRenderer(*this);
+  return scinew GeomFTGLFontRenderer(*this);
 }
 
 void

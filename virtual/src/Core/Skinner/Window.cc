@@ -61,6 +61,7 @@ namespace SCIRun {
     
    GLWindow::GLWindow(Variables *vars) :
       Parent(vars),
+      lock_(vars->get_id().c_str()),
       width_(Var<int>(vars,"width",640)()),
       height_(Var<int>(vars,"height",480)()),
       posx_(Var<int>(vars,"posx",50)()),
@@ -149,7 +150,7 @@ namespace SCIRun {
     
     BaseTool::propagation_state_e
     GLWindow::process_event(event_handle_t event) {
-
+      lock_.lock();
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       if (pointer) {
 
@@ -186,6 +187,7 @@ namespace SCIRun {
       if (redraw) {
         ASSERT(context_);
         if (!context_->make_current()) {
+	  lock_.unlock();
           return CONTINUE_E;
         }
         X11Lock::lock();
@@ -249,6 +251,9 @@ namespace SCIRun {
         context_->release();        
         X11Lock::unlock();
       }
+
+      lock_.unlock();
+
       return CONTINUE_E;
     }
 

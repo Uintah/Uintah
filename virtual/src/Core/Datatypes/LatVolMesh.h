@@ -1899,9 +1899,9 @@ LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
   const int j = static_cast<int>(floor(jj));
   const int k = static_cast<int>(floor(kk));
 
-  if (i < (ni_-1) && i >= 0 &&
-      j < (nj_-1) && j >= 0 &&
-      k < (nk_-1) && k >= 0)
+  if (i < (int)(ni_-1) && i >= 0 &&
+      j < (int)(nj_-1) && j >= 0 &&
+      k < (int)(nk_-1) && k >= 0)
   {
     cell.i_ = i;
     cell.j_ = j;

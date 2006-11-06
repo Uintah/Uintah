@@ -42,6 +42,8 @@ SRCS := \
 	$(SRCDIR)/ImportColorMapsFromMatlab.tcl\
 	$(SRCDIR)/ImportDatatypesFromMatlab.tcl\
 	$(SRCDIR)/ExportDatatypesToMatlab.tcl\
+	$(SRCDIR)/ImportBundlesFromMatlab.tcl\
+	$(SRCDIR)/ExportBundlesToMatlab.tcl\
 	$(SRCDIR)/ImportFieldsFromMatlab.tcl\
 	$(SRCDIR)/ExportFieldsToMatlab.tcl\
 	$(SRCDIR)/ImportMatricesFromMatlab.tcl\
