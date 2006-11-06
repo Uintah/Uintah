@@ -51,6 +51,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
 	$(SRCDIR)/String.cc                     \
 	$(SRCDIR)/TypeName.cc		    	\
+  $(SRCDIR)/FDataOperations.cc \
 	$(SRCDIR)/cd_templates.cc	    	\
 	$(SRCDIR)/cd_templates_fields_0.cc    	\
 	$(SRCDIR)/cd_templates_fields_1.cc    	\

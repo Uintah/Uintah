@@ -28,8 +28,8 @@
 
 
 
-#ifndef Datatypes_Field_h
-#define Datatypes_Field_h
+#ifndef CORE_DATATYPES_FIELD_H
+#define CORE_DATATYPES_FIELD_H 1
 
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Datatypes/Mesh.h>
@@ -46,6 +46,14 @@ typedef LockingHandle<ScalarFieldInterface> ScalarFieldInterfaceHandle;
 typedef LockingHandle<VectorFieldInterface> VectorFieldInterfaceHandle;
 typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 
+class FDataResult
+{
+public:
+  std::vector<double> scalar;
+  std::vector<Vector> vector;
+  std::vector<Tensor> tensor;
+  std::vector<Mesh::index_type> index;
+};
 
 class SCISHARE Field: public PropertyManager
 {
@@ -101,17 +109,7 @@ public:
   virtual void resize_fdata();
   virtual void resize_fdata(size_t size);
   
-  virtual void get_value(char &val, Mesh::index_type i) const;
-  virtual void get_value(unsigned char &val, Mesh::index_type i) const;
-  virtual void get_value(short &val, Mesh::index_type i) const;
-  virtual void get_value(unsigned short &val, Mesh::index_type i) const;
   virtual void get_value(int &val, Mesh::index_type i) const;
-  virtual void get_value(unsigned int &val, Mesh::index_type i) const;
-  virtual void get_value(long &val, Mesh::index_type i) const;
-  virtual void get_value(unsigned long &val, Mesh::index_type i) const;
-  virtual void get_value(long long &val, Mesh::index_type i) const;
-  virtual void get_value(unsigned long long &val, Mesh::index_type i) const;
-  virtual void get_value(float &val, Mesh::index_type i) const;
   virtual void get_value(double &val, Mesh::index_type i) const;
   virtual void get_value(Vector &val, Mesh::index_type i) const;
   virtual void get_value(Tensor &val, Mesh::index_type i) const;
@@ -129,17 +127,7 @@ public:
   template<class T>  inline void get_value(T& val, Mesh::VDElem::index_type idx) const
   { get_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
 
-  virtual void set_value(const char &val, Mesh::index_type i);
-  virtual void set_value(const unsigned char &val, Mesh::index_type i);
-  virtual void set_value(const short &val, Mesh::index_type i);
-  virtual void set_value(const unsigned short &val, Mesh::index_type i);
   virtual void set_value(const int &val, Mesh::index_type i);
-  virtual void set_value(const unsigned int &val, Mesh::index_type i);
-  virtual void set_value(const long &val, Mesh::index_type i);
-  virtual void set_value(const unsigned long &val, Mesh::index_type i);
-  virtual void set_value(const long long &val, Mesh::index_type i);
-  virtual void set_value(const unsigned long long &val, Mesh::index_type i);
-  virtual void set_value(const float &val, Mesh::index_type i);
   virtual void set_value(const double &val, Mesh::index_type i);
   virtual void set_value(const Vector &val, Mesh::index_type i);
   virtual void set_value(const Tensor &val, Mesh::index_type i);
@@ -156,19 +144,7 @@ public:
   { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
   template<class T>  inline void set_value(const T& val, Mesh::VDElem::index_type idx)
   { set_value(val,static_cast<SCIRun::Mesh::index_type>(idx)); }
-  
-  
-  virtual void interpolate(char &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(unsigned char &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(short &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(unsigned short &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(int &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(unsigned int &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(unsigned long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(long long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(unsigned long long &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void interpolate(float &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
+
   virtual void interpolate(double &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
   virtual void interpolate(Vector &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
   virtual void interpolate(Tensor &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
@@ -186,17 +162,6 @@ public:
   template<class T>  inline void interpolate(T& val, const vector<double> &coords, Mesh::VDElem::index_type idx) const
   { interpolate(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
 
-  virtual void gradient(vector<char> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<unsigned char> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<short> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<unsigned short> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<int> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<unsigned int> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<unsigned long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<long long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<unsigned long long> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
-  virtual void gradient(vector<float> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
   virtual void gradient(vector<double> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
   virtual void gradient(vector<Vector> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
   virtual void gradient(vector<Tensor> &val, const vector<double> &coords, Mesh::index_type elem_idx) const;
@@ -213,6 +178,60 @@ public:
   { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
   template<class T>  inline void gradient(vector<T>& val, const vector<double> &coords, Mesh::VDElem::index_type idx) const
   { gradient(val, coords, static_cast<SCIRun::Mesh::index_type>(idx)); }
+
+  virtual bool fdata_operation(const std::string& op, FDataResult& result) const;
+  
+  inline bool min(double& val, Mesh::index_type& idx) const
+  { 
+    FDataResult result; 
+    if(fdata_operation("min",result)) 
+    { val = result.scalar[0]; idx = result.index[0]; return (true); }
+    return (false);
+  }
+
+  inline bool min(double& val) const
+  { 
+    FDataResult result; 
+    if(fdata_operation("min",result)) 
+    { val = result.scalar[0]; return (true); }
+    return (false);
+  }
+
+  inline bool max(double& val, Mesh::index_type& idx) const
+  { 
+    FDataResult result; 
+    if(fdata_operation("max",result)) 
+    { val = result.scalar[0]; idx = result.index[0]; return (true); }
+    return (false);
+  }
+
+  inline bool max(double& val) const
+  { 
+    FDataResult result; 
+    if(fdata_operation("max",result)) 
+    { val = result.scalar[0]; return (true); }
+    return (false);
+  }
+
+  inline bool minmax(double& min, double& max, Mesh::index_type& minidx, Mesh::index_type& maxidx) const
+  { 
+    FDataResult result; 
+    if(fdata_operation("minmax",result)) 
+    { 
+      min = result.scalar[0]; minidx = result.index[0]; 
+      max = result.scalar[1]; maxidx = result.index[1];     
+      return (true); 
+    }
+    return (false);
+  }
+
+  inline bool minmax(double& min, double& max) const
+  { 
+    FDataResult result; 
+    if(fdata_operation("minmax",result)) 
+    { min = result.scalar[0]; max = result.scalar[1]; return (true); }
+    return (false);
+  }
 
 };
 

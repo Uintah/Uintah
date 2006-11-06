@@ -1030,15 +1030,12 @@ FieldInformation::has_virtual_interface()
 {
   std::string type = get_field_type_id();
   std::string meshtype = get_mesh_type_id();
-  
-  std::cout << "type="<<type<<"\n";
-  std::cout << "meshtype="<<meshtype<<"\n";
-  
+    
   MeshHandle meshtesthandle = Create_Mesh(meshtype);
-  if (meshtesthandle.get_rep() == 0) { std::cout << "Could not obtain mesh handle"; return (false); }
+  if (meshtesthandle.get_rep() == 0) { return (false); }
   
   FieldHandle testhandle = Create_Field(type,meshtesthandle);
-  if (testhandle.get_rep() == 0) { std::cout << "Could not obtain field handle"; return (false); }
+  if (testhandle.get_rep() == 0) { return (false); }
   if (testhandle->has_virtual_interface() == false) return (false);
   return (true);
 }
