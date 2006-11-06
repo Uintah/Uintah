@@ -43,14 +43,14 @@ namespace SCIRun {
 class Painter;
 class SessionReader {
 public:
-  SessionReader (Painter *painter);
+  SessionReader         (Painter *painter);
   ~SessionReader();
-  bool          load_session(string filename);
+  bool                  load_session(string filename);
 private:
-  NrrdVolume *  eval_volume_node (const xmlNodePtr, NrrdVolume *);
-  void          eval_lexov_node (const xmlNodePtr);
-  Painter *     painter_;
-  string        dir_;
+  NrrdVolumeHandle      eval_volume_node (const xmlNodePtr, NrrdVolumeHandle);
+  void                  eval_lexov_node (const xmlNodePtr);
+  Painter *             painter_;
+  string                dir_;
 };
 
 

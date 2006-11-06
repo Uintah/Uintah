@@ -61,12 +61,13 @@ NrrdVolume::NrrdVolume(Painter *painter,
                        NrrdDataHandle &nrrd,
                        unsigned int label) :
   painter_(painter),
+  lock(("NrrdVolume "+name).c_str()),
+  ref_cnt(0),
   parent_(0),
   children_(0),
   nrrd_handle_(0),
   name_(name),
   filename_(name),
-  mutex_(new Mutex(name.c_str())),
   opacity_(1.0),
   clut_min_(0.0),
   clut_max_(1.0),
@@ -86,10 +87,7 @@ NrrdVolume::NrrdVolume(Painter *painter,
 
 
 NrrdVolume::~NrrdVolume() {
-  mutex_->lock();
   nrrd_handle_ = 0;
-  mutex_->unlock();
-
 }
 
 
@@ -132,7 +130,7 @@ nrrd_data_size(Nrrd *nrrd)
 }
 
 
-
+#if 0
 NrrdVolume::NrrdVolume(NrrdVolume *copy, 
                        const string &name,
                        int clear) :
@@ -142,7 +140,6 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
   nrrd_handle_(0),
   name_(name),
   filename_(name),
-  mutex_(new Mutex(name.c_str())),
   opacity_(copy->opacity_),
   clut_min_(copy->clut_min_),
   clut_max_(copy->clut_max_),
@@ -157,8 +154,6 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
   expand_(copy->expand_)
 {
   visible_ = copy->visible_;
-  copy->mutex_->lock();
-  mutex_->lock();
 
   ASSERT(clear >= 0 && clear <= 2);
   
@@ -178,20 +173,18 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
   } break;
   }
 
-  mutex_->unlock();
   //  set_nrrd(nrrd_);
   build_index_to_world_matrix();
-  copy->mutex_->unlock();
 
 
 }
+#endif
 
 
 
 void
 NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle) 
 {
-  mutex_->lock();
   nrrd_handle_ = nrrd_handle;
   //  nrrd_handle_.detach();
   //  nrrdBasicInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd,0);
@@ -248,7 +241,6 @@ NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
 #endif
   build_index_to_world_matrix();
   dirty_ = true;
-  mutex_->unlock();
   reset_data_range();
 
 
@@ -259,7 +251,6 @@ NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
 void
 NrrdVolume::reset_data_range() 
 {
-  mutex_->lock();
   NrrdRange range;
   nrrdRangeSet(&range, nrrd_handle_->nrrd_, 0);
   if (data_min_ != range.min || data_max_ != range.max) {
@@ -269,7 +260,6 @@ NrrdVolume::reset_data_range()
     clut_max_ = range.max;
     opacity_ = 1.0;
   }
-  mutex_->unlock();
 }
   
 
@@ -542,16 +532,16 @@ NrrdVolume::compute_label_mask(unsigned int label)
 
 
 
-NrrdVolume *
+NrrdVolumeHandle
 NrrdVolume::create_child_label_volume(unsigned int label)
 {
-  NrrdVolume *anchor_volume = this;
-  while (anchor_volume->parent_) anchor_volume = anchor_volume->parent_;
+  NrrdVolumeHandle parent = this;
+  while (parent->parent_.get_rep()) parent = parent->parent_;
 
   if (!label) {
     const unsigned char max_bit = sizeof(unsigned int)*8;
     unsigned char bit = 0;
-    unsigned int used_labels = anchor_volume->compute_label_mask();
+    unsigned int used_labels = parent->compute_label_mask();
     while (bit < max_bit && (used_labels & (1 << bit))) ++bit;
     if (bit == max_bit) {
       cerr << "Cannot create child label volume!\n";
@@ -560,12 +550,10 @@ NrrdVolume::create_child_label_volume(unsigned int label)
     label = 1 << bit;
   }
 
-  NrrdVolume *vol = 
+  NrrdVolumeHandle vol = 
     new NrrdVolume(painter_, 
-                   anchor_volume->name_+" "+to_string(label), 
+                   parent->name_+" "+to_string(label), 
                    nrrd_handle_, label);
-  delete vol->mutex_;
-  vol->mutex_ = mutex_;
   vol->parent_ = this;
   children_.push_back(vol);
   return vol;
@@ -625,12 +613,12 @@ NrrdHandle
 NrrdVolume::create_float_nrrd_from_label()
 {
 
-  NrrdVolume *anchor_volume = this;
-  while (anchor_volume->parent_) anchor_volume = anchor_volume->parent_;
+  NrrdVolume *parent = this;
+  while (parent->parent_) parent = parent->parent_;
 
   const unsigned char max_bit = sizeof(unsigned int)*8;
   unsigned char bit = 0;
-  unsigned int used_labels = anchor_volume->compute_label_mask();
+  unsigned int used_labels = parent->compute_label_mask();
   while (bit < max_bit && (used_labels & (1 << bit))) ++bit;
   if (bit == max_bit) {
     cerr << "Cannot create child label volume!\n";
@@ -641,10 +629,8 @@ NrrdVolume::create_float_nrrd_from_label()
 
   NrrdVolume *vol = 
     new NrrdVolume(painter_, 
-                   anchor_volume->name_+" "+to_string(label), 
+                   parent->name_+" "+to_string(label), 
                    nrrd_handle_);
-  delete vol->mutex_;
-  vol->mutex_ = mutex_;
   vol->label_ = label;
   vol->parent_ = this;
   children_.push_back(vol);
@@ -657,7 +643,7 @@ NrrdVolume::create_float_nrrd_from_label()
 VolumeSliceHandle
 NrrdVolume::get_volume_slice(const Plane &plane) {
   //  return new VolumeSlice(this, plane);
-  NrrdVolume *parent = this;
+  NrrdVolumeHandle parent = this;
   VolumeSlices_t::iterator siter = parent->all_slices_.begin();
   VolumeSlices_t::iterator send = parent->all_slices_.end();  
   for (; siter != send; ++siter) {
@@ -666,8 +652,8 @@ NrrdVolume::get_volume_slice(const Plane &plane) {
     }
   }
 
-  while (parent->parent_) parent = parent->parent_;
-  if (this != parent) {
+  while (parent->parent_.get_rep()) parent = parent->parent_;
+  if (this != parent.get_rep()) {
     VolumeSlices_t::iterator siter = parent->all_slices_.begin();
     VolumeSlices_t::iterator send = parent->all_slices_.end();  
     for (; siter != send; ++siter) {
@@ -686,8 +672,8 @@ NrrdVolume::get_volume_slice(const Plane &plane) {
 void
 NrrdVolume::purge_unused_slices()
 {
-  NrrdVolume *parent = this;
-  while (parent->parent_) parent = parent->parent_;
+  NrrdVolumeHandle parent = this;
+  while (parent->parent_.get_rep()) parent = parent->parent_;
 
   VolumeSlices_t new_all_slices;
   if (!dirty_) {
@@ -757,39 +743,6 @@ NrrdVolume::extract_label_as_bit()
 
 
 
-NrrdDataHandle
-NrrdVolume::create_clear_nrrd(unsigned int type) {
-  NrrdDataHandle nrrdh = new NrrdData();
-  Nrrd *dst = nrrdh->nrrd_;
-  Nrrd *src = nrrd_handle_->nrrd_;
-  
-  nrrdBasicInfoCopy(dst, src, 0);
-  nrrdAxisInfoCopy(dst, src, 0, 0);
-
-  unsigned int num = nrrd_size(src);
-
-  if (!type) type = src->type;
-  dst->type = type;
-
-  switch (type) {
-  case nrrdTypeChar: dst->data = new signed char[num]; break;
-  case nrrdTypeUChar: dst->data = new unsigned char[num]; break;
-  case nrrdTypeShort: dst->data = new signed short[num]; break;
-  case nrrdTypeUShort: dst->data = new unsigned short[num]; break;
-  case nrrdTypeInt: dst->data = new signed int[num]; break;
-  case nrrdTypeUInt: dst->data = new unsigned int[num]; break;
-  case nrrdTypeLLong: dst->data = new signed long long[num]; break;
-  case nrrdTypeULLong: dst->data = new unsigned long long[num]; break;
-  case nrrdTypeFloat: dst->data = new float[num]; break;
-  case nrrdTypeDouble: dst->data = new double[num]; break;
-  default: throw "unhandled type in NrrdVolume::get_clear_nrrd"; break;
-  }
-
-  memset(dst->data, 0, nrrd_data_size(dst));
-
-  return nrrdh;
-
-}
 
 int
 NrrdVolume::bit() {
@@ -800,11 +753,29 @@ NrrdVolume::bit() {
 }
     
 
-NrrdDataHandle
-NrrdVolume::extract_bit_from_float(float ref) {
+
+void
+NrrdVolume::change_type_from_float_to_bit() {
+  NrrdDataHandle nrrdh = VolumeOps::float_to_bit(nrrd_handle_, 0, label_);
+  set_nrrd(nrrdh);  
+}
+
+void
+NrrdVolume::change_type_from_bit_to_float() {
+  NrrdDataHandle nrrdh = VolumeOps::float_to_bit(nrrd_handle_, 0, label_);
+  set_nrrd(nrrdh);
+}
+
+void
+NrrdVolume::clear() {
+  VolumeOps::clear_nrrd(nrrd_handle_);
 }
   
-  
+ 
+int
+NrrdVolume::numbytes() {
+  return nrrd_data_size(nrrd_handle_->nrrd_);
+}
 
 
 

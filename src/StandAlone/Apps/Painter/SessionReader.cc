@@ -110,8 +110,8 @@ SessionReader::eval_lexov_node(const xmlNodePtr node)
   NrrdVolumes volumes;
   for (xmlNode *cnode=node->children; cnode!=0; cnode=cnode->next) {
     if (XMLUtil::node_is_element(cnode, "volume")) {
-      NrrdVolume *vol = eval_volume_node(cnode, 0);
-      if (vol) {
+      NrrdVolumeHandle vol = eval_volume_node(cnode, 0);
+      if (vol.get_rep()) {
         volumes.push_back(vol);
       }
     } 
@@ -129,8 +129,8 @@ SessionReader::eval_lexov_node(const xmlNodePtr node)
 
 
 
-NrrdVolume *
-SessionReader::eval_volume_node(const xmlNodePtr node, NrrdVolume *parent)
+NrrdVolumeHandle
+SessionReader::eval_volume_node(const xmlNodePtr node, NrrdVolumeHandle parent)
 {
   Skinner::Variables *vars = new Skinner::Variables("");
   for (xmlNode *cnode=node->children; cnode!=0; cnode=cnode->next) {
@@ -138,7 +138,7 @@ SessionReader::eval_volume_node(const xmlNodePtr node, NrrdVolume *parent)
       Skinner::XMLIO::eval_var_node(cnode, vars);
     } 
   }
-  NrrdVolume *volume = 0;
+  NrrdVolumeHandle volume = 0;
 
 
   unsigned int label = 0;
@@ -146,7 +146,7 @@ SessionReader::eval_volume_node(const xmlNodePtr node, NrrdVolume *parent)
     label = vars->get_int("label");
   }
 
-  if (!parent) {
+  if (!parent.get_rep()) {
     string filename = vars->get_string("filename");  
     pair<string, string> dir_file = split_filename(filename);
     if (dir_file.first.empty()) dir_file.first = dir_;
@@ -156,7 +156,7 @@ SessionReader::eval_volume_node(const xmlNodePtr node, NrrdVolume *parent)
       volume = painter_->load_volume<unsigned int>(dir_file.first+filename);
     }
       
-    if (!volume) {
+    if (!volume.get_rep()) {
       cerr << "Error loading : " << filename << std::endl;
       return 0;
     }

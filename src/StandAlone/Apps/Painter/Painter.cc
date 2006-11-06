@@ -38,11 +38,11 @@
  *
  *  Copyright (C) 2005 SCI Group
  */
-
+#include <sci_comp_warn_fixes.h>
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <StandAlone/Apps/Painter/PointerToolSelectorTool.h>
 #include <StandAlone/Apps/Painter/KeyToolSelectorTool.h>
-#include <sci_comp_warn_fixes.h>
+#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
 #include <stdlib.h>
 #include <math.h>
 #include <map>
@@ -92,7 +92,6 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   windows_(),
   volumes_(),
   current_volume_(0),
-  undo_volume_(0),
   colormaps_(1, ColorMap::create_greyscale()),
   anatomical_coordinates_(0, 1),
   volume_lock_("Volume"),
@@ -167,8 +166,8 @@ Painter::get_data_from_layer_buttons()
 {
   for (unsigned int i = 0; i < layer_buttons_.size(); ++i) {
     LayerButton *button = layer_buttons_[i];
-    NrrdVolume *volume = button->volume_;
-    if (!volume) continue;
+    NrrdVolumeHandle &volume = button->volume_;
+    if (!volume.get_rep()) continue;
     volume->name_ = button->layer_name_;
     volume->visible_ = button->layer_visible_;
     volume->expand_ = button->expand_;
@@ -191,7 +190,7 @@ Painter::rebuild_layer_buttons()
 }
 
 void
-Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)  
+Painter::build_layer_button(unsigned int &bpos, NrrdVolumeHandle &volume)  
 {
   LayerButton *button = layer_buttons_[bpos];
   button->visible_ = true;
@@ -199,8 +198,8 @@ Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)
   button->volume_ = volume;
 
   unsigned int level = 0;
-  NrrdVolume *parent = volume;
-  while (parent->parent_) {
+  NrrdVolumeHandle parent = volume;
+  while (parent->parent_.get_rep()) {
     level++;
     parent = parent->parent_;
   }
@@ -229,9 +228,9 @@ Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)
 
 
 void
-Painter::build_volume_list(NrrdVolumes &volumes, NrrdVolume *volume)
+Painter::build_volume_list(NrrdVolumes &volumes, NrrdVolumeHandle &volume)
 {
-  NrrdVolumes &children = volume ? volume->children_ : volumes_;
+  NrrdVolumes &children = volume.get_rep() ? volume->children_ : volumes_;
   for (unsigned int i = 0; i < children.size(); ++i) {
     volumes.push_back(children[i]);
     build_volume_list(volumes, children[i]);
@@ -239,16 +238,17 @@ Painter::build_volume_list(NrrdVolumes &volumes, NrrdVolume *volume)
 }
 
 void
-Painter::move_layer_up(NrrdVolume *layer)
+Painter::move_layer_up(NrrdVolumeHandle &layer)
 {
-  if (!layer) return;
-  NrrdVolumes &volumes = layer->parent_ ? layer->parent_->children_ : volumes_;
+  if (!layer.get_rep()) return;
+  NrrdVolumes &volumes = 
+    layer->parent_.get_rep() ? layer->parent_->children_ : volumes_;
   unsigned int i = 0;
   while (i < volumes.size() && volumes[i] != layer) ++i;
   ASSERT(volumes[i] == layer);
   if (i == volumes.size()-1) return;
 
-  NrrdVolume *temp = volumes[i+1];
+  NrrdVolumeHandle temp = volumes[i+1];
   volumes[i+1] = volumes[i];
   volumes[i] = temp;
   
@@ -257,16 +257,17 @@ Painter::move_layer_up(NrrdVolume *layer)
 }
 
 void
-Painter::move_layer_down(NrrdVolume *layer)
+Painter::move_layer_down(NrrdVolumeHandle &layer)
 {
-  if (!layer) return;  
-  NrrdVolumes &volumes = layer->parent_ ? layer->parent_->children_ : volumes_;
+  if (!layer.get_rep()) return;  
+  NrrdVolumes &volumes = 
+    layer->parent_.get_rep() ? layer->parent_->children_ : volumes_;
   unsigned int i = 0;
   while (i < volumes.size() && volumes[i] != layer) ++i;
   ASSERT(volumes[i] == layer);
   if (i == 0) return;
 
-  NrrdVolume *temp = volumes[i-1];
+  NrrdVolumeHandle temp = volumes[i-1];
   volumes[i-1] = volumes[i];
   volumes[i] = temp;
   
@@ -278,7 +279,7 @@ Painter::move_layer_down(NrrdVolume *layer)
 void
 Painter::opacity_down()
 {
-  if (current_volume_) {
+  if (current_volume_.get_rep()) {
     current_volume_->opacity_ = 
       Clamp(current_volume_->opacity_-0.05, 0.0, 1.0);
     redraw_all();
@@ -288,7 +289,7 @@ Painter::opacity_down()
 void
 Painter::opacity_up()
 {
-  if (current_volume_) {
+  if (current_volume_.get_rep()) {
     current_volume_->opacity_ = 
       Clamp(current_volume_->opacity_+0.05, 0.0, 1.0);
     redraw_all();
@@ -328,7 +329,7 @@ Painter::cur_layer_up()
 void
 Painter::reset_clut()
 {
-  if (current_volume_) {
+  if (current_volume_.get_rep()) {
     current_volume_->clut_min_ = current_volume_->data_min_;
     current_volume_->clut_max_ = current_volume_->data_max_;
     set_all_slices_tex_dirty();
@@ -360,7 +361,7 @@ Painter::set_all_slices_tex_dirty() {
 }
 
 
-NrrdVolume *
+NrrdVolumeHandle
 Painter::find_volume_by_name(const string &name) {
   for (unsigned int i = 0; i < volumes_.size(); ++i)
     if (volumes_[i]->name_ == name) 
@@ -374,7 +375,7 @@ Painter::unique_layer_name(string base) {
   base = base.substr(0, pos+1);
   int i = 0;
   string name = base + " "+to_string(++i);
-  while (find_volume_by_name(name))
+  while (find_volume_by_name(name).get_rep())
     name = base + " "+to_string(++i);
   return name;
 }
@@ -385,10 +386,6 @@ Painter::unique_layer_name(string base) {
 void
 Painter::create_undo_volume() {
   return;
-  if (undo_volume_) 
-    delete undo_volume_;
-  string newname = current_volume_->name_;
-  undo_volume_ = scinew NrrdVolume(current_volume_, newname, 0);
 }
 
 void

@@ -124,8 +124,8 @@ public:
   static Skinner::DrawableMakerFunc_t   maker;
   static string                         class_name() { return "Painter"; }
   virtual int                           get_signal_id(const string &signalname) const;
-
-
+  void                                  redraw_all();
+  void			extract_all_window_slices();
 private:
   friend class SliceWindow;
   friend class VolumeSlice;
@@ -147,6 +147,12 @@ private:
   friend class ITKConfidenceConnectedImageFilterTool;
   friend class SessionReader;
 
+#ifdef HAVE_INSIGHT
+  //  template <class FilterType>
+  //  friend class ITKFilterCallback<FilterType>;
+#endif
+
+
   enum DisplayMode_e {
     normal_e,
     slab_e,
@@ -155,25 +161,26 @@ private:
   };
 
   // Methods for drawing to the GL window
-  void			redraw_all();
-  void			extract_all_window_slices();
+
+
   void                  set_probe();
 
   // these should probably be moved to NrrdVolume class
   template <class T>
-  NrrdVolume *          load_volume(string);
-  bool                  save_volume(string filename, NrrdVolume *);
+  NrrdVolumeHandle      load_volume(string);
+  bool                  save_volume(string filename, NrrdVolumeHandle &);
   
   void                  set_all_slices_tex_dirty();
   ColorMapHandle        get_colormap(int);
   void                  rebuild_layer_buttons();
   void                  get_data_from_layer_buttons();
 
-  void                  build_layer_button(unsigned int &, NrrdVolume *);
-  void                  build_volume_list(NrrdVolumes &,NrrdVolume *vol=0);
+  void                  build_layer_button(unsigned int &, NrrdVolumeHandle &);
+  void                  build_volume_list(NrrdVolumes &,
+                                          NrrdVolumeHandle &vol);
 
-  void                  move_layer_up(NrrdVolume *);
-  void                  move_layer_down(NrrdVolume *);
+  void                  move_layer_up(NrrdVolumeHandle &);
+  void                  move_layer_down(NrrdVolumeHandle &);
   void                  cur_layer_up();
   void                  cur_layer_down();
   void                  opacity_up();
@@ -181,7 +188,7 @@ private:
   void                  reset_clut();
   void                  create_undo_volume();
   void                  undo_volume();
-  NrrdVolume *          find_volume_by_name(const string &);
+  NrrdVolumeHandle      find_volume_by_name(const string &);
   pair<double, double>  compute_mean_and_deviation(Nrrd *, Nrrd *);
 
   void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
@@ -253,17 +260,17 @@ private:
   Point                 pointer_pos_;
   SliceWindows		windows_;
   NrrdVolumes		volumes_;
-  NrrdVolume *          current_volume_;
-  NrrdVolume *          undo_volume_;
+  NrrdVolumeHandle      current_volume_;
   ColorMaps_t           colormaps_;
   UIint			anatomical_coordinates_;
   Mutex                 volume_lock_;
 
   TextureHandle         volume_texture_;
   vector<LayerButton *> layer_buttons_;
-  NrrdVolume *          filter_volume_;
+  NrrdVolumeHandle      filter_volume_;
   bool                  abort_filter_;
   Skinner::Var<string>  status_;
+  Skinner::Drawables_t  filters_;
 
 };
 
@@ -383,7 +390,7 @@ Painter::filter_callback(itk::Object *object,
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
     std::cerr << "Filter progress: " << value * 100.0 << "%\n";
-    if (filter_volume_) {
+    if (filter_volume_.get_rep()) {
       FilterType *filter = dynamic_cast<FilterType *>(object);
       ASSERT(filter);
       volume_lock_.lock();
@@ -424,7 +431,7 @@ Painter::filter_callback(itk::Object *object,
 #endif
 
 template <class T>
-NrrdVolume *
+NrrdVolumeHandle
 Painter::load_volume(string filename) {
   filename = substituteTilde(filename);
   if (!validFile(filename)) {

@@ -90,14 +90,14 @@ KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_o:        painter_->opacity_down();break;
 
   case SCIRun_u:
-    if (painter_->current_volume_) {
+    if (painter_->current_volume_.get_rep()) {
       painter_->current_volume_->colormap_ = 
         Max(0,painter_->current_volume_->colormap_-1);
       painter_->set_all_slices_tex_dirty();
       painter_->redraw_all();
     } break;
   case SCIRun_i:
-    if (painter_->current_volume_) {
+    if (painter_->current_volume_.get_rep()) {
       painter_->current_volume_->colormap_ = 
         Min(int(painter_->colormaps_.size()), 
             painter_->current_volume_->colormap_+1);

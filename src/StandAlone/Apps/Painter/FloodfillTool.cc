@@ -30,6 +30,7 @@
 //    Date   : Sat Oct 14 16:13:30 2006
 
 #include <StandAlone/Apps/Painter/FloodfillTool.h>
+#include <StandAlone/Apps/Painter/VolumeOps.h>
 #include <StandAlone/Apps/Painter/Painter.h>
 
 namespace SCIRun {
@@ -123,7 +124,7 @@ FloodfillTool::draw(SliceWindow &)
 void
 FloodfillTool::do_floodfill()
 {
-  NrrdVolume *volume = painter_->current_volume_;
+  NrrdVolumeHandle &volume = painter_->current_volume_;
   vector<int> index = volume->world_to_index(start_pos_);
   if (!volume->index_valid(index)) 
     return;
@@ -180,7 +181,8 @@ FloodfillTool::do_floodfill()
           
           // Check to see if flood fill has already been here
           unsigned char visited;
-          nrrd_get_value(done_handle->nrrd_, neighbor_index, visited);
+          VolumeOps::nrrd_get_value(done_handle->nrrd_, 
+                                    neighbor_index, visited);
           // Bail if the voxel has been visited
           if (visited) continue;
           
@@ -190,7 +192,8 @@ FloodfillTool::do_floodfill()
           // Bail if the voxel is outside the flood fill range
           if (neighborval < min_ || neighborval > max_) continue;
           // Mark this voxel as visited
-          nrrd_set_value(done_handle->nrrd_, neighbor_index, (unsigned char)1);
+          VolumeOps::nrrd_set_value(done_handle->nrrd_, 
+                                    neighbor_index, (unsigned char)1);
           
           todo.push_back(neighbor_index);
         }

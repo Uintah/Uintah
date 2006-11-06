@@ -95,7 +95,7 @@ SessionWriter::write_volumes(NrrdVolumes &volumes, const string &dir) {
   NrrdVolumes::iterator end = volumes.end();
 
   for (; iter != end; ++iter) {
-    NrrdVolume *volume = *iter;
+    NrrdVolumeHandle volume = *iter;
     pair<string, string> dir_file = split_filename(volume->filename_);
 
     if (!ends_with(string_tolower(dir_file.second), ".hdr")) {
@@ -119,10 +119,10 @@ SessionWriter::add_volume_nodes(xmlNodePtr node, NrrdVolumes &volumes) {
   NrrdVolumes::iterator end = volumes.end();
 
   for (; iter != end; ++iter) {
-    NrrdVolume *volume = *iter;
+    NrrdVolumeHandle volume = *iter;
     xmlNodePtr cnode = xmlNewChild(node, 0, to_xml_ch_ptr("volume"),0);
     add_var_node(cnode, "name", volume->name_);
-    if (!volume->parent_)
+    if (!volume->parent_.get_rep())
       add_var_node(cnode, "filename", volume->filename_);
     add_var_node(cnode, "label", to_string(volume->label_));
     add_var_node(cnode, "visible", to_string(volume->visible_ ? 1 : 0));

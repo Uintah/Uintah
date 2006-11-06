@@ -34,7 +34,7 @@
         <var name="col">1</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Curvature
      Scaling</var>
-        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::curvatureScaling</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::CurvatureScaling</var>
       </object>
       
       <object class="LabeledSpinnerBox">                
@@ -42,14 +42,14 @@
         <var name="col">1</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Propagation
         Scaling</var>
-        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::propagationScaling</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::PropagationScaling</var>
       </object>
       
       <object class="LabeledSpinnerBox">                
         <var name="row">5</var>
         <var name="col">1</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Edge Weight</var>
-        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::edgeWeight</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::EdgeWeight</var>
       </object>
       <object class="Button">
         <var name="row">6</var>

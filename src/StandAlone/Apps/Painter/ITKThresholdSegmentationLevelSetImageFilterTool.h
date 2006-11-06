@@ -37,6 +37,7 @@
 
 #ifdef HAVE_INSIGHT
 #include <string>
+#include <StandAlone/Apps/Painter/NrrdVolume.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Datatypes/ITKDatatype.h>
 #include <itkImageToImageFilter.h>
@@ -46,7 +47,6 @@
 namespace SCIRun {
 
 class Painter;
-class NrrdVolume;
 typedef itk::Image<float,3> ITKImageFloat3D;
 
 class ITKThresholdSegmentationLevelSetImageFilterTool : public BaseTool {
@@ -58,7 +58,7 @@ private:
   void                cont();
   void                set_vars();
   Painter *           painter_;
-  NrrdVolume *        seed_volume_;
+  NrrdVolumeHandle    seed_volume_;
   
   
   typedef itk::ThresholdSegmentationLevelSetImageFilter

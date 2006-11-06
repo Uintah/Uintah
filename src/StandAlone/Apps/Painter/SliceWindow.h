@@ -96,7 +96,7 @@ public:
   void                  extract_slices();
   void                  render_slices();
   void                  redraw();
-  void                  autoview(NrrdVolume *, double offset=10.0);
+  void                  autoview(NrrdVolumeHandle &, double offset=10.0);
   void                  set_axis(unsigned int);
   GeomIndexedGroup*     get_geom_group();
 

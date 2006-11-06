@@ -42,6 +42,7 @@
 #include <Core/Skinner/Variables.h>
 #include <StandAlone/Apps/Painter/NrrdToITK.h>
 #include <StandAlone/Apps/Painter/VolumeSlice.h>
+#include <StandAlone/Apps/Painter/VolumeOps.h>
 #include <sci_defs/insight_defs.h>
 #include <Core/Geom/IndexedGroup.h>
 
@@ -52,20 +53,23 @@ namespace SCIRun {
 
 class Painter;
 class VolumeSlice;
+class NrrdVolume;
+typedef LockingHandle<NrrdVolume> NrrdVolumeHandle;
+typedef vector<NrrdVolumeHandle>	NrrdVolumes;
 
 class NrrdVolume { 
 public:
+  // For LockingHandle<NrrdVolume> NrrdVolumeHandle typedef after this class
+  Mutex               lock;
+  unsigned int        ref_cnt;
+
+
   // Constructor
   NrrdVolume	      (Painter *painter, 
                        const string &name,
                        NrrdDataHandle &nrrdh,
                        const unsigned int label = 0);
 
-  // Depreciated, please remove
-  // Copy Constructor
-  NrrdVolume          (NrrdVolume *copy, 
-                       const string &name, 
-                       int mode = 0); // if 1, clears out volume
   ~NrrdVolume();
 
 
@@ -80,9 +84,9 @@ public:
   NrrdDataHandle      get_nrrd();
   void                set_dirty(bool d = true) { dirty_ = d; }
 
-  NrrdVolume *        create_label_volume(unsigned int label=1, 
+  NrrdVolumeHandle    create_label_volume(unsigned int label=1, 
                                           NrrdDataHandle nrrdh = 0);
-  NrrdVolume *        create_child_label_volume(unsigned int label=0);
+  NrrdVolumeHandle    create_child_label_volume(unsigned int label=0);
   unsigned int        compute_label_mask(unsigned int label = 0);
 
   // Generates a VolumeSlice class if Plane intersects the volume,
@@ -122,22 +126,21 @@ public:
   ColorMapHandle      get_colormap();
   GeomIndexedGroup*   get_geom_group();
   NrrdDataHandle      extract_label_as_bit();
-  NrrdDataHandle      extract_bit_from_float(float ref = 0.0);
-  NrrdDataHandle      create_clear_nrrd(unsigned int type = 0);
 
+  void                change_type_from_float_to_bit();
+  void                change_type_from_bit_to_float();
+  void                clear();
+  int                 numbytes();
   int                 bit();
   
 
 
   Painter *           painter_;
-  NrrdVolume *        parent_;
-  vector<NrrdVolume*> children_;
+  NrrdVolumeHandle    parent_;
+  NrrdVolumes         children_;
   NrrdDataHandle      nrrd_handle_;
-
   string              name_;
   string              filename_;
-  Mutex *             mutex_;
-
 
   double	      opacity_;
   double              clut_min_;
@@ -165,145 +168,16 @@ public:
   //  VolumeSliceGroups_t slice_groups_;
 };
 
-typedef vector<NrrdVolume *>		NrrdVolumes;
-typedef map<string, NrrdVolume *>	NrrdVolumeMap;
-typedef list<string>                    NrrdVolumeOrder;
 
 
-
-template<class T>
-static void
-nrrd_get_value(const Nrrd *nrrd, 
-               const vector<int> &index, 
-               T &value)
-{
-  ASSERT((unsigned int)(index.size()) == nrrd->dim);
-  int position = index[0];
-  int mult_factor = nrrd->axis[0].size;
-  for (unsigned int a = 1; a < nrrd->dim; ++a) {
-    position += index[a] * mult_factor;
-    mult_factor *= nrrd->axis[a].size;
-  }
-
-  switch (nrrd->type) {
-  case nrrdTypeChar: {
-    char *slicedata = (char *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeUChar: {
-    unsigned char *slicedata = (unsigned char *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeShort: {
-    short *slicedata = (short *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeUShort: {
-    unsigned short *slicedata = (unsigned short *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeInt: {
-    int *slicedata = (int *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeUInt: {
-    unsigned int *slicedata = (unsigned int *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeLLong: {
-    signed long long *slicedata = (signed long long *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeULLong: {
-    unsigned long long *slicedata = (unsigned long long *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeFloat: {
-    float *slicedata = (float *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  case nrrdTypeDouble: {
-    double *slicedata = (double *)nrrd->data;
-    value = (T)slicedata[position];
-  } break;
-  default: {
-    throw "Unsupported data type: "+to_string(nrrd->type);
-  } break;
-  }
-}
-
-
-
-template <class T>
-static void
-nrrd_set_value(Nrrd *nrrd, 
-               const vector<int> &index, 
-               T val, 
-               unsigned int label_mask = 0)
-{
-  ASSERT((unsigned int)(index.size()) == nrrd->dim);
-  int position = index[0];
-  int mult_factor = nrrd->axis[0].size;
-  for (unsigned int a = 1; a < nrrd->dim; ++a) {
-    position += index[a] * mult_factor;
-    mult_factor *= nrrd->axis[a].size;
-  }
-
-  switch (nrrd->type) {
-  case nrrdTypeChar: {
-    char *slicedata = (char *)nrrd->data;
-    slicedata[position] = (char)val;
-  } break;
-  case nrrdTypeUChar: {
-    unsigned char *slicedata = (unsigned char *)nrrd->data;
-    slicedata[position] = (unsigned char)val;
-    } break;
-  case nrrdTypeShort: {
-    short *slicedata = (short *)nrrd->data;
-
-    slicedata[position] = (short)val;
-    } break;
-  case nrrdTypeUShort: {
-    unsigned short *slicedata = (unsigned short *)nrrd->data;
-    slicedata[position] = (unsigned short)val;
-    } break;
-  case nrrdTypeInt: {
-    int *slicedata = (int *)nrrd->data;
-    slicedata[position] = (int)val;
-    } break;
-  case nrrdTypeUInt: {
-    unsigned int *slicedata = (unsigned int *)nrrd->data;
-    if (slicedata[position] == label_mask) 
-      slicedata[position] = (unsigned int)val;
-    } break;
-  case nrrdTypeLLong: {
-    signed long long *slicedata = (signed long long *)nrrd->data;
-    slicedata[position] = (signed long long)val;
-    } break;
-  case nrrdTypeULLong: {
-    unsigned long long *slicedata = (unsigned long long *)nrrd->data;
-    slicedata[position] = (unsigned long long)val;
-    } break;
-  case nrrdTypeFloat: {
-    float *slicedata = (float *)nrrd->data;
-    slicedata[position] = (float)val;
-    } break;
-  case nrrdTypeDouble: {
-    double *slicedata = (double *)nrrd->data;
-    slicedata[position] = (double)val;
-    } break;
-  default: { 
-    throw "Unsupported data type: "+to_string(nrrd->type);
-    } break;
-  }
-}
 
 
 template<class T>
 void
-NrrdVolume::get_value(const vector<int> &index, T &value) {
+NrrdVolume::get_value(const vector<int> &index, T &value) 
+{
   ASSERT(index_valid(index));
-  nrrd_get_value(nrrd_handle_->nrrd_, index, value);
+  VolumeOps::nrrd_get_value(nrrd_handle_->nrrd_, index, value);
 }
 
 
@@ -311,7 +185,7 @@ template <class T>
 void
 NrrdVolume::set_value(const vector<int> &index, T value) {
   ASSERT(index_valid(index));
-  nrrd_set_value(nrrd_handle_->nrrd_, index, value);
+  VolumeOps::nrrd_set_value(nrrd_handle_->nrrd_, index, value);
 }
 
 
