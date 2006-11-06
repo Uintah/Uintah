@@ -6339,7 +6339,7 @@ GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushAttrib(GL_LIST_BIT);
 
   if (! renderer_) {
-    renderer_ = FontManager::get_renderer(2);
+    renderer_ = FontManager::get_sized_renderer(2);
   }
 
   if (matl) {
@@ -6371,7 +6371,7 @@ GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushAttrib(GL_LIST_BIT);
 
   if (! renderer_) {
-    renderer_ = FontManager::get_renderer(fontindex_);
+    renderer_ = FontManager::get_sized_renderer(fontindex_);
   }
 
   if (matl) {
@@ -6410,7 +6410,7 @@ GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
   glPushAttrib(GL_LIST_BIT);
 
   if (! renderer_) {
-    renderer_ = FontManager::get_renderer(fontindex_);
+    renderer_ = FontManager::get_sized_renderer(fontindex_);
   }
 
   if (matl) {
