@@ -409,6 +409,13 @@ SCI_ARG_WITH(tiff,
    sci_required_tiff=yes],
   [with_tiff=""])
 
+SCI_ARG_WITH(libgeotiff,
+  AC_HELP_STRING(--with-libgeotiff=DIR,
+                 Use the libgeotiff installation in DIR),
+  [with_libgeotiff="$withval"
+   sci_required_libgeotiff=yes],
+  [with_libgeotiff=""])
+
 SCI_ARG_WITH(xalan,
   AC_HELP_STRING(--with-xalan=DIR,
                  Use the xalan installation in DIR),
@@ -2716,6 +2723,31 @@ SCI_TRY_LINK(TIFF,tiff library,tiff.h,$_sci_inc,tiff,$_sci_lib,$M_LIB_DIR_FLAG $
 
 AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
+
+## -- check for libgeotiff ---------------------------------
+
+# Default values:
+_sci_optional=optional
+_sci_lib=
+_sci_inc=
+
+if test "$with_libgeotiff" = "yes"; then
+  # If --with-png is specified without a parameter, then it makes it required
+  _sci_optional=required
+else 
+  if test "$with_libgeotiff"; then
+    # If --with-libgeotiff has a parameter, then use it
+    _sci_lib="$with_libgeotiff"
+    _sci_inc="$with_libgeotiff"
+    _sci_optional=specific
+  fi 
+fi
+
+SCI_TRY_LINK(LIBGEOTIFF,libgeotiff installation,geotiff.h,$_sci_inc,geotiff,$_sci_lib,,,$_sci_optional)
+
+AC_SUBST(INC_LIBGEOTIFF_H)
+AC_SUBST(LIBGEOTIFF_LIB_FLAG)
+AC_SUBST(LIBGEOTIFF_LIB_DIR_FLAG)
 
 ##  --  search for png --------------------------------------
 

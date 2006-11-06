@@ -2707,7 +2707,7 @@ RenderFieldVirtual::render_faces_linear(Field *sfld,
 
 GeomHandle 
 RenderFieldVirtual::render_text(FieldHandle field_handle,
-				   bool use_color_map,
+				  ColorMapHandle color_handle,
 				   bool use_default_material,
 				   bool backface_cull_p,
 				   int fontsize,
@@ -2722,35 +2722,43 @@ RenderFieldVirtual::render_text(FieldHandle field_handle,
   GeomGroup *texts = scinew GeomGroup;
   GeomHandle text_switch = scinew GeomSwitch(texts);
 
+  bool use_colormap = false;
+	if (color_handle.get_rep()) use_colormap = true;
+	
   if (render_data)
   {
-    texts->add(render_text_data(field_handle, use_color_map,
+    texts->add(render_text_data(field_handle, color_handle,
+		    use_colormap,
 				use_default_material,
 				backface_cull_p,
 				fontsize, precision));
   }
   if (render_nodes)
   {
-    texts->add(render_text_nodes(field_handle, use_color_map,
+    texts->add(render_text_nodes(field_handle, color_handle,
+		     use_colormap,
 				 use_default_material,
 				 backface_cull_p,
 				 fontsize, precision, render_locations));
   }
   if (render_edges)
   {
-    texts->add(render_text_edges(field_handle, use_color_map,
+    texts->add(render_text_edges(field_handle, color_handle,
+		     use_colormap,
 				 use_default_material,
 				 fontsize, precision, render_locations));
   }
   if (render_faces)
   {
-    texts->add(render_text_faces(field_handle, use_color_map,
+    texts->add(render_text_faces(field_handle, color_handle,
+		     use_colormap,
 				 use_default_material,
 				 fontsize, precision, render_locations));
   }
   if (render_cells)
   {
-    texts->add(render_text_cells(field_handle, use_color_map,
+    texts->add(render_text_cells(field_handle, color_handle,
+				 use_colormap,
 				 use_default_material,
 				 fontsize, precision, render_locations));
   }
@@ -2759,7 +2767,8 @@ RenderFieldVirtual::render_text(FieldHandle field_handle,
 
 
 GeomHandle RenderFieldVirtual::render_text_data(FieldHandle field_handle,
-					bool use_color_map,
+				  ColorMapHandle color_handle,
+					bool use_colormap,
 					bool use_default_material,
 					bool backface_cull_p,
 					int fontsize,
@@ -2767,7 +2776,8 @@ GeomHandle RenderFieldVirtual::render_text_data(FieldHandle field_handle,
 {
   if (backface_cull_p && field_handle->basis_order() == 1)
   {
-    return render_text_data_nodes(field_handle, use_color_map,
+    return render_text_data_nodes(field_handle, color_handle,
+					color_handle.get_rep(),
 				  use_default_material,
 				  backface_cull_p, fontsize,
 				  precision);
@@ -2786,7 +2796,7 @@ GeomHandle RenderFieldVirtual::render_text_data(FieldHandle field_handle,
   FieldInformation fi(fld);
   
   bool vec_color = false;
-  if (!use_color_map)
+  if (use_colormap)
   {
     if (!use_default_material && fi.is_vector())
     {
@@ -2888,13 +2898,21 @@ GeomHandle RenderFieldVirtual::render_text_data(FieldHandle field_handle,
       {
         Vector vval(0, 0, 0);
         to_vector(val, vval);
-        texts->add(buffer.str(), p, Color(vval.x(), vval.y(), vval.z()));
+				
+				
+        texts->add(buffer.str(), p,  Color(vval.x(), vval.y(), vval.z()));
       }
       else
       {
         double dval = 0.0;
         to_double(val, dval);
-        texts->add(buffer.str(), p, dval);
+				// Compute the ColorMap index and retreive the color.
+				const double cmin = color_handle->getMin();
+				const double cmax = color_handle->getMax();
+				const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+				const Color &c = color_handle->getColor(index);
+
+        texts->add(buffer.str(), p, c);
       }
     }  
   }
@@ -2905,7 +2923,8 @@ GeomHandle RenderFieldVirtual::render_text_data(FieldHandle field_handle,
 
 GeomHandle 
 RenderFieldVirtual::render_text_data_nodes(FieldHandle field_handle,
-					      bool use_color_map,
+					      ColorMapHandle color_handle,
+								bool use_colormap,
 					      bool use_default_material,
 					      bool backface_cull_p,
 					      int fontsize,
@@ -2942,7 +2961,7 @@ RenderFieldVirtual::render_text_data_nodes(FieldHandle field_handle,
   {
     use_default_material = true;
   }
-  else if (!use_color_map)
+  else if (!use_colormap)
   {
     if (!use_default_material && fi.is_vector())
     {
@@ -3019,14 +3038,20 @@ RenderFieldVirtual::render_text_data_nodes(FieldHandle field_handle,
     {
       double dval;
       fld->get_value(dval, *iter);
+
+			const double cmin = color_handle->getMin();
+			const double cmax = color_handle->getMax();
+			const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+			const Color &c = color_handle->getColor(index);
+			
       if (culling_p)
       {
         mesh->get_normal(n, *iter);
-        ctexts->add(buffer.str(), p, n, dval);
+        ctexts->add(buffer.str(), p, n, c);
       }
       else
       {
-        texts->add(buffer.str(), p, dval);
+        texts->add(buffer.str(), p, c);
       }
     }
     ++iter;
@@ -3038,7 +3063,8 @@ RenderFieldVirtual::render_text_data_nodes(FieldHandle field_handle,
 
 GeomHandle 
 RenderFieldVirtual::render_text_nodes(FieldHandle field_handle,
-					 bool use_color_map,
+					 ColorMapHandle color_handle,
+					 bool use_colormap,
 					 bool use_default_material,
 					 bool backface_cull_p,
 					 int fontsize,
@@ -3073,7 +3099,7 @@ RenderFieldVirtual::render_text_nodes(FieldHandle field_handle,
   {
     use_default_material = true;
   }
-  else if (!use_color_map)
+  else if (!use_colormap)
   {
     if (!use_default_material && fi.is_vector())
     {
@@ -3137,14 +3163,20 @@ RenderFieldVirtual::render_text_nodes(FieldHandle field_handle,
     {
       double dval;
       fld->get_value(dval, *iter);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
+						
       if (culling_p)
       {
         mesh->get_normal(n, *iter);
-        ctexts->add(buffer.str(), p, n, dval);
+        ctexts->add(buffer.str(), p, n, c);
       }
       else
       {
-        texts->add(buffer.str(), p, dval);
+        texts->add(buffer.str(), p, c);
       }
     }
 
@@ -3155,7 +3187,8 @@ RenderFieldVirtual::render_text_nodes(FieldHandle field_handle,
 
 GeomHandle 
 RenderFieldVirtual::render_text_edges(FieldHandle field_handle,
-					 bool use_color_map,
+					 ColorMapHandle color_handle,
+           bool use_colormap,
 					 bool use_default_material,
 					 int fontsize,
 					 int precision,
@@ -3179,7 +3212,7 @@ RenderFieldVirtual::render_text_edges(FieldHandle field_handle,
   {
     use_default_material = true;
   }
-  else if (!use_color_map)
+  else if (!use_colormap)
   {
     if (!use_default_material && fi.is_vector())
     {
@@ -3223,7 +3256,12 @@ RenderFieldVirtual::render_text_edges(FieldHandle field_handle,
     {
       double dval;
       fld->get_value(dval, *iter);
-      texts->add(buffer.str(), p, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);			
+      texts->add(buffer.str(), p, c);
     } 
     ++iter;
   }
@@ -3233,7 +3271,8 @@ RenderFieldVirtual::render_text_edges(FieldHandle field_handle,
 
 GeomHandle 
 RenderFieldVirtual::render_text_faces(FieldHandle field_handle,
-					 bool use_color_map,
+					 ColorMapHandle color_handle,
+           bool use_colormap,
 					 bool use_default_material,
 					 int fontsize,
 					 int precision,
@@ -3257,7 +3296,7 @@ RenderFieldVirtual::render_text_faces(FieldHandle field_handle,
   {
     use_default_material = true;
   }
-  else if (!use_color_map)
+  else if (!use_colormap)
   {
     if (!use_default_material && fi.is_vector())
     {
@@ -3301,7 +3340,12 @@ RenderFieldVirtual::render_text_faces(FieldHandle field_handle,
     {
       double dval;
       fld->get_value(dval, *iter);
-      texts->add(buffer.str(), p, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
+      texts->add(buffer.str(), p, c);
     }
     ++iter;
   }
@@ -3311,7 +3355,8 @@ RenderFieldVirtual::render_text_faces(FieldHandle field_handle,
 
 GeomHandle 
 RenderFieldVirtual::render_text_cells(FieldHandle field_handle,
-					 bool use_color_map,
+					 ColorMapHandle color_handle,
+	 				 bool use_colormap,
 					 bool use_default_material,
 					 int fontsize,
 					 int precision,
@@ -3335,7 +3380,7 @@ RenderFieldVirtual::render_text_cells(FieldHandle field_handle,
   {
     use_default_material = true;
   }
-  else if (!use_color_map)
+  else if (!use_colormap)
   {
     if (!use_default_material && fi.is_vector())
     {
@@ -3379,7 +3424,12 @@ RenderFieldVirtual::render_text_cells(FieldHandle field_handle,
     {
       double dval;
       fld->get_value(dval, *iter);
-      texts->add(buffer.str(), p, dval);
+      // Compute the ColorMap index and retreive the color.
+      const double cmin = color_handle->getMin();
+      const double cmax = color_handle->getMax();
+      const double index = Clamp((dval - cmin)/(cmax - cmin), 0.0, 1.0);
+      const Color &c = color_handle->getColor(index);
+			texts->add(buffer.str(), p, c);
     }
 
     ++iter;

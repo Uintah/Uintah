@@ -367,7 +367,6 @@ class BioImageApp {
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] 5]
 	set completed [string equal $state Completed]
 	set juststarted [string equal $state JustStarted]
-
  	if {[string first $ChooseNrrd $which] != -1 && $completed} {
 	    if {$execute_choose == 1} {
 		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
@@ -449,7 +448,7 @@ class BioImageApp {
                 set 2D_fixed 1
 	    } 
 	    change_indicate_val 2
-	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && \
+	} elseif {[string first "Teem_Misc_ReportNrrdInfo_1" $which] != -1 && \
 		      $completed} {
 	    set axis_num 0
 	    global slice_frame
@@ -489,11 +488,11 @@ class BioImageApp {
 	    }
 
 	    $mods(ViewSlices)-c redrawall
-	} elseif {[string first "Teem_NrrdData_NrrdInfo_0" $which] != -1 && \
+	} elseif {[string first "Teem_Misc_ReportNrrdInfo_0" $which] != -1 && \
 		      $juststarted} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
-	} elseif { $which == "Teem_NrrdData_NrrdInfo_0" && $completed } {
+	} elseif { $which == "Teem_Misc_ReportNrrdInfo_0" && $completed } {
 	    change_indicate_val 2
 	    set NrrdInfo $which
 	    upvar \#0 $NrrdInfo-dimension dim
@@ -1316,6 +1315,7 @@ class BioImageApp {
 	disableModule $m2 1
 	disableModule $m3 1
 	disableModule $m4 1
+	disableModule $m5 1
 
 
 
@@ -2596,6 +2596,7 @@ class BioImageApp {
 	set valid_data 0
 	set ChooseNrrd [lindex [lindex $filters(0) $modules] $load_choose_input]
 	upvar \#0 $ChooseNrrd-port-selected-index port
+
         if {$port == 0} {       ; # Nrrd
             set mod [lindex [lindex $filters(0) $modules] $load_nrrd]
 	    upvar \#0 $mod-filename filename
@@ -2640,9 +2641,7 @@ class BioImageApp {
 	# Downstream ones execute before the upstream ones,
 	# so a new dataset isn't propagated            
 	set execute_choose 1
-	
 	$mod-c needexecute
-	
 	set has_executed 1
     } 
 
