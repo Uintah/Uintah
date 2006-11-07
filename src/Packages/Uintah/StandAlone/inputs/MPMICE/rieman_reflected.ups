@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
 
-<!-- @version: -->
 <!--____________________________________________________________________-->
 <!-- Validation problem:                                                -->
 <!-- Reference: " A High-resolution TVD Finite Volume Scheme for the    -->
@@ -12,7 +11,8 @@
 <!-- Fig 6(a,b,c)                                                       -->
 <!-- Run this with rmpmice                                              -->
 <!--___________ ________________________________________________________-->
-<Uintah_specification>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
        <title>mpmice shocktube validation with right end capped</title>
