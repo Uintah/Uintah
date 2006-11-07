@@ -160,6 +160,7 @@ class BioImageApp {
 	set load_dicom 1
 	set load_analyze 2
 	set load_field 3
+	set load_field_converter 4
 	set load_choose_vis 6
         set load_info 24
 
@@ -1914,30 +1915,35 @@ class BioImageApp {
 	set DicomNrrdReader [lindex $load_mods $load_dicom]
 	set AnalyzeNrrdReader [lindex $load_mods $load_analyze]
 	set FieldReader [lindex $load_mods $load_field]
+	set FieldReaderConverter [lindex $load_mods $load_field_converter]
 	if {$which == "Nrrd"} {
 	    setGlobal $ChooseNrrd-port-selected-index 0
 	    disableModule $NrrdReader 0
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
+	    disableModule $FieldReaderConverter 1
         } elseif {$which == "Dicom"} {
 	    setGlobal $ChooseNrrd-port-selected-index 1
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 0
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
+	    disableModule $FieldReaderConverter 1
         } elseif {$which == "Analyze"} {
 	    setGlobal $ChooseNrrd-port-selected-index 2
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 0
 	    disableModule $FieldReader 1
+	    disableModule $FieldReaderConverter 1
         } elseif {$which == "Field"} {
 	    setGlobal $ChooseNrrd-port-selected-index 3
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 0
+	    disableModule $FieldReaderConverter 0
 	}
     }
     
@@ -4427,6 +4433,7 @@ class BioImageApp {
     variable load_dicom
     variable load_analyze
     variable load_field
+    variable load_field_converter
     variable load_choose_vis
     variable load_info
 
