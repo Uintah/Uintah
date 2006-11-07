@@ -28,8 +28,8 @@
 
 
 #include<CCA/Components/TestProcessEvents/TestProcessEvents.h>
-#include <SCIRun/Internal/EventServiceException.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Internal/EventServiceException.h>
+#include <Framework/TypeMap.h>
 
 using namespace SCIRun;
 

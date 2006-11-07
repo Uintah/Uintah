@@ -39,8 +39,3 @@ endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/TestCreateTopic.o: Core/CCA/spec/cca_sidl.h
-
-SUBDIRS := $(SRCDIR)/TestLocation
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
