@@ -1111,7 +1111,7 @@ Pio(Piostream& stream, typename ImageMesh<Basis>::IFaceIndex& n)
 }
 
 
-#define IMAGEMESH_VERSION 2
+#define IMAGEMESH_VERSION 3
 
 template<class Basis>
 void
@@ -1127,6 +1127,10 @@ ImageMesh<Basis>::io(Piostream& stream)
 
   if (version >= 2) {
     basis_.io(stream);
+  }
+
+  if (version >= 3) {
+    Pio(stream, transform_);
   }
 
   stream.end_class();
