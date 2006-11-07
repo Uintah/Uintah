@@ -39,19 +39,16 @@ SUBDIRS   := \
              $(SRCDIR)/TTClient                     \
              $(SRCDIR)/FEM                          \
              $(SRCDIR)/LinSolver   \
-	     $(SRCDIR)/samplepe \
 	     $(SRCDIR)/TestCreateTopic \
 	     $(SRCDIR)/TestGetTopic \
 	     $(SRCDIR)/TestReleaseTopic \
 	     $(SRCDIR)/TestUnregisterEventListener \
-	     $(SRCDIR)/SampleComponent \
 	     $(SRCDIR)/TestSendEvent \
 	     $(SRCDIR)/TestEchoEvent \
 	     $(SRCDIR)/TestRegisterEventListener \
 	     $(SRCDIR)/TestProcessEvents \
 	     $(SRCDIR)/TestWildcardTopic \
-	     $(SRCDIR)/TestCreateWildcardTopic  \
-	     $(SRCDIR)/samploecomponent  \
+	     $(SRCDIR)/TestCreateWildcardTopic  
 
 
 ifeq ($(HAVE_WX),yes)

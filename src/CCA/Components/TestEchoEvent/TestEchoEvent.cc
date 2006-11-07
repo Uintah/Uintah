@@ -28,9 +28,8 @@
 
 
 #include<CCA/Components/TestEchoEvent/TestEchoEvent.h>
-#include<SCIRun/Internal/Topic.h>
-#include<SCIRun/Internal/Event.h>
-#include <SCIRun/TypeMap.h>
+#include<Framework/Internal/Topic.h>
+#include <Framework/TypeMap.h>
 
 using namespace SCIRun;
 

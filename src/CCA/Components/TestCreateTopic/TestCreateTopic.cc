@@ -28,7 +28,7 @@
 
 
 #include<CCA/Components/TestCreateTopic/TestCreateTopic.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 using namespace SCIRun;
 

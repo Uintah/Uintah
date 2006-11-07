@@ -28,7 +28,7 @@
 
 
 #include<CCA/Components/TestUnregisterEventListener/TestUnregisterEventListener.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 using namespace SCIRun;
 
