@@ -103,8 +103,6 @@ MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
 # SCIRun Thirdparty location
 SET(SCIRUN_THIRDPARTY_PATH . CACHE PATH "Path to SCIRun Thirdparty")
 
-SET(SCIRUN_THIRDPARTY_H ${SCIRUN_THIRDPARTY_PATH}/include CACHE PATH "Path to SCIRun Thirdparty includes")
-
 #INCLUDE(${PROJECT_SOURCE_DIR}/CMake/sciThirdparty.cmake)
 
 
@@ -289,6 +287,7 @@ FIND_LIBRARY(XML2_LIBRARY xml2
             NO_DEFAULT_PATH)
 FIND_PATH(XML2_INCLUDE libxml/xmlreader.h
            ${SCIRUN_THIRDPARTY_PATH}/include/libxml2/
+           ${SCIRUN_THIRDPARTY_PATH}/include/
            /usr/local/include/libxml2
            /usr/include
            /include
@@ -375,6 +374,7 @@ FIND_PATH(TCL_INCLUDE1 tcl.h
 
 FIND_PATH(TCL_INCLUDE2 tclMath.h
            ${SCIRUN_THIRDPARTY_PATH}/src/tcl/generic
+           ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
            /include
@@ -420,6 +420,7 @@ FIND_LIBRARY(FREETYPE_LIBRARY
 
 FIND_PATH(FREETYPE_INCLUDE freetype/freetype.h
            ${SCIRUN_THIRDPARTY_PATH}/include/freetype2/
+           ${SCIRUN_THIRDPARTY_PATH}/include/
            /usr/local/include
            /usr/include
            /include
