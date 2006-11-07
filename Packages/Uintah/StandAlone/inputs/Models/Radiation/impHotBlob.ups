@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
 
-<!-- @version: -->
 
-<Uintah_specification>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
        <title>symetry test</title>
