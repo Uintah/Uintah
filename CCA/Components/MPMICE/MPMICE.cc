@@ -1820,9 +1820,63 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       double sum;
       count           = 0;
 
+      double pres1 = press_new[c], pres2 = press_new[c];
+       sum = 0;
+       for (int m = 0; m < numALLMatls; m++) {
+         if(ice_matl[m]){
+           rho_micro[m][c] = 
+             ice_matl[m]->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
+         } if(mpm_matl[m]){
+           rho_micro[m][c] =  
+             mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
+                                          press_new[c],press_ref,mpm_matl[m]);
+         }
+         vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
+         sum += vol_frac[m][c];
+       }
+      if(sum<1.0){
+        while(sum<1.0){
+          pres1 *= 0.1;
+          sum = 0;
+          for (int m = 0; m < numALLMatls; m++) {
+            if(ice_matl[m]){
+              rho_micro[m][c] = 
+              ice_matl[m]->getEOS()->computeRhoMicro(pres1,gamma[m][c],
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
+            } if(mpm_matl[m]){
+              rho_micro[m][c] =  
+                mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
+                                          pres1,press_ref,mpm_matl[m]);
+            }
+            vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
+            sum += vol_frac[m][c];
+          }
+        }
+      }else if(sum>1.0){
+        while(sum>1.0){
+          pres2 *= 10.0;
+          sum = 0;
+          for (int m = 0; m < numALLMatls; m++) {
+            if(ice_matl[m]){
+              rho_micro[m][c] = 
+              ice_matl[m]->getEOS()->computeRhoMicro(pres2,gamma[m][c],
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
+            } if(mpm_matl[m]){
+              rho_micro[m][c] =  
+                mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
+                                          pres2,press_ref,mpm_matl[m]);
+            }
+            vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
+            sum += vol_frac[m][c];
+          }
+        }
+      }
+
       while ( count < d_ice->d_max_iter_equilibration && converged == false) {
         count++;
-        //__________________________________
+        press_new[c] = 0.5*(pres1 + pres2);
+        /*//__________________________________
         // evaluate press_eos at cell i,j,k
         for (int m = 0; m < numALLMatls; m++)  {
           if(ice_matl[m]){    // ICE
@@ -1862,7 +1916,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
        //__________________________________
        // backout rho_micro_CC at this new pressure
-       // - compute the updated volume fractions
+       // - compute the updated volume fractions*/
+        double vol_frac_not_close_packed = 1.;
        sum = 0;
        for (int m = 0; m < numALLMatls; m++) {
          if(ice_matl[m]){
@@ -1877,6 +1932,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
          sum += vol_frac[m][c];
        }
+
+       if(sum>1.0) pres1 = press_new[c];
+       else pres2 = press_new[c];
 
        //__________________________________
        // - Test for convergence 
