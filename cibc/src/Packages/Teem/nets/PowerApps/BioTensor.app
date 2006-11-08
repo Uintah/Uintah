@@ -9622,6 +9622,12 @@ class BioTensorApp {
     }
     
     method change_indicator_labels { msg } {
+        # truncate strings longer than 45 characters to
+        # avoid resizing the label window
+        if {[string length $msg] > 45} {
+          set msg [string range $msg 0 45]
+        }
+
 	if {!$loading} {
 	    if {($msg == "Visualization..." && $data_completed && $reg_completed && $dt_completed) || ($msg != "Visualization...")} {
 		$indicatorL0 configure -text $msg
