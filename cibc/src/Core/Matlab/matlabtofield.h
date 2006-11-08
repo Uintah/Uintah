@@ -59,8 +59,8 @@
 #include <sgi_stl_warnings_on.h>
 
 // Class for reading matlab files
-#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
 
 // FData classes
 #include <Core/Geometry/Vector.h>

@@ -31,27 +31,28 @@ SUBDIRS(
   Basis
   Bundle
   Comm
-  Containers 
+  Containers
   Datatypes
   Events
-  Exceptions 
+  Exceptions
   Geom
   GeomInterface
-  Geometry 
+  Geometry
   ICom
   ImportExport
-  Init 
+  Init
   Malloc
-  Math 
+  Math
+  Matlab 
   OS
-  Persistent 
+  Persistent
   Services
   Skinner
   SystemCall
   Thread
-  Util 
+  Util
   Volume
-  XMLUtil 
+  XMLUtil
 )
 
 

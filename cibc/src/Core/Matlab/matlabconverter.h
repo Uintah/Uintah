@@ -96,14 +96,14 @@ namespace SCIRun {
 #include <Core/Util/ProgressReporter.h>
 
 // Class for reading matlab files
-#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
 
 // Field conversion algorithms
-#include <Packages/MatlabInterface/Core/Datatypes/matlabtofield.h>
-#include <Packages/MatlabInterface/Core/Datatypes/fieldtomatlab.h>
+#include <Core/Matlab/matlabtofield.h>
+#include <Core/Matlab/fieldtomatlab.h>
 
-#include <Packages/MatlabInterface/Core/Datatypes/share.h>
+#include <Core/Matlab/share.h>
 
 /*
  * CLASS DESCRIPTION

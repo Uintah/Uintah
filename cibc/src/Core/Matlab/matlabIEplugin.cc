@@ -29,9 +29,9 @@
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 // #include <Core/ImportExprt/Nrrd/NrrdIEPlugin.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
+#include <Core/Matlab/matlabconverter.h>
 
 using namespace std;
 using namespace SCIRun;
