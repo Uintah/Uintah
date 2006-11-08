@@ -162,7 +162,6 @@ private:
 
   // Methods for drawing to the GL window
 
-
   void                  set_probe();
 
   // these should probably be moved to NrrdVolume class
@@ -189,10 +188,15 @@ private:
   void                  create_undo_volume();
   void                  undo_volume();
   NrrdVolumeHandle      find_volume_by_name(const string &);
-  pair<double, double>  compute_mean_and_deviation(Nrrd *, Nrrd *);
 
   void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
   string		unique_layer_name(string);
+
+  NrrdVolumeHandle      copy_current_layer(string suffix = "");
+  NrrdVolumeHandle      make_layer(string suffix,
+                                   NrrdDataHandle &,
+                                   unsigned int mask=0);
+
 
 #ifdef HAVE_INSIGHT
   template <class FilterType>
@@ -262,7 +266,6 @@ private:
   NrrdVolumes		volumes_;
   NrrdVolumeHandle      current_volume_;
   ColorMaps_t           colormaps_;
-  UIint			anatomical_coordinates_;
   Mutex                 volume_lock_;
 
   TextureHandle         volume_texture_;
@@ -271,7 +274,6 @@ private:
   bool                  abort_filter_;
   Skinner::Var<string>  status_;
   Skinner::Drawables_t  filters_;
-
 };
 
 

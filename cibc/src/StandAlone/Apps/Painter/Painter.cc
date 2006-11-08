@@ -93,7 +93,6 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   volumes_(),
   current_volume_(0),
   colormaps_(1, ColorMap::create_greyscale()),
-  anatomical_coordinates_(0, 1),
   volume_lock_("Volume"),
   volume_texture_(0),
   filter_volume_(0),
@@ -404,48 +403,6 @@ Painter::undo_volume() {
 }
 
 
-pair<double, double>
-Painter::compute_mean_and_deviation(Nrrd *nrrd, Nrrd *mask) {
-  double mean = 0;
-  double squared = 0;
-  unsigned int n = 0;
-  ASSERT(nrrd->dim > 3 && mask->dim > 3 && 
-         nrrd->axis[0].size == mask->axis[0].size &&
-         nrrd->axis[1].size == mask->axis[1].size &&
-         nrrd->axis[2].size == mask->axis[2].size &&
-         nrrd->axis[3].size == mask->axis[3].size &&
-         nrrd->type == nrrdTypeFloat &&
-         mask->type == nrrdTypeFloat);
-
-  unsigned int size = nrrd->axis[0].size;
-  for (unsigned int a = 1; a < nrrd->dim; ++a)
-    size *= nrrd->axis[a].size;
-
-  float *src = (float *)nrrd->data;
-  float *test = (float *)mask->data;
-
-  float min = AIR_POS_INF;
-  float max = AIR_NEG_INF;
-  
-  for (unsigned int i = 0; i < size; ++i)
-    if (test[i] > 0.0) {
-      //      cerr << test[i] << std::endl;
-      mean += src[i];
-      squared += src[i]*src[i];
-      min = Min(min, src[i]);
-      max = Max(max, src[i]);
-
-      ++n;
-    }
-
-  mean = mean / n;
-  double deviation = sqrt(squared/n-mean*mean);
-  //  cerr << "size: " << size << " n: " << n << std::endl;
-  //  cerr << "mean: " << mean << " dev: " << deviation << std::endl;
-  //  return make_pair(min,max);
-  return make_pair(mean, deviation);
-}
-  
          
 
 
@@ -491,6 +448,25 @@ Painter::maker(Skinner::Variables *vars)
 }
 
 
+NrrdVolumeHandle
+Painter::make_layer(string name, NrrdDataHandle &nrrdh, unsigned int mask) {
+  volume_lock_.lock();
+  NrrdVolume *vol = new NrrdVolume(this, unique_layer_name(name), nrrdh, mask);
+  volumes_.push_back(vol);
+  rebuild_layer_buttons();
+  current_volume_ = vol;
+  volume_lock_.unlock();  
+  return vol;
+}
+
+
+NrrdVolumeHandle
+Painter::copy_current_layer(string suff) {
+  if (!current_volume_.get_rep()) return 0;
+  NrrdDataHandle nrrdh = current_volume_->nrrd_handle_;
+  nrrdh.detach(); // Copies the layer memory to the new layer
+  return make_layer(current_volume_->name_+suff,nrrdh,current_volume_->label_);
+}
 
 
   

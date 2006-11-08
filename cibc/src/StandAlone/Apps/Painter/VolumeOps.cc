@@ -161,5 +161,48 @@ VolumeOps::bit_to_float(NrrdDataHandle &ninh,
 }
 
 
+pair<double, double>
+VolumeOps::nrrd_mean_and_deviation(NrrdDataHandle &nrrdh,
+                                   NrrdDataHandle &maskh) 
+{
+  Nrrd *nrrd = nrrdh->nrrd_;
+  Nrrd *mask = maskh->nrrd_;
+  double mean = 0;
+  double squared = 0;
+  unsigned int n = 0;
+  ASSERT(nrrd->dim > 3 && mask->dim > 3 && 
+         nrrd->axis[0].size == mask->axis[0].size &&
+         nrrd->axis[1].size == mask->axis[1].size &&
+         nrrd->axis[2].size == mask->axis[2].size &&
+         nrrd->axis[3].size == mask->axis[3].size &&
+         nrrd->type == nrrdTypeFloat &&
+         mask->type == nrrdTypeFloat);
 
+  unsigned int size = nrrd->axis[0].size;
+  for (unsigned int a = 1; a < nrrd->dim; ++a)
+    size *= nrrd->axis[a].size;
+
+  float *src = (float *)nrrd->data;
+  float *test = (float *)mask->data;
+
+  float min = AIR_POS_INF;
+  float max = AIR_NEG_INF;
+  
+  for (unsigned int i = 0; i < size; ++i)
+    if (test[i] > 0.0) {
+      //      cerr << test[i] << std::endl;
+      mean += src[i];
+      squared += src[i]*src[i];
+      min = Min(min, src[i]);
+      max = Max(max, src[i]);
+
+      ++n;
+    }
+
+  mean = mean / n;
+  double deviation = sqrt(squared/n-mean*mean);
+  //  cerr << "size: " << size << " n: " << n << std::endl;
+  //  cerr << "mean: " << mean << " dev: " << deviation << std::endl;
+  //  return make_pair(min,max);
+  return make_pair(mean, deviation);
 }

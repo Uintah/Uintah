@@ -68,10 +68,13 @@ public:
   
   template <class T>
   static 
-  void                           nrrd_set_value(Nrrd *,
-                                                const vector<int> &index,
-                                                T value,
-                                                unsigned int mask=0);
+  void                          nrrd_set_value(Nrrd *,
+                                               const vector<int> &index,
+                                               T value,
+                                               unsigned int mask=0);
+
+  static pair<double, double>   nrrd_mean_and_deviation(NrrdDataHandle &src,
+                                                        NrrdDataHandle &mask);
 };
 
 

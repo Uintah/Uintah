@@ -40,6 +40,7 @@
 #include <StandAlone/Apps/Painter/SessionWriter.h>
 #include <StandAlone/Apps/Painter/VolumeOps.h>
 #include <StandAlone/Apps/Painter/ITKFilterCallback.h>
+#include <StandAlone/Apps/Painter/VolumeFilter.h>
 
 #include <sci_comp_warn_fixes.h>
 #include <iostream>
@@ -502,24 +503,11 @@ Painter::ITKGradientMagnitude(event_handle_t) {
   cerr << "Insight not compiled\n";
   return STOP_E;
 #else
-  redraw_all();
-
-  string name = "ITKGradientMagnitude";
   typedef itk::GradientMagnitudeImageFilter
     < ITKImageFloat3D, ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter = FilterType::New();
 
-  volume_lock_.lock();
-  NrrdVolumeHandle vol = 
-    new NrrdVolume(this, name, current_volume_->nrrd_handle_);
-  volumes_.push_back(vol);
-  current_volume_ = vol;
-  volume_lock_.unlock();
-  rebuild_layer_buttons();
-  Skinner::Variables *vars = new Skinner::Variables(name, get_vars());  
- 
-  ITKFilterCallback<FilterType>(vars, vol, filter)();
-  vol->reset_data_range();
+  VolumeFilter<FilterType>(copy_current_layer(" Gradient Magnitude"))();
+  current_volume_->reset_data_range();
   extract_all_window_slices();
   redraw_all();
 #endif
