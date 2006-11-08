@@ -761,9 +761,9 @@ NrrdVolume::change_type_from_float_to_bit() {
 }
 
 void
-NrrdVolume::change_type_from_bit_to_float() {
-  NrrdDataHandle nrrdh = VolumeOps::float_to_bit(nrrd_handle_, 0, label_);
-  set_nrrd(nrrdh);
+NrrdVolume::change_type_from_bit_to_float(float val) {
+  nrrd_handle_ = VolumeOps::bit_to_float(nrrd_handle_, label_, val);
+  dirty_ = true;
 }
 
 void

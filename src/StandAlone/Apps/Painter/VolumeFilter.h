@@ -25,12 +25,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ITKFilterCallback.h
+//    File   : VolumeFilter.h
 //    Author : McKay Davis
 //    Date   : Sun Nov  5 21:37:09 2006
 
-#ifndef LeXoV_ITKFilterCallback_H
-#define LeXoV_ITKFilterCallback_H
+#ifndef LeXoV_VolumeFilter_H
+#define LeXoV_VolumeFilter_H
 
 #include <sci_comp_warn_fixes.h>
 #include <StandAlone/Apps/Painter/Painter.h>
@@ -54,24 +54,18 @@ using SCIRun::ITKDatatypeHandle;
 
 // todo, integrate scirun progressreporter class to this callback
 template <class FilterType>
-class ITKFilterCallback : public Skinner::Parent
+class VolumeFilter : public Skinner::Parent
 {
-  typedef typename FilterType::Pointer FilterPointer;
+  typedef typename      FilterType::Pointer FilterPointer;
 public:
-  ITKFilterCallback (NrrdVolumeHandle volume,
-                     Skinner::Variables *vars = 0) :
-    Parent::Parent(vars ? vars : new Skinner::Variables("ITKFilter",0)),
-    filter_(FilterType::New()),
-    volume_(volume),
-    abort_(false),
-    progress_(0.0),
-    passes_(1)
-  {
-  }
-  
-  
-  virtual ~ITKFilterCallback() {};
+  VolumeFilter          (NrrdVolumeHandle volume  = 0,
+                         Skinner::Variables *vars = 0);
+    
+  virtual               ~VolumeFilter() {};
+  void                  set_volume(NrrdVolumeHandle vol) { volume_ = vol; }
   void                  operator()(NrrdDataHandle nrrdh = 0);
+  void                  stop();
+  FilterPointer         operator->() { return filter_; };
     
 private:
   void                  filter_callback(itk::Object *, 
@@ -80,6 +74,7 @@ private:
   void                  filter_callback_const (const itk::Object *, 
                                                const itk::EventObject &);
 
+
   FilterPointer         filter_;
   NrrdVolumeHandle      volume_;
   bool                  abort_;
@@ -87,11 +82,23 @@ private:
   int                   passes_;
   
 };
-  
+
+
+template <class FilterType>  
+VolumeFilter<FilterType>::VolumeFilter(NrrdVolumeHandle volume,
+                                       Skinner::Variables *vars) 
+  : Parent::Parent(vars ? vars : new Skinner::Variables("ITKFilter",0)),
+    filter_(FilterType::New()),
+    volume_(volume),
+    abort_(false),
+    progress_(0.0),
+    passes_(1)
+{
+}
 
 template <class FilterType>  
 void
-ITKFilterCallback<FilterType>::operator()(NrrdDataHandle nrrd_handle) 
+VolumeFilter<FilterType>::operator()(NrrdDataHandle nrrd_handle) 
 {
   if (!nrrd_handle.get_rep()) {
     nrrd_handle = volume_->nrrd_handle_;
@@ -99,15 +106,15 @@ ITKFilterCallback<FilterType>::operator()(NrrdDataHandle nrrd_handle)
   typedef typename FilterType::InputImageType ImageInT;
   typedef typename FilterType::OutputImageType ImageOutT;
   typedef typename 
-    itk::MemberCommand< ITKFilterCallback<FilterType> > RedrawCommandType;
+    itk::MemberCommand< VolumeFilter<FilterType> > RedrawCommandType;
 
   typename RedrawCommandType::Pointer callback = RedrawCommandType::New();
 
   callback->SetCallbackFunction
-    (this, &ITKFilterCallback<FilterType>::filter_callback);
+    (this, &VolumeFilter<FilterType>::filter_callback);
 
   callback->SetCallbackFunction
-    (this, &ITKFilterCallback<FilterType>::filter_callback_const);
+    (this, &VolumeFilter<FilterType>::filter_callback_const);
 
   filter_->AddObserver(itk::ProgressEvent(), callback);
   filter_->AddObserver(itk::IterationEvent(), callback);
@@ -145,7 +152,7 @@ ITKFilterCallback<FilterType>::operator()(NrrdDataHandle nrrd_handle)
 
 template <class FilterType>
 void
-ITKFilterCallback<FilterType>::filter_callback(itk::Object *object,
+VolumeFilter<FilterType>::filter_callback(itk::Object *object,
                                                const itk::EventObject &event)
 {
   typedef typename FilterType::InputImageType ImageInT;
@@ -189,7 +196,7 @@ ITKFilterCallback<FilterType>::filter_callback(itk::Object *object,
 
 template <class FilterType>
 void
-ITKFilterCallback<FilterType>::
+VolumeFilter<FilterType>::
 filter_callback_const(const itk::Object *, const itk::EventObject &)
 {
   cerr << "filter_callback_const not implemented\n;";

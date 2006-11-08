@@ -38,6 +38,7 @@
 #ifdef HAVE_INSIGHT
 #include <string>
 #include <StandAlone/Apps/Painter/NrrdVolume.h>
+#include <StandAlone/Apps/Painter/VolumeFilter.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Datatypes/ITKDatatype.h>
 #include <itkImageToImageFilter.h>
@@ -52,19 +53,22 @@ typedef itk::Image<float,3> ITKImageFloat3D;
 class ITKThresholdSegmentationLevelSetImageFilterTool : public BaseTool {
 public:
   ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter);
-  propagation_state_e process_event(event_handle_t);
+  propagation_state_e           process_event(event_handle_t);
 private:
-  void                finish();
-  void                cont();
-  void                set_vars();
-  Painter *           painter_;
-  NrrdVolumeHandle    seed_volume_;
-  
+  void                          finish();
+  void                          cont();
+  void                          set_vars();
+  Painter *                     painter_;
+  NrrdVolumeHandle              seed_volume_;
+  Skinner::Var<double>          LowerThreshold_;
+  Skinner::Var<double>          UpperThreshold_;
+
   
   typedef itk::ThresholdSegmentationLevelSetImageFilter
   < ITKImageFloat3D, ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter_;
+  typedef FilterType::FeatureImageType FeatureImg;
   
+  VolumeFilter<FilterType>      filter_;
 };
 
 }

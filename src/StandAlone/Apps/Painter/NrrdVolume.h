@@ -128,7 +128,7 @@ public:
   NrrdDataHandle      extract_label_as_bit();
 
   void                change_type_from_float_to_bit();
-  void                change_type_from_bit_to_float();
+  void                change_type_from_bit_to_float(float val = 1);
   void                clear();
   int                 numbytes();
   int                 bit();

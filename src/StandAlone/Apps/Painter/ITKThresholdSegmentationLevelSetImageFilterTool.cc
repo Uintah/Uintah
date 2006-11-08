@@ -39,11 +39,14 @@
 namespace SCIRun {
 
 
-ITKThresholdSegmentationLevelSetImageFilterTool::ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter) :
-  BaseTool("ITK Threshold"),
+ITKThresholdSegmentationLevelSetImageFilterTool::
+ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter) :
+  BaseTool("ITKThresholdSegementationLevelSetImageFilterTool::"),
   painter_(painter),
   seed_volume_(0),
-  filter_(0)
+  LowerThreshold_(painter->get_vars(), get_name()+"LowerThreshold"),  
+  UpperThreshold_(painter->get_vars(), get_name()+"UpperThreshold"),
+  filter_()
 {
 }
 
@@ -60,8 +63,8 @@ ITKThresholdSegmentationLevelSetImageFilterTool::process_event
   if (dynamic_cast<FinishEvent *>(event.get_rep())) {
     if (painter_->current_volume_  == seed_volume_) {
       painter_->status_ = "Cannot use same layers for source and seed";
-      painter_->redraw_all();
-      return STOP_E;
+     painter_->redraw_all();
+     return STOP_E;
     }
 
     if (!seed_volume_.get_rep()) {
@@ -70,10 +73,10 @@ ITKThresholdSegmentationLevelSetImageFilterTool::process_event
       return STOP_E;
     }
 
-    if (filter_.IsNull()) 
+    //    if (!filter_) 
       finish();
-    else 
-      cont();
+      //    else 
+      //      cont();
     return CONTINUE_E;
   }
 
@@ -88,20 +91,15 @@ ITKThresholdSegmentationLevelSetImageFilterTool::process_event
 void
 ITKThresholdSegmentationLevelSetImageFilterTool::cont()
 {
-  cerr << "CONT\n";
-  //  filter_->ReverseExpansionDirectionOff();
+  set_vars();
   filter_->ManualReinitializationOn();
   filter_->Modified();
-  NrrdDataHandle temp = 0;
-  set_vars();
-  painter_->do_itk_filter<FilterType>(filter_, temp);
+  filter_();
 }
 
 
 #define SetFilterVarMacro(name, type) \
   filter_->Set##name(painter_->get_vars()->get_##type(scope+#name));
-
-
 
 void
 ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
@@ -123,57 +121,33 @@ ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
 }
   
 
-
-
 void
 ITKThresholdSegmentationLevelSetImageFilterTool::finish()
 {
-  painter_->volume_lock_.lock();
-  NrrdVolumeHandle &vol = painter_->current_volume_;
+  NrrdVolumeHandle cur_layer = painter_->current_volume_;
+  painter_->current_volume_ = seed_volume_;
+  NrrdVolumeHandle new_layer = painter_->copy_current_layer("LevelSet");
+  new_layer->change_type_from_bit_to_float(1000.0);
 
-  string newname = 
-    painter_->unique_layer_name(vol->name_+" ITK Threshold Result");
-  NrrdDataHandle extracted_nrrd = 
-    VolumeOps::bit_to_float(seed_volume_->nrrd_handle_, 
-                            seed_volume_->label_, 1000.0);
+  pair<double, double> meandev = VolumeOps::nrrd_mean_and_deviation
+    (cur_layer->nrrd_handle_, new_layer->nrrd_handle_);
 
-  NrrdDataHandle clear_volume = 
-    VolumeOps::create_clear_nrrd(extracted_nrrd, nrrdTypeFloat);
-  
-  NrrdVolume *new_layer = 
-    new NrrdVolume(painter_, newname, extracted_nrrd, 2);
-
-  painter_->volumes_.push_back(new_layer);
-  painter_->rebuild_layer_buttons();
-  painter_->extract_all_window_slices();
-  
-  pair<double, double> mean = painter_->compute_mean_and_deviation
-    (painter_->current_volume_->nrrd_handle_->nrrd_, 
-     new_layer->nrrd_handle_->nrrd_);
-  painter_->volume_lock_.unlock();
+  set_vars();
+  ITKDatatypeHandle fimageh = cur_layer->get_itk_image();
+  FeatureImg *fimage = dynamic_cast<FeatureImg *>(fimageh->data_.GetPointer());
 
   double factor = 2.5;
-  double min = mean.first - factor*mean.second;
-  double max = mean.first + factor*mean.second;
-  painter_->status_ = ("Threshold min: " + to_string(min) + 
-                       " Threshold max: " + to_string(max));
-
-
-  filter_ = FilterType::New();
-  filter_->SetLowerThreshold(min);
-  filter_->SetUpperThreshold(max);
-  
-  set_vars();
-
-  filter_->SetFeatureImage
-    (dynamic_cast<ITKImageFloat3D *>
-     (painter_->current_volume_->get_itk_image()->data_.GetPointer()));
-
-  ITKFilterCallback<FilterType>(painter_->get_vars(),new_layer,filter_)();
+  LowerThreshold_ = meandev.first - factor * meandev.second;
+  UpperThreshold_ = meandev.first + factor * meandev.second;
+  painter_->status_ = ("Threshold min: " + to_string(LowerThreshold_) + 
+                       " Threshold max: " + to_string(UpperThreshold_));
+  filter_->SetLowerThreshold(LowerThreshold_);
+  filter_->SetUpperThreshold(UpperThreshold_);    
+  filter_->SetFeatureImage(fimage);
+  filter_.set_volume(new_layer);
+  filter_();
 
   new_layer->change_type_from_float_to_bit();
-
-  painter_->redraw_all();
 }
 
 

@@ -99,10 +99,7 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_);
 
   painter_->CreateLabelVolume(0);
-  Skinner::Variables *vars = 
-    new Skinner::Variables("ITKConfidenceConnectedImageFilterTool",
-                           painter_->get_vars());  
-  ITKFilterCallback<FilterType> filt(vars, painter_->current_volume_, filter);
+  ITKFilterCallback<FilterType> filt(painter_->current_volume_);
   filt(volume_->nrrd_handle_);
 }
 
