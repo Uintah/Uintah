@@ -185,6 +185,14 @@ PROGRAM := Packages/Uintah/StandAlone/partextract
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# partconvert
+
+SRCS := $(SRCDIR)/partconvert.cc
+PROGRAM := Packages/Uintah/StandAlone/partconvert
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # parvarRange
 
 SRCS := $(SRCDIR)/partvarRange.cc
@@ -232,6 +240,14 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/lineextract.cc
 PROGRAM := Packages/Uintah/StandAlone/lineextract
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# ice2vtk 
+
+SRCS := $(SRCDIR)/ice2vtk.cc
+PROGRAM := Packages/Uintah/StandAlone/ice2vtk
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -397,6 +413,7 @@ uintah: sus \
         compare_uda \
         restart_merger \
         partextract \
+        partconvert \
         partvarRange \
         selectpart \
 	async_mpi_test \
@@ -406,6 +423,7 @@ uintah: sus \
         pfs \
         gambitFileReader \
         lineextract \
+        ice2vtk \
         timeextract \
         link_inputs \
         link_regression_tester
@@ -495,6 +513,8 @@ restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
 partextract: prereqs Packages/Uintah/StandAlone/partextract
 
+partconvert: prereqs Packages/Uintah/StandAlone/partconvert
+
 partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 
 selectpart: prereqs Packages/Uintah/StandAlone/selectpart
@@ -518,3 +538,6 @@ pfs2: prereqs Packages/Uintah/StandAlone/pfs2
 timeextract: Packages/Uintah/StandAlone/timeextract
 
 lineextract: Packages/Uintah/StandAlone/lineextract
+
+ice2vtk: Packages/Uintah/StandAlone/ice2vtk
+
