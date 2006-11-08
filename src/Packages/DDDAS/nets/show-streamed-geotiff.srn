@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.3" name="{Main}" bbox="{10 10 175 208}" creationDate="{Tue Nov 07 2006}" creationTime="{13:40:35}" geometry="{800x800+596+116}">
+<network version="v1.25.3" name="{Main}" bbox="{10 10 175 208}" creationDate="{Wed Nov 08 2006}" creationTime="{10:42:48}" geometry="{800x800+596+116}">
   <note>{}</note>
   <modules>
     <module id="m1" package="DDDAS" category="DataIO" name="StreamReader" gui_visible="yes">
       <position x="10" y="10"/>
-      <var name="brokerip" val="{74.131.123.5}" substitute="no"/>
+      <var name="brokerip" val="{74.140.164.139}" substitute="no"/>
       <var name="brokerport" val="{8831}" substitute="no"/>
       <var name="groupname" val="{testingdata2}" substitute="no"/>
       <var name="listenport" val="{8835}" substitute="no"/>
-      <var name="ui_geometry" val="{248x174+599+921}" substitute="no"/>
+      <var name="ui_geometry" val="{248x174+602+938}" substitute="no"/>
     </module>
     <module id="m2" package="SCIRun" category="Visualization" name="ShowField">
       <position x="10" y="87"/>
@@ -22,7 +22,7 @@
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x615+787+479" substitute="no"/>
+      <var name="ViewWindow_0-geometry" val="654x614+790+496" substitute="no"/>
       <var name="ViewWindow_0-view-eyep-x" val="{58.345206538}" substitute="no"/>
       <var name="ViewWindow_0-view-eyep-y" val="{6.91257876114}" substitute="no"/>
       <var name="ViewWindow_0-view-eyep-z" val="{-568.835063071}" substitute="no"/>
@@ -77,9 +77,6 @@
       <var name="ViewWindow_0-global-cull" val="{0}" substitute="no"/>
       <var name="ViewWindow_0-global-dl" val="{0}" substitute="no"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}" substitute="no"/>
-      <var name="&quot;ViewWindow_0-Nodes (1)&quot;" val="{1}" substitute="no"/>
-      <var name="&quot;ViewWindow_0-Edges (1)&quot;" val="{1}" substitute="no"/>
-      <var name="&quot;ViewWindow_0-Faces (1)&quot;" val="{1}" substitute="no"/>
     </module>
   </modules>
   <connections>

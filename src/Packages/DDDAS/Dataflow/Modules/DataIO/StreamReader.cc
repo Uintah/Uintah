@@ -159,14 +159,24 @@ DataHandler::run()
 
   //char bytes[8];
   
-  uint32_t bytes;
+  long int bytes;
+  char bytebuf[8];
 
   // get the size of incoming data.
-  if (conn_->read(&bytes, sizeof(uint32_t)) != sizeof(uint32_t)) {
+  if (conn_->read(bytebuf, 8) != 8) {
     return;
   }
-  // convert from network byte order to host byte order.
-  bytes = ntohl(bytes);
+  char tmp[8];
+  tmp[0] = bytebuf[7];
+  tmp[1] = bytebuf[6];
+  tmp[2] = bytebuf[5];
+  tmp[3] = bytebuf[4];
+  tmp[4] = bytebuf[3];
+  tmp[5] = bytebuf[2];
+  tmp[6] = bytebuf[1];
+  tmp[7] = bytebuf[0];
+
+  bytes = *((long int*)tmp);
 
   cerr << "getting : " << bytes << " bytes." << endl;
   char *buf = new char[bytes];
@@ -180,6 +190,7 @@ DataHandler::run()
 
   // tell the module about the new data.
   mod_->new_data_notify(fname, buf, bytes);
+  delete[] buf;
 }
 
 
@@ -355,8 +366,6 @@ StreamReader::new_data_notify(const string fname, void *buf, size_t bytes)
       cerr << header[i];
     }
     cerr << endl;
-    // Clean up buffer memory.
-    delete[] c;
   }
 
   if (fname.find(".tif") != string::npos) {
@@ -364,9 +373,6 @@ StreamReader::new_data_notify(const string fname, void *buf, size_t bytes)
     FILE *fd = fopen(tmpfn, "w");
     size_t status = fwrite(buf, sizeof(char), bytes, fd);
     fclose(fd);
-    // Clean up buffer memory.
-    char* cbuf = (char*)buf;
-    delete[] cbuf;
 
     TIFF* tif = XTIFFOpen(tmpfn, "r");
     if (!tif) return;
