@@ -157,39 +157,29 @@ DataHandler::run()
   // get the string that represents the filename.
   if (! conn_->read(fname)) { return; }
 
-  char bytes[8];
+  //char bytes[8];
   
+  uint32_t bytes;
+
   // get the size of incoming data.
-  if (conn_->read(&bytes, sizeof(long int)) != sizeof(long int)) {
+  if (conn_->read(&bytes, sizeof(uint32_t)) != sizeof(uint32_t)) {
     return;
   }
-  char bytes1[8];
-  bytes1[0] = bytes[7];
-  bytes1[1] = bytes[6];
-  bytes1[2] = bytes[5];
-  bytes1[3] = bytes[4];
-  bytes1[4] = bytes[3];
-  bytes1[5] = bytes[2];
-  bytes1[6] = bytes[1];
-  bytes1[7] = bytes[0];
+  // convert from network byte order to host byte order.
+  bytes = ntohl(bytes);
 
-  long int *mylong;
-
-//   mylong = (long int*)bytes;
-//   cerr << "getting : " << *mylong << " bytes." << endl;
-
-  mylong = (long int*)bytes1;
-  cerr << "getting : " << *mylong << " bytes." << endl;
-
-  char *buf = new char[*mylong];
+  cerr << "getting : " << bytes << " bytes." << endl;
+  char *buf = new char[bytes];
 
   // get the rest of the data.
-  if (conn_->read(buf, *mylong) != (int)*mylong) {
+  if (conn_->read(buf, bytes) != (int)bytes) {
+    cerr << "Error did not read "<< bytes << " bytes." << endl;
+    cerr << "DataHandler exiting...." << endl;
     return; 
   }
 
   // tell the module about the new data.
-  mod_->new_data_notify(fname, buf, *mylong);
+  mod_->new_data_notify(fname, buf, bytes);
 }
 
 
