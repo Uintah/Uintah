@@ -206,3 +206,5 @@ VolumeOps::nrrd_mean_and_deviation(NrrdDataHandle &nrrdh,
   //  return make_pair(min,max);
   return make_pair(mean, deviation);
 }
+
+}
