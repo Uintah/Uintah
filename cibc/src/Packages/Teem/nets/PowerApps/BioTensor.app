@@ -9622,10 +9622,10 @@ class BioTensorApp {
     }
     
     method change_indicator_labels { msg } {
-        # truncate strings longer than 45 characters to
+        # truncate strings longer than 40 characters to
         # avoid resizing the label window
-        if {[string length $msg] > 45} {
-          set msg [string range $msg 0 45]
+        if {[string length $msg] > 40} {
+          set msg [string range $msg 0 40]
         }
 
 	if {!$loading} {

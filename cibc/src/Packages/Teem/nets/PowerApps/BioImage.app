@@ -358,6 +358,7 @@ class BioImageApp {
 	    }
 	}
     } 
+
     ##########################
     ### update_progress
     ##########################
@@ -373,25 +374,25 @@ class BioImageApp {
 		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
 		set execute_choose 0
 	    }
-	} elseif { [string first "NrrdSetupTexture_0" $which] != -1 && \
+	} elseif { [string first "BuildTextureWithGradientsFromNrrds" $which] != -1 && \
 		       $juststarted} {
 	    change_indicator_labels "NrrdSetup Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "NrrdSetupTexture" $which] != -1 && \
+	} elseif {[string first "BuildTextureWithGradientsFromNrrds" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
-	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && \
+	} elseif {[string first "ConvertNrrdsToTexture" $which] != -1 && \
 		      $juststarted} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && \
+	} elseif {[string first "ConvertNrrdsToTexture" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
-	} elseif {[string first "VolumeVisualizer" $which] != -1 && \
+	} elseif {[string first "ShowTextureVolume" $which] != -1 && \
 		      $juststarted} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-        } elseif {[string first "VolumeVisualizer" $which] != -1 && \
+        } elseif {[string first "ShowTextureVolume" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Volume Rendering"
@@ -638,10 +639,10 @@ class BioImageApp {
     }
     
     method change_indicator_labels { msg } {
-        # truncate strings longer than 45 characters to
+        # truncate strings longer than 40 characters to
         # avoid resizing the label window
-        if {[string length $msg] > 45} {
-          set msg [string range $msg 0 45]
+        if {[string length $msg] > 40} {
+          set msg [string range $msg 0 40]
         }
 	$indicatorL0 configure -text $msg
 	$indicatorL1 configure -text $msg
