@@ -3104,8 +3104,10 @@ class BioTensorApp {
 	    
             bind $process.indicator <Button> {app display_module_error} 
 	    
-            label $process.indicatorL -text "Press Execute to Load Data..."
-            pack $process.indicatorL -side bottom -anchor sw -padx 5 -pady 3
+            label $process.indicatorL -text "Press Execute to Load Data..." \
+	        -anchor w
+            pack $process.indicatorL -side bottom -anchor sw -padx 5 -pady 3 \
+                -fill none
 	    	    
             # The new way of keeping track of tabs is to use 0 and 1.  The old
 	    # old way was to use 1 and 2.  This app uses the old way except with

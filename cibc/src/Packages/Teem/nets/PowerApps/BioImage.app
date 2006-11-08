@@ -1050,8 +1050,10 @@ class BioImageApp {
 	    
             bind $m.p.indicator <Button> {app display_module_error} 
 	    
-            label $m.p.indicatorL -text "Press Update to Load Volume..."
-            pack $m.p.indicatorL -side bottom -anchor sw -padx 5 -pady 3
+            label $m.p.indicatorL -text "Press Update to Load Volume..." \
+	        -anchor w
+            pack $m.p.indicatorL -side bottom -anchor sw -padx 5 -pady 3 \
+                -fill none
 	    
 	    set indicator$case $m.p.indicator.canvas
 	    set indicatorL$case $m.p.indicatorL
