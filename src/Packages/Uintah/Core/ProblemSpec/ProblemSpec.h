@@ -160,6 +160,11 @@ WARNING
       bool getAttribute(const std::string& value, std::string& result);
 
       //////////
+      // passes back the double value associated with value of this node's
+      // attributes into result
+      bool getAttribute(const std::string& value, double& result);
+
+      //////////
       // adds an attribute of specified name and value to this node's 
       // attribute list
       void setAttribute(const std::string& name, const std::string& value);

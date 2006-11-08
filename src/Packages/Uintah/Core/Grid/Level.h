@@ -3,8 +3,10 @@
 
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
+#include <Core/Containers/OffsetArray1.h>
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
@@ -30,6 +32,7 @@ namespace Uintah {
   using SCIRun::Point;
   using SCIRun::IntVector;
   using SCIRun::BBox;
+  using SCIRun::OffsetArray1;
 
   class PatchRangeTree;
   class BoundCondBase;
@@ -150,12 +153,22 @@ public:
      
   const LevelP& getRelativeLevel(int offset) const;
 
+
+  // Grid spacing
   Vector dCell() const {
     return d_dcell;
   }
   Point getAnchor() const {
     return d_anchor;
   }
+
+  // For stretched grids
+  bool isStretched() const {
+    return d_stretched;
+  }
+  void getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const;
+  void getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const;
+  void setStretched(Grid::Axis axis, const OffsetArray1<double>& faces);
 
   void setExtraCells(const IntVector& ec);
   IntVector getExtraCells() const {
@@ -241,6 +254,13 @@ private:
   IntVector d_gridSize;
   vector<int> d_gridStarts;
   vector<Patch*> d_gridPatches;
+
+  // For stretched frids
+  bool d_stretched;
+
+  // This is three different arrays containing the x,y,z coordinate of the face position
+  // be sized to d_idxSize[axis] + 1.  Used only for stretched grids
+  OffsetArray1<double> d_facePosition[3];
 
   // vars for select_rangetree
 
