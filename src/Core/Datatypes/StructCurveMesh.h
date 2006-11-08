@@ -295,14 +295,9 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_idsc;
   static MeshTypeID mesh_idsc;
-   static  const string type_name(int n = -1);
+  static  const string type_name(int n = -1);
+  
   virtual const TypeDescription *get_type_description() const;
-  static const TypeDescription* node_type_description();
-  static const TypeDescription* edge_type_description();
-  static const TypeDescription* face_type_description();
-  static const TypeDescription* cell_type_description();
-  static const TypeDescription* elem_type_description()
-  { return edge_type_description(); }
 
   // returns a StructCurveMesh
   static Persistent *maker() { return scinew StructCurveMesh<Basis>(); }
@@ -641,78 +636,6 @@ const TypeDescription*
 StructCurveMesh<Basis>::get_type_description() const
 {
   return SCIRun::get_type_description((StructCurveMesh<Basis> *)0);
-}
-
-
-template <class Basis>
-const TypeDescription*
-StructCurveMesh<Basis>::node_type_description()
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    const TypeDescription *me =
-      SCIRun::get_type_description((StructCurveMesh<Basis> *)0);
-    td = scinew TypeDescription(me->get_name() + "::Node",
-                                string(__FILE__),
-                                "SCIRun",
-                                TypeDescription::MESH_E);
-  }
-  return td;
-}
-
-
-template <class Basis>
-const TypeDescription*
-StructCurveMesh<Basis>::edge_type_description()
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    const TypeDescription *me =
-      SCIRun::get_type_description((StructCurveMesh<Basis> *)0);
-    td = scinew TypeDescription(me->get_name() + "::Edge",
-                                string(__FILE__),
-                                "SCIRun",
-                                TypeDescription::MESH_E);
-  }
-  return td;
-}
-
-
-template <class Basis>
-const TypeDescription*
-StructCurveMesh<Basis>::face_type_description()
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    const TypeDescription *me =
-      SCIRun::get_type_description((StructCurveMesh<Basis> *)0);
-    td = scinew TypeDescription(me->get_name() + "::Face",
-                                string(__FILE__),
-                                "SCIRun",
-                                TypeDescription::MESH_E);
-  }
-  return td;
-}
-
-
-template <class Basis>
-const TypeDescription*
-StructCurveMesh<Basis>::cell_type_description()
-{
-  static TypeDescription *td = 0;
-  if (!td)
-  {
-    const TypeDescription *me =
-      SCIRun::get_type_description((StructCurveMesh<Basis> *)0);
-    td = scinew TypeDescription(me->get_name() + "::Cell",
-                                string(__FILE__),
-                                "SCIRun",
-                                TypeDescription::MESH_E);
-  }
-  return td;
 }
 
 } // namespace SCIRun

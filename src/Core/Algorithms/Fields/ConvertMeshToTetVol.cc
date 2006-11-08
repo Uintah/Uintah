@@ -75,9 +75,6 @@ bool ConvertMeshToTetVolAlgo::ConvertMeshToTetVol(ProgressReporter *pr, FieldHan
   ////////////////////////////////////////////////
   // VIRTUAL VERSION OF THIS ALGORITHM
 
-  std::cout << "fi has_virtual_interface=" << fi.has_virtual_interface();
-  std::cout << "fo has_virtual_interface=" << fo.has_virtual_interface();
-
   if (fi.has_virtual_interface() && fo.has_virtual_interface())
   {
     output = Create_Field(fo);

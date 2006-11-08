@@ -129,6 +129,18 @@ Tensor::Tensor(const double *t)
   have_eigens_=0;
 }
 
+Tensor::Tensor(double t1,double t2,double t3,double t4,double t5,double t6)
+{
+  mat_[0][0]=t1;
+  mat_[0][1]=mat_[1][0]=t2;
+  mat_[0][2]=mat_[2][0]=t3;
+  mat_[1][1]=t4;
+  mat_[1][2]=mat_[2][1]=t5;
+  mat_[2][2]=t6;
+
+  have_eigens_=0;
+}
+
 //! Initialize the diagonal to this value
 Tensor::Tensor(double v) {
   have_eigens_=0;

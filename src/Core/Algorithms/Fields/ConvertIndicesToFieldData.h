@@ -65,6 +65,7 @@ public:
 };
 
 
+
 template <class FSRC, class FDST>
 bool IndicesToScalarAlgoT<FSRC, FDST>::ConvertIndicesToFieldData(ProgressReporter *pr, FieldHandle input, FieldHandle& output,MatrixHandle data)
 {
@@ -480,8 +481,6 @@ bool IndicesToTensorAlgoT<FSRC, FDST>::ConvertIndicesToFieldData(ProgressReporte
   // Success:
   return (true);
 }
-
-
 
 
 } // end namespace SCIRunAlgo

@@ -414,6 +414,13 @@ public:
     return (idx);
   }
 
+  inline Mesh::VNode::index_type add_point(const Point& point) 
+  {
+    VNode::index_type idx;
+    add_node(point,idx);
+    return (idx);
+  }
+  
   inline Mesh::VElem::index_type add_elem(const VNode::array_type nodes)
   {
     VElem::index_type idx;

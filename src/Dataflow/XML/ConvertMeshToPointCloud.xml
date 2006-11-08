@@ -39,29 +39,22 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>
-      Convert a structured field into an unstructured field for
-editing.
     </summary>
     <description>
       <p>
-        This converts a LatVolField into a HexVolField, an ImageField
-into a QuadSurfField, or a ScanlineField into a CurveField.  The
-structured meshes are not editable, as that operation does not
-preserve structure.  Data values and locations are preserved in the
-transformation.
       </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Field</name>
+	<name>Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Output Field</name>
+	<name>Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
