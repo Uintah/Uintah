@@ -316,23 +316,60 @@ const LevelP& Level::getRelativeLevel(int offset) const
 
 Point Level::getNodePosition(const IntVector& v) const
 {
+  if(d_stretched)
+    return Point(d_facePosition[0][v.x()], d_facePosition[1][v.y()], d_facePosition[2][v.z()]);
+  else
    return d_anchor+d_dcell*v;
 }
 
 Point Level::getCellPosition(const IntVector& v) const
 {
-   return d_anchor+d_dcell*v+d_dcell*0.5;
+  if(d_stretched)
+    return Point((d_facePosition[0][v.x()]+d_facePosition[0][v.x()+1])*0.5,
+                 (d_facePosition[1][v.y()]+d_facePosition[1][v.y()+1])*0.5,
+                 (d_facePosition[2][v.z()]+d_facePosition[2][v.z()+1])*0.5);
+  else
+    return d_anchor+d_dcell*v+d_dcell*0.5;
+}
+
+static int binary_search(double x, const OffsetArray1<double>& faces, int low, int high)
+{
+  while(high-low > 1) {
+    int m = (low + high)/2;
+    if(x < faces[m])
+      high = m;
+    else
+      low = m;
+  }
+  return low;
 }
 
 IntVector Level::getCellIndex(const Point& p) const
 {
-   Vector v((p-d_anchor)/d_dcell);
-   return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
+  if(d_stretched){
+    int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
+    int y = binary_search(p.y(), d_facePosition[1], d_facePosition[1].low(), d_facePosition[1].high());
+    int z = binary_search(p.z(), d_facePosition[2], d_facePosition[2].low(), d_facePosition[2].high());
+    return IntVector(x, y, z);
+  } else {
+    Vector v((p-d_anchor)/d_dcell);
+    return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
+  }
 }
 
 Point Level::positionToIndex(const Point& p) const
 {
-   return Point((p-d_anchor)/d_dcell);
+  if(d_stretched){
+    int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
+    int y = binary_search(p.y(), d_facePosition[1], d_facePosition[1].low(), d_facePosition[1].high());
+    int z = binary_search(p.z(), d_facePosition[2], d_facePosition[2].low(), d_facePosition[2].high());
+    double xfrac = p.x() - d_facePosition[0][x] / (d_facePosition[0][x+1] - d_facePosition[0][x]);
+    double yfrac = p.y() - d_facePosition[1][y] / (d_facePosition[1][y+1] - d_facePosition[1][y]);
+    double zfrac = p.z() - d_facePosition[2][z] / (d_facePosition[2][z+1] - d_facePosition[2][z]);
+    return Point(x+xfrac, y+yfrac, z+zfrac);
+  } else {
+    return Point((p-d_anchor)/d_dcell);
+  }
 }
 
 void Level::selectPatches(const IntVector& low, const IntVector& high,
@@ -856,6 +893,26 @@ IntVector Level::mapNodeToFiner(const IntVector& idx) const
   return idx*grid->getLevel(d_index+1)->d_refinementRatio;
 }
 
+// Stretched grid stuff
+void Level::getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const
+{
+  const OffsetArray1<double>& faces = d_facePosition[axis];
+  widths.resize(faces.low(), faces.high()-1);
+  for(int i=faces.low(); i < faces.high()-1; i++)
+    widths[i] = faces[i+1] - faces[i];
+}
+    
+void Level::getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const
+{
+  faces = d_facePosition[axis];
+}
+      
+void Level::setStretched(Grid::Axis axis, const OffsetArray1<double>& faces)
+{
+  d_facePosition[axis] = faces;
+  d_stretched = true;
+}
+
 int Level::getRefinementRatioMaxDim() const {
   return Max(Max(d_refinementRatio.x(), d_refinementRatio.y()), d_refinementRatio.z());
 }
@@ -877,4 +934,3 @@ namespace Uintah {
     return getLevel(set->getSubset(0));
   }
 }
-

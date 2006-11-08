@@ -1044,6 +1044,20 @@ ProblemSpec::getAttribute(const string& attribute, string& result)
   }
 }
 
+bool
+ProblemSpec::getAttribute(const string& name, double &value)
+{
+  string stringValue;
+  if(!getAttribute(name, stringValue))
+    return false;
+  checkForInputError(stringValue,"double"); 
+  istringstream ss(stringValue);
+  ss >> value;
+          
+  return true;
+}
+
+
 void
 ProblemSpec::setAttribute(const string& name, 
                           const string& value)
