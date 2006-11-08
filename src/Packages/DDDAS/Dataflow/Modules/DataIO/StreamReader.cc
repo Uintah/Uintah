@@ -355,6 +355,8 @@ StreamReader::new_data_notify(const string fname, void *buf, size_t bytes)
       cerr << header[i];
     }
     cerr << endl;
+    // Clean up buffer memory.
+    delete[] c;
   }
 
   if (fname.find(".tif") != string::npos) {
@@ -362,6 +364,9 @@ StreamReader::new_data_notify(const string fname, void *buf, size_t bytes)
     FILE *fd = fopen(tmpfn, "w");
     size_t status = fwrite(buf, sizeof(char), bytes, fd);
     fclose(fd);
+    // Clean up buffer memory.
+    char* cbuf = (char*)buf;
+    delete[] cbuf;
 
     TIFF* tif = XTIFFOpen(tmpfn, "r");
     if (!tif) return;
