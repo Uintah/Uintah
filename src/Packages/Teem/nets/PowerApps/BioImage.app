@@ -638,6 +638,11 @@ class BioImageApp {
     }
     
     method change_indicator_labels { msg } {
+        # truncate strings longer than 45 characters to
+        # avoid resizing the label window
+        if {[string length $msg] > 45} {
+          set msg [string range $msg 0 45]
+        }
 	$indicatorL0 configure -text $msg
 	$indicatorL1 configure -text $msg
     }
