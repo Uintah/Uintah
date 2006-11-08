@@ -52,6 +52,7 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                        d_calcVariance(calcVariance)
 {
   d_DORadiationCalc = false;
+  d_radiationCalc = false;
   d_bc = 0;
 #ifdef PetscFilter
   d_filter = 0;
