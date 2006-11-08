@@ -44,9 +44,9 @@
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
+#include <Core/Matlab/matlabconverter.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/String.h>
 

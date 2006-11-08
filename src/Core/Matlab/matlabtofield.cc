@@ -32,7 +32,7 @@
  * DATE: 17 OCT 2004
  */
 
-#include <Packages/MatlabInterface/Core/Datatypes/matlabtofield.h>
+#include <Core/Matlab/matlabtofield.h>
 
 namespace MatlabIO {
 

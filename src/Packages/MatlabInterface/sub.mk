@@ -30,7 +30,6 @@
 SRCDIR := Packages/MatlabInterface
 
 SUBDIRS := \
-        $(SRCDIR)/Core \
         $(SRCDIR)/Dataflow \
 	$(SRCDIR)/Services 
 

@@ -32,7 +32,7 @@
  * DATE: 18 MAR 2004
  */
 
-#include <Packages/MatlabInterface/Core/Datatypes/fieldtomatlab.h>
+#include <Core/Matlab/fieldtomatlab.h>
 
 namespace MatlabIO {
 

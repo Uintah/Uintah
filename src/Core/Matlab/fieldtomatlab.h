@@ -58,8 +58,8 @@
 #include <sgi_stl_warnings_on.h>
 
 // Class for reading matlab files
-#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
 
 // Field class files
 #include <Core/Datatypes/Field.h>
