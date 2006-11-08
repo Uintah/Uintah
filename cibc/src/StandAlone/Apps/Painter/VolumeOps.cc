@@ -33,8 +33,6 @@
 #include <StandAlone/Apps/Painter/VolumeOps.h>
 #include <Core/Containers/StringUtil.h>
 
-#ifdef HAVE_INSIGHT
-
 namespace SCIRun {
 
 
@@ -165,5 +163,3 @@ VolumeOps::bit_to_float(NrrdDataHandle &ninh,
 
 
 }
-
-#endif /* HAVE_INSIGHT */

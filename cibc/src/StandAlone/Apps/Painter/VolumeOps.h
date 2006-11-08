@@ -32,15 +32,9 @@
 #ifndef LeXoV_VolumeOps_H
 #define LeXoV_VolumeOps_H
 
-#include <sci_defs/insight_defs.h>
-#ifdef HAVE_INSIGHT
-
 #include <Core/Datatypes/NrrdData.h>
-#include <Core/Datatypes/ITKDatatype.h>
 #include <Core/Util/Assert.h>
 #include <Core/Containers/StringUtil.h>
-#include <itkImageToImageFilter.h>
-#include <itkImportImageFilter.h>
 
 namespace SCIRun {
 
@@ -214,5 +208,4 @@ VolumeOps::nrrd_set_value(Nrrd *nrrd,
 
 
 }
-#endif
 #endif
