@@ -84,7 +84,7 @@ bool FData_operation(const std::string& op,const std::vector<unsigned long>& fda
 bool FData_operation(const std::string& op,const std::vector<float>& fdata, 
                                                           FDataResult& result);
 bool FData_operation(const std::string& op,const std::vector<double>& fdata, 
-                                                          FDataResult& result);
+                                                  FDataResult& result);
 bool FData_operation(const std::string& op,const std::vector<Vector>& fdata, 
                                                           FDataResult& result);
 bool FData_operation(const std::string& op,const std::vector<Tensor>& fdata, 
@@ -132,7 +132,7 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     size_t sz = fdata.size();
     for (size_t i=0; i<sz;i++)
     {
-      val2 = static_cast<typename FDATA::value_type>(fdata[i]);
+      val2 = static_cast<double>(fdata[i]);
       if (val2 < val) { val = val2; idx = i; }
     }
   
@@ -152,7 +152,7 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     size_t sz = fdata.size();
     for (size_t i=0; i<sz;i++)
     {
-      val2 = static_cast<typename FDATA::value_type>(fdata[i]);
+      val2 = static_cast<double>(fdata[i]);
       if (val2 > val) { val = val2; idx = i; }
     }
   
@@ -174,7 +174,7 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     size_t sz = fdata.size();
     for (size_t i=0; i<sz;i++)
     {
-      val = static_cast<typename FDATA::value_type>(fdata[i]);
+      val = static_cast<double>(fdata[i]);
       if (val < val2) { val1 = val; idx1 = i; }
       if (val > val2) { val2 = val; idx2 = i; }
     }
@@ -200,7 +200,71 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
 template<class FDATA>
 bool FData_operation_vector(const std::string& op,const FDATA& fdata, FDataResult& result)
 {
+  if (op == "min")
+  {
+    result.scalar.resize(1);
+    result.index.resize(1);
+    
+    double val = -DBL_MAX;
+    double val2;
+    size_t idx = 0;
+    size_t sz = fdata.size();
+    for (size_t i=0; i<sz;i++)
+    {
+      val2 = fdata[i].length();
+      if (val2 < val) { val = val2; idx = i; }
+    }
+  
+    result.scalar[0] = val;
+    result.index[0] = static_cast<Mesh::index_type>(idx);
+    return (true);
+  }
 
+  if (op == "max")
+  {
+    result.scalar.resize(1);
+    result.index.resize(1);
+    
+    double val = DBL_MAX;
+    double val2;
+    size_t idx = 0;
+    size_t sz = fdata.size();
+    for (size_t i=0; i<sz;i++)
+    {
+      val2 = fdata[i].length();
+      if (val2 > val) { val = val2; idx = i; }
+    }
+  
+    result.scalar[0] = val;
+    result.index[0] = static_cast<Mesh::index_type>(idx);
+    return (true);
+  }
+
+  if (op == "minmax")
+  {
+    result.scalar.resize(2);
+    result.index.resize(2);
+    
+    double val1 = -DBL_MAX;
+    double val2 = DBL_MAX;
+    double val;
+    size_t idx1 = 0;
+    size_t idx2 = 0;
+    size_t sz = fdata.size();
+    for (size_t i=0; i<sz;i++)
+    {
+      val = fdata[i].length();
+      if (val < val2) { val1 = val; idx1 = i; }
+      if (val > val2) { val2 = val; idx2 = i; }
+    }
+  
+    result.scalar[0] = val1;
+    result.index[0] = static_cast<Mesh::index_type>(idx1);
+    result.scalar[1] = val2;
+    result.index[1] = static_cast<Mesh::index_type>(idx2);
+    return (true);
+  }
+  
   //! Test whether we have an interface, if we get this far
   //! we have the interface.
   if (op == "test")

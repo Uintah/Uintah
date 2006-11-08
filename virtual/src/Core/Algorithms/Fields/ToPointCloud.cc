@@ -54,7 +54,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   {
     // If we encounter a null pointer we return an error message and return to
     // the program to deal with this error. 
-    pr->error("ToPointCloud: No input field");
+    pr->error("ConvertMeshToPointCloud: No input field");
     return (false);
   }
 
@@ -86,7 +86,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   // non-linear classes. If so we return an error.
   if (fi.is_nonlinear())
   {
-    pr->error("ToPointCloud: This function has not yet been defined for non-linear elements yet");
+    pr->error("ConvertMeshToPointCloud: This function has not yet been defined for non-linear elements yet");
     return (false);
   }
 
@@ -110,6 +110,18 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
     fo.set_basis_type("NoDataBasis");
   }
   
+  // Test whether we can use the virtual interface, if so use this one
+  
+  if (fi.has_virtual_interface() && fo.has_virtual_interface())
+  {
+    output = Create_Field(fo);
+    
+    if (UseScalarInterface(fi,fo)) return (ToPointCloudV<double>(pr,input,output));
+    if (UseVectorInterface(fi,fo)) return (ToPointCloudV<Vector>(pr,input,output));
+    if (UseTensorInterface(fi,fo)) return (ToPointCloudV<Tensor>(pr,input,output));
+  }
+  
+  
   // Step 3: Build information structure for the dynamic compilation
   
   // The only object we need to build to perform a dynamic compilation is the
@@ -126,7 +138,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   //  4) The template descriptors separated by commas
    
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "ALGOConvertMeshToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
     "ToPointCloudAlgo","ToPointCloudAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 

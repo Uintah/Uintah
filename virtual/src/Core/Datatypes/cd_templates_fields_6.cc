@@ -213,7 +213,7 @@ typedef QuadBilinearLgn<unsigned long>         FDQulongBasis;
 typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQMesh;
 PersistentTypeID backwards_compat_SQM("StructQuadSurfMesh", "Mesh",
 				      SQMesh::maker, SQMesh::maker);
-//template class StructQuadSurfMesh<QuadBilinearLgn<Point> >;
+template class StructQuadSurfMesh<QuadBilinearLgn<Point> >;
 
 //NoData
 template class GenericField<SQMesh, NDBasis, FData2d<double,SQMesh> >;
@@ -337,7 +337,7 @@ typedef HexTrilinearLgn<unsigned long>         FDHulongBasis;
 typedef StructHexVolMesh<HexTrilinearLgn<Point> > SHMesh;
 PersistentTypeID backwards_compat_SHVM("StructHexVolMesh", "Mesh",
 				       SHMesh::maker, SHMesh::maker);
-//template class StructHexVolMesh<HexTrilinearLgn<Point> >;
+template class StructHexVolMesh<HexTrilinearLgn<Point> >;
 
 //Constant
 template class GenericField<SHMesh, CFDTensorBasis, FData3d<Tensor,SHMesh> >;

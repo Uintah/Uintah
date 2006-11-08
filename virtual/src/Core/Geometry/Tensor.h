@@ -71,6 +71,7 @@ public:
   Tensor(const double *); // 6 values
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);
+  Tensor(double, double, double, double, double, double);
   Tensor& operator=(const Tensor&);
   Tensor& operator=(const double&);
   virtual ~Tensor();

@@ -97,6 +97,7 @@ public:
   virtual bool is_scalar() const = 0;
 
   virtual Mesh::size_type data_size() const = 0;
+  inline Mesh::size_type num_values() const { return (data_size()); }
   
   // VIRTUAL INTERFACE FOR FIELDS
   // value and set_value are available for each datatype supported so far

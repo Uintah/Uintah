@@ -639,35 +639,31 @@ bool ConvertMeshToTetVolAlgo::ConvertHexVolToTetVolV(ProgressReporter *pr,
 
   if (ifield->basis_order() == 0)
   {
-    imesh->begin(ebi); 
-    imesh->end(eei);
+    size_t sz = ifield->num_values();
     T val;
     Mesh::index_type idx;
-    
-    while (ebi != eei)
+
+    for (Mesh::index_type r=0; r<sz; r++)
     {
-      idx = elemmap[static_cast<unsigned int>(*ebi)];
-      ifield->get_value(val, *ebi);
+      idx = elemmap[static_cast<unsigned int>(r)];
+      ifield->get_value(val, r);
       ofield->set_value(val, idx);
       ofield->set_value(val, idx+1);
       ofield->set_value(val, idx+2);
       ofield->set_value(val, idx+3);
-      ofield->set_value(val, idx+4);
-      ++ebi;
+      ofield->set_value(val, idx+4);    
     }
   }
   
   if (ifield->basis_order() == 1)
   {
-    imesh->begin(nbi);
-    imesh->end(nei);
+    size_t sz = ifield->num_values();
     T val;
 
-    while (nbi != nei)
+    for (Mesh::index_type r=0; r<sz; r++)
     {
-      ifield->get_value(val,*nbi);
-      ofield->set_value(val,*nbi);
-      ++nbi;
+      ifield->get_value(val,r);
+      ofield->set_value(val,r);
     }
   }
 
@@ -786,34 +782,31 @@ bool ConvertMeshToTetVolAlgo::ConvertLatVolToTetVolV(ProgressReporter *pr,
 
   if (ifield->basis_order() == 0)
   {
-    imesh->begin(bi); 
-    imesh->end(ei);
-    omesh->begin(obi); 
-    omesh->end(oei);
-
+    size_t sz = ifield->num_values();
     T val;
-    while (bi != ei)
+
+    Mesh::index_type q = 0;
+    for (Mesh::index_type r=0; r<sz; r++)
     {
-      ifield->get_value(val,*bi); ++bi;
-      ofield->set_value(val,*obi); ++obi;
-      ofield->set_value(val,*obi); ++obi;
-      ofield->set_value(val,*obi); ++obi;
-      ofield->set_value(val,*obi); ++obi;
-      ofield->set_value(val,*obi); ++obi;
+      ifield->get_value(val,r);
+      ofield->set_value(val,q);
+      ofield->set_value(val,q+1);
+      ofield->set_value(val,q+2);
+      ofield->set_value(val,q+3);
+      ofield->set_value(val,q+4);
+      q += 5;
     }
   }
   
   if (ifield->basis_order() == 1)
   {
-    imesh->begin(nbi);
-    imesh->end(nei);
-
+    size_t sz = ifield->num_values();
     T val;
-    while (nbi != nei)
+
+    for (Mesh::index_type r=0; r<sz; r++)
     {
-      ifield->get_value(val,*nbi);
-      ofield->set_value(val,*nbi);
-      ++nbi;
+      ifield->get_value(val,r);
+      ofield->set_value(val,r);
     }
   }
 

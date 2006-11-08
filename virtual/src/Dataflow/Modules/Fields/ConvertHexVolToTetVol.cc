@@ -27,160 +27,40 @@
 */
 
 
-/*
- *  ConvertHexVolToTetVol.cc:  Convert a Hex field into a Tet field using 1-5 split
- *
- *  Written by:
- *   David Weinstein
- *   University of Utah
- *   December 2002
- *
- *  Copyright (C) 1994, 2001 SCI Group
- */
-
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Dataflow/Modules/Fields/ConvertHexVolToTetVol.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/DynamicCompilation.h>
-
-#include <iostream>
-#include <vector>
-#include <algorithm>
-
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
 class ConvertHexVolToTetVol : public Module {
-private:
-  int last_generation_;
-  FieldHandle ofieldhandle_;
-
 public:
+  ConvertHexVolToTetVol(GuiContext*);
 
-  //! Constructor/Destructor
-  ConvertHexVolToTetVol(GuiContext *context);
-  virtual ~ConvertHexVolToTetVol();
-
-  //! Public methods
   virtual void execute();
 };
 
 
 DECLARE_MAKER(ConvertHexVolToTetVol)
 
-
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext *context) : 
-  Module("ConvertHexVolToTetVol", context, Filter, "ChangeMesh", "SCIRun"),
-  last_generation_(0)
+ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
+  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
 {
 }
 
-ConvertHexVolToTetVol::~ConvertHexVolToTetVol()
+void ConvertHexVolToTetVol::execute()
 {
-}
-
-void
-ConvertHexVolToTetVol::execute()
-{
-  FieldHandle ifieldhandle;
-  if (!get_input_handle("HexVol", ifieldhandle)) return;
-
-  // Cache generation.
-  if (ofieldhandle_.get_rep() &&
-      ifieldhandle->generation == last_generation_)
+  FieldHandle ifield, ofield;
+  if (!(get_input_handle("Field",ifield,true))) return;
+  
+  if (inputs_changed_ || !oport_cached("Field"))
   {
-    send_output_handle("TetVol", ofieldhandle_, true);
-    return;
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
+
+    send_output_handle("Field", ofield);
   }
-  last_generation_ = ifieldhandle->generation;
-  const TypeDescription *src_td = ifieldhandle->get_type_description();
-  CompileInfoHandle hci = ConvertHexVolToTetVolAlgo::get_compile_info(src_td);
-  Handle<ConvertHexVolToTetVolAlgo> halgo;
-  if (DynamicCompilation::compile(hci, halgo, true, this))
-  {
-    if (!halgo->execute(this, ifieldhandle, ofieldhandle_))
-    {
-      warning("ConvertHexVolToTetVol conversion failed to copy data.");
-      return;
-    }
-  }
-  else
-  {
-    CompileInfoHandle lci = LatToTetAlgo::get_compile_info(src_td);
-    Handle<LatToTetAlgo> lalgo;
-    if (DynamicCompilation::compile(lci, lalgo, true, this))
-    {
-      if (!lalgo->execute(this, ifieldhandle, ofieldhandle_))
-      {
-	warning("LatToTet conversion failed to copy data.");
-	return;
-      }
-    }
-    else
-    {
-      error("ConvertHexVolToTetVol only supported for Hex types -- failed for "+
-	    src_td->get_name());
-      return;
-    }
-  }
-
-  send_output_handle("TetVol", ofieldhandle_, true);
 }
-
-
-CompileInfoHandle
-ConvertHexVolToTetVolAlgo::get_compile_info(const TypeDescription *src_td)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("ConvertHexVolToTetVolAlgoT");
-  static const string base_class_name("ConvertHexVolToTetVolAlgo");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       src_td->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       src_td->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  rval->add_basis_include("../src/Core/Basis/NoData.h");
-  rval->add_basis_include("../src/Core/Basis/Constant.h");
-  rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
-  rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
-  src_td->fill_compile_info(rval);
-  return rval;
-}
-
-
-CompileInfoHandle
-LatToTetAlgo::get_compile_info(const TypeDescription *src_td)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("LatToTetAlgoT");
-  static const string base_class_name("LatToTetAlgo");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       src_td->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       src_td->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  rval->add_basis_include("../src/Core/Basis/NoData.h");
-  rval->add_basis_include("../src/Core/Basis/Constant.h");
-  rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
-  rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
-  src_td->fill_compile_info(rval);
-  return rval;
-}
-
 
 } // End namespace SCIRun

@@ -42,7 +42,6 @@
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -111,14 +110,11 @@ RescaleColorMap::execute()
     if (!gui_is_fixed_.get()) return;
   }
   // Check to see if any values have changed.
-  if( inputs_changed_ ||
-
-      !colormap_output_handle_.get_rep() ||
-
+  if( inputs_changed_ || !colormap_output_handle_.get_rep() ||
       (gui_is_fixed_.get() == 0 && gui_make_symmetric_.changed( true )) ||
       (gui_is_fixed_.get() == 1 && (gui_min_.changed( true ) ||
-				gui_max_.changed( true ))) ||
-      execute_error_ ) {
+      gui_max_.changed( true ))) ||execute_error_ ) 
+  {
 
     update_state(Executing);
 
@@ -127,49 +123,44 @@ RescaleColorMap::execute()
     colormap_output_handle_ = colormap_input_handle;
     colormap_output_handle_.detach();
 
-    if( gui_is_fixed_.get() ) {
+    if( gui_is_fixed_.get() ) 
+    {
       colormap_output_handle_->Scale( gui_min_.get(), gui_max_.get());
-
-    } else {
+    } 
+    else 
+    {
 
       // initialize the following so that the compiler will stop
       // warning us about possibly using unitialized variables
       double minv = DBL_MAX, maxv = -DBL_MAX;
 
-      for( unsigned int i=0; i<field_input_handles.size(); i++ ) {
-	FieldHandle fHandle = field_input_handles[i];
+      for( unsigned int i=0; i<field_input_handles.size(); i++ ) 
+      {
+        FieldHandle fHandle = field_input_handles[i];
 
-	string units;
-	if( fHandle->get_property("units", units) )
-	  colormap_output_handle_->set_units(units);
-	  
-	ScalarFieldInterfaceHandle sfi;
-	VectorFieldInterfaceHandle vfi;
+        string units;
+        if( fHandle->get_property("units", units) )
+          colormap_output_handle_->set_units(units);
+        
+        if (!(fHandle->minmax(minmax_.first,minmax_.second)))
+        {
+          error("An input field is not a scalar or vector field.");
+          execute_error_ = true;  
+        } 
 
-	if ((sfi = fHandle->query_scalar_interface(this)).get_rep()) {
-	  sfi->compute_min_max(minmax_.first, minmax_.second);
-	} else if ((vfi = fHandle->query_vector_interface(this)).get_rep()) {
-	  vfi->compute_length_min_max(minmax_.first, minmax_.second);
-	} else {
-	  error("An input field is not a scalar or vector field.");
-	  execute_error_ = true;
-	  return;
-	}
+        if ( minv > minmax_.first) minv = minmax_.first;
 
-	if ( minv > minmax_.first)
-	  minv = minmax_.first;
-
-	if ( maxv < minmax_.second)
-	  maxv = minmax_.second;
+        if ( maxv < minmax_.second) maxv = minmax_.second;
       }
 
       minmax_.first  = minv;
       minmax_.second = maxv;
 
-      if ( gui_make_symmetric_.get() ) {
-	float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
-	minmax_.first  = -biggest;
-	minmax_.second =  biggest;
+      if ( gui_make_symmetric_.get() ) 
+      {
+        float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
+        minmax_.first  = -biggest;
+        minmax_.second =  biggest;
       }
 
       colormap_output_handle_->Scale( minmax_.first, minmax_.second);

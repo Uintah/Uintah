@@ -40,6 +40,10 @@ class ConvertToUnstructuredMeshAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool ConvertToUnstructuredMesh(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+
+  template <class T>
+  bool ConvertToUnstructuredMeshV(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+
 };
 
 
@@ -105,17 +109,22 @@ bool ConvertToUnstructuredMeshAlgoT<FSRC, FDST>::ConvertToUnstructuredMesh(Progr
   imesh->size(numelems);
   omesh->elem_reserve(numelems);
   
+  typename FSRC::mesh_type::Node::array_type onodes;
+  typename FDST::mesh_type::Node::array_type nnodes;
+  size_t sz;
+  
+  if (bi != ei)
+  {
+    imesh->get_nodes(onodes, *bi);
+    sz = onodes.size();
+    nnodes.resize(sz);
+  }
+  
   while (bi != ei) 
   {
-    typename FSRC::mesh_type::Node::array_type onodes;
     imesh->get_nodes(onodes, *bi);
-    typename FDST::mesh_type::Node::array_type nnodes(onodes.size());
-
-    for (unsigned int i=0; i<onodes.size(); i++) 
-    {
+    for (unsigned int i=0; i<sz; i++) 
       nnodes[i] = static_cast<typename FDST::mesh_type::Node::index_type>(onodes[i]);
-    }
-
     omesh->add_elem(nnodes);
     ++bi;
   }
@@ -165,6 +174,92 @@ bool ConvertToUnstructuredMeshAlgoT<FSRC, FDST>::ConvertToUnstructuredMesh(Progr
   // copy property manager
 	output->copy_properties(input.get_rep());
   return (true);
+}
+
+
+template<class T>
+bool
+ConvertToUnstructuredMeshAlgo::ConvertToUnstructuredMeshV(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+{
+  Field* ifield = input.get_rep();
+  if (ifield == 0)
+  {
+    pr->error("ConvertToUnstructuredMesh: Could not obtain input field");
+    return (false);
+  }
+
+  Mesh* imesh = ifield->mesh().get_rep();
+  if (imesh == 0)
+  {
+    pr->error("ConvertToUnstructuredMesh: No mesh associated with input field");
+    return (false);
+  }
+
+  Field* ofield = output.get_rep();
+  if (ifield == 0)
+  {
+    pr->error("ConvertToUnstructuredMesh: Could not obtain output field");
+    return (false);
+  }
+  
+  Mesh* omesh = ofield->mesh().get_rep();
+  if (omesh == 0)
+  {
+    pr->error("ConvertToUnstructuredMesh: No mesh associated with output field");
+    return (false);
+  }  
+    
+  imesh->synchronize(Mesh::NODES_E);
+  if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::EDGES_E);
+  if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::FACES_E);
+  if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E);
+
+  Mesh::VNode::iterator bn, en;
+  Mesh::VNode::size_type numnodes;
+  imesh->begin(bn); 
+  imesh->end(en);
+  imesh->size(numnodes);
+  omesh->node_reserve(numnodes);
+
+  Point np;
+  while (bn != en) 
+  {
+    imesh->get_center(np, *bn);
+    omesh->add_node(np);
+    ++bn;
+  }
+
+  // Copy the elements.
+  Mesh::VElem::iterator bi, ei;
+  Mesh::VElem::size_type numelems;
+
+  imesh->begin(bi); 
+  imesh->end(ei);
+  imesh->size(numelems);
+  omesh->elem_reserve(numelems);
+  
+  Mesh::VNode::array_type nodes;
+  
+  while (bi != ei) 
+  {
+    imesh->get_nodes(nodes, *bi);
+    omesh->add_elem(nodes);
+    ++bi;
+  }
+
+  ofield->resize_fdata();
+  
+  size_t sz = ifield->num_values();
+  
+  T val;
+  for (Mesh::index_type r=0; r<sz; r++)
+  {
+    ifield->get_value(val,r);
+    ofield->set_value(val,r);
+  }
+
+  output->copy_properties(input.get_rep());
+  return (true); 
 }
 
 } // end namespace SCIRunAlgo

@@ -70,7 +70,19 @@ bool ConvertToUnstructuredMeshAlgo::ConvertToUnstructuredMesh(ProgressReporter *
     return (false);
   }
 
-  // Setup dynamic files
+  //-----------------------
+  // VIRTUAL VERSION
+  
+  if (fi.has_virtual_interface() && fo.has_virtual_interface())
+  {
+    output = Create_Field(fo);
+    if (UseScalarInterface(fi,fo)) return (ConvertToUnstructuredMeshV<double>(pr,input,output));
+    if (UseVectorInterface(fi,fo)) return (ConvertToUnstructuredMeshV<Vector>(pr,input,output));
+    if (UseTensorInterface(fi,fo)) return (ConvertToUnstructuredMeshV<Tensor>(pr,input,output));
+  }
+
+  //-----------------------
+  // DYNAMIC COMPILED VERSION
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "ALGOConvertToUnstructuredMesh."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
