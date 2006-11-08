@@ -159,13 +159,15 @@ DataHandler::run()
 
   //char bytes[8];
   
-  long int bytes;
+  long long bytes;
   char bytebuf[8];
 
   // get the size of incoming data.
-  if (conn_->read(bytebuf, 8) != 8) {
+  if (conn_->read(bytebuf, sizeof(long long)) != sizeof(long long)) {
     return;
   }
+
+  //swap out from network byte order.
   char tmp[8];
   tmp[0] = bytebuf[7];
   tmp[1] = bytebuf[6];
@@ -176,7 +178,7 @@ DataHandler::run()
   tmp[6] = bytebuf[1];
   tmp[7] = bytebuf[0];
 
-  bytes = *((long int*)tmp);
+  bytes = *((long long*)tmp);
 
   cerr << "getting : " << bytes << " bytes." << endl;
   char *buf = new char[bytes];
