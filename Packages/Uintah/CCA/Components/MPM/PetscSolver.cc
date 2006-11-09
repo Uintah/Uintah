@@ -559,6 +559,7 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   VecGetValues(d_t,d_DOF.size(),indices,y);
   VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
+  assembleVector();
   VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
 #endif
 #if (PETSC_VERSION_MINOR == 2)
@@ -589,6 +590,7 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   VecRestoreArray(d_t,&d_t_tmp);
   VecRestoreArray(d_flux,&d_flux_tmp);
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
+  assembleVector();
   VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
 
 #endif
@@ -596,6 +598,7 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   delete[] y;
   delete[] y_flux;
 
+  assembleFluxVector();
   assembleVector();
   finalizeMatrix();
 
