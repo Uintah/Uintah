@@ -34,6 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Init
 
 SRCS     += $(SRCDIR)/init.cc \
+            $(SRCDIR)/matlabIEplugin.cc \
             $(SRCDIR)/NrrdToField_Plugin.cc \
             $(SRCDIR)/NrrdToMatrix_Plugin.cc \
             $(SRCDIR)/SimpleTextFileToMatrix_Plugin.cc \
@@ -52,7 +53,8 @@ PSELIBS := \
 	Core/ImportExport \
 	Core/Persistent   \
 	Core/Thread       \
-	Core/Util 
+	Core/Util         \
+  Core/Matlab
 	
 LIBS :=
 

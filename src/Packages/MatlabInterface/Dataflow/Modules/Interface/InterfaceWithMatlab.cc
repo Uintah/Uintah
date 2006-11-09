@@ -40,9 +40,9 @@
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/SystemCall/TempFileManager.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabconverter.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
+#include <Core/Matlab/matlabconverter.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
 #include <Packages/MatlabInterface/Services/MatlabEngine.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>

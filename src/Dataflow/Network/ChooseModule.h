@@ -127,11 +127,12 @@ template< class HANDLE_TYPE >
 void
 ChooseModule< HANDLE_TYPE >::execute()
 {
+
   std::vector< HANDLE_TYPE > handles;
   string port_names("");
   string visible;
 
-  if( !get_dynamic_input_handles( port_name_, handles, false ) ) return;
+  if( !get_dynamic_input_handles( port_name_, handles, true ) ) return;
 
 
   if( !gui_is_built_) { // build gui first time through

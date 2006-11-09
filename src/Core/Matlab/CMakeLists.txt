@@ -26,19 +26,36 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+# CMakeLists.txt for Core/Matlab
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+SET(Core_Matlab_SRCS
+  matfile.cc
+  matfiledata.cc
+  matlabarray.cc
+  matlabfile.cc
+  matlabconverter.cc
+  fieldtomatlab.cc
+  matlabtofield.cc
+  Startup.cc
+)
 
-SRCDIR := Packages/MatlabInterface/Core
+ADD_LIBRARY(Core_Matlab ${Core_Matlab_SRCS})
 
-SUBDIRS := \
-        $(SRCDIR)/Datatypes \
+TARGET_LINK_LIBRARIES(Core_Matlab
+  Core_Datatypes
+  Core_ImportExport
+  Core_Containers
+  Core_Exceptions
+  Core_Thread
+  Core_Persistent
+  Core_Geometry
+  Core_Util
+  Core_Geom
+  Core_Bundle
+  ${Z_LIBRARY}
+  ${TEEM_LIBRARY}
+)
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
-
-
+IF(BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Core_Matlab)
+ENDIF(BUILD_SHARED_LIBS)

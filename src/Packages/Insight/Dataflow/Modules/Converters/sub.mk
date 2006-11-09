@@ -54,8 +54,8 @@ SRCS     += \
 	$(SRCDIR)/VectorToRGBPixel.cc \
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes \
-				Core/Datatypes Dataflow/Network \
+PSELIBS := Core/Datatypes Core/Math \
+        Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/GeomInterface Core/Geom Core/Datatypes Core/Geometry \

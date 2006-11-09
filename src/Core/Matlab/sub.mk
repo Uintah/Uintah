@@ -36,7 +36,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/MatlabInterface/Core/Datatypes
+SRCDIR   := Core/Matlab
 
 SRCS     += \
 	$(SRCDIR)/matfile.cc \
@@ -44,10 +44,8 @@ SRCS     += \
 	$(SRCDIR)/matlabarray.cc \
 	$(SRCDIR)/matlabfile.cc \
 	$(SRCDIR)/matlabconverter.cc \
-  	$(SRCDIR)/matlabIEplugin.cc \
- 	$(SRCDIR)/fieldtomatlab.cc \
-  	$(SRCDIR)/matlabtofield.cc \
-  	$(SRCDIR)/Startup.cc \
+	$(SRCDIR)/fieldtomatlab.cc \
+	$(SRCDIR)/matlabtofield.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/ImportExport Core/Containers \

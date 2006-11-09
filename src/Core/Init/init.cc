@@ -43,7 +43,14 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/Containers/StringUtil.h>
-//#include <Dataflow/Network/PackageDB.h>
+#include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
+#include <Core/ImportExport/Nrrd/NrrdIEPlugin.h>
+#include <Core/ImportExport/Field/FieldIEPlugin.h>
+#include <Core/Matlab/matlabfile.h>
+#include <Core/Matlab/matlabarray.h>
+#include <Core/Matlab/matlabconverter.h>
+
+
 
 using namespace SCIRun;
 using std::string;
@@ -102,4 +109,5 @@ SCIRunInit(string packages)
   }
 
 }
+
 

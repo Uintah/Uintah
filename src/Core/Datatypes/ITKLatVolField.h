@@ -213,13 +213,52 @@ public:
       ASSERTFAIL("ITKFData3d image not set");
     }
   }
+
+
   const value_type &operator[](typename LVMesh_::Node::index_type idx) const
   { 
+    ASSERTFAIL("const operator[] not defined for ITKLatVolField for Edges");
     if(image_set_) {
       typename image_type::IndexType pixel;
-      pixel[0] = idx.i_;
-      pixel[1] = idx.j_;
-      pixel[2] = idx.k_;
+      pixel[0] = 0;
+      pixel[1] = 0;
+      pixel[2] = 0;
+      return image_->GetPixel( pixel );  
+    }
+    else {
+      ASSERTFAIL("ITKFData3d image not set");
+    }
+  }
+  
+  const value_type &operator[](Mesh::index_type idx) const
+  { 
+    if(image_set_) {
+      const unsigned int k = idx / (dim1()*dim2());
+      const unsigned int ij = idx % (dim1()*dim2());
+      const unsigned int j = ij / dim1();
+      const unsigned int i = ij % dim1();
+      typename image_type::IndexType pixel;      
+      pixel[0] = i;
+      pixel[1] = j;
+      pixel[2] = k;
+      return image_->GetPixel( pixel ); 
+    }
+    else {
+      ASSERTFAIL("ITKFData3D image not set");
+    } 
+  }
+
+  value_type &operator[](Mesh::index_type idx)
+  { 
+    if(image_set_) {
+      const unsigned int k = idx / (dim1()*dim2());
+      const unsigned int ij = idx % (dim1()*dim2());
+      const unsigned int j = ij / dim1();
+      const unsigned int i = ij % dim1();
+      typename image_type::IndexType pixel;
+      pixel[0] = i;
+      pixel[1] = j;
+      pixel[2] = k;
       return image_->GetPixel( pixel ); 
     }
     else {
@@ -295,6 +334,10 @@ public:
   }
   void resize(const typename LVMesh_::Cell::size_type &size)
   { 
+  }
+  
+  void resize(size_t sz)
+  {
   }
   
   void set_image(itk::Image<Data, 3>* img) {
