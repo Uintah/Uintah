@@ -406,7 +406,7 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
               ++numPts;
           }
         } // matl loop
-        cout << "numPts = " << numPts << endl;
+	//        cout << "numPts = " << numPts << endl;
         new_dw->put(sumlong_vartype(numPts), 
                     lb->materialPointsPerLoadCurveLabel, 0, nofHeatFluxBCs-1);
       }  // patch loop
@@ -1373,11 +1373,13 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
       if (bcs_type == "HeatFlux") {
         HeatFluxBC* hfbc =
          dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+#if 0
         cout << *hfbc << endl;
         cout << "hfbc type = " << hfbc->getType() << endl;
         cout << "surface area = " << hfbc->getSurfaceArea() << endl;
         cout << "heat flux = " << hfbc->heatflux(time) << endl;
         cout << "flux per particle = " << hfbc->fluxPerParticle(time) << endl;
+#endif
         hfbcP.push_back(hfbc);
 
         // Calculate the force per particle at current time
@@ -1427,7 +1429,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
       
         if (!forceMagPerPart.empty()) {
           double mag = forceMagPerPart[0];
-          cout << "force mag = " << mag << endl;
+          //cout << "force mag = " << mag << endl;
           // Iterate over the particles
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
@@ -1451,7 +1453,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         }
         if (!heatFluxMagPerPart.empty()) {
           double mag = heatFluxMagPerPart[0];
-          cout << "heat flux mag = " << mag << endl;
+	  //          cout << "heat flux mag = " << mag << endl;
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
