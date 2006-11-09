@@ -33,9 +33,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 INCLUDES += $(INSIGHT_INCLUDE)
 
-SRCDIR   := Dataflow/Network
+SRCDIR   := Packages/Insight/Dataflow/Ports
 
-SRCS     += $(SRCDIR)/Ports/ITKDatatypePort.cc \
+SRCS     += $(SRCDIR)/ITKDatatypePort.cc \
 
 PSELIBS := \
         Dataflow/Comm      \
@@ -49,8 +49,9 @@ PSELIBS := \
         Core/Util          \
         Core/Thread        \
         Core/Volume        \
-        Core/XMLUtil  		 \
-				Core/OS
+        Core/XMLUtil       \
+	Core/OS            \
+
 
 LIBS := $(TCL_LIBRARY) $(XML2_LIBRARY)
 
