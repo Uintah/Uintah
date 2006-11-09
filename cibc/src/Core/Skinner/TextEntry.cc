@@ -76,7 +76,7 @@ namespace SCIRun {
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
         string str = get_vars()->get_string("text");
         int code = key->get_keyval();
-        bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
+        //bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
         cursor_position_ = Clamp(cursor_position_,0, str.length());
         if (code == SCIRun_Return) {
