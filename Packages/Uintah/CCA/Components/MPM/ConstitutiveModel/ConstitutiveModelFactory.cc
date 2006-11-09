@@ -22,6 +22,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Water.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -92,6 +93,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "ideal_gas")
     return(scinew IdealGasMP(child,flags));
 
+  else if (mat_type ==  "water")
+    return(scinew Water(child,flags));
+
   else if (mat_type == "comp_neo_hook_plastic")
     return(scinew CompNeoHookPlas(child,flags));
    
@@ -137,5 +141,3 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   return 0;
 }
-
-
