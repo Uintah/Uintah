@@ -79,11 +79,11 @@ class QueryInfo {
 public:
   QueryInfo() {}
   QueryInfo(DataArchive* archive,
-	    LevelP level,
-	    string varname,
-	    int mat,
-	    double time,
-	    const Uintah::TypeDescription *type):
+            LevelP level,
+            string varname,
+            int mat,
+            double time,
+            const Uintah::TypeDescription *type):
     archive(archive), level(level), varname(varname), mat(mat), time(time),
     type(type)
   {}
@@ -202,10 +202,10 @@ unsigned int get_nrrd_type() {
 // contiguous volume.
 template <class T, class VarT, class FIELD>
 void build_field(QueryInfo &qinfo,
-		 IntVector& lo,
+                 IntVector& lo,
                  T& /* data_type */,
-		 VarT& /*var*/,
-		 FIELD *sfd)
+                 VarT& /*var*/,
+                 FIELD *sfd)
 {
 #ifndef _AIX
   int max_workers = Max(Thread::numProcessors()/2, 2);
@@ -214,10 +214,10 @@ void build_field(QueryInfo &qinfo,
 #endif  
   if (verbose) cout << "max_workers = "<<max_workers<<"\n";
   Semaphore* thread_sema = scinew Semaphore("extractor semaphore",
-					    max_workers);
+                                            max_workers);
   // Loop over each patch and get the data from the data archive.
   for( Level::const_patchIterator r = qinfo.level->patchesBegin();
-      r != qinfo.level->patchesEnd(); ++r){
+       r != qinfo.level->patchesEnd(); ++r){
     IntVector low, hi;
     VarT v;
     // This gets the data
@@ -229,20 +229,20 @@ void build_field(QueryInfo &qinfo,
       low = (*r)->getNodeLowIndex();
       switch (qinfo.type->getType()) {
       case Uintah::TypeDescription::SFCXVariable:
-	hi = (*r)->getSFCXHighIndex();
-	break;
+        hi = (*r)->getSFCXHighIndex();
+        break;
       case Uintah::TypeDescription::SFCYVariable:
-	hi = (*r)->getSFCYHighIndex();
-	break;
+        hi = (*r)->getSFCYHighIndex();
+        break;
       case Uintah::TypeDescription::SFCZVariable:
-	hi = (*r)->getSFCZHighIndex();
-	break;
+        hi = (*r)->getSFCZHighIndex();
+        break;
       case Uintah::TypeDescription::NCVariable:
-	hi = (*r)->getNodeHighIndex();
-	break;
+        hi = (*r)->getNodeHighIndex();
+        break;
       default:
-	cerr << "build_field::unknown variable.\n";
-	exit(1);
+        cerr << "build_field::unknown variable.\n";
+        exit(1);
       } 
     } 
 
@@ -269,15 +269,15 @@ void build_field(QueryInfo &qinfo,
 #ifndef _AIX
       thread_sema->down();
       Thread *thrd = scinew Thread( 
-        (scinew PatchToFieldThread<VarT, T, FIELD>(sfd, v, lo, min_i, max_i,// low, hi,
-				      thread_sema)),
-	"patch_to_field_worker");
+                                   (scinew PatchToFieldThread<VarT, T, FIELD>(sfd, v, lo, min_i, max_i,// low, hi,
+                                                                              thread_sema)),
+                                   "patch_to_field_worker");
       thrd->detach();
 #else
       if (verbose) { cout << "Creating worker...";cout.flush(); }
       PatchToFieldThread<VarT, T, FIELD> *worker = 
         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-					   thread_sema));
+                                           thread_sema));
       if (verbose) { cout << "Running worker..."; cout.flush(); }
       worker->run();
       delete worker;
@@ -305,14 +305,14 @@ template <>
 bool
 wrap_copy( Vector* fdata, double*& datap, unsigned int size){
 
-    // Copy the data
-    for(unsigned int i = 0; i < size; i++) {
-      *datap++ = fdata->x();
-      *datap++ = fdata->y();
-      *datap++ = fdata->z();
-      fdata++;
-    }
-    return true;
+  // Copy the data
+  for(unsigned int i = 0; i < size; i++) {
+    *datap++ = fdata->x();
+    *datap++ = fdata->y();
+    *datap++ = fdata->z();
+    fdata++;
+  }
+  return true;
 }
 
 // Matrix3 version
@@ -321,38 +321,38 @@ template <>
 bool
 wrap_copy( Matrix3* fdata, double*& datap, unsigned int size){
 
-    switch (matrix_op) {
-    case None:
-      for(unsigned int i = 0; i < size; i++) {
-        for(int i = 0; i < 3; i++)
-          for(int j = 0; j < 3; j++)
-            *datap++ = (*fdata)(i,j);
-        fdata++;
-      }
-      break;
-    case Det:
-      for(unsigned int i = 0; i < size; i++) {
-        *datap++ = fdata->Determinant();
-        fdata++;
-      }
-      break;
-    case Trace:
-      for(unsigned int i = 0; i < size; i++) {
-        *datap++ = fdata->Trace();
-        fdata++;
-      }
-      break;
-    case Norm:
-      for(unsigned int i = 0; i < size; i++) {
-        *datap++ = fdata->Norm();
-        fdata++;
-      }
-      break;
-    default:
-      cerr << "Unknown matrix operation\n";
-      return false;
+  switch (matrix_op) {
+  case None:
+    for(unsigned int i = 0; i < size; i++) {
+      for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+          *datap++ = (*fdata)(i,j);
+      fdata++;
     }
-    return true;
+    break;
+  case Det:
+    for(unsigned int i = 0; i < size; i++) {
+      *datap++ = fdata->Determinant();
+      fdata++;
+    }
+    break;
+  case Trace:
+    for(unsigned int i = 0; i < size; i++) {
+      *datap++ = fdata->Trace();
+      fdata++;
+    }
+    break;
+  case Norm:
+    for(unsigned int i = 0; i < size; i++) {
+      *datap++ = fdata->Norm();
+      fdata++;
+    }
+    break;
+  default:
+    cerr << "Unknown matrix operation\n";
+    return false;
+  }
+  return true;
 }
 
 // Allocates memory for dest when needed (sets delete_me to true if it
@@ -371,7 +371,7 @@ Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
   if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
 
   const SCIRun::TypeDescription *td = 
-     source->get_type_description(Field::FDATA_TD_E);
+    source->get_type_description(Field::FDATA_TD_E);
   if( td->get_name().find( "Vector") != string::npos ) {  // Vectors
     unsigned int num_vec = source->fdata().size();
     double *data = new double[num_vec*3];
@@ -434,7 +434,7 @@ Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
       return 0;
     }
   } else { // Scalars
-  // We don't need to copy data, so just get the pointer to the data
+    // We don't need to copy data, so just get the pointer to the data
     delete_data = false;
     void *data = (void*)&(source->fdata()(0,0,0));
 
@@ -452,14 +452,14 @@ Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
 // getData<CCVariable<T>, T >();
 template<class VarT, class T>
 void getData(QueryInfo &qinfo, IntVector &low,
-	     LVMeshHandle mesh_handle_,
-	     int basis_order,
-	     string &filename) {
+             LVMeshHandle mesh_handle_,
+             int basis_order,
+             string &filename) {
 
   typedef GenericField<LVMesh, ConstantBasis<T>, 
-                       FData3d<T, LVMesh> > LVFieldCB;
+    FData3d<T, LVMesh> > LVFieldCB;
   typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
-                       FData3d<T, LVMesh> > LVFieldLB;
+    FData3d<T, LVMesh> > LVFieldLB;
 
   VarT gridVar;
   T data_T;
@@ -506,7 +506,7 @@ void getData(QueryInfo &qinfo, IntVector &low,
 #if 0
   Piostream *fieldstrm =
     scinew BinaryPiostream(string(filename + ".fld").c_str(),
-			   Piostream::Write);
+                           Piostream::Write);
   if (fieldstrm->error()) {
     cerr << "Could not open test.fld for writing.\n";
     exit(1);
@@ -546,44 +546,44 @@ void getData(QueryInfo &qinfo, IntVector &low,
 // getVariable<double>();
 template<class T>
 void getVariable(QueryInfo &qinfo, IntVector &low,
-		 IntVector &range, BBox &box, string &filename) {
-		 
+                 IntVector &range, BBox &box, string &filename) {
+     
   LVMeshHandle mesh_handle_;
   switch( qinfo.type->getType() ) {
   case Uintah::TypeDescription::CCVariable:
     mesh_handle_ = scinew LVMesh(range.x(), range.y(),
-				     range.z(), box.min(),
-				     box.max());
+                                 range.z(), box.min(),
+                                 box.max());
     getData<CCVariable<T>, T>(qinfo, low, mesh_handle_, 0,
-			      filename);
+                              filename);
     break;
   case Uintah::TypeDescription::NCVariable:
     mesh_handle_ = scinew LVMesh(range.x(), range.y(),
-				     range.z(), box.min(),
-				     box.max());
+                                 range.z(), box.min(),
+                                 box.max());
     getData<NCVariable<T>, T>(qinfo, low, mesh_handle_, 1,
-			      filename);
+                              filename);
     break;
   case Uintah::TypeDescription::SFCXVariable:
     mesh_handle_ = scinew LVMesh(range.x(), range.y()-1,
-				     range.z()-1, box.min(),
-				     box.max());
+                                 range.z()-1, box.min(),
+                                 box.max());
     getData<SFCXVariable<T>, T>(qinfo, low, mesh_handle_, 1,
-				filename);
+                                filename);
     break;
   case Uintah::TypeDescription::SFCYVariable:
     mesh_handle_ = scinew LVMesh(range.x()-1, range.y(),
-				     range.z()-1, box.min(),
-				     box.max());
+                                 range.z()-1, box.min(),
+                                 box.max());
     getData<SFCYVariable<T>, T>(qinfo, low, mesh_handle_, 1,
-				filename);
+                                filename);
     break;
   case Uintah::TypeDescription::SFCZVariable:
     mesh_handle_ = scinew LVMesh(range.x()-1, range.y()-1,
-				     range.z(), box.min(),
-				     box.max());
+                                 range.z(), box.min(),
+                                 box.max());
     getData<SFCZVariable<T>, T>(qinfo, low, mesh_handle_, 1,
-				filename);
+                                filename);
     break;
   default:
     cerr << "Type is unknown.\n";
@@ -656,15 +656,15 @@ int main(int argc, char** argv)
     } else if(s == "-mo") {
       s = argv[++i];
       if (s == "det")
-	matrix_op = Det;
+        matrix_op = Det;
       else if (s == "norm")
-	matrix_op = Norm;
+        matrix_op = Norm;
       else if (s == "trace")
-	matrix_op = Trace;
+        matrix_op = Trace;
       else if (s == "none")
-	matrix_op = None;
+        matrix_op = None;
       else
-	usage(s, argv[0]);
+        usage(s, argv[0]);
     } else if(s == "-binary") {
       do_binary=true;
     } else {
@@ -703,8 +703,8 @@ int main(int argc, char** argv)
     unsigned int var_index = 0;
     for (;var_index < vars.size(); var_index++) {
       if (variable_name == vars[var_index]) {
-	var_found = true;
-	break;
+        var_found = true;
+        break;
       }
     }
     
@@ -714,7 +714,7 @@ int main(int argc, char** argv)
       cerr << "Possible variable names are:\n";
       var_index = 0;
       for (;var_index < vars.size(); var_index++) {
-	cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
+        cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
       }
       cerr << "Aborting!!\n";
       exit(-1);
@@ -725,8 +725,8 @@ int main(int argc, char** argv)
       // Then use the variable name for the output name
       output_file_name = variable_name;
       if (!quiet)
-	cout << "Using variable name ("<<output_file_name<<
-	  ") as output file base name.\n";
+        cout << "Using variable name ("<<output_file_name<<
+          ") as output file base name.\n";
     }
     
     if (!quiet) cout << "Extracing data for "<<vars[var_index] << ": " << types[var_index]->getName() <<endl;
@@ -741,13 +741,13 @@ int main(int argc, char** argv)
     // set default max time value
     if (time_step_upper == (unsigned long)-1) {
       if (verbose)
-	cout <<"Initializing time_step_upper to "<<times.size()-1<<"\n";
+        cout <<"Initializing time_step_upper to "<<times.size()-1<<"\n";
       time_step_upper = times.size() - 1;
     }
     
     if (time_step_upper >= times.size() || time_step_upper < time_step_lower) {
       cerr << "timestephigh("<<time_step_lower<<") must be greater than " << time_step_lower 
-	   << " and less than " << times.size()-1 << endl;
+           << " and less than " << times.size()-1 << endl;
       exit(1);
     }
     
@@ -756,15 +756,15 @@ int main(int argc, char** argv)
     ////////////////////////////////////////////////////////
     // Loop over each timestep
     for (unsigned long time = time_step_lower; time <= time_step_upper;
-	 time+=tinc){
+         time+=tinc){
 
       // Check the level index
       double current_time = times[time];
       GridP grid = archive->queryGrid(current_time);
       if (level_index >= grid->numLevels() || level_index < 0) {
-	cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
-	cerr << "Trying next timestep.\n";
-	continue;
+        cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
+        cerr << "Trying next timestep.\n";
+        continue;
       }
     
       ///////////////////////////////////////////////////
@@ -773,39 +773,39 @@ int main(int argc, char** argv)
       LevelP level = grid->getLevel(level_index);
       const Patch* patch = *(level->patchesBegin());
       ConsecutiveRangeSet matls =
-	archive->queryMaterials(variable_name, patch, current_time);
+        archive->queryMaterials(variable_name, patch, current_time);
 
       if (verbose) {
-	// Print out all the material indicies valid for this timestep
-	cout << "Valid materials for "<<variable_name<<" at time["<<time<<"]("<<current_time<<") are \n\t";
-	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
-	     matlIter != matls.end(); matlIter++) {
-	  cout << *matlIter << ", ";
-	}
-	cout << endl;
+        // Print out all the material indicies valid for this timestep
+        cout << "Valid materials for "<<variable_name<<" at time["<<time<<"]("<<current_time<<") are \n\t";
+        for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+             matlIter != matls.end(); matlIter++) {
+          cout << *matlIter << ", ";
+        }
+        cout << endl;
       }
       
       int mat_num;
       if (material == -1) {
-	mat_num = *(matls.begin());
+        mat_num = *(matls.begin());
       } else {
-	unsigned int mat_index = 0;
-	mat_num = 0;
-	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
-	     matlIter != matls.end(); matlIter++){
-	  int matl = *matlIter;
-	  if (matl == material) {
-	    mat_num = matl;
-	    break;
-	  }
-	  mat_index++;
-	}
-	if (mat_index == matls.size()) {
-	  // then we didn't find the right material
-	  cerr << "Didn't find material " << material << " in the data.\n";
-	  cerr << "Trying next timestep.\n";
-	  continue;
-	}
+        unsigned int mat_index = 0;
+        mat_num = 0;
+        for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+             matlIter != matls.end(); matlIter++){
+          int matl = *matlIter;
+          if (matl == material) {
+            mat_num = matl;
+            break;
+          }
+          mat_index++;
+        }
+        if (mat_index == matls.size()) {
+          // then we didn't find the right material
+          cerr << "Didn't find material " << material << " in the data.\n";
+          cerr << "Trying next timestep.\n";
+          continue;
+        }
       }
       if (!quiet) cout << "Extracting data for material "<<mat_num<<".\n";
       
@@ -820,42 +820,42 @@ int main(int argc, char** argv)
       const Uintah::TypeDescription* subtype = td->getSubType();
     
       QueryInfo qinfo(archive, level, variable_name, mat_num, current_time,
-		      td);
+                      td);
 
       // Figure out the filename
       char filename_num[200];
       if (use_default_file_name)
-	sprintf(filename_num, "_M%02d_%04lu", mat_num, time);
+        sprintf(filename_num, "_M%02d_%04lu", mat_num, time);
       else
-	sprintf(filename_num, "_%04lu", time);
+        sprintf(filename_num, "_%04lu", time);
       string filename(output_file_name + filename_num);
     
       switch (subtype->getType()) {
       case Uintah::TypeDescription::double_type:
-	getVariable<double>(qinfo, low, range, box, filename);
-	break;
+        getVariable<double>(qinfo, low, range, box, filename);
+        break;
       case Uintah::TypeDescription::float_type:
-	getVariable<float>(qinfo, low, range, box, filename);
-	break;
+        getVariable<float>(qinfo, low, range, box, filename);
+        break;
       case Uintah::TypeDescription::int_type:
-	getVariable<int>(qinfo, low, range, box, filename);
-	break;
+        getVariable<int>(qinfo, low, range, box, filename);
+        break;
       case Uintah::TypeDescription::Vector:
-	getVariable<Vector>(qinfo, low, range, box, filename);
-	break;
+        getVariable<Vector>(qinfo, low, range, box, filename);
+        break;
       case Uintah::TypeDescription::Matrix3:
-	getVariable<Matrix3>(qinfo, low, range, box, filename);
-	break;
+        getVariable<Matrix3>(qinfo, low, range, box, filename);
+        break;
       case Uintah::TypeDescription::bool_type:
       case Uintah::TypeDescription::short_int_type:
       case Uintah::TypeDescription::long_type:
       case Uintah::TypeDescription::long64_type:
-	cerr << "Subtype "<<subtype->getName()<<" is not implemented\n";
-	exit(1);
-	break;
+        cerr << "Subtype "<<subtype->getName()<<" is not implemented\n";
+        exit(1);
+        break;
       default:
-	cerr << "Unknown subtype\n";
-	exit(1);
+        cerr << "Unknown subtype\n";
+        exit(1);
       }
     } // end time step iteration
     
