@@ -203,6 +203,34 @@ public:
     else
       ASSERTFAIL("ITKFData2d image not set");
   }
+
+
+  const value_type &operator[](Mesh::index_type idx) const
+  { 
+    if(image_set_) 
+    {
+      typename image_type::IndexType index;
+      index[0] = idx % dim1();
+      index[1] = idx / dim1();
+      return image_->GetPixel( index );
+    }
+    else
+      ASSERTFAIL("ITKFData2d image not set");
+  }
+
+  value_type &operator[](Mesh::index_type idx)
+  { 
+    if(image_set_) 
+    {
+      typename image_type::IndexType index;
+      index[0] = idx / dim1();
+      index[1] = idx % dim1();
+      return image_->GetPixel( index );
+    }
+    else
+      ASSERTFAIL("ITKFData2d image not set");
+  }
+
   
   value_type &operator[](typename IMesh_::Cell::index_type idx)
   { 
@@ -252,6 +280,10 @@ public:
   { 
   }
 
+  void resize(size_t sz)
+  {
+  }
+  
   void set_image(itk::Image<Data, 2>* img) {
     image_ = img;
 

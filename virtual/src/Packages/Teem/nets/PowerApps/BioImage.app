@@ -160,6 +160,7 @@ class BioImageApp {
 	set load_dicom 1
 	set load_analyze 2
 	set load_field 3
+	set load_field_converter 4
 	set load_choose_vis 6
         set load_info 24
 
@@ -357,6 +358,7 @@ class BioImageApp {
 	    }
 	}
     } 
+
     ##########################
     ### update_progress
     ##########################
@@ -372,25 +374,25 @@ class BioImageApp {
 		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
 		set execute_choose 0
 	    }
-	} elseif { [string first "NrrdSetupTexture_0" $which] != -1 && \
+	} elseif { [string first "BuildTextureWithGradientsFromNrrds" $which] != -1 && \
 		       $juststarted} {
 	    change_indicator_labels "NrrdSetup Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "NrrdSetupTexture" $which] != -1 && \
+	} elseif {[string first "BuildTextureWithGradientsFromNrrds" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
-	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && \
+	} elseif {[string first "ConvertNrrdsToTexture" $which] != -1 && \
 		      $juststarted} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "NrrdTextureBuilder" $which] != -1 && \
+	} elseif {[string first "ConvertNrrdsToTexture" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
-	} elseif {[string first "VolumeVisualizer" $which] != -1 && \
+	} elseif {[string first "ShowTextureVolume" $which] != -1 && \
 		      $juststarted} {
 	    change_indicator_labels "Volume Rendering..."
 	    change_indicate_val 1
-        } elseif {[string first "VolumeVisualizer" $which] != -1 && \
+        } elseif {[string first "ShowTextureVolume" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
 	    change_indicator_labels "Done Volume Rendering"
@@ -637,6 +639,11 @@ class BioImageApp {
     }
     
     method change_indicator_labels { msg } {
+        # truncate strings longer than 40 characters to
+        # avoid resizing the label window
+        if {[string length $msg] > 40} {
+          set msg [string range $msg 0 40]
+        }
 	$indicatorL0 configure -text $msg
 	$indicatorL1 configure -text $msg
     }
@@ -1049,8 +1056,10 @@ class BioImageApp {
 	    
             bind $m.p.indicator <Button> {app display_module_error} 
 	    
-            label $m.p.indicatorL -text "Press Update to Load Volume..."
-            pack $m.p.indicatorL -side bottom -anchor sw -padx 5 -pady 3
+            label $m.p.indicatorL -text "Press Update to Load Volume..." \
+	        -anchor w
+            pack $m.p.indicatorL -side bottom -anchor sw -padx 5 -pady 3 \
+                -fill none
 	    
 	    set indicator$case $m.p.indicator.canvas
 	    set indicatorL$case $m.p.indicatorL
@@ -1914,30 +1923,35 @@ class BioImageApp {
 	set DicomNrrdReader [lindex $load_mods $load_dicom]
 	set AnalyzeNrrdReader [lindex $load_mods $load_analyze]
 	set FieldReader [lindex $load_mods $load_field]
+	set FieldReaderConverter [lindex $load_mods $load_field_converter]
 	if {$which == "Nrrd"} {
 	    setGlobal $ChooseNrrd-port-selected-index 0
 	    disableModule $NrrdReader 0
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
+	    disableModule $FieldReaderConverter 1
         } elseif {$which == "Dicom"} {
 	    setGlobal $ChooseNrrd-port-selected-index 1
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 0
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 1
+	    disableModule $FieldReaderConverter 1
         } elseif {$which == "Analyze"} {
 	    setGlobal $ChooseNrrd-port-selected-index 2
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 0
 	    disableModule $FieldReader 1
+	    disableModule $FieldReaderConverter 1
         } elseif {$which == "Field"} {
 	    setGlobal $ChooseNrrd-port-selected-index 3
 	    disableModule $NrrdReader 1
 	    disableModule $DicomNrrdReader 1
 	    disableModule $AnalyzeNrrdReader 1
 	    disableModule $FieldReader 0
+	    disableModule $FieldReaderConverter 0
 	}
     }
     
@@ -4427,6 +4441,7 @@ class BioImageApp {
     variable load_dicom
     variable load_analyze
     variable load_field
+    variable load_field_converter
     variable load_choose_vis
     variable load_info
 

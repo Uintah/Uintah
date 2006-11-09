@@ -30,6 +30,7 @@
 
 SET(Core_Init_SRCS
   init.cc 
+  matlabIEplugin.cc
   NrrdToField_Plugin.cc 
   NrrdToMatrix_Plugin.cc 
   SimpleTextFileToMatrix_Plugin.cc 
@@ -50,6 +51,7 @@ TARGET_LINK_LIBRARIES(Core_Init
   Core_Persistent   
   Core_Thread       
   Core_Util 
+  Core_Matlab
 )
 
 IF(BUILD_SHARED_LIBS)

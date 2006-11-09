@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/MatlabInterface
 
-SUBDIRS(Core Dataflow Services)
+SUBDIRS(Dataflow Services)
 

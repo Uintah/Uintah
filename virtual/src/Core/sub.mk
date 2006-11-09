@@ -50,6 +50,7 @@ SUBDIRS := \
 	$(SRCDIR)/Init \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
+	$(SRCDIR)/Matlab \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
 	$(SRCDIR)/Services \
