@@ -876,7 +876,8 @@ esc_brackets(const string &str)
   string result;
   for (unsigned int i = 0; i < str.size(); i++)
   {
-    if (str[i] == '{' || str[i] == '}') result.push_back('\\');
+    if (str[i] == '{' || str[i] == '}' || str[i] == '\\')
+      result.push_back('\\');
     result.push_back(str[i]);
   }
   return result;
@@ -951,7 +952,8 @@ Module::compile_error(const string& filename)
   }
 
   msg_stream_flush();
-  gui_->execute(id_ + " append_log_msg {" + newstr + "} OrangeRed");
+  gui_->execute(id_ + " append_log_msg {" + esc_brackets(newstr) +
+                "} OrangeRed");
   update_msg_state(Error); 
   
   gui_->eval(get_id() + " compile_error " + filename);
@@ -962,7 +964,8 @@ Module::msg_stream_flush()
 {
   if (msg_stream_.str() != "")
   {
-    gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} black");
+    gui_->execute(id_ + " append_log_msg {" + esc_brackets(msg_stream_.str()) +
+                  "} black");
     msg_stream_.str("");
   }
 }
