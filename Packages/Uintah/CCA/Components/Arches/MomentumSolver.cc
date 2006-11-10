@@ -401,7 +401,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
@@ -549,7 +549,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,
     		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(constVelocityVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     new_dw->get(constVelocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
     new_dw->get(constVelocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 

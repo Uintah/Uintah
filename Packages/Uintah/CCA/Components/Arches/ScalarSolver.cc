@@ -186,10 +186,10 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
     tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -292,10 +292,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_dynScalarModel)
       new_dw->get(constScalarVars.viscosity, d_lab->d_scalarDiffusivityLabel, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else
       new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
     new_dw->get(constScalarVars.scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);

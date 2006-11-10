@@ -68,7 +68,8 @@ C--------------------------------------------------------------------
      &                      ctsav(i+1,j,k), cbsav(i+1,j,k),su(i+1,j,k),
      &                      sp(i+1,j,k),one)
                      AW(I+2,J,K) = 0.0D0
-                     cwsav(i+2,j,k) = 0.0D0
+c zeroing these out will break nonuniform discretization
+c                     cwsav(i+2,j,k) = 0.0D0
                end if
  110        CONTINUE
  120     CONTINUE

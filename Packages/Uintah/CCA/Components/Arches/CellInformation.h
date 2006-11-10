@@ -125,6 +125,25 @@ struct CellInformation : public RefCounted {
   OffsetArray1<double> fac3w;
   OffsetArray1<double> fac4w;
   OffsetArray1<int> kbsdw;
+  // CC variable interpolation factors
+  OffsetArray1<double> fac1ew;
+  OffsetArray1<double> fac2ew;
+  OffsetArray1<int> e_shift;
+  OffsetArray1<double> fac3ew;
+  OffsetArray1<double> fac4ew;
+  OffsetArray1<int> w_shift;
+  OffsetArray1<double> fac1ns;
+  OffsetArray1<double> fac2ns;
+  OffsetArray1<int> n_shift;
+  OffsetArray1<double> fac3ns;
+  OffsetArray1<double> fac4ns;
+  OffsetArray1<int> s_shift;
+  OffsetArray1<double> fac1tb;
+  OffsetArray1<double> fac2tb;
+  OffsetArray1<int> t_shift;
+  OffsetArray1<double> fac3tb;
+  OffsetArray1<double> fac4tb;
+  OffsetArray1<int> b_shift;
   // constructor computes the values
   CellInformation(const Patch*);
   ~CellInformation();

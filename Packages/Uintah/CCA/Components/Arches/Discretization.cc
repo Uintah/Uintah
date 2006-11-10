@@ -103,7 +103,12 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->fac2u, cellinfo->fac3u, cellinfo->fac4u,
 		  cellinfo->iesdu, cellinfo->iwsdu, cellinfo->nfac,
 		  cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
+		  cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                  cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
+		  cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                  cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
 		  idxLoU, idxHiU);
+
   } else if (index == Arches::YDIR) {
 
     // Get the patch indices
@@ -138,6 +143,10 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->fac2v, cellinfo->fac3v, cellinfo->fac4v,
 		  cellinfo->jnsdv, cellinfo->jssdv, cellinfo->efac,
 		  cellinfo->wfac, cellinfo->tfac, cellinfo->bfac,
+		  cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                  cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+		  cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                  cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
 		  idxLoV, idxHiV);
   } else if (index == Arches::ZDIR) {
 
@@ -173,10 +182,17 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
 		  cellinfo->ktsdw, cellinfo->kbsdw, cellinfo->efac,
 		  cellinfo->wfac, cellinfo->nfac, cellinfo->sfac,
+		  cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                  cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+		  cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                  cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
 		  idxLoW, idxHiW);
   }
 }
 
+//****************************************************************************
+// Divergence computation
+//****************************************************************************
 void 
 Discretization::computeDivergence(const ProcessorGroup* pc,
 				  const Patch* patch,
@@ -356,6 +372,12 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 		cellinfo->tfac, cellinfo->bfac,
 		cellinfo->dxpw, cellinfo->dxep, cellinfo->dyps,
 		cellinfo->dynp, cellinfo->dzpb, cellinfo->dztp,
+		cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+		cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
+		cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
 		conv_scheme, d_turbPrNo);
 
 }
