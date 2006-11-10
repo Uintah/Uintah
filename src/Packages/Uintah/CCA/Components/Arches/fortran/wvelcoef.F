@@ -156,15 +156,16 @@ c               DB = CBBW(K)*DBO - CBTW(K)*DTO*DZTPW(K)/DZPBW(K)
                DS = DSO
                DT = DTO
                DB = DBO
-               if (de.lt.0.0D0) write(6,*) "DE SFCZ negative at i= ",i
-               if (dw.lt.0.0D0) write(6,*) "DW SFCZ negative at i= ",i
-               if (dn.lt.0.0D0) write(6,*) "DN SFCZ negative at j= ",j
-               if (ds.lt.0.0D0) write(6,*) "DS SFCZ negative at j= ",j
-               if (dt.lt.0.0D0) write(6,*) "DT SFCZ negative at k= ",k
-               if (db.lt.0.0D0) write(6,*) "DB SFCZ negative at k= ",k
+               if (de.lt.0.0D0) write(6,*) "DE SFCZ is negative"
+               if (dw.lt.0.0D0) write(6,*) "DW SFCZ is negative"
+               if (dn.lt.0.0D0) write(6,*) "DN SFCZ is negative"
+               if (ds.lt.0.0D0) write(6,*) "DS SFCZ is negative"
+               if (dt.lt.0.0D0) write(6,*) "DT SFCZ is negative"
+               if (db.lt.0.0D0) write(6,*) "DB SFCZ is negative"
                if ((de.lt.0.0D0).or.(dw.lt.0.0D0).or.(dn.lt.0.0D0).or.
      .             (ds.lt.0.0D0).or.(dt.lt.0.0D0).or.(db.lt.0.0D0)) then
-                 write(6,*)  "Possibly stretching is two high."
+                 write(6,*) "Location indexes: ",i,j,k
+                 write(6,*) "Possibly stretching is two high."
                  call exit(0)
                end if
 C-----------------------------------------------------------------------

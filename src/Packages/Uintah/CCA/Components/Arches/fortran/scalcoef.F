@@ -205,15 +205,16 @@ c               DB = CBB(K)*DBO - CBT(K)*DTO*DZTP(K)/DZPB(K)
                DS = DSO
                DT = DTO
                DB = DBO
-               if (de.lt.0.0D0) write(6,*) "DE CC negative at i= ",i
-               if (dw.lt.0.0D0) write(6,*) "DW CC negative at i= ",i
-               if (dn.lt.0.0D0) write(6,*) "DN CC negative at j= ",j
-               if (ds.lt.0.0D0) write(6,*) "DS CC negative at j= ",j
-               if (dt.lt.0.0D0) write(6,*) "DT CC negative at k= ",k
-               if (db.lt.0.0D0) write(6,*) "DB CC negative at k= ",k
+               if (de.lt.0.0D0) write(6,*) "DE CC is negative"
+               if (dw.lt.0.0D0) write(6,*) "DW CC is negative"
+               if (dn.lt.0.0D0) write(6,*) "DN CC is negative"
+               if (ds.lt.0.0D0) write(6,*) "DS CC is negative"
+               if (dt.lt.0.0D0) write(6,*) "DT CC is negative"
+               if (db.lt.0.0D0) write(6,*) "DB CC is negative"
                if ((de.lt.0.0D0).or.(dw.lt.0.0D0).or.(dn.lt.0.0D0).or.
      .             (ds.lt.0.0D0).or.(dt.lt.0.0D0).or.(db.lt.0.0D0)) then
-                 write(6,*)  "Possibly stretching is two high."
+                 write(6,*) "Location indexes: ",i,j,k
+                 write(6,*) "Possibly stretching is two high."
                  call exit(0)
                end if
                DECOEF(I,J,K) = DE
