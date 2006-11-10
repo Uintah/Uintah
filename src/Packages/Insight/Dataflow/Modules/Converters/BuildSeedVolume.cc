@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Network/Ports/ITKDatatypePort.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Basis/Constant.h>

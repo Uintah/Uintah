@@ -41,7 +41,7 @@
 
 #include <Core/Containers/StringUtil.h>
 
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Network/Ports/ITKDatatypePort.h>
 
 namespace Insight {
 
