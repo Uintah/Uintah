@@ -279,7 +279,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
       for(iter = d_modelSetup->tvars.begin();
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
-        addRefineDependencies(task, tvar->var,ND,  all_matls_sub, needCoarseOld, needCoarseNew);
+        addRefineDependencies(task, tvar->var,ND, tvar->matls, needCoarseOld, needCoarseNew);
       }
     }
     sched->addTask(task, fineLevel->eachPatch(), all_matls);

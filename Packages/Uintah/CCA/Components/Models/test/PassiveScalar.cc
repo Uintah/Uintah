@@ -108,6 +108,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
+  d_matl_sub = d_matl_set->getUnion();
   
   //__________________________________
   // - create Label names
@@ -620,13 +621,22 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
                   this, &PassiveScalar::errorEstimate, false);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  gac, 1);
+  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  d_matl_sub, gac, 1);
   
-  t->computes(d_scalar->mag_grad_scalarLabel);
+  t->computes(d_scalar->mag_grad_scalarLabel, d_matl_sub);
   t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+ 
+  // define the material set of 0 and whatever the passive scalar index is
+  MaterialSet* matl_set;
+  vector<int> m(2);
+  m[0] = 0;
+  m[1] = d_matl->getDWIndex();
+  matl_set = new MaterialSet();
+  matl_set->addAll(m);
+  matl_set->addReference();
   
-  sched->addTask(t, coarseLevel->eachPatch(), d_sharedState->allMaterials());
+  sched->addTask(t, coarseLevel->eachPatch(), matl_set);
 }
 /*_____________________________________________________________________
  Function~  PassiveScalar::errorEstimate--
