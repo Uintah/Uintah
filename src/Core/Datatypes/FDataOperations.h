@@ -126,7 +126,7 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     result.scalar.resize(1);
     result.index.resize(1);
     
-    double val = -DBL_MAX;
+    double val = DBL_MAX;
     double val2;
     size_t idx = 0;
     size_t sz = fdata.size();
@@ -146,7 +146,7 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     result.scalar.resize(1);
     result.index.resize(1);
     
-    double val = DBL_MAX;
+    double val = -DBL_MAX;
     double val2;
     size_t idx = 0;
     size_t sz = fdata.size();
@@ -166,8 +166,8 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     result.scalar.resize(2);
     result.index.resize(2);
     
-    double val1 = -DBL_MAX;
-    double val2 = DBL_MAX;
+    double val1 = DBL_MAX;
+    double val2 = -DBL_MAX;
     double val;
     size_t idx1 = 0;
     size_t idx2 = 0;
@@ -175,7 +175,7 @@ bool FData_operation_scalar(const std::string& op,const FDATA& fdata, FDataResul
     for (size_t i=0; i<sz;i++)
     {
       val = static_cast<double>(fdata[i]);
-      if (val < val2) { val1 = val; idx1 = i; }
+      if (val < val1) { val1 = val; idx1 = i; }
       if (val > val2) { val2 = val; idx2 = i; }
     }
   
@@ -205,7 +205,7 @@ bool FData_operation_vector(const std::string& op,const FDATA& fdata, FDataResul
     result.scalar.resize(1);
     result.index.resize(1);
     
-    double val = -DBL_MAX;
+    double val = DBL_MAX;
     double val2;
     size_t idx = 0;
     size_t sz = fdata.size();
@@ -225,7 +225,7 @@ bool FData_operation_vector(const std::string& op,const FDATA& fdata, FDataResul
     result.scalar.resize(1);
     result.index.resize(1);
     
-    double val = DBL_MAX;
+    double val = -DBL_MAX;
     double val2;
     size_t idx = 0;
     size_t sz = fdata.size();
@@ -245,8 +245,8 @@ bool FData_operation_vector(const std::string& op,const FDATA& fdata, FDataResul
     result.scalar.resize(2);
     result.index.resize(2);
     
-    double val1 = -DBL_MAX;
-    double val2 = DBL_MAX;
+    double val1 = DBL_MAX;
+    double val2 = -DBL_MAX;
     double val;
     size_t idx1 = 0;
     size_t idx2 = 0;
@@ -254,7 +254,7 @@ bool FData_operation_vector(const std::string& op,const FDATA& fdata, FDataResul
     for (size_t i=0; i<sz;i++)
     {
       val = fdata[i].length();
-      if (val < val2) { val1 = val; idx1 = i; }
+      if (val < val1) { val1 = val; idx1 = i; }
       if (val > val2) { val2 = val; idx2 = i; }
     }
   

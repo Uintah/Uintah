@@ -126,7 +126,7 @@ ConvertIndicesToFieldDataAlgo::ConvertIndicesToFieldData(ProgressReporter *pr,
       double *dataptr = dm->get_data_pointer();    
 
       Mesh::size_type sz = input->num_values();
-      for(Mesh::index_type r; r<sz; r++)  
+      for(Mesh::index_type r=0; r<sz; r++)  
       {
         int idx;
         input->get_value(idx,r);
@@ -135,7 +135,7 @@ ConvertIndicesToFieldDataAlgo::ConvertIndicesToFieldData(ProgressReporter *pr,
           pr->error("ConvertIndicesToFieldData: Index exceeds matrix dimensions");
           return (false);  
         }
-        output->set_value(dataptr[idx],r);
+				output->set_value(dataptr[idx],r);
       }
       return (true);
     }
@@ -152,7 +152,7 @@ ConvertIndicesToFieldDataAlgo::ConvertIndicesToFieldData(ProgressReporter *pr,
       int max_index = dmh->nrows();        
 
       Mesh::size_type sz = input->num_values();
-      for(Mesh::index_type r; r<sz; r++)  
+      for(Mesh::index_type r=0; r<sz; r++)  
       {
         int idx;
         input->get_value(idx,r);
@@ -179,7 +179,7 @@ ConvertIndicesToFieldDataAlgo::ConvertIndicesToFieldData(ProgressReporter *pr,
       int ncols = dmh->ncols();
 
       Mesh::size_type sz = input->num_values();
-      for(Mesh::index_type r; r<sz; r++)  
+      for(Mesh::index_type r=0; r<sz; r++)  
       {
         int idx;
         input->get_value(idx,r);

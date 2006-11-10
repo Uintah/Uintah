@@ -96,7 +96,7 @@ void ManageParameterMatrix::execute()
     if (bundle->isMatrix(matrixname))
     {
       matrix = bundle->getMatrix(matrixname);
-      send_output_handle("Matrix",matrix,false);
+      send_output_handle("Matrix",matrix,true);
     }        
 
     send_output_handle("ParameterList",bundle,false);
