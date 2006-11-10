@@ -50,22 +50,23 @@ C-----------------------------------------------------------------------
      & PASS3A(pcell)
      & PASS3B(pcell),
      & wall, xminus, xplus, yminus, yplus, zminus, zplus)
-      call wallbc(idxLo, idxHi,
-     & PASS3A(cesav)
-     & PASS3B(cesav),
-     & PASS3A(cwsav)
-     & PASS3B(cwsav),
-     & PASS3A(cnsav)
-     & PASS3B(cnsav),
-     & PASS3A(cssav)
-     & PASS3B(cssav),
-     & PASS3A(ctsav)
-     & PASS3B(ctsav),
-     & PASS3A(cbsav)
-     & PASS3B(cbsav),
-     & PASS3A(pcell)
-     & PASS3B(pcell),
-     & wall, xminus, xplus, yminus, yplus, zminus, zplus)
+c zeroing these out will break nonuniform discretization
+c      call wallbc(idxLo, idxHi,
+c     & PASS3A(cesav)
+c     & PASS3B(cesav),
+c     & PASS3A(cwsav)
+c     & PASS3B(cwsav),
+c     & PASS3A(cnsav)
+c     & PASS3B(cnsav),
+c     & PASS3A(cssav)
+c     & PASS3B(cssav),
+c     & PASS3A(ctsav)
+c     & PASS3B(ctsav),
+c     & PASS3A(cbsav)
+c     & PASS3B(cbsav),
+c     & PASS3A(pcell)
+c     & PASS3B(pcell),
+c     & wall, xminus, xplus, yminus, yplus, zminus, zplus)
 c set bc's for diffusion coeff's required for divergence constraint
       call wallbc(idxLo, idxHi, 
      & PASS3A(decoef)

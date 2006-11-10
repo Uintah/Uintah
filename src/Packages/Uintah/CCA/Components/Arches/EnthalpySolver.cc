@@ -234,10 +234,10 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
     tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -450,10 +450,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_dynScalarModel)
       new_dw->get(constEnthalpyVars.viscosity,
 		  d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else
       new_dw->get(constEnthalpyVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
     new_dw->get(constEnthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);

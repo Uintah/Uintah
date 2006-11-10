@@ -183,10 +183,10 @@ ReactiveScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_reactScalarDiffusivityLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
   else
     tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -279,10 +279,10 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_dynScalarModel)
       new_dw->get(constReactscalarVars.viscosity,
 		  d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else
       new_dw->get(constReactscalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
     new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
