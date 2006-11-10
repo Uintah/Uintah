@@ -72,7 +72,7 @@ using namespace SCIRun;
 
 namespace SCIRun {
 
-#if defined(_WIN32) && !defined(BUILD_STATIC)
+#if defined(_WIN32) && !defined(BUILD_CORE_STATIC)
   #define SCISHARE __declspec(dllimport)
 #else
   #define SCISHARE

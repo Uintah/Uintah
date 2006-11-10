@@ -1,7 +1,7 @@
 #undef SCISHARE
 
 
-#if defined(_WIN32) && !defined(BUILD_STATIC)
+#if defined(_WIN32) && !defined(BUILD_CORE_STATIC)
 #ifdef BUILD_Core_Datatypes
 #define SCISHARE __declspec(dllexport)
 #else

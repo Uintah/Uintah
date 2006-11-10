@@ -38,6 +38,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
+#include <Core/OS/Dir.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,6 +52,8 @@
 
 #ifdef __APPLE__
   static std::string lib_ext = ".dylib";
+#elif defined(_WIN32)
+  static std::string lib_ext = ".dll";
 #else
   static std::string lib_ext = ".so";
 #endif
@@ -136,9 +139,11 @@ ServiceDB::findmaker(ServiceInfo* info)
     }
   
   string errstr;
- 
-  // try the large version of the shared library
-  LIBRARY_HANDLE package_so = findlib("lib" + pak_bname+lib_ext);
+  string libname = pak_bname+lib_ext;
+#ifndef _WIN32
+  libname = string("lib") + libname;
+#endif
+  LIBRARY_HANDLE package_so = findlib(libname);
   if (!package_so) errstr = string(" - ")+SOError()+string("\n");
 
   if (!package_so) 
@@ -380,8 +385,8 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
 	
 			// Test whether services directory exists
 			// if not create it
-
 			dirname = objdir+string("/services");
+      MKDIR(dirname.c_str(), 0777);
 			if (LSTAT(dirname.c_str(),&buf) < 0)
 			{
 				std::string cmd = string("mkdir ") + objdir + string("/services");

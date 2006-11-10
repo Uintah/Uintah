@@ -48,6 +48,9 @@ SET(scirun_src_dir "@scirun_src_dir@")
 # The SCIRun binary tree.
 SET(scirun_obj_dir "@scirun_obj_dir@")
 
+# whether Core was built with Shared Libs
+SET(BUILD_CORE_LIBS_SHARED "@BUILD_SHARED_LIBS@")
+
 # The SCIRUN include file directories.
 SET(SCIRUN_INCLUDE_DIRS "@SCIRUN_INCLUDE_DIRS_CONFIG@")
 
@@ -63,8 +66,8 @@ SET(SCIRUN_USE_FILE "@SCIRUN_USE_FILE@")
 # The build settings file.
 SET(SCIRUN_BUILD_SETTINGS_FILE "@SCIRUN_BUILD_SETTINGS_FILE@")
 
-# Whether SCIRUN was built with shared libraries.
-SET(SCIRUN_BUILD_SHARED "@BUILD_SHARED_LIBS@")
+# Whether the Core was built with shared libraries.
+SET(SCIRUN_BUILD_CORE_SHARED "@BUILD_SHARED_LIBS@")
 
 # SCIRun's Thirdparty directory
 SET(SCIRUN_THIRDPARTY_PATH "@SCIRUN_THIRDPARTY_PATH@")

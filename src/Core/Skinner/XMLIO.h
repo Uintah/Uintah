@@ -63,7 +63,7 @@ namespace SCIRun {
         register_maker(T::class_name(), &T::maker);
       }
 
-      static void               eval_var_node(const xmlNodePtr, Variables *);
+      SCISHARE static void               eval_var_node(const xmlNodePtr, Variables *);
     private:
       // purely static class, dont allow creation
       XMLIO();

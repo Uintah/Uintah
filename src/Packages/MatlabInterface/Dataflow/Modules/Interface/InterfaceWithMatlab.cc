@@ -64,7 +64,28 @@
 #pragma set woff 1424
 #pragma set woff 1209 
 #endif 
- 
+
+#ifdef _WIN32
+#define USE_MATLAB_ENGINE_LIBRARY
+#endif
+
+#ifdef USE_MATLAB_ENGINE_LIBRARY
+// symbols from the matlab engine library - import from the dll/so manually to not
+// explicitly require matlab (it won't work without it, but will compile and SCIRun will run)
+typedef struct engine Engine;	/* Incomplete definition for Engine */
+typedef Engine* (*ENGOPENPROC)(const char*);
+typedef int (*ENGCLOSEPROC)(Engine*);
+typedef int (*ENGSETVISIBLEPROC)(Engine*, bool);
+typedef int (*ENGEVALSTRINGPROC)(Engine*, const char*);
+typedef int (*ENGOUTPUTBUFFERPROC)(Engine*, char*, int);
+
+ENGOPENPROC engOpen = 0;
+ENGCLOSEPROC engClose = 0;
+ENGSETVISIBLEPROC engSetVisible = 0;
+ENGEVALSTRINGPROC engEvalString = 0;
+ENGOUTPUTBUFFERPROC engOutputBuffer = 0;
+#endif
+
 namespace MatlabIO {
 
 using namespace SCIRun;
@@ -262,10 +283,15 @@ class InterfaceWithMatlab : public Module, public ServiceBase
     GuiString		matlab_add_output_;
     GuiString		matlab_update_status_;
       
+#ifndef USE_MATLAB_ENGINE_LIBRARY
     ServiceClientHandle           matlab_engine_;
-    FileTransferClientHandle      file_transfer_;
     InterfaceWithMatlabEngineThreadInfoHandle	thread_info_;
-      
+#else
+    Engine* engine_;
+    char output_buffer_[512];
+#endif
+    FileTransferClientHandle      file_transfer_;
+
     bool            need_file_transfer_;
     std::string     remote_tempdir_;
       
@@ -442,7 +468,9 @@ InterfaceWithMatlab::InterfaceWithMatlab(GuiContext *context) :
   matlab_update_status_(context->subVar("matlab-update-status")),
   need_file_transfer_(false)
 {
-
+#ifdef USE_MATLAB_ENGINE_LIBRARY
+  engine_ = 0;
+#endif
 	// find the input and output ports
 	
 	int portnum = 0;
@@ -648,6 +676,9 @@ void InterfaceWithMatlab::presave()
 
 bool InterfaceWithMatlab::send_matlab_job()
 {
+  std::string mfilename = mfile_.substr(0,mfile_.size()-2); // strip the .m
+  std::string remotefile = file_transfer_->remote_file(mfilename);
+#ifndef USE_MATLAB_ENGINE_LIBRARY
 	IComPacketHandle packet = scinew IComPacket;
 	
 	if (packet.get_rep() == 0)
@@ -661,8 +692,7 @@ bool InterfaceWithMatlab::send_matlab_job()
 	thread_info_->unlock();
 	
 	packet->settag(TAG_MCODE);
-  std::string mfilename = mfile_.substr(0,mfile_.size()-2);
-	packet->setstring(file_transfer_->remote_file(mfilename)); // strip the .m
+	packet->setstring(remotefile); 
 	matlab_engine_->send(packet);
 
 	thread_info_->dolock();
@@ -695,12 +725,20 @@ bool InterfaceWithMatlab::send_matlab_job()
 	}
 	thread_info_->code_done_ = false;
 	thread_info_->unlock();
-	
+
+#else
+  string command = string("run ") + remotefile;
+  cout << "Sending matlab command: " << command<< endl;
+  bool success = (engEvalString(engine_, command.c_str()) == 0);
+  cout << output_buffer_ << endl;
+  // output_buffer_ has output in it - do something with it
+#endif
 	return(success);
 }
 
 bool InterfaceWithMatlab::send_input(std::string str)
 {
+#ifndef USE_MATLAB_ENGINE_LIBRARY
 	IComPacketHandle packet = scinew IComPacket;
 	
   if (matlab_engine_.get_rep() == 0) return(true);
@@ -716,6 +754,11 @@ bool InterfaceWithMatlab::send_input(std::string str)
 	matlab_engine_->send(packet);
 	
 	return(true);
+#else
+  if (engine_ == 0) return true;
+  engEvalString(engine_, str.c_str());
+  return true;
+#endif
 }
 
 
@@ -737,7 +780,11 @@ bool InterfaceWithMatlab::open_matlab_engine()
 		inet_session_old_ = session;
 	}
 
+#ifndef USE_MATLAB_ENGINE_LIBRARY
 	if (!(matlab_engine_.get_rep()))
+#else
+  if (!engine_)
+#endif
 	{
     
 		IComAddress address;
@@ -756,7 +803,8 @@ bool InterfaceWithMatlab::open_matlab_engine()
 
 		// Inform the impatient user we are still working for him
 		update_status("Please wait while launching matlab, this may take a few minutes ....\n");
-		
+
+#ifndef USE_MATLAB_ENGINE_LIBRARY
 		matlab_engine_ = scinew ServiceClient();
 		if(!(matlab_engine_->open(address,"matlabengine",sessionnum,passwd)))
 		{
@@ -768,21 +816,96 @@ bool InterfaceWithMatlab::open_matlab_engine()
 			matlab_engine_ = 0;
 			return(false);
     }
-    
+#else
+    if (engOpen == 0) {
+      // load functions from dll
+      LIBRARY_HANDLE englib = GetLibraryHandle("libeng.dll");
+      if (!englib) {
+        error(std::string("Could not open matlab library libeng."));
+        return false;
+      }
+      engOpen = (ENGOPENPROC) GetHandleSymbolAddress(englib, "engOpen");
+      engClose = (ENGCLOSEPROC) GetHandleSymbolAddress(englib, "engClose");
+      engSetVisible = (ENGSETVISIBLEPROC) GetHandleSymbolAddress(englib, "engSetVisible");
+      engEvalString = (ENGEVALSTRINGPROC) GetHandleSymbolAddress(englib, "engEvalString");
+      engOutputBuffer = (ENGOUTPUTBUFFERPROC) GetHandleSymbolAddress(englib, "engOutputBuffer");
+      if (!engOpen || !engClose || !engSetVisible || !engEvalString || !engOutputBuffer) {
+        error(std::string("Could not open matlab engine functions from matlab library"));
+        return false;
+      }
+      
+    }
+    if (inetaddress == "")
+      engine_ = engOpen("\0");
+    else
+      engine_ = engOpen(inetaddress.c_str());
+    if (!engine_) {
+      error(std::string("InterfaceWithMatlab: Could not open matlab engine"));
+      error(std::string("InterfaceWithMatlab: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
+      return false;
+    }
+    engOutputBuffer(engine_, output_buffer_, 512);
+    engSetVisible(engine_, false);
+#endif
     file_transfer_ = scinew FileTransferClient();
     if(!(file_transfer_->open(address,"matlabenginefiletransfer",sessionnum,passwd)))
 		{
+      string err;
+#ifndef USE_MATLAB_ENGINE_LIBRARY
+      err = matlab_engine_->geterror();
       matlab_engine_->close();
-			error(std::string("InterfaceWithMatlab: Could not open matlab engine file transfer service (error=") + matlab_engine_->geterror() + std::string(")"));
+      matlab_engine_ = 0;
+#else
+      engClose(engine_);
+      engine_ = 0;
+#endif
+			error(std::string("InterfaceWithMatlab: Could not open matlab engine file transfer service (error=") + err + std::string(")"));
 			error(std::string("InterfaceWithMatlab: Make sure the matlab engine file transfer service has not been disabled in $HOME/SCIRun/services/matlabengine.rc"));
 			error(std::string("InterfaceWithMatlab: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
 			error(std::string("InterfaceWithMatlab: If using matlab engine on local machine start engine with '-eai' option"));
 			
-      matlab_engine_ = 0;
 			file_transfer_ = 0;
 			return(false);
     }
-        
+      
+    need_file_transfer_ = false;
+    std::string localid;
+    std::string remoteid;
+    file_transfer_->get_local_homedirid(localid);
+    file_transfer_->get_remote_homedirid(remoteid);
+    if (localid != remoteid)
+    {
+      need_file_transfer_ = true;
+      if(!(file_transfer_->create_remote_tempdir("matlab-engine.XXXXXX",remote_tempdir_)))
+      {
+#ifndef USE_MATLAB_ENGINE_LIBRARY
+        matlab_engine_->close();
+        matlab_engine_ = 0;
+#else
+        engClose(engine_);
+        engine_ = 0;
+#endif
+        error(std::string("InterfaceWithMatlab: Could not create remote temporary directory"));
+        file_transfer_->close();
+        file_transfer_ = 0;
+        return(false);		
+      }
+      file_transfer_->set_local_dir(temp_directory_);
+      file_transfer_->set_remote_dir(remote_tempdir_);
+    }
+    else
+    {
+      // Although they might share a home directory
+      // This directory can be mounted at different trees
+      // Hence we translate between both. InterfaceWithMatlab does not like
+      // the use of $HOME
+      file_transfer_->set_local_dir(temp_directory_);
+      std::string tempdir = temp_directory_;
+      file_transfer_->translate_scirun_tempdir(tempdir);
+      file_transfer_->set_remote_dir(tempdir);
+    }
+
+#ifndef USE_MATLAB_ENGINE_LIBRARY
 		IComPacketHandle packet;
 		if(!(matlab_engine_->recv(packet)))
 		{
@@ -826,40 +949,6 @@ bool InterfaceWithMatlab::open_matlab_engine()
 
 			return(false);		
 		}
-
-
-    need_file_transfer_ = false;
-    std::string localid;
-    std::string remoteid;
-    file_transfer_->get_local_homedirid(localid);
-    file_transfer_->get_remote_homedirid(remoteid);
-    if (localid != remoteid)
-    {
-      need_file_transfer_ = true;
-      if(!(file_transfer_->create_remote_tempdir("matlab-engine.XXXXXX",remote_tempdir_)))
-      {
-        matlab_engine_->close();
-        file_transfer_->close();
-
-        error(std::string("InterfaceWithMatlab: Could not create remote temporary directory"));
-        matlab_engine_ = 0;
-        file_transfer_ = 0;
-        return(false);		
-      }
-      file_transfer_->set_local_dir(temp_directory_);
-      file_transfer_->set_remote_dir(remote_tempdir_);
-    }
-    else
-    {
-      // Although they might share a home directory
-      // This directory can be mounted at different trees
-      // Hence we translate between both. InterfaceWithMatlab does not like
-      // the use of $HOME
-      file_transfer_->set_local_dir(temp_directory_);
-      std::string tempdir = temp_directory_;
-      file_transfer_->translate_scirun_tempdir(tempdir);
-      file_transfer_->set_remote_dir(tempdir);
-    }
 		
 		thread_info_->gui_ = get_gui();
 		thread_info_->output_cmd_ = matlab_add_output_.get(); 
@@ -908,6 +997,9 @@ bool InterfaceWithMatlab::open_matlab_engine()
 			matlab_engine_->getremoteaddress() + "\nmatlabengine session: " + matlab_engine_->getsession() + "\nmatlabengine filetransfer version :" +
       file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\nlocal temp directory: " + file_transfer_->local_file("") +
       "\nremote temp directory: " + file_transfer_->remote_file("") + "\n";
+#else
+    std::string status = "InterfaceWithMatlab engine running\n";
+#endif
 		update_status(status);
 	}
 
@@ -917,12 +1009,12 @@ bool InterfaceWithMatlab::open_matlab_engine()
 
 bool InterfaceWithMatlab::close_matlab_engine()
 {
+#ifndef USE_MATLAB_ENGINE_LIBRARY
 	if (matlab_engine_.get_rep()) 
 	{
 		matlab_engine_->close();
 		matlab_engine_ = 0;
 	}
-
 	if (file_transfer_.get_rep()) 
 	{
 		file_transfer_->close();
@@ -941,6 +1033,12 @@ bool InterfaceWithMatlab::close_matlab_engine()
 		thread_info_->unlock();
 		thread_info_ = 0;
 	}
+#else
+  if (engine_) {
+    engClose(engine_);
+    engine_ = 0;
+  }
+#endif
 		
 	return(true);
 }
@@ -1117,7 +1215,7 @@ bool InterfaceWithMatlab::generate_matlab_code()
 		m_file.open(filename.c_str(),std::ios::app);
 
 		m_file << matlab_code_list_ << "\n";
-		for (int p = 0; p < NUM_MATRIX_PORTS; p++)
+    for (int p = 0; p < NUM_MATRIX_PORTS; p++)
 		{
 			// Test whether the matrix port exists
 			if (matrix_oport_[p] == 0) continue;
@@ -1175,7 +1273,7 @@ bool InterfaceWithMatlab::generate_matlab_code()
 			m_file << cmd;
 		}
 
-		m_file.close();
+    m_file.close();
 		
     if (need_file_transfer_) file_transfer_->put_file(file_transfer_->local_file(mfile_),file_transfer_->remote_file(mfile_));
 	}

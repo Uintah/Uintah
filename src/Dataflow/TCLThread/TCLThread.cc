@@ -62,7 +62,7 @@ using namespace SCIRun;
 
 #ifdef _WIN32
 #  define EXPERIMENTAL_TCL_THREAD
-#  ifndef BUILD_STATIC
+#  ifndef BUILD_DATAFLOW_STATIC
 #    define SCISHARE __declspec(dllimport)
 #  else
 #    define SCISHARE
@@ -290,6 +290,7 @@ TCLThread::startNetworkEditor()
       return TCL_ERROR;
     }
     fflush(stdout);
+
     printf("blt, ");
     if (Blt_Init(the_interp) == TCL_ERROR) {
       printf("Blt_Init() failed\n");

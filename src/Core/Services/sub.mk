@@ -50,8 +50,9 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Containers \
 	Core/ICom \
+	Core/OS \
 	Core/SystemCall \
-	Core/XMLUtil 
+	Core/XMLUtil
 
 LIBS := $(XML2_LIBRARY)
 

@@ -75,7 +75,7 @@ void set_vc_dirs()
 
 #  endif
 #  undef SCISHARE
-#  ifndef BUILD_STATIC
+#  ifndef BUILD_CORE_STATIC
 #    define SCISHARE __declspec(dllexport)
 #  else
 #    define SCISHARE

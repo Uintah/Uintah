@@ -131,7 +131,12 @@ int ReadServiceNodeFromFile(ServiceNode& n, const std::string filename)
   }
 
   xmlFreeDoc(doc);
+#ifndef _WIN32
+  // there is some problem in the windows version which is 
+  // either caused or exploited by this - LIBXML_TEST_VERSION
+  // will fail when called from a different module
   xmlCleanupParser();
+#endif
 
   return 1;
 }

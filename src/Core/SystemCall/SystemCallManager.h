@@ -243,7 +243,7 @@ inline void    SystemCallManager::unlock()
 // The systemcallmanager_ will be allocated in main and will be used by 
 // classes making use of this class.
 
-#if defined(_WIN32) && !defined(BUILD_STATIC)
+#if defined(_WIN32) && !defined(BUILD_CORE_STATIC)
 #  undef SCISHARE
 #  define SCISHARE __declspec(dllimport)
 #else

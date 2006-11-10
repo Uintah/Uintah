@@ -167,7 +167,12 @@ namespace SCIRun {
       xmlFreeDoc(doc);
       /* free up the parser context */
       xmlFreeParserCtxt(ctxt);  
+#ifndef _WIN32
+      // there is some problem in the windows version which is 
+      // either caused or exploited by this - LIBXML_TEST_VERSION
+      // will fail when called from a different module
       xmlCleanupParser();
+#endif
 
       return root;
     }
