@@ -1144,7 +1144,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::get_value(int &val, SCIRun::Mesh::index_type i) const
 {
-//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   val = CastFData<int>(fdata_[i]);
 }
 
@@ -1152,7 +1151,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::get_value(double &val, SCIRun::Mesh::index_type i) const
 {
-//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   val = CastFData<double>(fdata_[i]);
 }
 
@@ -1160,7 +1158,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::get_value(Vector &val, SCIRun::Mesh::index_type i) const
 {
-//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   val = CastFData<Vector>(fdata_[i]);
 }
 
@@ -1168,7 +1165,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::get_value(Tensor &val, SCIRun::Mesh::index_type i) const
 {
-//  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   val = CastFData<Tensor>(fdata_[i]);
 }
 
@@ -1177,7 +1173,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::set_value(const int &val, SCIRun::Mesh::index_type i)
 {
-  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = CastFData<value_type>(val);
 }
 
@@ -1185,7 +1180,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::set_value(const double &val, SCIRun::Mesh::index_type i)
 {
-  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = CastFData<value_type>(val);
 }
 
@@ -1193,7 +1187,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::set_value(const Vector &val, SCIRun::Mesh::index_type i)
 {
-  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = CastFData<value_type>(val);
 }
 
@@ -1201,7 +1194,6 @@ template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::set_value(const Tensor &val, SCIRun::Mesh::index_type i)
 {
-  CHECKARRAYBOUNDS(i, 0, fdata_.size());
   fdata_[i] = CastFData<value_type>(val);
 }
 

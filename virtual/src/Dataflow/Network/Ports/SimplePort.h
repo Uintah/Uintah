@@ -225,7 +225,6 @@ SimpleOPort<T>::finish()
     // Tell them that we didn't send anything.
     turn_on_light(Finishing);
     
-    handle_ = 0; // flush whatever we have on the output port
     for (int i = 0; i < nconnections(); i++)
     {
       Connection* conn = connections[i];
