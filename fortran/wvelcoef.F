@@ -110,18 +110,28 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C-----------------------------------------------------------------------
-               VISE = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))+
-     &              0.5D0*(VIS(I,J,K-1)+VIS(I+1,J,K-1)))
-               VISW = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))+
-     &              0.5D0*(VIS(I,J,K-1)+VIS(I-1,J,K-1)))  
-               VISN = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))+
-     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
-               VISS = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))+
-     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
-               VIST = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*
-     &              VIS(I,J,K+KTSDW(K))
-               VISB = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*
-     &              VIS(I,J,K+KBSDW(K))
+c               VISE = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))+
+c     &              0.5D0*(VIS(I,J,K-1)+VIS(I+1,J,K-1)))
+c               VISW = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))+
+c     &              0.5D0*(VIS(I,J,K-1)+VIS(I-1,J,K-1)))  
+c               VISN = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))+
+c     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
+c               VISS = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))+
+c     &              0.5D0*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
+               VISE = FAC1EW(I)*0.5D0*(VIS(I+1,J,K)+VIS(I+1,J,K-1))+
+     +                FAC2EW(I)*0.5D0*(VIS(I+E_shift(I),J,K)+
+     +                                 VIS(I+E_shift(I),J,K-1))
+               VISW = FAC3EW(I)*0.5D0*(VIS(I-1,J,K)+VIS(I-1,J,K-1))+
+     +                FAC4EW(I)*0.5D0*(VIS(I+W_shift(I),J,K)+
+     +                                 VIS(I+W_shift(I),J,K-1))
+               VISN = FAC1NS(J)*0.5D0*(VIS(I,J+1,K)+VIS(I,J+1,K-1))+
+     +                FAC2NS(J)*0.5D0*(VIS(I,J+N_shift(J),K)+
+     +                                 VIS(I,J+N_shift(J),K-1))
+               VISS = FAC3NS(J)*0.5D0*(VIS(I,J-1,K)+VIS(I,J-1,K-1))+
+     +                FAC4NS(J)*0.5D0*(VIS(I,J+S_shift(J),K)+
+     +                                 VIS(I,J+S_shift(J),K-1))
+               VIST = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*VIS(I,J,K+KTSDW(K))
+               VISB = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*VIS(I,J,K+KBSDW(K))
                DEO = VISE*AREAEW/DXEP(I)
                DWO = VISW*AREAEW/DXPW(I)
                DNO = VISN*AREAN/DYNP(J)
@@ -131,12 +141,32 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     NEW DIFFUSION TERMS
 C-----------------------------------------------------------------------
-               DE = CEE(I)*DEO + CWE(I)*DWO*DXPW(I)/DXEP(I)
-               DW = CWW(I)*DWO - CWE(I)*DEO*DXEP(I)/DXPW(I)   
-               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
-               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
-               DT = CTTW(K)*DTO + CBTW(K)*DBO*DZPBW(K)/DZTPW(K)
-               DB = CBBW(K)*DBO - CBTW(K)*DTO*DZTPW(K)/DZPBW(K)
+c viscosity interpolation for weighted central differencing is now done
+c directly to faces centered about P cell center, without intermediate
+c interpolation to standard P cell faces (where velocities are stored)
+c               DE = CEE(I)*DEO + CWE(I)*DWO*DXPW(I)/DXEP(I)
+c               DW = CWW(I)*DWO - CWE(I)*DEO*DXEP(I)/DXPW(I)   
+c               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
+c               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
+c               DT = CTTW(K)*DTO + CBTW(K)*DBO*DZPBW(K)/DZTPW(K)
+c               DB = CBBW(K)*DBO - CBTW(K)*DTO*DZTPW(K)/DZPBW(K)
+               DE = DEO
+               DW = DWO   
+               DN = DNO
+               DS = DSO
+               DT = DTO
+               DB = DBO
+               if (de.lt.0.0D0) write(6,*) "DE SFCZ negative at i= ",i
+               if (dw.lt.0.0D0) write(6,*) "DW SFCZ negative at i= ",i
+               if (dn.lt.0.0D0) write(6,*) "DN SFCZ negative at j= ",j
+               if (ds.lt.0.0D0) write(6,*) "DS SFCZ negative at j= ",j
+               if (dt.lt.0.0D0) write(6,*) "DT SFCZ negative at k= ",k
+               if (db.lt.0.0D0) write(6,*) "DB SFCZ negative at k= ",k
+               if ((de.lt.0.0D0).or.(dw.lt.0.0D0).or.(dn.lt.0.0D0).or.
+     .             (ds.lt.0.0D0).or.(dt.lt.0.0D0).or.(db.lt.0.0D0)) then
+                 write(6,*)  "Possibly stretching is two high."
+                 call exit(0)
+               end if
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------

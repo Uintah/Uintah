@@ -675,11 +675,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	    for (int jj = -1; jj <= 1; jj ++) {
 	      for (int ii = -1; ii <= 1; ii ++) {
 		IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-		double vol = cellinfo->sew[colX+shift.x()+ii]*
-			     cellinfo->sns[colY+jj]*
-		             cellinfo->stb[colZ+kk];
-		if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-		                      (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		// on the boundary
 		if (cellType[filterCell+shift] != flowID) {
 	          // intrusion
@@ -690,6 +685,11 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		// inside the domain
 		else
 		  if (cellType[filterCell+shift-IntVector(1,0,0)] != mmWallID) {
+		    double vol = cellinfo->sewu[colX+ii]*
+			         cellinfo->sns[colY+jj]*
+		                 cellinfo->stb[colZ+kk];
+		    if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+		                          (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		    filterRhoU[currCell] += vol*uVel[filterCell]*
 			     0.5*(density[filterCell]+
 			          density[filterCell-IntVector(1,0,0)]);
@@ -732,11 +732,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	    for (int jj = -1; jj <= 1; jj ++) {
 	      for (int ii = -1; ii <= 1; ii ++) {
 		IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-		double vol = cellinfo->sew[colX+ii]*
-			     cellinfo->sns[colY+shift.y()+jj]*
-		             cellinfo->stb[colZ+kk];
-		if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-		                      (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		// on the boundary
 		if (cellType[filterCell+shift] != flowID) {
 	          // intrusion
@@ -747,6 +742,11 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		// inside the domain
 		else
 		  if (cellType[filterCell+shift-IntVector(0,1,0)] != mmWallID) {
+		    double vol = cellinfo->sew[colX+ii]*
+		                 cellinfo->snsv[colY+jj]*
+		                 cellinfo->stb[colZ+kk];
+		    if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+		                          (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		    filterRhoV[currCell] += vol*vVel[filterCell]*
 			     0.5*(density[filterCell]+
 			          density[filterCell-IntVector(0,1,0)]);
@@ -790,11 +790,6 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	    for (int jj = -1; jj <= 1; jj ++) {
 	      for (int ii = -1; ii <= 1; ii ++) {
 		IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-		double vol = cellinfo->sew[colX+ii]*
-			     cellinfo->sns[colY+jj]*
-		             cellinfo->stb[colZ+shift.z()+kk];
-		if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-		                      (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		// on the boundary
 		if (cellType[filterCell+shift] != flowID) {
 	          // intrusion
@@ -805,6 +800,11 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 		// inside the domain
 		else
 		  if (cellType[filterCell+shift-IntVector(0,0,1)] != mmWallID) {
+		    double vol = cellinfo->sew[colX+ii]*
+			         cellinfo->sns[colY+jj]*
+		                 cellinfo->stbw[colZ+kk];
+		    if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+		                          (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
 		    filterRhoW[currCell] += vol*wVel[filterCell]*
 			     0.5*(density[filterCell]+
 			          density[filterCell-IntVector(0,0,1)]);

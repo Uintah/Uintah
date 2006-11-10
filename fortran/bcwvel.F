@@ -65,7 +65,8 @@ C--------------------------------------------------------------------
                   TMULT = 0.5D0*(VISCOS(I+1,j,k-1)+VISCOS(I+1,j,k))/XP
                   SP(I+1,J,K) = SP(I+1,J,K)-TMULT*SNS(J)*STBW(K)
                   AW(I+1,J,K) = 0.0D0
-                  cwsav(i+1,j,k) = 0.0D0
+c zeroing these out will break nonuniform discretization
+c                  cwsav(i+1,j,k) = 0.0D0
                 END IF
  110        CONTINUE
  120     CONTINUE

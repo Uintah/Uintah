@@ -163,12 +163,24 @@ C-----------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE DIFFUSION COEFFICIENTS
 C--------------------------------------------------------------------
-               GAME = 0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
-               GAMW = 0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
-               GAMN = 0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno
-               GAMS = 0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))/prandtlno
-               GAMT = 0.5D0*(VIS(I,J,K)+VIS(I,J,K+1))/prandtlno
-               GAMB = 0.5D0*(VIS(I,J,K)+VIS(I,J,K-1))/prandtlno
+c               GAME = 0.5D0*(VIS(I,J,K)+VIS(I+1,J,K))/prandtlno
+c               GAMW = 0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))/prandtlno
+c               GAMN = 0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))/prandtlno
+c               GAMS = 0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))/prandtlno
+c               GAMT = 0.5D0*(VIS(I,J,K)+VIS(I,J,K+1))/prandtlno
+c               GAMB = 0.5D0*(VIS(I,J,K)+VIS(I,J,K-1))/prandtlno
+               GAME = (FAC1EW(I)*VIS(I+1,J,K)+
+     +                 FAC2EW(I)*VIS(I+E_shift(I),J,K))/prandtlno
+               GAMW = (FAC3EW(I)*VIS(I-1,J,K)+
+     +                 FAC4EW(I)*VIS(I+W_shift(I),J,K))/prandtlno
+               GAMN = (FAC1NS(J)*VIS(I,J+1,K)+
+     +                 FAC2NS(J)*VIS(I,J+N_shift(J),K))/prandtlno
+               GAMS = (FAC3NS(J)*VIS(I,J-1,K)+
+     +                 FAC4NS(J)*VIS(I,J+S_shift(J),K))/prandtlno
+               GAMT = (FAC1TB(K)*VIS(I,J,K+1)+
+     +                 FAC2TB(K)*VIS(I,J,K+T_shift(K)))/prandtlno
+               GAMB = (FAC3TB(K)*VIS(I,J,K-1)+
+     +                 FAC4TB(K)*VIS(I,J,K+B_shift(K)))/prandtlno
                DEO = GAME*AREAEW/DXEP(I)
                DWO = GAMW*AREAEW/DXPW(I)
                DNO = GAMN*AREAN/DYNP(J)
@@ -178,12 +190,32 @@ C--------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     NEW DIFFUSION TERMS
 C-----------------------------------------------------------------------
-               DE = CEE(I)*DEO + CWE(I)*DWO*DXPW(I)/DXEP(I)
-               DW = CWW(I)*DWO - CWE(I)*DEO*DXEP(I)/DXPW(I)   
-               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
-               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
-               DT = CTT(K)*DTO + CBT(K)*DBO*DZPB(K)/DZTP(K)
-               DB = CBB(K)*DBO - CBT(K)*DTO*DZTP(K)/DZPB(K)
+c viscosity interpolation for weighted central differencing is now done
+c directly to faces centered about P cell center, without intermediate
+c interpolation to standard P cell faces (where velocities are stored)
+c               DE = CEE(I)*DEO + CWE(I)*DWO*DXPW(I)/DXEP(I)
+c               DW = CWW(I)*DWO - CWE(I)*DEO*DXEP(I)/DXPW(I)   
+c               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
+c               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
+c               DT = CTT(K)*DTO + CBT(K)*DBO*DZPB(K)/DZTP(K)
+c               DB = CBB(K)*DBO - CBT(K)*DTO*DZTP(K)/DZPB(K)
+               DE = DEO
+               DW = DWO   
+               DN = DNO
+               DS = DSO
+               DT = DTO
+               DB = DBO
+               if (de.lt.0.0D0) write(6,*) "DE CC negative at i= ",i
+               if (dw.lt.0.0D0) write(6,*) "DW CC negative at i= ",i
+               if (dn.lt.0.0D0) write(6,*) "DN CC negative at j= ",j
+               if (ds.lt.0.0D0) write(6,*) "DS CC negative at j= ",j
+               if (dt.lt.0.0D0) write(6,*) "DT CC negative at k= ",k
+               if (db.lt.0.0D0) write(6,*) "DB CC negative at k= ",k
+               if ((de.lt.0.0D0).or.(dw.lt.0.0D0).or.(dn.lt.0.0D0).or.
+     .             (ds.lt.0.0D0).or.(dt.lt.0.0D0).or.(db.lt.0.0D0)) then
+                 write(6,*)  "Possibly stretching is two high."
+                 call exit(0)
+               end if
                DECOEF(I,J,K) = DE
                DWCOEF(I,J,K) = DW
                DNCOEF(I,J,K) = DN

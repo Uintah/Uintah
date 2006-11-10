@@ -20,6 +20,10 @@ c*********************************************************************
       double precision SSD, PNSD, RNSD, SSSD
       double precision TSD, BSD, PTSD, BBSD
       double precision local_small
+      double precision E_face, W_face, E_face_to_E, W_face_to_W
+      double precision N_face, S_face, N_face_to_N, S_face_to_S
+      double precision T_face, B_face, T_face_to_T, B_face_to_B
+      double precision XUxplus, YVyplus, ZWzplus;
 
 c*********************************************************************
 c     Start :
@@ -149,6 +153,9 @@ C-----------------------------------------------------------------------
       else
         XU(iBegGhost) = PT5*(XX(iBegGhost)+XX(iBegGhost-1))
       end if
+      if (xplus) then
+        XUxplus = (THREE*XX(iEndGhost)-XX(iEndGhost-1))/TWO
+      end if
 
       DO 500 I = iBegGhost,iEndGhost-1
         DXEPU(I) = XU(I+1)-XU(I)
@@ -161,7 +168,9 @@ C-----------------------------------------------------------------------
      -                     PT5*(XX(iBegGhost-1)+XX(iBegGhost-2))
       end if
       if (xplus) then
-        DXEPU(iEndGhost) = DXPWU(iEndGhost)
+c because indexing used here is for CC variables
+c this fix is needed to compute sewu correctly on xplus boundary face
+        DXEPU(iEndGhost) = XUxplus-XU(iEndGhost)
       else
         DXEPU(iEndGhost) = PT5*(XX(iEndGhost+1)+XX(iEndGhost))-
      -                     XU(iEndGhost)
@@ -196,11 +205,52 @@ C-----------------------------------------------------------------------
      -                     XX(iEndGhost))/SEW(iEndGhost)
       end if
 
+*     factors for CC variable interpolation: p-cell
+
+      DO I = indexLow(1),indexHigh(1)
+        E_face = XX(I) + PT5*SEW(I)
+        W_face = XX(I) - PT5*SEW(I)
+        E_face_to_E = XX(I+1)-E_face
+        W_face_to_W = W_face-XX(I-1)
+        if (abs(E_face_to_E).lt.local_small) E_face_to_E=0.0D0
+        if (abs(W_face_to_W).lt.local_small) W_face_to_W=0.0D0
+        IF ((E_face_to_E.LE.ZERO).and.
+     .      (i.eq.indexHigh(1)).and.(xplus)) then
+          write(6,*) "grid stretching is too high near xplus boundary"
+          call exit(0)
+        ELSE IF (E_face_to_E.LE.ZERO) THEN
+          FAC1EW(I) = (XX(I+2)-E_face)/DXEP(I+1)
+          FAC2EW(I) = (E_face-XX(I+1))/DXEP(I+1)
+          E_shift(I) = 2
+        ELSE
+          FAC1EW(I) = (E_face-XX(I))/DXEP(I)
+          FAC2EW(I) = (XX(I+1)-E_face)/DXEP(I)
+          E_shift(I) = 0
+        END IF
+        IF ((W_face_to_W.LE.ZERO).and.
+     .      (i.eq.indexLow(1)).and.(xminus)) then
+          write(6,*) "grid stretching is too high near xminus boundary"
+          call exit(0)
+        ELSE IF (W_face_to_W.LE.ZERO) THEN
+          FAC3EW(I) = (W_face-XX(I-2))/DXPW(I-1)
+          FAC4EW(I) = (XX(I-1)-W_face)/DXPW(I-1)
+          W_shift(I) = -2
+        ELSE
+          FAC3EW(I) = (XX(I)-W_face)/DXPW(I)
+          FAC4EW(I) = (W_face-XX(I-1))/DXPW(I)
+          W_shift(I) = 0
+        END IF
+        if (abs(fac1ew(i)).lt.local_small) fac1ew(i)=0.0D0
+        if (abs(fac2ew(i)).lt.local_small) fac2ew(i)=0.0D0
+        if (abs(fac3ew(i)).lt.local_small) fac3ew(i)=0.0D0
+        if (abs(fac4ew(i)).lt.local_small) fac4ew(i)=0.0D0
+      END DO
+
 *     factors for differencing schemes: u-cell
 
       DO 800 I = ISTU,IENDU
-        ESD = PT5*(XU(I+1)+XU(I))
-        WSD = PT5*(XU(I)+XU(I-1))
+        ESD = XU(I) + PT5*SEWU(I)
+        WSD = XU(I) - PT5*SEWU(I)
         PESD = XX(I)-ESD
         WWSD = XX(I-1)-WSD
         if (abs(pesd).lt.local_small) pesd=0.0D0
@@ -263,6 +313,9 @@ C-----------------------------------------------------------------------
       else
         YV(jBegGhost) = PT5*(YY(jBegGhost)+YY(jBegGhost-1))
       end if
+      if (yplus) then
+        YVyplus = (THREE*YY(jEndGhost)-YY(jEndGhost-1))/TWO
+      end if
 
       DO 650 J = jBegGhost,jEndGhost-1
         DYNPV(J) = YV(J+1)-YV(J)
@@ -275,7 +328,9 @@ C-----------------------------------------------------------------------
      -                     PT5*(YY(jBegGhost-1)+YY(jBegGhost-2))
       end if
       if (yplus) then
-        DYNPV(jEndGhost) = DYPSV(jEndGhost)
+c because indexing used here is for CC variables
+c this fix is needed to compute snsv correctly on yplus boundary face
+        DYNPV(jEndGhost) = YVyplus-YV(jEndGhost)
       else
         DYNPV(jEndGhost) = PT5*(YY(jEndGhost+1)+YY(jEndGhost))-
      -                     YV(jEndGhost)
@@ -310,11 +365,52 @@ C-----------------------------------------------------------------------
      -                     YY(jEndGhost))/SNS(jEndGhost)
       end if
 
+*     factors for CC variable interpolation: p-cell
+
+      DO J = indexLow(2),indexHigh(2)
+        N_face = YY(J) + PT5*SNS(J)
+        S_face = YY(J) - PT5*SNS(J)
+        N_face_to_N = YY(J+1)-N_face
+        S_face_to_S = S_face-YY(J-1)
+        if (abs(N_face_to_N).lt.local_small) N_face_to_N=0.0D0
+        if (abs(S_face_to_S).lt.local_small) S_face_to_S=0.0D0
+        IF ((N_face_to_N.LE.ZERO).and.
+     .      (j.eq.indexHigh(2)).and.(yplus)) then
+          write(6,*) "grid stretching is too high near yplus boundary"
+          call exit(0)
+        ELSE IF (N_face_to_N.LE.ZERO) THEN
+          FAC1NS(J) = (YY(J+2)-N_face)/DYNP(J+1)
+          FAC2NS(J) = (N_face-YY(J+1))/DYNP(J+1)
+          N_shift(J) = 2
+        ELSE
+          FAC1NS(J) = (N_face-YY(J))/DYNP(J)
+          FAC2NS(J) = (YY(J+1)-N_face)/DYNP(J)
+          N_shift(J) = 0
+        END IF
+        IF ((S_face_to_S.LE.ZERO).and.
+     .      (j.eq.indexLow(2)).and.(yminus)) then
+          write(6,*) "grid stretching is too high near yminus boundary"
+          call exit(0)
+        ELSE IF (S_face_to_S.LE.ZERO) THEN
+          FAC3NS(J) = (S_face-YY(J-2))/DYPS(J-1)
+          FAC4NS(J) = (YY(J-1)-S_face)/DYPS(J-1)
+          S_shift(J) = -2
+        ELSE
+          FAC3NS(J) = (YY(J)-S_face)/DYPS(J)
+          FAC4NS(J) = (S_face-YY(J-1))/DYPS(J)
+          S_shift(J) = 0
+        END IF
+        if (abs(fac1ns(j)).lt.local_small) fac1ns(j)=0.0D0
+        if (abs(fac2ns(j)).lt.local_small) fac2ns(j)=0.0D0
+        if (abs(fac3ns(j)).lt.local_small) fac3ns(j)=0.0D0
+        if (abs(fac4ns(j)).lt.local_small) fac4ns(j)=0.0D0
+      END DO
+
 *     factors for differencing schemes: v-cell
 
       DO 850 J = JSTV,JENDV
-        RNSD = PT5*(YV(J+1)+YV(J))
-        SSD = PT5*(YV(J)+YV(J-1))
+        RNSD = YV(J) + PT5*SNSV(J)
+        SSD = YV(J) - PT5*SNSV(J)
         PNSD = YY(J)-RNSD
         SSSD = YY(J-1)-SSD
         if (abs(pnsd).lt.local_small) pnsd=0.0D0
@@ -378,6 +474,9 @@ C-----------------------------------------------------------------------
       else
         ZW(kBegGhost) = PT5*(ZZ(kBegGhost)+ZZ(kBegGhost-1))
       end if
+      if (zplus) then
+        ZWzplus = (THREE*ZZ(kEndGhost)-ZZ(kEndGhost-1))/TWO
+      end if
 
       DO 750 K = kBegGhost,kEndGhost-1
         DZTPW(K) = ZW(K+1)-ZW(K)
@@ -390,7 +489,9 @@ C-----------------------------------------------------------------------
      -                     PT5*(ZZ(kBegGhost-1)+ZZ(kBegGhost-2))
       end if
       if (zplus) then
-        DZTPW(kEndGhost) = DZPBW(kEndGhost)
+c because indexing used here is for CC variables
+c this fix is needed to compute stbw correctly on zplus boundary face
+        DZTPW(kEndGhost) = ZWzplus-ZW(kEndGhost)
       else
         DZTPW(kEndGhost) = PT5*(ZZ(kEndGhost+1)+ZZ(kEndGhost))-
      -                     ZW(kEndGhost)
@@ -425,11 +526,52 @@ C-----------------------------------------------------------------------
      -                     ZZ(kEndGhost))/STB(kEndGhost)
       end if
 
+*     factors for CC variable interpolation: p-cell
+
+      DO K = indexLow(3),indexHigh(3)
+        T_face = ZZ(K) + PT5*STB(K)
+        B_face = ZZ(K) - PT5*STB(K)
+        T_face_to_T = ZZ(K+1)-T_face
+        B_face_to_B = B_face-ZZ(K-1)
+        if (abs(T_face_to_T).lt.local_small) T_face_to_T=0.0D0
+        if (abs(B_face_to_B).lt.local_small) B_face_to_B=0.0D0
+        IF ((T_face_to_T.LE.ZERO).and.
+     .      (k.eq.indexHigh(3)).and.(zplus)) then
+          write(6,*) "grid stretching is too high near zplus boundary"
+          call exit(0)
+        ELSE IF (T_face_to_T.LE.ZERO) THEN
+          FAC1TB(K) = (ZZ(K+2)-T_face)/DZTP(K+1)
+          FAC2TB(K) = (T_face-ZZ(K+1))/DZTP(K+1)
+          T_shift(K) = 2
+        ELSE
+          FAC1TB(K) = (T_face-ZZ(K))/DZTP(K)
+          FAC2TB(K) = (ZZ(K+1)-T_face)/DZTP(K)
+          T_shift(K) = 0
+        END IF
+        IF ((B_face_to_B.LE.ZERO).and.
+     .      (k.eq.indexLow(3)).and.(zminus)) then
+          write(6,*) "grid stretching is too high near zminus boundary"
+          call exit(0)
+        ELSE IF (B_face_to_B.LE.ZERO) THEN
+          FAC3TB(K) = (B_face-ZZ(K-2))/DZPB(K-1)
+          FAC4TB(K) = (ZZ(K-1)-B_face)/DZPB(K-1)
+          B_shift(K) = -2
+        ELSE
+          FAC3TB(K) = (ZZ(K)-B_face)/DZPB(K)
+          FAC4TB(K) = (B_face-ZZ(K-1))/DZPB(K)
+          B_shift(K) = 0
+        END IF
+        if (abs(fac1tb(k)).lt.local_small) fac1tb(k)=0.0D0
+        if (abs(fac2tb(k)).lt.local_small) fac2tb(k)=0.0D0
+        if (abs(fac3tb(k)).lt.local_small) fac3tb(k)=0.0D0
+        if (abs(fac4tb(k)).lt.local_small) fac4tb(k)=0.0D0
+      END DO
+
 *     factors for differencing schemes: w-cell
 
       DO 900 K = KSTW,KENDW
-        TSD = PT5*(ZW(K+1)+ZW(K))
-        BSD = PT5*(ZW(K)+ZW(K-1))
+        TSD = ZW(K) + PT5*STBW(K)
+        BSD = ZW(K) - PT5*STBW(K)
         PTSD = ZZ(K)-TSD
         BBSD = ZZ(K-1)-BSD
         if (abs(ptsd).lt.local_small) ptsd=0.0D0
