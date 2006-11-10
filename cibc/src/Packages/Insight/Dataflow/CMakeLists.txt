@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/Insight/Dataflow
 
-SUBDIRS(GUI Modules Ports)
+SUBDIRS(GUI Modules)
 

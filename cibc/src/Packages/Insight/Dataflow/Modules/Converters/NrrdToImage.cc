@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Network/Ports/ITKDatatypePort.h>
 #include "itkImageRegionIterator.h"
 #include "itkMetaDataObject.h"
 

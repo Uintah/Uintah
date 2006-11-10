@@ -48,7 +48,7 @@
 
 #include <Core/Algorithms/DataIO/AnalyzeSliceImageIO.h>
 
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Network/Ports/ITKDatatypePort.h>
 
 #include <Core/Util/sci_system.h>
 #include <Core/Containers/StringUtil.h>
