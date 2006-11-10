@@ -44,12 +44,19 @@
 #include <Core/Services/ServiceLog.h>
 #include <Core/Containers/LockingHandle.h>
 
+#ifdef _WIN32
 #define DECLARE_SERVICE_MAKER(name) \
+extern "C" __declspec(dllexport) Service* make_service_##name(ServiceContext& ctx) \
+{ \
+  return new name(ctx); \
+}
+#else
+#define DECLARE_MAKER(name) \
 extern "C" Service* make_service_##name(ServiceContext &ctx) \
 { \
   return new name(ctx); \
 }
-
+#endif
 
 namespace SCIRun {
 

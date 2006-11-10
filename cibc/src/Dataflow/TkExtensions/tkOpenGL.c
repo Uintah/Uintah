@@ -45,9 +45,10 @@
 #endif
 
 #ifdef _WIN32
+#  undef SCISHARE
 #  include <windows.h>
-#  ifndef BUILD_STATIC
-#    define SCISHARE __declspec(dllimport)
+#  ifndef BUILD_DATAFLOW_STATIC
+#    define SCISHARE __declspec(dllexport)
 #  else
 #    define SCISHARE
 #  endif

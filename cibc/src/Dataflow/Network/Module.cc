@@ -84,12 +84,17 @@ FindLibrarySymbol(const string &package, const string &/* type */,
 
   string pak_bname, cat_bname;
   if (package == "SCIRun") {
-    pak_bname = "libDataflow" + ext;
-    cat_bname = "libDataflow_Network" + ext;
+    pak_bname = "Dataflow" + ext;
+    cat_bname = "Dataflow_Network" + ext;
   } else {
-    pak_bname =  "libPackages_" + package + "_Dataflow" + ext;
-    cat_bname = "libPackages_" + package + "_Dataflow_Ports" + ext;
+    pak_bname =  "Packages_" + package + "_Dataflow" + ext;
+    cat_bname = "Packages_" + package + "_Dataflow_Ports" + ext;
   }
+
+#ifndef _WIN32
+  pak_bname = string("lib") + pak_bname;
+  cat_bname = string("lib") + cat_bname;
+#endif
 
   // maybe it's in the small version of the shared library
   so = GetLibraryHandle(cat_bname.c_str());

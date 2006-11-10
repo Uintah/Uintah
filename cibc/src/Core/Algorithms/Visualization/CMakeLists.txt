@@ -32,6 +32,7 @@ SET(Core_Algorithms_Visualization_SRCS
   EdgeMC.cc
   FastLatMC.cc
   HexMC.cc
+  ExtractIsosurface.cc
   MarchingCubes.cc
   mcube2.cc
   Noise.cc

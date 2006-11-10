@@ -1064,7 +1064,7 @@ CreateAndEditColorMap2D::execute()
   }
 
   faux_changed();
-  redraw();
+  //redraw();
 
   if (!just_resend_selection_ || sent_cmap2_.get_rep() == 0)
     sent_cmap2_ = scinew ColorMap2(widgets_, updating_, 

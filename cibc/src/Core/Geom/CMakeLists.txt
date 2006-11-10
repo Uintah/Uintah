@@ -124,6 +124,7 @@ TARGET_LINK_LIBRARIES( Core_Geom
   Core_Util
   Core_Thread
   ${FTGL_LIBRARY}
+  ${GLEW_LIBRARY}
   ${GL_LIBRARY}
   ${PNG_LIBRARY}
   ${ZLIB_LIBRARY}

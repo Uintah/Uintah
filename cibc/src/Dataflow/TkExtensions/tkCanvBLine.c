@@ -41,7 +41,7 @@
 #include "tkInt.h"
 #include "tcl.h"
 
-#if defined(_WIN32) && !defined(BUILD_STATIC)
+#if defined(_WIN32) && !defined(BUILD_DATAFLOW_STATIC)
 #define SCISHARE __declspec(dllexport)
 #else
 #define SCISHARE

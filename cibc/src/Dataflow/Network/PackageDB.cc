@@ -114,8 +114,13 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
   }
   string errstr;
 
+  string libname = pak_bname+lib_ext;
+#ifndef _WIN32
+  // don't add the "lib" under windows
+  libname = string("lib") + libname;
+#endif
   // try the large version of the shared library
-  LIBRARY_HANDLE package_so = findLib("lib" + pak_bname+lib_ext);
+  LIBRARY_HANDLE package_so = findLib(libname);
   if (!package_so)
     errstr = string(" - ")+SOError()+string("\n");
 
@@ -130,7 +135,12 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
   else if (cat_name.substr(0, 7) == "UnuNtoZ") { cat_name = "Unu"; }
 
   // try the small version of the shared library
-  LIBRARY_HANDLE category_so = findLib("lib" + cat_bname+cat_name+lib_ext);
+  libname = cat_bname+cat_name+lib_ext;
+#ifndef _WIN32
+  // don't add the "lib" under windows
+  libname = string("lib") + libname;
+#endif
+  LIBRARY_HANDLE category_so = findLib(libname);
   if (!category_so)
     errstr = string(" - ")+SOError()+string("\n");
 

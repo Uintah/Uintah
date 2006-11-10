@@ -156,10 +156,12 @@ CONFIGURE_FILE (
   "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
 )
 
+SET(BUILD_SHARED_LIBS ON)
+
 IF(WIN32)
-  IF(NOT BUILD_SHARED_LIBS)
-    ADD_DEFINITIONS(-DBUILD_STATIC)
-  ENDIF(NOT BUILD_SHARED_LIBS)
+  IF(NOT BUILD_CORE_LIBS_SHARED)
+    ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
+  ENDIF(NOT BUILD_CORE_LIBS_SHARED)
 #  This defines M_PI for windows
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 ENDIF(WIN32)
@@ -227,7 +229,6 @@ TARGET_LINK_LIBRARIES(scirun
   Dataflow_GuiInterface  
   Core_ICom          
   Core_Init         
-  Core_Malloc 
   Core_Services      
   Core_SystemCall    
   Core_Thread        

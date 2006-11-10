@@ -71,6 +71,7 @@ namespace SCIRun {
     event_handle_t              win_ButtonReleaseEvent(MSG, int button);
     event_handle_t              win_ButtonPressEvent(MSG, int button);
     event_handle_t              win_PointerMotion(MSG);
+    event_handle_t              win_Wheel(MSG);
     event_handle_t              win_Expose(MSG);
     event_handle_t              win_Enter(MSG);
     event_handle_t              win_Leave(MSG);
