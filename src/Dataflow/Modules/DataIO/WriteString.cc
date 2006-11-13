@@ -41,9 +41,9 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Dataflow/Network/Ports/StringPort.h>
-#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Dataflow/Modules/DataIO/GenericWriter.h>
 
-namespace ModelCreation {
+namespace SCIRun {
 
 using namespace SCIRun;
 
@@ -132,6 +132,5 @@ WriteString::execute()
 }
 
 
-} // End namespace ModelCreation
-
+} // End namespace SCIRun
 

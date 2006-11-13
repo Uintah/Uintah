@@ -1,8 +1,8 @@
-itcl_class ModelCreation_ChangeFieldData_ComputeChangeFieldData {
+itcl_class ModelCreation_ChangeFieldData_CalculateFieldsData {
    inherit Module
 
     constructor {config} {
-        set name ComputeChangeFieldData
+        set name CalculateFieldsData
         set_defaults
     }
 

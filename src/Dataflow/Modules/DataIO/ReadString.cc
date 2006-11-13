@@ -27,7 +27,7 @@
 */
 
 /*
- *  WriteBundle.cc:
+ *  ReadString.cc:
  *
  *  Written by:
  *   jeroen
@@ -35,64 +35,86 @@
  *
  */
 
-#include <Core/Bundle/Bundle.h>
-#include <Dataflow/Network/Ports/BundlePort.h>
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
+#include <sgi_stl_warnings_off.h>
+#include <fstream>
+#include <string>
+#include <sgi_stl_warnings_on.h>
+
+#include <Dataflow/Network/Ports/StringPort.h>
+#include <Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
-using namespace std;
 
-
-class WriteBundle  : public GenericWriter<BundleHandle> {
+class ReadString : public GenericReader<StringHandle> {
 public:
-  WriteBundle(GuiContext*);
-
-  virtual ~WriteBundle();
+  ReadString(GuiContext*);
+  virtual ~ReadString();
 
   virtual void execute();
-
+  
 protected:
-  GuiString guiTypes_;
-  GuiString guiFileType_;
+  GuiString gui_types_;
+
+  virtual bool call_importer(const string &filename);
+    
 };
 
+DECLARE_MAKER(ReadString)
 
-DECLARE_MAKER(WriteBundle)
-WriteBundle::WriteBundle(GuiContext* ctx)
-  : GenericWriter<BundleHandle>("WriteBundle", ctx, "DataIO", "ModelCreation"),
-    guiTypes_(get_ctx()->subVar("types")),
-    guiFileType_(get_ctx()->subVar("filetype")) 
+ReadString::ReadString(GuiContext* ctx)
+  : GenericReader<StringHandle>("ReadString", ctx, "DataIO", "ModelCreation"),
+    gui_types_(get_ctx()->subVar("types", false))
 {
-  string exporttypes = "{";
-  exporttypes += "{{SCIRun Bundle File} {.bdl} } ";
-  exporttypes += "{{SCIRun Bundle Any} {.*} } ";
-  exporttypes += "}";
-
-  guiTypes_.set(exporttypes);
+  gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
 }
 
 
-WriteBundle::~WriteBundle()
+ReadString::~ReadString()
 {
 }
 
 
 void
-WriteBundle::execute()
+ReadString::execute()
 {
-  const string ftpre = guiFileType_.get();
-  const string::size_type loc = ftpre.find(" (");
-  const string ft = ftpre.substr(0, loc);
-
-  exporting_ = false;
-  GenericWriter<BundleHandle>::execute();
+  importing_ = true;
+  GenericReader<StringHandle>::execute();
 }
 
 
-} // end namespace
+// Simple text reader
+bool
+ReadString::call_importer(const string &filename)
+{
+  std::string input;
+  try
+  {
+    std::ifstream file(filename.c_str());
+    std::string line;
+
+    getline(file,line);
+    input += line;
+           
+    while(!file.eof())
+    { 
+      getline(file,line);
+      input += "\n";
+      input += line; 
+    }   
+  }
+  catch(...)
+  {
+    error("Could not open file: " + filename);
+    return(false);
+  }
+  
+  handle_ = scinew String(input);
+  return true;
+}
+
+
+} // End namespace ModelCreation
 
 

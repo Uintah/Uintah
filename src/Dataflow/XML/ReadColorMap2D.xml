@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
-
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -31,40 +30,38 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="WriteString" category="DataIO">
+
+
+<component name="ReadColorMap2D" category="DataIO">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module writes a text file with the contents of the string.
+    The ColorMap2 Read a persistent 2D colormap from a file on disk.
     </summary>
     <description>
-      <p>
-      This module writes a text file with the contents of the string. 
-      The output file will be a plain ASCII file.
-      </p>
-      <p>
-      This module has an optional filename input port which allows
-      to override the name assigned in the GUI. This port is intended
-      to assist with scripting and can be used to automatically assign
-      filenames.
-      </p>      
+    <p>
+    The ColorMap2 Read a persistent 2D colormap from a file on disk.    
+    </p>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>String</name>
+        <name>Filename</name>
         <datatype>SCIRun::String</datatype>
+      </port>  
+    </inputs>  
+    <outputs>
+      <port>
+        <name>Output Data</name>
+        <datatype>SCIRun::ColorMap2</datatype>
       </port>
       <port>
         <name>Filename</name>
         <datatype>SCIRun::String</datatype>
-      </port>
-    </inputs>
-    <outputs>
+      </port>      
     </outputs>
   </io>
 </component>
-

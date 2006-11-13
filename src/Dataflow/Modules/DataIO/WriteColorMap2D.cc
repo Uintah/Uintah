@@ -28,7 +28,7 @@
 
 
 /*
- *  WriteColorMap2D.cc: Save persistent representation of a colormap to a file
+ *  WriteColorMap2.cc: Save persistent representation of a colormap to a file
  *
  *  Written by:
  *   Michael Callahan
@@ -40,11 +40,11 @@
  */
 
 #include <Dataflow/Network/Ports/ColorMap2Port.h>
-#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Dataflow/Modules/DataIO/GenericWriter.h>
 
-namespace ModelCreation {
+namespace SCIRun {
 
-using namespace SCIRun;
+template class GenericWriter<ColorMap2Handle>;
 
 class WriteColorMap2D : public GenericWriter<ColorMap2Handle> {
 protected:
@@ -55,6 +55,7 @@ protected:
 
 public:
   WriteColorMap2D(GuiContext* ctx);
+  virtual ~WriteColorMap2D();
 
   virtual void execute();
 };
@@ -63,16 +64,21 @@ public:
 DECLARE_MAKER(WriteColorMap2D)
 
 WriteColorMap2D::WriteColorMap2D(GuiContext* ctx)
-  : GenericWriter<ColorMap2Handle>("WriteColorMap2D", ctx, "DataIO", "ModelCreation"),
+  : GenericWriter<ColorMap2Handle>("WriteColorMap2D", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
-    gui_exporttype_(get_ctx()->subVar("exporttype"))
+    gui_exporttype_(get_ctx()->subVar("exporttype"), "")
 {
   string exporttypes = "{";
-  exporttypes += "{{SCIRun ColorMap2 Binary} {.cmap} } ";
-  exporttypes += "{{SCIRun ColorMap2 ASCII} {.cmap} } ";
+  exporttypes += "{{SCIRun ColorMap2D Binary} {.cmap2} } ";
+  exporttypes += "{{SCIRun ColorMap2D ASCII} {.cmap2} } ";
   exporttypes += "}";
 
   gui_types_.set(exporttypes);
+}
+
+
+WriteColorMap2D::~WriteColorMap2D()
+{
 }
 
 
@@ -95,7 +101,7 @@ WriteColorMap2D::execute()
 
   // Determine if we're ASCII or Binary
   string ab = "Binary";
-  if (ft == "SCIRun ColorMap2 ASCII") ab = "ASCII";
+  if (ft == "SCIRun ColorMap2D ASCII") ab = "ASCII";
   filetype_.set(ab);
 
   GenericWriter<ColorMap2Handle>::execute();
@@ -103,4 +109,4 @@ WriteColorMap2D::execute()
 
 
 
-} // End namespace
+} // End namespace SCIRun

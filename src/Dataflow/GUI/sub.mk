@@ -98,13 +98,13 @@ SRCS := \
         $(SRCDIR)/CreateAndEditCameraPath.tcl \
         $(SRCDIR)/CreateAndEditColorMap2D.tcl \
         $(SRCDIR)/ReportColumnMatrixMisfit.tcl \
-	$(SRCDIR)/GetHexVolSheetBasedOnEdgeIndices.tcl \
+				$(SRCDIR)/GetHexVolSheetBasedOnEdgeIndices.tcl \
         $(SRCDIR)/ExtractPlanarSliceFromField.tcl\
         $(SRCDIR)/ShowMeshBoundingBox.tcl\
         $(SRCDIR)/ReportFieldInfo.tcl\
         $(SRCDIR)/ReportFieldGeometryMeasures.tcl \
         $(SRCDIR)/ReadField.tcl \
-	$(SRCDIR)/SetFieldProperty.tcl\
+				$(SRCDIR)/SetFieldProperty.tcl\
         $(SRCDIR)/GetSliceFromLatVol.tcl\
         $(SRCDIR)/ClipRasterFieldByIndices.tcl\
         $(SRCDIR)/WriteField.tcl \
@@ -117,7 +117,7 @@ SRCS := \
         $(SRCDIR)/CreateViewerCaption.tcl \
         $(SRCDIR)/ViewGraph.tcl \
         $(SRCDIR)/ToolTipText.tcl \
-	$(SRCDIR)/InsertHexVolSheetFromTriSurf.tcl \
+				$(SRCDIR)/InsertHexVolSheetFromTriSurf.tcl \
         $(SRCDIR)/ExtractIsosurface.tcl \
         $(SRCDIR)/ClipVolumeByIsovalue.tcl \
         $(SRCDIR)/ClipVolumeByIsovalueWithRefinement.tcl \
@@ -157,7 +157,7 @@ SRCS := \
         $(SRCDIR)/SciDialog.tcl \
         $(SRCDIR)/SciButtonPanel.tcl \
         $(SRCDIR)/SciMoveToCursor.tcl \
-	$(SRCDIR)/GeneratePointSamplesFromField.tcl \
+				$(SRCDIR)/GeneratePointSamplesFromField.tcl \
         $(SRCDIR)/SelectFieldROIWithBoxWidget.tcl \
         $(SRCDIR)/SetFieldOrMeshStringProperty.tcl \
         $(SRCDIR)/ShowColorMap.tcl \
@@ -183,14 +183,16 @@ SRCS := \
         $(SRCDIR)/ViewWidget.tcl \
         $(SRCDIR)/ShowTextureSlices.tcl \
         $(SRCDIR)/ShowTextureVolume.tcl \
-	$(SRCDIR)/CreateString.tcl\
-	$(SRCDIR)/ReportStringInfo.tcl\
-	$(SRCDIR)/PrintMatrixIntoString.tcl\
-	$(SRCDIR)/PrintStringIntoString.tcl\
-	$(SRCDIR)/ShowString.tcl\
-	$(SRCDIR)/CreateMatrix.tcl\
-	$(SRCDIR)/GetFileName.tcl\
-	$(SRCDIR)/GenerateStreamLinesWithPlacementHeuristic.tcl\
+				$(SRCDIR)/ReadString.tcl \
+				$(SRCDIR)/WriteString.tcl \
+				$(SRCDIR)/CreateString.tcl\
+				$(SRCDIR)/ReportStringInfo.tcl\
+				$(SRCDIR)/PrintMatrixIntoString.tcl\
+				$(SRCDIR)/PrintStringIntoString.tcl\
+				$(SRCDIR)/ShowString.tcl\
+				$(SRCDIR)/CreateMatrix.tcl\
+				$(SRCDIR)/GetFileName.tcl\
+				$(SRCDIR)/GenerateStreamLinesWithPlacementHeuristic.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library

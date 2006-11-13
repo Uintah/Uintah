@@ -36,37 +36,43 @@
 <component name="ReadColorMap" category="DataIO">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The ColorMap Read a persistent colormap from a file on
-disk.</summary>
+    <summary>
+    The ColorMap Read a persistent colormap from a file on disk.
+    </summary>
     <description>
-      <p>A ColorMap maps scalar values to color values.Upon opening,
-the The ReadColorMap GUI defaults to the directory that the user
-sets for their SCIRUN_DATA environment variable.  Otherwise, the GUI
-will default to the directory where the user's SCIRun executable
-resides. The current directory defaults to only show files with an
-.cmap extension which helps the user determine the difference between
-ColorMaps and other files.</p>
-      <p>However, the ReadColorMap can read-in a file with any
-extension so long as the data has the correct format.  If the user
-attempts to read-in a file that is other than a SCIRun supported
-ColorMap, or uses an incorrect file format, an error message appears
-in the Error frame within the SCIRun enrvironment. Clicking the OK
-button will load the file and dismiss the GUI.</p>
+    <p>
+    A ColorMap maps scalar values to color values. Upon opening, the 
+    ReadColorMap GUI defaults to the directory that the user sets for their 
+    SCIRUN_DATA environment variable.  Otherwise, the GUI will default to the 
+    directory where the user's SCIRun executable resides. The current directory 
+    defaults to only show files with an .cmap extension which helps the user 
+    determine the difference between ColorMaps and other files.  However, the 
+    ReadColorMap can read-in a file with any extension so long as the data 
+    has the correct format.  If the user attempts to read-in a file that is 
+    other than a SCIRun supported ColorMap, or uses an incorrect file format, 
+    an error message appears in the Error frame within the SCIRun enrvironment. 
+    Clicking the OK button will load the file and dismiss the GUI.  
+    </p>
     </description>
   </overview>
   <io>
-    <inputs>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>  
     </inputs>
     <outputs>
       <port>
-	<name>Output Data</name>
-	<datatype>SCIRun::ColorMap</datatype>
+        <name>Output Data</name>
+        <datatype>SCIRun::ColorMap</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
-  </gui>
 </component>

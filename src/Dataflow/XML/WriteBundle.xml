@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -38,11 +40,20 @@
       This module writes a bundle to disk.
     </summary>
     <description>
-      <p>This module writes a bundle to disk. A bundle file has a .bdl
-extension and can be written with the WriteBundle module and can be
-read with the BundleReader module. In a bdl file every component is
-stored. Hence it can be used to group a lot of different SCIRun
-objects together and store it as one file.</p>
+      <p>
+      This module writes a bundle to disk. A bundle file
+      has a .bdl extension and can be written with the WriteBundle
+      module and can be read with the BundleReader module. 
+      In a bdl file every component is stored. Hence it can
+      be used to group a lot of different SCIRun objects together
+      and store it as one file.
+      </p>
+      <p>
+      This module has an optional filename input port which allows
+      to override the name assigned in the GUI. This port is intended
+      to assist with scripting and can be used to automatically assign
+      filenames.
+      </p>
     </description>
   </overview>
   <io>
@@ -51,7 +62,13 @@ objects together and store it as one file.</p>
         <name>bundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
     </inputs>
+    <outputs>
+    </outputs>
   </io>
 </component>
 

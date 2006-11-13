@@ -33,6 +33,7 @@
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Packages/CardioWaveInterface/Core/Model/ModelAlgo.h>
+#include <Core/OS/FullFileName.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -93,8 +94,20 @@ void DMDGenerateSimulation::execute()
       gui_filename_.set(FileName->get());
       get_ctx()->reset();
     }
-    
+ 
     std::string filename = gui_filename_.get();
+    FullFileName ffn(filename);
+		if (!(ffn.create_file_path()))
+		{
+			error("Could not generate path to file");
+			return;
+		}		
+		
+		filename = ffn.get_abs_filename();
+		
+		gui_filename_.set(filename);
+    get_ctx()->reset();					
+									    
     FileName = scinew String(filename);
     bool enable_debug = gui_enable_debug_.get();
     bool build_visualization_bundle = gui_build_visualization_bundle_.get();

@@ -26,61 +26,59 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-# GUI for ReadField module
-# by Samsonov Alexei
-# December 2000
-
-itcl_class ModelCreation_DataIO_ReadField {
+itcl_class SCIRun_DataIO_ReadString {
     inherit Module
     constructor {config} {
-	set name ReadField
-	set_defaults
+        set name ReadString
+        set_defaults
     }
 
     method set_defaults {} {
-	global $this-types
-	global $this-filetype
+      global $this-types
+      global $this-filetype    
     }
 
-    method ui {} {
-	set w .ui[modname]
+   method ui {} {
+      set w .ui[modname]
 
-	if {[winfo exists $w]} {
-	    return
-	}
+      if {[winfo exists $w]} {
+          return
+      }
 
-	toplevel $w -class TkFDialog
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	set initdir [netedit getenv SCIRUN_DATA]
-	
-	#######################################################
-	# to be modified for particular reader
+      toplevel $w -class TkFDialog
+      # place to put preferred data directory
+      # it's used if $this-filename is empty
+      set initdir [netedit getenv SCIRUN_DATA]
+      
+      #######################################################
+      # to be modified for particular reader
 
-	# extansion to append if no extension supplied by user
-	set defext ".*"
-	set title "Open field file"
-	
-	######################################################
-	
-	# Unwrap $this-types into a list.
-	set tmp1 [set $this-types]
-	set tmp2 [eval "set tmp3 $tmp1"]
+      # extansion to append if no extension supplied by user
+      set defext ".*"
+      set title "Open text file"
+      
+      ######################################################
+      
+      # Unwrap $this-types into a list.
+      set tmp1 [set $this-types]
+      set tmp2 [eval "set tmp3 $tmp1"]
 
-	makeOpenFilebox \
-	    -parent $w \
-	    -filevar $this-filename \
-	    -setcmd "wm withdraw $w" \
-	    -command "$this-c needexecute; wm withdraw $w" \
-	    -cancel "wm withdraw $w" \
-	    -title $title \
-	    -filetypes $tmp2 \
-	    -initialdir $initdir \
-	    -defaultextension $defext \
-	    -allowMultipleFiles $this \
-	    -selectedfiletype $this-filetype
-	
-	moveToCursor $w	
+      makeOpenFilebox \
+          -parent $w \
+          -filevar $this-filename \
+          -setcmd "wm withdraw $w" \
+          -command "$this-c needexecute; wm withdraw $w" \
+          -cancel "wm withdraw $w" \
+          -title $title \
+          -filetypes $tmp2 \
+          -initialdir $initdir \
+          -defaultextension $defext \
+          -allowMultipleFiles $this \
+          -selectedfiletype $this-filetype
+      
+      moveToCursor $w	
     }
+
 }
+
+

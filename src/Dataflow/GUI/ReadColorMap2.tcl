@@ -32,13 +32,13 @@
 # October 2000
 
 
-catch {rename SCIRun_DataIO_ReadColorMap2 ""}
+catch {rename SCIRun_DataIO_ReadColorMap2D ""}
 
-itcl_class SCIRun_DataIO_ReadColorMap2 {
+itcl_class SCIRun_DataIO_ReadColorMap2D {
     inherit Module
 
     constructor {config} {
-	set name ReadColorMap2
+	set name ReadColorMap2D
     }
 
     method ui {} {

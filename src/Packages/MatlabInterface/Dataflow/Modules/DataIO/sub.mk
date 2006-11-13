@@ -59,7 +59,7 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Dataflow/TkExtensions Dataflow/Network Core/XMLUtil \
-        Core/Matlab Core/Services Core/ICom Core/SystemCall
+        Core/Matlab Core/OS
 
 LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY)
 

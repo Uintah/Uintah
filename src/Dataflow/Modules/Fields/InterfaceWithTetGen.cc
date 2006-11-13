@@ -169,6 +169,7 @@ InterfaceWithTetGen::execute()
 
   // Create the new mesh.
   tetrahedralize((char*)cmmd_ln.c_str(), &in, &out); 
+
   FieldHandle tetvol_out;
     update_progress(.9);
   // Convert to a SCIRun TetVol.
