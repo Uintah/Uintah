@@ -45,7 +45,7 @@ SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCI
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.
-INCLUDE (CMakeBackwardCompatibilityC)
+INCLUDE (CMakeBackwardCompatibilityCXX)
 
 #-----------------------------------------------------------------------------
 # Configure testing support.  This should be done before any
@@ -56,6 +56,27 @@ IF(BUILD_TESTING)
   SET(BUILDNAME "${BUILDNAME}" CACHE STRING "Name of build on the dashboard")
   MARK_AS_ADVANCED(BUILDNAME)
 ENDIF(BUILD_TESTING)
+
+
+#-----------------------------------------------------------------------------
+OPTION(HAVE_SCIRUN_THIRDPARTY "Use SCIRun Thirdparty build" ON)
+
+IF(HAVE_SCIRUN_THIRDPARTY)
+  IF(NOT SCIRUN_THIRDPARTY_PATH)
+    SET(SCIRUN_THIRDPARTY_PATH "$ENV{SCIRUN_THIRDPARTY_PATH}" CACHE PATH "Path to SCIRun Thirdparty")
+  ENDIF(NOT SCIRUN_THIRDPARTY_PATH)
+
+  IF(NOT EXISTS ${SCIRUN_THIRDPARTY_PATH}/include/teem/nrrd.h)
+    MESSAGE(FATAL_ERROR "Bad path to SCIRun Thirdparty (looking for ${SCIRUN_THIRDPARTY_PATH}/include/teem/nrrd.h to verify directory). Please specify correct SCIRUN_THIRDPARTY_PATH or turn HAVE_SCIRUN_THIRDPARTY to OFF.")
+  ENDIF(NOT EXISTS ${SCIRUN_THIRDPARTY_PATH}/include/teem/nrrd.h)
+
+ELSE(HAVE_SCIRUN_THIRDPARTY)
+  MESSAGE(STATUS "Not using standard SCIRun Thirdparty. Please individually set include and library variables.")
+ENDIF(HAVE_SCIRUN_THIRDPARTY)
+
+
+
+
 
 #----------------------------------------------------------------------------
 # Output directories.
@@ -99,9 +120,6 @@ IF(${SCIRUN_ENABLE_64BIT})
 ENDIF(${SCIRUN_ENABLE_64BIT})
 MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
 
-#-----------------------------------------------------------------------------
-# SCIRun Thirdparty location
-SET(SCIRUN_THIRDPARTY_PATH . CACHE PATH "Path to SCIRun Thirdparty")
 
 #INCLUDE(${PROJECT_SOURCE_DIR}/CMake/sciThirdparty.cmake)
 
