@@ -50,6 +50,7 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
      d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
      d_refinementRatio(refinementRatio)
 {
+  d_stretched = false;
   each_patch=0;
   all_patches=0;
 #ifdef SELECT_RANGETREE
