@@ -139,7 +139,7 @@ HeatFluxBC::getSurfaceArea() const
 double 
 HeatFluxBC::fluxPerParticle(double time) const
 {
-  cout << "d_numMaterialPoints = " << d_numMaterialPoints << endl;
+  //cout << "d_numMaterialPoints = " << d_numMaterialPoints << endl;
   if (d_numMaterialPoints < 1) return 0.0;
 
   // Get the area of the surface on which the heatflux BC is applied
@@ -148,7 +148,7 @@ HeatFluxBC::fluxPerParticle(double time) const
 
   // Get the initial heatflux that is applied ( t = 0.0 )
   double heatflx = heatflux(time);
-  cout << "heatflx = " << heatflx << endl;
+  //  cout << "heatflx = " << heatflx << endl;
 
   // Calculate the heatflux per particle
   return (heatflx*area)/static_cast<double>(d_numMaterialPoints);
