@@ -49,6 +49,7 @@
 #include <Core/Matlab/matlabconverter.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/String.h>
+#include <Core/OS/FullFileName.h>
 
 namespace MatlabIO {
 
@@ -178,14 +179,27 @@ void ExportMatricesToMatlab::execute()
   {
     if (filename.substr(filenamesize-4,filenamesize) != ".mat") filename += ".mat";
   }
-
+  
   // If the filename is empty, launch an error
   if (filename == "")
   {
-    error("ExportMatricesToMatlab: No file name was specified");
+    error("ExportDatatypesToMatlab: No file name was specified");
     return;
   }
-
+	
+	// Make sure the path to the new file exists
+	// If not make it and as well convert filename
+	// to absolute path name
+	FullFileName ffn(filename);
+	if (!(ffn.create_file_path()))
+	{
+		error("Could not generate path to file");
+		return;
+	}		
+	filename = ffn.get_abs_filename();
+	
+	guifilename_.set(filename);
+	get_ctx()->reset();					
   if (!overwrite()) return;
 
   // get all the settings from the GUI

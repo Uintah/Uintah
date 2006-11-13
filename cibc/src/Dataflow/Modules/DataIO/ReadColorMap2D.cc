@@ -28,71 +28,72 @@
 
 
 /*
- *  ReadBundle.cc:
+ *  ReadColorMap2.cc: Read a persistent colormap from a file
  *
  *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
+ *   Michael Callahan
+ *   Department of Computer Science
+ *   University of Utah
+ *   Sept 2004
  *
+ *  Copyright (C) 2004 SCI Group
  */
 
-#include <Core/Bundle/Bundle.h>
-#include <Dataflow/Network/Ports/BundlePort.h>
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
+#include <Dataflow/Network/Ports/ColorMap2Port.h>
+#include <Dataflow/Modules/DataIO/GenericReader.h>
 
-namespace ModelCreation {
+namespace SCIRun {
 
-using namespace SCIRun;
-using namespace std;
+template class GenericReader<ColorMap2Handle>;
 
-class ReadBundle : public GenericReader<BundleHandle> {
+class ReadColorMap2D : public GenericReader<ColorMap2Handle> {
+protected:
+  GuiString gui_types_;
+  GuiString gui_filetype_;
+
+  virtual bool call_importer(const string &filename);
+
 public:
-  ReadBundle(GuiContext*);
-
-  virtual ~ReadBundle();
+  ReadColorMap2D(GuiContext* ctx);
+  virtual ~ReadColorMap2D();
 
   virtual void execute();
-
-protected:
-  GuiString guiTypes_;
-  GuiString guiFileType_;
 };
 
+DECLARE_MAKER(ReadColorMap2D)
 
-DECLARE_MAKER(ReadBundle)
-  ReadBundle::ReadBundle(GuiContext* ctx)
-    : GenericReader<BundleHandle>("ReadBundle", ctx, "DataIO", "ModelCreation"),
-  guiTypes_(get_ctx()->subVar("types")),
-  guiFileType_(get_ctx()->subVar("filetype"))
+ReadColorMap2D::ReadColorMap2D(GuiContext* ctx)
+  : GenericReader<ColorMap2Handle>("ReadColorMap2D", ctx, "DataIO", "SCIRun"),
+    gui_types_(get_ctx()->subVar("types", false)),
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
   string importtypes = "{";
-  importtypes += "{{SCIRun Bundle File} {.bdl} } ";
-  importtypes += "{{SCIRun Bundle Any} {.*} } ";
+  importtypes += "{{SCIRun ColorMap2D File} {.cmap2} } ";
+  importtypes += "{{SCIRun ColorMap2D Any} {.*} } ";
   importtypes += "}";
 
-  guiTypes_.set(importtypes);
+  gui_types_.set(importtypes);
 }
 
 
-ReadBundle::~ReadBundle()
+ReadColorMap2D::~ReadColorMap2D()
 {
+}
+
+
+bool
+ReadColorMap2D::call_importer(const string &/*filename*/)
+{
+  return false;
 }
 
 
 void
-ReadBundle::execute()
+ReadColorMap2D::execute()
 {
-  const string ftpre = guiFileType_.get();
-  const string::size_type loc = ftpre.find(" (");
-  const string ft = ftpre.substr(0, loc);
-
   importing_ = false;
-  GenericReader<BundleHandle>::execute();
+  GenericReader<ColorMap2Handle>::execute();
 }
 
 
-} // end namespace
-
-
+} // End namespace SCIRun

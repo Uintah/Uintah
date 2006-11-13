@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -33,45 +33,36 @@
 
 
 
-<component name="ReadPath" category="DataIO">
+<component name="WriteColorMap2D" category="DataIO">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-    The ReadPath module reads a persistent camera path from a file.
+    Save persistent representation of a colormap to a file.
     </summary>
     <description>
     <p>
-    Upon opening, the The ReadPath GUI defaults to the directory that the user 
-    sets for their SCIRUN_DATA environment variable.  Otherwise, the GUI will 
-    default to the directory where the user's SCIRun executable resides. The 
-    current directory defaults to only show files with an .path extension which 
-    helps the user determine the difference between Paths and other files.  
-    However, the ReadPath can read-in a file with any extension so long as 
-    the data has the correct format.  If the user attempts to read-in a file 
-    that is other than a Path, or uses an incorrect file format, an error 
-    message appears in the Error frame within the SCIRun enrvironment. 
-    Clicking the OK button will load the file and dismiss the GUI.
-    </p>  
+    Save persistent representation of a colormap to a file.
+    </p>
+    <p>
+    This module has an optional filename input port which allows
+    to override the name assigned in the GUI. This port is intended
+    to assist with scripting and can be used to automatically assign
+    filenames.
+    </p>      
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Filename</name>
-        <datatype>SCIRun::String</datatype>
-      </port>  
-    </inputs>
-    <outputs>
-      <port>
-        <name>Output Data</name>
-        <datatype>SCIRun::Path</datatype>
+        <name>Input Data</name>
+        <datatype>SCIRun::ColorMap2</datatype>
       </port>
       <port>
         <name>Filename</name>
         <datatype>SCIRun::String</datatype>
-      </port>      
-    </outputs>
+      </port>        
+    </inputs>
   </io>
 </component>

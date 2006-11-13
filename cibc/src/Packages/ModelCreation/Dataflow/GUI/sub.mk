@@ -50,13 +50,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MergeMeshNodes.tcl\
 	$(SRCDIR)/ModalMapping.tcl\
 	$(SRCDIR)/ParameterList.tcl\
-	$(SRCDIR)/ReadBundle.tcl\
-	$(SRCDIR)/ReadColorMap2D.tcl\
-	$(SRCDIR)/ReadColorMap.tcl\
-	$(SRCDIR)/ReadField.tcl\
-	$(SRCDIR)/ReadMatrix.tcl\
-	$(SRCDIR)/ReadPath.tcl\
-	$(SRCDIR)/ReadString.tcl\
 	$(SRCDIR)/ReplicateDataArray.tcl\
 	$(SRCDIR)/ReportDataArrayInfo.tcl\
 	$(SRCDIR)/ReportDataArrayMeasure.tcl\
@@ -73,13 +66,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SelectByFieldsData.tcl\
 	$(SRCDIR)/SetFieldData.tcl\
 	$(SRCDIR)/StreamMatrixFromDisk.tcl\
-	$(SRCDIR)/WriteBundle.tcl\
-	$(SRCDIR)/WriteColorMap2D.tcl\
-	$(SRCDIR)/WriteColorMap.tcl\
-	$(SRCDIR)/WriteField.tcl\
-	$(SRCDIR)/WriteMatrix.tcl\
-	$(SRCDIR)/WritePath.tcl\
-	$(SRCDIR)/WriteString.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

@@ -3,6 +3,7 @@
 <?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
+
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -36,28 +37,38 @@
 <component name="WriteField" category="DataIO">
   <overview>
     <authors>
-      <author>Alexei Samsonov</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>Saves persistent field objects received from upstream
-modules.</summary>
-    <description><p>Upon opening, the WriteField GUI defaults to the
-directory that the user sets for their SCIRUN_DATA environment
-variable.   Otherwise, the GUI will default to the directory where the
-user's SCIRun executable resides. The user can enter the name of a
-file that the matrix saves to. The file should have a .fld extension.
-The default file name is MyField.  The user may also choose between a
-Binary or ASCII file format.</p>  
+    <summary>
+    Saves persistent field objects received from upstream modules.
+    </summary>
+    <description>
+    <p>
+    Upon opening, the WriteField GUI defaults to the directory that the user 
+    sets for their SCIRUN_DATA environment variable.   Otherwise, the GUI will 
+    default to the directory where the user's SCIRun executable resides. The 
+    user can enter the name of a file that the matrix saves to. The file should 
+    have a .fld extension.  The default file name is MyField.  The user may 
+    also choose between a Binary or ASCII file format.
+    </p>  
+    <p>
+    This module has an optional filename input port which allows
+    to override the name assigned in the GUI. This port is intended
+    to assist with scripting and can be used to automatically assign
+    filenames.
+    </p>          
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Data</name>
-	<datatype>SCIRun::Field</datatype>
+        <name>Input Data</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>        
     </inputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
-  </gui>
 </component>

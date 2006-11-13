@@ -27,62 +27,79 @@
 #
 
 
-# example of reader
-# by Samsonov Alexei
-# October 2000
-
-
-itcl_class ModelCreation_DataIO_ReadBundle {
+itcl_class SCIRun_DataIO_WriteString {
     inherit Module
     constructor {config} {
-        set name ReadBundle
-        set_defaults
+        set name WriteString
+    }
+    
+    method overwrite {} {
+			global $this-confirm $this-filetype
+			if {[info exists $this-confirm] && [info exists $this-filename] && \
+						[set $this-confirm] && [file exists [set $this-filename]] } {
+				set value [tk_messageBox -type yesno -parent . \
+				 -icon warning -message \
+				 "File [set $this-filename] already exists.\n Would you like to overwrite it?"]
+				if [string equal "no" $value] { return 0 }
+			}
+			return 1
     }
 
-    method set_defaults {} {
-        global $this-types
-        global $this-filetype
-    }
-
+    
     method ui {} {
         set w .ui[modname]
-
         if {[winfo exists $w]} {
+            # Refresh UI
+            biopseFDialog_RefreshCmd $w
             return
         }
-
+        
         toplevel $w -class TkFDialog
         # place to put preferred data directory
         # it's used if $this-filename is empty
         set initdir [netedit getenv SCIRUN_DATA]
-        
+
         #######################################################
         # to be modified for particular reader
 
         # extansion to append if no extension supplied by user
-        set defext ".*"
-        set title "Open bundle file"
+        set defext ".txt"
         
-        
+        # name to appear initially
+        set defname "MyString"
+        set title "Save text file"
+
         # Unwrap $this-types into a list.
         set tmp1 [set $this-types]
         set tmp2 [eval "set tmp3 $tmp1"]
         
+				set types {
+					{{Text files}       {.txt}      }
+					{{All Files}       {.*}   }				
+				}
         ######################################################
         
-        makeOpenFilebox \
+        makeSaveFilebox \
             -parent $w \
             -filevar $this-filename \
-            -setcmd "wm withdraw $w" \
-            -command "$this-c needexecute; wm withdraw $w" \
             -cancel "wm withdraw $w" \
+						-setcmd "wm withdraw $w" \
+            -command "$this-c needexecute; wm withdraw $w" \
             -title $title \
-            -filetypes $tmp2 \
+            -filetypes $types \
+            -initialfile $defname \
             -initialdir $initdir \
             -defaultextension $defext \
-	    -allowMultipleFiles $this \
-            -selectedfiletype $this-filetype
+            -formatvar $this-filetype \
+            -confirmvar $this-confirm \
+            -incrementvar $this-increment \
+            -currentvar $this-current \
+            -formatvar $this-filetype \
+            -formats {None} \
+            -selectedfiletype $this-exporttype
 
         moveToCursor $w
     }
 }
+
+

@@ -1,4 +1,8 @@
-/*
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+<!--
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -24,38 +28,41 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
-*/
+-->
 
+<component name="ReadString" category="DataIO">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module reads a text file into a string.
+    </summary>
+    <description>
+      <p>
+      This module reads a text file from disk. The file needs to be an ascii 
+      text file and does not to be formatted in a special way like all other 
+      SCIRun file types.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>String</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
 
-/*
- *  ReadPath.cc: Read a persistent camera path from a file
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   July 1994
- *
- *  Copyright (C) 1994 SCI Group
- */
-
-#include <Dataflow/Network/Ports/PathPort.h>
-#include <Packages/ModelCreation/Dataflow/Modules/DataIO/GenericReader.h>
-
-
-namespace ModelCreation {
-
-using namespace SCIRun;
-
-class ReadPath : public GenericReader<PathHandle> {
-public:
-  ReadPath(GuiContext* ctx);
-};
-
-DECLARE_MAKER(ReadPath)
-ReadPath::ReadPath(GuiContext* ctx)
-  : GenericReader<PathHandle>("ReadPath", ctx, "DataIO", "ModelCreation")
-{
-}
-
-} // End namespace

@@ -108,7 +108,7 @@ void DMDAddStimulusSeries::execute()
   if (inputs_changed_ || guidomain_.changed() || guicurrent_.changed() || 
       guiduration_.changed() || guistart_.changed() || guiend_.changed() || 
       guicurrentdensity_.changed() || guiuseelements_.changed() ||
-      !oport_cached("StimulationBundle"))
+      !oport_cached("StimulusBundle"))
   {
     // Get entry point to SCIRun core:
     SCIRunAlgo::ConverterAlgo mc(this);

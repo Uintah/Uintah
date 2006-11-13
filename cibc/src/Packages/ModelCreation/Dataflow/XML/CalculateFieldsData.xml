@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="ComputeChangeFieldData" category="ChangeFieldData">
+<component name="CalculateFieldsData" category="ChangeFieldData">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

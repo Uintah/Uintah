@@ -36,40 +36,44 @@
 <component name="ReadField" category="DataIO">
   <overview>
     <authors>
-      <author>Alexei Samsonov</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>ReadField allows the user to load-in any of the SCIRun
-supported Field types and then sends that Field to another
-module.</summary>
-    <description><p>Upon opening, the ReadField GUI defaults to the
-directory that the user sets for their SCIRUN_DATA environment
-variable.  Otherwise, the GUI will default to the directory where the
-user's SCIRun executable resides. The current directory defaults to
-only show files with an .fld extension which helps the user determine
-the difference between Fields and other files.  However, the
-ReadField can read-in a file with any extension so long as the data
-has the correct format.  If the user attempts to read-in a file that
-is other than a SCIRun supported Field, or uses an incorrect file
-format, an error message appears in the Error frame within the SCIRun
-enrvironment. Clicking the OK button will load the file and dismiss
-the GUI.</p>  
+    <summary>
+    ReadField allows the user to load-in any of the SCIRun supported Field 
+    types and then sends that Field to another module.
+    </summary>
+    <description>
+    <p>Upon opening, the ReadField GUI defaults to the directory that the user 
+    sets for their SCIRUN_DATA environment variable.  Otherwise, the GUI will 
+    default to the directory where the user's SCIRun executable resides. The 
+    current directory defaults to only show files with an .fld extension which 
+    helps the user determine the difference between Fields and other files.  
+    However, the ReadField can read-in a file with any extension so long as 
+    the data has the correct format.  If the user attempts to read-in a file 
+    that is other than a SCIRun supported Field, or uses an incorrect file 
+    format, an error message appears in the Error frame within the SCIRun 
+    enrvironment. Clicking the OK button will load the file and dismiss the GUI.
+    </p>  
     </description>   
   </overview>
   <io>
     <inputs lastportdynamic="no">
-      <!-- one of (device port file) -->
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>  
     </inputs>
     <outputs>
       <port>
-	<name>Output Data</name>
-	
-	<datatype>SCIRun::Field</datatype>
+        <name>Output Data</name>	
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
       </port>
     </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
-  </gui>
 </component>
 
 
