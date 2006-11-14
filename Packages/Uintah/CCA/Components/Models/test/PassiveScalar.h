@@ -134,7 +134,7 @@ WARNING
 
       GeometryPieceP piece;
       double initialScalar;
-      bool  sinusoidalIntialize;
+      bool  sinusoidalInitialize;
       IntVector freq;
       bool  linearInitialize;
       Vector slope;
