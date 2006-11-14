@@ -113,6 +113,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -mo <operator> type of operator to apply to matricies.\n";
   cerr << "                 Options are none, det, norm, and trace\n";
   cerr << "                 [defaults to none]\n";
+  cerr << "  -nbc,--noboundarycells - remove boundary cells from output\n";
   
   cerr << "\nOutput Options\n";
   cerr << "  -o,--out <outputfilename> [defaults to data]\n";
@@ -221,6 +222,7 @@ void build_field(QueryInfo &qinfo,
   // TODO: Bigler
   // Not sure I need this yet
   sfield->fdata().initialize(T(0));
+
   // Loop over each patch and get the data from the data archive.
   for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
        patch_it != qinfo.level->patchesEnd(); ++patch_it){
@@ -230,7 +232,7 @@ void build_field(QueryInfo &qinfo,
     // This gets the data
     qinfo.archive->query( patch_data, qinfo.varname, qinfo.mat, patch,
                           qinfo.time);
-    if (remove_boundary ) {
+    if ( remove_boundary ) {
       if(sfield->basis_order() == 0){
         patch_low = patch->getInteriorCellLowIndex();
         patch_high = patch->getInteriorCellHighIndex();
@@ -277,14 +279,16 @@ void build_field(QueryInfo &qinfo,
       }
     } // if (remove_boundary)
 
-    //    if (verbose) { cout << "Creating worker...";cout.flush(); }
+    // Rewindow the data if we need only a subset.  This should never
+    // get bigger (thus requiring reallocation).  rewindow returns
+    // true iff no reallocation is needed.
+    ASSERT(patch_data.rewindow( patch_low, patch_high ));
+    
     PatchToFieldThread<VarT, T, FIELD> *worker = 
       scinew PatchToFieldThread<VarT, T, FIELD>(sfield, patch_data, offset,
                                                 patch_low, patch_high);
-    //    if (verbose) { cout << "Running worker..."; cout.flush(); }
     worker->run();
     delete worker;
-    //    if (verbose) cout << "Worker finished"<<endl;
   }
 }
 
@@ -429,7 +433,8 @@ Nrrd* wrap_nrrd(FIELD *source) {
     }
   } else { // Scalars
     // We don't need to copy data, so just get the pointer to the data
-    size_t field_size = source->fdata().size()*sizeof(FIELD::value_type);
+    size_t field_size = (source->fdata().size() *
+                         sizeof(typename FIELD::value_type));
     void* data = malloc(field_size);
     if (!data) {
       cerr << "Cannot allocate memory ("<<field_size<<" byptes) for scalar nrrd copy.\n";
@@ -477,7 +482,7 @@ void getData(QueryInfo &qinfo, IntVector &low,
   char *err;
 
   Nrrd *out;
-  if( basis_order == 0){
+  if( basis_order == 0 ){
     LVFieldCB* sf = scinew LVFieldCB(mesh_handle_);
     if (!sf) {
       cerr << "Cannot allocate memory for field\n";
@@ -485,7 +490,6 @@ void getData(QueryInfo &qinfo, IntVector &low,
     }
     build_field(qinfo, low, data_T, gridVar, sf);
     // Convert the field to a nrrd
-    if (!quiet) cout << "Converting constant basis field to nrrd.\n";
     out = wrap_nrrd(sf);
     // Clean up our memory
     delete sf;
@@ -497,7 +501,6 @@ void getData(QueryInfo &qinfo, IntVector &low,
     }
     build_field(qinfo, low, data_T, gridVar, sf);
     // Convert the field to a nrrd
-    if (!quiet) cout << "Converting linear basis field to nrrd.\n";
     out = wrap_nrrd(sf);
     // Clean up our memory
     delete sf;
@@ -542,7 +545,7 @@ template<class T>
 void getVariable(QueryInfo &qinfo, IntVector &low, IntVector& hi,
                  IntVector &range, BBox &box,
                  string &filename) {
-     
+
   LVMeshHandle mesh_handle_;
   switch( qinfo.type->getType() ) {
   case Uintah::TypeDescription::CCVariable:
@@ -690,9 +693,8 @@ int main(int argc, char** argv)
         usage(s, argv[0]);
     } else if(s == "-binary") {
       do_binary=true;
-      // Don't enable this feature until it is debugged.
-//     } else if(s == "-nbc" || s == "--noboundarycells") {
-//       remove_boundary = true;
+    } else if(s == "-nbc" || s == "--noboundarycells") {
+      remove_boundary = true;
     } else {
       usage(s, argv[0]);
     }
@@ -751,8 +753,8 @@ int main(int argc, char** argv)
       // Then use the variable name for the output name
       output_file_name = variable_name;
       if (!quiet)
-        cout << "Using variable name ("<<output_file_name<<
-          ") as output file base name.\n";
+        cout << "Using variable name ("<<output_file_name
+             << ") as output file base name.\n";
     }
     
     if (!quiet) cout << "Extracing data for "<<vars[var_index] << ": " << types[var_index]->getName() <<endl;
