@@ -27,11 +27,11 @@
 #
 
 
-itcl_class SCIRun_Math_AppendMatrix {
+itcl_class SCIRun_Math_CollectMatrices {
     inherit Module
 
     constructor {config} {
-        set name AppendMatrix
+        set name CollectMatrices
     }
 
     method make_entry {w text v c} {

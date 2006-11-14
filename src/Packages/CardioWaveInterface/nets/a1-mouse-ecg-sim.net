@@ -26,7 +26,7 @@ set m20 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 28 504]
 set m21 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 10 358]
 set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 659]
 set m23 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 227 397]
-set m24 [addModuleAtPosition "SCIRun" "Math" "AppendMatrix" 706 566]
+set m24 [addModuleAtPosition "SCIRun" "Math" "CollectMatrices" 706 566]
 set m25 [addModuleAtPosition "SCIRun" "DataIO" "WriteMatrix" 706 632]
 set m26 [addModuleAtPosition "SCIRun" "Math" "ConvertMatrixType" 676 699]
 

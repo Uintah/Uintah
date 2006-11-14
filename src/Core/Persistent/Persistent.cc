@@ -145,10 +145,14 @@ PersistentTypeID::~PersistentTypeID()
 {
   Piostream::MapStringPersistentTypeID::iterator iter;
 
+  persistentTypeIDMutex.lock();
+
   if (table == NULL)
   {
     printf( "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n" );
     printf( "         For: %s, %s\n", type.c_str(), parent.c_str() );
+    persistentTypeIDMutex.unlock();
+
     return;
   }
 
@@ -168,6 +172,8 @@ PersistentTypeID::~PersistentTypeID()
     delete table;
     table = 0;
   }
+  persistentTypeIDMutex.unlock();
+
 }
 
 

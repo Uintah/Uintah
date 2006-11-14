@@ -27,7 +27,7 @@
 */
 
 /*
- *  AppendMatrix: Matrix operations -- concatenate, replace
+ *  CollectMatrices: Matrix operations -- concatenate, replace
  *
  *  Written by:
  *   David Weinstein &
@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class AppendMatrix : public Module {
+class CollectMatrices : public Module {
   MatrixHandle matrixH_;
 
   GuiInt append_;   // append or replace
@@ -59,27 +59,27 @@ class AppendMatrix : public Module {
   void concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out);
   void concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out);
 public:
-  AppendMatrix(GuiContext* ctx);
-  virtual ~AppendMatrix();
+  CollectMatrices(GuiContext* ctx);
+  virtual ~CollectMatrices();
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void *);
 };
 
-DECLARE_MAKER(AppendMatrix)
-AppendMatrix::AppendMatrix(GuiContext* ctx)
-: Module("AppendMatrix", ctx, Filter,"Math", "SCIRun"),
+DECLARE_MAKER(CollectMatrices)
+CollectMatrices::CollectMatrices(GuiContext* ctx)
+: Module("CollectMatrices", ctx, Filter,"Math", "SCIRun"),
   append_(get_ctx()->subVar("append"), 0),
   row_(get_ctx()->subVar("row"), 0),
   front_(get_ctx()->subVar("front"), 0)
 {
 }
 
-AppendMatrix::~AppendMatrix()
+CollectMatrices::~CollectMatrices()
 {
 }
 
 void
-AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
+CollectMatrices::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
     int r, c;
     for (r = 0; r <= m1H->nrows()-1; r++)
     {
@@ -100,7 +100,7 @@ AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) 
 
 
 void
-AppendMatrix::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
+CollectMatrices::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
     int r, c;
     for (r = 0; r <= m1H->nrows()-1; r++)
     {
@@ -121,7 +121,7 @@ AppendMatrix::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) 
 
 
 void
-AppendMatrix::execute()
+CollectMatrices::execute()
 {
   update_state(NeedData);
 
@@ -203,7 +203,7 @@ AppendMatrix::execute()
 
 
 void
-AppendMatrix::tcl_command(GuiArgs& args, void* userdata)
+CollectMatrices::tcl_command(GuiArgs& args, void* userdata)
 {
 
   if (args[1] == "clear")

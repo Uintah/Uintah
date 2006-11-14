@@ -34,7 +34,6 @@ SET(Core_Matlab_SRCS
   matlabarray.cc
   matlabfile.cc
   matlabconverter.cc
-  matlabIEplugin.cc
   fieldtomatlab.cc
   matlabtofield.cc
   Startup.cc
