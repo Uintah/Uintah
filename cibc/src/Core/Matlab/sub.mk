@@ -44,10 +44,8 @@ SRCS     += \
 	$(SRCDIR)/matlabarray.cc \
 	$(SRCDIR)/matlabfile.cc \
 	$(SRCDIR)/matlabconverter.cc \
-	$(SRCDIR)/matlabIEplugin.cc \
 	$(SRCDIR)/fieldtomatlab.cc \
 	$(SRCDIR)/matlabtofield.cc \
-	$(SRCDIR)/Startup.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/ImportExport Core/Containers \

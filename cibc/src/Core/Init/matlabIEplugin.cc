@@ -28,13 +28,14 @@
 
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
-// #include <Core/ImportExprt/Nrrd/NrrdIEPlugin.h>
+#include <Core/ImportExport/Nrrd/NrrdIEPlugin.h>
 #include <Core/Matlab/matlabfile.h>
 #include <Core/Matlab/matlabarray.h>
 #include <Core/Matlab/matlabconverter.h>
 
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
+
 using namespace MatlabIO;
 
 // SparseRowMatrix
@@ -45,7 +46,7 @@ MatlabMatrix_reader(ProgressReporter *pr, const char *filename)
   matlabconverter mc(pr);
   matlabarray ma;
   int numarrays;
-  string dummytext;
+  std::string dummytext;
   MatrixHandle mh;
   
   mh = 0;
@@ -80,7 +81,7 @@ MatlabMatrix_writer(ProgressReporter *pr,
   matlabfile mf;
   matlabconverter mc(pr);
   matlabarray ma;
-  string name;
+  std::string name;
  
   try
   {
@@ -108,7 +109,7 @@ MatlabNrrd_reader(ProgressReporter *pr, const char *filename)
   matlabconverter mc(pr);
   matlabarray ma;
   int numarrays;
-  string dummytext;
+  std::string dummytext;
   NrrdDataHandle mh;
   
   mh = 0;
@@ -143,7 +144,7 @@ MatlabNrrd_writer(ProgressReporter *pr,
   matlabfile mf;
   matlabconverter mc(pr);
   matlabarray ma;
-  string name;
+  std::string name;
  
   try
   {
@@ -170,7 +171,7 @@ MatlabField_reader(ProgressReporter *pr, const char *filename)
   matlabconverter mc(pr);
   matlabarray ma;
   int numarrays;
-  string dummytext;
+  std::string dummytext;
   FieldHandle mh;
   
   mh = 0;
@@ -205,7 +206,7 @@ MatlabField_writer(ProgressReporter *pr,
   matlabfile mf;
   matlabconverter mc(pr);
   matlabarray ma;
-  string name;
+  std::string name;
  
   try
   {
@@ -225,6 +226,9 @@ MatlabField_writer(ProgressReporter *pr,
   return(true);
 }
 
-     
-         
+static MatrixIEPlugin MatlabMatrix_plugin("Matlab Matrix",".mat", "*.mat", MatlabMatrix_reader, MatlabMatrix_writer);
+static FieldIEPlugin MatlabField_plugin("Matlab Field",".mat", "*.mat",MatlabField_reader,MatlabField_writer);   
+static NrrdIEPlugin MatlabNrrd_plugin("Matlab Matrix",".mat", "*.mat",MatlabNrrd_reader,MatlabNrrd_writer);     
+  
+} // end namespace SCIRun
 

@@ -33,7 +33,7 @@
 
 
 
-<component name="AppendMatrix" category="Math">
+<component name="CollectMatrices" category="Math">
   <overview>
     <authors>
       <author>David Weinstein</author>

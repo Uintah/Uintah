@@ -39,7 +39,7 @@ SRCDIR := Dataflow/GUI
 
 SRCS := \
         $(SRCDIR)/CreateLightForViewer.tcl \
-        $(SRCDIR)/AppendMatrix.tcl \
+        $(SRCDIR)/CollectMatrices.tcl \
         $(SRCDIR)/ArrowWidget.tcl \
         $(SRCDIR)/BaseWidget.tcl \
         $(SRCDIR)/BoxWidget.tcl \

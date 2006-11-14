@@ -41,18 +41,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Math
 
 SRCS     += \
-	$(SRCDIR)/AppendMatrix.cc\
 	$(SRCDIR)/BuildNoiseColumnMatrix.cc\
 	$(SRCDIR)/CreateGeometricTransform.cc\
+	$(SRCDIR)/CollectMatrices.cc\
 	$(SRCDIR)/ConvertMatrixType.cc\
 	$(SRCDIR)/ChooseMatrix.cc\
 	$(SRCDIR)/ReportColumnMatrixMisfit.cc\
 	$(SRCDIR)/EvaluateLinAlgBinary.cc\
 	$(SRCDIR)/EvaluateLinAlgUnary.cc\
 	$(SRCDIR)/EvaluateLinAlgGeneral.cc\
-        $(SRCDIR)/ReportMatrixInfo.cc\
-        $(SRCDIR)/GetColumnMatrixFromMatrix.cc\
-        $(SRCDIR)/SolveMinNormLeastSqSystem.cc\
+  $(SRCDIR)/ReportMatrixInfo.cc\
+  $(SRCDIR)/GetColumnMatrixFromMatrix.cc\
+  $(SRCDIR)/SolveMinNormLeastSqSystem.cc\
 	$(SRCDIR)/SolveLinearSystem.cc\
 	$(SRCDIR)/GetSubmatrix.cc\
 	$(SRCDIR)/ConvertMaskVectorToMappingMatrix.cc\
