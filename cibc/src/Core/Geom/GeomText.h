@@ -97,6 +97,7 @@ protected:
   vector<float>  index_;
 
   TextRenderer  *renderer_;
+  bool           disable_depth_test_;
 
 public:
   GeomTexts();
@@ -109,6 +110,8 @@ public:
   void add (const string &text, const Point &loc);
   void add (const string &text, const Point &loc, const Color &c);
   void add (const string &text, const Point &loc, float index);
+
+  void set_always_visible() { disable_depth_test_ = true; }
 
   virtual void reset_bbox();
   virtual void get_bounds(BBox&);

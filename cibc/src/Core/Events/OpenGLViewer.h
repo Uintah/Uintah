@@ -111,6 +111,8 @@ struct HiRes {
 class SCISHARE OpenGLViewer : public Runnable 
 {
 public:
+  typedef vector<unsigned int> sel_set_t;
+
   enum draw_type_e {
     DEFAULT_E,
     WIRE_E,
@@ -168,15 +170,34 @@ public:
   void                update_mode_string(string) {}
   void                get_bounds(BBox &bbox, bool check_visible = true);
 
-  set<unsigned int>&  get_selection_set() { return selection_set_; }
+
+
+  sel_set_t&          get_selection_set() { return selection_set_; }
   void                delete_selected_faces();
-  void                add_selection(unsigned int idx) {
-    selection_set_.insert(idx);
-    selection_set_visible_ = true;
+  void                add_selected_face();
+  void                add_selection(unsigned int idx) 
+  {
+    // only add an index once.
+    sel_set_t::iterator it = find(selection_set_.begin(), 
+				  selection_set_.end(), idx);
+    if (it == selection_set_.end()) {
+      selection_set_.push_back(idx);
+      selection_set_visible_ = true;
+    }
   }
-  void                remove_selection(unsigned int idx) {
-    selection_set_.erase(idx);
+  void                remove_selection(unsigned int idx) 
+  {
+    sel_set_t::iterator it = find(selection_set_.begin(), 
+				  selection_set_.end(), idx);
+    if (it != selection_set_.end()) {
+      selection_set_.erase(it);
+    }
     if (selection_set_.size() == 0) selection_set_visible_ = false;
+  }
+
+  void                clear_selection_set() {
+    selection_set_.clear();
+    selection_set_visible_ = false;
   }
 
   void                set_selection_geom(GeomHandle geom) {
@@ -317,7 +338,7 @@ protected:
   draw_type_e            draw_type_;
   bool                   capture_z_data_;
   bool                   need_redraw_;
-  set<unsigned int>      selection_set_;
+  sel_set_t              selection_set_;
   bool                   selection_set_visible_;
   GeomHandle             selection_geom_;
   tool_handle_t          selection_set_tool_;

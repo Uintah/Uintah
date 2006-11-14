@@ -476,7 +476,8 @@ render_field(FieldHandle fld_handle, RenderParams &params)
 				    params.text_show_nodes_,
 				    params.text_show_edges_,
 				    params.text_show_faces_,
-				    params.text_show_cells_);
+				    params.text_show_cells_,
+				    params.text_always_visible_);
   }
   return true;
 }

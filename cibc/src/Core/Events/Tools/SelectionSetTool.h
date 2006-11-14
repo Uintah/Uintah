@@ -52,10 +52,11 @@ public:
   SSTInterface() {}
   virtual ~SSTInterface() {}
   virtual void set_selection_set_visible(bool) = 0;
-  virtual set<unsigned int> &get_selection_set() = 0;
+  virtual vector<unsigned int> &get_selection_set() = 0;
   virtual void set_selection_geom(GeomHandle) = 0;
   virtual void add_selection(unsigned int idx) = 0;
   virtual void remove_selection(unsigned int idx) = 0;
+  virtual void clear_selection_set() = 0;
 };
 
 class SelectionSetTool : public BaseTool
@@ -72,6 +73,7 @@ public:
 
   propagation_state_e process_event(event_handle_t e);
   void delete_faces();
+  void add_face();
   void render_selection_set();
 
   void add_selection(unsigned int idx) {
@@ -82,7 +84,12 @@ public:
     ssti_->remove_selection(idx);
   }
   
-  void set_selection_mode(selection_mode_e m) { mode_ = m; }
+  void set_selection_mode(selection_mode_e m) { 
+    if (mode_ != m) {
+      ssti_->clear_selection_set();
+      mode_ = m; 
+    }
+  }
   selection_mode_e get_selection_mode() { return mode_; }
 
 private:

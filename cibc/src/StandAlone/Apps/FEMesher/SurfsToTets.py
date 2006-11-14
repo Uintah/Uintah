@@ -508,7 +508,9 @@ class SurfsToTets:
     pysci.add_command_event(e)
 
   def on_add_face_clicked(self, a) :
-    print "add face tool"
+    e = pysci.CommandEvent("OpenGLViewer")
+    e.set_command("add face")
+    pysci.add_command_event(e)
 
   def on_select_nodes_toggled(self, a) :
     etype = None

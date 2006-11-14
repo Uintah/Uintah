@@ -105,13 +105,13 @@ FrameBufferPickTool::get_index_at_selection(int x, int y, unsigned int &idx)
   a = fbi_->img()[off + 3];
   //  cerr << "rgba at x=" << x << " y=" << y << " :" 
   //     << (int)r << "," << (int)g << "," << (int)b << "," << (int)a << endl; 
-
+  
   rgba2idx(idx, r, g, b, a); // the index is drawn + 1 so that we can 
                              // distinguish the element 0 from and empty pick.
 
-//   if (idx == 0) return false;
-//   idx--;
-  cerr << "idx at x=" << x << " y=" << y << " :" << idx << endl;
+  if (idx == 0) return false;
+  idx--;
+  //  cerr << "idx at x=" << x << " y=" << y << " :" << idx << endl;
   return true;
 }
 
