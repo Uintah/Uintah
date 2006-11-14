@@ -146,7 +146,8 @@ PersistentTypeID GeomTexts::type_id("GeomTexts", "GeomObj", make_GeomTexts);
 GeomTexts::GeomTexts() : 
   GeomObj(),
   fontindex_(2),
-  renderer_(0)
+  renderer_(0),
+  disable_depth_test_(false)
 {
 }
 
@@ -157,7 +158,8 @@ GeomTexts::GeomTexts(const GeomTexts& copy) :
   text_(copy.text_),
   location_(copy.location_),
   color_(copy.color_),
-  renderer_(copy.renderer_)
+  renderer_(copy.renderer_),
+  disable_depth_test_(copy.disable_depth_test_)
 {
 }
 
@@ -220,7 +222,7 @@ GeomTexts::add(const string &t, const Point &p, float index)
 }
 
 
-#define GEOMTEXTS_VERSION 2
+#define GEOMTEXTS_VERSION 3
 
 void
 GeomTexts::io(Piostream& stream)
@@ -233,6 +235,7 @@ GeomTexts::io(Piostream& stream)
   Pio(stream, location_);
   Pio(stream, color_);
   if (version > 1) { Pio(stream, index_); }
+  if (version > 2) { Pio(stream, disable_depth_test_); }
   stream.end_class();
 }
 
