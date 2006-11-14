@@ -63,10 +63,11 @@ using namespace Uintah;
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 typedef LVMesh::handle_type LVMeshHandle;
 
-
 bool verbose = false;
 bool quiet = false;
 bool attached_header = true;
+bool remove_boundary = false;
+
 enum {
   None,
   Det,
@@ -198,97 +199,93 @@ unsigned int get_nrrd_type() {
 
 /////////////////////////////////////////////////////////////////////
 //
+
+
+
+//
+/////////////////////////////////////////////////////////////////////
+
+
+
+/////////////////////////////////////////////////////////////////////
+//
 // This will gather all the patch data and write it into the single
 // contiguous volume.
 template <class T, class VarT, class FIELD>
 void build_field(QueryInfo &qinfo,
-                 IntVector& lo,
+                 IntVector& offset,
                  T& /* data_type */,
                  VarT& /*var*/,
-                 FIELD *sfd)
+                 FIELD *sfield)
 {
-#ifndef _AIX
-  int max_workers = Max(Thread::numProcessors()/2, 2);
-#else
-  int max_workers = 1;
-#endif  
-  if (verbose) cout << "max_workers = "<<max_workers<<"\n";
-  Semaphore* thread_sema = scinew Semaphore("extractor semaphore",
-                                            max_workers);
+  // TODO: Bigler
+  // Not sure I need this yet
+  sfield->fdata().initialize(T(0));
   // Loop over each patch and get the data from the data archive.
-  for( Level::const_patchIterator r = qinfo.level->patchesBegin();
-       r != qinfo.level->patchesEnd(); ++r){
-    IntVector low, hi;
-    VarT v;
+  for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
+       patch_it != qinfo.level->patchesEnd(); ++patch_it){
+    IntVector patch_low, patch_high;
+    VarT patch_data;
+    const Patch* patch = *patch_it;
     // This gets the data
-    qinfo.archive->query( v, qinfo.varname, qinfo.mat, *r, qinfo.time);
-    if( sfd->basis_order() == 0){
-      low = (*r)->getCellLowIndex();
-      hi = (*r)->getCellHighIndex();
-    } else {
-      low = (*r)->getNodeLowIndex();
-      switch (qinfo.type->getType()) {
-      case Uintah::TypeDescription::SFCXVariable:
-        hi = (*r)->getSFCXHighIndex();
-        break;
-      case Uintah::TypeDescription::SFCYVariable:
-        hi = (*r)->getSFCYHighIndex();
-        break;
-      case Uintah::TypeDescription::SFCZVariable:
-        hi = (*r)->getSFCZHighIndex();
-        break;
-      case Uintah::TypeDescription::NCVariable:
-        hi = (*r)->getNodeHighIndex();
-        break;
-      default:
-        cerr << "build_field::unknown variable.\n";
-        exit(1);
-      } 
-    } 
-
-    IntVector range = hi - low;
-
-    int z_min = low.z();
-    int z_max = low.z() + hi.z() - low.z();
-    int z_step, z, N = 0;
-    if ((z_max - z_min) >= max_workers){
-      // in case we have large patches we'll divide up the work 
-      // for each patch, if the patches are small we'll divide the
-      // work up by patch.
-      int cs = 25000000;  
-      int S = range.x() * range.y() * range.z() * sizeof(T);
-      N = Min(Max(S/cs, 1), (max_workers-1));
-    }
-    N = Max(N,2);
-    z_step = (z_max - z_min)/(N - 1);
-    for(z = z_min ; z < z_max; z += z_step) {
+    qinfo.archive->query( patch_data, qinfo.varname, qinfo.mat, patch,
+                          qinfo.time);
+    if (remove_boundary ) {
+      if(sfield->basis_order() == 0){
+        patch_low = patch->getInteriorCellLowIndex();
+        patch_high = patch->getInteriorCellHighIndex();
+      } else {
+        patch_low = patch->getInteriorNodeLowIndex();
+        switch (qinfo.type->getType()) {
+        case Uintah::TypeDescription::SFCXVariable:
+          patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
+          break;
+        case Uintah::TypeDescription::SFCYVariable:
+          patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
+          break;
+        case Uintah::TypeDescription::SFCZVariable:
+          patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
+          break;
+        default:
+          patch_high = patch->getInteriorNodeHighIndex();   
+        } 
+      }
       
-      IntVector min_i(low.x(), low.y(), z);
-      IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
-      
-#ifndef _AIX
-      thread_sema->down();
-      Thread *thrd = scinew Thread( 
-                                   (scinew PatchToFieldThread<VarT, T, FIELD>(sfd, v, lo, min_i, max_i,// low, hi,
-                                                                              thread_sema)),
-                                   "patch_to_field_worker");
-      thrd->detach();
-#else
-      if (verbose) { cout << "Creating worker...";cout.flush(); }
-      PatchToFieldThread<VarT, T, FIELD> *worker = 
-        (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-                                           thread_sema));
-      if (verbose) { cout << "Running worker..."; cout.flush(); }
-      worker->run();
-      delete worker;
-      if (verbose) cout << "Worker finished"<<endl;
-#endif
-    }
+    } else { // Don't remove the boundary
+      if( sfield->basis_order() == 0){
+        patch_low = patch->getCellLowIndex();
+        patch_high = patch->getCellHighIndex();
+      } else {
+        patch_low = patch->getNodeLowIndex();
+        switch (qinfo.type->getType()) {
+        case Uintah::TypeDescription::SFCXVariable:
+          patch_high = patch->getSFCXHighIndex();
+          break;
+        case Uintah::TypeDescription::SFCYVariable:
+          patch_high = patch->getSFCYHighIndex();
+          break;
+        case Uintah::TypeDescription::SFCZVariable:
+          patch_high = patch->getSFCZHighIndex();
+          break;
+        case Uintah::TypeDescription::NCVariable:
+          patch_high = patch->getNodeHighIndex();
+          break;
+        default:
+          cerr << "build_field::unknown variable.\n";
+          exit(1);
+        }
+      }
+    } // if (remove_boundary)
+
+    //    if (verbose) { cout << "Creating worker...";cout.flush(); }
+    PatchToFieldThread<VarT, T, FIELD> *worker = 
+      scinew PatchToFieldThread<VarT, T, FIELD>(sfield, patch_data, offset,
+                                                patch_low, patch_high);
+    //    if (verbose) { cout << "Running worker..."; cout.flush(); }
+    worker->run();
+    delete worker;
+    //    if (verbose) cout << "Worker finished"<<endl;
   }
-#ifndef _AIX
-  thread_sema->down(max_workers);
-  if( thread_sema ) delete thread_sema;
-#endif
 }
 
 // helper function for wrap_nrrd
@@ -355,11 +352,10 @@ wrap_copy( Matrix3* fdata, double*& datap, unsigned int size){
   return true;
 }
 
-// Allocates memory for dest when needed (sets delete_me to true if it
-// does allocate memory), then copies all the data to dest from
+// Allocates memory for dest, then copies all the data to dest from
 // source.
 template<class FIELD>
-Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
+Nrrd* wrap_nrrd(FIELD *source) {
   Nrrd *out = nrrdNew();
   int dim = 3;
   size_t size[5];
@@ -381,7 +377,6 @@ Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
       return 0;
     }
     double *datap = data;
-    delete_data = true;
     typename FIELD::value_type *vec_data = &(source->fdata()(0,0,0));
     
 
@@ -417,7 +412,6 @@ Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
       return 0;
     }
     double *datap = data;
-    delete_data = true;
     typename FIELD::value_type *mat_data = &(source->fdata()(0,0,0));
     // Copy the data
     if( !wrap_copy( mat_data, datap, num_mat) ){
@@ -435,14 +429,21 @@ Nrrd* wrap_nrrd(FIELD *source, bool &delete_data) {
     }
   } else { // Scalars
     // We don't need to copy data, so just get the pointer to the data
-    delete_data = false;
-    void *data = (void*)&(source->fdata()(0,0,0));
+    size_t field_size = source->fdata().size()*sizeof(FIELD::value_type);
+    void* data = malloc(field_size);
+    if (!data) {
+      cerr << "Cannot allocate memory ("<<field_size<<" byptes) for scalar nrrd copy.\n";
+      nrrdNix(out);
+      return 0;
+    }
+    memcpy(data, (void*)&(source->fdata()(0,0,0)), field_size);
 
     if (nrrdWrap_nva(out, data, get_nrrd_type< typename FIELD::value_type>(), 
                      dim, size) == 0) {
       return out;
     } else {
       nrrdNix(out);
+      free(data);
       return 0;
     }
   }
@@ -456,10 +457,10 @@ void getData(QueryInfo &qinfo, IntVector &low,
              int basis_order,
              string &filename) {
 
-  typedef GenericField<LVMesh, ConstantBasis<T>, 
-    FData3d<T, LVMesh> > LVFieldCB;
+  typedef GenericField<LVMesh, ConstantBasis<T>,
+                       FData3d<T, LVMesh> > LVFieldCB;
   typedef GenericField<LVMesh, HexTrilinearLgn<T>, 
-    FData3d<T, LVMesh> > LVFieldLB;
+                       FData3d<T, LVMesh> > LVFieldLB;
 
   VarT gridVar;
   T data_T;
@@ -474,7 +475,6 @@ void getData(QueryInfo &qinfo, IntVector &low,
 
   // Get the nrrd data, and print it out.
   char *err;
-  bool delete_data = false;
 
   Nrrd *out;
   if( basis_order == 0){
@@ -485,8 +485,8 @@ void getData(QueryInfo &qinfo, IntVector &low,
     }
     build_field(qinfo, low, data_T, gridVar, sf);
     // Convert the field to a nrrd
-    if (!quiet) cout << "Converting field to nrrd.\n";
-    out = wrap_nrrd(sf, delete_data);
+    if (!quiet) cout << "Converting constant basis field to nrrd.\n";
+    out = wrap_nrrd(sf);
     // Clean up our memory
     delete sf;
   } else {
@@ -497,8 +497,8 @@ void getData(QueryInfo &qinfo, IntVector &low,
     }
     build_field(qinfo, low, data_T, gridVar, sf);
     // Convert the field to a nrrd
-    if (!quiet) cout << "Converting field to nrrd.\n";
-    out = wrap_nrrd(sf, delete_data);
+    if (!quiet) cout << "Converting linear basis field to nrrd.\n";
+    out = wrap_nrrd(sf);
     // Clean up our memory
     delete sf;
   }
@@ -527,14 +527,8 @@ void getData(QueryInfo &qinfo, IntVector &low,
     } else {
       if (!quiet) cout << "Done writing nrrd file\n";
     }
-    // Clean up the memory if we need to
-    if (delete_data) {
-      // nrrdNuke deletes the nrrd and the data inside the nrrd
-      nrrdNuke(out);
-    } else {
-      // nrrdNix will only delete the nrrd and not the data
-      nrrdNix(out);
-    }
+    // nrrdNuke deletes the nrrd and the data inside the nrrd
+    nrrdNuke(out);
   } else {
     // There was a problem
     err = biffGetDone(NRRD);
@@ -545,8 +539,9 @@ void getData(QueryInfo &qinfo, IntVector &low,
 
 // getVariable<double>();
 template<class T>
-void getVariable(QueryInfo &qinfo, IntVector &low,
-                 IntVector &range, BBox &box, string &filename) {
+void getVariable(QueryInfo &qinfo, IntVector &low, IntVector& hi,
+                 IntVector &range, BBox &box,
+                 string &filename) {
      
   LVMeshHandle mesh_handle_;
   switch( qinfo.type->getType() ) {
@@ -593,6 +588,34 @@ void getVariable(QueryInfo &qinfo, IntVector &low,
   }
 }
 
+bool
+is_periodic_bcs(IntVector cellir, IntVector ir)
+{
+  if( cellir.x() == ir.x() ||
+      cellir.y() == ir.y() ||
+      cellir.z() == ir.z() )
+    return true;
+  else
+    return false;
+}
+
+void
+get_periodic_bcs_range(IntVector cellmax, IntVector datamax,
+                       IntVector range, IntVector& newrange)
+{
+  if( cellmax.x() == datamax.x())
+    newrange.x( range.x() + 1 );
+  else
+    newrange.x( range.x() );
+  if( cellmax.y() == datamax.y())
+    newrange.y( range.y() + 1 );
+  else
+    newrange.y( range.y() );
+  if( cellmax.z() == datamax.z())
+    newrange.z( range.z() + 1 );
+  else
+    newrange.z( range.z() );
+}
 
 int main(int argc, char** argv)
 {
@@ -667,6 +690,9 @@ int main(int argc, char** argv)
         usage(s, argv[0]);
     } else if(s == "-binary") {
       do_binary=true;
+      // Don't enable this feature until it is debugged.
+//     } else if(s == "-nbc" || s == "--noboundarycells") {
+//       remove_boundary = true;
     } else {
       usage(s, argv[0]);
     }
@@ -809,12 +835,6 @@ int main(int argc, char** argv)
       }
       if (!quiet) cout << "Extracting data for material "<<mat_num<<".\n";
       
-      IntVector hi, low, range;
-      level->findIndexRange(low, hi);
-      range = hi - low;
-      BBox box;
-      level->getSpatialRange(box);
-      
       // get type and subtype of data
       const Uintah::TypeDescription* td = types[var_index];
       const Uintah::TypeDescription* subtype = td->getSubType();
@@ -822,6 +842,34 @@ int main(int argc, char** argv)
       QueryInfo qinfo(archive, level, variable_name, mat_num, current_time,
                       td);
 
+      IntVector hi, low, range;
+      BBox box;
+
+      // Remove the edges if no boundary cells
+      if( remove_boundary ){
+        level->findInteriorIndexRange(low, hi);
+        level->getInteriorSpatialRange(box);
+      } else {
+        level->findIndexRange(low, hi);
+        level->getSpatialRange(box);
+      }
+      range = hi - low;
+
+      if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
+        IntVector cellLo, cellHi;
+        if (remove_boundary) {
+          level->findInteriorCellIndexRange(cellLo, cellHi);
+        } else {
+          level->findCellIndexRange(cellLo, cellHi);
+        }
+        if (is_periodic_bcs(cellHi, hi)) {
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          range = newrange;
+        }
+      }
+      
+      
       // Figure out the filename
       char filename_num[200];
       if (use_default_file_name)
@@ -832,19 +880,24 @@ int main(int argc, char** argv)
     
       switch (subtype->getType()) {
       case Uintah::TypeDescription::double_type:
-        getVariable<double>(qinfo, low, range, box, filename);
+        getVariable<double>(qinfo, low, hi, range, box,
+                            filename);
         break;
       case Uintah::TypeDescription::float_type:
-        getVariable<float>(qinfo, low, range, box, filename);
+        getVariable<float>(qinfo, low, hi, range, box,
+                           filename);
         break;
       case Uintah::TypeDescription::int_type:
-        getVariable<int>(qinfo, low, range, box, filename);
+        getVariable<int>(qinfo, low, hi, range, box,
+                         filename);
         break;
       case Uintah::TypeDescription::Vector:
-        getVariable<Vector>(qinfo, low, range, box, filename);
+        getVariable<Vector>(qinfo, low, hi, range, box,
+                            filename);
         break;
       case Uintah::TypeDescription::Matrix3:
-        getVariable<Matrix3>(qinfo, low, range, box, filename);
+        getVariable<Matrix3>(qinfo, low, hi, range, box,
+                             filename);
         break;
       case Uintah::TypeDescription::bool_type:
       case Uintah::TypeDescription::short_int_type:
