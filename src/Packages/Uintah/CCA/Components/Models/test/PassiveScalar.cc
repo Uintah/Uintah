@@ -75,8 +75,8 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
-  ps->getWithDefault("sinusoidalIntialize", sinusoidalIntialize, false);
-  if(sinusoidalIntialize){
+  ps->getWithDefault("sinusoidalInitialize", sinusoidalInitialize, false);
+  if(sinusoidalInitialize){
     ps->getWithDefault("freq",freq,IntVector(0,0,0));
   }
   
@@ -90,9 +90,12 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   }
   
   uniformInitialize = true;
-  if(sinusoidalIntialize || linearInitialize || quadraticInitialize){
+  if(sinusoidalInitialize || linearInitialize || quadraticInitialize){
     uniformInitialize = false;
   }
+  
+  cout << " sinusoidalInitialize " << sinusoidalInitialize
+       << " uniformInitialize " << uniformInitialize << endl;
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
@@ -323,7 +326,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
       if(!region->uniformInitialize){
         IntVector freq = region->freq;
         // bulletproofing
-        if(region->sinusoidalIntialize && freq.x()==0 && freq.y()==0 && freq.z()==0){
+        if(region->sinusoidalInitialize && freq.x()==0 && freq.y()==0 && freq.z()==0){
           throw ProblemSetupException("PassiveScalar: you need to specify a <freq> whenever you use sinusoidalInitialize", __FILE__, __LINE__);
         }
         
@@ -350,7 +353,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             // normalized distance
             Vector d = (p.asVector() - lo.asVector() )/dist;
             
-            if(region->sinusoidalIntialize){
+            if(region->sinusoidalInitialize){
               f[c] = sin( 2.0 * freq.x() * d.x() * M_PI) + sin( 2.0 * freq.y() * d.y() * M_PI)  + sin( 2.0 * freq.z() * d.z() * M_PI);
             }
             if(region->linearInitialize){
