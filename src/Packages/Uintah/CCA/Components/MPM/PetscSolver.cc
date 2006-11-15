@@ -82,6 +82,8 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-mat_spooles_symmetryflag","0");
 #endif
 //  PetscOptionsSetValue("-options_table", PETSC_NULL);
+//  PetscOptionsSetValue("-mat_superlu_dist_iterrefine", "TRUE");
+//  PetscOptionsSetValue("-mat_superlu_dist_statprint", PETSC_NULL);
 //  PetscOptionsSetValue("-log_summary", PETSC_NULL);
 //  PetscOptionsSetValue("-log_info", PETSC_NULL);
 //  PetscOptionsSetValue("-trmalloc", PETSC_NULL);
