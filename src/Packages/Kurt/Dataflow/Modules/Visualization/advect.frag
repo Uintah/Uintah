@@ -28,7 +28,7 @@ bool out_of_bounds( vec4 pos )
     vec4 p = MeshTrans * pos;
 //    vec3 shift = vec3( 0.5 );
 //    vec3 r = p.xyz + shift;
-      vec3 r = p.xyz;
+    vec3 r = p.xyz;
 
     if (r.x < 0.0 || r.y < 0.0 || r.z < 0.0 ||
         r.x >= 1.0 || r.y >= 1.0 || r.z >= 1.0 ) {

@@ -238,7 +238,9 @@ void
 //     cerr<<"frame state is "<<frame_->GetStateString()<<"\n";
     flow_ren_->update_transform( c, r, d );
   } else {
-    flow_ren_->update_vector_field( vfield );
+    if( field_dirty ){
+      flow_ren_->update_vector_field( vfield );
+    }
   }
   
  
