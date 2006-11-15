@@ -282,7 +282,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
         D[0][0] = coef1 - coef2 + 2.*mubar*2./3. - 2./3.*(2.*shrTrl(0,0));
         D[0][1] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(1,1));
-        D[0][2] = coef1 -2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(2,2));
+        D[0][2] = coef1 - 2.*mubar*1./3. - 2./3.*(shrTrl(0,0) + shrTrl(2,2));
         D[0][3] =  - 2./3.*(shrTrl(0,1));
         D[0][4] =  - 2./3.*(shrTrl(0,2));
         D[0][5] =  - 2./3.*(shrTrl(1,2));
