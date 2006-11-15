@@ -52,8 +52,6 @@ TARGET_LINK_LIBRARIES( Core_Geometry
   Core_Util
   Core_Math 
   ${TEEM_LIBRARY}
-  ten
-  ell
   ${PNG_LIBRARY}
   ${ZLIB_LIBRARY}
   ${M_LIBRARY}
