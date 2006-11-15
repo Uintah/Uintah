@@ -1,4 +1,4 @@
-//  
+  
 //  For more information, please see: http://software.sci.utah.edu
 //  
 //  The MIT License
@@ -82,6 +82,7 @@ ParticleFlowRenderer::ParticleFlowRenderer() :
   reset_(true),
   recompute_(true),
   frozen_(false),
+  buffer_(LEFT),
   time_(0.0),
   time_increment_(0.05f),
   nsteps_(1),
@@ -268,7 +269,6 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 //     cerr<< "init = "<< initialized_<<", reset = "<<reset_<<
 //       ",  recompute = "<<recompute_<<"\n";
 
-    static bool left = true; //else right
     if(!initialized_ || reset_ || recompute_){
       if( /* cmap_h_ == 0 || */ fh_ == 0){
         return;
@@ -310,28 +310,14 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       create_points(array_width_, array_height_);
       CHECK_OPENGL_ERROR("");
 
-#if PB
-      // create the "current" pixel buffer using pixel_buffer_objects
-      if( glIsBuffer( vb_ ) ){
-        glDeleteBuffers( 1, &vb_);
-      } 
-      glGenBuffers(1, &vb_);
-      CHECK_OPENGL_ERROR("");
-      glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, vb_);
-      CHECK_OPENGL_ERROR("");
-      glBufferData(GL_PIXEL_PACK_BUFFER_ARB,
-                   array_width_ * array_height_ * 4,
-                   BUFFER_OFFSET(0), GL_DYNAMIC_DRAW);
-      CHECK_OPENGL_ERROR("");
-#endif        
       
       //       cerr<<"Starting array values are:  \n";
       //       print_array(array_width_*array_height_, 4, start_verts_);
 
+#if PB
       if(glIsBuffer(vb_)){
 	glDeleteBuffers(1, &vb_);
       }
-#if PB
       cerr<<"trying to use pixel buffer\n";
       glGenBuffers(1, &vb_);
       glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, vb_);
@@ -345,20 +331,23 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
     }
 #endif
 
+
+    double time;
     if( !frozen_){
-      
       if( part_tex_dirty_ ){
+        cerr<<"particle texture is dirty\n";
         load_part_texture( 0, start_verts_);
 #if !PB
-// 	load_part_texture( 1, current_verts_);
+ 	load_part_texture( 1, current_verts_);
 #endif
         part_tex_dirty_ = false;
 	CHECK_OPENGL_ERROR("");
       }
       else {
-//        load_part_texture( 1, current_verts_);
 #if PB
         glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, vb_);
+#else
+        load_part_texture( 1, current_verts_);
 #endif
       CHECK_OPENGL_ERROR("");
       }
@@ -366,6 +355,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 
 
       if( flow_tex_dirty_ ){
+        cerr<<"flow texture is dirty\n";
         reload_flow_texture();
       CHECK_OPENGL_ERROR("");
       }
@@ -387,14 +377,12 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       fb_->attach_texture(GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, part_tex_[1]);
       // draw to texture 
       glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);  
-      // get the current viewport dimensions
-      // check the frame buffer again.
-      //fb_->check_buffer();
 
+      // get the current viewport dimensions
       int vp[4];
       glGetIntegerv(GL_VIEWPORT, vp);
       // set the viewport to texture size
-      if (left)
+      if (buffer_ == LEFT)
 	glViewport(0,0, array_width_, array_height_);
       else
 	glViewport(array_width_,0, array_width_, array_height_);
@@ -415,17 +403,17 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       glActiveTexture(GL_TEXTURE1);
       double m[16];
       glGetDoublev(GL_PROJECTION_MATRIX, m);
-      //     CHECK_OPENGL_ERROR("");      
+          CHECK_OPENGL_ERROR("");      
       glMatrixMode(GL_PROJECTION);
-      //     CHECK_OPENGL_ERROR("");      
+          CHECK_OPENGL_ERROR("");      
       glLoadIdentity();
-      //     CHECK_OPENGL_ERROR("");      
+          CHECK_OPENGL_ERROR("");      
       gluOrtho2D(0,1,0,1);
-      //     CHECK_OPENGL_ERROR("");      
+          CHECK_OPENGL_ERROR("");      
       glMatrixMode(GL_MODELVIEW);
-      //     CHECK_OPENGL_ERROR("");    
+          CHECK_OPENGL_ERROR("");    
       glPushMatrix();
-      //     CHECK_OPENGL_ERROR("");    
+          CHECK_OPENGL_ERROR("");    
       glLoadIdentity();
       CHECK_OPENGL_ERROR("");    
 
@@ -440,25 +428,25 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         GLfloat matf[16];
         GLfloat mvmatf[16];
         //       cerr<<"Widget Transform:\n";
-        for(int i = 0; i < 16; i++){
-          matf[i] = (float) mat[i];
-          //         cerr<<matf[i];
-          //         if( (i+1) % 4 == 0 ){
-          //           cerr<<"\n";
-          //         } else {
-          //           cerr<<", ";
-          //         }
-        }
-        //       cerr<<"Canonical Mesh Transform:\n";
-        for(int i = 0; i < 16; i++){
-          mvmatf[i] = (float) mvmat[i];
-          //         cerr<<mvmatf[i];
-          //         if( (i+1) % 4 == 0 ){
-          //           cerr<<"\n";
-          //         } else {
-          //           cerr<<", ";
-          //         }
-        }
+//         for(int i = 0; i < 16; i++){
+//           matf[i] = (float) mat[i];
+//           //         cerr<<matf[i];
+//           //         if( (i+1) % 4 == 0 ){
+//           //           cerr<<"\n";
+//           //         } else {
+//           //           cerr<<", ";
+//           //         }
+//         }
+//         //       cerr<<"Canonical Mesh Transform:\n";
+//         for(int i = 0; i < 16; i++){
+//           mvmatf[i] = (float) mvmat[i];
+//           //         cerr<<mvmatf[i];
+//           //         if( (i+1) % 4 == 0 ){
+//           //           cerr<<"\n";
+//           //         } else {
+//           //           cerr<<", ";
+//           //         }
+//         }
 
         Transform mtform;
         double mmmat[16];
@@ -468,6 +456,8 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         GLfloat mmmatf[16];
         //       cerr<<"Mesh Transform:\n";
         for(int i = 0; i < 16; i++){
+          matf[i] = (float) mat[i];
+          mvmatf[i] = (float) mvmat[i];
           mmmatf[i] = float(mmmat[i]);
           //         cerr<<mmmatf[i];
           //         if( (i+1) % 4 == 0 ){
@@ -480,8 +470,6 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         //   // Set up initial uniform values
         shader_->initialize_uniform( "ParticleTrans", 1, false, &(matf[0]));
         shader_->initialize_uniform( "MeshTrans", 1, false, &(mmmatf[0]));
-        //       shader_->initialize_uniform( "MeshSize", GLfloat(nx_), GLfloat(ny_),
-        //                                    GLfloat(nz_) );
         shader_->initialize_uniform( "StartPositions", 0 );
         shader_->initialize_uniform( "Positions", 1 );      
         shader_->initialize_uniform( "Flow", 2 );      
@@ -489,6 +477,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         shader_->initialize_uniform( "Step", GLfloat( step_size_));
 
       }
+
       CHECK_OPENGL_ERROR("");    
 
       // use shader_ to move points in framebuffer object
@@ -497,7 +486,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 
       glBegin(GL_QUADS);
       {
-	if( left ) {
+	if( buffer_ == LEFT ) {
 	  glMultiTexCoord2f(GL_TEXTURE0, 0, 0); 
 	  glMultiTexCoord2f(GL_TEXTURE1, 0.5, 0); glVertex2f(0, 0);
 	  glMultiTexCoord2f(GL_TEXTURE0, 1, 0);
@@ -518,6 +507,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 	}
       }
       glEnd();
+      
       CHECK_OPENGL_ERROR("");    
       glPopMatrix(); //MODELVIEW
       CHECK_OPENGL_ERROR("");    
@@ -525,7 +515,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       CHECK_OPENGL_ERROR("");    
       glLoadMatrixd( m );
       glMatrixMode(GL_MODELVIEW);
-      CHECK_OPENGL_ERROR("");    
+      CHECK_OPENGL_ERROR("");
       // disable the shader
       glUseProgram(0);
       CHECK_OPENGL_ERROR("");    
@@ -549,18 +539,18 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 #if PB
       glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, vb_);
 
-      if( left ) {
-	glReadPixels(0,0, array_width_, array_height_,
-		     GL_RGBA, GL_FLOAT, NULL);
+      if( buffer_ == LEFT ) {
+ 	glReadPixels(0,0, array_width_, array_height_,
+ 		     GL_RGBA, GL_FLOAT, NULL);
       } else {//right
-	glReadPixels(array_width_,0, array_width_, array_height_,
-		     GL_RGBA, GL_FLOAT, NULL);
+ 	glReadPixels(array_width_,0, array_width_, array_height_,
+ 		     GL_RGBA, GL_FLOAT, NULL);
       }
       glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, 0);
 
 #else
       // read the pixels from the framebuffer object
-      if( left ) {
+      if( buffer_ == LEFT ) {
 	glReadPixels(0,0, array_width_, array_height_,
 		     GL_RGBA, GL_FLOAT,  current_verts_);
       } else {//right
@@ -590,14 +580,13 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       glColor4f(1.0,1.0,1.0,1.0);
       CHECK_OPENGL_ERROR("");
       if(lighting) glEnable(GL_LIGHTING);
-
       recompute_ = false;
     }
     draw_points();
     CHECK_OPENGL_ERROR("");
 
-    if( left ) left = false;
-    else left = true;
+    if( buffer_ == LEFT ) buffer_ = RIGHT;
+    else buffer_ = LEFT;
   }
   di = 0;
 }
@@ -607,34 +596,57 @@ ParticleFlowRenderer::Fbuffer_configure() {
 
       fb_->create();
       fb_->enable();  //Bind framebuffer object.
-//       if(!glIsTexture(part_tex_[1])){
 
-// 	glActiveTexture(GL_TEXTURE1_ARB);
-// 	glEnable(GL_TEXTURE_2D);
-// 	glBindTexture(GL_TEXTURE_2D, part_tex_[1]);
+      // Attach texture to framebuffer color buffer, draw to the positions
+      // texture.
+      fb_->attach_texture(GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, part_tex_[1]);
 
-	// Attach texture to framebuffer color buffer, draw to the positions
-	// texture.
-	fb_->attach_texture(GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, part_tex_[1]);
-      
-// 	glBindTexture(GL_TEXTURE_2D, 0);
-	
-// 	glDisable(GL_TEXTURE_2D);
-// 	glActiveTexture(GL_TEXTURE0_ARB);
-	fb_->disable();
-//       } else {
-// 	cerr<<"part_tex[1] is not a valid texture pointer\n";
-// 	fb_->disable();
-// 	//	return false;
-//       }
-
+      fb_->disable();
 
       if( !fb_->check_buffer() ) { 
         cerr<<"invalid frame buffer object.  Do nothing.\n";
         return false;
+      } else {
+        // fill the texture with zeros
+        fb_->enable();
+        // draw to texture 
+        // get the current viewport dimensions
+        int vp[4];
+        glGetIntegerv(GL_VIEWPORT, vp);
+        glGetIntegerv(GL_DRAW_BUFFER, &current_draw_buffer_);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);  
+        // set the viewport to texture size
+        glViewport(0,0, 2*array_width_, array_height_);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, part_tex_[1]);
+        double m[16];
+        glGetDoublev(GL_PROJECTION_MATRIX, m);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        CHECK_OPENGL_ERROR("");      
+        gluOrtho2D(0,1,0,1);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+        glColor4f(0,0,0,0);
+        glBegin(GL_QUADS);
+	  glMultiTexCoord2f(GL_TEXTURE1, 0, 0); glVertex2f(0, 0);
+	  glMultiTexCoord2f(GL_TEXTURE1, 1, 0); glVertex2f(1, 0);
+	  glMultiTexCoord2f(GL_TEXTURE1, 1, 1); glVertex2f(1, 1);
+	  glMultiTexCoord2f(GL_TEXTURE1, 0, 1); glVertex2f(0, 1);
+        glEnd();
+        glPopMatrix(); //MODELVIEW
+        glBindTexture(GL_TEXTURE_2D,0);
+        glActiveTexture(GL_TEXTURE0);
+        glDrawBuffer( current_draw_buffer_);
+        fb_->disable();
+        glViewport(vp[0], vp[1], vp[2], vp[3]);
+        glMatrixMode(GL_PROJECTION);
+        glLoadMatrixd( m );
+        glMatrixMode(GL_MODELVIEW);
+        CHECK_OPENGL_ERROR("");
+        return true;
       }
-
-      return true;
 }
 
 
@@ -733,10 +745,10 @@ void ParticleFlowRenderer::load_part_texture(GLuint unit, float *verts)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     
   if( unit == 1 ) // hack
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, 2*array_width_, array_height_,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, 2*array_width_, array_height_,
 		 0, GL_RGBA, GL_FLOAT, verts); 
   else 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, array_width_, array_height_,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, array_width_, array_height_,
 		 0, GL_RGBA, GL_FLOAT, verts); 
   CHECK_OPENGL_ERROR("");
 
@@ -765,7 +777,7 @@ void ParticleFlowRenderer::reload_flow_texture()
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB, nx_, ny_, nz_, 0,
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB, nx_, ny_, nz_, 0,
                  GL_RGB, GL_FLOAT, vfield_); 
 
     glBindTexture(GL_TEXTURE_3D, 0);
@@ -777,61 +789,6 @@ void ParticleFlowRenderer::reload_flow_texture()
 }
 
 
-// void  
-// ParticleFlowRenderer::createPoints(GLint w, GLint h)
-// {
-// 	GLfloat *vptr, *cptr, *cvptr, *velptr, *stptr;
-// 	GLfloat i, j;
-
-// 	if (start_verts_ != 0) 
-//           delete start_verts_;
-//         if (colors_ != 0)
-//           delete colors_;
-//         if (velocities_ != 0)
-//           delete velocities_;
-//         if (start_times_ != 0)
-//           delete start_times_;
-
-// 	start_verts_  = scinew GLfloat[w * h * 3 * sizeof(float)];
-//         current_verts_  = scinew GLfloat[w * h * 3 * sizeof(float)];
-// 	colors_ = scinew GLfloat[w * h * 3 * sizeof(float)];
-// 	velocities_ = scinew GLfloat[w * h * 3 * sizeof(float)];
-// 	start_times_ = scinew GLfloat[w * h * sizeof(float)];
-
-// 	vptr = start_verts_;
-//         cvptr = current_verts_;
-// 	cptr = colors_;
-// 	velptr = velocities_;
-// 	stptr  = start_times_;
-
-// 	for (i = 0.5 / w - 0.5; i < 0.5; i = i + 1.0/w)
-// 		for (j = 0.5 / h - 0.5; j < 0.5; j = j + 1.0/h)
-// 		{
-// 			*vptr       = i;
-// 			*(vptr + 1) = 0.0;
-// 			*(vptr + 2) = j;
-// 			vptr += 3;
-
-//                         *cvptr = 0.0; *(cvptr+1) = 0.0; 
-//                         *(cvptr+2) = 0.0; cvptr += 3;
-
-// 			*cptr       = ((float) rand() / RAND_MAX) * 0.5 + 0.5;
-// 			*(cptr + 1) = ((float) rand() / RAND_MAX) * 0.5 + 0.5;
-// 			*(cptr + 2) = ((float) rand() / RAND_MAX) * 0.5 + 0.5;
-// 			cptr += 3;
-
-// 			*velptr       = (((float) rand() / RAND_MAX)) + 3.0;
-// 			*(velptr + 1) =  ((float) rand() / RAND_MAX) * 10.0;
-// 			*(velptr + 2) = (((float) rand() / RAND_MAX)) + 3.0;
-// 			velptr += 3;
-
-// 			*stptr = ((float) rand() / RAND_MAX) * 10.0;
-// 			stptr++;
-// 		}
-
-// 	array_width_  = w;
-// 	array_height_ = h;
-// }
 
 
 void  
@@ -840,20 +797,18 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
   GLfloat *vptr, *cptr, *cvptr;
   GLfloat i, j;
 
-  if (start_verts_ != 0) 
-    delete [] start_verts_;
-  if (current_verts_ != 0)
-    delete [] current_verts_;
-  if ( colors_ != 0 )
-    delete [] colors_;
-
+  if (start_verts_ != 0) delete [] start_verts_;
   start_verts_  = scinew GLfloat[w * h * 4];
-  current_verts_  = scinew GLfloat[w * h * 4];
-  colors_ = scinew GLfloat[w * h * 3];
-
   vptr = start_verts_;
+#if !PB
+  if (current_verts_ != 0) delete [] current_verts_;
+  current_verts_  = scinew GLfloat[w * h * 4];
   cvptr = current_verts_;
+#endif
+  if ( colors_ != 0 ) delete [] colors_;
+  colors_ = scinew GLfloat[w * h * 3];
   cptr = colors_;
+
 
   for (i = 0.5/w - 0.5; i < 0.5; i += 1.0/w ){
     for (j = 0.5/h - 0.5; j < 0.5; j += 1.0/h )
@@ -864,16 +819,13 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
       *(vptr + 3) = 0.75 + ((float) rand() / RAND_MAX) * 0.5;
       vptr += 4;
 
+#if !PB
       *cvptr       = 0.0;
       *(cvptr + 1) = 0.0;
       *(cvptr + 2) = 0.0;
       *(cvptr + 3) = 0.0;      
-//       *(cvptr + 4) = 0.0;      
-//       *(cvptr + 5) = 0.0;      
-//       *(cvptr + 6) = 0.0;      
-//       *(cvptr + 7) = 0.0;      
       cvptr += 4;
-
+#endif
       *cptr       = ((float) rand() / RAND_MAX) * 0.5 + 0.25;
       *(cptr + 1) = ((float) rand() / RAND_MAX) * 0.5 + 0.25;
       *(cptr + 2) = ((float) rand() / RAND_MAX) * 0.5 + 0.25;
@@ -887,16 +839,8 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
 void 
 ParticleFlowRenderer::updateAnim()
 {
-CHECK_OPENGL_ERROR("");
-
-//   particle_time_ = -time_increment_;
-//   if (particle_time_ > 15.0)
-//     particle_time_ = 0.0;
-  
 //   cerr<<"shader 'Time' = "<<particle_time_<<" ";
-
   shader_->initialize_uniform("Time", time_increment_);
-  
   CHECK_OPENGL_ERROR("");
 }
 
@@ -912,7 +856,6 @@ ParticleFlowRenderer::vshader_configure()
   if( success ) {
     vshader_->create_program();
     vshader_->attach_objects();
-//     vshader_->bind_attribute_location( START_POSITION_ARRAY, "StartPosition" );
     success = vshader_->link_program();
   }
   
@@ -930,106 +873,6 @@ ParticleFlowRenderer::vshader_configure()
   return true;
 }
 
-
-
-// void  
-// ParticleFlowRenderer::drawPoints()
-// {	
-  
-//   if( !have_shader_functions() ){
-//       cerr<<"shader functions not available\n";
-//       return; // do nothing
-//     }
-
-//   GLchar *vertex_shader_source, *fragment_shader_source;
-
-//   if( shader_ == 0 ){
-//     shader_ = scinew GLSLShader();
-//     shader_->read_shader_source("particle",&vertex_shader_source, 
-//                                          &fragment_shader_source);
-//     shader_->install_shaders(vertex_shader_source,
-//                              fragment_shader_source);
-
-//     int success = shader_->compile_shaders();
-    
-//     if( success ) {
-//       shader_->create_program();
-//       shader_->attach_objects();
-//       shader_->bind_attribute_location ( VELOCITY_ARRAY, "Velocity" );
-//       shader_->bind_attribute_location ( START_TIME_ARRAY, "StartTime" );
-//       success = shader_->link_program();
-//     }
-//     if( success ) {
-//       //   // Set up initial uniform values
-//       shader_->initialize_uniform( "Background", 0.0, 0.0, 0.0, 0.0);
-//       shader_->initialize_uniform( "Time", GLfloat(-5.0));
-//     }
-//     if( !success ){
-//       cerr<<"Shader installation failed\n";
-//       delete shader_;
-//       shader_ = 0;
-//       return;
-//     }
-//   }
-//    glMatrixMode(GL_MODELVIEW);
-//    glPushMatrix();
-//    //   glLoadIdentity();
-   
-//    // set up transform for shader
-//    GLdouble mat[16];
-//    shader_trans_.get_trans( mat );
-// //    for(int i = 0; i < 4; i++) {
-// //      for( int j = 0; j< 4; j++) {
-// //        cerr<< mat[i*4 + j]<< " ";
-// //      }
-// //      cerr<<"\n";
-// //    }
-// //    cerr<<"\n";
-//    glMultMatrixd( mat );
-
-//    glUseProgram(shader_->ProgramObject);
-
-//   if(animating_) updateAnim();
-
-  
-
-
-//   GLboolean depth;
-//   glGetBooleanv(GL_DEPTH_TEST, &depth);
-//   glDepthFunc(GL_LESS);
-
-//   if( !depth ){
-//     glEnable(GL_DEPTH_TEST);
-//   }
-
-
-  
-//   glPointSize(2.0);
-
-//   glVertexPointer(3, GL_FLOAT, 0, start_verts_);
-//   glColorPointer(3, GL_FLOAT, 0, colors_);
-// //    glVertexAttribPointer(VELOCITY_ARRAY,  3, GL_FLOAT, GL_FALSE, 0, velocities_);
-// //   glVertexAttribPointer(START_TIME_ARRAY, 1, GL_FLOAT, GL_FALSE, 0, start_times_);
-
-//   glEnableClientState(GL_VERTEX_ARRAY);
-//   glEnableClientState(GL_COLOR_ARRAY);
-//   glEnableVertexAttribArray(VELOCITY_ARRAY);
-//   glEnableVertexAttribArray(START_TIME_ARRAY);
-
-//   glDrawArrays(GL_POINTS, 0, array_width_ * array_height_);
-
-//   glDisableClientState(GL_VERTEX_ARRAY);
-//   glDisableClientState(GL_COLOR_ARRAY);
-//   glDisableVertexAttribArray(VELOCITY_ARRAY);
-//   glDisableVertexAttribArray(START_TIME_ARRAY);
-  
-//   if( !depth ){
-//     glDisable(GL_DEPTH_TEST);
-//   }
-  
-//   glUseProgram(0);
-//   glPopMatrix();
-// }
 
 
 
@@ -1057,14 +900,6 @@ ParticleFlowRenderer::draw_points()
    // set up transform for shader
    GLdouble mat[16];
    shader_trans_.get_trans( mat );
-//    for(int i = 0; i < 4; i++) {
-//      for( int j = 0; j< 4; j++) {
-//        cerr<< mat[i*4 + j]<< " ";
-//      }
-//      cerr<<"\n";
-//    }
-//    cerr<<"\n";
-//    glMultMatrixd( mat );
 
    glUseProgram(vshader_->program_object());
 CHECK_OPENGL_ERROR("");
@@ -1073,15 +908,6 @@ CHECK_OPENGL_ERROR("");
 CHECK_OPENGL_ERROR("");
 
   
-
-//   glLoadIdentity();
-//   glTranslatef(0.0, 0.0, -5.0);
-  
-//   glRotatef(fYDiff, 1,0,0);
-//   glRotatef(fXDiff, 0,1,0);
-//   glRotatef(fZDiff, 0,0,1);
-//   glScalef(fScale, fScale, fScale);
-
 
   GLboolean depth;
   glGetBooleanv(GL_DEPTH_TEST, &depth);
@@ -1094,39 +920,26 @@ CHECK_OPENGL_ERROR("");
 
   
   glPointSize(2.0);
-  // reading from current_verts
+  glColorPointer(3, GL_FLOAT, 0, colors_);
+CHECK_OPENGL_ERROR("");
+
 #if PB
   // reading from pixel buffer
   glBindBuffer(GL_ARRAY_BUFFER, vb_);
   glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), NULL);
 // CHECK_OPENGL_ERROR("");
-
-#if PB
-  glBindBuffer(GL_ARRAY_BUFFER, vb_);
-  glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), NULL);
 #else
+  // reading from current_verts
   glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), current_verts_ );
 #endif
 
-//   glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), current_verts_);
 CHECK_OPENGL_ERROR("");
-
-  glColorPointer(3, GL_FLOAT, 0, colors_);
-CHECK_OPENGL_ERROR("");
-//   glVertexAttribPointer(VELOCITY_ARRAY,  3, GL_FLOAT, GL_FALSE, 0, velocities_);
-//   glVertexAttribPointer(START_TIME_ARRAY, 1, GL_FLOAT, GL_FALSE, 0, start_times_);
-//   glVertexAttribPointer(START_POSITION_ARRAY, 1, GL_FLOAT, GL_FALSE, 
-//                         0, start_verts_);
 
 
   glEnableClientState(GL_VERTEX_ARRAY);
 CHECK_OPENGL_ERROR("");
   glEnableClientState(GL_COLOR_ARRAY);
 CHECK_OPENGL_ERROR("");
-
-//   glEnableVertexAttribArray(VELOCITY_ARRAY);
-//   glEnableVertexAttribArray(START_TIME_ARRAY);
-//   glEnableVertexAttribArray(START_POSITION_ARRAY);
 
   glDrawArrays(GL_POINTS, 0, array_width_ * array_height_);
 CHECK_OPENGL_ERROR("");
@@ -1135,14 +948,11 @@ CHECK_OPENGL_ERROR("");
 CHECK_OPENGL_ERROR("");
   glDisableClientState(GL_COLOR_ARRAY);
 CHECK_OPENGL_ERROR("");
-//   glDisableVertexAttribArray(VELOCITY_ARRAY);
-//   glDisableVertexAttribArray(START_TIME_ARRAY);
-//   glDisableVertexAttribArray(START_POSITION_ARRAY);
 
 #if PB
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  
 #endif
+
   if( !depth ){
     glDisable(GL_DEPTH_TEST);
   }
@@ -1192,7 +1002,6 @@ ParticleFlowRenderer::have_shader_functions()
 
 }
 
-#endif
 
 
 

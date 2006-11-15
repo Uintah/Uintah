@@ -101,6 +101,14 @@ private:
   bool recompute_;
   bool frozen_;
 
+
+  enum buffer_e {
+    LEFT,
+    RIGHT
+  }; 
+
+  buffer_e buffer_;
+
   double time_;
   float time_increment_;
   
@@ -150,7 +158,7 @@ private:
   void load_part_texture(GLuint unit = 0, float *verts = 0);
   
 
-  
+
 }; 
 
 
