@@ -58,6 +58,7 @@ using std::map;
 using std::pair;
 
 class Persistent;
+class Piostream;
 
 //----------------------------------------------------------------------
 struct SCISHARE PersistentTypeID {
@@ -73,6 +74,14 @@ struct SCISHARE PersistentTypeID {
   Persistent* (*bc_maker1)();
   Persistent* (*bc_maker2)();
 };
+
+
+
+SCISHARE Piostream* auto_istream(const string& filename,
+                                 ProgressReporter *pr = 0);
+SCISHARE Piostream* auto_ostream(const string& filename, const string& type,
+                                 ProgressReporter *pr = 0);
+
 
 //----------------------------------------------------------------------
 class SCISHARE Piostream {
@@ -170,11 +179,6 @@ public:
   SCISHARE friend Piostream* auto_ostream(const string& filename, const string& type,
                                  ProgressReporter *pr);
 };
-
-  SCISHARE Piostream* auto_istream(const string& filename,
-                                   ProgressReporter *pr = 0);
-  SCISHARE Piostream* auto_ostream(const string& filename, const string& type,
-                                   ProgressReporter *pr = 0);
 
 
 //----------------------------------------------------------------------

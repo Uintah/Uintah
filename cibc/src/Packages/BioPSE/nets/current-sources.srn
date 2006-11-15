@@ -273,13 +273,13 @@
     <module category="ChangeFieldData" id="m22" name="ApplyMappingMatrix" package="SCIRun">
       <position x="9" y="822"/>
     </module>
-    <module category="ChangeFieldData" id="m23" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m23" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="43" y="301"/>
       <var name="function" val="{result = -1.0;
 }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
-    <module category="ChangeFieldData" id="m24" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m24" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="415" y="303"/>
       <var name="function" val="{result = 1.0;
 }"/>

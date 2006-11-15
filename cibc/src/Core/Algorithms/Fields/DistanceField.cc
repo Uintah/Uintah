@@ -128,13 +128,13 @@ bool DistanceFieldFaceAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
     return (false);
   }
   
-  if (!(fi.is_surface()))
+  if (!(fobj.is_surface()))
   {
     pr->error("DistanceField: This function is only defined for surface meshes");
     return (false);    
   }
 
-  if (!(fi.is_unstructuredmesh()))
+  if (!(fobj.is_unstructuredmesh()))
   {
     pr->error("DistanceField: This function is only defined for unstructured surface meshes");
     return (false);    
@@ -321,13 +321,13 @@ bool SignedDistanceFieldFaceAlgo::DistanceField(ProgressReporter *pr, FieldHandl
     return (false);
   }
   
-  if (!(fi.is_surface()))
+  if (!(fobj.is_surface()))
   {
     pr->error("SignedDistanceField: This function is only defined for surface meshes");
     return (false);    
   }
 
-  if (!(fi.is_unstructuredmesh()))
+  if (!(fobj.is_unstructuredmesh()))
   {
     pr->error("SignedDistanceField: This function is only defined for unstructured surface meshes");
     return (false);    

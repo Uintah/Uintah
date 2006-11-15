@@ -88,13 +88,22 @@ SET(Dataflow_Modules_Fields_SRCS
   SetFieldOrMeshStringProperty.cc
   ConvertMeshToPointCloud.cc
   ConvertRasterMeshToStructuredMesh.cc
-  CalculateFieldData.cc
-  CalculateFieldData2.cc
-  CalculateFieldData3.cc
+  CalculateFieldDataCompiled.cc
+  CalculateFieldDataCompiled2.cc
+  CalculateFieldDataCompiled3.cc
   TransformMeshWithFunction.cc
   TransformMeshWithTransform.cc
   ConvertMeshToUnstructuredMesh.cc
   CalculateVectorMagnitudes.cc
+  CalculateDistanceToField.cc
+  CalculateDistanceToFieldBoundary.cc
+  CalculateSignedDistanceToField.cc
+  CalculateIsInsideField.cc
+  CalculateInsideWhichField.cc
+  ConvertIndicesToFieldData.cc
+  CreateFieldData.cc
+  GetFieldData.cc
+  SetFieldData.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Fields ${Dataflow_Modules_Fields_SRCS})
@@ -105,6 +114,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
   Core_Algorithms_Fields
   Core_Algorithms_Visualization
   Core_Algorithms_Geometry
+  Core_Algorithms_ArrayMath
   Core_Basis
   Core_Datatypes
   Core_Exceptions

@@ -2368,36 +2368,6 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
     bk--;ek++;
   } while (found) ;
 
-#if 0
-  // The old code, useful for debugging purposes.  Note that the old
-  // and new code don't necessarily return the same face because if
-  // you hit an edge or corner any of the edge or corner faces are
-  // valid.
-  double dmin2 = DBL_MAX;
-  Point result2;
-  typename Face::index_type face2;
-  for (unsigned int i = 0; i < faces_.size(); i+=3)
-  {
-    Point rtmp;
-    closest_point_on_tri(rtmp, p,
-                         points_[faces_[i  ]],
-                         points_[faces_[i+1]],
-                         points_[faces_[i+2]]);
-    const double dtmp = (p - rtmp).length2();
-    if (dtmp < dmin2)
-    {
-      result2 = rtmp;
-      face2 = i/3;
-      dmin2 = dtmp;
-    }
-  }
-  if (face != face2)
-  {
-    cout << "face != face2 (" << face << " " << face2 << "\n";
-    cout << "dmin = " << dmin << ", dmin2 = " << dmin2 << "\n";
-  }
-#endif
-
   return sqrt(dmin);
 }
 

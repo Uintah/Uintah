@@ -100,13 +100,22 @@ SRCS     += \
 	$(SRCDIR)/SetFieldOrMeshStringProperty.cc\
 	$(SRCDIR)/ConvertMeshToPointCloud.cc\
 	$(SRCDIR)/ConvertRasterMeshToStructuredMesh.cc\
-	$(SRCDIR)/CalculateFieldData.cc\
-	$(SRCDIR)/CalculateFieldData2.cc\
-	$(SRCDIR)/CalculateFieldData3.cc\
+	$(SRCDIR)/CalculateFieldDataCompiled.cc\
+	$(SRCDIR)/CalculateFieldDataCompiled2.cc\
+	$(SRCDIR)/CalculateFieldDataCompiled3.cc\
 	$(SRCDIR)/TransformMeshWithFunction.cc\
 	$(SRCDIR)/TransformMeshWithTransform.cc\
 	$(SRCDIR)/ConvertMeshToUnstructuredMesh.cc\
 	$(SRCDIR)/CalculateVectorMagnitudes.cc\
+  $(SRCDIR)/CalculateDistanceToField.cc\
+  $(SRCDIR)/CalculateDistanceToFieldBoundary.cc\
+  $(SRCDIR)/CalculateSignedDistanceToField.cc\
+  $(SRCDIR)/CalculateIsInsideField.cc\
+  $(SRCDIR)/CalculateInsideWhichField.cc\
+  $(SRCDIR)/ConvertIndicesToFieldData.cc\
+  $(SRCDIR)/CreateFieldData.cc\
+  $(SRCDIR)/GetFieldData.cc\
+  $(SRCDIR)/SetFieldData.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
@@ -116,6 +125,7 @@ PSELIBS := \
 	Core/Algorithms/Fields   \
 	Core/Algorithms/Visualization   \
 	Core/Algorithms/Geometry \
+	Core/Algorithms/ArrayMath \
 	Core/Basis               \
 	Core/Datatypes           \
 	Core/Exceptions          \

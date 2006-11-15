@@ -70,13 +70,13 @@
       <var name="box-in-y" val="{-0.530626874703}"/>
       <var name="box-in-z" val="{0.675750501157}"/>
     </module>
-    <module category="ChangeFieldData" id="m5" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="95" y="144"/>
       <var name="function" val="{result = x;
 }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
-    <module category="ChangeFieldData" id="m6" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="322" y="143"/>
       <var name="function" val="{result = y;
 }"/>

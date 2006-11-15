@@ -128,6 +128,7 @@ public:
 
   Basis& get_basis()  { return basis_; }
   const mesh_handle_type &get_typed_mesh() const;
+  mesh_handle_type &get_typed_mesh();
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);
@@ -639,6 +640,13 @@ GenericField<Mesh, Basis, FData>::fdata() const
 template <class Mesh, class Basis, class FData>
 const typename GenericField<Mesh, Basis, FData>::mesh_handle_type &
 GenericField<Mesh, Basis, FData>::get_typed_mesh() const
+{
+  return mesh_;
+}
+
+template <class Mesh, class Basis, class FData>
+typename GenericField<Mesh, Basis, FData>::mesh_handle_type &
+GenericField<Mesh, Basis, FData>::get_typed_mesh()
 {
   return mesh_;
 }

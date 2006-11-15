@@ -426,6 +426,19 @@ public:
   // returns a QuadSurfMesh
   static Persistent *maker() { return new QuadSurfMesh<Basis>(); }
 
+  double find_closest_elem(Point &result, typename Elem::index_type &elem,
+                           const Point &p) const
+  {
+    ASSERTFAIL("Search grid has not yet implemented for this mesh");
+  }
+
+  double find_closest_elems(Point &result,
+                            vector<typename Elem::index_type> &elem,
+                            const Point &p) const
+  {
+    ASSERTFAIL("Search grid has not yet implemented for this mesh");
+  }
+
 private:
 
   const Point &point(typename Node::index_type i) const { return points_[i]; }
@@ -754,9 +767,6 @@ QuadSurfMesh<Basis>::get_edges(typename Edge::array_type &array,
 {
   ASSERTMSG(synchronized_ & EDGES_E,
             "Must call synchronize EDGES_E on TriSurfMesh first");
-
-  array.clear();
-
   array.clear();
 
   array.push_back(halfedge_to_edge_[idx * 4 + 0]);
@@ -915,7 +925,7 @@ QuadSurfMesh<Basis>::locate(typename Face::index_type &face,
   if (basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
 
   ASSERTMSG(synchronized_ & LOCATE_E,
-            "QuadSurfMesh::locate requires synchronization.");
+            "QuadSurfMesh:: requires synchronization.");
 
   unsigned int *iter, *end;
   if (grid_.get_rep() == 0) return false;

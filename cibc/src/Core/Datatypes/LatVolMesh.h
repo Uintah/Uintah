@@ -723,12 +723,12 @@ public:
   int get_valence(typename Face::index_type idx) const;
   int get_valence(const typename Cell::index_type &idx) const;
 
-  bool locate(typename Node::index_type &, const Point &);
+  bool locate(typename Node::index_type &, const Point &) const;
   bool locate(typename Edge::index_type &, const Point &) const
   { return false; }
   bool locate(typename Face::index_type &, const Point &) const
   { return false; }
-  bool locate(typename Cell::index_type &, const Point &);
+  bool locate(typename Cell::index_type &, const Point &) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
   int get_weights(const Point & , typename Edge::array_type & , double * )
@@ -1789,7 +1789,7 @@ LatVolMesh<Basis>::get_size(const typename Cell::index_type &idx) const
 
 template <class Basis>
 bool
-LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
+LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   const Point r = transform_.unproject(p);
@@ -1829,7 +1829,7 @@ LatVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 
 template <class Basis>
 bool
-LatVolMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
+LatVolMesh<Basis>::locate(typename Node::index_type &node, const Point &p) const
 {
   const Point r = transform_.unproject(p);
 

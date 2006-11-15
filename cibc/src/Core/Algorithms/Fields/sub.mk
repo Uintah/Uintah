@@ -15,7 +15,7 @@ SRCDIR   := Core/Algorithms/Fields
 
 SRCS     += \
             $(SRCDIR)/ApplyMappingMatrix.cc\
-            $(SRCDIR)/CalculateFieldData.cc\
+            $(SRCDIR)/CalculateFieldDataCompiled.cc\
             $(SRCDIR)/CalculateIsInsideField.cc\
             $(SRCDIR)/CalculateLinkBetweenOppositeFieldBoundaries.cc\
             $(SRCDIR)/ClearAndChangeFieldBasis.cc\

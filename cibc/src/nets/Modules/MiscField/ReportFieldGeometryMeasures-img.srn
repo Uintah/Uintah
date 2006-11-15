@@ -87,7 +87,7 @@
       <var name="row_end" val="{399}"/>
       <var name="col_end" val="{8}"/>
     </module>
-    <module category="ChangeFieldData" id="m5" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="97" y="95"/>
       <var name="function" val="{result = x + y + z;
 }"/>

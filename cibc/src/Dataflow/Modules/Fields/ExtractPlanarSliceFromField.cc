@@ -39,7 +39,7 @@
 #include <Dataflow/Modules/Fields/ExtractPlanarSliceFromField.h>
 #include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 #include <Core/Algorithms/Fields/ClipFieldByFunction.h>
-#include <Core/Algorithms/Fields/CalculateFieldData.h>
+#include <Core/Algorithms/Fields/CalculateFieldDataCompiled.h>
 #include <Core/Algorithms/Visualization/ExtractIsosurface.h>
 
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
@@ -229,11 +229,11 @@ ExtractPlanarSliceFromField::execute()
       field_input_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
 							 0, "<", " >") + " >";
     int hoffset = 0;
-    Handle<CalculateFieldDataAlgo> algoTD;
+    Handle<CalculateFieldDataCompiledAlgo> algoTD;
     
     while (1) {
       CompileInfoHandle ci =
-	CalculateFieldDataAlgo::get_compile_info(ftd, oftn, ltd, function, hoffset);
+	CalculateFieldDataCompiledAlgo::get_compile_info(ftd, oftn, ltd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algoTD, false, this)) {
 	error("Your function would not compile.");
 	get_gui()->eval(get_id() + " compile_error "+ci->filename_);

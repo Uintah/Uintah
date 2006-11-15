@@ -216,14 +216,16 @@ public:
                     typename LatVolMesh<Basis>::Cell::index_type &i) const
   { return get_size(i); };
 
-  bool locate(typename LatVolMesh<Basis>::Node::index_type &, const Point &);
+  bool locate(typename LatVolMesh<Basis>::Node::index_type &,
+                                                          const Point &) const;
   bool locate(typename LatVolMesh<Basis>::Edge::index_type &,
               const Point &) const
   { return false; }
   bool locate(typename LatVolMesh<Basis>::Face::index_type &,
               const Point &) const
   { return false; }
-  bool locate(typename LatVolMesh<Basis>::Cell::index_type &, const Point &);
+  bool locate(typename LatVolMesh<Basis>::Cell::index_type &, 
+                                                          const Point &) const;
 
 
   int get_weights(const Point &,
@@ -310,7 +312,6 @@ private:
 
   LockingHandle<SearchGrid>           grid_;
   Mutex                               grid_lock_; // Bad traffic!
-  typename LatVolMesh<Basis>::Cell::index_type           locate_cache_;
 
   unsigned int   synchronized_;
 };
@@ -326,7 +327,6 @@ template <class Basis>
 StructHexVolMesh<Basis>::StructHexVolMesh():
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
 {
 }
@@ -340,7 +340,6 @@ StructHexVolMesh<Basis>::StructHexVolMesh(unsigned int i,
   points_(i, j, k),
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
 {
 }
@@ -351,7 +350,6 @@ StructHexVolMesh<Basis>::StructHexVolMesh(const StructHexVolMesh<Basis> &copy):
   LatVolMesh<Basis>(copy),
   grid_(0),
   grid_lock_("StructHexVolMesh grid lock"),
-  locate_cache_(this, 0, 0, 0),
   synchronized_(Mesh::ALL_ELEMENTS_E)
 {
   points_.copy( copy.points_ );
@@ -571,13 +569,12 @@ template <class Basis>
 bool
 StructHexVolMesh<Basis>::locate(
                             typename LatVolMesh<Basis>::Cell::index_type &cell,
-                            const Point &p)
+                            const Point &p) const
 {
   if (this->basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
   // context switch is that cache is not found.
-  cell = locate_cache_;
   if (cell > typename LatVolMesh<Basis>::Cell::index_type(this, 0, 0, 0) &&
       cell < typename LatVolMesh<Basis>::Cell::index_type(this, this->ni_ -1,
                                                           this->nj_ - 1,
@@ -598,7 +595,6 @@ StructHexVolMesh<Basis>::locate(
 
       if( inside8_p(idx, p) ) {
         cell = idx;
-        locate_cache_ = cell;
         return true;
       }
       ++iter;
@@ -611,7 +607,7 @@ StructHexVolMesh<Basis>::locate(
 
 template <class Basis>
 bool
-StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &node, const Point &p)
+StructHexVolMesh<Basis>::locate(typename LatVolMesh<Basis>::Node::index_type &node, const Point &p) const
 {
   node.mesh_ = this;
   typename LatVolMesh<Basis>::Cell::index_type ci;

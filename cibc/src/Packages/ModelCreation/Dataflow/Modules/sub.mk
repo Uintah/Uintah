@@ -16,8 +16,6 @@ SUBDIRS := \
 	$(SRCDIR)/ChangeMesh\
 	$(SRCDIR)/Converter\
 	$(SRCDIR)/CreateField\
-	$(SRCDIR)/DataArrayMath\
-	$(SRCDIR)/DataStreaming\
 	$(SRCDIR)/ExampleFields\
 	$(SRCDIR)/FieldProperty\
 	$(SRCDIR)/FieldsData\

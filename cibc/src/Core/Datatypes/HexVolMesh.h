@@ -369,10 +369,10 @@ public:
   { return 0; }
 
   //! returns false if point is out of range.
-  bool locate(typename Node::index_type &loc, const Point &p);
-  bool locate(typename Edge::index_type &loc, const Point &p);
-  bool locate(typename Face::index_type &loc, const Point &p);
-  bool locate(typename Cell::index_type &loc, const Point &p);
+  bool locate(typename Node::index_type &loc, const Point &p) const;
+  bool locate(typename Edge::index_type &loc, const Point &p) const;
+  bool locate(typename Face::index_type &loc, const Point &p) const;
+  bool locate(typename Cell::index_type &loc, const Point &p) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
   int get_weights(const Point & , typename Edge::array_type & , double * )
@@ -496,7 +496,7 @@ public:
 
   bool get_coords(vector<double> &coords,
                   const Point &p,
-                  typename Cell::index_type idx)
+                  typename Cell::index_type idx) const
   {
     // This synchronize is only needed for non linear elements
     // It involves locking and unlock every time this function
@@ -1794,7 +1794,7 @@ HexVolMesh<Basis>::get_size(typename Cell::index_type idx) const
 
 template <class Basis>
 bool
-HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
+HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p) const
 {
   typename Cell::index_type ci;
   if (locate(ci, p)) { // first try the fast way.
@@ -1842,7 +1842,7 @@ HexVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
 
 template <class Basis>
 bool
-HexVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
+HexVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p) const
 {
   typename Cell::index_type cell;
   if (locate(cell, p))
@@ -1874,7 +1874,7 @@ HexVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
 
 template <class Basis>
 bool
-HexVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
+HexVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p) const
 {
   typename Cell::index_type cell;
   if (locate(cell, p))
@@ -1906,7 +1906,7 @@ HexVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
 
 template <class Basis>
 bool
-HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
+HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
 
@@ -1921,7 +1921,9 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       return true;
   }
 
-  if (!(synchronized_ & LOCATE_E)) synchronize(LOCATE_E);
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "Must call synchronize LOCATE_E on HexVolMesh first.");
+
   if(grid_.get_rep() == 0) return (false);
 
   unsigned int *iter, *end;

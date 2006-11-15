@@ -236,7 +236,7 @@ BEMMATRIX = bemMatrixPP2(MODEL);
       <var name="matrixname" val="{{cage} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} }"/>
       <var name="ui_geometry" val="{541x523+20+86}"/>
     </module>
-    <module category="Math" gui_visible="yes" id="m17" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" gui_visible="yes" id="m17" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="739" y="886"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{539.0}"/>
@@ -469,7 +469,7 @@ ELECTRODES: Measured potentials (bottom scale)
       <var name="matrixname" val="{{tank} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} }"/>
       <var name="ui_geometry" val="{541x523+120+186}"/>
     </module>
-    <module category="Math" gui_visible="yes" id="m33" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" gui_visible="yes" id="m33" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="1031" y="894"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{539.0}"/>

@@ -55,6 +55,7 @@ SRCS     += \
 	$(SRCDIR)/WritePath.cc\
 	$(SRCDIR)/ReadString.cc\
 	$(SRCDIR)/WriteString.cc\
+  $(SRCDIR)/StreamMatrixFromDisk.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
@@ -73,7 +74,8 @@ PSELIBS := \
 	Core/Thread        \
 	Dataflow/TkExtensions  \
 	Core/Util          \
-	Core/Volume        
+	Core/Volume        \
+  Core/Algorithms/DataStreaming
 
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)

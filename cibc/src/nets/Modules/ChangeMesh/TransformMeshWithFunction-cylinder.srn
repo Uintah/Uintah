@@ -169,7 +169,7 @@ result = Point(uu, vv, c);
 }"/>
       <var name="ui_geometry" val="{373x139+53+18}"/>
     </module>
-    <module category="ChangeFieldData" id="m5" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="65" y="93"/>
       <var name="function" val="{result = x*x + y*y;
 }"/>

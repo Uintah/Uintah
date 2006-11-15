@@ -47,6 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Basis/TetLinearLgn.h>
@@ -527,6 +528,7 @@ OptimizeDipole::read_field_ports(int &valid_data, int &new_data)
 
         // Cast the mesh base class up to a tetvolmesh.
         vol_mesh_ = (TVMesh*)dynamic_cast<TVMesh*>(mesh->mesh().get_rep());
+        vol_mesh_->synchronize(Mesh::LOCATE_E);
       }
       else
       {
@@ -599,16 +601,26 @@ OptimizeDipole::organize_last_send()
   Point best_pt(dipoles_(bestIdx,0), dipoles_(bestIdx,1), dipoles_(bestIdx,2));
   TVMesh::Cell::index_type best_cell_idx;
   vol_mesh_->locate(best_cell_idx, best_pt);
+  TVMesh::Cell::size_type matrix_size;
+  vol_mesh_->size(matrix_size);
+  matrix_size = matrix_size*3;
+  
+  msg_stream_ << "OptimizeDipole -- the dipole was found in cell " << 
+    best_cell_idx << "\n    at position " << best_pt << 
+    " with a misfit of " << bestMisfit << "\n";
 
-  msg_stream_ << "OptimizeDipole -- the dipole was found in cell " << best_cell_idx << "\n    at position " << best_pt << " with a misfit of " << bestMisfit << "\n";
-
-  DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
-  for (i=0; i<3; i++)
+  int *rr = scinew int[2];   rr[0] = 0; rr[1] = 3;
+  int *cc = scinew int[3];
+  double *dd = scinew double[3];
+  
+  for (int i=0;i<3;i++)
   {
-    (*leadfield_select_out)[0][i] = best_cell_idx*3+i;
-    (*leadfield_select_out)[1][i] = 1;
+    cc[i] = best_cell_idx*3+i;
+    dd[i] = 1.0;
+    if (matrix_size < best_cell_idx*3+i+1) matrix_size = best_cell_idx*3+i+1;
   }
-  leadfield_selectH_ = leadfield_select_out;
+
+  leadfield_selectH_ = scinew SparseRowMatrix(matrix_size,1,rr,cc,3,dd);
   PCMesh::handle_type pcm = scinew PCMesh;
   pcm->add_point(best_pt);
   PCFieldV *pcd = scinew PCFieldV(pcm);

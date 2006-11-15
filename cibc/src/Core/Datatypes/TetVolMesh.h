@@ -366,10 +366,10 @@ public:
 
 
   //! return false if point is out of range.
-  bool locate(typename Node::index_type &loc, const Point &p);
-  bool locate(typename Edge::index_type &loc, const Point &p);
-  bool locate(typename Face::index_type &loc, const Point &p);
-  bool locate(typename Cell::index_type &loc, const Point &p);
+  bool locate(typename Node::index_type &loc, const Point &p) const;
+  bool locate(typename Edge::index_type &loc, const Point &p) const;
+  bool locate(typename Face::index_type &loc, const Point &p) const;
+  bool locate(typename Cell::index_type &loc, const Point &p) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
   int get_weights(const Point & , typename Edge::array_type & , double * )
@@ -700,7 +700,7 @@ protected:
   void                  compute_grid();
 
   void                  orient(typename Cell::index_type ci);
-  bool                  inside(typename Cell::index_type idx, const Point &p);
+  bool                  inside(typename Cell::index_type idx, const Point &p) const;
 
   //! Used to recompute data for individual cells.  Don't use these, they
   // are not synchronous.  Use create_cell_syncinfo instead.
@@ -782,7 +782,6 @@ protected:
   //!  then search just those tets that overlap that grid cell.
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
   LockingHandle<SearchGridConstructor>  grid_;
-  typename Cell::index_type             locate_cache_;
 
   unsigned int          synchronized_;
   Mutex                 synchronize_lock_;
@@ -869,7 +868,6 @@ TetVolMesh<Basis>::TetVolMesh() :
   edge_table_(),
   node_neighbors_(0),
   grid_(0),
-  locate_cache_(0),
   synchronized_(CELLS_E | NODES_E),
   synchronize_lock_("TetVolMesh synchronize() lock")
 {
@@ -885,7 +883,6 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   edge_table_(),
   node_neighbors_(0),
   grid_(0),
-  locate_cache_(0),
   synchronized_(copy.synchronized_),
   synchronize_lock_("TetVolMesh synchronize() lock")
 {
@@ -1849,7 +1846,7 @@ TetVolMesh<Basis>::get_center(Point &p, typename Cell::index_type idx) const
 
 template <class Basis>
 bool
-TetVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
+TetVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p) const
 {
   typename Cell::index_type ci;
   if (locate(ci, p)) // first try the fast way.
@@ -1895,7 +1892,7 @@ TetVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
 
 template <class Basis>
 bool
-TetVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
+TetVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p) const
 {
   bool found_p = false;
   double mindist = DBL_MAX;
@@ -1920,7 +1917,7 @@ TetVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
 
 template <class Basis>
 bool
-TetVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
+TetVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p) const
 {
   bool found_p = false;
   double mindist = DBL_MAX;
@@ -1945,13 +1942,12 @@ TetVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
 
 template <class Basis>
 bool
-TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
+TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
   // context switch is that cache is not found.
-  cell = locate_cache_;
   if (cell > typename Cell::index_type(0) &&
       cell < typename Cell::index_type(cells_.size()/4) &&
       inside(cell, p))
@@ -1959,9 +1955,7 @@ TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       return true;
   }
 
-  if (!(synchronized_ & LOCATE_E))
-    synchronize(LOCATE_E);
-  ASSERTMSG(grid_.get_rep(), "synchronize(LOCATE) failed to build a grid.");
+  ASSERTMSG(synchronized_ & LOCATE_E,"TetVolMesh: need to synchronize LOCATE_E first");
 
   const list<unsigned int> *candidates;
   if (grid_->lookup(candidates, p))
@@ -1972,7 +1966,6 @@ TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       if (inside(typename Cell::index_type(*iter), p))
       {
         cell = typename Cell::index_type(*iter);
-        locate_cache_ = cell;
         return true;
       }
       ++iter;
@@ -2089,7 +2082,7 @@ TetVolMesh<Basis>::compute_grid()
 #if 0
 template <class Basis>
 bool
-TetVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
+TetVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p) const
 {
   Point center;
   get_center(center, idx);
@@ -2126,7 +2119,7 @@ TetVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
 #else
 template <class Basis>
 bool
-TetVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
+TetVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p) const
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.
@@ -2192,7 +2185,7 @@ TetVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
 #if 0
 template <class Basis>
 bool
-TetVolMesh<Basis>::inside(int i, const Point &p)
+TetVolMesh<Basis>::inside(int i, const Point &p) const
 {
   double *p0 = &points_[cells_[i*4+0]](0);
   double *p1 = &points_[cells_[i*4+1]](0);
