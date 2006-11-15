@@ -93,7 +93,7 @@ main(int argc, char **argv) {
     if (type == "Vertex") {
       double x, y, z;
       instr >> x >> y >> z;
-      //unsigned i = tsm->add_point(Point(x,y,z));
+      tsm->add_point(Point(x,y,z));
       //cerr << "Added point #"<< i <<": ("
       //   << x << ", " << y << ", " << z << ")" << endl;    
     } else if (type == "Face") {
@@ -104,7 +104,7 @@ main(int argc, char **argv) {
       n2 -= 1; n[1] = n2;
       n3 -= 1; n[2] = n3;
 
-      //unsigned int i = tsm->add_elem(n);
+      tsm->add_elem(n);
       //cerr << "Added face #"<< i <<": ("
       //   << n1 << ", " << n2 << ", " << n3 << ")" << endl; 
     } else {
