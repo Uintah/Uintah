@@ -29,7 +29,6 @@
 # CMakeLists.txt for Dataflow/Modules/Math
 
 SET(Dataflow_Modules_Math_SRCS
-  AppendMatrix.cc
   BuildNoiseColumnMatrix.cc
   CreateGeometricTransform.cc
   ConvertMatrixType.cc
