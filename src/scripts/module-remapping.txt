@@ -77,9 +77,9 @@ SCIRun::FieldsData::NodeGradient		SCIRun::ChangeFieldData::CalculateLatVolGradie
 SCIRun::FieldsData::PointLatticeMap		SCIRun::MiscField::BuildPointCloudToLatVolMappingMatrix
 SCIRun::FieldsData::ReplaceScalarDataValue	### NOTE TO USER: use SCIRun::ChangeFieldData::CalculateFieldData ###
 SCIRun::FieldsData::ScaleFieldData		### NOTE TO USER: use SCIRun::ChangeFieldData::CalculateFieldData ###
-SCIRun::FieldsData::TransformData2		SCIRun::ChangeFieldData::CalculateFieldData2
-SCIRun::FieldsData::TransformData3		SCIRun::ChangeFieldData::CalculateFieldData3
-SCIRun::FieldsData::TransformData		SCIRun::ChangeFieldData::CalculateFieldData
+SCIRun::FieldsData::TransformData2		SCIRun::ChangeFieldData::CalculateFieldDataCompiled2
+SCIRun::FieldsData::TransformData3		SCIRun::ChangeFieldData::CalculateFieldDataCompiled3
+SCIRun::FieldsData::TransformData		SCIRun::ChangeFieldData::CalculateFieldDataCompiled
 SCIRun::FieldsData::VectorMagnitude		SCIRun::ChangeFieldData::CalculateVectorMagnitudes
 SCIRun::FieldsGeometry::CastMLVtoHV		SCIRun::ChangeMesh::ConvertMLVtoHV
 SCIRun::FieldsGeometry::CastTVtoMLV		SCIRun::ChangeMesh::ConvertTVtoMLV
@@ -342,7 +342,7 @@ ModelCreation::FieldsCreate::MergeMeshes				ModelCreation::CreateField::MergeMes
 ModelCreation::FieldsCreate::SplitFieldByConnectedRegion		ModelCreation::CreateField::SplitFieldByConnectedRegion
 ModelCreation::FieldsCreate::SplitFieldByDomain				ModelCreation::CreateField::SplitAndMergeFieldByDomain
 ModelCreation::FieldsData::ComputeFieldData				ModelCreation::ChangeFieldData::CalculateFieldData
-ModelCreation::FieldsData::ComputeFieldsData				ModelCreation::ChangeFieldData::CalculateFieldsData
+ModelCreation::FieldsData::ComputeFieldsData				ModelCreation::ChangeFieldData::CalculateFieldData3
 ModelCreation::FieldsData::CreateFieldData				ModelCreation::ChangeFieldData::CreateFieldData
 ModelCreation::FieldsData::CurrentDensityMapping			NodelCreation::ChangeFieldData::MapCurrentDensityOntoField
 ModelCreation::FieldsData::DistanceToBoundary				ModelCreation::ChangeFieldData::CalculateDistanceToFieldBoundary

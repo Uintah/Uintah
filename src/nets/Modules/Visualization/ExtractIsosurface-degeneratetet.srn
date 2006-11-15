@@ -13,7 +13,7 @@
       <var name="padpercent" val="{0.0}"/>
       <var name="data-at" val="{Nodes}"/>
     </module>
-    <module category="ChangeFieldData" id="m2" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="81" y="93"/>
       <var name="function" val="{result = x + y + z;
 }"/>

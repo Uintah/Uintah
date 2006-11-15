@@ -14,7 +14,7 @@
       <var name="data-at" val="{Nodes}"/>
       <var name="ui_geometry" val="{314x263+59+54}"/>
     </module>
-    <module category="ChangeFieldData" gui_visible="yes" id="m2" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" gui_visible="yes" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="127" y="155"/>
       <var name="function" val="{result = Vector((x+1)*0.5, (y+1)*0.5, (z+1)*0.5);
 

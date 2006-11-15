@@ -130,7 +130,7 @@
       <var name="cnormal-y" val="{1.0}"/>
       <var name="cnormal-z" val="{1.0}"/>
     </module>
-    <module category="ChangeFieldData" id="m9" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m9" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="241" y="70"/>
       <var name="function" val="{result = (x-.5)*(x-.5) + (y-.5)*(y-0.5) + sin(x*130)*sin(y*130)/12;}"/>
       <var name="outputdatatype" val="{double}"/>

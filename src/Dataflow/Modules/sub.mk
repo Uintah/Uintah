@@ -42,10 +42,11 @@ SUBDIRS := \
 	$(SRCDIR)/Bundle\
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
+	$(SRCDIR)/DataArrayMath\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/Render\
 	$(SRCDIR)/Time\
-        $(SRCDIR)/Visualization\
+  $(SRCDIR)/Visualization\
 	$(SRCDIR)/String\
 	$(SRCDIR)/Examples\
 #[INSERT NEW CATEGORY DIR HERE]

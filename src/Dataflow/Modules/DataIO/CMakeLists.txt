@@ -43,6 +43,7 @@ SET(Dataflow_Modules_DataIO_SRCS
   WritePath.cc
   ReadString.cc
   WriteString.cc
+  StreamMatrixFromDisk.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_DataIO ${Dataflow_Modules_DataIO_SRCS})
@@ -64,6 +65,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_DataIO
   Dataflow_TkExtensions
   Core_Util
   Core_Volume
+  Core_Algorithms_DataStreaming
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}

@@ -33,7 +33,7 @@
       <var name="max" val="{2.80333333333}"/>
       <var name="makeSymmetric" val="{0}"/>
     </module>
-    <module category="ChangeFieldData" id="m5" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="55" y="165"/>
       <var name="function" val="{result = x*x + y*y + z*z;
 }"/>

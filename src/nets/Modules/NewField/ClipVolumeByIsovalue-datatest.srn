@@ -16,7 +16,7 @@
     <module category="ChangeMesh" id="m2" name="ConvertHexVolToTetVol" package="SCIRun">
       <position x="53" y="92"/>
     </module>
-    <module category="ChangeFieldData" id="m3" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m3" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="53" y="169"/>
       <var name="function" val="{result = x*x + y*y + z*z;
 

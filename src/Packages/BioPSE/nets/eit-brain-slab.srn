@@ -245,7 +245,7 @@
       <position x="852" y="321"/>
       <var name="preserve-scalar-type" val="{0}"/>
     </module>
-    <module category="Math" id="m28" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m28" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="870" y="386"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{                8}"/>
@@ -268,7 +268,7 @@
       <position x="1438" y="240"/>
       <var name="preserve-scalar-type" val="{0}"/>
     </module>
-    <module category="Math" id="m33" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m33" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="1456" y="304"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{                8}"/>

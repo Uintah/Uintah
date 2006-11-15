@@ -14,7 +14,7 @@
       <position x="220" y="146"/>
       <var name="filename" val="scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat"/>
     </module>
-    <module category="Math" id="m2" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m2" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="218" y="238"/>
       <var name="row_or_col" val="{col}"/>
     </module>

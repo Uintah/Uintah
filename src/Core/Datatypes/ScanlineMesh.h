@@ -253,8 +253,8 @@ public:
   void get_center(Point &, typename Face::index_type) const {}
   void get_center(Point &, typename Cell::index_type) const {}
 
-  bool locate(typename Node::index_type &, const Point &);
-  bool locate(typename Edge::index_type &, const Point &);
+  bool locate(typename Node::index_type &, const Point &) const;
+  bool locate(typename Edge::index_type &, const Point &) const;
   bool locate(typename Face::index_type &, const Point &) const { return false; }
   bool locate(typename Cell::index_type &, const Point &) const { return false; }
 
@@ -512,7 +512,7 @@ ScanlineMesh<Basis>::get_center(Point &result,
 // TODO: verify
 template <class Basis>
 bool
-ScanlineMesh<Basis>::locate(typename Edge::index_type &elem, const Point &p)
+ScanlineMesh<Basis>::locate(typename Edge::index_type &elem, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(elem, *this, p);
   const Point r = transform_.unproject(p);
@@ -532,7 +532,7 @@ ScanlineMesh<Basis>::locate(typename Edge::index_type &elem, const Point &p)
 // TODO: verify
 template <class Basis>
 bool
-ScanlineMesh<Basis>::locate(typename Node::index_type &node, const Point &p)
+ScanlineMesh<Basis>::locate(typename Node::index_type &node, const Point &p) const
 {
   const Point r = transform_.unproject(p);
   node = (unsigned int)(r.x() + 0.5);

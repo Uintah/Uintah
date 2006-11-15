@@ -120,7 +120,7 @@
       <var name="resolution" val="{255}"/>
       <var name="realres" val="{255}"/>
     </module>
-    <module category="ChangeFieldData" gui_visible="yes" id="m4" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" gui_visible="yes" id="m4" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="34" y="121"/>
       <var name="function" val="{result = sqrt(x*x + y*y + z*z);
 }"/>

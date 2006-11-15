@@ -181,17 +181,17 @@
     <module category="Forward" id="m14" name="BuildFEMatrix" package="BioPSE">
       <position x="204" y="163"/>
     </module>
-    <module category="ChangeFieldData" id="m15" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m15" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="240" y="254"/>
       <var name="function" val="{result = Vector(1,0,0);}"/>
       <var name="outputdatatype" val="{Vector}"/>
     </module>
-    <module category="ChangeFieldData" id="m16" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m16" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="445" y="254"/>
       <var name="function" val="{result = Vector(0,1,0);}"/>
       <var name="outputdatatype" val="{Vector}"/>
     </module>
-    <module category="ChangeFieldData" id="m17" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m17" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="652" y="253"/>
       <var name="function" val="{result = Vector(0,0,1);}"/>
       <var name="outputdatatype" val="{Vector}"/>
@@ -349,7 +349,7 @@
       <var name="dist" val="{uniscat}"/>
       <var name="whichtab" val="{Random}"/>
     </module>
-    <module category="ChangeFieldData" id="m36" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m36" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="1255" y="193"/>
       <var name="function" val="{result = Vector(0,0,1);}"/>
       <var name="outputdatatype" val="{Vector}"/>

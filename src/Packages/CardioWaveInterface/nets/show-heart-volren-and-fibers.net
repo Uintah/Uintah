@@ -18,8 +18,8 @@ set m12 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 330 537]
 set m13 [addModuleAtPosition "SCIRun" "MiscField" "ReportFieldGeometryMeasures" 366 110]
 set m14 [addModuleAtPosition "SCIRun" "NewField" "ClipFieldByFunction" 330 311]
 set m15 [addModuleAtPosition "SCIRun" "ChangeFieldData" "SwapFieldDataWithMatrixEntries" 348 176]
-set m16 [addModuleAtPosition "SCIRun" "ChangeFieldData" "CalculateFieldData2" 330 246]
-set m17 [addModuleAtPosition "SCIRun" "ChangeFieldData" "CalculateFieldData" 330 375]
+set m16 [addModuleAtPosition "SCIRun" "ChangeFieldData" "CalculateFieldDataCompiled2" 330 246]
+set m17 [addModuleAtPosition "SCIRun" "ChangeFieldData" "CalculateFieldDataCompiled" 330 375]
 
 addConnection $m0 0 $m2 0
 addConnection $m2 0 $m1 0

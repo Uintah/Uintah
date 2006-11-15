@@ -4,7 +4,7 @@
 
 set m0 [addModuleAtPosition "SCIRun" "DataIO" "ReadField" 10 78]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "ReadMatrix" 194 10]
-set m2 [addModuleAtPosition "SCIRun" "Math" "GetColumnMatrixFromMatrix" 194 77]
+set m2 [addModuleAtPosition "SCIRun" "Math" "GetColumnOrRowFromMatrix" 194 77]
 set m3 [addModuleAtPosition "SCIRun" "ChangeFieldData" "SwapFieldDataWithMatrixEntries" 10 157]
 set m4 [addModuleAtPosition "BioPSE" "Forward" "InsertVoltageSource" 246 250]
 set m5 [addModuleAtPosition "SCIRun" "DataIO" "ReadField" 403 81]
