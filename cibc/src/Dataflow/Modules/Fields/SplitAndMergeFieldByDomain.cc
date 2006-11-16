@@ -26,53 +26,53 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Malloc/Allocator.h>
+
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace SCIRun {
 
-class GetFieldBoundary : public Module {
+class SplitAndMergeFieldByDomain : public Module {
 public:
-  GetFieldBoundary(GuiContext*);
+  SplitAndMergeFieldByDomain(GuiContext*);
   virtual void execute();
+
 };
 
 
-DECLARE_MAKER(GetFieldBoundary)
-GetFieldBoundary::GetFieldBoundary(GuiContext* ctx)
-  : Module("GetFieldBoundary", ctx, Source, "NewField", "SCIRun")
+DECLARE_MAKER(SplitAndMergeFieldByDomain)
+SplitAndMergeFieldByDomain::SplitAndMergeFieldByDomain(GuiContext* ctx)
+  : Module("SplitAndMergeFieldByDomain", ctx, Source, "NewField", "SCIRun")
 {
 }
 
 
-void
-GetFieldBoundary::execute()
+void SplitAndMergeFieldByDomain::execute()
 {
-  // Declare dataflow object
-  FieldHandle field;
+  // Define local handles of data objects:
+  FieldHandle input;
+  FieldHandle output;
   
-  // Get data from ports
-  if (!(get_input_handle("Field",field,true))) return;
-  
-  // If parameters changed, do algorithm
-  if (inputs_changed_ || !oport_cached("BoundaryField") || !oport_cached("Mapping"))
-  {
-    FieldHandle ofield;
-    MatrixHandle mapping;
-    
-    // Entry point to algorithm
-    SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.GetFieldBoundary(field,ofield,mapping))) return;
+  // Get the new input data:    
+  if(!(get_input_handle("Field",input,true))) return;
 
-    // Send Data flow objects downstream
-    send_output_handle("BoundaryField",ofield,false);
-    send_output_handle("Mapping",mapping,false);
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("SplitField"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.SplitAndMergeFieldByDomain(input,output))) return;
+
+    // send new output if there is any:   
+    send_output_handle("SplitField",output,false);
   }
 }
 
+
+
 } // End namespace SCIRun
+
