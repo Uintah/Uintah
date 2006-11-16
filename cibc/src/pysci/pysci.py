@@ -555,6 +555,33 @@ class RedrawEventPtr(RedrawEvent):
         self.__class__ = RedrawEvent
 _pysci.RedrawEvent_swigregister(RedrawEventPtr)
 
+class AutoviewEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, AutoviewEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, AutoviewEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::AutoviewEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, AutoviewEvent, 'this', _pysci.new_AutoviewEvent(*args))
+        _swig_setattr(self, AutoviewEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_AutoviewEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def io(*args): return _pysci.AutoviewEvent_io(*args)
+    def clone(*args): return _pysci.AutoviewEvent_clone(*args)
+
+class AutoviewEventPtr(AutoviewEvent):
+    def __init__(self, this):
+        _swig_setattr(self, AutoviewEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, AutoviewEvent, 'thisown', 0)
+        self.__class__ = AutoviewEvent
+_pysci.AutoviewEvent_swigregister(AutoviewEventPtr)
+
 class TMNotifyEvent(BaseEvent):
     __swig_setmethods__ = {}
     for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
@@ -719,6 +746,8 @@ _pysci.vector_double_swigregister(vector_doublePtr)
 load_field = _pysci.load_field
 
 show_field = _pysci.show_field
+
+toggle_field_visibility = _pysci.toggle_field_visibility
 
 init_pysci = _pysci.init_pysci
 

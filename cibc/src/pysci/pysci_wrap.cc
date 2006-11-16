@@ -1436,76 +1436,79 @@ SWIG_Python_SetModule(swig_module_info *swig_module) {
 #define SWIGTYPE_p_MapPersistentInt swig_types[2]
 #define SWIGTYPE_p_MapStringPersistentTypeID swig_types[3]
 #define SWIGTYPE_p_ProgressState swig_types[4]
-#define SWIGTYPE_p_SCIRun__BaseEvent swig_types[5]
-#define SWIGTYPE_p_SCIRun__CallbackOpenGLContext swig_types[6]
-#define SWIGTYPE_p_SCIRun__CommandEvent swig_types[7]
-#define SWIGTYPE_p_SCIRun__Datatype swig_types[8]
-#define SWIGTYPE_p_SCIRun__EventModifiers swig_types[9]
-#define SWIGTYPE_p_SCIRun__KeyEvent swig_types[10]
-#define SWIGTYPE_p_SCIRun__Mutex swig_types[11]
-#define SWIGTYPE_p_SCIRun__OpenGLContext swig_types[12]
-#define SWIGTYPE_p_SCIRun__Persistent swig_types[13]
-#define SWIGTYPE_p_SCIRun__PersistentTypeID swig_types[14]
-#define SWIGTYPE_p_SCIRun__Piostream swig_types[15]
-#define SWIGTYPE_p_SCIRun__PointerEvent swig_types[16]
-#define SWIGTYPE_p_SCIRun__ProgressReporter swig_types[17]
-#define SWIGTYPE_p_SCIRun__QuitEvent swig_types[18]
-#define SWIGTYPE_p_SCIRun__RedrawEvent swig_types[19]
-#define SWIGTYPE_p_SCIRun__TMNotifyEvent swig_types[20]
-#define SWIGTYPE_p_SCIRun__WindowEvent swig_types[21]
-#define SWIGTYPE_p_allocator_type swig_types[22]
-#define SWIGTYPE_p_bool swig_types[23]
-#define SWIGTYPE_p_char swig_types[24]
-#define SWIGTYPE_p_difference_type swig_types[25]
-#define SWIGTYPE_p_double swig_types[26]
-#define SWIGTYPE_p_f___p_SCIRun__BaseEvent swig_types[27]
-#define SWIGTYPE_p_f___p_SCIRun__CommandEvent swig_types[28]
-#define SWIGTYPE_p_f___p_SCIRun__Datatype swig_types[29]
-#define SWIGTYPE_p_f___p_SCIRun__KeyEvent swig_types[30]
-#define SWIGTYPE_p_f___p_SCIRun__Persistent swig_types[31]
-#define SWIGTYPE_p_f___p_SCIRun__PointerEvent swig_types[32]
-#define SWIGTYPE_p_f___p_SCIRun__QuitEvent swig_types[33]
-#define SWIGTYPE_p_f___p_SCIRun__RedrawEvent swig_types[34]
-#define SWIGTYPE_p_f___p_SCIRun__TMNotifyEvent swig_types[35]
-#define SWIGTYPE_p_f___p_SCIRun__WindowEvent swig_types[36]
-#define SWIGTYPE_p_f_p_void__int swig_types[37]
-#define SWIGTYPE_p_float swig_types[38]
-#define SWIGTYPE_p_int swig_types[39]
-#define SWIGTYPE_p_long swig_types[40]
-#define SWIGTYPE_p_long_long swig_types[41]
-#define SWIGTYPE_p_p_SCIRun__BaseEvent swig_types[42]
-#define SWIGTYPE_p_p_SCIRun__CommandEvent swig_types[43]
-#define SWIGTYPE_p_p_SCIRun__Datatype swig_types[44]
-#define SWIGTYPE_p_p_SCIRun__KeyEvent swig_types[45]
-#define SWIGTYPE_p_p_SCIRun__Persistent swig_types[46]
-#define SWIGTYPE_p_p_SCIRun__PointerEvent swig_types[47]
-#define SWIGTYPE_p_p_SCIRun__QuitEvent swig_types[48]
-#define SWIGTYPE_p_p_SCIRun__RedrawEvent swig_types[49]
-#define SWIGTYPE_p_p_SCIRun__TMNotifyEvent swig_types[50]
-#define SWIGTYPE_p_p_SCIRun__WindowEvent swig_types[51]
-#define SWIGTYPE_p_p_char swig_types[52]
-#define SWIGTYPE_p_short swig_types[53]
-#define SWIGTYPE_p_signed_char swig_types[54]
-#define SWIGTYPE_p_size_type swig_types[55]
-#define SWIGTYPE_p_std__invalid_argument swig_types[56]
-#define SWIGTYPE_p_std__ostream swig_types[57]
-#define SWIGTYPE_p_std__string swig_types[58]
-#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[59]
-#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t__allocator_type swig_types[60]
-#define SWIGTYPE_p_std__vectorTstd__string_std__allocatorTstd__string_t_t swig_types[61]
-#define SWIGTYPE_p_std__vectorTstd__string_std__allocatorTstd__string_t_t__allocator_type swig_types[62]
-#define SWIGTYPE_p_unsigned_char swig_types[63]
-#define SWIGTYPE_p_unsigned_int swig_types[64]
-#define SWIGTYPE_p_unsigned_long swig_types[65]
-#define SWIGTYPE_p_unsigned_long_long swig_types[66]
-#define SWIGTYPE_p_unsigned_short swig_types[67]
-#define SWIGTYPE_p_value_type swig_types[68]
-#define SWIGTYPE_ptrdiff_t swig_types[69]
-#define SWIGTYPE_size_t swig_types[70]
-#define SWIGTYPE_std__ptrdiff_t swig_types[71]
-#define SWIGTYPE_std__size_t swig_types[72]
-static swig_type_info *swig_types[74];
-static swig_module_info swig_module = {swig_types, 73, 0, 0, 0, 0};
+#define SWIGTYPE_p_SCIRun__AutoviewEvent swig_types[5]
+#define SWIGTYPE_p_SCIRun__BaseEvent swig_types[6]
+#define SWIGTYPE_p_SCIRun__CallbackOpenGLContext swig_types[7]
+#define SWIGTYPE_p_SCIRun__CommandEvent swig_types[8]
+#define SWIGTYPE_p_SCIRun__Datatype swig_types[9]
+#define SWIGTYPE_p_SCIRun__EventModifiers swig_types[10]
+#define SWIGTYPE_p_SCIRun__KeyEvent swig_types[11]
+#define SWIGTYPE_p_SCIRun__Mutex swig_types[12]
+#define SWIGTYPE_p_SCIRun__OpenGLContext swig_types[13]
+#define SWIGTYPE_p_SCIRun__Persistent swig_types[14]
+#define SWIGTYPE_p_SCIRun__PersistentTypeID swig_types[15]
+#define SWIGTYPE_p_SCIRun__Piostream swig_types[16]
+#define SWIGTYPE_p_SCIRun__PointerEvent swig_types[17]
+#define SWIGTYPE_p_SCIRun__ProgressReporter swig_types[18]
+#define SWIGTYPE_p_SCIRun__QuitEvent swig_types[19]
+#define SWIGTYPE_p_SCIRun__RedrawEvent swig_types[20]
+#define SWIGTYPE_p_SCIRun__TMNotifyEvent swig_types[21]
+#define SWIGTYPE_p_SCIRun__WindowEvent swig_types[22]
+#define SWIGTYPE_p_allocator_type swig_types[23]
+#define SWIGTYPE_p_bool swig_types[24]
+#define SWIGTYPE_p_char swig_types[25]
+#define SWIGTYPE_p_difference_type swig_types[26]
+#define SWIGTYPE_p_double swig_types[27]
+#define SWIGTYPE_p_f___p_SCIRun__AutoviewEvent swig_types[28]
+#define SWIGTYPE_p_f___p_SCIRun__BaseEvent swig_types[29]
+#define SWIGTYPE_p_f___p_SCIRun__CommandEvent swig_types[30]
+#define SWIGTYPE_p_f___p_SCIRun__Datatype swig_types[31]
+#define SWIGTYPE_p_f___p_SCIRun__KeyEvent swig_types[32]
+#define SWIGTYPE_p_f___p_SCIRun__Persistent swig_types[33]
+#define SWIGTYPE_p_f___p_SCIRun__PointerEvent swig_types[34]
+#define SWIGTYPE_p_f___p_SCIRun__QuitEvent swig_types[35]
+#define SWIGTYPE_p_f___p_SCIRun__RedrawEvent swig_types[36]
+#define SWIGTYPE_p_f___p_SCIRun__TMNotifyEvent swig_types[37]
+#define SWIGTYPE_p_f___p_SCIRun__WindowEvent swig_types[38]
+#define SWIGTYPE_p_f_p_void__int swig_types[39]
+#define SWIGTYPE_p_float swig_types[40]
+#define SWIGTYPE_p_int swig_types[41]
+#define SWIGTYPE_p_long swig_types[42]
+#define SWIGTYPE_p_long_long swig_types[43]
+#define SWIGTYPE_p_p_SCIRun__AutoviewEvent swig_types[44]
+#define SWIGTYPE_p_p_SCIRun__BaseEvent swig_types[45]
+#define SWIGTYPE_p_p_SCIRun__CommandEvent swig_types[46]
+#define SWIGTYPE_p_p_SCIRun__Datatype swig_types[47]
+#define SWIGTYPE_p_p_SCIRun__KeyEvent swig_types[48]
+#define SWIGTYPE_p_p_SCIRun__Persistent swig_types[49]
+#define SWIGTYPE_p_p_SCIRun__PointerEvent swig_types[50]
+#define SWIGTYPE_p_p_SCIRun__QuitEvent swig_types[51]
+#define SWIGTYPE_p_p_SCIRun__RedrawEvent swig_types[52]
+#define SWIGTYPE_p_p_SCIRun__TMNotifyEvent swig_types[53]
+#define SWIGTYPE_p_p_SCIRun__WindowEvent swig_types[54]
+#define SWIGTYPE_p_p_char swig_types[55]
+#define SWIGTYPE_p_short swig_types[56]
+#define SWIGTYPE_p_signed_char swig_types[57]
+#define SWIGTYPE_p_size_type swig_types[58]
+#define SWIGTYPE_p_std__invalid_argument swig_types[59]
+#define SWIGTYPE_p_std__ostream swig_types[60]
+#define SWIGTYPE_p_std__string swig_types[61]
+#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[62]
+#define SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t__allocator_type swig_types[63]
+#define SWIGTYPE_p_std__vectorTstd__string_std__allocatorTstd__string_t_t swig_types[64]
+#define SWIGTYPE_p_std__vectorTstd__string_std__allocatorTstd__string_t_t__allocator_type swig_types[65]
+#define SWIGTYPE_p_unsigned_char swig_types[66]
+#define SWIGTYPE_p_unsigned_int swig_types[67]
+#define SWIGTYPE_p_unsigned_long swig_types[68]
+#define SWIGTYPE_p_unsigned_long_long swig_types[69]
+#define SWIGTYPE_p_unsigned_short swig_types[70]
+#define SWIGTYPE_p_value_type swig_types[71]
+#define SWIGTYPE_ptrdiff_t swig_types[72]
+#define SWIGTYPE_size_t swig_types[73]
+#define SWIGTYPE_std__ptrdiff_t swig_types[74]
+#define SWIGTYPE_std__size_t swig_types[75]
+static swig_type_info *swig_types[77];
+static swig_module_info swig_module = {swig_types, 76, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -9287,6 +9290,89 @@ static PyObject * RedrawEvent_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
+static PyObject *_wrap_new_AutoviewEvent(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::AutoviewEvent *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":new_AutoviewEvent")) goto fail;
+    result = (SCIRun::AutoviewEvent *)new SCIRun::AutoviewEvent();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__AutoviewEvent, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_AutoviewEvent(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::AutoviewEvent *arg1 = (SCIRun::AutoviewEvent *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_AutoviewEvent",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__AutoviewEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AutoviewEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::AutoviewEvent *arg1 = (SCIRun::AutoviewEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:AutoviewEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__AutoviewEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_AutoviewEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::AutoviewEvent *arg1 = (SCIRun::AutoviewEvent *) 0 ;
+    SCIRun::AutoviewEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:AutoviewEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__AutoviewEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::AutoviewEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__AutoviewEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * AutoviewEvent_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__AutoviewEvent, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
 static PyObject *_wrap_new_TMNotifyEvent__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj = NULL;
     SCIRun::string *arg1 = 0 ;
@@ -9483,6 +9569,30 @@ static PyObject *_wrap_new_TMNotifyEvent__SWIG_4(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_new_TMNotifyEvent__SWIG_5(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::TMNotifyEvent *arg1 = 0 ;
+    SCIRun::TMNotifyEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:new_TMNotifyEvent",&obj0)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__TMNotifyEvent, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::TMNotifyEvent");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    result = (SCIRun::TMNotifyEvent *)new SCIRun::TMNotifyEvent((SCIRun::TMNotifyEvent const &)*arg1);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__TMNotifyEvent, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_new_TMNotifyEvent(PyObject *self, PyObject *args) {
     int argc;
     PyObject *argv[5];
@@ -9494,6 +9604,21 @@ static PyObject *_wrap_new_TMNotifyEvent(PyObject *self, PyObject *args) {
     }
     if (argc == 0) {
         return _wrap_new_TMNotifyEvent__SWIG_4(self,args);
+    }
+    if (argc == 1) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__TMNotifyEvent, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            return _wrap_new_TMNotifyEvent__SWIG_5(self,args);
+        }
     }
     if (argc == 1) {
         int _v;
@@ -11874,6 +11999,32 @@ static PyObject *_wrap_show_field(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_toggle_field_visibility(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    unsigned int arg1 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:toggle_field_visibility",&obj0)) goto fail;
+    {
+        arg1 = static_cast<unsigned int >(SWIG_As_unsigned_SS_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        result = (bool)SCIRun::toggle_field_visibility(arg1);
+        
+        Py_END_ALLOW_THREADS
+    }
+    {
+        resultobj = SWIG_From_bool(static_cast<bool >(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_init_pysci(PyObject *, PyObject *args) {
     PyObject *resultobj = NULL;
     char **arg1 = (char **) 0 ;
@@ -12348,6 +12499,11 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"RedrawEvent_io", _wrap_RedrawEvent_io, METH_VARARGS, NULL},
 	 { (char *)"RedrawEvent_clone", _wrap_RedrawEvent_clone, METH_VARARGS, NULL},
 	 { (char *)"RedrawEvent_swigregister", RedrawEvent_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_AutoviewEvent", _wrap_new_AutoviewEvent, METH_VARARGS, NULL},
+	 { (char *)"delete_AutoviewEvent", _wrap_delete_AutoviewEvent, METH_VARARGS, NULL},
+	 { (char *)"AutoviewEvent_io", _wrap_AutoviewEvent_io, METH_VARARGS, NULL},
+	 { (char *)"AutoviewEvent_clone", _wrap_AutoviewEvent_clone, METH_VARARGS, NULL},
+	 { (char *)"AutoviewEvent_swigregister", AutoviewEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_TMNotifyEvent", _wrap_new_TMNotifyEvent, METH_VARARGS, NULL},
 	 { (char *)"delete_TMNotifyEvent", _wrap_delete_TMNotifyEvent, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_io", _wrap_TMNotifyEvent_io, METH_VARARGS, NULL},
@@ -12422,6 +12578,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"vector_double_swigregister", vector_double_swigregister, METH_VARARGS, NULL},
 	 { (char *)"load_field", _wrap_load_field, METH_VARARGS, NULL},
 	 { (char *)"show_field", _wrap_show_field, METH_VARARGS, NULL},
+	 { (char *)"toggle_field_visibility", _wrap_toggle_field_visibility, METH_VARARGS, NULL},
 	 { (char *)"init_pysci", _wrap_init_pysci, METH_VARARGS, NULL},
 	 { (char *)"terminate", _wrap_terminate, METH_VARARGS, NULL},
 	 { (char *)"test_function", _wrap_test_function, METH_VARARGS, NULL},
@@ -12447,6 +12604,9 @@ static void *_p_SCIRun__WindowEventTo_p_SCIRun__Datatype(void *x) {
 static void *_p_SCIRun__RedrawEventTo_p_SCIRun__Datatype(void *x) {
     return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::RedrawEvent *) x));
 }
+static void *_p_SCIRun__AutoviewEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::AutoviewEvent *) x));
+}
 static void *_p_SCIRun__QuitEventTo_p_SCIRun__Datatype(void *x) {
     return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::QuitEvent *) x));
 }
@@ -12470,6 +12630,9 @@ static void *_p_SCIRun__WindowEventTo_p_SCIRun__Persistent(void *x) {
 }
 static void *_p_SCIRun__RedrawEventTo_p_SCIRun__Persistent(void *x) {
     return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::RedrawEvent *) x));
+}
+static void *_p_SCIRun__AutoviewEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::AutoviewEvent *) x));
 }
 static void *_p_SCIRun__QuitEventTo_p_SCIRun__Persistent(void *x) {
     return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::QuitEvent *) x));
@@ -12498,6 +12661,9 @@ static void *_p_p_SCIRun__WindowEventTo_p_p_SCIRun__Persistent(void *x) {
 static void *_p_p_SCIRun__RedrawEventTo_p_p_SCIRun__Persistent(void *x) {
     return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::RedrawEvent **) x));
 }
+static void *_p_p_SCIRun__AutoviewEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::AutoviewEvent **) x));
+}
 static void *_p_p_SCIRun__QuitEventTo_p_p_SCIRun__Persistent(void *x) {
     return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::QuitEvent **) x));
 }
@@ -12524,6 +12690,9 @@ static void *_p_f___p_SCIRun__WindowEventTo_p_f___p_SCIRun__Persistent(void *x) 
 }
 static void *_p_f___p_SCIRun__RedrawEventTo_p_f___p_SCIRun__Persistent(void *x) {
     return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::RedrawEvent *(*)()) x));
+}
+static void *_p_f___p_SCIRun__AutoviewEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::AutoviewEvent *(*)()) x));
 }
 static void *_p_f___p_SCIRun__QuitEventTo_p_f___p_SCIRun__Persistent(void *x) {
     return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::QuitEvent *(*)()) x));
@@ -12558,6 +12727,9 @@ static void *_p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent(void *x) {
 static void *_p_SCIRun__RedrawEventTo_p_SCIRun__BaseEvent(void *x) {
     return (void *)((SCIRun::BaseEvent *)  ((SCIRun::RedrawEvent *) x));
 }
+static void *_p_SCIRun__AutoviewEventTo_p_SCIRun__BaseEvent(void *x) {
+    return (void *)((SCIRun::BaseEvent *)  ((SCIRun::AutoviewEvent *) x));
+}
 static void *_p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent(void *x) {
     return (void *)((SCIRun::BaseEvent *)  ((SCIRun::QuitEvent *) x));
 }
@@ -12578,6 +12750,7 @@ static swig_type_info _swigt__p_MapIntPersistent = {"_p_MapIntPersistent", "MapI
 static swig_type_info _swigt__p_MapPersistentInt = {"_p_MapPersistentInt", "MapPersistentInt *", 0, 0, 0};
 static swig_type_info _swigt__p_MapStringPersistentTypeID = {"_p_MapStringPersistentTypeID", "MapStringPersistentTypeID *", 0, 0, 0};
 static swig_type_info _swigt__p_ProgressState = {"_p_ProgressState", "ProgressState *", 0, 0, 0};
+static swig_type_info _swigt__p_SCIRun__AutoviewEvent = {"_p_SCIRun__AutoviewEvent", "SCIRun::AutoviewEvent *", 0, 0, 0};
 static swig_type_info _swigt__p_SCIRun__BaseEvent = {"_p_SCIRun__BaseEvent", "SCIRun::BaseEvent *", 0, 0, 0};
 static swig_type_info _swigt__p_SCIRun__CallbackOpenGLContext = {"_p_SCIRun__CallbackOpenGLContext", "SCIRun::CallbackOpenGLContext *", 0, 0, 0};
 static swig_type_info _swigt__p_SCIRun__CommandEvent = {"_p_SCIRun__CommandEvent", "SCIRun::CommandEvent *", 0, 0, 0};
@@ -12604,6 +12777,7 @@ static swig_type_info _swigt__p_f___p_SCIRun__Persistent = {"_p_f___p_SCIRun__Pe
 static swig_type_info _swigt__p_f___p_SCIRun__BaseEvent = {"_p_f___p_SCIRun__BaseEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_f___p_SCIRun__WindowEvent = {"_p_f___p_SCIRun__WindowEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_f___p_SCIRun__RedrawEvent = {"_p_f___p_SCIRun__RedrawEvent", 0, 0, 0, 0};
+static swig_type_info _swigt__p_f___p_SCIRun__AutoviewEvent = {"_p_f___p_SCIRun__AutoviewEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_f___p_SCIRun__QuitEvent = {"_p_f___p_SCIRun__QuitEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_f___p_SCIRun__Datatype = {"_p_f___p_SCIRun__Datatype", 0, 0, 0, 0};
 static swig_type_info _swigt__p_f___p_SCIRun__PointerEvent = {"_p_f___p_SCIRun__PointerEvent", 0, 0, 0, 0};
@@ -12619,6 +12793,7 @@ static swig_type_info _swigt__p_p_SCIRun__Persistent = {"_p_p_SCIRun__Persistent
 static swig_type_info _swigt__p_p_SCIRun__BaseEvent = {"_p_p_SCIRun__BaseEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_SCIRun__WindowEvent = {"_p_p_SCIRun__WindowEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_SCIRun__RedrawEvent = {"_p_p_SCIRun__RedrawEvent", 0, 0, 0, 0};
+static swig_type_info _swigt__p_p_SCIRun__AutoviewEvent = {"_p_p_SCIRun__AutoviewEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_SCIRun__QuitEvent = {"_p_p_SCIRun__QuitEvent", 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_SCIRun__Datatype = {"_p_p_SCIRun__Datatype", 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_SCIRun__PointerEvent = {"_p_p_SCIRun__PointerEvent", 0, 0, 0, 0};
@@ -12653,6 +12828,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_MapPersistentInt,
   &_swigt__p_MapStringPersistentTypeID,
   &_swigt__p_ProgressState,
+  &_swigt__p_SCIRun__AutoviewEvent,
   &_swigt__p_SCIRun__BaseEvent,
   &_swigt__p_SCIRun__CallbackOpenGLContext,
   &_swigt__p_SCIRun__CommandEvent,
@@ -12675,6 +12851,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
   &_swigt__p_difference_type,
   &_swigt__p_double,
+  &_swigt__p_f___p_SCIRun__AutoviewEvent,
   &_swigt__p_f___p_SCIRun__BaseEvent,
   &_swigt__p_f___p_SCIRun__CommandEvent,
   &_swigt__p_f___p_SCIRun__Datatype,
@@ -12690,6 +12867,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_int,
   &_swigt__p_long,
   &_swigt__p_long_long,
+  &_swigt__p_p_SCIRun__AutoviewEvent,
   &_swigt__p_p_SCIRun__BaseEvent,
   &_swigt__p_p_SCIRun__CommandEvent,
   &_swigt__p_p_SCIRun__Datatype,
@@ -12728,15 +12906,16 @@ static swig_cast_info _swigc__p_MapIntPersistent[] = {  {&_swigt__p_MapIntPersis
 static swig_cast_info _swigc__p_MapPersistentInt[] = {  {&_swigt__p_MapPersistentInt, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_MapStringPersistentTypeID[] = {  {&_swigt__p_MapStringPersistentTypeID, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_ProgressState[] = {  {&_swigt__p_ProgressState, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_SCIRun__BaseEvent[] = {  {&_swigt__p_SCIRun__BaseEvent, 0, 0, 0},  {&_swigt__p_SCIRun__WindowEvent, _p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__RedrawEvent, _p_SCIRun__RedrawEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__QuitEvent, _p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__TMNotifyEvent, _p_SCIRun__TMNotifyEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__CommandEvent, _p_SCIRun__CommandEventTo_p_SCIRun__BaseEvent, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_SCIRun__AutoviewEvent[] = {  {&_swigt__p_SCIRun__AutoviewEvent, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_SCIRun__BaseEvent[] = {  {&_swigt__p_SCIRun__BaseEvent, 0, 0, 0},  {&_swigt__p_SCIRun__WindowEvent, _p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__RedrawEvent, _p_SCIRun__RedrawEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__AutoviewEvent, _p_SCIRun__AutoviewEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__QuitEvent, _p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__TMNotifyEvent, _p_SCIRun__TMNotifyEventTo_p_SCIRun__BaseEvent, 0, 0},  {&_swigt__p_SCIRun__CommandEvent, _p_SCIRun__CommandEventTo_p_SCIRun__BaseEvent, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__CallbackOpenGLContext[] = {  {&_swigt__p_SCIRun__CallbackOpenGLContext, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__CommandEvent[] = {  {&_swigt__p_SCIRun__CommandEvent, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_SCIRun__Datatype[] = {  {&_swigt__p_SCIRun__BaseEvent, _p_SCIRun__BaseEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__WindowEvent, _p_SCIRun__WindowEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__RedrawEvent, _p_SCIRun__RedrawEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__QuitEvent, _p_SCIRun__QuitEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__Datatype, 0, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__TMNotifyEvent, _p_SCIRun__TMNotifyEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__CommandEvent, _p_SCIRun__CommandEventTo_p_SCIRun__Datatype, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_SCIRun__Datatype[] = {  {&_swigt__p_SCIRun__BaseEvent, _p_SCIRun__BaseEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__WindowEvent, _p_SCIRun__WindowEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__RedrawEvent, _p_SCIRun__RedrawEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__AutoviewEvent, _p_SCIRun__AutoviewEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__QuitEvent, _p_SCIRun__QuitEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__Datatype, 0, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__TMNotifyEvent, _p_SCIRun__TMNotifyEventTo_p_SCIRun__Datatype, 0, 0},  {&_swigt__p_SCIRun__CommandEvent, _p_SCIRun__CommandEventTo_p_SCIRun__Datatype, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__EventModifiers[] = {  {&_swigt__p_SCIRun__EventModifiers, 0, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__EventModifiers, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__EventModifiers, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__KeyEvent[] = {  {&_swigt__p_SCIRun__KeyEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__Mutex[] = {  {&_swigt__p_SCIRun__Mutex, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__OpenGLContext[] = {  {&_swigt__p_SCIRun__OpenGLContext, 0, 0, 0},  {&_swigt__p_SCIRun__CallbackOpenGLContext, _p_SCIRun__CallbackOpenGLContextTo_p_SCIRun__OpenGLContext, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_SCIRun__Persistent[] = {  {&_swigt__p_SCIRun__BaseEvent, _p_SCIRun__BaseEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__Persistent, 0, 0, 0},  {&_swigt__p_SCIRun__WindowEvent, _p_SCIRun__WindowEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__RedrawEvent, _p_SCIRun__RedrawEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__QuitEvent, _p_SCIRun__QuitEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__Datatype, _p_SCIRun__DatatypeTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__TMNotifyEvent, _p_SCIRun__TMNotifyEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__CommandEvent, _p_SCIRun__CommandEventTo_p_SCIRun__Persistent, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_SCIRun__Persistent[] = {  {&_swigt__p_SCIRun__BaseEvent, _p_SCIRun__BaseEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__Persistent, 0, 0, 0},  {&_swigt__p_SCIRun__WindowEvent, _p_SCIRun__WindowEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__RedrawEvent, _p_SCIRun__RedrawEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__AutoviewEvent, _p_SCIRun__AutoviewEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__QuitEvent, _p_SCIRun__QuitEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__PointerEvent, _p_SCIRun__PointerEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__KeyEvent, _p_SCIRun__KeyEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__Datatype, _p_SCIRun__DatatypeTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__TMNotifyEvent, _p_SCIRun__TMNotifyEventTo_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_SCIRun__CommandEvent, _p_SCIRun__CommandEventTo_p_SCIRun__Persistent, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__PersistentTypeID[] = {  {&_swigt__p_SCIRun__PersistentTypeID, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__Piostream[] = {  {&_swigt__p_SCIRun__Piostream, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SCIRun__PointerEvent[] = {  {&_swigt__p_SCIRun__PointerEvent, 0, 0, 0},{0, 0, 0, 0}};
@@ -12753,13 +12932,14 @@ static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0
 static swig_cast_info _swigc__p_f___p_SCIRun__BaseEvent[] = {{&_swigt__p_f___p_SCIRun__BaseEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__WindowEvent[] = {{&_swigt__p_f___p_SCIRun__WindowEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__RedrawEvent[] = {{&_swigt__p_f___p_SCIRun__RedrawEvent, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_f___p_SCIRun__AutoviewEvent[] = {{&_swigt__p_f___p_SCIRun__AutoviewEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__QuitEvent[] = {{&_swigt__p_f___p_SCIRun__QuitEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__Datatype[] = {{&_swigt__p_f___p_SCIRun__Datatype, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__PointerEvent[] = {{&_swigt__p_f___p_SCIRun__PointerEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__KeyEvent[] = {{&_swigt__p_f___p_SCIRun__KeyEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__TMNotifyEvent[] = {{&_swigt__p_f___p_SCIRun__TMNotifyEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f___p_SCIRun__CommandEvent[] = {{&_swigt__p_f___p_SCIRun__CommandEvent, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_f___p_SCIRun__Persistent[] = {  {&_swigt__p_f___p_SCIRun__BaseEvent, _p_f___p_SCIRun__BaseEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__Persistent, 0, 0, 0},  {&_swigt__p_f___p_SCIRun__WindowEvent, _p_f___p_SCIRun__WindowEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__RedrawEvent, _p_f___p_SCIRun__RedrawEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__QuitEvent, _p_f___p_SCIRun__QuitEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__Datatype, _p_f___p_SCIRun__DatatypeTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__PointerEvent, _p_f___p_SCIRun__PointerEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__KeyEvent, _p_f___p_SCIRun__KeyEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__TMNotifyEvent, _p_f___p_SCIRun__TMNotifyEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__CommandEvent, _p_f___p_SCIRun__CommandEventTo_p_f___p_SCIRun__Persistent, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_f___p_SCIRun__Persistent[] = {  {&_swigt__p_f___p_SCIRun__BaseEvent, _p_f___p_SCIRun__BaseEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__Persistent, 0, 0, 0},  {&_swigt__p_f___p_SCIRun__WindowEvent, _p_f___p_SCIRun__WindowEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__RedrawEvent, _p_f___p_SCIRun__RedrawEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__AutoviewEvent, _p_f___p_SCIRun__AutoviewEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__QuitEvent, _p_f___p_SCIRun__QuitEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__Datatype, _p_f___p_SCIRun__DatatypeTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__PointerEvent, _p_f___p_SCIRun__PointerEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__KeyEvent, _p_f___p_SCIRun__KeyEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__TMNotifyEvent, _p_f___p_SCIRun__TMNotifyEventTo_p_f___p_SCIRun__Persistent, 0, 0},  {&_swigt__p_f___p_SCIRun__CommandEvent, _p_f___p_SCIRun__CommandEventTo_p_f___p_SCIRun__Persistent, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_f_p_void__int[] = {  {&_swigt__p_f_p_void__int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_float[] = {  {&_swigt__p_float, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
@@ -12768,13 +12948,14 @@ static swig_cast_info _swigc__p_long_long[] = {  {&_swigt__p_long_long, 0, 0, 0}
 static swig_cast_info _swigc__p_p_SCIRun__BaseEvent[] = {{&_swigt__p_p_SCIRun__BaseEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__WindowEvent[] = {{&_swigt__p_p_SCIRun__WindowEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__RedrawEvent[] = {{&_swigt__p_p_SCIRun__RedrawEvent, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_p_SCIRun__AutoviewEvent[] = {{&_swigt__p_p_SCIRun__AutoviewEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__QuitEvent[] = {{&_swigt__p_p_SCIRun__QuitEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__Datatype[] = {{&_swigt__p_p_SCIRun__Datatype, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__PointerEvent[] = {{&_swigt__p_p_SCIRun__PointerEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__KeyEvent[] = {{&_swigt__p_p_SCIRun__KeyEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__TMNotifyEvent[] = {{&_swigt__p_p_SCIRun__TMNotifyEvent, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_SCIRun__CommandEvent[] = {{&_swigt__p_p_SCIRun__CommandEvent, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_p_SCIRun__Persistent[] = {  {&_swigt__p_p_SCIRun__BaseEvent, _p_p_SCIRun__BaseEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__Persistent, 0, 0, 0},  {&_swigt__p_p_SCIRun__WindowEvent, _p_p_SCIRun__WindowEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__RedrawEvent, _p_p_SCIRun__RedrawEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__QuitEvent, _p_p_SCIRun__QuitEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__Datatype, _p_p_SCIRun__DatatypeTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__PointerEvent, _p_p_SCIRun__PointerEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__KeyEvent, _p_p_SCIRun__KeyEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__TMNotifyEvent, _p_p_SCIRun__TMNotifyEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__CommandEvent, _p_p_SCIRun__CommandEventTo_p_p_SCIRun__Persistent, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_p_SCIRun__Persistent[] = {  {&_swigt__p_p_SCIRun__BaseEvent, _p_p_SCIRun__BaseEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__Persistent, 0, 0, 0},  {&_swigt__p_p_SCIRun__WindowEvent, _p_p_SCIRun__WindowEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__RedrawEvent, _p_p_SCIRun__RedrawEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__AutoviewEvent, _p_p_SCIRun__AutoviewEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__QuitEvent, _p_p_SCIRun__QuitEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__Datatype, _p_p_SCIRun__DatatypeTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__PointerEvent, _p_p_SCIRun__PointerEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__KeyEvent, _p_p_SCIRun__KeyEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__TMNotifyEvent, _p_p_SCIRun__TMNotifyEventTo_p_p_SCIRun__Persistent, 0, 0},  {&_swigt__p_p_SCIRun__CommandEvent, _p_p_SCIRun__CommandEventTo_p_p_SCIRun__Persistent, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_char[] = {  {&_swigt__p_p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_short[] = {  {&_swigt__p_short, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_signed_char[] = {  {&_swigt__p_signed_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -12803,6 +12984,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_MapPersistentInt,
   _swigc__p_MapStringPersistentTypeID,
   _swigc__p_ProgressState,
+  _swigc__p_SCIRun__AutoviewEvent,
   _swigc__p_SCIRun__BaseEvent,
   _swigc__p_SCIRun__CallbackOpenGLContext,
   _swigc__p_SCIRun__CommandEvent,
@@ -12825,6 +13007,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
   _swigc__p_difference_type,
   _swigc__p_double,
+  _swigc__p_f___p_SCIRun__AutoviewEvent,
   _swigc__p_f___p_SCIRun__BaseEvent,
   _swigc__p_f___p_SCIRun__CommandEvent,
   _swigc__p_f___p_SCIRun__Datatype,
@@ -12840,6 +13023,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_int,
   _swigc__p_long,
   _swigc__p_long_long,
+  _swigc__p_p_SCIRun__AutoviewEvent,
   _swigc__p_p_SCIRun__BaseEvent,
   _swigc__p_p_SCIRun__CommandEvent,
   _swigc__p_p_SCIRun__Datatype,

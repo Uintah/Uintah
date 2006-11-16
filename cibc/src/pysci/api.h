@@ -15,6 +15,7 @@ using std::string;
 
 unsigned int load_field(string fname);
 bool show_field(unsigned int fld_id);
+bool toggle_field_visibility(unsigned int fld_id);
 void init_pysci(char**environment);
 void terminate();
 void test_function(string f1, string f2, string f3);

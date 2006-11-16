@@ -181,7 +181,7 @@ def afront_isosurface(f, t) :
     os.system(cmmd)
 
 def make_trisurf(idx) :
-    exe = "/scratch/mjc/trunk/SCIRun/dbg/StandAlone/convert/MtoTriSurfField"
+    exe = "/scratch/mjc/branch/SCIRun/dbg/StandAlone/convert/MtoTriSurfField"
     cmmd = "%s mat%dmesh.m mat%d.ts.fld" % (exe, idx, idx)
     print cmmd
     os.system(cmmd)
