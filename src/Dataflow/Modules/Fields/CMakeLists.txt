@@ -111,6 +111,9 @@ SET(Dataflow_Modules_Fields_SRCS
   MapFieldDataFromNodeToElem.cc
   SelectAndSetFieldData.cc
   SelectAndSetFieldData3.cc
+  SplitAndMergeFieldByDomain.cc
+  GetDomainBoundary.cc
+  CollectFields.cc  
 )
 
 ADD_LIBRARY(Dataflow_Modules_Fields ${Dataflow_Modules_Fields_SRCS})

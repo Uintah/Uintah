@@ -26,53 +26,59 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
+#include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Dataflow/Network/Module.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
-namespace SCIRun {
 
-class GetFieldBoundary : public Module {
+namespace ModelCreation {
+
+using namespace SCIRun;
+
+class ConvertMatrixToField : public Module {
 public:
-  GetFieldBoundary(GuiContext*);
+  ConvertMatrixToField(GuiContext*);
+
   virtual void execute();
+
+private:
+  GuiString guidatalocation_;
 };
 
 
-DECLARE_MAKER(GetFieldBoundary)
-GetFieldBoundary::GetFieldBoundary(GuiContext* ctx)
-  : Module("GetFieldBoundary", ctx, Source, "NewField", "SCIRun")
+DECLARE_MAKER(ConvertMatrixToField)
+ConvertMatrixToField::ConvertMatrixToField(GuiContext* ctx)
+  : Module("ConvertMatrixToField", ctx, Source, "Converter", "ModelCreation"),
+    guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 
-
-void
-GetFieldBoundary::execute()
+void ConvertMatrixToField::execute()
 {
-  // Declare dataflow object
-  FieldHandle field;
+  // Define local handles of data objects:
+  MatrixHandle imatrix;
+  FieldHandle ofield;
   
-  // Get data from ports
-  if (!(get_input_handle("Field",field,true))) return;
-  
-  // If parameters changed, do algorithm
-  if (inputs_changed_ || !oport_cached("BoundaryField") || !oport_cached("Mapping"))
-  {
-    FieldHandle ofield;
-    MatrixHandle mapping;
+  // Get the new input data:  
+  if (!(get_input_handle("Matrix",imatrix,true))) return;
     
-    // Entry point to algorithm
-    SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.GetFieldBoundary(field,ofield,mapping))) return;
-
-    // Send Data flow objects downstream
-    send_output_handle("BoundaryField",ofield,false);
-    send_output_handle("Mapping",mapping,false);
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:    
+  if (inputs_changed_ || guidatalocation_.changed() || !oport_cached("Field"))
+  {
+    std::string datalocation = guidatalocation_.get();
+    SCIRunAlgo::ConverterAlgo algo(this);
+    if (!(algo.MatrixToField(imatrix,ofield,datalocation))) return;
+  
+    // send new output if there is any:  
+    send_output_handle("Field",ofield,false);
   }
 }
 
-} // End namespace SCIRun
+
+} // End namespace ModelCreation
+
+

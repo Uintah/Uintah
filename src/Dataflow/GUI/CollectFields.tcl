@@ -1,3 +1,4 @@
+##
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -26,12 +27,16 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-itcl_class SCIRun_NewField_JoinFields {
+itcl_class SCIRun_NewField_CollectFields {
     inherit Module
-
     constructor {config} {
-        set name JoinFields
+        set name CollectFields
+        set_defaults
+    }
+
+    method set_defaults {} {
+        global $this-buffersize
+        set $this-buffersize 20
     }
 
     method ui {} {
@@ -39,27 +44,19 @@ itcl_class SCIRun_NewField_JoinFields {
         if {[winfo exists $w]} {
             return
         }
-
         toplevel $w
 
-        checkbutton $w.fpc -text "Force PointCloudField as output" \
-          -variable $this-force-pointcloud
-        pack $w.fpc
+        iwidgets::entryfield $w.bs \
+          -labeltext "Buffer Size" \
+          -textvariable $this-buffersize
+        pack $w.bs -side top -expand yes -fill x
 
-        checkbutton $w.fnm -text "Merge duplicate nodes" \
-          -variable $this-force-nodemerge
-        pack $w.fnm
-
-        checkbutton $w.fnm2 -text "Only merge nodes with same value" \
-          -variable $this-matchval
-        pack $w.fnm2
-
-        iwidgets::entryfield $w.prec \
-          -labeltext "Tolerance (in distance) for merging nodes" \
-          -textvariable $this-tolerance
-        pack $w.prec -side top -expand yes -fill x
+        button $w.reset -text "Reset Buffer" -command "$this-c reset; $this-c needexecute"       
+        pack $w.reset -side top 
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w
-     }
+    }
 }
+
+

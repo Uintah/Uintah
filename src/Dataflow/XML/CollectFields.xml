@@ -1,4 +1,9 @@
-/*
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -24,55 +29,38 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
-*/
+-->
 
+<component name="CollectFields" category="NewField" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Collect the fields that are fed into the module. The field will be added to the output field. The module has a buffer with a first in, first out behavior to keep a history of fields in the buffer.
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Dataflow/Network/Module.h>
-
-namespace SCIRun {
-
-class GetFieldBoundary : public Module {
-public:
-  GetFieldBoundary(GuiContext*);
-  virtual void execute();
-};
-
-
-DECLARE_MAKER(GetFieldBoundary)
-GetFieldBoundary::GetFieldBoundary(GuiContext* ctx)
-  : Module("GetFieldBoundary", ctx, Source, "NewField", "SCIRun")
-{
-}
-
-
-void
-GetFieldBoundary::execute()
-{
-  // Declare dataflow object
-  FieldHandle field;
-  
-  // Get data from ports
-  if (!(get_input_handle("Field",field,true))) return;
-  
-  // If parameters changed, do algorithm
-  if (inputs_changed_ || !oport_cached("BoundaryField") || !oport_cached("Mapping"))
-  {
-    FieldHandle ofield;
-    MatrixHandle mapping;
-    
-    // Entry point to algorithm
-    SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.GetFieldBoundary(field,ofield,mapping))) return;
-
-    // Send Data flow objects downstream
-    send_output_handle("BoundaryField",ofield,false);
-    send_output_handle("Mapping",mapping,false);
-  }
-}
-
-} // End namespace SCIRun
+    </summary>
+    <description>
+      <p>        Collect the fields that are fed into the module. The field will be added to the output field. The module has a buffer with a first in, first out behavior to keep a history of fields in the buffer.
+</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>BufferSize</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Fields</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

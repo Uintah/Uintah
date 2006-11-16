@@ -35,13 +35,10 @@
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/Converter/ConverterAlgo.h>
 
-
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace ModelCreation {
-
-using namespace SCIRun;
+namespace SCIRun {
 
 class CollectFields : public Module {
 public:
@@ -59,7 +56,7 @@ private:
 
 DECLARE_MAKER(CollectFields)
 CollectFields::CollectFields(GuiContext* ctx)
-  : Module("CollectFields", ctx, Source, "CreateField", "ModelCreation"),
+  : Module("CollectFields", ctx, Source, "NewField", "SCIRun"),
     buffersizegui_(ctx->subVar("buffersize")),
     bufferlock_("Lock for internal buffer of module"),
     buffersize_(0)
@@ -105,7 +102,7 @@ CollectFields::execute()
     
     // The lock here protects us from the user wiping out the buffer
     // through the GUI while executing. This could cause a segmentation
-    // fault and hence it needs to be protected by a lock.
+    // fault and hence it needs to be protected b y a lock.
     bufferlock_.lock();
     algo.GatherFields(buffer_,Output);
     bufferlock_.unlock();
@@ -142,6 +139,6 @@ CollectFields::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-} // End namespace ModelCreation
+} // End namespace SCIRun
 
 

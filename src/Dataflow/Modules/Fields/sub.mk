@@ -123,6 +123,9 @@ SRCS     += \
   $(SRCDIR)/SelectAndSetFieldData.cc\
   $(SRCDIR)/SelectAndSetFieldData3.cc\
   $(SRCDIR)/CalculateMeshNodes.cc\
+  $(SRCDIR)/SplitAndMergeFieldByDomain.cc\
+  $(SRCDIR)/GetDomainBoundary.cc\
+  $(SRCDIR)/CollectFields.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
