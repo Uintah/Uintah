@@ -27,15 +27,6 @@
 */
 
 
-/*
- *
- *  Rewritten by:
- *   Jeroen Stinstra
- *
- * The old algorithm was failing to copy data, use the algorithm from
- * the ModelCreation Kernel in Algorithms instead.
- */
-
 #include <Dataflow/Network/Module.h>
 
 #include <Core/Datatypes/Field.h>
@@ -61,21 +52,15 @@ void
 ConvertMeshToPointCloud::execute()
 {
   FieldHandle ifield, ofield;
-  
-  // Get the input from the ports
   if (!(get_input_handle("Input Field",ifield,true))) return;
 
-  // Declare the algorithm library and reroute the 
-  // ProgressReporter to the algorithm library.
-  SCIRunAlgo::FieldsAlgo algo(this);
+  if (inputs_changed_ || !oport_cached("Output Field"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if (!(algo.ConvertMeshToPointCloud(ifield,ofield))) return;
 
-  // Run algorithm and exit if algorithm fails.
-  // Error are automatically reported through the
-  // ProgressReporter.
-  if (!(algo.ToPointCloud(ifield,ofield))) return;
-
-  // Send handles to output ports
-  send_output_handle("Output Field",ofield,true);
+    send_output_handle("Output Field", ofield);
+  }
 }
 
 } // End namespace SCIRun

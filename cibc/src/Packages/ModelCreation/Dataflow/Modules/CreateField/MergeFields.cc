@@ -94,7 +94,7 @@ void MergeFields::execute()
     // This is a separate algorithm now
     if (forcepointcloud)
     {
-      if (!(algo.ToPointCloud(output,output))) return;
+      if (!(algo.ConvertMeshToPointCloud(output,output))) return;
     }
 
     // send new output if there is any:        

@@ -50,14 +50,14 @@ using namespace SCIRun;
 //  argument. When the algorithm is compiled it will execute the algorithm.
 //
 // In this file two classes are defined:
-//  A base class ToPointCloudAlgo: This class contains the general access point for
+//  A base class ConvertMeshToPointCloudAlgo: This class contains the general access point for
 //  the dynamic compiled algorithm. It takes handles (pointers) to the Field
 //  base class. It will examine all the input arguments and determine which
 //  type the input Fields actually are. When this is known it will tell the
 //  dynamic compiler which algorithm needs to be compiled to carry out the 
 //  operation with high efficiency.
 //
-//  A template class ToPointCloudAlgoT: This class is derived from the base class
+//  A template class ConvertMeshToPointCloudAlgoT: This class is derived from the base class
 //  and has a similar call to the algorithm. This templated class contains the 
 //  actual algorithm. When the dynamic compiler is invoked it will take in a
 //  handle to the base algorithm, internally it will overload this with the
@@ -66,7 +66,7 @@ using namespace SCIRun;
 //  proper algorithm.  
 
 
-// ToPointCloudAlgo:
+// ConvertMeshToPointCloudAlgo:
 //
 // This class is the general access point to the dynamic algorithms in the class.
 // All dynamic algorithms in the class are defined as virtual functions and have
@@ -83,8 +83,8 @@ using namespace SCIRun;
 //
 // To call this specific algorithm from a module use the following:
 //
-// ToPointCloudAlgo algo;
-// if(!(algo->ToPointCloud(this,input,output)))
+// ConvertMeshToPointCloudAlgo algo;
+// if(!(algo->ConvertMeshToPointCloud(this,input,output)))
 // {
 //   // algorothm failed
 // }
@@ -93,14 +93,14 @@ using namespace SCIRun;
 // hence the pointer to the module can be used to initialise the ProgressReporter
 //
 
-class ToPointCloudAlgo : public DynamicAlgoBase
+class ConvertMeshToPointCloudAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
 };
 
 
-// ToPointCloudAlgoT:
+// ConvertMeshToPointCloudAlgoT:
 //
 // This class is the actual implementation of the algorithm. Note that the 
 // name of the algorithm ends with a 'T' to denote that the algorithm is 
@@ -109,10 +109,10 @@ public:
 // proper algorithm.   
 
 template <class FSRC, class FDST>
-class ToPointCloudAlgoT : public ToPointCloudAlgo
+class ConvertMeshToPointCloudAlgoT : public ConvertMeshToPointCloudAlgo
 {
 public:
-  virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
 };
 
 
@@ -120,7 +120,7 @@ public:
 // header file.
 
 template <class FSRC, class FDST>
-bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool ConvertMeshToPointCloudAlgoT<FSRC, FDST>::ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   // Safety check: test whether the input is of the propertype
   // Handle: the function 'get_rep()' gets the pointer contained in the handle. 
@@ -137,7 +137,7 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
     // Error reporting:
     // we forward the specific message to the ProgressReporter and return a
     // false to indicate that an error has occured.
-    pr->error("ToPointCloud: Could not obtain input field");
+    pr->error("ConvertMeshToPointCloud: Could not obtain input field");
     return (false);
   }
 
@@ -152,7 +152,7 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
   if (imesh == 0)
   {
-    pr->error("ToPointCloud: No mesh associated with input field");
+    pr->error("ConvertMeshToPointCloud: No mesh associated with input field");
     return (false);
   }
 
@@ -170,7 +170,7 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
   if (omesh == 0)
   {
-    pr->error("ToPointCloud: Could not create output field");
+    pr->error("ConvertMeshToPointCloud: Could not create output field");
     return (false);
   }
 
@@ -209,7 +209,7 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   output = dynamic_cast<FDST*>(ofield);
   if (ofield == 0)
   {
-    pr->error("ToPointCloud: Could not create output field");
+    pr->error("ConvertMeshToPointCloud: Could not create output field");
     return (false);  
   }
   
