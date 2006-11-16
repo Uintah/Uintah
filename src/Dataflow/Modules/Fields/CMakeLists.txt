@@ -88,6 +88,8 @@ SET(Dataflow_Modules_Fields_SRCS
   SetFieldOrMeshStringProperty.cc
   ConvertMeshToPointCloud.cc
   ConvertRasterMeshToStructuredMesh.cc
+  CalculateFieldData.cc
+  CalculateFieldData3.cc
   CalculateFieldDataCompiled.cc
   CalculateFieldDataCompiled2.cc
   CalculateFieldDataCompiled3.cc
@@ -115,6 +117,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
   Core_Algorithms_Visualization
   Core_Algorithms_Geometry
   Core_Algorithms_ArrayMath
+  Core_Algorithms_Converter
   Core_Basis
   Core_Datatypes
   Core_Exceptions

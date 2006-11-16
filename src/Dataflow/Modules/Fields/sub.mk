@@ -100,6 +100,8 @@ SRCS     += \
 	$(SRCDIR)/SetFieldOrMeshStringProperty.cc\
 	$(SRCDIR)/ConvertMeshToPointCloud.cc\
 	$(SRCDIR)/ConvertRasterMeshToStructuredMesh.cc\
+	$(SRCDIR)/CalculateFieldData.cc\
+	$(SRCDIR)/CalculateFieldData3.cc\
 	$(SRCDIR)/CalculateFieldDataCompiled.cc\
 	$(SRCDIR)/CalculateFieldDataCompiled2.cc\
 	$(SRCDIR)/CalculateFieldDataCompiled3.cc\
@@ -126,6 +128,7 @@ PSELIBS := \
 	Core/Algorithms/Visualization   \
 	Core/Algorithms/Geometry \
 	Core/Algorithms/ArrayMath \
+	Core/Algorithms/Converter \
 	Core/Basis               \
 	Core/Datatypes           \
 	Core/Exceptions          \

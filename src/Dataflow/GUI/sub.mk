@@ -174,6 +174,8 @@ SRCS := \
         $(SRCDIR)/InterfaceWithTetGen.tcl \
         $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
+        $(SRCDIR)/CalculateFieldData.tcl \
+        $(SRCDIR)/CalculateFieldData3.tcl \
         $(SRCDIR)/CalculateFieldDataCompiled.tcl \
         $(SRCDIR)/CalculateFieldDataCompiled2.tcl \
         $(SRCDIR)/CalculateFieldDataCompiled3.tcl \
@@ -202,6 +204,7 @@ SRCS := \
         $(SRCDIR)/CalculateDataArray.tcl\
         $(SRCDIR)/ReplicateDataArray.tcl\
         $(SRCDIR)/ReportDataArrayMeasure.tcl\
+        $(SRCDIR)/ReportDataArrayInfo.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
