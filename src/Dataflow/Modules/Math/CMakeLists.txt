@@ -40,7 +40,7 @@ SET(Dataflow_Modules_Math_SRCS
   EvaluateLinAlgUnary.cc
   EvaluateLinAlgGeneral.cc
   ReportMatrixInfo.cc
-  GetColumnMatrixFromMatrix.cc
+  GetColumnOrRowFromMatrix.cc
   SolveMinNormLeastSqSystem.cc
   SolveLinearSystem.cc
   GetSubmatrix.cc

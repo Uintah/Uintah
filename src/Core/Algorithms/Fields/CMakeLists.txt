@@ -29,7 +29,7 @@
 # Sources of Core/Algorithms/Fields classes
 SET(Core_Algorithms_Fields_SRCS
   ApplyMappingMatrix.cc
-  CalculateFieldData.cc
+  CalculateFieldDataCompiled.cc
   CalculateIsInsideField.cc
   CalculateLinkBetweenOppositeFieldBoundaries.cc
   ClearAndChangeFieldBasis.cc
