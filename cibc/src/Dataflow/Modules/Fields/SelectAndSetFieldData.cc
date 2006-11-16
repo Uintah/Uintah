@@ -40,15 +40,13 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 
-namespace ModelCreation {
+namespace SCIRun {
 
-using namespace SCIRun;
-
-class SelectAndSetFieldsData : public Module {
+class SelectAndSetFieldData : public Module {
   public:
-    SelectAndSetFieldsData(GuiContext*);
+    SelectAndSetFieldData(GuiContext*);
 
-    virtual ~SelectAndSetFieldsData();
+    virtual ~SelectAndSetFieldData();
 
     virtual void execute();
 
@@ -68,9 +66,9 @@ class SelectAndSetFieldsData : public Module {
 };
 
 
-DECLARE_MAKER(SelectAndSetFieldsData)
-SelectAndSetFieldsData::SelectAndSetFieldsData(GuiContext* ctx)
-  : Module("SelectAndSetFieldsData", ctx, Source, "ChangeFieldData", "ModelCreation"),
+DECLARE_MAKER(SelectAndSetFieldData)
+SelectAndSetFieldData::SelectAndSetFieldData(GuiContext* ctx)
+  : Module("SelectAndSetFieldData", ctx, Source, "ChangeFieldData", "SCIRun"),
   guiselection1_(get_ctx()->subVar("selection1")),
   guifunction1_(get_ctx()->subVar("function1")),
   guiselection2_(get_ctx()->subVar("selection2")),
@@ -80,27 +78,28 @@ SelectAndSetFieldsData::SelectAndSetFieldsData(GuiContext* ctx)
   guiselection4_(get_ctx()->subVar("selection4")),
   guifunction4_(get_ctx()->subVar("function4")),  
   guifunctiondef_(get_ctx()->subVar("functiondef")),
-  guiformat_(get_ctx()->subVar("format")) 
+  guiformat_(get_ctx()->subVar("format"))  
 {
 }
 
-SelectAndSetFieldsData::~SelectAndSetFieldsData(){
+
+SelectAndSetFieldData::~SelectAndSetFieldData()
+{
 }
 
-void SelectAndSetFieldsData::execute()
+
+void
+SelectAndSetFieldData::execute()
 {
-  FieldHandle field, field2, field3;
+  FieldHandle field;
   std::vector<MatrixHandle> matrices;
   
-  if (!(get_input_handle("Field1",field,true))) return;
-  get_input_handle("Field2",field2,false);
-  get_input_handle("Field3",field3,false);
+  if (!(get_input_handle("Field",field,true))) return;
   get_dynamic_input_handles("Array",matrices,false);
 
   get_gui()->lock();
   get_gui()->eval(get_id()+" update_text");
   get_gui()->unlock();
-
 
   if (inputs_changed_ || guiselection1_.changed() || guifunction1_.changed() ||
       guiselection2_.changed() || guifunction2_.changed() ||
@@ -118,57 +117,33 @@ void SelectAndSetFieldsData::execute()
       return;
     }
     
-    size_t mstart = 6;
-    if (field2.get_rep() == 0 ) mstart--;
-    if (field3.get_rep() == 0 ) mstart--;
-
-    SCIRunAlgo::ArrayObjectList inputlist(numinputs+mstart,SCIRunAlgo::ArrayObject(this));
+    SCIRunAlgo::ArrayObjectList inputlist(numinputs+4,SCIRunAlgo::ArrayObject(this));
     SCIRunAlgo::ArrayObjectList outputlist(1,SCIRunAlgo::ArrayObject(this));
-
+    
     // Create the DATA object for the function
     // DATA is the data on the field
-    size_t k = 0;
-    
-    if(!(inputlist[k++].create_inputdata(field,"DATA1")))
+    if(!(inputlist[0].create_inputdata(field,"DATA")))
     {
       error("Failed to read field data");
       return;
     }
-    
-    if (field2.get_rep())
-    {
-      if(!(inputlist[k++].create_inputdata(field2,"DATA2")))
-      {
-        error("Failed to read field data");
-        return;
-      }
-    }
-
-    if (field3.get_rep())
-    {
-      if(!(inputlist[k++].create_inputdata(field3,"DATA3")))
-      {
-        error("Failed to read field data");
-        return;
-      }
-    }
 
     // Create the POS, X,Y,Z, data location objects.  
-    if(!(inputlist[k++].create_inputlocation(field,"POS","X","Y","Z")))
+    if(!(inputlist[1].create_inputlocation(field,"POS","X","Y","Z")))
     {
       error("Failed to read node/element location data");
       return;
     }
 
     // Create the ELEMENT object describing element properties
-    if(!(inputlist[k++].create_inputelement(field,"ELEMENT")))
+    if(!(inputlist[2].create_inputelement(field,"ELEMENT")))
     {
       error("Failed to read element data");
       return;
     }
 
     // Add an object for getting the index and size of the array.
-    if(!(inputlist[k++].create_inputindex("INDEX","SIZE")))
+    if(!(inputlist[3].create_inputindex("INDEX","SIZE")))
     {
       error("Internal error in module");
       return;
@@ -187,10 +162,10 @@ void SelectAndSetFieldsData::execute()
       }
 
       matrixname[0] = mname++;    
-      if (!(inputlist[p+mstart].create_inputdata(matrices[p],matrixname)))
+      if (!(inputlist[p+4].create_inputdata(matrices[p],matrixname)))
       {
         std::ostringstream oss;
-        oss << "Input Matrix " << p+1 << "cannot be used as an input";
+        oss << "Input matrix " << p+1 << "is not a valid ScalarArray, VectorArray, or TensorArray";
         error(oss.str());
         return;
       }
@@ -203,7 +178,7 @@ void SelectAndSetFieldsData::execute()
       if (n == 1) n = inputlist[r].size();
       if ((inputlist[r].size() != n)&&(inputlist[r].size() != 1))
       {
-        if (r < mstart)
+        if (r < 4)
         {
           error("Number of data entries does not seem to match number of elements/nodes");
           return;
@@ -211,9 +186,8 @@ void SelectAndSetFieldsData::execute()
         else
         {
           std::ostringstream oss;
-          oss << "The number of data entries in Field " << r-2 << "does not seem to match the number of data entries in the main field";
+          oss << "The number of rows in matrix " << r-2 << "does not seem to match the number of datapoints in the field";
           error(oss.str());
-          return;
         }
       }
     }
@@ -228,10 +202,9 @@ void SelectAndSetFieldsData::execute()
     FieldHandle ofield;
     if(!(outputlist[0].create_outputdata(field,format,"RESULT",ofield)))
     {
-      error("Could not allocate output field");
       return;
     }
-
+        
     std::string function1 = guifunction1_.get();
     std::string selection1 = guiselection1_.get();
     std::string function2 = guifunction2_.get();
@@ -259,7 +232,7 @@ void SelectAndSetFieldsData::execute()
     if ((selection3.size()) && (function3.size())) f += "if ("+selection3+")\n{\n RESULT = " + function3 + ";}\n else ";
     if ((selection4.size()) && (function4.size())) f += "if ("+selection4+")\n{\n RESULT = " + function4 + ";}\n else ";
     if (functiondef.size()) f += "\n{\n RESULT = " + functiondef + ";\n}\n"; else f += "\n {\n }\n";
-    
+     
     // Actual engine call, which does the dynamic compilation, the creation of the
     // code for all the objects, as well as inserting the function and looping 
     // over every data point
@@ -269,18 +242,19 @@ void SelectAndSetFieldsData::execute()
       return;
     }
     
-    // If engine succeeded we have a new field at ofield.
     send_output_handle("Field",ofield,false);
   }
 }
 
+extern std::string tvm_help_field;
+
 
 void
-SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
+SelectAndSetFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("SelectAndSetFieldsData needs a minor command");
+    args.error("ComputeDataField needs a minor command");
     return;
   }
 
@@ -300,7 +274,4 @@ SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-
-} // End namespace ModelCreation
-
-
+} // End namespace SCIRun

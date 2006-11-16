@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -31,57 +31,32 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="SelectAndSetFieldsData" category="ChangeFieldData">
+<component name="MapFieldDataFromNodeToElem" category="ChangeFieldData">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
-      This module computes a new scalar, vector or tensor array based upon a 
-      combination of scalars, vectors, and tensors. 
+      Compute the value of the elements based on the data from the adjoining elements. This module supports various operations to map node data to element data.
     </summary>
     <description>
-      <section>
-      <title>Overview</title>
       <p>
-      </p>
-      </section>
+      Compute the value of the elements based on the data from the adjoining elements. This module supports various operations to map node data to element data.
 
-      <section>
-      <title>Input elements</title>
-      </section>
-      
-      <section>
-      <title>Output elements</title>     
-      </section>      
-    
-      <section>
-      <title>See Also </title>
-      <p>
-      <modref package="ModelCreation" name="ComputeDataArray" />	
-      <modref package="ModelCreation" name="ReplicateDataArray" />	
+        Supported methods are:
+        AVERAGE - Compute the average of adjoining nodes
+        MIN - Compute the minimum value of adjoining nodes
+        MAX - Compute the maximum value of adjoining nodes
+        SUM - Compute the sum of the adjoining nodes
+        INTERPOLATE - Compute a weighted average of the adjoining nodes
       </p>
-      </section>      
-    
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="yes">
+    <inputs lastportdynamic="no">
       <port>
-        <name>Field1</name>
+        <name>Field</name>
         <datatype>SCIRun::Field</datatype>
-      </port>      
-      <port>
-        <name>Field2</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
-        <name>Field3</name>
-        <datatype>SCIRun::Field</datatype>
-      </port> 
-      <port>
-        <name>Array</name>
-        <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>

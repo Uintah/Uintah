@@ -40,15 +40,13 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 
-namespace ModelCreation {
+namespace SCIRun {
 
-using namespace SCIRun;
-
-class SelectAndSetFieldsData : public Module {
+class SelectAndSetFieldData3 : public Module {
   public:
-    SelectAndSetFieldsData(GuiContext*);
+    SelectAndSetFieldData3(GuiContext*);
 
-    virtual ~SelectAndSetFieldsData();
+    virtual ~SelectAndSetFieldData3();
 
     virtual void execute();
 
@@ -68,9 +66,10 @@ class SelectAndSetFieldsData : public Module {
 };
 
 
-DECLARE_MAKER(SelectAndSetFieldsData)
-SelectAndSetFieldsData::SelectAndSetFieldsData(GuiContext* ctx)
-  : Module("SelectAndSetFieldsData", ctx, Source, "ChangeFieldData", "ModelCreation"),
+DECLARE_MAKER(SelectAndSetFieldData3)
+
+SelectAndSetFieldData3::SelectAndSetFieldData3(GuiContext* ctx)
+  : Module("SelectAndSetFieldData3", ctx, Source, "ChangeFieldData", "SCIRun"),
   guiselection1_(get_ctx()->subVar("selection1")),
   guifunction1_(get_ctx()->subVar("function1")),
   guiselection2_(get_ctx()->subVar("selection2")),
@@ -84,10 +83,10 @@ SelectAndSetFieldsData::SelectAndSetFieldsData(GuiContext* ctx)
 {
 }
 
-SelectAndSetFieldsData::~SelectAndSetFieldsData(){
+SelectAndSetFieldData3::~SelectAndSetFieldData3(){
 }
 
-void SelectAndSetFieldsData::execute()
+void SelectAndSetFieldData3::execute()
 {
   FieldHandle field, field2, field3;
   std::vector<MatrixHandle> matrices;
@@ -276,11 +275,11 @@ void SelectAndSetFieldsData::execute()
 
 
 void
-SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
+SelectAndSetFieldData3::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("SelectAndSetFieldsData needs a minor command");
+    args.error("SelectAndSetFieldData3 needs a minor command");
     return;
   }
 
@@ -300,7 +299,4 @@ SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-
-} // End namespace ModelCreation
-
-
+} // End namespace SCIRun

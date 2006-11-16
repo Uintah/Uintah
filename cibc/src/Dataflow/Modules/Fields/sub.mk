@@ -118,6 +118,10 @@ SRCS     += \
   $(SRCDIR)/CreateFieldData.cc\
   $(SRCDIR)/GetFieldData.cc\
   $(SRCDIR)/SetFieldData.cc\
+  $(SRCDIR)/MapFieldDataFromElemToNode.cc\
+  $(SRCDIR)/MapFieldDataFromNodeToElem.cc\
+  $(SRCDIR)/SelectAndSetFieldData.cc\
+  $(SRCDIR)/SelectAndSetFieldData3.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
@@ -136,12 +140,12 @@ PSELIBS := \
 	Core/Geometry            \
 	Core/GeomInterface       \
 	Core/Containers          \
-	Dataflow/GuiInterface        \
+	Dataflow/GuiInterface    \
 	Core/ImportExport        \
 	Core/Math                \
 	Core/Persistent          \
 	Core/Thread              \
-	Dataflow/TkExtensions        \
+	Dataflow/TkExtensions    \
 	Core/Util              
 
 
