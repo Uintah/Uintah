@@ -45,7 +45,7 @@ SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCI
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.
-INCLUDE (CMakeBackwardCompatibilityCXX)
+INCLUDE (CMakeBackwardCompatibilityC)
 
 #-----------------------------------------------------------------------------
 # Configure testing support.  This should be done before any
@@ -73,8 +73,6 @@ IF(HAVE_SCIRUN_THIRDPARTY)
 ELSE(HAVE_SCIRUN_THIRDPARTY)
   MESSAGE(STATUS "Not using standard SCIRun Thirdparty. Please individually set include and library variables.")
 ENDIF(HAVE_SCIRUN_THIRDPARTY)
-
-
 
 
 
@@ -173,6 +171,7 @@ IF(CMAKE_USE_PTHREADS)
   ELSE(CMAKE_USE_PTHREADS)
     SET(DEF_THREAD "") 
 ENDIF(CMAKE_USE_PTHREADS)
+
 
 #-----------------------------------------------------------------------------
 # Socket library
