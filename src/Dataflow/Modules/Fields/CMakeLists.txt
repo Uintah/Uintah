@@ -90,6 +90,7 @@ SET(Dataflow_Modules_Fields_SRCS
   ConvertRasterMeshToStructuredMesh.cc
   CalculateFieldData.cc
   CalculateFieldData3.cc
+  CalculateMeshNodes.cc
   CalculateFieldDataCompiled.cc
   CalculateFieldDataCompiled2.cc
   CalculateFieldDataCompiled3.cc

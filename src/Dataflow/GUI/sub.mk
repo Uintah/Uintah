@@ -209,6 +209,7 @@ SRCS := \
         $(SRCDIR)/MapFieldDataFromNodeToElem.tcl\
         $(SRCDIR)/SelectAndSetFieldData.tcl\
         $(SRCDIR)/SelectAndSetFieldData3.tcl\
+        $(SRCDIR)/CalculateMeshNodes.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library

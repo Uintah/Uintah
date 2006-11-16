@@ -59,7 +59,7 @@ ConvertMeshToPointCloud::execute()
   if (inputs_changed_ || !oport_cached("Field"))
   {
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ToPointCloud(ifield,ofield))) return;
+    if (!(algo.ConvertMeshToPointCloud(ifield,ofield))) return;
 
     send_output_handle("Field", ofield);
   }

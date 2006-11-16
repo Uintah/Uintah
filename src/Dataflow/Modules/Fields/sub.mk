@@ -122,6 +122,7 @@ SRCS     += \
   $(SRCDIR)/MapFieldDataFromNodeToElem.cc\
   $(SRCDIR)/SelectAndSetFieldData.cc\
   $(SRCDIR)/SelectAndSetFieldData3.cc\
+  $(SRCDIR)/CalculateMeshNodes.cc\
 #[INSERT NEW CODE FILE HERE]
 
 

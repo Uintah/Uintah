@@ -52,7 +52,7 @@ SRCS     += \
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/SplitAndMergeFieldByDomain.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
-            $(SRCDIR)/ToPointCloud.cc\
+            $(SRCDIR)/ConvertMeshToPointCloud.cc\
             $(SRCDIR)/TransformMeshWithTransform.cc\
 #[INSERT NEW CODE FILE HERE]
 

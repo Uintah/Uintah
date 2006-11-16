@@ -66,7 +66,7 @@ SET(Core_Algorithms_Fields_SRCS
   SetFieldData.cc
   SplitAndMergeFieldByDomain.cc
   SplitByConnectedRegion.cc
-  ToPointCloud.cc
+  ConvertMeshToPointCloud.cc
   TransformMeshWithTransform.cc
 )
 
