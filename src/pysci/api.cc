@@ -242,13 +242,14 @@ unsigned int load_field(string fname)
   return dm->load_field(fname);
 }
 
+bool toggle_field_visibility(unsigned int fld_id) 
+{
+  return dm->toggle_field_visibility(fld_id);  
+}
+
 bool show_field(unsigned int fld_id) 
 {
   return dm->show_field(fld_id);  
 }
-
-
-
-
 
 }

@@ -43,6 +43,9 @@ import threading
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import segnrrd
+import glob
+
 
 # import the scirun python api.
 import pysci
@@ -251,7 +254,10 @@ class SurfsToTets:
     self.pbar_ = self.xml_.get_widget("progress")
     self.drawing_area = None
     self.list_view_ = self.xml_.get_widget("model_treeview")
+    self.mat_list_view_ = self.xml_.get_widget("material_treeview")
     self.init_model_treeview()
+    self.init_material_treeview()
+    self.open_file_handler_ = None
 
     # Add a timer callback to update the value of the progress bar
     self.timer = gobject.timeout_add (100, progress_timeout, self)
@@ -296,6 +302,8 @@ class SurfsToTets:
     ifact.lookup("visible")
 
     renderer = gtk.CellRendererPixbuf()
+    #renderer.connect('edited', self.on_model_treeview_cell_edited, 0)
+    #renderer.set_property('editable', True)
     column = gtk.TreeViewColumn("Visible", renderer, stock_id=0)
     self.list_view_.append_column(column)
 
@@ -307,19 +315,55 @@ class SurfsToTets:
     column = gtk.TreeViewColumn("FID", renderer, text=2)
     self.list_view_.append_column(column)
 
+  def init_material_treeview(self) :
+
+    ls = gtk.ListStore(int, str, float)
+     
+    self.mat_list_view_.set_model(ls)
+    self.mat_list_view_.set_headers_visible(True)
+
+    renderer = gtk.CellRendererText()
+    renderer.connect('edited', self.on_material_treeview_cell_edited, 0)
+    renderer.set_property('editable', True)#gtk.CELL_RENDERER_MODE_EDITABLE)
+    column = gtk.TreeViewColumn("Material Index", renderer, text=0)
+    self.mat_list_view_.append_column(column)
+        
+    renderer = gtk.CellRendererText()
+    renderer.connect('edited', self.on_material_treeview_cell_edited, 1)
+    renderer.set_property('editable', True)
+    column = gtk.TreeViewColumn("Material Name", renderer, text=1)
+    self.mat_list_view_.append_column(column)
+
+    renderer = gtk.CellRendererText()
+    renderer.connect('edited', self.on_material_treeview_cell_edited, 2)
+    renderer.set_property('editable', True)
+    column = gtk.TreeViewColumn("Isovalue", renderer, text=2)
+    self.mat_list_view_.append_column(column)
+
 
   # this selects a model from the visible list, for picking purposes.
-  def on_model_treeview_button_release_event(self, a, b) :
-    print '---------------- b r e !'
-    print a
-    print b
+  def on_model_treeview_button_release_event(self, a, event) :
+    
     sel = self.list_view_.get_selection()
     l = sel.get_selected()[0]
     it = sel.get_selected()[1]
+ 
+##     print l.get_path(it)
+##     print l.get_value(it, 1)
+##     print l.get_value(it, 2)
 
-    print l.get_path(it)
-    print l.get_value(it, 1)
-    print l.get_value(it, 2)
+
+    if event.button == 3 :
+      ls = self.list_view_.get_model()
+      # right click means toggle visibility
+      tog = gtk.STOCK_YES
+      if l.get_value(it, 0) == "gtk-yes" :
+	tog = gtk.STOCK_NO
+      ls.set(it, 0, tog)
+      fid = l.get_value(it, 2)
+      pysci.toggle_field_visibility(int(fid))
+      
+
 
     # create an event to notify tools that the selection target is
     # the selected field id.
@@ -327,13 +371,6 @@ class SurfsToTets:
     fid = l.get_value(it, 2)
     pysci.selection_target_changed(int(fid))
 
-
-  # use this event to change visibility of that model.
-  def on_model_treeview_row_activated(self, a, b, c):
-    print 'activated!'
-    print a
-    print b
-    print c
 
   def get_file(self, pattern) :
 
@@ -343,7 +380,6 @@ class SurfsToTets:
     chooser.set_filter(filt)
     if not self.shortcuts_added_ :
 	self.shortcuts_added_ = 1
-	print os.curdir
 	cdir = os.getcwd()
 	chooser.add_shortcut_folder(cdir)
 	if os.environ.has_key("SCIRUN_DATA") :
@@ -352,7 +388,12 @@ class SurfsToTets:
 
     chooser.show()
 
+  def get_dir(self) :
+    chooser = self.xml_.get_widget("dir_chooser")
+    chooser.show()
+
   def on_open_fld_clicked(self, button) :
+    self.open_file_handler_ = self.handle_load_srfld
     self.get_file("*.fld")
 
 
@@ -360,11 +401,11 @@ class SurfsToTets:
     chooser = self.xml_.get_widget("chooser")
     chooser.hide()
 
-  def on_chooser_open_clicked(self, button) :
-    chooser = self.xml_.get_widget("chooser")
-    if chooser.get_filename() != None :
-      self.file_ = chooser.get_filename()
+  def on_dir_chooser_cancel_clicked(self, button) :
+    chooser = self.xml_.get_widget("dir_chooser")
+    chooser.hide()
 
+  def handle_load_srfld(self) :
       # show the field in the viewer
       fld_id = pysci.load_field(self.file_)
       if fld_id == 0 :
@@ -373,6 +414,20 @@ class SurfsToTets:
       pysci.show_field(fld_id)
       ls = self.list_view_.get_model()
       ls.insert(0, (gtk.STOCK_YES, self.file_, fld_id))
+
+      
+  def on_chooser_open_clicked(self, button) :
+    chooser = self.xml_.get_widget("chooser")
+    if chooser.get_filename() != None :
+      self.file_ = chooser.get_filename()
+      self.open_file_handler_()
+      chooser.hide()
+
+  def on_dir_chooser_open_clicked(self, button) :
+    chooser = self.xml_.get_widget("dir_chooser")
+    if chooser.get_filename() != None :
+      self.file_ = chooser.get_filename()
+      self.open_file_handler_()
       chooser.hide()
 
 
@@ -545,7 +600,105 @@ class SurfsToTets:
     if sel_cb.get_active() :
       sel_tb.show()
     else :
-      sel_tb.hide()	
+      sel_tb.hide()
+
+  def on_add_mat_button_clicked(self, w) :
+    ls = self.mat_list_view_.get_model()
+    ls.insert(0, (0, "Material Name", 0.5))
+
+  def on_rm_mat_button_clicked(self, w) :
+    ls = self.mat_list_view_.get_model()
+    sel = self.mat_list_view_.get_selection()
+
+    it = sel.get_selected()[1]
+    ls.remove(it)
+
+
+  def on_en_surf_button_clicked(self, w) :
+##     if self.proj_dir_ == None :
+##       return
+
+    ls = self.mat_list_view_.get_model()
+    for i in ls :
+      print "%d %s %f" % (i[0], i[1], i[2])
+      idx = i[0]
+      t = (i[0], i[2])
+      nrrd = self.input_nrrd_
+      cur = os.getcwd()
+      os.chdir(self.proj_dir_)
+      segnrrd.make_solo_material(idx, nrrd)
+      segnrrd.uniform_resample_nnrd(idx)      
+      segnrrd.pad_nrrd("mat%d.resamp.nhdr" % idx, idx)
+      segnrrd.make_afront_nhdr("mat%d.resamp.pad.nhdr" % idx)
+      segnrrd.afront_isosurface("afront.mat%d.resamp.pad.nhdr" % idx, t)
+      segnrrd.make_trisurf(idx)
+      os.chdir(cur)
+
+
+
+
+  def handle_input_nrrd(self) :
+    self.input_nrrd_ = self.file_
+    ent = self.xml_.get_widget("in_nrrd_ent")
+    ent.set_text(self.input_nrrd_)
+    segnrrd.inspect_nrrd(self.input_nrrd_)
+    ent = self.xml_.get_widget("num_mats_ent")
+    ent.set_text("%d" % segnrrd.maxval)
+    
+  def on_input_activate(self, a):
+    self.open_file_handler_ = self.handle_input_nrrd
+    self.get_file("*.nrrd")
+
+  def handle_new_proj(self) :
+    self.proj_dir_ = self.file_
+    ent = self.xml_.get_widget("proj_dir_ent")
+    ent.set_text(self.proj_dir_)
+
+  def handle_open_proj(self) :
+    self.proj_dir_ = self.file_
+    ent = self.xml_.get_widget("proj_dir_ent")
+    ent.set_text(self.proj_dir_)
+    #also load all the surfaces from this dir that have been generated.
+    
+    files = glob.glob("%s/mat*.ts.fld" % self.proj_dir_)
+    for f in files :
+      fld_id = pysci.load_field(f)
+      if fld_id == 0 :
+	print "Error loading file: %s" % f
+	return
+      pysci.show_field(fld_id)
+      ls = self.list_view_.get_model()
+      ls.insert(0, (gtk.STOCK_YES, f, fld_id))
+    
+
+  def on_new_proj_activate(self, a):
+    self.open_file_handler_ = self.handle_new_proj
+    self.get_dir()
+
+  def on_open_proj_activate(self, a):
+    self.open_file_handler_ = self.handle_open_proj
+    self.get_dir()
+
+  def on_material_treeview_cell_edited(self, cell, pathstr, new, udat):
+    col = udat
+    ls = self.mat_list_view_.get_model()
+    iter = ls.get_iter_from_string(pathstr)
+    if col == 0 :
+      ls.set(iter, col, int(new))
+    elif col == 1 :
+      ls.set(iter, col, new)
+    else :
+      ls.set(iter, col, float(new))
+
+      
+  def on_model_treeview_cell_edited(self, cell, pathstr, new, udat):
+    col = udat
+    ls = self.list_view_.get_model()
+    iter = ls.get_iter_from_string(pathstr)
+
+    print "ok toggle visibility"
+
+
 
 if __name__ == "__main__" :
   gtk.threads_init()

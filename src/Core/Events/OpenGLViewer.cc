@@ -195,22 +195,41 @@ public:
       SceneGraphEvent *ev =
 	dynamic_cast<SceneGraphEvent*>(scene_events_[e].get_rep());
       ASSERT(ev);
-      map<string, int>::iterator iter;
-      iter = obj_ids_.find(ev->get_geom_obj_name());
-      if (iter != obj_ids_.end()) {
-	//already showing this geometry.  Delete it first
-	int id = (*iter).second;
-	visible_[ev->get_geom_obj_name()] = false;
-	sg_->delObj(id);
-	obj_ids_.erase(ev->get_geom_obj_name());
-      }
-      GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
-						 ev->get_geom_obj_name(), 
-						 0);     
+
+      if (ev->toggle_visibility_p()) {
+	// the geom name is only -field id- in this case.
+	string fid = ev->get_geom_obj_name();
+
+	//toggle all sg objects containing the field id string.
+	map<string, bool>::iterator iter = visible_.begin();
+	while (iter != visible_.end()) {
+	  string name = (*iter).first;
+	  bool val = (*iter).second;
+	  ++iter;
+	  if (name.find(fid) != string::npos) {
+	    visible_[name] = ! val;
+	  }
+	}
+      } else {
+
+	map<string, int>::iterator iter;
+	cerr << "now showing: " << ev->get_geom_obj_name() << endl;
+	iter = obj_ids_.find(ev->get_geom_obj_name());
+	if (iter != obj_ids_.end()) {
+	  //already showing this geometry.  Delete it first
+	  int id = (*iter).second;
+	  visible_[ev->get_geom_obj_name()] = false;
+	  sg_->delObj(id);
+	  obj_ids_.erase(ev->get_geom_obj_name());
+	}
+	GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
+						   ev->get_geom_obj_name(), 
+						   0);     
     
-      visible_[ev->get_geom_obj_name()] = true;
-      obj_ids_[ev->get_geom_obj_name()] = ids_;
-      sg_->addObj(si, ids_++);
+	visible_[ev->get_geom_obj_name()] = true;
+	obj_ids_[ev->get_geom_obj_name()] = ids_;
+	sg_->addObj(si, ids_++);
+      }
     }
     scene_events_.clear();
   }
@@ -1775,9 +1794,6 @@ OpenGLViewer::draw_visible_scene_graph()
 	    si->crowd_lock()->readUnlock();
 	  }
 	}
-      } else {
-	cerr << "Warning: Object " << si->getString() 
-	     <<" not in visibility database." << endl;
       }
     }
   }
@@ -2374,11 +2390,7 @@ OpenGLViewer::get_bounds(BBox &bbox, bool check_visible)
 	si->get_bounds(bbox);
 	if(si->crowd_lock()) si->crowd_lock()->readUnlock();
 
-      } else {
-	cerr << "Warning: object " << si->getString()
-	     << " not in visibility database." << endl;
-	si->get_bounds(bbox);
-      }
+      } 
     }
   }
   const unsigned int objs_size = internal_objs_.size();

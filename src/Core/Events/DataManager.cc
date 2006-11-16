@@ -68,6 +68,7 @@ private:
 DataManager::DataManager() :
   ThrottledRunnable(10.),  // does not need to update very quickly
   lock_("DataManager lock"),
+  params_(new RenderParams()),
   tm_("DataManager tool manager"),
   events_(0)
 { 
@@ -86,6 +87,7 @@ DataManager::~DataManager()
   nrrds_.clear();
   mats_.clear();
   fields_.clear();
+  delete params_;
 }
 
 bool
@@ -168,12 +170,10 @@ DataManager::selection_target_changed(unsigned int fid)
   EventManager::add_event(event);
 }  
 
-// sends Scene Graph event with the rendered geometry.
-bool         
-DataManager::show_field(unsigned int fld_id)
+void 
+DataManager::set_render_params(unsigned int fid) 
 {
-  FieldHandle fld_handle = fields_[fld_id];
-  static RenderParams p;
+  RenderParams &p = *params_;
   p.defaults();
   p.faces_transparency_ = true;
   p.do_nodes_ = true;
@@ -181,7 +181,44 @@ DataManager::show_field(unsigned int fld_id)
   p.do_edges_ = true;
   p.do_text_ = false;
   p.text_show_faces_ = false;
-  
+
+  static ColorMap *cm = 0;
+  if (cm == 0) {
+    cm = ColorMap::create_rainbow(23.0);
+    srand48(69);
+  }
+
+  double c = (double)fid / 256.0;
+  p.def_material_ = cm->lookup(c);
+  p.def_material_->transparency = .80;
+}
+
+
+// sends Scene Graph event with toggle visibility signal, effecting all
+// fields with the given fld_id
+bool         
+DataManager::toggle_field_visibility(unsigned int fld_id)
+{
+  //toggle for all GeomObjs' generated for this field
+  ostringstream str;
+  str << "-" << fld_id << "-";
+
+  SceneGraphEvent* sge = new SceneGraphEvent(0, str.str());
+  sge->set_toggle_visibility();
+  event_handle_t event = sge;
+  EventManager::add_event(event);
+
+  return true;  
+}
+
+// sends Scene Graph event with the rendered geometry.
+bool         
+DataManager::show_field(unsigned int fld_id)
+{
+  FieldHandle fld_handle = fields_[fld_id];
+  set_render_params(fld_id);
+  RenderParams &p = *params_;
+
   if (! render_field(fld_handle, p)) {
     cerr << "Error: render_field failed." << endl;
     return false;
@@ -194,13 +231,13 @@ DataManager::show_field(unsigned int fld_id)
   EventManager::add_event(event);
    
   ostringstream str;
-  str << "-" << fld_id;
+  str << "-" << fld_id << "-";
 
   string fname;
   if (! fld_handle->get_property("name", fname)) {
     fname = "Field";
   }
-  // fname = fname + str.str();
+  fname = fname + str.str();
 
   if (p.do_nodes_) 
   {
