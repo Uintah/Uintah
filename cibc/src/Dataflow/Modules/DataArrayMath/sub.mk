@@ -23,6 +23,7 @@ SRCS     += \
         $(SRCDIR)/ReplicateDataArray.cc\
         $(SRCDIR)/AppendDataArrays.cc\
         $(SRCDIR)/ReportDataArrayMeasure.cc\
+        $(SRCDIR)/ReportDataArrayInfo.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

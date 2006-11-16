@@ -31,65 +31,36 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="ReportMatrixInfo" category="Math">
+<component name="ReportDataArrayInfo" category="DataArrayMath">
   <overview>
     <authors>
-      <author>Michael Callahan</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>ReportMatrixInfo is used to view the attributes of
-matrices.</summary>
+    <summary>
+      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray.
+    </summary>
     <description>
       <p>
-        ReportMatrixInfo is purely an informational Module.  It performs no
-modification on input data.  Upon execution it displays attributes
-about the input matrix in the UI.
-      </p>
-      <p>
-	Matrix Attributes displayed:
-      </p>
-      <p>
-	Name - The Matrix name. May be blank.
-      </p>
-      <p>
-	Generation - The Matrix internal object id.
-      </p>
-      <p>
-	Typename - The C++ typename of the input Matrix Type.
-      </p>
-      <p> # Rows - The number of rows in the input matrix.
-      </p>
-      <p>
-        # Columns - The number of columns in the input matrix.
-      </p>
-      <p>
-	# Elements - The size of the matrix.  This is Rows x Columns
-for non sparse matrices.  For sparse matrices this is the number of
-nonzero elements in the array.
-      </p>
+      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray. 
+      The module differs from MatrixInfo in the sense that it reports whether a matrix
+      is a ScalarArray, VectorArray, or TensorArray. The module outputs as well the number of 
+      elements in the array.
+      </p> 
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Input</name>
-	<datatype>SCIRun::Matrix</datatype>
+        <name>DataArray</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>NumRows</name>
-      	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>NumCols</name>
-      	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
         <name>NumElements</name>
-      	<datatype>SCIRun::Matrix</datatype>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
-    </outputs>    
+    </outputs>
   </io>
 </component>
+

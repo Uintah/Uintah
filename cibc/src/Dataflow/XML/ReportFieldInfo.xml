@@ -97,6 +97,36 @@ input field.
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
+    <outputs>
+      <port>
+        <name>NumNodes</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+      <port>
+        <name>NumElements</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+      <port>
+        <name>NumData</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+      <port>
+        <name>DataMin</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+      <port>
+        <name>DataMax</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+      <port>
+        <name>FieldSize</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+      <port>
+        <name>FieldCenter</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>      
+    </outputs>    
   </io>
   <gui>
     <description>

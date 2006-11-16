@@ -2,7 +2,6 @@
 <!DOCTYPE component SYSTEM "component.dtd">
 <?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
-
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -31,65 +30,69 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="ReportMatrixInfo" category="Math">
+<component name="CalculateFieldData3" category="ChangeFieldData">
   <overview>
     <authors>
-      <author>Michael Callahan</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>ReportMatrixInfo is used to view the attributes of
-matrices.</summary>
+    <summary>
+      This module computes a new scalar, vector or tensor array based upon a 
+      combination of scalars, vectors, and tensors. 
+    </summary>
     <description>
+      <section>
+      <title>Overview</title>
       <p>
-        ReportMatrixInfo is purely an informational Module.  It performs no
-modification on input data.  Upon execution it displays attributes
-about the input matrix in the UI.
       </p>
+      </section>
+
+      <section>
+      <title>Input elements</title>
+      </section>
+      
+      <section>
+      <title>Output elements</title>     
+      </section>      
+    
+      <section>
+      <title>See Also </title>
       <p>
-	Matrix Attributes displayed:
+      <modref package="ModelCreation" name="ComputeDataArray" />	
+      <modref package="ModelCreation" name="ReplicateDataArray" />	
       </p>
-      <p>
-	Name - The Matrix name. May be blank.
-      </p>
-      <p>
-	Generation - The Matrix internal object id.
-      </p>
-      <p>
-	Typename - The C++ typename of the input Matrix Type.
-      </p>
-      <p> # Rows - The number of rows in the input matrix.
-      </p>
-      <p>
-        # Columns - The number of columns in the input matrix.
-      </p>
-      <p>
-	# Elements - The size of the matrix.  This is Rows x Columns
-for non sparse matrices.  For sparse matrices this is the number of
-nonzero elements in the array.
-      </p>
+      </section>      
+    
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="no">
+    <inputs lastportdynamic="yes">
       <port>
-        <name>Input</name>
-	<datatype>SCIRun::Matrix</datatype>
+        <name>Field1</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>      
+      <port>
+        <name>Field2</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Field3</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Function</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
+      <port>
+        <name>Array</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>NumRows</name>
-      	<datatype>SCIRun::Matrix</datatype>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
-      <port>
-        <name>NumCols</name>
-      	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>NumElements</name>
-      	<datatype>SCIRun::Matrix</datatype>
-      </port>
-    </outputs>    
+    </outputs>
   </io>
 </component>
+
