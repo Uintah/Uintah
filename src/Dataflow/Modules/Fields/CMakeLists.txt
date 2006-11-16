@@ -106,6 +106,10 @@ SET(Dataflow_Modules_Fields_SRCS
   CreateFieldData.cc
   GetFieldData.cc
   SetFieldData.cc
+  MapFieldDataFromElemToNode.cc
+  MapFieldDataFromNodeToElem.cc
+  SelectAndSetFieldData.cc
+  SelectAndSetFieldData3.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Fields ${Dataflow_Modules_Fields_SRCS})

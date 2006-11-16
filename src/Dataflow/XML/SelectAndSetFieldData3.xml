@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
 <!--
@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="SelectAndSetFieldsData" category="ChangeFieldData">
+<component name="SelectAndSetFieldData3" category="ChangeFieldData">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

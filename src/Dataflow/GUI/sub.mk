@@ -205,6 +205,10 @@ SRCS := \
         $(SRCDIR)/ReplicateDataArray.tcl\
         $(SRCDIR)/ReportDataArrayMeasure.tcl\
         $(SRCDIR)/ReportDataArrayInfo.tcl\
+        $(SRCDIR)/MapFieldDataFromElemToNode.tcl\
+        $(SRCDIR)/MapFieldDataFromNodeToElem.tcl\
+        $(SRCDIR)/SelectAndSetFieldData.tcl\
+        $(SRCDIR)/SelectAndSetFieldData3.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
