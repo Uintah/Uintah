@@ -16,6 +16,7 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/ShellMPM.cc \
+	$(SRCDIR)/AMRMPM.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/Solver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
