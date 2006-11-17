@@ -425,10 +425,10 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i);
-  void to_index(typename Edge::index_type &index, unsigned int i) { index= i; }
-  void to_index(typename Face::index_type &index, unsigned int i);
-  void to_index(typename Cell::index_type &index, unsigned int i) { index= i; }
+  void to_index(typename Node::index_type &index, unsigned int i) const;
+  void to_index(typename Edge::index_type &index, unsigned int i) const { index= i; }
+  void to_index(typename Face::index_type &index, unsigned int i) const;
+  void to_index(typename Cell::index_type &index, unsigned int i) const { index= i; }
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
@@ -1185,7 +1185,7 @@ ImageMesh<Basis>::size(typename ImageMesh::Node::size_type &s) const
 
 template<class Basis>
 void
-ImageMesh<Basis>::to_index(typename ImageMesh::Node::index_type &idx, unsigned int a)
+ImageMesh<Basis>::to_index(typename ImageMesh::Node::index_type &idx, unsigned int a) const
 {
   const unsigned int i = a % ni_;
   const unsigned int j = a / ni_;
@@ -1244,7 +1244,7 @@ ImageMesh<Basis>::size(typename ImageMesh::Face::size_type &s) const
 
 template<class Basis>
 void
-ImageMesh<Basis>::to_index(typename ImageMesh::Face::index_type &idx, unsigned int a)
+ImageMesh<Basis>::to_index(typename ImageMesh::Face::index_type &idx, unsigned int a) const
 {
   const unsigned int i = a % (ni_-1);
   const unsigned int j = a / (ni_-1);
