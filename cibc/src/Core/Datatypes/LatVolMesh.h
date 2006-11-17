@@ -651,12 +651,12 @@ public:
   void size(typename Face::size_type &) const;
   void size(typename Cell::size_type &) const;
 
-  void to_index(typename Node::index_type &index, unsigned int i);
-  void to_index(typename Edge::index_type &index, unsigned int i)
+  void to_index(typename Node::index_type &index, unsigned int i) const;
+  void to_index(typename Edge::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Face::index_type &index, unsigned int i)
+  void to_index(typename Face::index_type &index, unsigned int i) const
   { index = i; }
-  void to_index(typename Cell::index_type &index, unsigned int i);
+  void to_index(typename Cell::index_type &index, unsigned int i) const;
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
@@ -2004,7 +2004,7 @@ LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Node::size_type &s) const
 template <class Basis>
 void
 LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Node::index_type &idx,
-                            unsigned int a)
+                            unsigned int a) const
 {
   const unsigned int i = a % ni_;
   const unsigned int jk = a / ni_;
@@ -2093,7 +2093,7 @@ LatVolMesh<Basis>::size(typename LatVolMesh<Basis>::Cell::size_type &s) const
 template <class Basis>
 void
 LatVolMesh<Basis>::to_index(typename LatVolMesh<Basis>::Cell::index_type &idx,
-                            unsigned int a)
+                            unsigned int a) const
 {
   const unsigned int i = a % (ni_-1);
   const unsigned int jk = a / (ni_-1);
