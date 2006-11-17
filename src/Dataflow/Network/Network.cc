@@ -63,10 +63,10 @@ using namespace SCIRun;
 using namespace std;
 
 
-Network::Network()
-  : the_lock("Network lock"), 
-	  wait_delete_("Signal module deletion"),
-		sched(0)
+Network::Network() :
+  wait_delete_("Signal module deletion"),
+  the_lock("Network lock"), 
+  sched(0)
 {
 }
 
