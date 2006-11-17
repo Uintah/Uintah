@@ -26,59 +26,37 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Dataflow/Modules/Math
+# Sources of Core/Algorithms/Regression classes
 
-SET(Dataflow_Modules_Math_SRCS
-  AppendMatrix.cc
-  BuildNoiseColumnMatrix.cc
-  CreateGeometricTransform.cc
-  ChooseMatrix.cc
-  ConvertMatrixType.cc
-  CollectMatrices.cc
-  ReportColumnMatrixMisfit.cc
-  EvaluateLinAlgBinary.cc
-  EvaluateLinAlgUnary.cc
-  EvaluateLinAlgGeneral.cc
-  ReportMatrixInfo.cc
-  GetColumnOrRowFromMatrix.cc
-  SolveMinNormLeastSqSystem.cc
-  SolveLinearSystem.cc
-  GetSubmatrix.cc
-  ConvertMaskVectorToMappingMatrix.cc
-  ConvertMappingMatrixToMaskVector.cc
-  CreateMatrix.cc
-  ReportMatrixColumnMeasure.cc
-  ReportMatrixRowMeasure.cc
-  ReorderMatrixByCuthillMcKee.cc
-  ReorderMatrixByReverseCuthillMcKee.cc
-  ResizeMatrix.cc
+SET(Core_Algorithms_Regression_SRCS
+  RegressionAlgo.cc
+  CompareFields.cc
 )
 
-ADD_LIBRARY(Dataflow_Modules_Math ${Dataflow_Modules_Math_SRCS})
+ADD_LIBRARY(Core_Algorithms_Regression ${Core_Algorithms_Regression_SRCS})
 
-TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
-  Core_Algorithms_Math
-  Core_Algorithms_ArrayMath
-  Core_Datatypes
-  Core_Exceptions
-  Core_Geom
-  Core_GeomInterface
-  Core_Geometry
-  Core_Containers
-  Dataflow_GuiInterface
-  Core_Math
-  Core_Persistent
-  Core_Thread
-  Dataflow_TkExtensions
-  Core_Util
-  Dataflow_Network
-  ${TK_LIBRARY}
-  ${GL_LIBRARY}
-  ${M_LIBRARY}
-  ${PETSC_UNI_LIBRARY}
-  ${TEEM_LIBRARY}
+TARGET_LINK_LIBRARIES(Core_Algorithms_Regression 
+  Core_Containers 
+  Core_Exceptions 
+  Core_Thread 
+  Core_Datatypes 
+  Core_Basis 
+  Core_Geom 
+  Core_Util 
+  Core_Algorithms_Util 
+  Core_Bundle 
+  Core_Geometry 
+  Core_Algorithms_DataIO 
+  Core_OS
+  ${DL_LIBRARY} 
+  ${THREAD_LIBRARY}
 )
+
+IF(ITK_FOUND)
+  SET(TARGET_LINK_LIBRARIES ${TARGET_LINK_LIBRARIES} ITKCommon ITKBasicFilters ITKIO)
+ENDIF(ITK_FOUND)
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_Math)
+  ADD_DEFINITIONS(-DBUILD_Core_Algorithms_Regression)
 ENDIF(BUILD_SHARED_LIBS)
+
