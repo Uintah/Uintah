@@ -695,7 +695,8 @@ Painter::ShowVolumeRendering(event_handle_t event)
 
   
   NrrdDataHandle volnrrd = new NrrdData();
-  NrrdRange *range = nrrdRangeNewSet(nrrd_handle->nrrd_, nrrdBlind8BitRangeState);
+  NrrdRange *range = nrrdRangeNewSet(nrrd_handle->nrrd_, 
+                                     nrrdBlind8BitRangeState);
   nrrdQuantize(volnrrd->nrrd_, nrrd_handle->nrrd_, range, 8);
   nrrdRangeNix(range);
 

@@ -35,6 +35,7 @@
 #include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Runnable.h>
+#include <Core/Skinner/Drawable.h>
 #include <iostream>
 
 using std::cerr;
@@ -51,7 +52,19 @@ namespace SCIRun {
       BaseEvent("", 0),
       signal_name_(name),
       variables_(vars),
-      thrower_(thrower)      
+      thrower_(thrower),
+      result_(BaseTool::STOP_E)
+      
+    {
+    }
+
+
+    Signal::Signal(const Signal &copy) :
+      BaseEvent("", 0),
+      signal_name_(copy.signal_name_),
+      variables_(copy.variables_),
+      thrower_(copy.thrower_),
+      result_(copy.result_)
     {
     }
 
@@ -105,25 +118,19 @@ namespace SCIRun {
     
     class ThreadedCallback : public Runnable {
     public:     
-      ThreadedCallback() : callback_(0), signal_(0), state_(BaseTool::STOP_E){}
-      virtual ~ThreadedCallback() { }
-      
-      void      set_callback(SignalCatcher::CatcherTargetInfoBase *callback) {
-        callback_ = callback;
-      }
-      
-      void      set_signal(const event_handle_t &signal) {
+      ThreadedCallback(SignalCatcher::CatcherTargetInfoBase *callback,
+                       const event_handle_t &signal) : 
+        callback_(callback), signal_(0), state_(BaseTool::STOP_E)
+      {
         signal_ = signal;
+        signal_.detach();
       }
-      
-      event_handle_t get_signal() {
-        return signal_;
-      }
+
+      virtual ~ThreadedCallback() { signal_ = 0; }
       
       virtual void run() {
         ASSERT(callback_);
         state_ = callback_->doCallback(signal_);
-        signal_ = 0;
       }
       
       BaseTool::propagation_state_e     get_state() { return state_; }
@@ -158,17 +165,14 @@ namespace SCIRun {
           //ASSERT(callback->catcher_);
           //ASSERT(callback->function_);
           signal->set_vars(callback->variables_);
-          bool threaded = false;
-          if (callback->variables_) 
-            threaded = Var<bool>(callback->variables_, "threaded", 0)();
+          bool threaded = 
+            callback->variables_ && callback->variables_->get_bool("threaded");
+
           if (!threaded) {
             state = callback->doCallback(signal);
           } else {
-            ThreadedCallback *threaded_callback = new ThreadedCallback();
-            threaded_callback->set_callback(callback);
-            threaded_callback->set_signal(signal);
-            //            cerr << "Threading " << callback->targetname_ << std::endl;
-            (new Thread(threaded_callback, signalname.c_str()))->detach();
+            ThreadedCallback *thread = new ThreadedCallback(callback,signal);
+            (new Thread(thread, signalname.c_str()))->detach();
           }
           if (state == BaseTool::STOP_E) break;
         }
@@ -198,6 +202,32 @@ namespace SCIRun {
       return allcatchers;
     }
                
+#if 0
+    SignalCallback::SignalCallback(Drawable *thrower,
+                                   const string &signalname)
+      : signal_(new Signal(signalname, thrower, thrower->get_vars())),
+        catcher_(0)
+    {
+
+      SignalToAllCatchers_t &acatchers = thrower->all_catchers_;
+      SignalToAllCatchers_t::iterator aciter = catchers.find(signalname);
+      if (citer == catchers.end()) return;
+      AllSignalCatchers_t::iterator citer = aciter->second.begin();
+      AllSignalCatchers_t::iterator cend = aciter->second.end();
+      
+      for (;riter != rend; ++riter) {
+      }
+    }
+#endif
+      
+
+
+      
+
+      
+
+
+
   }
 }
     

@@ -1,10 +1,10 @@
 <definition class="ToolMenu">
   <object class="MenuList">
     <var name="width">150</var>
-    <var name="height">100</var>
+    <var name="height">120</var>
     <definition class="MenuList::child">
       <object class="Grid">
-        <var name="rows">4</var>
+        <var name="rows">5</var>
         <var name="cols">1</var>
 
 
@@ -57,6 +57,19 @@
 
           <signal name="Button::clicked" 
                   target="Painter::ShowIsosurface">
+            <var name="threaded">1</var>
+          </signal>
+          
+          
+        </object>
+
+        <object class="MenuButton">
+          <var name="col">1</var>
+          <var name="row">5</var>
+          <var name="Button::Text::text" propagate="yes">Volume Render</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::ShowVolumeRendering">
             <var name="threaded">1</var>
           </signal>
           

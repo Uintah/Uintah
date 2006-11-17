@@ -46,7 +46,7 @@
     <definition class="ShadowedFocusBox::child">
       <object class="LabeledGradientBackground">
         <var name="GradientBackground::bottom-color" 
-             type="color" propagate="yes">#99999999</var>
+             type="color" propagate="yes">#000000FF</var>
         <var name="LabeledGradientBackground::text" 
              propagate="yes">3D Viewer</var>
         
