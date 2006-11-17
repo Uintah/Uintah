@@ -47,6 +47,7 @@
 #ifndef SCI_project_Network_h
 #define SCI_project_Network_h 1
 
+#include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <string>
 #include <vector>
@@ -77,8 +78,10 @@ public:
   typedef map<string, Connection*>	MapStringConnection;
   typedef map<string, Module*>	MapStringModule;
     
-private:
+		
+	ConditionVariable wait_delete_;
   Mutex the_lock;
+private:
 
   MapStringConnection conn_ids;
     
