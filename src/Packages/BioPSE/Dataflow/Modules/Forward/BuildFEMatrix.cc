@@ -26,138 +26,141 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-/*
- *  BuildFEMatrix.cc:  Setups the global finite element matrix
- *
- *  Written by:
- *   F. B. Sachse
- *   CVRTI
- *   University of Utah
- *   Nov 2005
- *
- *  Generalized version of code from  
- *   Ruth Nicholson Klepfer, Department of Bioengineering
- *   University of Utah, Oct 1994
- *   Alexei Samsonov, Department of Computer Science
- *   University of Utah, Mar 2001    
- *   Sascha Moehrs, SCI , University of Utah, January 2003 (Hex)
- *   Lorena Kreda, Northeastern University, November 2003 (Tri)
- */
-
-#include <Packages/BioPSE/Dataflow/Modules/Forward/BuildFEMatrix.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Module.h>
 
 namespace BioPSE {
 
 using namespace SCIRun;
 
-
-class BuildFEMatrix : public Module
-{
-  GuiInt uiUseCond_;
-  GuiInt uiUseBasis_;
-  GuiString uiNProcessors_;
-  
+class BuildFEMatrix : public Module {
 public:
-  //! Constructor/Destructor
-  BuildFEMatrix(GuiContext *context);
-  virtual ~BuildFEMatrix();
+  BuildFEMatrix(GuiContext*);
 
-  //! Public methods
   virtual void execute();
+
+  GuiInt uiUseCond_;
+  GuiInt uiUseBasis_;  
+  
+  int gen_;
+  vector<vector<double> > DataBasis_;
+  MatrixHandle BasisMatrix_;
+
+  void convert_tensortable(FieldHandle field, MatrixHandle& matrix);  
 };
 
 
 DECLARE_MAKER(BuildFEMatrix)
-
-
-BuildFEMatrix::BuildFEMatrix(GuiContext *context) : 
-  Module("BuildFEMatrix", context, Filter, "Forward", "BioPSE"), 
-  uiUseCond_(context->subVar("UseCondTCL")),
-  uiUseBasis_(context->subVar("UseBasisTCL")),
-  uiNProcessors_(context->subVar("NProcessorsTCL"))
-{}
-
-
-BuildFEMatrix::~BuildFEMatrix()
+BuildFEMatrix::BuildFEMatrix(GuiContext* ctx)
+  : Module("BuildFEMatrix", ctx, Source, "Forward", "BioPSE"),
+    uiUseCond_(ctx->subVar("UseCondTCL")),
+    uiUseBasis_(ctx->subVar("UseBasisTCL"))
 {
 }
 
 
-void
-BuildFEMatrix::execute()
+void BuildFEMatrix::execute()
 {
-  BuildFEMatrixParam SFP;
+  FieldHandle Field;
+  MatrixHandle Conductivity;
+  MatrixHandle SysMatrix;
+  
+  if (!(get_input_handle("Mesh",Field,true))) return;
+  get_input_handle("ConductivityTable",Conductivity,false);
+  
+  if (inputs_changed_ || !oport_cached("Stiffness Matrix"))
+  {
+    SCIRunAlgo::MathAlgo numericalgo(this);
+  
+    if (uiUseBasis_.get())
+    {
+      if (Conductivity.get_rep()!=0)
+      {
+        Conductivity.detach();
+      }
+      else
+      {
+        convert_tensortable(Field,Conductivity);
+      }
+      
+      if (Conductivity.get_rep())
+      {
+        int nconds = Conductivity->nrows();
+        if ((Field->mesh()->generation != gen_)&&(BasisMatrix_.get_rep()!=0))
+        {
+        
+          MatrixHandle con = scinew DenseMatrix(nconds,1);
+          double* data = con->get_data_pointer();
+          for (int i=0; i<nconds;i++) data[i] = 0.0;
+          if(!(numericalgo.BuildFEMatrix(Field,BasisMatrix_,-1,con))) return;
+          int nconds = Conductivity->nrows();
+          
+          DataBasis_.resize(nconds);
+          for (int s=0; s< nconds; s++)
+          {
+            MatrixHandle temp;
+            data[s] = 1.0;
+            if(!(numericalgo.BuildFEMatrix(Field,temp,-1,con))) return;
+            SparseRowMatrix *m = temp->sparse();
+            DataBasis_[s].resize(m->nnz);
+            for (int p=0; p< m->nnz; p++)
+            {
+              DataBasis_[s][p] = m->a[p];
+            }
+            data[s] = 0.0;
+          }
 
-  if (!get_input_handle("Mesh", SFP.fieldH_)) return;
+          gen_ = Field->mesh()->generation;
+        }
 
-  const TypeDescription *ftd = SFP.fieldH_->get_type_description(Field::FIELD_NAME_ONLY_E);
-  const TypeDescription *mtd = SFP.fieldH_->get_type_description(Field::MESH_TD_E);
-  const TypeDescription *btd = SFP.fieldH_->get_type_description(Field::BASIS_TD_E);
-  const TypeDescription *dtd = SFP.fieldH_->get_type_description(Field::FDATA_TD_E);
-  const TypeDescription::td_vec *htdv = dtd->get_sub_type();
-
-  const string hfvaltype = (*htdv)[0]->get_name();
-  if (hfvaltype != "int" && hfvaltype != "Tensor") {
-    error("Input Field is not of type 'int' or 'Tensor'.");
-    return; 
+        SysMatrix = BasisMatrix_;
+        SysMatrix.detach();
+        SparseRowMatrix *m = SysMatrix->sparse();
+        double *sum = m->a;
+        for (int s=0; s<nconds; s++)
+        {
+          double weight = Conductivity->get(s,0);
+          for (int p=0; p < DataBasis_[s].size(); p++)
+            sum[p] += weight*DataBasis_[s][p];
+        }
+      }
+      
+      return;
+    }
+ 
+ 
+    if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,-1,Conductivity))) return;
+    
+    send_output_handle("Stiffness Matrix",SysMatrix,false);  
   }
-
-  SFP.gen_=SFP.fieldH_->generation;
-  SFP.UseCond_=uiUseCond_.get();
-  SFP.UseBasis_=uiUseBasis_.get();
-  SFP.nprocessors_=atoi(uiNProcessors_.get().c_str());
-
-  CompileInfoHandle ci =
-    BuildFEMatrixBase::get_compile_info(ftd, mtd, btd, dtd);
-  Handle<BuildFEMatrixBase> algo;
-  if (!module_dynamic_compile(ci, algo)) 
-    return;
-  
-  MatrixHandle hGblMtrx = algo->execute(SFP);
-  
-  // Send the data downstream
-  send_output_handle("Stiffness Matrix", hGblMtrx);
 }
 
-CompileInfoHandle
-BuildFEMatrixBase::get_compile_info(const TypeDescription *ftd,
-			       const TypeDescription *mtd,
-			       const TypeDescription *btd,
-			       const TypeDescription *dtd)
+
+void 
+BuildFEMatrix::convert_tensortable(FieldHandle field, MatrixHandle& matrix)
 {
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("BuildFEMatrixBaseT");
-  static const string base_class_name("BuildFEMatrixBase");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() + "." +
-		       mtd->get_filename() + "."+
-		       btd->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       ftd->get_name() + "<" + mtd->get_name() + ", " +
-		       btd->get_name() + ", " + dtd->get_name() + "> "  );
+  vector<pair<string,Tensor> > tens;
   
-  // Add in the include path to compile this obj
-
-  rval->add_include(include_path);
-  rval->add_namespace("BioPSE");
-
-  ftd->fill_compile_info(rval);
-  mtd->fill_compile_info(rval);
-  btd->fill_compile_info(rval);
-  dtd->fill_compile_info(rval);
-
-  return rval;
+  field->get_property("conductivity_table",tens);
+  
+  if (tens.size() > 0)
+  {
+    matrix = scinew DenseMatrix(tens.size(),1);
+    double* data = matrix->get_data_pointer();
+    for (size_t i; i<tens.size();i++)
+    {
+      data[i] = tens[i].second.mat_[0][0];
+    }
+  }
 }
 
-} // End namespace BioPSE
+} // End namespace SCIRun
 
 
 

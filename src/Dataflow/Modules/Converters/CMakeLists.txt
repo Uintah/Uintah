@@ -26,6 +26,36 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+# CMakeLists.txt forc Dataflow/Modules/Converters
 
-SUBDIRS(Bundle Converters DataIO DataArrayMath Fields Math Render Time 
-  Visualization String Examples)
+SET(Dataflow_Modules_Converters_SRCS
+  ConvertMatrixToString.cc
+  ConvertMatrixToField.cc
+  ConvertNrrdToField.cc
+)
+
+ADD_LIBRARY(Dataflow_Modules_Converters ${Dataflow_Modules_Converters_SRCS})
+
+TARGET_LINK_LIBRARIES(Dataflow_Modules_Converters
+  Core_Datatypes
+  Dataflow_Network
+  Core_Persistent
+  Core_Containers
+  Core_Util
+  Core_Exceptions
+  Core_Thread
+  Dataflow_GuiInterface
+  Core_Geom
+  Core_Datatypes
+  Core_Geometry
+  Core_GeomInterface
+  Dataflow_TkExtensions
+  Core_Algorithms_Converter
+  ${TK_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
+)
+
+IF(BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_Converters)
+ENDIF(BUILD_SHARED_LIBS)

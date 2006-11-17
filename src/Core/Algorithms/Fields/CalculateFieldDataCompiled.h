@@ -80,7 +80,7 @@ CalculateFieldDataCompiledAlgoT<IFIELD, OFIELD, LOC>::execute(FieldHandle field_
   IFIELD *ifield = dynamic_cast<IFIELD *>(field_h.get_rep());
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
   OFIELD *ofield = scinew OFIELD(imesh);
-
+  
   typename LOC::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);

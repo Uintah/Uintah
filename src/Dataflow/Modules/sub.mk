@@ -40,6 +40,7 @@ SRCDIR := Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Bundle\
+  $(SRCDIR)/Converters\
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
 	$(SRCDIR)/DataArrayMath\
