@@ -126,8 +126,8 @@ void BuildFEMatrix::execute()
         for (int s=0; s<nconds; s++)
         {
           double weight = Conductivity->get(s,0);
-          for (int p=0; p < DataBasis_[s].size(); p++)
-            sum[p] += weight*DataBasis_[s][p];
+          for (unsigned int p=0; p < DataBasis_[s].size(); p++)
+            sum[p] += weight * DataBasis_[s][p];
         }
       }
       
