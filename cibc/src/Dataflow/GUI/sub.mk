@@ -212,6 +212,8 @@ SRCS := \
         $(SRCDIR)/CalculateMeshNodes.tcl\
         $(SRCDIR)/CollectFields.tcl\
         $(SRCDIR)/GetDomainBoundary.tcl\
+        $(SRCDIR)/ConvertNrrdToField.tcl\
+        $(SRCDIR)/ConvertMatrixToField.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
