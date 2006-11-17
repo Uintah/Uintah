@@ -649,7 +649,10 @@ void SerialMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
   
   Task* t = scinew Task("MPM::computeParticleTempFromGrid",
                         this, &SerialMPM::computeParticleTempFromGrid);
+
   t->requires(Task::NewDW, lb->gTemperatureLabel, gac, NGN);
+  t->requires(Task::OldDW, lb->pXLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
   t->computes(lb->pTempCurrentLabel);
   sched->addTask(t, patches, matls);
 }
@@ -1604,7 +1607,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
-        total_mom += pvelocity[idx]*pmass[idx];
+        total_mom += pmom;
 
         // Add each particles contribution to the local mass & velocity 
         // Must use the node indices
