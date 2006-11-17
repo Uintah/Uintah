@@ -227,6 +227,7 @@ TARGET_LINK_LIBRARIES(scirun
   Core_Exceptions    
   Core_Geom          
   Dataflow_GuiInterface  
+  Core_Malloc
   Core_ICom          
   Core_Init         
   Core_Services      

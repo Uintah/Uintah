@@ -26,59 +26,26 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Dataflow/Modules/Math
+# Sources of Core/Algorithms/DataStreaming classes
 
-SET(Dataflow_Modules_Math_SRCS
-  AppendMatrix.cc
-  BuildNoiseColumnMatrix.cc
-  CreateGeometricTransform.cc
-  ChooseMatrix.cc
-  ConvertMatrixType.cc
-  CollectMatrices.cc
-  ReportColumnMatrixMisfit.cc
-  EvaluateLinAlgBinary.cc
-  EvaluateLinAlgUnary.cc
-  EvaluateLinAlgGeneral.cc
-  ReportMatrixInfo.cc
-  GetColumnOrRowFromMatrix.cc
-  SolveMinNormLeastSqSystem.cc
-  SolveLinearSystem.cc
-  GetSubmatrix.cc
-  ConvertMaskVectorToMappingMatrix.cc
-  ConvertMappingMatrixToMaskVector.cc
-  CreateMatrix.cc
-  ReportMatrixColumnMeasure.cc
-  ReportMatrixRowMeasure.cc
-  ReorderMatrixByCuthillMcKee.cc
-  ReorderMatrixByReverseCuthillMcKee.cc
-  ResizeMatrix.cc
+SET(Core_Algorithms_DataStreaming_SRCS
+  StreamMatrix.cc
 )
 
-ADD_LIBRARY(Dataflow_Modules_Math ${Dataflow_Modules_Math_SRCS})
+ADD_LIBRARY(Core_Algorithms_DataStreaming ${Core_Algorithms_DataStreaming_SRCS})
 
-TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
-  Core_Algorithms_Math
-  Core_Algorithms_ArrayMath
-  Core_Datatypes
-  Core_Exceptions
+TARGET_LINK_LIBRARIES(Core_Algorithms_DataStreaming 
+  Core_ImportExport 
+  Core_Util 
+  Core_Containers 
+  Core_Exceptions 
+  Core_Thread 
+  Core_Datatypes 
   Core_Geom
-  Core_GeomInterface
-  Core_Geometry
-  Core_Containers
-  Dataflow_GuiInterface
-  Core_Math
-  Core_Persistent
-  Core_Thread
-  Dataflow_TkExtensions
-  Core_Util
-  Dataflow_Network
-  ${TK_LIBRARY}
-  ${GL_LIBRARY}
-  ${M_LIBRARY}
-  ${PETSC_UNI_LIBRARY}
-  ${TEEM_LIBRARY}
+  Core_Geometry 
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_Math)
+  ADD_DEFINITIONS(-DBUILD_Core_Algorithms_DataStreaming)
 ENDIF(BUILD_SHARED_LIBS)
+

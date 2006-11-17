@@ -26,4 +26,5 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-SUBDIRS( Converter DataIO Fields Geometry Math Util Visualization )
+SUBDIRS( ArrayMath Converter DataIO DataStreaming Fields Geometry Math
+Regression Util Visualization )
