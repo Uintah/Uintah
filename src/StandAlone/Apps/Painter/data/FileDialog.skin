@@ -25,6 +25,7 @@
           <var name="cell-height">$Animation::variable-1</var>
           <signal name="FileLoadBox::CancelButtonPress" 
                   target="Animation::AnimateVariableDescending">
+            <var name="threaded">1</var>
             <var name="varnum">1</var>
           </signal>
           

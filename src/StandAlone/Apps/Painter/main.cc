@@ -34,7 +34,6 @@
 #include <Core/Skinner/XMLIO.h>
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <Core/Events/EventManager.h>
-#include <Core/Events/Trail.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -56,14 +55,13 @@ main(int argc, char *argv[], char **environment) {
   
   Skinner::XMLIO::register_maker<Painter>();
   if (!Skinner::load_default_skin()) {
-    cerr << "Errors encounted loading default skin.  Continuing anyways...\n";
+    cerr << "Errors encounted loading default skin.\n";
+    return 1;
   }
 
   EventManager *em = new EventManager();
   Thread *em_thread = new Thread(em, "Event Manager");
-#ifndef _WIN32
-  start_trail_file();
-#endif
+  EventManager::do_trails();
 
 #if defined(__APPLE__) && !defined(HAVE_X11)
   // Apple's version of event management
@@ -72,7 +70,6 @@ main(int argc, char *argv[], char **environment) {
 #endif
 
   em_thread->join();
-  EventManager::stop_trail_file();
 
   return 0;
 }

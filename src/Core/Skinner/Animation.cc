@@ -126,11 +126,10 @@ namespace SCIRun {
         newval = Clamp(newval, 
                        Min(variable_begin_, variable_end_),
                        Max(variable_begin_, variable_end_));
-
         //        height = newval;
         variable = newval;
 
-
+        cerr << newval << std::endl;
         timer_->wait_for_time(time+1/60.0);
         if (time > stop_time_) {
           at_start_ = !at_start_;

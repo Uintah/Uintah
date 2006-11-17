@@ -35,7 +35,6 @@ SET(Core_Events_SRCS
   OSXEventSpawner.cc
   SceneGraphEvent.cc
   SelectionTargetEvent.cc
-  Trail.cc	
   Tools/AutoviewTool.cc	
   Tools/Ball.cc		
   Tools/BallAux.cc		
