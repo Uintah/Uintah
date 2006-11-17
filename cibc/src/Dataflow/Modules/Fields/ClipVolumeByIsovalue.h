@@ -46,9 +46,6 @@
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 
-#include <Dataflow/Modules/Fields/ConvertHexVolToTetVol.h>
-#include <Dataflow/Modules/Fields/GetFieldBoundary.h>
-
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 
 #include <sci_hash_map.h>
