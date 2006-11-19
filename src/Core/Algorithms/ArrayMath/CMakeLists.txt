@@ -46,7 +46,6 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_ArrayMath
   Core_Geom 
   Core_Geometry 
   ${M_LIBRARY} 
-  ${TK_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)
