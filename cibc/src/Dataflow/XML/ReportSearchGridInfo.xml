@@ -41,11 +41,6 @@
     <summary>
        Output a LatVolField that matches the search grid of the input field.
     </summary>
-    <description>
-      <p>Output a LatVolField that matches the search grid of the
-        input field.  This is primarily useful for debugging search grid
-        related problems.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

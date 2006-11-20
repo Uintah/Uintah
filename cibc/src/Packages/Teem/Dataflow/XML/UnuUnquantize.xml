@@ -35,18 +35,6 @@
       <author>Darby Van Uitert</author>
     </authors>
     <summary>Recover floating point values from quantized data.</summary>
-    <description>
-    <p>Recover floating point values from quantized data.</p>
-    <p>InputNrrd - Nrrd to unquantize.</p>
-    <p>OutputNrrd - Unquantized output Nrrd.</p>
-    <p>Min = Lowest value prior to quantization. If Use Input's Min is checked,
-    use the InputNrrd's oldMin if it exists, otherwise 0.0 (double).
-    </p>
-    <p>Max = Highest value prior to quantization. If Use Input's Max is 
-    checked, use the the InputNrrd's oldMax if it exists,  otherwise 1.0 (double).
-    </p>
-    <p>Checkbox &quot;Output as type double&quot; should be checked if the user wishes to use double for output type, instead of float.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

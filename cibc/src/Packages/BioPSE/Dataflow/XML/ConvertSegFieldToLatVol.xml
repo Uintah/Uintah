@@ -42,10 +42,6 @@
       Create a LatVolField from a SegLatVolField -- choose a quantity
 to store as the data.
     </summary>
-    <description>
-      <p>Create a LatVolField from a SegLatVolField -- choose a quantity
-to store as the data.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

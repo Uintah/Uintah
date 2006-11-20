@@ -43,28 +43,6 @@ defined in regions of low anisotropy, the length of the vector
 (pre-quantization) is modulated by anisotropy, requiring the selection
 of some anisotropy metric.
     </summary>
-    <description>
-      <p>Quantize directions of diffusion. Because VTK doesn't do
-multi-dimensional colormaps, we have to quantize directions of
-diffusion (usually just the principal eigenvector) in order to create
-the usual XYZ-RGB coloring. Because eigenvector directions are poorly
-defined in regions of low anisotropy, the length of the vector
-(pre-quantization) is modulated by anisotropy, requiring the selection
-of some anisotropy metric.</p>
-      <p>Evec Index : Which eigenvector should be quantized: a value
-of 0 for the direction of fastest diffusion (eigenvector associated
-with largest eigenvalue), values 1 or 2 for other two eigenvectors
-(associated with middle and smallest eigenvalue) (integer).</p>
-      <p>Anisotropy Metric: Which anisotropy metric to plot. All the
-Westin metrics come in two versions. Currently supported: cl1, cl2:
-Westin's linear; cp1, cp2: Westin's planar; ca1, ca2: Westin's linear
-+ planar; cs1, cs2: Westin's spherical (1-ca); ct1, ct2: GK's
-anisotropy type (cp/ca); ra: Basser/Pierpaoli relative anisotropy; fa:
-Basser/Pierpaoli fractional anisotropy/sqrt(2); vf: volume fraction =
-1-(Basser/Pierpaoli volume ratio); tr: trace.</p>
-      <p>Don't Attenuate the color by Anisotropy : When not selected,
-regions with low or no anisotropy are very dark colors or black.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

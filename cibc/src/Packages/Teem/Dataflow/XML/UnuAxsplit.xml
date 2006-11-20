@@ -39,18 +39,6 @@
 axinsert, since a given axis can be split into fast and slow axes of
 arbitrary size, as long as the product of the fast and slow sizes is
 the same as the original size.</summary>
-    <description>
-      <p>Split one axis into two axes. More general version of unu
-axinsert, since a given axis can be split into fast and slow axes of
-arbitrary size, as long as the product of the fast and slow sizes is
-the same as the original size.</p>
-      <p>Axis: specify the axis to split at.  This value should be an
-integer.</p>
-      <p>Fast Axis Size: specify the fast axis size to produce when
-splitting.</p>
-      <p>Slow Axis Size: specify the slow axis size to produce when
-splitting.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

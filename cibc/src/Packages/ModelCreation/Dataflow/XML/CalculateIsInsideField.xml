@@ -41,18 +41,6 @@
       are located within a volume defined by a volume mesh or by a closed
       surface. 
     </summary>
-    <description>
-      <p>
-      This module determines whether nodes or the centers of the elements
-      are located within a volume defined by a volume mesh or by a closed
-      surface. If the input field has data on the elements the centers of the
-      elements are tested for whethter they are inside the volume. 
-      This module assigns a 1.0 to every node or element that is inside the
-      object field and 0.0 to every node or element that is outside.
-      The module outputs the data both as a field and as a matrix. The latter is
-      equal to a selection vector. 
-      </p> 
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

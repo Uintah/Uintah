@@ -38,8 +38,6 @@
     </authors>
     <summary>Writes an ITK Image.
     </summary>
-    <description><p>This module writes out an ITK Image in either Meta Image format, PNG, or JPG.</p>
-  </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

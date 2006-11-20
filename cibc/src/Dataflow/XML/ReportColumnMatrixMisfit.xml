@@ -41,9 +41,6 @@
     </authors>
     <summary>Compute and visualize error between two
 vectors.</summary>
-    <description>
-      <p>Compute and visualize error between two vectors.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

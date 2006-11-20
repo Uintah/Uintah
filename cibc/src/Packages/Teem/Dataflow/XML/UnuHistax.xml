@@ -37,18 +37,6 @@
     </authors>
     <summary>Replace each scanline along an axis with its histogram.
     </summary>
-    <description>
-      <p>Replace each scanline along an axis with its histogram.</p>
-      <p>Axis: axis to histogram along (int).</p>
-      <p>Bins: the number of bins in histogram (int).</p>
-      <p>Type: output type; default: nrrdTypeUChar.</p>
-      <p>Min: Value at low end of histogram and should be a double. To
-disregard this value and use the lowest value of the input nrrd, check
-Use lowest value of input nrrd as min.</p>
-      <p>Max: Value at high end of histogram. Should also be a double.
-To disregard this value and use the highest value of the input nrrd,
-check Use highest value of input nrrd as max.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

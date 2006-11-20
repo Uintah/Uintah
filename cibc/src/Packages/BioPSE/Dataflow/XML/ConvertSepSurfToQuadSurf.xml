@@ -41,9 +41,6 @@
     <summary>
       Change the Separating Surface into a QuadSurf.
     </summary>
-    <description>
-      <p>Change the Separating Surface into a QuadSurf.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

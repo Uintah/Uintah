@@ -9,10 +9,6 @@
       Merge nodes that are close together and remove double elements.
 
     </summary>
-    <description>
-      <p>        Merge nodes that are close together and remove double elements.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

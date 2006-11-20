@@ -40,9 +40,6 @@
       This module reorders the rows and columns of a square matrix according to the  CutHill-McKee scheme in order to reduce the bandwidth of the matrix.
 
     </summary>
-    <description>
-      <p>        This module reorders the rows and columns of a square matrix according to the CutHill-McKee scheme in order to reduce the bandwith of the matrix. The input for this module is a square matrix and it returns the reordered matrix. The second output is the reordering scheme. If one is solve A*x=b. Vector b needs to be multiplied with the mapping matrix and x needs to be multiplied with the inverse mapping matrix.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

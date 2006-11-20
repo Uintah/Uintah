@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Extracts the selected index of the vector that is the input pixel type.
-  This module encapsulates the functionality of the ITK Filter itk::VectorIndexSelectionCastImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

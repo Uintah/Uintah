@@ -37,22 +37,6 @@
     </authors>
     <summary>Extract a single fiber tract, given a start
 point.</summary>
-    <description>
-      <p>Extract a single fiber tract, given a start point. Currently,
-only fibers based on 4th-order Runge-Kutta on principal eigenvector
-are supported via tend. The world space in which fibers are calculated
-has the volume inscribed in a bi-unit cubecentered at the origin. The
-output fiber is in the form of a 3xN array of doubles, with N points
-along fiber. </p>
-      <p>Step Size : stepsize along fiber, in world space. This value
-should be a double.</p>
-      <p>Stopping Criteria : the conditions that should signify the
-end of a fiber. Multiple stopping criteria are logically OR-ed and
-tested at every point along the fiber. These conditions include Fiber
-Length, Number of Steps, Confidence Threshold, and Anisotropy
-Threshold.</p>
-      <p>Kernel : Kernel for reconstructing tensor field.</p>
-    </description>
     <examplesr></examplesr>
   </overview>
   <io>

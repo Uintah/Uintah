@@ -39,13 +39,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary></summary>
-    <description>
-      <p>Inputs:</p>       
-      <p>Main (Required): The main field to be processed by tetgen.  The outer surface or Tetrahedral volume field to refine.</p>       
-      <p>Points (Optional): If there is a PointCloud attached to this input, the point in it will be included in the output tetvol. Data on this field is meaningless.</p> 
-      <p>Region Attribs (Optional): If a PointCloud is attached the points will be considered points inside the different regions. The data will be used as the volume constraint for that region.  For the volume constraint to be respected you must pass the 'a' command line switch.</p>
-      <p>Regions (optional): This is a dynamic input, each input should be a surface field, that defines a region inside the Main Input.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

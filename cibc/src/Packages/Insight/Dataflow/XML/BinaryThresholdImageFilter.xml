@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-This filter produces an output image whose pixels are either one of two values ( OutsideValue or InsideValue ), depending on whether of not the corresponding input image pixel lie between the two thresholds ( LowerThreshold and UpperThreshold ). Values equal to either threshold is considered to be between the thresholds.
-  This module encapsulates the functionality of the ITK Filter itk::BinaryThresholdImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

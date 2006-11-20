@@ -38,12 +38,6 @@
     </authors>
     <summary>Use ImageMagick libraries to open neary any image
 file.</summary>
-    <description>
-      <p>ImportImage will open any of the image types supported by
-ImageMagick.  The image is opened as a 3xWxH nrrd containing float
-data ranging between 0 and 1.  At this time only the RGB channels of
-the image are preserved, any opacity channel is discarded.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

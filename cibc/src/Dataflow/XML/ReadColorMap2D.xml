@@ -40,11 +40,6 @@
     <summary>
     The ColorMap2 Read a persistent 2D colormap from a file on disk.
     </summary>
-    <description>
-    <p>
-    The ColorMap2 Read a persistent 2D colormap from a file on disk.    
-    </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

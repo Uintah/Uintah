@@ -37,34 +37,6 @@
     </authors>
     <summary>Ternary operation on three nrrds or constants. Can have
 one, two, or three nrrds, but not zero. </summary>
-    <description>
-      <p>Ternary operation on three nrrds or constants. Can have one,
-two, or three nrrds, but not zero.</p>
-      <p>Operator: Binary operator. Possibilities include:</p>
-      <p>    +, x, : sum or product of three values</p>
-      <p>min, max : minimum, maximum</p>
-      <p>clamp : second value is clamped to range between the first
-and the third</p>
-      <p>ifelse : if 1st value non-zero, then 2nd value, else 3rd
-value</p>
-      <p>lerp : linear interpolation between the 2nd and 3rd values,
-as the 1st value varies between 0.0 and 1.0, respectively</p>
-      <p>exists : if the first value exists, use the second value,
-otherwise use the third</p>
-      <p>in_op : 1 iff second value is is greater than first and less
-than the second second, 0 otherwise</p>
-      <p>in_cl : 1 iff second value is greater than or equal to the
-first and less than or equal to second, 0 otherwise</p>
-      <p>Float Input 1: This value is the first float value and will
-only be used if the first nrrd port isn't connected.</p>
-      <p>Float Input 2: This value is the second float value and will
-only be used if the second nrrd port isn't connected.</p>
-      <p>Float Input 3: This value is the third float value and will
-only be used if the third nrrd port isn't connected.</p>
-      <p>Type : type to convert all input nrrds to prior to doing the
-operation.  To leave it unchanged, check the 'Same as input type'
-checkbutton.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

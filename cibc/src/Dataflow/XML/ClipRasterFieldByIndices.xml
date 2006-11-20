@@ -41,27 +41,6 @@
 The Field Sub Sample module sub samples a structured grid. It is
 posible to sub sample a particular region or sparsely sample the grid.
     </summary>
-    <description>
-      <p>
-The Field Sub Sample module sub samples a structured grid. It is
-posible to sub sample a particular region or sparsely sample the grid.
-      </p>
-
-      <p> The Field Sub Sample input port is a field that is
-structured in 3D. This field will be sub sampled in 3D and piped to
-the output port. The user can sub-sample the grid in all directions
-via the GUI. The sub-sampling can be performed either of two ways, a
-sub region can be selected or values can be skipped. A combination of
-both is also possible. </p> 
-
-      <p> The "Start Node" defines the first sampling. Because the
-data is circular in the Theta and Phi directions the ending node is
-defined as the "Start Node" plus the "Number of Nodes". This allows
-for overlap in the data. In the case of the Radial direction the
-number of nodes is limited based on the size of the data. The "Skip
-Nodes" defines how often the data will be sample between start and end
-nodes. </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

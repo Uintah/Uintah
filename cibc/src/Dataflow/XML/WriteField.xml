@@ -42,22 +42,6 @@
     <summary>
     Saves persistent field objects received from upstream modules.
     </summary>
-    <description>
-    <p>
-    Upon opening, the WriteField GUI defaults to the directory that the user 
-    sets for their SCIRUN_DATA environment variable.   Otherwise, the GUI will 
-    default to the directory where the user's SCIRun executable resides. The 
-    user can enter the name of a file that the matrix saves to. The file should 
-    have a .fld extension.  The default file name is MyField.  The user may 
-    also choose between a Binary or ASCII file format.
-    </p>  
-    <p>
-    This module has an optional filename input port which allows
-    to override the name assigned in the GUI. This port is intended
-    to assist with scripting and can be used to automatically assign
-    filenames.
-    </p>          
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

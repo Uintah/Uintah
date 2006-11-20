@@ -42,13 +42,6 @@
       defines which parts are inside and which parts are outside of the clipping
       range.
     </summary>
-    <description>
-    <p>
-      This module can be used to clip of parts of a mesh, using a function which 
-      defines which parts are inside and which parts are outside of the clipping
-      range.    
-    </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

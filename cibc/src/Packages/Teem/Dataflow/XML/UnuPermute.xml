@@ -38,10 +38,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Specify axes to be swapped with eachother</summary>
-    <description>
-      <p>Specify in the UI which axes are to be swapped with
-eachother. </p>
-    </description>
     <examplesr>Teem/nets/test/permute.net</examplesr>
   </overview>
   <io>

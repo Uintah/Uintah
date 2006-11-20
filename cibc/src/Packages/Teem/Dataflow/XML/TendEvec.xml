@@ -37,13 +37,6 @@
     </authors>
     <summary>Calculate one or more eigenvectors in a DT
 volume.</summary>
-    <description>
-      <p>Calculate one or more eigenvectors in a DT volume.</p>
-      <p>Major, Medium, and Minor : indicate which eigenvalues should
-be saved out.</p>
-      <p>Threshold : Confidence threshold.  This value should be a
-float.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

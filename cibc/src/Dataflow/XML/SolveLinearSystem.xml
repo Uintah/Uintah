@@ -41,23 +41,6 @@
     <summary>The SolveLinearSystem module is used to solve the linear system
 Ax=b, where A is a given Matrix, b is a given right-hand-side vector,
 and the user wants to find the solution vector x.</summary>
-    <description>
-      <p>We support several different iteratve solution techniques
-within SCIRun, including Jacobi, Conjugate Gradient, and Biconjugate
-Gradient.
-      </p>
-      <p>As the module iteratively approaches the solution, a
-graphical user interface depicts the norm of the residual.  This
-feedback allows the user to visually confirm whether a solution is
-converging, and if so how quickly.  It also provides a convenient
-interface for specifying a convergrence threshold, as the user can
-interactively raise of lower the maximum acceptable error tolerance in
-real-time.  As the solver is converging, the module can send out the
-current guess at the solution and continue to iterate; this
-intermediate result is passed downstream to dependent modules, and can
-be useful for visualizing how a system is physically converging.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

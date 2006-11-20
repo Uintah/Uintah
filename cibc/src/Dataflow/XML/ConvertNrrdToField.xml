@@ -40,10 +40,6 @@
       Convert a NRRD into a SCIRun Field object.
 
     </summary>
-    <description>
-      <p>        Convert a NRRD into a SCIRun Field object.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

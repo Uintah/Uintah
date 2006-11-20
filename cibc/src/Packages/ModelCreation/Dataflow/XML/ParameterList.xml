@@ -40,11 +40,6 @@
     <summary>
       This module allows for creation a bundle with strings, scalars, vectors, and tensors as components. Each component has a name and can be extracte out of the bundle.
     </summary>
-    <description>
-      <p>
-      This module allows for creation a bundle with strings, scalars, vectors, and tensors as components. Each component has a name and can be extracte out of the bundle.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

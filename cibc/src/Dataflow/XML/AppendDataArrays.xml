@@ -39,19 +39,6 @@
     <summary>
       This module appends various data arrays together.
     </summary>
-    <description>
-      <p>
-      A data array is a dense matrix that represents an array of scalars, 
-      vectors, or tensors. Each row in the matrix represents one scalar,
-      one vector or one tensor. The number of columns in the matrix is one
-      for an array of scalars, three for an array of vectors, or six or nine
-      for an array of tensors. 
-      </p>
-      <p>
-      This module takes several of these matrices and appends the subsequent
-      at the bottom of the matrix, expanding the array.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

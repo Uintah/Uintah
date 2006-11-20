@@ -39,11 +39,6 @@
     <summary>
       This module takes a ScalarArray, VectorArray or TensorArray and replicates it n-fold.
     </summary>
-    <description>
-      <p>
-      This module takes a ScalarArray, VectorArray or TensorArray and replicates it n-fold.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

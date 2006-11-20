@@ -42,13 +42,6 @@ Due to a specified dipole, the potential on the outer sphere of a four
 layer spherical volume conductor is computed.
 </summary>
 
-    <description>
-      <p>The potentials on the outer sphere are calculated
-analytically at the electrode positions.  The spherical volume
-consists of four layers (skalp, skull, cerebrospinal fluid, brain).
-Every layer can have different radial and tangential conductivities.
-The dipole has to be in the innermost sphere.</p>
-    </description>
 
   </overview>
 

@@ -10,13 +10,6 @@
       and from it creates all the files needed to compile and run a CardioWave
       simulation.
     </summary>
-    <description>
-      <p>        
-      Build a CardioWave Simulation. This module uses the create SimulationBundle
-      and from it creates all the files needed to compile and run a CardioWave
-      simulation.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

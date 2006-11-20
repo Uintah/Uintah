@@ -34,9 +34,6 @@
     <author>Darby J Van Uitert</author>
     </authors>
     <summary></summary>
-    <description>
-    <p>Convert a NRRD to an Image.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

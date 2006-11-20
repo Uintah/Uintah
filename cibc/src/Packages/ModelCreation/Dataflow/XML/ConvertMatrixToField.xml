@@ -8,15 +8,6 @@
     <summary>
       Convert a Matrix into a ImageMesh.
     </summary>
-    <description>
-      <p>   
-      Convert a Matrix into a ImageMesh. There are two ways of doing the
-      conversion: (1) assuming every value in the matrix is a node value
-      and hence creating a mesh with the values assigned to the nodes, or
-      (2) assuming every value represents an element value. The module assumes
-      a unitary spacing between the rows and colums of the matrix. 
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

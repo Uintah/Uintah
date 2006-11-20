@@ -36,20 +36,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Calculate B-matrix given gradient directions.</summary>
-    <description>
-      <p>Calculate B-matrix given gradient directions, assuming no
-diffusion weighting from the other imaging gradients. The input is a
-3-by-N array of floats or doubles, each row being one of the gradient
-directions used for diffusion-weighted imaging. A plain text file with
-one gradient per line, no punctuation, is an easy way to specify this
-information. The gradient vector coefficients are used as is, without
-normalization (since different gradient strengths are sometimes
-desired). The output has one row of the B-matrix per line, with
-coefficient ordering Bxx, Bxy, Bxz, Byy, Byz, Bzz, and with the
-off-diagonal elements NOT pre-multiplied by 2.</p>
-      <p>List of Gradients : List of gradients, one gradient per
-line.</p>
-    </description>
     <examplesr></examplesr>
   </overview>
   <io>

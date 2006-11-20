@@ -42,10 +42,6 @@
 	The ViewSlices module displays orthogonal slices of a 3D Nrrd
 in a 2D OpenGL window.
     </summary>
-    <description>
-      <developer>
-      </developer>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

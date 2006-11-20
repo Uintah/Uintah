@@ -38,18 +38,6 @@
     </authors>
     <summary>Replace a slice with a different nrrd. This is
 functionally the opposite of slice.</summary>
-    <description>
-      <p>Replace a slice with a different nrrd. This is functionally
-the opposite of slice.</p>
-      <p>The InputNrrd is the nrrd into which the slice will be
-inserted.</p>
-      <p>The SliceNrrd is the nrrd slice to be inserted into the
-InputNrrd.</p>
-      <p>The axis indicates the axis to splice along and should be an
-integer.</p>
-      <p>The position indicates the position to splice at.  It must be
-an integer.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

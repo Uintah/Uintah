@@ -9,9 +9,6 @@
       This module will build a table which will indicate which nodes at the edges are connected to the opposite edges.
 
     </summary>
-    <description>
-      <p>        This module will build a table which will indicate which nodes at the edges are connected to the opposite edges. </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

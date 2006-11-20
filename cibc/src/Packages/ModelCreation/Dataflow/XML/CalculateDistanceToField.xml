@@ -39,11 +39,6 @@
     <summary>
       This module computes the minimum distance between the object and the nodes in field or the center of the elements.
     </summary>
-    <description>
-      <p>
-      This module computes the minimum distance between the object and the nodes in field or the center of the elements.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

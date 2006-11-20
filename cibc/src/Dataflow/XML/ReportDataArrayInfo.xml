@@ -39,14 +39,6 @@
     <summary>
       Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray.
     </summary>
-    <description>
-      <p>
-      Get information on a matrix used as a ScalarArray, VectorArray, or TensorArray. 
-      The module differs from MatrixInfo in the sense that it reports whether a matrix
-      is a ScalarArray, VectorArray, or TensorArray. The module outputs as well the number of 
-      elements in the array.
-      </p> 
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

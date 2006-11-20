@@ -41,9 +41,6 @@
     <summary>
         Generates Axes Geometry for rendering graphs.
     </summary>
-    <description>
-      <p>Generates Axes Geometry for rendering graphs.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

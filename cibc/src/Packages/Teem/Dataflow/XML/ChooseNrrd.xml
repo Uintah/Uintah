@@ -42,15 +42,6 @@
         ChooseNrrd takes in an arbitrary number of input Nrrds, and
 pass one of them downstream, based on the port index typed in the UI.
     </summary>
-    <description>
-      <p>
-        ChooseNrrd takes in an arbitrary number of input Nrrds, and
-pass one of them downstream, based on the port index typed in the UI.
-If the Use first valid nrrd option is checked, the module will
-disregard the port index and iterate over the input ports, passing the
-first valid data downstream.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

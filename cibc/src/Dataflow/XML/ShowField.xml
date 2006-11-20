@@ -43,36 +43,6 @@
 Mesh inside a Field. Where possible, the field takes its color from
 the Data values that permeate the field.
     </summary>
-    <description>
-      <p>
-         The field in the first input port holds the mesh that is to
-be visualized. It only needs to have a mesh, in which case it will be
-rendered in the default color, which is editable from the UI. If there
-is a color map attached to port 2, and there is valid data in field,
-then the data serves as an index into the color map, and the mesh is
-rendered with appropriate colors.
-      </p>
-      <p>
-         Nodes can be rendered as spheres, axes, or as points. Edges
-can be rendered as lines or cylinders. All of which have editable
-size. Faces and text can be rendered or not.
-      </p>
-      <p>
-         If the Orientation Field contains Vector data, then that
-field is used to draw vectors or oriented glyphs.  These can then be
-colored with the values derived from the first input port.  In order
-for the vectors to be colored properly, the Field and Orientation
-Field ports must share the same mesh and have data at the same
-locations.
-      </p>
-      <developer>
-	<p>
-           ShowField uses the dynamic loader to compile and load a
-RenderField Algorithm templated on field type. RenderField does all
-the rendering work, it loads the scene graph to be rendered. 
-        </p>
-      </developer>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

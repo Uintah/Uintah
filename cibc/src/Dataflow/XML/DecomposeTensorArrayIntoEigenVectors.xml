@@ -39,11 +39,6 @@
     <summary>
       This module decomposes the a N by 9 Matrix, representing an array of tensors into three N by 3 matrices which contain the eigen vectors of the system, numbered from the most significant to the least significant and three column vectors representing the three eigen values of the tensor.
     </summary>
-    <description>
-      <p>
-      This module decomposes the a N by 9 Matrix, representing an array of tensors into three N by 3 matrices which contain the eigen vectors of the system, numbered from the most significant to the least significant and three column vectors representing the three eigen values of the tensor.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

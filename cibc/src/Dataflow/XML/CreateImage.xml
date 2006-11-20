@@ -41,28 +41,6 @@
     <summary>
       Make an ImageField that fits the source field.
     </summary>
-    <description>
-
-      <p> Make an ImageField that fits the source field.  The value
-type of the ImageField is similar to that of the input field.  If
-there is no input field specified, then create a unit area of doubles.
- The size parameters refer to the number of nodes in the volume, not
-the number of faces.  Thus a 2x2x2 node image will only contain one
-facet. </p>
-
-      <p> The Pad Percentage parameter is an optional parameter that
-describes how much larger than the input field the resulting image
-area should be.  For example, a value of 100 would make the image
-field be three times as far across and contain nine times the area of
-an image with the default 0 padding.  A value of 50 would cause the
-image to be twice as far across (50% bigger on each side).
-</p>
-
-      <p> No interpolation is done onto the new field.  It is
-recommended that the <modref package="SCIRun" name="DirectMapping"/>
-module be used if those values are needed. </p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

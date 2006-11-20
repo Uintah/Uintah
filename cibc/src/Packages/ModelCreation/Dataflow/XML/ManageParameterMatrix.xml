@@ -40,11 +40,6 @@
     <summary>
       This module gets a matrix from a ParameterList.
     </summary>
-    <description>
-      <p>
-      This module gets a matrix from a ParameterList. Use the GUI to select the parameter.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

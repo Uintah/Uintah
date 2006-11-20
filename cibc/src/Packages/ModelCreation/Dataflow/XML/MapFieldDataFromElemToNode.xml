@@ -39,17 +39,6 @@
     <summary>
       Compute the value of the nodes based on the data from the adjoining elements. This module supports various operations to map element data to node data.
     </summary>
-    <description>
-      <p>
-      Compute the value of the nodes based on the data from the adjoining elements. This module supports various operations to map element data to node data.
-        Supported methods are:
-        AVERAGE - Compute the average of adjoining elements
-        MIN - Compute the minimum value of adjoining elements
-        MAX - Compute the maximum value of adjoinint elements
-        SUM - Compute the sum of the adjoining elements
-        INTERPOLATE - Compute a weighted average of the adjoining elements
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

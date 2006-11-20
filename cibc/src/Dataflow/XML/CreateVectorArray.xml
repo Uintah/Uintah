@@ -39,11 +39,6 @@
     <summary>
       This module creates a vector out of arrays of scalars.
     </summary>
-    <description>
-    <p>
-      This module creates a vector out of arrays of scalars.
-    </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

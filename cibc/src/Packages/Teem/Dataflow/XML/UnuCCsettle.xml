@@ -38,9 +38,6 @@
     </authors>
     <summary>Remap CC values down to lowest contiguous values.
     </summary>
-    <description>
-      <p>Remap CC values down to lowest contiguous values.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

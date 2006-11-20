@@ -39,18 +39,6 @@
       <author>Jason Shepherd</author>
     </authors>
     <summary>Nodal movement to improve mesh quality.</summary>
-    <description>
-
-      <p>The SmoothMesh module is used to move various nodes in a
-mesh in an attempt to improve the overall mesh quality.  The TSTT
-MESQUITE library is the work-horse for this module.
-(see http://www.cs.sandia.gov/optimization/knupp/Mesquite.html and/or http://www.tstt-scidac.org/research/mesquite.html for more information,
-or http://software.sandia.gov to download the MESQUITE library.)</p>
-
-      <p> Only TetVol, HexVol, TriSurf, and QuadSurf meshes are currently 
-supported by this module.  It is important that the triangles are oriented
-consistently when smoothing a TriSurfMesh.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

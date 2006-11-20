@@ -37,9 +37,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Assign data to a field.</summary>
-    <description>
-      <p>Version Date: June 2001</p><p>Version: 1.0</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

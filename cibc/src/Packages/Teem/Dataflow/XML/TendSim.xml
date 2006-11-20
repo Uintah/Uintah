@@ -40,15 +40,6 @@ be in the same form as the input to tend estim, , and the B matrix
 used is the output from tend bmat. The other required inputs are the
 reference (non-diffusion-weighted) anatomical scalar volume, and the
 corresponding volume of diffusion tensors.</summary>
-    <description>
-      <p>Simulate DW images from a tensor field. The output will be in
-the same form as the input to tend estim, , and the B matrix used is
-the output from tend bmat. The other required inputs are the reference
-(non-diffusion-weighted) anatomical scalar volume, and the
-corresponding volume of diffusion tensors.</p>
-      <p>B Value: value for simulated scan.  This should be a
-float.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

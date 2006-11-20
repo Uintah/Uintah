@@ -37,13 +37,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Compute the current across a surface.</summary>
-    <description>
-      <p>Version Date: January 2003</p>
-      <p>Version: 1.0</p>
-      <p>IntegrateCurrent calculates current flow across a surface.
-Required inputs are the electric field, mesh with conductivities, and
-a surface enclosing the current source(s).</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

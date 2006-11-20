@@ -39,9 +39,6 @@
     <summary>
       Convert a LatVolField to a HexVolField
     </summary>
-    <description>
-      <p>Convert a LatVolField to a HexVolField</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
