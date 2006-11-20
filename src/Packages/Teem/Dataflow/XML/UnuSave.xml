@@ -42,24 +42,6 @@ DSC comments, and is suitable for inclusion into other PostScript
 documents. As a stand-alone file, the image is conveniently centered
 on an 8.5x11 inch page, with 0.5 inch margins.
     </summary>
-    <description>
-      <p>Write nrrd with specific format, encoding, or endianness. EPS
-output is a EPSF-3.0 file with BoundingBox and HiResBoundingBox DSC
-comments, and is suitable for inclusion into other PostScript
-documents. As a stand-alone file, the image is conveniently centered
-on an 8.5x11 inch page, with 0.5 inch margins.</p>
-      <p> Format: output file format. Possibilities include: nrrd :
-standard nrrd format; png : PNG image; pnm : PNM image; PPM for color,
-PGM for grayscale; text : plain ASCII text for 1-D and 2-D data; vtk :
-VTK "STRUCTURED_POINTS" dataset; eps : EPS file</p>
-      <p>Encoding : encoding of data in file. Not all encodings are
-supported in a given format. Possibilities include: raw : raw
-encoding; ascii : print data in ascii; hex : two hex digits per
-byte</p>
-      <p>Endian : Endianness to save data out as; little for Intel and
-friends; big for everyone else. Defaults to endianness of this
-machine.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

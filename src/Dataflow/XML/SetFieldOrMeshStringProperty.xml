@@ -41,28 +41,6 @@
     <summary>
       Set a Property for a Field (or for its mesh).
     </summary>
-    <description>
-      <p>Set a Property for a Field or Mesh.  The property can then be
-used by downstream modules to determine various things about the
-field.  This module is only used for editing string properties.</p>
-
-      <p>The properties most commonly set are:</p>
-
-      <p>name:  The name of the field or mesh.</p>
-      <p>units:  What units are used when measuring a mesh.</p>
-
-      <p>Properties are generally used for domain specific
-information, such that the number used in the base SCIRun module set
-is quite limited.</p>
-
-      <p>There are also several properties which are not currenty
-editable with this module.  These include the multi-value properties
-and properties which are not just strings.  These include the minmax
-property which is a cache of the min and max values for a field, and
-the conductivities_table which contains conductivities for an indexed
-field.</p>
-      
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

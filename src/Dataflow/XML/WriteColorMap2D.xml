@@ -41,17 +41,6 @@
     <summary>
     Save persistent representation of a colormap to a file.
     </summary>
-    <description>
-    <p>
-    Save persistent representation of a colormap to a file.
-    </p>
-    <p>
-    This module has an optional filename input port which allows
-    to override the name assigned in the GUI. This port is intended
-    to assist with scripting and can be used to automatically assign
-    filenames.
-    </p>      
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

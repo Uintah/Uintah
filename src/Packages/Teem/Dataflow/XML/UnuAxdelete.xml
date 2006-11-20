@@ -39,16 +39,6 @@
 axes have only a single sample along them. The underlying linear
 ordering of the samples is unchanged, and the information about the
 other axes is shifted downwards as needed.</summary>
-    <description>
-      <p>Remove one or more singleton axes from a nrrd. Singleton axes
-have only a single sample along them. The underlying linear ordering
-of the samples is unchanged, and the information about the other axes
-is shifted downwards as needed.</p>
-      <p>Axis: indicates the axis at which to delete the stub axis and
-should be an integer. If you give -1 as the axis, this will do a
-matlab-style squeeze, in which any and all singleton axes are
-removed.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

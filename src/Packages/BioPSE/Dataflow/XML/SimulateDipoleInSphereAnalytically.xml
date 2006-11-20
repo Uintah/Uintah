@@ -41,15 +41,6 @@
 
     <summary>Due to the specified dipoles, the SimulateDipoleInSphereAnalytically module fills the sphere field with potentials values.</summary>
 
-    <description>
-      <p>Version Date: March 2001</p>
-      <p>Version: 1.1</p>
-      <p>The current version of the module provides analytical
-	calculation of potentials on the surface of the supplied sphere. We assume that the
-	sphere has uniform conductivity equal to 1. The
-	center of the sphere is the center of the bounding box, and the
-	radius is half of the maximum dimension of the box.</p>
-    </description>
   </overview>
   
   <io>

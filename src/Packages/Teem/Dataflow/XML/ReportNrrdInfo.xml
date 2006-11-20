@@ -39,13 +39,6 @@
     </authors>
     <summary>ReportNrrdInfo is used to view the attributes of
 Nrrd's.</summary>
-    <description>
-      <p> Display in the ui all attributes of the input nrrd for each
-axis in the Nrrd. Display all info in the modules UI. The data type,
-dimensionality, and label, data center, kind, size, spacing, min, max
-along each axis in the Nrrd.  If it is not stored in the Nrrd --- is
-displayed. </p>
-    </description>
     <examplesr>Teem/nets/test/ReportNrrdInfo-test.net</examplesr>
   </overview>
   <io>

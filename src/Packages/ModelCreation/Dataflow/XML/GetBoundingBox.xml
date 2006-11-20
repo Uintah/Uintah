@@ -9,10 +9,6 @@
       This module gets the bounding box of a field.
 
     </summary>
-    <description>
-      <p>        This module gets the bounding box of a field.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

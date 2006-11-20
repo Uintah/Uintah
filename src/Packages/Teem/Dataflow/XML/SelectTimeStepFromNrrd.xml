@@ -42,39 +42,6 @@ also select a range of time indecies and send them to the output port
 one at a time.  This module allows the user to animate Through a time
 series.
     </summary>
-    <description>
-      <p>When the module runs in interactive mode, the user selects
-which vectors they want to include in the playback.  In the
-SelectTimeStepFromNrrd module dialog window, Start and End sliders enable the
-user to set the playback range, the Current Value function specifies
-which row or column to send downstream, and the Delay function
-controls the time delay and speed of the animated points on the
-mesh.</p>
-      
-      <p>There are several Play Modes in the SelectTimeStepFromNrrd GUI dialog
-window: Once, Loop, Bounce1, and Bounce2.  The Once mode plays the
-animation from current value to the end of the selected range of
-column and rows on the matrix.  The Loop mode plays the selected range
-endlessly, reversing directions after reaching the start or end of the
-range.  Bounce1 only plays endpoints once, while Bounce2 repeats them.
-For example, if the range is 1 through 3, Bounce1 will play { 1 2 3 2
-1 2 3 2 1 . . .}, while Bounce2 will play {1 2 3 3 2 1 2 3 3 2 1}.
-Using the Delay text field in the GUI dialog window, the user
-specifies a delay (in milliseconds) that controls the speed at which
-the selected rows or columns may be sent to the output port.</p>
-      
-      <p>The Increment entry can be used to skip through the input
-matrix by more than one element at a time.  This can be used with the
-Send Amount entry to send more than one row/column at a time. For
-instance, if both entries are set to three, the module will send three
-rows/columns at a time, which can then be mapped onto a vector field
-by the <modref package="SCIRun" name="ManageFieldData"/> module. </p>
-
-      <p>This module is much more efficient if the Time axis is the
-last (slowest) axis in the input NRRD.  This is because the output of
-each timestep is a contiguous chunk of the input and can thus be sent
-as a pointer offset rather than an interleaved memory copy.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no"> 

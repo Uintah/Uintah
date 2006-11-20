@@ -38,15 +38,6 @@
     <summary>Add a stub (length 1) axis to a nrrd. The underlying
 linear ordering of the samples is unchanged, and the information about
 the other axes is shifted upwards as needed.</summary>
-    <description>
-      <p>Add a stub (length 1) axis to a nrrd. The underlying linear
-ordering of the samples is unchanged, and the information about the
-other axes is shifted upwards as needed.</p>
-      <p>Axis: indicates the axis at which to insert the new axis and
-should be an integer.</p>
-      <p>Label: is the string label to associate with the new
-axis.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

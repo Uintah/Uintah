@@ -37,11 +37,6 @@
     </authors>
     <summary>Reverse order of slices along one axis. Special case of
 unu shuffle.</summary>
-    <description>
-      <p>Reverse order of slices along one axis. Special case of unu
-shuffle.</p>
-      <p>Axis: the axis to flip along.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

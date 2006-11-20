@@ -38,13 +38,6 @@
     <summary>
       This module reads a text file into a string.
     </summary>
-    <description>
-      <p>
-      This module reads a text file from disk. The file needs to be an ascii 
-      text file and does not to be formatted in a special way like all other 
-      SCIRun file types.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

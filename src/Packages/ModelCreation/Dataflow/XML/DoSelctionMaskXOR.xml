@@ -39,11 +39,6 @@
     <summary>
       Exclusive OR operation on two selection masks.
     </summary>
-    <description>
-      <p>
-      Exclusive OR operation on two selection masks.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -39,12 +39,6 @@
 orientation of the tensor is unchanged. Note that unlike tend anscale,
 this operation can completely change the shape of the tensor.
     </summary>
-    <description>
-      <p>Modify shape by adding a constant to all eigenvalues. The
-orientation of the tensor is unchanged. Note that unlike tend anscale,
-this operation can completely change the shape of the tensor.</p>
-      <p>Value to Add : value to add to all eigenvalues (float).</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

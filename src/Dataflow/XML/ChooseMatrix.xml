@@ -43,15 +43,6 @@
 and pass one of them downstream, based on the port index typed in the
 UI.
     </summary>
-      <description>
-	<p>
-        ChooseMatrix takes in an arbitrary number of input matrices,
-and pass one of them downstream, based on the port index typed in the
-UI. If the Use first valid matrix option is checked, the module will
-disregard the port index and iterate over the input ports, passing the
-first valid data downstream.
-      </p>
-      </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

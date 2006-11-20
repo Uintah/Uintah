@@ -37,16 +37,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Compute the current density vector field</summary>
-    <description>
-      <p>Version Date: January 2003</p>
-      <p>Version: 1.0</p>
-      <p>CalculateCurrentDensity calculate the current density vector field.
-Required inputs are the electric field and mesh with conductivities.
-Technical note: The current density vector field J is the product of
-sigma and -del V. The minus sign is added in CalculateCurrentDensity, so the
-electric field input should be positive (which is the unmodified
-output of the <modref package="SCIRun" name="Gradient"/> module).</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -40,15 +40,6 @@
       constructed out of two orthogonal N by 3 arrays describing the 
       eigenvectors for the system and 3 column vectors describing the eigen values.
     </summary>
-    <description>
-    <p>
-      This module can be used to compute the conductivity tensors of a field, based on the eigen vector decomposition of for instance DTI data. 
-      Each of the inputs can be matrix with N rows or with 1 row, in the latter case that value is assumed to be the same for all tensors.
-      The first two inputs are the first two eigen vectors (the third is computed internally using a cross product). These are given as N by 3 arrays, where each row describes a [X,Y,Z] direction vector. 
-      The three remaining inputs are the eigen values (or the conductivities  ) for the corresponding direction. This can be a scalar value to mark that this value is the same for all or this can be vector with N values, describing an individual value for each tensor.
-      The output is a N by 9 matrix with the tensor entries on the rows of the matrix.
-    </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

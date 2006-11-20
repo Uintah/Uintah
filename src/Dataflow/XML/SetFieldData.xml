@@ -40,10 +40,6 @@
       Extract data from the matrix and insert it into the field.
 
     </summary>
-    <description>
-      <p>        Extract data from the matrix and insert it into the field.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

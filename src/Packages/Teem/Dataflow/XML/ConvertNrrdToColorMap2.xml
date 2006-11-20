@@ -39,17 +39,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Load an Image and output it as a ColorMap2</summary>
-    <description>
-      <p>The input nrrd must be and rgba image that is 512 x 256, so a
-3 dimensional nrrd that is 4 x 512 x 256</p>
-      <p>Typically this is used to create a precise image to texture
-your volume vis with.  The inputs to EditTransferFunc2 take a
-ColorMap2 and a nrrd. That nrrd is a 2d histogram, which can be saved
-and converted to an image readable by 3rd party painting programs. You
-can then paint the areas of the image as you wish, and convert it back
-to a nrrd, then feed it to this module to send downstream as a
-ColorMap2.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

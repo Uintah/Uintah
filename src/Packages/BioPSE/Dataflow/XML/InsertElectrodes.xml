@@ -35,9 +35,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Insert electrodes into a finite element mesh.</summary>
-    <description>
-      <p>Insert electrodes into a finite element mesh.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

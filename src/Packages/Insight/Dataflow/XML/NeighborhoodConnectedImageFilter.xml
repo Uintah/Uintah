@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Label pixels that are connected to a seed and lie within a neighborhood.
-  This module encapsulates the functionality of the ITK Filter itk::NeighborhoodConnectedImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

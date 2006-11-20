@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Implements pixel-wise generic operation on one image.
-  This module encapsulates the functionality of the ITK Filter itk::UnaryFunctorImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

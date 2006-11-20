@@ -8,11 +8,6 @@
     <summary>
 	This module defines the location of the stimulus electrodes.
     </summary>
-    <description>
-      <p>
-	This module defines the location of the stimulus electrodes.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

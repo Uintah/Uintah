@@ -41,10 +41,6 @@
 
 
     </summary>
-    <description>
-      <p>        Append a matrix to a base matrix.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

@@ -42,12 +42,6 @@
       Apply a mapping matrix to project the data from one field onto
 the mesh of another field.
     </summary>
-    <description>
-      <p>
-        This module maps the "Source" field onto the geometry of the
-"Destination" field using the "Mapping" matrix to do the projection.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

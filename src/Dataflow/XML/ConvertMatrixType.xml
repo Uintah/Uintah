@@ -39,13 +39,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Casts a matrix</summary>
-    <description>
-      <p>Displays type if the input matrix.
-      </p>
-      <p>Allows you to let the matrix stay the same and just pass
-through, or cast it to a ColumnMatrix, DenseMatrix or SparseRowMatrix.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

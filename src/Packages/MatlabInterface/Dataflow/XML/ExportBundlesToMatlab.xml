@@ -28,54 +28,6 @@
     <summary> The ExportBundlesToMatlab Module saves a SCIRun NRRD
 object into a MATLAB .mat file.
 	</summary>
-    <description>
-      <section>
-	<title>Module Description</title>
-	<p>
-	The ExportBundlesToMatlab module exports SCIRun Bundle objects
-into a MATLAB compatible .mat file. Currently this module supports the
-fileformat of MATLAB version 5 and higher. The module has multiple
-input ports that can be used to store multiple MATLAB arrays in one
-file.
-	</p>
-	
-	<p> Setting up the GUI: </p>
-	
-	<orderedlist>
-	  <listitem>
-	    <p>Select a filename for the MATLAB file that needs to be
-created. You can use the BROWSE button to select an existing file.</p>
-	  </listitem>
-	  <listitem>
-	    <p>Setup the format of each matrix and change the names of
-the matrices to the ones you want to use in MATLAB.</p>
-	  </listitem>
-	  <listitem>
-	    <p>Execute the module and the file will be written.</p>
-	  </listitem>
-	</orderedlist>
-      </section>
-	
-      <section>
-	<title>See Also </title>
-	<p>
-	<modref package="MatlabInterface" name="Matlab" />, <modref
-package="MatlabInterface" name="MatlabBundelsReader" />, <modref
-package="MatlabInterface" name="ExportBundlesToMatlab" />, <modref
-package="MatlabInterface" name="MatlabDataReader" />, <modref
-package="MatlabInterface" name="MatlabDataWriter" />, <modref
-package="MatlabInterface" name="MatlabFieldsReader" />, <modref
-package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
-package="MatlabInterface" name="MatlabMatricesReader" />, <modref
-package="MatlabInterface" name="MatlabMatricesReader" />, <modref
-package="MatlabInterface" name="MatlabNrrdsWriter" />, <modref
-package="MatlabInterface" name="MatlabNrrdsReader" />	
-	
-	</p>
-      </section>	
-	
-	
-    </description>   
   </overview>
   <io>
     <inputs lastportdynamic="no">

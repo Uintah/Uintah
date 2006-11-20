@@ -9,9 +9,6 @@
       This module creates a Dirichlet boundary condition.
 
     </summary>
-    <description>
-      <p>        This module creates a Dirichlet boundary condition.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -37,24 +37,6 @@
     </authors>
     <summary>Unary operation on a nrrd.
     </summary>
-    <description>
-      <p>Unary operation on a nrrd.</p>
-      <p>Operator: Unary operator.  Posibilities include:</p>
-      <p>- : negative (multiply by -1.0)</p>
-      <p>r : reciprocal (1.0/value)</p>
-      <p>sin, cos, tan, asin, acos, atan : same as in C</p>
-      <p>exp, log, log10, log1p : same as in C</p>
-      <p>sqrt, cbrt, ceil, floor : same as in C</p>
-      <p>erf : error function (integral of Gaussian)</p>
-      <p>rup, rdn : round up or down to integral value</p>
-      <p>abs : absolute value</p>
-      <p>sgn : -1, 0, 1 if value is  less than 0, ==0, or  greater
-than 0</p>
-      <p>exists : 1 iff not NaN or +/-Inf, 0 otherwise.</p>
-      <p>Type : convert input nrrd to this type prior to doing the
-operation.  To leave it unchanged, check the 'Same as input type'
-checkbutton.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

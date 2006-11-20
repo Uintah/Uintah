@@ -39,9 +39,6 @@
     <summary>
       Get the data from the field and put it into a matrix.
     </summary>
-    <description>
-      <p>        Get the data from the field and put it into a matrix.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

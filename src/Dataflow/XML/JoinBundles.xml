@@ -37,11 +37,6 @@
     <summary>
       This merges the contents of multiple bundles into one bundle. 
     </summary>
-    <description>
-      <p>This merges the contents of multiple bundles into one bundle.
-If the same object name exists in multiple bundles the one from the
-right most input is chosen and the other one will be purged.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

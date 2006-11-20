@@ -40,24 +40,6 @@
     </authors>
     <summary>Interactive tool  to edit and playback camera path in
 <modref package="SCIRun" name="Viewer"/>.</summary>
-    <description>
-      <p>CreateAndEditCameraPath module provides a set of interactive tools for
-creation and manipulation of camera path in Viewer. The basic features
-of the modules are as follows:</p>
-    
-      <p>- Interactive adding/inserting/deleting of key frames of
-current camera position in edited path</p>
-      <p> - Navigation through existing key frames</p>
-      <p>- Three interpolation modes - Linear, Cubic and no
-interpolation (key frames only playback)</p>
-      <p>- Two acceleration modes - smooth start/end(in interpolated
-mode) and no acceleration</p>
-      <p>- Path step(smoothness) and sampling rate specification for
-current path</p>
-      <p>- Automatic generation of circle path based on current camera
-position and position of reference widget</p>
-      <p>- Looped and reversed path modes</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

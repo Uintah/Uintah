@@ -37,17 +37,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary></summary>
-    <description>
-      <p>Collapse scanlines to scalars along some axis. The scanline
-is reduced to a single scalar by "measuring" all the values in the
-scanline with some measure. The output nrrd has dimension one less
-than input; the output type depends on the measure in a non-trivial
-way. </p>
-      <p>Axis : the axis to project along. This should be an
-integer.</p>
-      <p>Projection Measure : How to measure a scanline, by
-summarizing all its values with a single scalar. </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

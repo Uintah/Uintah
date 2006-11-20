@@ -8,11 +8,6 @@
     <summary>
       This module filters a phase image and adds the phase discontinuity.
     </summary>
-    <description>
-      <p>
-      This module filters a phase image and adds the phase discontinuity.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

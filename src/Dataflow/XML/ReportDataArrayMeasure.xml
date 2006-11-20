@@ -40,9 +40,6 @@
       This module calculates a measure of the array.
 
     </summary>
-    <description>
-      <p>        This module calculates a measure of the array. The module currently supports the calculation of the sum, mean, variance, norm, maximum, minimum, std dev, and median.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

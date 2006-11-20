@@ -37,13 +37,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary></summary>
-    <description>
-      <p>Slice at a position along an axis. Output nrrd dimension is
-one less than input nrrd dimension. Per-axis information is preserved.
-</p>
-      <p>Axis : the axis to slice along, integer.</p>
-      <p>Position : the position to slice at, integer.</p>
-    </description>
     <examplesr></examplesr>
   </overview>
   <io>

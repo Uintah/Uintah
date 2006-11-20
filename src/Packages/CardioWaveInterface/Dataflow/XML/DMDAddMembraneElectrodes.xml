@@ -8,9 +8,6 @@
     <summary>
       This module defines electrode positions for detailed time recordings.
     </summary>
-    <description>
-      <p>        This module defines electrode positions for detailed time recordings. </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -36,18 +36,6 @@
       <author>Darby Van Uitert</author>
     </authors>
     <summary>Permute slices along one axis.</summary>
-    <description>
-      <p>Permute slices along one axis.</p>
-      <p>Slices along one axis are re-arranged as units according to
-the given permutation (or its inverse). The permutation tells which
-old slice to put at each new position. For example, the shuffle 0-1,
-1-2, 2-0 would be 2 0 1.</p>
-      <p>New Slice Ordering: one or more integers separated by white
-space indicating the new slice ordering.</p>
-      <p>Use Inverse of Given Permutation checkbox will use the
-inverse of the permutation given above.</p>
-      <p>Axis indicates the axis to shuffle along.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

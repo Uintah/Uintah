@@ -40,10 +40,6 @@
     </authors>
     <summary>CoregisterPointClouds the first three points of two
 PointCloudFields.</summary>
-    <description>
-      <p>CoregisterPointClouds the first three points of two
-PointCloudFields.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

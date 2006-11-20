@@ -9,9 +9,6 @@
       Calculate Sum, Average, Minimum, Maximum, etc of the field data.
 
     </summary>
-    <description>
-      <p>        Calculate Sum, Average, Minimum, Maximum, etc of the field data.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

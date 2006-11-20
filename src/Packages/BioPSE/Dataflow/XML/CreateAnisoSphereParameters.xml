@@ -41,44 +41,6 @@
     <summary>CreateAnisoSphereParameters implements a four-layer anisotropic
 spherical volume conductor.</summary>
 
-    <description>
-
-      <p>CreateAnisoSphereParameters implements the geometry and composition of a
-four-layer anisotropic spherical volume conductor, resembling the
-human head.  See <xref target="svc"/>.  CreateAnisoSphereParameters provides data
-to other modules. For instance, due to a dipole in the innermost
-spere, <modref package="BioPSE" name="DipoleInAnisoSpheres"/> and
-<modref package="BioPSE" name="CreateDisAnisoSpheres"/> are used to
-compute the potential distribution on the outer sphere of the volume
-conductor.</p>
-
-      <p>CreateAnisoSphereParameters provides the following parameters, which can
-be adjusted via CreateAnisoSphereParameters's GUI:</p>
-      <unorderedlist>
-        <listitem>
-          <p>Radii for scalp, skull, cerebrospinal fluid, and
-brain</p>
-        </listitem>
-        <listitem>
-          <p>Radial and tangential conductivities for scalp, skull,
-cerebrospinal fluid, and brain</p> 
-        </listitem>
-        <listitem>
-          <p>Electrode positions where the potential distribution
-should be computed (on the surface of the outermost sphere)</p>
-        </listitem>
-      </unorderedlist>
-
-      <p>Network "net.das" demonstrates the use of
-CreateAnisoSphereParameters in a network.</p>
-
-      <figure id="svc">
-        <img>../Modules/Forward/doc/sphere_model.gif</img>
-        <caption>Schematic Representation of the Spherical Volume
-Conductor.</caption>
-      </figure>
-
-    </description>
 
   </overview>
 

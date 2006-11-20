@@ -41,14 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Label pixels that are connected to one seed but not another.
-
-IsolatedConnectedImageFilter labels pixels with ReplaceValue that are connected to Seed1 AND NOT connected to Seed2. The filter adjusts the upper threshold until the two seeds are not connected. The user supplies a Lower threshold. The algorithm uses a binary search to adjust the upper threshold, starting at UpperValueLimit. UpperValueLimit defaults to the largest possible value for the InputImagePixelType. 
-  This module encapsulates the functionality of the ITK Filter itk::IsolatedConnectedImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

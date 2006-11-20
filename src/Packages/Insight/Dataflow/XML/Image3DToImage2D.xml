@@ -37,8 +37,6 @@
     </authors>
     <summary>
     </summary>
-    <description><p>This module allows you to cast an image to a lower dimension, the first "slice" (or line or volume) will be extracted. If you want to convert an image to a lower dimension and specify the subspace (i.e. which slice of a volume, etc.) then you should use ExtractImageFilter. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::CastImageFilter.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

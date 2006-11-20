@@ -40,13 +40,6 @@
     <summary>
       This module adds a 'string' object as a field property.
     </summary>
-    <description>
-      <p>
-      This module adds a 'string' object as a field property. The
-      module allows three separate strings to be inserted at the 
-      same time.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

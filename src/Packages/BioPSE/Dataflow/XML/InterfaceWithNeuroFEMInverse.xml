@@ -40,10 +40,6 @@
     </authors>
     <summary>Invoke the NeuroFEM ipm program to solve the input
 problem for the inputs.</summary>
-    <description>
-      <p>Invoke the NeuroFEM ipm program to solve the input problem
-for the inputs.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -37,16 +37,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Output a Nrrd as an image file.</summary>
-    <description>
-
-      <p>ExportImage uses the ImageMagick libaries to convert a Nrrd
-into an image file in one of the many formats supported by
-ImageMagick.  The Nrrd can be G, RGB, or RGBA data consisting of
-unsigned characters, unsigned shorts, floats, or doubles.  If the data
-is float or double then it should be between 0 and 1. See <modref
-package="Teem" name="ImageImporter"/> for more on the data format.</p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

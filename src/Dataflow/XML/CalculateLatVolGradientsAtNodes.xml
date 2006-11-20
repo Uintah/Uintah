@@ -42,20 +42,6 @@
       Compute the derivative of a scalar lattice and output it as a
 vector lattice.
     </summary>
-    <description>
-      <p>The CalculateLatVolGradientsAtNodes module computes the derivative of a scalar
-field and converts it to a vector field. The gradient is the
-derivative of three dimensions; the first component in the X
-direction, the second component in the Y direction, and the third
-component in the Z direction grid, computing the general direction of
-"flow" at a specific point on the geometry.</p>
-
-      <p>CalculateLatVolGradientsAtNodes only supports computation of the gradient on
-node centered LatVolFields of scalar type.  The CalculateLatVolGradientsAtNodes module
-has no GUI. If CalculateLatVolGradientsAtNodes recieves as input a Field type it does not
-support, an error message appears in the Error frame of the SCIRun
-environment.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

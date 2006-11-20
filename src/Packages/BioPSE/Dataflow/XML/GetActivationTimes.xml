@@ -40,9 +40,6 @@
       Accepts a matrix of potentials on a surface and calculates the activation
       times by selecting the lowest (most negative) derivative.
     </summary>
-    <description>
-      <p>Version Date: May 1999</p><p>Version: 1.0</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

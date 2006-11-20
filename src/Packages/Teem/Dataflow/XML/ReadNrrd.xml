@@ -38,16 +38,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Open a raw nrrd or a SCIRun wrapped nrrd.</summary>
-    <description>
-
-      <p>Interface to introdude a NrrdData into the net. ReadNrrd
-can open a raw nrrd, or a previously saved SCIRun wrapped nrrd
-(NrrdData). If the first axis is vector or tensor data, make sure that
-the nrrdKind for that axis is set appropriately.  This can be checked
-via the <modref package="Teem" name="NrrdInfo"/> module and changed
-via the <modref package="Teem" name="UnuAxinfo"/> module.</p>
-
-    </description>
     <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
   <io>

@@ -40,9 +40,6 @@
       This module resizes a matrix.
 
     </summary>
-    <description>
-      <p>        This module resizes a matrix. One can specify the new size of the matrix by connecting scalar values to the input or by setting the appropriate values in the GUI. </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

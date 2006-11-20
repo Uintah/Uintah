@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-This filter performs anisotropic diffusion on a scalar itk::Image using the modified curvature diffusion equation (MCDE) implemented in itkCurvatureNDAnisotropicDiffusionFunction. For detailed information on anisotropic diffusion and the MCDE see itkAnisotropicDiffusionFunction and itkCurvatureNDAnisotropicDiffusionFunction.
-  This module encapsulates the functionality of the ITK Filter itk::CurvatureAnisotropicDiffusionImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

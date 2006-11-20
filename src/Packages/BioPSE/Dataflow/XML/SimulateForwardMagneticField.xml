@@ -40,9 +40,6 @@
     </authors>
     <summary>Calculation of magnetic field at given detector points
 due to specificed dipoles. </summary>
-    <description>
-      <p>The modules calculates the magnetic field due to given dipoles at specified detector positions based on the Biot-Savart law.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

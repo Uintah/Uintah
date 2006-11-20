@@ -41,9 +41,6 @@
     <summary> This module builds a 3D Texture for use with an
               OpenGL volume renderer.
     </summary>
-    <description>
-      <p>The ConvertFieldsToTexture module is used to create 3D volume textures for use by the <modref package="SCIRun" name="VolumeVisualizer"/> and <modref package="SCIRun" name="VolumeSlicer"/> modules.  The two inputs are a scalar LatVolField and an optional vector LatVolField that are packed into an appropriate texture.  Both fields must have the same dimensionality.  The Gradient Field input port is used for lighting and ColorMap2 filtering and is only required if those two features are to be used.  It can be computed from the scalar field using the <modref package="SCIRun" name="NodeGradient"/> module if needed.  See also the <modref package="SCIRun" name="NrrdConvertFieldsToTexture"/> module.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

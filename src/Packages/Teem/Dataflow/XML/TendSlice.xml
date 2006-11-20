@@ -37,13 +37,6 @@
     </authors>
     <summary>Slice 3D tensors to get slab/image of 3D/2D tensors.
     </summary>
-    <description>
-      <p>Slice 3D tensors to get slab/image of 3D/2D tensors.</p>
-      <p>Axis : axis along which to slice (integer).</p>
-      <p>Position : position to slice at (integer).</p>
-      <p>Dimension : dimension of desired tensor to output.  This
-value can be either 2 or 3 (integer).</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

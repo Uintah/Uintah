@@ -38,16 +38,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Quantize values into 8, 16, 32 bit values.</summary>
-    <description>
-      <p>Given an input nrrd, output a nrrd that is of type unsigned
-char, unsigned short, unsigned int (8,16,32 bit) values.  The input
-values are clamped to be in the range of the min and max values
-specified in the user interface.  By default, the min and max of the
-input will be used.  This is indicated by the 'Use lowest/highest
-value of input as min/max'.  To specify different min max, uncheck the
-above checkbox and input the values in the entry. The current min/max
-values will be displayed after initial execution.</p>
-    </description>
     <examplesr>Teem/nets/test/quantize.net</examplesr>
   </overview>
   <io>

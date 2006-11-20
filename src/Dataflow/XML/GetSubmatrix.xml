@@ -39,23 +39,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Select a subset of a matrix.</summary>
-    <description>
-
-      <p>The GetSubmatrix module allows you to select a contiguous
-GetSubmatrix from an input matrix.  The sliders are used to select a row
-and column range of the input field.  The block of values covered by
-the sliders is then sent to the output matrix.</p>
-
-      <p>The range bounds can be specified without using the GUI
-sliders.  If a matrix is attached to the 'Optional Range Bounds' port
-then the range is extracted from that matrix instead. (0,0) will be
-the minimum row, (1, 0) is the maximum row, (0,1) is the minimum
-column, and (1,1) is the maximum column.  All other values in the
-'Optional Range Bounds' matrix are ignored. If the bounds do not fall
-within the size of the input matrix only the existing values are
-sent.</p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

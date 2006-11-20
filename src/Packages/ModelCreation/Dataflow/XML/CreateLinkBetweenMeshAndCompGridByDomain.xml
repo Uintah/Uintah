@@ -9,11 +9,6 @@
       This module computes how nodes should be merged over the boundary. It calculates the needed ordering in the computational grid.
 
     </summary>
-    <description>
-      <p>        This module computes how nodes should be merged over the boundary. It calculates the needed ordering in the computational grid.
-
-The output matrix GeomToComp maps the geometrical nodes to the computational nodes, the CompToGeom is the opposite mapping.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

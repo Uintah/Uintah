@@ -39,11 +39,6 @@
     <summary>
       Decomposed the vector in the three cartesian coordinates.
     </summary>
-    <description>
-      <p>
-      Decomposed the vector in the three cartesian coordinates.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

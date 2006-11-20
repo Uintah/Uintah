@@ -35,9 +35,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Configure an electrode.</summary>
-    <description>
-      <p>Configure an electrode.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

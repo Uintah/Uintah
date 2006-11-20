@@ -39,10 +39,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Display a ColorMap with index values.</summary>
-    <description>
-      <p>ShowColorMap creates a geometry overlay containing the input
-colormap and numerical values for it's range.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

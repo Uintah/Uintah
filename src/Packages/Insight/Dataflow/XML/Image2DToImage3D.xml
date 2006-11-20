@@ -37,8 +37,6 @@
     </authors>
     <summary>
     </summary>
-    <description><p>This module allows you to cast an 2D image to 3D image. The resulting 3D image will have a single slice. See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on the itk::CastImageFilter.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

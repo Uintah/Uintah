@@ -42,20 +42,6 @@
         JoinFields glues any number of input fields into one output
 field.
     </summary>
-    <description>
-      <p>JoinFields takes in an arbitrary number of input fields and
-gathers them all up into one output field.  If the input fields all
-have the same editable mesh type then the output field will also be of
-the same type.  If the meshes are not editable or of different mesh
-types then only their points will be gathered up and a single
-PointCloudField will be produced.</p>
-
-      <p>The mesh type is not preserved for non-editable mesh types
-such as LatVolFields because they cannot be arbitrarily glued together
-while maintaining their mesh type.  Run the fields through the <modref
-package="SCIRun" name="Unstructure"/> module before passing them into
-JoinFields if you want the element structure to be preserved.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

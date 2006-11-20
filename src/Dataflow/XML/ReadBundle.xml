@@ -39,19 +39,6 @@
     <summary>
       This module reads a bundle from disk.
     </summary>
-    <description>
-      <p>
-      This module reads a bundle from disk. A bundle file
-      has a .bdl extension and can be written with the BundleWriter
-      module. In a .bdl file every component is stored. Hence it can be used
-      to group a lot of different SCIRun objects together and store it as one file.
-      </p>
-      <p>
-      The module has an optional filename input port which overrides the filename in
-      the GUI and it also outputs the selected filename. The latter is useful if
-      one wants to annotate the results with the input filename.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

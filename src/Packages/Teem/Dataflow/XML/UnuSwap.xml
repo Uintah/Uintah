@@ -37,12 +37,6 @@
     </authors>
     <summary>Interchange scan-line ordering of two axes. Special case
 of unu permute.</summary>
-    <description>
-      <p>Interchange scan-line ordering of two axes. Special case of
-unu permute.</p>
-      <p>Axis A and Axis B should be integer values representing the
-two axes to be switched.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

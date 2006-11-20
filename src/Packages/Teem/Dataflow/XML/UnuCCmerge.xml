@@ -41,28 +41,6 @@ done into its largest neighbor. Whether or not to merge can be
 constrained by one or more of: CC size (-s), original CC value being
 brighter or darker (-d), and number of neighbors (-n). 
     </summary>
-    <description>
-      <p>>Merge CCs with their neighbors, under various contraints.
-This operates on the output of "ccfind". Merging of a CC is always
-done into its largest neighbor. Whether or not to merge can be
-constrained by one or more of: CC size (-s), original CC value being
-brighter or darker (-d), and number of neighbors (-n).</p>
-      <p>Value Driven Merging : do value-driven merging. Options
-include dark islands get merged with bright surrounds, bright
-surrounds get merged into dark islands, or the default which indicates
-that merging can go either way.</p>
-      <p>Max Size : a cap on the CC size that will be absorbed into
-its surround. CCs larger than this are deemed too significant to mess
-with. Or, a value of 0 removes any such restriction on merging.</p>
-      <p>Max Neighbors : a cap on the number of neighbors that a CC
-may have if it is to be be merged. A value of 1 allows only islands to
-be merged, a value of 2 does merging with bigger of two neighbors,
-etc, while a value of 0 says that number of neighbors is no
-constraint.</p>
-      <p>Connectivity : what kind of connectivity to use: the number
-of coordinates that vary in order to traverse the neighborhood of a
-given sample. In 2D: 1 : 4-connected, 2 : 8-connected</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

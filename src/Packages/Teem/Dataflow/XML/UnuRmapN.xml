@@ -47,27 +47,6 @@ treated as a 'color'.  This module does no interpolation, rather the
 nrrd coordinates should exactly match the range of the colormap nrrd
 dimensions, ie 0-255 for a 1D map of size 256.
     </summary>
-    <description>
-      <p>Map nrrd through *regular* univariate map of N dimension
-(colormap). A map is regular if the control points are evenly spaced
-along the domain, and hence their position isn't explicitly
-represented in the map; the axis min, axis max, and number of points
-determine their location.</p>
-
-      <p>This is an N dimensional mapping in that the fast axis of the
-nrrd is used to look up coordinates in the N or N+1 map.  For instance
-if the fast axis is size three, then the map should contain 3
-dimensions for grayscale or 4 dimensions where the fast dimension is
-the 'color'.  It is byte copied so the 'color' can really be any
-opaque data type.</p>
-
-      <p>No interpolation is done by this module.  Instead the mapping
-coordinates should be the exact zero based index into the mapping
-index that is to be used.  For example, given a 1D colormap of size
-256, the input nrrd should contain values between 0 and 255.  The
-output nrrd will have the same dimensionality as the input but the
-data will be replaced with the fast axis data from the input nrrd.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

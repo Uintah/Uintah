@@ -10,11 +10,6 @@
 
 
     </summary>
-    <description>
-      <p>        Find an index per point of the closest node with given value in the field.
-
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

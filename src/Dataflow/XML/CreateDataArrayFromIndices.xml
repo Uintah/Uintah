@@ -40,26 +40,6 @@
       This module takes the elements of the input array and reorders them 
       according to order specified in the index vector.
     </summary>
-    <description>
-      <section>
-      <title>Overview</title>     
-      <p>
-      This module uses an index vector to reorder the elements of a scalar,
-      vector or tensor array into a new array. The index vector indexes the 
-      points to the elements in the input array and creates a new matrix in
-      which the elements are stored in the order which is indicated in the index
-      vector. Index numbering starts at 0. 
-      </p>
-      </section>      
-    
-      <section>
-      <title>See Also </title>
-      <p>
-      <modref package="ModelCreation" name="ComputeFieldData" />	
-      <modref package="ModelCreation" name="ReplicateArray" />	
-      </p>
-      </section>      
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

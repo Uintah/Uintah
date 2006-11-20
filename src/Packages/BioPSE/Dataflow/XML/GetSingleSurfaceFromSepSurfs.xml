@@ -42,10 +42,6 @@
       Extract a single QuadSurf (one connected component) from a
 Separating Surface.
     </summary>
-    <description>
-      <p>Extract a single QuadSurf (one connected component) from a
-Separating Surface.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

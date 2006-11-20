@@ -8,11 +8,6 @@
     <summary>
       Bundle all the information needed to build a CardioWave simulation.
     </summary>
-    <description>
-      <p>
-      Bundle all the information needed to build a CardioWave simulation.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

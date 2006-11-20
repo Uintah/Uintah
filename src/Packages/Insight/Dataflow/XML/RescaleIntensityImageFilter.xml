@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Applies pixel-wise a linear transformation to the intensity values of input image pixels. The linear transformation is defined by the user in terms of the minimum and maximum values that the output image should have.
-  This module encapsulates the functionality of the ITK Filter itk::RescaleIntensityImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-This filter performs anisotropic diffusion on a vector itk::Image using the anisotropic diffusion function implemented implemented in itkVectorGradientNDAnisotropicDiffusionFunction. For detailed information on anisotropic diffusion see itkAnisotropicDiffusionFunction, itkVectorGradientNDAnisotropicDiffusionFunction, and itkGradientAnisotropicDiffusionFunction.
-  This module encapsulates the functionality of the ITK Filter itk::VectorGradientAnisotropicDiffusionImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>
