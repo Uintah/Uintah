@@ -147,7 +147,8 @@ GeomTexts::GeomTexts() :
   GeomObj(),
   fontindex_(2),
   renderer_(0),
-  disable_depth_test_(false)
+  disable_depth_test_(false),
+  is_2d_(false)
 {
 }
 
@@ -159,7 +160,8 @@ GeomTexts::GeomTexts(const GeomTexts& copy) :
   location_(copy.location_),
   color_(copy.color_),
   renderer_(copy.renderer_),
-  disable_depth_test_(copy.disable_depth_test_)
+  disable_depth_test_(copy.disable_depth_test_),
+  is_2d_(copy.is_2d_)
 {
 }
 

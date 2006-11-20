@@ -6387,10 +6387,23 @@ GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
       renderer_->set_color(color_[i].r(), color_[i].g(), 
 			   color_[i].b(), 1.0); 
     }
-    renderer_->render(text_[i], location_[i].x(), 
-		      location_[i].y(), location_[i].z(), 
-		      di->view_, sf,
-		      TextRenderer::SW);
+    if (is_2d_p()) {
+      GLint vmat[4];
+      glGetIntegerv(GL_VIEWPORT, vmat);
+      int w = vmat[2];
+      int h = vmat[3];
+      
+      float sx = w * ((location_[i].x() + 1.) / 2.);
+      float sy = h * ((location_[i].y() + 1.) / 2.);
+      renderer_->render(text_[i], sx, sy, TextRenderer::SW);
+      glDisable(GL_BLEND);
+      glShadeModel(GL_SMOOTH);
+    } else {
+      renderer_->render(text_[i], location_[i].x(), 
+			location_[i].y(), location_[i].z(), 
+			di->view_, sf,
+			TextRenderer::SW);
+    }
   }
 
   glPopAttrib();
@@ -6810,6 +6823,7 @@ GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
       cliplist[ii] = true;
     }
   }
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -6819,12 +6833,8 @@ GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
   glDisable(GL_DEPTH_TEST);
   glRasterPos2d(0.55, -0.98);
 
-  Point eye = di->view_.eyep();
-  di->view_.eyep(Point(0.0, -5.0, 5.0));
 
   child_->draw(di,matl,t);
-
-  di->view_.eyep(eye);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);

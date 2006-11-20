@@ -450,9 +450,6 @@ TextRenderer::render(const string &text, float x, float y, float z,
   glColor4d(1.0, 0.0, 0.0, 1.0);
 
 
-  GLint vmat[4];
-  glGetIntegerv(GL_VIEWPORT, vmat);
-
   double mmat[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, mmat);
   double pmat[16];

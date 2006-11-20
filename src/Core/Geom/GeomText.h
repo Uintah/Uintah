@@ -98,6 +98,7 @@ protected:
 
   TextRenderer  *renderer_;
   bool           disable_depth_test_;
+  bool           is_2d_;
 
 public:
   GeomTexts();
@@ -112,6 +113,9 @@ public:
   void add (const string &text, const Point &loc, float index);
 
   void set_always_visible() { disable_depth_test_ = true; }
+  void set_is_2d(bool b) { is_2d_ = b; }
+
+  bool is_2d_p() const { return is_2d_; }
 
   virtual void reset_bbox();
   virtual void get_bounds(BBox&);
