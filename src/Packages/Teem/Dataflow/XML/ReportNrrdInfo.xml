@@ -39,7 +39,6 @@
     </authors>
     <summary>ReportNrrdInfo is used to view the attributes of
 Nrrd's.</summary>
-    <examplesr>Teem/nets/test/ReportNrrdInfo-test.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

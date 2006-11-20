@@ -37,7 +37,6 @@
     </authors>
     <summary>Describe everything about one sample in a DT volume.
     </summary>
-    <examplesr>Teem/nets/test/NrrdInfo-test.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

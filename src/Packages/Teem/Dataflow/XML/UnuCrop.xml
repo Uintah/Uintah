@@ -39,7 +39,6 @@
     </authors>
     <summary>Create an output nrrd that is a subsample of the
 original.</summary>
-    <examplesr>Teem/nets/test/crop_set.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

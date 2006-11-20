@@ -36,7 +36,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Estimate tensors from a set of DW images. </summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

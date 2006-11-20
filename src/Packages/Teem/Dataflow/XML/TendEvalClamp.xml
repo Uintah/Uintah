@@ -37,7 +37,6 @@
     </authors>
     <summary>Modify shape by clamping eigenvalues in some
 range.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

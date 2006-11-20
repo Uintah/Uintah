@@ -40,7 +40,6 @@ maintains the isotropic component of the tensor, and fixes either the
 trace or determinant, while scaling up (or down) the deviatoric
 component of the tensor. Good for exaggerating the shape of nearly
 isotropic tensors.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

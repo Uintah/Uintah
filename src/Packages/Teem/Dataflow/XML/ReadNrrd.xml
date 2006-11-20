@@ -38,7 +38,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Open a raw nrrd or a SCIRun wrapped nrrd.</summary>
-    <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

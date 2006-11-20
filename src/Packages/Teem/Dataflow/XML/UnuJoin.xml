@@ -37,7 +37,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>module interface for nrrdJoin function.</summary>
-    <examplesr>Teem/nets/test/field_set.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

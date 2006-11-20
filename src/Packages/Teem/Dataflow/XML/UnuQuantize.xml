@@ -38,7 +38,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Quantize values into 8, 16, 32 bit values.</summary>
-    <examplesr>Teem/nets/test/quantize.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

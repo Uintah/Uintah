@@ -37,7 +37,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Output the NrrdData object via Pio.</summary>
-    <examplesr>Teem/nets/test/io.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">
