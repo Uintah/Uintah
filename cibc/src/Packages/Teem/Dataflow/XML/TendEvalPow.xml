@@ -37,7 +37,6 @@
     </authors>
     <summary>Modify shape by raising eigenvalues to some
 power.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

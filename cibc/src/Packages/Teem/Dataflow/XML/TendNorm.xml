@@ -35,7 +35,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Normalize tensor size.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

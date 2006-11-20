@@ -37,7 +37,6 @@
     </authors>
     <summary>Make an RGB volume from an eigenvector and an
 anisotropy.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

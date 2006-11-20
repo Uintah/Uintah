@@ -36,7 +36,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Register diffusion-weighted echo-planar images.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

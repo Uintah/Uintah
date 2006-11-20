@@ -36,7 +36,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Calculate B-matrix given gradient directions.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

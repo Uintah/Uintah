@@ -41,7 +41,6 @@
     <summary>A module that generates fixed Colormaps for visualization
 tools.
     </summary>
-    <examplesr>../doc/GenStandarColorMaps.sr</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

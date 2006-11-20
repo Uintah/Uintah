@@ -40,7 +40,6 @@
 value will be zero in the locations which don't meet the given
 confidence threshold. 
      </summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

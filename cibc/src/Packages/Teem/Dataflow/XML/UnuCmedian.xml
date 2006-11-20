@@ -37,7 +37,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Cheap histogram-based median filtering</summary>
-    <examplesr>Teem/nets/cmedian.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

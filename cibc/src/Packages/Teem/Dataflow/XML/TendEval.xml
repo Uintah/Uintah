@@ -37,7 +37,6 @@
     </authors>
     <summary>Calculate one or more eigenvalues in a DT
 volume.</summary>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">
