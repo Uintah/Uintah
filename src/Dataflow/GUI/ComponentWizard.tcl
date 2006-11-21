@@ -581,10 +581,6 @@ proc generateXML { d } {
       createSciDialog -title "Module Creation Error" -message "Please enter a 'Summary' (On the 'Description' tab)" -error
       return
     }
-    if { ![info exists ${d}(descript)] || ![llength [set ${d}(descript)]] } {
-      createSciDialog -title "Module Creation Error" -message "Please enter a 'Description' (On the 'Description' tab)" -error
-      return
-    }
     #
     ######################################################################
 
@@ -622,13 +618,6 @@ proc generateXML { d } {
     puts $id "    <summary>"
     puts $id "      [set ${d}(summary)]"
     puts $id "    </summary>"
-
-    # DESCRIPTION
-    puts $id "    <description>"
-    puts $id "      <p>"
-    puts $id "        [set ${d}(descript)]" 
-    puts $id "      </p>"
-    puts $id "    </description>"
 
     puts $id "  </overview>"
 
