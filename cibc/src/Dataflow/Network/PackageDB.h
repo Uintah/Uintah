@@ -61,7 +61,6 @@ struct ModuleInfo
   bool                         optional_;
   bool			       hide_;
   vector<string>               authors_;
-  string                       help_description_;
   string                       summary_;
   ModuleMaker                  maker_;
   std::vector<IPortInfo*>      iports_;
