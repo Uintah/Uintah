@@ -27,5 +27,4 @@
 #
 
 
-SUBDIRS(Bundle Converters DataIO DataArrayMath Fields Math Render Time 
-  Visualization String Examples)
+SUBDIRS(Bundle Converters DataIO DataArrayMath Fields Math Render Time Visualization String Examples)
