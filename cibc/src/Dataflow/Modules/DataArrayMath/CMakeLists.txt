@@ -29,43 +29,43 @@
 # CMakeLists.txt for Dataflow/Modules/DataArrayMath
 
 SET(Dataflow_Modules_DataArrayMath_SRCS
-        CreateDataArray.cc
-        CalculateDataArray.cc
-        CreateTensorArray.cc
-        CreateVectorArray.cc
-        DecomposeTensorArrayIntoEigenVectors.cc
-        SplitVectorArrayInXYZ.cc
-        CreateDataArrayFromIndices.cc
-        ReplicateDataArray.cc
-        AppendDataArrays.cc
-        ReportDataArrayMeasure.cc
+  CreateDataArray.cc
+  CalculateDataArray.cc
+  CreateTensorArray.cc
+  CreateVectorArray.cc
+  DecomposeTensorArrayIntoEigenVectors.cc
+  SplitVectorArrayInXYZ.cc
+  CreateDataArrayFromIndices.cc
+  ReplicateDataArray.cc
+  AppendDataArrays.cc
+  ReportDataArrayMeasure.cc
+  ReportDataArrayInfo.cc
 )
 
-ADD_LIBRARY(Dataflow_Modules_Math ${Dataflow_Modules_DataArrayMath_SRCS})
+ADD_LIBRARY(Dataflow_Modules_DataArrayMath ${Dataflow_Modules_DataArrayMath_SRCS})
 
-TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
-  Core_Algorithms_Math
-  Core_Algorithm_ArrayMath
-  Core_Datatypes
-  Core_Exceptions
-  Core_Geom
-  Core_GeomInterface
-  Core_Geometry
-  Core_Containers
-  Dataflow_GuiInterface
-  Core_Math
-  Core_Persistent
-  Core_Thread
-  Dataflow_TkExtensions
-  Core_Util
-  Dataflow_Network
+TARGET_LINK_LIBRARIES(Dataflow_Modules_DataArrayMath
+  Core_Datatypes 
+  Dataflow_Network 
+  Core_Persistent 
+  Core_Containers 
+  Core_Util 
+  Core_Exceptions 
+  Core_Thread 
+  Dataflow_GuiInterface 
+  Core_Geom 
+  Core_Datatypes 
+  Core_Geometry 
+  Core_GeomInterface 
+  Dataflow_TkExtensions 
+  Core_Algorithms_ArrayMath 
   ${TK_LIBRARY}
-  ${GL_LIBRARY}
+  ${GL_LIBRARY} 
   ${M_LIBRARY}
-  ${PETSC_UNI_LIBRARY}
   ${TEEM_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_DataArrayMath)
 ENDIF(BUILD_SHARED_LIBS)
+
