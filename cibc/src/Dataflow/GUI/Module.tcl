@@ -1688,10 +1688,10 @@ proc htmlHelp {modid} {
 	
 	button $w.f.cancel -text "Cancel" -command "cancelHelp"
 	
-	button $w.f.ok -text "Open in HTML" \
+	button $w.f.ok -text "Open in Browser" \
 	    -command "setBrowser \[$w.list get active\] $url"
 
-	pack $w.f.ok $w.f.cancel -side right -ipadx 5 -ipady 5 -padx 5 -pady 5
+	pack $w.f.cancel $w.f.ok -side right -ipadx 5 -ipady 5 -padx 5 -pady 5 -fill x -expand 1
 	pack $w.f -side bottom -expand 1 -fill x -padx 5 -pady 5
 	pack $w.list -side top -expand 1 -fill both -padx 10
 	return 1
@@ -1699,7 +1699,7 @@ proc htmlHelp {modid} {
     return 0
 }
 
-proc cancelHelp { modid } {
+proc cancelHelp { } {
     if { [winfo exists .choosebrowser] } {
 	destroy .choosebrowser
     }
