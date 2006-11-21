@@ -351,7 +351,6 @@ protected:
   string                 module_name_;
   string                 package_name_;
   string                 category_name_;
-  string                 description_;
   Scheduler             *sched_;
   bool                   lastportdynamic_;
   int                    pid_;
