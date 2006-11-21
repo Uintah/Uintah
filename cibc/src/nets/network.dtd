@@ -73,7 +73,8 @@
           id CDATA #REQUIRED
           package CDATA #REQUIRED
           category CDATA #REQUIRED
-          name CDATA #REQUIRED>
+          name CDATA #REQUIRED
+          version CDATA #IMPLIED>
 
 
 <!ELEMENT module (position, note?, gui_callback?, port_caching?, var*)>
@@ -82,6 +83,7 @@
           package CDATA #REQUIRED
           category CDATA #REQUIRED
           name CDATA #REQUIRED
+          version CDATA #IMPLIED
           gui_visible (yes | no) "no">
 
 <!ELEMENT position EMPTY>
