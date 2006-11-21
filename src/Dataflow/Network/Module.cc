@@ -651,7 +651,9 @@ Module::set_stack_size(unsigned long s)
 void
 Module::want_to_execute()
 {
+    sched_->lockNeedExecute();
     need_execute_ = true;
+    sched_->unlockNeedExecute();
     sched_->do_scheduling();
 }
 
