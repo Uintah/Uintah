@@ -30,7 +30,7 @@
 //    Date   : Tue Sep 26 18:44:34 2006
 
 #include <StandAlone/Apps/Painter/Painter.h>
-#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
+#include <StandAlone/Apps/Painter/VolumeFilter.h>
 #include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
 #include <sci_gl.h>
 
@@ -85,7 +85,7 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   typedef itk::ConfidenceConnectedImageFilter
     < ITKImageFloat3D, ITKImage > FilterType;
 
-  FilterType::Pointer filter = FilterType::New();
+  VolumeFilter<FilterType> filter;
   FilterType::IndexType seed_point;
   for(unsigned int i = 0; i < seed_point.GetIndexDimension(); i++) {
     seed_point[i] = seed_[i+1];
@@ -99,8 +99,9 @@ ITKConfidenceConnectedImageFilterTool::finish() {
   filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_);
 
   painter_->CreateLabelVolume(0);
-  ITKFilterCallback<FilterType> filt(painter_->current_volume_);
-  filt(volume_->nrrd_handle_);
+  filter.set_volume(painter_->current_volume_);
+
+  filter(volume_->nrrd_handle_);
 }
 
 BaseTool::propagation_state_e

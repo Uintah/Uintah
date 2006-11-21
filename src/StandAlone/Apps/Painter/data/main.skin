@@ -67,6 +67,7 @@
   <var name="Painter::crop::max::x" type="double" propagate="yes">0</var>
   <var name="Painter::crop::max::y" type="double" propagate="yes">0</var>
   <var name="Painter::crop::max::z" type="double" propagate="yes">0</var>
+  <var name="FileLoadBox::focus" type="bool" propagate="yes">1</var>
 
 
   <var name="Resample::x" type="double" propagate="yes">100</var>

@@ -67,8 +67,9 @@
                 <object class="Box">
                   <var name="color">#FFFFFFFF</var>
                   
-                  <object class="Root::FocusRegion">
+                  <object class="Root::FocusRegion" id="FileInput">
                     <var name="ignore_tab">1</var>
+                    <var name="focus">$FileLoadBox::focus</var>
                     
                     <signal name="FocusRegion::focus"
                             target="Arithmetic::set_value">
@@ -101,6 +102,11 @@
                         <var name="cursor">1</var>
                         <var name="offsety">1</var>
                         <var name="shadow">0</var>
+                        <signal name="TextEntry::enter"
+                                target="FileLoadBox::OKButtonPress">
+                          <var name="filename" propagate="yes">$FileLoadBox::filename</var>
+                        </signal>
+
                       </object>
                     </object>
                   </object>

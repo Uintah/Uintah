@@ -76,9 +76,9 @@ namespace SCIRun {
         event_handle_t psignal = new PointerSignal(signalname, pointer);
         result = SignalThrower::throw_signal(psignal);
       } else if (key) {
-          signalname = class_()+"::do_KeyEvent";
-          event_handle_t ksignal = new KeySignal(signalname, key);
-          result = SignalThrower::throw_signal(ksignal);
+        signalname = class_()+"::do_KeyEvent";
+        event_handle_t ksignal = new KeySignal(signalname, key);
+        result = SignalThrower::throw_signal(ksignal);
       } else if (window && 
                  window->get_window_state() == WindowEvent::REDRAW_E) {
         signalname = class_()+"::redraw";

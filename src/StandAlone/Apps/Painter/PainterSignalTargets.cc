@@ -39,7 +39,6 @@
 #include <StandAlone/Apps/Painter/SessionReader.h>
 #include <StandAlone/Apps/Painter/SessionWriter.h>
 #include <StandAlone/Apps/Painter/VolumeOps.h>
-#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
 #include <StandAlone/Apps/Painter/VolumeFilter.h>
 
 #include <sci_comp_warn_fixes.h>

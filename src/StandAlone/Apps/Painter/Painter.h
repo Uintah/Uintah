@@ -147,12 +147,6 @@ private:
   friend class ITKConfidenceConnectedImageFilterTool;
   friend class SessionReader;
 
-#ifdef HAVE_INSIGHT
-  //  template <class FilterType>
-  //  friend class ITKFilterCallback<FilterType>;
-#endif
-
-
   enum DisplayMode_e {
     normal_e,
     slab_e,

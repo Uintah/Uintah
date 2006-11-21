@@ -42,7 +42,6 @@
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <StandAlone/Apps/Painter/PointerToolSelectorTool.h>
 #include <StandAlone/Apps/Painter/KeyToolSelectorTool.h>
-#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
 #include <stdlib.h>
 #include <math.h>
 #include <map>
