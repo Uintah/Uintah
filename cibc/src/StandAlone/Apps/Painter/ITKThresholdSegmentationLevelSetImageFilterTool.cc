@@ -33,7 +33,6 @@
 #ifdef HAVE_INSIGHT
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <StandAlone/Apps/Painter/VolumeOps.h>
-#include <StandAlone/Apps/Painter/ITKFilterCallback.h>
 #include <Core/Util/Assert.h>
 
 namespace SCIRun {

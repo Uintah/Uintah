@@ -87,7 +87,7 @@ private:
 template <class FilterType>  
 VolumeFilter<FilterType>::VolumeFilter(NrrdVolumeHandle volume,
                                        Skinner::Variables *vars) 
-  : Parent::Parent(vars ? vars : new Skinner::Variables("ITKFilter",0)),
+  : Parent::Parent(vars ? vars : new Skinner::Variables("VolumeFilter",0)),
     filter_(FilterType::New()),
     volume_(volume),
     abort_(false),

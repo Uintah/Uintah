@@ -49,6 +49,7 @@ namespace SCIRun {
       numeric_(variables, "numeric", false)
     { 
       REGISTER_CATCHER_TARGET_BY_NAME(TextEntry::redraw, Text::redraw);
+      REGISTER_CATCHER_TARGET(TextEntry::do_KeyEvent);
       flags_ &= ~TextRenderer::CURSOR;      
     }
 
@@ -56,67 +57,65 @@ namespace SCIRun {
     {
     }
 
-    MinMax
-    TextEntry::get_minmax(unsigned int ltype)
-    {
-      return SPRING_MINMAX;
-    }
 
     int
     TextEntry::get_signal_id(const string &id) const {
-      if (id == "TextEntry::return") return 1;
+      if (id == "TextEntry::enter") return 1;
       return 0;
     }
 
 
     BaseTool::propagation_state_e
-    TextEntry::process_event(event_handle_t event)
+    TextEntry::do_KeyEvent(event_handle_t event)
     {
-      KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
-      if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
-        string str = get_vars()->get_string("text");
-        int code = key->get_keyval();
-        //bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
-        string character = "";
-        cursor_position_ = Clamp(cursor_position_,0, str.length());
-        if (code == SCIRun_Return) {
-          throw_signal("TextEntry::enter");
-        } else if (code == SCIRun_Tab) {
-          str = autocomplete(str);
-          cursor_position_ = str.length();
-        } else if (code == SCIRun_BackSpace) {
-          if (cursor_position_) {
-            cursor_position_--;
-            str.erase(cursor_position_, 1);
-          }
-        } else if (code == SCIRun_Left) {
-          cursor_position_ = Max(int(cursor_position_-1), 0);
-        } else if (code == SCIRun_Right) {
-          cursor_position_ = Min(int(cursor_position_+1),int(str.length()));
-        } else {
-          character = string(1, char_traits<wchar_t>::to_char_type(code));
+      KeySignal *keysig = dynamic_cast<KeySignal *>(event.get_rep());
+      ASSERT(keysig);
+      KeyEvent *key = keysig->get_key_event();
+
+      if (!(key->get_key_state() & KeyEvent::KEY_PRESS_E)) return CONTINUE_E;
+      
+      string str = get_vars()->get_string("text");
+      int code = key->get_keyval();
+      //bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
+      string character = "";
+      cursor_position_ = Clamp(cursor_position_,0, str.length());
+      if (code == SCIRun_Return) {
+        throw_signal("TextEntry::enter");
+      } else if (code == SCIRun_Tab) {
+        str = autocomplete(str);
+        cursor_position_ = str.length();
+      } else if (code == SCIRun_BackSpace) {
+        if (cursor_position_) {
+          cursor_position_--;
+          str.erase(cursor_position_, 1);
         }
-        
-        if (character.length()) {
-          if (numeric_) {
-            double val;
-            string temp = str;
-            temp.insert(cursor_position_, character);
-            if (string_to_double(temp, val)) {
-              str = temp;
-              cursor_position_++;
-            }
-          } else {            
-            str.insert(cursor_position_, character);
+      } else if (code == SCIRun_Left) {
+        cursor_position_ = Max(int(cursor_position_-1), 0);
+      } else if (code == SCIRun_Right) {
+        cursor_position_ = Min(int(cursor_position_+1),int(str.length()));
+      } else {
+        character = string(1, char_traits<wchar_t>::to_char_type(code));
+      }
+      
+      if (character.length()) {
+        if (numeric_) {
+          double val;
+          string temp = str;
+          temp.insert(cursor_position_, character);
+          if (string_to_double(temp, val)) {
+            str = temp;
             cursor_position_++;
           }
+        } else {            
+          str.insert(cursor_position_, character);
+          cursor_position_++;
         }
-
-        renderer_->set_cursor_position(cursor_position_);
-        get_vars()->set_by_string("text", str);
-        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-      }        
-      return Text::process_event(event);
+      }
+      
+      renderer_->set_cursor_position(cursor_position_);
+      get_vars()->set_by_string("text", str);
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      return CONTINUE_E;
     }
 
 

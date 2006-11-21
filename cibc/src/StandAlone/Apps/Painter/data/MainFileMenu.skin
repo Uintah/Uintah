@@ -25,6 +25,12 @@
             <var name="varnum">1</var>
             <var name="threaded">1</var>
           </signal>                   
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FileLoadBox::focus</var>
+            <var name="value">1</var>
+          </signal>                   
+
         </object>
         
         <object class="MenuButton">
