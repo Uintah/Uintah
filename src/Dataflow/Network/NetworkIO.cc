@@ -58,6 +58,7 @@ NetworkIO::get_mod_id(const string& id)
   return (id == sn) ? sn : mmap[id];
 }
 
+
 string 
 NetworkIO::gui_push_subnet_ctx()
 {
@@ -66,6 +67,7 @@ NetworkIO::gui_push_subnet_ctx()
   string s = gui->eval(cmmd);
   return s;
 }
+
 
 void 
 NetworkIO::gui_pop_subnet_ctx(string ctx)
@@ -78,6 +80,8 @@ NetworkIO::gui_pop_subnet_ctx(string ctx)
   netid_to_modid_.pop();
   netid_to_conid_.pop();
 }
+
+
 void 
 NetworkIO::gui_add_subnet_at_position(const string &mod_id, 
 				      const string &module, 
@@ -108,9 +112,8 @@ NetworkIO::gui_add_subnet_at_position(const string &mod_id,
   ostringstream cmmd1;
   cmmd1 << "set Subnet(Subnet" << sn_count_ << "_Name) \"" << module << "\"";
   gui->eval(cmmd1.str());
-
-
 }
+
 
 void 
 NetworkIO::gui_add_module_at_position(const string &mod_id, 
@@ -187,6 +190,7 @@ NetworkIO::gui_add_connection(const string &con_id,
   cmap[con_id] = cid;
 }
 
+
 void 
 NetworkIO::gui_set_connection_disabled(const string &con_id)
 { 
@@ -197,6 +201,7 @@ NetworkIO::gui_set_connection_disabled(const string &con_id)
   string cmmd = "set Disabled(" + con + ") {1}";
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::gui_set_module_port_caching(const string &mid, const string &pid,
@@ -209,6 +214,7 @@ NetworkIO::gui_set_module_port_caching(const string &mid, const string &pid,
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_call_module_callback(const string &id, const string &call)
 {
@@ -218,6 +224,7 @@ NetworkIO::gui_call_module_callback(const string &id, const string &call)
   string cmmd = modid + " " + call;
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var, 
@@ -240,6 +247,7 @@ NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var,
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_connection_route(const string &con_id, const string &route)
 {  
@@ -250,6 +258,7 @@ NetworkIO::gui_set_connection_route(const string &con_id, const string &route)
   string cmmd = "set ConnectionRoutes(" + con + ") " + route;
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::gui_set_module_note(const string &mod_id, const string &pos, 
@@ -269,6 +278,7 @@ NetworkIO::gui_set_module_note(const string &mod_id, const string &pos,
     gui->eval(cmmd);
   }
 }
+
 
 void 
 NetworkIO::gui_set_connection_note(const string &con_id, const string &pos, 
@@ -290,6 +300,7 @@ NetworkIO::gui_set_connection_note(const string &con_id, const string &pos,
   }
 }
 
+
 void 
 NetworkIO::gui_set_variable(const string &var, const string &val)
 {  
@@ -298,6 +309,7 @@ NetworkIO::gui_set_variable(const string &var, const string &val)
   string cmmd = "set " + var +  " " + val;
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::gui_open_module_gui(const string &mod_id)
@@ -308,6 +320,7 @@ NetworkIO::gui_open_module_gui(const string &mod_id)
   string cmmd = mod + " initialize_ui";
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::process_environment(const xmlNodePtr enode)
@@ -402,6 +415,7 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
   }
 }
 
+
 void 
 NetworkIO::process_modules_pass2(const xmlNodePtr enode)
 {
@@ -470,6 +484,7 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
   }
 }
 
+
 void 
 NetworkIO::process_connections(const xmlNodePtr enode)
 {
@@ -522,6 +537,7 @@ NetworkIO::process_connections(const xmlNodePtr enode)
     }
   }
 }
+
 
 string
 NetworkIO::process_filename(const string &orig)
@@ -722,6 +738,7 @@ NetworkIO::process_network_node(xmlNode* network_node)
   }
 }
 
+
 bool
 NetworkIO::load_network()
 {
@@ -834,11 +851,13 @@ NetworkIO::push_subnet_scope(const string &id, const string &name)
   subnets_.push(sn_node);
 }
 
+
 void 
 NetworkIO::pop_subnet_scope()
 {
   subnets_.pop();
 }
+
 
 void 
 NetworkIO::start_net_doc(const string &fname, const string &vers)
@@ -873,6 +892,7 @@ NetworkIO::start_net_doc(const string &fname, const string &vers)
   xmlNewProp(root_node, BAD_CAST "version", BAD_CAST vers.c_str());
 }
 
+
 void
 NetworkIO::write_net_doc()
 {
@@ -885,6 +905,7 @@ NetworkIO::write_net_doc()
   out_fname_ = "";
   done_writing_ = true;
 }
+
 
 void 
 NetworkIO::add_net_var(const string &var, const string &val)
@@ -905,6 +926,7 @@ NetworkIO::add_net_var(const string &var, const string &val)
   }
   xmlNewProp(node, BAD_CAST var.c_str(), BAD_CAST val.c_str());
 }
+
 
 void 
 NetworkIO::add_environment_sub(const string &var, const string &val)
@@ -939,6 +961,7 @@ NetworkIO::add_environment_sub(const string &var, const string &val)
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST var.c_str());
   xmlNewProp(tmp, BAD_CAST "val", BAD_CAST val.c_str());
 }
+
 
 void 
 NetworkIO::add_net_note(const string &val)
@@ -1000,6 +1023,7 @@ NetworkIO::add_module_node(const string &id, const string &pack,
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST mod.c_str());
 }
 
+
 xmlNode*
 NetworkIO::get_module_node(const string &id)
 {  
@@ -1035,6 +1059,7 @@ NetworkIO::get_module_node(const string &id)
   }
   return mid_node;
 }
+
 
 void 
 NetworkIO::add_module_variable(const string &id, const string &var, 
@@ -1072,6 +1097,7 @@ NetworkIO::add_module_variable(const string &id, const string &var,
   else xmlNewProp(tmp, BAD_CAST "substitute", BAD_CAST "no");
 }
 
+
 void 
 NetworkIO::set_module_gui_visible(const string &id)
 {
@@ -1083,6 +1109,7 @@ NetworkIO::set_module_gui_visible(const string &id)
   }
   xmlNewProp(node, BAD_CAST "gui_visible", BAD_CAST "yes");
 }
+
 
 void 
 NetworkIO::add_module_gui_callback(const string &id, const string &call)
@@ -1109,6 +1136,7 @@ NetworkIO::add_module_gui_callback(const string &id, const string &call)
   xmlNewTextChild(gc_node, 0, BAD_CAST "callback", BAD_CAST call.c_str());
 }
 
+
 void 
 NetworkIO::add_module_position(const string &id, const string &x, 
 			       const string &y)
@@ -1125,6 +1153,7 @@ NetworkIO::add_module_position(const string &id, const string &x,
 
 }
 
+
 void 
 NetworkIO::add_module_note(const string &id, const string &note)
 {
@@ -1137,6 +1166,7 @@ NetworkIO::add_module_note(const string &id, const string &note)
   xmlNewTextChild(mnode, 0, BAD_CAST "note", BAD_CAST note.c_str());
 }
  
+
 void 
 NetworkIO::add_module_note_position(const string &id, const string &pos)
 {
@@ -1163,6 +1193,7 @@ NetworkIO::add_module_note_position(const string &id, const string &pos)
   xmlNewProp(node, BAD_CAST "position", BAD_CAST pos.c_str());
 }
  
+
 void 
 NetworkIO::add_module_note_color(const string &id, const string &col)
 {
@@ -1189,6 +1220,7 @@ NetworkIO::add_module_note_color(const string &id, const string &col)
   xmlNewProp(node, BAD_CAST "color", BAD_CAST col.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_node(const string &id, const string &fmod, 
 			       const string &fport, const string &tmod, 
@@ -1262,6 +1294,7 @@ NetworkIO::get_connection_node(const string &id)
   return cid_node;
 }
 
+
 void 
 NetworkIO::set_disabled_connection(const string &id)
 {
@@ -1274,6 +1307,7 @@ NetworkIO::set_disabled_connection(const string &id)
   xmlNewProp(cid_node, BAD_CAST "disabled", BAD_CAST "yes");
 }
  
+
 void 
 NetworkIO::add_connection_route(const string &id, const string &route)
 {
@@ -1287,6 +1321,7 @@ NetworkIO::add_connection_route(const string &id, const string &route)
   xmlNewTextChild(cid_node, 0, BAD_CAST "route", BAD_CAST route.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_note(const string &id, const string &note)
 {
@@ -1300,6 +1335,7 @@ NetworkIO::add_connection_note(const string &id, const string &note)
   xmlNewTextChild(cid_node, 0, BAD_CAST "note", BAD_CAST note.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_note_position(const string &id, const string &pos)
 {
@@ -1327,6 +1363,7 @@ NetworkIO::add_connection_note_position(const string &id, const string &pos)
   xmlNewProp(node, BAD_CAST "position", BAD_CAST pos.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_note_color(const string &id, const string &col)
 {
