@@ -213,7 +213,7 @@ public:
       } else {
 
 	map<string, int>::iterator iter;
-	cerr << "now showing: " << ev->get_geom_obj_name() << endl;
+        //	cerr << "now showing: " << ev->get_geom_obj_name() << endl;
 	iter = obj_ids_.find(ev->get_geom_obj_name());
 	if (iter != obj_ids_.end()) {
 	  //already showing this geometry.  Delete it first
