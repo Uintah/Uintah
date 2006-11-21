@@ -844,6 +844,7 @@ NetworkIO::push_subnet_scope(const string &id, const string &name)
   xmlNewProp(tmp, BAD_CAST "package", BAD_CAST "subnet");
   xmlNewProp(tmp, BAD_CAST "category", BAD_CAST "subnet");
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST name.c_str());
+  xmlNewProp(tmp, BAD_CAST "version", BAD_CAST "1.0");
 
   xmlNodePtr sn_node = xmlNewChild(tmp, 0, BAD_CAST "network", 0);
   xmlNewProp(sn_node, BAD_CAST "version", BAD_CAST "contained");
@@ -1021,6 +1022,7 @@ NetworkIO::add_module_node(const string &id, const string &pack,
   xmlNewProp(tmp, BAD_CAST "package", BAD_CAST pack.c_str());
   xmlNewProp(tmp, BAD_CAST "category", BAD_CAST cat.c_str());
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST mod.c_str());
+  xmlNewProp(tmp, BAD_CAST "version", BAD_CAST "1.0");
 }
 
 
