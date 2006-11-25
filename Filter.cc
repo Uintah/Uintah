@@ -237,7 +237,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
   // for box filter of size 2 matrix width is 27
   d_nz = 27; // defined in Filter.h
   o_nz = 26;
-  cout << "Creating the patch matrix... \n Note: if sus crashes here, try reducing your resolution.";
+  cout << "Creating the patch matrix... \n Note: if sus crashes here, try reducing your resolution.\n";
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
