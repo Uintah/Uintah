@@ -107,8 +107,6 @@ proc handle_network_executing { var op1 op2} {
     if { $network_executing == "1" } {
 	$maincanvas itemconfigure bgRect -fill $Color(NetworkEditorLocked) \
 	    -outline $Color(NetworkEditorLocked)
-# 	update
-# 	update idletasks
 
 	bind . <Control-u> "restore_not_executing_interface"
 	bind . <Control-d> ""
