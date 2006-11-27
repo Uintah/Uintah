@@ -206,8 +206,6 @@ Scheduler::do_scheduling_real(Module* exclude)
   if (!schedule)
     return;
 
-  report_execution_started();
-
   lockNeedExecute();
   int nmodules=net->nmodules();
   queue<Module *> needexecute;		
@@ -227,6 +225,8 @@ Scheduler::do_scheduling_real(Module* exclude)
     unlockNeedExecute();
     return;
   }
+
+  report_execution_started();
 
   // For all of the modules that need executing, execute the
   // downstream modules and arrange for the data to be sent to them
