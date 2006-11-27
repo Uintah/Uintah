@@ -29,8 +29,8 @@
 
 #Makefile fragment for the SatndAlone directory
 
-SRCDIR := StandAlone/Apps
-SUBDIRS := \
+#SRCDIR := StandAlone/Apps
+#SUBDIRS := \
 #	$(SRCDIR)/Painter \
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+#include $(SCIRUN_SCRIPTS)/recurse.mk
