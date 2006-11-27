@@ -49,6 +49,7 @@ set Color(Compiling) "\#f0e68c"
 set Color(Trace) red
 set Color(ConnDisabled) gray
 set Color(NetworkEditor) "\#036"
+set Color(NetworkEditorLocked) "\#603"
 set Color(SubnetEditor) purple4 ;#$Color(NetworkEditor)
 #set Color(NetworkEditor) "black"
 set Color(ErrorFrameBG) $Color(NetworkEditor)
