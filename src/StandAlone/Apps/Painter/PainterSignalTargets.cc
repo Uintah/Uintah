@@ -690,25 +690,16 @@ Painter::ShowVolumeRendering(event_handle_t event)
   event_handle_t scene_event = 0;
 
   if (!current_volume_.get_rep()) return STOP_E;
-  NrrdDataHandle nrrd_handle = current_volume_->nrrd_handle_;
-
-  
-  NrrdDataHandle volnrrd = new NrrdData();
-  NrrdRange *range = nrrdRangeNewSet(nrrd_handle->nrrd_, 
-                                     nrrdBlind8BitRangeState);
-  nrrdQuantize(volnrrd->nrrd_, nrrd_handle->nrrd_, range, 8);
-  nrrdRangeNix(range);
 
   const int card_mem = 128;
   volume_texture_ = new Texture;
   NrrdTextureBuilderAlgo::build_static(volume_texture_,
-                                       nrrd_handle, 0, 255,
+                                       current_volume_->nrrd_handle_, 0, 255,
                                        0, 0, 255, card_mem);
 
   Skinner::Var<string> filename(get_vars(), "cmap2_filename", "default.cmap2");
     
-  string path = 
-    findFileInPath(filename(),sci_getenv("SKINNER_PATH"));
+  string path = findFileInPath(filename(),sci_getenv("SKINNER_PATH"));
   if (path.empty()) {
     cerr << "no colormap file specified1\n";
     return STOP_E;
@@ -737,6 +728,9 @@ Painter::ShowVolumeRendering(event_handle_t event)
   vector<ColorMap2Handle> *cmap2v = new vector<ColorMap2Handle>(0);
   cmap2v->push_back(icmap);
 
+  icmap->value_range().first = 0;
+  icmap->value_range().second = 1300;
+
   vector<Plane *> *planes = new vector<Plane *>;
   VolumeRenderer *vol = new VolumeRenderer(volume_texture_, 
                                            cmap, 
@@ -747,11 +741,11 @@ Painter::ShowVolumeRendering(event_handle_t event)
   vol->set_shading(true);
   vol->set_sw_raster(true);
   //  vol->set_slice_alpha(-0.5);
-  vol->set_slice_alpha(1.1);
+  //vol->set_slice_alpha(1.1);
   vol->set_interactive_rate(1.0);
   vol->set_sampling_rate(1.5);
   vol->set_material(0.322, 0.868, 1.0, 18);
-  vol->set_interp(0);
+  //vol->set_interp(0);
   scene_event = new SceneGraphEvent(vol, "FOO");
   EventManager::add_event(scene_event);
   //process_event(scene_event);
@@ -894,7 +888,9 @@ Painter::ResampleVolume(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::AbortFilterOn(event_handle_t event) {
   cerr << "Stop Fitler\n";
-  abort_filter_ = true;
+  for (unsigned int i = 0; i < filters_.size(); ++i) 
+    filters_[i]->stop();
+  //  abort_filter_ = true;
   return CONTINUE_E;
 }
 

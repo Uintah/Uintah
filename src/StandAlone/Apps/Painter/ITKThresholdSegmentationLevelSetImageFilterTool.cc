@@ -144,6 +144,7 @@ ITKThresholdSegmentationLevelSetImageFilterTool::finish()
   filter_->SetUpperThreshold(UpperThreshold_);    
   filter_->SetFeatureImage(fimage);
   filter_.set_volume(new_layer);
+  painter_->filters_.push_back(&filter_);
   filter_();
 
   new_layer->change_type_from_float_to_bit();
