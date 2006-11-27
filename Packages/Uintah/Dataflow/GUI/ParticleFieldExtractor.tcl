@@ -236,31 +236,37 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
         pack $w.lf.bf.b$level -side left
     }
         
-    method buildLevels { level } {
+    method buildLevels { args } {
+        puts "buildLevels input is $args"
 	set w $pf
 	set buttontype radiobutton
 	set c "$this-c needexecute"
 	frame $w.lf -relief flat -borderwidth 2
 	pack $w.lf -side top
-	label $w.lf.l -text Levels
+	label $w.lf.l -text Level
 	pack $w.lf.l -side top
 	frame $w.lf.bf -relief flat
 	pack $w.lf.bf -side top -expand yes -fill both
-        for {set j 0} { $j < $levels } {incr j} {
-            $buttontype $w.lf.bf.b$j -text $j \
-                -variable $this-level  -value $j -command $c
-            pack $w.lf.bf.b$j -side left
+        set match 0
+        for {set j 0} { $j < [llength $args] } {incr j} {
+            set name [lindex $args $j]
+            $buttontype $w.lf.bf.b$name -text $name \
+                -variable $this-level  -value $name -command $c
+            pack $w.lf.bf.b$name -side left
+            if { [set $this-level] == $name } {
+                set match 1
+            }
         }
 
 
-	if {$levels > 1} {
-	    $buttontype $w.lf.bf.b$levels -text all \
-		-variable $this-level -value $levels -command $c
-	    pack $w.lf.bf.b$levels -side left
-	}
+# 	if {[llength $levels] > 1} {
+# 	    $buttontype $w.lf.bf.b$levels -text all \
+# 		-variable $this-level -value $levels -command $c
+# 	    pack $w.lf.bf.b$levels -side left
+# 	}
 	
-	if { [set $this-level] > $levels } {
-	    set $this-level [expr $levels -1]
+	if { $match == 0 } {
+	    set $this-level [lindex $args 0 ]
 	}
     }
 

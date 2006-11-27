@@ -129,8 +129,8 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
   GridP grid = archive->queryGrid(times[timestep]);
   int levels = grid->numLevels();
   int guilevel = level_.get();
-  LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
-  
+  LevelP level = grid->getLevel( (guilevel == levels ? levels-1 : guilevel) );
+  if( guilevel == levels )  level_.set( levels - 1 );
   Patch* r = *(level->patchesBegin());
   
   // get the number of materials for the particle Variables
@@ -148,12 +148,15 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 //       cerr<<"\n";
     }
   }
+  ostringstream level_os;
 
   if( !archive_dirty && nm == num_materials){
     return true;
   } else {
-    // currently particles can only exist on one level.  Figure out which
-    // level and build the interface for it. 
+    // make a list of levels with particles on them.  Eventually
+    // particles will only exist on one level, but until then
+    // Figure out which levels have particles and build the 
+    // interface for them. 
     // NOTE: this is not a general solution!
     bool found_particles = false;
     for( int j = 0; j < (int)names.size(); j++ ){
@@ -168,20 +171,18 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
             while( it != matls.end() ){
               archive->query( var, names[j], *it, *iter, times[timestep]); 
               if(var.getParticleSet()->numParticles() > 0){
-                found_particles = true; //we have found particles on this level
-                level_.set( i );
-                r = *(level->patchesBegin());
-                break;                  // break out
+                level_os << i <<" ";
+                if( !found_particles ) {
+                  found_particles = true; //we have found particles
+                }
+                break;                  // break out while
               }
               ++it;
             }
-            if( found_particles ) { 
-              break;
-            }
+            if( found_particles )
+              break;  //break out patches loop
           }
-          if( found_particles ){ // break out of the level loop
-            break;
-          }
+          // don't break out of levels loop
         }
         if( found_particles ){
           break;
@@ -205,9 +206,6 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     //   psVar.set("");
     //   pvVar.set("");
     //   ptVar.set("");
-
-    ostringstream os;
-    os << level_.get();  // was levels
 
     string psNames("");
     string pvNames("");
@@ -308,8 +306,8 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     if( visible == "1"){
       get_gui()->execute(get_id() + " destroyFrames");
       get_gui()->execute(get_id() + " build");
-//       get_gui()->execute(get_id() + " buildLevels "+ os.str());
-      get_gui()->execute(get_id() + " buildLevel "+ os.str());
+      get_gui()->execute(get_id() + " buildLevels "+ level_os.str());
+//      get_gui()->execute(get_id() + " buildLevel "+ level_os.str());
       //      get_gui()->execute(get_id() + " setParticleScalars " + psNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleVectors " + pvNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleTensors " + ptNames.c_str());
@@ -583,7 +581,7 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, double time,
   GridP grid = archive->queryGrid( time );
   int levels = grid->numLevels();
   int guilevel = level_.get();
-  LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
+  LevelP level = grid->getLevel( (guilevel == levels ? levels-1 : guilevel) );
 
  
   PSetHandle pseth = scinew PSet();
