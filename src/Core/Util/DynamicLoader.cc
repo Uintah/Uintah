@@ -111,70 +111,45 @@ DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
 
 
-string
+static string
+remove_vowels1(const string &s)
+{
+  string result;
+  result.reserve(s.size());
+  for (unsigned int i = 0; i < s.size(); i++)
+  {
+    if (!(s[i] == 'a' || s[i] == 'e' || s[i] == 'i' ||
+          s[i] == 'o' || s[i] == 'u'))
+    {
+      result += s[i];
+    }
+  }
+  
+  return result;
+}
+
+// More agressive filename shortening.  Replace "GenericField" with "GFld" and
+// "ConstantBasis" with "Cnst" in addition to removing all of the vowels.
+static string
 remove_vowels(const string &s)
 {
-  // will never remove first character.
-  vector<size_t> rm_list;
-  size_t p = 0;
-  for(;;) {
-    p = s.find("a", p);
-    if (p  == string::npos)
-      break;
-    else {
-      rm_list.push_back(p);
-      ++p;
-    }
-  }
-  p = 0;
-  for(;;) {
-    p = s.find("e", p);
-    if (p  == string::npos)
-      break;
-    else {
-      rm_list.push_back(p);
-      ++p;
-    }
-  }
-  p = 0;
-  for(;;) {
-    p = s.find("i", p);
-    if (p  == string::npos)
-      break;
-    else {
-      rm_list.push_back(p);
-      ++p;
-    }
-  }
-  p = 0;
-  for(;;) {
-    p = s.find("o", p);
-    if (p  == string::npos)
-      break;
-    else {
-      rm_list.push_back(p);
-      ++p;
-    }
-  }
-  p = 0;
-  for(;;) {
-    p = s.find("u", p);
-    if (p  == string::npos)
-      break;
-    else {
-      rm_list.push_back(p);
-      ++p;
-    }
+  string result(s);
+  while (1)
+  {
+    string::size_type loc = result.find("GenericField", 0);
+    if (loc == string::npos) break;
+    result.replace(loc, 12, "GFld");
   }
 
-  sort(rm_list.begin(), rm_list.end());
-  string rval = s;
-  vector<size_t>::reverse_iterator iter = rm_list.rbegin();
-  while (iter != rm_list.rend()) {
-    rval.erase(*iter++, 1);
+  while (1)
+  {
+    string::size_type loc = result.find("ConstantBasis", 0);
+    if (loc == string::npos) break;
+    result.replace(loc, 13, "Cnst");
   }
-  return rval;
+  return remove_vowels1(result);
 }
+
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn,
 			 const string &tcn, const string &tcdec) :
