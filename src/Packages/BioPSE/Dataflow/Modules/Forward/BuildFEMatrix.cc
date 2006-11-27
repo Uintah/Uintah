@@ -72,7 +72,7 @@ void BuildFEMatrix::execute()
   MatrixHandle SysMatrix;
   
   if (!(get_input_handle("Mesh",Field,true))) return;
-  get_input_handle("ConductivityTable",Conductivity,false);
+  get_input_handle("Conductivity Table", Conductivity, false);
   
   if (inputs_changed_ || !oport_cached("Stiffness Matrix"))
   {
