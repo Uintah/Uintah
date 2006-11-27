@@ -53,6 +53,7 @@ namespace SCIRun {
       virtual MinMax                    get_minmax(unsigned int);
       virtual int                       get_signal_id(const string &) const;
     private:
+      void                              save_png();
       Mutex				lock_;
       CatcherFunction_t                 close;
       CatcherFunction_t                 mark_redraw;
@@ -69,8 +70,8 @@ namespace SCIRun {
       Thread *                          draw_thread_;
       Drawables_t                       redrawables_;
       bool                              force_redraw_;
+
 #ifdef HAVE_PNG
-      void                              save_png();
       unsigned char *                   png_buf_;
       png_bytep *                       png_rows_;
       int                               png_num_;

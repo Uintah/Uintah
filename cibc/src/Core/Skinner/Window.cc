@@ -302,9 +302,9 @@ namespace SCIRun {
     }
       
 
-#ifdef HAVE_PNG
     void
     GLWindow::save_png() {
+#ifdef HAVE_PNG
       if (!do_png_) return;
       const int bpp = 3;
       const int vpw = context_->width();
@@ -355,7 +355,8 @@ namespace SCIRun {
       png_write_end(png_write, 0);
       png_destroy_write_struct(&png_write, &png_info);
       fclose(fp);
-    }
 #endif
+    }
+
   }
 }
