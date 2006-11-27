@@ -89,8 +89,9 @@ FIND_PATH(TCL_INCLUDE tcl.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
-           /include)
-
+           /include
+           NO_DEFAULT_PATH)
+MARK_AS_ADVANCED(TCL_SRC_PATH TCL_INCLUDE1 TCL_INCLUDE2 TCL_INCLUDE)
 INCLUDE_DIRECTORIES(${TCL_INCLUDE1} ${TCL_INCLUDE2})
 
 # TK include directories
@@ -106,7 +107,9 @@ FIND_PATH(TK_INCLUDE tk.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
+MARK_AS_ADVANCED(TK_INCLUDE TK_SRC_PATH TK_INCLUDE1 TK_INCLUDE2)
 
 INCLUDE_DIRECTORIES(${TK_INCLUDE1} ${TK_INCLUDE2})
 
@@ -150,6 +153,8 @@ ELSE(WIN32 AND NOT CYGWIN)
   SET(SO_OR_A_FILE "so" CACHE STRING "library extension")
   SET(SOFLAGS "${CFLAGS} -shared -L${LIBRARY_OUTPUT_PATH}")
 ENDIF(WIN32 AND NOT CYGWIN)
+
+MARK_AS_ADVANCED(SO_OR_A_FILE)
 
 CONFIGURE_FILE (
   "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/cmake_Makefile.in"
