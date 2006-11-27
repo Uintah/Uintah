@@ -114,6 +114,7 @@ typedef itk::Image<float,3> ITKImageFloat3D;
 #endif
 
 
+class VolumeFilterBase;
 
 class Painter : public Skinner::Parent
 {
@@ -200,6 +201,8 @@ private:
   void                  filter_callback(itk::Object *, 
                                         const itk::EventObject &);
 
+  vector<VolumeFilterBase *> filters_;
+
   //  void                  filter_callback_const (const itk::Object *, 
   //                                               const itk::EventObject &);
 #endif
@@ -267,7 +270,7 @@ private:
   NrrdVolumeHandle      filter_volume_;
   bool                  abort_filter_;
   Skinner::Var<string>  status_;
-  Skinner::Drawables_t  filters_;
+  //  Skinner::Drawables_t  filters_;
 };
 
 

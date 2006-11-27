@@ -52,30 +52,26 @@ namespace SCIRun {
 #ifdef HAVE_INSIGHT
 using SCIRun::ITKDatatypeHandle;
 
-// todo, integrate scirun progressreporter class to this callback
-template <class FilterType>
-class VolumeFilter : public Skinner::Parent
+
+class VolumeFilterBase : public Skinner::Parent
 {
-  typedef typename      FilterType::Pointer FilterPointer;
 public:
-  VolumeFilter          (NrrdVolumeHandle volume  = 0,
-                         Skinner::Variables *vars = 0);
-    
-  virtual               ~VolumeFilter() {};
-  void                  set_volume(NrrdVolumeHandle vol) { volume_ = vol; }
-  void                  operator()(NrrdDataHandle nrrdh = 0);
-  void                  stop();
-  FilterPointer         operator->() { return filter_; };
-    
-private:
-  void                  filter_callback(itk::Object *, 
-                                        const itk::EventObject &);
+  VolumeFilterBase      (NrrdVolumeHandle volume  = 0,
+                         Skinner::Variables *vars = 0)  
+    : Parent::Parent(vars ? vars : new Skinner::Variables("VolumeFilter", 0)),
+      volume_(volume),
+      abort_(false),
+      progress_(0.0),
+      passes_(1)
+  {
+  }
   
-  void                  filter_callback_const (const itk::Object *, 
-                                               const itk::EventObject &);
-
-
-  FilterPointer         filter_;
+    
+  virtual               ~VolumeFilterBase() {};
+  void                  set_volume(NrrdVolumeHandle vol) { volume_ = vol; }
+  void                  stop() { abort_ = true; }
+  virtual void          operator()(NrrdDataHandle nrrdh) {};
+protected:
   NrrdVolumeHandle      volume_;
   bool                  abort_;
   double                progress_;
@@ -84,15 +80,34 @@ private:
 };
 
 
+// todo, integrate scirun progressreporter class to this callback
+template <class FilterType>
+class VolumeFilter : public VolumeFilterBase
+{
+  typedef typename      FilterType::Pointer FilterPointer;
+public:
+  VolumeFilter          (NrrdVolumeHandle volume  = 0,
+                         Skinner::Variables *vars = 0);
+  virtual               ~VolumeFilter() {};
+  FilterPointer         operator->() { return filter_; };
+  void                  operator()(NrrdDataHandle nrrdh = 0);    
+private:
+  void                  filter_callback(itk::Object *, 
+                                        const itk::EventObject &);
+  
+  void                  filter_callback_const (const itk::Object *, 
+                                               const itk::EventObject &);
+
+  FilterPointer         filter_;
+  
+};
+
+
 template <class FilterType>  
 VolumeFilter<FilterType>::VolumeFilter(NrrdVolumeHandle volume,
                                        Skinner::Variables *vars) 
-  : Parent::Parent(vars ? vars : new Skinner::Variables("VolumeFilter",0)),
-    filter_(FilterType::New()),
-    volume_(volume),
-    abort_(false),
-    progress_(0.0),
-    passes_(1)
+  : VolumeFilterBase(volume, vars),
+    filter_(FilterType::New())
 {
 }
 
