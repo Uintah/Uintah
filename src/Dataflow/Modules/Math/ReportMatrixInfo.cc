@@ -26,27 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-//    File   : ReportMatrixInfo.cc
-//    Author : McKay Davis
-//    Date   : July 2002
-
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Core/Containers/Handle.h>
-#include <Core/Geometry/BBox.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/StringUtil.h>
-#include <map>
-#include <iostream>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 namespace SCIRun {
-
-using std::endl;
-using std::pair;
 
 class ReportMatrixInfo : public Module {
 private:
@@ -57,39 +44,30 @@ private:
   GuiString gui_cols_;
   GuiString gui_elements_;
 
-  int              generation_;
-
   void clear_vals();
   void update_input_attributes(MatrixHandle);
 
 public:
   ReportMatrixInfo(GuiContext* ctx);
-  virtual ~ReportMatrixInfo();
   virtual void execute();
 };
 
-  DECLARE_MAKER(ReportMatrixInfo)
+
+DECLARE_MAKER(ReportMatrixInfo)
 
 ReportMatrixInfo::ReportMatrixInfo(GuiContext* ctx)
   : Module("ReportMatrixInfo", ctx, Sink, "Math", "SCIRun"),
-    gui_matrixname_(get_ctx()->subVar("matrixname", false), "---"),
-    gui_generation_(get_ctx()->subVar("generation", false), "---"),
-    gui_typename_(get_ctx()->subVar("typename", false), "---"),
-    gui_rows_(get_ctx()->subVar("rows", false), "---"),
-    gui_cols_(get_ctx()->subVar("cols", false), "---"),
-    gui_elements_(get_ctx()->subVar("elements", false), "---"),
-    generation_(-1)
+    gui_matrixname_(get_ctx()->subVar("matrixname", false),"---"),
+    gui_generation_(get_ctx()->subVar("generation", false),"---"),
+    gui_typename_(get_ctx()->subVar("typename", false),"---"),
+    gui_rows_(get_ctx()->subVar("rows", false),"---"),
+    gui_cols_(get_ctx()->subVar("cols", false),"---"),
+    gui_elements_(get_ctx()->subVar("elements", false),"---")
 {
 }
 
 
-ReportMatrixInfo::~ReportMatrixInfo()
-{
-}
-
-
-void
-ReportMatrixInfo::clear_vals()
+void ReportMatrixInfo::clear_vals()
 {
   gui_matrixname_.set("---");
   gui_generation_.set("---");
@@ -103,85 +81,88 @@ ReportMatrixInfo::clear_vals()
 void
 ReportMatrixInfo::update_input_attributes(MatrixHandle m)
 {
-  const bool regressing = sci_getenv_p("SCI_REGRESSION_TESTING");
-
-  string matrixname;
-  if (!m->get_property("name", matrixname))
+  std::string matrixname;
+  if (m->get_property("name", matrixname))
   {
-    matrixname = "--- Name Not Assigned ---";
-  }
-  gui_matrixname_.set(matrixname);
-  if (regressing) { remark("Name: " + matrixname); }
-
-  gui_generation_.set(to_string(m->generation));
-  if (regressing) { remark("Generation: " + to_string(m->generation)); }
-
-  // Set the typename.
-  string kind;
-  string size;
-  if (m->is_sparse())
-  {
-    kind = "SparseRowMatrix";
-    size = to_string(m->sparse()->get_nnz());
-  }
-  else if (m->is_column())
-  {
-    kind = "ColumnMatrix";
-    size = to_string(m->ncols() * m->nrows());
-  }
-  else if (m->is_dense_col_maj())
-  {
-    kind = "DenseColMajMatrix";
-    size = to_string(m->ncols() * m->nrows());
-  }
-  else if (m->is_dense())
-  {
-    kind = "DenseMatrix";
-    size = to_string(m->ncols() * m->nrows());
+    gui_matrixname_.set(matrixname);
   }
   else
   {
-    kind = "Unknown";
-    size = "*";
+    gui_matrixname_.set("--- Name Not Assigned ---");
   }
-  gui_typename_.set(kind);
-  gui_elements_.set(size);
-  if (regressing)
+
+  gui_generation_.set(to_string(m->generation));
+
+  // Set the typename.
+  if (m->is_sparse())
   {
-    remark("Type: " + kind);
+    gui_typename_.set("SparseRowMatrix");
+    gui_elements_.set(to_string(m->sparse()->get_nnz()));
+  }
+  else if (m->is_column())
+  {
+    gui_typename_.set("ColumnMatrix");
+    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+  }
+  else if (m->is_dense_col_maj())
+  {
+    gui_typename_.set("DenseColMajMatrix");
+    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+  }
+  else if (m->is_dense())
+  {
+    gui_typename_.set("DenseMatrix");
+    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+  }
+  else
+  {
+    gui_typename_.set("Unknown");
+    gui_elements_.set("*");
   }
 
   gui_rows_.set(to_string(m->nrows()));
   gui_cols_.set(to_string(m->ncols()));
-  if (regressing)
-  {
-    remark("Rows: " + to_string(m->nrows()));
-    remark("Cols: " + to_string(m->ncols()));
-    remark("Elems: " + size);
-  }
 }
 
 
-void
-ReportMatrixInfo::execute()
+void ReportMatrixInfo::execute()
 {
-  // The input port (with data) is required.
   MatrixHandle mh;
-  if (!get_input_handle("Input", mh, false))
+  SCIRunAlgo::ConverterAlgo calgo(this);
+  
+  if(!(get_input_handle("Input",mh,true))) 
   {
     clear_vals();
-    generation_ = -1;
     return;
   }
-
-  if (generation_ != mh.get_rep()->generation)
+  
+  if (inputs_changed_ || !oport_cached("NumRows") || !oport_cached("NumCols") || !oport_cached("NumElements"))
   {
-    generation_ = mh.get_rep()->generation;
     update_input_attributes(mh);
+
+    MatrixHandle NumRows, NumCols, NumElements;
+    if (!(calgo.IntToMatrix(mh->nrows(),NumRows))) return;
+    if (!(calgo.IntToMatrix(mh->ncols(),NumCols))) return;
+    
+    int numelems;
+    if (mh->is_sparse()) 
+    {
+      numelems = static_cast<int>(mh->sparse()->get_nnz());
+    }
+    else
+    {
+      numelems = static_cast<int>(mh->nrows()*mh->ncols());
+    }
+    if (!(calgo.IntToMatrix(numelems,NumElements))) return;
+
+    send_output_handle("NumRows", NumRows);
+    send_output_handle("NumCols", NumCols);
+    send_output_handle("NuMElements", NumElements);
   }
 }
 
 
 } // end SCIRun namespace
+
 
 

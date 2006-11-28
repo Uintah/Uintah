@@ -28,7 +28,7 @@
 
 
 /*
- *  GetColumnMatrixFromMatrix: Select a row or column of a matrix
+ *  GetColumnOrRowFromMatrix: Select a row or column of a matrix
  *
  *  Written by:
  *   David Weinstein
@@ -39,8 +39,10 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -51,7 +53,7 @@
 
 namespace SCIRun {
 
-class GetColumnMatrixFromMatrix : public Module {
+class GetColumnOrRowFromMatrix : public Module {
   GuiString row_or_col_;
   GuiDouble selectable_min_;
   GuiDouble selectable_max_;
@@ -76,17 +78,17 @@ class GetColumnMatrixFromMatrix : public Module {
   int increment(int which, int lower, int upper);
 
 public:
-  GetColumnMatrixFromMatrix(GuiContext* ctx);
-  virtual ~GetColumnMatrixFromMatrix();
+  GetColumnOrRowFromMatrix(GuiContext* ctx);
+  virtual ~GetColumnOrRowFromMatrix();
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
 };
 
 
-DECLARE_MAKER(GetColumnMatrixFromMatrix)
+DECLARE_MAKER(GetColumnOrRowFromMatrix)
 
-GetColumnMatrixFromMatrix::GetColumnMatrixFromMatrix(GuiContext* ctx)
-  : Module("GetColumnMatrixFromMatrix", ctx, Filter,"Math", "SCIRun"),
+GetColumnOrRowFromMatrix::GetColumnOrRowFromMatrix(GuiContext* ctx)
+  : Module("GetColumnOrRowFromMatrix", ctx, Filter,"Math", "SCIRun"),
     row_or_col_(get_ctx()->subVar("row_or_col")),
     selectable_min_(get_ctx()->subVar("selectable_min")),
     selectable_max_(get_ctx()->subVar("selectable_max")),
@@ -110,13 +112,13 @@ GetColumnMatrixFromMatrix::GetColumnMatrixFromMatrix(GuiContext* ctx)
 }
 
 
-GetColumnMatrixFromMatrix::~GetColumnMatrixFromMatrix()
+GetColumnOrRowFromMatrix::~GetColumnOrRowFromMatrix()
 {
 }
 
 
 void
-GetColumnMatrixFromMatrix::send_selection(MatrixHandle mh, int which,
+GetColumnOrRowFromMatrix::send_selection(MatrixHandle mh, int which,
 				   int ncopy, bool cache)
 {
   MatrixHandle matrix(0);
@@ -166,7 +168,7 @@ GetColumnMatrixFromMatrix::send_selection(MatrixHandle mh, int which,
 
 
 int
-GetColumnMatrixFromMatrix::increment(int which, int lower, int upper)
+GetColumnOrRowFromMatrix::increment(int which, int lower, int upper)
 {
   data_series_done_.reset();
   if (playmode_.get() == "autoplay" && data_series_done_.get()) {
@@ -217,7 +219,7 @@ GetColumnMatrixFromMatrix::increment(int which, int lower, int upper)
 
 
 void
-GetColumnMatrixFromMatrix::execute()
+GetColumnOrRowFromMatrix::execute()
 {
   update_state(NeedData);
 
@@ -283,10 +285,6 @@ GetColumnMatrixFromMatrix::execute()
     }
   } else {
     string units("");;
-    //    if (!mh->get_property("col_units", units))
-    //{
-    //  units = "Units";
-    // }
     if (units != selectable_units_.get()) {
       selectable_units_.set(units);
       changed_p = true;
@@ -325,40 +323,99 @@ GetColumnMatrixFromMatrix::execute()
   int which;
 
   // Specialized matrix multiply, with Weight Vector given as a sparse
-  // matrix.  It's not clear what this has to do with GetColumnMatrixFromMatrix.
+  // matrix.  It's not clear what this has to do with GetColumnOrRowFromMatrix.
   MatrixHandle weightsH;
   if (get_input_handle("Weight Vector", weightsH, false))
   {
-    ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
+    // Some how some one removed the sparse matrix version
+    // We change back to the system of using a sparse matrix
+    
+    // Convert matrix to sparse matrix
+    MatrixHandle spH = static_cast<Matrix*>(weightsH->sparse()); 
+    SparseRowMatrix* w = dynamic_cast<SparseRowMatrix*>(spH.get_rep());
+    
     if (w == 0)  {
-      error("Weight Vector must be a column matrix.");
+      error("Could not obtain weight matrix");
       return;
     }
-    ColumnMatrix *cm;
-    if (use_row_) {
-      cm = scinew ColumnMatrix(mh->ncols());
-      cm->zero();
-      double *data = cm->get_data();
-      for (int i = 0; i<w->nrows()/2; i++) {
-	const int idx = (int)((*w)[i*2]);
-	double wt = (*w)[i*2+1];
-	for (int j = 0; j<mh->ncols(); j++)
-	  data[j]+=mh->get(idx, j)*wt;
+
+    DenseMatrix *dm;
+    
+    if (use_row_)
+    {
+      int nnrows = w->nrows();
+      int nncols = mh->ncols();
+      
+      dm = scinew DenseMatrix(nnrows,nncols);
+      if (dm == 0)
+      {
+        error("Could not obtain enough memory for output matrix");
+        return;      
+      }
+      
+      dm->zero();
+      
+      int *rr = w->rows;
+      int *cc = w->columns;
+      double *a =  w->a;
+      
+      if ((rr==0)||(cc==0)||(a==0))
+      {
+        error("Encountered an invalid sparse matrix");
+        return;
+      }
+      
+      double *data = dm->get_data_pointer();
+      for (int p = 0; p < nnrows; p++)
+      {
+        for (int r = rr[p]; r<rr[p+1]; r++)
+        {
+          for (int q = 0;  q< nncols; q++)
+          {
+            data[q+p*nncols]+=mh->get(cc[r],q)*a[r];
+          }
+        }
       }
     }
     else
     {
-      cm = scinew ColumnMatrix(mh->nrows());
-      cm->zero();
-      double *data = cm->get_data();
-      for (int i = 0; i<w->nrows()/2; i++) {
-	const int idx = (int)((*w)[i*2]);
-	double wt = (*w)[i*2+1];
-	for (int j = 0; j<mh->nrows(); j++)
-	  data[j]+=mh->get(j, idx)*wt;
+
+      int nncols = w->nrows();
+      int nnrows = mh->nrows();
+      
+      dm = scinew DenseMatrix(nnrows,nncols);
+      if (dm == 0)
+      {
+        error("Could not obtain enough memory for output matrix");
+        return;      
+      }
+      
+      dm->zero();
+      
+      int *rr = w->rows;
+      int *cc = w->columns;
+      double *a =  w->a;
+      
+      if ((rr==0)||(cc==0)||(a==0))
+      {
+        error("Encountered an invalid sparse matrix");
+        return;
+      }
+      
+      double *data = dm->get_data_pointer();
+      for (int p = 0; p < nncols; p++)
+      {
+        for (int r = rr[p]; r<rr[p+1]; r++)
+        {
+          for (int q = 0;  q< nnrows; q++)
+          {
+            data[p+q*nncols]+=mh->get(q,cc[r])*a[r];
+          }
+        }
       }
     }
-    MatrixHandle cmtmp(cm);
+    
+    MatrixHandle cmtmp(dm);
     send_output_handle("Vector", cmtmp);
     return;
   }
@@ -475,10 +532,10 @@ GetColumnMatrixFromMatrix::execute()
 
 
 void
-GetColumnMatrixFromMatrix::tcl_command(GuiArgs& args, void* userdata)
+GetColumnOrRowFromMatrix::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() < 2) {
-    args.error("GetColumnMatrixFromMatrix needs a minor command");
+    args.error("GetColumnOrRowFromMatrix needs a minor command");
     return;
 
   }
