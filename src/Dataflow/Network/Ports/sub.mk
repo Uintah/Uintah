@@ -46,3 +46,6 @@ SRCS     += \
         $(SRCDIR)/TexturePort.cc    \
         $(SRCDIR)/TimePort.cc
 
+ifeq ($(HAVE_INSIGHT),yes)
+   SRCS += $(SRCDIR)/ITKDatatypePort.cc
+endif

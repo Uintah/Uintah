@@ -41,10 +41,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/DataIO
 
 SRCS     += \
-        $(SRCDIR)/ReadBundle.cc\
-        $(SRCDIR)/WriteBundle.cc\
-	$(SRCDIR)/ReadColorMap2.cc\
-	$(SRCDIR)/WriteColorMap2.cc\
+	$(SRCDIR)/ReadBundle.cc\
+	$(SRCDIR)/WriteBundle.cc\
+	$(SRCDIR)/ReadColorMap2D.cc\
+	$(SRCDIR)/WriteColorMap2D.cc\
 	$(SRCDIR)/ReadColorMap.cc\
 	$(SRCDIR)/WriteColorMap.cc\
 	$(SRCDIR)/ReadField.cc\
@@ -53,6 +53,9 @@ SRCS     += \
 	$(SRCDIR)/WriteMatrix.cc\
 	$(SRCDIR)/ReadPath.cc\
 	$(SRCDIR)/WritePath.cc\
+	$(SRCDIR)/ReadString.cc\
+	$(SRCDIR)/WriteString.cc\
+  $(SRCDIR)/StreamMatrixFromDisk.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
@@ -71,7 +74,8 @@ PSELIBS := \
 	Core/Thread        \
 	Dataflow/TkExtensions  \
 	Core/Util          \
-	Core/Volume        
+	Core/Volume        \
+  Core/Algorithms/DataStreaming
 
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)

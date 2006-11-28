@@ -28,86 +28,72 @@
 
 
 /*
- *  WriteColorMap2.cc: Save persistent representation of a colormap to a file
+ *  ReadColorMap2.cc: Read a persistent colormap from a file
  *
  *  Written by:
  *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   September 2004
+ *   Sept 2004
  *
  *  Copyright (C) 2004 SCI Group
  */
 
 #include <Dataflow/Network/Ports/ColorMap2Port.h>
-#include <Dataflow/Modules/DataIO/GenericWriter.h>
-//#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
+#include <Dataflow/Modules/DataIO/GenericReader.h>
 
 namespace SCIRun {
 
-template class GenericWriter<ColorMap2Handle>;
+template class GenericReader<ColorMap2Handle>;
 
-class WriteColorMap2 : public GenericWriter<ColorMap2Handle> {
+class ReadColorMap2D : public GenericReader<ColorMap2Handle> {
 protected:
   GuiString gui_types_;
-  GuiString gui_exporttype_;
+  GuiString gui_filetype_;
 
-  virtual bool call_exporter(const string &filename);
+  virtual bool call_importer(const string &filename);
 
 public:
-  WriteColorMap2(GuiContext* ctx);
-  virtual ~WriteColorMap2();
+  ReadColorMap2D(GuiContext* ctx);
+  virtual ~ReadColorMap2D();
 
   virtual void execute();
 };
 
+DECLARE_MAKER(ReadColorMap2D)
 
-DECLARE_MAKER(WriteColorMap2)
-
-WriteColorMap2::WriteColorMap2(GuiContext* ctx)
-  : GenericWriter<ColorMap2Handle>("WriteColorMap2", ctx, "DataIO", "SCIRun"),
+ReadColorMap2D::ReadColorMap2D(GuiContext* ctx)
+  : GenericReader<ColorMap2Handle>("ReadColorMap2D", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
-    gui_exporttype_(get_ctx()->subVar("exporttype"), "")
+    gui_filetype_(get_ctx()->subVar("filetype"))
 {
-  string exporttypes = "{";
-  exporttypes += "{{SCIRun ColorMap2 Binary} {.cmap} } ";
-  exporttypes += "{{SCIRun ColorMap2 ASCII} {.cmap} } ";
-  exporttypes += "}";
+  string importtypes = "{";
+  importtypes += "{{SCIRun ColorMap2D File} {.cmap2} } ";
+  importtypes += "{{SCIRun ColorMap2D Any} {.*} } ";
+  importtypes += "}";
 
-  gui_types_.set(exporttypes);
+  gui_types_.set(importtypes);
 }
 
 
-WriteColorMap2::~WriteColorMap2()
+ReadColorMap2D::~ReadColorMap2D()
 {
 }
 
 
 bool
-WriteColorMap2::call_exporter(const string &/*filename*/)
+ReadColorMap2D::call_importer(const string &/*filename*/)
 {
   return false;
 }
 
 
-
 void
-WriteColorMap2::execute()
+ReadColorMap2D::execute()
 {
-  const string ftpre = gui_exporttype_.get();
-  const string::size_type loc = ftpre.find(" (");
-  const string ft = ftpre.substr(0, loc);
-
-  exporting_ = false;
-
-  // Determine if we're ASCII or Binary
-  string ab = "Binary";
-  if (ft == "SCIRun ColorMap2 ASCII") ab = "ASCII";
-  filetype_.set(ab);
-
-  GenericWriter<ColorMap2Handle>::execute();
+  importing_ = false;
+  GenericReader<ColorMap2Handle>::execute();
 }
-
 
 
 } // End namespace SCIRun

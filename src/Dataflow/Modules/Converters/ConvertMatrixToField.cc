@@ -26,75 +26,54 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
-/*
- *  ReadColorMap2.cc: Read a persistent colormap from a file
- *
- *  Written by:
- *   Michael Callahan
- *   Department of Computer Science
- *   University of Utah
- *   Sept 2004
- *
- *  Copyright (C) 2004 SCI Group
- */
-
-#include <Dataflow/Network/Ports/ColorMap2Port.h>
-#include <Dataflow/Modules/DataIO/GenericReader.h>
-//#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
 namespace SCIRun {
 
-template class GenericReader<ColorMap2Handle>;
-
-class ReadColorMap2 : public GenericReader<ColorMap2Handle> {
-protected:
-  GuiString gui_types_;
-  GuiString gui_filetype_;
-
-  virtual bool call_importer(const string &filename);
-
+class ConvertMatrixToField : public Module {
 public:
-  ReadColorMap2(GuiContext* ctx);
-  virtual ~ReadColorMap2();
+  ConvertMatrixToField(GuiContext*);
 
   virtual void execute();
+
+private:
+  GuiString guidatalocation_;
 };
 
-DECLARE_MAKER(ReadColorMap2)
 
-ReadColorMap2::ReadColorMap2(GuiContext* ctx)
-  : GenericReader<ColorMap2Handle>("ReadColorMap2", ctx, "DataIO", "SCIRun"),
-    gui_types_(get_ctx()->subVar("types", false)),
-    gui_filetype_(get_ctx()->subVar("filetype"))
-{
-  string importtypes = "{";
-  importtypes += "{{SCIRun ColorMap2 File} {.cmap2} } ";
-  importtypes += "{{SCIRun ColorMap2 Any} {.*} } ";
-  importtypes += "}";
-
-  gui_types_.set(importtypes);
-}
-
-
-ReadColorMap2::~ReadColorMap2()
+DECLARE_MAKER(ConvertMatrixToField)
+ConvertMatrixToField::ConvertMatrixToField(GuiContext* ctx)
+  : Module("ConvertMatrixToField", ctx, Source, "Converters", "SCIRun"),
+    guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 
-
-bool
-ReadColorMap2::call_importer(const string &/*filename*/)
+void ConvertMatrixToField::execute()
 {
-  return false;
+  // Define local handles of data objects:
+  MatrixHandle imatrix;
+  FieldHandle ofield;
+  
+  // Get the new input data:  
+  if (!(get_input_handle("Matrix",imatrix,true))) return;
+    
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:    
+  if (inputs_changed_ || guidatalocation_.changed() || !oport_cached("Field"))
+  {
+    std::string datalocation = guidatalocation_.get();
+    SCIRunAlgo::ConverterAlgo algo(this);
+    if (!(algo.MatrixToField(imatrix,ofield,datalocation))) return;
+  
+    // send new output if there is any:  
+    send_output_handle("Field",ofield,false);
+  }
 }
-
-
-void
-ReadColorMap2::execute()
-{
-  importing_ = false;
-  GenericReader<ColorMap2Handle>::execute();
-}
-
 
 } // End namespace SCIRun

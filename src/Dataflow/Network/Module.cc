@@ -84,12 +84,17 @@ FindLibrarySymbol(const string &package, const string &/* type */,
 
   string pak_bname, cat_bname;
   if (package == "SCIRun") {
-    pak_bname = "libDataflow" + ext;
-    cat_bname = "libDataflow_Network" + ext;
+    pak_bname = "Dataflow" + ext;
+    cat_bname = "Dataflow_Network" + ext;
   } else {
-    pak_bname =  "libPackages_" + package + "_Dataflow" + ext;
-    cat_bname = "libPackages_" + package + "_Dataflow_Ports" + ext;
+    pak_bname =  "Packages_" + package + "_Dataflow" + ext;
+    cat_bname = "Packages_" + package + "_Dataflow_Ports" + ext;
   }
+
+#ifndef _WIN32
+  pak_bname = string("lib") + pak_bname;
+  cat_bname = string("lib") + cat_bname;
+#endif
 
   // maybe it's in the small version of the shared library
   so = GetLibraryHandle(cat_bname.c_str());
@@ -657,7 +662,9 @@ Module::set_stack_size(unsigned long s)
 void
 Module::want_to_execute()
 {
+    sched_->lockNeedExecute();
     need_execute_ = true;
+    sched_->unlockNeedExecute();
     sched_->do_scheduling();
 }
 
@@ -686,106 +693,6 @@ Module::get_position(int& x, int& y)
     error("Error parsing y coordinate.");
     return;
   }
-}
-
-
-// Simple and limited parser for help descriptions.
-// gcc-2.95.3 compiler does not support string push_back, use + instead.
-//
-// states are
-//  0 toplevel
-//  1 parsing tag
-//  2 parsing spaces.
-static string
-parse_description(const string &in)
-{
-  std::stack<int> state;
-  // Initialization of 999999999 is to remove compiler warning and
-  // to hopefully make this code trip up in a way that it can be 
-  // debugged more easily if the input (in) is incorrect.
-  string::size_type tagstart = 999999999;
-  string out;
-  state.push(0);
-  state.push(2); // start by eating spaces.
-  for (unsigned int i=0; i < in.size(); i++)
-  {
-    char c = in[i];
-    if (c == '\n' || c == '\t')
-    {
-      c = ' ';
-    }
-    if (state.top() == 0)
-    {
-      if (c == '<')
-      {
-	tagstart = i;
-	state.push(1);
-      }
-      else if (c == ' ')
-      {
-	out = out + ' ';
-	state.push(2);
-      }
-      else if (c == '.' || c == '!' || c == '?')
-      {
-	out = out + c + ' ' + ' ';
-	state.push(2);
-      }
-      else
-      {
-	out = out + c;
-      }
-    }
-    else if (state.top() == 1)
-    {
-      if (c == '>')
-      {
-	if (i > 1 && in[i-2] == '/' && in[i-1] == 'p')
-	{
-	  out = out + '\n' + '\n';
-	  state.pop();
-	  state.push(2);
-	}
-	else
-	{
-	  const string tag = in.substr(tagstart, i-tagstart+1);
-	  if (tag.find("<modref") == 0)
-	  {
-	    const string tmp = tag.substr(tag.find("name=\"") + 6);
-	    const string modname = tmp.substr(0, tmp.find('"'));
-	    out = out + modname;
-	    state.pop();
-	    if (state.top() == 2) state.pop();
-	  }
-	  else if (tag.find("<listitem") == 0)
-	  {
-	    out = out + "  * ";
-	    state.pop();
-	    if (state.top() != 2) state.push(2);
-	  }
-	  else
-	  {
-	    // Just eat this tag.
-	    state.pop();
-	  }
-	}
-      }
-    }
-    else if (state.top() == 2)
-    {
-      if (c == '<')
-      {
-	tagstart = i;
-	state.push(1);
-      }
-      else if (c != ' ')
-      {
-	state.pop();
-	i--;
-      }
-    }
-  }
-  return out;
 }
 
 
@@ -861,7 +768,7 @@ Module::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "getpid"){
     args.result(to_string(pid_));
   } else if(args[1] == "help"){
-    args.result(parse_description(description_));
+    args.result("http://www.sci.utah.edu/ncrr/wiki/index.php/CIBC:Documentation:SCIRun:Reference:" + package_name_ + ":" + module_name_);
   } else if(args[1] == "remark"){
     remark(args[2]);
   } else if(args[1] == "warning"){

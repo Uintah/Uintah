@@ -56,6 +56,10 @@ SET(Dataflow_Network_SRCS
   Ports/TimePort.cc
 )
 
+IF(ITK_FOUND)
+  SET(Dataflow_Network_SRCS ${Dataflow_Network_SRCS} Ports/ITKDatatypePort.cc)
+ENDIF(ITK_FOUND)
+
 ADD_LIBRARY(Dataflow_Network ${Dataflow_Network_SRCS})
 
 TARGET_LINK_LIBRARIES(Dataflow_Network

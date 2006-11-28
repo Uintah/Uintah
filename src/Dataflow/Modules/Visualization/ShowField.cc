@@ -134,6 +134,7 @@ class ShowField : public Module
   GuiDouble                text_color_g_;
   GuiDouble                text_color_b_;
   GuiInt                   text_backface_cull_;
+  GuiInt                   text_always_visible_;
   GuiInt                   text_fontsize_;
   GuiInt                   text_precision_;
   GuiInt                   text_render_locations_;
@@ -268,6 +269,7 @@ ShowField::ShowField(GuiContext* ctx) :
   text_color_g_(get_ctx()->subVar("text-color-g")),
   text_color_b_(get_ctx()->subVar("text-color-b")),
   text_backface_cull_(get_ctx()->subVar("text-backface-cull")),
+  text_always_visible_(get_ctx()->subVar("text-always_visible")),
   text_fontsize_(get_ctx()->subVar("text-fontsize")),
   text_precision_(get_ctx()->subVar("text-precision")),
   text_render_locations_(get_ctx()->subVar("text-render_locations")),
@@ -1003,7 +1005,8 @@ ShowField::execute()
 				 text_show_nodes_.get(),
 				 text_show_edges_.get(),
 				 text_show_faces_.get(),
-				 text_show_cells_.get());
+				 text_show_cells_.get(),
+				 text_always_visible_.get());
       }
 
       const char *name =	text_backface_cull_.get()?"Culled Text Data":"Text Data";

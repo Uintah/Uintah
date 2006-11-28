@@ -31,8 +31,8 @@
 SET(Dataflow_Modules_DataIO_SRCS
   ReadBundle.cc
   WriteBundle.cc
-  ReadColorMap2.cc
-  WriteColorMap2.cc
+  ReadColorMap2D.cc
+  WriteColorMap2D.cc
   ReadColorMap.cc
   WriteColorMap.cc
   ReadField.cc
@@ -41,6 +41,9 @@ SET(Dataflow_Modules_DataIO_SRCS
   WriteMatrix.cc
   ReadPath.cc
   WritePath.cc
+  ReadString.cc
+  WriteString.cc
+  StreamMatrixFromDisk.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_DataIO ${Dataflow_Modules_DataIO_SRCS})
@@ -62,6 +65,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_DataIO
   Dataflow_TkExtensions
   Core_Util
   Core_Volume
+  Core_Algorithms_DataStreaming
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}

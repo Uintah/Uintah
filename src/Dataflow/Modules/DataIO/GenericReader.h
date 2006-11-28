@@ -28,7 +28,6 @@
 
 
 /*
- *  ColorMapReader.cc: Read a persistent colormap from a file
  *
  *  Written by:
  *   Steven G. Parker
@@ -45,13 +44,15 @@
  *   Output port must be of type SimpleOPort
  */
 
+
+#include <Dataflow/Network/Ports/StringPort.h>
+#include <Core/Datatypes/String.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <sys/stat.h>
 
 namespace SCIRun {
-
 
 template <class HType> 
 class GenericReader : public Module
@@ -78,7 +79,7 @@ template <class HType>
 GenericReader<HType>::GenericReader(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Source, cat, pack),
-    filename_(get_ctx()->subVar("filename"), ""),
+    filename_(get_ctx()->subVar("filename")),
     old_filemodification_(0),
     importing_(false)
 {
@@ -102,6 +103,13 @@ template <class HType>
 void
 GenericReader<HType>::execute()
 {
+  StringHandle filename;
+  if (get_input_handle("Filename",filename,false))
+  {
+    filename_.set(filename->get());
+    get_ctx()->reset();
+  }
+  
   const string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
@@ -170,14 +178,10 @@ GenericReader<HType>::execute()
       delete stream;
     }
   }
-
-  // Send the data downstream.
-  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_output_port(0);
-  if (!outport) {
-    error("Unable to initialize oport.");
-    return;
-  }
-  outport->send_and_dereference(handle_, true);
+ 
+  send_output_handle(0,handle_,true);
+  filename = scinew String(filename_.get());
+  send_output_handle("Filename",filename,false);
 }
 
 } // End namespace SCIRun
