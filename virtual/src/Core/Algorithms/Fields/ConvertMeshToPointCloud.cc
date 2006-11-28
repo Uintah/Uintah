@@ -27,7 +27,7 @@
 */
 
 // Get all the class definitions. 
-#include <Core/Algorithms/Fields/ToPointCloud.h>
+#include <Core/Algorithms/Fields/ConvertMeshToPointCloud.h>
 
 
 // As we already included DynamicAlgorithm.h in the header we do not need to
@@ -39,7 +39,7 @@ using namespace SCIRun;
 
 // Implementation of the actual access point to the algorithm
 
-bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool ConvertMeshToPointCloudAlgo::ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
 
   // Step 0:
@@ -110,18 +110,6 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
     fo.set_basis_type("NoDataBasis");
   }
   
-  // Test whether we can use the virtual interface, if so use this one
-  
-  if (fi.has_virtual_interface() && fo.has_virtual_interface())
-  {
-    output = Create_Field(fo);
-    
-    if (UseScalarInterface(fi,fo)) return (ToPointCloudV<double>(pr,input,output));
-    if (UseVectorInterface(fi,fo)) return (ToPointCloudV<Vector>(pr,input,output));
-    if (UseTensorInterface(fi,fo)) return (ToPointCloudV<Tensor>(pr,input,output));
-  }
-  
-  
   // Step 3: Build information structure for the dynamic compilation
   
   // The only object we need to build to perform a dynamic compilation is the
@@ -139,7 +127,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
    
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "ALGOConvertMeshToPointCloud."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "ToPointCloudAlgo","ToPointCloudAlgoT",
+    "ConvertMeshToPointCloudAlgo","ConvertMeshToPointCloudAlgoT",
     fi.get_field_name() + "," + fo.get_field_name());
 
   // The dynamic algorithm will be created by writing a small piece of code in
@@ -165,7 +153,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   
   // Create an access point to the dynamically compiled algorithm
   // Note: this is currently a handle to the base class algorithm.
-  SCIRun::Handle<ToPointCloudAlgo> algo;
+  SCIRun::Handle<ConvertMeshToPointCloudAlgo> algo;
   
   // Dynamically compile the algorithm. 
   // If the function is a success: algo will point to the dynamically
@@ -190,7 +178,7 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   // is returned. 
   // As error messages are reportered to the ProgressReporter we do not need to
   // handle any error messages here, they automatically are forwarded to the user. 
-  return(algo->ToPointCloud(pr,input,output));
+  return(algo->ConvertMeshToPointCloud(pr,input,output));
 }
 
 } // End namespace SCIRunAlgo

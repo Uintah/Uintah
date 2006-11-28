@@ -29,9 +29,14 @@
 
 # Makefile fragment for this subdirectory
 
+
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Events
+
+SUBDIRS := $(SRCDIR)/Tools
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
 
 SRCS     += \
 	$(SRCDIR)/BaseEvent.cc		        \
@@ -39,7 +44,6 @@ SRCS     += \
 	$(SRCDIR)/EventManager.cc	        \
 	$(SRCDIR)/OpenGLViewer.cc	        \
 	$(SRCDIR)/SceneGraphEvent.cc            \
-	$(SRCDIR)/Trail.cc	        \
 	$(SRCDIR)/SelectionTargetEvent.cc	
 
 ifeq ($(IS_WIN),yes)
@@ -49,9 +53,6 @@ else
   SRCS +=$(SRCDIR)/OSXEventSpawner.cc	
 endif
 
-
-SUBDIRS := $(SRCDIR)/Tools
-include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Core/Algorithms/Fields \
            Core/Algorithms/Visualization \

@@ -44,7 +44,8 @@ SceneGraphEvent::SceneGraphEvent() :
   BaseEvent(),
   obj_(0),
   name_(),
-  sg_id_(-1)
+  sg_id_(-1),
+  toggle_visibility_(false)
 {
 }
     
@@ -54,7 +55,8 @@ SceneGraphEvent::SceneGraphEvent(GeomHandle o, string n,
   BaseEvent(target, time),
   obj_(o),
   name_(n),
-  sg_id_(-1)
+  sg_id_(-1),
+  toggle_visibility_(false)
 {
 }
 

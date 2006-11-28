@@ -763,10 +763,10 @@ public:
 
 
   //! return false if point is out of range.
-  bool locate(typename Node::index_type &loc, const Point &p);
-  bool locate(typename Edge::index_type &loc, const Point &p);
-  bool locate(typename Face::index_type &loc, const Point &p);
-  bool locate(typename Cell::index_type &loc, const Point &p);
+  bool locate(typename Node::index_type &loc, const Point &p) const;
+  bool locate(typename Edge::index_type &loc, const Point &p) const;
+  bool locate(typename Face::index_type &loc, const Point &p) const;
+  bool locate(typename Cell::index_type &loc, const Point &p) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
   int get_weights(const Point & , typename Edge::array_type & , double * )
@@ -777,7 +777,7 @@ public:
 
   double polygon_area(const typename Node::array_type &ni, const Vector N) const;
   void orient(typename Cell::index_type idx);
-  bool inside(typename Cell::index_type idx, const Point &p);
+  bool inside(typename Cell::index_type idx, const Point &p) const;
 
   void get_point(Point &result, typename Node::index_type index) const
   { result = points_[index]; }
@@ -1004,7 +1004,6 @@ protected:
   //!  The grid is only built if synchronize(Mesh::LOCATE_E) is called.
   LockingHandle<SearchGrid>  grid_;
   Mutex                      grid_lock_; // Bad traffic!
-  typename Cell::index_type  locate_cache_;
 
   unsigned int               synchronized_;
   Basis                      basis_;
@@ -1149,7 +1148,6 @@ PrismVolMesh<Basis>::PrismVolMesh() :
   node_neighbor_lock_("PrismVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("PrismVolMesh grid_ fill lock"),
-  locate_cache_(0),
   synchronized_(CELLS_E | NODES_E)
 {
 }
@@ -1211,7 +1209,6 @@ PrismVolMesh<Basis>::PrismVolMesh(const PrismVolMesh &copy):
   node_neighbor_lock_("PrismVolMesh node_neighbors_ fill lock"),
   grid_(0),
   grid_lock_("PrismVolMesh grid_ fill lock"),
-  locate_cache_(0),
   synchronized_(copy.synchronized_)
 {
   synchronized_ &= ~EDGES_E;
@@ -2120,7 +2117,7 @@ PrismVolMesh<Basis>::get_center(Point &p, typename Node::array_type& arr) const
 
 template <class Basis>
 bool
-PrismVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
+PrismVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p) const
 {
   typename Cell::index_type ci;
   if (locate(ci, p)) {// first try the fast way.
@@ -2163,7 +2160,7 @@ PrismVolMesh<Basis>::locate(typename Node::index_type &loc, const Point &p)
 
 template <class Basis>
 bool
-PrismVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
+PrismVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p) const
 {
   bool found_p = false;
   double mindist = DBL_MAX;
@@ -2186,7 +2183,7 @@ PrismVolMesh<Basis>::locate(typename Edge::index_type &edge, const Point &p)
 
 template <class Basis>
 bool
-PrismVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
+PrismVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p) const
 {
   bool found_p = false;
   double mindist = DBL_MAX;
@@ -2209,13 +2206,12 @@ PrismVolMesh<Basis>::locate(typename Face::index_type &face, const Point &p)
 
 template <class Basis>
 bool
-PrismVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
+PrismVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
   // Check last cell found first.  Copy cache to cell first so that we
   // don't care about thread safeness, such that worst case on
   // context switch is that cache is not found.
-  cell = locate_cache_;
   if (cell > typename Cell::index_type(0) &&
       cell < typename Cell::index_type(cells_.size()/PRISM_NNODES) &&
       inside(cell, p))
@@ -2223,9 +2219,7 @@ PrismVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       return true;
   }
 
-  if (!(synchronized_ & LOCATE_E))
-    synchronize(LOCATE_E);
-  ASSERT(grid_.get_rep());
+  ASSERT(synchronized_ & LOCATE_E);
 
   unsigned int *iter, *end;
   if (grid_->lookup(&iter, &end, p))
@@ -2235,7 +2229,6 @@ PrismVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       if (inside(typename Cell::index_type(*iter), p))
       {
         cell = typename Cell::index_type(*iter);
-        locate_cache_ = cell;
         return true;
       }
       ++iter;
@@ -2281,7 +2274,7 @@ PrismVolMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
 }
 
 
-//===================================================================
+//===============================================================
 // area3D_Polygon(): computes the area of a 3D planar polygon
 //    Input:  int n = the number of vertices in the polygon
 //            Point* V = an array of n+2 vertices in a plane
@@ -2441,7 +2434,7 @@ PrismVolMesh<Basis>::orient(typename Cell::index_type idx)
 
 template <class Basis>
 bool
-PrismVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p)
+PrismVolMesh<Basis>::inside(typename Cell::index_type idx, const Point &p) const
 {
   vector<double> c(3);
   return get_coords(c, p, idx);

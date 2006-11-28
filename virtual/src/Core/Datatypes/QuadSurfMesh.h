@@ -466,7 +466,20 @@ public:
   // returns a QuadSurfMesh
   static Persistent *maker() { return scinew QuadSurfMesh<Basis>(); }
   static MeshHandle mesh_maker() { return scinew QuadSurfMesh<Basis>(); }
-  
+ 
+  double find_closest_elem(Point &result, typename Elem::index_type &elem,
+                           const Point &p) const
+  {
+    ASSERTFAIL("Search grid has not yet implemented for this mesh");
+  }
+
+  double find_closest_elems(Point &result,
+                            vector<typename Elem::index_type> &elem,
+                            const Point &p) const
+  {
+    ASSERTFAIL("Search grid has not yet implemented for this mesh");
+  }	
+	  
 
 public:
   //! VIRTUAL INTERFACE FUNCTIONS
@@ -551,6 +564,8 @@ public:
                               
   virtual void get_normal(Vector& norm,VNode::index_type i) const;  
   
+
+
 private:
 
   //////////////////////////////////////////////////////////////
@@ -1002,6 +1017,7 @@ QuadSurfMesh<Basis>::end(typename QuadSurfMesh::Cell::iterator &itr) const
 }
 
 template <class Basis>
+
 bool
 QuadSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
                                   typename Face::index_type from,
@@ -1150,7 +1166,7 @@ QuadSurfMesh<Basis>::locate(typename Face::index_type &face,
   if (basis_.polynomial_order() > 1) return elem_locate(face, *this, p);
 
   ASSERTMSG(synchronized_ & LOCATE_E,
-            "QuadSurfMesh::locate requires synchronization.");
+            "QuadSurfMesh:: requires synchronization.");
 
   unsigned int *iter, *end;
   if (grid_.get_rep() == 0) return false;

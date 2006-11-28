@@ -61,8 +61,12 @@ HGLRC Win32OpenGLContext::first_context_ = NULL;
 char *GlClassName = "GLarea";
 bool GlClassInitialized = false;
 WNDCLASS GlClass;
-extern HINSTANCE dllHINSTANCE;
-LRESULT CALLBACK WindowEventProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#ifndef BUILD_CORE_STATIC
+#  define SCISHARE __declspec(dllexport)
+#else
+#  define SCISHARE
+#endif
+SCISHARE LRESULT CALLBACK WindowEventProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void initGLextensions();
 
 void
@@ -119,7 +123,7 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
     GlClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     GlClass.cbClsExtra = 0;
     GlClass.cbWndExtra = sizeof(long); // to save context pointer
-    GlClass.hInstance = dllHINSTANCE;
+    GlClass.hInstance = 0; //dllHINSTANCE;
     GlClass.hbrBackground = NULL;
     GlClass.lpszMenuName = NULL;
     GlClass.lpszClassName = GlClassName;
@@ -131,7 +135,7 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
       PrintErr("RegisterClass");
   }
 
-  int style = WS_OVERLAPPED;
+  int style = WS_OVERLAPPEDWINDOW;
 
 #if 0
   // if parent window...
@@ -424,6 +428,10 @@ WindowEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       break;
     }
   case WM_MOVE: break;
+  case WM_CLOSE:
+    // this message is received here, but we want it in the GetMessage loop (in EventSpawner)
+    PostMessage(hwnd, msg, wParam, lParam);
+    break;
   default: result = DefWindowProc(hwnd, msg, wParam, lParam);
   }
   
@@ -457,8 +465,10 @@ void initGLextensions()
   }
 }
 #endif
+#if 0
 BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {
+  
   switch (reason) {
   case DLL_PROCESS_ATTACH:
     dllHINSTANCE = hinstance; break;
@@ -466,3 +476,4 @@ BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
   }
   return TRUE;
 }
+#endif

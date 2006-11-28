@@ -61,7 +61,7 @@ ClipAtIndecesBase::get_compile_info(const TypeDescription *fsrc)
 }
 
 FieldHandle
-clip_nodes(FieldHandle fh, const set<unsigned int> &indeces)
+clip_nodes(FieldHandle fh, const vector<unsigned int> &indeces)
 {
   const TypeDescription *ftd = fh->get_type_description();
   // description for just the data in the field
@@ -85,7 +85,7 @@ clip_nodes(FieldHandle fh, const set<unsigned int> &indeces)
 }
 
 FieldHandle
-clip_faces(FieldHandle fh, const set<unsigned int> &indeces)
+clip_faces(FieldHandle fh, const vector<unsigned int> &indeces)
 {
   const TypeDescription *ftd = fh->get_type_description();
   // description for just the data in the field

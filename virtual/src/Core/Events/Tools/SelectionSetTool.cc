@@ -83,11 +83,11 @@ SelectionSetTool::delete_faces()
     cerr << "Error:: not a TriSurf in SelectionSetTool::delete_faces" 
 	 << endl;
   }
-  set<unsigned int> &sfaces = ssti_->get_selection_set();
+  vector<unsigned int> &sfaces = ssti_->get_selection_set();
 
 
   vector<int> faces;
-  set<unsigned int>::iterator si = sfaces.begin();
+  vector<unsigned int>::iterator si = sfaces.begin();
   while (si != sfaces.end()) {
     faces.push_back(*si++);
   }
@@ -106,6 +106,47 @@ SelectionSetTool::delete_faces()
   //clear the selection set.
   sfaces.clear();
   ssti_->set_selection_set_visible(false);
+  sel_fld_->lock.unlock();
+
+  //notify the data manager that this model has changed.
+  CommandEvent *c = new CommandEvent();
+  c->set_command("selection field modified");
+  event_handle_t event = c;
+  EventManager::add_event(event);
+}
+
+void 
+SelectionSetTool::add_face() 
+{
+  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
+  if (! sel_fld_.get_rep()) return;
+  sel_fld_->lock.lock();
+  // turn this call into a general algorithm, but for now assume trisurf.
+  MeshHandle mb = sel_fld_->mesh();
+  TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
+  if (!tsm) {
+    cerr << "Error:: not a TriSurf in SelectionSetTool::delete_faces" 
+	 << endl;
+  }
+  vector<unsigned int> &snodes = ssti_->get_selection_set();
+  if (snodes.size() < 3) {
+    cerr << "Error: must select 3 nodes to add a face" << endl;
+  }
+
+  vector<int> nodes;
+  vector<unsigned int>::iterator si = snodes.begin();
+  int n0 = *si++;
+  int n1 = *si++;
+  int n2 = *si++;
+
+  tsm->add_triangle(n0, n1, n2);
+
+  //clear the selection set.
+  snodes.erase(snodes.begin(), si);
+  if (snodes.size() == 0) {
+    ssti_->set_selection_set_visible(false);
+  }
   sel_fld_->lock.unlock();
 
   //notify the data manager that this model has changed.

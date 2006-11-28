@@ -1014,12 +1014,12 @@ public:
   double get_volume(typename Cell::index_type idx) const
   { return get_size(idx); };
 
-  bool locate(typename Node::index_type &, const Point &);
+  bool locate(typename Node::index_type &, const Point &) const;
   bool locate(typename Edge::index_type &, const Point &) const
   { return false; }
   bool locate(typename Face::index_type &, const Point &) const
   { return false; }
-  bool locate(typename Cell::index_type &, const Point &);
+  bool locate(typename Cell::index_type &, const Point &) const;
 
   int get_weights(const Point &p, typename Node::array_type &l, double *w);
   int get_weights(const Point & , typename Edge::array_type & , double * )
@@ -1702,7 +1702,7 @@ MaskedLatVolMesh<Basis>::get_center(Point &result, const typename Cell::index_ty
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::locate(typename Node::index_type &idx, const Point &p)
+MaskedLatVolMesh<Basis>::locate(typename Node::index_type &idx, const Point &p) const
 {
   typename LatVolMesh<Basis>::Node::index_type i(this,idx.i_,idx.j_,idx.k_);
   bool lat = LatVolMesh<Basis>::locate(i,p);
@@ -1717,7 +1717,7 @@ MaskedLatVolMesh<Basis>::locate(typename Node::index_type &idx, const Point &p)
 
 template <class Basis>
 bool
-MaskedLatVolMesh<Basis>::locate(typename Cell::index_type &idx, const Point &p)
+MaskedLatVolMesh<Basis>::locate(typename Cell::index_type &idx, const Point &p) const
 {
   if (this->basis_.polynomial_order() > 1) {
     if (elem_locate(idx, *this, p) && check_valid(idx)) return true;

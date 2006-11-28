@@ -59,15 +59,19 @@ public:
   GeomHandle          get_geom_obj() const { return obj_; }
   string              get_geom_obj_name() const { return name_; }
   int                 get_scene_graph_id() const { return sg_id_; }
+  bool                toggle_visibility_p() const 
+  { return toggle_visibility_; }
 
   //! Mutators
   void                  set_geom_obj(GeomHandle obj) { obj_ = obj; } 
   void                  set_geom_obj_name(GeomHandle obj) { obj_ = obj; } 
   void                  set_scene_graph_id(int id) { sg_id_ = id; }
+  void                  set_toggle_visibility() { toggle_visibility_ = true; }
 private:
   GeomHandle          obj_;
   string              name_;
   int                 sg_id_;
+  bool                toggle_visibility_;
 };
 
 

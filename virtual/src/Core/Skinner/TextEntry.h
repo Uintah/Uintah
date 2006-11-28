@@ -42,12 +42,11 @@ namespace SCIRun {
     public:
       TextEntry (Variables *);
       virtual ~TextEntry();
-      virtual propagation_state_e       process_event(event_handle_t);
-      virtual MinMax                    get_minmax(unsigned int);
       virtual int                       get_signal_id(const string &) const;
       static string                     class_name() { return "TextEntry"; }
       static DrawableMakerFunc_t        maker;
     private:
+      CatcherFunction_t                 do_KeyEvent;
       Var<bool>                         numeric_;
     };
   }

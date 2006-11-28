@@ -314,8 +314,8 @@ namespace SCIRun {
 
     bool
     Variables::get_bool(const string &name) {
+      if (!exists(name)) return false;
       Var<bool>val(this,name);
-      if (!val.exists()) return false;
       return val();
     }
 

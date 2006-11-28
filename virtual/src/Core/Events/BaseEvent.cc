@@ -41,9 +41,10 @@ Persistent *make_PointerEvent() { return new PointerEvent(); }
 Persistent *make_WindowEvent() { return new WindowEvent(); }
 Persistent *make_KeyEvent() { return new KeyEvent(); }
 Persistent *make_QuitEvent() { return new QuitEvent(); }
+Persistent *make_AutoviewEvent() { return new AutoviewEvent(); }
 
 
-PersistentTypeID BaseEvent::type_id("BaseEvent", "", 0);
+PersistentTypeID BaseEvent::type_id("BaseEvent", "Datatype", 0);
 PersistentTypeID PointerEvent::type_id("PointerEvent", "BaseEvent", 
                                        &make_PointerEvent);
 PersistentTypeID WindowEvent::type_id("WindowEvent", "BaseEvent", 
@@ -53,6 +54,7 @@ PersistentTypeID QuitEvent::type_id("QuitEvent", "BaseEvent",
 PersistentTypeID KeyEvent::type_id("KeyEvent", "BaseEvent",
                                    &make_KeyEvent);
 PersistentTypeID EventModifiers::type_id("EventModifiers", "", 0);
+PersistentTypeID AutoviewEvent::type_id("AutoviewEvent", "BaseEvent", make_AutoviewEvent);
 
 BaseEvent::BaseEvent(const string &target, 
                      long int time) :

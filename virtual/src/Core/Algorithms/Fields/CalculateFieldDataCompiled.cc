@@ -28,7 +28,7 @@
 
 
 /*
- *  CalculateFieldData: Unary field data operations
+ *  CalculateFieldDataCompiled: Unary field data operations
  *
  *  Written by:
  *   Michael Callahan
@@ -40,14 +40,14 @@
  */
 
 #include <Core/Containers/StringUtil.h>
-#include <Core/Algorithms/Fields/CalculateFieldData.h>
+#include <Core/Algorithms/Fields/CalculateFieldDataCompiled.h>
 #include <Core/Containers/HashTable.h>
 #include <iostream>
 
 namespace SCIRun {
 
 CompileInfoHandle
-CalculateFieldDataAlgo::get_compile_info(const TypeDescription *field_td,
+CalculateFieldDataCompiledAlgo::get_compile_info(const TypeDescription *field_td,
 				    string ofieldtypename,
 				    const TypeDescription *loc_td,
 				    string function,
@@ -58,8 +58,8 @@ CalculateFieldDataAlgo::get_compile_info(const TypeDescription *field_td,
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string template_name("CalculateFieldDataInstance" + to_string(hashval));
-  static const string base_class_name("CalculateFieldDataAlgo");
+  const string template_name("CalculateFieldDataCompiledInstance" + to_string(hashval));
+  static const string base_class_name("CalculateFieldDataCompiledAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_name + "." +
@@ -75,7 +75,7 @@ CalculateFieldDataAlgo::get_compile_info(const TypeDescription *field_td,
   // Code for the function.
   string class_declaration =
     string("template <class IFIELD, class OFIELD, class LOC>\n") +
-    "class " + template_name + " : public CalculateFieldDataAlgoT<IFIELD, OFIELD, LOC>\n" +
+    "class " + template_name + " : public CalculateFieldDataCompiledAlgoT<IFIELD, OFIELD, LOC>\n" +
     "{\n" +
     "  virtual void function(typename OFIELD::value_type &result,\n" +
     "                        double x, double y, double z,\n" +

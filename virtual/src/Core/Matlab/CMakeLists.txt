@@ -36,7 +36,6 @@ SET(Core_Matlab_SRCS
   matlabconverter.cc
   fieldtomatlab.cc
   matlabtofield.cc
-  Startup.cc
 )
 
 ADD_LIBRARY(Core_Matlab ${Core_Matlab_SRCS})

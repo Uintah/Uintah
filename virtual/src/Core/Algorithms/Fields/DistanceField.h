@@ -133,9 +133,9 @@ bool DistanceFieldCellAlgoT<FSRC,FDST,FOBJ,DFOBJ>::DistanceField(ProgressReporte
     return(false);
   }
 
-  typename FSRC::mesh_type *imesh = ifield->get_typed_mesh();
-  typename FOBJ::mesh_type *objmesh = objfield->get_typed_mesh();
-  typename DFOBJ::mesh_type *dobjmesh = dobjfield->get_typed_mesh();
+  typename FSRC::mesh_type *imesh = ifield->get_typed_mesh().get_rep();
+  typename FOBJ::mesh_type *objmesh = objfield->get_typed_mesh().get_rep();
+  typename DFOBJ::mesh_type *dobjmesh = dobjfield->get_typed_mesh().get_rep();
 
   FDST* ofield = scinew FDST(imesh);
   if (ofield == 0)
@@ -169,7 +169,7 @@ bool DistanceFieldCellAlgoT<FSRC,FDST,FOBJ,DFOBJ>::DistanceField(ProgressReporte
       }
       else
       {
-        val = static_cast<typename FDST::value_type>(dobjmesh->find_closest_element(p2,fidx,p));
+        val = static_cast<typename FDST::value_type>(dobjmesh->find_closest_elem(p2,fidx,p));
       }
       ofield->set_value(val,*(it));
       ++it;
@@ -194,7 +194,7 @@ bool DistanceFieldCellAlgoT<FSRC,FDST,FOBJ,DFOBJ>::DistanceField(ProgressReporte
       }
       else
       {
-        val = static_cast<typename FDST::value_type>(dobjmesh->find_closest_element(p2,fidx,p));
+        val = static_cast<typename FDST::value_type>(dobjmesh->find_closest_elem(p2,fidx,p));
       }
       ofield->set_value(val,*(it));
       ++it;
@@ -230,8 +230,8 @@ bool DistanceFieldFaceAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporter *pr,
     return(false);
   }
 
-  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
-  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh();
+  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh().get_rep();
+  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh().get_rep();
 
   FDST* ofield = scinew FDST(imesh);
   if (ofield == 0)
@@ -257,7 +257,7 @@ bool DistanceFieldFaceAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporter *pr,
     {
       Point p, p2;
       imesh->get_center(p,*(it));
-      val = static_cast<typename FDST::value_type>(objmesh->find_closest_element(p2,fidx,p));
+      val = static_cast<typename FDST::value_type>(objmesh->find_closest_elem(p2,fidx,p));
       ofield->set_value(val,*(it));
       ++it;
     }
@@ -274,7 +274,7 @@ bool DistanceFieldFaceAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporter *pr,
     {
       Point p, p2;
       imesh->get_center(p,*(it));
-      val = static_cast<typename FDST::value_type>(objmesh->find_closest_element(p2,fidx,p));
+      val = static_cast<typename FDST::value_type>(objmesh->find_closest_elem(p2,fidx,p));
       ofield->set_value(val,*(it));
       ++it;
     }  
@@ -307,8 +307,8 @@ bool DistanceFieldEdgeAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporter *pr,
     return(false);
   }
 
-  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
-  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh();
+  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh().get_rep();
+  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh().get_rep();
 
   FDST* ofield = scinew FDST(imesh);
   if (ofield == 0)
@@ -451,8 +451,8 @@ bool DistanceFieldNodeAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporter *pr,
     return(false);
   }
 
-  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
-  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh();
+  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh().get_rep();
+  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh().get_rep();
 
   FDST* ofield = scinew FDST(imesh);
   if (ofield == 0)
@@ -553,8 +553,8 @@ bool SignedDistanceFieldFaceAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporte
     return(false);
   }
 
-  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
-  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh();
+  typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh().get_rep();
+  typename FOBJ::mesh_handle_type objmesh = objfield->get_typed_mesh().get_rep();
 
   FDST* ofield = scinew FDST(imesh);
   if (ofield == 0)
@@ -585,7 +585,7 @@ bool SignedDistanceFieldFaceAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporte
     {
       Point p, p1, p2;
       imesh->get_center(p,*(it));
-      val = static_cast<typename FDST::value_type>(objmesh->find_closest_element(p2,fidx,p));
+      val = static_cast<typename FDST::value_type>(objmesh->find_closest_elem(p2,fidx,p));
       objmesh->get_nodes(nodes,fidx);  
       objmesh->get_center(n0,nodes[0]);
       objmesh->get_center(n1,nodes[1]);
@@ -668,7 +668,7 @@ bool SignedDistanceFieldFaceAlgoT<FSRC,FDST,FOBJ>::DistanceField(ProgressReporte
     {
       Point p, p1, p2;
       imesh->get_center(p,*(it));
-      val = static_cast<typename FDST::value_type>(objmesh->find_closest_element(p2,fidx,p));
+      val = static_cast<typename FDST::value_type>(objmesh->find_closest_elem(p2,fidx,p));
       objmesh->get_nodes(nodes,fidx);  
       objmesh->get_center(n0,nodes[0]);
       objmesh->get_center(n1,nodes[1]);

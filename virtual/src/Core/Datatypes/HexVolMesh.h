@@ -2143,6 +2143,10 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
       return true;
   }
 
+
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "Must call synchronize LOCATE_E on HexVolMesh first.");
+
   if(grid_.get_rep() == 0) return (false);
 
   unsigned int *iter, *end;

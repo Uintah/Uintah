@@ -104,6 +104,7 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   cmap2_size_(256),
   cmap1_tex_(0),
   cmap2_tex_(0),
+  use_pbuffer_(true),
   raster_pbuffer_(0),
   shader_factory_(0),
   cmap2_pbuffer_(0),
@@ -957,7 +958,21 @@ TextureRenderer::colormap2_software_rasterize()
                     cmap2_array_.dim2(), cmap2_array_.dim1(),
                     GL_RGBA, GL_UNSIGNED_BYTE, &cmap2_array_(0,0,0));
     glBindTexture(GL_TEXTURE_2D, 0);
-  }      
+  }
+
+
+  // Debug code to save colormap 2 to png for external viewing
+#if 0
+  NrrdDataHandle nrrdh = new NrrdData;
+  Nrrd *nrrd = nrrdh->nrrd_;
+  nrrd->dim = 3;
+  nrrd->axis[0].size = 4;
+  nrrd->axis[1].size = cmap2_array_.dim2();
+  nrrd->axis[2].size = cmap2_array_.dim1();
+  nrrd->data = &cmap2_array_(0,0,0);
+  nrrd->type = nrrdTypeUChar;
+  nrrdSave("/tmp/cmap2.png", nrrd,0);  
+#endif
 }
     
 

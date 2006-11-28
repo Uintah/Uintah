@@ -27,12 +27,12 @@
 */
 
 
-//    File   : CalculateFieldData.h
+//    File   : CalculateFieldDataCompiled.h
 //    Author : Michael Callahan
 //    Date   : June 2002
 
-#if !defined(CalculateFieldData_h)
-#define CalculateFieldData_h
+#if !defined(CalculateFieldDataCompiled_h)
+#define CalculateFieldDataCompiled_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -44,7 +44,7 @@
 
 namespace SCIRun {
 
-class SCISHARE CalculateFieldDataAlgo : public DynamicAlgoBase
+class SCISHARE CalculateFieldDataCompiledAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src) = 0;
@@ -61,7 +61,7 @@ public:
 
 
 template <class IFIELD, class OFIELD, class LOC>
-class CalculateFieldDataAlgoT : public CalculateFieldDataAlgo
+class CalculateFieldDataCompiledAlgoT : public CalculateFieldDataCompiledAlgo
 {
 public:
   virtual void function(typename OFIELD::value_type &result,
@@ -75,12 +75,12 @@ public:
 
 template <class IFIELD, class OFIELD, class LOC>
 FieldHandle
-CalculateFieldDataAlgoT<IFIELD, OFIELD, LOC>::execute(FieldHandle field_h)
+CalculateFieldDataCompiledAlgoT<IFIELD, OFIELD, LOC>::execute(FieldHandle field_h)
 {
   IFIELD *ifield = dynamic_cast<IFIELD *>(field_h.get_rep());
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
   OFIELD *ofield = scinew OFIELD(imesh);
-
+  
   typename LOC::iterator ibi, iei;
   imesh->begin(ibi);
   imesh->end(iei);
@@ -107,4 +107,4 @@ CalculateFieldDataAlgoT<IFIELD, OFIELD, LOC>::execute(FieldHandle field_h)
 
 } // end namespace SCIRun
 
-#endif // CalculateFieldData_h
+#endif // CalculateFieldDataCompiled_h

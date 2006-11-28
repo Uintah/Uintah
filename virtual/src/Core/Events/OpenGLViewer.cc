@@ -82,7 +82,7 @@
 #  undef far
 #  undef min
 #  undef max
-#  if !defined(BUILD_STATIC)
+#  if !defined(BUILD_CORE_STATIC)
 #    define SCISHARE __declspec(dllimport)
 #  else
 #    define SCISHARE
@@ -139,7 +139,7 @@ public:
   void set_selection_set_visible(bool b) { 
     viewer_->set_selection_set_visible(b);
   }
-  set<unsigned int> &get_selection_set() {
+  OpenGLViewer::sel_set_t &get_selection_set() {
     return viewer_->get_selection_set();
   }
   void set_selection_geom(GeomHandle geom) {
@@ -151,6 +151,10 @@ public:
   void remove_selection(unsigned int idx) {
     viewer_->remove_selection(idx);
   }
+  void clear_selection_set() {
+    viewer_->clear_selection_set();
+  }
+  
 
   OpenGLViewer *viewer_;
 };
@@ -191,22 +195,41 @@ public:
       SceneGraphEvent *ev =
 	dynamic_cast<SceneGraphEvent*>(scene_events_[e].get_rep());
       ASSERT(ev);
-      map<string, int>::iterator iter;
-      iter = obj_ids_.find(ev->get_geom_obj_name());
-      if (iter != obj_ids_.end()) {
-	//already showing this geometry.  Delete it first
-	int id = (*iter).second;
-	visible_[ev->get_geom_obj_name()] = false;
-	sg_->delObj(id);
-	obj_ids_.erase(ev->get_geom_obj_name());
-      }
-      GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
-						 ev->get_geom_obj_name(), 
-						 0);     
+
+      if (ev->toggle_visibility_p()) {
+	// the geom name is only -field id- in this case.
+	string fid = ev->get_geom_obj_name();
+
+	//toggle all sg objects containing the field id string.
+	map<string, bool>::iterator iter = visible_.begin();
+	while (iter != visible_.end()) {
+	  string name = (*iter).first;
+	  bool val = (*iter).second;
+	  ++iter;
+	  if (name.find(fid) != string::npos) {
+	    visible_[name] = ! val;
+	  }
+	}
+      } else {
+
+	map<string, int>::iterator iter;
+        //	cerr << "now showing: " << ev->get_geom_obj_name() << endl;
+	iter = obj_ids_.find(ev->get_geom_obj_name());
+	if (iter != obj_ids_.end()) {
+	  //already showing this geometry.  Delete it first
+	  int id = (*iter).second;
+	  visible_[ev->get_geom_obj_name()] = false;
+	  sg_->delObj(id);
+	  obj_ids_.erase(ev->get_geom_obj_name());
+	}
+	GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
+						   ev->get_geom_obj_name(), 
+						   0);     
     
-      visible_[ev->get_geom_obj_name()] = true;
-      obj_ids_[ev->get_geom_obj_name()] = ids_;
-      sg_->addObj(si, ids_++);
+	visible_[ev->get_geom_obj_name()] = true;
+	obj_ids_[ev->get_geom_obj_name()] = ids_;
+	sg_->addObj(si, ids_++);
+      }
     }
     scene_events_.clear();
   }
@@ -258,11 +281,13 @@ public:
 					    unsigned int time) 
   {
     if (cmmd == "delete faces") {
-      oglv_->delete_selected_faces();
-      
+
+      oglv_->delete_selected_faces();      
       return STOP_E;
+
     } else if (cmmd == "add face") {
 
+      oglv_->add_selected_face();  
       return STOP_E;
     }
     return CONTINUE_E;
@@ -287,6 +312,7 @@ public:
   {
     const string fbpick_name("FBPickTool");
     const string rmfaces_name("RMFacesTool");
+    cerr << "start_tool: " << id << ", " << mode << endl;
     if (id == fbpick_name) {
       if (! fbpt_) {
 	fbpt_ = new FrameBufferPickTool(fbpick_name, 
@@ -302,8 +328,10 @@ public:
       }
 
       if (mode == "nodes") {
+	cerr << "sel mode nodes" << endl;
 	oglv_->set_selection_mode(SelectionSetTool::NODES_E);
       } else {
+	cerr << "sel modes faces" << endl;
 	oglv_->set_selection_mode(SelectionSetTool::FACES_E);
       } 
       return STOP_E;
@@ -339,6 +367,13 @@ public:
     } else if (tm.query_tool_id(OpenGLViewer::SELECTION_TOOL_E) == 
 	       "suspend selection") 
     {
+      if (mode == "nodes") {
+	cerr << "sel mode nodes" << endl;
+	oglv_->set_selection_mode(SelectionSetTool::NODES_E);
+      } else {
+	cerr << "sel modes faces" << endl;
+	oglv_->set_selection_mode(SelectionSetTool::FACES_E);
+      } 
       tm.rm_tool(OpenGLViewer::SELECTION_TOOL_E);
     }
     return STOP_E;
@@ -485,12 +520,21 @@ OpenGLViewer::set_selection_mode(SelectionSetTool::selection_mode_e m)
     dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
   if (sst) { sst->set_selection_mode(m); }
 }
+
 void
 OpenGLViewer::delete_selected_faces()
 { 
   SelectionSetTool* sst = 
     dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
   if (sst) { sst->delete_faces(); }
+}
+
+void
+OpenGLViewer::add_selected_face()
+{ 
+  SelectionSetTool* sst = 
+    dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
+  if (sst) { sst->add_face(); }
 }
 
 void
@@ -1750,9 +1794,6 @@ OpenGLViewer::draw_visible_scene_graph()
 	    si->crowd_lock()->readUnlock();
 	  }
 	}
-      } else {
-	cerr << "Warning: Object " << si->getString() 
-	     <<" not in visibility database." << endl;
       }
     }
   }
@@ -2349,11 +2390,7 @@ OpenGLViewer::get_bounds(BBox &bbox, bool check_visible)
 	si->get_bounds(bbox);
 	if(si->crowd_lock()) si->crowd_lock()->readUnlock();
 
-      } else {
-	cerr << "Warning: object " << si->getString()
-	     << " not in visibility database." << endl;
-	si->get_bounds(bbox);
-      }
+      } 
     }
   }
   const unsigned int objs_size = internal_objs_.size();

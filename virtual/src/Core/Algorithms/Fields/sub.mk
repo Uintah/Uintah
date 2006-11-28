@@ -15,7 +15,7 @@ SRCDIR   := Core/Algorithms/Fields
 
 SRCS     += \
             $(SRCDIR)/ApplyMappingMatrix.cc\
-            $(SRCDIR)/CalculateFieldData.cc\
+            $(SRCDIR)/CalculateFieldDataCompiled.cc\
             $(SRCDIR)/CalculateIsInsideField.cc\
             $(SRCDIR)/CalculateLinkBetweenOppositeFieldBoundaries.cc\
             $(SRCDIR)/ClearAndChangeFieldBasis.cc\
@@ -52,7 +52,7 @@ SRCS     += \
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/SplitAndMergeFieldByDomain.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
-            $(SRCDIR)/ToPointCloud.cc\
+            $(SRCDIR)/ConvertMeshToPointCloud.cc\
             $(SRCDIR)/TransformMeshWithTransform.cc\
 #[INSERT NEW CODE FILE HERE]
 

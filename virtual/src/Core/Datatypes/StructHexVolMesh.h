@@ -218,14 +218,16 @@ public:
                     typename LatVolMesh<Basis>::Cell::index_type &i) const
   { return get_size(i); };
 
-  bool locate(typename LatVolMesh<Basis>::Node::index_type &, const Point &) const;
+  bool locate(typename LatVolMesh<Basis>::Node::index_type &,
+              const Point &) const;
   bool locate(typename LatVolMesh<Basis>::Edge::index_type &,
               const Point &) const
   { return false; }
   bool locate(typename LatVolMesh<Basis>::Face::index_type &,
               const Point &) const
   { return false; }
-  bool locate(typename LatVolMesh<Basis>::Cell::index_type &, const Point &) const;
+  bool locate(typename LatVolMesh<Basis>::Cell::index_type &, 
+              const Point &) const;
 
 
   int get_weights(const Point &,
@@ -361,7 +363,6 @@ private:
 
   LockingHandle<SearchGrid>           grid_;
   Mutex                               grid_lock_; // Bad traffic!
- 
   unsigned int   synchronized_;
 };
 
@@ -627,8 +628,9 @@ StructHexVolMesh<Basis>::locate(
                             const Point &p) const
 {
   if (this->basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
-
-
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
   if (cell > typename LatVolMesh<Basis>::Cell::index_type(this, 0, 0, 0) &&
       cell < typename LatVolMesh<Basis>::Cell::index_type(this, this->ni_ -1,
                                                           this->nj_ - 1,
@@ -639,7 +641,8 @@ StructHexVolMesh<Basis>::locate(
   }
 
   ASSERT(synchronized_ & Mesh::LOCATE_E);
-  cell.mesh_ = this;
+
+  if (this->basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
 
   unsigned int *iter, *end;
   if (grid_->lookup(&iter, &end, p)) {

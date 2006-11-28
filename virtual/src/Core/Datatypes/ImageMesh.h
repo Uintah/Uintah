@@ -433,7 +433,8 @@ public:
   void to_index(typename Node::index_type &index, unsigned int i) const;
   void to_index(typename Edge::index_type &index, unsigned int i) const { index= i; }
   void to_index(typename Face::index_type &index, unsigned int i) const;
-  void to_index(typename Cell::index_type &index, unsigned int i) const{ index= i; }
+  void to_index(typename Cell::index_type &index, unsigned int i) const { index= i; }
+
 
   //! get the child elements of the given index
   void get_nodes(typename Node::array_type &, typename Edge::index_type) const;
