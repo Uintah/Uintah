@@ -179,7 +179,11 @@ ShaderProgramARB::max_texture_size_4()
 bool
 ShaderProgramARB::texture_non_power_of_two()
 {
+#if defined(__APPLE__) && (defined(__i386__) || defined(__x86_64__))
+  return false;
+#else
   return non_2_textures_;
+#endif
 }
 
 bool
