@@ -27,27 +27,19 @@
 */
 
 
-//    File   : ReportFieldInfo.cc
-//    Author : McKay Davis
-//    Date   : July 2002
-
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Containers/Handle.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <map>
-#include <iostream>
-#include <sstream>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
-namespace SCIRun {
+namespace ModelCreation {
 
-using std::endl;
-using std::pair;
+using namespace SCIRun;
 
 class ReportFieldInfo : public Module {
 private:
@@ -58,6 +50,7 @@ private:
   GuiString gui_datamax_;
   GuiString gui_numnodes_;
   GuiString gui_numelems_;
+  GuiString gui_numdata_;
   GuiString gui_dataat_;
   GuiString gui_cx_;
   GuiString gui_cy_;
@@ -66,41 +59,49 @@ private:
   GuiString gui_sizey_;
   GuiString gui_sizez_;
 
+  double min_;
+  double max_;
+  Point  center_;
+  Vector size_;
+  int    numelems_;
+  int    numnodes_;
+  int    numdata_;
+  
   void clear_vals();
   void update_input_attributes(FieldHandle);
 
 public:
   ReportFieldInfo(GuiContext* ctx);
-  virtual ~ReportFieldInfo();
   virtual void execute();
 };
 
-  DECLARE_MAKER(ReportFieldInfo)
+
+DECLARE_MAKER(ReportFieldInfo)
 
 ReportFieldInfo::ReportFieldInfo(GuiContext* ctx)
   : Module("ReportFieldInfo", ctx, Sink, "MiscField", "SCIRun"),
-    gui_fldname_(get_ctx()->subVar("fldname", false), "---"),
-    gui_generation_(get_ctx()->subVar("generation", false), "---"),
-    gui_typename_(get_ctx()->subVar("typename", false), "---"),
-    gui_datamin_(get_ctx()->subVar("datamin", false), "---"),
-    gui_datamax_(get_ctx()->subVar("datamax", false), "---"),
-    gui_numnodes_(get_ctx()->subVar("numnodes", false), "---"),
-    gui_numelems_(get_ctx()->subVar("numelems", false), "---"),
-    gui_dataat_(get_ctx()->subVar("dataat", false), "---"),
-    gui_cx_(get_ctx()->subVar("cx", false), "---"),
-    gui_cy_(get_ctx()->subVar("cy", false), "---"),
-    gui_cz_(get_ctx()->subVar("cz", false), "---"),
-    gui_sizex_(get_ctx()->subVar("sizex", false), "---"),
-    gui_sizey_(get_ctx()->subVar("sizey", false), "---"),
-    gui_sizez_(get_ctx()->subVar("sizez", false), "---")
+    gui_fldname_(get_ctx()->subVar("fldname", false),"---"),
+    gui_generation_(get_ctx()->subVar("generation", false),"---"),
+    gui_typename_(get_ctx()->subVar("typename", false),"---"),
+    gui_datamin_(get_ctx()->subVar("datamin", false),"---"),
+    gui_datamax_(get_ctx()->subVar("datamax", false),"---"),
+    gui_numnodes_(get_ctx()->subVar("numnodes", false),"---"),
+    gui_numelems_(get_ctx()->subVar("numelems", false),"---"),
+    gui_numdata_(get_ctx()->subVar("numdata", false),"---"),
+    gui_dataat_(get_ctx()->subVar("dataat", false),"---"),
+    gui_cx_(get_ctx()->subVar("cx", false),"---"),
+    gui_cy_(get_ctx()->subVar("cy", false),"---"),
+    gui_cz_(get_ctx()->subVar("cz", false),"---"),
+    gui_sizex_(get_ctx()->subVar("sizex", false),"---"),
+    gui_sizey_(get_ctx()->subVar("sizey", false),"---"),
+    gui_sizez_(get_ctx()->subVar("sizez", false),"---"),
+    min_(0.0),
+    max_(0.0),
+    numelems_(0),
+    numnodes_(0),
+    numdata_(0)
 {
 }
-
-
-ReportFieldInfo::~ReportFieldInfo()
-{
-}
-
 
 
 void
@@ -113,6 +114,7 @@ ReportFieldInfo::clear_vals()
   gui_datamax_.set("---");
   gui_numnodes_.set("---");
   gui_numelems_.set("---");
+  gui_numdata_.set("---");
   gui_dataat_.set("---");
   gui_cx_.set("---");
   gui_cy_.set("---");
@@ -126,48 +128,39 @@ ReportFieldInfo::clear_vals()
 void
 ReportFieldInfo::update_input_attributes(FieldHandle f)
 {
-  const bool regressing = sci_getenv_p("SCI_REGRESSION_TESTING");
-  
   // Name
-  string fldname;
-  if (!f->get_property("name",fldname))
+  std::string fldname;
+  if (f->get_property("name",fldname))
   {
-    fldname = "--- Name Not Assigned ---";
+    gui_fldname_.set(fldname);
   }
-  gui_fldname_.set(fldname);
-  if (regressing) { remark("Name: " + fldname); }
+  else
+  {
+    gui_fldname_.set("--- Name Not Assigned ---");
+  }
 
   // Generation
-  const string gen = to_string(f->generation);
-  gui_generation_.set(gen);
-  if (regressing) { remark("Generation: " + gen); }
+  gui_generation_.set(to_string(f->generation));
 
   // Typename
-  const string &tname = f->get_type_description()->get_name();
+  const std::string &tname = f->get_type_description()->get_name();
   gui_typename_.set(tname);
-  if (regressing) { remark("Type: " + tname); }
 
   // Basis
   static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
-  string dataat;
   switch(f->basis_order())
   {
   case 1:
-    dataat = "Nodes (linear basis)";
+    gui_dataat_.set("Nodes (linear basis)");
     break;
   case 0:
-    dataat = at_table[f->mesh()->dimensionality()] +
-      string(" (constant basis)");
+    gui_dataat_.set(at_table[f->mesh()->dimensionality()] +
+                    string(" (constant basis)"));
     break;
   case -1:
-    dataat = "None";
-    break;
-  default:
-    dataat = "High Order Basis";
+    gui_dataat_.set("None");
     break;
   }
-  gui_dataat_.set(dataat);
-  if (regressing) { remark("Data At: " + dataat); }
 
   Point center;
   Vector size;
@@ -183,17 +176,9 @@ ReportFieldInfo::update_input_attributes(FieldHandle f)
     gui_sizex_.set(to_string(size.x()));
     gui_sizey_.set(to_string(size.y()));
     gui_sizez_.set(to_string(size.z()));
-    if (regressing)
-    {
-      remark("Center: "
-             + to_string(center.x()) + " "
-             + to_string(center.y()) + " "
-             + to_string(center.z()));
-      remark("Size: "
-             + to_string(size.x()) + " "
-             + to_string(size.y()) + " "
-             + to_string(size.z()));
-    }
+    
+    size_ = size;
+    center_ = center;
   }
   else
   {
@@ -204,64 +189,95 @@ ReportFieldInfo::update_input_attributes(FieldHandle f)
     gui_sizex_.set("--- N/A ---");
     gui_sizey_.set("--- N/A ---");
     gui_sizez_.set("--- N/A ---");
+
+    size_ = Vector(0.0,0.0,0.0);
+    center_ = Point(0.0,0.0,0.0);
   }
 
   ScalarFieldInterfaceHandle sdi = f->query_scalar_interface(this);
   if (sdi.get_rep())
   {
-    pair<double, double> minmax;
+    std::pair<double, double> minmax;
     sdi->compute_min_max(minmax.first,minmax.second);
     gui_datamin_.set(to_string(minmax.first));
     gui_datamax_.set(to_string(minmax.second));
-    if (regressing)
-    {
-      remark("Data Min: " + to_string(minmax.first));
-      remark("Data Max: " + to_string(minmax.second));
-    }
+    
+    min_ = minmax.first;
+    max_ = minmax.second;
   }
   else
   {
     gui_datamin_.set("--- N/A ---");
     gui_datamax_.set("--- N/A ---");
+    
+    min_ = 0.0;
+    max_ = 0.0;
   }
-
-  // Do this last, sometimes takes a while.
-
-  int nnodes, nelems;
 
   SCIRunAlgo::FieldsAlgo algo(this);
-  algo.GetFieldInfo(f,nnodes,nelems);
-  
-  std::ostringstream num_nodes; num_nodes << nnodes;
-  std::ostringstream num_elems; num_elems << nelems;
+  if(!(algo.GetFieldInfo(f,numnodes_,numelems_))) return;
 
+  switch(f->basis_order())
+  {
+  case 1:
+    numdata_ = numnodes_;
+    break;
+  case 0:
+    numdata_ = numelems_;
+    break;
+  default:
+    numdata_ = 0;
+    break;
+  }
+
+  std::ostringstream num_nodes; num_nodes << numnodes_;
+  std::ostringstream num_elems; num_elems << numelems_;
+  std::ostringstream num_data;  num_data  << numdata_;
+  
   gui_numnodes_.set(num_nodes.str());
   gui_numelems_.set(num_elems.str());
-  if (regressing)
-  {
-    remark("Num Nodes: " + num_nodes.str());
-    remark("Num Elems: " + num_elems.str());
-  }
+  gui_numdata_.set(num_data.str());
 }
 
 
 void
 ReportFieldInfo::execute()
-{
-  FieldHandle field_input_handle;
-  if( !get_input_handle( "Input Field", field_input_handle, true ) ) {
+{  
+  FieldHandle fh;
+  
+  if (!(get_input_handle("Input Field",fh,true)))
+  {
     clear_vals();
     return;
   }
 
-  // If no data or a changed recalcute.
-  if( inputs_changed_ )
-    update_input_attributes(field_input_handle);
+  if (inputs_changed_ || !oport_cached("NumNodes") || 
+      !oport_cached("NumElements") || !oport_cached("NumData") ||
+      !oport_cached("DataMin") || !oport_cached("DataMax") ||
+      !oport_cached("FieldSize") || !oport_cached("FieldCenter") )
+  {
+    update_input_attributes(fh);
+
+    MatrixHandle NumNodes, NumElements, NumData, DataMin, DataMax, FieldSize, FieldCenter;
+    
+    SCIRunAlgo::ConverterAlgo calgo(this);
+
+    if (!(calgo.IntToMatrix(numnodes_,NumNodes))) return;
+    if (!(calgo.IntToMatrix(numelems_,NumElements))) return;
+    if (!(calgo.IntToMatrix(numdata_,NumData))) return;
+    if (!(calgo.DoubleToMatrix(min_,DataMin))) return;
+    if (!(calgo.DoubleToMatrix(max_,DataMax))) return;
+    if (!(calgo.VectorToMatrix(size_,FieldSize))) return;
+    if (!(calgo.PointToMatrix(center_,FieldCenter))) return;
+    
+    send_output_handle("NumNodes", NumNodes);
+    send_output_handle("NumElements", NumElements);
+    send_output_handle("NumData", NumData);
+    send_output_handle("DataMin", DataMin);
+    send_output_handle("DataMax", DataMax);
+    send_output_handle("FieldSize", FieldSize);
+    send_output_handle("FieldCenter", FieldCenter);
+  }
 }
 
-
-
-
 } // end SCIRun namespace
-
-

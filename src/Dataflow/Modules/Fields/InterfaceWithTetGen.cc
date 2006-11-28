@@ -83,12 +83,23 @@ InterfaceWithTetGen::execute()
   tetgenio in, out;
 
   FieldHandle main_input;
-  if(!get_input_handle( "Main", main_input, true)) return;
+  if(!get_input_handle("Main", main_input, true)) return;
 
   FieldHandle points;
-  if (get_input_handle( "Points", points, false)) {
+  bool add_points = false;
+  if (get_input_handle("Points", points, false)) {
     // Process the extra interior points.
-    error("add the interior points");
+    const TypeDescription *pnts = points->get_type_description();
+    const string tcn("TGAdditionalPoints");
+    CompileInfoHandle ci = TGAdditionalPointsAlgo::get_compile_info(pnts,tcn);
+    Handle<TGAdditionalPointsAlgo> ap_algo;
+    if (module_dynamic_compile(ci, ap_algo)) {
+      // Process the region attributes.
+      ap_algo->add_points(this, points, in);
+    }
+
+    add_points = true;
+    warning("Added extra interior points from Points port.");
   }
 
   FieldHandle region_attribs;
@@ -147,8 +158,18 @@ InterfaceWithTetGen::execute()
   in.save_nodes("/tmp/tgIN");
   in.save_poly("/tmp/tgIN");
 
+
+  string cmmd_ln = switch_.get();
+  if (add_points) {
+    // if we are adding points make sure the command line switches include an i
+    if (cmmd_ln.find("i") == string::npos) {
+      cmmd_ln = cmmd_ln + "i";
+    }
+  }
+
   // Create the new mesh.
-  tetrahedralize((char*)switch_.get().c_str(), &in, &out); 
+  tetrahedralize((char*)cmmd_ln.c_str(), &in, &out); 
+
   FieldHandle tetvol_out;
     update_progress(.9);
   // Convert to a SCIRun TetVol.
@@ -160,7 +181,7 @@ InterfaceWithTetGen::execute()
 
 CompileInfoHandle
 InterfaceWithTetGenInterface::get_compile_info(const TypeDescription *td, 
-				  const string template_class_name)
+					  const string template_class_name)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));

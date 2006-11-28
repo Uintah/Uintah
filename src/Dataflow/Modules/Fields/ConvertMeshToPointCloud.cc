@@ -50,26 +50,14 @@ void
 ConvertMeshToPointCloud::execute()
 {
   FieldHandle ifield, ofield;
-  
-  // Get the input from the ports
   if (!(get_input_handle("Field",ifield,true))) return;
 
-  // Declare the algorithm library and reroute the 
-  // ProgressReporter to the algorithm library.
-  if (inputs_changed_ || !oport_cached("Field"))
+  if (inputs_changed_ || !oport_cached("Output Field"))
   {
-    // Declare the algorithm library and reroute the 
-    // ProgressReporter to the algorithm library.
-
     SCIRunAlgo::FieldsAlgo algo(this);
+    if (!(algo.ConvertMeshToPointCloud(ifield,ofield))) return;
 
-    // Run algorithm and exit if algorithm fails.
-    // Error are automatically reported through the
-    // ProgressReporter.
-    if (!(algo.ToPointCloud(ifield,ofield))) return;
-
-    // Send handles to output ports
-    send_output_handle("Field",ofield,true);
+    send_output_handle("Output Field", ofield);
   }
 }
 

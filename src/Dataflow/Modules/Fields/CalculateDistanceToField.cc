@@ -28,38 +28,51 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
-class ConvertHexVolToTetVol : public Module {
+class CalculateDistanceToField : public Module {
 public:
-  ConvertHexVolToTetVol(GuiContext*);
-
+  CalculateDistanceToField(GuiContext*);
   virtual void execute();
+  
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(CalculateDistanceToField)
+CalculateDistanceToField::CalculateDistanceToField(GuiContext* ctx)
+  : Module("CalculateDistanceToField", ctx, Source, "ChangeFieldData", "SCIRun")
 {
 }
 
-void ConvertHexVolToTetVol::execute()
+void CalculateDistanceToField::execute()
 {
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
+  // define data handles:
+  FieldHandle input, output;
+  FieldHandle object;
   
-  if (inputs_changed_ || !oport_cached("TetVol"))
+  // get input from ports:
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_input_handle("ObjectField",object,true))) return;
+  
+  // only compute output if inputs changed:
+  if (inputs_changed_ || !oport_cached("DistanceField"))
   {
+    // Entry point to core of SCIRun:
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
 
-    send_output_handle("TetVol", ofield);
+    // Actual algorithm:
+    if(!(algo.DistanceField(input,output,object))) return;
+
+    // Send data downstream:
+    send_output_handle("DistanceField",output,false);
   }
 }
 
 } // End namespace SCIRun
+
 

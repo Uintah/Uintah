@@ -28,38 +28,52 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
-class ConvertHexVolToTetVol : public Module {
-public:
-  ConvertHexVolToTetVol(GuiContext*);
+class MapFieldDataFromElemToNode : public Module {
+  public:
+    MapFieldDataFromElemToNode(GuiContext*);
+    virtual void execute();
 
-  virtual void execute();
+  private:
+    GuiString method_;
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(MapFieldDataFromElemToNode)
+MapFieldDataFromElemToNode::MapFieldDataFromElemToNode(GuiContext* ctx)
+  : Module("MapFieldDataFromElemToNode", ctx, Source, "ChangeFieldData", "SCIRun"),
+    method_(get_ctx()->subVar("method"))  
 {
 }
 
-void ConvertHexVolToTetVol::execute()
-{
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
-  
-  if (inputs_changed_ || !oport_cached("TetVol"))
-  {
-    SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
+void MapFieldDataFromElemToNode::execute()
+{   
+  // Define dataflow handles:
+  FieldHandle input;
+  FieldHandle output;
 
-    send_output_handle("TetVol", ofield);
+  // Get data from port:
+  if (!(get_input_handle("Field",input,true))) return;
+  
+  // Only do work if needed:
+  if (inputs_changed_ || method_.changed() || !oport_cached("Field"))
+  {
+    std::string method = method_.get();
+    SCIRunAlgo::FieldsAlgo algo(this);
+
+    if (!(algo.MapFieldDataFromElemToNode(input,output,method))) return;
+ 
+    // send data downstream:
+    send_output_handle("Field",output,false); 
   }
 }
 
 } // End namespace SCIRun
+
 

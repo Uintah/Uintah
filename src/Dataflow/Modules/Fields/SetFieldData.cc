@@ -28,38 +28,47 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
-class ConvertHexVolToTetVol : public Module {
+class SetFieldData : public Module {
 public:
-  ConvertHexVolToTetVol(GuiContext*);
-
+  SetFieldData(GuiContext*);
   virtual void execute();
+private:
+  GuiInt keepscalartypegui_;
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(SetFieldData)
+SetFieldData::SetFieldData(GuiContext* ctx)
+  : Module("SetFieldData", ctx, Source, "ChangeFieldData", "SCIRun"),
+  keepscalartypegui_(ctx->subVar("keepscalartype"))
 {
 }
 
-void ConvertHexVolToTetVol::execute()
+void SetFieldData::execute()
 {
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
+  FieldHandle Input, Output;
+  MatrixHandle Data;
   
-  if (inputs_changed_ || !oport_cached("TetVol"))
+  if(!(get_input_handle("Field",Input,true))) return;
+  if(!(get_input_handle("Data",Data,true))) return;
+  
+  if (inputs_changed_ || keepscalartypegui_.changed() || !oport_cached("Field"))
   {
+    bool keepscalartype = keepscalartypegui_.get();
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
-
-    send_output_handle("TetVol", ofield);
+    if(!(algo.SetFieldData(Input,Output,Data,keepscalartype))) return;
+    
+    send_output_handle("Field",Output,false);
   }
 }
 
 } // End namespace SCIRun
+
 

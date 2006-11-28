@@ -101,12 +101,31 @@ SRCS     += \
 	$(SRCDIR)/ConvertMeshToPointCloud.cc\
 	$(SRCDIR)/ConvertRasterMeshToStructuredMesh.cc\
 	$(SRCDIR)/CalculateFieldData.cc\
-	$(SRCDIR)/CalculateFieldData2.cc\
 	$(SRCDIR)/CalculateFieldData3.cc\
+	$(SRCDIR)/CalculateFieldDataCompiled.cc\
+	$(SRCDIR)/CalculateFieldDataCompiled2.cc\
+	$(SRCDIR)/CalculateFieldDataCompiled3.cc\
 	$(SRCDIR)/TransformMeshWithFunction.cc\
 	$(SRCDIR)/TransformMeshWithTransform.cc\
 	$(SRCDIR)/ConvertMeshToUnstructuredMesh.cc\
 	$(SRCDIR)/CalculateVectorMagnitudes.cc\
+  $(SRCDIR)/CalculateDistanceToField.cc\
+  $(SRCDIR)/CalculateDistanceToFieldBoundary.cc\
+  $(SRCDIR)/CalculateSignedDistanceToField.cc\
+  $(SRCDIR)/CalculateIsInsideField.cc\
+  $(SRCDIR)/CalculateInsideWhichField.cc\
+  $(SRCDIR)/ConvertIndicesToFieldData.cc\
+  $(SRCDIR)/CreateFieldData.cc\
+  $(SRCDIR)/GetFieldData.cc\
+  $(SRCDIR)/SetFieldData.cc\
+  $(SRCDIR)/MapFieldDataFromElemToNode.cc\
+  $(SRCDIR)/MapFieldDataFromNodeToElem.cc\
+  $(SRCDIR)/SelectAndSetFieldData.cc\
+  $(SRCDIR)/SelectAndSetFieldData3.cc\
+  $(SRCDIR)/CalculateMeshNodes.cc\
+  $(SRCDIR)/SplitAndMergeFieldByDomain.cc\
+  $(SRCDIR)/GetDomainBoundary.cc\
+  $(SRCDIR)/CollectFields.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
@@ -117,6 +136,8 @@ PSELIBS := \
 	Core/Algorithms/Visualization   \
 	Core/Algorithms/Geometry \
 	Core/Algorithms/Util \
+	Core/Algorithms/ArrayMath \
+	Core/Algorithms/Converter \
 	Core/Basis               \
 	Core/Datatypes           \
 	Core/Exceptions          \
@@ -124,12 +145,12 @@ PSELIBS := \
 	Core/Geometry            \
 	Core/GeomInterface       \
 	Core/Containers          \
-	Dataflow/GuiInterface        \
+	Dataflow/GuiInterface    \
 	Core/ImportExport        \
 	Core/Math                \
 	Core/Persistent          \
 	Core/Thread              \
-	Dataflow/TkExtensions        \
+	Dataflow/TkExtensions    \
 	Core/Util              
 
 

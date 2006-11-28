@@ -28,38 +28,47 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
-namespace SCIRun {
+namespace ModelCreation {
 
-class ConvertHexVolToTetVol : public Module {
-public:
-  ConvertHexVolToTetVol(GuiContext*);
+using namespace SCIRun;
 
-  virtual void execute();
+class CalculateSignedDistanceToField : public Module {
+  public:
+    CalculateSignedDistanceToField(GuiContext*);
+    virtual void execute();
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(CalculateSignedDistanceToField)
+CalculateSignedDistanceToField::CalculateSignedDistanceToField(GuiContext* ctx)
+  : Module("CalculateSignedDistanceToField", ctx, Source, "ChangeFieldData", "SCIRun") 
 {
 }
 
-void ConvertHexVolToTetVol::execute()
+
+void CalculateSignedDistanceToField::execute()
 {
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
-  
-  if (inputs_changed_ || !oport_cached("TetVol"))
+  FieldHandle input, output;
+  FieldHandle object;
+ 
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_input_handle("ObjectField",object,true))) return;
+ 
+  if (inputs_changed_ || !oport_cached("SignedDistanceField"))
   {
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
-
-    send_output_handle("TetVol", ofield);
+    if(!(algo.SignedDistanceField(input,output,object))) return;
+   
+    send_output_handle("SignedDistanceField",output,false); 
   }
 }
 
-} // End namespace SCIRun
+
+} // End namespace ModelCreation
+
 

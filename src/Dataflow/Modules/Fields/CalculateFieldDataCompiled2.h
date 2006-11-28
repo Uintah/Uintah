@@ -27,12 +27,12 @@
 */
 
 
-//    File   : CalculateFieldData2.h
+//    File   : CalculateFieldDataCompiled2.h
 //    Author : Michael Callahan
 //    Date   : June 2002
 
-#if !defined(CalculateFieldData2_h)
-#define CalculateFieldData2_h
+#if !defined(CalculateFieldDataCompiled2_h)
+#define CalculateFieldDataCompiled2_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -41,7 +41,7 @@
 
 namespace SCIRun {
 
-class CalculateFieldData2Algo : public DynamicAlgoBase
+class CalculateFieldDataCompiled2Algo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src0, FieldHandle src1) = 0;
@@ -59,7 +59,7 @@ public:
 
 
 template <class IFIELD0, class IFIELD1, class OFIELD, class LOC>
-class CalculateFieldData2AlgoT : public CalculateFieldData2Algo
+class CalculateFieldDataCompiled2AlgoT : public CalculateFieldDataCompiled2Algo
 {
 public:
   virtual void function(typename OFIELD::value_type &result,
@@ -74,7 +74,7 @@ public:
 
 template <class IFIELD0, class IFIELD1, class OFIELD, class LOC>
 FieldHandle
-CalculateFieldData2AlgoT<IFIELD0, IFIELD1, OFIELD, LOC>::execute(FieldHandle f0_h,
+CalculateFieldDataCompiled2AlgoT<IFIELD0, IFIELD1, OFIELD, LOC>::execute(FieldHandle f0_h,
 							   FieldHandle f1_h)
 {
   IFIELD0 *ifield0 = dynamic_cast<IFIELD0 *>(f0_h.get_rep());
@@ -111,4 +111,4 @@ CalculateFieldData2AlgoT<IFIELD0, IFIELD1, OFIELD, LOC>::execute(FieldHandle f0_
 
 } // end namespace SCIRun
 
-#endif // CalculateFieldData2_h
+#endif // CalculateFieldDataCompiled2_h
