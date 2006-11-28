@@ -27,58 +27,51 @@
 #
 
 
-# example of reader
-# by Samsonov Alexei
-# October 2000
-
-
-catch {rename SCIRun_DataIO_ReadColorMap2D ""}
-
-itcl_class SCIRun_DataIO_ReadColorMap2D {
+itcl_class SCIRun_Math_CollectMatrices {
     inherit Module
 
     constructor {config} {
-	set name ReadColorMap2D
+        set name CollectMatrices
+    }
+
+    method make_entry {w text v c} {
+        frame $w
+        label $w.l -text "$text"
+        pack $w.l -side left
+        global $v
+        entry $w.e -textvariable $v
+        bind $w.e <Return> $c
+        pack $w.e -side right
     }
 
     method ui {} {
-	set w .ui[modname]
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            return
+        }
 
-	if {[winfo exists $w]} {
-	    return
-	}
+        toplevel $w
+        wm minsize $w 150 20
+        frame $w.f
+        pack $w.f -padx 2 -pady 2 -side top -expand yes
+        global $this-row
+        make_labeled_radio $w.f.r "Rows/Columns" "" \
+                top $this-row \
+		{{"Row" 1} \
+                {"Column" 0}}
+        global $this-append
+        make_labeled_radio $w.f.a "Append/Replace" "" \
+                top $this-append \
+		{{"Append" 1} \
+                {"Replace" 0}}
+        global $this-front
+        make_labeled_radio $w.f.f "Prepend/Postpend" "" \
+                top $this-front \
+		{{"Prepend" 1} \
+                {"Postpend" 0}}
+	pack $w.f.r $w.f.a $w.f.f -side left -expand 1 -fill x
 
-	toplevel $w -class TkFDialog
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	set initdir [netedit getenv SCIRUN_DATA]
-	
-	#######################################################
-	# to be modified for particular reader
-
-	# extansion to append if no extension supplied by user
-	set defext ".cmap2"
-	set title "Open colormap2 file"
-	
-	
-	# Unwrap $this-types into a list.
-	set tmp1 [set $this-types]
-	set tmp2 [eval "set tmp3 $tmp1"]
-	
-	######################################################
-	
-	makeOpenFilebox \
-		-parent $w \
-		-filevar $this-filename \
-		-setcmd "wm withdraw $w" \
-		-command "$this-c needexecute; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
-		-title $title \
-		-filetypes $tmp2 \
-		-initialdir $initdir \
-		-defaultextension $defext \
-	        -selectedfiletype $this-filetype
-
+	makeSciButtonPanel $w $w $this "\"Clear Output\" \"$this-c clear\" \"\""
 	moveToCursor $w
     }
 }

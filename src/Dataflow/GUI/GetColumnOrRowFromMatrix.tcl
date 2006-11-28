@@ -27,11 +27,11 @@
 #
 
 
-itcl_class SCIRun_Math_GetColumnMatrixFromMatrix {
+itcl_class SCIRun_Math_GetColumnOrRowFromMatrix {
     inherit Module 
 
     constructor {config} {
-        set name GetColumnMatrixFromMatrix
+        set name GetColumnOrRowFromMatrix
         set_defaults
     }
 

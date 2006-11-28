@@ -1634,7 +1634,7 @@ proc htmlHelp {modid} {
 	set url file://$localhtml
 	set usehtml 1
     } elseif { ![netedit sci_system echo a | telnet -e a software.sci.utah.edu 80 2> /dev/null > /dev/null] } {
-	set url http://software.sci.utah.edu/src/$htmlpath
+	set url [$modid-c help]
 	set usehtml 1
     }
     
@@ -1686,13 +1686,12 @@ proc htmlHelp {modid} {
 	    -text "Dont ask for help viewer again"
 	pack $w.f.ask -side top -ipady 5 -fill x
 	
-
-	button $w.f.cancel -text "View Help as Text" -command "textHelp $modid"
+	button $w.f.cancel -text "Cancel" -command "cancelHelp"
 	
-	button $w.f.ok -text "Open in HTML" \
+	button $w.f.ok -text "Open in Browser" \
 	    -command "setBrowser \[$w.list get active\] $url"
 
-	pack $w.f.ok $w.f.cancel -side right -ipadx 5 -ipady 5 -padx 5 -pady 5
+	pack $w.f.cancel $w.f.ok -side right -ipadx 5 -ipady 5 -padx 5 -pady 5 -fill x -expand 1
 	pack $w.f -side bottom -expand 1 -fill x -padx 5 -pady 5
 	pack $w.list -side top -expand 1 -fill both -padx 10
 	return 1
@@ -1700,15 +1699,9 @@ proc htmlHelp {modid} {
     return 0
 }
 
-proc textHelp { modid } {
+proc cancelHelp { } {
     if { [winfo exists .choosebrowser] } {
 	destroy .choosebrowser
-    }
-    netedit setenv BROWSER text
-    moduleHelp $modid
-    global BROWSER_DONT_ASK
-    if { !$BROWSER_DONT_ASK } {
-	netedit setenv BROWSER ""
     }
 }
 

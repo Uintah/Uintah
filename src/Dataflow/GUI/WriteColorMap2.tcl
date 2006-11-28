@@ -32,13 +32,13 @@
 # October 2000 
 # NOTE: if file to be splitted, uncomment corresponding lines in the file
 
-catch {rename SCIRun_DataIO_WriteColorMap2 ""}
+catch {rename SCIRun_DataIO_WriteColorMap2D ""}
 
-itcl_class SCIRun_DataIO_WriteColorMap2 {
+itcl_class SCIRun_DataIO_WriteColorMap2D {
     inherit Module
 
     constructor {config} {
-	set name WriteColorMap2
+	set name WriteColorMap2D
     }
 
     method overwrite {} {

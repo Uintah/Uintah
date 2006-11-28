@@ -1,3 +1,4 @@
+##
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -26,59 +27,36 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-# example of reader
-# by Samsonov Alexei
-# October 2000
-
-
-catch {rename SCIRun_DataIO_ReadColorMap2D ""}
-
-itcl_class SCIRun_DataIO_ReadColorMap2D {
+itcl_class SCIRun_NewField_CollectFields {
     inherit Module
-
     constructor {config} {
-	set name ReadColorMap2D
+        set name CollectFields
+        set_defaults
+    }
+
+    method set_defaults {} {
+        global $this-buffersize
+        set $this-buffersize 20
     }
 
     method ui {} {
-	set w .ui[modname]
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            return
+        }
+        toplevel $w
 
-	if {[winfo exists $w]} {
-	    return
-	}
+        iwidgets::entryfield $w.bs \
+          -labeltext "Buffer Size" \
+          -textvariable $this-buffersize
+        pack $w.bs -side top -expand yes -fill x
 
-	toplevel $w -class TkFDialog
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	set initdir [netedit getenv SCIRUN_DATA]
-	
-	#######################################################
-	# to be modified for particular reader
+        button $w.reset -text "Reset Buffer" -command "$this-c reset; $this-c needexecute"       
+        pack $w.reset -side top 
 
-	# extansion to append if no extension supplied by user
-	set defext ".cmap2"
-	set title "Open colormap2 file"
-	
-	
-	# Unwrap $this-types into a list.
-	set tmp1 [set $this-types]
-	set tmp2 [eval "set tmp3 $tmp1"]
-	
-	######################################################
-	
-	makeOpenFilebox \
-		-parent $w \
-		-filevar $this-filename \
-		-setcmd "wm withdraw $w" \
-		-command "$this-c needexecute; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
-		-title $title \
-		-filetypes $tmp2 \
-		-initialdir $initdir \
-		-defaultextension $defext \
-	        -selectedfiletype $this-filetype
-
-	moveToCursor $w
+        makeSciButtonPanel $w $w $this
+        moveToCursor $w
     }
 }
+
+
