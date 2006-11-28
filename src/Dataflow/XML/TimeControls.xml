@@ -35,11 +35,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Global time controls.</summary>
-    <description>
-      <p>
-	Allows downstream modules the ability to synchronize itself 
-	with a global notion of time.</p>
-    </description>
   </overview>
   <io>
     <inputs>

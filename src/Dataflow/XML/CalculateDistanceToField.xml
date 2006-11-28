@@ -31,27 +31,32 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="WriteColorMap2" category="DataIO">
+<component name="CalculateDistanceToField" category="ChangeFieldData">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>Save persistent representation of a colormap to a file.
+    <summary>
+      This module computes the minimum distance between the object and the nodes in field or the center of the elements.
     </summary>
-    <description>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Data</name>
-	<datatype>SCIRun::ColorMap2</datatype>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ObjectField</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
+    <outputs>
+      <port>
+        <name>DistanceField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
-  </gui>
 </component>
+

@@ -37,15 +37,6 @@
     <summary>
       This module retrieves a 'colormap' object from a bundle. 
     </summary>
-    <description>
-      <p>This module retrieves a 'colormap' object from a bundle by
-specifying the name of that object. The module has three output ports
-that each can be programmed to retrieve a specific 'colormap' object.
-</p>
-      
-      <p>The module's first bundle output port just generates a copy
-of the input bundle.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

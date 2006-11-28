@@ -41,18 +41,6 @@
  The Field Slicer module reduces the dimension of a topologically
 regular field by 1 dimension.
      </summary>
-    <description>
-      <p>
-The Field Slicer module reduces the dimension of a topologically
-regular field by 1 dimension.
-      </p>
-      
-      <p> The Field Slicer input port is a field that has regular
-topology. The field will be reduced by 1 dimension and piped to the
-output port. The user must supply two input values via the module GUI,
-the axis the field is reduced along and location along the selected
-axis. </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

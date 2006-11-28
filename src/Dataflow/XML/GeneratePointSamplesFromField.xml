@@ -39,9 +39,6 @@
       <author>Robert Van Uitert</author>
     </authors>
     <summary>Place seed points in a field.</summary>
-    <description>
-      <p>Place seed points in a field.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

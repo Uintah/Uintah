@@ -39,16 +39,6 @@
     </authors>
     <summary>InterfaceWithCamal will create a 3D volumetric mesh of tets in the
 supplied boundary mesh</summary>
-    <description>
-      <p>
-Create a volumetric tetrahedral mesh from the given boundary mesh.
-Uses the CAMAL wrapper from Sandia National Labs for the Simulog
-GHS-3D incremental Delaunay tetrahedralizer.
-      </p>
-      <p>
-The output field is a tetrahedral field of elements.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

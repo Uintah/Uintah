@@ -42,32 +42,6 @@
     <summary>CreateAndEditColorMap2D is used for interactively creating and
 editing ColorMap2 transfer functions for use in volume visualization.
     </summary>
-    <description>
-
-      <p>CreateAndEditColorMap2D is used for interactively creating and editing
-ColorMap2 transfer functions for use in volume visualization. These
-are two dimensional colormaps where the horizontal axis represents the
-scalar values of the data and the vertical axis represents the
-gradient magnitude.  For example a narrow vertical bar that cuts
-across the colormap selects all the elements in the data with that
-value and results in an approximate isosurface (it's not quite a
-surface as it has volume depending upon the narrowness of the band).
-A vertical bar would represent a particular rate of change within the
-volume and could be used to highlight boundaries between objects or
-areas of high flow.</p>
-
-      <p>The ColorMap2 is painted by dragging various widgets around
-to cover the points of interest in the data.  In addition an optional
-ColorMap2 can be generated elsewhere (See <modref package="SCIRun"
-name="ColorMap2Reader"/> and <modref package="SCIRun"
-name="NrrdToColorMap2"/> and passed into the appropriate input port.
-The second Histogram port is also optional and should contain a join
-histogram of the scalar values and gradient magnitudes.  It should be
-a 512x256 grayscale image (and must contain unsigned character data)
-that is displayed in the background of the ColorMap2 for reference
-purposes.</p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

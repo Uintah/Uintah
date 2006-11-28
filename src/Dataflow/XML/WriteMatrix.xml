@@ -36,31 +36,22 @@
 <component name="WriteMatrix" category="DataIO">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The WriteMatrix modules saves a persistent
-representation of a matrix to disk.</summary>
-    <description>
-      <p>Upon opening, the WriteMatrix GUI defaults to the directory
-that the user sets for their SCIRUN_DATA environment variable.
-Otherwise, the GUI will default to the directory where the user's
-SCIRun executable resides. The user can enter the name of a file that
-the matrix saves to. The file should have a .mat extension. The
-default file name is MyMatrix.  The user may also choose between a
-Binary or ASCII file format.  The Split check box option splits the
-reader file and matrix data into two files.
-    </p>
-    </description>
+    <summary>
+    The WriteMatrix modules saves a persistent representation of a matrix to disk.
+    </summary>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Data</name>
-	<datatype>SCIRun::Matrix</datatype>
+        <name>Input Data</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>    
     </inputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
-  </gui>
 </component>

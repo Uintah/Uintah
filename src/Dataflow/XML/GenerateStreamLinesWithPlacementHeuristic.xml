@@ -41,42 +41,6 @@
     <summary>
       Generate optimal stream lines      
     </summary>
-    <description>
-      <p>
-      The GenerateStreamLinesWithPlacementHeuristic module finds optimal
-      streamlines by comparison between a source field and a rendered
-      steamlines image.
-      </p>
-      <p>
-      GenerateStreamLinesWithPlacementHeuristic takes five fields as
-      input:
-      </p>
-      <p> 
-      (1) Source, contains a field into which is rendered during processing. 
-      By default random seed points are chosen from the underlying mesh. 
-      </p>
-      <p>
-      (2) Weighting, contains information about the weighting of
-      render operations. Commonly, the magnitude of the flow field is
-      used as input.
-      </p>
-      <p>
-      (3) Flow, describes the vector field, necessary for generation
-      of streamlines. 
-      </p>
-      <p>
-      (4) Compare, describes the data, which should be reconstructed
-      by the streamlines. Commonly, the magnitude of the flow field is
-      used as input.
-      </p>
-      <p>
-      (5) Seed points (optional), selects seed points from the
-      underlying mesh.
-      </p>
-      <p>     
-      GenerateStreamLinesWithPlacementHeuristic outputs the optimal streamlines as CurveMesh field.      
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

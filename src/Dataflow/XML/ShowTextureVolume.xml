@@ -41,35 +41,6 @@
     <summary>This module implements a volume renderer using 3D texture
 hardware.
     </summary>
-    <description>
-      <p>The VolumeViewer module implements a volume renderer for
-SCIRun using 3D texture hardware.</p>
-
-      <p> The Basic frame allows the selection of standard (Over
-Operator) or maximum intensity projection (MIP) rendering styles.  It
-also allows for selection of 16 or 32 bit blending modes, however in
-the future this option will be moved to the visual selection in the
-<modref package="SCIRun" name="Viewer"/>. There is also a selection
-for Trilinear or Nearest interpolation and a slider for changing the
-opacity of the volume.  Software ColorMap2 Rasterization can be forced
-on in the unusual event that the default rendering mode does not
-work.</p>
-
-      <p> The Sampling frame allows the user to change the sampling
-rate for interactive and non-interactive use.  The number is a
-multiplier and the formula used to compute the actual number of slices
-is "rate * sqrt(nx * nx + ny * ny + nz * nz) / sqrt(3.0)", or
-approximately Sampling Rate slices per texture element.  Adaptive
-sampling refers to the rate at which the volume is sampled while the
-viewer is being interacted with. </p>
-
-      <p> The Shading frame is used to control the lighting properties
-of the volume visualization.  The Shading button toggles lighting of
-the volume's drawn elements and the material is used to modulate the
-lighting color.  This option requires that the texture be built with
-normals.  It also requires a graphics card with fragment shader
-support.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

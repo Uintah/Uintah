@@ -40,17 +40,6 @@
     </authors>
     <summary>Computes a PointCloudField containing all of the element
 centers for a field.</summary>
-    <description>
-      <p>The Centriods module computes a PointCloudField containing
-all of the element centers for a field.  For instance, if the input
-field is a TetVolField then the output field would contain the center
-of each tetrahedra.  An input PointCloudField would return the same
-data locations.</p>
-
-      <p>The output field is always a PointCloudField of doubles, and
-contains no data.  If data is needed at the points then an
-interpolation module should be used to recover them.</p> 
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

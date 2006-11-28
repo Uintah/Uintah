@@ -35,12 +35,6 @@
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>This module can be used to create a string.</summary>
-    <description>
-      <p>
-      This module allows the user to create a string by typing its 
-      contents into an edit box in the GUI.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

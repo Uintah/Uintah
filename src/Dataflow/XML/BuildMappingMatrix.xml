@@ -44,34 +44,6 @@
       Build a mapping matrix -- a matrix that says how to project the
 data from one field onto the data of a second field.
     </summary>
-    <description>
-      <p>
-        This module builds a mapping matrix which contains information
-about how to interpolate the data from the source field onto the
-geometry of the destination field.  The resulting mapping matrix can
-then be used by the <modref package="SCIRun"
-name="ApplyMappingMatrix"/> module to map the values from a field
-similar to the source field onto the destination field.
-      </p>
-      <p>
-        The source field for BuildMappingMatrix and <modref
-package="SCIRun" name="ApplyMappingMatrix"/> must contain the same
-geometry and data locations.  However they do not have to contain the
-same data values or value types.  For instance, a TetVolField of
-doubles with data at the nodes can be passed into the Source port of
-BuildMappingMatrix, and a TetVolField of Vectors with data also at the
-nodes and with the same mesh can be passed into the source port of
-<modref package="SCIRun" name="ApplyMappingMatrix"/>.
-      </p>
-      <p>
-        <modref package="SCIRun" name="DirectMapping"/> should be used
-instead of BuildMappingMatrix and <modref package="SCIRun"
-name="ApplyMappingMatrix"/> if the mapping is not to be reused, as it
-does the same interpolation without building the intermediate mapping
-matrix.  This should be used if the source field changes much more
-often than the destination field.
-      </p> 
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

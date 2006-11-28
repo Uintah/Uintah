@@ -39,47 +39,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Select a subset of a field.</summary>
-    <description>
-      <p>
-        The ClipFieldByFunction module clips out a subset of a field.  It
-does so by preserving all of the elements in the input field for which
-the user specified C++ expression evaluates to true at the specified
-test location.  As a side effect of this algorithm any degenerate
-non-element items in the input field are discarded by the clip.
-      </p>
-      <p>
-        The type of the field is preserved in the clip, as well as the
-data values if possible.  Some field types are structured and thus not
-clippable.  This includes the LatVolField, ImageField, and Scanline
-field types.  There is an <modref package="SCIRun"
-name="Unstructure"/> module that can be used to convert these fields
-to appropriately unstructured versions before clipping.
-      </p>
-      <p>
-        The user function should be a valid C++ expression.  It will
-be dynamically compiled into a function of the form "bool
-inside_p(double x, double y, double z, TYPE v) { return EXPR; }" where
-TYPE is the data type contained in the field, and EXPR is the function
-typed into the GUI.
-      </p>
-      <p>
-        The geometric location of the test is be specified in addition
-to the function.  The test can be valid if it works at element
-centers, at one node, or at all of the nodes in each mesh element.  If
-the data location of the clip is different that the location of the
-data in the field, 'v' will always be 0 for that test (because there
-is no data there).
-      </p>
-      <p>
-        For example, "x gt 0" would clip the field to only those
-elements with positions greater than 0.  "y lt 3 || z gt 2.5" would
-preserve just the elements with y position less than 3 or z position
-greater than 2.5.  "v == 4" would preserve all of the elements that
-contained a data value of 4.  *Note that current simple HTML parser
-cannot handle greater than or less than symbols, abbreviated them to
-'gt' and 'lt'.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

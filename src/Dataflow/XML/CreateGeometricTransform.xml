@@ -39,12 +39,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Build a 4x4 geometric transformation matrix.</summary>
-    <description>
-      <p>Build the transformation matrix by specifying options in
-respect to Translate, Scale, Rotate, Sheer and Permute.</p>
-      <p>If the second input (SCIRun::Field) is input, its bounding
-box is used to init the transform</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

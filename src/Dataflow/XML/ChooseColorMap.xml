@@ -44,16 +44,6 @@ colormaps, and passes one of them downstream, based on the port index
 typed in the UI.  Input port specification is 0 based (ie: first port
 is 0, 2nd port is 1, etc.) 
     </summary>
-      <description>
-	<p>
-        ChooseColorMap takes in an arbitrary number of input
-colormaps, and passes one of them downstream, based on the port index
-typed in the UI.  Input port specification is 0 based (ie: first port
-is 0, 2nd port is 1, etc.) If the Use first valid colormap option is
-checked, the module will disregard the port index and iterate over the
-input ports, passing the first valid data downstream.
-      </p>
-      </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

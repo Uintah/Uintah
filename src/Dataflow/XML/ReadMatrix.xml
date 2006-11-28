@@ -2,7 +2,6 @@
 <!DOCTYPE component SYSTEM "component.dtd">
 <?xml-stylesheet href="component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
-
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -36,36 +35,28 @@
 <component name="ReadMatrix" category="DataIO">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The ReadMatrix moudle reads a persistent matrix from a
-file and sends that matrix to another module.</summary>
-    <description>
-      <p>Upon opening, the The ReadMatrix GUI defaults to the
-directory that the user sets for their SCIRUN_DATA environment
-variable.  Otherwise, the GUI will default to the directory where the
-user's SCIRun executable resides. The current directory defaults to
-only show files with an .mat extension which helps the user determine
-the difference between matrix files and other files.  However, the
-ReadMatrix can read-in a file with any extension so long as the data
-has the correct format.  If the user attempts to read-in a file that
-is other than a SCIRun supported Matrix, or uses an incorrect file
-format, an error message appears in the Error frame within the SCIRun
-enrvironment. Clicking the OK button will load the file and dismiss
-the GUI.</p>
-    </description>
+    <summary>
+    The ReadMatrix moudle reads a persistent matrix from a file and sends that matrix to another module.
+    </summary>
   </overview>
   <io>
-    <inputs>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>  
     </inputs>
     <outputs>
       <port>
-	<name>Output Data</name>
-	<datatype>SCIRun::Matrix</datatype>
+        <name>Output Data</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
-  </gui>
 </component>

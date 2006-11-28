@@ -37,9 +37,6 @@
     <summary>
       This Module gets a filename and stores it in a string.
     </summary>
-    <description>
-      <p>This Module gets a filename and stores it in a string.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -37,12 +37,6 @@
     <summary>
       This module does a sprintf with input strings into a new string.
     </summary>
-    <description>
-      <p>This module performs a sprintf with strings, whereever a %s
-in the format string is found the input string will be pasted. This
-module takes in a new string for each %s encountered in the format
-string. If not enough string are supplied an empty string is used.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

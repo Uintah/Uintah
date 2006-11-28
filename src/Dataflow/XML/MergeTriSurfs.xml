@@ -39,9 +39,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Self intersect all the triangles in a trisurf with each other so that none overlap.</summary>
-    <description>
-      <p>The MergeTriSurfs module dices up a TriSurfMesh such that no two triangles overlap each other.  For example two or more triangle meshes could be combined with GatherFields and the result then run through MergeTriSurfs to cut along the seams where the two surfaces intersect.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

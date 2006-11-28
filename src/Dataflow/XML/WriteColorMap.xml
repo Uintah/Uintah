@@ -36,28 +36,22 @@
 <component name="WriteColorMap" category="DataIO">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>Save persistent representation of a colormap to a file.
+    <summary>
+    Save persistent representation of a colormap to a file.
     </summary>
-    <description><p>Upon opening, the WriteColorMap GUI defaults to
-the directory that the user sets for their SCIRUN_DATA environment
-variable.   Otherwise, the GUI will default to the directory where the
-user's SCIRun executable resides. The user can enter the name of a
-file that the matrix saves to. The file should have a .cmap extension.
-The default file name is MyColorMap.  The user may choose to save the
-file in either Binary or ASCII file format.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Data</name>
-	<datatype>SCIRun::ColorMap</datatype>
+        <name>Input Data</name>
+        <datatype>SCIRun::ColorMap</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>        
     </inputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/SaveFileUI.jpg</img>
-  </gui>
 </component>

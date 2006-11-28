@@ -8,10 +8,6 @@
     <summary>
       Most basic example of Field Output in a SCIRun module.
     </summary>
-    <description>
-      <p>Get a Field from the input port and print out the pointer to
-the field when executed, and send the same field downstream.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
