@@ -369,9 +369,11 @@ main(int argc, char *argv[], char **environment) {
 
   SCIRunInit();
 
-  // Now split off a process for running external processes
+#ifndef _WIN32
+  // Now split off a process for running external processes (not on windows)
   systemcallmanager_ = scinew SystemCallManager();
   systemcallmanager_->create();
+#endif
   start_eai();
   
   Network* net=new Network();
