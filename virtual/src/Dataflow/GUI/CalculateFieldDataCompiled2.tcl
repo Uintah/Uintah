@@ -27,21 +27,16 @@
 #
 
 
-itcl_class SCIRun_ChangeFieldData_CalculateFieldData {
+itcl_class SCIRun_ChangeFieldData_CalculateFieldDataCompiled2 {
     inherit Module
     constructor {config} {
-        set name CalculateFieldData
+        set name CalculateFieldDataCompiled2
 	
 	# Trace variable for optionmenu so that it will display
 	# the correct value when opening a saved network.
 	global $this-outputdatatype
 	trace variable $this-outputdatatype w \
 	    "$this set_combobox .otype.c $this-outputdatatype"
-    }
-
-    method set_defaults {} {
-	setGlobal $this-function "result = v * 10;"
-	setGlobal $this-outputdatatype "input"
     }
 
     method update_text {} {
@@ -59,12 +54,12 @@ itcl_class SCIRun_ChangeFieldData_CalculateFieldData {
         toplevel $w
 
 	labelcombo $w.otype "Output Data Type" \
-	    {"Same as Input" "unsigned char" "unsigned short" \
+	    {"input 0" "input 1" "unsigned char" "unsigned short" \
 		 "unsigned int" \
-		 char short int float double Vector Tensor string} \
+		 char short int float double Vector Tensor} \
 	    $this-outputdatatype
 
-	label $w.info -text "Function (note: you can use the values 'v', 'x', 'y', and 'z')"
+	label $w.info -text "Function (note: you can use the values 'v0', 'v1', 'x', 'y', and 'z')"
 
 	option add *textBackground white	
 	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic

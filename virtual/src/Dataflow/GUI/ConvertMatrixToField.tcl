@@ -1,3 +1,4 @@
+##
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -26,24 +27,17 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-itcl_class SCIRun_ChangeFieldData_CalculateFieldData2 {
+itcl_class SCIRun_Converters_ConvertMatrixToField {
     inherit Module
     constructor {config} {
-        set name CalculateFieldData2
-	
-	# Trace variable for optionmenu so that it will display
-	# the correct value when opening a saved network.
-	global $this-outputdatatype
-	trace variable $this-outputdatatype w \
-	    "$this set_combobox .otype.c $this-outputdatatype"
+        set name ConvertMatrixToField
+        set_defaults
     }
 
-    method update_text {} {
-	set w .ui[modname]
-        if {[winfo exists $w]} {
-	    set $this-function [$w.row1 get 1.0 end]
-        }
+    method set_defaults {} {
+        global $this-datalocation
+        
+        set $this-datalocation "Node"
     }
 
     method ui {} {
@@ -53,24 +47,14 @@ itcl_class SCIRun_ChangeFieldData_CalculateFieldData2 {
         }
         toplevel $w
 
-	labelcombo $w.otype "Output Data Type" \
-	    {"input 0" "input 1" "unsigned char" "unsigned short" \
-		 "unsigned int" \
-		 char short int float double Vector Tensor} \
-	    $this-outputdatatype
 
-	label $w.info -text "Function (note: you can use the values 'v0', 'v1', 'x', 'y', and 'z')"
+        labelcombo $w.datalocation "Data Location" \
+          {"Node" "Element"} \
+          $this-datalocation
 
-	option add *textBackground white	
-	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic
 
-	$w.row1 insert end [set $this-function]
-
-	pack $w.info -side top -anchor w -padx 5 -pady 5
-	pack $w.row1 -side top -e y -f both -padx 5
-
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
+        makeSciButtonPanel $w $w $this
+        moveToCursor $w
     }
 
 

@@ -75,13 +75,40 @@ set CurrentlySelectedModules ""
 set network_executing "0"
 trace variable network_executing w handle_network_executing
 
+proc restore_not_executing_interface {} {
+    global network_executing maincanvas Color
+    set network_executing "0"
+    $maincanvas itemconfigure bgRect -fill $Color(NetworkEditor) \
+	-outline $Color(NetworkEditor)
+    
+    bind . <Control-d> "moduleDestroySelected"
+    bind . <Control-l> "ClearCanvas"
+    bind . <Control-z> "undo"
+    bind . <Control-e> "netedit scheduleall"
+    bind . <Control-y> "redo"
+    bind . <Control-o> "popupLoadMenu"
+    bind . <Control-s> "popupSaveMenu"
+    bind all <Control-q> "NiceQuit"
+    .main_menu.file.menu entryconfig  0 -state active
+    .main_menu.file.menu entryconfig  1 -state active
+    .main_menu.file.menu entryconfig  2 -state active
+    .main_menu.file.menu entryconfig  3 -state active
+    .main_menu.file.menu entryconfig  5 -state active
+    .main_menu.file.menu entryconfig  6 -state active
+    .main_menu.file.menu entryconfig  7 -state active
+    .main_menu.file.menu entryconfig  9 -state active
+    .main_menu.file.menu entryconfig 11 -state active
+}
 
 
 proc handle_network_executing { var op1 op2} {
-    global network_executing
-
+    global network_executing maincanvas Color
     # unbind/rebind the keystroke commands that can change network state.
     if { $network_executing == "1" } {
+	$maincanvas itemconfigure bgRect -fill $Color(NetworkEditorLocked) \
+	    -outline $Color(NetworkEditorLocked)
+
+	bind . <Control-u> "restore_not_executing_interface"
 	bind . <Control-d> ""
 	bind . <Control-l> ""
 	bind . <Control-z> ""
@@ -101,23 +128,7 @@ proc handle_network_executing { var op1 op2} {
 	.main_menu.file.menu entryconfig 11 -state disabled
 
     } else {
-	bind . <Control-d> "moduleDestroySelected"
-	bind . <Control-l> "ClearCanvas"
-	bind . <Control-z> "undo"
-	bind . <Control-e> "netedit scheduleall"
-	bind . <Control-y> "redo"
-	bind . <Control-o> "popupLoadMenu"
-	bind . <Control-s> "popupSaveMenu"
-	bind all <Control-q> "NiceQuit"
-	.main_menu.file.menu entryconfig  0 -state active
-	.main_menu.file.menu entryconfig  1 -state active
-	.main_menu.file.menu entryconfig  2 -state active
-	.main_menu.file.menu entryconfig  3 -state active
-	.main_menu.file.menu entryconfig  5 -state active
-	.main_menu.file.menu entryconfig  6 -state active
-	.main_menu.file.menu entryconfig  7 -state active
-	.main_menu.file.menu entryconfig  9 -state active
-	.main_menu.file.menu entryconfig 11 -state active
+	restore_not_executing_interface
     }
 }
 
@@ -349,9 +360,9 @@ proc makeNetworkEditor {} {
     # button 3.  The Modules List Menu can't be bound to the canvas
     # itself because mouse events are sent to both the objects on the
     # canvas (such as the lines connection the modules) and the canvas.
-    eval $maincanvas create rectangle [$maincanvas cget -scrollregion] \
-	-fill "$Color(NetworkEditor)" -outline "$Color(NetworkEditor)" \
-	-tags bgRect 
+     eval $maincanvas create rectangle [$maincanvas cget -scrollregion] \
+ 	-fill "$Color(NetworkEditor)" -outline "$Color(NetworkEditor)" \
+ 	-tags bgRect 
 
     $maincanvas configure \
 	-xscrollcommand "updateViewAreaBox; $botFrame.hscroll set" \

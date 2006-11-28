@@ -1,3 +1,4 @@
+##
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -26,22 +27,16 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-itcl_class SCIRun_Math_AppendMatrix {
+itcl_class SCIRun_Math_ReportMatrixRowMeasure {
     inherit Module
-
     constructor {config} {
-        set name AppendMatrix
+        set name ReportMatrixRowMeasure
+        set_defaults
     }
 
-    method make_entry {w text v c} {
-        frame $w
-        label $w.l -text "$text"
-        pack $w.l -side left
-        global $v
-        entry $w.e -textvariable $v
-        bind $w.e <Return> $c
-        pack $w.e -side right
+    method set_defaults {} {
+        global $this-method
+        set $this-method "Sum"        
     }
 
     method ui {} {
@@ -49,29 +44,27 @@ itcl_class SCIRun_Math_AppendMatrix {
         if {[winfo exists $w]} {
             return
         }
-
         toplevel $w
-        wm minsize $w 150 20
+
+        wm minsize $w 170 20
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
-        global $this-row
-        make_labeled_radio $w.f.r "Rows/Columns" "" \
-                top $this-row \
-		{{"Row" 1} \
-                {"Column" 0}}
-        global $this-append
-        make_labeled_radio $w.f.a "Append/Replace" "" \
-                top $this-append \
-		{{"Append" 1} \
-                {"Replace" 0}}
-        global $this-front
-        make_labeled_radio $w.f.f "Prepend/Postpend" "" \
-                top $this-front \
-		{{"Prepend" 1} \
-                {"Postpend" 0}}
-	pack $w.f.r $w.f.a $w.f.f -side left -expand 1 -fill x
+        make_labeled_radio $w.f.r "Matrix Column Operations:" "" \
+                top $this-method \
+                {{"Sum" Sum}\
+                {"Mean" Mean}\
+                {"Variance" Variance}\
+                {"Std Deviation" StdDev}\
+                {"Norm" Norm}\
+                {"Maximum" Maximum}\
+                {"Minimum" Minimum}\
+                {"Median" Median}}
+        pack $w.f.r -side top -expand 1 -fill x
+        pack $w.f -expand 1 -fill x
 
-	makeSciButtonPanel $w $w $this "\"Clear Output\" \"$this-c clear\" \"\""
-	moveToCursor $w
+        makeSciButtonPanel $w $w $this
+        moveToCursor $w
     }
 }
+
+

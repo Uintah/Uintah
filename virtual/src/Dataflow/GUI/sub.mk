@@ -38,8 +38,9 @@
 SRCDIR := Dataflow/GUI
 
 SRCS := \
+        $(SRCDIR)/AppendMatrix.tcl\
         $(SRCDIR)/CreateLightForViewer.tcl \
-        $(SRCDIR)/AppendMatrix.tcl \
+        $(SRCDIR)/CollectMatrices.tcl \
         $(SRCDIR)/ArrowWidget.tcl \
         $(SRCDIR)/BaseWidget.tcl \
         $(SRCDIR)/BoxWidget.tcl \
@@ -98,13 +99,13 @@ SRCS := \
         $(SRCDIR)/CreateAndEditCameraPath.tcl \
         $(SRCDIR)/CreateAndEditColorMap2D.tcl \
         $(SRCDIR)/ReportColumnMatrixMisfit.tcl \
-	$(SRCDIR)/GetHexVolSheetBasedOnEdgeIndices.tcl \
+				$(SRCDIR)/GetHexVolSheetBasedOnEdgeIndices.tcl \
         $(SRCDIR)/ExtractPlanarSliceFromField.tcl\
         $(SRCDIR)/ShowMeshBoundingBox.tcl\
         $(SRCDIR)/ReportFieldInfo.tcl\
         $(SRCDIR)/ReportFieldGeometryMeasures.tcl \
         $(SRCDIR)/ReadField.tcl \
-	$(SRCDIR)/SetFieldProperty.tcl\
+				$(SRCDIR)/SetFieldProperty.tcl\
         $(SRCDIR)/GetSliceFromLatVol.tcl\
         $(SRCDIR)/ClipRasterFieldByIndices.tcl\
         $(SRCDIR)/WriteField.tcl \
@@ -117,7 +118,7 @@ SRCS := \
         $(SRCDIR)/CreateViewerCaption.tcl \
         $(SRCDIR)/ViewGraph.tcl \
         $(SRCDIR)/ToolTipText.tcl \
-	$(SRCDIR)/InsertHexVolSheetFromTriSurf.tcl \
+				$(SRCDIR)/InsertHexVolSheetFromTriSurf.tcl \
         $(SRCDIR)/ExtractIsosurface.tcl \
         $(SRCDIR)/ClipVolumeByIsovalue.tcl \
         $(SRCDIR)/ClipVolumeByIsovalueWithRefinement.tcl \
@@ -131,7 +132,7 @@ SRCS := \
         $(SRCDIR)/MaskLatVol.tcl \
         $(SRCDIR)/ReportMatrixInfo.tcl \
         $(SRCDIR)/ReadMatrix.tcl \
-        $(SRCDIR)/GetColumnMatrixFromMatrix.tcl \
+        $(SRCDIR)/GetColumnOrRowFromMatrix.tcl \
         $(SRCDIR)/WriteMatrix.tcl \
         $(SRCDIR)/Module.tcl \
         $(SRCDIR)/NetworkEditor.tcl \
@@ -157,7 +158,7 @@ SRCS := \
         $(SRCDIR)/SciDialog.tcl \
         $(SRCDIR)/SciButtonPanel.tcl \
         $(SRCDIR)/SciMoveToCursor.tcl \
-	$(SRCDIR)/GeneratePointSamplesFromField.tcl \
+				$(SRCDIR)/GeneratePointSamplesFromField.tcl \
         $(SRCDIR)/SelectFieldROIWithBoxWidget.tcl \
         $(SRCDIR)/SetFieldOrMeshStringProperty.tcl \
         $(SRCDIR)/ShowColorMap.tcl \
@@ -174,8 +175,10 @@ SRCS := \
         $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
         $(SRCDIR)/CalculateFieldData.tcl \
-        $(SRCDIR)/CalculateFieldData2.tcl \
         $(SRCDIR)/CalculateFieldData3.tcl \
+        $(SRCDIR)/CalculateFieldDataCompiled.tcl \
+        $(SRCDIR)/CalculateFieldDataCompiled2.tcl \
+        $(SRCDIR)/CalculateFieldDataCompiled3.tcl \
         $(SRCDIR)/TransformMeshWithFunction.tcl \
         $(SRCDIR)/UIvar.tcl \
         $(SRCDIR)/ViewScene.tcl \
@@ -183,14 +186,34 @@ SRCS := \
         $(SRCDIR)/ViewWidget.tcl \
         $(SRCDIR)/ShowTextureSlices.tcl \
         $(SRCDIR)/ShowTextureVolume.tcl \
-	$(SRCDIR)/CreateString.tcl\
-	$(SRCDIR)/ReportStringInfo.tcl\
-	$(SRCDIR)/PrintMatrixIntoString.tcl\
-	$(SRCDIR)/PrintStringIntoString.tcl\
-	$(SRCDIR)/ShowString.tcl\
-	$(SRCDIR)/CreateMatrix.tcl\
-	$(SRCDIR)/GetFileName.tcl\
-	$(SRCDIR)/GenerateStreamLinesWithPlacementHeuristic.tcl\
+				$(SRCDIR)/ReadString.tcl \
+				$(SRCDIR)/WriteString.tcl \
+				$(SRCDIR)/CreateString.tcl\
+				$(SRCDIR)/ReportStringInfo.tcl\
+				$(SRCDIR)/PrintMatrixIntoString.tcl\
+				$(SRCDIR)/PrintStringIntoString.tcl\
+				$(SRCDIR)/ShowString.tcl\
+				$(SRCDIR)/CreateMatrix.tcl\
+				$(SRCDIR)/GetFileName.tcl\
+				$(SRCDIR)/GenerateStreamLinesWithPlacementHeuristic.tcl\
+        $(SRCDIR)/ReportMatrixColumnMeasure.tcl\
+        $(SRCDIR)/ReportMatrixRowMeasure.tcl\
+        $(SRCDIR)/ResizeMatrix.tcl\
+        $(SRCDIR)/StreamMatrixFromDisk.tcl\
+        $(SRCDIR)/CreateDataArray.tcl\
+        $(SRCDIR)/CalculateDataArray.tcl\
+        $(SRCDIR)/ReplicateDataArray.tcl\
+        $(SRCDIR)/ReportDataArrayMeasure.tcl\
+        $(SRCDIR)/ReportDataArrayInfo.tcl\
+        $(SRCDIR)/MapFieldDataFromElemToNode.tcl\
+        $(SRCDIR)/MapFieldDataFromNodeToElem.tcl\
+        $(SRCDIR)/SelectAndSetFieldData.tcl\
+        $(SRCDIR)/SelectAndSetFieldData3.tcl\
+        $(SRCDIR)/CalculateMeshNodes.tcl\
+        $(SRCDIR)/CollectFields.tcl\
+        $(SRCDIR)/GetDomainBoundary.tcl\
+        $(SRCDIR)/ConvertNrrdToField.tcl\
+        $(SRCDIR)/ConvertMatrixToField.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library

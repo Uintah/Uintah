@@ -88,6 +88,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-text-color-g
 	global $this-text-color-b
 	global $this-text-backface-cull
+	global $this-text-always_visible
 	global $this-text-fontsize
 	global $this-text-precision
 	global $this-text-render_locations
@@ -155,6 +156,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-color-g 1.0
 	set $this-text-color-b 1.0
 	set $this-text-backface-cull 0
+	set $this-text-always_visible 0
 	set $this-text-fontsize 1
 	set $this-text-precision 2
 	set $this-text-render_locations 0
@@ -622,6 +624,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	    -command "$this-c rerender_text" \
 	    -variable $this-text-backface-cull
 
+	checkbutton $text.alwaysvisible \
+	    -text "Text always visible (not hidden by faces)" \
+	    -command "$this-c rerender_text" \
+	    -variable $this-text-always_visible
+
 	checkbutton $text.locations \
 	    -text "Render indices as locations" \
 	    -command "$this-c rerender_text" \
@@ -675,7 +682,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	pack $text.precision.label -side left -anchor s -fill x
 	pack $text.precision.scale -side left -anchor n -fill x
 	
-	pack $text.show_text $text.show $text.backfacecull $text.locations \
+	pack $text.show_text $text.show $text.backfacecull \
+	    $text.alwaysvisible $text.locations \
 	    $text.use_def_col $text.def_col $text.size \
 	    $text.precision -side top -fill y -anchor w
     }

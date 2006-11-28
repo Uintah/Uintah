@@ -1,3 +1,4 @@
+##
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -27,58 +28,45 @@
 #
 
 
-# example of reader
-# by Samsonov Alexei
-# October 2000
-
-
-catch {rename SCIRun_DataIO_ReadColorMap2D ""}
-
-itcl_class SCIRun_DataIO_ReadColorMap2D {
+itcl_class SCIRun_Math_ResizeMatrix {
     inherit Module
-
     constructor {config} {
-	set name ReadColorMap2D
+        set name ResizeMatrix
+        set_defaults
+    }
+
+    method set_defaults {} {
+        global $this-dim-m
+        global $this-dim-n
+        
+        set $this-dim-m 1
+        set $this-dim-n 1
     }
 
     method ui {} {
-	set w .ui[modname]
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            return
+        }
+        toplevel $w
+        
+        iwidgets::labeledframe $w.frame -labeltext "NEW MATRIX DIMENSIONS"
+        set d [$w.frame childsite]
+        pack $w.frame -fill both -expand yes
+        
+        label $d.lab1 -text "Number of Rows"
+        entry $d.e1 -textvariable $this-dim-m        
+        label $d.lab2 -text "Number of Columns"
+        entry $d.e2 -textvariable $this-dim-n        
+        
+        grid $d.lab1 -row 0 -column 0  -sticky news
+        grid $d.e1 -row 0 -column 1  -sticky news
+        grid $d.lab2 -row 1 -column 0  -sticky news
+        grid $d.e2 -row 1 -column 1  -sticky news
 
-	if {[winfo exists $w]} {
-	    return
-	}
-
-	toplevel $w -class TkFDialog
-	# place to put preferred data directory
-	# it's used if $this-filename is empty
-	set initdir [netedit getenv SCIRUN_DATA]
-	
-	#######################################################
-	# to be modified for particular reader
-
-	# extansion to append if no extension supplied by user
-	set defext ".cmap2"
-	set title "Open colormap2 file"
-	
-	
-	# Unwrap $this-types into a list.
-	set tmp1 [set $this-types]
-	set tmp2 [eval "set tmp3 $tmp1"]
-	
-	######################################################
-	
-	makeOpenFilebox \
-		-parent $w \
-		-filevar $this-filename \
-		-setcmd "wm withdraw $w" \
-		-command "$this-c needexecute; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
-		-title $title \
-		-filetypes $tmp2 \
-		-initialdir $initdir \
-		-defaultextension $defext \
-	        -selectedfiletype $this-filetype
-
-	moveToCursor $w
+        makeSciButtonPanel $w $w $this
+        moveToCursor $w
     }
 }
+
+

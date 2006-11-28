@@ -27,8 +27,6 @@
 #
 
 
-package require Iwidgets 3.0
-
 itcl_class SCIRun_NewField_GeneratePointSamplesFromFieldOrWidget {
     inherit Module
 

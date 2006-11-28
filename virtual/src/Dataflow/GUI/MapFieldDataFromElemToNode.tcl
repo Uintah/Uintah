@@ -1,3 +1,4 @@
+##
 #
 #  For more information, please see: http://software.sci.utah.edu
 # 
@@ -26,56 +27,40 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-itcl_class SCIRun_ChangeFieldData_CalculateFieldData3 {
+itcl_class SCIRun_ChangeFieldData_MapFieldDataFromElemToNode {
     inherit Module
     constructor {config} {
-        set name CalculateFieldData3
-	
-	# Trace variable for optionmenu so that it will display
-	# the correct value when opening a saved network.
-	global $this-outputdatatype
-	trace variable $this-outputdatatype w \
-	    "$this set_combobox .otype.c $this-outputdatatype"
+        set name MapFieldDataFromElemToNode
+        set_defaults
     }
 
-    method update_text {} {
-	set w .ui[modname]
-        if {[winfo exists $w]} {
-	    set $this-function [$w.row1 get 1.0 end]
-        }
+    method set_defaults {} {
+    	global $this-method
+      set $this-method "Interpolate"
     }
 
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
 
-	labelcombo $w.otype "Output Data Type" \
-	    {"input 0" "input 1" "input 2" "unsigned char" "unsigned short" \
-		 "unsigned int" \
-		 char short int float double Vector Tensor} \
-	    $this-outputdatatype
+        iwidgets::Labeledframe $w.method -labelpos nw \
+		               -labeltext "Method for Computing Node Data" 
+			       
+        pack $w.method 
+        set method [$w.method childsite]
+        labelcombo $method.method "Method" \
+            {Interpolate Average Min Max Sum Median None} \
+            $this-method $this-temp
+        pack $method.method -side top 
 
-	label $w.info -text "Function (note: you can use the values 'v0', 'v1', 'v2', 'x', 'y', and 'z')"
-
-	option add *textBackground white	
-	iwidgets::scrolledtext $w.row1 -height 60 -hscrollmode dynamic
-
-	$w.row1 insert end [set $this-function]
-
-	pack $w.info -side top -anchor w -padx 5 -pady 5
-	pack $w.row1 -side top -e y -f both -padx 5
-
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
+        makeSciButtonPanel $w $w $this
+        moveToCursor $w
     }
-
-
-    method labelcombo { win text1 arglist var} {
+    
+    method labelcombo { win text1 arglist var var2} {
 	frame $win 
 	pack $win -side top -padx 5
 	label $win.l1 -text $text1 \
@@ -99,14 +84,11 @@ itcl_class SCIRun_ChangeFieldData_CalculateFieldData3 {
 	    $win.c insert end [set $var]
 	}
 
-	$win.c select [set $var]
+	label $win.l2 -text "" -width 40 -anchor w -just left
 
-	label $win.l2 -text "" -width 20 -anchor w -just left
-
-	# hack to associate optionmenus with a textvariable
-	# bind $win.c <Map> "$win.c select {[set $var]}"
-
-	pack $win.l1 $win.colon -side left
+  $win.c select [set $var]  
+	
+  pack $win.l1 $win.colon -side left
 	pack $win.c $win.l2 -side left	
     }
 
@@ -119,13 +101,28 @@ itcl_class SCIRun_ChangeFieldData_CalculateFieldData3 {
 	}
     }
 
-    method set_combobox { win var name1 name2 op } {
-	set w .ui[modname]
-	set menu $w.$win
-	if {[winfo exists $menu]} {
-	    $menu select $var
+    method config_labelcombo { win arglist sel} {
+	if {![winfo exists $win]} {
+	    return
 	}
-    }
+	$win.c delete 0 end
+	if {[llength $arglist]==0} {
+	    $win.c insert end ""
+	}
+	set i 0
+	set length [llength $arglist]
+	for {set elem [lindex $arglist $i]} {$i<$length} \
+	    {incr i 1; set elem [lindex $arglist $i]} {
+	    $win.c insert end $elem
+	}
+	
+	if {"$sel"!="---"} {
+	    $win.c select $sel
+	}
+}
+    
+    
+    
 }
 
 
