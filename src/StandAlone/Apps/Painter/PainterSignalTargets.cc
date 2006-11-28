@@ -888,9 +888,11 @@ Painter::ResampleVolume(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::AbortFilterOn(event_handle_t event) {
   cerr << "Stop Fitler\n";
+#ifdef HAVE_INSIGHT
   for (unsigned int i = 0; i < filters_.size(); ++i) 
     filters_[i]->stop();
   //  abort_filter_ = true;
+#endif
   return CONTINUE_E;
 }
 
