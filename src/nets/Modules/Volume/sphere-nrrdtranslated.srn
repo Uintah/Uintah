@@ -119,7 +119,7 @@
       <var name="resolution" val="{255}"/>
       <var name="realres" val="{255}"/>
     </module>
-    <module category="ChangeFieldData" id="m4" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m4" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="42" y="85"/>
       <var name="function" val="{const double minv = 0.115470053838;
 const double maxv= 1.73205080757;

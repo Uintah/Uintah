@@ -2,7 +2,7 @@
 <!DOCTYPE network
   PUBLIC '-//SCIRun/Network DTD'
   'network.dtd'>
-<network bbox="{12 7 634 707}" creationDate="{Thu Mar 16 2006}" creationTime="{10:32:12}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+<network bbox="{16 7 601 466}" creationDate="{Thu Mar 16 2006}" creationTime="{10:32:09}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
   <modules>
     <module category="NewField" id="m1" name="CreateLatVol" package="SCIRun">
@@ -13,13 +13,13 @@
       <var name="padpercent" val="{0.0}"/>
       <var name="data-at" val="{Nodes}"/>
     </module>
-    <module category="ChangeFieldData" id="m2" name="CalculateFieldData" package="SCIRun">
-      <position x="12" y="194"/>
-      <var name="function" val="{result = x;}"/>
-      <var name="outputdatatype" val="{double}"/>
+    <module category="ChangeFieldData" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
+      <position x="16" y="166"/>
+      <var name="function" val="{result=Cross(Vector(x, y, 0), Vector(0, 0, 1));}"/>
+      <var name="outputdatatype" val="{Vector}"/>
     </module>
     <module category="Visualization" id="m3" name="ShowField" package="SCIRun">
-      <position x="111" y="555"/>
+      <position x="97" y="340"/>
       <var name="nodes-on" val="{0}"/>
       <var name="nodes-as-disks" val="{1}"/>
       <var name="edges-on" val="{0}"/>
@@ -36,38 +36,39 @@
       <var name="show_progress" val="{}"/>
     </module>
     <module category="Visualization" id="m4" name="CreateStandardColorMaps" package="SCIRun">
-      <position x="439" y="327"/>
+      <position x="406" y="92"/>
       <var name="width" val="{335}"/>
       <var name="height" val="{40}"/>
       <var name="mapName" val="{Blackbody}"/>
-      <var name="minRes" val="{13}"/>
+      <var name="reverse" val="{1}"/>
+      <var name="minRes" val="{10}"/>
       <var name="resolution" val="{255}"/>
       <var name="realres" val="{255}"/>
     </module>
     <module category="Visualization" id="m5" name="RescaleColorMap" package="SCIRun">
-      <position x="336" y="440"/>
+      <position x="364" y="252"/>
       <var name="main_frame" val="{}"/>
       <var name="isFixed" val="{0}"/>
-      <var name="min" val="{-0.999823995441}"/>
-      <var name="max" val="{0.99817431085}"/>
+      <var name="min" val="{-0.991703652707}"/>
+      <var name="max" val="{0.994470534524}"/>
       <var name="makeSymmetric" val="{0}"/>
     </module>
     <module category="Render" id="m6" name="ViewScene" package="SCIRun">
-      <position x="117" y="663"/>
+      <position x="95" y="422"/>
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x615+56+36"/>
-      <var name="ViewWindow_0-view-eyep-x" val="{-3.06032534961}"/>
-      <var name="ViewWindow_0-view-eyep-y" val="{-10.5472644292}"/>
-      <var name="ViewWindow_0-view-eyep-z" val="{0.954258906462}"/>
-      <var name="ViewWindow_0-view-lookat-x" val="{0.00155775446311}"/>
-      <var name="ViewWindow_0-view-lookat-y" val="{-0.000122573113861}"/>
-      <var name="ViewWindow_0-view-lookat-z" val="{7.83316668473e-06}"/>
-      <var name="ViewWindow_0-view-up-x" val="{-0.0213627713069}"/>
-      <var name="ViewWindow_0-view-up-y" val="{0.0962358814753}"/>
-      <var name="ViewWindow_0-view-up-z" val="{0.995129281611}"/>
-      <var name="ViewWindow_0-view-fov" val="{20}"/>
+      <var name="ViewWindow_0-geometry" val="654x615+59+54"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-0.789976}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{-0.281165}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{4.74118}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.956403}"/>
+      <var name="ViewWindow_0-view-up-y" val="{-0.253913}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.144298}"/>
+      <var name="ViewWindow_0-view-fov" val="{               20}"/>
       <var name="ViewWindow_0-view-eyep_offset-x" val="{}"/>
       <var name="ViewWindow_0-view-eyep_offset-y" val="{}"/>
       <var name="ViewWindow_0-view-eyep_offset-z" val="{}"/>
@@ -150,7 +151,7 @@
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
     </module>
     <module category="NewField" id="m7" name="GeneratePointSamplesFromFieldOrWidget" package="SCIRun">
-      <position x="135" y="88"/>
+      <position x="76" y="85"/>
       <var name="endpoints" val="{0}"/>
       <var name="endpoint0x" val="{}"/>
       <var name="endpoint0y" val="{}"/>
@@ -162,24 +163,21 @@
       <var name="ringstate" val="{}"/>
       <var name="framestate" val="{}"/>
       <var name="numseeds" val="{2500}"/>
-      <var name="rngseed" val="{10}"/>
+      <var name="rngseed" val="{9}"/>
       <var name="rnginc" val="{0}"/>
       <var name="dist" val="{uniscat}"/>
       <var name="whichtab" val="{Random}"/>
     </module>
-    <module category="ChangeFieldData" id="m8" name="CalculateFieldData" package="SCIRun">
-      <position x="201" y="203"/>
-      <var name="function" val="{result = y;}"/>
-      <var name="outputdatatype" val="{double}"/>
+    <module category="ChangeFieldData" gui_visible="yes" id="m8" name="CalculateFieldDataCompiled" package="SCIRun">
+      <position x="202" y="164"/>
+      <var name="function" val="{result = x;
+}"/>
+      <var name="outputdatatype" val="{input}"/>
+      <var name="ui_geometry" val="{433x169+56+36}"/>
     </module>
-    <module category="ChangeFieldData" id="m9" name="CalculateFieldData" package="SCIRun">
-      <position x="412" y="201"/>
-      <var name="function" val="{result = z;}"/>
-      <var name="outputdatatype" val="{double}"/>
-    </module>
-    <module category="ChangeFieldData" gui_visible="yes" id="m10" name="CalculateFieldData3" package="SCIRun">
-      <position x="177" y="335"/>
-      <var name="function" val="{result = Vector(v0, v1, v2);
+    <module category="ChangeFieldData" gui_visible="yes" id="m9" name="CalculateFieldDataCompiled2" package="SCIRun">
+      <position x="35" y="252"/>
+      <var name="function" val="{Vector v(v0); v.normalize(); result = v * v1;
 }"/>
       <var name="outputdatatype" val="{Vector}"/>
       <var name="ui_geometry" val="{433x169+53+18}"/>
@@ -188,15 +186,13 @@
   <connections>
     <connection from="m7" fromport="0" id="c1" to="m2" toport="0"/>
     <connection from="m7" fromport="0" id="c2" to="m8" toport="0"/>
-    <connection from="m7" fromport="0" id="c3" to="m9" toport="0"/>
-    <connection from="m1" fromport="0" id="c4" to="m7" toport="0"/>
-    <connection from="m10" fromport="0" id="c5" to="m3" toport="0"/>
-    <connection from="m2" fromport="0" id="c6" to="m10" toport="0"/>
-    <connection from="m4" fromport="0" id="c7" to="m5" toport="0"/>
-    <connection from="m3" fromport="0" id="c8" to="m6" toport="0"/>
-    <connection from="m8" fromport="0" id="c9" to="m10" toport="1"/>
-    <connection from="m9" fromport="0" id="c10" to="m5" toport="1"/>
-    <connection from="m5" fromport="0" id="c11" to="m3" toport="1"/>
-    <connection from="m9" fromport="0" id="c12" to="m10" toport="2"/>
+    <connection from="m1" fromport="0" id="c3" to="m7" toport="0"/>
+    <connection from="m9" fromport="0" id="c4" to="m3" toport="0"/>
+    <connection from="m2" fromport="0" id="c5" to="m9" toport="0"/>
+    <connection from="m4" fromport="0" id="c6" to="m5" toport="0"/>
+    <connection from="m3" fromport="0" id="c7" to="m6" toport="0"/>
+    <connection from="m8" fromport="0" id="c8" to="m9" toport="1"/>
+    <connection from="m8" fromport="0" id="c9" to="m5" toport="1"/>
+    <connection from="m5" fromport="0" id="c10" to="m3" toport="1"/>
   </connections>
 </network>

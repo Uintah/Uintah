@@ -5,7 +5,7 @@
 <network bbox="{14 7 515 574}" creationDate="{Thu Mar 16 2006}" creationTime="{10:36:55}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
   <modules>
-    <module category="ChangeFieldData" id="m1" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m1" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="58" y="171"/>
       <var name="function" val="{result = x*x + y*y + z*z;
 }"/>
