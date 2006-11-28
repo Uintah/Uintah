@@ -459,8 +459,8 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     const MaterialSet* matls)
 {
   // Only allow particles at the finest level for now
-  if(level->getIndex() != level->getGrid()->numLevels()-1)
-    return;
+//  if(level->getIndex() != level->getGrid()->numLevels()-1)
+//    return;
   reloc_old_posLabel = old_posLabel;
   reloc_old_labels = old_labels;
   reloc_new_posLabel = new_posLabel;
@@ -641,6 +641,8 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
   
   int total_reloc[3], v;
   total_reloc[0]=total_reloc[1]=total_reloc[2]=0;
+  int total_refine[3];
+  total_refine[0]=total_refine[1]=total_refine[2]=0;
   typedef MPIScatterRecords::maptype maptype;
   typedef MPIScatterRecords::procmaptype procmaptype;
   typedef MPIScatterProcessorRecord::patchestype patchestype;
@@ -653,6 +655,19 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
   keepsets.initialize(0);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+
+    // AMR stuff
+    const Level* curLevel = patch->getLevel();
+    bool hasFiner   = curLevel->hasFinerLevel();
+    bool hasCoarser = curLevel->hasCoarserLevel();
+    Level* fineLevel=0;
+    Level* coarseLevel=0;
+    if(hasFiner){
+      fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
+    }
+    if(hasCoarser){
+      coarseLevel = (Level*) curLevel->getCoarserLevel().get_rep();
+    }
 
     // Particles are only allowed to be one cell out
     IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
@@ -674,10 +689,13 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 
       ParticleSubset* relocset = scinew ParticleSubset(pset->getParticleSet(),
 						       false, -1, 0, 0);
+      ParticleSubset* refineset = scinew ParticleSubset(pset->getParticleSet(),
+						       false, -1, 0, 0);
+      ParticleSubset* coarsenset = scinew ParticleSubset(pset->getParticleSet(),
+						       false, -1, 0, 0);
       ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
 						      false, -1, 0,
 						      pset->numParticles());
-
       ParticleSubset* delset = new_dw->getDeleteSubset(matl, patch);
       // Look for particles that left the patch, 
       // and if they are not in the delete set, put them in relocset
@@ -696,14 +714,24 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 
 	// if particle is in delete set, don't keep or relocate
 	//	for (ParticleSubset::iterator deliter = delset->begin(); 
-	//	     deliter != delset->end(); deliter++) {
+	//	     deliter != delset->end(); deliter++) 
 
 	if (deliter != delset->end() && idx == *deliter) {
 	  keep = false;
 	  deliter++;
 	}
 	if(patch->getBox().contains(px[idx]) && keep){
-	  keepset->addParticle(idx);
+          bool refined=false;  // is particle going to a finer patch?
+          if(hasFiner){        // See if a finer patch exists at this point
+            const Patch* patchExists = fineLevel->getPatchFromPoint(px[idx]);
+            if(patchExists != 0){  // Then there is a finer patch here
+	      refineset->addParticle(idx);
+              refined=true;
+            }
+          }
+          if(!hasFiner || !refined){  // No finer patch, at least at this point
+	    keepset->addParticle(idx);
+          }
 	}
 	else if(keep) {
 	  relocset->addParticle(idx);
@@ -734,8 +762,16 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	    }
 	  }
 	  if(i == (int)neighbors.size()){
+            bool coarsened = false;
+            //  Particle fell off of current level, maybe to a coarser one?
+            if(hasCoarser){   // See if a coarser patch exists at this point
+	      if(coarseLevel->containsPoint(px[idx])){
+                coarsenset->addParticle(idx);
+                coarsened = true;
+              }
+            }
 	    // Make sure that the particle really left the world
-	    if(level->containsPoint(px[idx])){
+	    if(level->containsPoint(px[idx]) && ! coarsened){
               static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
               warn.invoke();
             }
@@ -764,6 +800,17 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	}
       }
       delete relocset;
+
+      if(refineset->numParticles() > 0){
+        total_refine[0]+=refineset->numParticles();
+        // Figure out exactly where they went...
+        for(ParticleSubset::iterator iter = relocset->begin();
+            iter != relocset->end(); iter++){
+          //particleIndex idx = *iter;
+	}
+      }
+      delete refineset;
+
     }
   }
 
