@@ -52,6 +52,15 @@ bool ConvertToUnstructuredMeshAlgo::ConvertToUnstructuredMesh(ProgressReporter *
   }
   
   std::string mesh_type = fi.get_mesh_type();
+
+  if (mesh_type == "HexVolMesh" || mesh_type == "TetVolMesh" ||
+      mesh_type == "TriSurfMesh" || mesh_type == "QuadSurfMesh" ||
+      mesh_type == "CurveMesh" || mesh_type == "PointCloudMesh") {
+    pr->remark("Mesh already is unstructured; copying input to output");
+    output = input;
+    return true;
+  }
+
   if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh"))
   {
     fo.set_mesh_type("HexVolMesh");
