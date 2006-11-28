@@ -207,11 +207,26 @@ Scheduler::do_scheduling_real(Module* exclude)
     return;
 
   lockNeedExecute();
-  int nmodules=net->nmodules();
+  int nmodules;
+  nmodules=net->nmodules();
+
+  int i;			    
+  bool have_something_to_execute=false;
+  for(i=0;i<nmodules && !have_something_to_execute;i++)
+  {
+    Module* module=net->module(i);
+    if (module->need_execute_) have_something_to_execute=true;
+  }
+
+  unlockNeedExecute();
+  if (!have_something_to_execute) return;
+  report_execution_started();
+  lockNeedExecute();
+
+  nmodules=net->nmodules();
   queue<Module *> needexecute;		
 
   // build queue of module ptrs to execute
-  int i;			    
   for(i=0;i<nmodules;i++)
   {
     Module* module=net->module(i);
@@ -225,8 +240,6 @@ Scheduler::do_scheduling_real(Module* exclude)
     unlockNeedExecute();
     return;
   }
-
-  report_execution_started();
 
   // For all of the modules that need executing, execute the
   // downstream modules and arrange for the data to be sent to them
