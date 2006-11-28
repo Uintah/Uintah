@@ -87,6 +87,7 @@ Scheduler::Scheduler(Network* net)
     schedule(true),
     serial_id(1),
     callback_lock_("Scheduler lock for callbacks_"),
+    need_execute_lock_("Scheduler lock for modules setting need_execute"),
     mailbox("NetworkEditor request FIFO", 100)
 {
   net->attach(this);
@@ -177,6 +178,7 @@ void
 Scheduler::multisend_real(OPort* oport)
 {
   int nc=oport->nconnections();
+  lockNeedExecute();
   for (int c=0;c<nc;c++)
   {
     Connection* conn=oport->connection(c);
@@ -187,6 +189,7 @@ Scheduler::multisend_real(OPort* oport)
       m->need_execute_ = true;
     }
   }
+  unlockNeedExecute();
 }
 
 
@@ -203,11 +206,27 @@ Scheduler::do_scheduling_real(Module* exclude)
   if (!schedule)
     return;
 
-  int nmodules=net->nmodules();
+  lockNeedExecute();
+  int nmodules;
+  nmodules=net->nmodules();
+
+  int i;			    
+  bool have_something_to_execute=false;
+  for(i=0;i<nmodules && !have_something_to_execute;i++)
+  {
+    Module* module=net->module(i);
+    if (module->need_execute_) have_something_to_execute=true;
+  }
+
+  unlockNeedExecute();
+  if (!have_something_to_execute) return;
+  report_execution_started();
+  lockNeedExecute();
+
+  nmodules=net->nmodules();
   queue<Module *> needexecute;		
 
   // build queue of module ptrs to execute
-  int i;			    
   for(i=0;i<nmodules;i++)
   {
     Module* module=net->module(i);
@@ -218,11 +237,10 @@ Scheduler::do_scheduling_real(Module* exclude)
   }
   if (needexecute.empty())
   {
+    unlockNeedExecute();
     return;
   }
 
-  report_execution_started();
-  
   // For all of the modules that need executing, execute the
   // downstream modules and arrange for the data to be sent to them
   // mm - this doesn't really execute them. It just adds modules to
@@ -303,7 +321,7 @@ Scheduler::do_scheduling_real(Module* exclude)
     OPort* oport=conn->oport;
     Module* module=oport->get_module();
 
-    // Only tricker the non-executing modules.
+    // Only trigger the non-executing modules.
     if (!module->need_execute_)
     {
       module->mailbox_.send(scinew Scheduler_Module_Message(conn));
@@ -326,7 +344,7 @@ Scheduler::do_scheduling_real(Module* exclude)
     Module* module = net->module(i);
     if (module == exclude)
     {
-      report_execution_finished_real(serial_base + i);
+      // we'll call report_execution_finished_real after we unlockNeedExecute
     }
     else if (module->need_execute_)
     {
@@ -338,6 +356,17 @@ Scheduler::do_scheduling_real(Module* exclude)
       // Already done, just synchronize.
       module->mailbox_.send(scinew Scheduler_Module_Message(serial_base + i,
                                                            false));
+    }
+  }
+
+  unlockNeedExecute();
+
+  for(i=0;i<nmodules;i++)
+  {
+    Module* module = net->module(i);
+    if (module == exclude)
+    {
+      report_execution_finished_real(serial_base + i);
     }
   }
 }

@@ -26,9 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  ColorMapWriter.cc: Save persistent representation of a colormap to a file
  *
  *  Written by:
  *   Steven G. Parker
@@ -50,6 +48,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/String.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 namespace SCIRun {
 
@@ -122,20 +122,18 @@ template <class HType>
 void
 GenericWriter<HType>::execute()
 {
-  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_input_port(0);
-  if (!inport) {
-    error("Unable to initialize iport.");
-    return;
-  }
-
-  // Read data from the input port
-  if (!inport->get(handle_) || !handle_.get_rep())
+  if (!(get_input_handle(0,handle_,true))) return;
+  
+  StringHandle filename;
+  if (get_input_handle("Filename",filename,false)) 
   {
-    remark("No data on input port.");
-    return;
+    filename_.set(filename->get());
+    get_ctx()->reset();
   }
+  
 
   // If no name is provided, return.
+
   const string fn(filename_.get());
   if (fn == "")
   {

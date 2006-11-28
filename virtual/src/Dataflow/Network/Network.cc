@@ -52,6 +52,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 
+
 #ifdef _WIN32
 #include <io.h>
 #endif
@@ -62,8 +63,10 @@ using namespace SCIRun;
 using namespace std;
 
 
-Network::Network()
-  : the_lock("Network lock"), sched(0)
+Network::Network() :
+  wait_delete_("Signal module deletion"),
+  the_lock("Network lock"), 
+  sched(0)
 {
 }
 
@@ -105,21 +108,30 @@ Network::write_unlock()
 int
 Network::nmodules()
 {
-  return modules.size();
+	the_lock.lock();
+	int sz = static_cast<int>(modules.size());
+	the_lock.unlock();
+  return (sz);
 }
 
 
 Module*
 Network::module(int i)
 {
-  return modules[i];
+	the_lock.lock();
+	Module* ptr = modules[i];
+	the_lock.unlock();
+  return ptr;
 }
 
 
 Connection*
 Network::connection(int i)
 {
-  return connections[i];
+	the_lock.lock();
+	Connection* ptr = connections[i];
+	the_lock.unlock();
+  return ptr;
 }
 
 
@@ -140,10 +152,13 @@ Network::connect(Module* m1, int p1, Module* m2, int p2)
   ostringstream ids;
   ids << m1->id_ << "_p" << p1 << "_to_" << m2->id_ << "_p" << p2;
   Connection* conn = scinew Connection(m1, p1, m2, p2, ids.str());
-  connections.push_back(conn);
+  
+	the_lock.lock();
+	connections.push_back(conn);
 
   // Reschedule next time we can.
   reschedule=1;
+	the_lock.unlock();
 
   return conn->id;
 }
@@ -152,6 +167,7 @@ Network::connect(Module* m1, int p1, Module* m2, int p2)
 int
 Network::disconnect(const string& connId)
 {
+	the_lock.lock();
   unsigned int i;
   for (i = 0; i < connections.size(); i++)
   {
@@ -167,6 +183,7 @@ Network::disconnect(const string& connId)
  
   delete connections[i];
   connections.erase(connections.begin() + i);
+	the_lock.unlock();
   return 1;
 }
 
@@ -216,15 +233,21 @@ Network::add_module(const string& packageName,
     cerr << "Error: can't create instance " << instanceName << "\n";
     return 0;
   }
+	
+	the_lock.lock();
   modules.push_back(mod);
+	the_lock.unlock();
 
   // Binds NetworkEditor and Network instances to module instance.  
   // Instantiates ModuleHelper and starts event loop.
   mod->set_context(this);
 
   // add Module id and ptr to Module to hash table of modules in network
+	the_lock.lock();
   module_ids[mod->id_] = mod;
-  mod->gui_->add_command(mod->id_+"-c", mod, 0);
+  the_lock.unlock();
+	
+	mod->gui_->add_command(mod->id_+"-c", mod, 0);
   return mod;
 }
 
@@ -236,15 +259,20 @@ Network::add_instantiated_module(Module* mod)
     cerr << "Error: can't add instanated module\n";
     return;
   }
+	
+	the_lock.lock();
   modules.push_back(mod);
-
+	the_lock.unlock();
+	
   // Binds NetworkEditor and Network instances to module instance.
   // Instantiates ModuleHelper and starts event loop.
   mod->set_context(this);
   
   // add Module id and ptr to Module to hash table of modules in network
+	the_lock.lock();
   module_ids[mod->id_] = mod;
-
+  the_lock.unlock();
+	
   GuiInterface* gui = mod->gui_;
   // Add a TCL command for this module...
   gui->add_command(mod->id_+"-c", mod, 0);
@@ -256,16 +284,19 @@ Network::add_instantiated_module(Module* mod)
 Module*
 Network::get_module_by_id(const string& id)
 {
+	Module* m = 0;
+
+	the_lock.lock();
   MapStringModule::iterator mod;
   mod = module_ids.find(id);
   if (mod != module_ids.end())
   {
-    return (*mod).second;
+    m = (*mod).second;
   }
-  else
-  {
-    return 0;
-  }
+
+	the_lock.unlock();
+	
+	return (m);
 }
 
 
@@ -291,19 +322,29 @@ public:
 
   void run()
   {
-    Network::MapStringModule::iterator const mpos = 
-      net_->module_ids.find(module_->get_id());
-    ASSERT(mpos != net_->module_ids.end());
-    
+		// Get module ID
+		string mod_id = module_->get_id();
+
+		// Remove module from list
+		net_->write_lock();
     unsigned int vpos = 0;
     while (vpos<net_->modules.size() && net_->modules[vpos]!=module_) ++vpos;
     ASSERT(vpos<net_->modules.size());
+    net_->modules.erase(net_->modules.begin()+vpos);		
+		net_->write_unlock();
 
-    net_->module_ids.erase(mpos);
-    net_->modules.erase(net_->modules.begin()+vpos);
-
-    // The Module destructor blocks the thread until execution is complete
     delete module_;
+
+		net_->write_lock();
+    Network::MapStringModule::iterator const mpos = 
+      net_->module_ids.find(mod_id);
+    ASSERT(mpos != net_->module_ids.end());
+    net_->module_ids.erase(mpos);
+
+
+		//Signal that we are done with deleting
+		net_->wait_delete_.conditionBroadcast();
+		net_->write_unlock();
   }
 };
 }
@@ -321,9 +362,19 @@ Network::delete_module(const string& id)
   const string tname("Delete module: " + id);
   Thread *mod_deleter = scinew Thread(dm, tname.c_str());
   mod_deleter->detach();
-
+	
+	// Wait until module is deleted
+	//the_lock.lock();
+	//while(module_ids.find(id) != module_ids.end())
+	//{
+	//	wait_delete_.wait(the_lock);
+	//	the_lock.lock();
+	//}
+	//the_lock.unlock();
+	
   return 1;
 }
+
 
 
 void
@@ -362,12 +413,15 @@ Network::attach(Scheduler* _sched)
 void
 Network::disable_connection(const string& connId)
 {
-  for (unsigned int i = 0; i < connections.size(); i++)
+	the_lock.lock();
+	for (unsigned int i = 0; i < connections.size(); i++)
     if (connections[i]->id == connId)
     {
       connections[i]->disabled_ = true;
+			the_lock.unlock();
       return;
     }
+	the_lock.unlock();
 }
 
 

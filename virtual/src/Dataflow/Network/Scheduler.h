@@ -106,6 +106,7 @@ class SCISHARE Scheduler : public Runnable
   std::vector<SCData> callbacks_;
   std::vector<SCData> start_callbacks_; // prior to execution of any module
   Mutex callback_lock_;
+  Mutex need_execute_lock_;
 
   virtual void run();
   void main_loop();
@@ -121,6 +122,11 @@ public:
   Scheduler(Network*);
   ~Scheduler();
     
+  // Prevent modules from changing their need_execute_ state while
+  //   the dataflow dependency tree is being walked
+  inline void lockNeedExecute() { need_execute_lock_.lock(); }
+  inline void unlockNeedExecute() { need_execute_lock_.unlock(); }
+
   // Turns scheduler on and off
   // Returns: true if scheduler is now on, false if scheduler is now off
   bool toggleOnOffScheduling();

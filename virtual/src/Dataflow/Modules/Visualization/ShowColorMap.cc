@@ -232,6 +232,7 @@ ShowColorMap::execute()
 	char value[80];
 	GeomLines *lines = scinew GeomLines();
 	GeomTexts *texts = scinew GeomTexts();
+	texts->set_is_2d(true);
 	texts->set_font_index(gui_text_fontsize_.get());
 	int num_sig_digits = gui_num_sig_digits_.get();
 	if (num_sig_digits < 1) {

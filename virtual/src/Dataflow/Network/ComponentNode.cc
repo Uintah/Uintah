@@ -132,12 +132,7 @@ set_description(ModuleInfo &mi, const xmlNodePtr cnode)
       
       xmlNodePtr node = onode->children;
       for (; node != 0; node = node->next) {
-	if (string(to_char_ptr(node->name)) == string("description")) 
-	{
-	  mi.help_description_ = get_serialized_children(node);
-	  return true;
-	} 
-	else if (string(to_char_ptr(node->name)) == string("summary")) 
+        if (string(to_char_ptr(node->name)) == string("summary")) 
 	{
 	  mi.summary_ = get_serialized_children(node);
 	} 
@@ -222,25 +217,7 @@ write_component_file(const ModuleInfo &mi, const char* filename)
   }
   // summary
   xmlNewChild(node, 0, BAD_CAST "summary", BAD_CAST mi.summary_.c_str());
-  // description
-  tmp = xmlNewChild(node, 0, BAD_CAST "description", 0);
 
-
-  // trim out the <p> </p> from the first and last line added from 
-  // the temp xml file that the component wizard creates, and add 
-  // the 'p' node instead.
-  
-  size_t s = mi.help_description_.find("<p>", 0);
-  size_t e = mi.help_description_.find("</p>", 0);
-  s = mi.help_description_.find("\n", s) + 1;
-  e = mi.help_description_.rfind("\n", e) - 1;
-
-  string hdtrimmed = mi.help_description_.substr(s, e - s);
-  
-  xmlNewChild(tmp, 0, BAD_CAST "p", 
-	      BAD_CAST hdtrimmed.c_str());
-  
- 
   // io
   node = xmlNewChild(root_node, 0, BAD_CAST "io", 0); 
 
