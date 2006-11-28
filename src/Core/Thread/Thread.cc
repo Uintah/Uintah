@@ -71,7 +71,7 @@
 #  include <sci_defs/environment_defs.h> // for SCIRUN_OBJDIR. can't use sci_getenv lest we create a circular dependency
 #  undef SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
 #  define strcasecmp stricmp //native windows doesn't have strcasecmp
-#  ifndef BUILD_STATIC
+#  ifndef BUILD_CORE_STATIC
 #    define SCISHARE __declspec(dllexport)
 #  else
 #    define SCISHARE

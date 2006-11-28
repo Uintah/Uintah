@@ -61,9 +61,9 @@ public:
   };
 
   virtual FieldHandle clip_nodes(FieldHandle field, 
-				 const set<unsigned int>& indeces) = 0;
+				 const vector<unsigned int>& indeces) = 0;
   virtual FieldHandle clip_faces(FieldHandle field, 
-				 const set<unsigned int>& indeces) = 0;
+				 const vector<unsigned int>& indeces) = 0;
   
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc);
@@ -75,9 +75,9 @@ class ClipAtIndecesAlgo : public ClipAtIndecesBase
 {
 public:
   virtual FieldHandle clip_nodes(FieldHandle field, 
-				 const set<unsigned int>& indeces);
+				 const vector<unsigned int>& indeces);
   virtual FieldHandle clip_faces(FieldHandle field, 
-				 const set<unsigned int>& indeces);
+				 const vector<unsigned int>& indeces);
   
 };
 
@@ -86,7 +86,7 @@ public:
 template<class Field>
 FieldHandle
 ClipAtIndecesAlgo<Field>::clip_nodes(FieldHandle field, 
-				     const set<unsigned int>& indeces)
+				     const vector<unsigned int>& indeces)
 {
   typedef typename Field::value_type value_t; 
   typedef typename Field::mesh_type  imesh_t; 
@@ -104,7 +104,7 @@ ClipAtIndecesAlgo<Field>::clip_nodes(FieldHandle field,
 
   vector<typename mesh_t::Node::index_type> new_idxs;
   mesh_t *msh = new mesh_t();
-  set<unsigned int>::iterator iter = indeces.begin();
+  vector<unsigned int>::const_iterator iter = indeces.begin();
   while (iter != indeces.end()) {
     nidx_t idx = (nidx_t)*iter++;
 
@@ -132,7 +132,7 @@ ClipAtIndecesAlgo<Field>::clip_nodes(FieldHandle field,
 template<class Field>
 FieldHandle
 ClipAtIndecesAlgo<Field>::clip_faces(FieldHandle field, 
-				     const set<unsigned int>& indeces)
+				     const vector<unsigned int>& indeces)
 {
   typedef typename Field::value_type value_t; 
   typedef typename Field::mesh_type  imesh_t; 
@@ -150,7 +150,7 @@ ClipAtIndecesAlgo<Field>::clip_faces(FieldHandle field,
   typename Field::mesh_handle_type imesh = ifld->get_typed_mesh();
 
   mesh_t *msh = new mesh_t();
-  set<unsigned int>::iterator iter = indeces.begin();
+  vector<unsigned int>::const_iterator iter = indeces.begin();
   while (iter != indeces.end()) {
     fidx_t idx = (fidx_t)*iter++;
 
@@ -173,8 +173,10 @@ ClipAtIndecesAlgo<Field>::clip_faces(FieldHandle field,
 }
 
 
-SCISHARE FieldHandle clip_nodes(FieldHandle fld, const set<unsigned int>& indeces);
-SCISHARE FieldHandle clip_faces(FieldHandle fld, const set<unsigned int>& indeces);
+SCISHARE FieldHandle clip_nodes(FieldHandle fld, 
+				const vector<unsigned int>& indeces);
+SCISHARE FieldHandle clip_faces(FieldHandle fld, 
+				const vector<unsigned int>& indeces);
 
 } // namespace SCIRun
 

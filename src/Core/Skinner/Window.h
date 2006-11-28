@@ -34,6 +34,12 @@
 
 #include <Core/Skinner/Parent.h>
 
+#include <sci_defs/image_defs.h>
+#ifdef HAVE_PNG
+#  include <png.h>
+#endif
+
+
 namespace SCIRun {
   class OpenGLContext;
   class ThrottledRunnable;
@@ -47,6 +53,7 @@ namespace SCIRun {
       virtual MinMax                    get_minmax(unsigned int);
       virtual int                       get_signal_id(const string &) const;
     private:
+      void                              save_png();
       Mutex				lock_;
       CatcherFunction_t                 close;
       CatcherFunction_t                 mark_redraw;
@@ -63,6 +70,13 @@ namespace SCIRun {
       Thread *                          draw_thread_;
       Drawables_t                       redrawables_;
       bool                              force_redraw_;
+
+#ifdef HAVE_PNG
+      unsigned char *                   png_buf_;
+      png_bytep *                       png_rows_;
+      int                               png_num_;
+      bool                              do_png_;
+#endif
     };
 
   }

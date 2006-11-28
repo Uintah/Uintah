@@ -43,6 +43,7 @@
 
 namespace SCIRun {
 
+class RenderParams;
 
 class SCISHARE DataManager : public ThrottledRunnable 
 {
@@ -62,10 +63,13 @@ public:
 
   // sends Scene Graph event with the rendered geometry.
   bool           show_field(unsigned int fld_id);
+  bool           toggle_field_visibility(unsigned int fld_id);
   void           selection_target_changed(unsigned int fid);
   unsigned int   get_selection_target() { return sel_fid_; }
 
 private:
+  void           set_render_params(unsigned int);
+
   Mutex                               lock_;
   
   map<unsigned int, NrrdDataHandle>   nrrds_;
@@ -73,11 +77,13 @@ private:
   map<unsigned int, FieldHandle>      fields_;
   
   unsigned int                        sel_fid_;
+  RenderParams                       *params_;
 
   ToolManager                         tm_;
   EventManager::event_mailbox_t      *events_;
 
   static unsigned int                 next_id_;
+
 };
 
 }

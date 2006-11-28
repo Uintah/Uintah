@@ -2106,7 +2106,9 @@ bool
 TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
-
+  // Check last cell found first.  Copy cache to cell first so that we
+  // don't care about thread safeness, such that worst case on
+  // context switch is that cache is not found.
   if (cell > typename Cell::index_type(0) &&
       cell < typename Cell::index_type(cells_.size()/4) &&
       inside(cell, p))
@@ -2114,7 +2116,7 @@ TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p) const
       return true;
   }
 
-  ASSERTMSG(grid_.get_rep(), "synchronize(LOCATE) failed to build a grid.");
+  ASSERTMSG(synchronized_ & LOCATE_E,"TetVolMesh: need to synchronize LOCATE_E first");
 
   const list<unsigned int> *candidates;
   if (grid_->lookup(candidates, p))

@@ -140,7 +140,8 @@ public:
 				 bool render_nodes,
 				 bool render_edges,
 				 bool render_faces,
-				 bool render_cells) = 0;
+				 bool render_cells,
+				 bool always_visible) = 0;
 
   RenderFieldBase();
   virtual ~RenderFieldBase();
@@ -195,7 +196,8 @@ public:
 				 bool render_nodes,
 				 bool render_edges,
 				 bool render_faces,
-				 bool render_cells);
+				 bool render_cells,
+				 bool always_visible);
 
 protected:
   GeomHandle render_nodes(Fld *fld, 
@@ -250,14 +252,16 @@ protected:
 			      bool use_default_material,
 			      bool backface_cull_p,
 			      int fontsize,
-			      int precision);
+			      int precision,
+			      bool always_visible);
   GeomHandle render_text_data_nodes(FieldHandle fld,
 				    ColorMapHandle color_handle,
 				    bool use_color_map,
 				    bool use_default_material,
 				    bool backface_cull_p,
 				    int fontsize,
-				    int precision);
+				    int precision,
+				    bool always_visible);
   GeomHandle render_text_nodes(FieldHandle fld,
 			       ColorMapHandle color_handle,
 			       bool use_color_map,
@@ -265,28 +269,32 @@ protected:
 			       bool backface_cull_p,
 			       int fontsize,
 			       int precision,
-			       bool render_locations);
+			       bool render_locations,
+			       bool always_visible);
   GeomHandle render_text_edges(FieldHandle fld,
 			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       int fontsize,
 			       int precision,
-			       bool render_locations);
+			       bool render_locations,
+			       bool always_visible);
   GeomHandle render_text_faces(FieldHandle fld,
 			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       int fontsize,
 			       int precision,
-			       bool render_locations);
+			       bool render_locations,
+			       bool always_visible);
   GeomHandle render_text_cells(FieldHandle fld,
 			       ColorMapHandle color_handle,
 			       bool use_color_map,
 			       bool use_default_material,
 			       int fontsize,
 			       int precision,
-			       bool render_locations);
+			       bool render_locations,
+			       bool always_visible);
 };
 
 
@@ -323,7 +331,8 @@ public:
           bool render_nodes,
           bool render_edges,
           bool render_faces,
-bool render_cells);
+					bool render_cells,
+				  bool always_visible);
 
 protected:
   GeomHandle render_nodes(Field *fld, 
@@ -1973,7 +1982,8 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				   bool render_nodes,
 				   bool render_edges,
 				   bool render_faces,
-				   bool render_cells)
+				   bool render_cells,
+				   bool always_visible)
 {
   GeomGroup *texts = scinew GeomGroup;
   GeomHandle text_switch = scinew GeomSwitch(texts);
@@ -1984,7 +1994,7 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				color_handle.get_rep(),
 				use_default_material,
 				backface_cull_p,
-				fontsize, precision));
+				fontsize, precision, always_visible));
   }
   if (render_nodes)
   {
@@ -1992,21 +2002,24 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
 				 color_handle.get_rep(),
 				 use_default_material,
 				 backface_cull_p,
-				 fontsize, precision, render_locations));
+				 fontsize, precision, 
+				 render_locations, always_visible));
   }
   if (render_edges)
   {
     texts->add(render_text_edges(field_handle, color_handle, 
 				 color_handle.get_rep(),
 				 use_default_material,
-				 fontsize, precision, render_locations));
+				 fontsize, precision, 
+				 render_locations, always_visible));
   }
   if (render_faces)
   {
     texts->add(render_text_faces(field_handle, color_handle, 
 				 color_handle.get_rep(),
 				 use_default_material,
-				 fontsize, precision, render_locations));
+				 fontsize, precision, 
+				 render_locations, always_visible));
   }
   if (render_cells)
   {
@@ -2014,7 +2027,8 @@ RenderField<Fld, Loc>::render_text(FieldHandle field_handle,
     texts->add(render_text_cells(field_handle, color_handle, 
 				 color_handle.get_rep(),
 				 use_default_material,
-				 fontsize, precision, render_locations));
+				 fontsize, precision, 
+				 render_locations, always_visible));
   }
   return text_switch;
 }
@@ -2042,14 +2056,15 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
 					bool use_default_material,
 					bool backface_cull_p,
 					int fontsize,
-					int precision)
+					int precision,
+					bool always_visible)
 {
   if (backface_cull_p && field_handle->basis_order() == 1)
   {
     return render_text_data_nodes(field_handle, color_handle, use_color_map,
 				  use_default_material,
 				  backface_cull_p, fontsize,
-				  precision);
+				  precision, always_visible);
   }
 
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
@@ -2058,6 +2073,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
   GeomTexts *texts = scinew GeomTexts();
+  if (always_visible) texts->set_always_visible();
   GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
@@ -2130,7 +2146,8 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
 					      bool use_default_material,
 					      bool backface_cull_p,
 					      int fontsize,
-					      int precision)
+					      int precision,
+					      bool always_visible)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -2151,6 +2168,7 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
   else
   {
     texts = scinew GeomTexts();
+    if (always_visible) texts->set_always_visible();
     text_switch = scinew GeomSwitch(scinew GeomDL(texts));
     texts->set_font_index(fontsize);
   }
@@ -2253,7 +2271,8 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
 					 bool backface_cull_p,
 					 int fontsize,
 					 int precision,
-					 bool render_locations)
+					 bool render_locations,
+					 bool always_visible)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -2274,6 +2293,7 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
   else
   {
     texts = scinew GeomTexts();
+    if (always_visible) texts->set_always_visible();
     text_switch = scinew GeomSwitch(scinew GeomDL(texts));
     texts->set_font_index(fontsize);
   }
@@ -2381,7 +2401,8 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
 					 bool use_default_material,
 					 int fontsize,
 					 int precision,
-					 bool render_locations)
+					 bool render_locations,
+					 bool always_visible)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -2390,6 +2411,7 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
   mesh->synchronize(Mesh::EDGES_E);
 
   GeomTexts *texts = scinew GeomTexts;
+  if (always_visible) texts->set_always_visible();
   GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
@@ -2471,7 +2493,8 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
 					 bool use_default_material,
 					 int fontsize,
 					 int precision,
-					 bool render_locations)
+					 bool render_locations,
+					 bool always_visible)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -2480,6 +2503,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   mesh->synchronize(Mesh::FACES_E);
 
   GeomTexts *texts = scinew GeomTexts;
+  if (always_visible) texts->set_always_visible();
   GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
@@ -2562,7 +2586,8 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 					 bool use_default_material,
 					 int fontsize,
 					 int precision,
-					 bool render_locations)
+					 bool render_locations,
+					 bool always_visible)
 {
   Fld *fld = dynamic_cast<Fld *>(field_handle.get_rep());
   ASSERT(fld);
@@ -2571,6 +2596,7 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
   mesh->synchronize(Mesh::CELLS_E);
 
   GeomTexts *texts = scinew GeomTexts;
+  if (always_visible) texts->set_always_visible();
   GeomHandle text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
@@ -3940,6 +3966,7 @@ struct RenderParams
     text_show_faces_ = false;
     text_show_cells_ = false;
     text_geometry_ = 0;
+    text_always_visible_ = true;
   }
 
 
@@ -3977,6 +4004,7 @@ struct RenderParams
   bool           text_show_edges_;
   bool           text_show_faces_;
   bool           text_show_cells_;
+  bool           text_always_visible_;
   
   DynamicAlgoHandle  dalgo_;         //! the algorithm instance (return data)
   RenderFieldBase   *renderer_;      //! same cast to the correct type.

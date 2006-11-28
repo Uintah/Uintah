@@ -743,7 +743,6 @@ void
 GeomDL::fbpick_draw(DrawInfoOpenGL* di, Material *m, double time)
 {
   if ( !child_.get_rep() ) return;
-  cerr << "GeomDL::fbpick_draw" << endl;
   child_->fbpick_draw(di,m,time);  // do not use display list
 }
 void
@@ -3482,7 +3481,6 @@ idx2rgba(unsigned int idx, unsigned char &r, unsigned char &g,
 void
 GeomSpheres::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  cerr << "spheres fbpick draw: " << endl;
   const bool ulr = radii_.size() == centers_.size();
   if (!ulr && global_radius_ < 1.0e-6) { return; }
 
@@ -3499,7 +3497,9 @@ GeomSpheres::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
   for (unsigned int i = 0; i < centers_.size(); i++)
   {
     unsigned char r, g, b, a;
-    idx2rgba(item_idx_[i], r, g, b, a);
+    // we use 0 as a non index, so increment all indecies by one,
+    // here while we decrement after reading..
+    idx2rgba(item_idx_[i] + 1, r, g, b, a);
 //     cerr << "idx: " << item_idx_[i] << endl;
 //     cerr << "r,g,b,a: " << int(r) << "," << int(g) << "," 
 // 	 << int(b) << "," << int(a) << endl;
@@ -4057,7 +4057,6 @@ void
 GeomFastTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
-  cerr << "GeomFastTriangles::fbpick_draw(...)" << endl;
   glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_1D);
   glDisable(GL_TEXTURE_2D);
@@ -4069,7 +4068,7 @@ GeomFastTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
   for (unsigned int v = 0; v < nverts * 4; v+=4) {
     unsigned int face_idx = v / 12;
     unsigned char r, g, b, a;
-    idx2rgba(face_idx, r, g, b, a);
+    idx2rgba(face_idx + 1, r, g, b, a);
     cols[v] = r;
     cols[v+1] = g;
     cols[v+2] = b;
@@ -4321,7 +4320,6 @@ GeomTranspTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
   if (!pre_draw(di, matl, 1)) return;
-  cerr << "GeomTranspTriangles::fbpick_draw(...)" << endl;
   glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_1D);
   glDisable(GL_TEXTURE_2D);
@@ -4333,7 +4331,7 @@ GeomTranspTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
   for (unsigned int v = 0; v < nverts * 4; v+=4) {
     unsigned int face_idx = v / 12;
     unsigned char r, g, b, a;
-    idx2rgba(face_idx, r, g, b, a);
+    idx2rgba(face_idx + 1, r, g, b, a);
     cols[v] = r;
     cols[v+1] = g;
     cols[v+2] = b;
@@ -6368,6 +6366,7 @@ GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,0)) return;
   glDisable(GL_TEXTURE_1D);
+  if (disable_depth_test_) glDisable(GL_DEPTH_TEST);
   glPushAttrib(GL_LIST_BIT);
 
   if (! renderer_) {
@@ -6388,13 +6387,27 @@ GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
       renderer_->set_color(color_[i].r(), color_[i].g(), 
 			   color_[i].b(), 1.0); 
     }
-    renderer_->render(text_[i], location_[i].x(), 
-		      location_[i].y(), location_[i].z(), 
-		      di->view_, sf,
-		      TextRenderer::SW);
+    if (is_2d_p()) {
+      GLint vmat[4];
+      glGetIntegerv(GL_VIEWPORT, vmat);
+      int w = vmat[2];
+      int h = vmat[3];
+      
+      float sx = w * ((location_[i].x() + 1.) / 2.);
+      float sy = h * ((location_[i].y() + 1.) / 2.);
+      renderer_->render(text_[i], sx, sy, TextRenderer::SW);
+      glDisable(GL_BLEND);
+      glShadeModel(GL_SMOOTH);
+    } else {
+      renderer_->render(text_[i], location_[i].x(), 
+			location_[i].y(), location_[i].z(), 
+			di->view_, sf,
+			TextRenderer::SW);
+    }
   }
 
   glPopAttrib();
+  if (disable_depth_test_) glEnable(GL_DEPTH_TEST);
   post_draw(di);
 }
 
@@ -6810,6 +6823,7 @@ GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
       cliplist[ii] = true;
     }
   }
+
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -6819,12 +6833,8 @@ GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
   glDisable(GL_DEPTH_TEST);
   glRasterPos2d(0.55, -0.98);
 
-  Point eye = di->view_.eyep();
-  di->view_.eyep(Point(0.0, -5.0, 5.0));
 
   child_->draw(di,matl,t);
-
-  di->view_.eyep(eye);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);

@@ -417,10 +417,10 @@ public:
   bool SplitFieldByConnectedRegion(FieldHandle input, 
 				   std::vector<FieldHandle>& output);    
 
-  // ToPointCloud: 
+  // ConvertMeshToPointCloud: 
   // Remove all element information from a mesh and only extract
   // the actual points in the mesh.
-  bool ToPointCloud(FieldHandle input, FieldHandle& output);
+  bool ConvertMeshToPointCloud(FieldHandle input, FieldHandle& output);
     
   // TransformField: 
   // Transform a field and rotate vectors and tensors accordingly.

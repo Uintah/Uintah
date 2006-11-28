@@ -77,6 +77,7 @@ public:
   virtual bool          is_scene_graph_event() { return false; }
   virtual bool          is_tm_notify_event() { return false; }
   virtual bool          is_command_event() { return false; }
+  virtual bool          is_trail_enabled() { return false; }
 private:
   //! The event timestamp
   long int              time_;
@@ -106,6 +107,7 @@ public:
   unsigned int          get_modifiers() const { return modifiers_; }
   //! Mutators
   void                  set_modifiers(unsigned int m) { modifiers_ = m; }
+  virtual bool          is_trail_enabled() { return true; }
 protected:
   unsigned int         modifiers_;
 };
@@ -136,7 +138,7 @@ public:
   static PersistentTypeID type_id;
 
   virtual bool          is_pointer_event() { return true; }
-
+  virtual bool          is_trail_enabled() { return true; }
   //! Accessors
   unsigned int          get_pointer_state() const { return p_state_; }
   int                   get_x() const { return x_; }
@@ -177,6 +179,7 @@ public:
   static PersistentTypeID type_id;
 
   virtual bool          is_key_event() { return true; }
+  virtual bool          is_trail_enabled() { return true; }
 
   //! Accessors
   unsigned int          get_key_state() const { return k_state_; }
@@ -219,6 +222,7 @@ public:
   static PersistentTypeID type_id;
 
   virtual bool          is_window_event() { return true; }
+  virtual bool          is_trail_enabled() { return true; }
   
   //! Accessors
   unsigned int          get_window_state() const { return w_state_; }
@@ -236,7 +240,7 @@ public:
   virtual ~QuitEvent();
   virtual void          io(Piostream&);
   static PersistentTypeID type_id;
-
+  virtual bool          is_trail_enabled() { return true; }
   virtual QuitEvent *   clone() { return new QuitEvent(*this); }
 };
 
@@ -254,6 +258,8 @@ public:
   AutoviewEvent();
   virtual ~AutoviewEvent();
   virtual void          io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool          is_trail_enabled() { return true; }
   virtual AutoviewEvent * clone() { return new AutoviewEvent(*this); }
 };
 

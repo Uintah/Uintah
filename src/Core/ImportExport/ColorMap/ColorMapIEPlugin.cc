@@ -47,7 +47,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#if defined(_WIN32) && !defined(BUILD_STATIC)
+#if defined(_WIN32) && !defined(BUILD_CORE_STATIC)
 #define SCISHARE __declspec(dllimport)
 #else
 #define SCISHARE

@@ -47,9 +47,9 @@ NrrdBitmaskOutline::NrrdBitmaskOutline(NrrdDataHandle &nin_handle) :
   lock("NrrdBitmaskOutline"),
   ref_cnt(0),
   nrrd_handle_(nin_handle),
-  line_coords_(32, 0),
-  point_coords_(32, 0),
-  bit_verts_(32, 0),
+  line_coords_(32),
+  point_coords_(32),
+  bit_verts_(32),
   colormap_(ColorMap::create_pseudo_random(201)),
   dirty_(true)
 {

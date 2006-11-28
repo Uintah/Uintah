@@ -42,7 +42,7 @@
 #include <Core/Events/BaseEvent.h>
 #include <iostream>
 #include <sci_gl.h>
-#include <sci_glu.h>
+
 
 #if defined(_WIN32)
 #  include <Core/Geom/Win32OpenGLContext.h>
@@ -54,6 +54,7 @@
 #  include <Core/Geom/OSXOpenGLContext.h>
 #  include <Core/Events/OSXEventSpawner.h>
 #endif
+
 
 
 namespace SCIRun {
@@ -74,6 +75,13 @@ namespace SCIRun {
       draw_thread_(0),
       redrawables_(),
       force_redraw_(false)
+#ifdef HAVE_PNG
+      ,
+      png_buf_(0),
+      png_rows_(0),
+      png_num_(0),
+      do_png_(sci_getenv("SKINNER_MOVIE_BASE_FILENAME"))
+#endif
     {
 #if defined(_WIN32)
         
@@ -156,19 +164,19 @@ namespace SCIRun {
 
 #if defined(__linux)
         if ((pointer->get_pointer_state() & PointerEvent::MOTION_E) &&
-            sci_getenv_p("SCIRUN_TRAIL_PLAYBACK")) {
+            EventManager::trailfile_is_playing())
+        {
           const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
           X11OpenGLContext *x11 = dynamic_cast<X11OpenGLContext *>(context_);
-
-          Window src_win = x11->window_;
-          
-          // if the second letter of SCIRUN_TRAIL_MODE is G, 
-          // Grab the pointer from the root window from the user
-          if (trailmode && trailmode[1] == 'G') {
-            src_win = None;
-          }
-
-          if (x11) {
+          if (x11 && trailmode) {
+            Window src_win = x11->window_;
+            
+            // if the second letter of SCIRUN_TRAIL_MODE is G, 
+            // Grab the pointer from the root window from the user
+            if (trailmode[1] == 'G') {
+              src_win = None;
+            }
+            
             XWarpPointer(x11->display_, src_win, x11->window_,
                          0,0, x11->width(), x11->height(),
                          pointer->get_x(), pointer->get_y());
@@ -184,6 +192,10 @@ namespace SCIRun {
       bool redraw = (window && 
                      window->get_window_state() & WindowEvent::REDRAW_E);
       bool subdraw = redraw && redrawables_.size() && !force_redraw_;
+
+      int vpw;
+      int vph;
+
       if (redraw) {
         ASSERT(context_);
         if (!context_->make_current()) {
@@ -191,8 +203,9 @@ namespace SCIRun {
           return CONTINUE_E;
         }
         X11Lock::lock();
-        int vpw = context_->width();
-        int vph = context_->height();
+        vpw = context_->width();
+        vph = context_->height();
+
         set_region(RectRegion(0.0, 0.0, double(vpw), double(vph)));
         
         glViewport(0, 0, vpw, vph);
@@ -248,6 +261,8 @@ namespace SCIRun {
         glPopMatrix();
         CHECK_OPENGL_ERROR();
         context_->swap();
+        save_png();
+
         context_->release();        
         X11Lock::unlock();
       }
@@ -287,6 +302,61 @@ namespace SCIRun {
     }
       
 
+    void
+    GLWindow::save_png() {
+#ifdef HAVE_PNG
+      if (!do_png_) return;
+      const int bpp = 3;
+      const int vpw = context_->width();
+      const int vph = context_->height();
+      const int num = vpw*vph*bpp;
+
+      if (num != png_num_) {
+        if (png_buf_) delete png_buf_;
+        if (png_rows_) delete png_rows_;
+        png_buf_ = new unsigned char[num];
+        png_rows_ = new png_bytep[vph];
+        for(int y = 0; y < vph; y++) {
+          png_rows_[vph - y - 1] = (png_bytep)(png_buf_ + y * vpw * bpp);
+        }
+        png_num_ = num;
+      }
+
+      ASSERT(png_buf_);
+      ASSERT(png_rows_);
+      ASSERT(png_num_);
+
+      png_structp png_write = png_create_write_struct(PNG_LIBPNG_VER_STRING, 
+                                                      0,0,0);
+      png_set_compression_level(png_write, 4);
+      png_infop png_info = png_create_info_struct(png_write);
+      bool pngerror = setjmp(png_jmpbuf(png_write));
+      ASSERT(!pngerror);      
+
+      const char *fname = sci_getenv("SKINNER_MOVIE_BASE_FILENAME");
+      static int i = 0;
+      char name[strlen(fname)+32];
+      sprintf (name, fname, ++i);
+      FILE *fp = fopen(name, "wb");
+      png_init_io(png_write, fp);
+        
+      png_set_IHDR(png_write, png_info, vpw, vph,
+                   8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+                   PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+      /* write header */
+      png_write_info(png_write, png_info);      
+
+      glPixelStorei(GL_PACK_ALIGNMENT, 1);
+      glReadBuffer(GL_BACK);
+      glReadPixels(0, 0, vpw, vph, GL_RGB, GL_UNSIGNED_BYTE, png_buf_);
+      
+      png_set_rows(png_write, png_info, png_rows_);
+      png_write_image(png_write, png_rows_);
+      png_write_end(png_write, 0);
+      png_destroy_write_struct(&png_write, &png_info);
+      fclose(fp);
+#endif
+    }
 
   }
 }

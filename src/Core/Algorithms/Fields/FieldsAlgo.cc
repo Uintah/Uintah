@@ -62,7 +62,7 @@
 #include <Core/Algorithms/Fields/SplitAndMergeFieldByDomain.h>
 #include <Core/Algorithms/Fields/SplitByConnectedRegion.h>
 #include <Core/Algorithms/Fields/TransformMeshWithTransform.h>
-#include <Core/Algorithms/Fields/ToPointCloud.h>
+#include <Core/Algorithms/Fields/ConvertMeshToPointCloud.h>
 #include <Core/Algorithms/Fields/ConvertToUnstructuredMesh.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -498,10 +498,10 @@ bool FieldsAlgo::SplitFieldByConnectedRegion(FieldHandle input, std::vector<Fiel
 }
 
 
-bool FieldsAlgo::ToPointCloud(FieldHandle input,FieldHandle& output)
+bool FieldsAlgo::ConvertMeshToPointCloud(FieldHandle input,FieldHandle& output)
 {
-  ToPointCloudAlgo algo;
-  return(algo.ToPointCloud(pr_,input,output));
+  ConvertMeshToPointCloudAlgo algo;
+  return(algo.ConvertMeshToPointCloud(pr_,input,output));
 }
 
 

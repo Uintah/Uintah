@@ -87,7 +87,7 @@ ShaderProgramARB::init_shaders_supported()
       else
       {
         glewInit();
-
+        glewExperimental = GL_TRUE;
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	  fprintf(stderr,"GL error '%s'\n",gluErrorString(err));

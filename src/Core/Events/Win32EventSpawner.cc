@@ -47,7 +47,13 @@
 #define MOUSE_X(lp) ((int)(short)LOWORD(lp))
 #define MOUSE_Y(lp) ((int)(short)HIWORD(lp))
 
-// TODO - translate event->set_time
+#ifndef BUILD_CORE_STATIC
+#  define SCISHARE __declspec(dllimport)
+#else
+#  define SCISHARE
+#endif
+
+extern SCISHARE LRESULT CALLBACK WindowEventProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace SCIRun {
 
@@ -77,8 +83,8 @@ Win32GLContextRunnable::win_KeyEvent(MSG winevent, bool pressed)
   MSG keymsg;
   unsigned long keyval = 0;
 
-switch (winevent.wParam) {
-    // non ASCII keys
+  switch (winevent.wParam) {
+  // non ASCII keys
   case VK_CLEAR:   keyval = SCIRun_Clear; break;
   case VK_LEFT:    keyval = SCIRun_Left; break;
   case VK_RIGHT:   keyval = SCIRun_Right; break;
@@ -89,20 +95,23 @@ switch (winevent.wParam) {
   case VK_INSERT:  keyval = SCIRun_Insert; break;
   case VK_DELETE:  keyval = SCIRun_Delete; break;
   case VK_NEXT:    keyval = SCIRun_Next; break;
-  case VK_SHIFT:   keyval = SCIRun_Shift_L; break;
-  case VK_CONTROL: keyval = SCIRun_Control_L; break;
-  case VK_MENU:    keyval = SCIRun_Alt_L; break;
+  
+    // don't handle shift/control/alt - let the state handle that
+  case VK_SHIFT:   keyval = 0; break;
+  case VK_CONTROL: keyval = 0; break;
+  case VK_MENU:    keyval = 0; break; // menu is ALT
+  case VK_CAPITAL: keyval = 0; break;
   case VK_PAUSE:   keyval = SCIRun_Pause; break;
   case VK_PRINT:   keyval = SCIRun_Print; break;
   case VK_SELECT:  keyval = SCIRun_Select; break;
   case VK_EXECUTE: keyval = SCIRun_Execute; break;
-  case VK_CAPITAL: keyval = SCIRun_Caps_Lock; break;
   case VK_HELP:    keyval = SCIRun_Help; break;
   case VK_NUMLOCK: keyval = SCIRun_Num_Lock; break;
   case VK_SCROLL:  keyval = SCIRun_Scroll_Lock; break;
   case VK_BACK:    keyval = SCIRun_BackSpace; break;
   case VK_RETURN:  keyval = SCIRun_Return; break;
   case VK_ESCAPE:  keyval = SCIRun_Escape; break;
+  case VK_TAB:     keyval = SCIRun_Tab; break;
   default:
     if (winevent.wParam >= VK_F1 && winevent.wParam <= VK_F24) {
       keyval = SCIRun_F1 + (winevent.wParam-VK_F1); break;
@@ -118,6 +127,7 @@ switch (winevent.wParam) {
   if (keyval != 0) {
     KeyEvent *sci_event = new KeyEvent();
 
+#if 0
     // TranslateEvent converts shift-keys, but SCIRun events (see TextEntry.cc) want un-shifted
     if (keyval >= 'A' && keyval <= 'Z')
       keyval += 32;
@@ -125,6 +135,7 @@ switch (winevent.wParam) {
       keyval += 16;
     else if (keyval == ')')
       keyval = '0';
+#endif
 
     if (pressed)
       sci_event->set_key_state(KeyEvent::KEY_PRESS_E);
@@ -135,9 +146,9 @@ switch (winevent.wParam) {
     sci_event->set_modifiers(state);
     sci_event->set_time(winevent.time);
     sci_event->set_keyval(keyval);
-    //if (sci_getenv_p("SCI_DEBUG")) {
+    if (sci_getenv_p("SCI_DEBUG")) {
       cerr << "Keyval: " << sci_event->get_keyval() << std::endl;
-    //}
+    }
     return sci_event;
   }
   return 0;
@@ -204,6 +215,33 @@ Win32GLContextRunnable::win_PointerMotion(MSG winevent)
   sci_event->set_pointer_state(state);
   sci_event->set_x(MOUSE_X(winevent.lParam));
   sci_event->set_y(context_->height_ - 1 - MOUSE_Y(winevent.lParam));
+  sci_event->set_time(winevent.time);
+  return sci_event;
+}
+
+event_handle_t
+Win32GLContextRunnable::win_Wheel(MSG winevent)
+{
+  PointerEvent *sci_event = new PointerEvent();
+  unsigned int state = PointerEvent::BUTTON_PRESS_E;
+
+  sci_event->set_modifiers(win_ModifierState());
+  
+  int delta = GET_WHEEL_DELTA_WPARAM(winevent.wParam);
+  if (delta < 0) 
+    state |= PointerEvent::BUTTON_4_E;
+  else
+    state |= PointerEvent::BUTTON_5_E;
+  //if (winevent.wParam & MK_LBUTTON) state |= PointerEvent::BUTTON_1_E;
+  //if (winevent.wParam & MK_MBUTTON) state |= PointerEvent::BUTTON_2_E;
+  //if (winevent.wParam & MK_RBUTTON) state |= PointerEvent::BUTTON_3_E;
+  //if (wineventp->state & Button4Mask) state |= PointerEvent::BUTTON_4_E;
+  //if (wineventp->state & Button5Mask) state |= PointerEvent::BUTTON_5_E;
+  
+  sci_event->set_pointer_state(state);
+  sci_event->set_x(MOUSE_X(winevent.lParam));
+  sci_event->set_y(context_->height_ - 1 - MOUSE_Y(winevent.lParam));
+  cout << "Wheel: " << MOUSE_X(winevent.lParam) << " " << context_->height_ - 1 - MOUSE_Y(winevent.lParam) << endl;
   sci_event->set_time(winevent.time);
   return sci_event;
 }
@@ -302,7 +340,7 @@ bool Win32GLContextRunnable::iterate()
     event_handle_t event = 0;
     switch (msg.message) {
     case WM_MOVE: break;
-    case WM_SIZE: 
+    case WM_SIZE:  
       context_->width_ = LOWORD(msg.lParam); context_->height_ = HIWORD(msg.lParam); break;
     case WM_KEYDOWN:
       event = win_KeyEvent(msg, true); break;
@@ -320,6 +358,8 @@ bool Win32GLContextRunnable::iterate()
       event = win_ButtonReleaseEvent(msg, 2); break;
     case WM_RBUTTONUP:
       event = win_ButtonReleaseEvent(msg, 3); break;
+    case WM_MOUSEWHEEL:
+      event = win_Wheel(msg); break;
     case WM_MOUSEMOVE:
       // need to call 'TrackMouseEvent' so we can get a 'mouseLeave' event.  A 'mouseEnter' event will be 
       // the first motion event after the pointer has been outside
@@ -349,15 +389,10 @@ bool Win32GLContextRunnable::iterate()
       EndPaint(context_->window_, &ps);
       break;
     }
-#if 0
-    case ConfigureNotify:	event = win_Configure(msg); break;
-    case ClientMessage:	event = win_Client(msg); break;
-    case FocusIn:             event = win_FocusIn(msg); break;
-    case FocusOut:            event = win_FocusOut(msg); break;
-    case VisibilityNotify:    event = win_Visibilty(msg); break;
-    case MapNotify:           event = win_Map(msg); break;
-#endif
-    default:                  
+    case WM_CLOSE: 
+      event = scinew QuitEvent(); break;
+    default:
+      CallWindowProc(WindowEventProc, msg.hwnd, msg.message, msg.wParam, msg.lParam);
       if (sci_getenv_p("SCI_DEBUG")) 
         cerr << target_ << ": Unknown Win32 event type: " 
               << msg.message << "\n"; 

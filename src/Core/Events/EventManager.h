@@ -62,16 +62,20 @@ public:
   virtual void                          run();
   ToolManager &                         tm() { return tm_; };
 
-  static bool                           record_trail_file(const string &);
-  static bool                           play_trail_file(const string &);
-  static void                           stop_trail_file();
-  static void                           play_trail();
+  static void                           do_trails();
+  static bool                           trailfile_is_playing();
+  static bool                           trailfile_is_recording();
 
 
 private:
   typedef multimap<string, event_mailbox_t*> id_tm_map_t;
 
-  static  Piostream *                   stream_;
+  // Trail File Methods
+  static bool                           open_trail_file(const string &, 
+                                                        bool = true);
+  static void                           stop_trail_file();
+  static void                           play_trail();
+  static  Piostream *                   trailfile_stream_;
 
   //! all of the threads who need to know about events.
   static id_tm_map_t                    mboxes_;
@@ -80,6 +84,9 @@ private:
 
   //! the mailbox for adding events to the stream.
   static event_mailbox_t                mailbox_;
+
+  //! the mailbox for non-trail events that stop the trailfile from playing
+  static event_mailbox_t                trail_interrupt_mailbox_;
 
   //! for tools that process or modify events before being dispatched.
   ToolManager                           tm_;

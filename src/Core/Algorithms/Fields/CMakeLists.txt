@@ -29,7 +29,7 @@
 # Sources of Core/Algorithms/Fields classes
 SET(Core_Algorithms_Fields_SRCS
   ApplyMappingMatrix.cc
-  CalculateFieldData.cc
+  CalculateFieldDataCompiled.cc
   CalculateIsInsideField.cc
   CalculateLinkBetweenOppositeFieldBoundaries.cc
   ClearAndChangeFieldBasis.cc
@@ -66,7 +66,7 @@ SET(Core_Algorithms_Fields_SRCS
   SetFieldData.cc
   SplitAndMergeFieldByDomain.cc
   SplitByConnectedRegion.cc
-  ToPointCloud.cc
+  ConvertMeshToPointCloud.cc
   TransformMeshWithTransform.cc
 )
 

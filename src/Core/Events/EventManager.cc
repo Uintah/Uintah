@@ -48,7 +48,7 @@ namespace SCIRun {
 EventManager::id_tm_map_t EventManager::mboxes_;
 Mutex EventManager::mboxes_lock_("EventManager mboxes_ lock");
 Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 512);
-Piostream * EventManager::stream_ = 0;
+Piostream * EventManager::trailfile_stream_ = 0;
 
 EventManager::EventManager() :
   tm_("EventManager tools")
@@ -97,7 +97,7 @@ EventManager::~EventManager()
   if (sci_getenv_p("SCI_DEBUG")) {
     cerr << "EventManager has been destroyed." << endl;
   }
-
+  stop_trail_file();
 
 }
 
@@ -107,63 +107,62 @@ EventManager::~EventManager()
 void
 EventManager::add_event(event_handle_t event) 
 {
-  if (stream_ && stream_->reading()) return;
-
-  KeyEvent *ke = dynamic_cast<KeyEvent*>(event.get_rep());
-  if (ke && !ke->get_key_state() )
-  {
-    cerr << "Invalid key event\n";
+  if (event->is_trail_enabled() && trailfile_is_playing()) {
+    //    mailbox_.send(new TrailfilePauseEvent());
+    //    mailbox_.send(event);
+    return;
   }
-
 
   mailbox_.send(event);
 }
 
 bool
-EventManager::record_trail_file(const string &filename)
+EventManager::open_trail_file(const string &filename, bool record)
 {
-  if (stream_) {
+  if (trailfile_stream_) {
     return false;
   }
 
-  stream_ = auto_ostream(filename, "Text", 0);
+  if (record) {
+    trailfile_stream_ = auto_ostream(filename, "Text", 0);
+  } else {
+    trailfile_stream_ = auto_istream(filename, 0);
+  }
+    
 
-  if (stream_ && stream_->error()) {
-    delete stream_;
+  if (trailfile_stream_ && trailfile_stream_->error()) {
+    delete trailfile_stream_;
     return false;
   }
-  stream_->disable_pointer_hashing();
-
-  return stream_;
-}
-
-bool
-EventManager::play_trail_file(const string &filename)
-{
-  if (stream_) {
-    return false;
-  }
-
-  stream_ = auto_istream(filename, 0);
   
-  if (stream_ && stream_->error()) {
-    delete stream_;
-    return false;
+  if (record) {
+    trailfile_stream_->disable_pointer_hashing();
   }
 
-  return stream_;
-
+  return trailfile_stream_;
 }
 
 
 void
 EventManager::stop_trail_file()
 {
-  if (!stream_) return;
-  delete stream_;
-  stream_ = 0;
+  cerr << "Stop_trail_file()\n";
+  if (!trailfile_stream_) return;
+  delete trailfile_stream_;
+  trailfile_stream_ = 0;
 }
   
+
+bool
+EventManager::trailfile_is_playing() {
+  return trailfile_stream_ && trailfile_stream_->reading();
+}
+
+bool
+EventManager::trailfile_is_recording() {
+  return trailfile_stream_ && trailfile_stream_->writing();
+}
+
 
 EventManager::event_mailbox_t*
 EventManager::register_event_messages(string id)
@@ -235,29 +234,42 @@ EventManager::unregister_mailbox(event_mailbox_t *mailbox)
 
 void
 EventManager::play_trail() {
-  ASSERT(stream_ && stream_->reading());
+  ASSERT(trailfile_stream_ && trailfile_stream_->reading());
 
   event_handle_t event;
-  unsigned long event_time = 0;
-  unsigned long last_event_time = 0;
+  signed long event_time = 0;
+  signed long last_event_time = 0;
   double last_timer_time = 0;
   const double millisecond = 1.0 / 1000.0;
   TimeThrottle timer;
   timer.start();
-  sci_putenv("SCIRUN_TRAIL_PLAYBACK", "1");
-  while (stream_ && !stream_->eof()) {
+  int l = 0;
+  while (trailfile_stream_ && !trailfile_stream_->eof()) {
+    ++l;    
     event = 0;
-    Pio(*stream_, event);
+    Pio(*trailfile_stream_, event);
   
     if (!event.get_rep()) {
       stop_trail_file();
+      cerr << "Error in trailfile on Line:  " << l << std::endl;
       continue;
     }   
     if ((event_time = event->get_time())) {
+      
       if (last_event_time) {
         double diff = (event_time-last_event_time) * millisecond;
-        if (diff > 10) diff = 10;
-        if (diff < 0) diff = 0;
+        if (diff > 10) {
+          cerr << "Event Time: " << event_time << std::endl;
+          cerr << "Last Event Time: " << last_event_time << std::endl;
+          cerr << "diff: " << diff << std::endl;
+          
+          diff = 10;
+        }
+        if (diff < 0) {
+          cerr << "diff: " << diff << std::endl;
+          diff = 0;
+        }
+
         timer.wait_for_time(last_timer_time + diff);
       }           
       last_event_time = event_time;
@@ -267,9 +279,49 @@ EventManager::play_trail() {
     mailbox_.send(event);
   }
   timer.stop();
-  sci_putenv("SCIRUN_TRAIL_PLAYBACK", "0");
 } 
   
+
+void
+EventManager::do_trails() {
+  string default_trailfile(string("/tmp/")+
+                           sci_getenv("EXECUTABLE_NAME")+".trail");
+  string default_trailmode("");
+
+  const char *trailfile = sci_getenv("SCIRUN_TRAIL_FILE");
+  const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
+
+  if (!trailfile) {
+    trailfile = default_trailfile.c_str();
+  }
+
+  if (!trailmode) {
+    trailmode = default_trailmode.c_str();
+  }
+
+  if (trailmode && trailfile) {
+    if (trailmode[0] == 'R') {
+      if (EventManager::open_trail_file(trailfile, true)) {
+        cerr << "Recording trail file: ";
+      } else {
+        cerr << "ERROR recording trail file ";
+      } 
+      cerr << trailfile << std::endl;
+    }
+
+    if (trailmode[0] == 'P') {
+      if (EventManager::open_trail_file(trailfile, false)) {
+        cerr << "Playing trail file: " << trailfile << std::endl;
+        EventManager::play_trail();
+        cerr << "Trail file completed.\n";
+      } else {
+        cerr << "ERROR playing trail file " << trailfile << std::endl;
+      } 
+    }
+  }
+}  
+
+
 
 void
 EventManager::run() 
@@ -278,9 +330,8 @@ EventManager::run()
   event_handle_t event;
   do {
     event = tm_.propagate_event(mailbox_.receive());
-
-#if 1
-    static unsigned long last_event_time = 0;
+    
+    static signed long last_event_time = 0;
     static double last_timer_time = 0;
     static ::TimeThrottle timer;
     if (timer.current_state() == Timer::Stopped) {
@@ -291,19 +342,13 @@ EventManager::run()
       last_event_time = event->get_time();
     } else if (last_event_time) {
       last_event_time +=
-        (unsigned long)((timer.time() - last_timer_time) * 100.0);
+        (signed long)((timer.time() - last_timer_time) * 100.0);
       event->set_time(last_event_time);
     }
     last_timer_time = timer.time();
-#endif
-
-
-    if (stream_ && stream_->writing() &&
-        (event->is_pointer_event() || 
-         event->is_key_event() || 
-         event->is_window_event()))
-    {
-      Pio(*stream_, event);
+    
+    if (event->is_trail_enabled() && trailfile_is_recording()) {
+      Pio(*trailfile_stream_, event);
     }
 
     if (dynamic_cast<QuitEvent*>(event.get_rep()) != 0 &&
@@ -339,7 +384,7 @@ EventManager::run()
       if (sci_getenv_p("SCI_DEBUG")) {
         cerr << "Event target mailbox id empty, broadcasting." << endl;
       }
-
+      
       id_tm_map_t::iterator it = mboxes_.begin();
       for (;it != mboxes_.end(); ++it) {
         if (sci_getenv_p("SCI_DEBUG")) {
@@ -349,7 +394,7 @@ EventManager::run()
       }
     }
     mboxes_lock_.unlock();
-  } while (!done);
+    } while (!done);
 #if defined(__APPLE__) && !defined(HAVE_X11)
   Carbon::QuitApplicationEventLoop();
 #endif

@@ -50,14 +50,14 @@ using namespace SCIRun;
 //  argument. When the algorithm is compiled it will execute the algorithm.
 //
 // In this file two classes are defined:
-//  A base class ToPointCloudAlgo: This class contains the general access point for
+//  A base class ConvertMeshToPointCloudAlgo: This class contains the general access point for
 //  the dynamic compiled algorithm. It takes handles (pointers) to the Field
 //  base class. It will examine all the input arguments and determine which
 //  type the input Fields actually are. When this is known it will tell the
 //  dynamic compiler which algorithm needs to be compiled to carry out the 
 //  operation with high efficiency.
 //
-//  A template class ToPointCloudAlgoT: This class is derived from the base class
+//  A template class ConvertMeshToPointCloudAlgoT: This class is derived from the base class
 //  and has a similar call to the algorithm. This templated class contains the 
 //  actual algorithm. When the dynamic compiler is invoked it will take in a
 //  handle to the base algorithm, internally it will overload this with the
@@ -66,7 +66,7 @@ using namespace SCIRun;
 //  proper algorithm.  
 
 
-// ToPointCloudAlgo:
+// ConvertMeshToPointCloudAlgo:
 //
 // This class is the general access point to the dynamic algorithms in the class.
 // All dynamic algorithms in the class are defined as virtual functions and have
@@ -83,8 +83,8 @@ using namespace SCIRun;
 //
 // To call this specific algorithm from a module use the following:
 //
-// ToPointCloudAlgo algo;
-// if(!(algo->ToPointCloud(this,input,output)))
+// ConvertMeshToPointCloudAlgo algo;
+// if(!(algo->ConvertMeshToPointCloud(this,input,output)))
 // {
 //   // algorothm failed
 // }
@@ -93,17 +93,14 @@ using namespace SCIRun;
 // hence the pointer to the module can be used to initialise the ProgressReporter
 //
 
-class ToPointCloudAlgo : public DynamicAlgoBase
+class ConvertMeshToPointCloudAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
-  
-  template <class T>
-  bool ToPointCloudV(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
 };
 
 
-// ToPointCloudAlgoT:
+// ConvertMeshToPointCloudAlgoT:
 //
 // This class is the actual implementation of the algorithm. Note that the 
 // name of the algorithm ends with a 'T' to denote that the algorithm is 
@@ -112,10 +109,10 @@ public:
 // proper algorithm.   
 
 template <class FSRC, class FDST>
-class ToPointCloudAlgoT : public ToPointCloudAlgo
+class ConvertMeshToPointCloudAlgoT : public ConvertMeshToPointCloudAlgo
 {
 public:
-  virtual bool ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+  virtual bool ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
 };
 
 
@@ -123,7 +120,7 @@ public:
 // header file.
 
 template <class FSRC, class FDST>
-bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool ConvertMeshToPointCloudAlgoT<FSRC, FDST>::ConvertMeshToPointCloud(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   // Safety check: test whether the input is of the propertype
   // Handle: the function 'get_rep()' gets the pointer contained in the handle. 
@@ -173,7 +170,7 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
   if (omesh == 0)
   {
-    pr->error("ConvertMeshToPointCloud: Could not create output mesh");
+    pr->error("ConvertMeshToPointCloud: Could not create output field");
     return (false);
   }
 
@@ -249,124 +246,6 @@ bool ToPointCloudAlgoT<FSRC, FDST>::ToPointCloud(ProgressReporter *pr, FieldHand
   // Success:
   return (true);
 }
-
-
-
-
-template <class T>
-bool ToPointCloudAlgo::ToPointCloudV(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
-{
-  // Handle: the function 'get_rep()' gets the pointer contained in the handle. 
-  // The safety check is done by using a dynamic_cast to the type we want to
-  // have. The dynamic_cast is a C++ facility that checks the type of the object
-  // dynamically. If the object is of a different type it results in a null
-  // pointer and otherwise it returns the pointer to the top level object in the
-  // class hierarchy.
-
-  // Get pointers to the meshes and fields. These should be a little faster than
-  // using the handle dereference operation, as it does not do a safety check
-  // whether the pointer exists. As long as we have local copies of the handles
-  // The objects cannot be deleted and we can safely use the pointers.
-  Field *ifield = input.get_rep();
-  if (ifield == 0)
-  { // The object is of a different type
-  
-    // Error reporting:
-    // we forward the specific message to the ProgressReporter and return a
-    // false to indicate that an error has occured.
-    pr->error("ConvertMeshToPointCloud: Could not obtain input field");
-    return (false);
-  }
-
-  // Get a pointer to the mesh as well
-  Mesh *imesh = ifield->mesh().get_rep();
-  if (imesh == 0)
-  {
-    pr->error("ConvertMeshToPointCloud: No mesh associated with input field");
-    return (false);
-  }
-
-  // The output mesh was already create based on the field information in the
-  // main algorithm
-
-  Field *ofield = output.get_rep();
-  if (ofield == 0)
-  { // The object is of a different type
-  
-    // Error reporting:
-    // we forward the specific message to the ProgressReporter and return a
-    // false to indicate that an error has occured.
-    pr->error("ConvertMeshToPointCloud: Could not obtain output field");
-    return (false);
-  }
-
-  // Get a pointer to the mesh as well
-  Mesh *omesh = ofield->mesh().get_rep();
-  if (omesh == 0)
-  {
-    pr->error("ConvertMeshToPointCloud: No mesh associated with input field");
-    return (false);
-  }
-
-  // Actual algorithm starts here:
-  
-  // Synchronize makes sure that all function calls to retrieve the elements and
-  // nodes are working. Some mesh types need this.
-  imesh->synchronize(Mesh::NODES_E);
-  if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::EDGES_E);
-  if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::FACES_E);
-  if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E);
-
-  // Define iterators over the nodes
-  Mesh::VNode::iterator bn, en;
-  Mesh::VNode::size_type numnodes;
-
-  imesh->begin(bn); // get begin iterator
-  imesh->end(en);   // get end iterator
-  imesh->size(numnodes); // get the number of nodes in the mesh
-  
-  // It is always good to preallocate memory if the number of nodes in the output
-  // mesh is known
-  omesh->node_reserve(numnodes);
-  
-  // Iterate over all nodes and copy each node
-  while (bn != en) 
-  {
-    Point point;
-    imesh->get_center(point, *bn);
-    omesh->add_node(point);
-    ++bn;
-  }
-
-  // Make sure Fdata matches the size of the number of nodes
-  ofield->resize_fdata();
-
-  // Is this a linear input field, if so we can copy data from node to node
-  if (ifield->basis_order() == 1) 
-  {
-    // The Field class has both a iterator as well as a direct interface access 
-    // using indices. As the latter is faster we use the direct access 
-
-    Mesh::size_type sz = ifield->num_values();
-    T val;
-    for (Mesh::index_type r=0; r<sz; r++)
-    {
-      ifield->get_value(val,r);
-      ofield->set_value(val,r);
-    }
-  }
-
-  // In the other cases we cannot preserve data and the output field should 
-  // already be of the class NoDataBasis.
-
-	output->copy_properties(input.get_rep());
-  
-  // Success:
-  return (true);
-}
-
-
-
 
 } // end namespace SCIRunAlgo
 

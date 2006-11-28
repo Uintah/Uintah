@@ -68,6 +68,7 @@ namespace SCIRun {
     {
     public:
       Signal(const string &name, SignalThrower *, Variables *);
+      Signal(const Signal &copy);
       ~Signal();
       string              get_signal_name() { return signal_name_; }
       void                set_signal_name(const string &n) { signal_name_=n; }
@@ -178,15 +179,6 @@ namespace SCIRun {
     {
     }
 
-#if 0
-    SignalCatcher::CatcherTargetInfoBase::~CatcherTargetInfoBase()
-    {
-      //      if (variables_) {
-      //        delete variables_;
-      //        variables_ = 0;
-      //      }
-    }
-#endif
   
     class SCISHARE SignalThrower {
     public:      
@@ -216,6 +208,22 @@ namespace SCIRun {
       // Should be private
       SignalToAllCatchers_t all_catchers_;
     };
+
+
+
+    class SCISHARE SignalCallback {
+    public:
+      SignalCallback(Drawable *, const string &signal);
+      virtual ~SignalCallback();
+      event_handle_t    operator()();
+    private:
+      Signal *                                  signal_;
+      SignalCatcher::CatcherTargetInfoBase *    catcher_;
+    };
+
+      
+        
+
 
     class Variables;
 

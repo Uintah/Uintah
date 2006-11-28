@@ -84,7 +84,7 @@ using std::string;
 namespace SCIRun {
   // a naive way to get Thread::self when the compiler 
   // doesn't support thread-local storage
-  map<int, Thread*> threadids; 
+  //map<int, Thread*> threadids; 
 
   // NOTE - Do not give semaphores or mutexes names - there's a good chance that
   // if they have the same name they will conflict with each other (multiple semaphores
@@ -159,14 +159,14 @@ namespace SCIRun {
     Thread* current_thread;
   };
 
-/*  Thread-local storage - not all compilers support it
-#if 1
+/*  Thread-local storage - not all compilers support it */
+#ifdef _MSC_VER
   // this is the VC way to give thread-local storage
 __declspec(thread) ThreadLocalMemory* thread_local;
 #else
 __thread ThreadLocalMemory* thread_local; // __attribute__ ((tls_model ("initial-exec")));
 #endif
-*/
+
 bool exiting=false;
 
   char* threadError()
@@ -787,12 +787,12 @@ void Thread::initialize()
     mainthread->priv_->state=RUNNING;
     mainthread->priv_->bstacksize=0;
 
-    threadids[mainthread->priv_->threadid] = mainthread;
+    //threadids[mainthread->priv_->threadid] = mainthread;
 
 	cerr << "mainthread id = " << mainthread->priv_->threadid << endl;
 
-	//thread_local = new ThreadLocalMemory;
-	//thread_local->current_thread = mainthread;
+	thread_local = new ThreadLocalMemory;
+	thread_local->current_thread = mainthread;
 
         mainthread->priv_->done = CreateSemaphore(0,0,10,0);
 	if (!mainthread->priv_->done) {
@@ -876,7 +876,8 @@ void Thread_shutdown(Thread* thread, bool actually_exit)
 	thread->migrate(-1);
 
     lock_scheduler();
-    //thread_local->current_thread = 0;
+
+    thread_local->current_thread = 0;
     priv->thread=0;
     CloseHandle(priv->done);
     CloseHandle(priv->delete_ready);
@@ -916,7 +917,7 @@ void Thread_shutdown(Thread* thread, bool actually_exit)
 	}
     }
     // get rid of the tls hack
-    threadids.erase(GetCurrentThreadId());
+    //threadids.erase(GetCurrentThreadId());
 
     if (actually_exit)
       ExitThread(0);
@@ -925,9 +926,9 @@ void Thread_shutdown(Thread* thread, bool actually_exit)
 unsigned long run_threads(void* priv_v)
 {
     Thread_private* priv=(Thread_private*)priv_v;
-    threadids[priv->threadid] = priv->thread;
-    //thread_local = new ThreadLocalMemory;
-    //thread_local->current_thread = priv->thread;
+    //threadids[priv->threadid] = priv->thread;
+    thread_local = new ThreadLocalMemory;
+    thread_local->current_thread = priv->thread;
     priv->state=Thread::RUNNING;
     Thread_run(priv->thread);
     priv->state=Thread::SHUTDOWN;
@@ -943,7 +944,8 @@ unsigned long __stdcall start_threads(void* priv_v)
 
 Thread* Thread::self()
 {
-  //return thread_local->current_thread;
+  return thread_local->current_thread;
+#if 0
   int threadid = GetCurrentThreadId();
   map<int, Thread*>::iterator iter = threadids.find(threadid);
   if (iter == threadids.end()) {
@@ -956,6 +958,7 @@ Thread* Thread::self()
     return 0;
   }
   return iter->second;
+#endif
 }
 
 void Thread::exitAll(int code)
@@ -996,7 +999,7 @@ void Thread::os_start(bool stopped)
 
     lock_scheduler();
 	priv_->t = CreateThread(0,stacksize_,start_threads,priv_,(stopped?CREATE_SUSPENDED:0),(unsigned long*)&priv_->threadid);
-  threadids[priv_->threadid] = this;
+  //threadids[priv_->threadid] = this;
 	if (!priv_->t) {
 	  throw ThreadError(std::string("CreateThread failed")
 			    +threadError());

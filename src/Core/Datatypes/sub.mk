@@ -61,6 +61,12 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_5.cc	\
 	$(SRCDIR)/cd_templates_fields_6.cc	\
 
+ifeq ($(HAVE_INSIGHT),yes)
+   SRCS += $(SRCDIR)/ITKDatatype.cc \
+        $(SRCDIR)/cd_templates_itk.cc \
+        $(SRCDIR)/cd_templates_fields_0_itk.cc \
+        $(SRCDIR)/cd_templates_fields_1_itk.cc 
+endif
 
 PSELIBS := \
 	Core/Basis        \
@@ -74,6 +80,10 @@ PSELIBS := \
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
+
+ifeq ($(HAVE_INSIGHT),yes)
+   LIBS += $(INSIGHT_LIBRARY)
+endif
 
 INCLUDES += $(TEEM_INCLUDE)
 INCLUDES += $(BLAS_INCLUDE)
