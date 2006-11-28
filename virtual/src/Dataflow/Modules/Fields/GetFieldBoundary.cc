@@ -28,9 +28,9 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
@@ -59,7 +59,7 @@ GetFieldBoundary::execute()
   if (!(get_input_handle("Field",field,true))) return;
   
   // If parameters changed, do algorithm
-  if (inputs_changed_ || !oport_cached("Boundary") || !oport_cached("Mapping"))
+  if (inputs_changed_ || !oport_cached("BoundaryField") || !oport_cached("Mapping"))
   {
     FieldHandle ofield;
     MatrixHandle mapping;
@@ -75,5 +75,3 @@ GetFieldBoundary::execute()
 }
 
 } // End namespace SCIRun
-
-

@@ -27,37 +27,56 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Field.h>
+#include <Core/Malloc/Allocator.h>
+
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
-class ConvertHexVolToTetVol : public Module {
+class CalculateInsideWhichField : public Module {
 public:
-  ConvertHexVolToTetVol(GuiContext*);
-
+  CalculateInsideWhichField(GuiContext*);
   virtual void execute();
+  
+private:
+  GuiString outputbasis_;
+  GuiString outputtype_;  
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(CalculateInsideWhichField)
+CalculateInsideWhichField::CalculateInsideWhichField(GuiContext* ctx)
+  : Module("CalculateInsideWhichField", ctx, Source, "ChangeFieldData", "SCIRun"),
+    outputbasis_(ctx->subVar("outputbasis")),
+    outputtype_(ctx->subVar("outputtype"))
 {
 }
 
-void ConvertHexVolToTetVol::execute()
+
+void CalculateInsideWhichField::execute()
 {
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
+  SCIRun::FieldHandle input, output;
+  std::vector<SCIRun::FieldHandle> objectfields;
   
-  if (inputs_changed_ || !oport_cached("TetVol"))
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_dynamic_input_handles("Object",objectfields,true))) return;
+
+  if (objectfields.size() == 0) return;
+  
+  if (inputs_changed_ || outputbasis_.changed() 
+      || outputtype_.changed() || !oport_cached("Field"))
   {
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
-
-    send_output_handle("TetVol", ofield);
+    if(!(algo.CalculateInsideWhichField(input,output,
+                objectfields,outputtype_.get(),outputbasis_.get()))) return;
+ 
+    send_output_handle("Field",output,false);
   }
 }
 

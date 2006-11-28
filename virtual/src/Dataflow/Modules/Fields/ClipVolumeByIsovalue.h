@@ -46,9 +46,6 @@
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 
-#include <Dataflow/Modules/Fields/ConvertHexVolToTetVol.h>
-#include <Dataflow/Modules/Fields/GetFieldBoundary.h>
-
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 
 #include <sci_hash_map.h>
@@ -1495,6 +1492,8 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     //Now, figure out the correspondence for the new nodes with the original mesh...
   int counter = i;
   int rrvalue = i;
+  
+  mesh->synchronize(Mesh::LOCATE_E);
   for( unsigned int j = 0; j < node_list.size(); j++ )
   {
     rr[counter+j] = rrvalue;

@@ -26,40 +26,53 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
+
+#include <Core/Datatypes/Field.h>
+#include <Core/Malloc/Allocator.h>
+
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace SCIRun {
 
-class ConvertHexVolToTetVol : public Module {
+class SplitAndMergeFieldByDomain : public Module {
 public:
-  ConvertHexVolToTetVol(GuiContext*);
-
+  SplitAndMergeFieldByDomain(GuiContext*);
   virtual void execute();
+
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(SplitAndMergeFieldByDomain)
+SplitAndMergeFieldByDomain::SplitAndMergeFieldByDomain(GuiContext* ctx)
+  : Module("SplitAndMergeFieldByDomain", ctx, Source, "NewField", "SCIRun")
 {
 }
 
-void ConvertHexVolToTetVol::execute()
+
+void SplitAndMergeFieldByDomain::execute()
 {
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
+  // Define local handles of data objects:
+  FieldHandle input;
+  FieldHandle output;
   
-  if (inputs_changed_ || !oport_cached("TetVol"))
+  // Get the new input data:    
+  if(!(get_input_handle("Field",input,true))) return;
+
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("SplitField"))
   {
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
+    if(!(algo.SplitAndMergeFieldByDomain(input,output))) return;
 
-    send_output_handle("TetVol", ofield);
+    // send new output if there is any:   
+    send_output_handle("SplitField",output,false);
   }
 }
+
+
 
 } // End namespace SCIRun
 

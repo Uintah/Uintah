@@ -28,7 +28,7 @@
 
 
 /*
- *  CalculateFieldData: Unary field data operations
+ *  CalculateFieldDataCompiled: Unary field data operations
  *
  *  Written by:
  *   Michael Callahan
@@ -42,18 +42,18 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Algorithms/Fields/CalculateFieldData.h>
+#include <Core/Algorithms/Fields/CalculateFieldDataCompiled.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
 #include <iostream>
 
 namespace SCIRun {
 
-class CalculateFieldData : public Module
+class CalculateFieldDataCompiled : public Module
 {
 public:
-  CalculateFieldData(GuiContext* ctx);
-  virtual ~CalculateFieldData();
+  CalculateFieldDataCompiled(GuiContext* ctx);
+  virtual ~CalculateFieldDataCompiled();
   virtual void execute();
 
   virtual void presave();
@@ -66,11 +66,11 @@ private:
 };
 
 
-DECLARE_MAKER(CalculateFieldData)
+DECLARE_MAKER(CalculateFieldDataCompiled)
 
 
-CalculateFieldData::CalculateFieldData(GuiContext* ctx)
-  : Module("CalculateFieldData", ctx, Filter,"ChangeFieldData", "SCIRun"),
+CalculateFieldDataCompiled::CalculateFieldDataCompiled(GuiContext* ctx)
+  : Module("CalculateFieldDataCompiled", ctx, Filter,"ChangeFieldData", "SCIRun"),
     gui_function_(get_ctx()->subVar("function"), "result = v * 10;"),
     gui_output_data_type_(get_ctx()->subVar("outputdatatype"), "input"),
     field_output_handle_(0)
@@ -78,13 +78,13 @@ CalculateFieldData::CalculateFieldData(GuiContext* ctx)
 }
 
 
-CalculateFieldData::~CalculateFieldData()
+CalculateFieldDataCompiled::~CalculateFieldDataCompiled()
 {
 }
 
 
 void
-CalculateFieldData::execute()
+CalculateFieldDataCompiled::execute()
 {
   FieldHandle field_input_handle;
   if( !get_input_handle( "Input Field", field_input_handle, true ) ) return;
@@ -126,11 +126,11 @@ CalculateFieldData::execute()
       field_input_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
 							 0, "<", " >") + " >";
     int hoffset = 0;
-    Handle<CalculateFieldDataAlgo> algo;
+    Handle<CalculateFieldDataCompiledAlgo> algo;
     
     while (1) {
       CompileInfoHandle ci =
-	CalculateFieldDataAlgo::get_compile_info(ftd, oftn, ltd, function, hoffset);
+	CalculateFieldDataCompiledAlgo::get_compile_info(ftd, oftn, ltd, function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)) {
 	error("Your function would not compile.");
 	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
@@ -152,7 +152,7 @@ CalculateFieldData::execute()
 
 
 void
-CalculateFieldData::presave()
+CalculateFieldDataCompiled::presave()
 {
   get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }

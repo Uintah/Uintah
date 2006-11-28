@@ -367,14 +367,14 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
     //fixed_[i] = (v > 0.5);
   }
 
-  const TypeDescription *mtd = mOwner->mesh()->get_type_description();
-  CompileInfoHandle ci_boundary = GetFieldBoundaryAlgo::get_compile_info( mtd );
-  Handle<GetFieldBoundaryAlgo> boundary_algo;
   FieldHandle boundary_field_h;
-  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) ) return;
-  
   MatrixHandle interp1(0);  
-  boundary_algo->execute( mod, mOwner->mesh(), boundary_field_h, interp1, 1 );
+  
+  SCIRunAlgo::FieldsAlgo algo(mod);
+  algo.GetFieldBoundary(mOwner,boundary_field_h,interp1);
+  
+  
+  const TypeDescription *mtd = mOwner->mesh()->get_type_description();
   
   triExists = false;
   quadExists=false;

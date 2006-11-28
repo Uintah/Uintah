@@ -26,40 +26,46 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
-class ConvertHexVolToTetVol : public Module {
+class ConvertIndicesToFieldData : public Module {
 public:
-  ConvertHexVolToTetVol(GuiContext*);
-
+  ConvertIndicesToFieldData(GuiContext*);
   virtual void execute();
 };
 
 
-DECLARE_MAKER(ConvertHexVolToTetVol)
-ConvertHexVolToTetVol::ConvertHexVolToTetVol(GuiContext* ctx)
-  : Module("ConvertHexVolToTetVol", ctx, Source, "ChangeMesh", "SCIRun")
+DECLARE_MAKER(ConvertIndicesToFieldData)
+ConvertIndicesToFieldData::ConvertIndicesToFieldData(GuiContext* ctx)
+  : Module("ConvertIndicesToFieldData", ctx, Source, "ChangeFieldData", "SCIRun")
 {
 }
 
-void ConvertHexVolToTetVol::execute()
-{
-  FieldHandle ifield, ofield;
-  if (!(get_input_handle("HexVol",ifield,true))) return;
-  
-  if (inputs_changed_ || !oport_cached("TetVol"))
-  {
-    SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.ConvertMeshToTetVol(ifield,ofield))) return;
 
-    send_output_handle("TetVol", ofield);
+void ConvertIndicesToFieldData::execute()
+{
+  FieldHandle input, output;
+  MatrixHandle data;
+  
+  if (!(get_input_handle("Field",input,true))) return;
+  if (!(get_input_handle("Data",data,true))) return;
+  
+  if (inputs_changed_ || !oport_cached("Field"))
+  {
+    SCIRunAlgo::FieldsAlgo falgo(this); 
+    if (!(falgo.ConvertIndicesToFieldData(input,output,data))) return;
+    
+    send_output_handle("Field",output,false);
   }
 }
 
 } // End namespace SCIRun
+
 

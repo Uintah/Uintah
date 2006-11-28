@@ -28,7 +28,7 @@
 
 
 /*
- *  CalculateFieldData3: Unary field data operations
+ *  CalculateFieldDataCompiled3: Unary field data operations
  *
  *  Written by:
  *   Michael Callahan
@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Modules/Fields/CalculateFieldData3.h>
+#include <Dataflow/Modules/Fields/CalculateFieldDataCompiled3.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class CalculateFieldData3 : public Module
+class CalculateFieldDataCompiled3 : public Module
 {
 private:
 private:
@@ -70,18 +70,18 @@ private:
   bool error_;
 
 public:
-  CalculateFieldData3(GuiContext* ctx);
-  virtual ~CalculateFieldData3();
+  CalculateFieldDataCompiled3(GuiContext* ctx);
+  virtual ~CalculateFieldDataCompiled3();
   virtual void execute();
   virtual void presave();
 };
 
 
-DECLARE_MAKER(CalculateFieldData3)
+DECLARE_MAKER(CalculateFieldDataCompiled3)
 
 
-CalculateFieldData3::CalculateFieldData3(GuiContext* ctx)
-  : Module("CalculateFieldData3", ctx, Filter,"ChangeFieldData", "SCIRun"),
+CalculateFieldDataCompiled3::CalculateFieldDataCompiled3(GuiContext* ctx)
+  : Module("CalculateFieldDataCompiled3", ctx, Filter,"ChangeFieldData", "SCIRun"),
     gFunction_(get_ctx()->subVar("function"), "result = v0 + v1 + v2;"),
     gOutputDataType_(get_ctx()->subVar("outputdatatype"), "input 0"),
     fGeneration0_(-1),
@@ -92,13 +92,13 @@ CalculateFieldData3::CalculateFieldData3(GuiContext* ctx)
 }
 
 
-CalculateFieldData3::~CalculateFieldData3()
+CalculateFieldDataCompiled3::~CalculateFieldDataCompiled3()
 {
 }
 
 
 void
-CalculateFieldData3::execute()
+CalculateFieldDataCompiled3::execute()
 {
   // Get input field.
   FieldHandle fHandle0;
@@ -240,11 +240,11 @@ CalculateFieldData3::execute()
       fHandle0->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
 							  0, "<", " >") + " >";
     int hoffset = 0;
-    Handle<CalculateFieldData3Algo> algo;
+    Handle<CalculateFieldDataCompiled3Algo> algo;
 
     while (1) {
       CompileInfoHandle ci =
-	CalculateFieldData3Algo::get_compile_info(ftd0, ftd1, ftd2, oftn, ltd,
+	CalculateFieldDataCompiled3Algo::get_compile_info(ftd0, ftd1, ftd2, oftn, ltd,
 					     function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)) {
 	error("Your function would not compile.");
@@ -266,14 +266,14 @@ CalculateFieldData3::execute()
 
 
 void
-CalculateFieldData3::presave()
+CalculateFieldDataCompiled3::presave()
 {
   get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
 
 
 CompileInfoHandle
-CalculateFieldData3Algo::get_compile_info(const TypeDescription *field0_td,
+CalculateFieldDataCompiled3Algo::get_compile_info(const TypeDescription *field0_td,
 				     const TypeDescription *field1_td,
 				     const TypeDescription *field2_td,
 				     string ofieldtypename,
@@ -286,8 +286,8 @@ CalculateFieldData3Algo::get_compile_info(const TypeDescription *field0_td,
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string template_name("CalculateFieldData3Instance" + to_string(hashval));
-  static const string base_class_name("CalculateFieldData3Algo");
+  const string template_name("CalculateFieldDataCompiled3Instance" + to_string(hashval));
+  static const string base_class_name("CalculateFieldDataCompiled3Algo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_name + "." +
@@ -308,7 +308,7 @@ CalculateFieldData3Algo::get_compile_info(const TypeDescription *field0_td,
   string class_declaration =
     string("") + 
     "template <class IFIELD0, class IFIELD1, class IFIELD2, class OFIELD, class LOC>\n" +
-    "class " + template_name + " : public CalculateFieldData3AlgoT<IFIELD0, IFIELD1, IFIELD2, OFIELD, LOC>\n" +
+    "class " + template_name + " : public CalculateFieldDataCompiled3AlgoT<IFIELD0, IFIELD1, IFIELD2, OFIELD, LOC>\n" +
     "{\n" +
     "  virtual void function(typename OFIELD::value_type &result,\n" +
     "                        double x, double y, double z,\n" +

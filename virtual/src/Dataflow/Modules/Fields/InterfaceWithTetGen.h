@@ -76,6 +76,29 @@ public:
 };
 
 
+class TGAdditionalPointsAlgo : public InterfaceWithTetGenInterface
+{
+public:
+  virtual ~TGAdditionalPointsAlgo() {}
+  
+  //! given the input fields generate the appropriate data in the tetgenio.
+  virtual void add_points(ProgressReporter        *pr, 
+			  FieldHandle              o, 
+			  tetgenio                &in) = 0;
+};
+
+template <class Fld>
+class TGAdditionalPoints : public TGAdditionalPointsAlgo
+{
+public:
+  virtual ~TGAdditionalPoints() {}
+  
+  //! given the input fields generate the appropriate data in the tetgenio.
+  virtual void add_points(ProgressReporter        *pr, 
+			  FieldHandle              o, 
+			  tetgenio                &in);
+};
+
 class TGSurfaceTGIOAlgo : public InterfaceWithTetGenInterface
 {
 public:
@@ -285,6 +308,46 @@ TGRegionAttrib<Fld>::set_region_attribs(ProgressReporter *pr, FieldHandle ra,
     ++ni; ++idx;
   }
 
+}
+
+
+template <class Fld>
+void 
+TGAdditionalPoints<Fld>::add_points(ProgressReporter        *pr, 
+				    FieldHandle              ap, 
+				    tetgenio                &in)
+{
+  Fld* addp = dynamic_cast<Fld*>(ap.get_rep());
+  if (! addp) {
+    pr->error("Passed in Field type does not match compiled type.");
+    return;
+  }
+  typedef typename Fld::mesh_type Msh;
+  typedef typename Msh::basis_type Bas;
+  Msh *mesh = addp->get_typed_mesh().get_rep();
+
+  //NOTE: in 1.4.2 tetgen the addpointlist goes away. We will be adding an
+  //      additional tetgenio structure somehow.
+
+  //iterate over nodes and add the points.
+  typename Msh::Node::iterator ni, end;
+  mesh->begin(ni);
+  mesh->end(end);
+  unsigned idx = 0;
+  typename Msh::Node::size_type sz;
+  mesh->size(sz);
+  in.numberofaddpoints = sz;
+  // Allocate the list.
+  in.addpointlist = new REAL[sz*3];
+  while (ni != end) {
+    Point p;
+    mesh->get_center(p, *ni);
+    in.addpointlist[idx * 3] = p.x();
+    in.addpointlist[idx * 3 + 1] = p.y();
+    in.addpointlist[idx * 3 + 2] = p.z();
+
+    ++ni; ++idx;
+  }
 }
 
 } //namespace SCIRun

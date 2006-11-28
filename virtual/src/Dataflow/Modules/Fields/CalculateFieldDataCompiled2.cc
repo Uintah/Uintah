@@ -28,7 +28,7 @@
 
 
 /*
- *  CalculateFieldData2: Unary field data operations
+ *  CalculateFieldDataCompiled2: Unary field data operations
  *
  *  Written by:
  *   Michael Callahan
@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Modules/Fields/CalculateFieldData2.h>
+#include <Dataflow/Modules/Fields/CalculateFieldDataCompiled2.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class CalculateFieldData2 : public Module
+class CalculateFieldDataCompiled2 : public Module
 {
 private:
   GuiString gFunction_;
@@ -67,18 +67,18 @@ private:
   bool error_;
 
 public:
-  CalculateFieldData2(GuiContext* ctx);
-  virtual ~CalculateFieldData2();
+  CalculateFieldDataCompiled2(GuiContext* ctx);
+  virtual ~CalculateFieldDataCompiled2();
   virtual void execute();
   virtual void presave();
 };
 
 
-DECLARE_MAKER(CalculateFieldData2)
+DECLARE_MAKER(CalculateFieldDataCompiled2)
 
 
-CalculateFieldData2::CalculateFieldData2(GuiContext* ctx)
-  : Module("CalculateFieldData2", ctx, Filter,"ChangeFieldData", "SCIRun"),
+CalculateFieldDataCompiled2::CalculateFieldDataCompiled2(GuiContext* ctx)
+  : Module("CalculateFieldDataCompiled2", ctx, Filter,"ChangeFieldData", "SCIRun"),
     gFunction_(get_ctx()->subVar("function"), "result = v0 * 10 + v1;"),
     gOutputDataType_(get_ctx()->subVar("outputdatatype"), "input 0"),
     fGeneration0_(-1),
@@ -88,13 +88,13 @@ CalculateFieldData2::CalculateFieldData2(GuiContext* ctx)
 }
 
 
-CalculateFieldData2::~CalculateFieldData2()
+CalculateFieldDataCompiled2::~CalculateFieldDataCompiled2()
 {
 }
 
 
 void
-CalculateFieldData2::execute()
+CalculateFieldDataCompiled2::execute()
 {
   // Get input field 0.
   FieldHandle fHandle0;
@@ -204,11 +204,11 @@ CalculateFieldData2::execute()
       fHandle0->get_type_description(Field::FDATA_TD_E)->get_similar_name(outputDataType,
 							  0, "<", " >") + " >";
     int hoffset = 0;
-    Handle<CalculateFieldData2Algo> algo;
+    Handle<CalculateFieldDataCompiled2Algo> algo;
 
     while (1) {
       CompileInfoHandle ci =
-	CalculateFieldData2Algo::get_compile_info(ftd0, ftd1, oftn, ltd, 
+	CalculateFieldDataCompiled2Algo::get_compile_info(ftd0, ftd1, oftn, ltd, 
 					     function, hoffset);
       if (!DynamicCompilation::compile(ci, algo, false, this)) {
 	error("Your function would not compile.");
@@ -230,14 +230,14 @@ CalculateFieldData2::execute()
 
 
 void
-CalculateFieldData2::presave()
+CalculateFieldDataCompiled2::presave()
 {
   get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
 
 
 CompileInfoHandle
-CalculateFieldData2Algo::get_compile_info(const TypeDescription *field0_td,
+CalculateFieldDataCompiled2Algo::get_compile_info(const TypeDescription *field0_td,
 				     const TypeDescription *field1_td,
 				     string ofieldtypename,
 				     const TypeDescription *loc_td,
@@ -249,8 +249,8 @@ CalculateFieldData2Algo::get_compile_info(const TypeDescription *field0_td,
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string template_name("CalculateFieldData2Instance" + to_string(hashval));
-  static const string base_class_name("CalculateFieldData2Algo");
+  const string template_name("CalculateFieldDataCompiled2Instance" + to_string(hashval));
+  static const string base_class_name("CalculateFieldDataCompiled2Algo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_name + "." +
@@ -268,7 +268,7 @@ CalculateFieldData2Algo::get_compile_info(const TypeDescription *field0_td,
   // Code for the function.
   string class_declaration = string("") +
     "template <class IFIELD0, class IFIELD1, class OFIELD, class LOC>\n" +
-    "class " + template_name + " : public CalculateFieldData2AlgoT<IFIELD0, IFIELD1, OFIELD, LOC>\n" +
+    "class " + template_name + " : public CalculateFieldDataCompiled2AlgoT<IFIELD0, IFIELD1, OFIELD, LOC>\n" +
     "{\n" +
     "  virtual void function(typename OFIELD::value_type &result,\n" +
     "                        double x, double y, double z,\n" +

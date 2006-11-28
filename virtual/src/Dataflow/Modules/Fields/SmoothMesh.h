@@ -39,7 +39,7 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/HexVolMesh.h>
-#include <Dataflow/Modules/Fields/ConvertQuadSurfToTriSurf.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <set>
@@ -524,19 +524,12 @@ SmoothMeshAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
   FieldHandle ofh = fieldh->clone();
   ofh->copy_properties( fieldh.get_rep() );
   
-  const TypeDescription *mtd = ofh->mesh()->get_type_description();
-  CompileInfoHandle ci_boundary = GetFieldBoundaryAlgo::get_compile_info( mtd );
-  Handle<GetFieldBoundaryAlgo> boundary_algo;
+  SCIRunAlgo::FieldsAlgo algo(mod);
   FieldHandle boundary_field_h;
-  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) )
-  {
-    mod->error( "Unable to obtain a list of boundary elements for smoothing the boundary." );
-    return ofh;
-  }
+  MatrixHandle interp1;  
+    
+  if (!(algo.GetFieldBoundary(ofh,boundary_field_h,interp1))) return ofh;
 
-  MatrixHandle interp1(0);  
-  boundary_algo->execute( mod, ofh->mesh(), boundary_field_h, interp1, 1 );
-  
   const TypeDescription *std = boundary_field_h->get_type_description();
   CompileInfoHandle ci_boundary_smooth = SmoothMeshAlgo::get_compile_info( std, "Tri" );
   Handle<SmoothMeshAlgo> bound_smooth_algo;
@@ -571,6 +564,7 @@ SmoothMeshAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
     smooth_boundary->get_point( p, bi );
     omesh->set_point( p, *cols );
   }
+  
   return ofh;
 }
 
@@ -596,19 +590,12 @@ SmoothMeshAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
   ofh->copy_properties( fieldh.get_rep() );
   ofh->mesh_detach();
 
-  const TypeDescription *mtd = ofh->mesh()->get_type_description();
-  CompileInfoHandle ci_boundary = GetFieldBoundaryAlgo::get_compile_info( mtd );
-  Handle<GetFieldBoundaryAlgo> boundary_algo;
   FieldHandle boundary_field_h;
-  if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) )
-  {
-    mod->error( "Unable to obtain a list of boundary elements for smoothing the boundary." );
-    return ofh;
-  }
+  MatrixHandle interp1;  
 
-  MatrixHandle interp1(0);  
-  boundary_algo->execute( mod, ofh->mesh(), boundary_field_h, interp1, 1 );
-  
+  SCIRunAlgo::FieldsAlgo algo(mod);
+  if(!(algo.GetFieldBoundary(ofh,boundary_field_h,interp1))) return ofh;
+    
   const TypeDescription *std = boundary_field_h->get_type_description();
   CompileInfoHandle ci_boundary_smooth = SmoothMeshAlgo::get_compile_info( std, "Quad" );
   Handle<SmoothMeshAlgo> bound_smooth_algo;
@@ -617,6 +604,7 @@ SmoothMeshAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
     mod->error( "Unable to compile SmoothMesh algorithm for smoothing the boundary." );
     return ofh;
   }
+
 
   ofh->mesh_detach();
   typename FIELD::mesh_type *omesh =
@@ -643,6 +631,7 @@ SmoothMeshAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
     smooth_boundary->get_point( p, bi );
     omesh->set_point( p, *cols );
   }
+
 
   return ofh;
 }
@@ -688,16 +677,14 @@ SmoothMeshAlgoQuad<FIELD>::compute_domain_surface( ProgressReporter *mod,
   // The QuadSurfMesh class doesn't currently support a 'snap_to'
   // function, so we'll convert the quads to tris for the domain 
   // functions until the classes can be updated appropriately.
-  const TypeDescription *src_td = fieldh->get_type_description();
-  CompileInfoHandle qci = ConvertQuadSurfToTriSurfAlgo::get_compile_info(src_td);
-  Handle<ConvertQuadSurfToTriSurfAlgo> qalgo;
-  if( !DynamicCompilation::compile(qci, qalgo, mod )) return false;
-  if( !qalgo.get_rep() || !qalgo->execute( mod, fieldh, ofieldh ) )
+
+  SCIRunAlgo::FieldsAlgo algo(mod);
+  if(!(algo.ConvertMeshToTriSurf(fieldh,ofieldh)))
   {
     mod->warning( "ConvertQuadSurfToTriSurf conversion failed to copy data." );
     return false;
   }
-    
+
   return true;
 }
 
