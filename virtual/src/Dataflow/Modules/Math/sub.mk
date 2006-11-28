@@ -41,26 +41,34 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Math
 
 SRCS     += \
-	$(SRCDIR)/AppendMatrix.cc\
+  $(SRCDIR)/AppendMatrix.cc\
 	$(SRCDIR)/BuildNoiseColumnMatrix.cc\
-	$(SRCDIR)/CreateGeometricTransform.cc\
-	$(SRCDIR)/ConvertMatrixType.cc\
 	$(SRCDIR)/ChooseMatrix.cc\
-	$(SRCDIR)/ReportColumnMatrixMisfit.cc\
-	$(SRCDIR)/EvaluateLinAlgBinary.cc\
-	$(SRCDIR)/EvaluateLinAlgUnary.cc\
-	$(SRCDIR)/EvaluateLinAlgGeneral.cc\
-        $(SRCDIR)/ReportMatrixInfo.cc\
-        $(SRCDIR)/GetColumnMatrixFromMatrix.cc\
-        $(SRCDIR)/SolveMinNormLeastSqSystem.cc\
-	$(SRCDIR)/SolveLinearSystem.cc\
-	$(SRCDIR)/GetSubmatrix.cc\
-	$(SRCDIR)/ConvertMaskVectorToMappingMatrix.cc\
+	$(SRCDIR)/CollectMatrices.cc\
 	$(SRCDIR)/ConvertMappingMatrixToMaskVector.cc\
+	$(SRCDIR)/ConvertMaskVectorToMappingMatrix.cc\
+	$(SRCDIR)/ConvertMatrixType.cc\
+	$(SRCDIR)/CreateGeometricTransform.cc\
 	$(SRCDIR)/CreateMatrix.cc\
+	$(SRCDIR)/EvaluateLinAlgBinary.cc\
+	$(SRCDIR)/EvaluateLinAlgGeneral.cc\
+	$(SRCDIR)/EvaluateLinAlgUnary.cc\
+  $(SRCDIR)/GetColumnOrRowFromMatrix.cc\
+	$(SRCDIR)/GetSubmatrix.cc\
+  $(SRCDIR)/SolveMinNormLeastSqSystem.cc\
+	$(SRCDIR)/SolveLinearSystem.cc\
+	$(SRCDIR)/ReportColumnMatrixMisfit.cc\
+  $(SRCDIR)/ReportMatrixColumnMeasure.cc\
+  $(SRCDIR)/ReportMatrixInfo.cc\
+  $(SRCDIR)/ReportMatrixRowMeasure.cc\
+  $(SRCDIR)/ReorderMatrixByCuthillMcKee.cc\
+  $(SRCDIR)/ReorderMatrixByReverseCuthillMcKee.cc\
+  $(SRCDIR)/ResizeMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
+  Core/Algorithms/Math\
+  Core/Algorithms/Converter\
 	Core/Datatypes     \
 	Core/Exceptions    \
 	Core/Geom          \

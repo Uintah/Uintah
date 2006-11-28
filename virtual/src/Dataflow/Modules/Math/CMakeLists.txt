@@ -32,25 +32,34 @@ SET(Dataflow_Modules_Math_SRCS
   AppendMatrix.cc
   BuildNoiseColumnMatrix.cc
   CreateGeometricTransform.cc
-  ConvertMatrixType.cc
   ChooseMatrix.cc
+  ConvertMatrixType.cc
+  CollectMatrices.cc
   ReportColumnMatrixMisfit.cc
   EvaluateLinAlgBinary.cc
   EvaluateLinAlgUnary.cc
   EvaluateLinAlgGeneral.cc
   ReportMatrixInfo.cc
-  GetColumnMatrixFromMatrix.cc
+  GetColumnOrRowFromMatrix.cc
   SolveMinNormLeastSqSystem.cc
   SolveLinearSystem.cc
   GetSubmatrix.cc
   ConvertMaskVectorToMappingMatrix.cc
   ConvertMappingMatrixToMaskVector.cc
   CreateMatrix.cc
+  ReportMatrixColumnMeasure.cc
+  ReportMatrixInfo.cc
+  ReportMatrixRowMeasure.cc
+  ReorderMatrixByCuthillMcKee.cc
+  ReorderMatrixByReverseCuthillMcKee.cc
+  ResizeMatrix.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Math ${Dataflow_Modules_Math_SRCS})
 
 TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
+  Core_Algorithms_Math
+  Core_Algorithm_ArrayMath
   Core_Datatypes
   Core_Exceptions
   Core_Geom
@@ -64,7 +73,6 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
   Dataflow_TkExtensions
   Core_Util
   Dataflow_Network
-  Dataflow_Widgets
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
