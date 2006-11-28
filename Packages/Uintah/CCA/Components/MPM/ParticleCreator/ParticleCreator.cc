@@ -398,8 +398,24 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
 
+  // AMR stuff
+  const Level* curLevel = patch->getLevel();
+  bool hasFiner = curLevel->hasFinerLevel();
+  Level* fineLevel=0;
+  if(hasFiner){
+    fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
+  }
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
+    IntVector c = *iter;
+    if(hasFiner){ // Don't create particles if a finer level exists here
+      const Point CC = patch->cellPosition(c);
+      const Patch* patchExists = fineLevel->getPatchFromPoint(CC);
+      if(patchExists != 0){
+       continue;
+      }
+    }
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
