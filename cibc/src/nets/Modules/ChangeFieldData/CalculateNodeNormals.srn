@@ -144,7 +144,7 @@
       <var name="show-edge" val="{1}"/>
       <var name="show-face" val="{1}"/>
     </module>
-    <module category="ChangeFieldData" id="m6" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="68" y="89"/>
       <var name="function" val="{result = 1.0;
 }"/>
