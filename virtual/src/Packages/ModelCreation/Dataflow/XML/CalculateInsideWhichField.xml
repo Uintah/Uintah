@@ -9,9 +9,6 @@
       This module detects whether a node or a cell is inside any of the object fields. The output field will be indexed according to the object it is in starting with index 1. Index 0 reserved for the part of the field not in any of the object fields.
 
     </summary>
-    <description>
-      <p>        This module detects whether a node or a cell is inside any of the object fields. The output field will be indexed according to the object it is in starting with index 1. Index 0 reserved for the part of the field not in any of the object fields.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

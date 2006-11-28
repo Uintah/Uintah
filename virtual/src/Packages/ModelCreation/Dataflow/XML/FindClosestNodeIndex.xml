@@ -9,10 +9,6 @@
       Find an index per point of the closest node in the field.
 
     </summary>
-    <description>
-      <p>        Find an index per point of the closest node in the field.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

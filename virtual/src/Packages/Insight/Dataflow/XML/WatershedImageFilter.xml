@@ -41,13 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-  A low-level image analysis algorithm that automatically produces 
-  a hierarchy of segmented, labeled images from a scalar-valued image input.
-  This module encapsulates the functionality of the ITK Filter itk::WatershedImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

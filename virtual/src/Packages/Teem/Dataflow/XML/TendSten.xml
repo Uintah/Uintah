@@ -37,18 +37,6 @@
     </authors>
     <summary>Calculate structure tensors from a scalar field. Not a diffusion
 tensor, but it is symmetric and positive-definate.</summary>
-    <description>
-    <p>Calculate structure tensors from a scalar field. Not a diffusion
-tensor, but it is symmetric and positive-definate.</p>
-    <p>Difference Scale : the radius of the kernel used for differentiation
-    to computer gradient vectors (in pixels).  This number should be an 
-    integer.</p>
-    <p>Integration Scale : the radius of the kernel used for blurring 
-    outer products of gradients in order compute structure tensors (in pixels).
-    This number should be an integer.</p>
-    <p> Downsample Factor : the factor by which to downsample when creating
-    volume of structure tensors.  This should also be an integer.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

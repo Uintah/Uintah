@@ -37,8 +37,6 @@
     </authors>
     <summary>
     </summary>
-    <description><p>Converts a SCIRun Field to an ITK Image.  The data is referenced, not copied.  This module currenlty works for ImageField, ITKImageField, LatVolField, or ITKLatVolField.</p>
-  </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

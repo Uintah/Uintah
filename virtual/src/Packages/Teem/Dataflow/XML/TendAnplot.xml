@@ -41,27 +41,6 @@ metrics all vary from 0.0 to 1.0, and will be sampled in the lower
 right half of the image. The plane on which they are sampled is a
 surface of constant trace.
     </summary>
-    <description>
-      <p>Graph anisotropy metric in barycentric coords. The metrics
-all vary from 0.0 to 1.0, and will be sampled in the lower right half
-of the image. The plane on which they are sampled is a surface of
-constant trace.</p>
-      <p>Resolution : resolution of anisotropy plot. This value should
-be an integer.</p>
-      <p>Sample Whole Triangle of Constant Trace : check to sample the
-whole triangle of constant trace, instead of just the sixth of it in
-which the eigenvalues have the traditional sorted order.</p>
-      <p>Set Outside Pixel Values to NaN : set the pixel values
-outside the triangle to be NaN. If not checked they will be set to
-0.</p>
-      <p>Anisotropy Metric to Plot : Which anisotropy metric to plot.
-All the Westin metrics come in two versions. Currently supported: cl1,
-cl2: Westin's linear; cp1, cp2: Westin's planar; ca1, ca2: Westin's
-linear + planar; cs1, cs2: Westin's spherical (1-ca); ct1, ct2: GK's
-anisotropy type (cp/ca); ra: Basser/Pierpaoli relative anisotropy; fa:
-Basser/Pierpaoli fractional anisotropy/sqrt(2); vf: volume fraction =
-1-(Basser/Pierpaoli volume ratio); tr: trace.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

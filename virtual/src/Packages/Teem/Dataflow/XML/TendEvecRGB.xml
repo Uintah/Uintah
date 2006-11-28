@@ -37,32 +37,6 @@
     </authors>
     <summary>Make an RGB volume from an eigenvector and an
 anisotropy.</summary>
-    <description>
-      <p>Make an RGB volume from an eigenvector and an anisotropy.
-</p>
-      <p>Eigenvector to use : indicate which eigenvector will be
-colored.</p>
-      <p>Anisotropy Metric : Which anisotropy metric to use for
-modulating the saturation of the colors.  All the Westin metrics come
-in two versions.  Currently supported are:</p>
-      <p>cl1, cl2 : Westin's linear.</p>
-      <p>cp1, cp2 : Westin's planar.</p>
-      <p>ca1, ca2 : Westin's linear + planar.</p>
-      <p>cs1, cs2 : Westin's spherical (1-ca).</p>
-      <p>ct1, ct2 : GK's anisotropy type (cp/ca).</p>
-      <p>ra : Basser/Pierpaoli relative anisotropy.</p>
-      <p>fa : Basser/Pierpaoli fractional anisotropy/sqrt(2).</p>
-      <p>vf : volume fraction = 1-(Basser/Pierpaoli volume ratio).</p>
-      <p>tr : trace.</p>
-      <p>Background : gray level to use for voxels who's confidence is
-zero. This should be a float.</p>
-      <p>Gray : he gray level to desaturate towards as anisotropy
-decreases (while confidence remains 1.0). This value should be a
-float.</p>
-      <p>Gamma : gamma to use on color components. This value should
-be a float.</p>
-    </description>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -41,14 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Implements a Reflection of an image along a selected direction.
-This class is parameterized over the type of the input image and 
-the type of the output image. 
-  This module encapsulates the functionality of the ITK Filter itk::ReflectImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

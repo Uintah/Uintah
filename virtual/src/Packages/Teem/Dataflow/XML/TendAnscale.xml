@@ -40,16 +40,6 @@ maintains the isotropic component of the tensor, and fixes either the
 trace or determinant, while scaling up (or down) the deviatoric
 component of the tensor. Good for exaggerating the shape of nearly
 isotropic tensors.</summary>
-    <description>
-      <p>Scale the anisotropic component of the tensors. This
-maintains the isotropic component of the tensor, and fixes either the
-trace or determinant, while scaling up (or down) the deviatoric
-component of the tensor. Good for exaggerating the shape of nearly
-isotropic tensors.</p>
-      <p>Scale: Amount by which to scale deviatoric component of
-tensor. This value should be a float.</p>
-    </description>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

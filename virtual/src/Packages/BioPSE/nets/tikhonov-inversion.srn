@@ -24,7 +24,7 @@
       <var name="tex_var" val="{1e-06}"/>
       <var name="ui_geometry" val="{505x506+56+36}"/>
     </module>
-    <module category="Math" gui_visible="yes" id="m4" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" gui_visible="yes" id="m4" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="216" y="85"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{               20}"/>

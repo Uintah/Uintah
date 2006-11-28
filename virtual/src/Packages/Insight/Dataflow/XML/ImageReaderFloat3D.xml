@@ -37,8 +37,6 @@
     </authors>
     <summary>
     </summary>
-    <description><p>This module uses the itk::ImageFileReader to read in a 2D Image as floats.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.</p>
-  </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

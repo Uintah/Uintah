@@ -134,7 +134,7 @@
       <position x="21" y="146"/>
       <var name="filename" val="scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat"/>
     </module>
-    <module category="Math" id="m14" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m14" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="21" y="223"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_units" val="{Units}"/>

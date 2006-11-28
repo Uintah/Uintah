@@ -41,25 +41,6 @@ magnitude or two (or more). Or, use "unu gamma" to warp the values in
 the direction you know they need to go. Either of these might work
 because extremely tall and narrow peaks in the equalization histogram
 will produce poor results.</summary>
-    <description>
-      <p>Perform histogram equalization. If this seems to be doing
-nothing, try increasing the number of histograms bins by an order of
-magnitude or two (or more). Or, use "unu gamma" to warp the values in
-the direction you know they need to go. Either of these might work
-because extremely tall and narrow peaks in the equalization histogram
-will produce poor results.</p>
-      <p>Bins: the number of bins to use in histogram that is created
-in order to calculate the mapping that achieves the equalization.
-(int)</p>
-      <p>SBins: the number bins in value histogram to ignore in
-calculating the mapping. Bins are ignored when they get more hits than
-other bins, and when the values that fall in them are constant. This
-is an effective way to prevent large regions of background value from
-distorting the equalization mapping. default: "0"</p>
-      <p>Amount: extent to which the histogram equalizing mapping
-should be applied; 0.0: no change, 1.0: full equalization (float);
-default: "1.0"</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

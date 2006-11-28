@@ -39,11 +39,6 @@
     <summary>
       This function converts the SelectionMask into a list of all activated elements.
     </summary>
-    <description>
-    <p>
-      This function converts the SelectionMask into a list of all activated elements.
-    </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

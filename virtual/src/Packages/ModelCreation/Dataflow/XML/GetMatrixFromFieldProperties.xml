@@ -40,12 +40,6 @@
     <summary>
       This module retrieves a matrix property from a field. 
     </summary>
-    <description>
-      <p>
-      This module retrieves a matrix property from a field. The name of the 
-      property can be entered in the GUI.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

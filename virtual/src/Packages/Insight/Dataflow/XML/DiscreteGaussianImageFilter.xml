@@ -41,15 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-  Blurs an image by separable convolution with 
-  discrete gaussian kernels. This filter performs 
-  Gaussian blurring by separable convolution of an 
-  image and a discrete Gaussian operator (kernel).
-  This module encapsulates the functionality of the ITK Filter itk::DiscreteGaussianImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

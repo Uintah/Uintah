@@ -39,13 +39,6 @@
     <summary>
       This function converts a list of indices into a SelectionMask. The module needs to know the  length of the selection mask in order to know what the biggest index is. (This one is not necessarily selected)
     </summary>
-    <description>
-      <p>
-      This function converts a list of indices into a SelectionMask. The module 
-      needs to know the  length of the selection mask in order to know what the 
-      biggest index is. (This one is not necessarily selected)
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -40,10 +40,6 @@
     </authors>
     <summary>Convert a ColorMap2 into a 256x512x4 floating point image
 nrrd.</summary>
-    <description>
-      <p>Convert a ColorMap2 into a 256x512x4 floating point image
-nrrd.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

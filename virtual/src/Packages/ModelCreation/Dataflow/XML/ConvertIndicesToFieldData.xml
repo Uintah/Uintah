@@ -9,9 +9,6 @@
       This module takes a field with inidices and puts the data indexed from a matrix in the field.
 
     </summary>
-    <description>
-      <p>        This module takes a field with inidices and puts the data indexed from a matrix in the field.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -28,61 +28,6 @@
     <summary> The ExportNrrdsToMatlab Module saves a SCIRun NRRD object
 into a MATLAB .mat file.
 	</summary>
-    <description>
-      <section>
-	<title>Module Description</title>
-	<p>
-	The ExportNrrdsToMatlab module exports SCIRun NRRD objects into
-a MATLAB compatible .mat file. Currently this module supports the
-fileformat of MATLAB version 5 and higher. The module has multiple
-input ports that can be used to store multiple MATLAB arrays in one
-file. Each of these matrices can be formatted into different formats.
-Firstly, the datatype of the matrix can be altered. Since matrices in
-matlab are able to use multiple dataformats, casting the data within
-the module may be a convenient way of saving space. Secondly, the
-module has the option to export the data as a structured matrix. This
-has the advantage that additional properties can be exported to matlab
-as well. Currently this feature is only used to export the values
-stored in the property manager and the properties stored in the NRRD
-axis, like units, spacing, etc.
-	</p>
-	
-	<p> Setting up the GUI: </p>
-	
-	<orderedlist>
-	  <listitem>
-	    <p>Select a filename for the MATLAB file that needs to be
-created. You can use the BROWSE button to select an existing file.</p>
-	  </listitem>
-	  <listitem>
-	    <p>Setup the format of each matrix and change the names of
-the matrices to the ones you want to use in MATLAB.</p>
-	  </listitem>
-	  <listitem>
-	    <p>Execute the module and the file will be written.</p>
-	  </listitem>
-	</orderedlist>
-      </section>
-	
-      <section>
-	<title>See Also </title>
-	<p>
-	<modref package="MatlabInterface" name="Matlab" />, <modref
-package="MatlabInterface" name="MatlabBundelsReader" />, <modref
-package="MatlabInterface" name="MatlabBundlesWriter" />, <modref
-package="MatlabInterface" name="MatlabDataReader" />, <modref
-package="MatlabInterface" name="MatlabDataWriter" />, <modref
-package="MatlabInterface" name="MatlabFieldsReader" />, <modref
-package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
-package="MatlabInterface" name="MatlabMatricesReader" />, <modref
-package="MatlabInterface" name="MatlabMatricesReader" />, <modref
-package="MatlabInterface" name="ExportNrrdsToMatlab" />, <modref
-package="MatlabInterface" name="MatlabNrrdsReader" />	
-	</p>
-      </section>	
-	
-	
-    </description>   
   
   
   </overview>

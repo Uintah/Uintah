@@ -37,9 +37,6 @@
     <summary>
       This module adds the functionality of gage to SCIRun.
     </summary>
-    <description>
-      <p>This module adds the functionality of gage to SCIRun.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -99,7 +99,7 @@ namespace SCIRun {
 
 #include <Core/Datatypes/ITKImageField.h>
 #include <Core/Datatypes/ITKLatVolField.h>
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Network/Ports/ITKDatatypePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <Core/Datatypes/GenericField.h>

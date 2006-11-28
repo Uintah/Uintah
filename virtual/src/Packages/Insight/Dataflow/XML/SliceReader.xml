@@ -37,16 +37,6 @@
     <author>Darby Van Uitert</author>
     </authors>
     <summary>Read in a 3D volume a slice at a time.</summary>
-    <description>
-
-    <p>Read in a 3D volume a slice at a time.  Slicing is done along
-    the last axis.  This module currently only works for the case of
-    an Analyze header file (.hdr) and Analyze image file (.img). The
-    basename of these files must be the same and the image file cannot
-    be compressed. If Cast Output is checked, the output image will
-    be cast to a float image.</p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

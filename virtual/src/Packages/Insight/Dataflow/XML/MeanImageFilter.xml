@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Applies an averaging filter to an image.  Computes an image where a given pixel is the mean value of the the pixels in a neighborhood about the corresponding input pixel. 
-  This module encapsulates the functionality of the ITK Filter itk::MeanImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

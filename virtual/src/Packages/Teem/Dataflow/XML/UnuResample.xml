@@ -38,12 +38,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Resample a nrrd to a new size.</summary>
-    <description>
-      <p>Given an input nrrd, and options specified in the UI for
-NrrdResample, generate a newly sampled nrrd.  Size specification can
-be absolute or based on a multiplier (see UI).</p>
-    </description>
-    <examplesr>Teem/nets/test/resample.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

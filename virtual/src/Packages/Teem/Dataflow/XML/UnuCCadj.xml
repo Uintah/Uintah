@@ -39,16 +39,6 @@
 operates on the output of ccfind. Output is unsigned char array
 containing 1 at locations (I,J) and (J,I) if CCs with ids I and J are
 adjacent, according to the chosen style of adjacency.</summary>
-    <description>
-      <p>Form adjecency matrix of connected components. This operates
-on the output of ccfind. Output is unsigned char array containing 1 at
-locations (I,J) and (J,I) if CCs with ids I and J are adjacent,
-according to the chosen style of adjacency.</p>
-      <p>Connectivity : indicates what kind of connectivity to use, or
-the number of coordinates that vary in order to traverse the
-neighborhood of a given sample. In 2D: 1: 4-connected, 2: 8-connected.
-This value should be represented by an integer.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

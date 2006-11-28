@@ -41,27 +41,6 @@
     <summary>The module changes/creates the right-hand side (RHS) and
 forward matrices for voltgage (Dirichlet) boundary
 conditions.</summary>
-    <description>
-      <p>Version Date: March 2001</p><p>Version: 1.0</p>
-      <p>The module has the following behaviour:</p>
-      <orderedlist>
-	<listitem>
-	  <p>The ApplyFEMVoltageSource module creates and fills a new
-ColumnMatrix, according to mesh and dipole parameters in situations
-where it does not locate a ColumnMatrix on its input that contains an
-RHS to modify, or when the module finds a ColumnMatrix of a different
-size than the number of nodes in the mesh.</p>
-	</listitem>
-	<listitem>
-	  <p>We assume the mesh to be a TetVolField(int) type,
-containing indices to the conductivity tensor lookup table. The
-documentation for the <modref package="BioPSE" name="SetupFEMatrix"/>
-module provides further information about this mesh.
-
-</p>
-	</listitem>
-      </orderedlist>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

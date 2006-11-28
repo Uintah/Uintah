@@ -18,7 +18,7 @@
       <position x="223" y="11"/>
       <var name="filename" val="scisub_datadir/time-dependent/eeg_ATD256.av.bc.mat"/>
     </module>
-    <module category="Math" gui_visible="yes" id="m3" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" gui_visible="yes" id="m3" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="223" y="76"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{             1199}"/>

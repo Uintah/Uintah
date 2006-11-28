@@ -126,7 +126,7 @@ ApplyFEMCurrentSource::execute()
   if (!module_dynamic_compile(ci, algo)) 
     return;
 
-  ColumnMatrix *w=NULL;
+  SparseRowMatrix *w=NULL;
   
   algo->execute(this, hField, hSource, hMapping, dipole,
                 Max(sourceNodeTCL_.get(),0), Max(sinkNodeTCL_.get(),0),

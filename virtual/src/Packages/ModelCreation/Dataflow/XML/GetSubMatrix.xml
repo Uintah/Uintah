@@ -9,10 +9,6 @@
       Get a submatrix from a matrix by selecting row and column indices.
 
     </summary>
-    <description>
-      <p>        Get a submatrix from a matrix by selecting row and column indices.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

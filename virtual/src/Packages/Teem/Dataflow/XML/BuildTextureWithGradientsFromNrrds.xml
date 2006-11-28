@@ -36,15 +36,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Set up a volume texture from a 3D scalar nrrd.</summary>
-    <description>
-      <p>Efficiently compute the inputs to NrrdTextureBuilder.  The
-first output port will contain a 4D nrrd where the fast dimension
-contains normals and values packed together (normal refers to the
-gradient.)  The second output will contain the gradient magnitudes.
-The first output will be of type unsigned character as expected by
-NrrdTextureBuilder.  The gradient magnitude field is of type float and
-should be run through UnuQuantize.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -29,17 +29,6 @@
 // Include all code for the dynamic engine
 #include <Core/Algorithms/ArrayMath/ArrayObject.h>
 #include <Core/Algorithms/ArrayMath/ArrayEngine.h>
-
-// DataArrayMath (TVM) is my namespace in which all Scalar, Vector, and Tensor math is defined.
-// The classes in this namespace have a definition which is more in line with
-// how functions are written in Algebra or Matlab than the native SCIRun Tensor
-// and Vector classes. Hence all calculations are performed in this specially
-// constructed namespace, to enhance the usability of SCIRun. 
-// The TVMHelp system contains an almost complete list of functions that are
-// defined in the DataArrayMath, so when new functions are added, one does 
-// not need to update the GUI, but the module dynamically looks up the available
-// functions when it is created.
-
 #include <Core/Algorithms/ArrayMath/ArrayEngineHelp.h>
 #include <Core/Algorithms/ArrayMath/ArrayEngineMath.h>
 
@@ -55,11 +44,11 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class SelectAndSetChangeFieldData : public Module {
+class SelectAndSetFieldsData : public Module {
   public:
-    SelectAndSetChangeFieldData(GuiContext*);
+    SelectAndSetFieldsData(GuiContext*);
 
-    virtual ~SelectAndSetChangeFieldData();
+    virtual ~SelectAndSetFieldsData();
 
     virtual void execute();
 
@@ -79,9 +68,9 @@ class SelectAndSetChangeFieldData : public Module {
 };
 
 
-DECLARE_MAKER(SelectAndSetChangeFieldData)
-SelectAndSetChangeFieldData::SelectAndSetChangeFieldData(GuiContext* ctx)
-  : Module("SelectAndSetChangeFieldData", ctx, Source, "ChangeFieldData", "ModelCreation"),
+DECLARE_MAKER(SelectAndSetFieldsData)
+SelectAndSetFieldsData::SelectAndSetFieldsData(GuiContext* ctx)
+  : Module("SelectAndSetFieldsData", ctx, Source, "ChangeFieldData", "ModelCreation"),
   guiselection1_(get_ctx()->subVar("selection1")),
   guifunction1_(get_ctx()->subVar("function1")),
   guiselection2_(get_ctx()->subVar("selection2")),
@@ -95,10 +84,10 @@ SelectAndSetChangeFieldData::SelectAndSetChangeFieldData(GuiContext* ctx)
 {
 }
 
-SelectAndSetChangeFieldData::~SelectAndSetChangeFieldData(){
+SelectAndSetFieldsData::~SelectAndSetFieldsData(){
 }
 
-void SelectAndSetChangeFieldData::execute()
+void SelectAndSetFieldsData::execute()
 {
   FieldHandle field, field2, field3;
   std::vector<MatrixHandle> matrices;
@@ -287,11 +276,11 @@ void SelectAndSetChangeFieldData::execute()
 
 
 void
-SelectAndSetChangeFieldData::tcl_command(GuiArgs& args, void* userdata)
+SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("SelectAndSetChangeFieldData needs a minor command");
+    args.error("SelectAndSetFieldsData needs a minor command");
     return;
   }
 

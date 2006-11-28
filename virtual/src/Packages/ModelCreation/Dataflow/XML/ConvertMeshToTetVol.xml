@@ -8,11 +8,6 @@
     <summary>
       Convert a field into a TetVolField.
     </summary>
-    <description>
-      <p>
-      Convert a field into a TetVolField. This is a more general implementation of HexToTet.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

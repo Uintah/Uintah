@@ -9,9 +9,6 @@
       This module maps potentials and conductivities into a current density field. The module samples the underlying fields and averages or integrates the data and puts the result on the elements of the output mesh. The module has the option to do the dot product with the current density field as well for surface destination meshes.
 
     </summary>
-    <description>
-      <p>        This module maps potentials and conductivities into a current density field. The module samples the underlying fields and averages or integrates the data and puts the result on the elements of the output mesh. The module has the option to do the dot product with the current density field as well for surface destination meshes.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

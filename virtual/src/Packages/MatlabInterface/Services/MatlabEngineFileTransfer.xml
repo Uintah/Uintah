@@ -27,7 +27,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<service name="matlabenginefiletransfer" class="FileTransfer" packageclass="SCIRun" version="1.0">
+<service name="matlabenginefiletransfer" class="FileTransfer" classpackage="SCIRun" version="1.0">
 <rcfile>matlabengine.rc</rcfile>
 <buffersize>30000</buffersize>
 </service>

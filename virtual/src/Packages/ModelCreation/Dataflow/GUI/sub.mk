@@ -14,19 +14,17 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/AppendMatrix.tcl\
-	$(SRCDIR)/CalculateDataArray.tcl\
 	$(SRCDIR)/CalculateFieldData.tcl\
 	$(SRCDIR)/CalculateFieldsData.tcl\
 	$(SRCDIR)/CalculateInsideWhichField.tcl\
 	$(SRCDIR)/CalculateIsInsideField.tcl\
 	$(SRCDIR)/CalculateLinkBetweenOppositeFieldBoundaries.tcl\
-        $(SRCDIR)/CalculateMeshNodes.tcl\
+  $(SRCDIR)/CalculateMeshNodes.tcl\
 	$(SRCDIR)/ClipFieldByFunction.tcl\
 	$(SRCDIR)/CollectFields.tcl\
 	$(SRCDIR)/ConvertMatrixToField.tcl\
 	$(SRCDIR)/ConvertNrrdToField.tcl\
 	$(SRCDIR)/ConvertTimeToWeightedIndices.tcl\
-	$(SRCDIR)/CreateDataArray.tcl\
 	$(SRCDIR)/CreateFieldData.tcl\
 	$(SRCDIR)/GenerateSphericalSurface.tcl\
 	$(SRCDIR)/GetDomainBoundary.tcl\
@@ -37,8 +35,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/InsertMatrixBreakPoint.tcl\
 	$(SRCDIR)/InsertMatrixIntoFieldProperties.tcl\
 	$(SRCDIR)/InsertStringBreakPoint.tcl\
-        $(SRCDIR)/InsertStringIntoFieldProperties.tcl\
-        $(SRCDIR)/ManageParameterMatrix.tcl\
+  $(SRCDIR)/InsertStringIntoFieldProperties.tcl\
+  $(SRCDIR)/ManageParameterMatrix.tcl\
 	$(SRCDIR)/ManageParameterString.tcl\
 	$(SRCDIR)/MapCurrentDensityOntoField.tcl\
 	$(SRCDIR)/MapFieldDataFromElemToNode.tcl\
@@ -50,16 +48,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MergeMeshNodes.tcl\
 	$(SRCDIR)/ModalMapping.tcl\
 	$(SRCDIR)/ParameterList.tcl\
-	$(SRCDIR)/ReadBundle.tcl\
-	$(SRCDIR)/ReadColorMap2D.tcl\
-	$(SRCDIR)/ReadColorMap.tcl\
-	$(SRCDIR)/ReadField.tcl\
-	$(SRCDIR)/ReadMatrix.tcl\
-	$(SRCDIR)/ReadPath.tcl\
-	$(SRCDIR)/ReadString.tcl\
-	$(SRCDIR)/ReplicateDataArray.tcl\
 	$(SRCDIR)/ReportDataArrayInfo.tcl\
-	$(SRCDIR)/ReportDataArrayMeasure.tcl\
 	$(SRCDIR)/ReportFieldDataMeasures.tcl\
 	$(SRCDIR)/ReportFieldInfo.tcl\
 	$(SRCDIR)/ReportMatrixColumnMeasure.tcl\
@@ -69,17 +58,9 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ScaleFieldMeshAndData.tcl\
 	$(SRCDIR)/SelectAndSetFieldData.tcl\
 	$(SRCDIR)/SelectAndSetFieldsData.tcl\
-        $(SRCDIR)/SelectByFieldData.tcl\
+  $(SRCDIR)/SelectByFieldData.tcl\
 	$(SRCDIR)/SelectByFieldsData.tcl\
 	$(SRCDIR)/SetFieldData.tcl\
-	$(SRCDIR)/StreamMatrixFromDisk.tcl\
-	$(SRCDIR)/WriteBundle.tcl\
-	$(SRCDIR)/WriteColorMap2D.tcl\
-	$(SRCDIR)/WriteColorMap.tcl\
-	$(SRCDIR)/WriteField.tcl\
-	$(SRCDIR)/WriteMatrix.tcl\
-	$(SRCDIR)/WritePath.tcl\
-	$(SRCDIR)/WriteString.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

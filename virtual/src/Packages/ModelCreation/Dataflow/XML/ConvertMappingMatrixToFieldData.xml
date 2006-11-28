@@ -39,16 +39,6 @@
     <summary>
       This module puts the index of the original field onto the field.
     </summary>
-    <description>
-      <p>
-      A mapping amtrix is generated every time the nodes in the mesh are 
-      remapped. This module takes the mapping from the original mesh to the new 
-      mesh and puts the original node indices onto the data of the new mesh. The 
-      input of the module takes the newly created field and its mapping matrix 
-      and combines it again so the new field contains the numbers of the indices
-      that refer to the old field.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

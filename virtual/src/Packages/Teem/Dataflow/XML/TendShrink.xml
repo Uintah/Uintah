@@ -39,11 +39,6 @@
 confidence value is set to 1.0 everwhere. You can unu spliced or
 nrrdSplice() something else in its place later.
     </summary>
-    <description>
-      <p>Converts a 9-value DT volume to a 7-value DT volume. The
-confidence value is set to 1.0 everwhere. You can unu spliced or
-nrrdSplice() something else in its place later.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
