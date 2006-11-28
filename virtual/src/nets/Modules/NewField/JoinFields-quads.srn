@@ -123,13 +123,13 @@
     <module category="ChangeMesh" id="m7" name="ConvertMeshToUnstructuredMesh" package="SCIRun">
       <position x="276" y="73"/>
     </module>
-    <module category="ChangeFieldData" id="m8" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m8" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="69" y="142"/>
       <var name="function" val="{result = x*x + y*y + z*z;
 }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
-    <module category="ChangeFieldData" id="m9" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m9" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="281" y="143"/>
       <var name="function" val="{result = x*x + y*y + z*z;
 

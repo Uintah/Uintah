@@ -110,7 +110,7 @@
       <var name="ViewWindow_0-global-dl" val="{0}"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
     </module>
-    <module category="ChangeFieldData" id="m3" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m3" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="107" y="76"/>
       <var name="function" val="{result = sqrt(x*x + y*y + z*z);
 }"/>

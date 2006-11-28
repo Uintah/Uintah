@@ -131,7 +131,7 @@
       <position x="94" y="174"/>
       <var name="preserve-scalar-type" val="{0}"/>
     </module>
-    <module category="ChangeFieldData" id="m6" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="103" y="251"/>
       <var name="function" val="{double phi, r, uu, vv;
 
@@ -187,7 +187,7 @@ result = Vector(uu, vv, c);
     <module category="ChangeMesh" id="m8" name="SwapNodeLocationsWithMatrixEntries" package="SCIRun">
       <position x="63" y="408"/>
     </module>
-    <module category="ChangeFieldData" id="m9" name="CalculateFieldData" package="SCIRun">
+    <module category="ChangeFieldData" id="m9" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="87" y="491"/>
       <var name="function" val="{static MusilRNG rng;
 result = rng();
