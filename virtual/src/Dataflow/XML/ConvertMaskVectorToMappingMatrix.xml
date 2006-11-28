@@ -11,9 +11,6 @@
     <summary>
       Converts a Mask Vector to a Mapping Matrix.
     </summary>
-    <description>
-      <p>Converts a Mask Vector to a Mapping Matrix.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

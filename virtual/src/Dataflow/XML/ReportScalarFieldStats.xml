@@ -39,8 +39,6 @@
       <author>Kurt Zimmerman</author>
     </authors>
     <summary>Analyze data from a scalarfield.</summary>
-    <description>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

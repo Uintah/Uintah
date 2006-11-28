@@ -44,15 +44,6 @@ automatically set the range of scalar values that map to the ColorMap.
 because each time the user connects a Field module to the
 RescaleColorMap Field input port, another Field input port appears. 
 </summary>
-    <description>
-      <p>In the GUI, the Auto Scale check box uses the minimum and
-maximum values found in the ScalarField and maps the ColorMap to that
-range. The Fixed Scale check box allows the user to manually select
-for the range of scalar values to which the colors map by adjusting
-the minimum and maximum values in the appropriate text fields. After
-changing the range to which the colors map, a new ColorMap passes
-downstream to the connecting module.  </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

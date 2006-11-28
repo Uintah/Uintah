@@ -39,9 +39,6 @@
       <author>Unknown</author>
     </authors>
     <summary>Modify and create custom SCIRun ColorMaps.</summary>
-    <description>
-      <p>A simple interactive editor for SCIRun ColorMaps.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

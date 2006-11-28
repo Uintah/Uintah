@@ -31,46 +31,26 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="AppendMatrix" category="Math">
+<component name="GetFieldData" category="ChangeFieldData" optional="false">
   <overview>
     <authors>
-      <author>David Weinstein</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>Composite a matrix from components.</summary>
-    <description>
-      <p>This module builds up a composited matrix from an optional
-base matrix and submatrices that get appended to the end (or prepended
-to the beginning).  Using this module, in conjunction with an upstream
-<modref package="SCIRun" name="MatrixSelectVector"/> module, users can
-build up time-dependent solution matrices.</p>
-      <p>The UI has options to allow the user to select:</p>
-      <p>- whether the matrices are concatenated (or replaced);</p>
-      <p>- whether ColumnMatrices are added as rows or columns;</p>
-      <p>- whether the submatrix should be concatenated to the
-beginning or the end of the base-matrix;</p>
-      <p>- and a button to clear the current concatenated
-contents.</p>
-      <p>Note: this module always produces a DenseMatrix as
-output.</p>
-    </description>
+    <summary>
+      Get the data from the field and put it into a matrix.
+    </summary>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Optional BaseMatrix</name>
-	<datatype>SCIRun::Matrix</datatype>
-      </port>
-      <port>
-        <name>SubMatrix</name>
-	<datatype>SCIRun::Matrix</datatype>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>CompositeMatrix</name>
-	<datatype>SCIRun::Matrix</datatype>
+        <name>Data</name>
+        <datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

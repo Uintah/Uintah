@@ -39,10 +39,6 @@
       <author>Jason Shepherd</author>
     </authors>
     <summary>Insert a layer of hexes corresponding to the input TriSurfMesh.</summary>
-    <description>
-
-      <p>The InsertHexVolSheetFromTriSurf module inserts a layer of hexahedral elements into the input hexahedral mesh which roughly follows the shape of the input triangle mesh.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

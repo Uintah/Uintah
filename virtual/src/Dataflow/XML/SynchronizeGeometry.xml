@@ -38,39 +38,6 @@
     </authors>
     <summary>Create a barrier to synchronize a set of geometry
 streams.</summary>
-    <description>
-      <p> Unlike the other modules in SCIRun, the Viewer module is
-asynchronous.  That is, ViewWindows redraw as soon as any Geometry is
-added (or deleted) through any Viewer port. This is typically the
-desired behavior, as it keeps the visualizations optimally
-interactive.  However, this is not desirable when creating animations,
-since a new animation frame is generated each time there is a redraw.
-On the contrary, when creating animations, users typically want only a
-single redraw per time-step, and that redraw should occur only when
-all of the scene geometry has been updated.  The SynchronizeGeoemtry
-module provides precisely this mechanism.  All of the Geometry that
-the user wishes to change synchronously with each frame of the
-animation (e.g. updated isosurfaces, streamlines, psuedo-colored
-surface potential maps, etc) are passed through the
-SynchronizeGeometry module before being passed into the Viewer.  As
-updated Geometries are sent to SynchronizeGeometry, it stores them in
-a buffer until all of the inputs have been received; it then sends
-them to the Viewer as a single atomic group, which results in a single
-redraw event (and thus a single new frame for the animation).
-	</p>
-      <p> A geometry stream is composed of multiple geometry samples.
-Each geometry sample is created by calling GeometryOPort:: delObj()
-and/or GeometryOPort::addObj() one or more times. All geometry samples
-with the same virtual sequence number in differenct streams must reach
-the barrier before they can all proceed. The boundary of geometry
-samples is the GeometryFlush or GeometryFlushViews message, which is
-sent out explicitly by calling functions like GeometryOPort::
-flushViews(), or implicitly by SCIRun after you did some geometry
-operations (delete or add) in Module::execute() but did not call any
-flush messages. With a checkbox in the control panel, users can
-dynamically choose whether or not to enforce the barrier.
-	</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

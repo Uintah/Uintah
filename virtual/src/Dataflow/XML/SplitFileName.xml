@@ -38,11 +38,6 @@
       This module splits a filename in: pathname, filename (base), and
 extension.
     </summary>
-    <description>
-      <p>This module splits a filename in: pathname, filename (base),
-and extension. To get the full filename back, just merge the three
-resulting strings together.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

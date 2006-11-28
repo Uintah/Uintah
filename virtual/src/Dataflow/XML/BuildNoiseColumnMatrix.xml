@@ -39,8 +39,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Performs the unary matrix operation transpose.</summary>
-    <description>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -31,29 +31,28 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="ReadColorMap2" category="DataIO">
+<component name="ConvertNrrdToField" category="Converters" optional="false">
   <overview>
     <authors>
-      <author>Steven G. Parker</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The ColorMap2 Read a persistent 2d colormap from a file
-on disk.</summary>
-    <description>
-    </description>
+    <summary>
+      Convert a NRRD into a SCIRun Field object.
+
+    </summary>
   </overview>
   <io>
-    <inputs>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Nrrd</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
-	<name>Output Data</name>
-	<datatype>SCIRun::ColorMap2</datatype>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
-  </gui>
 </component>

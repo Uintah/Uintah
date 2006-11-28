@@ -39,14 +39,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Select data from a field.</summary>
-    <description>
-      <p>
-        This module allows the user to paint values into a field using
-a selection widget.  The output field contains integer values that
-correspond to the values selected in the GUI when the painting was
-done.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

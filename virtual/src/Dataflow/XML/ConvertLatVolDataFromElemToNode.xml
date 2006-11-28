@@ -40,18 +40,6 @@
     </authors>
     <summary>Make a new field with data at nodes instead of
 elements.</summary>
-    <description>
-
-      <p>ConvertLatVolDataFromElemToNode creates a new field with the data at the mesh
-nodes rather than at the elements.  This currently only works on
-LatVolField, StructHexVolField, ImageField, and StuctQuadSurfField
-field types.  The data must be at cells/faces as appropriate to the
-field type.  A new field is created such that the data remains at the
-same positions in space but occupy the nodes of the new mesh rather
-than being located at the cell/face locations.  This is the opposite
-of <modref package="SCIRun" name="MoveNodeToElem"/>.</p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

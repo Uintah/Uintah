@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -37,21 +39,23 @@
     <summary>
       This module reads a bundle from disk.
     </summary>
-    <description>
-      <p>This module reads a bundle from disk. A bundle file has a
-.bdl extension and can be written with the BundleWriter module. In a
-bdl file every component is stored. Hence it can be used to group a
-lot of different SCIRun objects together and store it as one file.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
+      <port>
+	<name>Filename</name>
+	<datatype>SCIRun::String</datatype>
+      </port>  
     </inputs>
     <outputs>
       <port>
         <name>bundle</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
 </component>

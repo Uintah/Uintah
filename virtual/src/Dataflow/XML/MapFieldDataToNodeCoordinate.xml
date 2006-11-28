@@ -39,17 +39,6 @@
       <author>David Weinstein</author>
     </authors>
     <summary>Replace a mesh coordinate with the scalar fdata values.</summary>
-    <description>
-      <p> For unstructured data (HexVol, TetVol, QuadSurf, TriSurf,
-          Curve, PointCloud) change the positions of the nodes by
-	  replacing one of the coordinates with the Field data.
-          (Note: this is obviously only supported for scalar data
-          types.)  Per Allen's request, for surface meshes, also
-          support "pushing" the nodes by (normal x data).  This
-          module is useful for turning cutting planes into
-          heightfields, and for "inflating/deflating" surfaces. 
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

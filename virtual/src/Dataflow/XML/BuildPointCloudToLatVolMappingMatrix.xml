@@ -40,11 +40,6 @@
     </authors>
     <summary>Builds mapping matrix that projects data from a
 PointCloud to a LatVol </summary>
-    <description>
-      <p>Builds mapping matrix that projects data from a PointCloud to
-a LatVol 
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

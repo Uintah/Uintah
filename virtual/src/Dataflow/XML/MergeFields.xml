@@ -39,9 +39,6 @@
       <author>Michael Callahan</author>
     </authors>
     <summary>Insert the elements from a field into a TetVol or TriSurf field.</summary>
-    <description>
-        <p>No description yet.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

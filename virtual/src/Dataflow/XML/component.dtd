@@ -72,7 +72,7 @@
 				hide (true | false) "false">
 
 <!--  Overview of component's purpose  -->
-<!ELEMENT overview (authors, summary, description, examplesr?)>
+<!ELEMENT overview (authors, summary)>
 
 <!-- Brief (1 or 2 sentence) summary. -->
 <!ELEMENT summary %Inline;>
@@ -82,10 +82,6 @@
 
 <!--  1 author  -->
 <!ELEMENT author %Inline;>
-
-<!-- Name of sr file which demonstrates use of this component  -->
-<!-- This element is obsolete! -->
-<!ELEMENT examplesr %filename;>
 
 <!-- Net descriptions -->
 <!ELEMENT nets (net+)>

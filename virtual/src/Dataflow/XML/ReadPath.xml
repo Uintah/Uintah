@@ -36,34 +36,28 @@
 <component name="ReadPath" category="DataIO">
   <overview>
     <authors>
-      <author>Dave Weinstein</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>The ReadPath module reads a persistent camera path from
-a file.</summary>
-    <description><p>Upon opening, the The ReadPath GUI defaults to
-the directory that the user sets for their SCIRUN_DATA environment
-variable.  Otherwise, the GUI will default to the directory where the
-user's SCIRun executable resides. The current directory defaults to
-only show files with an .path extension which helps the user determine
-the difference between Paths and other files.  However, the ReadPath
-can read-in a file with any extension so long as the data has the
-correct format.  If the user attempts to read-in a file that is other
-than a Path, or uses an incorrect file format, an error message
-appears in the Error frame within the SCIRun enrvironment. Clicking
-the OK button will load the file and dismiss the GUI.</p>  
-    </description>
+    <summary>
+    The ReadPath module reads a persistent camera path from a file.
+    </summary>
   </overview>
   <io>
-    <inputs>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>  
     </inputs>
     <outputs>
       <port>
-	<name>Output Data</name>
-	<datatype>SCIRun::Path</datatype>
+        <name>Output Data</name>
+        <datatype>SCIRun::Path</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>      
     </outputs>
   </io>
-  <gui>
-    <img>../Modules/DataIO/doc/OpenFileUI.jpg</img>
-  </gui>
 </component>

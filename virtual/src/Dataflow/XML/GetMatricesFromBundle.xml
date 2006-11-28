@@ -37,20 +37,6 @@
     <summary>
       This module retrieves a 'matrix' object from a bundle. 
     </summary>
-    <description>
-      <p>This module retrieves a 'matrix' object from a bundle by
-specifying the name of that object. The module has three output ports
-that each can be programmed to retrieve a specific 'matrix'
-object.</p>
-
-      <p>Since Nrrd and Matrix objects can represent the same kind of
-data. The bundle class has a built in converter from matrix to nrrd.
-Hence all compatible matrix objects are listed as well and will be
-converted on the spot if they are selected.</p>
-      
-      <p>The module's first bundle output port just generates a copy
-of the input bundle.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

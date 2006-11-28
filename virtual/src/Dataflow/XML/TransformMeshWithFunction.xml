@@ -40,21 +40,6 @@
     </authors>
     <summary>Perform a specified functional transform on all of the
 points in a field.</summary>
-    <description>
-      <p>Compute the specified function on each point in the input
-field.</p>
-
-      <p>The mesh transform is specified in the GUI as the body of a
-C++ function.  The input values to the function is 'p'.  No value is
-returned, rather set the 'result' variable to the return point.  For
-example, "result = Point(p.x() + 5, p.y(), p.z());" would return a new
-field translated by 5 in the X direction.</p>
-
-      <p>This module does not work on the mesh types that do not
-contain any implicit points.  This includes LatVolMesh, ImageMesh, and
-ScanlineMesh.  The function will not compile but give an error about
-set_point being undefined.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

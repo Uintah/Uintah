@@ -37,9 +37,6 @@
     <summary>
       This module can be used to display the contents of a string.
     </summary>
-    <description>
-      <p>This module shows the contents of a string.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

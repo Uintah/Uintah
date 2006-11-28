@@ -39,10 +39,6 @@
       <author>Jason Shepherd</author>
     </authors>
     <summary>Removes a layer of hexes corresponding to the input edge ids.</summary>
-    <description>
-
-      <p>The GetHexVolSheetBasedOnEdgeIndices module removes a layer of hexahedral elements corresponding to the sheet uniquely defined by the input edge ids.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

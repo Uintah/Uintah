@@ -39,10 +39,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>The BuildMatrixOfSurfaceNormals calculates area weighted normal Vectors per node.</summary>
-    <description>
-      <p> For each node in the input surface mesh, find the attached faces, and average the face normal weighted by area for that node.  Output a nx3 DenseMatrix where n is the number of nodes in the input surface mesh.  This matrix can be passed to ManageFieldData to map this data back to a Vector Field with the same mesh.
-      </p>       
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
