@@ -61,6 +61,7 @@ private:
 
 
 DECLARE_MAKER(JoinFields)
+
 JoinFields::JoinFields(GuiContext* ctx)
   : Module("JoinFields", ctx, Source, "NewField", "SCIRun"),
   guiaccumulating_(get_ctx()->subVar("accumulating"), 0),
@@ -72,12 +73,13 @@ JoinFields::JoinFields(GuiContext* ctx)
 {
 }
 
-void JoinFields::execute()
+
+void
+JoinFields::execute()
 {
   // Define local handles of data objects:
   std::vector<SCIRun::FieldHandle> fields;
   FieldHandle output;
-
 
   // Some stuff for old power apps
   if (guiclear_.get())
@@ -105,7 +107,9 @@ void JoinFields::execute()
 
   // Only reexecute if the input changed. SCIRun uses simple scheduling
   // that executes every module downstream even if no data has changed: 
-  if (inputs_changed_ ||  guitolerance_.changed() || guimergenodes_.changed() || guiforcepointcloud_.changed() || guimatchval_.changed() || !oport_cached("Output Field"))
+  if (inputs_changed_ ||  guitolerance_.changed() ||
+      guimergenodes_.changed() || guiforcepointcloud_.changed() ||
+      guimatchval_.changed() || !oport_cached("Output Field"))
   {
     double tolerance = 0.0;
     bool   mergenodes = false;
@@ -118,7 +122,8 @@ void JoinFields::execute()
     if (guimatchval_.get()) matchval = true;
 
     SCIRunAlgo::FieldsAlgo algo(this);  
-    if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval))) return;
+    if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval)))
+      return;
 
     // This option is here to be compatible with the old GatherFields module:
     // This is a separate algorithm now
