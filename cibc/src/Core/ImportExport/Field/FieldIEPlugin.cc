@@ -143,7 +143,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
     }
     if (*(*loc).second == *this)
     {
-      cerr << "WARNING: FieldIEPlugin '" << tmppname << "' duplicated.\n";
+      // cerr << "WARNING: FieldIEPlugin '" << tmppname << "' duplicated.\n";
       break;
     }
 
@@ -162,8 +162,8 @@ FieldIEPlugin::~FieldIEPlugin()
 {
   if (field_plugin_table == NULL)
   {
-    cerr << "WARNING: FieldIEPlugin.cc: ~FieldIEPlugin(): field_plugin_table is NULL\n";
-    cerr << "         For: " << pluginname << "\n";
+    // cerr << "WARNING: FieldIEPlugin.cc: ~FieldIEPlugin(): field_plugin_table is NULL\n";
+    // cerr << "         For: " << pluginname << "\n";
     return;
   }
 
@@ -172,8 +172,8 @@ FieldIEPlugin::~FieldIEPlugin()
   map<string, FieldIEPlugin *>::iterator iter = field_plugin_table->find(pluginname);
   if (iter == field_plugin_table->end())
   {
-    cerr << "WARNING: FieldIEPlugin " << pluginname << 
-      " not found in database for removal.\n";
+    // cerr << "WARNING: FieldIEPlugin " << pluginname << 
+    //  " not found in database for removal.\n";
   }
   else
   {

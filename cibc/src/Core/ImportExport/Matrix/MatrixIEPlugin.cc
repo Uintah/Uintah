@@ -100,7 +100,7 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
     }
     if (*(*loc).second == *this)
     {
-      cerr << "WARNING: MatrixIEPlugin '" << tmppname << "' duplicated.\n";
+//      cerr << "WARNING: MatrixIEPlugin '" << tmppname << "' duplicated.\n";
       break;
     }
 
@@ -119,8 +119,8 @@ MatrixIEPlugin::~MatrixIEPlugin()
 {
   if (matrix_plugin_table == NULL)
   {
-    cerr << "WARNING: MatrixIEPlugin.cc: ~MatrixIEPlugin(): matrix_plugin_table is NULL\n";
-    cerr << "         For: " << pluginname_ << "\n";
+//    cerr << "WARNING: MatrixIEPlugin.cc: ~MatrixIEPlugin(): matrix_plugin_table is NULL\n";
+//    cerr << "         For: " << pluginname_ << "\n";
     return;
   }
 
@@ -129,8 +129,8 @@ MatrixIEPlugin::~MatrixIEPlugin()
   map<string, MatrixIEPlugin *>::iterator iter = matrix_plugin_table->find(pluginname_);
   if (iter == matrix_plugin_table->end())
   {
-    cerr << "WARNING: MatrixIEPlugin " << pluginname_ << 
-      " not found in database for removal.\n";
+//    cerr << "WARNING: MatrixIEPlugin " << pluginname_ << 
+//      " not found in database for removal.\n";
   }
   else
   {
