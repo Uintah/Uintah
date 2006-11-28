@@ -27,7 +27,7 @@
 */
 
 /*
- *  ComputeChangeFieldData.cc:
+ *  CalculateFieldsData.cc:
  *
  *  Written by:
  *   jeroen
@@ -64,11 +64,11 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ComputeChangeFieldData : public Module {
+class CalculateFieldsData : public Module {
   public:
-    ComputeChangeFieldData(GuiContext*);
+    CalculateFieldsData(GuiContext*);
 
-    virtual ~ComputeChangeFieldData();
+    virtual ~CalculateFieldsData();
 
     virtual void execute();
 
@@ -80,18 +80,18 @@ class ComputeChangeFieldData : public Module {
 };
 
 
-DECLARE_MAKER(ComputeChangeFieldData)
-ComputeChangeFieldData::ComputeChangeFieldData(GuiContext* ctx)
-  : Module("ComputeChangeFieldData", ctx, Source, "ChangeFieldData", "ModelCreation"),
+DECLARE_MAKER(CalculateFieldsData)
+CalculateFieldsData::CalculateFieldsData(GuiContext* ctx)
+  : Module("CalculateFieldsData", ctx, Source, "ChangeFieldData", "ModelCreation"),
   guifunction_(get_ctx()->subVar("function")),
   guiformat_(get_ctx()->subVar("format"))  
 {
 }
 
-ComputeChangeFieldData::~ComputeChangeFieldData(){
+CalculateFieldsData::~CalculateFieldsData(){
 }
 
-void ComputeChangeFieldData::execute()
+void CalculateFieldsData::execute()
 {
   // Define input handles:
   FieldHandle field, field2, field3;
@@ -265,11 +265,11 @@ void ComputeChangeFieldData::execute()
 }
 
 void
-ComputeChangeFieldData::tcl_command(GuiArgs& args, void* userdata)
+CalculateFieldsData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("ComputeChangeFieldData needs a minor command");
+    args.error("CalculateFieldsData needs a minor command");
     return;
   }
 

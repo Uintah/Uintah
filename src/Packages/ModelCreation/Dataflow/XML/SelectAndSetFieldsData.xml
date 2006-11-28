@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="SelectAndSetChangeFieldData" category="ChangeFieldData">
+<component name="SelectAndSetFieldsData" category="ChangeFieldData">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
@@ -40,30 +40,6 @@
       This module computes a new scalar, vector or tensor array based upon a 
       combination of scalars, vectors, and tensors. 
     </summary>
-    <description>
-      <section>
-      <title>Overview</title>
-      <p>
-      </p>
-      </section>
-
-      <section>
-      <title>Input elements</title>
-      </section>
-      
-      <section>
-      <title>Output elements</title>     
-      </section>      
-    
-      <section>
-      <title>See Also </title>
-      <p>
-      <modref package="ModelCreation" name="ComputeDataArray" />	
-      <modref package="ModelCreation" name="ReplicateDataArray" />	
-      </p>
-      </section>      
-    
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

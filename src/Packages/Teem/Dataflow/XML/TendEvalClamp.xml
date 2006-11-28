@@ -37,18 +37,6 @@
     </authors>
     <summary>Modify shape by clamping eigenvalues in some
 range.</summary>
-    <description>
-      <p>Modify shape by clamping eigenvalues in some range. The
-orientation of the tensor is unchanged. Note that unlike tend anscale,
-this operation can completely change the shape of the tensor.</p>
-      <p>Min :  Eigenvalues are clamped from below by this (the
-minimum output eigenvalue). Use nan to signify that no minimum
-clamping should be done. This value should be a float.</p>
-      <p>Max : Eigenvalues are clamped from above by this (the maximum
-output eigenvalue). Use nan to signify that no maximum clamping should
-be done. This value should be a float.</p>
-    </description>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

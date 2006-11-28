@@ -40,12 +40,6 @@
       Inverts a selection. Nodes that were not selected get selection and
       nodes that were selected get deselected.
     </summary>
-    <description>
-      <p>
-      Inverts a selection. Nodes that were not selected get selection and
-      nodes that were selected get deselected.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

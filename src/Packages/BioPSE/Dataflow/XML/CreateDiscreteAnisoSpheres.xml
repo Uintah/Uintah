@@ -39,20 +39,6 @@
     <summary>Scale the geometry of a sphere to a requested size and
 assign a conductivity tensor to each cell.</summary>
 
-    <description>
-      <p>The module creates a discrete version of a four-layer
-anisotropic spherical volume conductor, resembling the human head.
-The volume conductor consists of four concentric spheres. Each sphere
-can have different radial and tangential conductivities. The input
-mesh, which is a discrete unit sphere, is scaled to the outer radius
-of the model.  The radii of all four layers should be provided via the
-input port 'SphereRadii'. Moreover, a conductivity tensor is assigned
-to each cell (i.e. the cell is associated with one of the four layers
-based on the distance of the cell to the sphere center). Then, based
-on the radial and tangential conductitities at port
-'AnisoConductivities', a conductivity tensor is computed for that
-cell.</p>
-    </description>
 
   </overview>
 

@@ -39,9 +39,6 @@
     <summary>
       Solve inverse problem using Truncated SVD.
     </summary>
-    <description>
-      <p>Solve inverse problem using Truncated SVD.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

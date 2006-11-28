@@ -39,23 +39,6 @@
 Dense or Column Matrix or convert a Sparse Row Matrix to three Nrrds
 (Data, Rows, and Columns).
     </summary>
-    <description>
-      <p>Convert a SCIRun Matrix to a single Nrrd in the case of a
-Dense or Column Matrix or convert a Sparse Row Matrix to three Nrrds
-(Data, Rows, and Columns).</p>
-      <p>If the input Matrix is a Column Matrix, the module will
-produe a 1D Nrrd of doubles containing the data.</p>
-      <p>If the input Matrix is a Dense matrix, the module will
-produce a 2D Nrrd of Doubles.</p>
-      <p>If the input Matrix is a Sparse Row Matrix, the module will
-produce three Nrrds.  The first output port contains the Data as a 1D
-Nrrd representing the non-zero entries in the Sparse Row Matrix.  The
-second output will contain the Rows Nrrd which is the row accumulation
-buffer containing R+1 entries where R is the number of rows and
-Rows[N+1]-Rows[N] is the number of non-zero entries in row N. The last
-output will be the Columns Nrrd containing the column number for each
-non-zero data entry.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

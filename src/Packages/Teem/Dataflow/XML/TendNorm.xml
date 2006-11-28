@@ -35,28 +35,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Normalize tensor size.</summary>
-    <description>
-      <p>Normalize tensor size. This operates on the eigenvalues of
-the tensor, and allows normalizing some user-defined weighting of the
-eigenvalues by some user-defined amount .</p>
-      <p>Major : relative weights to put on major eigenvalue when
-performing normalization (internally rescaled to have a 1.0 L1 norm).
-This weightings determines the tensors's size. Value should be a
-float.</p>
-      <p>Medium : relative weights to put on medium eigenvalue when
-performing normalization (internally rescaled to have a 1.0 L1 norm).
-This weightings determines the tensors's size. Value should be a
-float.</p>
-      <p>Minor :relative weights to put on minor eigenvalue when
-performing normalization (internally rescaled to have a 1.0 L1 norm).
-This weightings determines the tensors's size. Value should be a
-float.</p>
-      <p>Amount : how much of the normalization to perform. Should be
-a float.</p>
-      <p>Target : target size, post normalization. This value should
-be a float.</p>
-    </description>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

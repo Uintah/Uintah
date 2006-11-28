@@ -41,9 +41,6 @@
     <summary>
       Create Separating surfaces from a SegLatVolField.
     </summary>
-    <description>
-      <p>Create Separating surfaces from a SegLatVolField.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

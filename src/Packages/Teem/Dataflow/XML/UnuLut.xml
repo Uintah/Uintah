@@ -40,29 +40,6 @@ represented as a nrrd). The lookup table can be 1D, in which case the
 output has the same dimension as the input, or 2D, in which case the
 output has one more dimension than the input, and each value is mapped
 to a scanline (along axis 0) from the lookup table.</summary>
-    <description>
-      <p>Map nrrd through univariate lookup table (itself represented
-as a nrrd). The lookup table can be 1D, in which case the output has
-the same dimension as the input, or 2D, in which case the output has
-one more dimension than the input, and each value is mapped to a
-scanline (along axis 0) from the lookup table.</p>
-      <p>Rescale to the Lookup Table : indicates whether to rescale
-the input values from the input range to the lut domain. The lut
-domain is either explicitly defined by the axis min,max along axis 0
-or 1, or, it is implicitly defined as zero to the length of that
-axis.</p>
-      <p>Min : Only used when rescaling to Lookup Table. Indicates the
-low end of input range. Should be a double. To disregard this value
-and use the lowest value of the input nrrd, check Use lowest value of
-input nrrd as min.</p>
-      <p>Max : Only used when rescaling to Lookup Table. Indicates the
-high end of input range. Should be a double. To disregard this value
-and use the highest value of the input nrrd, check Use highest value
-of input nrrd as max.</p>
-      <p>Type: Specify the type of the output nrrd.  If Use lut's type
-as output type is checked, this value will be disregarded and the lut
-type will be used.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

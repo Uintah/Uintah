@@ -41,6 +41,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Basis/Bases.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
@@ -57,7 +58,7 @@ using namespace SCIRun;
 class ApplyFEMCurrentSourceAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, bool dipole, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs, ColumnMatrix **w) = 0;
+  virtual void execute(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, bool dipole, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs, SparseRowMatrix **w) = 0;
     
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
@@ -80,7 +81,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
   typedef typename FIELD::mesh_type FMT;
   typedef typename FMT::basis_type MBT;
 
-  void execute_dipole(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, ColumnMatrix** rhs, ColumnMatrix **w)
+  void execute_dipole(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, ColumnMatrix** rhs, SparseRowMatrix **w)
   {
     FMT *mesh=dynamic_cast<FMT *>(hField->mesh().get_rep());
     ASSERT(mesh);
@@ -88,6 +89,9 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
     mesh->synchronize(Mesh::LOCATE_E);
     typename FMT::Node::size_type nsize; 
     mesh->size(nsize);
+
+    typename FMT::Cell::size_type sz;
+    mesh->size(sz);
 
     if (*rhs == 0)
     {
@@ -123,6 +127,8 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
       //	cerr << "Pos " << pos << endl;
       //	cerr << "Dir " << dir << endl;
 
+
+      
       typename FMT::Cell::index_type loc;
       if (mesh->locate(loc, pos))
       {
@@ -200,9 +206,16 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
       }
     }
 
-    *w = scinew ColumnMatrix(weights.size());
-    for (int i=0; i< (int)weights.size(); i++) 
-      (*w)->put(i, weights[i]); 
+    int *rr = scinew int[2]; rr[0] = 0; rr[1] = static_cast<int>(weights.size());
+    int *cc = scinew int[weights.size()/2];
+    double *dd = scinew double[weights.size()/2];
+    for (int i=0; i < static_cast<int>(weights.size()); i+=2)
+    {
+      cc[i] = static_cast<int>(weights[i]);
+      dd[i] = static_cast<double>(weights[i+1]);
+    }
+    
+    *w = scinew SparseRowMatrix(1,3*sz,rr,cc,weights.size(),dd);
   }
 
   void execute_sources_and_sinks(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs)
@@ -322,7 +335,7 @@ public:
   ApplyFEMCurrentSourceAlgoT() {};
   virtual ~ApplyFEMCurrentSourceAlgoT() {};
 
-  virtual void execute(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, bool dipole, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs, ColumnMatrix **w) 
+  virtual void execute(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, bool dipole, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs, SparseRowMatrix **w) 
   {
     if (dipole)
       execute_dipole(PR, hField, hSource, rhs, w);

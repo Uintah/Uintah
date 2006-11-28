@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-  Segments structures in images based on image features derived from pseudo-canny-edges.
-  This module encapsulates the functionality of the ITK Filter itk::CannySegmentationLevelSetImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

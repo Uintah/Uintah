@@ -10,10 +10,6 @@
 
 
     </summary>
-    <description>
-      <p>        This module Clips a field by taking all the elements that are inside the object field.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

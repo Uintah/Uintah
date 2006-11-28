@@ -40,10 +40,6 @@
       Solve inverse problem using Tikhonov regularization by using
 SVD.
     </summary>
-    <description>
-      <p>Solve inverse problem using Tikhonov regularization by using
-SVD.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

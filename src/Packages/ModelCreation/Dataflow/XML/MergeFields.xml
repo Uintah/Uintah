@@ -41,32 +41,6 @@
     <summary>
         MergeFields glues any number of input fields into one output field.
     </summary>
-    <description>
-      <p>
-      This module is intended to replace GatherFields and fix a number of problems
-      associate with the old module.
-      </p>
-    
-      <p>
-      This module takes in an arbitrary number of input fields and
-      gathers them all up into one output field.  If the input
-      fields all have the same editable mesh type then the output
-      field will also be of the same type.  If the meshes are not
-      editable or of different mesh types then only their points
-      will be gathered up and a single PointCloudField will be
-      produced.
-      </p>
-
-      <p>
-      The module has the option to merge nodes together when they are at the
-      same physical location. Often due to numeric round off, they are at a 
-      slightly different position. Hence the module allows to set a tolerance
-      which is used to determine whether two nodes are in fact the same. The 
-      tolerance is a simple measure in distance that is applied to see whether
-      nodes are the same.
-      </p>
-
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

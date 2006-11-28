@@ -105,7 +105,7 @@ CollectFields::execute()
     
     // The lock here protects us from the user wiping out the buffer
     // through the GUI while executing. This could cause a segmentation
-    // fault and hence it needs to be protected b y a lock.
+    // fault and hence it needs to be protected by a lock.
     bufferlock_.lock();
     algo.GatherFields(buffer_,Output);
     bufferlock_.unlock();

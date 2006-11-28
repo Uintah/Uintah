@@ -40,18 +40,6 @@
     <summary>Take the data from a field or fields and wrap it with a
 nrrd and pass it out.
     </summary>
-    <description>
-      <p>Inputs: a field or multiple fields that share the *same*
-mesh. Output: a NrrdData.
-      </p>
-      <p>
-         This module converts data from a given field, into NrrdData.
-NrrdData is the SCIRun object that is mostly a wrapper around a Nrrd*.
-There are many operations that can be applied to the data as a nrrd,
-<slink path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink>
-many of which are supported in this Teem package. </p>
-    </description>
-    <examplesr>Teem/nets/test/to_and_from_lvd.fld.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">
@@ -81,7 +69,7 @@ many of which are supported in this Teem package. </p>
 	<p></p>
       </description>
       <step>
-	<p>Run the test network (see examplesr tag), and verify that
+	<p>Run the test network and verify that
 geometry and data values are identical.  This can be done with visual
 inspection. Just turn off and on display of nodes to compare
 colors.</p>

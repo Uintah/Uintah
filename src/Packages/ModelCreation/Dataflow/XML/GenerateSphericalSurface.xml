@@ -8,11 +8,6 @@
     <summary>
       This module creates an example spherical surface.
     </summary>
-    <description>
-      <p>
-      This module creates an example spherical surface.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

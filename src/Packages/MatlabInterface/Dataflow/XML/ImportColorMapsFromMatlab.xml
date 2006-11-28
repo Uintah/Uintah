@@ -41,31 +41,6 @@
 MATLAB file
 	</summary>
 	
-    <description>
-	
-      <section>
-	<title>Module description</title>
-
-      </section>
-	
-      <section>
-	<title>See Also </title>
-	<p>
-	<modref package="MatlabInterface" name="Matlab" />, <modref
-package="MatlabInterface" name="MatlabBundelsReader" />, <modref
-package="MatlabInterface" name="MatlabBundlesWriter" />, <modref
-package="MatlabInterface" name="MatlabDataReader" />, <modref
-package="MatlabInterface" name="MatlabDataWriter" />, <modref
-package="MatlabInterface" name="MatlabFieldsReader" />, <modref
-package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
-package="MatlabInterface" name="ImportColorMapsFromMatlab" />, <modref
-package="MatlabInterface" name="ImportColorMapsFromMatlab" />, <modref
-package="MatlabInterface" name="MatlabNrrdsWriter" />, <modref
-package="MatlabInterface" name="MatlabNrrdsReader" />	
-	</p>
-      </section>
-	
-    </description>   
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -64,6 +64,7 @@ TARGET_LINK_LIBRARIES(Packages_MatlabInterface_Dataflow_Modules_DataIO
   Core_Services
   Core_ICom
   Core_SystemCall
+	Core_OS
   ${TEEM_LIBRARY}
   ${Z_LIBRARY}
   ${M_LIBRARY}

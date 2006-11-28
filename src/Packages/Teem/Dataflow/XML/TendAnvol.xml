@@ -40,25 +40,6 @@
 value will be zero in the locations which don't meet the given
 confidence threshold. 
      </summary>
-    <description>
-      <p>Apply an anisotropy metric to a DT volume. The anisotropy
-value will be zero in the locations which don't meet the given
-confidence threshold. </p>
-      <p>Anisotropy Metric : Which anisotropy metric to plot. All the
-Westin metrics come in two versions. Currently supported:</p>
-      <p>cl1, cl2 : Westin's linear.</p>
-      <p>cp1, cp2 : Westin's planar.</p>
-      <p>ca1, ca2 : Westin's linear + planar.</p>
-      <p>cs1, cs2 : Westin's spherical (1-ca).</p>
-      <p>ct1, ct2 : GK's anisotropy type (cp/ca).</p>
-      <p>ra : Basser/Pierpaoli relative anisotropy.</p>
-      <p>fa : Basser/Pierpaoli fractional anisotropy/sqrt(2).</p>
-      <p>vf : volume fraction = 1-(Basser/Pierpaoli volume ratio).</p>
-      <p>tr : trace</p>
-      <p>Threshold : The confidence threshold.  This value should be a
-float.</p>
-    </description>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

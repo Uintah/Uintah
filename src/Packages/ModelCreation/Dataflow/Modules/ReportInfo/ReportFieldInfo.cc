@@ -36,9 +36,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
-namespace ModelCreation {
-
-using namespace SCIRun;
+namespace SCIRun {
 
 class ReportFieldInfo : public Module {
 private:
@@ -78,7 +76,7 @@ public:
 DECLARE_MAKER(ReportFieldInfo)
 
 ReportFieldInfo::ReportFieldInfo(GuiContext* ctx)
-  : Module("ReportFieldInfo", ctx, Sink, "ReportInfo", "ModelCreation"),
+  : Module("ReportFieldInfo", ctx, Sink, "ReportInfo", "SCIRun"),
     gui_fldname_(get_ctx()->subVar("fldname", false),"---"),
     gui_generation_(get_ctx()->subVar("generation", false),"---"),
     gui_typename_(get_ctx()->subVar("typename", false),"---"),

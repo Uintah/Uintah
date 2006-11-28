@@ -35,21 +35,6 @@
     </authors>
     <summary>
     </summary>
-    <description>
-<p>Fast binary erosion.</p>
-
-<p>BinaryErodeImageFilter is a binary erosion morphologic operation. This implementation is based on the papers:</p>
-
-<p>L.Vincent "Morphological transformations of binary images with arbitrary structuring elements", and N.Nikopoulos et al. "An efficient algorithm for 3d binary morphological transformations with 3d structuring elements for arbitrary size and shape". IEEE Transactions on Image Processing. Vol. 9. No. 3. 2000. pp. 283-286.</p>
-
-<p>Gray scale images can be processed as binary images by selecting a "ErodeValue". Pixel values matching the dilate value are considered the "foreground" and all other pixels are "background". This is useful in processing segmented images where all pixels in segment #1 have value 1 and pixels in segment #2 have value 2, etc. A particular "segment number" can be processed. ErodeValue defaults to the maximum possible value of the PixelType.</p>
-
-<p>The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel. A reasonable choice of structuring element is itk::BinaryBallStructuringElement.</p>
-
-<p>This class was contributed by Gaetan Lehmann from INRA de Jouy-en-Josas.</p>
-
-<p>This module encapsulates the functionality of the ITK Filter itk::BinaryErodeImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.</p>
-  </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">  

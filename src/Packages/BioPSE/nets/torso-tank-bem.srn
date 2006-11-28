@@ -17,7 +17,7 @@ known (inner surface)
 potentials}</note>
       <var name="filename" val="scisub_datadir/time-dependent/Ucager.mat"/>
     </module>
-    <module category="Math" gui_visible="yes" id="m2" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" gui_visible="yes" id="m2" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="231" y="454"/>
       <note color="{#ecb882}" position="{e}">{Choose which time-step
 from the computed output
@@ -39,7 +39,7 @@ outer surface potentials
 (measured)}</note>
       <var name="filename" val="scisub_datadir/time-dependent/Utankr.mat"/>
     </module>
-    <module category="Math" id="m4" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m4" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="1009" y="538"/>
       <note position="{s}">{Choose the same time
 instant as the other data}</note>
@@ -258,7 +258,7 @@ on outer surface}</note>
       <var name="show_progress" val="{}"/>
       <var name="field-name" val="{Heart Cage}"/>
     </module>
-    <module category="Math" id="m17" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m17" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="57" y="535"/>
       <note position="{def}">{Choose the same
 time instant from

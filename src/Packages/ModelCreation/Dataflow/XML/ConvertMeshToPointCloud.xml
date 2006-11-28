@@ -8,11 +8,6 @@
     <summary>
       Convert a field into a PointCloud field.
     </summary>
-    <description>
-      <p>
-      Convert a field into a PointCloud field.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

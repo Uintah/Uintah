@@ -38,9 +38,6 @@
     <summary>Superficially change dimension and/or axes sizes. The underlying
 linear ordering of the samples is unchanged, but the reported dimension or
 axes sizes are changed. Identical in concept to Matlab's reshape command.</summary>
-    <description>
-    <p>New axes sizes should be input as a string of integers separated by white space.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

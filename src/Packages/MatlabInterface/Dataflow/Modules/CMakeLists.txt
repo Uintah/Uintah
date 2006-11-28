@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/MatlabInterface/Dataflow/Modules
 
-SUBDIRS(DataIO)
+SUBDIRS(DataIO Interface)
 

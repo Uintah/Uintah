@@ -41,18 +41,6 @@ components (Dxx, Dxy, Dxz, Dyy, Dyz, Dzz). The 9-value tensor is the
 full matrix (Dxx, Dxy, Dxz, Dxy, Dyy, Dyz, Dxz, Dyz, Dzz), which is
 set to all zeros when the confidence is below the given threshold.
     </summary>
-    <description>
-      <p>Converts a 7-value DT volume to a 9-value DT volume. The
-7-value tensor is confidence value followed by the unique tensor
-components (Dxx, Dxy, Dxz, Dyy, Dyz, Dzz). The 9-value tensor is the
-full matrix (Dxx, Dxy, Dxz, Dxy, Dyy, Dyz, Dxz, Dyz, Dzz), which is
-set to all zeros when the confidence is below the given threshold.</p>
-      <p>Threshold : confidence level to threshold output tensors at.
-Should be between 0.0 and 1.0. (float)</p>
-      <p>Scale : how to scale values before saving as 9-value tensor.
-Useful for visualization tools which assume certain characteristic
-ranges of eigenvalues (float)</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

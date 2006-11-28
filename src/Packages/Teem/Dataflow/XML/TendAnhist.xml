@@ -41,17 +41,6 @@ space used is either one of Westin's triple of spherical, linear, and planar
 anisotropy. The bin counts in the histogram are weighted by the confidence
 value.
     </summary>
-    <description>
-    <p>Generate barycentric histograms of anisotropy. The barycentric
-space used is either one of Westin's triple of spherical, linear, and planar
-anisotropy. The bin counts in the histogram are weighted by the confidence
-value.</p>
-    <p>Weights NRRD is optional and if given as input, determines how to weigh contributions to histogram.  If given, the value in the NRRD at the corresponding location will be the bin count increment.  If not given, the increment is one bin count per sample.</p>
-    <p>Right: Sample a right-triangle-shaped region, instead of a roughly equilateral triangle.</p>
-    <p>Westin Version : Which version of Westin's anisotropy metric triple to
-    use, either integers 1 or 2. </p>
-    <p> Resolution : resolution of anisotropy plot.  This should be an integer.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

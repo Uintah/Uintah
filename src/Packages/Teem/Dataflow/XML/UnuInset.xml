@@ -37,16 +37,6 @@
     </authors>
     <summary>Replace a sub-region with a different nrrd. This is
 functionally the opposite of crop.</summary>
-    <description>
-      <p>Replace a sub-region with a different nrrd. This is
-functionally the opposite of crop.</p>
-      <p>InputNrrd is the Nrrd to have data inset into.</p>
-      <p>SubRegionNrrd is the Nrrd data to be inset into the
-InputNrrd.</p>
-      <p>Min should contain the coordinates of where to locate the
-sub-volume within the InputNrrd. This value must be a list of integers
-(separated by white space).</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

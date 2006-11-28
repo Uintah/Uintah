@@ -39,13 +39,6 @@
     <summary>
       Boolean AND operation on a series of selection masks. 
     </summary>
-    <description>
-    <p>
-      Boolean AND operation on a series of selection masks. 
-      All the masks must be of the same size in order for this
-      module to function properly.
-    </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

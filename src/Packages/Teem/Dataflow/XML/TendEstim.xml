@@ -36,32 +36,6 @@
       <author>Martin Cole</author>
     </authors>
     <summary>Estimate tensors from a set of DW images. </summary>
-    <description>
-      <p>Estimate tensors from a set of DW images. The various DWI
-volumes must be stacked along axis 0 (as with the output of "tend
-epireg"). The tensor coefficient weightings associated with each of
-the DWIs, the B-matrix, is given as a seperate array, see "tend bmat"
-usage info for details. A "confidence" value is computed with the
-tensor, based on a soft thresholding of the sum of all the DWIs,
-according to the threshold and softness parameters.</p>
-      <p>B0 is stored as first DWI value : Determines if the B=0
-non-diffusion-weighted reference image is known, or if it has to be
-estimated along with the tensor elements. Check it if true to indicate
-that the B=0 image is the FIRST input image given , and hence the
-B-matrix has ONE LESS row than the number of of input images. If
-false, there is no reference image; all the input images are
-diffusion-weighted in some way or another, and there exactly as many
-rows in the B-matrix as there are input images</p>
-      <p>Threshold : </p>
-      <p>Soft : how fuzzy the confidence boundary should be. By
-default, confidence boundary is perfectly sharp. This value should be
-a float.</p>
-      <p>Scale : After estimating the tensor, scale all of its
-elements (but not the confidence value) by this amount. Can help with
-downstream numerical precision if values are very large or small. This
-value should be a float.</p>
-    </description>
-    <examplesr></examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

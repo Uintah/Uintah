@@ -84,7 +84,8 @@ PSELIBS := \
         Core/Thread        \
         Dataflow/TkExtensions  \
         Core/Util          \
-        Dataflow/Network   
+        Dataflow/Network   \
+        Core/Algorithms/Math
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

@@ -9,7 +9,7 @@ set m3 [addModuleAtPosition "SCIRun" "ChangeFieldData" "SwapFieldDataWithMatrixE
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 296 339]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 314 270]
 set m6 [addModuleAtPosition "SCIRun" "Visualization" "CreateStandardColorMaps" 314 187]
-set m7 [addModuleAtPosition "SCIRun" "Math" "GetColumnMatrixFromMatrix" 193 100]
+set m7 [addModuleAtPosition "SCIRun" "Math" "GetColumnOrRowFromMatrix" 193 100]
 
 addConnection $m3 0 $m4 0
 addConnection $m6 0 $m5 0

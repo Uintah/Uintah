@@ -39,12 +39,6 @@
 input is in the form of three nrrds, one for confidence values (3D),
 one for eigenvalues (4D, three evals per voxel), and one for
 eigenvectors (4D, nine evec components per voxel).</summary>
-    <description>
-      <p>Create DT volume from confidence and eigensystem. The input
-is in the form of three nrrds, one for confidence values (3D), one for
-eigenvalues (4D, three evals per voxel), and one for eigenvectors (4D,
-nine evec components per voxel).</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

@@ -41,51 +41,6 @@
     <summary>
         ReportFieldInfo is used to view the attributes of fields.
     </summary>
-    <description>
-      <p>
-        ReportFieldInfo is purely an informational Module.  It performs no
-	modification on input data.  Upon execution it displays
-	attributes about the input field in the UI.
-      </p>
-      <p>
-	Field Attributes displayed:
-      </p>
-      <p>
-	Name - The Field name. May be blank.
-      </p>
-      <p>
-	Generation - The Field internal object id.
-      </p>
-      <p>
-	Typename - The C++ typename of the input Field Type.
-      </p>
-      <p>
-	Center - The X,Y,Z coordinates of the average center of the
-	nodes in the Field.
-      </p>
-      <p>
-	Size - The X,Y,Z coordinates of the grid-aligned bounding box
-	that encloses the Field.
-      </p>
-      <p>
-	Data min,max - Only valid for scalar type input fields. Prints
-	the respective min and max scalar values of the data
-	associated with the input field.
-      </p>
-      <p>	
-	# Nodes - The number of X,Y,Z points in the input field.
-      </p>
-      <p>
-	# Elements - The number of highest dimension elements in the
-        input field.  Ex.  For a PointCloudField this would equal
-        the number of nodes.  For a TetVolField this would equal the
-        number of tetrahedral cells in the input field.
-      </p>
-      <p>
-	Data at - The location of the data values associated with the
-	input field.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

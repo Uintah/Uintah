@@ -42,32 +42,6 @@ output records the number of corresponding positions in the inputs
 with a combination of values represented by the coordinates of the
 bin.
     </summary>
-    <description>
-      <p>Create joint histogram of two or more nrrds. Each axis of the
-output corresponds to one of the input nrrds, and each bin in the
-output records the number of corresponding positions in the inputs
-with a combination of values represented by the coordinates of the
-bin.</p>
-      <p> Bins : bins(i) is the number of bins to use along axis i (of
-joint histogram), which represents the values of InputNrrd(i). This
-should be two or more integers separated by white space.</p>
-      <p>Mins : min(i) is the low range of values to be quantized
-along axis i; use nan to represent lowest value present. This should
-be two more more double separated by white space (except when using
-nan).</p>
-      <p>Maxs : max(i) is the high range of values to be quantized
-along axis i; use nan to represent highest value present. This should
-be two or more double separated by white space (except when using
-nan).</p>
-      <p>Type : nrrd type to use for output (the type used to store
-hit counts in the join histogram). Clamping is done on hit counts so
-that they never overflow a fixed-point type.</p>
-      <p>WeightNrrd : An optional input indicating how to weigh
-contributions to joint histogram. If this port is not connected, the
-increment is one bin count per sample, but by giving a nrrd, the value
-in the nrrd at the corresponding location will be the bin count
-increment.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

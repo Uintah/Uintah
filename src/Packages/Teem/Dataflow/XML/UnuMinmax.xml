@@ -37,11 +37,6 @@
       <author>Darby Van Uitert</author>
     </authors>
     <summary>Print out min max values in one or more nrrds</summary>
-    <description>
-      <p>Print out min and max values in one or more nrrds. Unlike
-other modules, this doesn't produce a nrrd. It only prints to the UI
-the min and max values found in the input nrrd(s)</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

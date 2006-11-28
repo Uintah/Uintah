@@ -9,10 +9,6 @@
       Collect the fields that are fed into the module. The field will be added to the output field. The module has a buffer with a first in, first out behavior to keep a history of fields in the buffer.
 
     </summary>
-    <description>
-      <p>        Collect the fields that are fed into the module. The field will be added to the output field. The module has a buffer with a first in, first out behavior to keep a history of fields in the buffer.
-</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

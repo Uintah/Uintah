@@ -9,9 +9,6 @@
       This module maps the gradient on the destination field.
 
     </summary>
-    <description>
-      <p>        This module maps the gradient on the destination field.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

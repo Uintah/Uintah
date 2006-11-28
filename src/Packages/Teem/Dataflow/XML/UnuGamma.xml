@@ -39,22 +39,6 @@
 the gamma value here is actually the reciprocal of the exponent
 actually used to transform the values.
     </summary>
-    <description>
-      <p>Brighten or darken values with a gamma. Just as in xv, the
-gamma value here is actually the reciprocal of the exponent actually
-used to transform the values.</p>
-      <p>Gamma: gamma greater than 1.0 brightens, gamma less than 1.0
-darkens. Negative gammas invert values (like in xv). This value should
-be a double.</p>
-      <p>Min: Value at low end of histogram.  This value should be a
-double. To use the lowest value found in the input nrrd, check the Use
-lowest value of input nrrd as min checkbox.  In this case the min
-value will be disregarded.</p>
-      <p>Max: Value at high end of histogram.  This value should be a
-double. To use the highest value found in the input nrrd, check the
-Use highest value of input nrrd as max checkbox.  In this case the max
-value will be disregarded.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

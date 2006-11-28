@@ -41,8 +41,6 @@
     <summary>
     >Given a point cloud of doubles, create a binary ITK Image of unsigned chars.
     </summary>
-    <description>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

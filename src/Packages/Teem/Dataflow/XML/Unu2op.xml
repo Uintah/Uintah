@@ -37,24 +37,6 @@
     </authors>
     <summary>Binary operation on two nrrds, or on a nrrd and a constant. Either
 the first or second operand can be a float constant, but not both. To perform the operation on two nrrds, connect both input ports.  To have one Nrrd on the left hand side of the operator, connect to the first port and vice versa for the right hand side.</summary>
-    <description>
-    <p>Binary operation on two nrrds, or on a nrrd and a constant. Either
-the first or second operand can be a float constant, but not both. To perform the operation on two nrrds, connect both input ports.  To have one Nrrd on the left hand side of the operator, connect to the first port and vice versa for the right hand side.</p>
-    <p>Operator: Binary operator. Possibilities include:</p>
-    <p>    +, -, x, / : add, subtract, multiply, divide</p>
-    <p>    ^ : exponentiation (pow)</p>
-    <p>    % : integer modulo</p>
-    <p>    fmod : same as fmod() in C</p>
-    <p>     atan2 : same as atan2() in C</p>
-    <p>    min, max: minimum, maximum</p>
-     <p>   lt, lte, gt, gte : same as C's less than, less than or equal to, greater than, greater than or equal to</p>
-    <p>    eq, neq : same as C's == and !=</p>
-    <p>    comp : -1, 0, or 1 if 1st value is less than, equal to, or
-           geater than 2nd value</p>
-    <p>    exists : if 1st value exists, use it, else use 2nd value</p>
-    <p>Float Input : This value is used in the operation and can be on the left or right side of the operator depending on which Nrrd port is connected. If both nrrds ports are connected, this value will be ignored.</p>
-    <p>Type : type to convert all input nrrds to prior to doing the operation.  To leave it unchanged, check the 'Same as input type' checkbutton.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

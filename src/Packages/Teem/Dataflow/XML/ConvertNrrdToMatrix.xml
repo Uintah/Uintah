@@ -38,32 +38,6 @@
     <summary>Convert a combination of Nrrds to a SCIRun Matrix of type
 Column, Dense or Sparse.
     </summary>
-    <description>
-      <p>Convert a combination of Nrrds to a SCIRun Matrix of type
-Column, Dense or Sparse.</p>
-      <p>To create a ColumnMatrix, the first port, or the Data port,
-should be the only one connected.  For a column matrix, the Nrrd
-should be a 1D Nrrd.</p>
-      <p>To create a Dense Matrix, a 2D Nrrd should be passed into the
-Data port.</p>
-      <p>To create a SparseRow Matrix, the module needs Data, Rows,
-and Columns. </p>
-      <p>The Data Nrrd should be a 1D Nrrd containing the non-zero
-entries.  Its size will be referred to as NNZ (number of non-zeros).
-</p>
-      <p>The Rows Nrrd is the row accumulation buffer containing R+1
-entries where R is the number of rows and Rows[N+1]-Rows[N] is the
-number of non-zero entries in row N.</p>
-      <p>The Columns Nrrd should be a 1D Nrrd with size NNZ as well.
-The Columns Nrrd contains the column number for each non-zero data
-entry.  It should be sorted by row/col order and correspond with the
-spaces in the Rows Nrrd.</p>
-      <p>The number of columns can be specified in the UI by clicking
-the Columns (for Sparse Row Matrix) radiobutton and entering the
-number of columns.  If the Auto radiobutton is selected, the module
-will attempt to determine the number of columns based on the largest
-entry of the Columns Nrrd.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

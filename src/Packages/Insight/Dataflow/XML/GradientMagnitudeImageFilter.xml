@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Computes the gradient magnitude of an image region at each pixel.
-  This module encapsulates the functionality of the ITK Filter itk::GradientMagnitudeImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

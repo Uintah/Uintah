@@ -36,9 +36,6 @@
       <author>Dave Weinstein</author>
     </authors>
     <summary>Compute the 3D gradient.</summary>
-    <description>
-      <p>Compute the 3D gradient.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

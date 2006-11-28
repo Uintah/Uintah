@@ -39,7 +39,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/TypeDescription.h>
-#include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
+#include <Dataflow/Network/Ports/ITKDatatypePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/ITKImageField.h>

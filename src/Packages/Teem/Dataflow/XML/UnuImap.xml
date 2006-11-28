@@ -43,34 +43,6 @@ value is the location of the control point, and the remaining values
 give are the range of the map for that control point. The output
 value(s) is the result of linearly interpolating between value(s) from
 the map.</summary>
-    <description>
-      <p>Map nrrd through *irregular* univariate map (colormap). A map
-is irregular if the control points are not evenly spaced along the
-domain, and hence their position must be explicitly represented in the
-map. As nrrds, these maps are necessarily 2D. Along axis 0, the first
-value is the location of the control point, and the remaining values
-give are the range of the map for that control point. The output
-value(s) is the result of linearly interpolating between value(s) from
-the map.</p>
-      <p>Length of accelerator array: length of accelerator array,
-used to try to speed-up task of finding between which pair of control
-points a given value lies. Not terribly useful for small maps (about
-10 points or less). Use 0 to turn accelorator off. This should be an
-integer.</p>
-      <p>Rescale to the Map Domain : indicates whether to rescale the
-input values from the input range to the map domain.</p>
-      <p>Min : Only used when rescaling to the Map Domain. Indicates
-the low end of input range. Should be a double.  To disregard this
-value and use the lowest value of the input nrrd, check Use lowest
-value of input nrrd as min.</p>
-      <p>Max : Only used when rescaling to the Map Domain. Indicates
-the high end of input range. Should be a double. To disregard this
-value and use the highest value of the input nrrd, check Use highest
-value of input nrrd as max.</p>
-      <p>Type: Specify the type of the output nrrd.  If Use map's type
-as output type is checked, this value will be disregarded and the map
-type will be used.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

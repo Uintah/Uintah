@@ -37,21 +37,6 @@
     </authors>
     <summary>Create (PGM) image of 1-D value histogram
     </summary>
-    <description>
-      <p>Create (PGM) image of 1-D value histogram</p>
-      <p>Height: height of output image (horizontal size is determined
-by number of bins in input histogram). This value should be an
-integer.</p>
-      <p>Show log-scaled hisogram: will show the log-scaled histogram
-with decade tick-marks.</p>
-      <p>Max Number of Hits: constrain the top of the drawn histogram
-to be at this number of hits. This will either scale the drawn
-histogram downward or clip its top, depending on whether the given max
-is higher or lower than the actual maximum bin count. This value
-should be a double. This value is only used when Use Max Number of
-Hits is checked. If not checked, the actual maximum bin count is
-used.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

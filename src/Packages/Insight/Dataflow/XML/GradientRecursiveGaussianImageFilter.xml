@@ -41,12 +41,6 @@
 </authors>
     <summary>
     </summary>
-    <description>
-<p>
-Computes the gradient of an image by convolution with the first derivative of a Gaussian. 
-  This module encapsulates the functionality of the ITK Filter itk::GradientRecursiveGaussianImageFilter.  See the <ulink url="http://www.itk.org">ITK web site</ulink> for detailed information on this filter.
-  </p>
-</description>
   </overview>
   
   <io>

@@ -8,10 +8,6 @@
     <summary>
       This module lets the user add a geometry with a specific model.
     </summary>
-    <description>
-      <p>        This module lets the user add a geometry with a specific model.
-      </p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="yes">

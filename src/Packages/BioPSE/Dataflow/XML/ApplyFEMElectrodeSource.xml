@@ -41,29 +41,6 @@
     <summary>Due to course current dipoles, the
 ApplyFEMElectrodeSource module changes and recreates the right-hand
 side (RHS) for the Finite Elements discretization approach.</summary>
-    <description>
-      <p>Version Date: March 2001</p><p>Version: 1.0</p>
-      <orderedlist>
-	<listitem>
-	  <p>The ApplyFEMElectrodeSource module creates and fills a
-new ColumnMatrix, according to mesh and dipole parameters in
-situations where it does not locate a ColumnMatrix on its input that
-contains an RHS to modify, or when the module finds a ColumnMatrix of
-a different size than the number of nodes in the mesh.</p>
-	</listitem>
-	<listitem>
-	  <p>We assume the mesh to be a TetVolField(int) type,
-containing indices to the conductivity tensor lookup table. The
-documentation for the <modref package="BioPSE" name="SetupFEMatrix"/>
-module provides further documentation about this mesh.</p>
-	</listitem>
-	<listitem>
-	  <p>Dipoles are represented as nodes in TetVolMesh. The
-corresponding value are vectors representing dipole moments. Thus, the
-module expects dipoles as TetVolField(Vector) field</p>
-	</listitem>
-      </orderedlist>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

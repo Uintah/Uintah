@@ -106,7 +106,7 @@
     <module category="Math" id="m7" name="SolveMinNormLeastSqSystem" package="SCIRun">
       <position x="84" y="533"/>
     </module>
-    <module category="Math" id="m8" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m8" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="84" y="382"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{18380}"/>
@@ -115,7 +115,7 @@
       <var name="range_max" val="{0}"/>
       <var name="execmode" val="{play}"/>
     </module>
-    <module category="Math" id="m9" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m9" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="265" y="377"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{18380}"/>
@@ -124,7 +124,7 @@
       <var name="range_max" val="{0}"/>
       <var name="execmode" val="{play}"/>
     </module>
-    <module category="Math" id="m10" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m10" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="448" y="371"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{18380}"/>
@@ -145,7 +145,7 @@
       <position x="647" y="292"/>
       <var name="filename" val="scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat"/>
     </module>
-    <module category="Math" id="m14" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m14" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="102" y="291"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{2}"/>
@@ -154,7 +154,7 @@
       <var name="range_max" val="{0}"/>
       <var name="execmode" val="{play}"/>
     </module>
-    <module category="Math" id="m15" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m15" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="283" y="292"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{2}"/>
@@ -164,7 +164,7 @@
       <var name="range_max" val="{1}"/>
       <var name="execmode" val="{play}"/>
     </module>
-    <module category="Math" id="m16" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m16" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="466" y="293"/>
       <var name="row_or_col" val="{col}"/>
       <var name="selectable_max" val="{2}"/>
@@ -186,7 +186,7 @@
       <var name="edge_scale" val="{0.03}"/>
       <var name="show_progress" val="{-2147483647}"/>
     </module>
-    <module category="Math" id="m18" name="GetColumnMatrixFromMatrix" package="SCIRun">
+    <module category="Math" id="m18" name="GetColumnOrRowFromMatrix" package="SCIRun">
       <position x="683" y="455"/>
       <var name="row_or_col" val="{col}"/>
     </module>
