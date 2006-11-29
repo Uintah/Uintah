@@ -804,8 +804,8 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   barrier_.wait(numprocessors_);
 
   //! distributing dofs among processors
-  const int start_gd = global_dimension * proc_num/numprocessors_;
-  const int end_gd  = global_dimension * (proc_num+1)/numprocessors_;
+  const int start_gd = (global_dimension * proc_num)/numprocessors_;
+  const int end_gd  = (global_dimension * (proc_num+1))/numprocessors_;
 
   //! creating sparse matrix structure
   std::vector<unsigned int> mycols;
@@ -928,7 +928,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   {
     rows_[global_dimension] = st;
     double* vals_ = scinew double[st];
-    for (int p=0; p <st; p++) vals_[p] = 0.0;
+    // for (int p=0; p <st; p++) vals_[p] = 0.0;
     fematrix_ = scinew SparseRowMatrix(global_dimension, global_dimension, rows_, allcols_, st,vals_);
     fematrixhandle_ = fematrix_;
   }
@@ -939,8 +939,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   //! zeroing in parallel
   const int ns = colidx_[proc_num];
   const int ne = colidx_[proc_num+1];
-  double* a = &fematrix_->a[ns], *ae=&fematrix_->a[ne];
-
+  double* a = &(fematrix_->a[ns]), *ae=&(fematrix_->a[ne]);
   while (a<ae) *a++=0.0;
 
   std::vector<std::vector<double> > ni_points;
