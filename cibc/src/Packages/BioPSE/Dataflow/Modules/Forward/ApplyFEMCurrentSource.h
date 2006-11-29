@@ -209,13 +209,13 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
     int *rr = scinew int[2]; rr[0] = 0; rr[1] = static_cast<int>(weights.size());
     int *cc = scinew int[weights.size()/2];
     double *dd = scinew double[weights.size()/2];
-    for (int i=0; i < static_cast<int>(weights.size()); i+=2)
+    for (int i=0; i < static_cast<int>(weights.size()/2); i++)
     {
-      cc[i] = static_cast<int>(weights[i]);
-      dd[i] = static_cast<double>(weights[i+1]);
+      cc[i] = static_cast<int>(weights[2*i]);
+      dd[i] = static_cast<double>(weights[2*i+1]);
     }
     
-    *w = scinew SparseRowMatrix(1,3*sz,rr,cc,weights.size(),dd);
+    *w = scinew SparseRowMatrix(1,3*sz,rr,cc,static_cast<int>(weights.size()/2),dd);
   }
 
   void execute_sources_and_sinks(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs)
