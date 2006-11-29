@@ -104,7 +104,6 @@ namespace Uintah {
       typedef typename Types::sol_type sol_type;
       cout_doing << "HypreSolver2::solve" << endl;
 
-
       DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
       DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
       DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
@@ -745,9 +744,16 @@ namespace Uintah {
     TypeDescription::Type domtype = A->typeDescription()->getType();
     ASSERTEQ(domtype, x->typeDescription()->getType());
     ASSERTEQ(domtype, b->typeDescription()->getType());
+    
+    IntVector periodic = level->getPeriodicBoundaries();
+    if(periodic != IntVector(0,0,0)){
+      throw InternalError("There's a bug in the hypre solver when you use periodic boundary conditions, please use a different solver", __FILE__, __LINE__);
+    }
+    
     const HypreSolver2Params* dparams = dynamic_cast<const HypreSolver2Params*>(params);
-    if(!dparams)
+    if(!dparams){
       throw InternalError("Wrong type of params passed to hypre solver!", __FILE__, __LINE__);
+    }
 
     switch(domtype){
     case TypeDescription::SFCXVariable:
