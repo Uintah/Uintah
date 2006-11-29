@@ -215,7 +215,7 @@ namespace SCIRun {
     public:
       SignalCallback(Drawable *, const string &signalname);
       SignalCallback(Signal *signal);
-      virtual ~SignalCallback() {}
+      virtual ~SignalCallback();
       event_handle_t                            operator()();
     private:
       Signal *                                  signal_;
