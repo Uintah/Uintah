@@ -114,17 +114,6 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
 
 Painter::~Painter()
 {
-//   int count = 1;
-//   for (NrrdVolumes::iterator iter = volumes_.begin(); 
-//        iter != volumes_.end(); ++iter) {
-//     string filename = "/tmp/painter-nrrd"+to_string(count++)+".nrrd";
-//     cerr << "saving " << filename << std::endl;
-//     nrrdSave(filename.c_str(),
-//              (*iter)->nrrd_handle_->nrrd_,
-//              0);
-//   }
-
-
 }
 
 

@@ -308,11 +308,6 @@ public:
 
 
 
-unsigned int nrrd_type_size(Nrrd *);
-unsigned int nrrd_data_size(Nrrd *);
-unsigned int nrrd_size(Nrrd *);
-
-
 
 template <class T>
 unsigned int max_vector_magnitude_index(vector<T> array) {
