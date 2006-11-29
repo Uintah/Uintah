@@ -33,11 +33,13 @@
 #include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
 
+#include <Core/Algorithms/Fields/share.h>
+
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class GetFieldBoundaryAlgo : public DynamicAlgoBase
+class SCISHARE GetFieldBoundaryAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool GetFieldBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle& mapping);

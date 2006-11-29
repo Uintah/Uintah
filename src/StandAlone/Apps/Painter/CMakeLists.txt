@@ -86,6 +86,15 @@ FIND_PATH(GLEW_INCLUDE glew.h
            /usr/include
            /include)
 
+IF(WIN32)
+  IF(NOT BUILD_CORE_LIBS_SHARED)
+    ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
+  ENDIF(NOT BUILD_CORE_LIBS_SHARED)
+#  This defines M_PI for windows
+  ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+ENDIF(WIN32)
+
+
 SET(LEXOV_SRCS 
   AutoviewTool.cc 
   BrushTool.cc 
@@ -127,6 +136,7 @@ IF(APPLE)
                      ${Painter_SOURCE_DIR}/data
                      ${EXECUTABLE_OUTPUT_PATH}/LeXoV.app/Contents/MacOS/data)
 ELSE(APPLE)
+  #ADD_EXECUTABLE(LeXoV WIN32 ${LEXOV_SRCS})
   ADD_EXECUTABLE(LeXoV ${LEXOV_SRCS})
   ADD_CUSTOM_COMMAND(TARGET LeXoV
                      POST_BUILD
@@ -170,7 +180,4 @@ IF(ITK_FOUND)
     ITKBasicFilters
     ITKIO)
 ENDIF(ITK_FOUND)
-
-
-
 

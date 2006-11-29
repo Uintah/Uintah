@@ -45,6 +45,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <algorithm>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Events/EventManager.h>

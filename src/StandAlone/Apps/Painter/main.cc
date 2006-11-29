@@ -49,6 +49,13 @@ namespace Carbon {
 
 using namespace SCIRun;
 
+#if 0 && defined(_WIN32)
+// this makes it a "windows" app instead of a "console" app.  The downside is that
+// we get argv all in one string, and no environment pointer
+int WinMain(HINSTANCE, HINSTANCE, LPSTR cmdline, int show)
+{
+#endif
+
 int
 main(int argc, char *argv[], char **environment) {
   create_sci_environment(environment, argv[0]);  

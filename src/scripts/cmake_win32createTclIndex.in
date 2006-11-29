@@ -26,49 +26,8 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/MatlabInterface/Dataflow/Modules/DataIO
 
-SET(Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS
-  ImportColorMapsFromMatlab.cc
-  ImportDatatypesFromMatlab.cc
-  ExportDatatypesToMatlab.cc
-  ImportFieldsFromMatlab.cc
-  ExportFieldsToMatlab.cc
-  ImportMatricesFromMatlab.cc
-  ExportMatricesToMatlab.cc
-  ImportNrrdsFromMatlab.cc
-  ExportNrrdsToMatlab.cc
-  ImportBundlesFromMatlab.cc
-  ExportBundlesToMatlab.cc
-)
-
-ADD_LIBRARY(Packages_MatlabInterface_Dataflow_Modules_DataIO ${Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS})
-
-TARGET_LINK_LIBRARIES(Packages_MatlabInterface_Dataflow_Modules_DataIO
-  Core_Persistent
-  Core_Containers
-  Core_Util
-  Core_Exceptions
-  Core_Thread
-  Dataflow_GuiInterface
-  Core_Geom
-  Core_Datatypes
-  Core_Geometry
-  Core_GeomInterface
-  Dataflow_TkExtensions
-  Dataflow_Network
-  Core_XMLUtil
-  Core_Matlab
-  Core_Services
-  Core_ICom
-  Core_SystemCall
-  ${TEEM_LIBRARY}
-  ${Z_LIBRARY}
-  ${M_LIBRARY}
-  ${TK_LIBRARY}
-  ${GL_LIBRARY}
-)
-
-IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_MatlabInterface_Dataflow_Modules_DataIO)
-ENDIF(BUILD_SHARED_LIBS)
+source @TCL_INIT_DIR@/init.tcl
+package require Itcl 3.1
+source @ITCL_INIT_DIR@/itcl.tcl
+auto_mkindex @CREATE_TCL_PACKAGE@

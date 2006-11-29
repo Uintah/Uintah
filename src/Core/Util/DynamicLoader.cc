@@ -54,26 +54,6 @@ using namespace std;
 
 #ifdef _WIN32
 #  include <windows.h>
-#  ifdef _MSC_VER
-
-string vstext;
-void set_vc_dirs()
-{
-  string path_to_vc = PATH_TO_VC;
-  string path_to_psdk = PATH_TO_PSDK;
-  string path_to_make = PATH_TO_MSYS_BIN;
-
-  // path is path-to-vc/bin + path-to-vc/../Common7/IDE (for a dependent dll) + path_to_make
-  vstext = "@SET PATH=" + path_to_vc + "\\..\\Common7\\IDE;" + path_to_vc + "\\bin;" + path_to_make + ";%PATH%\n";
-
-  // include is path-to-vc/include and path-to-psdk/Include
-  vstext+= "@SET INCLUDE=" + path_to_vc + "\\include;" + path_to_psdk + "\\Include\n";
-
-  // lib (libpaths) is the same, with lib
-  vstext+= "@SET LIB=" + path_to_vc + "\\lib;" + path_to_psdk + "\\Lib";
-}
-
-#  endif
 #  undef SCISHARE
 #  ifndef BUILD_CORE_STATIC
 #    define SCISHARE __declspec(dllexport)
@@ -404,10 +384,6 @@ DynamicLoader::DynamicLoader() :
   map_lock_.lock();
   algo_map_.clear();
   map_lock_.unlock();
-
-#ifdef _MSC_VER
-  set_vc_dirs();
-#endif
 }
 
 
@@ -595,7 +571,10 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " +
 		    info.filename_ + ext);
 
+#ifndef _WIN32
+  // windows will change command and post this message later
   pr->add_raw_message("DynamicLoader - Executing: " + command + "\n");
+#endif
 
   FILE *pipe = 0;
   bool result = true;
@@ -629,17 +608,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   strcpy(otfdir, otf_dir().c_str());
   // We need to make Windows create a command and read it since windows
   // system can't handle a ';' to split commands
-  int loc = command.find(';');
 
-  // give it \ instead of / so windows can read it correctly
-  string command1 = command.substr(0, loc);
-  for (unsigned i = 0; i < command1.length(); i++)
-  {
-    if (command1[i] == '/')
-    {
-      command1[i] = '\\';
-    }
-  }
   for (unsigned i = 0; i < strlen(otfdir); i++)
   {
     if (otfdir[i] == '/')
@@ -647,16 +616,11 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
       otfdir[i] = '\\';
     }
   }
-  string command2 = command.substr(loc+1, command.length());
-  // hardcoded...
-  string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
-  FILE* batch = fopen(batch_filename.c_str(), "w");
-#ifdef _MSC_VER
-  fprintf(batch, "\n%s\n%s\n%s\n", vstext.c_str(), command1.c_str(), command2.c_str());
-#else
-  fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
-#endif
-  fclose(batch);
+  string batch_filename = string(otfdir)+"\\win32make.bat";
+
+  // reset command
+  command = batch_filename + " " + info.filename_ + "dll " + info.filename_ + "cc " + info.filename_ + "log";
+  pr->add_raw_message("DynamicLoader - Executing: " + command + "\n");
 
   si_.cb = sizeof(STARTUPINFO);
 
@@ -664,7 +628,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   // Otherwise it will get confused while trying to run in the same shell as the
   // tcl interpreter.
   bool retval =
-    CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
+    CreateProcess((char*)batch_filename.c_str(),(char*)command.c_str(),0,0,0,CREATE_NO_WINDOW,0,otfdir, &si_, &pi_);
   if (!retval)
   {
     const char *soerr = SOError();
