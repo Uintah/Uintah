@@ -1,0 +1,70 @@
+@echo off
+rem
+rem  For more information, please see: http://software.sci.utah.edu
+rem 
+rem  The MIT License
+rem 
+rem  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+rem  University of Utah.
+rem 
+rem  
+rem  Permission is hereby granted, free of charge, to any person obtaining a
+rem  copy of this software and associated documentation files (the "Software"),
+rem  to deal in the Software without restriction, including without limitation
+rem  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+rem  and/or sell copies of the Software, and to permit persons to whom the
+rem  Software is furnished to do so, subject to the following conditions:
+rem 
+rem  The above copyright notice and this permission notice shall be included
+rem  in all copies or substantial portions of the Software.
+rem 
+rem  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+rem  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+rem  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+rem  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+rem  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+rem  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+rem  DEALINGS IN THE SOFTWARE.
+rem
+
+rem pseudo-Makefile for field manipulation code that is compiled and loaded on the fly
+rem This will become a batch file, that the DynamicLoader will call like:
+
+rem Usage:
+rem   win32make.bat <dll-name> <src-name> <log-name>
+
+set DLL=%1
+set SRC=%2
+set LOG=%3
+
+set PATH=%PATH%;@PATH_TO_VC@/bin;@PATH_TO_VC@/../Common7/IDE
+
+rem INCLUDE and LIB are VS variables which tell the compiler to look in those paths
+set INCLUDE=@PATH_TO_VC@/include
+set LIB=@PATH_TO_VC@/lib
+
+set CXX=@CMAKE_CXX_COMPILER@
+set CXXFLAGS=@CMAKE_CXX_FLAGS@ @CMAKE_CXX_FLAGS_RELEASE@ /W1 /EHsc /GR
+
+set SCIRUN_SRCTOP=@scirun_src_dir@
+set SCIRUN_OBJTOP=@scirun_obj_dir@
+set SCIRUN_OBJTOP_DATAFLOW=@scirun_obj_dataflow_dir@
+
+set LIBDIR1=%SCIRUN_OBJTOP%/lib
+
+rem Sandia Meshing Library
+rem set CONDITIONAL_LIBS=%CAMAL_LIBRARY% %F_LIBRARY%
+
+rem VERDICT Mesh Quality Library
+rem set CONDITIONAL_LIBS=%CONDITIONAL_LIBS% %VERDICT_LIBRARY%
+
+rem MESQUITE Mesh Optimization Library
+rem set CONDITIONAL_LIBS=%CONDITIONAL_LIBS% %MESQUITE_LIBRARY%
+
+set INCLUDES=-I%SCIRUN_SRCTOP%/include -I%SCIRUN_SRCTOP% -I%SCIRUN_OBJTOP% -I%SCIRUN_OBJTOP%/include -I%SCIRUN_SRCTOP%/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XML2_H@ @INC_PETSC_H@ @INC_SIDL_H@ @INC_MPI_H@ @INC_GL_H@ @INC_GLEW_H@ @INC_INSIGHT_H@ @INC_TEEM_H@ @INC_CAMAL_H@ @INC_TETGEN_H@ @INC_MESQUITE_H@ @INC_VERDICT_H@
+echo on
+%CXX% %CXXFLAGS% %SRC% %INCLUDES% -o %DLL% -link -dll %SCIRUN_OBJTOP%/lib/*.lib %SCIRUN_OBJTOP_DATAFLOW%/lib/*.lib > %LOG%
+
+:usage
+
+:done

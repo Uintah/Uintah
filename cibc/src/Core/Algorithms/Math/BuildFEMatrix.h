@@ -49,12 +49,13 @@
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Algorithms/Math/share.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class BuildFEMatrixAlgo : public DynamicAlgoBase
+class SCISHARE BuildFEMatrixAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc = 1);

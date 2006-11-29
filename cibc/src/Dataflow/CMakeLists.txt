@@ -156,21 +156,38 @@ ENDIF(WIN32 AND NOT CYGWIN)
 
 MARK_AS_ADVANCED(SO_OR_A_FILE)
 
-CONFIGURE_FILE (
-  "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/cmake_Makefile.in"
-  "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
-)
+IF(WIN32)
+  CONFIGURE_FILE (
+    "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/cmake_win32make.in"
+    "${PROJECT_BINARY_DIR}/on-the-fly-libs/win32make.bat"
+  )
+ELSE(WIN32)
+  CONFIGURE_FILE (
+    "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/cmake_Makefile.in"
+    "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
+  )
+ENDIF(WIN32)
 
 SET(BUILD_SHARED_LIBS ON)
 
+
+# Add correct flags for win32
 IF(WIN32)
   IF(NOT BUILD_CORE_LIBS_SHARED)
     ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
   ENDIF(NOT BUILD_CORE_LIBS_SHARED)
 #  This defines M_PI for windows
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
+  # win32 l3 warnings are a little ridiculous
+  SET(CMAKE_CXX_WARNING_LEVEL 1)
+  IF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    STRING(REGEX REPLACE "/W[0-4]" "/W1"
+            CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W1")
+  ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
 ENDIF(WIN32)
-
 
 SUBDIRS(Comm Constraints GuiInterface Modules Network TkExtensions TCLThread
 Widgets)
@@ -182,19 +199,38 @@ SET(TCLSH ${SCIRUN_THIRDPARTY_PATH}/bin/tclsh${TCL_VERSION})
 SET(TCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/tcl/)
 SET(ITCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/itcl/)
 MESSAGE(STATUS "Creating createTclIndex")
-CONFIGURE_FILE (
-  "${SCIRUN_SOURCE_DIR}/src/scripts/cmake_createTclIndex.in"
-  "${CREATETCLINDEX}"
-)
 
-# Change permissions on createTclIndex file and generate
-# tclIndex files for Core/GUI and Dataflow/GUI
-ADD_CUSTOM_TARGET(create_tclIndex_SCIRun ALL
-  chmod a+x ${CREATETCLINDEX}
-  COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Core/GUI 
-  COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Dataflow/GUI
-)
-
+IF(WIN32) 
+  # On Windows, we would just make a batch file to do the same thing as the createTCLIndex sh script,
+  # but the << operator is not accepted.  So we must create a file per tcl index
+  set (CREATE_TCL_PACKAGE ${SCIRUN_SOURCE_DIR}/src/Core/GUI)
+  CONFIGURE_FILE (
+    "${SCIRUN_SOURCE_DIR}/src/scripts/cmake_win32createTclIndex.in"
+    "${PROJECT_BINARY_DIR}/createCoreTclIndex.tcl"
+  )
+  set (CREATE_TCL_PACKAGE ${SCIRUN_SOURCE_DIR}/src/Dataflow/GUI)
+  CONFIGURE_FILE (
+    "${SCIRUN_SOURCE_DIR}/src/scripts/cmake_win32createTclIndex.in"
+    "${PROJECT_BINARY_DIR}/createDataflowTclIndex.tcl"
+  )
+  
+  ADD_CUSTOM_TARGET(create_tclIndex_SCIRun ALL
+    COMMAND ${TCLSH} createCoreTclIndex.tcl
+    COMMAND ${TCLSH} createDataflowTclIndex.tcl
+  )  
+ELSE(WIN32)
+  CONFIGURE_FILE (
+    "${SCIRUN_SOURCE_DIR}/src/scripts/cmake_createTclIndex.in"
+    "${CREATETCLINDEX}"
+  )
+  # Change permissions on createTclIndex file and generate
+  # tclIndex files for Core/GUI and Dataflow/GUI
+  ADD_CUSTOM_TARGET(create_tclIndex_SCIRun ALL
+    chmod a+x ${CREATETCLINDEX}
+    COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Core/GUI 
+    COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Dataflow/GUI
+  )
+ENDIF(WIN32)
 # Packages enabled when building core
 
 # Replace comma's from LoadPackage to be semi-colons to make a list
@@ -213,11 +249,27 @@ FOREACH( pkg ${PACKAGE_LIST})
     # Add the package subdirectory in CMake
     SUBDIRS(${SCIRUN_SOURCE_DIR}/src/Packages/${pkg})
 
-    # Create the tclIndex file
-    ADD_CUSTOM_TARGET(create_tclIndex_${pkg} ALL
-      chmod a+x ${CREATETCLINDEX}
-      COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Packages/${pkg}/Dataflow/GUI 
-    )
+    IF(WIN32) 
+      # On Windows, we would just make a batch file to do the same thing as the createTCLIndex sh script,
+      # but the << operator is not accepted.  So we must create a file per tcl index
+      set (CREATE_TCL_PACKAGE ${SCIRUN_SOURCE_DIR}/src/Packages/${pkg}/Dataflow/GUI)
+      CONFIGURE_FILE (
+        "${SCIRUN_SOURCE_DIR}/src/scripts/cmake_win32createTclIndex.in"
+        "${PROJECT_BINARY_DIR}/create${pkg}TclIndex.tcl"
+      )
+      set (CREATE_TCL_PACKAGE ${SCIRUN_SOURCE_DIR}/src/Dataflow/GUI)
+      
+      ADD_CUSTOM_TARGET(create_tclIndex_${pkg} ALL
+        COMMAND ${TCLSH} create${pkg}TclIndex.tcl
+      )  
+    ELSE(WIN32)
+
+      # Create the tclIndex file
+      ADD_CUSTOM_TARGET(create_tclIndex_${pkg} ALL
+        chmod a+x ${CREATETCLINDEX}
+        COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Packages/${pkg}/Dataflow/GUI 
+      )
+    ENDIF(WIN32)
   ENDIF(NOT ${pkg} MATCHES "SCIRun")
 ENDFOREACH( pkg )
 
@@ -225,14 +277,13 @@ ENDFOREACH( pkg )
 ADD_EXECUTABLE(scirun
 ${SCIRUN_SOURCE_DIR}/src/main/main.cc)
 
-TARGET_LINK_LIBRARIES(scirun 
+SET(SCIRUN_LIBS
   Core_Basis         
   Core_Comm          
   Core_Containers    
   Core_Exceptions    
   Core_Geom          
   Dataflow_GuiInterface  
-  Core_Malloc
   Core_ICom          
   Core_Init         
   Core_Services      
@@ -245,6 +296,14 @@ TARGET_LINK_LIBRARIES(scirun
   Dataflow_Network   
   Dataflow_TCLThread 
   ${GLEW_LIBRARY}
+)
+
+IF(NOT WIN32)
+# don't add malloc to windows version
+  SET(SCIRUN_LIBS ${SCIRUN_LIBS} Core_Malloc)
+ENDIF(NOT WIN32)
+
+TARGET_LINK_LIBRARIES(scirun ${SCIRUN_LIBS}
 )
 
 

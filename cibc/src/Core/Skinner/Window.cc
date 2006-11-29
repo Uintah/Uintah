@@ -335,7 +335,7 @@ namespace SCIRun {
 
       const char *fname = sci_getenv("SKINNER_MOVIE_BASE_FILENAME");
       static int i = 0;
-      char name[strlen(fname)+32];
+      char name[256];
       sprintf (name, fname, ++i);
       FILE *fp = fopen(name, "wb");
       png_init_io(png_write, fp);

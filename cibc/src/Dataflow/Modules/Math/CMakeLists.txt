@@ -59,6 +59,7 @@ ADD_LIBRARY(Dataflow_Modules_Math ${Dataflow_Modules_Math_SRCS})
 TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
   Core_Algorithms_Math
   Core_Algorithms_ArrayMath
+  Core_Algorithms_Converter
   Core_Datatypes
   Core_Exceptions
   Core_Geom
@@ -66,6 +67,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Math
   Core_Geometry
   Core_Containers
   Dataflow_GuiInterface
+  Dataflow_Widgets
   Core_Math
   Core_Persistent
   Core_Thread

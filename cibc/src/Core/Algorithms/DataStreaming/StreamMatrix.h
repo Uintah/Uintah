@@ -47,13 +47,15 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Algorithms/DataStreaming/share.h>
+
 // This class is intended for streaming 2D datafiles stored in the nrrd file
 // format into SCIRun. The data will be left on disk and will not be loaded
 // into memory. 
 
 namespace SCIRunAlgo {
 
-class StreamMatrixAlgo {
+class SCISHARE StreamMatrixAlgo {
 
   public:
   

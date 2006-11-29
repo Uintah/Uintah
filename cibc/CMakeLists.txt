@@ -91,6 +91,7 @@ MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 OPTION(BUILD_SHARED_LIBS "Build SCIRun with shared libraries." OFF)
 SET(SCIRUN_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
+# Add correct flags for win32
 IF(WIN32)
   IF(NOT BUILD_SHARED_LIBS)
     ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
@@ -98,6 +99,14 @@ IF(WIN32)
 #  This defines M_PI for windows
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
   ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
+  # win32 l3 warnings are a little ridiculous
+  SET(CMAKE_CXX_WARNING_LEVEL 1)
+  IF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    STRING(REGEX REPLACE "/W[0-4]" "/W1"
+            CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W1")
+  ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
 ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
@@ -317,8 +326,14 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # Tcl/Tk
-SET(TK_VERSION 8.3)
-SET(TCL_VERSION 8.3)
+IF(WIN32)
+  # BJW - find a better way to do this
+  SET(TK_VERSION 8.4)
+  SET(TCL_VERSION 8.4)
+ELSE(WIN32)
+  SET(TK_VERSION 8.3)
+  SET(TCL_VERSION 8.3)
+ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
 # ITK library
@@ -539,8 +554,7 @@ SET(MAKE ${CMAKE_BUILD_TOOL})
 
 IF(WIN32 AND NOT CYGWIN)
   SET (PATH_TO_VC "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7" CACHE PATH "Path to Visual Studio")
-  SET (PATH_TO_PSDK "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7/PlatformSDK" CACHE PATH "Path to PSDK")
-  SET (PATH_TO_MSYS_BIN "c:/msys/1.0/bin" CACHE PATH "Path to Msys bin directory")
+#  SET (PATH_TO_PSDK "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7/PlatformSDK" CACHE PATH "Path to PSDK")
 ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------

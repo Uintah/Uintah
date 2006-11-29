@@ -78,9 +78,10 @@
 #include <Core/Skinner/GeomSkinnerVarSwitch.h>
 
 #ifndef _WIN32
-#include <sys/mman.h>
+#  include <sys/mman.h>
 #else
-#include <io.h>
+#  include <Core/OS/Rand.h>
+#  include <io.h>
 #endif
 
 #ifdef HAVE_INSIGHT
@@ -610,7 +611,7 @@ Painter::ReloadVolumeTexture(event_handle_t event) {
 }
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_STATIC)
 #undef SCISHARE
 #define SCISHARE __declspec(dllimport)
 #else
