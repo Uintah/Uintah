@@ -93,10 +93,11 @@
   <var name="light_red" propagate="yes">#882222BB</var>
   <var name="light_green" propagate="yes">#33993388</var>
   <var name="light_blue" propagate="yes">#33339988</var>
-
+<!--
   <var name="light_red" propagate="yes">#220000FF</var>
   <var name="light_green" propagate="yes">#002200FF</var>
   <var name="light_blue" propagate="yes">#000022FF</var>
+-->
 
 
 
