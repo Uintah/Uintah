@@ -437,6 +437,7 @@ int main(int argc, char** argv)
       printParticleVariable(da, particleVariable, time_step_lower, 
                             time_step_upper);
     }
+#if 0
     //______________________________________________________________________
     //            DO_TECPLOT
     if(do_tecplot){ // if begin: 1
@@ -941,7 +942,7 @@ int main(int argc, char** argv)
 	} // end of if block (do_all_ccvars || ...): 3
       } // end of loop over variables: 2
     } //end of if (do_tecplot): 1
-
+#endif
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
     if(do_varsummary){
