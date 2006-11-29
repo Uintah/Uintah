@@ -32,6 +32,8 @@ Scene* make_scene(int argc, char* argv[])
   int cells=5;
   int depth=3;
   double scale = .001;
+  Point light_location(-50,30,20);
+  
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-cells") == 0){
       i++;
@@ -45,6 +47,14 @@ Scene* make_scene(int argc, char* argv[])
     } else if(strcmp(argv[i], "-scale") == 0){
       i++;
       scale = atof(argv[i]);
+    } else if (strcmp(argv[i], "-light_location") == 0) {
+      float x,y,z;
+      x = atof(argv[++i]);
+      y = atof(argv[++i]);
+      z = atof(argv[++i]);
+      light_location = Point(x, y, z);
+//     } else if (strcmp(argv[i], "-light_intensity") == 0) {
+//       light_intensity = atof(argv[++i]);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       exit(1);
@@ -68,11 +78,9 @@ Scene* make_scene(int argc, char* argv[])
   //Material *flat_white = new LambertianMaterial(Color(0,0,1));
 
   //GridTris* david = new GridTris(flat_white, 100, 0);
-  char newfile[1000];
-  strncpy(newfile, file, strlen(file)-4);
-  string newfileS = string(newfile)+"-grid";
-  GridTris* david = new GridTris(matl0, cells, depth,
-                                 newfileS);
+  string gridfile(file);
+  gridfile = string(gridfile, 0, gridfile.size()-4) + "-grid";
+  GridTris* david = new GridTris(matl0, cells, depth, gridfile);
   Point dav_ped_top(-14,-20,1);
 
   read_ply(file,david);
@@ -124,7 +132,7 @@ Scene* make_scene(int argc, char* argv[])
 						  Vector(0,0,1)) );
   
   scene->select_shadow_mode(Hard_Shadows);
-  Light *david_light = new Light(Point(-50,30,20), Color(1,1,1), 0);
+  Light *david_light = new Light(light_location, Color(1,1,1), 0);
 
   david_light->name_ = "david_light";
 

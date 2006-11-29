@@ -23,6 +23,9 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
+// Number of spheres to process before looking at how long it took.
+// Helps with systems where this is a parallel bottleneck.
+#define SPHERE_TIME_COUNT_RESOLUTION 10000
 
 namespace rtrt {
   struct MCell {
@@ -257,10 +260,12 @@ void GridSpheres::preprocess(double, int&, int&)
   int tc2=totalcells*totalcells;
   for(int i=0;i<nspheres;i++){
 #ifndef __ia64__
-    double tnow=SCIRun::Time::currentSeconds();
-    if(tnow-itime > 5.0){
-      cerr << i << "/" << nspheres << '\n';
-      itime=tnow;
+    if (i % SPHERE_TIME_COUNT_RESOLUTION == 0) {
+      double tnow=SCIRun::Time::currentSeconds();
+      if(tnow-itime > 5.0){
+        cerr << i << "/" << nspheres << '\n';
+        itime=tnow;
+      }
     }
 #endif
     int sx, sy, sz, ex, ey, ez;
@@ -314,10 +319,12 @@ void GridSpheres::preprocess(double, int&, int&)
   p=spheres;
   for(int i=0;i<nspheres;i++){
 #ifndef __ia64__
-    double tnow=SCIRun::Time::currentSeconds();
-    if(tnow-itime > 5.0){
-      cerr << i << "/" << nspheres << '\n';
-      itime=tnow;
+    if (i % SPHERE_TIME_COUNT_RESOLUTION == 0) {
+      double tnow=SCIRun::Time::currentSeconds();
+      if(tnow-itime > 5.0){
+        cerr << i << "/" << nspheres << '\n';
+        itime=tnow;
+      }
     }
 #endif
     int sx, sy, sz, ex, ey, ez;

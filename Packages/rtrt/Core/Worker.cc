@@ -50,7 +50,7 @@ extern void run_gl_test();
 
 extern Mutex io_lock_;
 
-#define CSCALE 5.e3
+#define CSCALE 5.e4
 /*#define CMAP(t) Color(t*CSCALE,0,1-(t)*CSCALE)*/
 #define CMAP(t) Color(t*CSCALE,t*CSCALE,t*CSCALE)
 

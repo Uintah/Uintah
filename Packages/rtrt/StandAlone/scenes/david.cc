@@ -32,6 +32,7 @@ Scene* make_scene(int argc, char* argv[])
   int cells=5;
   int depth=3;
   double scale = .001;
+  char* view = 0;
   for(int i=1;i<argc;i++){
     if(strcmp(argv[i], "-cells") == 0){
       i++;
@@ -45,6 +46,8 @@ Scene* make_scene(int argc, char* argv[])
     } else if(strcmp(argv[i], "-scale") == 0){
       i++;
       scale = atof(argv[i]);
+    } else if(strcmp(argv[i], "-view") == 0) {
+      view = argv[++i];
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       exit(1);
@@ -56,10 +59,31 @@ Scene* make_scene(int argc, char* argv[])
 //  Vector Up(-0.168284, 0.979459, -0.111091);
 //  double fov=60;
 
-  Point Eye(-17.1721, -34.6021, 3.4593);
-  Point Lookat(-14, -20, 3.40703);
+//   Point Eye(-17.1721, -34.6021, 3.4593);
+//   Point Lookat(-14, -20, 3.40703);
+//   Vector Up(0, 0, 1);
+//   double fov=22.5;
+
+  // Full body
+  //  -eye -3.92132 -14.2923 -1.66762 -lookat -0.743912 0.334214 -1.71997 -up 0 0 1 -fov 17.1315
+  
+  Point Eye(-3.92132, -14.2923, -1.6676);
+  Point Lookat(-0.743912, 0.334214, -1.71997);
   Vector Up(0, 0, 1);
-  double fov=22.5;
+  double fov=17.1315;
+
+  if (view) {
+    if (strcmp(view, "head") == 0) {
+      // Head Shot
+      Eye = Point(156.991, -158, 55.948);
+      Lookat = Point(-1.33461, 0.678295, 0.477779);
+      Up = Vector(0, 0, 1);
+      fov=0.208696;
+    } else {
+      fprintf(stderr, "Unknown view %s\n", view);
+      fprintf(stderr, "Try: head\n");
+    }
+  }
 
   Camera cam(Eye,Lookat,Up,fov);
 
@@ -131,7 +155,7 @@ Scene* make_scene(int argc, char* argv[])
   david_light->name_ = "david_light";
   scene->add_light(david_light);
 
-  Light *david_light_back = new Light(Point(3,10,10), Color(1,1,1), 1);
+  Light *david_light_back = new Light(Point(20,10,10), Color(1,1,1), 1);
   david_light_back->name_ = "david_light_back";
   scene->add_light(david_light_back);
 
