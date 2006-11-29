@@ -36,10 +36,8 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Plane.h>
-
 #include <Core/Volume/Texture.h>
 #include <Core/Volume/TextureRenderer.h>
-
 #include <Core/Volume/share.h>
 
 namespace SCIRun {

@@ -63,6 +63,12 @@
         
       </object>
 
+      <object class="ProgressBar">
+        <var name="row">6</var>
+        <var name="col">1</var>
+        <var name="ProgressBar::progress" propagate="yes">$Filter::percent</var>
+      </object>
+
       <object class="Button">
         <var name="row">10</var>
         <var name="col">1</var>

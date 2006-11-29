@@ -42,6 +42,7 @@
 #include <Core/Skinner/MenuManager.h>
 #include <Core/Skinner/ViewSubRegion.h>
 #include <Core/Skinner/VisibilityGroup.h>
+#include <Core/Skinner/Progress.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Containers/StringUtil.h>
@@ -62,8 +63,8 @@ namespace SCIRun {
     {
       REGISTER_CATCHER_TARGET(Root::Redraw);
       REGISTER_CATCHER_TARGET(Root::Arc_Maker);
-      REGISTER_CATCHER_TARGET(Root::Arrow_Maker);
       REGISTER_CATCHER_TARGET(Root::Arithmetic_Maker);
+      REGISTER_CATCHER_TARGET(Root::Arrow_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Destructor);
       REGISTER_CATCHER_TARGET(Root::FocusGrab_Maker);
@@ -71,6 +72,7 @@ namespace SCIRun {
       REGISTER_CATCHER_TARGET(Root::Graph2D_Maker);
       //      REGISTER_CATCHER_TARGET(Root::ColorMap2D_Maker);
       REGISTER_CATCHER_TARGET(Root::MenuManager_Maker);
+      REGISTER_CATCHER_TARGET(Root::Progress_Maker);
       REGISTER_CATCHER_TARGET(Root::Text_Maker);
       REGISTER_CATCHER_TARGET(Root::ViewSubRegion_Maker);
       REGISTER_CATCHER_TARGET(Root::VisibilityGroup_Maker);
@@ -86,12 +88,13 @@ namespace SCIRun {
     DECLARE_SKINNER_MAKER(Root, Arc);
     DECLARE_SKINNER_MAKER(Root, Arithmetic);
     DECLARE_SKINNER_MAKER(Root, Arrow);
-    DECLARE_SKINNER_MAKER(Root, Text);
-    DECLARE_SKINNER_MAKER(Root, Graph2D);
-    DECLARE_SKINNER_MAKER(Root, ViewSubRegion);
-    DECLARE_SKINNER_MAKER(Root, MenuManager);
     DECLARE_SKINNER_MAKER(Root, FocusGrab);
     DECLARE_SKINNER_MAKER(Root, FocusRegion);
+    DECLARE_SKINNER_MAKER(Root, Graph2D);
+    DECLARE_SKINNER_MAKER(Root, MenuManager);
+    DECLARE_SKINNER_MAKER(Root, Progress);
+    DECLARE_SKINNER_MAKER(Root, Text);
+    DECLARE_SKINNER_MAKER(Root, ViewSubRegion);
     DECLARE_SKINNER_MAKER(Root, VisibilityGroup);
     //    DECLARE_SKINNER_MAKER(Root, ColorMap2D);
 

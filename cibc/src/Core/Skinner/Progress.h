@@ -6,7 +6,7 @@
 //  Copyright (c) 2006 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
-//  
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -25,33 +25,26 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Box.h
+//    File   : Progress.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:11 2006
+//    Date   : Tue Nov 28 12:06:38 2006
 
-#ifndef SKINNER_BOX_H
-#define SKINNER_BOX_H
+#ifndef SKINNER_PROGRESS_H
+#define SKINNER_PROGRESS_H
 
 #include <Core/Skinner/Parent.h>
-#include <Core/Skinner/Color.h>
 #include <Core/Skinner/Variables.h>
 
 namespace SCIRun {
   namespace Skinner {
-    class Box : public Parent {
+    class Progress : public Parent {
     public:
-      Box(Variables *);
-      virtual ~Box();
-      virtual MinMax                    minmax(unsigned int);
-      static string                     class_name() { return "Box"; }
-      static DrawableMakerFunc_t        maker;
-      virtual int                       get_signal_id(const string &) const;
-
+      Progress(Variables *);
+      virtual ~Progress();
     private:
-      CatcherFunction_t                 do_PointerEvent;
-      CatcherFunction_t                 redraw;
-      Var<Color>                        color_;
+      CatcherFunction_t                 process_event;
+      Var<double>                       percent_;
+      Var<string>                       text_;
     };
   }
 }

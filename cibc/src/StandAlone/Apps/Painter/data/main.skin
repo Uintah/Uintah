@@ -68,6 +68,7 @@
   <var name="Painter::crop::max::y" type="double" propagate="yes">0</var>
   <var name="Painter::crop::max::z" type="double" propagate="yes">0</var>
   <var name="FileLoadBox::focus" type="bool" propagate="yes">1</var>
+  <var name="Filter::percent" type="double" propagate="yes">0</var>
 
 
   <var name="Resample::x" type="double" propagate="yes">100</var>
@@ -127,6 +128,8 @@
   <xi:include href="TextCheckButton.skin" parse="xml"/>
   <xi:include href="SliceFrame.skin" parse="xml"/>
   <xi:include href="FrameButton.skin" parse="xml"/>
+
+  <xi:include href="ProgressBar.skin" parse="xml"/>
 
   <xi:include href="StatusBar.skin" parse="xml"/>
   <xi:include href="MenuList.skin" parse="xml"/>

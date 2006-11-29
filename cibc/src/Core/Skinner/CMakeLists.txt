@@ -51,6 +51,7 @@ SET(Core_Skinner_SRCS
   MenuManager.cc
   MenuList.cc
   Parent.cc
+  Progress.cc
   RectRegion.cc
   Root.cc
   SceneGraph.cc

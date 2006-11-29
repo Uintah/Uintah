@@ -6,7 +6,7 @@
 //  Copyright (c) 2006 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
-//  
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -25,35 +25,47 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Box.h
+//    File   : Progress.cc
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:11 2006
+//    Date   : Tue Nov 28 12:08:10 2006
 
-#ifndef SKINNER_BOX_H
-#define SKINNER_BOX_H
-
-#include <Core/Skinner/Parent.h>
-#include <Core/Skinner/Color.h>
-#include <Core/Skinner/Variables.h>
+#include <Core/Skinner/Progress.h>
 
 namespace SCIRun {
   namespace Skinner {
-    class Box : public Parent {
-    public:
-      Box(Variables *);
-      virtual ~Box();
-      virtual MinMax                    minmax(unsigned int);
-      static string                     class_name() { return "Box"; }
-      static DrawableMakerFunc_t        maker;
-      virtual int                       get_signal_id(const string &) const;
-
-    private:
-      CatcherFunction_t                 do_PointerEvent;
-      CatcherFunction_t                 redraw;
-      Var<Color>                        color_;
-    };
+    Progress::Progress(Variables *variables) :
+      Parent(variables),
+      percent_(variables, "percent", 0.0),
+      text_(variables, "text", "0%")
+    {
+    }
+    
+    Progress::~Progress()
+    {
+    }
+    
+    BaseTool::propagation_state_e
+    Progress::process_event(event_handle_t e)
+    {
+      BaseTool::propagation_state_e state = Drawable::process_event(e);
+      bool stop = false;
+      if (state != STOP_E) {
+        char temp[100];
+        double per = percent_*100.0;
+        sprintf(temp, "%1.1f%%", per);
+        text_ = string(temp);
+        const RectRegion &reg = get_region();
+        RectRegion region(reg.x1(), reg.y1(), 
+                          reg.x1() + percent_*reg.width(), reg.y2());
+        for (Drawables_t::iterator citer = children_.begin(); 
+             citer != children_.end(); ++citer)
+        {
+          (*citer)->set_region(region);
+          state = (*citer)->process_event(e);
+        }
+      }
+      
+      return stop ? STOP_E : state;
+    }
   }
 }
-
-#endif
