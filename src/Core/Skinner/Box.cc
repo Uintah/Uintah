@@ -47,8 +47,7 @@ namespace SCIRun {
 
     Box::Box(Variables *variables) :
       Parent(variables),
-      color_(variables, "color", Color(1.0, 0.0, 0.0, 1.0)),
-      focus_(true)
+      color_(variables, "color", Color(1.0, 0.0, 0.0, 1.0))
     {
       REGISTER_CATCHER_TARGET(Box::redraw);
       REGISTER_CATCHER_TARGET(Box::do_PointerEvent);

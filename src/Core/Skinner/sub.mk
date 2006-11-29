@@ -55,6 +55,7 @@ SRCS     += \
 	$(SRCDIR)/MenuManager.cc	\
 	$(SRCDIR)/MenuButton.cc	\
 	$(SRCDIR)/Parent.cc	    	\
+	$(SRCDIR)/Progress.cc	    	\
 	$(SRCDIR)/RectRegion.cc    	\
 	$(SRCDIR)/Root.cc        	\
 	$(SRCDIR)/SceneGraph.cc  	\

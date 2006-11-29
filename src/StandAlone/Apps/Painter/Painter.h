@@ -126,7 +126,7 @@ public:
   static string                         class_name() { return "Painter"; }
   virtual int                           get_signal_id(const string &signalname) const;
   void                                  redraw_all();
-  void			extract_all_window_slices();
+  void                                  extract_all_window_slices();
 private:
   friend class SliceWindow;
   friend class VolumeSlice;

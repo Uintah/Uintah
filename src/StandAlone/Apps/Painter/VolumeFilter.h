@@ -183,6 +183,9 @@ VolumeFilter<FilterType>::filter_callback(itk::Object *object,
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
     std::cerr << "Filter progress: " << progress_ * 100.0 << "%\n";
+    Skinner::Var<double> percent (volume_->painter_->get_vars(), "Filter::percent");
+    percent = progress_;
+    
     if (volume_.get_rep()) {
       ITKDatatypeHandle imgh = new ITKDatatype();
       imgh->data_ = filter_->GetOutput();
@@ -191,9 +194,11 @@ VolumeFilter<FilterType>::filter_callback(itk::Object *object,
 
       typedef typename FilterType::OutputImageType::PixelType OutT;
       volume_->nrrd_handle_ = itk_image_to_nrrd<OutT>(imgh);
+      cerr << volume_->nrrd_handle_->nrrd_->data << std::endl;
       volume_->dirty_ = true;
       volume_->painter_->extract_all_window_slices();
       volume_->painter_->redraw_all();
+
     }
   }
 

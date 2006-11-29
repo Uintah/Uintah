@@ -658,14 +658,18 @@ NrrdVolume::get_volume_slice(const Plane &plane) {
     VolumeSlices_t::iterator send = parent->all_slices_.end();  
     for (; siter != send; ++siter) {
       if ((*siter)->get_plane() == plane) {
+        lock.lock();
         all_slices_.push_back
           (new VolumeSlice(this, plane, (*siter)->nrrd_handle_, label_));
+        lock.unlock();
         return all_slices_.back();
         //        return (*siter);
       }
     }
   } 
+  lock.lock();
   all_slices_.push_back(new VolumeSlice(this, plane,0,label_));
+  lock.unlock();
   return all_slices_.back();
 }
 
