@@ -54,6 +54,10 @@ itcl_class SCIRun_NewField_JoinFields {
           -variable $this-matchval
         pack $w.fnm2
 
+        checkbutton $w.fmo -text "Merge mesh only, do not assign values" \
+          -variable $this-meshonly
+        pack $w.fmo
+
         iwidgets::entryfield $w.prec \
           -labeltext "Tolerance (in distance) for merging nodes" \
           -textvariable $this-tolerance
