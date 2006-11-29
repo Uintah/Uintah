@@ -92,96 +92,6 @@ NrrdVolume::~NrrdVolume() {
 
 
 
-unsigned int
-nrrd_type_size(Nrrd *nrrd)
-{
-  switch (nrrd->type) {
-  case nrrdTypeChar: return sizeof(char); break;
-  case nrrdTypeUChar: return sizeof(unsigned char); break;
-  case nrrdTypeShort: return sizeof(short); break;
-  case nrrdTypeUShort: return sizeof(unsigned short); break;
-  case nrrdTypeInt: return sizeof(int); break;
-  case nrrdTypeUInt: return sizeof(unsigned int); break;
-  case nrrdTypeLLong: return sizeof(signed long long); break;
-  case nrrdTypeULLong: return sizeof(unsigned long long); break;
-  case nrrdTypeFloat: return sizeof(float); break;
-  case nrrdTypeDouble: return sizeof(double); break;
-  default: throw "Unsupported data type: "+to_string(nrrd->type); break;
-  }
-  return 0;
-}
-
-
-unsigned int
-nrrd_size(Nrrd *nrrd)
-{
-  if (!nrrd->dim) return 0;
-  unsigned int size = nrrd->axis[0].size;
-  for (unsigned int a = 1; a < nrrd->dim; ++a)
-    size *= nrrd->axis[a].size;
-  return size;
-}
-
-
-unsigned int
-nrrd_data_size(Nrrd *nrrd)
-{
-  return nrrd_size(nrrd) * nrrd_type_size(nrrd);
-}
-
-
-#if 0
-NrrdVolume::NrrdVolume(NrrdVolume *copy, 
-                       const string &name,
-                       int clear) :
-  painter_(copy->painter_),
-  parent_(0),
-  children_(0),
-  nrrd_handle_(0),
-  name_(name),
-  filename_(name),
-  opacity_(copy->opacity_),
-  clut_min_(copy->clut_min_),
-  clut_max_(copy->clut_max_),
-  data_min_(copy->data_min_),
-  data_max_(copy->data_max_),
-  label_(copy->label_),
-  colormap_(copy->colormap_),
-  stub_axes_(copy->stub_axes_),
-  transform_(),
-  keep_(copy->keep_),
-  visible_(),
-  expand_(copy->expand_)
-{
-  visible_ = copy->visible_;
-
-  ASSERT(clear >= 0 && clear <= 2);
-  
-  switch (clear) {
-  case 0: {
-    nrrd_handle_ = scinew NrrdData();
-    nrrdCopy(nrrd_handle_->nrrd_, copy->nrrd_handle_->nrrd_);
-  } break;
-  case 1: {
-    nrrd_handle_ = scinew NrrdData();
-    nrrdCopy(nrrd_handle_->nrrd_, copy->nrrd_handle_->nrrd_);
-    memset(nrrd_handle_->nrrd_->data, 0, nrrd_data_size(nrrd_handle_->nrrd_));
-  } break;
-  default:
-  case 2: {
-    nrrd_handle_ = copy->nrrd_handle_;
-  } break;
-  }
-
-  //  set_nrrd(nrrd_);
-  build_index_to_world_matrix();
-
-
-}
-#endif
-
-
-
 void
 NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle) 
 {
@@ -778,7 +688,7 @@ NrrdVolume::clear() {
  
 int
 NrrdVolume::numbytes() {
-  return nrrd_data_size(nrrd_handle_->nrrd_);
+  return VolumeOps::nrrd_data_size(nrrd_handle_);
 }
 
 
