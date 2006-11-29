@@ -177,8 +177,7 @@ checkForInputError(const string& stringValue,
     if (pos != string::npos){
       ostringstream warn;
       warn << "Input file error: I found ("<< stringValue[pos]
-           << ") inside of "<< stringValue<< " at position "<< pos
-           << "\nIf this is a valid number tell me --Todd "<<endl;
+           << ") inside of "<< stringValue<< " at position "<< pos <<endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     //__________________________________
@@ -188,8 +187,7 @@ checkForInputError(const string& stringValue,
     if (p1 != p2){
       ostringstream warn;
       warn << "Input file error: I found two (..) "
-           << "inside of "<< stringValue
-           << "\nIf this is a valid number tell me --Todd "<<endl;
+           << "inside of "<< stringValue <<endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }  
@@ -199,8 +197,7 @@ checkForInputError(const string& stringValue,
     if (pos != string::npos){
       ostringstream warn;
       warn << "Input file error Integer Number: I found ("<< stringValue[pos]
-           << ") inside of "<< stringValue<< " at position "<< pos
-           << "\nIf this is a valid number tell me --Todd "<<endl;
+           << ") inside of "<< stringValue<< " at position "<< pos <<endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
