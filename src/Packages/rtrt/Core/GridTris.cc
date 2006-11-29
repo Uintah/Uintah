@@ -152,7 +152,7 @@ void GridTris::preprocess(double, int&, int&)
     long numTris;
     in.read((char*)&numTris, sizeof(long));
     tris.resize(numTris);
-    cerr << "Reading tris, " << (double)numTris*sizeof(Tri)/1024./1024. << "M\n";
+    cerr << "Reading "<<numTris<<" tris, " << (double)numTris*sizeof(Tri)/1024./1024. << "M\n";
     in.read((char*)&tris[0], numTris*sizeof(Tri));
     
     in.read((char*)&min, sizeof(min));
