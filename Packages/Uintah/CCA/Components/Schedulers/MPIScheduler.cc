@@ -629,8 +629,8 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
     if (!keep_waiting)
       break;
   }
-  if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2)
-    mpidbg << d_myworld->myrank() << " Done  waiting...\n";
+  mpidbg << d_myworld->myrank() << " Done  waiting...\n";
+  
 
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
