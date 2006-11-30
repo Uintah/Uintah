@@ -358,7 +358,8 @@ SCI_ARG_WITH(babel,
   AC_HELP_STRING(--with-babel=DIR,
   Use the Babel installation in DIR (strongly recommended for SCIRun2)),
   [with_babel="$withval"
-   sci_required_babel=yes],
+   sci_required_babel=yes
+   sci_required_java=yes],
   [with_babel=""])
 SCI_ARG_WITH(wxwidgets,
   AC_HELP_STRING(--with-wxwidgets=DIR,
@@ -586,6 +587,12 @@ SCI_ARG_ENABLE(scirun2,
    [SCI_SET_PACKAGE_CHECKS(SCIRun2, $host)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
+SCI_ARG_WITH(cppunit,
+  AC_HELP_STRING(--with-cppunit=DIR,
+                 Enable cppunit based unit tests),
+  [with_cppunit="$withval"
+   sci_required_cppunit=yes],
+  [with_cppunit=""])
 SCI_ARG_ENABLE(plume,
   AC_HELP_STRING(--enable-plume,
                  Build Plume (based on SCIRun2)),
@@ -2980,83 +2987,110 @@ AC_SUBST(F_LIB_DIR_FLAG)
 ## Sun distribution only
 
 ## check env for JAVA_HOME, JAVAHOME (Ptolemy II)?
-#AC_MSG_CHECKING(for Java)
 
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
+# move this up
 _cca_version=1.0.0
 _sci_cca_tp_base=/usr/sci/projects
 _sci_cca_tp_subdir=CCA/Thirdparty/$_cca_version
 _sci_cca_tp_path=$_sci_tp_base/$_sci_cca_tp_subdir/$sci_tp_arch
 
-## Sun RPMs or bin installer usually install in /usr/java
-## Suse RPMs usually install in /usr/lib/jvm
-_java_top_guess="$_sci_cca_tp_path/java /usr/java /usr/lib/jvm /usr/local/lib"
-_java_top=
-
 if test "$sci_required_java" = "yes" ; then
-  _sci_optional=required
-fi
+  AC_MSG_CHECKING(for Java)
 
-if test "$with_java" = "yes"; then
-  _sci_optional=required
-  for d in $_java_top_guess; do
-    _jni_h=`find $d -follow -name "jni.h" -print 2>/dev/null`
-    if test -f "$_jni_h"; then
-        _jni_h_dir=`dirname $_jni_h`
-        _java_top=`dirname $_jni_h_dir`
-        AC_MSG_RESULT(Found Java top directory $_java_top)
-        _sci_inc=_jni_h_dir
-        break
+  _fatal_error=
+  if test "$sci_required_ptolemyII" = "yes" -o "$with_java"; then
+    _fatal_error="yes"
+    _sci_optional=required
+  else
+    _fatal_error="no"
+    _sci_optional=optional
+  fi
+
+  ## Sun RPMs or bin installer usually install in /usr/java
+  ## Suse RPMs usually install in /usr/lib/jvm
+  ## OSX Java installation in /System and /Developer
+  if test "$IS_OSX" = "yes"; then
+    JAVA_PROG=
+    AC_PATH_PROG(JAVA_PROG,java,NOT_FOUND,)
+    if test "$JAVA_PROG" != "NOT_FOUND" ; then
+        _sci_inc="/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers /System/Library/Frameworks/JavaVM.framework/Headers/darwin"
+        _sci_lib="/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Libraries"
+        SCI_TRY_LINK(JAVA, java JNI libraries,jni.h,$_sci_inc,jvm jvm_compat,$_sci_lib,,,$_sci_optional)
     fi
-  done
-elif test "$with_java"; then
-  ## need to link more than one library
-  _sci_optional=required
-  _sci_inc="$with_java/include"
-  _java_top=$with_java
-  AC_MSG_RESULT(Found Java top directory $_java_top)
-fi
+  else
+    _java_top_guess="$_sci_cca_tp_path/java /usr/java /usr/lib/jvm /usr/local/lib"
+    _java_top=
 
-if test "$_sci_optional" = "required"; then
-  _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
-  if test -d "$_java_lib_dir"; then
-    _sci_lib="$_sci_lib $_java_lib_dir"
+    if test "$with_java" = "yes"; then
+      #_sci_optional=required
+      for d in $_java_top_guess; do
+        _jni_h=`find $d -follow -name "jni.h" -print 2>/dev/null`
+        if test -f "$_jni_h"; then
+            _jni_h_dir=`dirname $_jni_h`
+            _java_top=`dirname $_jni_h_dir`
+            AC_MSG_RESULT(Found Java top directory $_java_top)
+            _sci_inc=_jni_h_dir
+            break
+        fi
+      done
+    elif test "$with_java"; then
+      ## need to link more than one library
+      #_sci_optional=required
+      _sci_inc="$with_java/include"
+      _java_top=$with_java
+      AC_MSG_RESULT(Found Java top directory $_java_top)
+    fi
+
+    _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+    if test -d "$_java_lib_dir"; then
+      _sci_lib="$_sci_lib $_java_lib_dir"
+    fi
+
+    _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+    if test -d "$_jvm_lib_dir"; then
+      _sci_lib="$_sci_lib $_jvm_lib_dir"
+    fi
+
+    _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
+    if test -d "$_jni_platfrom_h_dir"; then
+      _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
+    fi
+
+    SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
   fi
-
-  _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
-  if test -d "$_jvm_lib_dir"; then
-    _sci_lib="$_sci_lib $_jvm_lib_dir"
-  fi
-
-  _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
-  if test -d "$_jni_platfrom_h_dir"; then
-    _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
-  fi
-
-  SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
 
   AC_ARG_VAR(JAVAC,Java compiler)
   AC_PATH_PROG(JAVAC,javac,NOT_FOUND,$_java_top $PATH)
   if test "$JAVAC" = "NOT_FOUND"; then
-    SCI_MSG_ERROR(java not found)
+    if test "$_fatal_error" = "yes" ; then
+      SCI_MSG_ERROR(java not found)
+    else
+      AC_MSG_WARN(java not found)
+    fi
   fi
 
   AC_ARG_VAR(JAR,Java archive tool)
   AC_PATH_PROG(JAR,jar,NOT_FOUND,$_java_top $PATH)
   if test "$JAR" = "NOT_FOUND"; then
-    SCI_MSG_ERROR(jar not found)
+    if test "$_fatal_error" = "yes" ; then
+      SCI_MSG_ERROR(jar not found)
+    else
+      AC_MSG_WARN(jar not found)
+    fi
   fi
-fi
 
-if test "$HAVE_JAVA" = "yes"; then
+  if test "$HAVE_JAVA" = "yes"; then
     DEF_JAVA="#define HAVE_JAVA 1"
-fi
+  fi
 
-if test "$with_java" && test ! "$DEF_JAVA"; then
-  AC_MSG_ERROR(Java installation directory is missing.)
+  if test "$with_java" && test ! "$DEF_JAVA"; then
+    #AC_MSG_ERROR(Java installation directory is missing.)
+    AC_MSG_WARN(Java installation directory is missing.)
+  fi
 fi
 
 AC_SUBST(HAVE_JAVA)
@@ -4255,39 +4289,64 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$enable_scirun2" = "yes" -a "$with_babel" = "yes"; then
-  _sci_optional=required
-elif test "$enable_scirun2" = "yes" -a "$with_babel"; then
-  _sci_lib="$with_babel/lib"
-  _sci_inc="$with_babel/include $with_babel/include/cxx $with_babel/include/f77"
-  _sci_optional=required
-fi
+if test "$sci_required_babel" = "yes" ; then
 
-## should try to link with C++ header?
-_babel_libs="-lsidl -lsidlx -lsidlstub_cxx -lsidlstub_f77 -lsidlstub_java"
-SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,$_babel_libs,,$_sci_optional)
+  if test "$with_babel"; then
+    if test "$with_babel" != "yes"; then
+      _sci_lib="$with_babel/lib"
+      _sci_inc="$with_babel/include $with_babel/include/cxx"
 
-BABEL_BIN=
-AC_CHECKING(for babel in $SIDL_LIB_DIR/../bin)
-AC_CHECK_PROG(BABEL_BIN,babel,$SIDL_LIB_DIR/../bin/babel,NONE,$SIDL_LIB_DIR/../bin)
+      ## check for fortran (assuming Fortran77)
+      ## if and when it becomes necessary, add check for Fortran90
+      if test "$HAVE_F" = "yes" && test "$F77" ; then
+        _sci_inc="$_sci_inc $with_babel/include/f77"
+        _babel_libs="$_babel_libs -lsidlstub_f77"
+      fi
 
-if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.99.0 or greater)
-  SCI_CHECK_VERSION($BABEL_BIN,--version,0.99.0,,echo configure: error: wrong Babel version.; exit)
-  DEF_BABEL="#define HAVE_BABEL 1"
-  HAVE_BABEL="yes"
-fi
+      if test "$HAVE_JAVA" = "yes" ; then
+        _sci_inc="$_sci_inc $with_babel/include/java"
+        _babel_libs="$_babel_libs -lsidlstub_java"
+      fi
+    fi
+    _sci_optional=required
+  fi
 
-## make missing babel an error!
-BABEL_CLASSPATH=
-if test "$with_babel" && test ! "$DEF_BABEL"; then
-  echo
-  AC_MSG_ERROR(One or more of the Babel components is missing.)
-fi
+  AC_MSG_CHECKING(for Babel)
 
-if test "$HAVE_JAVA" = "yes"; then
-  BABEL_CLASSPATH=`find $LIB_DIR_SIDL -follow -name "*.jar" 2> /dev/null | tr -d "\n"`
-  AS_MESSAGE(Babel classpath=$BABEL_CLASSPATH)
+  # the bare minumum:
+  _babel_libs="-lsidl -lsidlx -lsidlstub_cxx"
+
+  ## should try to link with C++ header (<babel>/include/cxx/sidl.hxx)?
+  SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,$_babel_libs,,$_sci_optional)
+
+  BABEL_BIN=
+  if test "$with_babel" = "yes"; then
+    AC_CHECKING(for babel in PATH)
+    AC_CHECK_PROG(BABEL_BIN,babel,babel,NONE)
+  else
+    AC_CHECKING(for babel in $SIDL_LIB_DIR/../bin)
+    AC_CHECK_PROG(BABEL_BIN,babel,$SIDL_LIB_DIR/../bin/babel,NONE,$SIDL_LIB_DIR/../bin)
+  fi
+
+  if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
+    ## check for compatible version (0.99.0 or greater)
+    SCI_CHECK_VERSION($BABEL_BIN,--version,0.99.0,,echo configure: error: wrong Babel version.; exit)
+    DEF_BABEL="#define HAVE_BABEL 1"
+    HAVE_BABEL="yes"
+  fi
+
+  ## make missing babel an error!
+  BABEL_CLASSPATH=
+  if test "$with_babel" && test ! "$DEF_BABEL"; then
+    echo
+    AC_MSG_ERROR(One or more of the Babel components is missing.)
+  fi
+
+  if test "$HAVE_JAVA" = "yes"; then
+    BABEL_CLASSPATH=`find $LIB_DIR_SIDL -follow -name "*.jar" 2> /dev/null | tr -d "\n"`
+    AS_MESSAGE(Babel classpath=$BABEL_CLASSPATH)
+  fi
+
 fi
 
 AC_SUBST(HAVE_BABEL)
@@ -4983,52 +5042,51 @@ _sci_optional=optional
 
 if test "$sci_required_wx" = "yes" -a "$enable_scirun2" = "yes" ; then
 
- if test "$with_wx" = "yes"; then
-   _sci_optional=required
- elif test "$with_wx"; then
-   ## can't use 'specific' setting because we'll try to link more than 1 library later
-   _sci_optional=required
-   _sci_lib="$with_wx/lib"
-   _sci_inc="$with_wx/include"
- fi
+  if test "$with_wx" = "yes"; then
+    _sci_optional=required
+  elif test "$with_wx"; then
+    ## can't use 'specific' setting because we'll try to link more than 1 library later
+    _sci_optional=required
+    _sci_lib="$with_wx/lib"
+    _sci_inc="$with_wx/include"
+  fi
 
- _wx_bin=$_sci_lib/../bin
- WX_CONFIG=
- AC_PATH_PROG(WX_CONFIG,wx-config,NOT_FOUND,$_wx_bin $PATH)
+  _wx_bin=$_sci_lib/../bin
+  WX_CONFIG=
+  AC_PATH_PROG(WX_CONFIG,wx-config,NOT_FOUND,$_wx_bin $PATH)
 
- if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
-   SCI_MSG_ERROR(wx-config not found)
- fi
+  if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
+    SCI_MSG_ERROR(wx-config not found)
+  fi
 
- SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
- WX_LIBS=`$WX_CONFIG --libs`
- WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
+  SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
+  WX_LIBS=`$WX_CONFIG --libs`
+  WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
 
- ext="$ac_ext"
- ac_ext="cc"
+  AC_LANG([C++])
 
- case $host in
-   *linux*)
-     _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
-     _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
-     _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-     _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+  case $host in
+  *linux*)
+    _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
+    _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
-     ;;
-   *-darwin*)
-     _wx_lib_dir_flags=$WX_LIBS
-     _wx_lib_flags=$WX_LIBS
-     _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-     _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+    ;;
+  *-darwin*)
+    _wx_lib_dir_flags=$WX_LIBS
+    _wx_lib_flags=$WX_LIBS
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
-     ;;
-   *)
-     #assume there is no specific version
-     ;;
- esac
- SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
- # Restore the previous settings.
- ac_ext="$ext"
+    ;;
+  *)
+    #assume there is no specific version
+    ;;
+  esac
+  SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+  # Restore the previous settings.
+  AC_LANG([C])
 
  if test "$HAVE_WX" = "yes"; then
    DEF_WX="#define HAVE_WX 1"
@@ -5134,12 +5192,11 @@ if test "$sci_required_vtk" = "yes"; then
     _vtk_inc="$sci_thirdparty_include"
   fi
 
-  ext="$ac_ext"
-  ac_ext="cc"
+  AC_LANG([C++])
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
   # Restore the previous settings.
-  ac_ext="$ext"
+  AC_LANG([C])
 
   if test "$HAVE_VTK" = "yes"; then
      DEF_VTK="#define HAVE_VTK 1"
@@ -5311,6 +5368,40 @@ AC_SUBST(DEF_BOOST)
 AC_SUBST(INC_BOOST_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
+
+##  --  search for cppunit  -------------------------------------------
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+
+if test "$sci_required_cppunit" = "yes" ; then
+  _sci_optional=required
+
+  if test "$with_cppunit" ; then
+    _sci_lib="$with_cppunit/lib"
+    _sci_inc="$with_cppunit/include"
+    #_sci_optional=specific
+  fi
+
+  AC_LANG([C++])
+  SCI_TRY_LINK(CPPUNIT,cppunit library,cppunit/Test.h,$_sci_inc,cppunit,$_sci_lib,-ldl,,$_sci_optional)
+  AC_LANG([C])
+
+  if test "$HAVE_CPPUNIT" = "yes"; then
+     DEF_CPPUNIT="#define HAVE_CPPUNIT 1"
+  fi
+
+  if test "$with_cppunit" && test ! "$DEF_CPPUNIT"; then
+    echo
+    AC_MSG_ERROR(One or more of the cppunit components is missing.)
+  fi
+
+  AC_SUBST(HAVE_CPPUNIT)
+  AC_SUBST(DEF_CPPUNIT)
+  AC_SUBST(INC_CPPUNIT_H)
+  AC_SUBST(CPPUNIT_LIB_FLAG)
+  AC_SUBST(CPPUNIT_LIB_DIR_FLAG)
+fi #end sci_required_cppunit
 
 ##  --  search for loki stuff  -------------------------------------------
 if test "$sci_required_loki" = "yes"; then
