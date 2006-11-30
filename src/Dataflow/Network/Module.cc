@@ -752,6 +752,8 @@ Module::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "needexecute"){
     if(!abort_flag_){
       abort_flag_=1;
+      // Back up the network on any module executes
+      gui_->eval("backupNetwork");
       want_to_execute();
     }
   } else if(args[1] == "getpid"){

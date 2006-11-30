@@ -285,7 +285,7 @@ proc makeNetworkEditor {} {
 	    -command ".bot.neteditFrame.canvas postscript -file /tmp/canvas.ps -x 0 -y 0 -width 4500 -height 4500" -state disabled
     }
     .main_menu.file.menu add command -label "Execute All" -underline 0 \
-	-command "updateRunDateAndTime 0; netedit scheduleall" -state disabled
+	-command "backupNetwork; updateRunDateAndTime 0; netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
     .main_menu.file.menu add cascade -label "Wizards" -underline 0 \
@@ -1056,6 +1056,7 @@ proc check_filename {name} {
 	if {$name == ""} {
 		return "invalid"
 	}
+
     set ext_ind [expr [string length $name] - 4]
     set ext [string range $name $ext_ind end]
     
@@ -2174,14 +2175,68 @@ proc init_DATADIR_and_DATASET {} {
     netedit setenv SCIRUN_NET_SUBSTITUTE_DATADIR true
 }
     
+proc backupNetwork { } {
+  # check if we have a filename and if so save it to #filename#
+  global netedit_savefile
+  if { [file exists $netedit_savefile] } {
+      set root_filename [lindex [file split $netedit_savefile] end]
+
+      # don't save back ups of back up files as ##filename##!!!
+      if {[string index $root_filename 0] == "#" && 
+	  [string index $root_filename end] == "#"} {
+	      set root_filename [string range $root_filename 1 end-1]
+      }
+
+      set current_path [lrange [file split $netedit_savefile] 0 end-1]
+      if {[llength $current_path] > 0} {
+	  set current_path [eval file join [lrange [file split $netedit_savefile] 0 end-1]]
+      } else {
+	  # net in current directory so we need something to the path
+	  # so the file joins work
+	  set current_path [pwd]
+      }
+
+      # First attempt to save it to same directory as netedit_savefile
+      if {[file writable $current_path]} {
+	  set dest [eval file join $current_path \#$root_filename\#]
+	  writeNetwork $dest
+      } else {
+	  # else save to home/SCIRun directory as nedetit_savefile
+	  set src "[file split [netedit getenv HOME]]"
+	  set src [lappend src SCIRun \#$root_filename\#]
+	  set dest [eval file join $src]
+	  writeNetwork $dest
+      }
+  } else {
+      # Attempt to write to #MyNetwork.srn# in current directory
+      set src  "[file split [pwd]] MyNetwork.srn"
+      set src [eval file join $src]
+      set parts [file split $src]
+      set parts [lreplace $parts end end \#[lindex $parts end]\#]
+      set dir [pwd]
+
+      if {[file writable $dir]} {
+          set dest [eval file join $parts]
+	  writeNetwork $dest
+      } else {
+	  # Else write to home/SCIRun directory
+	  set src "[file split [netedit getenv HOME]]"
+	  set src [lappend src SCIRun \#MyNetwork.srn\#]
+	  set dest [eval file join $src]
+	  writeNetwork $dest
+      }
+  }
+}
 
 proc writeNetwork { filename { subnet 0 } } {
-    # if the file already exists, back it up to "#filename"
-    if { [file exists $filename] } {
+    # if the file already exists, back it up to "filename.bak"
+    if { [file exists $filename] &&
+	 [string index $filename 0] != "#" &&
+	 [string index $filename end] != "#"} {
 	set src  "[file split [pwd]] [file split ${filename}]"
 	set src [eval file join $src]
 	set parts [file split $src]
-	set parts [lreplace $parts end end \#[lindex $parts end]]
+	set parts "[lreplace $parts end end [lindex $parts end]].bak"
 	set dest [eval file join $parts]
 	catch [file rename -force $src $dest]
     }
