@@ -763,6 +763,31 @@ ELSE(ENABLE_SCI_MALLOC)
 ENDIF(ENABLE_SCI_MALLOC)
 SET(DEF_MALLOC_LINENUMBERS "")
 
+# Search for Tetgen (http://tetgen.berlios.de)
+OPTION(WITH_TETGEN "Use tetgen library" OFF)
+MARK_AS_ADVANCED(WITH_TETGEN)
+IF(WITH_TETGEN)
+  FIND_LIBRARY(TETGEN_LIBRARY 
+    NAMES tetgen 
+    PATHS /usr/local/lib
+    /usr/lib
+    /lib)
+
+  FIND_PATH(TETGEN_INCLUDE tetgen.h
+    /usr/local/include/
+    /usr/include
+    /include)
+
+   IF(TETGEN_LIBRARY)
+     SET(HAVE_TETGEN "YES")
+     SET(DEF_TETGEN "#define HAVE_TETGEN 1")
+   ELSE(TETGEN_LIBRARY)
+     SET(HAVE_TETGEN "NO")
+   ENDIF(TETGEN_LIBRARY)
+ELSE(WITH_TETGEN)
+   SET(HAVE_TETGEN "NO")
+ENDIF(WITH_TETGEN)
+
 #----------------------------------------------------------------------------
 # ITK
 IF(EXISTS ${SCIRUN_THIRDPARTY_PATH}/lib/InsightToolkit)
