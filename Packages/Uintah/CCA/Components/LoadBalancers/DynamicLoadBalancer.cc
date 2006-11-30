@@ -260,9 +260,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
   }
   IntVector range = high-low;
   Vector center;
-  center[0]=low[0]+range[0]/2.0;
-  center[1]=low[1]+range[1]/2.0;
-  center[2]=low[2]+range[2]/2.0;
+  center[0]=(high[0]+low[0])/2.0;
+  center[1]=(high[1]+low[1])/2.0;
+  center[2]=(high[2]+low[2])/2.0;
   IntVector dimensions;
   int dim=0;
   for(int d=0;d<3;d++)
@@ -274,7 +274,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
      }
   }
   
-  if( (false && level->numPatches()<1000) || d_myworld->size()==1)  //do in serial
+  if( (level->numPatches()<d_myworld->size()) || d_myworld->size()==1)  //do in serial
   {
     for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
     {
@@ -289,7 +289,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
         positions.push_back(pos[dimensions[d]]);
       }
     }
-
     if(dim==3)
     {
       SFC3f curve(HILBERT, d_myworld);
@@ -364,8 +363,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
       curve.SetCenter(center.x(),center.y(), center.z());
+      curve.SetMergeMode(1);
       curve.SetCleanup(BATCHERS);
-      curve.SetMergeParameters(3000,2,.15);
+      curve.SetMergeParameters(3000,500,2,.15);
       curve.GenerateCurve();
     }
     else if(dim==2)
@@ -377,8 +377,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
       curve.SetCenter(center[dimensions[0]],center[dimensions[1]]);
+      curve.SetMergeMode(1);
       curve.SetCleanup(BATCHERS);
-      curve.SetMergeParameters(3000,2,.15);
+      curve.SetMergeParameters(3000,500,2,.15);
       curve.GenerateCurve();
     }
     else
@@ -390,15 +391,22 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
       curve.SetCenter(center[dimensions[0]]);
+      curve.SetMergeMode(1);
       curve.SetCleanup(BATCHERS);
-      curve.SetMergeParameters(3000,2,.15);
+      curve.SetMergeParameters(3000,500,2,.15);
       curve.GenerateCurve();
     }
 
     //indices comes back in the size of each proc's patch set, pointing to the index
     // gather it all into one array
+    
+    int rsize=indices.size();
+     
+    //gather recv counts
+    MPI_Allgather(&rsize,1,MPI_INT,&recvcounts[0],1,MPI_INT,d_myworld->getComm());
+    
     vector<int> displs(d_myworld->size(), 0);
-
+    
     for (unsigned i = 0; i < recvcounts.size(); i++)
     {
        recvcounts[i]*=sizeof(DistributedIndex);
@@ -407,19 +415,18 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     {
        displs[i] = recvcounts[i-1] + displs[i-1];
     }
+    //gather curve
     MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, output, &recvcounts[0], 
                    &displs[0], MPI_BYTE, d_myworld->getComm());
   } 
   /*
   for (int i = 0; i < level->numPatches(); i++) 
   {
-//    if (d_myworld->myrank() == 0)
-//      cout << "  SFC Index " << i << " " << output[i] << endl;
     for (int j = i+1; j < level->numPatches(); j++)
     {
-      if (output[i] == output[j]) 
+      if (output[i].p == output[j].p && output[i].i == output[j].i) 
       {
-        cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index " << i << " has the same value as index " << j << " " << output[i] << endl;
+        cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index " << i << " has the same value as index " << j << " " << output[i].p << ":" << output[j].i << endl;
         throw InternalError("SFC unsuccessful", __FILE__, __LINE__);
       }
     }
@@ -518,7 +525,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   for (unsigned i = 0; i < groupCost.size(); i++) {
     int currentProc = 0;
     double currentProcCost = 0;
-
+    
     for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) {
       int index;
       if (d_doSpaceCurve) {
@@ -568,6 +575,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   if (d_myworld->myrank() == 0)
     dbg << " Time to LB: " << time << endl;
   doing << d_myworld->myrank() << "   APF END\n";
+  MPI_Barrier(d_myworld->getComm());
   return doLoadBalancing;
 }
 
