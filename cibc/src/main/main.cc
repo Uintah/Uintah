@@ -158,6 +158,10 @@ parse_args( int argc, char *argv[] )
     {
       NetworkIO::load_net(arg);
     }
+    else if (ends_with(string_tolower(arg),".srn#"))
+    {
+      NetworkIO::load_net(arg);
+    }
     else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
 	      ( arg == "-s" ) ||  ( arg == "--s" ) )
     {
@@ -207,7 +211,8 @@ parse_args( int argc, char *argv[] )
 	exit(0);
       }
       string filename(string_tolower(arg));
-      if (!ends_with(filename,".net") && !ends_with(filename,".app"))
+      if (!ends_with(filename,".net") && !ends_with(filename,".app") &&
+	  !ends_with(filename,".srn#"))
       {
 	std::cerr << "Valid net files end with .srn, .app, " 
                   << "(or .net prior to v1.25.2) exiting." << std::endl;
