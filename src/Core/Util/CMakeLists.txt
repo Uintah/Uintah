@@ -56,6 +56,7 @@ TARGET_LINK_LIBRARIES(Core_Util
   Core_Containers 
   Core_Exceptions 
   Core_Thread
+	Core_Malloc
   ${DL_LIBRARY}
   ${THREAD_LIBRARY}
 )
