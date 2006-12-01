@@ -7,8 +7,21 @@
     <var name="FrameButton::shadowx" propagate="yes">-2</var>
     <var name="FrameButton::shadowy" propagate="yes">2</var>
     <var name="FrameButton::shadowcolor" propagate="yes">#FFFFFFFF</var>
+    <var name="FrameButton::invert" propagate="yes">1</var>
     <signal name="button_1_clicked" target="Button::clicked"/>
+    <signal name="button_1_clicked" target="Arithmetic::set_value">
+      <var name="variable">$FrameButton::invert</var>
+      <var name="value">0</var>
+    </signal>
+    <signal name="button_1_pressed" target="GLWindow::redraw_drawable"/>
+      
     <signal name="button_1_released" target="Button::released"></signal>
+    <signal name="button_1_released" target="Arithmetic::set_value">
+      <var name="variable">$FrameButton::invert</var>
+      <var name="value">1</var>
+    </signal>
+    <signal name="button_1_released" target="GLWindow::redraw_drawable"/>
+
     
     <object class="Root::FocusRegion">
 
@@ -51,6 +64,14 @@
       </signal>
 
       <signal name="FocusRegion::unfocus"
+              target="Arithmetic::set_value">
+
+        <var name="variable">$FrameButton::invert</var>
+        <var name="value">1</var>
+      </signal>
+
+
+      <signal name="FocusRegion::unfocus"
               target="Button::unfocus"/>
 
       <signal name="FocusRegion::unfocus"
@@ -75,7 +96,7 @@
         <var name="height" overwrite="no">$FrameButton::height</var>
         <var name="color1">$Button::color1</var>
         <var name="color2">$Button::color2</var>
-        <var name="invert">1</var>
+        <var name="invert">$FrameButton::invert</var>
 
         <object class="Box">
           <var name="color">$Button::color</var>
