@@ -549,7 +549,7 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   
   vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, current_volume_->nrrd_handle_);
   
-  vol->dirty_;
+  vol->dirty_ = true;
   extract_all_window_slices();
   redraw_all();
   return CONTINUE_E;
