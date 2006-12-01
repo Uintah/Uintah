@@ -439,7 +439,10 @@ DataArchive::query( Variable& var, const std::string& name,
   double tstart = Time::currentSeconds();
   string url;
   d_lock.lock();  
-  ProblemSpecP vnode = findVariable(name, patch, matlIndex, time, url);
+
+  // if this is a virtual patch, grab the real patch, but only do that here - in the next query, we want
+  // the data to be returned in the virtual coordinate space
+  ProblemSpecP vnode = findVariable(name, patch->getRealPatch(), matlIndex, time, url);
   d_lock.unlock();
   if(vnode == 0){
     cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
