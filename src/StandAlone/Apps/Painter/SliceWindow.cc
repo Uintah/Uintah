@@ -814,6 +814,17 @@ SliceWindow::do_PointerEvent(event_handle_t event) {
     painter_->cur_window_ = this;
     painter_->pointer_pos_ = screen_to_world(pointer->get_x(), 
                                              pointer->get_y());
+    NrrdVolumeHandle &vol = painter_->current_volume_;
+    if (vol.get_rep() &&
+        vol->inside_p(painter_->pointer_pos_))
+    {
+      float val = 0.0;
+      vol->get_value(vol->world_to_index(painter_->pointer_pos_), val);
+      painter_->status_ = "Value: " + to_string(val);
+      mark_redraw();
+    } else {
+      status_ = "";
+    }
   } else if (pdown_ && painter_->cur_window_ == this) {
     unsigned int state = PointerEvent::BUTTON_RELEASE_E;
     state |= pointer->get_pointer_state() & bmask;
