@@ -182,7 +182,8 @@ void FirstOrderAdvector::advectMass(const CCVariable<double>& q_CC,
 }
 
 //__________________________________
-//     D O U B L E
+//     D O U B L E 
+// (int_eng, sp_vol * mass, transported Variables)
 void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  const CCVariable<double>& /*mass*/,
                                  CCVariable<double>& q_advected,
@@ -198,7 +199,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
 
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
-//  needed by implicit ICE
+//  needed by implicit ICE  q_CC = volFrac
 void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  const Patch* patch,
                                  CCVariable<double>& q_advected,
@@ -218,7 +219,7 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
   q_FC_fluxes<double>(q_CC, "vol_frac", varBasket);
 }
 //__________________________________
-//     V E C T O R
+//     V E C T O R  (momentum)
 void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                                  const CCVariable<double>& /*mass*/,
                                  CCVariable<Vector>& q_advected,
@@ -257,6 +258,9 @@ template <class T, typename F>
     for(int f = TOP; f <= BACK; f++ )  {    
       //__________________________________
       //   S L A B S
+      // q_CC: vol_frac, mass, momentum, int_eng....
+      //      for consistent units you need to divide by cell volume
+      // 
       IntVector ac = c + S_ac[f];     // slab adjacent cell
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
