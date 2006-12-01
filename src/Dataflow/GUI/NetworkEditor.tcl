@@ -71,14 +71,22 @@ set inserting 0
 set netedit_savefile ""
 set NetworkChanged 0
 set CurrentlySelectedModules ""
-
+set disable_network_locking "0"
 set network_executing "0"
 trace variable network_executing w handle_network_executing
 
+proc set_network_executing {val} {
+    global network_executing disable_network_locking
+    if { $disable_network_locking == "1" } {
+	set network_executing "0"
+	return
+    }
+    set network_executing $val
+}
+
 proc restore_not_executing_interface {} {
-    global network_executing maincanvas Color
-    set network_executing "0"
-    $maincanvas itemconfigure bgRect -fill $Color(NetworkEditor) \
+    global network_executing maincanvas Color disable_network_locking
+     $maincanvas itemconfigure bgRect -fill $Color(NetworkEditor) \
 	-outline $Color(NetworkEditor)
     
     bind . <Control-d> "moduleDestroySelected"
@@ -100,6 +108,11 @@ proc restore_not_executing_interface {} {
     .main_menu.file.menu entryconfig 11 -state active
 }
 
+proc disable_netedit_locking {} {
+    global disable_network_locking
+    set disable_network_locking "1"
+    restore_not_executing_interface
+}
 
 proc handle_network_executing { var op1 op2} {
     global network_executing maincanvas Color
@@ -108,7 +121,7 @@ proc handle_network_executing { var op1 op2} {
 	$maincanvas itemconfigure bgRect -fill $Color(NetworkEditorLocked) \
 	    -outline $Color(NetworkEditorLocked)
 
-	bind . <Control-u> "restore_not_executing_interface"
+	bind . <Control-u> "disable_netedit_locking"
 	bind . <Control-d> ""
 	bind . <Control-l> ""
 	bind . <Control-z> ""

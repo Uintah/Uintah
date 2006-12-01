@@ -82,16 +82,18 @@ namespace SCIRun {
 static bool
 scheduling_starting_callback(void *data)
 {
+  const string proc("set_network_executing 1");
   GuiInterface* gui = (GuiInterface*)data;
-  gui->set("network_executing", "1");
+  gui->execute(proc);
   return true;
 }
 
 static bool
 scheduling_done_callback(void *data)
 {
+  const string proc("set_network_executing 0");
   GuiInterface* gui = (GuiInterface*)data;
-  gui->set("network_executing", "0");
+  gui->execute(proc);
   return true;
 }
 
