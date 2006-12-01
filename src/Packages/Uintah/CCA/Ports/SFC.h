@@ -503,6 +503,7 @@ void SFC<DIM,LOCS>::ProfileMergeParameters(int repeat)
 
 #define sample(median,block_size, merge_size, blocks, sample_size)                                  \
 {                                                                                                   \
+   float start,finish;                                                                              \
    float median_sum;                                                                                \
    SetMergeParameters(block_size,merge_size,blocks,sample_size);                                    \
    for(int r=0;r<repeat;r++)                                                                        \
