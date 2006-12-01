@@ -38,7 +38,7 @@ SRCDIR := Framework/StandAlone
 
 ########################################################################
 #
-# sr
+# Framework executable
 #
 
 ifeq ($(LARGESOS),yes)
@@ -62,7 +62,7 @@ ifeq ($(HAVE_WX),yes)
   LIBS += $(WX_LIBRARY)
 endif
 
-PROGRAM := sr
+PROGRAM := $(FWK_EXE)
 SRCS := $(SRCDIR)/main.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 

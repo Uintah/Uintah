@@ -66170,6 +66170,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   if test "$HAVE_CPPUNIT" = "yes"; then
      DEF_CPPUNIT="#define HAVE_CPPUNIT 1"
+     HAVE_CPPUNIT="yes"
   fi
 
   if test "$with_cppunit" && test ! "$DEF_CPPUNIT"; then
@@ -66179,12 +66180,13 @@ echo "$as_me: error: One or more of the cppunit components is missing." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
-
-
-
-
-
 fi #end sci_required_cppunit
+
+
+
+
+
+
 
 ##  --  search for loki stuff  -------------------------------------------
 if test "$sci_required_loki" = "yes"; then

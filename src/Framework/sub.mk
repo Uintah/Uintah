@@ -64,13 +64,13 @@ ifeq ($(HAVE_BABEL),yes)
 endif
 
 ifeq ($(HAVE_TAO),yes)
- SUBDIRS += \
-            $(SRCDIR)/Corba \
-            $(SRCDIR)/Tao
+  SUBDIRS += \
+             $(SRCDIR)/Corba \
+             $(SRCDIR)/Tao
 endif
 
 ifeq ($(BUILD_BRIDGE),yes)
-   SUBDIRS += $(SRCDIR)/Bridge
+  SUBDIRS += $(SRCDIR)/Bridge
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -118,12 +118,16 @@ ifeq ($(HAVE_BABEL),yes)
 endif
 
 ifeq ($(HAVE_WX),yes)
- LIBS := $(LIBS) $(WX_LIBRARY)
+  LIBS := $(LIBS) $(WX_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 SUBDIRS := \
            $(SRCDIR)/StandAlone
+
+ifeq ($(BUILD_UNIT_TESTS),yes)
+  SUBDIRS += $(SRCDIR)/UnitTests
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
