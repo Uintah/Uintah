@@ -146,7 +146,6 @@ EventManager::open_trail_file(const string &filename, bool record)
 void
 EventManager::stop_trail_file()
 {
-  cerr << "Stop_trail_file()\n";
   if (!trailfile_stream_) return;
   delete trailfile_stream_;
   trailfile_stream_ = 0;
