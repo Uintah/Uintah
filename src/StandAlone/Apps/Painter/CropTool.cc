@@ -315,7 +315,7 @@ CropTool::set_window_cursor(SliceWindow &window, int cursor)
   return;
   //  if (painter_->event_.window_ != &window || 
   //      window.cursor_pixmap_ == cursor) return;
-  window.cursor_pixmap_ = cursor;
+  //  window.cursor_pixmap_ = cursor;
   string cursor_name;
   switch (cursor) {
   case 1: cursor_name = "bottom_left_corner"; break;

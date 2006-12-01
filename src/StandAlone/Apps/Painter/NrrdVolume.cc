@@ -96,10 +96,7 @@ void
 NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle) 
 {
   nrrd_handle_ = nrrd_handle;
-  //  nrrd_handle_.detach();
-  //  nrrdBasicInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd,0);
-  //  nrrdAxisInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd, 0,0);
-  //  nrrdCopy(nrrd_handle_->nrrd_, nrrd->nrrd);
+  nrrd_handle_->lock.lock();
   Nrrd *n = nrrd_handle_->nrrd_;
 
   stub_axes_.clear();
@@ -138,17 +135,8 @@ NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
     if (n->axis[a].spacing < 0.0)
       n->axis[a].spacing *= -1.0;
   }
-#if 0
-  NrrdRange range;
-  nrrdRangeSet(&range, n, 0);
-  if (data_min_ != range.min || data_max_ != range.max) {
-    data_min_ = range.min;
-    data_max_ = range.max;
-    clut_min_ = range.min;
-    clut_max_ = range.max;
-    opacity_ = 1.0;
-  }
-#endif
+
+  nrrd_handle_->lock.unlock();
   build_index_to_world_matrix();
   dirty_ = true;
   reset_data_range();
@@ -351,21 +339,6 @@ NrrdVolume::vector_to_index(const Vector &v) {
   for (unsigned int i = 0; i < zero_idx.size(); ++i) 
     idx[i] = idx[i] - zero_idx[i];
   return idx;
-    
-//   DenseMatrix transform = transform_;
-//   ColumnMatrix index_matrix(transform.ncols());
-//   ColumnMatrix world_coords(transform.nrows());
-//   for (int i = 0; i < transform.nrows(); ++i)
-//     if (i > 0 && i < 4) 
-//       world_coords[i] = v[i-1];
-//     else       
-//       world_coords[i] = 0.0;;
-//   int tmp, tmp2;
-//   transform.mult_transpose(world_coords, index_matrix, tmp, tmp2);
-//   vector<double> return_val(index_matrix.nrows()-1);
-//   for (unsigned int i = 0; i < return_val.size(); ++i)
-//     return_val[i] = index_matrix[i];
-//   return return_val;
 }
 
 
@@ -379,6 +352,7 @@ NrrdVolume::index_to_vector(const vector<double> &index) {
 
 void
 NrrdVolume::build_index_to_world_matrix() {
+  nrrd_handle_->lock.lock();
   Nrrd *nrrd = nrrd_handle_->nrrd_;
   int dim = nrrd->dim+1;
   DenseMatrix matrix(dim, dim);
@@ -414,6 +388,7 @@ NrrdVolume::build_index_to_world_matrix() {
   matrix.put(dim-1, dim-1, 1.0);
     
   transform_ = matrix;
+  nrrd_handle_->lock.unlock();
 }
 
 bool
@@ -518,38 +493,6 @@ NrrdVolume::write(string fname) {
 #endif
 }
 
-#if 0
-NrrdHandle
-NrrdVolume::create_float_nrrd_from_label()
-{
-
-  NrrdVolume *parent = this;
-  while (parent->parent_) parent = parent->parent_;
-
-  const unsigned char max_bit = sizeof(unsigned int)*8;
-  unsigned char bit = 0;
-  unsigned int used_labels = parent->compute_label_mask();
-  while (bit < max_bit && (used_labels & (1 << bit))) ++bit;
-  if (bit == max_bit) {
-    cerr << "Cannot create child label volume!\n";
-    return 0;
-  }
-
-  unsigned int label = 1 << bit;
-
-  NrrdVolume *vol = 
-    new NrrdVolume(painter_, 
-                   parent->name_+" "+to_string(label), 
-                   nrrd_handle_);
-  vol->label_ = label;
-  vol->parent_ = this;
-  children_.push_back(vol);
-  return vol;
-}
-
-#endif
-
-
 VolumeSliceHandle
 NrrdVolume::get_volume_slice(const Plane &plane) {
   //  return new VolumeSlice(this, plane);
@@ -652,11 +595,6 @@ NrrdVolume::extract_label_as_bit()
 
   return newnrrdh;
 }
-
-
-
-
-
 
 int
 NrrdVolume::bit() {

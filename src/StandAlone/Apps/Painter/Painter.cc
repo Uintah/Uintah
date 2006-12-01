@@ -123,7 +123,7 @@ void
 Painter::redraw_all()
 {
   for (SliceWindows::iterator i = windows_.begin(); i != windows_.end(); ++i) {
-    (*i)->redraw();
+    (*i)->mark_redraw();
   }
 }
 
@@ -144,6 +144,7 @@ Painter::extract_all_window_slices() {
   for (SliceWindows::iterator i = windows_.begin(); i != windows_.end(); ++i) {
     (*i)->extract_slices();
   }
+
   if (volume_texture_.get_rep()) {
     ShowVolumeRendering(0);
   }

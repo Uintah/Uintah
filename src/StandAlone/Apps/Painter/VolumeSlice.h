@@ -47,37 +47,38 @@ class SliceWindow;
 
 class VolumeSlice {
 public:
-  // For LockingHandle
-  Mutex                 lock;
-  int                   ref_cnt;
 
   VolumeSlice(NrrdVolume *, 
               const Plane &,
               NrrdDataHandle nrrd ,
               unsigned int label);
   
-  void                  bind();
-  void                  draw();
-  unsigned int          axis();
-  void                  set_tex_dirty();
-  const Plane &         get_plane() { return plane_; }
+  // For LockingHandle
+  Mutex                                 lock;
+  int                                   ref_cnt;
 
-  NrrdVolume *          volume_;
-  NrrdDataHandle        nrrd_handle_;
+  void                                  bind();
+  void                                  draw();
+  unsigned int                          axis();
+  void                                  set_tex_dirty();
+  const Plane &                         get_plane() { return plane_; }
+
+  NrrdVolume *                          volume_;
+  NrrdDataHandle                        nrrd_handle_;
   
   NrrdBitmaskOutlineHandle              outline_;
   ColorMappedNrrdTextureObjHandle       texture_;
   GeomHandle                            geom_texture_;
 
 private:
-  void                  extract_nrrd_slice_from_volume();
-  Plane                 plane_;
-  unsigned int          label_;
-  bool                  tex_dirty_;
+  void                                  extract_nrrd_slice_from_volume();
+  Plane                                 plane_;
+  unsigned int                          label_;
+  bool                                  tex_dirty_;
   
-  Point                 pos_;
-  Vector                xdir_;
-  Vector                ydir_;
+  Point                                 pos_;
+  Vector                                xdir_;
+  Vector                                ydir_;
   
 
 };
