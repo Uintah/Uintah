@@ -624,22 +624,26 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
                   this, &PassiveScalar::errorEstimate, false);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  d_matl_sub, gac, 1);
+  
+  t->requires(Task::NewDW, d_scalar->scalar_CCLabel,  d_matl_sub, gac,1);
   
   t->computes(d_scalar->mag_grad_scalarLabel, d_matl_sub);
   t->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   t->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
  
-  // define the material set of 0 and whatever the passive scalar index is
+  // define the material set of 0 and whatever the passive scalar index is 
+  // don't add matl 0 twice 
   MaterialSet* matl_set;
-  vector<int> m(2);
-  m[0] = 0;
-  m[1] = d_matl->getDWIndex();
+  vector<int> m;
+  m.push_back(0);
+  if(d_matl->getDWIndex() != 0){
+    m.push_back(d_matl->getDWIndex());
+  }
   matl_set = new MaterialSet();
   matl_set->addAll(m);
   matl_set->addReference();
-  
-  sched->addTask(t, coarseLevel->eachPatch(), matl_set);
+    
+  sched->addTask(t, coarseLevel->eachPatch(), matl_set); 
 }
 /*_____________________________________________________________________
  Function~  PassiveScalar::errorEstimate--
