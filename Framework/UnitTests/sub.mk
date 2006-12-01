@@ -26,34 +26,22 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component
+SRCDIR := Framework/UnitTests
 
-SUBDIRS := \
-           $(SRCDIR)/argtest    \
-           $(SRCDIR)/framework  \
-           $(SRCDIR)/memstress  \
-           $(SRCDIR)/mitest	    \
-           $(SRCDIR)/objects    \
-           $(SRCDIR)/pingpong	  \
-           $(SRCDIR)/spectest   \
-           $(SRCDIR)/pp	        \
-           $(SRCDIR)/stopserver
+PROGRAM := $(SRCDIR)/test
 
-ifeq ($(HAVE_MPI),yes)
-  SUBDIRS += \
-             $(SRCDIR)/pingpongArr   \
-             $(SRCDIR)/mxnargtest    \
-             $(SRCDIR)/Jacobi        \
-             $(SRCDIR)/LUFactor      \
-             $(SRCDIR)/OESort        \
-             $(SRCDIR)/subsetter     \
-             $(SRCDIR)/ppArr         \
-             $(SRCDIR)/passPPtr      \
-             $(SRCDIR)/exceptiontest \
-             $(SRCDIR)/testDT
-endif
+SRCS := \
+        $(SRCDIR)/AbstractFrameworkTest.cc \
+        $(SRCDIR)/main.cc
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+PSELIBS := \
+            Framework \
+            Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
+            Core/Thread Core/Exceptions Core/Util
+
+#cppunit libs
+LIBS := $(CPPUNIT_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk

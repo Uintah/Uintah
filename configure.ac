@@ -5389,6 +5389,7 @@ if test "$sci_required_cppunit" = "yes" ; then
 
   if test "$HAVE_CPPUNIT" = "yes"; then
      DEF_CPPUNIT="#define HAVE_CPPUNIT 1"
+     HAVE_CPPUNIT="yes"
   fi
 
   if test "$with_cppunit" && test ! "$DEF_CPPUNIT"; then
@@ -5396,12 +5397,13 @@ if test "$sci_required_cppunit" = "yes" ; then
     AC_MSG_ERROR(One or more of the cppunit components is missing.)
   fi
 
-  AC_SUBST(HAVE_CPPUNIT)
-  AC_SUBST(DEF_CPPUNIT)
-  AC_SUBST(INC_CPPUNIT_H)
-  AC_SUBST(CPPUNIT_LIB_FLAG)
-  AC_SUBST(CPPUNIT_LIB_DIR_FLAG)
 fi #end sci_required_cppunit
+
+AC_SUBST(HAVE_CPPUNIT)
+AC_SUBST(DEF_CPPUNIT)
+AC_SUBST(INC_CPPUNIT_H)
+AC_SUBST(CPPUNIT_LIB_FLAG)
+AC_SUBST(CPPUNIT_LIB_DIR_FLAG)
 
 ##  --  search for loki stuff  -------------------------------------------
 if test "$sci_required_loki" = "yes"; then
