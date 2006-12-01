@@ -36,7 +36,7 @@ SRCS     += \
             $(SRCDIR)/TTClient.cc
 
 PSELIBS  := \
-            Core/CCA/PIDL Core/CCA/spec \
+            Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
             Core/Thread Core/Containers Core/Exceptions \
             CCA/Components/TableTennis
 

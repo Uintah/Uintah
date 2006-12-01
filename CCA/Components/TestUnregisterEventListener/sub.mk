@@ -30,7 +30,7 @@ SRCDIR := CCA/Components/TestUnregisterEventListener
 
 SRCS += $(SRCDIR)/TestUnregisterEventListener.cc \
 
-PSELIBS :=  Core/CCA/PIDL  \
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL  \
   Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
 ifeq ($(HAVE_GUI),yes)

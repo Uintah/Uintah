@@ -31,7 +31,7 @@ SRCDIR := CCA/Components/TestSendEvent
 SRCS += $(SRCDIR)/TestSendEvent.cc
 
 PSELIBS := \
-           Framework Core/CCA/PIDL Core/CCA/spec \
+           Framework Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
            Core/Thread Core/Containers Core/Exceptions
 
 ifeq ($(HAVE_GUI),yes)

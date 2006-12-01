@@ -43,10 +43,10 @@ SRCS     += \
             $(SRCDIR)/TxtConnection.cc \
             $(SRCDIR)/TxtMessage.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
+PSELIBS := Framework Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
            Core/Thread Core/Containers Core/Exceptions
 
-LIBS := $(NCURSES_LIBRARY) $(LIBS)
+LIBS := $(NCURSES_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
