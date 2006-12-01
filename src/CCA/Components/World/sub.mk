@@ -37,7 +37,7 @@ SRCS     += \
             $(SRCDIR)/World.cc
 
 PSELIBS := \
-           Core/CCA/PIDL Core/CCA/spec \
+           Framework Core/CCA/PIDL Core/CCA/SSIDL Core/CCA/spec \
            Core/Thread Core/Containers Core/Exceptions
 
 ifeq ($(HAVE_GUI),yes)

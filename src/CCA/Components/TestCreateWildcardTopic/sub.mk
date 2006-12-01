@@ -30,8 +30,9 @@ SRCDIR := CCA/Components/TestCreateWildcardTopic
 
 SRCS += $(SRCDIR)/TestCreateWildcardTopic.cc \
 
-PSELIBS := Core/CCA/PIDL  \
-  Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
+           Core/Thread Core/Containers Core/Exceptions
 
 ifeq ($(HAVE_GUI),yes)
   LIBS := $(WX_LIBRARY)

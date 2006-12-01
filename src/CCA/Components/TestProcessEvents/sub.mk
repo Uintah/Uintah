@@ -30,7 +30,7 @@ SRCDIR := CCA/Components/TestProcessEvents
 
 SRCS += $(SRCDIR)/TestProcessEvents.cc \
 
-PSELIBS := Core/CCA/PIDL  \
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL  \
   Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
 ifeq ($(HAVE_GUI),yes)

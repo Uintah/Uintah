@@ -38,7 +38,7 @@ SRCS     += \
 #$(SRCDIR)/Matrix.cc
 
 PSELIBS  := \
-            Core/CCA/PIDL Core/CCA/spec \
+            Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
             Core/Thread Core/Containers Core/Exceptions
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
