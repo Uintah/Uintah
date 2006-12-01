@@ -79,20 +79,15 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
                                   Painter *painter) :  
   Skinner::Parent(variables), 
   painter_(painter),
-  name_(variables->get_id()),
   slices_(),
-  purge_volumes_(false),
   recompute_slices_(false),
   center_(0,0,0),
   normal_(0,0,0),
   axis_(2),
-  zoom_(0,100.0),
-  slab_min_(0,0),
-  slab_max_(0,0),
-  //  redraw_(true),
-  autoview_(true),
-  show_guidelines_(0,1),
-  cursor_pixmap_(-1),
+  zoom_(100.0),
+  slab_min_(0),
+  slab_max_(0),
+  show_guidelines_(1),
   pdown_(0),
   color_(variables, "SliceWindow::color", Skinner::Color(0,0,0,0)),
   show_grid_(variables, "SliceWindow::GridVisible",1),
@@ -104,7 +99,6 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
 {
   Skinner::Var<int> axis(variables, "axis", 2);
   set_axis(axis());
-  //  axis_ = axis;
   REGISTER_CATCHER_TARGET(SliceWindow::redraw);
   REGISTER_CATCHER_TARGET(SliceWindow::do_PointerEvent);
   REGISTER_CATCHER_TARGET(SliceWindow::Autoview);
@@ -115,12 +109,22 @@ SliceWindow::SliceWindow(Skinner::Variables *variables,
 
 
 void
-SliceWindow::redraw() {
+SliceWindow::mark_redraw() {
   throw_signal("SliceWindow::mark_redraw");
 }
 
+
 void
-SliceWindow::push_gl_2d_view() {
+SliceWindow::render_guide_lines(Point mouse) {
+  if (!show_guidelines_) return;
+
+  //  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
+  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
+
+  double vpw = get_region().width();
+  double vph = get_region().height();
+
+  // Push 2D gl view
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -129,33 +133,9 @@ SliceWindow::push_gl_2d_view() {
   glLoadIdentity();
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
-  double vpw = get_region().width();
-  double vph = get_region().height();
   glScaled(1.0/vpw, 1.0/vph, 1.0);
   CHECK_OPENGL_ERROR();
-}
 
-
-void
-SliceWindow::pop_gl_2d_view() {
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  CHECK_OPENGL_ERROR();
-}
-
-
-void
-SliceWindow::render_guide_lines(Point mouse) {
-  if (!show_guidelines_()) return;
-
-  //  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 0.8 };
-  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
-
-  push_gl_2d_view();
-  double vpw = get_region().width();
-  double vph = get_region().height();
 
   glColor4dv(white);
   glBegin(GL_LINES); 
@@ -166,7 +146,13 @@ SliceWindow::render_guide_lines(Point mouse) {
   glEnd();
   CHECK_OPENGL_ERROR();
 
-  pop_gl_2d_view();
+  // Pop 2D gl view
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
+
 
 }
 
@@ -261,68 +247,6 @@ double mod_d(double dividend, double divisor) {
 }
 
 
-void
-SliceWindow::render_frame(double x,
-                                   double y,
-                                   double border_wid,
-                                   double border_hei,
-                                   double *color1,
-                                   double *color2)
-{
-  const double vw = get_region().width();
-  const double vh = get_region().height();
-  if (color1)
-    glColor4dv(color1);
-
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-  CHECK_OPENGL_ERROR();
-
-  glMatrixMode(GL_MODELVIEW);
-  glPushMatrix();
-  glLoadIdentity();
-  glScaled(2.0, 2.0, 2.0);
-  glTranslated(-.5, -.5, -.5);
-  glScaled(1.0/vw, 1.0/vh, 1.0);
-  CHECK_OPENGL_ERROR();
-
-  glBegin(GL_QUADS);
-  glVertex3d(x,y,0);
-  glVertex3d(vw-x,y,0);
-  glVertex3d(vw-x,y+border_hei,0);
-  glVertex3d(x,y+border_hei,0);
-
-  glVertex3d(vw-x-border_wid,y+border_hei,0);
-  glVertex3d(vw-x,y+border_hei,0);
-  glVertex3d(vw-x,vh-y,0);
-  glVertex3d(vw-x-border_wid,vh-y,0);
-
-  if (color2)
-    glColor4dv(color2);
-
-  glVertex3d(x,vh-y,0);
-  glVertex3d(vw-x,vh-y,0);
-  glVertex3d(vw-x-border_wid,vh-y-border_hei,0);
-  glVertex3d(x,vh-y-border_hei,0);
-
-  glVertex3d(x,y,0);
-  glVertex3d(x+border_wid,y+border_hei,0);
-  glVertex3d(x+border_wid,vh-y-border_hei,0);
-  glVertex3d(x,vh-y-border_hei,0);
-
-  glEnd();
-  CHECK_OPENGL_ERROR();
-
-  glPopMatrix();
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  CHECK_OPENGL_ERROR();
-}
-
-  
-
-
 // renders vertical and horizontal bars that represent
 // selected slices in other dimensions
 void
@@ -362,13 +286,6 @@ SliceWindow::render_grid()
   const int vw = Ceil(region.width());
   const int vh = Ceil(region.height());
 
-  //  double grey1[4] = { 0.75, 0.75, 0.75, 1.0 };
-  //  double grey2[4] = { 0.5, 0.5, 0.5, 1.0 };
-  //  double grey3[4] = { 0.25, 0.25, 0.25, 1.0 };
-  //  double white[4] = { 1,1,1,1 };
-  //  render_frame(0,0, 15, 15, grey1);
-  //  render_frame(15,15, 3, 3, white, grey2 );
-  //  render_frame(17,17, 2, 2, grey3);
   double grid_color = 0.25;
 
   glDisable(GL_TEXTURE_2D);
@@ -485,10 +402,9 @@ SliceWindow::y_axis()
 void
 SliceWindow::setup_gl_view()
 {
-  //  glViewport(region_.x1(), region_.y1(), 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  //  CHECK_OPENGL_ERROR();
+
   if (axis_ == 0) { // screen +X -> +Y, screen +Y -> +Z
     glRotated(-90,0.,1.,0.);
     glRotated(-90,1.,0.,0.);
@@ -503,16 +419,16 @@ SliceWindow::setup_gl_view()
   glGetDoublev(GL_PROJECTION_MATRIX, gl_projection_matrix_);
   CHECK_OPENGL_ERROR();
 
-  double hwid = get_region().width()*50.0/zoom_();
-  double hhei = get_region().height()*50.0/zoom_();
+  double hwid = get_region().width()  * 50.0 / zoom_;
+  double hhei = get_region().height() * 50.0 / zoom_;
 
   double cx = center_(x_axis());
   double cy = center_(y_axis());
   
   double diagonal = hwid*hwid+hhei*hhei;
 
-  double maxz = center_(axis_) + diagonal*zoom_()/100.0;
-  double minz = center_(axis_) - diagonal*zoom_()/100.0;
+  double maxz = center_(axis_) + diagonal * zoom_ / 100.0;
+  double minz = center_(axis_) - diagonal * zoom_ / 100.0;
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -591,76 +507,6 @@ SliceWindow::render_orientation_text()
   text->render(ttext,get_region().width()/2, get_region().height()-2, 
                TextRenderer::N | TextRenderer::SHADOW | TextRenderer::REVERSE);
 #endif
-}
-
-
-
-void
-SliceWindow::render_progress_bar() {
-  GLdouble grey[4] = { 0.6, 0.6, 0.6, 0.6 }; 
-  GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 }; 
-  GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
-  GLdouble yellow[4] = { 1.0, 0.76, 0.1, 1.0 };
-  GLdouble lt_yellow[4] = { 0.8, 0.5, 0.1, 1.0 };  
-  
-  GLdouble *colors[5] = { lt_yellow, yellow, black, grey, white };
-  GLdouble widths[5] = { 11, 9.0, 7.0, 5.0, 1.0 }; 
-
-  push_gl_2d_view();
-
-  double vpw = get_region().width();
-  double vph = get_region().height();
-  double x_off = 50;
-  double h = 50;
-  double gap = 5;
-  //  double y_off = 20;
-
-  Point ll(x_off, vph/2.0 - h/2, 0);
-  Point lr(vpw-x_off, vph/2.0 - h/2, 0);
-  Point ur(vpw-x_off, vph/2.0 + h/2, 0);
-  Point ul(x_off, vph/2.0 + h/2, 0);
-
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  glEnable(GL_LINE_SMOOTH);
-  for (int pass = 2; pass < 5; ++pass) {
-    glColor4dv(colors[pass]);
-    glLineWidth(widths[pass]);    
-
-    glBegin(GL_LINE_LOOP);
-    {
-      glVertex3dv(&ll(0));
-      glVertex3dv(&lr(0));
-      glVertex3dv(&ur(0));
-      glVertex3dv(&ul(0));
-    }
-    glEnd();
-  }
-  glLineWidth(1.0);
-  glDisable(GL_LINE_SMOOTH);
-  CHECK_OPENGL_ERROR();
-
-  Vector right = Vector(vpw - 2 *x_off - 2*gap, 0, 0);
-  Vector up = Vector(0, h - gap * 2, 0);
-
-  ll = ll + Vector(gap, gap, 0);
-  lr = ll + right;
-  ur = lr + up;
-  ul = ll + up;
-
-  glColor4dv(yellow);
-  glBegin(GL_QUADS);
-  glVertex3dv(&ll(0));
-  glVertex3dv(&lr(0));
-  glVertex3dv(&ur(0));
-  glVertex3dv(&ul(0));
-  glEnd();
-  CHECK_OPENGL_ERROR();
-  
-
-
-  pop_gl_2d_view();
 }
 
 
@@ -801,11 +647,6 @@ SliceWindow::render_slices()
 }
 
 
-
-
-
-
-
 void
 SliceWindow::extract_slices() {
   recompute_slices_ = true;
@@ -819,8 +660,7 @@ SliceWindow::set_axis(unsigned int axis) {
   normal_ = Vector(axis == 0 ? 1 : 0,
                    axis == 1 ? 1 : 0,
                    axis == 2 ? 1 : 0);
-  extract_slices();
-  //  redraw_ = true;
+  recompute_slices_ = true;
 }
 
 void
@@ -833,43 +673,22 @@ SliceWindow::set_probe() {
   vector<double> nindex = vol->point_to_index(newcenter);
   if (nindex[axis_+1] >= 0 && nindex[axis_+1] < vol->max_index(axis_+1)) {
     center_ = newcenter;
-    extract_slices();
+    recompute_slices_ = true;
   }
 }
 
-
 void
-SliceWindow::prev_slice()
-{
-
+SliceWindow::move_slice(int amount) {
   NrrdVolumeHandle &vol = painter_->current_volume_;
   if (!vol.get_rep()) return;
-  vector<double> delta = vol->vector_to_index(normal_);
+  vector<double> delta = vol->vector_to_index(-normal_ * amount);
   unsigned int index = max_vector_magnitude_index(delta);
   delta[index] /= fabs(delta[index]);
   Point newcenter = center_ - vol->index_to_vector(delta);
   vector<double> nindex = vol->point_to_index(newcenter);
   if (nindex[axis_+1] >= 0 && nindex[axis_+1] < vol->max_index(axis_+1)) {
     center_ = newcenter;
-    extract_slices();
-    painter_->redraw_all();
-  }
-}
-
-
-void
-SliceWindow::next_slice()
-{
-  NrrdVolumeHandle vol = painter_->current_volume_;
-  if (!vol.get_rep()) return;
-  vector<double> delta = vol->vector_to_index(-normal_);
-  unsigned int index = max_vector_magnitude_index(delta);
-  delta[index] /= fabs(delta[index]);
-  Point newcenter = center_ - vol->index_to_vector(delta);
-  vector<double> nindex = vol->point_to_index(newcenter);
-  if (nindex[axis_+1] >= 0 && nindex[axis_+1] < vol->max_index(axis_+1)) {
-    center_ = newcenter;
-    extract_slices();
+    recompute_slices_ = true;
     painter_->redraw_all();
   }
 }
@@ -878,7 +697,7 @@ BaseTool::propagation_state_e
 SliceWindow::zoom_in(event_handle_t)
 {
   zoom_ *= 1.1;
-  redraw();
+  mark_redraw();
   return CONTINUE_E;
 }
 
@@ -887,7 +706,7 @@ BaseTool::propagation_state_e
 SliceWindow::zoom_out(event_handle_t)
 {
   zoom_ /= 1.1;
-  redraw();
+  mark_redraw();
   return CONTINUE_E;
 }
   
@@ -945,7 +764,6 @@ SliceWindow::Autoview(event_handle_t) {
 
 void
 SliceWindow::autoview(NrrdVolumeHandle &volume, double offset) {
-  autoview_ = false;
   double wid = get_region().width() -  2*offset;
   double hei = get_region().height() - 2*offset;
 
@@ -974,7 +792,7 @@ SliceWindow::autoview(NrrdVolumeHandle &volume, double offset) {
     center_ = Point(0,0,0);
     zoom_ = 100;
   }
-  redraw();
+  mark_redraw();
 }
 
 BaseTool::propagation_state_e
@@ -1109,19 +927,7 @@ SliceWindow::redraw(event_handle_t) {
   }
 
 
-  //  get_vars()->change_parent("value", value, "string", true);
-  //get_vars()->change_parent("clut_min_max", clut_min_max, "string", true);
-  //get_vars()->change_parent("clut_ww_wl", clut_ww_wl, "string", true);
-  //get_vars()->change_parent("xyz_pos", xyz_pos, "string", true);
-  //get_vars()->change_parent("sca_pos", sca_pos, "string", true);
-
-    
-
   setup_gl_view();
-  if (autoview_) {
-    autoview(painter_->current_volume_);
-    setup_gl_view();
-  }
   CHECK_OPENGL_ERROR();
 
   // Render the individual slices

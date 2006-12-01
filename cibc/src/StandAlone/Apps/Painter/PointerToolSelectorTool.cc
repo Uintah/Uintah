@@ -86,14 +86,14 @@ PointerToolSelectorTool::pointer_down(int button, int x, int y,
     if (modifiers & EventModifiers::SHIFT_E)
       window.zoom_in(0);
     else
-      window.next_slice();
+      window.move_slice(1);
     break;
     
   case 5:
     if (modifiers & EventModifiers::SHIFT_E)
       window.zoom_out(0);
     else
-      window.prev_slice();
+      window.move_slice(-1);
     break;
   default: 
     break;

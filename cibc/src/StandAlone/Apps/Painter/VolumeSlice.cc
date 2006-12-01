@@ -39,29 +39,14 @@
 #include <iostream>
 #include <sci_gl.h>
 #include <sci_algorithm.h>
-#include <Core/Bundle/Bundle.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Datatypes/Field.h> 
-#include <Core/Exceptions/GuiException.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Skinner/GeomSkinnerVarSwitch.h>
-#include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Core/Geom/OpenGLViewport.h>
-#include <Core/Geom/FreeType.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Thread/CleanupManager.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/Environment.h>
-#include <Core/Volume/CM2Widget.h>
-#include <Core/Geom/TextRenderer.h>
-#include <Core/Geom/FontManager.h>
 #include <Core/Geom/GeomColorMappedNrrdTextureObj.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/EventManager.h>
@@ -112,8 +97,6 @@ VolumeSlice::VolumeSlice(NrrdVolume *volume,
 
   if (!nrrd_handle_.get_rep()) {
     extract_nrrd_slice_from_volume();
-  } else {
-    cerr << "";
   }
 
   if (!nrrd_handle_.get_rep()) {
@@ -401,15 +384,12 @@ VolumeSlice::draw()
   if (!nrrd_handle_.get_rep()) return;
   if (!texture_.get_rep() || !outline_.get_rep()) return;
 
-  //  float a = volume_->opacity_;
-  //  glColor4f(a,a,a,a);
   glDisable(GL_CULL_FACE);
   glEnable(GL_BLEND);
   glDisable(GL_LIGHTING);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glShadeModel(GL_FLAT);
-  //  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   CHECK_OPENGL_ERROR();  
 
 

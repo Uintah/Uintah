@@ -68,8 +68,8 @@ KeyToolSelectorTool::key_press(string, int keyval,
   switch (keyval) {
   case SCIRun_equal:    window.zoom_in(0); break;
   case SCIRun_minus:    window.zoom_out(0); break;
-  case SCIRun_comma:    window.prev_slice(); break;
-  case SCIRun_period:   window.next_slice(); break;
+  case SCIRun_comma:    window.move_slice(-1); break;
+  case SCIRun_period:   window.move_slice(1); break;
     //  case SCIRun_u:        painter_->undo_volume();
     //  case SCIRun_a:        tm_.add_tool(new CropTool(painter_),100); break;
     //  case SCIRun_f:        tm_.add_tool(new FloodfillTool(painter_),100); break;
