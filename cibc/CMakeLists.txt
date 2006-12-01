@@ -35,9 +35,9 @@ PROJECT(CIBC_Core)
 #-----------------------------------------------------------------------------
 # SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
 # in src/scirunrc
-SET(SCIRUN_VERSION_MAJOR "1")
-SET(SCIRUN_VERSION_MINOR "25")
-SET(SCIRUN_VERSION_PATCH "3")
+SET(SCIRUN_VERSION_MAJOR "3")
+SET(SCIRUN_VERSION_MINOR "0")
+SET(SCIRUN_VERSION_PATCH "0")
 
 # Version string should not include patch level.  The major.minor is
 # enough to distinguish available features of the toolkit.
@@ -840,6 +840,9 @@ INCLUDE_DIRECTORIES(
 SUBDIRS(src Testing)
 
 #----------------------------------------------------------------------------
+# for now set make install directory to current binary directory
+SET(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR})
+
 # Help other projects use SCIRun Core
 
 # Copy the UseSCIRUN.cmake file to the binary tree for backward compatability.
@@ -858,7 +861,7 @@ EXPORT_LIBRARY_DEPENDENCIES(${PROJECT_BINARY_DIR}/SCIRUNLibraryDepends.cmake)
 INCLUDE (${PROJECT_SOURCE_DIR}/sciGenerateSCIRUNConfig.cmake)
 
 # Install some files.
-INSTALL_FILES(/include/SCIRun .h sciConfigure)
+#INSTALL_FILES(/include/SCIRun .h sciConfigure)
 INSTALL_FILES(/lib/SCIRun .cmake UseSCIRUN SCIRUNLibraryDepends)
 
 
