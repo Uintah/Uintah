@@ -157,7 +157,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   sched->overrideVariableBehavior("specific_heat",true, true, false);
   sched->overrideVariableBehavior("gamma",        true, true, false);
   sched->overrideVariableBehavior("vol_frac_CC",  true, true, false);
-  sched->overrideVariableBehavior("sp_vol_CC",    false, true, false);
+  sched->overrideVariableBehavior("sp_vol_CC",    d_with_mpm, true, false);
   if (d_with_mpm)
     sched->overrideVariableBehavior("temp_CC",      true, true, false);
 
