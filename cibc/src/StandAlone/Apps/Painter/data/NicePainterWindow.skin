@@ -13,16 +13,16 @@
         <signal name="SliceWindow::mark_redraw" 
                 target="GLWindow::mark_redraw"/>
 
-
-
-
-        <!--
-            <object class="Root::Text">
-            <var name="visible">$PainterWindow::show_tools</var>
-            <var name="text">$cursor_value</var>
-            <var name="anchor">SW</var>
-            </object>
-        -->
+        <object class="Root::Text">
+          <var name="visible">$PainterWindow::show_tools</var>
+          <var name="text">$cursor_value</var>
+          <var name="fgcolor">#FFFFFFFF</var>
+          <var name="bgcolor">#000000FF</var>
+          <var name="shadow">1</var>
+          <var name="offsetx">-1</var>
+          <var name="offsety">1</var>
+          <var name="anchor">SW</var>
+        </object>
 
         <object class="Grid">                
           <var name="cols">2</var>

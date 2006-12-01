@@ -121,12 +121,16 @@
   <var name="LayerSaveDialog::visible" propagate="yes">0</var>
   <var name="QuitDialog::visible" propagate="yes">0</var>
 
+  <xi:include href="CheckButtonTemplate.skin" parse="xml"/>  
   <xi:include href="GrabFocusRegion.skin" parse="xml"/>  
   <xi:include href="ShadowedBox.skin" parse="xml"/>  
   <xi:include href="Button2.skin" parse="xml"/>
   <xi:include href="ImageButton.skin" parse="xml"/>
-  <xi:include href="ImageFrameButton.skin" parse="xml"/>
+
+  <xi:include href="EyeCheckButton.skin" parse="xml"/>
+  <xi:include href="ExpandArrowCheckButton.skin" parse="xml"/>
   <xi:include href="TextCheckButton.skin" parse="xml"/>
+
   <xi:include href="SliceFrame.skin" parse="xml"/>
   <xi:include href="FrameButton.skin" parse="xml"/>
 
@@ -157,7 +161,7 @@
   <xi:include href="FileLoadBox.skin" parse="xml"/>
   <xi:include href="QuitDialog.skin" parse="xml"/>
   <xi:include href="SpinnerBox.skin" parse="xml"/>
-  <xi:include href="ExpandButton.skin" parse="xml"/>
+
 
   <xi:include href="LabeledSpinnerBox.skin" parse="xml"/>
   <xi:include href="MainToolbar.skin" parse="xml"/>
