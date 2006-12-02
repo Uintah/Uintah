@@ -823,7 +823,7 @@ SliceWindow::do_PointerEvent(event_handle_t event) {
       painter_->status_ = "Value: " + to_string(val);
       mark_redraw();
     } else {
-      status_ = "";
+      painter_->status_ = "";
     }
   } else if (pdown_ && painter_->cur_window_ == this) {
     unsigned int state = PointerEvent::BUTTON_RELEASE_E;
