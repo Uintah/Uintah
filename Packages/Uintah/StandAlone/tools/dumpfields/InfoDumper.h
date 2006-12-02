@@ -11,7 +11,7 @@ namespace Uintah {
   
   class InfoOpts {
   public:
-    InfoOpts(Args & args);
+    InfoOpts(SCIRun::Args & args);
     
     bool  showeachmat;
     
