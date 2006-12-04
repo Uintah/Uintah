@@ -45,6 +45,10 @@
 
 #include <Core/Datatypes/FieldIndex.h>
 
+#ifdef _WIN32
+#include <iterator>
+#endif
+
 namespace SCIRun {
 
 
@@ -65,6 +69,11 @@ struct FieldIteratorBase {
   { return index_ != a.index_; }
 
   inline T operator*() { return index_; }
+
+#ifdef _WIN32
+  typedef std::bidirectional_iterator_tag iterator_category;
+  typedef T difference_type;
+#endif
 
 protected:
   T index_;
@@ -91,6 +100,11 @@ struct NodeIterator : public FieldIteratorBase<T> {
   //! Required interface for an FieldIterator.
   inline 
   NodeIndex<T> operator*() { return NodeIndex<T>(this->index_); }
+#ifdef _WIN32
+  typedef NodeIndex<T> value_type;
+  typedef NodeIndex<T>* pointer;
+  typedef NodeIndex<T>& reference;
+#endif
 };
 
 //! Distinct type for edge Iterator.
@@ -104,6 +118,11 @@ struct EdgeIterator : public FieldIteratorBase<T> {
   //! Required interface for an FieldIterator.
   inline 
   EdgeIndex<T> operator*() { return EdgeIndex<T>(this->index_); }
+#ifdef _WIN32
+  typedef EdgeIndex<T> value_type;
+  typedef EdgeIndex<T>* pointer;
+  typedef EdgeIndex<T>& reference;
+#endif
 };
 
 //! Distinct type for face Iterator.

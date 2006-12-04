@@ -232,18 +232,19 @@ Win32GLContextRunnable::win_Wheel(MSG winevent)
     state |= PointerEvent::BUTTON_4_E;
   else
     state |= PointerEvent::BUTTON_5_E;
-  //if (winevent.wParam & MK_LBUTTON) state |= PointerEvent::BUTTON_1_E;
-  //if (winevent.wParam & MK_MBUTTON) state |= PointerEvent::BUTTON_2_E;
-  //if (winevent.wParam & MK_RBUTTON) state |= PointerEvent::BUTTON_3_E;
-  //if (wineventp->state & Button4Mask) state |= PointerEvent::BUTTON_4_E;
-  //if (wineventp->state & Button5Mask) state |= PointerEvent::BUTTON_5_E;
-  
+
   sci_event->set_pointer_state(state);
   sci_event->set_x(MOUSE_X(winevent.lParam));
   sci_event->set_y(context_->height_ - 1 - MOUSE_Y(winevent.lParam));
   cout << "Wheel: " << MOUSE_X(winevent.lParam) << " " << context_->height_ - 1 - MOUSE_Y(winevent.lParam) << endl;
   sci_event->set_time(winevent.time);
-  return sci_event;
+
+  // The Skinner wants a down and up event together 
+  PointerEvent *event2 = new PointerEvent((state &~ PointerEvent::BUTTON_PRESS_E)|PointerEvent::BUTTON_RELEASE_E,
+    sci_event->get_x(), sci_event->get_y(), sci_event->get_target(), sci_event->get_time());
+
+  EventManager::add_event(sci_event);
+  return event2;  // let the loop add this one
 }
 
 event_handle_t
