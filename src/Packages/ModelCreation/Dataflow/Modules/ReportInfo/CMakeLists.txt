@@ -26,7 +26,37 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules
+# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/ReportInfo
 
-SUBDIRS(BreakPoint ChangeFieldData ChangeMesh Converter CreateField ExampleFields FieldProperty FieldsData FiniteElements Math ReportInfo Script SelectionMask Time)
+SET(Packages_ModelCreation_Dataflow_Modules_ReportInfo_SRCS
+  ReportDataArrayInfo.cc
+  ReportMatrixInfo.cc
+  ReportFieldInfo.cc
+)
 
+ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_ReportInfo ${Packages_ModelCreation_Dataflow_Modules_ReportInfo_SRCS})
+
+TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_ReportInfo
+  Core_Datatypes
+  Dataflow_Network
+  Core_Persistent
+  Core_Containers
+  Core_Util
+  Core_Exceptions
+  Core_Thread
+  Dataflow_GuiInterface
+  Core_Geom
+  Core_Datatypes
+  Core_Geometry
+  Core_GeomInterface
+  Dataflow_TkExtensions
+  Core_Algorithms_Fields
+  Core_Algorithms_Converter
+  ${TK_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
+)
+
+IF(BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Packages_ModelCreation_Dataflow_Modules_ReportInfo)
+ENDIF(BUILD_SHARED_LIBS)

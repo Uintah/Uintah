@@ -26,7 +26,47 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules
+# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/ChangeMesh
 
-SUBDIRS(BreakPoint ChangeFieldData ChangeMesh Converter CreateField ExampleFields FieldProperty FieldsData FiniteElements Math ReportInfo Script SelectionMask Time)
+SET(Packages_ModelCreation_Dataflow_Modules_ChangeMesh_SRCS
+  CalculateLinkBetweenOppositeFieldBoundaries.cc
+  CalculateMeshNodes.cc
+  ConvertMeshToPointCloud.cc
+  ConvertMeshToTetVol.cc
+  ConvertMeshToTriSurf.cc
+  ConvertToUnstructuredMesh.cc
+  FindClosestNodeIndexByValue.cc
+  FindClosestNodeIndex.cc
+  GetBoundingBox.cc
+  MergeMeshNodes.cc
+  ScaleFieldMeshAndData.cc
+)
 
+ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_ChangeMesh ${Packages_ModelCreation_Dataflow_Modules_ChangeMesh_SRCS})
+
+TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_ChangeMesh
+  Core_Datatypes
+  Dataflow_Network
+  Core_Persistent
+  Core_Containers
+  Core_Util
+  Core_Exceptions
+  Core_Thread
+  Dataflow_GuiInterface
+  Core_Geom
+  Core_Datatypes
+  Core_Geometry
+  Core_GeomInterface
+  Dataflow_TkExtensions
+  Packages_ModelCreation_Core_Datatypes
+  Core_Algorithms_Fields
+  Core_Algorithms_Converter
+  Core_Algorithms_ArrayMath
+  ${TK_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
+)
+
+IF(BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Packages_ModelCreation_Dataflow_Modules_ChangeMesh)
+ENDIF(BUILD_SHARED_LIBS)

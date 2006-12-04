@@ -26,17 +26,34 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/FieldsData
+# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/ChangeFieldData
 
-SET(Packages_ModelCreation_Dataflow_Modules_FieldsData_SRCS
-  ModalMapping.cc
-  SelectByFieldData.cc
-  SelectByFieldsData.cc
+SET(Packages_ModelCreation_Dataflow_Modules_ChangeFieldData_SRCS
+  CalculateDistanceToFieldBoundary.cc
+  CalculateDistanceToField.cc
+  CalculateFieldData.cc
+  CalculateFieldsData.cc
+  CalculateInsideWhichField.cc
+  CalculateIsInsideField.cc
+  CalculateSignedDistanceToField.cc
+  ConvertIndicesToFieldData.cc
+  ConvertMappingMatrixToFieldData.cc
+  CreateFieldData.cc
+  GetFieldData.cc
+  MapCurrentDensityOntoField.cc
+  MapFieldDataFromElemToNode.cc
+  MapFieldDataFromNodeToElem.cc
+  MapFieldDataGradientOntoField.cc
+  MapFieldDataOntoFieldNodes.cc
+  ReportFieldDataMeasures.cc
+  SelectAndSetFieldData.cc
+  SelectAndSetFieldsData.cc
+  SetFieldData.cc
 )
 
-ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_FieldsData ${Packages_ModelCreation_Dataflow_Modules_FieldsData_SRCS})
+ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_ChangeFieldData ${Packages_ModelCreation_Dataflow_Modules_ChangeFieldData_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_FieldsData
+TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_ChangeFieldData
   Core_Datatypes
   Dataflow_Network
   Core_Persistent
@@ -61,5 +78,5 @@ TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_FieldsData
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_ModelCreation_Dataflow_Modules_FieldsData)
+  ADD_DEFINITIONS(-DBUILD_Packages_ModelCreation_Dataflow_Modules_ChangeFieldData)
 ENDIF(BUILD_SHARED_LIBS)

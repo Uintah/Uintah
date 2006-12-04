@@ -26,7 +26,37 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules
+# CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/FieldProperty
 
-SUBDIRS(BreakPoint ChangeFieldData ChangeMesh Converter CreateField ExampleFields FieldProperty FieldsData FiniteElements Math ReportInfo Script SelectionMask Time)
+SET(Packages_ModelCreation_Dataflow_Modules_FieldProperty_SRCS
+  InsertMatrixIntoFieldProperties.cc
+  InsertStringIntoFieldProperties.cc
+  GetMatrixFromFieldProperties.cc
+  GetStringFromFieldProperties.cc
+)
 
+ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_FieldProperty ${Packages_ModelCreation_Dataflow_Modules_FieldProperty_SRCS})
+
+TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_FieldProperty
+  Core_Datatypes
+  Dataflow_Network
+  Core_Persistent
+  Core_Containers
+  Core_Util
+  Core_Exceptions
+  Core_Thread
+  Dataflow_GuiInterface
+  Core_Geom
+  Core_Datatypes
+  Core_Geometry
+  Core_GeomInterface
+  Dataflow_TkExtensions
+  ${TK_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
+  ${TEEM_LIBRARY}
+)
+
+IF(BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Packages_ModelCreation_Dataflow_Modules_FieldProperty)
+ENDIF(BUILD_SHARED_LIBS)
