@@ -66,7 +66,7 @@ protected:
 DECLARE_MAKER(WriteString)
 
 WriteString::WriteString(GuiContext* ctx)
-  : GenericWriter<StringHandle>("WriteString", ctx, "DataIO", "ModelCreation"),
+  : GenericWriter<StringHandle>("WriteString", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false)),
     gui_exporttype_(get_ctx()->subVar("exporttype")),
     gui_increment_(get_ctx()->subVar("increment")),
