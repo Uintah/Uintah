@@ -33,7 +33,7 @@ SET(Core_Algorithms_DataIO_SRCS
 )
 
 IF(ITK_FOUND)
-  SET(Core_Algorithms_DataIO_SRCS ${Core_Algorithms_DatIO_SRCS}
+  SET(Core_Algorithms_DataIO_SRCS DataIOAlgo.cc
       AnalyzeImage.cc AnalyzeReader.cc AnalyzeSliceImageIO.cc)
 ENDIF(ITK_FOUND)
 
