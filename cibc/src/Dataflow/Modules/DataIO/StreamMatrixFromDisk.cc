@@ -112,6 +112,8 @@ StreamMatrixFromDisk::execute()
   filename = guifilename_.get();
   if (filename == "") return;
 
+  FileName = scinew String(filename); 
+
   // Get Indices or Weights 
   get_input_handle("Indices",Indices,false);
   get_input_handle("Weights",Weights,false);
