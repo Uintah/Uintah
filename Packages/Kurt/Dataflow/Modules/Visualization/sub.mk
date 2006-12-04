@@ -23,7 +23,6 @@ PSELIBS := \
         Core/Geom Core/GeomInterface \
 	Core/Geometry Dataflow/Widgets Core/XMLUtil \
 	Core/Util \
-	Packages/Kurt/Core/Geom \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/CCA/Ports       \
 	Packages/Uintah/Core/ProblemSpec \
@@ -32,6 +31,7 @@ PSELIBS := \
 
 #Core/GLVolumeRenderer \
 #Packages/Uintah/Dataflow \
+#Packages/Kurt/Core/Geom \
 
 
 LIBS := $(XML_LIBRARY)  $(GL_LIBRARY) $(M_LIBRARY)
