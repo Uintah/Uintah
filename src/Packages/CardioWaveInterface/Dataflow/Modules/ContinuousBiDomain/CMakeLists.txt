@@ -26,31 +26,44 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/CardioWaveInterface/Core/XML
+# CMakeLists.txt for Packages/CardioWaveInterface/Dataflow/Modules/ContinuousBiDomain
 
-SET(Packages_CardioWaveInterface_Core_XML_SRCS
-  MembraneXML.cc
-  SynapseXML.cc
-  OutputXML.cc
-  CWSolverXML.cc
-  NWSolverXML.cc
-  CWTimeStepXML.cc
-  NWTimeStepXML.cc
-  CardioWaveXML.cc
-  NeuroWaveXML.cc
+SET(Packages_CardioWaveInterface_Dataflow_Modules_ContinuousBiDomain_SRCS
+  CBDAddMembrane.cc
+  CBDAddReference.cc
+  CBDAddStimulus.cc
+  CBDCreateDomain.cc
+  CBDGenerateSimulation.cc
+  CBDSetupSimulation.cc
 )
 
-ADD_LIBRARY(Packages_CardioWaveInterface_Core_XML ${Packages_CardioWaveInterface_Core_XML_SRCS})
+ADD_LIBRARY(Packages_CardioWaveInterface_Dataflow_Modules_ContinuousBiDomain ${Packages_CardioWaveInterface_Dataflow_Modules_ContinuousBiDomain_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Core_XML
+TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Dataflow_Modules_ContinuousBiDomain
   Core_Datatypes
+  Dataflow_Network
   Core_Persistent
   Core_Containers
   Core_Util
-  Core_XMLUtil
-  ${XML2_LIBRARY}
+  Core_Exceptions
+  Core_Thread
+  Dataflow_GuiInterface
+  Core_Geom
+  Core_Datatypes
+  Core_Geometry
+  Core_GeomInterface
+  Dataflow_TkExtensions
+  Core_Bundle
+  Core_Algorithms_Converter
+  Core_Algorithms_Fields
+  Core_Algorithms_Math
+  Packages_CardioWaveInterface_Core_XML
+  Packages_CardioWaveInterface_Core_Model
+  ${TK_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Core_XML)
+  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Dataflow_Modules_ContinuousBiDomain)
 ENDIF(BUILD_SHARED_LIBS)
