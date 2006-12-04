@@ -84,7 +84,7 @@ ParticleFlowRenderer::ParticleFlowRenderer() :
   frozen_(false),
   buffer_(LEFT),
   time_(0.0),
-  time_increment_(0.05f),
+  time_increment_(-0.05f),
   nsteps_(1),
   step_size_(1.0),
   flow_tex_(0),
@@ -332,7 +332,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 #endif
 
 
-    double time;
+
     if( !frozen_){
       if( part_tex_dirty_ ){
         cerr<<"particle texture is dirty\n";
@@ -466,14 +466,14 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
           //           cerr<<", ";
           //         }
         }
-      
+
         //   // Set up initial uniform values
         shader_->initialize_uniform( "ParticleTrans", 1, false, &(matf[0]));
         shader_->initialize_uniform( "MeshTrans", 1, false, &(mmmatf[0]));
-        shader_->initialize_uniform( "StartPositions", 0 );
-        shader_->initialize_uniform( "Positions", 1 );      
-        shader_->initialize_uniform( "Flow", 2 );      
-        shader_->initialize_uniform( "Time", GLfloat(-time_increment_));
+        shader_->initialize_uniform( "StartPositions", GLint(0) );
+        shader_->initialize_uniform( "Positions", GLint(1) );      
+        shader_->initialize_uniform( "Flow", GLint(2) );      
+        shader_->initialize_uniform( "Time", GLfloat(time_increment_));
         shader_->initialize_uniform( "Step", GLfloat( step_size_));
 
       }
