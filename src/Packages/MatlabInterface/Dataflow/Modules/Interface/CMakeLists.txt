@@ -49,7 +49,7 @@ TARGET_LINK_LIBRARIES(Packages_MatlabInterface_Dataflow_Modules_Interface
   Dataflow_TkExtensions
   Dataflow_Network
   Core_XMLUtil
-  Packages_MatlabInterface_Core_Datatypes
+  Core_Matlab
   Core_Services
   Core_ICom
   Core_SystemCall
