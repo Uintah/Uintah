@@ -14,11 +14,14 @@
     </signal>
         
     <signal name="button_1_clicked" target="Button::clicked"/>
+    <signal name="button_1_clicked" target="GLWindow::redraw_drawable"/>
+    
     <signal name="button_1_released" target="Button::released"/>
+    <signal name="button_1_released" target="GLWindow::redraw_drawable"/>
     
     <object class="Frame">      
-      <var name="width" overwrite="no">2</var>
-      <var name="height" overwrite="no">2</var>
+      <var name="width" overwrite="no">3</var>
+      <var name="height" overwrite="no">3</var>
       <var name="color1">$Button::color1</var>
       <var name="color2">$Button::color2</var>
       <var name="invert">$CheckButton::state</var>
