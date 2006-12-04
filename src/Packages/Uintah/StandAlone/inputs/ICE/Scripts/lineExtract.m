@@ -40,6 +40,16 @@ plotRefineFlag  = false;
 startEnd ={'-istart -1 0 0 -iend 100 0 0';'-istart 0 0 0 -iend 200 0 0' ;'-istart 0 0 0 -iend 200 0 0'};
 
 %________________________________
+% do the Uintah utilities exist
+[s0, r0]=unix('puda');
+[s1, r1]=unix('lineextract');
+if( s0 ~=0 || s1 ~= 0)
+  disp('Cannot execute uintah utilites puda or lineextract');
+  disp('  a) make sure you are in the right directory, and');
+  disp('  b) the utilities (puda/lineextract) have been compiled');
+end
+
+%________________________________
 %  extract the physical time for each dump
 c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
 [status0, result0]=unix(c0);
