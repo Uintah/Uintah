@@ -129,7 +129,7 @@
       <position x="94" y="174"/>
       <var name="preserve-scalar-type" val="{0}"/>
     </module>
-    <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiledCompiled" package="SCIRun">
+    <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="103" y="251"/>
       <var name="function" val="{double phi, r, uu, vv;
 
