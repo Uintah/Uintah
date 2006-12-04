@@ -28,15 +28,15 @@
 
 # CMakeLists.txt for Packages/CardioWaveInterface/Core/Datatypes
 
-SET(Packages_CardioWave_Core_Datatypes_SRCS
+SET(Packages_CardioWaveInterface_Core_Datatypes_SRCS
   CardioWaveConverter.cc
   Startup.cc
   cardiowaveIEplugin.cc
 )
 
-ADD_LIBRARY(Packages_CardioWave_Core_Datatypes ${Packages_CardioWave_Core_Datatypes_SRCS})
+ADD_LIBRARY(Packages_CardioWaveInterface_Core_Datatypes ${Packages_CardioWaveInterface_Core_Datatypes_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_Datatypes
+TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Core_Datatypes
   Core_Datatypes
   Core_Persistent
   Core_Exceptions
@@ -53,5 +53,5 @@ TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_Datatypes
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_CardioWave_Core_Datatypes)
+  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Core_Datatypes)
 ENDIF(BUILD_SHARED_LIBS)

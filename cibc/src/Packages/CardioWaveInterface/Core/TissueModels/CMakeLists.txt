@@ -28,13 +28,13 @@
 
 # CMakeLists.txt for Packages/CardioWaveInterface/Core/TissueModels
 
-SET(Packages_CardioWave_Core_TissueModels_SRCS
+SET(Packages_CardioWaveInterface_Core_TissueModels_SRCS
   RegularBundle.cc
 )
 
-ADD_LIBRARY(Packages_CardioWave_Core_TissueModels ${Packages_CardioWave_Core_TissueModels_SRCS})
+ADD_LIBRARY(Packages_CardioWaveInterface_Core_TissueModels ${Packages_CardioWaveInterface_Core_TissueModels_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_TissueModels
+TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Core_TissueModels
   Core_Datatypes
   Dataflow_Network
   Core_Persistent
@@ -58,5 +58,5 @@ TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_TissueModels
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_CardioWave_Core_TissueModels)
+  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Core_TissueModels)
 ENDIF(BUILD_SHARED_LIBS)

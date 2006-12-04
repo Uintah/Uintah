@@ -26,7 +26,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/CardioWaveInterface/Core
+# CMakeLists.txt for Packages/CardioWaveInterface
 
 SUBDIRS(Datatypes Model TissueModels XML)
 

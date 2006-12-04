@@ -28,15 +28,15 @@
 
 # CMakeLists.txt for Packages/CardioWaveInterface/Core/Model
 
-SET(Packages_CardioWave_Core_Model_SRCS
+SET(Packages_CardioWaveInterface_Core_Model_SRCS
   ModelAlgo.cc
   BuildMembraneTable.cc
   BuildStimulusTable.cc
 )
 
-ADD_LIBRARY(Packages_CardioWave_Core_Model ${Packages_CardioWave_Core_Model_SRCS})
+ADD_LIBRARY(Packages_CardioWaveInterface_Core_Model ${Packages_CardioWaveInterface_Core_Model_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_Model
+TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Core_Model
   Core_Datatypes
   Dataflow_Network
   Core_Persistent
@@ -59,5 +59,5 @@ TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_Model
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_CardioWave_Core_Model)
+  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Core_Model)
 ENDIF(BUILD_SHARED_LIBS)

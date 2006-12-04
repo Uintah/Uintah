@@ -26,31 +26,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/CardioWaveInterface/Core/XML
+# CMakeLists.txt for Packages/CardioWaveInterface
 
-SET(Packages_CardioWaveInterface_Core_XML_SRCS
-  MembraneXML.cc
-  SynapseXML.cc
-  OutputXML.cc
-  CWSolverXML.cc
-  NWSolverXML.cc
-  CWTimeStepXML.cc
-  NWTimeStepXML.cc
-  CardioWaveXML.cc
-  NeuroWaveXML.cc
-)
+SUBDIRS(Core Dataflow StandAlone)
 
-ADD_LIBRARY(Packages_CardioWaveInterface_Core_XML ${Packages_CardioWaveInterface_Core_XML_SRCS})
-
-TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Core_XML
-  Core_Datatypes
-  Core_Persistent
-  Core_Containers
-  Core_Util
-  Core_XMLUtil
-  ${XML2_LIBRARY}
-)
-
-IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Core_XML)
-ENDIF(BUILD_SHARED_LIBS)
