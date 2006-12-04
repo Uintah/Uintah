@@ -4,10 +4,10 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
 SRCDIR := Packages/Kurt
 SUBDIRS := \
-	$(SRCDIR)/Core \
 	$(SRCDIR)/Dataflow \
-#	$(SRCDIR)/StandAlone \
 #[INSERT NEW CODE FILE HERE]
+#	$(SRCDIR)/StandAlone \
+#	$(SRCDIR)/Core \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
