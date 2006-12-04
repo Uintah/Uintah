@@ -39,8 +39,7 @@ SRCS     += $(SRCDIR)/init.cc \
             $(SRCDIR)/NrrdToMatrix_Plugin.cc \
             $(SRCDIR)/SimpleTextFileToMatrix_Plugin.cc \
             $(SRCDIR)/SimpleTextFileToTriSurf_Plugin.cc \
-            
-            
+
 PSELIBS := \
   Core/Algorithms/DataIO \
   Core/Algorithms/Converter \
@@ -49,13 +48,12 @@ PSELIBS := \
 	Core/Basis				\
 	Core/Exceptions   \
 	Core/Geometry     \
-	Dataflow/GuiInterface \
 	Core/ImportExport \
 	Core/Persistent   \
 	Core/Thread       \
 	Core/Util         \
-  Core/Matlab
-	
+	Core/Matlab
+
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
