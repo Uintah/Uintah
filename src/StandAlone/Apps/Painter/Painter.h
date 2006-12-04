@@ -124,7 +124,6 @@ public:
 
   static Skinner::DrawableMakerFunc_t   maker;
   static string                         class_name() { return "Painter"; }
-  virtual int                           get_signal_id(const string &signalname) const;
   void                                  redraw_all();
   void                                  extract_all_window_slices();
 private:

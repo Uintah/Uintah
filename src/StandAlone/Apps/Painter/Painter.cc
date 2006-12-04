@@ -396,43 +396,6 @@ Painter::undo_volume() {
 }
 
 
-         
-
-
-#ifdef HAVE_INSIGHT
-
-#if 0
-void
-Painter::filter_callback_const(const itk::Object *object,
-                               const itk::EventObject &event)
-{
-  itk::ProcessObject::ConstPointer process = 
-    dynamic_cast<const itk::ProcessObject *>(object);
-  ASSERT(process);
-  double value = process->GetProgress();
-  if (typeid(itk::ProgressEvent) == typeid(event))
-  {
-    std::cerr << "Const Filter Progress: " << value * 100.0 << "%\n";
-  }
-
-  if (typeid(itk::IterationEvent) == typeid(event))
-  {
-    std::cerr << "Const Filter Iteration: " << value * 100.0 << "%\n";
-  }
-}
-#endif
-#endif // HAVE_INSIGHT
-
-
-int
-Painter::get_signal_id(const string &signalname) const {
-  if (signalname == "SliceWindow_Maker") return 1;
-  if (signalname == "LayerButton_Maker") return 2;
-  if (signalname == "Painter::start_brush_tool") return 3;
-  return 0;
-}
-
-
 
 Skinner::Drawable *
 Painter::maker(Skinner::Variables *vars) 

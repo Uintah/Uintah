@@ -79,7 +79,7 @@
               <var name="row">7</var>
               <var name="cell-height">25</var>
 
-              <object class="ImageFrameButton">
+              <object class="EyeCheckButton">
                 <var name="CheckButton::state" propagate="yes">$SliceWindow::SlicesVisible</var>
                 <signal name="Button::clicked" 
                         target="GLWindow::mark_redraw"/>

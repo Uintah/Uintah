@@ -99,8 +99,6 @@
   <var name="light_blue" propagate="yes">#000022FF</var>
 -->
 
-
-
   <var name="dark_blue" propagate="yes">#444466FF</var>
 
   <var name="button_color" propagate="yes">#BBBBFFFF</var>
@@ -122,14 +120,17 @@
   <var name="QuitDialog::visible" propagate="yes">0</var>
 
   <xi:include href="CheckButtonTemplate.skin" parse="xml"/>  
+  <xi:include href="CheckButton.skin" parse="xml"/>  
+  <xi:include href="LabeledCheckButton.skin" parse="xml"/>  
+  <xi:include href="EyeCheckButton.skin" parse="xml"/>
+  <xi:include href="ExpandArrowCheckButton.skin" parse="xml"/>
+  <xi:include href="TextCheckButton.skin" parse="xml"/>
+
   <xi:include href="GrabFocusRegion.skin" parse="xml"/>  
   <xi:include href="ShadowedBox.skin" parse="xml"/>  
   <xi:include href="Button2.skin" parse="xml"/>
   <xi:include href="ImageButton.skin" parse="xml"/>
 
-  <xi:include href="EyeCheckButton.skin" parse="xml"/>
-  <xi:include href="ExpandArrowCheckButton.skin" parse="xml"/>
-  <xi:include href="TextCheckButton.skin" parse="xml"/>
 
   <xi:include href="SliceFrame.skin" parse="xml"/>
   <xi:include href="FrameButton.skin" parse="xml"/>
