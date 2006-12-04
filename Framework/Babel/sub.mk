@@ -35,22 +35,17 @@ OUTPUTDIR :=${OBJTOP_ABS}/$(SRCDIR)
 
 INCLUDES := -I$(OUTPUTDIR) $(INCLUDES)
 
-ifeq ($(HAVE_QT),yes)
-  LIBS := $(QT_LIBRARY) $(LIBS)
+ifeq ($(IS_OSX),yes)
+  CP_FLAGS :=
+else
+  CP_FLAGS := -u
 endif
 
 ${OUTPUTDIR}/framework.make: ${FWKSIDL} Core/Babel/timestamp
-  ifeq ($(IS_OSX),yes)
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
-	cp $(dir $<)*Impl.* $(dir $@)
+	cp $(CP_FLAGS) $(dir $<)*Impl.* $(dir $@)
 	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} $<
-	mv  $(dir $@)babel.make $@
-  else
-	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
-	cp -u $(dir $<)*Impl.* $(dir $@)
-	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} $<
-	mv  $(dir $@)babel.make $@
-  endif
+	mv $(dir $@)babel.make $@
 
 ${OUTPUTDIR}/cca.make: ${CCASIDL}
 	$(BABEL) --client=C++ --output-directory=${dir $@} $<
