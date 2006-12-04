@@ -347,6 +347,7 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
     {   // start engine
       putmsg("MatlabEngine: trying to start matlab engine");
       std::string startmatlab = getparameter("startmatlab");
+      
       putmsg("MatlabEngine: Get matlab startup command " + startmatlab);
       if (startmatlab == "")
         {
@@ -419,25 +420,25 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
   putmsg("MatlabEngine: Send test to matlab to see whether it is working");
   matlab_handle_->dolock();
   if (!(matlab_handle_->start_test_))
-    {
-      // We print it backwards in case there is a loop back, this way
-      // it tests matlab engine properly
-      std::string testcode = "fprintf(1,fliplr('n\\n\\TSET-DESSAP-ENIGNEBALTAMn\\'))\n";
-      matlab_handle_->put_stdin_int(testcode);
-      matlab_handle_->start_test_ = true;
-    }
+  {
+    // We print it backwards in case there is a loop back, this way
+    // it tests matlab engine properly
+    std::string testcode = "fprintf(1,fliplr('n\\n\\TSET-DESSAP-ENIGNEBALTAMn\\'))\n";
+    matlab_handle_->put_stdin_int(testcode);
+    matlab_handle_->start_test_ = true;
+  }
         
   if (!(matlab_handle_->passed_test_))
-    {
-      int secondstowait = 180;        // built in  default time we should wait before matlab is launched
-      std::string timetowait = getparameter("matlabtimeout");
-      if (timetowait!="")
-        {
-          std::istringstream iss(timetowait);
-          iss >> secondstowait;
-          if (secondstowait  < 1) secondstowait = 180;
-        }
-                
+  {
+    int secondstowait = 180;        // built in  default time we should wait before matlab is launched
+    std::string timetowait = getparameter("matlabtimeout");
+    if (timetowait!="")
+      {
+        std::istringstream iss(timetowait);
+        iss >> secondstowait;
+        if (secondstowait  < 1) secondstowait = 180;
+      }
+              
 #ifndef _WIN32
       // FIX
       struct timeval  tv;
@@ -445,18 +446,18 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
       gettimeofday(&tv,0);
       tm.tv_nsec = 0;
       tm.tv_sec = tv.tv_sec + secondstowait;
+      matlab_handle_->wait_test_.timedWait( matlab_handle_->lock, &tm);
 #endif
 
-      if (!(matlab_handle_->passed_test_))
-        {
-          matlab_handle_->unlock();
-          packet->settag(TAG_MERROR);
-          packet->setstring("Matlab did not launch properly, it failed in the testing stage");
-                                                
-          return(false);
-        }
-        
-    }
+    if (!(matlab_handle_->passed_test_))
+    {
+      matlab_handle_->unlock();
+      packet->settag(TAG_MERROR);
+      packet->setstring("Matlab did not launch properly, it failed in the testing stage");
+                                            
+      return(false);
+    }      
+  }
   matlab_handle_->unlock();
 
 
