@@ -30,9 +30,9 @@
 
 SET(Packages_ModelCreation_Dataflow_Modules_FiniteElements_SRCS
   BuildFEMatrix.cc
-  CreateLinkBetweenMeshAndCompGrid.cc
-  CreateLinkBetweenMeshAndCompGridByDomain.cc
   CreateFEDirichletBC.cc
+  CreateLinkBetweenMeshAndCompGridByDomain.cc
+  CreateLinkBetweenMeshAndCompGrid.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_FiniteElements ${Packages_ModelCreation_Dataflow_Modules_FiniteElements_SRCS})
