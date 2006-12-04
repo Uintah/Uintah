@@ -28,7 +28,7 @@ bool out_of_bounds( vec4 pos )
     vec4 p = MeshTrans * pos;
 //    vec3 shift = vec3( 0.5 );
 //    vec3 r = p.xyz + shift;
-    vec3 r = p.xyz;
+      vec3 r = p.xyz;
 
     if (r.x < 0.0 || r.y < 0.0 || r.z < 0.0 ||
         r.x >= 1.0 || r.y >= 1.0 || r.z >= 1.0 ) {
@@ -46,9 +46,10 @@ void main (void)
     // transform this to get the flow texture index
     vec3 flow_pos = (MeshTrans * vec4(pos.xyz, 1.0)).xyz;
     vec4 dir = texture3D(Flow, flow_pos);
-    pos += vec4(dir.xyz, Time)*Step;
+//    pos += vec4(dir.xyz, Time)*Step;
+    pos += vec4( dir.xyz * Step, Time);
 
-    if (pos.w <= 0.0 || out_of_bounds( vec4( vec3(pos), 1.0) ) ) {   
+    if (pos.w <= 0.0 || out_of_bounds( vec4( pos.xyz, 1.0) ) ) {   
         vec4 start_pos =  texture2D( StartPositions, TexCoord0 );
         pos = ParticleTrans * vec4(start_pos.xyz, 1.0);
         pos.w = start_pos.w;
