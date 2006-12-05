@@ -3758,60 +3758,65 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
   _sci_lib_dir=
   _sci_inc=
 
-  if test "$with_petsc"; then
-    _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$PETSC_ARCH"
-    _sci_inc="$with_petsc/bmake/$PETSC_ARCH $with_petsc/include"
-  else
-    # Modify _sci_dirs to have correct path information:
-    for i in $sci_thirdparty_dir; do
-      if test ! -d "$i"; then
-        continue
-      fi
+  for petsc_arch in "$PETSC_ARCH" linux-gnu; do
+    if test "$HAVE_PETSC" = "yes"; then
+      break
+    fi
+
+    if test "$with_petsc"; then
+      _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$petsc_arch"
+      _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
+    else
+      # Modify _sci_dirs to have correct path information:
+      for i in $sci_thirdparty_dir; do
+        if test ! -d "$i"; then
+          continue
+        fi
   
-      #this is where the lib actually lives
-      if test ! -d "$i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"; then
-        continue
-      fi
+        #this is where the lib actually lives
+        if test ! -d "$i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$petsc_arch"; then
+          continue
+        fi
   
-      _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$PETSC_ARCH"
-      _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$PETSC_ARCH"
-    done  
-  fi
+        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$petsc_arch"
+        _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+      done  
+    fi
 
 # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
 # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
-  SCI_TRY_LINK(PETSC,
-               petsc libraries and headers,
-               petsc.h,
-               $_sci_inc /usr/include/petsc,
-               petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-               $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
-               $INC_MPI_H -DMPIPP_H,
-               ,
-               optional)
+    SCI_TRY_LINK(PETSC,
+                 petsc libraries and headers,
+                 petsc.h,
+                 $_sci_inc /usr/include/petsc,
+                 petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+                 $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
+                 $INC_MPI_H -DMPIPP_H,
+                 ,
+                 optional)
 
-  if test "$HAVE_PETSC" = "yes" ; then
-    DEF_PETSC="#define HAVE_PETSC 1"
-  else
-    # Give it a shot on the old petsc version if we're not doing Uintah
-    if test "$pkg_Uintah" != "yes"; then
-      SCI_TRY_LINK(PETSC,
-                   petsc libraries and headers (old),
-                   petsc.h,
-                   $_sci_inc /usr/include/petsc,
-                   petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-                   $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
-                   $INC_MPI_H -DMPIPP_H,
-                   ,
-                   optional)
-      if test "$HAVE_PETSC" = "yes"; then
-        DEF_PETSC="#define HAVE_PESC 1"
-      fi
-    fi  
+    if test "$HAVE_PETSC" = "yes" ; then
+      DEF_PETSC="#define HAVE_PETSC 1"
+    else
+      # Give it a shot on the old petsc version if we're not doing Uintah
+      if test "$pkg_Uintah" != "yes"; then
+        SCI_TRY_LINK(PETSC,
+                     petsc libraries and headers (old),
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+                     $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
+                     $INC_MPI_H -DMPIPP_H,
+                     ,
+                     optional)
+        if test "$HAVE_PETSC" = "yes"; then
+          DEF_PETSC="#define HAVE_PESC 1"
+        fi
+      fi  
 
-  fi    
-    
+    fi    
+  done  
   if test "$with_petsc" && test ! "$DEF_PETSC"; then
     echo
     AC_MSG_ERROR(One or more of the PETSc components is missing.)
