@@ -99,7 +99,7 @@ function[q_slab, gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x,
       q_slab(j) = q(j) * mass_slab(j) + mass(j) * grad_x(j) * gradLim(j) * rx(j);
     end
     if(advOrder == 1)   % first order
-      q_slab(j) = q(j) * mass_slab(j)
+      q_slab(j) = q(j) * mass_slab(j);
     end
   end
 end

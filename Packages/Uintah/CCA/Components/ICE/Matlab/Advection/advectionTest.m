@@ -22,7 +22,7 @@ delT     = 1000;
 nTimesteps  = 100;
 dx_initial  = 0.01;          % initial value for dx
 
-advOrder  = 1;               % first order = 1, second order = 2
+advOrder  = 2;               % first order = 1, second order = 2
 
 refineRatio = 2;
 fl_begin    = 0.3;           % fine level begin
