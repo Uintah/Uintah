@@ -116,8 +116,9 @@ ConvertMatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH)
   
   NrrdData *nd = scinew NrrdData();
   nrrdAlloc_nva(nd->nrrd_, nrrdTypeDouble, 1, size);
-  nrrdAxisInfoSet_nva(nd->nrrd_, nrrdAxisInfoLabel, "column-data");
-  nd->nrrd_->axis[0].kind = nrrdKindDomain;
+
+  nrrdAxisInfoSet_va(nd->nrrd_, nrrdAxisInfoKind, nrrdKindDomain);
+  nrrdAxisInfoSet_va(nd->nrrd_, nrrdAxisInfoLabel, "column-data");
 
   double *val = (double*)nd->nrrd_->data;
   double *data = matrix->get_data();
