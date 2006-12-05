@@ -122,7 +122,7 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
 
   //TODO: assume type is always good?
   std::string lastname=componentType.substr(componentType.find('.')+1);
-  std::string so_name("lib/libCCA_Components_");
+  std::string so_name("libCCA_Components_");
   so_name = so_name + lastname + ".so";
 
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
