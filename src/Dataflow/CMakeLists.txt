@@ -136,7 +136,8 @@ SET(IS_OSX "no")
 SET(IS_WIN "no")
 SET(IS_AIX "no")
 
-SET(CFLAGS "-Wall -g ")
+# CFLAGS is only used in the on-the-fly-libs Makefile.
+SET(CFLAGS "${CMAKE_CXX_FLAGS}")
 
 IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
   SET(SO_OR_A_FILE "dylib" CACHE STRING "library extension")
@@ -158,6 +159,9 @@ ELSE(WIN32 AND NOT CYGWIN)
 ENDIF(WIN32 AND NOT CYGWIN)
 
 MARK_AS_ADVANCED(SO_OR_A_FILE)
+
+# Add the dynamic libary creation flags to the CFLAGS (-fPIC, etc).
+SET(CFLAGS "${CFLAGS} ${CMAKE_SHARED_LIBRARY_CXX_FLAGS}")
 
 IF(WIN32)
   CONFIGURE_FILE (
