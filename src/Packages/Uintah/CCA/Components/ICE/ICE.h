@@ -1030,6 +1030,10 @@ namespace Uintah {
        const VarLabel* var_X_FC_flux;
        const VarLabel* var_Y_FC_flux;
        const VarLabel* var_Z_FC_flux;
+       
+       const VarLabel* var_X_FC_corr;
+       const VarLabel* var_Y_FC_corr;
+       const VarLabel* var_Z_FC_corr;
       };
       
       class ICEModelSetup : public ModelSetup {

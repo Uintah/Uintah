@@ -153,6 +153,9 @@ ICE::~ICE()
     VarLabel::destroy(rvar->var_X_FC_flux);
     VarLabel::destroy(rvar->var_Y_FC_flux);
     VarLabel::destroy(rvar->var_Z_FC_flux);
+    VarLabel::destroy(rvar->var_X_FC_corr);
+    VarLabel::destroy(rvar->var_Y_FC_corr);
+    VarLabel::destroy(rvar->var_Z_FC_corr);
   } 
   
   // delete models
@@ -5718,6 +5721,13 @@ void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
   t->var_Y_FC_flux = VarLabel::create(var->getName()+"_Y_FC_flux", 
                                 SFCYVariable<double>::getTypeDescription());
   t->var_Z_FC_flux = VarLabel::create(var->getName()+"_Z_FC_flux", 
+                                SFCZVariable<double>::getTypeDescription());
+                                
+  t->var_X_FC_corr = VarLabel::create(var->getName()+"_X_FC_corr", 
+                                SFCXVariable<double>::getTypeDescription());
+  t->var_Y_FC_corr = VarLabel::create(var->getName()+"_Y_FC_corr", 
+                                SFCYVariable<double>::getTypeDescription());
+  t->var_Z_FC_corr = VarLabel::create(var->getName()+"_Z_FC_corr", 
                                 SFCZVariable<double>::getTypeDescription());
   d_reflux_vars.push_back(t);
 }
