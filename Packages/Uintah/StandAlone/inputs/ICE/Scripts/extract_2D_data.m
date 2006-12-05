@@ -14,8 +14,6 @@ clear function;
 %________________________________
 % USER INPUTS
 uda = 'impHotBlob.uda'
-n_x_cells = 20;
-n_y_cells = 20;
 
 desc = 'Semi-Implicit hot blob';
 desc2 = 'Example: of 2D lineextract';
@@ -93,6 +91,9 @@ for(n = 1:nDumps )
         x     = v1{1,L}(:,1);
         y     = v1{1,L}(:,2);
         value = v1{1,L}(:,4);
+        n_x_cells = length(unique(x));
+        n_y_cells = length(unique(y));
+        
         z = reshape(value,[n_x_cells n_y_cells]);
        
         subplot(numPlotRows,numPlotCols,plotNum),contour(x(1:n_x_cells),y(1:n_y_cells:end),z,100);
