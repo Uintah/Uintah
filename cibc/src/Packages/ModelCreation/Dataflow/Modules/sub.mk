@@ -18,7 +18,6 @@ SUBDIRS := \
 	$(SRCDIR)/CreateField\
 	$(SRCDIR)/ExampleFields\
 	$(SRCDIR)/FieldProperty\
-	$(SRCDIR)/FieldsData\
 	$(SRCDIR)/FiniteElements\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/ReportInfo\

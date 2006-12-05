@@ -54,7 +54,7 @@ class ModalMapping : public Module {
 
 DECLARE_MAKER(ModalMapping)
 ModalMapping::ModalMapping(GuiContext* ctx)
-  : Module("ModalMapping", ctx, Source, "FieldsData", "ModelCreation"),
+  : Module("ModalMapping", ctx, Source, "ChangeFieldData", "ModelCreation"),
     mappingmethod_(ctx->subVar("mappingmethod")),
     integrationmethod_(ctx->subVar("integrationmethod")),
     integrationfilter_(ctx->subVar("integrationfilter")),

@@ -71,7 +71,7 @@ class SelectByFieldsData : public Module {
 
 DECLARE_MAKER(SelectByFieldsData)
 SelectByFieldsData::SelectByFieldsData(GuiContext* ctx)
-  : Module("SelectByFieldsData", ctx, Source, "FieldsData", "ModelCreation"),
+  : Module("SelectByFieldsData", ctx, Source, "ChangeFieldData", "ModelCreation"),
   guifunction_(get_ctx()->subVar("function"))
 {
 }
