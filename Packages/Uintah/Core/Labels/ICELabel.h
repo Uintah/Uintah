@@ -153,7 +153,7 @@ namespace Uintah {
     const VarLabel* sp_vol_X_FC_fluxLabel;
     const VarLabel* sp_vol_Y_FC_fluxLabel;
     const VarLabel* sp_vol_Z_FC_fluxLabel;
-    
+
     const VarLabel* int_eng_X_FC_fluxLabel;
     const VarLabel* int_eng_Y_FC_fluxLabel;
     const VarLabel* int_eng_Z_FC_fluxLabel;
@@ -161,6 +161,27 @@ namespace Uintah {
     const VarLabel* vol_frac_X_FC_fluxLabel;
     const VarLabel* vol_frac_Y_FC_fluxLabel;
     const VarLabel* vol_frac_Z_FC_fluxLabel;
+    
+    // face centered corrections computed in refluxing
+    const VarLabel* mass_X_FC_corrLabel;
+    const VarLabel* mass_Y_FC_corrLabel;
+    const VarLabel* mass_Z_FC_corrLabel;
+    
+    const VarLabel* mom_X_FC_corrLabel;
+    const VarLabel* mom_Y_FC_corrLabel;
+    const VarLabel* mom_Z_FC_corrLabel;
+    
+    const VarLabel* sp_vol_X_FC_corrLabel;
+    const VarLabel* sp_vol_Y_FC_corrLabel;
+    const VarLabel* sp_vol_Z_FC_corrLabel;
+    
+    const VarLabel* int_eng_X_FC_corrLabel;
+    const VarLabel* int_eng_Y_FC_corrLabel;
+    const VarLabel* int_eng_Z_FC_corrLabel;
+    
+    const VarLabel* vol_frac_X_FC_corrLabel;
+    const VarLabel* vol_frac_Y_FC_corrLabel;
+    const VarLabel* vol_frac_Z_FC_corrLabel;
 
     // Implicit AMR variables
     const VarLabel* matrix_CFI_weightsLabel;
