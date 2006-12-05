@@ -28,11 +28,14 @@ SRCS     += \
 	$(SRCDIR)/MapFieldDataFromElemToNode.cc\
 	$(SRCDIR)/MapFieldDataFromNodeToElem.cc\
 	$(SRCDIR)/MapFieldDataGradientOntoField.cc\
-        $(SRCDIR)/MapFieldDataOntoFieldNodes.cc\
+	$(SRCDIR)/MapFieldDataOntoFieldNodes.cc\
 	$(SRCDIR)/ReportFieldDataMeasures.cc\
 	$(SRCDIR)/SelectAndSetFieldData.cc\
 	$(SRCDIR)/SelectAndSetFieldsData.cc\
 	$(SRCDIR)/SetFieldData.cc\
+	$(SRCDIR)/ModalMapping.cc\
+	$(SRCDIR)/SelectByFieldsData.cc\
+	$(SRCDIR)/SelectByFieldData.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

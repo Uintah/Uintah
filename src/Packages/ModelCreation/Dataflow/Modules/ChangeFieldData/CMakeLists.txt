@@ -49,6 +49,9 @@ SET(Packages_ModelCreation_Dataflow_Modules_ChangeFieldData_SRCS
   SelectAndSetFieldData.cc
   SelectAndSetFieldsData.cc
   SetFieldData.cc
+	SelectByFieldsData.cc
+	SelectByFieldData.cc
+	ModelMapping.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_ChangeFieldData ${Packages_ModelCreation_Dataflow_Modules_ChangeFieldData_SRCS})
