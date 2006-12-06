@@ -199,6 +199,7 @@ void ViscoTransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
   cm_ps->appendElement("t4", d_initialData.t4);
   cm_ps->appendElement("t5", d_initialData.t5);
   cm_ps->appendElement("t6", d_initialData.t6);
+  cm_ps->appendElement("StrainEnergy",d_StrainEnergy); // MooneyRivlin or VerondaWestmann
 }
 
 
