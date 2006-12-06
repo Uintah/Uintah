@@ -1,0 +1,420 @@
+State 6 conflicts: 1 shift/reduce
+State 10 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: specification $end
+
+    1 specification: mainline_star
+
+    2 mainline_star: /* empty */
+    3              | mainline_star mainline
+
+    4 mainline: command
+    5         | otherline
+
+    6 otherline_star: /* empty */
+    7               | otherline_star otherline
+
+    8 otherline: OTHERLINE
+    9          | IDENTIFIER
+
+   10 command: MAP IDENTIFIER ARROW IDENTIFIER namemap_star
+   11        | MAP namemap_star
+   12        | ININTERFACE otherline_star CLOSEININTERFACE
+   13        | OUTINTERFACE otherline_star CLOSEOUTINTERFACE
+   14        | INOUTOMIT
+   15        | INOUTOMIT IDENTIFIER
+   16        | INOUTREMAP IDENTIFIER
+
+   17 namemap_star: /* empty */
+   18             | namemap_star namemap
+
+   19 namemap: '>' IDENTIFIER ARROW IDENTIFIER subnamemap_star
+   20        | '>' IDENTIFIER subnamemap_star
+
+   21 subnamemap_star: /* empty */
+   22                | subnamemap_star subnamemap
+
+   23 subnamemap: DBLANGLE IDENTIFIER ARROW IDENTIFIER
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'>' (62) 19 20
+error (256)
+IDENTIFIER (258) 9 10 15 16 19 20 23
+OTHERLINE (259) 8
+MAP (260) 10 11
+ININTERFACE (261) 12
+OUTINTERFACE (262) 13
+CLOSEININTERFACE (263) 12
+CLOSEOUTINTERFACE (264) 13
+INOUTREMAP (265) 16
+INOUTOMIT (266) 14 15
+ARROW (267) 10 19 23
+DBLANGLE (268) 23
+
+
+Nonterminals, with rules where they appear
+
+$accept (15)
+    on left: 0
+specification (16)
+    on left: 1, on right: 0
+mainline_star (17)
+    on left: 2 3, on right: 1 3
+mainline (18)
+    on left: 4 5, on right: 3
+otherline_star (19)
+    on left: 6 7, on right: 7 12 13
+otherline (20)
+    on left: 8 9, on right: 5 7
+command (21)
+    on left: 10 11 12 13 14 15 16, on right: 4
+namemap_star (22)
+    on left: 17 18, on right: 10 11 18
+namemap (23)
+    on left: 19 20, on right: 18
+subnamemap_star (24)
+    on left: 21 22, on right: 19 20 22
+subnamemap (25)
+    on left: 23, on right: 22
+
+
+state 0
+
+    0 $accept: . specification $end
+
+    $default  reduce using rule 2 (mainline_star)
+
+    specification  go to state 1
+    mainline_star  go to state 2
+
+
+state 1
+
+    0 $accept: specification . $end
+
+    $end  shift, and go to state 3
+
+
+state 2
+
+    1 specification: mainline_star .
+    3 mainline_star: mainline_star . mainline
+
+    IDENTIFIER    shift, and go to state 4
+    OTHERLINE     shift, and go to state 5
+    MAP           shift, and go to state 6
+    ININTERFACE   shift, and go to state 7
+    OUTINTERFACE  shift, and go to state 8
+    INOUTREMAP    shift, and go to state 9
+    INOUTOMIT     shift, and go to state 10
+
+    $default  reduce using rule 1 (specification)
+
+    mainline   go to state 11
+    otherline  go to state 12
+    command    go to state 13
+
+
+state 3
+
+    0 $accept: specification $end .
+
+    $default  accept
+
+
+state 4
+
+    9 otherline: IDENTIFIER .
+
+    $default  reduce using rule 9 (otherline)
+
+
+state 5
+
+    8 otherline: OTHERLINE .
+
+    $default  reduce using rule 8 (otherline)
+
+
+state 6
+
+   10 command: MAP . IDENTIFIER ARROW IDENTIFIER namemap_star
+   11        | MAP . namemap_star
+
+    IDENTIFIER  shift, and go to state 14
+
+    IDENTIFIER  [reduce using rule 17 (namemap_star)]
+    $default    reduce using rule 17 (namemap_star)
+
+    namemap_star  go to state 15
+
+
+state 7
+
+   12 command: ININTERFACE . otherline_star CLOSEININTERFACE
+
+    $default  reduce using rule 6 (otherline_star)
+
+    otherline_star  go to state 16
+
+
+state 8
+
+   13 command: OUTINTERFACE . otherline_star CLOSEOUTINTERFACE
+
+    $default  reduce using rule 6 (otherline_star)
+
+    otherline_star  go to state 17
+
+
+state 9
+
+   16 command: INOUTREMAP . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 18
+
+
+state 10
+
+   14 command: INOUTOMIT .
+   15        | INOUTOMIT . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 19
+
+    IDENTIFIER  [reduce using rule 14 (command)]
+    $default    reduce using rule 14 (command)
+
+
+state 11
+
+    3 mainline_star: mainline_star mainline .
+
+    $default  reduce using rule 3 (mainline_star)
+
+
+state 12
+
+    5 mainline: otherline .
+
+    $default  reduce using rule 5 (mainline)
+
+
+state 13
+
+    4 mainline: command .
+
+    $default  reduce using rule 4 (mainline)
+
+
+state 14
+
+   10 command: MAP IDENTIFIER . ARROW IDENTIFIER namemap_star
+
+    ARROW  shift, and go to state 20
+
+
+state 15
+
+   11 command: MAP namemap_star .
+   18 namemap_star: namemap_star . namemap
+
+    '>'  shift, and go to state 21
+
+    $default  reduce using rule 11 (command)
+
+    namemap  go to state 22
+
+
+state 16
+
+    7 otherline_star: otherline_star . otherline
+   12 command: ININTERFACE otherline_star . CLOSEININTERFACE
+
+    IDENTIFIER        shift, and go to state 4
+    OTHERLINE         shift, and go to state 5
+    CLOSEININTERFACE  shift, and go to state 23
+
+    otherline  go to state 24
+
+
+state 17
+
+    7 otherline_star: otherline_star . otherline
+   13 command: OUTINTERFACE otherline_star . CLOSEOUTINTERFACE
+
+    IDENTIFIER         shift, and go to state 4
+    OTHERLINE          shift, and go to state 5
+    CLOSEOUTINTERFACE  shift, and go to state 25
+
+    otherline  go to state 24
+
+
+state 18
+
+   16 command: INOUTREMAP IDENTIFIER .
+
+    $default  reduce using rule 16 (command)
+
+
+state 19
+
+   15 command: INOUTOMIT IDENTIFIER .
+
+    $default  reduce using rule 15 (command)
+
+
+state 20
+
+   10 command: MAP IDENTIFIER ARROW . IDENTIFIER namemap_star
+
+    IDENTIFIER  shift, and go to state 26
+
+
+state 21
+
+   19 namemap: '>' . IDENTIFIER ARROW IDENTIFIER subnamemap_star
+   20        | '>' . IDENTIFIER subnamemap_star
+
+    IDENTIFIER  shift, and go to state 27
+
+
+state 22
+
+   18 namemap_star: namemap_star namemap .
+
+    $default  reduce using rule 18 (namemap_star)
+
+
+state 23
+
+   12 command: ININTERFACE otherline_star CLOSEININTERFACE .
+
+    $default  reduce using rule 12 (command)
+
+
+state 24
+
+    7 otherline_star: otherline_star otherline .
+
+    $default  reduce using rule 7 (otherline_star)
+
+
+state 25
+
+   13 command: OUTINTERFACE otherline_star CLOSEOUTINTERFACE .
+
+    $default  reduce using rule 13 (command)
+
+
+state 26
+
+   10 command: MAP IDENTIFIER ARROW IDENTIFIER . namemap_star
+
+    $default  reduce using rule 17 (namemap_star)
+
+    namemap_star  go to state 28
+
+
+state 27
+
+   19 namemap: '>' IDENTIFIER . ARROW IDENTIFIER subnamemap_star
+   20        | '>' IDENTIFIER . subnamemap_star
+
+    ARROW  shift, and go to state 29
+
+    $default  reduce using rule 21 (subnamemap_star)
+
+    subnamemap_star  go to state 30
+
+
+state 28
+
+   10 command: MAP IDENTIFIER ARROW IDENTIFIER namemap_star .
+   18 namemap_star: namemap_star . namemap
+
+    '>'  shift, and go to state 21
+
+    $default  reduce using rule 10 (command)
+
+    namemap  go to state 22
+
+
+state 29
+
+   19 namemap: '>' IDENTIFIER ARROW . IDENTIFIER subnamemap_star
+
+    IDENTIFIER  shift, and go to state 31
+
+
+state 30
+
+   20 namemap: '>' IDENTIFIER subnamemap_star .
+   22 subnamemap_star: subnamemap_star . subnamemap
+
+    DBLANGLE  shift, and go to state 32
+
+    $default  reduce using rule 20 (namemap)
+
+    subnamemap  go to state 33
+
+
+state 31
+
+   19 namemap: '>' IDENTIFIER ARROW IDENTIFIER . subnamemap_star
+
+    $default  reduce using rule 21 (subnamemap_star)
+
+    subnamemap_star  go to state 34
+
+
+state 32
+
+   23 subnamemap: DBLANGLE . IDENTIFIER ARROW IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 35
+
+
+state 33
+
+   22 subnamemap_star: subnamemap_star subnamemap .
+
+    $default  reduce using rule 22 (subnamemap_star)
+
+
+state 34
+
+   19 namemap: '>' IDENTIFIER ARROW IDENTIFIER subnamemap_star .
+   22 subnamemap_star: subnamemap_star . subnamemap
+
+    DBLANGLE  shift, and go to state 32
+
+    $default  reduce using rule 19 (namemap)
+
+    subnamemap  go to state 33
+
+
+state 35
+
+   23 subnamemap: DBLANGLE IDENTIFIER . ARROW IDENTIFIER
+
+    ARROW  shift, and go to state 36
+
+
+state 36
+
+   23 subnamemap: DBLANGLE IDENTIFIER ARROW . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 37
+
+
+state 37
+
+   23 subnamemap: DBLANGLE IDENTIFIER ARROW IDENTIFIER .
+
+    $default  reduce using rule 23 (subnamemap)

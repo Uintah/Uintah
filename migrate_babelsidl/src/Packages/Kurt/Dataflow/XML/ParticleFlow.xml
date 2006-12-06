@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="ParticleFlow" category="Visualization" optional="false">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>
+      Shader based particle flow renderer.
+
+    </summary>
+    <description>
+      <p>        This module takes a Vector field representing flow, and creates a steady flow rendering.  The flow can be animated and recycled, or fixed at a certain number of steps.  Step sizes can also be user controlled.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Vector Flow Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>ParticleFlow Renderer</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

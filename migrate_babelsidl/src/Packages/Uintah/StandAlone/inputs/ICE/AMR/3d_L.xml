@@ -1,0 +1,25 @@
+<Uintah_Include>
+  <Level>
+    <Box>
+      <lower> [-.1,-.1,-.1] </lower>
+      <upper> [0,0,0] </upper>
+      <extraCells> [1,1,1] </extraCells>
+    </Box>
+    <Box>
+      <lower> [0,-.1,-.1] </lower>
+      <upper> [.1,0,0] </upper>
+      <extraCells> [1,1,1] </extraCells>
+    </Box>
+    <Box>
+      <lower> [-.1,0,-.1] </lower>
+      <upper> [0,.1,0] </upper>
+      <extraCells> [1,1,1] </extraCells>
+    </Box>
+    <Box>
+      <lower> [-.1,-.1,0] </lower>
+      <upper> [0,0,.1] </upper>
+      <extraCells> [1,1,1] </extraCells>
+    </Box>
+    <spacing> [.0125, .0125, .0125] </spacing>
+  </Level>
+</Uintah_Include>

@@ -1,0 +1,19 @@
+<start>
+
+
+<Test>
+<Meta>
+<Title>res_study</Title>
+<interactive>./compare_mms -ice -mms sine -v press_CC -L </interactive>
+<outFile>tmp_out</outFile>
+</Meta>
+
+<udaFile>mms_1_res_25.uda</udaFile>
+<udaFile>mms_1_base_case_run.uda</udaFile>
+<udaFile>mms_1_res_100.uda</udaFile>
+<udaFile>mms_1_res_150.uda</udaFile>
+
+</Test>
+
+</start>
+

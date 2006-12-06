@@ -1,0 +1,10 @@
+
+
+package NewPort {
+
+  interface StringPort extends gov.cca.Port
+  {
+        string getString();
+  };
+
+};

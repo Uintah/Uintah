@@ -1,0 +1,124 @@
+
+\section{3D AMR Grid Representation} 
+
+The responsibility of this library will be to manage the data in the
+domain.  Data is represented on several {\em Patches}, collected into
+{\em Levels} and formed into a {\em Hierarchy}.  Multiple {\em
+Variables} exist over the entire computational domain.
+
+\vspace{0.5in}
+
+This is the basic interface to a hierarchy:
+\begin{verbatim}
+class Hierarchy {
+public:
+	Hierarchy(int maxLevels);
+	~Hierarchy();
+};
+\end{verbatim}
+
+In addition, we will need to define:
+\begin{enumerate}
+\item Iteration over levels
+\item Operations on a composite grid
+\item Computations that are performed on a composite grid
+\end{enumerate}
+
+\vspace{0.5in}
+
+
+This is the basic interface to a Level:
+\begin{verbatim}
+class Level {
+public:
+	Level();
+	~Level();
+
+
+	Hierarchy* getHierarchy() const;	
+	int levelNumber();
+};
+\end{verbatim}
+
+In addition, we will need to define:
+\begin{enumerate}
+\item A mechanism to iterate over the patches in a level
+\item A mechanism to perform parallel operations on a level
+\item Computations that are performed at an entire level
+\end{enumerate}
+
+
+\vspace{0.5in}
+
+This is the basic interface to a Patch:
+\begin{verbatim}
+class Patch {
+public:
+	Patch();
+	~Patch();
+
+	Level* getLevel() const;
+	Point lowerCorner();
+	Point upperCorner();
+};
+
+class StructuredPatch : public Patch {
+};
+
+class CurvilinearPatch : public Patch {
+};
+
+class UnstructuredPatch : public Patch {
+};
+
+\end{verbatim}
+
+In addition, we will need to define:
+\begin{enumerate}
+\item A way to access data on the patch
+\item A way to iterate over data (implicitly, explicitly, or both):
+\begin{itemize}
+\item Interior cells
+\item All cells
+\item Nodes
+\item Faces
+\item etc.
+\end{itemize}
+\item A way to map patches to procesors
+\item A way to describe work to be done on patches
+\item A way to relate patches to other patches
+\end{enumerate}
+
+\vspace{1.5in}
+
+There will also be a basic ``Data'' class (or classes).  We will need
+to define:
+\begin{enumerate}
+\item A way to express computation on these data classes
+\item Perhaps a way to extract 3D pointers for passing to a legacy
+      fortran code.
+\item A way to express the ``type'' of data, including, face-centered
+      vs. cell centered vs. vertex centered, and double, int, float,
+      possibly units, etc.
+\end{enumerate}
+
+Specific computation requirements include:
+\begin{enumerate}
+\item Array operations (add/multiply, etc.)
+\item Stencil operations
+\item Array slicing/subsectioning
+\item Tri-diagonal operations (arches) (ADI)
+\item ``where''
+\item do different stuff based on signs of velocities (for up-winding
+      and for Todd's advection operator).
+\item Norms
+\item Generic linear and non-linear solver interfaces
+\end{enumerate}
+
+\vspace{1.5in}
+
+Other responsibilities include:
+\begin{enumerate}
+\item Resource allocation
+\item Managing of Hierarchy/regridding
+\end{enumerate}

@@ -1,0 +1,92 @@
+
+#include <Core/CCA/datawrapper/PDEtranslate/ViewerWindow.h>
+
+#include <Core/Thread/Time.h>
+
+using namespace SCIRun;
+using namespace std;
+
+extern "C" BridgeComponent* make_Bridge_<%= $templateArgv[0]%>()
+{
+  return static_cast<BridgeComponent*>(new <%= rndBridgeName%>());
+}
+
+<%= rndBridgeName%>::<%= rndBridgeName%>(){
+}
+                                                                                                   
+<%= rndBridgeName%>::~<%= rndBridgeName%>(){
+}
+                                                                                                   
+void <%= rndBridgeName%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+
+<port> 
+  <%= $inPortName%>::pointer dp = <%= $inPortName%>::pointer(new <%= $inPortName%>(services));
+  services->addProvidesPort((void*)&dp,"pport","sci.cca.ports.<%= $inPortName%>",CCA);
+</port> 
+
+  DataReader* dr = new DataReader();
+  services->addVtkPort(dr,VtkPortInstance::Output);
+}
+
+DataReader::DataReader() 
+{
+  OutPort::setName("DataReader::output");
+  addPort(this);
+  vtkID = vtkImageData::New(); 
+}
+
+vtkObject* DataReader::getOutput()
+{
+  return vtkID;
+}
+
+<port>
+<method> 
+<%= $inMethodType%> SCIRun::<%= $inPortName%>::<%= $inMethodName%>(<%= outDefArgs(method(:ccaType))%>) {
+
+  vtk::Port* port = mysvcs->getVtkPort("DataReader::output");  
+  if(port == NULL) {
+    cerr << "Null Vtk port received\n";
+    exit(1);
+  }
+  vtk::OutPort* oport = reinterpret_cast<vtk::OutPort* >(port);
+  vtkImageData* vtkID = reinterpret_cast<vtkImageData*>(oport->getOutput());
+  if(vtkID == NULL) {
+    cerr << "Unable to get vtkImageData from port\n";
+    exit(1);
+  }
+
+  double stime=Time::currentSeconds();
+
+  //Convert Data
+  int d0=300;
+  int d1=300;
+
+  ViewerWindow* vw = new ViewerWindow(nodes,triangles,solution,d0-1,d1-1); 
+  SSIDL::array2<double>* image = new SSIDL::array2<double>(d0,d1); 
+  vw->convert(*image);
+
+  vtkID->SetDimensions(d0, d1, 1);
+  vtkID->SetOrigin(0.5, 0.5, 0);
+  vtkID->SetSpacing(2.0/d0, 2.0/d1, 0);
+  vtkID->SetScalarTypeToFloat();
+  vtkFloatArray *scalars=vtkFloatArray::New();
+  scalars->SetNumberOfValues(d0*d1);
+  int offset=0;
+  for(int i=0; i<d0; i++){
+    for(int j=0; j<d1; j++){
+      scalars->SetValue(offset++,(*image)[i][j]);
+    }
+  }
+  vtkID->GetPointData()->SetScalars(scalars);
+  scalars->Delete();
+
+  oport->update(SCIRun::vtk::Port::REFRESH);
+
+  double dt=Time::currentSeconds()-stime;
+  std::cerr << d0 << "x" << d1 << " in " << dt << " seconds\n";
+}
+</method> 
+</port>  
+

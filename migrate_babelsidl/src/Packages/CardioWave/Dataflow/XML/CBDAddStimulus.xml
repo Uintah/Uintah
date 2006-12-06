@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CBDAddStimulus" category="ContinuousBiDomain" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+	This module defines the location of the stimulus electrodes.
+    </summary>
+    <description>
+      <p>
+	This module defines the location of the stimulus electrodes.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>StimulusBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Domain</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Current</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Start</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>End</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>StimulusBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

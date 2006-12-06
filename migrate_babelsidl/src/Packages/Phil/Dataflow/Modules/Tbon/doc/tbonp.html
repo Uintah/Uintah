@@ -1,0 +1,50 @@
+<html>
+<title>TBONP module</title>
+<body>
+
+<h1>TBONP</h1>
+
+<b>Description:</b><p>
+
+<a href="template.html">Template class</a> (Please read!)<p>
+
+Parallel implementation of the Temporal Branch-on-Need Octree (T-BON) 
+for rectilinear scalar fields (see the thesis for more details).<p>
+
+Some preprocessing must be done before isosurface extraction.
+This preprocess step is DIFFERENT from that of the
+<a href="bono.html">BONO</a> module, but the SAME as that for
+the <a href="tbon.html">TBON</a> module.  See that documentation
+for details.
+
+During execution (run the module on an execution metafile), the
+user controls isovalue and time value sliders.  Nodes and data are read
+in whenever needed to construct the current isosurface, otherwise
+left on disk.  The data files are read in in blocks to improve I/O
+performance (again, see the thesis).  A Marching Cubes-type 
+interpolation is performed to create triangles for rendering.<p>
+
+A centralized work queue model is used to distribute computation.
+First, the tree and data for the current isosurface are read into memory.
+Then, the tree is traversed and all cells containing portions of the
+isosurface are enqueued.  Threads then request jobs and are given
+batches of cells on which to perform interpolation and triangle 
+construction. <p>
+
+The number of worker threads is hard coded.  This is because I didn't
+want to deal with recreating the work queue and forking more threads
+whenever the user changed
+the "# processors" slider.  So if you want to change it, just look in
+TbonP.cc for "np = " and change that number.<p>
+
+<p><b>Metafile format:</b><p>
+
+Same as for the <a href="tbon.html#metafiles">TBON</a> module.
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 1 February 2000
+
+
+</body>
+</html>
