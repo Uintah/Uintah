@@ -83,4 +83,24 @@ LayerButton::select(event_handle_t signalh) {
 }
 
 
+BaseTool::propagation_state_e
+LayerButton::merge(event_handle_t signalh) {
+  painter_->merge_layer(volume_);
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e
+LayerButton::update_from_gui(event_handle_t signalh) {
+  if (!volume_.get_rep()) return STOP_E;
+  volume_->name_ = layer_name_;
+  volume_->visible_ = layer_visible_;
+  volume_->expand_ = expand_;
+  return CONTINUE_E;
+}
+
+  
+
+
+
 }

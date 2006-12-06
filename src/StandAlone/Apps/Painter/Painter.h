@@ -174,6 +174,7 @@ private:
 
   void                  move_layer_up(NrrdVolumeHandle &);
   void                  move_layer_down(NrrdVolumeHandle &);
+  bool                  merge_layer(NrrdVolumeHandle &);
   void                  cur_layer_up();
   void                  cur_layer_down();
   void                  opacity_up();
@@ -218,7 +219,6 @@ private:
   CatcherFunction_t     CopyLayer;
   CatcherFunction_t     DeleteLayer;
   CatcherFunction_t     NewLayer;
-  CatcherFunction_t     MergeLayer;
 
   CatcherFunction_t     MemMapFileRead;
   CatcherFunction_t     NrrdFileWrite;

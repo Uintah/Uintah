@@ -64,7 +64,7 @@
       </object>
 
       <object class="ProgressBar">
-        <var name="row">6</var>
+        <var name="row">7</var>
         <var name="col">1</var>
         <var name="ProgressBar::progress" propagate="yes">$Filter::percent</var>
       </object>

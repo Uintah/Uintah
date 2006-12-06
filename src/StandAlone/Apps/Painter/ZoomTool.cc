@@ -66,13 +66,11 @@ ZoomTool::pointer_motion(int button, int x, int y,
                                 unsigned int modifiers,
                                 int time)
 {
-  if (!window_ || (button != 3) || (modifiers != EventModifiers::SHIFT_E)) {
-    return QUIT_AND_STOP_E;
+  if (window_) {
+    const int delta = x + y_ - x_ - y;
+    window_->zoom_ = Max(0.00001, zoom_ * Pow(1.008,delta));
+    window_->mark_redraw();
   }
-
-  const int delta = x + y_ - x_ - y;
-  window_->zoom_ = Max(0.00001, zoom_ * Pow(1.008,delta));
-  window_->mark_redraw();
   return STOP_E;
 }    
 

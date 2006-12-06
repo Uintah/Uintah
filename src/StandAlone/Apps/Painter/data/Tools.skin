@@ -199,11 +199,13 @@
                       target="Painter::FinishTool">
                 <var name="threaded">1</var>
               </signal>
+<!--
               <signal name="ToolDialog::Done" 
                       target="VisibilityGroup::show_VisibleItem">
                 <var name="id">Nothing</var>
                 <var name="group">ToolsVisibleGroup</var>
               </signal>
+-->
             </object>
           </object>
 

@@ -1,22 +1,16 @@
 <definition class="ITKThresholdSegmentationLevelSetImageFilterToolDialog">
-  <object class="Frame">
-    <var name="invert">1</var>
+  <object class="Box">
+    <var name="color">#AAAAAAAA</var>
     <var name="LabeledSpinnerBox::text_size" propagate="yes">15</var>
 
-    <object class="Texture">
-      <var name="file">BackgroundTile04.png</var>
-      <var name="color">#AAAAAAFF</var>
-      <var name="repeatx">1</var>
-      <var name="repeaty">1</var>
-    </object>
-
     <object class="Grid">
-      <var name="rows">9</var>
+      <var name="rows">13</var>
       <var name="cols">1</var>
 
       <object class="Root::Text">
         <var name="row">1</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="text"> ITK Threshold Segmentation
  Level Set Image Filter </var>
         <var name="size">15</var>
@@ -27,34 +21,61 @@
         <var name="offsety">2</var>
         <var name="shadow">1</var>
       </object>
-      
-      
+
       <object class="LabeledSpinnerBox">
         <var name="row">3</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Brush Radius</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$Painter::brush_radius</var>
+      </object>
+      
+      <object class="LabeledSpinnerBox">
+        <var name="row">4</var>
+        <var name="col">1</var>
+        <var name="cell-height">35</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Threshold Min</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::LowerThreshold</var>
+      </object>
+
+      <object class="LabeledSpinnerBox">
+        <var name="row">5</var>
+        <var name="col">1</var>
+        <var name="cell-height">35</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Threshold Max</var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::UpperThreshold</var>
+      </object>
+      
+      <object class="LabeledSpinnerBox">
+        <var name="row">6</var>
+        <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Curvature
      Scaling</var>
         <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::CurvatureScaling</var>
       </object>
       
       <object class="LabeledSpinnerBox">                
-        <var name="row">4</var>
+        <var name="row">7</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Propagation
         Scaling</var>
         <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::PropagationScaling</var>
       </object>
       
       <object class="LabeledSpinnerBox">                
-        <var name="row">5</var>
+        <var name="row">8</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="LabeledSpinnerBox::text" propagate="yes">Edge Weight</var>
         <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKThresholdSegmentationLevelSetImageFilterTool::EdgeWeight</var>
       </object>
+
       <object class="Button">
-        <var name="row">6</var>
+        <var name="row">9</var>
         <var name="col">1</var>
-        
+        <var name="cell-height">35</var>
         <var name="Button::color" propagate="yes">#EEEEEEFF</var>
         <var name="Button::Text::text" propagate="yes">Set Seed Layer</var>
         
@@ -64,8 +85,9 @@
       </object>
       
       <object class="VCRControls">
-        <var name="row">7</var>
+        <var name="row">10</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <signal name="VCRControls::play"
                 target="Painter::FinishTool">
           <var name="threaded">1</var>
@@ -77,15 +99,16 @@
       </object>
 
       <object class="ProgressBar">
-        <var name="row">8</var>
+        <var name="row">11</var>
         <var name="col">1</var>
+        <var name="cell-height">35</var>
         <var name="ProgressBar::progress" propagate="yes">$Filter::percent</var>
       </object>
       
       <object class="Button">
-        <var name="row">9</var>
+        <var name="row">13</var>
         <var name="col">1</var>
-        
+        <var name="cell-height">35</var>
         <var name="Button::color" propagate="yes">#EEEEEEFF</var>
         <var name="Button::Text::text" propagate="yes">Done</var>
         

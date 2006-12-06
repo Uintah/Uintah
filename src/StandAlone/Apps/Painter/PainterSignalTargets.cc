@@ -114,7 +114,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::CopyLayer);
   REGISTER_CATCHER_TARGET(Painter::DeleteLayer);
   REGISTER_CATCHER_TARGET(Painter::NewLayer);
-  REGISTER_CATCHER_TARGET(Painter::MergeLayer);
+  //  REGISTER_CATCHER_TARGET(Painter::MergeLayer);
 
   REGISTER_CATCHER_TARGET(Painter::MemMapFileRead);
 
@@ -302,47 +302,6 @@ Painter::NewLayer(event_handle_t event) {
 
 
 
-BaseTool::propagation_state_e 
-Painter::MergeLayer(event_handle_t event) {
-#if 0
-  NrrdVolumeOrder::iterator volname = 
-    std::find(volume_order_.begin(), 
-              volume_order_.end(), 
-              current_volume_->name_);
-  
-  if (volname == volume_order_.begin()) return STOP_E;
-  NrrdVolume *vol1 = volume_map_[*volname];
-  NrrdVolume *vol2 = volume_map_[*(--volname)];
-    
-
-  NrrdData *nout = new NrrdData();
-  NrrdIter *ni1 = nrrdIterNew();
-  NrrdIter *ni2 = nrrdIterNew();
-    
-  nrrdIterSetNrrd(ni1, vol1->nrrd_handle_->nrrd_);
-  nrrdIterSetNrrd(ni2, vol2->nrrd_handle_->nrrd_);
-  
-  if (nrrdArithIterBinaryOp(nout->nrrd_, nrrdBinaryOpMultiply, ni1, ni2)) {
-    char *err = biffGetDone(NRRD);
-    string errstr = (err ? err : "");
-    free(err);
-    throw errstr;
-  }
-
-  nrrdIterNix(ni1);
-  nrrdIterNix(ni2);
-
-  nrrdKeyValueCopy(nout->nrrd_,  vol1->nrrd_handle_->nrrd_);
-  nrrdKeyValueCopy(nout->nrrd_,  vol2->nrrd_handle_->nrrd_);
-  
-  vol1->nrrd_handle_->nrrd_ = nout->nrrd_;
-  vol2->keep_ = 0;
-  
-  current_volume_ = vol1;
-#endif
-  return CONTINUE_E;
-}
-  
 
 
 BaseTool::propagation_state_e 

@@ -179,11 +179,10 @@ VolumeFilter<FilterType>::filter_callback(itk::Object *object,
   if (!process) return;
 
   progress_ =  process->GetProgress();
-
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
-    std::cerr << "Filter progress: " << progress_ * 100.0 << "%\n";
-    Skinner::Var<double> percent (volume_->painter_->get_vars(), "Filter::percent");
+    Skinner::Var<double> percent(volume_->painter_->get_vars(), 
+                                 "Filter::percent");
     percent = progress_;
     
     if (volume_.get_rep()) {
@@ -205,7 +204,7 @@ VolumeFilter<FilterType>::filter_callback(itk::Object *object,
 
   if (typeid(itk::IterationEvent) == typeid(event))
   {
-    std::cerr << "Filter Iteration: " << progress_ * 100.0 << "%\n";
+    //    std::cerr << "Filter Iteration: " << progress_ * 100.0 << "%\n";
   }
 
   if (abort_) {

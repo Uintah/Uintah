@@ -157,12 +157,7 @@ void
 Painter::get_data_from_layer_buttons()  
 {
   for (unsigned int i = 0; i < layer_buttons_.size(); ++i) {
-    LayerButton *button = layer_buttons_[i];
-    NrrdVolumeHandle &volume = button->volume_;
-    if (!volume.get_rep()) continue;
-    volume->name_ = button->layer_name_;
-    volume->visible_ = button->layer_visible_;
-    volume->expand_ = button->expand_;
+    layer_buttons_[i]->update_from_gui(0);
   }
 }
 
@@ -424,5 +419,55 @@ Painter::copy_current_layer(string suff) {
   return make_layer(current_volume_->name_+suff,nrrdh,current_volume_->label_);
 }
 
+
+bool
+Painter::merge_layer(NrrdVolumeHandle &vol1) {
+#if 0
+  NrrdVolumeHandle vol2 = 0;
+  NrrdVolumes &volumes =  parent.get_rep() ? parent->children_ : volumes_;
+  for (int i = 1; i < volumes.size(); ++i)
+    if (volumes[i-1] == vol1)
+      vol2 = volumes[i];
+  if (!vol1.get_rep() || !vol2.get_rep()) return STOP_E;
+
+  cerr << "Merge layer1: " << vol1->name_ << std::endl;
+  cerr << "Merge layer2: " << vol2->name_ << std::endl;
+
+
+
+  
+  if (volname == volume_order_.begin()) return STOP_E;
+  NrrdVolume *vol1 = volume_map_[*volname];
+  NrrdVolume *vol2 = volume_map_[*(--volname)];
+    
+
+  NrrdData *nout = new NrrdData();
+  NrrdIter *ni1 = nrrdIterNew();
+  NrrdIter *ni2 = nrrdIterNew();
+    
+  nrrdIterSetNrrd(ni1, vol1->nrrd_handle_->nrrd_);
+  nrrdIterSetNrrd(ni2, vol2->nrrd_handle_->nrrd_);
+  
+  if (nrrdArithIterBinaryOp(nout->nrrd_, nrrdBinaryOpMultiply, ni1, ni2)) {
+    char *err = biffGetDone(NRRD);
+    string errstr = (err ? err : "");
+    free(err);
+    throw errstr;
+  }
+
+  nrrdIterNix(ni1);
+  nrrdIterNix(ni2);
+
+  nrrdKeyValueCopy(nout->nrrd_,  vol1->nrrd_handle_->nrrd_);
+  nrrdKeyValueCopy(nout->nrrd_,  vol2->nrrd_handle_->nrrd_);
+  
+  vol1->nrrd_handle_->nrrd_ = nout->nrrd_;
+  vol2->keep_ = 0;
+  
+  current_volume_ = vol1;
+#endif
+  return true;
+}
+  
  
 } // end namespace SCIRun
