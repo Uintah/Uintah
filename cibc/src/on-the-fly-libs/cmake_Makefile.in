@@ -92,19 +92,10 @@ ifeq ($(HAVE_MESQUITE),yes)
    CONDITIONAL_LIBS := $(CONDITIONAL_LIBS) $(MESQUITE_LIBRARY)
 endif
 
-INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_OBJTOP)/include -I$(SCIRUN_SRCTOP)/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XML2_H@ @INC_PETSC_H@ $(BABEL_INCLUDE) $(TAU_INCLUDE) $(MPI_INCLUDE) $(GL_INCLUDE) $(INSIGHT_INCLUDE) $(TEEM_INCLUDE) @INC_CAMAL_H@ @INC_TETGEN_H@ @INC_MESQUITE_H@ @INC_VERDICT_H@
-
-ifeq ($(SSTREAM_COMPAT),yes)
-INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
-endif
-INCLUDES := $(sort $(INCLUDES))
-
-# This comes from the configVars.mk file (Dd)  (Can remove this line if no one objects...)
-#SOFLAGS         := @SOFLAGS@  $(CFLAGS)
+INCLUDES = @OTFL_INCLUDES@
 
 SRCS = $(wildcard *.cc)
 OTF_LIBS := $(patsubst %.cc,%.@SO_OR_A_FILE@, $(SRCS))
-
 
 ifeq ($(NEED_SONAME),yes)
 SONAMEFLAG = -Wl,-soname,$(notdir $@)
