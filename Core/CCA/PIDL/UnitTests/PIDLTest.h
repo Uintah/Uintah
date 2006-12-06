@@ -26,46 +26,32 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/CCA/PIDL/PIDL.h>
-#include <Framework/UnitTests/AbstractFrameworkTest.h>
+#ifndef Core_CCA_PIDL_UnitTests_PIDLTest_h
+#define Core_CCA_PIDL_UnitTests_PIDLTest_h
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION( AbstractFrameworkTest );
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
-AbstractFrameworkTest::AbstractFrameworkTest()
-{
-  //std::cout << "AbstractFrameworkTest::AbstractFrameworkTest()" << std::endl;
-}
+class PIDLTest : public CppUnit::TestFixture {
+public:
+  virtual ~PIDLTest();
 
-AbstractFrameworkTest::~AbstractFrameworkTest()
-{
-  //std::cout << "AbstractFrameworkTest::~AbstractFrameworkTest()" << std::endl;
-}
+  // Set up context before running a test.
+  virtual void setUp();
 
-void AbstractFrameworkTest::setUp()
-{
-  // tested in PIDLTest
-  SCIRun::PIDL::initialize();
-    //SCIRun::PIDL::isfrwk = true;
-//   //all threads in the framework share the same
-//   //invocation id
-   //SCIRun::PRMI::setInvID(SCIRun::ProxyID(1,0));
-//   fwk = new SCIRun::SCIRunFramework();
-//   CPPUNIT_ASSERT(fwk != 0);
-}
+  // Clean up after the test run.
+  virtual void tearDown();
 
-void AbstractFrameworkTest::tearDown()
-{
-  SCIRun::PIDL::finalize();
-//   delete fwk;
-}
+  void testInitialize();
+  void testWarehouse();
+  void testFinalize();
 
-void AbstractFrameworkTest::testInstantiate()
-{
-  CPPUNIT_FAIL( "not implemented" );
-}
+private:
+  CPPUNIT_TEST_SUITE( PIDLTest );
+  CPPUNIT_TEST( testInitialize );
+  CPPUNIT_TEST( testWarehouse );
+  CPPUNIT_TEST( testFinalize );
+  CPPUNIT_TEST_SUITE_END();
+};
 
-void AbstractFrameworkTest::testGetServices()
-{
-  CPPUNIT_FAIL( "not implemented" );
-}
+#endif
