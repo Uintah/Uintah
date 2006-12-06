@@ -422,18 +422,15 @@ Painter::copy_current_layer(string suff) {
 
 bool
 Painter::merge_layer(NrrdVolumeHandle &vol1) {
-#if 0
   NrrdVolumeHandle vol2 = 0;
+  NrrdVolumeHandle parent = vol1.get_rep() ? vol1->parent_ : 0;
   NrrdVolumes &volumes =  parent.get_rep() ? parent->children_ : volumes_;
-  for (int i = 1; i < volumes.size(); ++i)
-    if (volumes[i-1] == vol1)
+  for (int i = 0; i < volumes.size()-1; ++i)
+    if (volumes[i+1] == vol1)
       vol2 = volumes[i];
   if (!vol1.get_rep() || !vol2.get_rep()) return STOP_E;
 
-  cerr << "Merge layer1: " << vol1->name_ << std::endl;
-  cerr << "Merge layer2: " << vol2->name_ << std::endl;
-
-
+#if 0
 
   
   if (volname == volume_order_.begin()) return STOP_E;

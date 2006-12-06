@@ -106,62 +106,6 @@
           </object>
 
 
-          <object class="FrameButton">
-            <var name="row">2</var>
-            <var name="col">5</var>            
-            <var name="cell-width">$button_width</var>
-            <var name="cell-height">$button_height</var>
-            <var name="Button::Text::text" propagate="yes">L</var>
-
-            <signal name="Button::clicked" 
-                    target="Painter::CreateLabelVolume">
-            </signal>
-
-            <signal name="Button::clicked" 
-                    target="GLWindow::mark_redraw"/>
-
-            <signal name="Button::clicked" 
-                    target="Root::Stop"/>
-            
-          </object>
-
-
-          <object class="FrameButton">
-            <var name="row">2</var>
-            <var name="col">6</var>            
-            <var name="cell-width">$button_width</var>
-            <var name="cell-height">$button_height</var>
-            <var name="Button::Text::text" propagate="yes">X</var>
-            <var name="Button::Text::fgcolor" propagate="yes">#660000FF</var>
-
-            <signal name="Button::clicked" 
-                    target="Painter::DeleteLayer">
-              <var name="name">$LayerButton::name</var>            
-            </signal>
-
-            <signal name="Button::clicked" 
-                    target="GLWindow::mark_redraw"/>
-
-            <signal name="Button::clicked" 
-                    target="Root::Stop"/>
-            
-          </object>
-
-          <object class="FrameButton">
-            <var name="row">2</var>
-            <var name="col">7</var>            
-            <var name="cell-width">$button_width</var>
-            <var name="cell-height">$button_height</var>
-            <var name="Button::Text::text" propagate="yes">N</var>
-
-            <signal name="Button::clicked" 
-                    target="Painter::NewLayer">
-            </signal>
-
-            <signal name="Button::clicked" 
-                    target="GLWindow::mark_redraw"/>
-            
-          </object>
 
 
           <object class="EyeCheckButton">
@@ -221,6 +165,82 @@
               
               
           </object>
+
+
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">5</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">L</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::CreateLabelVolume">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+
+            <signal name="Button::clicked" 
+                    target="Root::Stop"/>
+            
+          </object>
+
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">6</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">X</var>
+            <var name="Button::Text::fgcolor" propagate="yes">#660000FF</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::DeleteLayer">
+              <var name="name">$LayerButton::name</var>            
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+
+            <signal name="Button::clicked" 
+                    target="Root::Stop"/>
+            
+          </object>
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">7</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">N</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::NewLayer">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+            
+          </object>
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">8</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">M</var>
+
+            <signal name="Button::clicked" 
+                    target="LayerButton::merge">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
+            
+          </object>
+
         </object>
       </object>
     </object>
