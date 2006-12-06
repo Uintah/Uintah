@@ -13,12 +13,12 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.0        </maxTime>
+       <maxTime>            0.45        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1           </delt_max>
        <delt_init>          1.0e-5      </delt_init>
-       <!--<max_iterations>     1          </max_iterations> -->
+       <!--<max_iterations>     100          </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -89,19 +89,19 @@
               <extraCells>   [1,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
            </Box>
-           <spacing>         [0.05,0.1,0.1]        </spacing> 
+           <spacing>         [0.0125,0.1,0.1]        </spacing> 
        </Level>
-
+<!--
        <Level>
            <Box label="2">
-              <lower>        [.2, 0,  0]          </lower>
-              <upper>        [.8, 0.1,0.1]        </upper>
+              <lower>        [.4, 0,  0]          </lower>
+              <upper>        [.6, 0.1,0.1]        </upper>
               <extraCells>   [1,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
            </Box>
-           <spacing>         [.025,0.1,0.1]        </spacing>
+           <spacing>         [.003125,0.1,0.1]        </spacing>
        </Level>
-<!--
+
        <Level>
            <Box label="3">
               <lower>        [.35,  0,  0]        </lower>       
@@ -149,8 +149,9 @@
       <save label="rhs"/>
       <save label="scalar-f"/>
       <save label="scalar-f_X_FC_flux"/>
+      <save label="scalar-f_X_FC_corr" levels = "0"/>
       <save label="sum_scalar_f"/>
-      <!-- <save label="refineFlag"/> -->
+      <save label="refineFlag"/> 
       <checkpoint interval="0.05" cycle="2"/>"
    </DataArchiver>
 
@@ -218,7 +219,7 @@
         <Refinement_Criteria_Thresholds>
         </Refinement_Criteria_Thresholds>
       </ICE>
-<!--     
+     
       <Regridder>
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[4,1,1]]  </cell_refinement_ratio>
@@ -235,7 +236,7 @@
         <patches_per_level_per_proc> 8       </patches_per_level_per_proc>
         
       </Regridder> 
--->    
+    
     </AMR>
 
     <!--____________________________________________________________________-->
@@ -263,7 +264,7 @@
                     <max>       [  1.,  1.,  1. ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [1.,0.,0.]          </velocity>
+               <velocity>      [1.23456,0.,0.]          </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -288,8 +289,8 @@
             <difference>
             <box label="wholeDomain">     </box>
             <box label="scalarPlug">
-              <min>         [0.2,  0,    0]    </min>
-              <max>         [0.8, 0.1, 0.1]   </max>
+              <min>         [0.15,  0,    0]    </min>
+              <max>         [0.35, 0.1, 0.1]   </max>
             </box>
             </difference>
             <scalar>    0.00   </scalar>
@@ -297,9 +298,9 @@
           <geom_object>
             <box label="scalarPlug">      </box>
             <scalar>          1.00        </scalar>
-            <linearInitialize> true       </linearInitialize>
+            <linearInitialize> false       </linearInitialize>
             <slope>           [1,0,0]     </slope>
-            <sinusoidalInitialize> false   </sinusoidalInitialize>
+            <sinusoidalInitialize> true   </sinusoidalInitialize>
             <freq>            [1,0,0]     </freq>
          </geom_object>
        </scalar>
