@@ -103,3 +103,9 @@ endif
 ####################################################################
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+ifeq ($(BUILD_UNIT_TESTS),yes)
+  SUBDIRS := $(SRCDIR)/UnitTests
+	include $(SCIRUN_SCRIPTS)/recurse.mk
+endif
+

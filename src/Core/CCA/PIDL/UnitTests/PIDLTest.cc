@@ -26,46 +26,68 @@
   DEALINGS IN THE SOFTWARE.
 */
 
+#include <Core/CCA/PIDL/UnitTests/PIDLTest.h>
+
+#include <cppunit/TestAssert.h>
+#include <cppunit/portability/Stream.h>
+
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Framework/UnitTests/AbstractFrameworkTest.h>
+#include <Core/CCA/PIDL/Warehouse.h>
+
+#include <Core/Exceptions/InternalError.h>
+#include <Core/CCA/PIDL/CommError.h>
+
+#include <iostream>
 
 // Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION( AbstractFrameworkTest );
+CPPUNIT_TEST_SUITE_REGISTRATION( PIDLTest );
 
-AbstractFrameworkTest::AbstractFrameworkTest()
+PIDLTest::~PIDLTest()
 {
-  //std::cout << "AbstractFrameworkTest::AbstractFrameworkTest()" << std::endl;
 }
 
-AbstractFrameworkTest::~AbstractFrameworkTest()
+void PIDLTest::setUp()
 {
-  //std::cout << "AbstractFrameworkTest::~AbstractFrameworkTest()" << std::endl;
 }
 
-void AbstractFrameworkTest::setUp()
+void PIDLTest::tearDown()
 {
-  // tested in PIDLTest
-  SCIRun::PIDL::initialize();
-    //SCIRun::PIDL::isfrwk = true;
-//   //all threads in the framework share the same
-//   //invocation id
-   //SCIRun::PRMI::setInvID(SCIRun::ProxyID(1,0));
-//   fwk = new SCIRun::SCIRunFramework();
-//   CPPUNIT_ASSERT(fwk != 0);
 }
 
-void AbstractFrameworkTest::tearDown()
+void PIDLTest::testInitialize()
 {
+  try {
+    SCIRun::PIDL::initialize();
+  }
+  catch (const SCIRun::CommError& e1) {
+    CPPUNIT_FAIL(e1.message());
+  }
+  catch (const SCIRun::Exception& e2) {
+    CPPUNIT_FAIL(e2.message());
+  }
+  // check initial PIDL settings
+  CPPUNIT_ASSERT_EQUAL(SCIRun::PIDL::rank, 0);
+  CPPUNIT_ASSERT_EQUAL(SCIRun::PIDL::size, 1);
+  CPPUNIT_ASSERT(SCIRun::PIDL::sampleProxy == false);
+  CPPUNIT_ASSERT(SCIRun::PIDL::isfrwk == false);
+  CPPUNIT_ASSERT(SCIRun::PIDL::isFramework() == false);
+}
+
+void PIDLTest::testWarehouse()
+{
+  SCIRun::Warehouse *warehouse;
+  try {
+    warehouse = SCIRun::PIDL::getWarehouse();
+  }
+  catch (const SCIRun::InternalError& e) {
+    CPPUNIT_FAIL(e.message());
+  }
+  CPPUNIT_ASSERT(warehouse != 0);
+}
+
+// doesn't return because of DataTransmitter bug
+void PIDLTest::testFinalize()
+{
+  std::cout << "\ntestFinalize\n";
   SCIRun::PIDL::finalize();
-//   delete fwk;
-}
-
-void AbstractFrameworkTest::testInstantiate()
-{
-  CPPUNIT_FAIL( "not implemented" );
-}
-
-void AbstractFrameworkTest::testGetServices()
-{
-  CPPUNIT_FAIL( "not implemented" );
 }

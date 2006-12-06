@@ -5569,12 +5569,17 @@ if test "$enable_scirun2" = "yes"; then
   if test "$HAVE_BABEL" != "yes"; then
     AC_MSG_WARN([could not find a Babel installation (recommended for SCIRun2).])
   fi
+  if test "$DEBUG" = "yes"; then
+    DEF_DEBUG="#define FWK_DEBUG 1"
+  fi
   BUILD_SCIRUN2="yes"
 else
   BUILD_SCIRUN2="no"
 fi
-AC_SUBST(BUILD_SCIRUN2)
 
+AC_SUBST(DEF_DEBUG)
+AC_SUBST(BUILD_SCIRUN2)
+sci_defs_files="$sci_defs_files include/sci_defs/framework_testdefs.h"
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  Fix Frost config vars  ------------------------
