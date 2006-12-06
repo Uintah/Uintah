@@ -51,6 +51,7 @@ LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
   REGISTER_CATCHER_TARGET(LayerButton::down);
   REGISTER_CATCHER_TARGET(LayerButton::kill);
   REGISTER_CATCHER_TARGET(LayerButton::select);
+  REGISTER_CATCHER_TARGET(LayerButton::merge);
 }
 
 LayerButton::~LayerButton() 

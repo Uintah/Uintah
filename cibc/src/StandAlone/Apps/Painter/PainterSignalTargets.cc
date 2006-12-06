@@ -114,7 +114,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::CopyLayer);
   REGISTER_CATCHER_TARGET(Painter::DeleteLayer);
   REGISTER_CATCHER_TARGET(Painter::NewLayer);
-  //  REGISTER_CATCHER_TARGET(Painter::MergeLayer);
 
   REGISTER_CATCHER_TARGET(Painter::MemMapFileRead);
 
