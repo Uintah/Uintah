@@ -120,11 +120,11 @@ all: $(OTF_LIBS)
 %.d: %.cc
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Building .d file for: $<"
-	@set -e; $(CXX) -M @CFLAGS@ $(INCLUDES) $< \
+	@set -e; $(CXX) -M @OTFL_CFLAGS@ $(INCLUDES) $< \
           | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
           [ -s $@ ] || rm -f $@
 else
-	set -e; $(CXX) -M @CFLAGS@ $(INCLUDES) $< \
+	set -e; $(CXX) -M @OTFL_CFLAGS@ $(INCLUDES) $< \
           | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
           [ -s $@ ] || rm -f $@
 endif
@@ -133,10 +133,10 @@ endif
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
 	@rm -f $@ $(*).so $(*).dylib $(*).dll
-	@$(CXX) -c @CFLAGS@ $(INCLUDES) $< -o $@ 
+	@$(CXX) -c @OTFL_CFLAGS@ $(INCLUDES) $< -o $@ 
 else
 	rm -f $@ $(*).so $(*).dylib $(*).dll
-	$(CXX) -c @CFLAGS@ $(INCLUDES) $< -o $@ 
+	$(CXX) -c @OTFL_CFLAGS@ $(INCLUDES) $< -o $@ 
 endif
 
 # don't create deps with ms yet
@@ -147,17 +147,17 @@ endif
 %.so : %.o 
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Linking: $@"
-	@$(CXX) @CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ $(LIBRPATH1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
+	@$(CXX) @OTFL_CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ $(LIBRPATH1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 else
-	$(CXX) @CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ $(LIBRPATH1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
+	$(CXX) @OTFL_CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ $(LIBRPATH1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 endif
 
 %.dylib : %.o 
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Linking: $@"
-	@$(CXX) @CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ -L$(LIBDIR1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
+	@$(CXX) @OTFL_CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ -L$(LIBDIR1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 else
-	$(CXX) @CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ -L$(LIBDIR1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
+	$(CXX) @OTFL_CFLAGS@ $(LIBRARY) @SOFLAGS@ $< -o $@ -L$(LIBDIR1) $(LIBS1) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 endif
 
 %.dll : %.obj
