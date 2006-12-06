@@ -51,6 +51,7 @@
 
 #include <stdlib.h>
 
+#include <Core/Malloc/share.h>
 namespace SCIRun {
   
 struct Allocator;
@@ -74,7 +75,7 @@ void AllocatorResetDefaultTag();
 
 // append the num to the MallocStats file if MallocStats are dumped to a file
 // (negative appends nothing)
-void AllocatorMallocStatsAppendNumber(int num);
+SCISHARE void AllocatorMallocStatsAppendNumber(int num);
   
 Allocator* DefaultAllocator();
 void GetGlobalStats(Allocator*,

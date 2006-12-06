@@ -111,10 +111,12 @@
 #ifndef JGS_MATLABIO_MATLABCONVERTER_FIELDTOMATLAB_H
 #define JGS_MATLABIO_MATLABCONVERTER_FIELDTOMATLAB_H 1
 
+#include <Core/Matlab/share.h>
+
 namespace MatlabIO {
 
 
-class FieldToMatlabAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
+class SCISHARE FieldToMatlabAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
 {
   public:
 
