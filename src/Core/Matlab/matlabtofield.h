@@ -109,6 +109,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>
 
+#include <Core/Matlab/share.h>
 
 
 /*
@@ -122,7 +123,7 @@
 
 namespace MatlabIO {
 
-class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
+class SCISHARE MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
 {
   public:
 

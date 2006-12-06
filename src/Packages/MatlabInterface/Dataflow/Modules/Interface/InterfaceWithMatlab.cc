@@ -288,7 +288,7 @@ class InterfaceWithMatlab : public Module, public ServiceBase
     InterfaceWithMatlabEngineThreadInfoHandle	thread_info_;
 #else
     Engine* engine_;
-    char output_buffer_[512];
+    char output_buffer_[51200];
 #endif
     FileTransferClientHandle      file_transfer_;
 
@@ -731,6 +731,9 @@ bool InterfaceWithMatlab::send_matlab_job()
   cout << "Sending matlab command: " << command<< endl;
   bool success = (engEvalString(engine_, command.c_str()) == 0);
   cout << output_buffer_ << endl;
+
+  // without this, matlab will cache the first file as a function and ignore the rest of them.
+  engEvalString(engine_, "clear functions");
   // output_buffer_ has output in it - do something with it
 #endif
 	return(success);
@@ -844,8 +847,8 @@ bool InterfaceWithMatlab::open_matlab_engine()
       error(std::string("InterfaceWithMatlab: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
       return false;
     }
-    engOutputBuffer(engine_, output_buffer_, 512);
-    engSetVisible(engine_, false);
+    engOutputBuffer(engine_, output_buffer_, 51200);
+    //engSetVisible(engine_, false);
 #endif
     file_transfer_ = scinew FileTransferClient();
     if(!(file_transfer_->open(address,"matlabenginefiletransfer",sessionnum,passwd)))
