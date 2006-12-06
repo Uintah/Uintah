@@ -1207,27 +1207,27 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
       task->requires(Task::NewDW, rvar->var_Z_FC_flux,
                   0, Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                   
-      task->modifies(rvar->var_X_FC_flux, fat);
-      task->modifies(rvar->var_Y_FC_flux, fat);
-      task->modifies(rvar->var_Z_FC_flux, fat);
+      task->computes(rvar->var_X_FC_corr);
+      task->computes(rvar->var_Y_FC_corr);
+      task->computes(rvar->var_Z_FC_corr);
     }
   }
 
-  task->modifies(lb->mass_X_FC_fluxLabel, fat);
-  task->modifies(lb->mass_Y_FC_fluxLabel, fat);
-  task->modifies(lb->mass_Z_FC_fluxLabel, fat);
+  task->computes(lb->mass_X_FC_corrLabel);
+  task->computes(lb->mass_Y_FC_corrLabel);
+  task->computes(lb->mass_Z_FC_corrLabel);
   
-  task->modifies(lb->mom_X_FC_fluxLabel, fat);
-  task->modifies(lb->mom_Y_FC_fluxLabel, fat);
-  task->modifies(lb->mom_Z_FC_fluxLabel, fat);
+  task->computes(lb->mom_X_FC_corrLabel);
+  task->computes(lb->mom_Y_FC_corrLabel);
+  task->computes(lb->mom_Z_FC_corrLabel);
   
-  task->modifies(lb->int_eng_X_FC_fluxLabel, fat);
-  task->modifies(lb->int_eng_Y_FC_fluxLabel, fat);
-  task->modifies(lb->int_eng_Z_FC_fluxLabel, fat); 
+  task->computes(lb->int_eng_X_FC_corrLabel);
+  task->computes(lb->int_eng_Y_FC_corrLabel);
+  task->computes(lb->int_eng_Z_FC_corrLabel); 
   
-  task->modifies(lb->sp_vol_X_FC_fluxLabel, fat);
-  task->modifies(lb->sp_vol_Y_FC_fluxLabel, fat);
-  task->modifies(lb->sp_vol_Z_FC_fluxLabel, fat);
+  task->computes(lb->sp_vol_X_FC_corrLabel);
+  task->computes(lb->sp_vol_Y_FC_corrLabel);
+  task->computes(lb->sp_vol_Z_FC_corrLabel);
   
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allICEMaterials()); 
 }
@@ -1488,21 +1488,21 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
   //__________________________________
   // Correction fluxes  from the coarse level            
                                       // MASS
-  task->requires(Task::NewDW, lb->mass_X_FC_fluxLabel, gac, 1);  
-  task->requires(Task::NewDW, lb->mass_Y_FC_fluxLabel, gac, 1);  
-  task->requires(Task::NewDW, lb->mass_Z_FC_fluxLabel, gac, 1);  
+  task->requires(Task::NewDW, lb->mass_X_FC_corrLabel, gac, 1);  
+  task->requires(Task::NewDW, lb->mass_Y_FC_corrLabel, gac, 1);  
+  task->requires(Task::NewDW, lb->mass_Z_FC_corrLabel, gac, 1);  
                                       // MOMENTUM
-  task->requires(Task::NewDW, lb->mom_X_FC_fluxLabel,  gac, 1);  
-  task->requires(Task::NewDW, lb->mom_Y_FC_fluxLabel,  gac, 1);  
-  task->requires(Task::NewDW, lb->mom_Z_FC_fluxLabel,  gac, 1);  
+  task->requires(Task::NewDW, lb->mom_X_FC_corrLabel,  gac, 1);  
+  task->requires(Task::NewDW, lb->mom_Y_FC_corrLabel,  gac, 1);  
+  task->requires(Task::NewDW, lb->mom_Z_FC_corrLabel,  gac, 1);  
                                       // INT_ENG
-  task->requires(Task::NewDW, lb->int_eng_X_FC_fluxLabel,gac, 1);    
-  task->requires(Task::NewDW, lb->int_eng_Y_FC_fluxLabel,gac, 1);    
-  task->requires(Task::NewDW, lb->int_eng_Z_FC_fluxLabel,gac, 1);    
+  task->requires(Task::NewDW, lb->int_eng_X_FC_corrLabel,gac, 1);    
+  task->requires(Task::NewDW, lb->int_eng_Y_FC_corrLabel,gac, 1);    
+  task->requires(Task::NewDW, lb->int_eng_Z_FC_corrLabel,gac, 1);    
                                       // SPECIFIC VOLUME
-  task->requires(Task::NewDW, lb->sp_vol_X_FC_fluxLabel, gac, 1);    
-  task->requires(Task::NewDW, lb->sp_vol_Y_FC_fluxLabel, gac, 1);    
-  task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel, gac, 1);               
+  task->requires(Task::NewDW, lb->sp_vol_X_FC_corrLabel, gac, 1);    
+  task->requires(Task::NewDW, lb->sp_vol_Y_FC_corrLabel, gac, 1);    
+  task->requires(Task::NewDW, lb->sp_vol_Z_FC_corrLabel, gac, 1);               
 
 
   //__________________________________
@@ -1513,9 +1513,9 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
          iter != d_modelSetup->d_reflux_vars.end(); iter++){
       AMR_refluxVariable* rvar = *iter;
       
-      task->requires(Task::NewDW, rvar->var_X_FC_flux, gac, 1);    
-      task->requires(Task::NewDW, rvar->var_Y_FC_flux, gac, 1);    
-      task->requires(Task::NewDW, rvar->var_Z_FC_flux, gac, 1);
+      task->requires(Task::NewDW, rvar->var_X_FC_corr, gac, 1);    
+      task->requires(Task::NewDW, rvar->var_Y_FC_corr, gac, 1);    
+      task->requires(Task::NewDW, rvar->var_Z_FC_corr, gac, 1);
       task->modifies(rvar->var_adv);
     }
   }

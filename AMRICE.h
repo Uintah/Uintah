@@ -7,7 +7,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-
 #include <Packages/Uintah/CCA/Components/ICE/share.h>
 
 //#define REFLUX_DBG 
@@ -231,9 +230,9 @@ void ICE::refluxOperator_applyCorrectionFluxes(
                               const int one_zero)
 {
   // form the fine patch flux label names
-  string x_name = varLabel + "_X_FC_flux";
-  string y_name = varLabel + "_Y_FC_flux";
-  string z_name = varLabel + "_Z_FC_flux";
+  string x_name = varLabel + "_X_FC_corr";
+  string y_name = varLabel + "_Y_FC_corr";
+  string z_name = varLabel + "_Z_FC_corr";
   
   // grab the varLabels
   VarLabel* xlabel = VarLabel::find(x_name);
@@ -244,14 +243,14 @@ void ICE::refluxOperator_applyCorrectionFluxes(
     throw InternalError( "refluxOperator_applyCorrectionFluxes: variable label not found: " 
                           + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
   }
-  constSFCXVariable<T>  Q_X_coarse_flux;
-  constSFCYVariable<T>  Q_Y_coarse_flux;
-  constSFCZVariable<T>  Q_Z_coarse_flux;
+  constSFCXVariable<T>  Q_X_coarse_corr;
+  constSFCYVariable<T>  Q_Y_coarse_corr;
+  constSFCZVariable<T>  Q_Z_coarse_corr;
   
   Ghost::GhostType  gac = Ghost::AroundCells;
-  new_dw->get(Q_X_coarse_flux,  xlabel,indx, coarsePatch, gac,1);
-  new_dw->get(Q_Y_coarse_flux,  ylabel,indx, coarsePatch, gac,1);
-  new_dw->get(Q_Z_coarse_flux,  zlabel,indx, coarsePatch, gac,1); 
+  new_dw->get(Q_X_coarse_corr,  xlabel,indx, coarsePatch, gac,1);
+  new_dw->get(Q_Y_coarse_corr,  ylabel,indx, coarsePatch, gac,1);
+  new_dw->get(Q_Z_coarse_corr,  zlabel,indx, coarsePatch, gac,1); 
   
   //__________________________________
   // Iterate over coarsefine interface faces
@@ -294,7 +293,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
           T q_CC_coarse_org = q_CC_coarse[c_CC];
-          q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
+          q_CC_coarse[c_CC] += Q_X_coarse_corr[c_FC];
                 
           count += one_zero;                       // keep track of how that face                        
           finePatch->setFaceMark(0,patchFace,count); // has been touched
@@ -303,7 +302,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           if (c_CC.y() == half.y() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
             cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
                  << " q_CC_org " << q_CC_coarse_org
-                 << " correction " << Q_X_coarse_flux[c_FC]
+                 << " correction " << Q_X_coarse_corr[c_FC]
                  << " q_CC_corrected " << q_CC_coarse[c_CC] << endl;
             cout << "" << endl;
           }
@@ -316,7 +315,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
           T q_CC_coarse_org = q_CC_coarse[c_CC];
-          q_CC_coarse[c_CC] += Q_Y_coarse_flux[c_FC];
+          q_CC_coarse[c_CC] += Q_Y_coarse_corr[c_FC];
           
           count += one_zero;                              
           finePatch->setFaceMark(0,patchFace,count);
@@ -325,7 +324,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           if (c_CC.x() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
             cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
                  << " q_CC_org " << q_CC_coarse_org
-                 << " correction " << Q_Y_coarse_flux[c_FC]
+                 << " correction " << Q_Y_coarse_corr[c_FC]
                  << " q_CC_corrected " << q_CC_coarse[c_CC] << endl;
             cout << "" << endl;
           }
@@ -337,7 +336,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;             
           T q_CC_coarse_org = q_CC_coarse[c_CC];
-          q_CC_coarse[c_CC] += Q_Z_coarse_flux[c_FC];
+          q_CC_coarse[c_CC] += Q_Z_coarse_corr[c_FC];
           
           count += one_zero;                              
           finePatch->setFaceMark(0,patchFace,count);
@@ -346,7 +345,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           if (c_CC.x() == half.x() && c_CC.y() == half.y() && is_rightFace_variable(name,varLabel) ) {
             cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
                  << " q_CC_org " << q_CC_coarse_org
-                 << " correction " << Q_Z_coarse_flux[c_FC]
+                 << " correction " << Q_Z_coarse_corr[c_FC]
                  << " q_CC_corrected " << q_CC_coarse[c_CC] << endl;
             cout << "" << endl;
           }
@@ -589,27 +588,31 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                               const int one_zero)
 {
   // form the fine patch flux label names
-  string x_name = fineVarLabel + "_X_FC_flux";
-  string y_name = fineVarLabel + "_Y_FC_flux";
-  string z_name = fineVarLabel + "_Z_FC_flux";
+  string x_name = fineVarLabel + "_X_FC_";
+  string y_name = fineVarLabel + "_Y_FC_";
+  string z_name = fineVarLabel + "_Z_FC_";
   
   // grab the varLabels
-  VarLabel* xlabel = VarLabel::find(x_name);
-  VarLabel* ylabel = VarLabel::find(y_name);
-  VarLabel* zlabel = VarLabel::find(z_name);  
+  const VarLabel* xFluxLabel = VarLabel::find(x_name + "flux");
+  const VarLabel* yFluxLabel = VarLabel::find(y_name + "flux");
+  const VarLabel* zFluxLabel = VarLabel::find(z_name + "flux");
+  
+  const VarLabel* xCorrLabel = VarLabel::find(x_name + "corr");
+  const VarLabel* yCorrLabel = VarLabel::find(y_name + "corr");
+  const VarLabel* zCorrLabel = VarLabel::find(z_name + "corr"); 
 
-  if(xlabel == NULL || ylabel == NULL || zlabel == NULL){
+  if(xFluxLabel == NULL || yFluxLabel == NULL || zFluxLabel == NULL){
     throw InternalError( "refluxOperator_computeCorrectionFluxes: variable label not found: " 
                           + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
   }
 
-  constSFCXVariable<T> Q_X_fine_flux;
-  constSFCYVariable<T> Q_Y_fine_flux;
-  constSFCZVariable<T> Q_Z_fine_flux;
+  constSFCXVariable<T> Q_X_fine_flux, Q_X_coarse_flux;
+  constSFCYVariable<T> Q_Y_fine_flux, Q_Y_coarse_flux;
+  constSFCZVariable<T> Q_Z_fine_flux, Q_Z_coarse_flux;
   
-  SFCXVariable<T>  Q_X_coarse_flux, Q_X_coarse_flux_org;
-  SFCYVariable<T>  Q_Y_coarse_flux, Q_Y_coarse_flux_org;
-  SFCZVariable<T>  Q_Z_coarse_flux, Q_Z_coarse_flux_org;
+  SFCXVariable<T> Q_X_coarse_corr;
+  SFCYVariable<T> Q_Y_coarse_corr;
+  SFCZVariable<T> Q_Z_coarse_corr;
   
   // find the exact range of fine data (so we don't mess up mpi)
   IntVector xfl, xfh, yfl, yfh, zfl, zfh, ch;
@@ -648,23 +651,27 @@ void ICE::refluxOperator_computeCorrectionFluxes(
     do_z = false;
   }
 
+
+  Ghost::GhostType gx  = Ghost::AroundFacesX;
+  Ghost::GhostType gy  = Ghost::AroundFacesY;
+  Ghost::GhostType gz  = Ghost::AroundFacesZ;
   if (do_x) {
-    new_dw->getRegion(Q_X_fine_flux,    xlabel,indx, fineLevel,   xfl,xfh);
-    new_dw->allocateTemporary(Q_X_coarse_flux_org, coarsePatch);
-    new_dw->getModifiable(Q_X_coarse_flux,  xlabel,indx, coarsePatch);
-    Q_X_coarse_flux_org.copyData(Q_X_coarse_flux);
+    new_dw->getRegion(     Q_X_fine_flux,   xFluxLabel, indx, fineLevel, xfl,xfh);
+    new_dw->get(           Q_X_coarse_flux, xFluxLabel, indx, coarsePatch, gx,1);
+    new_dw->allocateAndPut(Q_X_coarse_corr, xCorrLabel, indx, coarsePatch);
+    Q_X_coarse_corr.initialize(T(0));
   }
   if (do_y) {
-    new_dw->getRegion(Q_Y_fine_flux,    ylabel,indx, fineLevel,   yfl,yfh);
-    new_dw->allocateTemporary(Q_Y_coarse_flux_org, coarsePatch);
-    new_dw->getModifiable(Q_Y_coarse_flux,  ylabel,indx, coarsePatch);
-    Q_Y_coarse_flux_org.copyData(Q_Y_coarse_flux);
+    new_dw->getRegion(     Q_Y_fine_flux,   yFluxLabel, indx, fineLevel, yfl,yfh);
+    new_dw->get(           Q_Y_coarse_flux, yFluxLabel, indx, coarsePatch, gy,1);
+    new_dw->allocateAndPut(Q_Y_coarse_corr, yCorrLabel, indx, coarsePatch);
+    Q_Y_coarse_corr.initialize(T(0));
   }
   if (do_z) {
-    new_dw->getRegion(Q_Z_fine_flux,    zlabel,indx, fineLevel,   zfl,zfh);
-    new_dw->allocateTemporary(Q_Z_coarse_flux_org, coarsePatch);
-    new_dw->getModifiable(Q_Z_coarse_flux,  zlabel,indx, coarsePatch);
-    Q_Z_coarse_flux_org.copyData(Q_Z_coarse_flux);
+    new_dw->getRegion(     Q_Z_fine_flux,   zFluxLabel, indx, fineLevel, zfl,zfh);
+    new_dw->get(           Q_Z_coarse_flux, zFluxLabel, indx, coarsePatch, gz,1);
+    new_dw->allocateAndPut(Q_Z_coarse_corr, zCorrLabel, indx, coarsePatch);
+    Q_Z_coarse_corr.initialize(T(0));
   }
 
   IntVector r_Ratio = fineLevel->getRefinementRatio();
@@ -729,6 +736,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
     cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
     cout <<name <<  " coarsePatch " << *coarsePatch << endl;
     cout << "      finePatch   " << *finePatch << endl;
+    cout << "nSubCycles: " << nSubCycles << endl;
   }
 #endif 
 /*===========TESTING==========`*/
@@ -742,7 +750,6 @@ void ICE::refluxOperator_computeCorrectionFluxes(
         //__________________________________
         // sum all of the fluxes passing from the 
         // fine level to the coarse level
- 
         for(; !c_iter.done(); c_iter++){
            IntVector c_CC = *c_iter;
            IntVector c_FC = c_CC + c_FC_offset;
@@ -756,7 +763,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
              sum_fineLevelFlux += Q_X_fine_flux[f_FC];
            }
 
-           Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] 
+           Q_X_coarse_corr[c_FC] = (c_FaceNormal*Q_X_coarse_flux[c_FC] 
                                  + (f_FaceNormal*sum_fineLevelFlux)/nSubCycles);
            //Q_X_coarse_flux[c_FC] = ( Q_X_coarse_flux_org[c_FC] - coeff* sum_fineLevelFlux);
 
@@ -766,9 +773,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 #ifdef REFLUX_DBG
         if (c_CC.y() == half.y() && c_CC.z() == half.z() && is_rightFace_variable(name,fineVarLabel) ) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-               << " coarseLevelFlux " << c_FaceNormal*Q_X_coarse_flux_org[c_FC]
+               << " coarseLevelFlux " << c_FaceNormal*Q_X_coarse_flux[c_FC]
                << " sum_fineLevelflux " << (f_FaceNormal *sum_fineLevelFlux)/nSubCycles
-               << " correction " << Q_X_coarse_flux[c_FC]<< endl;
+               << " correction " << Q_X_coarse_corr[c_FC]<< endl;
           cout << "" << endl;
         }
 #endif 
@@ -791,7 +798,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
              sum_fineLevelFlux += Q_Y_fine_flux[f_FC];          
            }
 
-           Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] 
+           Q_Y_coarse_corr[c_FC] = (c_FaceNormal*Q_Y_coarse_flux[c_FC] 
                                  + (f_FaceNormal*sum_fineLevelFlux)/nSubCycles);
 
            count += one_zero;                       // keep track of how many times              
@@ -800,9 +807,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 #ifdef REFLUX_DBG
         if (c_CC.x() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,fineVarLabel)) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-               << " coarseLevelFlux " << c_FaceNormal*Q_Y_coarse_flux_org[c_FC]
+               << " coarseLevelFlux " << c_FaceNormal*Q_Y_coarse_flux[c_FC]
                << " sum_fineLevelflux " << (f_FaceNormal *sum_fineLevelFlux)/nSubCycles
-               << " correction " << Q_Y_coarse_flux[c_FC] << endl;
+               << " correction " << Q_Y_coarse_corr[c_FC] << endl;
           cout << "" << endl;
         }
 #endif 
@@ -826,7 +833,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
              sum_fineLevelFlux += Q_Z_fine_flux[f_FC];
            }
                               
-           Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] 
+           Q_Z_coarse_corr[c_FC] = (c_FaceNormal*Q_Z_coarse_flux[c_FC] 
                                  + (f_FaceNormal*sum_fineLevelFlux)/nSubCycles);
            
             count += one_zero;                              
@@ -835,9 +842,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 #ifdef REFLUX_DBG
         if (c_CC.x() == half.x() && c_CC.y() == half.y() && is_rightFace_variable(name,fineVarLabel)) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-                << " coarseLevelFlu " << c_FaceNormal*Q_Z_coarse_flux_org[c_FC]
+                << " coarseLevelFlu " << c_FaceNormal*Q_Z_coarse_flux[c_FC]
                << " sum_fineLevelflux " << (f_FaceNormal *sum_fineLevelFlux)/nSubCycles
-               << " correction " << Q_Z_coarse_flux[c_FC]<< endl;
+               << " correction " << Q_Z_coarse_corr[c_FC]<< endl;
           cout << "" << endl;
         }
 #endif 
