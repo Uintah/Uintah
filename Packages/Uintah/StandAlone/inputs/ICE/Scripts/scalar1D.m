@@ -14,55 +14,59 @@ clear function;
 
 %________________________________
 % USER INPUTS
-%uda = 'advectScalarAMR-2L_r2-I2.new.uda'
-uda = 'impAdvectAMR.uda'
+uda = 'impAdvectScalarAMR.uda'
 
-desc = '1D uniform advection of a passive scalar, refinement ratio 2';
-desc2 = 'Linear CFI Interpolation, SecondOrder advection, Refluxing off';
+desc = '1D uniform advection of a passive scalar, R=4';
+desc2 = 'Linear CFI Interpolation, SecondOrder advection, Refluxing on';
 
-legendText = {'L-0','L-1', 'L-2'};
-pDir = 1;                    
-symbol = {'+-','*-r','xg'};
-mat      = 0;
+legendText = {'L-0','L-1', 'L-2', 'L-3', 'L-4'};
+pDir   = 1;                    
+symbol = {'+','*r','xg','squarem','diamondb'};
+mat    = 0;
 
-exactSolution = 'linear' %'sinusoidal'; %linear
-velocity    = 5;
-exactSolMin = 0.05;
-exactSolMax = 5.25;
+exactSolution = 'sinusoidal' %'sinusoidal'; %linear
+velocity    = 1.23456;
+exactSolMin = 0.15;
+exactSolMax = 0.35;
 freq  = 1;
 slope = 1;
 
 numPlotCols = 1;
-numPlotRows = 1;
+numPlotRows = 3;
 
 plotScalarF        = true;
-plotScalarFaceflux = false;
+plotRHS            = false;
+plotScalarFaceflux = true;
+plotScalarFaceCorr = true;
 plotSumScalarF     = true;
 
 
 % lineExtract start and stop
-%startEnd ={'-istart 0 -1 0 -iend 0 100 0';'-istart 0 -1 0 -iend 0 100 0' ;'-istart 0 0 0 -iend 200 0 0'};
-startEnd ={'-istart -1 0 0 -iend 100 0 0';'-istart -1 0 0 -iend 100 0 0' ;'-istart 0 0 0 -iend 200 0 0'};
+startEnd ={'-istart -1 0 0 -iend 100 0 0';
+           '-istart -1 0 0 -iend 400 0 0';
+           '-istart -1 0 0 -iend 400 0 0';
+           '-istart -1 0 0 -iend 400 0 0';
+           '-istart -1 0 0 -iend 400 0 0'};
 %________________________________
 %  extract the physical time for each dump
-c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
+c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
 [status0, result0]=unix(c0);
-physicalTime  = importdata('tmp');
-nDumps = length(physicalTime) - 1;
+physicalTime  = load('-ascii','tmp');
+nDumps = length(physicalTime)
 
-set(0,'DefaultFigurePosition',[0,0,900,600]);
+%set(0,'DefaultFigurePosition',[0,0,900,600]);
 %_________________________________
 % Loop over all the timesteps
 for(n = 1:nDumps )
-  %n = input('input timestep') 
+  n = input('input timestep') 
   ts = n-1;
   
-  time = sprintf('%d sec',physicalTime(n));
+  time = sprintf('%e sec',physicalTime(n));
   
   %find max number of levels
   c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i |grep "Number of levels" | grep -o \\[0-9\\] >& tmp',uda, ts,ts);
   [s, maxLevel]=unix(c0);
-  maxLevel  = importdata('tmp');
+  maxLevel  = load('-ascii','tmp');
   levelExists{1} = 0;
    
   % find what levels exists
@@ -70,23 +74,6 @@ for(n = 1:nDumps )
     c0 = sprintf('puda -gridstats %s -timesteplow %i -timestephigh %i >& tmp ; grep "Level: index %i" tmp',uda, ts,ts, L-1);
     [levelExists{L}, result0]=unix(c0);
   end 
-  
-  %_________________________________
-  % Exact Solution
-  dist   = exactSolMax - exactSolMin;
-  offset = physicalTime(n) * velocity;
-  xmin   = exactSolMin + offset;
-  xmax   = exactSolMax + offset;
-  dx     = (xmax - xmin)/100;
-  x = xmin:dx:xmax;
- 
-  if( strcmp(exactSolution,'linear'))
-    f = slope .* (x - xmin )/dist;
-  end
-  if(strcmp(exactSolution,'sinusoidal'))
-    f = sin( 2.0 * freq * pi .* (x - xmin )/dist);
-  end
-  
   
   %______________________________
   for(L = 1:maxLevel) 
@@ -104,14 +91,45 @@ for(n = 1:nDumps )
       if plotScalarF
         c6 = sprintf('lineextract -v scalar-f -l %i -cellCoords -timestep %i %s -o scalar-f.dat -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s6, r6]=unix(c6);
-        scalar{1,L} = importdata('scalar-f.dat');
-        xx = scalar{1,L}(:,pDir);
+        scalarArray{1,L} = load('-ascii','scalar-f.dat');
+        xx     = scalarArray{1,L}(:,pDir);
+        scalar = scalarArray{1,L}(:,4);
+
+
+        %_________________________________
+        % Exact Solution on each level
+        dist   = exactSolMax - exactSolMin;
+        offset = physicalTime(n) * velocity;
+        xmin   = exactSolMin + offset;
+        xmax   = exactSolMax + offset;
+        uda_dx = xx(2) - xx(1);
+        x = xmin:uda_dx:xmax;
+        exactSol=xx * 0;
         
-        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,scalar{1,L}(:,4),symbol{L})
+        for( i = 1:length(xx))
+          if(xx(i) >= xmin && xx(i) <= xmax)
+            
+            if( strcmp(exactSolution,'linear'))
+              exactSol(i) = exactSol(i) + slope .* (xx(i) - xmin )/dist;
+            end
+
+            if(strcmp(exactSolution,'sinusoidal'))
+              exactSol(i) = exactSol(i) + sin( 2.0 * freq * pi .* (xx(i) - xmin )/dist);
+            end
+          end
+        end
+
+        difference = scalar - exactSol;
+        L2norm     = sqrt( sum(difference.^2)/length(difference) )
+        LInfinity  = max(difference)
+         
+        % plot the results
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,scalar,symbol{L})
         hold on;
-        plot(x,f);
-        t = sprintf('%s Time: %s\n%s',desc, time,desc2)
+        plot(xx,exactSol);
+        t = sprintf('%s Time: %s\n%s',desc, time,desc2);
         title(t);
+        %axis([0.175 0.225]);
         %axis([2.75 5.75 0.5 1])
         
         ylabel('scalar');
@@ -124,23 +142,35 @@ for(n = 1:nDumps )
         plotNum = plotNum+ 1;
       end
       %____________________________
-      %   Reflux correcton
+      %   rhs
+      if plotRHS
+        c6 = sprintf('lineextract -v rhs -l %i -cellCoords -timestep %i %s -o rhs.dat -m %i  -uda %s',level,ts,S_E,mat,uda);
+        [s6, r6]=unix(c6);
+        rhs{1,L} = load('-ascii','rhs.dat');
+        xx = rhs{1,L}(:,pDir);
+        
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,rhs{1,L}(:,4),symbol{L})
+        %axis([0.175 0.225]);
+        %axis([2.75 5.75 0.5 1])
+        
+        grid on;
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
+        plotNum = plotNum+ 1;
+      end
+      %____________________________
+      %   Reflux flux
       if plotScalarFaceflux
         c6 = sprintf('lineextract -v scalar-f_X_FC_flux -l %i -cellCoords -timestep %i %s -o scalar-f_X_FC_flux.dat  -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s6, r6]=unix(c6);
-        scalar{1,L} = importdata('scalar-f_X_FC_flux.dat');
-        xx = scalar{1,L}(:,pDir);
+        scalarFlux{1,L} = load('-ascii','scalar-f_X_FC_flux.dat');
+        xx = scalarFlux{1,L}(:,pDir);
         
-        if( L == maxLevel)
-            tmp = scalar{1,L}(:,4) .* 2;
-        else
-            tmp = scalar{1,L}(:,4);
-        end
-        
-        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,tmp,symbol{L})
-        t = sprintf('%s Time: %s \n',desc, time,desc2)
-       
-        axis([0 10 0. 10])
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,scalarFlux{1,L}(:,4),symbol{L})
+        t = sprintf('%s Time: %s \n',desc, time,desc2);
         
         ylabel('Flux_{scalar}');
         legend(legendText);
@@ -152,19 +182,40 @@ for(n = 1:nDumps )
         end
         plotNum = plotNum+ 1;
       end
+      
+      %____________________________
+      %   Reflux Correction
+      if plotScalarFaceCorr
+        if(L~=maxLevel)
+          c6 = sprintf('lineextract -v scalar-f_X_FC_corr -l %i -cellCoords -timestep %i %s -o scalar-f_X_FC_corr.dat  -m %i  -uda %s',level,ts,S_E,mat,uda);
+          [s6, r6]=unix(c6);
+          scalarCorr{1,L} = load('-ascii','scalar-f_X_FC_corr.dat');
+          xx = scalarCorr{1,L}(:,pDir);
+          normalizedScalarCorr = scalarCorr{1,L}(:,4)./(scalarFlux{1,L}(:,4) + 1e-100);
+
+          subplot(numPlotRows,numPlotCols,plotNum), plot(xx,normalizedScalarCorr,symbol{L})
+          t = sprintf('%s Time: %s \n',desc, time,desc2);
+          ylim([-1 1]);
+          
+          ylabel('Normalized reflux correction Flux_{scalar}');
+          legend(legendText);
+          grid on;
+          plotNum = plotNum+ 1;
+        end
+      end
 
     end  % if level exists
   end  % level loop
-  M(n) = getframe(gcf);
+  'sum scalar on coarse level ',sum(scalarArray{1,1}(:,4))
+%  M(n) = getframe(gcf);
 end  % timestep loop
-
 
 %____________________________
 %   sum_scalar_f
 if(plotSumScalarF)
   figure(2)
   c = sprintf('%s/sum_scalar_f.dat',uda);
-  sumscalar = importdata(c)
+  sumscalar = load('-ascii',c);
   t = sumscalar(:,1);
   plot(t,sumscalar(:,2))
   ylabel('sum_scalar_f');
