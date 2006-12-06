@@ -79,6 +79,10 @@ KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_c:        painter_->CopyLayer(0); break;
   case SCIRun_x:        painter_->DeleteLayer(0); break;
   case SCIRun_v:        painter_->NewLayer(0);break;
+  case SCIRun_f:        
+  if (painter_->cur_window_) {
+    painter_->cur_window_->autoview(painter_->current_volume_);
+  } break;
 
   case SCIRun_r:        painter_->reset_clut();
   case SCIRun_Left:     painter_->move_layer_down(painter_->current_volume_);break;

@@ -58,6 +58,12 @@
   <var name="ITKThresholdSegmentationLevelSetImageFilterTool::SmoothingConductance" 
        type="double" propagate="yes">0.0</var>
 
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::LowerThreshold" 
+       type="double" propagate="yes">1.0</var>
+
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::UpperThreshold" 
+       type="double" propagate="yes">3.0</var>
+
 
   <var name="volume_visible" propagate="yes">1</var>
 

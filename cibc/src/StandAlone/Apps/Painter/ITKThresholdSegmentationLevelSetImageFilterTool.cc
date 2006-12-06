@@ -40,7 +40,7 @@ namespace SCIRun {
 
 ITKThresholdSegmentationLevelSetImageFilterTool::
 ITKThresholdSegmentationLevelSetImageFilterTool(Painter *painter) :
-  BaseTool("ITKThresholdSegementationLevelSetImageFilterTool::"),
+  BaseTool("ITKThresholdSegmentationLevelSetImageFilterTool::"),
   painter_(painter),
   seed_volume_(0),
   LowerThreshold_(painter->get_vars(), get_name()+"LowerThreshold"),  
@@ -98,12 +98,11 @@ ITKThresholdSegmentationLevelSetImageFilterTool::cont()
 
 
 #define SetFilterVarMacro(name, type) \
-  filter_->Set##name(painter_->get_vars()->get_##type(scope+#name));
+  filter_->Set##name(painter_->get_vars()->get_##type(get_name()+#name));
 
 void
 ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
 {
-  string scope = "ITKThresholdSegmentationLevelSetImageFilterTool::";
   SetFilterVarMacro(CurvatureScaling, double);
   SetFilterVarMacro(PropagationScaling, double);
   SetFilterVarMacro(EdgeWeight, double);
@@ -113,7 +112,7 @@ ITKThresholdSegmentationLevelSetImageFilterTool::set_vars()
   SetFilterVarMacro(SmoothingIterations,int);
   SetFilterVarMacro(SmoothingTimeStep, double);
   SetFilterVarMacro(SmoothingConductance, double);
-  if (painter_->get_vars()->get_bool(scope+"ReverseExpansionDirection")) 
+  if (painter_->get_vars()->get_bool(get_name()+"ReverseExpansionDirection")) 
     filter_->ReverseExpansionDirectionOn();
   else 
     filter_->ReverseExpansionDirectionOff();

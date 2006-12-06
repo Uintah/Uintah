@@ -45,6 +45,7 @@ class LayerButton : public Skinner::Parent {
 public:
   LayerButton(Skinner::Variables *, Painter *painter);
   virtual ~LayerButton();
+  CatcherFunction_t           update_from_gui;
 private:
   friend class Painter;
   Painter *                   painter_;
@@ -61,6 +62,7 @@ private:
   CatcherFunction_t           down;
   CatcherFunction_t           kill;
   CatcherFunction_t           select;
+  CatcherFunction_t           merge;
 };
 
 
