@@ -47,19 +47,13 @@ StatisticsTool::StatisticsTool(Painter *painter) :
 }
 
 
-
-#if 0
-int
-StatisticsTool::do_event(Event &event)
+BaseTool::propagation_state_e
+StatisticsTool::pointer_down(int b, int x, int y, unsigned int m, int t)
 {
-
-  NrrdVolume *vol = painter_->current_volume_;
-  if (!vol || !event.window_)
-    return FALLTHROUGH_E;
-
-  if (event.type_ == Event::BUTTON_PRESS_E && 
-      event.button(2)) {
-
+  NrrdVolumeHandle vol = painter_->current_volume_;
+  cerr << "Boo!\n";
+  if (vol.get_rep() && painter_->cur_window_)
+  {
     sum_ = 0;
     squared_sum_ = 0;
     count_ = 0;
@@ -71,16 +65,24 @@ StatisticsTool::do_event(Event &event)
     vol->clut_max_ = vol->data_max_;
     painter_->set_all_slices_tex_dirty();
     painter_->redraw_all();
-    return HANDLED_E;
+    cerr << "Blah!\n";
+    return STOP_E;
   }
+  return CONTINUE_E;
+}
 
-  if ((event.type_ == Event::BUTTON_PRESS_E ||
-       event.type_ == Event::MOTION_E)  && 
-      event.button(1)) {
 
-    vector<int> index = vol->world_to_index(event.position_);
+
+BaseTool::propagation_state_e
+StatisticsTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
+{
+  cerr << "Foo!\n";
+  NrrdVolumeHandle vol = painter_->current_volume_;
+  if (vol.get_rep() && painter_->cur_window_)
+  {
+    vector<int> index = vol->world_to_index(painter_->pointer_pos_);
     if (!vol->index_valid(index)) 
-      return FALLTHROUGH_E;
+      return CONTINUE_E;
 
     double value;
     vol->get_value(index, value);
@@ -97,25 +99,18 @@ StatisticsTool::do_event(Event &event)
 
     painter_->set_all_slices_tex_dirty();
     painter_->redraw_all();
-    return HANDLED_E;
+    cerr << "mean: " << mean_ << std::endl;
+    cerr << "dev: " << standard_deviation_ << std::endl;
+    return STOP_E;
   }
-  return FALLTHROUGH_E;
+  return CONTINUE_E;
 }
   
 
-int
-StatisticsTool::draw(SliceWindow &window)
+BaseTool::propagation_state_e
+StatisticsTool::pointer_up(int, int, int, unsigned int, int)
 {
-
-  if (painter_->font1_ && &window == painter_->event_.window_)
-    painter_->font1_->render("Mean: "+to_string(mean_)+
-                             "\nStandard Deviation: "+
-                             to_string(standard_deviation_), 
-                             painter_->event_.x_, painter_->event_.y_,
-                             TextRenderer::NW | TextRenderer::SHADOW);
-  return 0;
+  return QUIT_AND_STOP_E;
 }
-#endif
-
-
+  
 }  

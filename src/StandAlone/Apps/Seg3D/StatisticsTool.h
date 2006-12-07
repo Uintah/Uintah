@@ -42,6 +42,9 @@ class Painter;
 class StatisticsTool : public PointerTool {
 public:
   StatisticsTool(Painter *painter);
+  propagation_state_e pointer_down(int, int, int, unsigned int, int);
+  propagation_state_e pointer_motion(int, int, int, unsigned int, int);
+  propagation_state_e pointer_up(int, int, int, unsigned int, int);
 private:
   Painter *           painter_;
   double              standard_deviation_;
