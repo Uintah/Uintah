@@ -43,6 +43,7 @@ LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
   background_color_(vars, "LayerButton::background_color"),
   layer_visible_(vars, "LayerButton::visible"),
   expand_(vars, "LayerButton::expand"),
+  expand_visible_(vars, "LayerButton::expand_visible"),
   expand_width_(vars, "LayerButton::expand_width", 25.0),
   volume_(0)
   

@@ -55,6 +55,7 @@ private:
   Skinner::Var<Skinner::Color>background_color_;
   Skinner::Var<bool>          layer_visible_;
   Skinner::Var<bool>          expand_;
+  Skinner::Var<bool>          expand_visible_;
   Skinner::Var<double>        expand_width_;
   
   NrrdVolumeHandle            volume_;

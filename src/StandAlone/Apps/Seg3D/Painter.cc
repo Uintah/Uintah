@@ -192,9 +192,9 @@ Painter::build_layer_button(unsigned int &bpos, NrrdVolumeHandle &volume)
   }
   button->indent_ = 20*level+5;
   if (volume->children_.empty()) {
-    button->expand_width_ = 0;
+    button->expand_visible_ = false;
   } else {
-    button->expand_width_ = 20;
+    button->expand_visible_ = true;
   }
     
 

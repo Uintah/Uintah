@@ -7,11 +7,13 @@
     <var name="LayerButton::visible" propagate="yes">1</var>
     <var name="LayerButton::indent" propagate="yes">10</var>
     <var name="LayerButton::expand_width" propagate="yes">10</var>
+    <var name="LayerButton::expand_visible" propagate="yes">0</var>
+    <var name="Button::Text::size" propagate="yes">17</var>
     <var name="row">$LayerButton::num</var>
     <var name="col">1</var>
-    <var name="thumbnail_height" propagate="yes">45</var>
-    <var name="button_width" propagate="yes">20</var>
-    <var name="button_height" propagate="yes">20</var>
+    <var name="thumbnail_height" propagate="yes">40</var>
+    <var name="button_width" propagate="yes">17</var>
+    <var name="button_height" propagate="yes">17</var>
     <var name="cell-height">$thumbnail_height</var>
 
     <var name="LayerButton::name" propagate="yes">Layer</var>
@@ -28,14 +30,14 @@
         <object class="Collection">
           <var name="row">1</var>
           <var name="col">1</var>
-          <var name="cell-height">3</var>
+          <var name="cell-height">2</var>
           <var name="cell-width">$LayerButton::indent</var>
         </object>
 
         <object class="Collection">
           <var name="row">3</var>
           <var name="col">1</var>
-          <var name="cell-height">3</var>
+          <var name="cell-height">2</var>
         </object>
         
 
@@ -77,7 +79,7 @@
             <var name="focus">$TextEntry::focused</var>
             <object class="Root::ViewSubRegion">
               <object class="TextEntry">
-                <var name="size">20</var>
+                <var name="size">17</var>
                 <var name="text">$LayerButton::name</var>
                 <var name="fgcolor">#000000FF</var>
                 <var name="bgcolor">#FFFFFFFF</var>
@@ -92,12 +94,14 @@
           </object>
 
           <object class="ExpandArrowCheckButton">
+            <var name="visible">$LayerButton::expand_visible</var>
             <var name="CheckButton::state" 
                  propagate="yes">$LayerButton::expand</var>
             
             <var name="row">2</var>
             <var name="col">1</var>
-            <var name="cell-width">$LayerButton::expand_width</var>
+            <var name="cell-width">$button_width</var>
+
             <var name="cell-height">$button_height</var>
             <signal name="Button::clicked"
                     target="Painter::RebuildLayers"/>

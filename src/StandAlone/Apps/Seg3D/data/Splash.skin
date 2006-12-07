@@ -1,5 +1,7 @@
 <definition class="Splash">
   <object class="Frame">
+    <var name="titlefont" propagate="yes">SFQuartziteExtendedItalic.ttf</var>
+    <var name="titlefontsize" propagate="yes">95</var>
     <var name="topcolor" propagate="yes">#DDDDDDFF</var>
     <var name="botcolor" propagate="yes">#222222FF</var>
 
@@ -9,16 +11,19 @@
     <var name="color2">$botcolor</var>
     <var name="invert">1</var>
 
+<!--
     <object class="Texture">
       <var name="file">BackgroundTile03.png</var>
       <var name="color">#FFFFFFFF</var>
       <var name="repeatx">1</var>
       <var name="repeaty">1</var>
     </object>
+-->
+
 
 
     <object class="Box">
-      <var name="color">$clear</var>
+      <var name="color">#AAAAAAFF</var>
       <signal name="button_1_clicked" 
               target="GLWindow::close"/>
     </object>
@@ -198,47 +203,30 @@
 
         <object class="Root::Text">            
           <var name="text">$program_name</var>
-          <var name="font">Crass.ttf</var>
-          <var name="font">Machinegun.ttf</var>
-          <var name="font">test.ttf</var>
-          <var name="font">LCD.ttf</var>
-          <var name="font">Ariendesse.ttf</var>
-          <var name="font">AtomicClockRadio.ttf</var>
-          <var name="font">AustralianSunset.ttf</var>
-          <var name="font">Astronaut.ttf</var>
-          <var name="font">AmigaForever.ttf</var>
-          <var name="size">80</var>
+          <var name="font">$titlefont</var>
+          <var name="size">$titlefontsize</var>
           <var name="anchor">S</var>
           <var name="extruded">1</var>
           <var name="extruded">1</var>
           <var name="fgcolor">#FF444480</var>
-          <var name="fgcolor">#aaaaEEa0</var>
+          <var name="fgcolor">#8888FFa0</var>
 
-          <var name="bgcolor">$clear</var>
-          <var name="offsetx">-8</var>
-          <var name="offsety">33</var>
+          <var name="bgcolor">#000000FF</var>
+          <var name="offsetx">-28</var>
+          <var name="offsety">13</var>
 
         </object>
 
         <object class="Root::Text">            
           <var name="text">$program_name</var>
-          <var name="font">Crass.ttf</var>
-          <var name="font">Machinegun.ttf</var>
-          <var name="font">test.ttf</var>
-          <var name="font">LCD.ttf</var>
-          <var name="font">AramisRegular.ttf</var>
-          <var name="font">Ariendesse.ttf</var>
-          <var name="font">AtomicClockRadio.ttf</var>
-          <var name="font">AustralianSunset.ttf</var>
-          <var name="font">Astronaut.ttf</var>
-          <var name="font">AmigaForever.ttf</var>
-          <var name="size">80</var>
+          <var name="font">$titlefont</var>
+          <var name="size">$titlefontsize</var>
           <var name="anchor">S</var>
           <var name="shadow">1</var>
           <var name="fgcolor">#FFFFFFFF</var>
           <var name="bgcolor">$clear</var>
-          <var name="offsetx">-5</var>
-          <var name="offsety">31</var>
+          <var name="offsetx">-25</var>
+          <var name="offsety">11</var>
         </object>
       </object>
 
@@ -249,6 +237,7 @@
           <var name="text">$full_program_name</var>
           <var name="font">Crass.ttf</var>
           <var name="font">Caslon.ttf</var>
+          <var name="font">$titlefont</var>
           <var name="size">26</var>
           <var name="anchor">N</var>
           <var name="extruded">1</var>
@@ -263,6 +252,7 @@
           <var name="text">$full_program_name</var>
           <var name="font">Crass.ttf</var>
           <var name="font">Caslon.ttf</var>
+          <var name="font">$titlefont</var>
           <var name="size">26</var>
           <var name="anchor">N</var>
           <var name="shadow">1</var>
