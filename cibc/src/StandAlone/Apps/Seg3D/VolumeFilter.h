@@ -193,7 +193,6 @@ VolumeFilter<FilterType>::filter_callback(itk::Object *object,
 
       typedef typename FilterType::OutputImageType::PixelType OutT;
       volume_->nrrd_handle_ = itk_image_to_nrrd<OutT>(imgh);
-      cerr << volume_->nrrd_handle_->nrrd_->data << std::endl;
       volume_->dirty_ = true;
       volume_->painter_->extract_all_window_slices();
       volume_->painter_->redraw_all();
