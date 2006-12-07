@@ -972,7 +972,7 @@ bool FieldToMatlabAlgo::mladdtransform(MESH* mesh,matlabarray mlarray)
   T.get_trans(data);
   transform.createdensearray(4,4,matlabarray::miDOUBLE);
   transform.setnumericarray(data,16);
-  mlarray.setfield(0,"tranform",transform);
+  mlarray.setfield(0,"transform",transform);
   return(true);
 }
 
