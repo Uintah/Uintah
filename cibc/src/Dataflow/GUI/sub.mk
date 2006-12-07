@@ -216,6 +216,8 @@ SRCS := \
         $(SRCDIR)/ConvertMatrixToField.tcl\
 				$(SRCDIR)/CalculateIsInsideField.tcl\
 				$(SRCDIR)/CalculateInsideWhichField.tcl\
+				$(SRCDIR)/SetFieldData.tcl\
+				
 				#[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
