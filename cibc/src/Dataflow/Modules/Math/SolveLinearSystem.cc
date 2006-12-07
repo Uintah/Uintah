@@ -321,13 +321,10 @@ SolveLinearSystem::execute()
   epcount = Max(1, emit_iter.get());
   const string meth = method.get();
 
-  bool intermediate = false;
-
   if (meth == "Conjugate Gradient & Precond. (SCI)") {
     conjugate_gradient_sci(mat, *solp, *rhsp);
   } else if (meth == "BiConjugate Gradient & Precond. (SCI)") {
     bi_conjugate_gradient_sci(mat, *solp, *rhsp);
-    intermediate = true;
   } else if (meth == "Jacobi & Precond. (SCI)") {
     jacobi_sci(mat, *solp, *rhsp);
 #ifdef PETSC_UNI
@@ -361,7 +358,7 @@ SolveLinearSystem::execute()
     return;
   }
 
-  send_output_handle("Solution", solution, false, intermediate);
+  send_output_handle("Solution", solution, false);
 
   if (delete_rhsp) { delete rhsp; }
 }
