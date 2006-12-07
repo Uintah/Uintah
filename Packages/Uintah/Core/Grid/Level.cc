@@ -364,9 +364,9 @@ Point Level::positionToIndex(const Point& p) const
     int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
     int y = binary_search(p.y(), d_facePosition[1], d_facePosition[1].low(), d_facePosition[1].high());
     int z = binary_search(p.z(), d_facePosition[2], d_facePosition[2].low(), d_facePosition[2].high());
-    double xfrac = p.x() - d_facePosition[0][x] / (d_facePosition[0][x+1] - d_facePosition[0][x]);
-    double yfrac = p.y() - d_facePosition[1][y] / (d_facePosition[1][y+1] - d_facePosition[1][y]);
-    double zfrac = p.z() - d_facePosition[2][z] / (d_facePosition[2][z+1] - d_facePosition[2][z]);
+    double xfrac = (p.x() - d_facePosition[0][x]) / (d_facePosition[0][x+1] - d_facePosition[0][x]);
+    double yfrac = (p.y() - d_facePosition[1][y]) / (d_facePosition[1][y+1] - d_facePosition[1][y]);
+    double zfrac = (p.z() - d_facePosition[2][z]) / (d_facePosition[2][z+1] - d_facePosition[2][z]);
     return Point(x+xfrac, y+yfrac, z+zfrac);
   } else {
     return Point((p-d_anchor)/d_dcell);
