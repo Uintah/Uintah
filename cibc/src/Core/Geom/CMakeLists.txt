@@ -114,6 +114,7 @@ ENDIF(WIN32)
 
 ADD_LIBRARY(Core_Geom ${Core_Geom_SRCS})
 
+
 TARGET_LINK_LIBRARIES( Core_Geom 
   Core_Persistent
   Core_Geometry
@@ -123,14 +124,15 @@ TARGET_LINK_LIBRARIES( Core_Geom
   Core_Math
   Core_Util
   Core_Thread
+  ${THREAD_LIBRARY} 
   ${FTGL_LIBRARY}
-  ${GLEW_LIBRARY}
   ${GL_LIBRARY}
   ${PNG_LIBRARY}
   ${ZLIB_LIBRARY}
   ${M_LIBRARY}
   ${TEEM_LIBRARY}
   ${FREETYPE_LIBRARY}
+  ${GLEW_LIBRARY}
 )
 
 IF(X11_FOUND)
@@ -139,6 +141,9 @@ IF(X11_FOUND)
   )      
 ENDIF(X11_FOUND)
 
+IF(APPLE)
+ TARGET_LINK_LIBRARIES( Core_Geom "-lGLU -framework Carbon")
+ENDIF(APPLE)
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Geom)

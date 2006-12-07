@@ -452,6 +452,16 @@ IF (WIN32)
   SET(GL_INCLUDE ${OPENGL_INCLUDE_DIR})
   SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GL_INCLUDE})
 ENDIF(WIN32)
+
+# Fixing a problem on OSX for now: the standard CMake script finds the wrong OpenGL
+# libraries. Hence they are hard coded here, however these require X11 to be installed
+# and this is not checked here. We need to come uo with a better fix here.
+ 
+IF (APPLE)
+  SET(GL_LIBRARY /usr/X11R6/lib/libGL.dylib /usr/X11R6/lib/libGLU.dylib "-framework AGL" CACHE INTERNAL "OpenGL Libs")
+  SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GL_INCLUDE})
+ENDIF(APPLE)
+
 #-----------------------------------------------------------------------------
 # Freetype
 FIND_LIBRARY(FREETYPE_LIBRARY 
