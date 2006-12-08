@@ -175,7 +175,8 @@ ViewWindow::ViewWindow(ViewScene* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_currentvisual_(ctx->subVar("currentvisual")),
     gui_autoav_(ctx->subVar("autoav")),
     gui_caxes_(ctx->subVar("caxes")),
-    gui_pos_(ctx->subVar("pos"))
+    gui_pos_(ctx->subVar("pos")),
+		mpick_(false)
 {
   gui_->add_command(id_ + "-c", this, 0);
 
@@ -1441,9 +1442,12 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     ViewSceneMessage *msg = scinew ViewSceneMessage(id_, tbeg, tend, num, framerate);
     if(!viewer_->mailbox_.trySend(msg))
        cerr << "Redraw event dropped, mailbox full!\n";
-  } else if(args[1] == "mtranslate") {
+  } 
+	else if(args[1] == "mtranslate") 
+	{
     do_mouse(&ViewWindow::mouse_translate, args);
-  } else if(args[1] == "mdolly") {
+  } 
+	else if(args[1] == "mdolly") {
     do_mouse(&ViewWindow::mouse_dolly, args);
   } else if(args[1] == "mrotate") {
     do_mouse(&ViewWindow::mouse_rotate, args);
@@ -1615,15 +1619,21 @@ ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
     args.error(args[1]+" needs start/move/end and x y");
     return;
   }
+	
   int action;
   if(args[2] == "start"){
     action=MouseStart;
     mouse_action_ = true;
+		if (args[1] == "mpick") mpick_ = true;
+				
   } else if(args[2] == "end"){
     action=MouseEnd;
     mouse_action_ = false;
+		if (mpick_) handler = &ViewWindow::mouse_pick;
+		mpick_ = false;
   } else if(args[2] == "move"){
     action=MouseMove;
+		if (mpick_) handler = &ViewWindow::mouse_pick;
   } else {
     args.error("Unknown mouse action");
     return;
@@ -1662,6 +1672,7 @@ ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
       return;
     }
   }
+
 
   // We have to send this to the Viewer thread...
   ViewWindowMouseMessage *msg = scinew ViewWindowMouseMessage

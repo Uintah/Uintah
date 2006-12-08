@@ -262,6 +262,7 @@ private:
   GuiInt		gui_autoav_;
   GuiInt		gui_caxes_;
   GuiString		gui_pos_;
+	bool				mpick_;
 };
 
 class ViewWindowMouseMessage : public MessageBase {
