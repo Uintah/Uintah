@@ -11,7 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 
 #define d_SMALL_NUM 1e-100
-#define DUMP_LIMITER
+//#define DUMP_LIMITER
 namespace Uintah {
 
 class SecondOrderBase {
