@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := StandAlone/Apps/Painter
+SRCDIR := StandAlone/Apps/Seg3D
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
