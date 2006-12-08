@@ -48,6 +48,8 @@ SET(scirun_src_dir "@scirun_src_dir@")
 # The SCIRun binary tree.
 SET(scirun_obj_dir "@scirun_obj_dir@")
 
+SET(CIBC_Core_SOURCE_DIR "@CIBC_Core_SOURCE_DIR@")
+
 # whether Core was built with Shared Libs
 SET(BUILD_CORE_LIBS_SHARED "@BUILD_SHARED_LIBS@")
 
