@@ -608,7 +608,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     if (stats.active() && d_myworld->size() > 1) {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
         if (maxReduce[i] > 0)
-          stats << setw(15) << statLabels[i] << " avg: " << setw(6) << avgReduce[i] << " max: " << setw(6) << maxReduce[i]
+          stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i]
                 << " LIB%: " << 1-(avgReduce[i]/maxReduce[i]) << endl;
       }
     } 
