@@ -214,11 +214,9 @@ SRCS := \
         $(SRCDIR)/GetDomainBoundary.tcl\
         $(SRCDIR)/ConvertNrrdToField.tcl\
         $(SRCDIR)/ConvertMatrixToField.tcl\
-				$(SRCDIR)/CalculateIsInsideField.tcl\
-				$(SRCDIR)/CalculateInsideWhichField.tcl\
-				$(SRCDIR)/SetFieldData.tcl\
-				
-				#[INSERT NEW TCL FILE HERE]
+        $(SRCDIR)/CalculateIsInsideField.tcl\
+        $(SRCDIR)/CalculateInsideWhichField.tcl\
+#[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
 ifeq ($(HAVE_MESQUITE),yes)

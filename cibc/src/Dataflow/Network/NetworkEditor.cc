@@ -411,7 +411,7 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
     NetworkIO::load_net(args[2]);
     NetworkIO ln;
     ln.load_network();
-  } else {
+  } else  {
     throw "Unknown minor command for netedit";
   }
 } // end tcl_command()
