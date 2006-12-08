@@ -33,7 +33,7 @@
 
 
 
-<component name="ClipVolumeByIsovalueWithRefinement" category="NewField">
+<component name="RefineMeshByIsovalue" category="NewField">
   <overview>
     <authors>
       <author>Michael Callahan</author>
@@ -63,13 +63,13 @@
     </outputs>
   </io>
   <nets>
-    <net id="ClipVolumeByIsovalueWithRefinement-boundarytest">
-      <title>ClipVolumeByIsovalueWithRefinement-boundarytest Regression Test</title>
+    <net id="RefineMeshByIsovalue-boundarytest">
+      <title>RefineMeshByIsovalue-boundarytest Regression Test</title>
 
-      <p>Test the ClipVolumeByIsovalueWithRefinement module to make sure that the outer clip
+      <p>Test the RefineMeshByIsovalue module to make sure that the outer clip
 boundary is consistent.  We do this by creating a regular lattice with
 a distance function at the nodes, then converting that lattice into a
-tetrahedral mesh and doing the ClipVolumeByIsovalueWithRefinement to get a sphere.  The sphere is
+tetrahedral mesh and doing the RefineMeshByIsovalue to get a sphere.  The sphere is
 then run through <modref package="SCIRun" name="FieldBoundary"/> and
 half of it is clipped away with <modref package="SCIRun"
 name="ClipByFunction"/> so that we can see the interior.  If
@@ -79,24 +79,24 @@ interior has a rough geode appearance because all of the miscut
 tetrahera are added to the boundary.</p>
 
       <p>This network can be found at
-src/nets/Modules/NewField/ClipVolumeByIsovalueWithRefinement-boundarytest.net.</p>
+src/nets/Modules/NewField/RefineMeshByIsovalue-boundarytest.net.</p>
 
     </net>
-    <net id="ClipVolumeByIsovalueWithRefinement-datatest">
-      <title>ClipVolumeByIsovalueWithRefinement-datatest Regression Test</title>
+    <net id="RefineMeshByIsovalue-datatest">
+      <title>RefineMeshByIsovalue-datatest Regression Test</title>
 
-      <p>Test the ClipVolumeByIsovalueWithRefinement module to make sure that the data from the
+      <p>Test the RefineMeshByIsovalue module to make sure that the data from the
 input field is preserved in the output field.</p>
 
       <p>This network can be found at
-src/nets/Modules/NewField/ClipVolumeByIsovalueWithRefinement-datatest.net.</p>
+src/nets/Modules/NewField/RefineMeshByIsovalue-datatest.net.</p>
 
     </net>
-    <net id="ClipVolumeByIsovalueWithRefinement-probe">
-      <title>ClipVolumeByIsovalueWithRefinement-probe Regression Test</title>
+    <net id="RefineMeshByIsovalue-probe">
+      <title>RefineMeshByIsovalue-probe Regression Test</title>
 
       <p>Example network demonstrating the use of a <modref
-package="SCIRun" name="Probe"/> widget to determine where an ClipVolumeByIsovalueWithRefinement
+package="SCIRun" name="Probe"/> widget to determine where an RefineMeshByIsovalue
 should take place.  A Tetrahedral mesh is created by mapping the
 distance function onto a unit lattice.  Then the probe is used to
 extract an isovalue from that Tetrahedral mesh which is then passed
@@ -105,18 +105,18 @@ it into a matrix and then used by IsoCilp to determine which value to
 clip against.</p>
 
       <p>This network can be found at
-src/nets/Modules/NewField/ClipVolumeByIsovalueWithRefinement-probe.net.</p>
+src/nets/Modules/NewField/RefineMeshByIsovalue-probe.net.</p>
 
     </net>
-    <net id="ClipVolumeByIsovalueWithRefinement-tet">
-      <title>ClipVolumeByIsovalueWithRefinement-tet Regression Test</title>
+    <net id="RefineMeshByIsovalue-tet">
+      <title>RefineMeshByIsovalue-tet Regression Test</title>
 
-      <p>Test networks for the ClipVolumeByIsovalueWithRefinement module.  TetVolMesh and
-TriSurfMesh field types are both supported by the ClipVolumeByIsovalueWithRefinement module so we
+      <p>Test networks for the RefineMeshByIsovalue module.  TetVolMesh and
+TriSurfMesh field types are both supported by the RefineMeshByIsovalue module so we
 make sure that they are both working.</p>
 
       <p>This network can be found at
-src/nets/Modules/NewField/ClipVolumeByIsovalueWithRefinement-tet.net.</p>
+src/nets/Modules/NewField/RefineMeshByIsovalue-tet.net.</p>
 
     </net>
   </nets>

@@ -19,7 +19,7 @@
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x166+467+528}"/>
     </module>
-    <module category="NewField" gui_visible="yes" id="m2" name="ClipVolumeByIsovalueWithRefinement" package="SCIRun">
+    <module category="NewField" gui_visible="yes" id="m2" name="RefineMeshByIsovalue" package="SCIRun">
       <position x="375" y="264"/>
       <var name="isoval" val="{0.5}"/>
       <var name="lte" val="{0}"/>

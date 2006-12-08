@@ -57,7 +57,7 @@ typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
 typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 class GuiInterface;
 
-class SCISHARE ClipVolumeByIsovalueWithRefinementAlgo : public DynamicAlgoBase
+class SCISHARE RefineMeshByIsovalueAlgo : public DynamicAlgoBase
 {
 public:
 
@@ -75,7 +75,7 @@ public:
 
 
 template <class FIELD>
-class ClipVolumeByIsovalueWithRefinementAlgoQuad : public ClipVolumeByIsovalueWithRefinementAlgo
+class RefineMeshByIsovalueAlgoQuad : public RefineMeshByIsovalueAlgo
 {
 public:
   //! virtual interface. 
@@ -182,7 +182,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipVolumeByIsovalueWithRefinementAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
+RefineMeshByIsovalueAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
                                   FieldHandle fieldh,
                                   double isoval, bool lte,
                                   MatrixHandle &interp)
@@ -384,7 +384,7 @@ ClipVolumeByIsovalueWithRefinementAlgoQuad<FIELD>::execute(ProgressReporter *rep
 
 
 template <class FIELD>
-class ClipVolumeByIsovalueWithRefinementAlgoHex : public ClipVolumeByIsovalueWithRefinementAlgo
+class RefineMeshByIsovalueAlgoHex : public RefineMeshByIsovalueAlgo
 {
 public:
   //! virtual interface. 
@@ -392,7 +392,7 @@ public:
 			      double isoval, bool lte,
 			      MatrixHandle &interpolant);
 
-  ClipVolumeByIsovalueWithRefinementAlgoHex<FIELD>() 
+  RefineMeshByIsovalueAlgoHex<FIELD>() 
   {
     coords.resize(3);
   };
@@ -599,7 +599,7 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipVolumeByIsovalueWithRefinementAlgoHex<FIELD>::execute(ProgressReporter *reporter,
+RefineMeshByIsovalueAlgoHex<FIELD>::execute(ProgressReporter *reporter,
                                  FieldHandle fieldh,
                                  double isoval, bool lte,
                                  MatrixHandle &interp)
@@ -1649,7 +1649,7 @@ IRMakeConvexAlgoT<FIELD>::execute(ProgressReporter *reporter,
       else if (pattern == -4)
       {
         changed = true;
-        const int *ro = ClipVolumeByIsovalueWithRefinementAlgo::hex_reorder_table[which];
+        const int *ro = RefineMeshByIsovalueAlgo::hex_reorder_table[which];
 
         for (unsigned int i = 0; i < 4; i++)
         {

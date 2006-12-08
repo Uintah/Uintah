@@ -2,7 +2,7 @@
 <!DOCTYPE network
   PUBLIC '-//SCIRun/Network DTD'
   'network.dtd'>
-<network bbox="{63 14 268 777}" creationDate="{Tue Jul 18 2006}" creationTime="{13:32:37}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.3">
+<network bbox="{23 14 642 911}" creationDate="{Tue Jul 18 2006}" creationTime="{13:39:45}" geometry="{800x800+118+112}" name="{Main}" version="v1.25.3">
   <note>{}</note>
   <modules>
     <module category="NewField" id="m1" name="CreateStructHex" package="SCIRun">
@@ -12,30 +12,30 @@
       <var name="sizez" val="{8}"/>
       <var name="padpercent" val="{0.0}"/>
       <var name="data-at" val="{Nodes}"/>
-      <var name="ui_geometry" val="{314x263+704+714}"/>
+      <var name="ui_geometry" val="{314x263+800+714}"/>
     </module>
     <module category="Visualization" id="m2" name="ShowField" package="SCIRun">
-      <position x="87" y="652"/>
+      <position x="221" y="772"/>
       <var name="normalize-vectors" val="{}"/>
       <var name="has_scalar_data" val="{1}"/>
       <var name="show_progress" val="{}"/>
       <var name="use-defaults" val="{0}"/>
     </module>
     <module category="Render" id="m3" name="ViewScene" package="SCIRun">
-      <position x="80" y="733"/>
+      <position x="79" y="867"/>
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x613+468+113"/>
-      <var name="ViewWindow_0-view-eyep-x" val="{2.21657703576}"/>
-      <var name="ViewWindow_0-view-eyep-y" val="{2.0763397432}"/>
-      <var name="ViewWindow_0-view-eyep-z" val="{9.66153535078}"/>
+      <var name="ViewWindow_0-geometry" val="654x611+496+107"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-1.02136528798}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{1.42552526206}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{9.93865428122}"/>
       <var name="ViewWindow_0-view-lookat-x" val="{0.0892598280706}"/>
       <var name="ViewWindow_0-view-lookat-y" val="{0.0958677638924}"/>
       <var name="ViewWindow_0-view-lookat-z" val="{-0.0264993892841}"/>
-      <var name="ViewWindow_0-view-up-x" val="{-0.282999600936}"/>
-      <var name="ViewWindow_0-view-up-y" val="{0.949985122622}"/>
-      <var name="ViewWindow_0-view-up-z" val="{-0.132058671305}"/>
+      <var name="ViewWindow_0-view-up-x" val="{-0.207511362945}"/>
+      <var name="ViewWindow_0-view-up-y" val="{0.966340882491}"/>
+      <var name="ViewWindow_0-view-up-z" val="{-0.152066870407}"/>
       <var name="ViewWindow_0-view-fov" val="{20.0}"/>
       <var name="ViewWindow_0-view-eyep_offset-x" val="{}"/>
       <var name="ViewWindow_0-view-eyep_offset-y" val="{}"/>
@@ -70,7 +70,7 @@
       <var name="ViewWindow_0-inertia_y" val="{0}"/>
       <var name="ViewWindow_0-currentvisual" val="{0}"/>
       <var name="ViewWindow_0-autoav" val="{0}"/>
-      <var name="ViewWindow_0-caxes" val="{1}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
       <var name="ViewWindow_0-pos" val="{}"/>
       <var name="ViewWindow_0-clip-num" val="{}"/>
       <var name="ViewWindow_0-clip-visible" val="{}"/>
@@ -120,7 +120,9 @@
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
       <var name="&quot;ViewWindow_0-Nodes (1)&quot;" val="{1}"/>
       <var name="&quot;ViewWindow_0-Edges (1)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Faces (1)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Nodes (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Edges (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Faces (2)&quot;" val="{1}"/>
     </module>
     <module category="ChangeMesh" id="m4" name="SwapNodeLocationsWithMatrixEntries" package="SCIRun">
       <position x="89" y="91"/>
@@ -187,29 +189,88 @@ result = Vector(uu, vv, c);
     </module>
     <module category="ChangeFieldData" id="m9" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="87" y="491"/>
-      <var name="function" val="{result = z;
+      <var name="function" val="{static MusilRNG rng;
+result = rng();
+
+
+
 }"/>
       <var name="outputdatatype" val="{input}"/>
-      <var name="ui_geometry" val="{433x166+37+505}"/>
+      <var name="ui_geometry" val="{433x166+809+449}"/>
     </module>
-    <module category="NewField" id="m10" name="ClipVolumeByIsovalueWithRefinement" package="SCIRun">
-      <position x="87" y="571"/>
-      <var name="isoval" val="{0.95}"/>
+    <module category="NewField" gui_visible="yes" id="m10" name="RefineMeshByIsovalue" package="SCIRun">
+      <position x="219" y="683"/>
+      <var name="isoval" val="{0.5}"/>
       <var name="lte" val="{0}"/>
-      <var name="ui_geometry" val="{314x126+704+745}"/>
+      <var name="ui_geometry" val="{314x126+329+824}"/>
+    </module>
+    <module category="NewField" id="m11" name="GetSliceFromLatVol" package="SCIRun">
+      <position x="104" y="583"/>
+      <var name="axis" val="{2}"/>
+      <var name="dims" val="{3}"/>
+      <var name="dim-i" val="{8}"/>
+      <var name="dim-j" val="{8}"/>
+      <var name="dim-k" val="{8}"/>
+      <var name="index-i" val="{0}"/>
+      <var name="index-j" val="{0}"/>
+      <var name="index-k" val="{7}"/>
+      <var name="update_type" val="{Manual}"/>
+      <var name="continuous" val="{0}"/>
+      <var name="ui_geometry" val="{347x230+800+744}"/>
+    </module>
+    <module category="Visualization" id="m12" name="ShowField" package="SCIRun">
+      <position x="23" y="745"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="has_scalar_data" val="{1}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="edge_display_type" val="{Cylinders}"/>
+      <var name="scalar_display_type" val="{Scaled Spheres}"/>
+      <var name="active_tab" val="{Edges}"/>
+      <var name="node_scale" val="{0.0197}"/>
+      <var name="edge_scale" val="{0.0071}"/>
+      <var name="scalars_scale" val="{0.038}"/>
+      <var name="use-defaults" val="{0}"/>
+      <var name="ui_geometry" val="{370x655+322+238}"/>
+    </module>
+    <module category="Visualization" id="m13" name="CreateStandardColorMaps" package="SCIRun">
+      <position x="447" y="535"/>
+      <var name="mapName" val="{Rainbow}"/>
+      <var name="gamma" val="{0.0}"/>
+      <var name="resolution" val="{2}"/>
+      <var name="reverse" val="{0}"/>
+      <var name="faux" val="{0}"/>
+      <var name="positionList" val="{}"/>
+      <var name="nodeList" val="{}"/>
+      <var name="width" val="{335}"/>
+      <var name="height" val="{40}"/>
+      <var name="ui_geometry" val="{347x488+388+486}"/>
+    </module>
+    <module category="Visualization" id="m14" name="RescaleColorMap" package="SCIRun">
+      <position x="440" y="626"/>
+      <var name="main_frame" val="{.uiSCIRun_Visualization_RescaleColorMap_0}"/>
+      <var name="isFixed" val="{1}"/>
+      <var name="min" val="{0.0}"/>
+      <var name="max" val="{1.0}"/>
+      <var name="makeSymmetric" val="{0}"/>
+      <var name="ui_geometry" val="{314x126+404+465}"/>
     </module>
   </modules>
   <connections>
-    <connection from="m10" fromport="0" id="c1" to="m2" toport="0"/>
-    <connection from="m1" fromport="0" id="c2" to="m4" toport="0"/>
-    <connection from="m1" fromport="0" id="c3" to="m8" toport="0"/>
-    <connection from="m5" fromport="0" id="c4" to="m6" toport="0"/>
-    <connection from="m6" fromport="0" id="c5" to="m7" toport="0"/>
-    <connection from="m9" fromport="0" id="c6" to="m10" toport="0"/>
-    <connection from="m4" fromport="0" id="c7" to="m5" toport="0"/>
-    <connection from="m8" fromport="0" id="c8" to="m9" toport="0"/>
-    <connection from="m2" fromport="0" id="c9" to="m3" toport="0"/>
-    <connection from="m7" fromport="1" id="c10" to="m8" toport="1"/>
-    <connection from="m4" fromport="1" id="c11" to="m5" toport="1"/>
+    <connection from="m11" fromport="0" id="c1" to="m10" toport="0"/>
+    <connection from="m11" fromport="0" id="c2" to="m12" toport="0"/>
+    <connection from="m10" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c4" to="m4" toport="0"/>
+    <connection from="m1" fromport="0" id="c5" to="m8" toport="0"/>
+    <connection from="m5" fromport="0" id="c6" to="m6" toport="0"/>
+    <connection from="m6" fromport="0" id="c7" to="m7" toport="0"/>
+    <connection from="m9" fromport="0" id="c8" to="m11" toport="0"/>
+    <connection from="m4" fromport="0" id="c9" to="m5" toport="0"/>
+    <connection from="m8" fromport="0" id="c10" to="m9" toport="0"/>
+    <connection from="m13" fromport="0" id="c11" to="m14" toport="0"/>
+    <connection from="m12" fromport="0" id="c12" to="m3" toport="0"/>
+    <connection from="m7" fromport="1" id="c13" to="m8" toport="1"/>
+    <connection from="m4" fromport="1" id="c14" to="m5" toport="1"/>
+    <connection from="m14" fromport="0" id="c15" to="m12" toport="1"/>
+    <connection from="m2" fromport="0" id="c16" to="m3" toport="1"/>
   </connections>
 </network>

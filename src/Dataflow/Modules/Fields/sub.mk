@@ -76,7 +76,7 @@ SRCS     += \
 	$(SRCDIR)/InsertHexVolSheetFromTriSurf.cc\
 	$(SRCDIR)/MergeTriSurfs.cc\
 	$(SRCDIR)/ClipVolumeByIsovalue.cc\
-	$(SRCDIR)/ClipVolumeByIsovalueWithRefinement.cc\
+	$(SRCDIR)/RefineMeshByIsovalue.cc\
 	$(SRCDIR)/SwapFieldDataWithMatrixEntries.cc\
 	$(SRCDIR)/SwapNodeLocationsWithMatrixEntries.cc\
 	$(SRCDIR)/MapFieldDataToNodeCoordinate.cc\

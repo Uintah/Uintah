@@ -121,7 +121,7 @@ SRCS := \
 				$(SRCDIR)/InsertHexVolSheetFromTriSurf.tcl \
         $(SRCDIR)/ExtractIsosurface.tcl \
         $(SRCDIR)/ClipVolumeByIsovalue.tcl \
-        $(SRCDIR)/ClipVolumeByIsovalueWithRefinement.tcl \
+        $(SRCDIR)/RefineMeshByIsovalue.tcl \
         $(SRCDIR)/LightWidget.tcl \
         $(SRCDIR)/EvaluateLinAlgBinary.tcl \
         $(SRCDIR)/EvaluateLinAlgUnary.tcl \

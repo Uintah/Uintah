@@ -2,7 +2,7 @@
 <!DOCTYPE network
   PUBLIC '-//SCIRun/Network DTD'
   'network.dtd'>
-<network bbox="{17 13 568 518}" creationDate="{Mon Jun 19 2006}" creationTime="{17:09:04}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.3">
+<network bbox="{17 13 568 518}" creationDate="{Fri Jun 16 2006}" creationTime="{09:24:36}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.3">
   <note>{}</note>
   <modules>
     <module category="NewField" id="m1" name="CreateImage" package="SCIRun">
@@ -30,24 +30,25 @@
     </module>
     <module category="ChangeFieldData" id="m3" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="83" y="87"/>
-      <var name="function" val="{result = fabs(x-y);
-
+      <var name="function" val="{result = sqrt(x*x + y*y + z*z);
 
 }"/>
       <var name="outputdatatype" val="{input}"/>
-      <var name="ui_geometry" val="{433x166+42+315}"/>
+      <var name="ui_geometry" val="{433x166+37+313}"/>
     </module>
-    <module category="NewField" id="m4" name="ClipVolumeByIsovalueWithRefinement" package="SCIRun">
+    <module category="NewField" id="m4" name="RefineMeshByIsovalue" package="SCIRun">
       <position x="375" y="264"/>
-      <var name="isoval" val="{0.1}"/>
+      <var name="isoval" val="{0.5}"/>
       <var name="lte" val="{1}"/>
-      <var name="ui_geometry" val="{314x126+330+279}"/>
+      <var name="ui_geometry" val="{314x126+199+297}"/>
     </module>
     <module category="Visualization" id="m5" name="ShowField" package="SCIRun">
       <position x="403" y="355"/>
       <var name="faces-on" val="{0}"/>
       <var name="has_scalar_data" val="{1}"/>
       <var name="active_tab" val="{Faces}"/>
+      <var name="node_scale" val="{0.03}"/>
+      <var name="edge_scale" val="{0.015}"/>
       <var name="scalars_scale" val="{0.3}"/>
       <var name="use-defaults" val="{0}"/>
       <var name="ui_geometry" val="{370x655+360+323}"/>
@@ -68,7 +69,7 @@
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x612+603+316"/>
+      <var name="ViewWindow_0-geometry" val="654x613+598+292"/>
       <var name="ViewWindow_0-view-eyep-x" val="{0.499130151519}"/>
       <var name="ViewWindow_0-view-eyep-y" val="{0.499130151519}"/>
       <var name="ViewWindow_0-view-eyep-z" val="{4.05093409329}"/>
@@ -126,16 +127,16 @@
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
       <var name="&quot;ViewWindow_0-Nodes (1)&quot;" val="{1}"/>
       <var name="&quot;ViewWindow_0-Edges (1)&quot;" val="{1}"/>
-      <var name="&quot;ViewWindow_0-Isosurface (3)&quot;" val="{1}"/>
       <var name="&quot;ViewWindow_0-Nodes (2)&quot;" val="{1}"/>
       <var name="&quot;ViewWindow_0-Edges (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Isosurface (3)&quot;" val="{1}"/>
     </module>
     <module category="Visualization" id="m8" name="ExtractIsosurface" package="SCIRun">
       <position x="208" y="354"/>
       <var name="isoval-min" val="{0.0}"/>
-      <var name="isoval-max" val="{1.0}"/>
-      <var name="isoval" val="{0.1}"/>
-      <var name="isoval-typed" val="{0.1}"/>
+      <var name="isoval-max" val="{1.41421356237}"/>
+      <var name="isoval" val="{0.5}"/>
+      <var name="isoval-typed" val="{0.5}"/>
       <var name="isoval-quantity" val="{1}"/>
       <var name="quantity-range" val="{field}"/>
       <var name="quantity-clusive" val="{exclusive}"/>
@@ -155,7 +156,7 @@
       <var name="color-r" val="{0.4}"/>
       <var name="color-g" val="{0.2}"/>
       <var name="color-b" val="{0.9}"/>
-      <var name="ui_geometry" val="{328x485+216+489}"/>
+      <var name="ui_geometry" val="{328x485+162+489}"/>
     </module>
   </modules>
   <connections>

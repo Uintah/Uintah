@@ -27,11 +27,11 @@
 #
 
 
-itcl_class SCIRun_NewField_ClipVolumeByIsovalueWithRefinement {
+itcl_class SCIRun_NewField_RefineMeshByIsovalue {
     inherit Module
 
     constructor {config} {
-        set name ClipVolumeByIsovalueWithRefinement
+        set name RefineMeshByIsovalue
     }
 
     method ui {} {
