@@ -26,6 +26,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
 
 #define SECONDS_PER_MINUTE 60.0
 #define SECONDS_PER_HOUR   3600.0
@@ -40,6 +41,7 @@ using namespace std;
 static DebugStream dbg("SimulationStats", true);
 static DebugStream dbgTime("SimulationTimeStats", false);
 static DebugStream simdbg("SimulationController", false);
+static DebugStream stats("ComponentTimings", false);
 extern DebugStream amrout;
 
 namespace Uintah {
@@ -421,9 +423,8 @@ toHumanUnits( unsigned long value )
 void
 SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
-#ifndef _WIN32 // win32 doesn't have sci-malloc or sbrk
   // get memory stats for output
-#ifndef DISABLE_SCI_MALLOC
+#if !defined(DISABLE_SCI_MALLOC)
   size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
     nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
     highwater_mmap, bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks;
@@ -435,7 +436,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
                  bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks);
   unsigned long memuse = sizealloc - sizefree;
   unsigned long highwater = highwater_mmap;
-#else
+#elif !defined(_WIN32)
   unsigned long memuse = 0;
   if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
     memuse = ProcessInfo::GetMemoryResident();
@@ -443,6 +444,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     memuse = (char*)sbrk(0)-start_addr;
   }
   unsigned long highwater = 0;
+#else
+  unsigned long highwater = 0, memuse = 0;
 #endif
   
   // get memory stats for each proc if MALLOC_PERPROC is in the environent
@@ -452,7 +455,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     if ( !filenamePrefix || strlen( filenamePrefix ) == 0 ) {
       mallocPerProcStream = &dbg;
     } else {
-      char filename[MAXPATHLEN];
+      char filename[256];
       sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
       if ( timestep == 0 ) {
         mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
@@ -468,7 +471,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     *mallocPerProcStream << "Timestep " << timestep << "   ";
     *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
     *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
+#ifndef _WIN32
     *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr << "   ";
+#endif
 #ifndef DISABLE_SCI_MALLOC
     *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
     *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
@@ -481,29 +486,60 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   
   // with the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double tmp_double = memuse;
   double avg_memuse = memuse;
   unsigned long max_memuse = memuse;
   double avg_highwater = highwater;
   unsigned long max_highwater = highwater;
+
+  // a little ugly, but do it anyway so we only have to do one reduce for sum and
+  // one reduce for max
+  std::vector<double> toReduce, avgReduce, maxReduce;
+  std::vector<const char*> statLabels;
   if (d_myworld->size() > 1) {
-    MPI_Reduce(&tmp_double, &avg_memuse, 1, MPI_DOUBLE, MPI_SUM, 0,
-               d_myworld->getComm());
-    if(highwater){
-      tmp_double = highwater;
-      MPI_Reduce(&tmp_double, &avg_highwater, 1, MPI_DOUBLE,
-                 MPI_SUM, 0, d_myworld->getComm());
+    toReduce.push_back(memuse);
+    statLabels.push_back("Mem usage");
+    if (stats.active()) {
+      toReduce.push_back(d_sharedState->compilationTime);
+      toReduce.push_back(d_sharedState->regriddingTime);
+      toReduce.push_back(d_sharedState->regriddingCompilationTime);
+      toReduce.push_back(d_sharedState->regriddingCopyDataTime);
+      toReduce.push_back(d_sharedState->loadbalancerTime);
+      toReduce.push_back(d_sharedState->taskExecTime);
+      toReduce.push_back(d_sharedState->taskCommTime);
+      toReduce.push_back(d_sharedState->outputTime);
+      statLabels.push_back("Recompile");
+      statLabels.push_back("Regridding");
+      statLabels.push_back("Regrid-schedule");
+      statLabels.push_back("Regrid-copydata");
+      statLabels.push_back("LoadBalance");
+      statLabels.push_back("TaskExec");
+      statLabels.push_back("TaskComm");
+      statLabels.push_back("Output");
     }
-    avg_memuse /= d_myworld->size(); // only to be used by processor 0
-    avg_highwater /= d_myworld->size();
-    MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
+    if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
+      toReduce.push_back(highwater);
+    avgReduce.resize(toReduce.size());
+    maxReduce.resize(toReduce.size());
+    MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
                d_myworld->getComm());
+    MPI_Reduce(&toReduce[0], &maxReduce[0], toReduce.size(), MPI_DOUBLE, MPI_MAX, 0,
+               d_myworld->getComm());
+
+    // make sums averages
+    for (unsigned i = 0; i < avgReduce.size(); i++) {
+      avgReduce[i] /= d_myworld->size();
+    }
+
+    // get specific values - pop front since we don't know if there is a highwater
+    avg_memuse = avgReduce[0];
+    max_memuse = maxReduce[0];
     if(highwater){
-      MPI_Allreduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
-                 MPI_MAX, d_myworld->getComm());
+      avg_highwater = avgReduce[avgReduce.size()-1];
+      max_highwater = maxReduce[maxReduce.size()-1];
     }
   }
-#endif
+  d_sharedState->clearStats();
+
   // calculate mean/std dev
   //double stdDev = 0;
   double mean = 0;
@@ -532,6 +568,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   */
   
   // output timestep statistics
+
   if(d_myworld->myrank() == 0){
     char walltime[96];
     if (d_n > 3) {
@@ -567,7 +604,16 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     
 #endif
     dbg << endl;
-    
+
+    if (stats.active() && d_myworld->size() > 1) {
+      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+        if (maxReduce[i] > 0)
+          stats << setw(15) << statLabels[i] << " avg: " << setw(6) << avgReduce[i] << " max: " << setw(6) << maxReduce[i]
+                << " LIB%: " << 1-(avgReduce[i]/maxReduce[i]) << endl;
+      }
+    } 
+
+
     if ( d_n > 0 ) {
       double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
       double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);

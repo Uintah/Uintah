@@ -179,6 +179,18 @@ public:
   SimulationTime* d_simTime;
 
   bool d_lockstepAMR;
+
+  // timing statistics to test load balance
+  void clearStats();
+  double compilationTime;
+  double regriddingTime;
+  double regriddingCompilationTime;
+  double regriddingCopyDataTime;
+  double loadbalancerTime;
+  double taskExecTime;
+  double taskCommTime;
+  double outputTime;
+
 private:
 
   void registerMaterial(Material*);

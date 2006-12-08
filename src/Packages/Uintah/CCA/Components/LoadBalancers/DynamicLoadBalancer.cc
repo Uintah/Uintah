@@ -852,6 +852,8 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
 
+  double start = Time::currentSeconds();
+
   bool changed = false;
   bool force = false;
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
@@ -925,6 +927,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
   }
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, (changed || state == restart) ? regrid : check);
+  d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
   return changed;
 }
 

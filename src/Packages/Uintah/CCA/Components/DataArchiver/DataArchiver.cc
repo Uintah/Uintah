@@ -1416,6 +1416,7 @@ DataArchiver::outputReduction(const ProcessorGroup*,
 
   if (new_dw->timestepRestarted())
     return;
+  double start = Time::currentSeconds();
   // Dump the stuff in the reduction saveset into files in the uda
   // at every timestep
   dbg << "DataArchiver::outputReduction called\n";
@@ -1449,6 +1450,7 @@ DataArchiver::outputReduction(const ProcessorGroup*,
       out << "\n";
     }
   }
+  d_sharedState->outputTime += Time::currentSeconds()-start;
 }
 
 void
@@ -1468,6 +1470,9 @@ DataArchiver::output(const ProcessorGroup*,
       (!d_isCheckpointTimestep && type != OUTPUT)) {
     return;
   }
+
+ double start = Time::currentSeconds();
+
 
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
@@ -1730,6 +1735,8 @@ DataArchiver::output(const ProcessorGroup*,
     doc->releaseDocument();
   }
   d_outputLock.unlock(); 
+  d_sharedState->outputTime += Time::currentSeconds()-start;
+
 
 } // end output()
 
