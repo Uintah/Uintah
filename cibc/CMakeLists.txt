@@ -81,8 +81,8 @@ ENDIF(HAVE_SCIRUN_THIRDPARTY)
 
 #----------------------------------------------------------------------------
 # Output directories.
-SET (LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
+SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
 #output directory for installing all include files.")
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
@@ -547,7 +547,7 @@ ENDIF(WITH_MPEG)
 
 #-----------------------------------------------------------------------------
 # Teem
-SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+SET (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 FIND_PACKAGE( Teem )
 IF (TEEM_LIBRARY)
   IF (TEEM_INCLUDE_DIR)
@@ -589,8 +589,8 @@ SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
 
 
 # sci_defs/environment_defs.h
-SET(scirun_src_dir "${CMAKE_SOURCE_DIR}/src" CACHE INTERNAL "Path to SCIRun's src directory")
-SET(scirun_obj_dir ${CMAKE_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
+SET(scirun_src_dir "${PROJECT_SOURCE_DIR}/src" CACHE INTERNAL "Path to SCIRun's src directory")
+SET(scirun_obj_dir ${PROJECT_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
 
 SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 SET(ITCL_LIB_DIR ${SCIRUN_THIRDPARTY_PATH}/lib)

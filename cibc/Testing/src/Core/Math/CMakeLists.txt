@@ -28,7 +28,7 @@
 
 # Testing class instantiations
 
-ADD_EXECUTABLE(testMiscMath ${CMAKE_SOURCE_DIR}/Testing/src/Core/Math/testMiscMath.cc)
+ADD_EXECUTABLE(testMiscMath ${PROJECT_SOURCE_DIR}/Testing/src/Core/Math/testMiscMath.cc)
 
 TARGET_LINK_LIBRARIES(testMiscMath Core_Math)
 
