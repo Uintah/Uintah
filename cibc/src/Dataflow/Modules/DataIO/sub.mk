@@ -74,6 +74,7 @@ PSELIBS := \
 	Core/Thread        \
 	Dataflow/TkExtensions  \
 	Core/Util          \
+	Core/OS						 \
 	Core/Volume        \
   Core/Algorithms/DataStreaming
 
