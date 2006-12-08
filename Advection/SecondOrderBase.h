@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 
 #define d_SMALL_NUM 1e-100
+#define DUMP_LIMITER
 namespace Uintah {
 
 class SecondOrderBase {
@@ -393,7 +394,20 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
   new_dw->allocateTemporary(q_CC_min, patch,gac,1);
    
   q_CCMaxMin( q_CC, patch, q_CC_max, q_CC_min); 
+
+#ifdef DUMP_LIMITER  
+  static int counter;
+  FILE *fp;
+  if(d_smokeOnOff){
+    ostringstream fname;
+    fname<<"limiter/"<<counter<< ".dat";
+    string filename = fname.str();
     
+    fp = fopen(filename.c_str(), "w");
+    counter +=1;
+  }
+# endif
+
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
@@ -427,11 +441,23 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
     temp = SCIRun::Min(unit, gradLim_max);
     temp = SCIRun::Min(temp, gradLim_min);
     T gradLim = temp;
-           
+#ifdef DUMP_LIMITER    
+    if(d_smokeOnOff && c.y() == 0 && c.z() == 0){
+      fprintf(fp, "%i %16.15E\n",  c.x(),gradLim);
+    }
+#endif
+    
     q_grad_x[c] = q_grad_x[c] * gradLim;
     q_grad_y[c] = q_grad_y[c] * gradLim;
     q_grad_z[c] = q_grad_z[c] * gradLim; 
   }
+  
+#ifdef DUMP_LIMITER  
+  if(d_smokeOnOff){
+    fclose(fp);
+  }
+#endif
+
 }
 
 } // end namespace Uintah
