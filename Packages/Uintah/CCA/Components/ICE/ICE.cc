@@ -73,7 +73,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   : UintahParallelComponent(myworld)
 {
   lb   = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
   d_doRefluxing         = false;
@@ -118,7 +117,6 @@ ICE::~ICE()
   delete d_customBC_var_basket;
   delete d_conservationTest;
   delete lb;
-  delete MIlb;
   delete d_advector;
   delete d_exchCoeff;
 
@@ -4187,10 +4185,12 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
           
          }
+#if 1
          if(massGain > 0.0){
            cout << "Mass gained by the models this timestep = " 
                 << massGain << "\t L-" <<level->getIndex()<<endl;
          }
+#endif
        }  //  if (models.size() > 0)
 
         //---- P R I N T   D A T A ------ 
