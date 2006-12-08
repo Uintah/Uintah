@@ -49,6 +49,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Datatypes/String.h>
+#include <Core/OS/FullFileName.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 
 namespace SCIRun {
@@ -127,20 +128,31 @@ GenericWriter<HType>::execute()
   StringHandle filename;
   if (get_input_handle("Filename",filename,false)) 
   {
+		// This piece of code makes sure that the path to the output
+		// file exists and that we use an absolute filename
+		FullFileName ffn(filename->get());
+		if (!(ffn.create_file_path()))
+		{
+			error("Could not create path to filename");
+			return;
+		}
+		filename = scinew String(ffn.get_abs_filename());
+
     filename_.set(filename->get());
     get_ctx()->reset();
   }
   
-
   // If no name is provided, return.
 
-  const string fn(filename_.get());
+  string fn(filename_.get());
   if (fn == "")
   {
     warning("No filename specified.");
     return;
   }
 
+
+	
   if (!overwrite()) return;
  
   if (exporting_)
