@@ -935,36 +935,36 @@ proc popupInsertMenu { {subnet 0} } {
     
     #get the net to be inserted
     set types {
-	{{SCIRun Net} {.srn} }
-	{{old SCIRun Net} {.net} }
+      {{SCIRun Net} {.srn} }
+      {{old SCIRun Net} {.net} }
     } 
-    set netedit_loadnet [tk_getOpenFile -filetypes $types ]
-    if { [check_filename $netedit_loadnet] == "invalid" } {
-		set netedit_loadnet ""
-		return
+    set netedit_insertnet [tk_getOpenFile -filetypes $types ]
+    if { [check_filename $netedit_insertnet] == "invalid" } {
+      set netedit_insertnet ""
+      return
     }
-    if { ![file exists $netedit_loadnet]} { 
-		return
+    if { ![file exists $netedit_insertnet]} { 
+      return
     }
     
     set canvas $Subnet(Subnet${subnet}_canvas)    
     # get the bbox for the net being inserted by
     # parsing netedit_loadnet for bbox 
-    set fchannel [open $netedit_loadnet]
+    set fchannel [open $netedit_insertnet]
     set curr_line ""
     set curr_line [gets $fchannel]
     while { ![eof $fchannel] } {
-	if { [string match "set bbox*" $curr_line] } {
+    if { [string match "set bbox*" $curr_line] } {
 	    eval $curr_line
 	    break
-	}
-	set curr_line [gets $fchannel]
-	set val [string match "set bbox*" $curr_line]
+    }
+    set curr_line [gets $fchannel]
+    set val [string match "set bbox*" $curr_line]
 
     }
     set viewBox "0 0 [winfo width $canvas] [winfo width $canvas]"
     if { ![info exists bbox] || [llength $bbox] != 4 } {
-	set bbox $viewBox
+      set bbox $viewBox
     }
     set w [expr [lindex $bbox 2] - [lindex $bbox 0]]
     set h [expr [lindex $bbox 3] - [lindex $bbox 1]]
@@ -974,37 +974,37 @@ proc popupInsertMenu { {subnet 0} } {
     set done 0
     set bbox [list 0 0 $w $h] ;# start inserting in upper left corner
     while {!$done} {
-	set done 1
-	set modules [eval $canvas find overlapping $bbox]
-	foreach modid $modules {
-	    if { [lsearch [$canvas gettags $modid] module] != -1 } {
-		set overlap [clipBBoxes [compute_bbox $canvas $modid] $bbox]
-		if ![string equal $overlap "0 0 0 0"] {
-		    set done 0
-		    break
-		}
-	    }
-	}
-	if {!$done} {
-	    # move the insert position left by half a screen
-	    for {set i 0} {$i < 4} {incr i} {
-		set bbox [lreplace $bbox $i $i \
+      set done 1
+      set modules [eval $canvas find overlapping $bbox]
+      foreach modid $modules {
+        if { [lsearch [$canvas gettags $modid] module] != -1 } {
+          set overlap [clipBBoxes [compute_bbox $canvas $modid] $bbox]
+          if ![string equal $overlap "0 0 0 0"] {
+            set done 0
+            break
+          }
+        }
+      }
+      if {!$done} {
+        # move the insert position left by half a screen
+        for {set i 0} {$i < 4} {incr i} {
+          set bbox [lreplace $bbox $i $i \
 			      [expr [lindex $moveBoxX $i]+[lindex $bbox $i]]]
-	    }
-	    if {[lindex $bbox 2] > $mainCanvasWidth} {
-		set bbox [lreplace $bbox 2 2 \
-			  [expr [lindex $bbox 2] -[lindex $bbox 0]]]
-		set bbox [lreplace $bbox 0 0 0]
-		for {set i 0} {$i < 4} {incr i} {
-		    set bbox [lreplace $bbox $i $i \
+        }
+        if {[lindex $bbox 2] > $mainCanvasWidth} {
+          set bbox [lreplace $bbox 2 2 \
+          [expr [lindex $bbox 2] -[lindex $bbox 0]]]
+          set bbox [lreplace $bbox 0 0 0]
+          for {set i 0} {$i < 4} {incr i} {
+            set bbox [lreplace $bbox $i $i \
 			       [expr [lindex $moveBoxY $i]+[lindex $bbox $i]]]
-		}
-		if {[lindex $bbox 3] > $mainCanvasHeight} {
-		    set bbox [list 50 50 [expr 50+$w] [expr 50+$h]]
-		    set done 1
-		}
-	    }
-	}
+          }
+          if {[lindex $bbox 3] > $mainCanvasHeight} {
+            set bbox [list 50 50 [expr 50+$w] [expr 50+$h]]
+            set done 1
+          }
+        }
+      }
     }
 
     set insertOffset [list [expr [lindex $bbox 0]-[lindex $oldbox 0]] \
@@ -1013,21 +1013,23 @@ proc popupInsertMenu { {subnet 0} } {
     $canvas yview moveto [expr [lindex $bbox 1]/$mainCanvasHeight-0.01]
     set preLoadModules $Subnet(Subnet${subnet}_Modules)
     set inserting 1
-    if {[string match *.net $netedit_loadnet]} {
-	loadnet $netedit_loadnet
+    if {[string match *.net $netedit_insertnet]} {
+      loadnet $netedit_insertnet
     } else {
-	uplevel \#0 netedit load_srn $netedit_loadnet
+      global netedit_savefile
+      set tmp $netedit_savefile
+      uplevel \#0 netedit load_srn $netedit_insertnet
+      set netedit_savefile $tmp
     }
     set inserting 0
     unselectAll
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	if { [lsearch $preLoadModules $module] == -1 } {
-	    $module addSelected
-	}
+      if { [lsearch $preLoadModules $module] == -1 } {
+        $module addSelected
+      }
     }
     
     set NetworkChanged 1
-
 }
 
 proc subnet_bbox { subnet { cheat 1} } {
@@ -1377,7 +1379,7 @@ proc loadfile {netedit_loadfile} {
     return
 }
 
-proc loadnet { netedit_loadfile } {
+proc loadnet { netedit_loadfile} {
     # Check to see of the file exists; warn user if it doesnt
     if { ![file exists $netedit_loadfile] } {
 	set message "File \"$netedit_loadfile\" does not exist."
@@ -1387,10 +1389,10 @@ proc loadnet { netedit_loadfile } {
 
     global netedit_savefile inserting PowerApp Subnet geometry
     if { !$inserting || ![string length $netedit_savefile] } {
-	# Cut off the path from the net name and put in on the title bar:
-	wm title . "SCIRun ([lindex [file split $netedit_loadfile] end])"
-	# Remember the name of this net for future "Saves".
-	set netedit_savefile $netedit_loadfile
+      # Cut off the path from the net name and put in on the title bar:
+      wm title . "SCIRun ([lindex [file split $netedit_loadfile] end])"
+      # Remember the name of this net for future "Saves".
+      set netedit_savefile $netedit_loadfile
     }
 
     renameSourceCommand
@@ -2005,7 +2007,7 @@ proc getOnTheFlyLibsDir {} {
     set makefile [file join [netedit getenv SCIRUN_OBJDIR] on-the-fly-libs Makefile]
     if [catch "file copy -force $makefile $dir"] {
 	tk_messageBox -type ok -parent . -icon error -message \
-	    "SCIRun cannot copy $makefile to $dir.\n\nThe Makefile was generated during configure and is necessary for dynamic compilation to work.  Please reconfigure SCIRun to re-generate this file.\n\nDynamic code generation will not work.  If you continue this session, networks may not execute correctly."
+	    "SCIRun cannot copy $makefile to $dir.\n\nThe Makefile was generated during configure and is necessasary for dynamic compilation to work.  Please reconfigure SCIRun to re-generate this file.\n\nDynamic code generation will not work.  If you continue this session, networks may not execute correctly."
 	return $binOTF
     }
 	
