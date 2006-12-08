@@ -84,18 +84,16 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   if(linearInitialize){
     ps->getWithDefault("slope",slope,Vector(0,0,0));
   }
+  ps->getWithDefault("cubicInitialize",     cubicInitialize,     false);
   ps->getWithDefault("quadraticInitialize", quadraticInitialize, false);
   if(quadraticInitialize){
     ps->getWithDefault("coeff",coeff,Vector(0,0,0));
   }
   
   uniformInitialize = true;
-  if(sinusoidalInitialize || linearInitialize || quadraticInitialize){
+  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize){
     uniformInitialize = false;
   }
-  
-  cout << " sinusoidalInitialize " << sinusoidalInitialize
-       << " uniformInitialize " << uniformInitialize << endl;
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
@@ -359,6 +357,13 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             if(region->linearInitialize){
               f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
             }
+            if(region->cubicInitialize){    
+              if(d.x() <= 0.5)
+                f[c] = -1.3333333*pow(d.x(),3)  + pow(d.x(),2);
+              else{
+                f[c] = -1.3333333*pow( (1.0 - d.x()),3) + pow( (1.0 - d.x()),2);
+              } 
+            }            
             if(region->quadraticInitialize){
               f[c] = coeff.x() * d.x() * d.x() 
                    + coeff.y() * d.y() * d.y() 

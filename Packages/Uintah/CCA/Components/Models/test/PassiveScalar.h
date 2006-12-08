@@ -138,6 +138,7 @@ WARNING
       IntVector freq;
       bool  linearInitialize;
       Vector slope;
+      bool cubicInitialize;
       bool quadraticInitialize;
       Vector coeff;
       
