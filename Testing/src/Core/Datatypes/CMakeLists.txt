@@ -31,7 +31,7 @@
 
 IF(ITK_FOUND)
   # ITKDatatype
-  ADD_EXECUTABLE(testITKDatatype ${CMAKE_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKDatatype.cc)
+  ADD_EXECUTABLE(testITKDatatype ${PROJECT_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKDatatype.cc)
 
   TARGET_LINK_LIBRARIES(testITKDatatype Core_Datatypes Core_Malloc)
 
@@ -39,7 +39,7 @@ IF(ITK_FOUND)
     ${EXECUTABLE_OUTPUT_PATH}/testITKDatatype)
 
   # ITKImageField
-  ADD_EXECUTABLE(testITKImageField ${CMAKE_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKImageField.cc)
+  ADD_EXECUTABLE(testITKImageField ${PROJECT_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKImageField.cc)
 
   TARGET_LINK_LIBRARIES(testITKImageField 
     Core_Datatypes 
@@ -49,7 +49,7 @@ IF(ITK_FOUND)
     ${EXECUTABLE_OUTPUT_PATH}/testITKImageField)
 
   # ITKLatVolField
-  ADD_EXECUTABLE(testITKLatVolField ${CMAKE_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKLatVolField.cc)
+  ADD_EXECUTABLE(testITKLatVolField ${PROJECT_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKLatVolField.cc)
 
   TARGET_LINK_LIBRARIES(testITKLatVolField 
     Core_Datatypes 

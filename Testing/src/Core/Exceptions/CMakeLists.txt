@@ -28,7 +28,7 @@
 
 # Exceptions
 
-ADD_EXECUTABLE(testFileNotFound ${CMAKE_SOURCE_DIR}/Testing/src/Core/Exceptions/testFileNotFound.cc)
+ADD_EXECUTABLE(testFileNotFound ${PROJECT_SOURCE_DIR}/Testing/src/Core/Exceptions/testFileNotFound.cc)
 
 TARGET_LINK_LIBRARIES(testFileNotFound Core_Exceptions)
 

@@ -47,8 +47,8 @@ ENDIF(BUILD_TESTING)
 
 #----------------------------------------------------------------------------
 # Output directories.
-SET (LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
+SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
 #output directory for installing all include files.")
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
@@ -192,7 +192,7 @@ Widgets)
 
 # createTclIndex and tclIndex files
 # DV Fix for each packages, create their tclIndex file
-SET(CREATETCLINDEX ${CMAKE_BINARY_DIR}/createTclIndex CACHE INTERNAL "createTclIndex script file")
+SET(CREATETCLINDEX ${PROJECT_BINARY_DIR}/createTclIndex CACHE INTERNAL "createTclIndex script file")
 SET(TCLSH ${SCIRUN_THIRDPARTY_PATH}/bin/tclsh${TCL_VERSION})
 SET(TCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/tcl/)
 SET(ITCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/itcl/)
