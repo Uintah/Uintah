@@ -520,8 +520,9 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_output->finalizeTimestep(t, 0, grid, d_scheduler, 1);
       
       d_scheduler->compile();
+      double end = Time::currentSeconds() - start;
       if(d_myworld->myrank() == 0)
-        cout << "done taskgraph compile (" << Time::currentSeconds() - start << " seconds)\n";
+        cout << "done taskgraph compile (" << end << " seconds)\n";
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
@@ -543,6 +544,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   double regridTime = Time::currentSeconds() - start;
+  d_sharedState->regriddingTime += regridTime;
   d_sharedState->setRegridTimestep(false);
 
   int lbstate = initialTimestep ? LoadBalancer::init : LoadBalancer::regrid;
@@ -670,7 +672,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   double dt=Time::currentSeconds() - start;
   if(d_myworld->myrank() == 0)
     cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
-  
+  d_sharedState->compilationTime += dt;
   d_sharedState->setNeedAddMaterial(0);
 }
 //______________________________________________________________________

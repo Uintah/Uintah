@@ -80,7 +80,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   d_switchState = false;
   d_simTime = 0;
-  
+  clearStats();  
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -321,4 +321,16 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
     result = matls[matlidx];
   }
   return result;
+}
+
+void SimulationState::clearStats()
+{
+  compilationTime = 0;
+  regriddingTime = 0;
+  regriddingCompilationTime = 0;
+  regriddingCopyDataTime = 0;
+  loadbalancerTime = 0;
+  taskExecTime = 0;
+  taskCommTime = 0;
+  outputTime = 0;
 }

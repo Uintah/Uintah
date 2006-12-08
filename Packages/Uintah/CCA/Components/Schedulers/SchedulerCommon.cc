@@ -25,7 +25,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-
+#include <Core/Thread/Time.h>
 
 #include <fstream>
 #include <iostream>
@@ -812,6 +812,7 @@ SchedulerCommon::finalizeTimestep()
 void
 SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim)
 {  
+  double start = Time::currentSeconds();
   // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
   for (unsigned i = 0; i < label_matls_.size(); i++)
@@ -996,13 +997,16 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     }
   }
 
+
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
-
+  //d_sharedState->setCopyDataTimestep(true);  -- do we still need this?  - BJW
 #ifndef _WIN32
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
 #endif
   this->compile(); 
+  d_sharedState->regriddingCompilationTime += Time::currentSeconds() - start;
+  start = Time::currentSeconds();
   this->execute();
 #ifndef _WIN32
   AllocatorSetDefaultTag(tag);
@@ -1031,6 +1035,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     delete v; // copied on the put command
   }
   newDataWarehouse->refinalize();
+  d_sharedState->regriddingCopyDataTime += Time::currentSeconds() - start;
 }
 
 

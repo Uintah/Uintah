@@ -690,7 +690,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   // big.  We make it moderately large anyway - memory is cheap.
   void* old_mpibuffer;
   int old_mpibuffersize;
+#ifndef _WIN32
+  // windows mpich doesn't like this here, but everybody else's needs it...
   MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
+#endif
 #define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
   char* mpibuffer = scinew char[MPI_BUFSIZE];
   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
@@ -779,6 +782,11 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
              mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
   }
 
+  if (d_sharedState != 0) { // subschedulers don't have a sharedState
+    d_sharedState->taskExecTime += mpi_info_.totaltask;
+    d_sharedState->taskCommTime += mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce;
+  }
+
   // Don't need to lock sends 'cause all threads are done at this point.
   sends_.waitall(d_myworld);
   ASSERT(sends_.numRequests() == 0);
@@ -799,8 +807,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   int junk;
   MPI_Buffer_detach(&mpibuffer, &junk);
   delete[] mpibuffer;
+#ifndef _WIN32
   if(old_mpibuffersize)
     MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
+#endif
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
