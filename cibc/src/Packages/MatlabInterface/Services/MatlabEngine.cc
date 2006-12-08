@@ -347,8 +347,10 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
     {   // start engine
       putmsg("MatlabEngine: trying to start matlab engine");
       std::string startmatlab = getparameter("startmatlab");
+			std::string rcfile = getparameter("rcfile");
       
-      putmsg("MatlabEngine: Get matlab startup command " + startmatlab);
+      putmsg("MatlabEngine: Get matlab startup command:" + startmatlab);
+			putmsg("MatlabEngine: RC file used:"+rcfile);
       if (startmatlab == "")
         {
           putmsg("MatlabEngine: Could not read startmatlab from matlabengine.rc file");

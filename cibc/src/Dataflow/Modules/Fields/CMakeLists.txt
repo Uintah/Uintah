@@ -64,7 +64,7 @@ SET(Dataflow_Modules_Fields_SRCS
   InsertHexVolSheetFromTriSurf.cc
   MergeTriSurfs.cc
   ClipVolumeByIsovalue.cc
-  ClipVolumeByIsovalueWithRefinement.cc
+  RefineMeshByIsovalue.cc
   SwapFieldDataWithMatrixEntries.cc
   SwapNodeLocationsWithMatrixEntries.cc
   MapFieldDataToNodeCoordinate.cc

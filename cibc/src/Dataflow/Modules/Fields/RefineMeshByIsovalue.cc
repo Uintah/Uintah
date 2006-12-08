@@ -29,7 +29,7 @@
 
 
 /*
- *  ClipVolumeByIsovalueWithRefinement.cc:  Clip out parts of a field.
+ *  RefineMeshByIsovalue.cc:  Clip out parts of a field.
  *
  *  Written by:
  *   Michael Callahan
@@ -45,13 +45,13 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/Modules/Fields/ClipVolumeByIsovalueWithRefinement.h>
+#include <Dataflow/Modules/Fields/RefineMeshByIsovalue.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 namespace SCIRun {
 
-int ClipVolumeByIsovalueWithRefinementAlgo::hex_reorder_table[14][8] = {
+int RefineMeshByIsovalueAlgo::hex_reorder_table[14][8] = {
   {0, 1, 2, 3, 4, 5, 6, 7},
   {1, 2, 3, 0, 5, 6, 7, 4},
   {2, 3, 0, 1, 6, 7, 4, 5},
@@ -72,7 +72,7 @@ int ClipVolumeByIsovalueWithRefinementAlgo::hex_reorder_table[14][8] = {
 };
 
 
-double ClipVolumeByIsovalueWithRefinementAlgo::hcoords_double[8][3] = {
+double RefineMeshByIsovalueAlgo::hcoords_double[8][3] = {
   { 0.0, 0.0, 0.0},
   { 1.0, 0.0, 0.0},
   { 1.0, 1.0, 0.0},
@@ -83,7 +83,7 @@ double ClipVolumeByIsovalueWithRefinementAlgo::hcoords_double[8][3] = {
   { 0.0, 1.0, 1.0}
 };
 
-class ClipVolumeByIsovalueWithRefinement : public Module
+class RefineMeshByIsovalue : public Module
 {
 private:
   GuiDouble gui_isoval_;
@@ -94,18 +94,18 @@ private:
   int       last_matrix_generation_;
 
 public:
-  ClipVolumeByIsovalueWithRefinement(GuiContext* ctx);
-  virtual ~ClipVolumeByIsovalueWithRefinement();
+  RefineMeshByIsovalue(GuiContext* ctx);
+  virtual ~RefineMeshByIsovalue();
 
   virtual void execute();
 };
 
 
-DECLARE_MAKER(ClipVolumeByIsovalueWithRefinement)
+DECLARE_MAKER(RefineMeshByIsovalue)
 
 
-ClipVolumeByIsovalueWithRefinement::ClipVolumeByIsovalueWithRefinement(GuiContext* ctx)
-  : Module("ClipVolumeByIsovalueWithRefinement", ctx, Filter, "NewField", "SCIRun"),
+RefineMeshByIsovalue::RefineMeshByIsovalue(GuiContext* ctx)
+  : Module("RefineMeshByIsovalue", ctx, Filter, "NewField", "SCIRun"),
     gui_isoval_(get_ctx()->subVar("isoval"), 0.0),
     gui_lte_(get_ctx()->subVar("lte"), 1),
     last_field_generation_(0),
@@ -116,13 +116,13 @@ ClipVolumeByIsovalueWithRefinement::ClipVolumeByIsovalueWithRefinement(GuiContex
 }
 
 
-ClipVolumeByIsovalueWithRefinement::~ClipVolumeByIsovalueWithRefinement()
+RefineMeshByIsovalue::~RefineMeshByIsovalue()
 {
 }
 
 
 void
-ClipVolumeByIsovalueWithRefinement::execute()
+RefineMeshByIsovalue::execute()
 {
   // Get input field.
   FieldHandle ifieldhandle;
@@ -204,11 +204,11 @@ ClipVolumeByIsovalueWithRefinement::execute()
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  CompileInfoHandle ci = ClipVolumeByIsovalueWithRefinementAlgo::get_compile_info(ftd, ext);
-  Handle<ClipVolumeByIsovalueWithRefinementAlgo> algo;
+  CompileInfoHandle ci = RefineMeshByIsovalueAlgo::get_compile_info(ftd, ext);
+  Handle<RefineMeshByIsovalueAlgo> algo;
   if (!DynamicCompilation::compile(ci, algo, false, this))
   {
-    error("Unable to compile ClipVolumeByIsovalueWithRefinement algorithm.");
+    error("Unable to compile RefineMeshByIsovalue algorithm.");
     return;
   }
 
@@ -223,13 +223,13 @@ ClipVolumeByIsovalueWithRefinement::execute()
 
 
 CompileInfoHandle
-ClipVolumeByIsovalueWithRefinementAlgo::get_compile_info(const TypeDescription *fsrc,
+RefineMeshByIsovalueAlgo::get_compile_info(const TypeDescription *fsrc,
                                 string ext)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string template_class_name("ClipVolumeByIsovalueWithRefinementAlgo" + ext);
-  static const string base_class_name("ClipVolumeByIsovalueWithRefinementAlgo");
+  const string template_class_name("RefineMeshByIsovalueAlgo" + ext);
+  static const string base_class_name("RefineMeshByIsovalueAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
