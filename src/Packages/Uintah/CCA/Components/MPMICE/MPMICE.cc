@@ -51,9 +51,8 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                MPMType mpmtype, const bool doAMR)
   : UintahParallelComponent(myworld)
 {
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
+ 
   d_rigidMPM = false;
   d_doAMR = doAMR;
   d_testForNegTemps_mpm = true;
@@ -80,6 +79,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   else {
     d_ice  = scinew ICE(myworld, false);
   }
+
+  Ilb=d_ice->lb;
+  Mlb=d_mpm->lb;
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = d_ice->d_TINY_RHO;
@@ -124,8 +126,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  M P M
-  //  d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
+  d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->attachPort("scheduler",sched);
@@ -166,7 +168,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     d_ice->attachPort("modelmaker",models);
   }
   
-  d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
 
 
