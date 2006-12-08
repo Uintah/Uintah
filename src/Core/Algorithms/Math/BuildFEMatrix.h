@@ -84,7 +84,8 @@ class FEMBuilder : public DynamicAlgoBase
 public:
 
   // Constructor needed as Barrier needs to have name
-  FEMBuilder() :
+  FEMBuilder(ProgressReporter* pr) :
+    pr_(pr),
     barrier_("FEMBuilder Barrier")
   {
   }
@@ -95,6 +96,7 @@ public:
 private:
 
   // For parallel implementation
+  ProgressReporter* pr_;
   Barrier barrier_;
 
   typename FIELD::mesh_type::basis_type fieldbasis_;
@@ -193,7 +195,7 @@ bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle 
   // original main class is pure and we can use one instance to do multiple
   // computations. This helps when precomputing dynamic algorithms
 
-  Handle<FEMBuilder<FIELD> > builder = scinew FEMBuilder<FIELD>;
+  Handle<FEMBuilder<FIELD> > builder = scinew FEMBuilder<FIELD>(pr);
   // Call the the none pure version
   builder->build_matrix(input,output,ctable,numproc);
 
@@ -817,6 +819,9 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   std::vector<int> neib_dofs;
 
   //! loop over system dofs for this thread
+  int cnt = 0;
+  int size_gd = end_gd-start_gd;
+    
   for (unsigned int i = start_gd; i<end_gd; i++)
   {
     rows_[i] = mycols.size();
@@ -884,6 +889,11 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
         mycols.push_back(neib_dofs[j]);
       }
     }
+    if (proc_num == 0) 
+    {
+      cnt++;
+      if (cnt == 200) { cnt = 0; pr_->update_progress(i,2*size_gd); }
+    }    
   }
 
   colidx_[proc_num] = mycols.size();
@@ -951,6 +961,9 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   lsml.resize(local_dimension);
       	
   //! loop over system dofs for this thread
+  cnt = 0;
+  
+  size_gd = end_gd-start_gd;
   for (int i = start_gd; i<end_gd; i++)
   {
     if (i < global_dimension_nodes)
@@ -1052,6 +1065,12 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
           }
         }
       }
+    }
+    
+    if (proc_num == 0) 
+    {
+      cnt++;
+      if (cnt == 200) { cnt = 0; pr_->update_progress(i+size_gd,2*size_gd); }
     }
   }
 
