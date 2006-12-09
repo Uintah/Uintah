@@ -92,14 +92,14 @@ void BuildFEMatrix::execute()
       if (Conductivity.get_rep())
       {
         int nconds = Conductivity->nrows();
-        if ((Field->mesh()->generation != gen_)&&(BasisMatrix_.get_rep()!=0))
+        if ((Field->mesh()->generation != gen_)||(BasisMatrix_.get_rep()==0))
         {
         
           MatrixHandle con = scinew DenseMatrix(nconds,1);
           double* data = con->get_data_pointer();
           for (int i=0; i<nconds;i++) data[i] = 0.0;
           if(!(numericalgo.BuildFEMatrix(Field,BasisMatrix_,-1,con))) return;
-          int nconds = Conductivity->nrows();
+          nconds = Conductivity->nrows();
           
           DataBasis_.resize(nconds);
           for (int s=0; s< nconds; s++)
@@ -118,6 +118,7 @@ void BuildFEMatrix::execute()
 
           gen_ = Field->mesh()->generation;
         }
+        
 
         SysMatrix = BasisMatrix_;
         SysMatrix.detach();
@@ -129,13 +130,13 @@ void BuildFEMatrix::execute()
           for (unsigned int p=0; p < DataBasis_[s].size(); p++)
             sum[p] += weight * DataBasis_[s][p];
         }
+
       }
-      
-      return;
     }
- 
- 
-    if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,-1,Conductivity))) return;
+    else
+    {
+      if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,-1,Conductivity))) return;
+    }
     
     send_output_handle("Stiffness Matrix",SysMatrix,false);  
   }
