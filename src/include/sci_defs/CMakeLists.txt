@@ -33,117 +33,117 @@
 
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/blas_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/blas_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/blas_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/blas_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/bits_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/bits_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/bits_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/bits_defs.h"
 )
 
 # DV Fix chromium (DEF_CHROMIUM not set)
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/chromium_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/chromium_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/chromium_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/chromium_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/compile_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/compile_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/compile_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/compile_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/cmake_config_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/config_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/cmake_config_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/config_defs.h"
 )
 
 # DV Fix collab_vis (DEF_COLLAB_VIS not set)
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/collab_vis_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/collab_vis_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/collab_vis_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/collab_vis_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/cmake_config_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/config_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/cmake_config_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/config_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/error_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/error_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/error_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/error_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/cmake_environment_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/environment_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/cmake_environment_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/environment_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/exe_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/exe_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/exe_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/exe_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/hashmap_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/hashmap_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/hashmap_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/hashmap_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/image_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/image_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/image_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/image_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/lapack_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/lapack_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/lapack_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/lapack_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/malloc_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/malloc_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/malloc_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/malloc_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/ogl_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/ogl_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/ogl_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/ogl_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/petsc_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/petsc_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/petsc_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/petsc_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/ptolemy_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/ptolemy_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/ptolemy_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/ptolemy_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/template_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/template_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/template_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/template_defs.h"
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/include/sci_defs/thread_testdefs.h.in"
-  "${PROJECT_BINARY_DIR}/include/sci_defs/thread_defs.h"
+  "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/thread_testdefs.h.in"
+  "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/thread_defs.h"
 )
 
 CONFIGURE_FILE (
-      "${PROJECT_SOURCE_DIR}/include/sci_defs/x11_testdefs.h.in"
-      "${PROJECT_BINARY_DIR}/include/sci_defs/x11_defs.h"
+      "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/x11_testdefs.h.in"
+      "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/x11_defs.h"
 )
 
 
 #---------------------------------------------------------------------
 # Package configure files
 CONFIGURE_FILE (
-      "${PROJECT_SOURCE_DIR}/include/sci_defs/teem_testdefs.h.in"
-      "${PROJECT_BINARY_DIR}/include/sci_defs/teem_defs.h"
+      "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/teem_testdefs.h.in"
+      "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/teem_defs.h"
 )
 
 CONFIGURE_FILE (
-      "${PROJECT_SOURCE_DIR}/include/sci_defs/insight_testdefs.h.in"
-      "${PROJECT_BINARY_DIR}/include/sci_defs/insight_defs.h"
+      "${SCIRUN_CORE_SOURCE_DIR}/include/sci_defs/insight_testdefs.h.in"
+      "${SCIRUN_CORE_BINARY_DIR}/include/sci_defs/insight_defs.h"
 )
 

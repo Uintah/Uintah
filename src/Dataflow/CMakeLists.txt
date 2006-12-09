@@ -29,7 +29,7 @@
 # This is the root SCIRun CMakeLists file.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
 
-PROJECT(SCIRUN)
+PROJECT(SCIRUN_DATAFLOW)
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.
@@ -48,15 +48,15 @@ ENDIF(BUILD_TESTING)
 #----------------------------------------------------------------------------
 # Output directories.
 IF(NOT BUILD_FROM_TOP_LEVEL)
-  SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-  SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+  SET (LIBRARY_OUTPUT_PATH ${SCIRUN_DATAFLOW_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
+  SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_DATAFLOW_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
   #output directory for installing all include files.")
   MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 ENDIF(NOT BUILD_FROM_TOP_LEVEL)
 
 
 # DV Find SCIRun Core stuff
-SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
+SET(CMAKE_MODULE_PATH ${SCIRUN_DATAFLOW_SOURCE_DIR})
 FIND_PACKAGE( SCIRUN )
 IF(SCIRUN_FOUND)
   INCLUDE(${SCIRUN_USE_FILE})
@@ -118,12 +118,12 @@ INCLUDE_DIRECTORIES(${TK_INCLUDE1} ${TK_INCLUDE2})
 # Create on-the-fly-libs stuff
 # DV Fix - these shouldn't necesarily point to thirdparty
 GET_DIRECTORY_PROPERTY(OTFL_INCLUDES_LIST INCLUDE_DIRECTORIES)
-SET(OTFL_INCLUDES "-I${CIBC_Core_SOURCE_DIR}/Packages")
+SET(OTFL_INCLUDES "-I${SCIRUN_CORE_SOURCE_DIR}/Packages")
 FOREACH(next_ITEM ${OTFL_INCLUDES_LIST})
    SET(OTFL_INCLUDES "${OTFL_INCLUDES} -I${next_ITEM}")
 ENDFOREACH(next_ITEM ${OTFL_INCLUDES_LIST})
 
-SET(scirun_obj_dataflow_dir ${PROJECT_BINARY_DIR})
+SET(scirun_obj_dataflow_dir ${SCIRUN_DATAFLOW_BINARY_DIR})
 
 SET(IS_OSX "no")
 SET(IS_WIN "no")
@@ -158,13 +158,13 @@ SET(OTFL_CFLAGS "${OTFL_CFLAGS} ${CMAKE_SHARED_LIBRARY_CXX_FLAGS}")
 
 IF(WIN32)
   CONFIGURE_FILE (
-    "${CIBC_Core_SOURCE_DIR}/on-the-fly-libs/cmake_win32make.in"
-    "${PROJECT_BINARY_DIR}/on-the-fly-libs/win32make.bat"
+    "${SCIRUN_CORE_SOURCE_DIR}/on-the-fly-libs/cmake_win32make.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/on-the-fly-libs/win32make.bat"
   )
 ELSE(WIN32)
   CONFIGURE_FILE (
-    "${CIBC_Core_SOURCE_DIR}/on-the-fly-libs/cmake_Makefile.in"
-    "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
+    "${SCIRUN_CORE_SOURCE_DIR}/on-the-fly-libs/cmake_Makefile.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/on-the-fly-libs/Makefile"
   )
 ENDIF(WIN32)
 
@@ -194,7 +194,7 @@ Widgets)
 
 # createTclIndex and tclIndex files
 # DV Fix for each packages, create their tclIndex file
-SET(CREATETCLINDEX ${PROJECT_BINARY_DIR}/createTclIndex CACHE INTERNAL "createTclIndex script file")
+SET(CREATETCLINDEX ${SCIRUN_DATAFLOW_BINARY_DIR}/createTclIndex CACHE INTERNAL "createTclIndex script file")
 SET(TCLSH ${SCIRUN_THIRDPARTY_PATH}/bin/tclsh${TCL_VERSION})
 SET(TCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/tcl/)
 SET(ITCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/itcl/)
@@ -203,15 +203,15 @@ MESSAGE(STATUS "Creating createTclIndex")
 IF(WIN32) 
   # On Windows, we would just make a batch file to do the same thing as the createTCLIndex sh script,
   # but the << operator is not accepted.  So we must create a file per tcl index
-  set (CREATE_TCL_PACKAGE ${CIBC_Core_SOURCE_DIR}/Core/GUI)
+  set (CREATE_TCL_PACKAGE ${SCIRUN_CORESOURCE_DIR}/Core/GUI)
   CONFIGURE_FILE (
-    "${CIBC_Core_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
-    "${PROJECT_BINARY_DIR}/createCoreTclIndex.tcl"
+    "${SCIRUN_CORE_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
+    "${SCIRUN_DATAFLOW_BINARY_DIR}/createCoreTclIndex.tcl"
   )
-  set (CREATE_TCL_PACKAGE ${CIBC_Core_SOURCE_DIR}/Dataflow/GUI)
+  set (CREATE_TCL_PACKAGE ${SCIRUN_CORE_SOURCE_DIR}/Dataflow/GUI)
   CONFIGURE_FILE (
-    "${CIBC_Core_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
-    "${PROJECT_BINARY_DIR}/createDataflowTclIndex.tcl"
+    "${SCIRUN_CORE_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
+    "${SCIRUN_DATAFLOW_BINARY_DIR}/createDataflowTclIndex.tcl"
   )
   
   ADD_CUSTOM_TARGET(create_tclIndex_SCIRun ALL
@@ -220,15 +220,15 @@ IF(WIN32)
   )  
 ELSE(WIN32)
   CONFIGURE_FILE (
-    "${CIBC_Core_SOURCE_DIR}/scripts/cmake_createTclIndex.in"
+    "${SCIRUN_CORE_SOURCE_DIR}/scripts/cmake_createTclIndex.in"
     "${CREATETCLINDEX}"
   )
   # Change permissions on createTclIndex file and generate
   # tclIndex files for Core/GUI and Dataflow/GUI
   ADD_CUSTOM_TARGET(create_tclIndex_SCIRun ALL
     chmod a+x ${CREATETCLINDEX}
-    COMMAND ${CREATETCLINDEX} ${CIBC_Core_SOURCE_DIR}/Core/GUI 
-    COMMAND ${CREATETCLINDEX} ${CIBC_Core_SOURCE_DIR}/Dataflow/GUI
+    COMMAND ${CREATETCLINDEX} ${SCIRUN_CORE_SOURCE_DIR}/Core/GUI 
+    COMMAND ${CREATETCLINDEX} ${SCIRUN_CORE_SOURCE_DIR}/Dataflow/GUI
   )
 ENDIF(WIN32)
 # Packages enabled when building core
@@ -242,22 +242,22 @@ FOREACH( pkg ${PACKAGE_LIST})
   IF(NOT ${pkg} MATCHES "SCIRun")
     # add SCIRun/src/Packages to the include line once
     IF(NOT ${INCLUDED_PACKAGE_INCLUDES})
-      INCLUDE_DIRECTORIES(${CIBC_Core_SOURCE_DIR}/Packages)
+      INCLUDE_DIRECTORIES(${SCIRUN_CORE_SOURCE_DIR}/Packages)
       SET(INCLUDED_PACKAGE_INCLUDES TRUE)
     ENDIF(NOT ${INCLUDED_PACKAGE_INCLUDES})
 
     # Add the package subdirectory in CMake
-    SUBDIRS(${CIBC_Core_SOURCE_DIR}/Packages/${pkg})
+    SUBDIRS(${SCIRUN_CORE_SOURCE_DIR}/Packages/${pkg})
 
     IF(WIN32) 
       # On Windows, we would just make a batch file to do the same thing as the createTCLIndex sh script,
       # but the << operator is not accepted.  So we must create a file per tcl index
-      set (CREATE_TCL_PACKAGE ${CIBC_Core_SOURCE_DIR}/Packages/${pkg}/Dataflow/GUI)
+      set (CREATE_TCL_PACKAGE ${SCIRUN_CORE_SOURCE_DIR}/Packages/${pkg}/Dataflow/GUI)
       CONFIGURE_FILE (
-        "${CIBC_Core_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
-        "${PROJECT_BINARY_DIR}/create${pkg}TclIndex.tcl"
+        "${SCIRUN_CORE_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
+        "${SCIRUN_DATAFLOW_BINARY_DIR}/create${pkg}TclIndex.tcl"
       )
-      set (CREATE_TCL_PACKAGE ${CIBC_Core_SOURCE_DIR}/Dataflow/GUI)
+      set (CREATE_TCL_PACKAGE ${SCIRUN_CORE_SOURCE_DIR}/Dataflow/GUI)
       
       ADD_CUSTOM_TARGET(create_tclIndex_${pkg} ALL
         COMMAND ${TCLSH} create${pkg}TclIndex.tcl
@@ -267,7 +267,7 @@ FOREACH( pkg ${PACKAGE_LIST})
       # Create the tclIndex file
       ADD_CUSTOM_TARGET(create_tclIndex_${pkg} ALL
         chmod a+x ${CREATETCLINDEX}
-        COMMAND ${CREATETCLINDEX} ${CIBC_Core_SOURCE_DIR}/Packages/${pkg}/Dataflow/GUI 
+        COMMAND ${CREATETCLINDEX} ${SCIRUN_CORE_SOURCE_DIR}/Packages/${pkg}/Dataflow/GUI 
       )
     ENDIF(WIN32)
   ENDIF(NOT ${pkg} MATCHES "SCIRun")
@@ -275,7 +275,7 @@ ENDFOREACH( pkg )
 
 # scirun executable
 ADD_EXECUTABLE(scirun
-${CIBC_Core_SOURCE_DIR}/main/main.cc)
+${SCIRUN_CORE_SOURCE_DIR}/main/main.cc)
 
 SET(SCIRUN_LIBS
   Core_Basis         
@@ -318,13 +318,13 @@ STRING (REGEX MATCH "BioPSE" WITH_BIOPSE_PACKAGE ${LOAD_PACKAGE})
 
 IF(WITH_TEEM_PACKAGE MATCHES "Teem")
   # BioTensor
-  CONFIGURE_FILE(${CIBC_Core_SOURCE_DIR}/Packages/Teem/nets/PowerApps/cmake_BioTensor ${EXECUTABLE_OUTPUT_PATH}/BioTensor)
+  CONFIGURE_FILE(${SCIRUN_CORE_SOURCE_DIR}/Packages/Teem/nets/PowerApps/cmake_BioTensor ${EXECUTABLE_OUTPUT_PATH}/BioTensor)
   ADD_CUSTOM_TARGET(create_BioTensor ALL
     chmod +x ${EXECUTABLE_OUTPUT_PATH}/BioTensor
     )
   
   # BioImage
-  CONFIGURE_FILE(${CIBC_Core_SOURCE_DIR}/Packages/Teem/nets/PowerApps/cmake_BioImage ${EXECUTABLE_OUTPUT_PATH}/BioImage)
+  CONFIGURE_FILE(${SCIRUN_CORE_SOURCE_DIR}/Packages/Teem/nets/PowerApps/cmake_BioImage ${EXECUTABLE_OUTPUT_PATH}/BioImage)
   ADD_CUSTOM_TARGET(create_BioImage ALL
     chmod +x ${EXECUTABLE_OUTPUT_PATH}/BioImage
     )
@@ -332,7 +332,7 @@ ENDIF(WITH_TEEM_PACKAGE MATCHES "Teem")
 
 IF(WITH_BIOPSE_PACKAGE MATCHES "BioPSE")
   # BioFEM
-  CONFIGURE_FILE(${CIBC_Core_SOURCE_DIR}/Packages/BioPSE/nets/PowerApps/cmake_BioFEM ${EXECUTABLE_OUTPUT_PATH}/BioFEM)
+  CONFIGURE_FILE(${SCIRUN_CORE_SOURCE_DIR}/Packages/BioPSE/nets/PowerApps/cmake_BioFEM ${EXECUTABLE_OUTPUT_PATH}/BioFEM)
   ADD_CUSTOM_TARGET(create_BioFEM ALL
     chmod +x ${EXECUTABLE_OUTPUT_PATH}/BioFEM
     )
