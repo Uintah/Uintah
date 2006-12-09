@@ -81,6 +81,7 @@ IF(NOT SCIRUN_THIRDPARTY_PATH_SET)
 ENDIF(NOT SCIRUN_THIRDPARTY_PATH_SET)
 
 FIND_PATH(SCIRUN_THIRDPARTY_PATH_CHECK SCIRUN_THIRDPARTY_VERSION ${SCIRUN_THIRDPARTY_PATH})
+MARK_AS_ADVANCED(SCIRUN_THIRDPARTY_PATH_CHECK)
 
 IF(NOT SCIRUN_THIRDPARTY_PATH_CHECK)
   MESSAGE(FATAL_ERROR "Invalid SCIRUN_THIRDPARTY_PATH ${SCIRUN_THIRDPARTY_PATH}. Cannot find ${SCIRUN_THIRDPARTY_PATH}/SCIRUN_THIRDPARTY_VERSION. Please re-run cmake and specify a valid path.")
@@ -133,6 +134,7 @@ SET(LOAD_PACKAGE "SCIRun,BioPSE,Teem,MatlabInterface" CACHE STRING "Building SCI
 # SCIRun build configuration options
 IF(NOT BUILD_FROM_TOP_LEVEL)
   OPTION(BUILD_SHARED_LIBS "Build SCIRun with shared libraries." ON)
+  MARK_AS_ADVANCED(BUILD_SHARED_LIBS)
 ENDIF(NOT BUILD_FROM_TOP_LEVEL)
 
 # Add correct flags for win32
@@ -180,6 +182,7 @@ ELSE(ENABLE_SCI_MALLOC)
   SET(DEF_MALLOC "#define DISABLE_SCI_MALLOC 1")
 ENDIF(ENABLE_SCI_MALLOC)
 SET(DEF_MALLOC_LINENUMBERS "")
+MARK_AS_ADVANCED(ENABLE_SCI_MALLOC)
 
 #-----------------------------------------------------------------------------
 # Teem in Thirdparty
@@ -198,7 +201,7 @@ FIND_LIBRARY(ZLIB_LIBRARY
   PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
   NO_DEFAULT_PATH)
 
-FIND_PATH(ZLIB_INCLUDE_DIR zlib.h
+FIND_PATH(ZLIB_INCLUDE zlib.h
   ${SCIRUN_THIRDPARTY_PATH}/include/
   NO_DEFAULT_PATH)
 
@@ -253,6 +256,7 @@ FIND_PATH(TCL_INCLUDE2 tclMath.h
            ${SCIRUN_THIRDPARTY_PATH}/src/tcl/generic
            ${SCIRUN_THIRDPARTY_PATH}/include
            NO_DEFAULT_PATH)
+MARK_AS_ADVANCED(TCL_INCLUDE1 TCL_INCLUDE2)
 
 # Tk in Thirdparty
 FIND_LIBRARY(TK_LIBRARY tk
@@ -499,6 +503,8 @@ IF(WITH_X11)
   ENDIF(X11_FOUND)
 ENDIF(WITH_X11)
 
+MARK_AS_ADVANCED(WITH_X11)
+
 #----------------------------------------------------------------------------
 # sci_defs variables
 
@@ -516,7 +522,9 @@ ENDIF(WIN32 AND NOT CYGWIN)
 
 # sci_defs/environment_defs.h
 SET(scirun_src_dir "${SCIRUN_CORE_SOURCE_DIR}" CACHE INTERNAL "Path to SCIRun's src directory")
-SET(scirun_obj_dir ${LIBRARY_OUTPUT_PATH} CACHE INTERNAL "Path to SCIRun's binary directory")
+# DV Technically, I don't have access to this variable once we fix building
+# these projets separately!!!
+SET(scirun_obj_dir ${SCIRUN_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
 
 SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 SET(ITCL_LIB_DIR ${SCIRUN_THIRDPARTY_PATH}/lib)
@@ -732,6 +740,8 @@ IF(WITH_ITK)
   ENDIF(ITK_FOUND)
 ENDIF(WITH_ITK)
 
+MARK_AS_ADVANCED(WITH_ITK)
+
 #-----------------------------------------------------------------------------
 # The entire SCIRun tree should use the same include path
 
@@ -785,3 +795,5 @@ INSTALL_FILES(/lib/SCIRun .cmake UseSCIRUN SCIRUNLibraryDepends)
 
 # traverse the tree
 SUBDIRS(include Core)
+
+MARK_AS_ADVANCED(BLT_INCLUDE BLT_LIBRARY FREETYPE_INCLUDE FREETYPE_LIBRARY TCL_LIBRARY TCL_INCLUDE ITCL_INCLUDE ITCL_LIBRARY ITK_INCLUDE ITK_LIBRARY TK_INCLUDE TK_LIBRARY PNG_INCLUDE PNG_LIBRARY ZLIB_INCLUDE ZLIB_LIBRARY XML2_LIBRARY XML2_INCLUDE TEEM_LIBRARY TEEM_INCLUDE_DIR MPEG_LIBRARY MPEG_INCLUDE GLEW_LIBRARY GLEW_INCLUDE M_LIBRARY WITH_MPEG)
