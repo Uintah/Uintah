@@ -60,7 +60,7 @@ SET(CMAKE_MODULE_PATH ${SCIRUN_DATAFLOW_SOURCE_DIR})
 FIND_PACKAGE( SCIRUN )
 IF(SCIRUN_FOUND)
   INCLUDE(${SCIRUN_USE_FILE})
-  SET(SCIRUN_DIR . CACHE PATH "Path to SCIRun Core")
+  SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR} CACHE PATH "Path to SCIRun Core")
 ELSE(SCIRUN_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build SCIRun Dataflow without SCIRUN Core. Please set SCIRUN_DIR.")
 ENDIF(SCIRUN_FOUND)
@@ -159,12 +159,12 @@ SET(OTFL_CFLAGS "${OTFL_CFLAGS} ${CMAKE_SHARED_LIBRARY_CXX_FLAGS}")
 IF(WIN32)
   CONFIGURE_FILE (
     "${SCIRUN_CORE_SOURCE_DIR}/on-the-fly-libs/cmake_win32make.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/on-the-fly-libs/win32make.bat"
+    "${SCIRUN_BINARY_DIR}/on-the-fly-libs/win32make.bat"
   )
 ELSE(WIN32)
   CONFIGURE_FILE (
     "${SCIRUN_CORE_SOURCE_DIR}/on-the-fly-libs/cmake_Makefile.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/on-the-fly-libs/Makefile"
+    "${SCIRUN_BINARY_DIR}/on-the-fly-libs/Makefile"
   )
 ENDIF(WIN32)
 

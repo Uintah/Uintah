@@ -33,5 +33,5 @@
  # Just loading the needed packages.
  export SCIRUN_LOAD_PACKAGE=SCIRun,Teem
 
- @EXECUTABLE_OUTPUT_PATH@/scirun @SCIRUN_SOURCE_DIR@/src/Packages/Teem/nets/PowerApps/BioTensor.app $1
+ @EXECUTABLE_OUTPUT_PATH@/scirun @SCIRUN_CORE_SOURCE_DIR@/Packages/Teem/nets/PowerApps/BioTensor.app $1
 
