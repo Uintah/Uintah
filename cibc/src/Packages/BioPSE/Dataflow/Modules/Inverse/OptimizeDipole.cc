@@ -620,7 +620,7 @@ OptimizeDipole::organize_last_send()
     if (matrix_size < best_cell_idx*3+i+1) matrix_size = best_cell_idx*3+i+1;
   }
 
-  leadfield_selectH_ = scinew SparseRowMatrix(matrix_size,1,rr,cc,3,dd);
+  leadfield_selectH_ = scinew SparseRowMatrix(1,matrix_size,rr,cc,3,dd);
   PCMesh::handle_type pcm = scinew PCMesh;
   pcm->add_point(best_pt);
   PCFieldV *pcd = scinew PCFieldV(pcm);
