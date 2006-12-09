@@ -30,18 +30,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
 
 # DV Change to SCIRun Core or something?
-PROJECT(CIBC_Core)
-
-#-----------------------------------------------------------------------------
-# SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
-# in src/scirunrc
-SET(SCIRUN_VERSION_MAJOR "3")
-SET(SCIRUN_VERSION_MINOR "0")
-SET(SCIRUN_VERSION_PATCH "0")
-
-# Version string should not include patch level.  The major.minor is
-# enough to distinguish available features of the toolkit.
-SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCIRUN_VERSION_PATCH}")
+PROJECT(SCIRUN_CORE)
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.
@@ -50,91 +39,65 @@ INCLUDE (CMakeBackwardCompatibilityC)
 #-----------------------------------------------------------------------------
 # Configure testing support.  This should be done before any
 # MESSAGE(FATAL_ERROR ...) commands are invoked.
-INCLUDE( CTest )
-IF(BUILD_TESTING)
-  ENABLE_TESTING()
-  SET(BUILDNAME "${BUILDNAME}" CACHE STRING "Name of build on the dashboard")
-  MARK_AS_ADVANCED(BUILDNAME)
-ENDIF(BUILD_TESTING)
+IF(NOT BUILD_FROM_TOP_LEVEL)
+  INCLUDE( CTest )
+  IF(BUILD_TESTING)
+    ENABLE_TESTING()
+    SET(BUILDNAME "${BUILDNAME}" CACHE STRING "Name of build on the dashboard")
+    MARK_AS_ADVANCED(BUILDNAME)
+  ENDIF(BUILD_TESTING)
+ENDIF(NOT BUILD_FROM_TOP_LEVEL)
+
+SET(SCIRUN_CORE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 #----------------------------------------------------------------------------
 # Output directories.
 IF(NOT BUILD_FROM_TOP_LEVEL)
-  SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-  SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+  SET (LIBRARY_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
+  SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
   #output directory for installing all include files.")
   MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 ENDIF(NOT BUILD_FROM_TOP_LEVEL)
 
 
 #-----------------------------------------------------------------------------
-OPTION(HAVE_SCIRUN_THIRDPARTY "Use SCIRun Thirdparty build" ON)
+# Force user to use our Thirdparty, and verify for looking for
+# SCIRUN_THIRDPARTY_VERSION file
 
-IF(HAVE_SCIRUN_THIRDPARTY)
+# If not defined, check environment
+SET(SCIRUN_THIRDPARTY_PATH_SET 0)
+IF(NOT SCIRUN_THIRDPARTY_PATH)
   SET(SCIRUN_THIRDPARTY_PATH_ENV "$ENV{SCIRUN_THIRDPARTY_PATH}")
-  IF(NOT SCIRUN_THIRDPARTY_PATH_ENV)
-    SET(SCIRUN_THIRDPARTY_PATH "." CACHE PATH "Path to SCIRun Thirdparty")
-  ELSE(NOT SCIRUN_THIRDPARTY_PATH_ENV)
-    SET(SCIRUN_THIRDPARTY_PATH ${SCIRUN_THIRDPARTY_PATH_ENV} CACHE PATH "Path to SCIRun Thirdparty")
-  ENDIF(NOT SCIRUN_THIRDPARTY_PATH_ENV)
+  IF(SCIRUN_THIRDPARTY_PATH_ENV)
+    SET(SCIRUN_THIRDPARTY_PATH ${SCIRUN_THIRDPARTY_PATH_ENV} CACHE PATH "Path to SCIRun's Thirdparty")
+    SET(SCIRUN_THIRDPARTY_PATH_SET 1)
+  ENDIF(SCIRUN_THIRDPARTY_PATH_ENV)
+ELSE(NOT SCIRUN_THIRDPARTY_PATH)
+  SET(SCIRUN_THIRDPARTY_PATH_SET 1)
+ENDIF(NOT SCIRUN_THIRDPARTY_PATH)
 
-  IF(NOT EXISTS ${SCIRUN_THIRDPARTY_PATH}/include/teem/nrrd.h)
-    MESSAGE(FATAL_ERROR "Bad path to SCIRun Thirdparty (looking for ${SCIRUN_THIRDPARTY_PATH}/include/teem/nrrd.h to verify directory). Please specify correct SCIRUN_THIRDPARTY_PATH or turn HAVE_SCIRUN_THIRDPARTY to OFF.")
-  ENDIF(NOT EXISTS ${SCIRUN_THIRDPARTY_PATH}/include/teem/nrrd.h)
+IF(NOT SCIRUN_THIRDPARTY_PATH_SET)
+  MESSAGE(FATAL_ERROR "SCIRUN_THIRDPARTY_PATH must be specified to build. Please re-run cmake and specify a valid path to the SCIRun Thirdparty (version ${SCIRUN_VERSION_STRING}) using the SCIRUN_THIRDPARTY_PATH variable. This path must contain the SCIRUN_THIRDPARTY_VERSION file.")
+ENDIF(NOT SCIRUN_THIRDPARTY_PATH_SET)
 
-ELSE(HAVE_SCIRUN_THIRDPARTY)
-  MESSAGE(STATUS "Not using standard SCIRun Thirdparty. Please individually set include and library variables.")
-ENDIF(HAVE_SCIRUN_THIRDPARTY)
+FIND_PATH(SCIRUN_THIRDPARTY_PATH_CHECK SCIRUN_THIRDPARTY_VERSION ${SCIRUN_THIRDPARTY_PATH})
 
+IF(NOT SCIRUN_THIRDPARTY_PATH_CHECK)
+  MESSAGE(FATAL_ERROR "Invalid SCIRUN_THIRDPARTY_PATH ${SCIRUN_THIRDPARTY_PATH}. Cannot find ${SCIRUN_THIRDPARTY_PATH}/SCIRUN_THIRDPARTY_VERSION. Please re-run cmake and specify a valid path.")
+ELSE(NOT SCIRUN_THIRDPARTY_PATH_CHECK)
+  FILE(READ ${SCIRUN_THIRDPARTY_PATH}/SCIRUN_THIRDPARTY_VERSION 
+    SCIRUN_THIRDPARTY_VERSION_STRING)
+  STRING(REGEX MATCH "SCIRUN_THIRDPARTY_VERSION=${SCIRUN_VERSION_STRING}" THIRDPARTY_VERSION_CHECK ${SCIRUN_THIRDPARTY_VERSION_STRING})
+  IF(THIRDPARTY_VERSION_CHECK)
+  ELSE(THIRDPARTY_VERSION_CHECK)
+    MESSAGE("SCIRUN_THIRDPARTY_VERSION file does not contain correct version of ${SCIRUN_VERSION_STRING}")
+  ENDIF(THIRDPARTY_VERSION_CHECK)
+ENDIF(NOT SCIRUN_THIRDPARTY_PATH_CHECK)
 
+SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_THIRDPARTY_PATH}/include)
 
-# ----------------------------------------------------------------------------
-# SCIRun build configuration options
-OPTION(BUILD_SHARED_LIBS "Build SCIRun with shared libraries." ON)
-SET(SCIRUN_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-
-# Add correct flags for win32
-IF(WIN32)
-  IF(NOT BUILD_SHARED_LIBS)
-    ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
-  ENDIF(NOT BUILD_SHARED_LIBS)
-#  This defines M_PI for windows
-  ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
-  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
-  # win32 l3 warnings are a little ridiculous
-  SET(CMAKE_CXX_WARNING_LEVEL 1)
-  IF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    STRING(REGEX REPLACE "/W[0-4]" "/W1"
-            CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W1")
-  ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-ENDIF(WIN32)
-
-#-----------------------------------------------------------------------------
-# SCIRUN build configuration options.
-# OPTION(ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF)
-# SET(SCIRUN_ENABLE_SCI_MALLOC ${ENABLE_SCI_MALLOC})
-# DV Fix checking bit of thirdparty with size of pointer check
-# sci_defs/bits_defs.h
-# DV clean up (if user tries to configure 64 bit machine to 32, flag error?)
-# DV also maybe need to add binary flags here
-# Set NBITS (64 or 32) based on the size of a void pointer.
-# Handle if machine defaults to one bit size but user is trying to do another
-IF(CMAKE_SIZEOF_VOID_P MATCHES  8)
-  SET(NBITS 64 CACHE INTERNAL "64 or 32 bit build")
-ELSE(CMAKE_SIZEOF_VOID_P MATCHES 8)
-  SET(NBITS 32 CACHE INTERNAL "64 or 32 bit build")
-ENDIF(CMAKE_SIZEOF_VOID_P MATCHES 8)
-SET (SCIRUN_ENABLE_64BIT 0 CACHE BOOL "Enable 64 bit build.")
-IF(${SCIRUN_ENABLE_64BIT})
-  SET(NBITS 64 CACHE INTERNAL "64 bit build")
-ENDIF(${SCIRUN_ENABLE_64BIT})
-MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
-
-
-#INCLUDE(${PROJECT_SOURCE_DIR}/CMake/sciThirdparty.cmake)
-
+# Force SCIRUN_THIRDPARTY_PATH to be cached
+SET(SCIRUN_THIRDPARTY_PATH ${SCIRUN_THIRPDARTY_PATH} CACHE PATH "Path to SCIRun's Thirdparty.")
 
 #DV FIX HARD CODED VERSION
 #SET(COMPILER_VERS unknown)
@@ -161,6 +124,246 @@ MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
 #    "Cannot build SCIRun without Thirdparty. Please set SCIRUN_THIRDPARTY_PATH.")
 #ENDIF(SCIRUN_THIRDPARTY_FOUND)
 
+#-----------------------------------------------------------------------------
+# SCIRun Packages to enable (must enable packages when building core for now)
+# DV Fix need error checking to make sure SCIRun gets included
+SET(LOAD_PACKAGE "SCIRun,BioPSE,Teem,MatlabInterface" CACHE STRING "Building SCIRun, BioPSE, Teem, and MatlabInterface packages by default.")
+
+# ----------------------------------------------------------------------------
+# SCIRun build configuration options
+IF(NOT BUILD_FROM_TOP_LEVEL)
+  OPTION(BUILD_SHARED_LIBS "Build SCIRun with shared libraries." ON)
+ENDIF(NOT BUILD_FROM_TOP_LEVEL)
+
+# Add correct flags for win32
+IF(WIN32)
+  IF(NOT BUILD_SHARED_LIBS)
+    ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
+  ENDIF(NOT BUILD_SHARED_LIBS)
+#  This defines M_PI for windows
+  ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
+  # win32 l3 warnings are a little ridiculous
+  SET(CMAKE_CXX_WARNING_LEVEL 1)
+  IF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    STRING(REGEX REPLACE "/W[0-4]" "/W1"
+            CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W1")
+  ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+ENDIF(WIN32)
+
+
+# DV Fix checking bit of thirdparty with size of pointer check
+# sci_defs/bits_defs.h
+# DV clean up (if user tries to configure 64 bit machine to 32, flag error?)
+# DV also maybe need to add binary flags here
+# Set NBITS (64 or 32) based on the size of a void pointer.
+# Handle if machine defaults to one bit size but user is trying to do another
+IF(CMAKE_SIZEOF_VOID_P MATCHES  8)
+  SET(NBITS 64 CACHE INTERNAL "64 or 32 bit build")
+ELSE(CMAKE_SIZEOF_VOID_P MATCHES 8)
+  SET(NBITS 32 CACHE INTERNAL "64 or 32 bit build")
+ENDIF(CMAKE_SIZEOF_VOID_P MATCHES 8)
+SET (SCIRUN_ENABLE_64BIT 0 CACHE BOOL "Enable 64 bit build.")
+IF(${SCIRUN_ENABLE_64BIT})
+  SET(NBITS 64 CACHE INTERNAL "64 bit build")
+ENDIF(${SCIRUN_ENABLE_64BIT})
+MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
+
+#------------------------------------------------------------------------------
+# enable/disable sci malloc
+OPTION(ENABLE_SCI_MALLOC "Enable sci malloc system" OFF)
+IF(ENABLE_SCI_MALLOC)
+  SET(DEF_MALLOC "")
+ELSE(ENABLE_SCI_MALLOC)
+  SET(DEF_MALLOC "#define DISABLE_SCI_MALLOC 1")
+ENDIF(ENABLE_SCI_MALLOC)
+SET(DEF_MALLOC_LINENUMBERS "")
+
+#-----------------------------------------------------------------------------
+# Teem in Thirdparty
+SET (CMAKE_MODULE_PATH ${SCIRUN_CORE_SOURCE_DIR}/CMake)
+FIND_PACKAGE( Teem )
+IF (TEEM_LIBRARY)
+  IF (TEEM_INCLUDE_DIR)
+    SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${TEEM_INCLUDE_DIR})
+  ENDIF(TEEM_INCLUDE_DIR)
+ENDIF(TEEM_LIBRARY)
+
+#-----------------------------------------------------------------------------
+# Z lib in Thirdparty
+FIND_LIBRARY(ZLIB_LIBRARY 
+  NAMES z zlib zdll
+  PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+  NO_DEFAULT_PATH)
+
+FIND_PATH(ZLIB_INCLUDE_DIR zlib.h
+  ${SCIRUN_THIRDPARTY_PATH}/include/
+  NO_DEFAULT_PATH)
+
+IF(ZLIB_LIBRARY)
+   MESSAGE(STATUS "Found ZLIB: ${ZLIB_LIBRARY}")
+ELSE(ZLIB_LIBRARY)
+   MESSAGE(FATAL_ERROR ": z library required.")
+ENDIF(ZLIB_LIBRARY)
+
+#-----------------------------------------------------------------------------
+# png lib in Thirdparty
+FIND_LIBRARY(PNG_LIBRARY png
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(PNG_INCLUDE png.h
+          ${SCIRUN_THIRDPARTY_PATH}/include/
+          NO_DEFAULT_PATH)
+
+IF(PNG_LIBRARY)
+   MESSAGE(STATUS "Found PNG: ${PNG_LIBRARY}")
+   SET(HAVE_PNG "YES")
+   SET(DEF_PNG "#define HAVE_PNG 1")
+ELSE(PNG_LIBRARY)
+   MESSAGE(FATAL_ERROR ": png library required.")
+ENDIF(PNG_LIBRARY)
+
+
+#-----------------------------------------------------------------------------
+# XML2 in Thirdparty
+FIND_LIBRARY(XML2_LIBRARY xml2
+            PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+            NO_DEFAULT_PATH)
+
+FIND_PATH(XML2_INCLUDE libxml/xmlreader.h
+           ${SCIRUN_THIRDPARTY_PATH}/include/libxml2/
+           ${SCIRUN_THIRDPARTY_PATH}/include/
+           NO_DEFAULT_PATH)
+SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${XML2_INCLUDE})
+
+#-----------------------------------------------------------------------------
+# Tcl in Thirdparty
+FIND_LIBRARY(TCL_LIBRARY tcl
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(TCL_INCLUDE1 tcl.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           NO_DEFAULT_PATH)
+
+FIND_PATH(TCL_INCLUDE2 tclMath.h
+           ${SCIRUN_THIRDPARTY_PATH}/src/tcl/generic
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           NO_DEFAULT_PATH)
+
+# Tk in Thirdparty
+FIND_LIBRARY(TK_LIBRARY tk
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+# Tcl/Tk versions
+IF(WIN32)
+  # BJW - find a better way to do this
+  SET(TK_VERSION 8.4)
+  SET(TCL_VERSION 8.4)
+ELSE(WIN32)
+  SET(TK_VERSION 8.3)
+  SET(TCL_VERSION 8.3)
+ENDIF(WIN32)
+
+#-----------------------------------------------------------------------------
+# ITK in Thirdparty
+FIND_LIBRARY(ITK_LIBRARY itk
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(ITK_INCLUDE itk.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           NO_DEFAULT_PATH)
+
+#-----------------------------------------------------------------------------
+# ITCL library in Thirdparty
+FIND_LIBRARY(ITCL_LIBRARY itcl
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(ITCL_INCLUDE itcl.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           NO_DEFAULT_PATH)
+
+#-----------------------------------------------------------------------------
+# blt lib in Thirdparty
+FIND_LIBRARY(BLT_LIBRARY BLT
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(BLT_INCLUDE blt.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           NO_DEFAULT_PATH)
+
+IF(WIN32)
+  SET(BLT_LIBRARY ${BLT_LIBRARY} gdi32 winspool comdlg32 user32 advapi32)
+ENDIF(WIN32)
+
+#-----------------------------------------------------------------------------
+# Freetype in Thirdparty
+FIND_LIBRARY(FREETYPE_LIBRARY 
+             NAMES freetype libfreetype.so libfreetype.a
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(FREETYPE_INCLUDE freetype/freetype.h
+           ${SCIRUN_THIRDPARTY_PATH}/include/freetype2/
+           ${SCIRUN_THIRDPARTY_PATH}/include/
+           NO_DEFAULT_PATH)
+
+SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${FREETYPE_INCLUDE})
+SET(DEF_FREETYPE "#define HAVE_FREETYPE 1")
+
+#-----------------------------------------------------------------------------
+# Glew in Thirdparty
+FIND_LIBRARY(GLEW_LIBRARY 
+             NAMES GLEW glew32
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
+FIND_PATH(GLEW_INCLUDE GL/glew.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           NO_DEFAULT_PATH)
+
+SET(DEF_GLEW "#define HAVE_GLEW 1")
+
+#-----------------------------------------------------------------------------
+# MPEG sometimes in Thirdparty (not in Windows?)
+IF(WIN32)
+  OPTION(WITH_MPEG "Build SCIRun with MPEG support" OFF)
+ELSE(WIN32)
+  OPTION(WITH_MPEG "Build SCIRun with MPEG support" ON)
+ENDIF(WIN32)
+
+IF(WITH_MPEG)
+  FIND_LIBRARY(MPEG_LIBRARY mpege
+              PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+              /usr/local/lib
+              /usr/lib
+              /lib
+              NO_DEFAULT_PATH)
+
+  FIND_PATH(MPEG_INCLUDE mpege.h
+             ${SCIRUN_THIRDPARTY_PATH}/include
+             /usr/local/include
+             /usr/include
+             /include
+             NO_DEFAULT_PATH)
+
+  IF(MPEG_LIBRARY)
+    SET(HAVE_MPEG "1")
+    SET(DEF_MPEG "#define HAVE_MPEG 1")
+    MESSAGE(STATUS "Found MPEG: ${MPEG_LIBRARY}")
+    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
+  ELSE(MPEG_LIBRARY)
+    SET(HAVE_MPEG "0")
+    MESSAGE(STATUS "MPEG not found")
+  ENDIF(MPEG_LIBRARY)
+ENDIF(WITH_MPEG)
 
 #-----------------------------------------------------------------------------
 # Thread library
@@ -173,8 +376,8 @@ IF(CMAKE_USE_PTHREADS)
   # Check for sempahore libs w/in pthread library
   # DV can I scale down the lib like configure.ac for loop
   TRY_COMPILE(HAS_SEMAPHORE_LIBS
-    ${PROJECT_BINARY_DIR}/CMakeTmp
-    ${PROJECT_SOURCE_DIR}/CMake/testSemaphore.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp
+    ${SCIRUN_CORE_SOURCE_DIR}/CMake/testSemaphore.cc
       COMPILE_DEFINITIONS
       -l${THREAD_LIBRARY}
       -I/usr/local/include -I/usr/include -I/include
@@ -186,7 +389,6 @@ IF(CMAKE_USE_PTHREADS)
     SET(DEF_THREAD "") 
 ENDIF(CMAKE_USE_PTHREADS)
 
-
 #-----------------------------------------------------------------------------
 # Socket library
 # DV Not sure if socket library needs to be defined for cygwin
@@ -194,16 +396,6 @@ IF(WIN32 AND NOT CYGWIN)
   SET(SOCKET_LIBRARY ws2_32 CACHE INTERNAL "Socket library ws2_32")
   SET(THREAD_LIBRARY winmm CACHE INTERNAL "Time functionality library winmm")
 ENDIF(WIN32 AND NOT CYGWIN)
-
-#-----------------------------------------------------------------------------
-# dlopen library
-#IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
-#  FIND_LIBRARY(DL_LIBRARY dlopen
-#             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib
-#             /usr/local/lib
-#             /usr/lib
-#             /lib)
-#ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
 
 #-----------------------------------------------------------------------------
 # math library
@@ -271,169 +463,6 @@ ELSE(WIN32)
   ENDIF(HAVE_TRACEBACK_H)
 ENDIF(WIN32)
 
-
-#-----------------------------------------------------------------------------
-# Z lib
-IF(WIN32 AND NOT CYGWIN)
-  SET(ZLIB_LIBRARY ${SCIRUN_THIRDPARTY_PATH}/lib/z)
-  SET(ZLIB_INCLUDE ${SCIRUN_THIRDPARTY_PATH}/include)
-ELSE(WIN32 AND NOT CYGWIN)
-  FIND_PACKAGE( ZLIB )
-ENDIF(WIN32 AND NOT CYGWIN)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ZLIB_INCLUDE_DIR})
-
-#-----------------------------------------------------------------------------
-# png lib
-FIND_LIBRARY(PNG_LIBRARY png
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             NO_DEFAULT_PATH)
-
-FIND_PATH(PNG_INCLUDE png.h
-          ${SCIRUN_THIRDPARTY_PATH}/include/
-          NO_DEFAULT_PATH)
-
-
-IF(PNG_LIBRARY)
-   MESSAGE(STATUS "Found PNG: ${PNG_LIBRARY}")
-   SET(HAVE_PNG "YES")
-   SET(DEF_PNG "#define HAVE_PNG 1")
-ELSE(PNG_LIBRARY)
-   MESSAGE(FATAL_ERROR ": libpng required.")
-ENDIF(PNG_LIBRARY)
-
-
-#-----------------------------------------------------------------------------
-# DV XML2 FROM 3P FOR NOW
-FIND_LIBRARY(XML2_LIBRARY xml2
-            PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-            /usr/local/lib
-            /usr/lib
-            /lib
-            NO_DEFAULT_PATH)
-FIND_PATH(XML2_INCLUDE libxml/xmlreader.h
-           ${SCIRUN_THIRDPARTY_PATH}/include/libxml2/
-           ${SCIRUN_THIRDPARTY_PATH}/include/
-           /usr/local/include/libxml2
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
-
-
-#-----------------------------------------------------------------------------
-# Tcl/Tk
-IF(WIN32)
-  # BJW - find a better way to do this
-  SET(TK_VERSION 8.4)
-  SET(TCL_VERSION 8.4)
-ELSE(WIN32)
-  SET(TK_VERSION 8.3)
-  SET(TCL_VERSION 8.3)
-ENDIF(WIN32)
-
-#-----------------------------------------------------------------------------
-# ITK library
-FIND_LIBRARY(ITK_LIBRARY itk
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib
-             NO_DEFAULT_PATH)
-FIND_PATH(ITK_INCLUDE itk.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-
-#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITK_INCLUDE})
-
-#-----------------------------------------------------------------------------
-# ITCL library
-FIND_LIBRARY(ITCL_LIBRARY itcl
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib
-             NO_DEFAULT_PATH)
-FIND_PATH(ITCL_INCLUDE itcl.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITCL_INCLUDE})
-
-#-----------------------------------------------------------------------------
-# TK library
-FIND_LIBRARY(TK_LIBRARY tk
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib
-             NO_DEFAULT_PATH)
-#SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
-
-#SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
-#SET(TK_INCLUDE2 ${TK_SRC_PATH}/unix)
-
-#FIND_PATH(TK_INCLUDE tk.h
-#           ${SCIRUN_THIRDPARTY_PATH}/include
-#           /usr/local/include
-#           /usr/include
-#           /include)
-
-#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE1} ${TK_INCLUDE2})
-
-
-
-#-----------------------------------------------------------------------------
-# TCL library
-FIND_LIBRARY(TCL_LIBRARY tcl
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib
-             NO_DEFAULT_PATH)
-
-FIND_PATH(TCL_INCLUDE1 tcl.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-
-FIND_PATH(TCL_INCLUDE2 tclMath.h
-           ${SCIRUN_THIRDPARTY_PATH}/src/tcl/generic
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-
-#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE1} ${TCL_INCLUDE2})
-
-#-----------------------------------------------------------------------------
-# blt lib
-FIND_LIBRARY(BLT_LIBRARY BLT
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib
-             NO_DEFAULT_PATH)
-FIND_PATH(BLT_INCLUDE blt.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-
-#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${BLT_INCLUDE})
-
-IF(WIN32)
-  SET(BLT_LIBRARY ${BLT_LIBRARY} gdi32 winspool comdlg32 user32 advapi32)
-ENDIF(WIN32)
-
 #-----------------------------------------------------------------------------
 # OpenGL library - win32 finds the OPENGL_gl_LIBRARY but for some reason this 
 #   if check does not complete
@@ -451,29 +480,12 @@ ENDIF(WIN32)
 
 # Fixing a problem on OSX for now: the standard CMake script finds the wrong OpenGL
 # libraries. Hence they are hard coded here, however these require X11 to be installed
-# and this is not checked here. We need to come uo with a better fix here.
+# and this is not checked here. We need to come up with a better fix here.
  
 IF (APPLE)
   SET(GL_LIBRARY /usr/X11R6/lib/libGL.dylib /usr/X11R6/lib/libGLU.dylib "-framework AGL" CACHE INTERNAL "OpenGL Libs")
   SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GL_INCLUDE})
 ENDIF(APPLE)
-
-#-----------------------------------------------------------------------------
-# Freetype
-FIND_LIBRARY(FREETYPE_LIBRARY 
-             NAMES freetype libfreetype.so libfreetype.a
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             NO_DEFAULT_PATH)
-
-FIND_PATH(FREETYPE_INCLUDE freetype/freetype.h
-           ${SCIRUN_THIRDPARTY_PATH}/include/freetype2/
-           ${SCIRUN_THIRDPARTY_PATH}/include/
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${FREETYPE_INCLUDE})
-
 
 #----------------------------------------------------------------------------
 # X11
@@ -487,69 +499,8 @@ IF(WITH_X11)
   ENDIF(X11_FOUND)
 ENDIF(WITH_X11)
 
-#-----------------------------------------------------------------------------
-# Glew
-FIND_LIBRARY(GLEW_LIBRARY 
-             NAMES GLEW glew32
-             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib
-             NO_DEFAULT_PATH)
-FIND_PATH(GLEW_INCLUDE GL/glew.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include
-           NO_DEFAULT_PATH)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GLEW_INCLUDE})
-
-SET(DEF_GLEW "#define HAVE_GLEW 1")
-
-#-----------------------------------------------------------------------------
-# MPEG
-
-IF(WIN32)
-  OPTION(WITH_MPEG "Build SCIRun with MPEG support" OFF)
-ELSE(WIN32)
-  OPTION(WITH_MPEG "Build SCIRun with MPEG support" ON)
-ENDIF(WIN32)
-
-IF(WITH_MPEG)
-  FIND_LIBRARY(MPEG_LIBRARY mpege
-              PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
-              /usr/local/lib
-              /usr/lib
-              /lib
-              NO_DEFAULT_PATH)
-
-  FIND_PATH(MPEG_INCLUDE mpege.h
-             ${SCIRUN_THIRDPARTY_PATH}/include
-             /usr/local/include
-             /usr/include
-             /include
-             NO_DEFAULT_PATH)
-
-  IF(MPEG_LIBRARY)
-    SET(HAVE_MPEG "1")
-    SET(DEF_MPEG "#define HAVE_MPEG 1")
-    MESSAGE(STATUS "Found MPEG: ${MPEG_LIBRARY}")
-    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
-  ELSE(MPEG_LIBRARY)
-    SET(HAVE_MPEG "0")
-    MESSAGE(STATUS "MPEG not found")
-  ENDIF(MPEG_LIBRARY)
-ENDIF(WITH_MPEG)
-
-#-----------------------------------------------------------------------------
-# Teem
-SET (CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
-FIND_PACKAGE( Teem )
-IF (TEEM_LIBRARY)
-  IF (TEEM_INCLUDE_DIR)
-    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TEEM_INCLUDE_DIR})
-  ENDIF(TEEM_INCLUDE_DIR)
-ENDIF(TEEM_LIBRARY)
+#----------------------------------------------------------------------------
+# sci_defs variables
 
 # sci_defs/compile_defs.h
 # DV Not needed eventually?
@@ -563,36 +514,12 @@ IF(WIN32 AND NOT CYGWIN)
 #  SET (PATH_TO_PSDK "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7/PlatformSDK" CACHE PATH "Path to PSDK")
 ENDIF(WIN32 AND NOT CYGWIN)
 
-#-----------------------------------------------------------------------------
-# SCIRun Packages to enable (must enable packages when building core for now)
-# DV Fix need error checking to make sure SCIRun gets included
-SET(LOAD_PACKAGE "SCIRun,BioPSE,Teem,MatlabInterface" CACHE STRING "Just loading SCIRun")
-
-# DV fix enabling more packages
-#SET (PACKAGES "" CACHE STRING "SCIRun packages to enable (separated by white space).")
-
-#IF(PACKAGES)
-#  # Always load SCIRun
-#  SET(PKGS "SCIRun")
-#  FOREACH(p ${PACKAGES})
-#    SET(PKGS "${PKGS},${p}")
-#  ENDFOREACH(p ${PACKAGES})
-#  SET(LOAD_PACKAGE ${PKGS} CACHE STRING "Packages to load")
-#ELSE(PACKAGES)
-#  SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
-#ENDIF(PACKAGES)
-
-
-
 # sci_defs/environment_defs.h
-SET(scirun_src_dir "${PROJECT_SOURCE_DIR}/src" CACHE INTERNAL "Path to SCIRun's src directory")
-SET(scirun_obj_dir ${PROJECT_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
+SET(scirun_src_dir "${SCIRUN_CORE_SOURCE_DIR}" CACHE INTERNAL "Path to SCIRun's src directory")
+SET(scirun_obj_dir ${LIBRARY_OUTPUT_PATH} CACHE INTERNAL "Path to SCIRun's binary directory")
 
 SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 SET(ITCL_LIB_DIR ${SCIRUN_THIRDPARTY_PATH}/lib)
-
-# DV maybe this shouldn't be alterable?
-#MARK_AS_ADVANCED(LOAD_PACKAGE)
 
 # sci_defs/error_defs.h
 SET(THROW_LEVEL 0 CACHE STRING "Set throw level N(0-3)")
@@ -603,24 +530,21 @@ SET(ASSERTION_LEVEL 3 CACHE STRING "Set assertion level N(0-3)")
 IF(HAVE_LAPACK)
   SET(DEF_LAPACK "#define HAVE_LAPACK 1" CACHE INTERNAL "Have Lapack")
 ENDIF(HAVE_LAPACK)
-#ELSE(HAVE_LAPACK)
-#  SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE INTERNAL "Have Lapack")
-
 
 # sci_defs/hashmap_defs.h
 SET(DEF_HASHMAP "None" CACHE INTERNAL "Determining hash map")
 
 # DV Fix to figure out value of DEF_HASHMAP
 TRY_COMPILE(DEF_HASHMAP
-  ${PROJECT_BINARY_DIR}/CMakeTmp
-  ${PROJECT_SOURCE_DIR}/CMake/SCIRunTestHashMapSTD.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp
+  ${SCIRUN_CORE_SOURCE_DIR}/CMake/SCIRunTestHashMapSTD.cc
   OUTPUT_VARIABLE OUTPUT)
 IF(DEF_HASHMAP)
   SET(DEF_HASHMAP "#define HAVE_STD_HASHMAP 1" CACHE INTERNAL "Using STD hash map")
 ELSE(DEF_HASHMAP)
   TRY_COMPILE(DEF_HASHMAP 
-  ${PROJECT_BINARY_DIR}/CMakeTmp
-  ${PROJECT_SOURCE_DIR}/CMake/SCIRunTestHashMapEXT.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp
+  ${SCIRUN_CORE_SOURCE_DIR}/CMake/SCIRunTestHashMapEXT.cc
   OUTPUT_VARIABLE OUTPUT)
 
   # include <ext/hash_map> instead
@@ -628,16 +552,16 @@ ELSE(DEF_HASHMAP)
     SET(DEF_HASHMAP "#define HAVE_EXT_HASHMAP 1" CACHE INTERNAL "Using EXT hash map")
   ELSE(DEF_HASHMAP)
    TRY_COMPILE(DEF_HASHMAP 
-    ${PROJECT_BINARY_DIR}/CMakeTmp
-    ${PROJECT_SOURCE_DIR}/CMake/SCIRunTestHashMapSTDEXT.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp
+    ${SCIRUN_CORE_SOURCE_DIR}/CMake/SCIRunTestHashMapSTDEXT.cc
     OUTPUT_VARIABLE OUTPUT)
 
     IF(DEF_HASHMAP)
       SET(DEF_HASHMAP "#define HAVE_STDEXT_HASHMAP 1" CACHE INTERNAL "Using STD EXT hash map")
     ELSE(DEF_HASHMAP)
       TRY_COMPILE(DEF_HASHMAP 
-      ${PROJECT_BINARY_DIR}/CMakeTmp
-      ${PROJECT_SOURCE_DIR}/CMake/SCIRunTestHashMapGNU.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/CMakeTmp
+      ${SCIRUN_CORE_SOURCE_DIR}/CMake/SCIRunTestHashMapGNU.cc
       OUTPUT_VARIABLE OUTPUT)
       # include <ext/hash_map> instead
 
@@ -651,8 +575,6 @@ ELSE(DEF_HASHMAP)
   ENDIF(DEF_HASHMAP)
 ENDIF(DEF_HASHMAP)
 
-
-
 # DV Figure out how to make these not even configurable
 # sci_defs/template_defs.h
 SET(TEMPLATE_TAG " " CACHE STRING "NOT SURE")
@@ -661,7 +583,6 @@ SET(TEMPLATE_BOX "<>" CACHE STRING "NOT SURE")
 
 MARK_AS_ADVANCED(THROW_LEVEL ASSERTION_LEVEL DEF_HASH TEMPLATE_TAG TEMPLATE_BOX)
 # DV Add with_exc stuff from configure.ac
-
 INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
 CHECK_INCLUDE_FILE(limits.h HAVE_LIMITS)
 IF(HAVE_LIMITS)
@@ -726,9 +647,6 @@ SET(DEF_OOGL "")
 
 #SET(DEF_FTGL)
 
-# Freetype in 3p
-SET(DEF_FREETYPE "#define HAVE_FREETYPE 1")
-
 #SET(DEF_OGL_EXT_HDRS)
 
 #SET(OGL_ERR_MACRO)
@@ -761,14 +679,6 @@ ENDIF(WITH_PETSC)
 
 # DV FIX check for unipetsc if petsc not found
 
-OPTION(ENABLE_SCI_MALLOC "Enable sci malloc system" OFF)
-IF(ENABLE_SCI_MALLOC)
-  SET(DEF_MALLOC "")
-ELSE(ENABLE_SCI_MALLOC)
-  SET(DEF_MALLOC "#define DISABLE_SCI_MALLOC 1")
-ENDIF(ENABLE_SCI_MALLOC)
-SET(DEF_MALLOC_LINENUMBERS "")
-
 # Search for Tetgen (http://tetgen.berlios.de)
 OPTION(WITH_TETGEN "Use tetgen library" OFF)
 MARK_AS_ADVANCED(WITH_TETGEN)
@@ -795,9 +705,9 @@ ELSE(WITH_TETGEN)
 ENDIF(WITH_TETGEN)
 
 #----------------------------------------------------------------------------
-# ITK
+# Insight Toolkit
 IF(EXISTS ${SCIRUN_THIRDPARTY_PATH}/lib/InsightToolkit)
-  SET(ITK_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/InsightToolkit CACHE PATH "Path toITK")
+  SET(ITK_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/InsightToolkit CACHE PATH "Path to IInsight Toolkit")
 ENDIF(EXISTS ${SCIRUN_THIRDPARTY_PATH}/lib/InsightToolkit)
 
 IF(ITK_DIR)
@@ -812,6 +722,11 @@ IF(WITH_ITK)
     INCLUDE(${ITK_USE_FILE})
     SET(DEF_INSIGHT "#define HAVE_INSIGHT 1" CACHE INTERNAL "Have insight")
     SET(HAVE_INSIGHT "yes" CACHE INTERNAL "Linking against ITK")
+    # add Insight to LOAD_PACKAGE if not all ready there
+    STRING(REGEX MATCH "Insight" BUILDING_INSIGHT ${LOAD_PACKAGE})
+    IF(NOT BUILDING_INSIGHT)
+      SET(LOAD_PACKAGE "${LOAD_PACKAGE},Insight")
+    ENDIF(NOT BUILDING_INSIGHT)
   ELSE(ITK_FOUND)
     MESSAGE(FATAL_ERROR "Cannot find ITK. Please set ITK_DIR.")
   ENDIF(ITK_FOUND)
@@ -825,15 +740,15 @@ ENDIF(WITH_ITK)
 #-----------------------------------------------------------------------------
 # Include directories for other projects installed on the system.
 SET(SCIRUN_INCLUDE_DIRS_SYSTEM 
-  ${CIBC_Core_SOURCE_DIR}/
-  ${CIBC_Core_SOURCE_DIR}/include/
+  ${SCIRUN_CORE_SOURCE_DIR}/
+  ${SCIRUN_CORE_SOURCE_DIR}/include/
 )
 
 # Set include directories for sci_defs
 SET(SCIRUN_INCLUDE_DIRS_BUILD_TREE 
-  ${CIBC_Core_BINARY_DIR}/
-  ${CIBC_Core_BINARY_DIR}/include/
-  ${CIBC_Core_BINARY_DIR}/include/sci_defs/
+  ${CMAKE_CURRENT_BINARY_DIR}/
+  ${CMAKE_CURRENT_BINARY_DIR}/include/
+  ${CMAKE_CURRENT_BINARY_DIR}/include/sci_defs/
 )
 
 INCLUDE_DIRECTORIES(
@@ -845,29 +760,28 @@ INCLUDE_DIRECTORIES(
 
 #----------------------------------------------------------------------------
 # for now set make install directory to current binary directory
-SET(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR})
+SET(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
 # Help other projects use SCIRun Core
 
 # Copy the UseSCIRUN.cmake file to the binary tree for backward compatability.
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/UseSCIRUN.cmake.in
-               ${PROJECT_BINARY_DIR}/UseSCIRUN.cmake COPYONLY IMMEDIATE)
+CONFIGURE_FILE(${SCIRUN_CORE_SOURCE_DIR}/UseSCIRUN.cmake.in
+               ${SCIRUN_CORE_BINARY_DIR}/UseSCIRUN.cmake COPYONLY IMMEDIATE)
  
 # Save the compiler settings so another project can import them.
 INCLUDE(${CMAKE_ROOT}/Modules/CMakeExportBuildSettings.cmake)
-CMAKE_EXPORT_BUILD_SETTINGS(${PROJECT_BINARY_DIR}/SCIRUNBuildSettings.cmake)
+CMAKE_EXPORT_BUILD_SETTINGS(${SCIRUN_CORE_BINARY_DIR}/SCIRUNBuildSettings.cmake)
 INSTALL_FILES(/lib/SCIRun .cmake SCIRUNBuildSettings)
 
 # Save library dependencies.
-EXPORT_LIBRARY_DEPENDENCIES(${PROJECT_BINARY_DIR}/SCIRUNLibraryDepends.cmake)
+EXPORT_LIBRARY_DEPENDENCIES(${SCIRUN_CORE_BINARY_DIR}/SCIRUNLibraryDepends.cmake)
 
 # Create the SCIRUNConfig.cmake file containing the SCIRUN configuration.
-INCLUDE (${PROJECT_SOURCE_DIR}/sciGenerateSCIRUNConfig.cmake)
+INCLUDE (${SCIRUN_CORE_SOURCE_DIR}/sciGenerateSCIRUNConfig.cmake)
 
 # Install some files.
 #INSTALL_FILES(/include/SCIRun .h sciConfigure)
 INSTALL_FILES(/lib/SCIRun .cmake UseSCIRUN SCIRUNLibraryDepends)
 
-
-
+# traverse the tree
 SUBDIRS(include Core)

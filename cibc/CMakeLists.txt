@@ -26,7 +26,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-PROJECT(CIBC)
+PROJECT(SCIRUN)
 
 # This is the root SCIRun CMakeLists file.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
@@ -34,6 +34,15 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
 #-----------------------------------------------------------------------------
 # Test for some required system information.
 INCLUDE (CMakeBackwardCompatibilityC)
+
+#-----------------------------------------------------------------------------
+# SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
+# in src/scirunrc
+SET(SCIRUN_VERSION_MAJOR "3")
+SET(SCIRUN_VERSION_MINOR "0")
+SET(SCIRUN_VERSION_PATCH "0")
+
+SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCIRUN_VERSION_PATCH}")
 
 #-----------------------------------------------------------------------------
 # Configure testing support.  This should be done before any
@@ -47,19 +56,30 @@ ENDIF(BUILD_TESTING)
 
 #----------------------------------------------------------------------------
 # Output directories.
-SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+SET (LIBRARY_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
+SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
 #output directory for installing all include files.")
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
 SET(BUILD_FROM_TOP_LEVEL 1 CACHE INTERNAL "Building from top level")
 
+OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
+
+# Automatically build core
+# DV Need to fix building Testing
 SUBDIRS(src)
 
-OPTION(BUILD_DATAFLOW "Build SCIRun exectuable and dataflow" ON)
+# Option for building scirun executable, dataflow, packages
+OPTION(BUILD_DATAFLOW "Build SCIRun executable, dataflow, and packages" ON)
+IF(BUILD_DATAFLOW)
+  SET(SCIRUN_DIR ${CMAKE_CURRENT_BINARY_DIR})
+  SUBDIRS(src/Dataflow)
+ENDIF(BUILD_DATAFLOW)
+
+# Option for building Seg3D
+OPTION(BUILD_SEG3D "Build Seg3D Application" OFF)
 IF(BUILD_DATAFLOW)
   SET(SCIRUN_DIR ${PROJECT_BINARY_DIR}/src)
   SUBDIRS(src/Dataflow)
 ENDIF(BUILD_DATAFLOW)
-
 
