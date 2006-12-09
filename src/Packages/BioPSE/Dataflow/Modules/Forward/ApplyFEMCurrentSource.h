@@ -206,7 +206,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
       }
     }
 
-    int *rr = scinew int[2]; rr[0] = 0; rr[1] = static_cast<int>(weights.size());
+    int *rr = scinew int[2]; rr[0] = 0; rr[1] = static_cast<int>(weights.size()/2);
     int *cc = scinew int[weights.size()/2];
     double *dd = scinew double[weights.size()/2];
     for (int i=0; i < static_cast<int>(weights.size()/2); i++)
