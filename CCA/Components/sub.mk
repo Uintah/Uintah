@@ -47,8 +47,7 @@ SUBDIRS   := \
 	     $(SRCDIR)/TestEchoEvent \
 	     $(SRCDIR)/TestRegisterEventListener \
 	     $(SRCDIR)/TestProcessEvents \
-	     $(SRCDIR)/TestWildcardTopic \
-	     $(SRCDIR)/TestCreateWildcardTopic  
+	     $(SRCDIR)/TestWildcardTopic 
 
 
 ifeq ($(HAVE_WX),yes)
