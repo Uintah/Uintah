@@ -74,14 +74,12 @@ int TestSendEventgo::go()
   }
   sci::cca::TypeMap::pointer typeMapPtr;
   //Send Event with an empty event body
-  std::cout << "Test 1 : Send an Event with an empty Header\n";
+  std::cout << "Test 1 : Send an Event with an empty event body\n";
   try {
     sci::cca::Topic::pointer topicPtr = ptr->createTopic("Hello");
-    sci::cca::TypeMap::pointer header = com->getServices()->createTypeMap();
     sci::cca::TypeMap::pointer body = com->getServices()->createTypeMap();
-    sci::cca::Event::pointer eventPtr(new Event(header, body));
     std::cout << "Before send event call\n";
-    topicPtr->sendEvent(eventPtr);
+    topicPtr->sendEvent("Hello",body);
     std::cout << "After send Event call\n";
   } catch(const sci::cca::EventServiceException::pointer &e) {
     std::cout << "Exception in trying to send an Event with empty Header" << e->getNote() << std::endl;
@@ -91,10 +89,8 @@ int TestSendEventgo::go()
   std::cout << "Test 2: Send an Event successfully\n";
   try {
     sci::cca::Topic::pointer topicPtr = ptr->createTopic("Hello");
-    sci::cca::TypeMap::pointer header = com->getServices()->createTypeMap();
     sci::cca::TypeMap::pointer body = com->getServices()->createTypeMap();
-    sci::cca::Event::pointer eventPtr(new Event(header, body));
-    topicPtr->sendEvent(eventPtr);
+    topicPtr->sendEvent("Hello",body);
     std::cout << "Send Event successful\n";
   } catch(const sci::cca::EventServiceException::pointer &e) {
     std::cout << e->getNote() << std::endl;

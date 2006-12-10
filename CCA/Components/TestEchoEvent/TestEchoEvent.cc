@@ -95,17 +95,15 @@ int TestEchoEventgo::go()
 
     //Test Register EventListener
     std::cout << "Test 2: Test Register EventListener\n";
-    topicPtr->registerEventListener(std::string("EchoEventListener"),echoEvptr);
+    sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("SampleTopic");
+    subPtr->registerEventListener(std::string("EchoEventListener"),echoEvptr);
     std::cout << "Listener registered successfully.\n";
     
     //Test SendEvent
     std::cout << "Test 3 : Test SendEvent\n";
-    sci::cca::TypeMap::pointer eventHeader = com->getServices()->createTypeMap();
     sci::cca::TypeMap::pointer eventBody = com->getServices()->createTypeMap();
-    eventHeader->putString(std::string("FrameworkURL"),std::string("RandomURL"));
     eventBody->putString(std::string("Event1"),sendString);
-    sci::cca::Event::pointer theEvent(new Event(eventHeader,eventBody));
-    topicPtr->sendEvent(theEvent);
+    topicPtr->sendEvent("SampleTopic",eventBody);
     std::cout << "Event sent successfully.\n" << std::endl;
   }
   catch(const sci::cca::EventServiceException::pointer &e){
