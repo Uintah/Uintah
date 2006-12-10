@@ -80,11 +80,12 @@ int TestRegisterEventListenergo::go()
   }
    sci::cca::EventListener::pointer evptr(new TestEventListener);
    sci::cca::Topic::pointer topicPtr = ptr->createTopic("Hello");
+   sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("Hello");
    //Register event Listener with empty listener key
    std::cout << "Test 1 : Register event Listener with empty listener key:\n";
    try
      {
-       topicPtr->registerEventListener(std::string(""),evptr);
+       subPtr->registerEventListener(std::string(""),evptr);
      }
    catch(const sci::cca::EventServiceException::pointer &e)
      {
@@ -95,8 +96,8 @@ int TestRegisterEventListenergo::go()
    std::cout << "Test 2 : Register event listener with an already existing listener key\n";
    try
      {
-       topicPtr->registerEventListener(std::string("sample"),evptr);
-       topicPtr->registerEventListener(std::string("sample"),evptr);
+       subPtr->registerEventListener(std::string("sample"),evptr);
+       subPtr->registerEventListener(std::string("sample"),evptr);
      }
    catch(const sci::cca::EventServiceException::pointer &e)
      {
@@ -107,7 +108,7 @@ int TestRegisterEventListenergo::go()
    try
      {
        sci::cca::EventListener::pointer samplePtr;
-       topicPtr->registerEventListener(std::string("Test"),samplePtr);
+       subPtr->registerEventListener(std::string("Test"),samplePtr);
      }
    catch(const sci::cca::EventServiceException::pointer &e)
      {
@@ -117,7 +118,7 @@ int TestRegisterEventListenergo::go()
    std::cout << "Test 4: Register an Event Listener\n";
    try
      {
-       topicPtr->registerEventListener(std::string("Test"),evptr);
+       subPtr->registerEventListener(std::string("Test"),evptr);
        std::cout << "Registered successfully\n";
      }
    catch(const sci::cca::EventServiceException::pointer &e)

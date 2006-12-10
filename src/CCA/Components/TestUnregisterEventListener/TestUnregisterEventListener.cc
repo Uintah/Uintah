@@ -72,11 +72,13 @@ int TestUnregisterEventListenergo::go()
     return 1;
   }
    sci::cca::Topic::pointer topicPtr = ptr->createTopic("Hello");
+   sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("Hello");
+
    //Unregister with empty topic name
    std::cout << "Test 1 : Unregister with empty topic name\n";
    try
      {
-       topicPtr->unregisterEventListener(std::string(""));
+       subPtr->unregisterEventListener(std::string(""));
      }
    catch(const sci::cca::EventServiceException::pointer  &e)
      {
@@ -86,7 +88,7 @@ int TestUnregisterEventListenergo::go()
    std::cout << "Test 2 : Unregister a non-existent topic name\n";
    try
      {
-       topicPtr->unregisterEventListener("Random");
+       subPtr->unregisterEventListener("Random");
   
      }
    catch(const sci::cca::EventServiceException::pointer  &e)
@@ -97,7 +99,7 @@ int TestUnregisterEventListenergo::go()
    std::cout << "Test 3 : Unregister an existent topic \n";
    try
      {
-       topicPtr->unregisterEventListener("Hello");
+       subPtr->unregisterEventListener("Hello");
        std::cout << "Unregister successful\n";
      }
    catch(const sci::cca::EventServiceException::pointer  &e)
