@@ -179,8 +179,7 @@
     </module>
     <module category="ChangeFieldData" gui_visible="yes" id="m10" name="CalculateFieldDataCompiled3" package="SCIRun">
       <position x="177" y="335"/>
-      <var name="function" val="{result = Vector(v0, v1, v2);
-}"/>
+      <var name="function" val="{result = Vector(v0, v1, v2); }"/>
       <var name="outputdatatype" val="{Vector}"/>
       <var name="ui_geometry" val="{433x169+53+18}"/>
     </module>

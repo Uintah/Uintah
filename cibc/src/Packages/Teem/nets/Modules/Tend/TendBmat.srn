@@ -7,16 +7,7 @@
   <modules>
     <module category="Tend" gui_visible="yes" id="m1" name="TendBmat" package="Teem">
       <position x="10" y="10"/>
-      <var name="gradient_list" val="{0.56656 0.453453 0.3453453
-0.453453 0.3443 0.8656
-0.22344 0.435346 0.445457
-0.2343 0.242 0.25235
-0.234 0.345 0.456
-0.234 0.3453 0.4547
-0.123 0.234 0.3465
-
-
-}"/>
+      <var name="gradient_list" val="{0.56656 0.453453 0.3453453 0.453453 0.3443 0.8656 0.22344 0.435346 0.445457 0.2343 0.242 0.25235 0.234 0.345 0.456 0.234 0.3453 0.4547 0.123 0.234 0.3465   }"/>
       <var name="ui_geometry" val="{570x415+56+36}"/>
     </module>
     <module category="Misc" gui_visible="yes" id="m2" name="ReportNrrdInfo" package="Teem">

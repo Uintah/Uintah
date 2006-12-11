@@ -27,7 +27,7 @@
       <position x="432" y="317"/>
       <var name="ui_geometry" val="{682x273+13+89}"/>
     </module>
-    <module category="Converters" id="m5" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m5" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="65" y="236"/>
       <var name="datasets" val="{{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : Unknown} }"/>
     </module>

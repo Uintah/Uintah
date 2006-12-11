@@ -34,7 +34,7 @@ SET(Packages_Teem_Dataflow_Modules_Converters_SRCS
   ConvertToNrrd.cc
   ConvertRasterFieldToNrrd.cc
   ConvertNrrdToColorMap2.cc
-  ConvertNrrdToRasterField.cc
+  ConvertNrrdToGeneralField.cc
   ConvertNrrdToMatrix.cc
   ConvertMatrixToNrrd.cc
 )

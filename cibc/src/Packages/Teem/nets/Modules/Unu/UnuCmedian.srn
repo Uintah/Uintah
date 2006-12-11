@@ -15,7 +15,7 @@
     <module category="Converters" id="m2" name="ConvertRasterFieldToNrrd" package="Teem">
       <position x="363" y="283"/>
     </module>
-    <module category="Converters" id="m3" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m3" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="363" y="411"/>
     </module>
     <module category="Visualization" id="m4" name="CreateStandardColorMaps" package="SCIRun">

@@ -158,6 +158,7 @@ SCIRun::Visualization::StreamLines		SCIRun::Visualization::GenerateStreamLines
 SCIRun::Visualization::TextureBuilder	SCIRun::Visualization::ConvertFieldsToTexture
 SCIRun::Visualization::VolumeSlicer		SCIRun::Visualization::ShowTextureSlices
 SCIRun::Visualization::VolumeVisualizer	SCIRun::Visualization::ShowTextureVolume
+SCIRun::Converters::ConvertNrrdToField Teem::Converters::ConvertNrrdToField
 BioPSE::DataIO::RawToDenseMatrix		BioPSE::DataIO::ImportDenseMatrixFromRaw
 BioPSE::Forward::AnisoSphereModel		BioPSE::Forward::CreateAnisoSphereParameters
 BioPSE::Forward::ApplyFEMCurrentSource	BioPSE::Forward::ApplyFEMCurrentSource
@@ -222,8 +223,8 @@ Teem::DataIO::FieldToNrrd		Teem::Converters::ConvertRasterFieldToNrrd
 Teem::Converters::FieldToNrrd		Teem::Converters::ConvertRasterFieldToNrrd
 Teem::Converters::MatrixToNrrd		Teem::Converters::ConvertMatrixToNrrd
 Teem::Converters::NrrdToColorMap2		Teem::Converters::ConvertNrrdToColorMap2
-Teem::DataIO::NrrdToField		Teem::Converters::ConvertNrrdToRasterField
-Teem::Converters::NrrdToField		Teem::Converters::ConvertNrrdToRasterField
+Teem::DataIO::NrrdToField		Teem::Converters::ConvertNrrdToGeneralField
+Teem::Converters::NrrdToField		Teem::Converters::ConvertNrrdToGeneralField
 Teem::Converters::NrrdToMatrix		Teem::Converters::ConvertNrrdToMatrix
 Teem::DataIO::AnalyzeNrrdReader		Teem::DataIO::ImportNrrdFromAnalyze
 Teem::DataIO::DicomNrrdReader		Teem::DataIO::ImportNrrdFromDicom
@@ -232,12 +233,12 @@ Teem::DataIO::ImageImporter			Teem::DataIO::ImportImage
 Teem::DataIO::NrrdReader			Teem::DataIO::ReadNrrd 
 Teem::DataIO::NrrdWriter			Teem::DataIO::WriteNrrd
 Teem::Gage::GageProbe			Teem::Misc::BuildDerivedNrrdWithGage
-Teem::NrrdData::NrrdGradient		Teem::Misc::BuildNrrdGradients
+Teem::NrrdData::NrrdGradient		Teem::Misc::BuildNrrdGradient
 Teem::NrrdData::NrrdInfo			Teem::Misc::ReportNrrdInfo
 Teem::NrrdData::ChooseNrrd			Teem::Misc::ChooseNrrd
 Teem::NrrdData::NrrdSelectTime		Teem::Misc::SelectTimeStepFromNrrd
 Teem::NrrdData::NrrdSetProperty		Teem::Misc::SetNrrdProperty
-Teem::NrrdData::NrrdSetupTexture		Teem::Misc::BuildTextureWithGradientsFromNrrds
+Teem::NrrdData::NrrdSetupTexture		Teem::Misc::BuildNrrdGradientAndMagnitude
 Teem::Segmentation::MRITissueClassifier	Teem::Misc::ClassifyHeadTissuesFromMultiMRI
 Teem::Tend::TendAnhist			Teem::Tend::TendAnhist
 Teem::Tend::TendAnplot			Teem::Tend::TendAnplot

@@ -16,11 +16,7 @@
     </module>
     <module category="ChangeFieldData" gui_visible="yes" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="96" y="133"/>
-      <var name="function" val="{result = Vector((x+1)*0.5, (y+1)*0.5, (z+1)*0.5);
-
-
-
-}"/>
+      <var name="function" val="{result = Vector((x+1)*0.5, (y+1)*0.5, (z+1)*0.5);    }"/>
       <var name="outputdatatype" val="{Vector}"/>
       <var name="ui_geometry" val="{433x169+56+36}"/>
     </module>

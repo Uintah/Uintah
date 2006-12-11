@@ -29,9 +29,7 @@
     </module>
     <module category="ChangeFieldData" id="m3" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="61" y="245"/>
-      <var name="function" val="{result = x*x + y*y +z*z;
-
-}"/>
+      <var name="function" val="{result = x*x + y*y +z*z;  }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="NewField" gui_visible="yes" id="m4" name="ClipVolumeByIsovalue" package="SCIRun">

@@ -121,11 +121,7 @@
     </module>
     <module category="ChangeFieldData" id="m4" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="42" y="85"/>
-      <var name="function" val="{const double minv = 0.115470053838;
-const double maxv= 1.73205080757;
-const double tmp = sqrt(x*x + y*y + z*z);
-result = (unsigned char)((tmp - minv) / ( maxv - minv) * 255.0);
-}"/>
+      <var name="function" val="{const double minv = 0.115470053838; const double maxv= 1.73205080757; const double tmp = sqrt(x*x + y*y + z*z); result = (unsigned char)((tmp - minv) / ( maxv - minv) * 255.0); }"/>
       <var name="outputdatatype" val="{unsigned char}"/>
     </module>
     <module category="Visualization" id="m5" name="ShowTextureVolume" package="SCIRun">

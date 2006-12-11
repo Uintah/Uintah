@@ -29,7 +29,7 @@
 
 
 /*
- *  ConvertNrrdToRasterField.cc:  Convert a Nrrds to a Field. Incoming Nrrds
+ *  ConvertNrrdToGeneralField.cc:  Convert a Nrrds to a Field. Incoming Nrrds
  *                    may consist of Data, Points, Connections and
  *                    a Field mesh to associate it with.  
  *
@@ -78,13 +78,13 @@
 
 #include <iostream>
 
-#include <Teem/Dataflow/Modules/Converters/ConvertNrrdToRasterField.h>
+#include <Teem/Dataflow/Modules/Converters/ConvertNrrdToGeneralField.h>
 
 namespace SCITeem {
 
 using namespace SCIRun;
 
-class ConvertNrrdToRasterField : public Module {
+class ConvertNrrdToGeneralField : public Module {
 
   typedef CurveMesh<CrvLinearLgn<Point> >             CMesh;
   typedef TriSurfMesh<TriLinearLgn<Point> >           TSMesh;
@@ -119,9 +119,9 @@ public:
   bool        has_error_;
   FieldHandle last_field_;
 
-  ConvertNrrdToRasterField(GuiContext*);
+  ConvertNrrdToGeneralField(GuiContext*);
 
-  virtual ~ConvertNrrdToRasterField();
+  virtual ~ConvertNrrdToGeneralField();
 
   virtual void execute();
 
@@ -168,9 +168,9 @@ public:
 };
 
 
-DECLARE_MAKER(ConvertNrrdToRasterField)
-ConvertNrrdToRasterField::ConvertNrrdToRasterField(GuiContext* ctx)
-  : Module("ConvertNrrdToRasterField", ctx, Source, "Converters", "Teem"),
+DECLARE_MAKER(ConvertNrrdToGeneralField)
+ConvertNrrdToGeneralField::ConvertNrrdToGeneralField(GuiContext* ctx)
+  : Module("ConvertNrrdToGeneralField", ctx, Source, "Converters", "Teem"),
     gPermute_(get_ctx()->subVar("permute")),
     gBuildEigens_(get_ctx()->subVar("build-eigens")),
     gQuadOrTet_(get_ctx()->subVar("quad-or-tet")),
@@ -183,14 +183,14 @@ ConvertNrrdToRasterField::ConvertNrrdToRasterField(GuiContext* ctx)
 }
 
 
-ConvertNrrdToRasterField::~ConvertNrrdToRasterField()
+ConvertNrrdToGeneralField::~ConvertNrrdToGeneralField()
 {
 }
 
 
 
 void
-ConvertNrrdToRasterField::execute()
+ConvertNrrdToGeneralField::execute()
 {
   NrrdDataHandle dataH;
   NrrdDataHandle pointsH;
@@ -362,7 +362,7 @@ ConvertNrrdToRasterField::execute()
 
 
 FieldHandle 
-ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
+ConvertNrrdToGeneralField::create_field_from_nrrds(NrrdDataHandle dataH,
 				     NrrdDataHandle pointsH,
 				     NrrdDataHandle connectH,
 				     FieldHandle origfieldH,
@@ -446,8 +446,8 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
     // verify the data will "fit" into the mesh passed in
     if (has_data_) {
       const TypeDescription *td = origfieldH->get_type_description();
-      CompileInfoHandle ci = ConvertNrrdToRasterFieldTestMeshAlgo::get_compile_info(td);
-      Handle<ConvertNrrdToRasterFieldTestMeshAlgo> algo;
+      CompileInfoHandle ci = ConvertNrrdToGeneralFieldTestMeshAlgo::get_compile_info(td);
+      Handle<ConvertNrrdToGeneralFieldTestMeshAlgo> algo;
       if ((module_dynamic_compile(ci, algo)) && 
 	  (algo->execute(origfieldH, dataH, ofield_handle, data_rank))) {
 	remark("Creating a field from original mesh in input nrrd");
@@ -455,11 +455,11 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
 	// Now create field based on the mesh created above and send it
 	CompileInfoHandle ci;
 	  
-	ci = ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
+	ci = ConvertNrrdToGeneralFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
 						    dataH->nrrd_->type, 
 						    data_rank);
 	  
-	Handle<ConvertNrrdToRasterFieldFieldAlgo> algo;
+	Handle<ConvertNrrdToGeneralFieldFieldAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return 0;
 	  
 	if ((nrrdKindSize( dataH->nrrd_->axis[0].kind) == 9) && build_eigens) {
@@ -470,16 +470,16 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
 	  
 	return ofield_handle;
       } else {
-	warning("Warning: Field passed in but not used because sizes didn't match.  Generating mesh from scratch. Try inserting a ChangeFieldDataAt module above ConvertNrrdToRasterField and setting the data location.");
+	warning("Warning: Field passed in but not used because sizes didn't match.  Generating mesh from scratch. Try inserting a ChangeFieldDataAt module above ConvertNrrdToGeneralField and setting the data location.");
       }
     } else if (has_points_) {
       // Now create field based on the mesh created above and send it
       CompileInfoHandle ci;
-      ci = ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
+      ci = ConvertNrrdToGeneralFieldFieldAlgo::get_compile_info(mtd, btd, dtd,
 						  pointsH->nrrd_->type, 
 						  data_rank);
       
-      Handle<ConvertNrrdToRasterFieldFieldAlgo> algo;
+      Handle<ConvertNrrdToGeneralFieldFieldAlgo> algo;
       if (!module_dynamic_compile(ci, algo)) return 0;
       
       // DARBY - change this replace all of the current points to the new points.
@@ -681,12 +681,12 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
     remark( "Creating an unstructured " + mtd->get_name() );
       
     CompileInfoHandle ci_mesh =
-      ConvertNrrdToRasterFieldMeshAlgo::get_compile_info("Unstructured",
+      ConvertNrrdToGeneralFieldMeshAlgo::get_compile_info("Unstructured",
 					    mtd,
 					    pointsH->nrrd_->type,
 					    connectH->nrrd_->type);
       
-    Handle<UnstructuredConvertNrrdToRasterFieldMeshAlgo> algo_mesh;
+    Handle<UnstructuredConvertNrrdToGeneralFieldMeshAlgo> algo_mesh;
       
     if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
       
@@ -828,18 +828,18 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
 
       CompileInfoHandle ci_mesh = 0;
       if (has_data_) {
-	ci_mesh = ConvertNrrdToRasterFieldMeshAlgo::get_compile_info("Unstructured",
+	ci_mesh = ConvertNrrdToGeneralFieldMeshAlgo::get_compile_info("Unstructured",
 							mtd,
 							pointsH->nrrd_->type,
 							dataH->nrrd_->type);
       } else {
-	ci_mesh = ConvertNrrdToRasterFieldMeshAlgo::get_compile_info("Unstructured",
+	ci_mesh = ConvertNrrdToGeneralFieldMeshAlgo::get_compile_info("Unstructured",
 							mtd,
 							pointsH->nrrd_->type,
 							pointsH->nrrd_->type);
       }
 	  
-      Handle<UnstructuredConvertNrrdToRasterFieldMeshAlgo> algo_mesh;
+      Handle<UnstructuredConvertNrrdToGeneralFieldMeshAlgo> algo_mesh;
 	  
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
 	  
@@ -854,12 +854,12 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
       remark( "Creating a structured " + mtd->get_name() );
 	  
       CompileInfoHandle ci_mesh =
-	ConvertNrrdToRasterFieldMeshAlgo::get_compile_info( "Structured",
+	ConvertNrrdToGeneralFieldMeshAlgo::get_compile_info( "Structured",
 					       mtd,
 					       pointsH->nrrd_->type,
 					       pointsH->nrrd_->type);
 	  
-      Handle<StructuredConvertNrrdToRasterFieldMeshAlgo> algo_mesh;
+      Handle<StructuredConvertNrrdToGeneralFieldMeshAlgo> algo_mesh;
 	  
       if( !module_dynamic_compile(ci_mesh, algo_mesh) ) return 0;
 	  
@@ -1166,16 +1166,16 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
   ASSERTMSG(btd != 0, "Basis Type Description not valid");
 
   if (has_data_) {
-    ci = ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
+    ci = ConvertNrrdToGeneralFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
 						dataH->nrrd_->type, 
 						data_rank);
   } else {
-    ci = ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
+    ci = ConvertNrrdToGeneralFieldFieldAlgo::get_compile_info(mtd, btd, dtd, 
 						pointsH->nrrd_->type, 
 						data_rank);
   }
   
-  Handle<ConvertNrrdToRasterFieldFieldAlgo> algo;
+  Handle<ConvertNrrdToGeneralFieldFieldAlgo> algo;
   
   if (!module_dynamic_compile(ci, algo)) return 0;
   
@@ -1197,15 +1197,15 @@ ConvertNrrdToRasterField::create_field_from_nrrds(NrrdDataHandle dataH,
 
 
 CompileInfoHandle
-ConvertNrrdToRasterFieldMeshAlgo::get_compile_info( const string topoStr,
+ConvertNrrdToGeneralFieldMeshAlgo::get_compile_info( const string topoStr,
 				       const TypeDescription *mtd,
 				       const unsigned int ptype,
 				       const unsigned int ctype)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string base_class_name(topoStr + "ConvertNrrdToRasterFieldMeshAlgo");
-  const string template_class_name(topoStr + "ConvertNrrdToRasterFieldMeshAlgoT");
+  const string base_class_name(topoStr + "ConvertNrrdToGeneralFieldMeshAlgo");
+  const string template_class_name(topoStr + "ConvertNrrdToGeneralFieldMeshAlgoT");
 
   string pTypeStr,  cTypeStr;
   string pTypeName, cTypeName;
@@ -1257,7 +1257,7 @@ ConvertNrrdToRasterFieldMeshAlgo::get_compile_info( const string topoStr,
 }
 
 CompileInfoHandle
-ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
+ConvertNrrdToGeneralFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
 				       const TypeDescription *btd,
 				       const TypeDescription *dtd,
 				       const unsigned int type,
@@ -1265,7 +1265,7 @@ ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string base_class_name("ConvertNrrdToRasterFieldFieldAlgo");
+  static const string base_class_name("ConvertNrrdToGeneralFieldFieldAlgo");
   
   string typeStr, typeName;
   
@@ -1360,13 +1360,13 @@ ConvertNrrdToRasterFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
   return rval;
 }
  
-ConvertNrrdToRasterFieldTestMeshAlgo::~ConvertNrrdToRasterFieldTestMeshAlgo()
+ConvertNrrdToGeneralFieldTestMeshAlgo::~ConvertNrrdToGeneralFieldTestMeshAlgo()
 {
 }
 
 
 CompileInfoHandle
-ConvertNrrdToRasterFieldTestMeshAlgo::get_compile_info(const TypeDescription *td) 
+ConvertNrrdToGeneralFieldTestMeshAlgo::get_compile_info(const TypeDescription *td) 
 {
   CompileInfo *rval = scinew CompileInfo(dyn_file_name(td), 
 					 base_class_name(), 
@@ -1379,7 +1379,7 @@ ConvertNrrdToRasterFieldTestMeshAlgo::get_compile_info(const TypeDescription *td
 }
 
 const string& 
-ConvertNrrdToRasterFieldTestMeshAlgo::get_h_file_path() {
+ConvertNrrdToGeneralFieldTestMeshAlgo::get_h_file_path() {
   static const string path(TypeDescription::cc_to_h(__FILE__));
   return path;
 }

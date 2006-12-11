@@ -131,51 +131,7 @@
     </module>
     <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="103" y="251"/>
-      <var name="function" val="{double phi, r, uu, vv;
-
-const double a = v.x();
-const double b = v.y();
-const double c = v.z();
-  
-if (a &gt; -b)
-{
-  if (a &gt; b)
-  {
-    r = a;
-    phi = (M_PI/4.0) * b/a;
-  }
-  else
-  {
-    r = b;
-    phi = (M_PI/4.0) * (2 - a/b);
-  }
-}
-else
-{
-  if (a &lt; b)
-  {
-    r = -a;
-    phi = (M_PI/4.0) * (4 + (b/a));
-  }
-  else
-  {
-    r = -b;
-    if (b != 0)
-    {
-      phi = (M_PI/4.0) * (6 - a/b);
-    }
-    else
-    {
-      phi = 0;
-    }
-  }
-}
-
-uu = r * cos(phi);
-vv = r * sin(phi);
-  
-result = Vector(uu, vv, c);
-}"/>
+      <var name="function" val="{double phi, r, uu, vv;  const double a = v.x(); const double b = v.y(); const double c = v.z();    if (a &gt; -b) {   if (a &gt; b)   {     r = a;     phi = (M_PI/4.0) * b/a;   }   else   {     r = b;     phi = (M_PI/4.0) * (2 - a/b);   } } else {   if (a &lt; b)   {     r = -a;     phi = (M_PI/4.0) * (4 + (b/a));   }   else   {     r = -b;     if (b != 0)     {       phi = (M_PI/4.0) * (6 - a/b);     }     else     {       phi = 0;     }   } }  uu = r * cos(phi); vv = r * sin(phi);    result = Vector(uu, vv, c); }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="ChangeFieldData" id="m7" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
@@ -187,8 +143,7 @@ result = Vector(uu, vv, c);
     </module>
     <module category="ChangeFieldData" id="m9" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="87" y="491"/>
-      <var name="function" val="{result = z;
-}"/>
+      <var name="function" val="{result = z; }"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x166+37+505}"/>
     </module>

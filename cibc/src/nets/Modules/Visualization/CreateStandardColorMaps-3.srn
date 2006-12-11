@@ -34,8 +34,7 @@
     </module>
     <module category="ChangeFieldData" id="m3" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="68" y="89"/>
-      <var name="function" val="{result = x;
-}"/>
+      <var name="function" val="{result = x; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="Visualization" id="m4" name="ShowField" package="SCIRun">

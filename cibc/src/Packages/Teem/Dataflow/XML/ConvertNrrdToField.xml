@@ -29,31 +29,28 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-<component name="BuildTextureWithGradientsFromNrrds" category="Misc">
+<component name="ConvertNrrdToField" category="Converters">
   <overview>
     <authors>
-      <author>Michael Callahan</author>
+      <author>Jeroen Stinstra</author>
     </authors>
-    <summary>Set up a volume texture from a 3D scalar nrrd.</summary>
+    <summary>
+      Convert a NRRD into a SCIRun Field object.
+
+    </summary>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Value</name>
+        <name>Nrrd</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>Normal/Value</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>Gradient Magnitude</name>
-        <datatype>SCIRun::Nrrd</datatype>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>
 </component>
-

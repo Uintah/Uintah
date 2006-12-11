@@ -35,7 +35,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-namespace SCIRun {
+namespace SCITeem {
+
+using namespace SCIRun;
 
 class ConvertNrrdToField : public Module {
 public:
@@ -49,13 +51,15 @@ private:
 
 
 DECLARE_MAKER(ConvertNrrdToField)
-ConvertNrrdToField::ConvertNrrdToField(GuiContext* ctx)
-  : Module("ConvertNrrdToField", ctx, Source, "Converters", "SCIRun"),
-    guidatalocation_(get_ctx()->subVar("datalocation"))
+
+ConvertNrrdToField::ConvertNrrdToField(GuiContext* ctx) : 
+  Module("ConvertNrrdToField", ctx, Source, "Converters", "Teem"),
+  guidatalocation_(get_ctx()->subVar("datalocation"))
 {
 }
 
-void ConvertNrrdToField::execute()
+void 
+ConvertNrrdToField::execute()
 {
   // Define local handles of data objects:
   NrrdDataHandle nrrd;
@@ -77,4 +81,4 @@ void ConvertNrrdToField::execute()
   }
 }
 
-} // End namespace SCIRun
+} // End namespace SCITeem

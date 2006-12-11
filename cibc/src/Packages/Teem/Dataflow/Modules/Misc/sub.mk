@@ -14,8 +14,8 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Misc
 
 SRCS     += \
         $(SRCDIR)/BuildDerivedNrrdWithGage.cc\
-        $(SRCDIR)/BuildNrrdGradients.cc\
-        $(SRCDIR)/BuildTextureWithGradientsFromNrrds.cc\
+        $(SRCDIR)/BuildNrrdGradient.cc\
+        $(SRCDIR)/BuildNrrdGradientAndMagnitude.cc\
         $(SRCDIR)/ClassifyHeadTissuesFromMultiMRI.cc\
         $(SRCDIR)/ChooseNrrd.cc\
         $(SRCDIR)/ReportNrrdInfo.cc\

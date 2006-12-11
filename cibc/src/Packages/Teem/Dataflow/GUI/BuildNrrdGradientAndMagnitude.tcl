@@ -28,7 +28,7 @@
 
 
 ##
- #  BuildTextureWithGradientsFromNrrds.tcl
+ #  BuildNrrdGradientAndMagnitude.tcl
  #  Written by:
  #   Michael Callahan
  #   Department of Computer Science
@@ -37,12 +37,12 @@
  #  Copyright (C) 2005 SCI Group
  ##
 
-catch {rename Teem_Misc_BuildTextureWithGradientsFromNrrds ""}
+catch {rename Teem_Misc_BuildNrrdGradientAndMagnitude ""}
 
-itcl_class Teem_Misc_BuildTextureWithGradientsFromNrrds {
+itcl_class Teem_Misc_BuildNrrdGradientAndMagnitude {
     inherit Module
     constructor {config} {
-        set name BuildTextureWithGradientsFromNrrds
+        set name BuildNrrdGradientAndMagnitude
         set_defaults
     }
     method set_defaults {} {

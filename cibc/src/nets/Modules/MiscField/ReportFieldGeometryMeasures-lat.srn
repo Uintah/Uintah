@@ -97,8 +97,7 @@
     </module>
     <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="97" y="95"/>
-      <var name="function" val="{result = x + y + z;
-}"/>
+      <var name="function" val="{result = x + y + z; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
   </modules>

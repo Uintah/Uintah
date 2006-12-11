@@ -121,7 +121,7 @@ if __name__ == '__main__' :
     print "WARNING:   This script will overwrite the file or files specified"
     print "           Please backup your .srn files first."
     print "Usage:"
-    print "python repair_srn.py <path/to/.srn> <path/to/remapping_file>"
+    print "python remap_modules_in_srn.py <path/to/.srn> <path/to/remapping_file>"
     print ''
     s = '\tIf the first argument is a directory, then work recursively \non all .srn files under that directory, otherwise the argument should\nspecify a single .srn file. The remapping_file contains the mapping\nfrom old to new module info.  The file should have one remapping per\nline like so: \n\noldpackage:::oldcategory::oldmodule  newpackage::newcategory::newmodule\n\n\tSee SCIRun/src/scripts/module-remapping.txt.\n\n'
     print s

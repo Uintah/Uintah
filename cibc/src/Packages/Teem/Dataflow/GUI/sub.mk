@@ -47,10 +47,11 @@ SRCS := \
 	$(SRCDIR)/ClassifyHeadTissuesFromMultiMRI.tcl\
 	$(SRCDIR)/ReportNrrdInfo.tcl\
 	$(SRCDIR)/SetNrrdProperty.tcl\
-	$(SRCDIR)/BuildTextureWithGradientsFromNrrds.tcl\
+	$(SRCDIR)/BuildNrrdGradientAndMagnitude.tcl\
 	$(SRCDIR)/ReadNrrd.tcl\
 	$(SRCDIR)/SelectTimeStepFromNrrd.tcl\
-	$(SRCDIR)/ConvertNrrdToRasterField.tcl\
+	$(SRCDIR)/ConvertNrrdToField.tcl\
+	$(SRCDIR)/ConvertNrrdToGeneralField.tcl\
 	$(SRCDIR)/WriteNrrd.tcl\
 	$(SRCDIR)/TendAnscale.tcl\
 	$(SRCDIR)/TendAnvol.tcl\

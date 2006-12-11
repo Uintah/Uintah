@@ -26,14 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-//    File   : ConvertNrrdToRasterField.h
+//    File   : ConvertNrrdToGeneralField.h
 //    Author : Allen Sanderson
 //             School of Computing
 //             University of Utah
 //    Date   : July 2003
 
-#if !defined(ConvertNrrdToRasterField_h)
-#define ConvertNrrdToRasterField_h
+#if !defined(ConvertNrrdToGeneralField_h)
+#define ConvertNrrdToGeneralField_h
 
 #include <Dataflow/Network/Module.h>
 
@@ -55,7 +55,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 using std::cerr;
-class ConvertNrrdToRasterFieldMeshAlgo : public DynamicAlgoBase
+class ConvertNrrdToGeneralFieldMeshAlgo : public DynamicAlgoBase
 {
 public:
   //! support the dynamically compiled algorithm concept
@@ -68,7 +68,7 @@ public:
 
 
 
-class RegularConvertNrrdToRasterFieldMeshAlgo : public ConvertNrrdToRasterFieldMeshAlgo
+class RegularConvertNrrdToGeneralFieldMeshAlgo : public ConvertNrrdToGeneralFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -77,8 +77,8 @@ public:
 
 
 template< class MESH, class DNTYPE, class CNTYPE>
-class RegularConvertNrrdToRasterFieldMeshAlgoT : 
-  public RegularConvertNrrdToRasterFieldMeshAlgo
+class RegularConvertNrrdToGeneralFieldMeshAlgoT : 
+  public RegularConvertNrrdToGeneralFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -87,7 +87,7 @@ public:
 
 template< class MESH, class DNTYPE, class CNTYPE>
 void
-RegularConvertNrrdToRasterFieldMeshAlgoT< MESH, DNTYPE, CNTYPE>::
+RegularConvertNrrdToGeneralFieldMeshAlgoT< MESH, DNTYPE, CNTYPE>::
 execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 {
   Point minpt, maxpt;
@@ -143,7 +143,7 @@ execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 }
 
 
-class StructuredConvertNrrdToRasterFieldMeshAlgo : public ConvertNrrdToRasterFieldMeshAlgo
+class StructuredConvertNrrdToGeneralFieldMeshAlgo : public ConvertNrrdToGeneralFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -153,8 +153,8 @@ public:
 
 
 template< class MESH, class PNTYPE, class CNTYPE >
-class StructuredConvertNrrdToRasterFieldMeshAlgoT : 
-  public StructuredConvertNrrdToRasterFieldMeshAlgo
+class StructuredConvertNrrdToGeneralFieldMeshAlgoT : 
+  public StructuredConvertNrrdToGeneralFieldMeshAlgo
 {
 public:
 
@@ -166,7 +166,7 @@ public:
 
 template< class MESH, class PNTYPE, class CNTYPE >
 void
-StructuredConvertNrrdToRasterFieldMeshAlgoT< MESH, PNTYPE, CNTYPE >::
+StructuredConvertNrrdToGeneralFieldMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle pointsH,
 	int idim, int jdim, int kdim)
@@ -203,8 +203,8 @@ execute(MeshHandle& mHandle,
 
 
 
-class UnstructuredConvertNrrdToRasterFieldMeshAlgo : 
-  public ConvertNrrdToRasterFieldMeshAlgo
+class UnstructuredConvertNrrdToGeneralFieldMeshAlgo : 
+  public ConvertNrrdToGeneralFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -214,8 +214,8 @@ public:
 };
 
 template< class MESH, class PNTYPE, class CNTYPE >
-class UnstructuredConvertNrrdToRasterFieldMeshAlgoT : 
-  public UnstructuredConvertNrrdToRasterFieldMeshAlgo
+class UnstructuredConvertNrrdToGeneralFieldMeshAlgoT : 
+  public UnstructuredConvertNrrdToGeneralFieldMeshAlgo
 {
 public:
   virtual void execute(MeshHandle& mHandle,
@@ -227,7 +227,7 @@ public:
 
 template< class MESH, class PNTYPE, class CNTYPE >
 void
-UnstructuredConvertNrrdToRasterFieldMeshAlgoT< MESH, PNTYPE, CNTYPE >::
+UnstructuredConvertNrrdToGeneralFieldMeshAlgoT< MESH, PNTYPE, CNTYPE >::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle pointsH,
 	NrrdDataHandle connectH,
@@ -296,7 +296,7 @@ execute(MeshHandle& mHandle,
 
 
 
-class ConvertNrrdToRasterFieldFieldAlgo : public DynamicAlgoBase
+class ConvertNrrdToGeneralFieldFieldAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle& mHandle,
@@ -317,7 +317,7 @@ public:
 };
 
 template< class FIELD, class MESH, class NTYPE >
-class ConvertNrrdToRasterFieldFieldAlgoScalar : public ConvertNrrdToRasterFieldFieldAlgo
+class ConvertNrrdToGeneralFieldFieldAlgoScalar : public ConvertNrrdToGeneralFieldFieldAlgo
 {
 public:
   //! virtual interface.
@@ -334,7 +334,7 @@ public:
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-ConvertNrrdToRasterFieldFieldAlgoScalar<FIELD, MESH, NTYPE>::
+ConvertNrrdToGeneralFieldFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens,
@@ -416,7 +416,7 @@ execute(MeshHandle& mHandle,
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-ConvertNrrdToRasterFieldFieldAlgoScalar<FIELD, MESH, NTYPE>::
+ConvertNrrdToGeneralFieldFieldAlgoScalar<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens)
@@ -484,7 +484,7 @@ execute(MeshHandle& mHandle,
 
 
 template< class FIELD, class MESH, class NTYPE >
-class ConvertNrrdToRasterFieldFieldAlgoVector : public ConvertNrrdToRasterFieldFieldAlgo
+class ConvertNrrdToGeneralFieldFieldAlgoVector : public ConvertNrrdToGeneralFieldFieldAlgo
 {
 public:
   //! virtual interface.
@@ -501,7 +501,7 @@ public:
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-ConvertNrrdToRasterFieldFieldAlgoVector<FIELD, MESH, NTYPE>::
+ConvertNrrdToGeneralFieldFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens,
@@ -584,7 +584,7 @@ execute(MeshHandle& mHandle,
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-ConvertNrrdToRasterFieldFieldAlgoVector<FIELD, MESH, NTYPE>::
+ConvertNrrdToGeneralFieldFieldAlgoVector<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens)
@@ -663,7 +663,7 @@ execute(MeshHandle& mHandle,
 
 
 template< class FIELD, class MESH, class NTYPE >
-class ConvertNrrdToRasterFieldFieldAlgoTensor : public ConvertNrrdToRasterFieldFieldAlgo
+class ConvertNrrdToGeneralFieldFieldAlgoTensor : public ConvertNrrdToGeneralFieldFieldAlgo
 {
 public:
   //! virtual interface.
@@ -680,7 +680,7 @@ public:
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-ConvertNrrdToRasterFieldFieldAlgoTensor<FIELD, MESH, NTYPE>::
+ConvertNrrdToGeneralFieldFieldAlgoTensor<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens,
@@ -1104,7 +1104,7 @@ execute(MeshHandle& mHandle,
 
 template< class FIELD, class MESH, class NTYPE >
 FieldHandle
-ConvertNrrdToRasterFieldFieldAlgoTensor<FIELD, MESH, NTYPE>::
+ConvertNrrdToGeneralFieldFieldAlgoTensor<FIELD, MESH, NTYPE>::
 execute(MeshHandle& mHandle,
 	NrrdDataHandle dataH,
 	int build_eigens)
@@ -1481,12 +1481,12 @@ execute(MeshHandle& mHandle,
 }
 
 
-class ConvertNrrdToRasterFieldTestMeshAlgo : public DynamicAlgoBase
+class ConvertNrrdToGeneralFieldTestMeshAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool execute(SCIRun::FieldHandle, NrrdDataHandle, 
 		       SCIRun::FieldHandle &, const int a0_size) = 0;
-  virtual ~ConvertNrrdToRasterFieldTestMeshAlgo();
+  virtual ~ConvertNrrdToGeneralFieldTestMeshAlgo();
 
   static const string& get_h_file_path();
   static string dyn_file_name(const TypeDescription *td) {
@@ -1495,12 +1495,12 @@ public:
   }
 
   static const string base_class_name() {
-    static string name("ConvertNrrdToRasterFieldTestMeshAlgo");
+    static string name("ConvertNrrdToGeneralFieldTestMeshAlgo");
     return name;
   }
 
   static const string template_class_name() {
-    static string name("ConvertNrrdToRasterFieldTestMesh");
+    static string name("ConvertNrrdToGeneralFieldTestMesh");
     return name;
   }
 
@@ -1509,7 +1509,7 @@ public:
 };
 
 template< class Fld >
-class ConvertNrrdToRasterFieldTestMesh : public ConvertNrrdToRasterFieldTestMeshAlgo
+class ConvertNrrdToGeneralFieldTestMesh : public ConvertNrrdToGeneralFieldTestMeshAlgo
 {
 public:
   //! virtual interface.
@@ -1522,7 +1522,7 @@ public:
 
 template< class Fld>
 bool
-ConvertNrrdToRasterFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld, 
+ConvertNrrdToGeneralFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld, 
 				  NrrdDataHandle      in,
 				  SCIRun::FieldHandle &out,
 				  const int a0_size)

@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-//    File   : BuildTextureWithGradientsFromNrrds.cc
+//    File   : BuildNrrdGradientAndMagnitude.cc
 //    Author : Michael Callahan
 //    Date   : Feb 2005
 
@@ -43,10 +43,10 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class BuildTextureWithGradientsFromNrrds : public Module {
+class BuildNrrdGradientAndMagnitude : public Module {
 public:
-  BuildTextureWithGradientsFromNrrds(SCIRun::GuiContext *ctx);
-  virtual ~BuildTextureWithGradientsFromNrrds();
+  BuildNrrdGradientAndMagnitude(SCIRun::GuiContext *ctx);
+  virtual ~BuildNrrdGradientAndMagnitude();
   virtual void execute();
 
   GuiDouble minf_;
@@ -64,10 +64,10 @@ public:
 };
 
 
-DECLARE_MAKER(BuildTextureWithGradientsFromNrrds)
+DECLARE_MAKER(BuildNrrdGradientAndMagnitude)
 
-BuildTextureWithGradientsFromNrrds::BuildTextureWithGradientsFromNrrds(SCIRun::GuiContext *ctx) : 
-  Module("BuildTextureWithGradientsFromNrrds", ctx, Filter, "Misc", "Teem"),
+BuildNrrdGradientAndMagnitude::BuildNrrdGradientAndMagnitude(SCIRun::GuiContext *ctx) : 
+  Module("BuildNrrdGradientAndMagnitude", ctx, Filter, "Misc", "Teem"),
   minf_(get_ctx()->subVar("minf")),
   maxf_(get_ctx()->subVar("maxf")),
   useinputmin_(get_ctx()->subVar("useinputmin")),
@@ -90,7 +90,7 @@ BuildTextureWithGradientsFromNrrds::BuildTextureWithGradientsFromNrrds(SCIRun::G
 }
 
 
-BuildTextureWithGradientsFromNrrds::~BuildTextureWithGradientsFromNrrds()
+BuildNrrdGradientAndMagnitude::~BuildNrrdGradientAndMagnitude()
 {
 }
 
@@ -216,7 +216,7 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
 
 
 void 
-BuildTextureWithGradientsFromNrrds::execute()
+BuildNrrdGradientAndMagnitude::execute()
 {
   update_state(NeedData);
 

@@ -10,11 +10,7 @@
     </module>
     <module category="ChangeFieldData" gui_visible="yes" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="83" y="84"/>
-      <var name="function" val="{result = sqrt(x*x + y*y);
-
-
-
-}"/>
+      <var name="function" val="{result = sqrt(x*x + y*y);    }"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x166+839+760}"/>
     </module>

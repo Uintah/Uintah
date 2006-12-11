@@ -212,7 +212,6 @@ SRCS := \
         $(SRCDIR)/CalculateMeshNodes.tcl\
         $(SRCDIR)/CollectFields.tcl\
         $(SRCDIR)/GetDomainBoundary.tcl\
-        $(SRCDIR)/ConvertNrrdToField.tcl\
         $(SRCDIR)/ConvertMatrixToField.tcl\
         $(SRCDIR)/CalculateIsInsideField.tcl\
         $(SRCDIR)/CalculateInsideWhichField.tcl\
