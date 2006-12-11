@@ -15,7 +15,6 @@ SRCDIR   := Dataflow/Modules/Converters
 SRCS     += \
 	$(SRCDIR)/ConvertMatrixToString.cc\
 	$(SRCDIR)/ConvertMatrixToField.cc\
-	$(SRCDIR)/ConvertNrrdToField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
