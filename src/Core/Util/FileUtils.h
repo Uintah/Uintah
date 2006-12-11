@@ -51,8 +51,7 @@ namespace SCIRun {
 // Inserts "insert" in front of all occurrances of 
 // "match" within the file named "filename"
 
-SCISHARE void InsertStringInFile(char* filename, char* match, char* insert);
-
+SCISHARE void InsertStringInFile( char* filename, char* match, char* insert );
 
 ////////////////////////////////////
 // GetFilenamesEndingWith()
@@ -60,11 +59,11 @@ SCISHARE void InsertStringInFile(char* filename, char* match, char* insert);
 // all the files with extension "ext" inside
 // the directory named "dir"
 
-SCISHARE std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
+SCISHARE std::map<int,char*>* GetFilenamesEndingWith( char* dir, char* ext );
 
-
-SCISHARE bool validFile(std::string filename);
-SCISHARE bool validDir(std::string filename);
+SCISHARE bool validFile( std::string filename );
+SCISHARE bool validDir( std::string filename );
+SCISHARE bool isSymLink( std::string filename );
 
 } // End namespace SCIRun
 
