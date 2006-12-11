@@ -247,6 +247,9 @@ interface ComponentEventService extends Port {
 
   void moveComponent(in ComponentID component, in int x, in int y);
 }
+// END proposed - sparker
+
+//***********************************************************************************
 
 /**
  * The proposed event service is based on a publish-subscribe model:
@@ -271,19 +274,10 @@ interface EventService extends cca.Port {
   cca.Topic getTopic(in string topicName) throws EventServiceException;
 
   /**
-   * @return the WildcardTopic if it already exists,
-   * @exception EventServiceException if creating WildcardTopic fails
+   * @return the Subscription if it already exists,
+   * @exception EventServiceException if creating Subscription fails
    */
-  cca.WildcardTopic createWildcardTopic(in string topicName) throws EventServiceException;
-
-
-  /**
-   * Get a Topic by name.
-   * @return WildcardTopic,
-   * @exception EventServiceException if topicName is empty or if not found
-   */
-  // throws exception if topicName is empty or if not found
-  cca.WildcardTopic getWildcardTopic(in string topicName) throws EventServiceException;
+  cca.Subscription subscribeToEvents(in string topicName) throws EventServiceException;
 
   /**
    * Notifies the EventService that this Topic is no longer used.
@@ -292,14 +286,14 @@ interface EventService extends cca.Port {
   void releaseTopic(in string topicName) throws EventServiceException;
 
   /**
-   * Notifies the EventService that this WildcardTopic is no longer used.
+   * Notifies the EventService that this Subscription is no longer used.
    * @exception EventServiceException if topicName is empty or if not found
    */
-  void releaseWildcardTopic(in string topicName) throws EventServiceException;
+  void releaseSubscription(in cca.Subscription subscription) throws EventServiceException;
 
   /** Process published events. */
   void processEvents();
 
 }
 
-// END proposed - sparker
+

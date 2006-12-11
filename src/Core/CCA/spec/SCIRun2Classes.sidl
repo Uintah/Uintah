@@ -136,6 +136,8 @@ class GUIBuilder implements-all sci.cca.Builder, sci.cca.EventListener {
   opaque getPortColor(in string portName);
 }
 
+//*********************************************************************************************************
+
 /**
  * Stores event header and event body:
  * Header: should not be empty, may contain delivery metadata
@@ -143,8 +145,8 @@ class GUIBuilder implements-all sci.cca.Builder, sci.cca.EventListener {
  * Body: may be empty, may contain event data
  */
 interface Event {
-  void setHeader(in cca.TypeMap header);
-  void setBody(in cca.TypeMap body);
+  //void setHeader(in cca.TypeMap header);
+  //void setBody(in cca.TypeMap body);
 
   cca.TypeMap getHeader();
   cca.TypeMap getBody();
@@ -156,30 +158,33 @@ interface EventListener {
   void processEvent(in string topicName, in Event theEvent);
 }
 
-/** Topics are channels in which events are sent. */
-interface AbstractTopic {
+
+interface Topic {
   /**
-   * Register an EventListener on a Topic or a group of Topics (through WildcardTopic).
+   * @return Topic name (from EventService.createTopic)
+   */
+  string getTopicName();
+
+  /** Publish an event. */
+  void sendEvent(in string name, in cca.TypeMap eventBody) throws EventServiceException;
+}
+
+/** Mechanism for grouping hierarchically related Topics for subscribers. */
+interface Subscription {
+  /**
+   * Register an EventListener on a Topic or a group of Topics (through Subscription).
    * @exception if listenerKey is null or empty or if listener is null
    */
   void registerEventListener(in string listenerKey, in EventListener theListener) throws EventServiceException;
 
   /**
-   * Unregister an EventListener on a Topic or a group of Topics (through WildcardTopic).
+   * Unregister an EventListener on a Topic or a group of Topics (through Subscription).
    * @exception if listenerKey is null or empty
    */
   void unregisterEventListener(in string listenerKey);
   /**
    * @return Topic name (from EventService.createTopic)
    */
-  string getTopicName();
+  string getSubscriptionName();
 }
 
-interface Topic extends AbstractTopic {
-  /** Publish an event. */
-  void sendEvent(in Event theEvent) throws EventServiceException;
-}
-
-/** Mechanism for grouping hierarchically related Topics for subscribers. */
-interface WildcardTopic extends AbstractTopic {
-}
