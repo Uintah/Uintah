@@ -27,41 +27,41 @@
 */
 
 
-#ifndef SCIRun_Framework_TestWildcardTopic_h
-#define SCIRun_Framework_TestWildcardTopic_h
+#ifndef SCIRun_Framework_TestSubscription_h
+#define SCIRun_Framework_TestSubscription_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
 using namespace SCIRun;
 
-class TestWildcardTopicEventListener : public sci::cca::EventListener
+class TestSubscriptionEventListener : public sci::cca::EventListener
 {
  public:
     void processEvent(const std::string &topicName, const sci::cca::Event::pointer  &theEvent);
 };
 
-class TestWildcardTopic: public sci::cca::Component {
+class TestSubscription : public sci::cca::Component {
 public:
-  TestWildcardTopic();
-  virtual ~TestWildcardTopic();
+  TestSubscription();
+  virtual ~TestSubscription();
   virtual void setServices(const sci::cca::Services::pointer& svc);
   sci::cca::Services::pointer&  getServices() { return services; }
 
 private:
-  TestWildcardTopic(const TestWildcardTopic&);
-  TestWildcardTopic& operator=(const TestWildcardTopic&);
+  TestSubscription(const TestSubscription&);
+  TestSubscription& operator=(const TestSubscription&);
   sci::cca::Services::pointer services;
 };
 
 
-class TestWildcardtopicgo : public sci::cca::ports::GoPort {
+class TestSubscriptionGo : public sci::cca::ports::GoPort {
 public:
-  virtual ~TestWildcardtopicgo() {}
-  void setParent(TestWildcardTopic *com) { this->com = com; }
+  virtual ~TestSubscriptionGo() {}
+  void setParent(TestSubscription *com) { this->com = com; }
   virtual int go();
 
 private:
-  TestWildcardTopic *com;
+  TestSubscription *com;
 
 };
 

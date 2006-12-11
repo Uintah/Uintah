@@ -27,17 +27,17 @@
 */
 
 
-#include<CCA/Components/TestWildcardTopic/TestWildcardTopic.h>
+#include<CCA/Components/TestSubscription/TestSubscription.h>
 #include<Framework/Internal/Topic.h>
 #include <Framework/TypeMap.h>
 
 using namespace SCIRun;
 
-extern "C" sci::cca::Component::pointer make_SCIRun_TestWildcardTopic()
+extern "C" sci::cca::Component::pointer make_SCIRun_TestSubscription()
 {
-  return sci::cca::Component::pointer(new TestWildcardTopic());
+  return sci::cca::Component::pointer(new TestSubscription());
 }
-void TestWildcardTopicEventListener::processEvent(const std::string &topicName, const sci::cca::Event::pointer &theEvent)
+void TestSubscriptionEventListener::processEvent(const std::string &topicName, const sci::cca::Event::pointer &theEvent)
 {
   try{
     sci::cca::TypeMap::pointer eventBody = theEvent->getBody();
@@ -50,28 +50,28 @@ void TestWildcardTopicEventListener::processEvent(const std::string &topicName, 
   }
 }
 
-TestWildcardTopic::TestWildcardTopic()
+TestSubscription::TestSubscription()
 {
 }
 
-TestWildcardTopic::~TestWildcardTopic()
+TestSubscription::~TestSubscription()
 {
   services->removeProvidesPort("go");
 }
 
-void TestWildcardTopic::setServices(const sci::cca::Services::pointer& svc)
+void TestSubscription::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
-  TestWildcardtopicgo *providesgp0 = new TestWildcardtopicgo();
+  TestSubscriptionGo *providesgp0 = new TestSubscriptionGo();
   providesgp0->setParent(this);
   sci::cca::TypeMap::pointer pProps0 = svc->createTypeMap();
-  svc->addProvidesPort(TestWildcardtopicgo::pointer(providesgp0), "go", "sci.cca.ports.GoPort", pProps0);
+  svc->addProvidesPort(TestSubscriptionGo::pointer(providesgp0), "go", "sci.cca.ports.GoPort", pProps0);
 
 }
 
-int TestWildcardtopicgo::go()
+int TestSubscriptionGo::go()
 {
-  std::cout<<"Inside Go Function of TestWildcardTopic\n";
+  std::cout<<"Inside Go Function of TestSubscription\n";
    sci::cca::ports::EventService::pointer ptr;
    try {
       sci::cca::Port::pointer pp = com->getServices()->getPort("cca.EventService");
@@ -83,55 +83,55 @@ int TestWildcardtopicgo::go()
       std::cout << e->getNote() << std::endl;
     return 1;
   }
-  sci::cca::EventListener::pointer evptr(new TestWildcardTopicEventListener);
+  sci::cca::EventListener::pointer evptr(new TestSubscriptionEventListener);
 
   sci::cca::Topic::pointer topicPtr = ptr->createTopic("randomTopic");
   sci::cca::Topic::pointer topicPtr1 = ptr->createTopic("test.Echo.one");
   sci::cca::Topic::pointer topicPtr2 = ptr->createTopic("test.Echo.two");
   sci::cca::Topic::pointer topicPtr3 = ptr->createTopic("test.random.one");
 
-  //  Register a Listener to a Wildcardtopic (with a '*' at the beginning)
-  std::cout << "Test 1 : Register a Listener to a Wildcardtopic(with a '*' at the beginning)\n";
+  //  Register a Listener to a Subscription (with a '*' at the beginning)
+  std::cout << "Test 1 : Register a Listener to a Subscription(with a '*' at the beginning)\n";
   try{
     sci::cca::Subscription::pointer subPtr1(ptr->subscribeToEvents("*.one"));
-    std::cout << "WildcardTopic successfully created\n";
-    subPtr1->registerEventListener(std::string("WildcardTopicListener"),evptr);
+    std::cout << "Subscription successfully created\n";
+    subPtr1->registerEventListener(std::string("SubscriptionListener"),evptr);
     std::cout << "Listener successfully registered\n";
   }
   catch(const sci::cca::EventServiceException::pointer &e){
-    std::cout << "Exceptiion in registering a listener to a WildcardTopic : " << e->getNote() << std::endl; 
+    std::cout << "Exceptiion in registering a listener to a Subscription : " << e->getNote() << std::endl; 
   }
   catch(const Exception &e){
     std::cout << "Unknown Exception\n";
   }
    
 
-  //  Register a Listener to a Wildcardtopic (which has a '%')
-  std::cout << "Test 2 : Register a Listener to a Wildcardtopic(with a '*' in the middle)\n";
+  //  Register a Listener to a Subscription (which has a '%')
+  std::cout << "Test 2 : Register a Listener to a Subscription(with a '*' in the middle)\n";
   try{
     sci::cca::Subscription::pointer subPtr2(ptr->subscribeToEvents("test.%.one"));
-    subPtr2->registerEventListener(std::string("WildcardTopicListener1"),evptr);
+    subPtr2->registerEventListener(std::string("SubscriptionListener1"),evptr);
     
     std::cout << "Listener successfully registered\n";
   }
   catch(const sci::cca::EventServiceException::pointer &e){
-    std::cout << "Exceptiion in registering a listener to a WildcardTopic : " << e->getNote() << std::endl; 
+    std::cout << "Exceptiion in registering a listener to a Subscription : " << e->getNote() << std::endl; 
   }
   catch(const Exception &e){
     std::cout << "Unknown Exception\n";
   }
   
 
-  //  Register a Listener to a Wildcardtopic (with a '*' at the end)
-  std::cout << "Test 3 : Register a Listener to a Wildcardtopic(with a '*' at the end)\n";
+  //  Register a Listener to a Subscription (with a '*' at the end)
+  std::cout << "Test 3 : Register a Listener to a Subscription(with a '*' at the end)\n";
   try{
     sci::cca::Subscription::pointer subPtr3(ptr->subscribeToEvents("test.*"));
-    subPtr3->registerEventListener(std::string("WildcardTopicListener2"),evptr);
+    subPtr3->registerEventListener(std::string("SubscriptionListener2"),evptr);
     
     std::cout << "Listener successfully registered\n";
   }
   catch(const sci::cca::EventServiceException::pointer &e){
-    std::cout << "Exceptiion in registering a listener to a WildcardTopic : " << e->getNote() << std::endl; 
+    std::cout << "Exceptiion in registering a listener to a Subscription : " << e->getNote() << std::endl; 
   }
   catch(const Exception &e){
     std::cout << "Unknown Exception\n";
@@ -139,8 +139,7 @@ int TestWildcardtopicgo::go()
 
 
   //Send Events
-  try{
-     
+  try {
      sci::cca::TypeMap::pointer eventBody = com->getServices()->createTypeMap();
      eventBody->putString(std::string("Event1"),std::string("Event sent to randomTopic"));
      topicPtr->sendEvent("randomTopic",eventBody);
@@ -156,9 +155,6 @@ int TestWildcardtopicgo::go()
      sci::cca::TypeMap::pointer eventBody3 = com->getServices()->createTypeMap();
      eventBody3->putString(std::string("Event3"),std::string("Event sent to test.random.one"));
      topicPtr3->sendEvent("test.random.one",eventBody3);
-
-
-
   }
   catch(const sci::cca::EventServiceException::pointer &e){
     std::cout << "EventService Exception : " << e->getNote() << std::endl;
