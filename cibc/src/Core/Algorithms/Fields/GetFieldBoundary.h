@@ -126,7 +126,7 @@ bool GetFieldBoundaryAlgoT<FSRC, FDST>::GetFieldBoundary(ProgressReporter *pr, F
       {
         imesh->get_nodes(inodes,delems[p]);
         if (onodes.size() == 0) onodes.resize(inodes.size());
-        for (int q=0; q< onodes.size(); q++)
+        for (unsigned int q=0; q< onodes.size(); q++)
         {
           a = inodes[q];
           hash_map_type::iterator it = node_map.find(static_cast<unsigned int>(a));
