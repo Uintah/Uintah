@@ -31,7 +31,6 @@
 SET(Dataflow_Modules_Converters_SRCS
   ConvertMatrixToString.cc
   ConvertMatrixToField.cc
-  ConvertNrrdToField.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Converters ${Dataflow_Modules_Converters_SRCS})
