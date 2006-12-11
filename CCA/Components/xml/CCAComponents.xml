@@ -118,9 +118,6 @@
   <library name="libCCA_Components_TestWildcardTopic.so">
     <component name="SCIRun.TestWildcardTopic" />
   </library>
-  <library name="libCCA_Components_TestCreateWildcardTopic.so">
-    <component name="SCIRun.TestCreateWildcardTopic" />
-  </library>
   <library name="libCCA_Components_samploecomponent.so">
     <component name="SCIRun.samploecomponent" />
   </library>

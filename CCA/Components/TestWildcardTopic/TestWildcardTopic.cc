@@ -89,22 +89,13 @@ int TestWildcardtopicgo::go()
   sci::cca::Topic::pointer topicPtr1 = ptr->createTopic("test.Echo.one");
   sci::cca::Topic::pointer topicPtr2 = ptr->createTopic("test.Echo.two");
   sci::cca::Topic::pointer topicPtr3 = ptr->createTopic("test.random.one");
-  //Create a WildcardTopic without a wildcard character
-  std::cout << "Test 1 : Creating a Wildcardtopic\n";
-  try{
-    sci::cca::WildcardTopic::pointer wildcardTopicPtr(ptr->createWildcardTopic("test.Echo.one"));
-    std::cout << "WildcardTopic successfully created\n";
-  }
-  catch(const sci::cca::EventServiceException::pointer &e){
-    std::cout << "Exception in creating a WildcardTopic " << e->getNote() << std::endl; 
-  }
 
   //  Register a Listener to a Wildcardtopic (with a '*' at the beginning)
   std::cout << "Test 1 : Register a Listener to a Wildcardtopic(with a '*' at the beginning)\n";
   try{
-    sci::cca::WildcardTopic::pointer wildcardTopicPtr1(ptr->createWildcardTopic("*.one"));
+    sci::cca::Subscription::pointer subPtr1(ptr->subscribeToEvents("*.one"));
     std::cout << "WildcardTopic successfully created\n";
-    wildcardTopicPtr1->registerEventListener(std::string("WildcardTopicListener"),evptr);
+    subPtr1->registerEventListener(std::string("WildcardTopicListener"),evptr);
     std::cout << "Listener successfully registered\n";
   }
   catch(const sci::cca::EventServiceException::pointer &e){
@@ -115,11 +106,11 @@ int TestWildcardtopicgo::go()
   }
    
 
-  //  Register a Listener to a Wildcardtopic (which has a '*' and  a '?')
+  //  Register a Listener to a Wildcardtopic (which has a '%')
   std::cout << "Test 2 : Register a Listener to a Wildcardtopic(with a '*' in the middle)\n";
   try{
-    sci::cca::WildcardTopic::pointer wildcardTopicPtr2(ptr->createWildcardTopic("t?st.*.?ne"));
-    wildcardTopicPtr2->registerEventListener(std::string("WildcardTopicListener1"),evptr);
+    sci::cca::Subscription::pointer subPtr2(ptr->subscribeToEvents("test.%.one"));
+    subPtr2->registerEventListener(std::string("WildcardTopicListener1"),evptr);
     
     std::cout << "Listener successfully registered\n";
   }
@@ -134,8 +125,8 @@ int TestWildcardtopicgo::go()
   //  Register a Listener to a Wildcardtopic (with a '*' at the end)
   std::cout << "Test 3 : Register a Listener to a Wildcardtopic(with a '*' at the end)\n";
   try{
-    sci::cca::WildcardTopic::pointer wildcardTopicPtr3(ptr->createWildcardTopic("test.*"));
-    wildcardTopicPtr3->registerEventListener(std::string("WildcardTopicListener2"),evptr);
+    sci::cca::Subscription::pointer subPtr3(ptr->subscribeToEvents("test.*"));
+    subPtr3->registerEventListener(std::string("WildcardTopicListener2"),evptr);
     
     std::cout << "Listener successfully registered\n";
   }
@@ -149,27 +140,22 @@ int TestWildcardtopicgo::go()
 
   //Send Events
   try{
-     sci::cca::TypeMap::pointer eventHeader = com->getServices()->createTypeMap();
      
      sci::cca::TypeMap::pointer eventBody = com->getServices()->createTypeMap();
      eventBody->putString(std::string("Event1"),std::string("Event sent to randomTopic"));
-     sci::cca::Event::pointer theEvent(new Event(eventHeader,eventBody));
-     topicPtr->sendEvent(theEvent);
+     topicPtr->sendEvent("randomTopic",eventBody);
 
      sci::cca::TypeMap::pointer eventBody1 = com->getServices()->createTypeMap();
      eventBody1->putString(std::string("Event1"),std::string("Event sent to test.Echo.one"));
-     sci::cca::Event::pointer theEvent1(new Event(eventHeader,eventBody1));
-     topicPtr1->sendEvent(theEvent1);
+     topicPtr1->sendEvent("test.Echo.one",eventBody1);
 
      sci::cca::TypeMap::pointer eventBody2 = com->getServices()->createTypeMap();
-     sci::cca::Event::pointer theEvent2(new Event(eventHeader,eventBody2));
      eventBody2->putString(std::string("Event2"),std::string("Event sent to test.Echo.two"));
-     topicPtr2->sendEvent(theEvent2);
+     topicPtr2->sendEvent("test.Echo.two",eventBody2);
 
      sci::cca::TypeMap::pointer eventBody3 = com->getServices()->createTypeMap();
      eventBody3->putString(std::string("Event3"),std::string("Event sent to test.random.one"));
-     sci::cca::Event::pointer theEvent3(new Event(eventHeader,eventBody3));
-     topicPtr3->sendEvent(theEvent3);
+     topicPtr3->sendEvent("test.random.one",eventBody3);
 
 
 
