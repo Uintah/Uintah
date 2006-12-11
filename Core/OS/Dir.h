@@ -40,8 +40,8 @@
 #include <direct.h>
 #include <sys/stat.h>
 #define S_IRUSR 0x0100
-#define	S_ISDIR(m)	(((m) & S_IFMT) == S_IFDIR)
-#define	S_ISREG(m)	(((m) & S_IFMT) == S_IFREG)
+#define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
+#define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
 #endif
 
 #include <Core/OS/share.h>
@@ -104,11 +104,11 @@ namespace SCIRun {
       Dir getSubdir(const std::string& name);
       bool exists();
 
-     void getFilenamesBySuffix(const std::string& suffix,
-			       std::vector<std::string>& filenames);
+      void getFilenamesBySuffix(const std::string& suffix,
+                                std::vector<std::string>& filenames);
 
       std::string getName() const {
-	 return name_;
+         return name_;
       }
    private:
 
