@@ -425,7 +425,7 @@ Painter::merge_layer(NrrdVolumeHandle &vol1) {
   NrrdVolumeHandle vol2 = 0;
   NrrdVolumeHandle parent = vol1.get_rep() ? vol1->parent_ : 0;
   NrrdVolumes &volumes =  parent.get_rep() ? parent->children_ : volumes_;
-  for (int i = 0; i < volumes.size()-1; ++i)
+  for (unsigned int i = 0; i < volumes.size()-1; ++i)
     if (volumes[i+1] == vol1)
       vol2 = volumes[i];
   if (!vol1.get_rep() || !vol2.get_rep()) return STOP_E;
