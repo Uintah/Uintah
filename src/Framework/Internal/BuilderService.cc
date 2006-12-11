@@ -93,12 +93,12 @@ BuilderService::createInstance(const std::string& instanceName,
   if(ptr.isNull()){
     std::cout << "Pointer returned is Null!!!\n";
   }
-  sci::cca::Topic::pointer topicPtr = ptr->getTopic("scirun2.services.builderservice.component.create");
+  std::string topicName = "scirun2.services.builderservice.component.create";
+  sci::cca::Topic::pointer topicPtr = ptr->getTopic(topicName);
   sci::cca::TypeMap::pointer eventBody = framework->createTypeMap();
   eventBody->putString(std::string("Event-ComponentCreation"),std::string(("Class Name-")+className));
-  sci::cca::TypeMap::pointer eventHeader = framework->createTypeMap();
-  sci::cca::Event::pointer eventPtr(new Event(eventHeader,eventBody));
-  topicPtr->sendEvent(eventPtr);
+
+  topicPtr->sendEvent(topicName,eventBody);
   framework->releaseFrameworkService("cca.EventService","EventService");
 
   if (instanceName.size()) {
@@ -248,14 +248,13 @@ void
 BuilderService::destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout)
 {
   sci::cca::Port::pointer pp = framework->getFrameworkService("cca.EventService","EventService");
-    sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
-  sci::cca::Topic::pointer topicPtr = ptr->getTopic("scirun2.services.builderservice.component.destroy");
+  sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
+  std::string topicName = "scirun2.services.builderservice.component.destroy";
+  sci::cca::Topic::pointer topicPtr = ptr->getTopic(topicName);
   sci::cca::TypeMap::pointer eventBody = framework->createTypeMap();
   eventBody->putString(std::string("Event-ComponentDestruction"),std::string(("Class Name-")+className));
-  sci::cca::TypeMap::pointer eventHeader = framework->createTypeMap();
-  //sci::cca::Event::pointer eventPtr = topicPtr->createEvent(eventHeader,eventBody);
-  sci::cca::Event::pointer eventPtr(new Event(eventHeader,eventBody));
-  topicPtr->sendEvent(eventPtr);
+
+  topicPtr->sendEvent(topicName,eventBody);
   framework->releaseFrameworkService("cca.EventService","EventService");
   framework->destroyComponentInstance(toDie, timeout);
   return;

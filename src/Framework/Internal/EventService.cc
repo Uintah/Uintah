@@ -28,7 +28,7 @@
 
 #include <Framework/Internal/EventService.h>
 #include <Framework/Internal/Topic.h>
-#include <Framework/Internal/WildcardTopic.h>
+#include <Framework/Internal/Subscription.h>
 #include <Framework/Internal/EventServiceException.h>
 #include <Framework/SCIRunFramework.h>
 #include <Framework/CCA/CCAException.h>
@@ -43,7 +43,7 @@ EventService::EventService(SCIRunFramework* framework)
 EventService::~EventService()
 {
   topicMap.clear();
-  wildcardTopicMap.clear();
+  subscriptionMap.clear();
 }
 
 sci::cca::ComponentID::pointer
@@ -87,17 +87,17 @@ sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
     topicPtr = iter->second;
   }
 
-  // for all WildcardTopics:
-  // check for matching topic name and add to newly created Topic's WildcardTopics map
-  for (WildcardTopicMap::iterator wildcardTopicIter = wildcardTopicMap.begin();
-       wildcardTopicIter != wildcardTopicMap.end(); wildcardTopicIter++) {
+  // for all Subscriptions:
+  // check for matching topic name and add to newly created Topic's Subscriptions map
+  for (SubscriptionMap::iterator subscriptionIter = subscriptionMap.begin();
+       subscriptionIter != subscriptionMap.end(); subscriptionIter++) {
 
-    if (isMatch(wildcardTopicIter->second->getTopicName(), topicName)) {
+    if (isMatch(subscriptionIter->second->getSubscriptionName(), topicName)) {
       Topic* t = dynamic_cast<Topic*>(topicPtr.getPointer());
       if (t == 0) {
         throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
       }
-      t->addWildcardTopic(topicName, wildcardTopicIter->second);
+      t->addSubscription(topicName, subscriptionIter->second);
 
     }
   }
@@ -118,57 +118,43 @@ sci::cca::Topic::pointer EventService::getTopic(const std::string &topicName)
   }
 }
 
-sci::cca::WildcardTopic::pointer EventService::createWildcardTopic(const std::string &topicName)
+sci::cca::Subscription::pointer EventService::subscribeToEvents(const std::string &topicName)
 {
   if (topicName.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
-  //Check if the last charecter is a '*'
-  if(topicName.at(topicName.size()-1)!= '*'){
-    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic Name format not supported: No character allowed after '*", sci::cca::Unexpected));
-  }
-  
-  //Check if topicName has more than one '*' s
-  int countStars = 0;
-  for(unsigned int i=0;i<topicName.size();i++)
-    if(topicName.at(i) == '*')
-      countStars++;
-  if(countStars > 1){
-    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic Name format not supported: More than one '*' not allowed", sci::cca::Unexpected));
-  }
-
-  sci::cca::WildcardTopic::pointer wildcardTopicPtr;
-  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
-  if (iter == wildcardTopicMap.end()) { // new WildcardTopic
-    wildcardTopicPtr = new WildcardTopic(topicName);
-    wildcardTopicMap[topicName] = wildcardTopicPtr;
-  } else { // WildcardTopic already present
-    wildcardTopicPtr = iter->second;
+  sci::cca::Subscription::pointer subscriptionPtr;
+  SubscriptionMap::iterator iter = subscriptionMap.find(topicName);
+  if (iter == subscriptionMap.end()) { // new Subscription
+    subscriptionPtr = new Subscription(topicName);
+    subscriptionMap[topicName] = subscriptionPtr;
+  } else { // Subscription already present
+    subscriptionPtr = iter->second;
   }
 
   // for all Topics:
-  // add newly created WildcardTopic to matching Topic's WildcardTopics map
+  // add newly created Subscription to matching Topic's Subscriptions map
   for (TopicMap::iterator topicIter = topicMap.begin(); topicIter != topicMap.end(); topicIter++) {
     if (isMatch(topicIter->second->getTopicName(), topicName)) {
       Topic* t = dynamic_cast<Topic*>((topicIter->second).getPointer());
       if (t == 0) {
         throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
       }
-      t->addWildcardTopic(topicName, wildcardTopicPtr);
+      t->addSubscription(topicName, subscriptionPtr);
     }
   }
-  return wildcardTopicPtr;
+  return subscriptionPtr;
 }
 
-sci::cca::WildcardTopic::pointer EventService::getWildcardTopic(const std::string &topicName)
+sci::cca::Subscription::pointer EventService::getSubscription(const std::string &topicName)
 {
   if (topicName.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
-  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
-  if (iter == wildcardTopicMap.end()) {
+  SubscriptionMap::iterator iter = subscriptionMap.find(topicName);
+  if (iter == subscriptionMap.end()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
   } else {
     return iter->second;
@@ -188,28 +174,28 @@ void EventService::releaseTopic(const std::string &topicName)
   topicMap.erase(iter);
 }
 
-void EventService::releaseWildcardTopic(const std::string &topicName)
+void EventService::releaseSubscription(const sci::cca::Subscription::pointer& subscription)
 {
-  if (topicName.empty()) {
+  if (subscription.isNull()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
-  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
-  if (iter == wildcardTopicMap.end()) {
+  SubscriptionMap::iterator iter = subscriptionMap.find(subscription->getSubscriptionName());
+  if (iter == subscriptionMap.end()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
   }
 
-  // for all Topics that match this WildcardTopic: remove this WildcardTopic from the wildcardTopicsMap
+  // for all Topics that match this Subscription: remove this Subscription from the subscriptionsMap
   for (TopicMap::iterator topicIter = topicMap.begin(); topicIter != topicMap.end(); topicIter++) {
-    if (isMatch(topicIter->second->getTopicName(), topicName)) {
+    if (isMatch(topicIter->second->getTopicName(), subscription->getSubscriptionName())) {
       Topic* t = dynamic_cast<Topic*>((topicIter->second).getPointer());
       if (t == 0) {
         throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
       }
-      t->removeWildcardTopic(topicName);
+      t->removeSubscription(subscription->getSubscriptionName());
     }
   }
-  wildcardTopicMap.erase(iter);
+  subscriptionMap.erase(iter);
 }
 
 void EventService::processEvents()
@@ -229,22 +215,57 @@ void EventService::processEvents()
 }
 
 
-// TODO: check wildcardTopicName for correct formatting?
+// TODO: check subscriptionName for correct formatting?
 // Note: WildcadTopic format needs to decided.
-bool EventService::isMatch(const std::string& topicName, const std::string& wildcardTopicName)
+bool EventService::isMatch(const std::string& topicName, const std::string& subscriptionName)
 {
-  std::string::size_type wildcardTokenPos = wildcardTopicName.rfind('*');
+  std::string::size_type s_star = subscriptionName.find('*');
 
-  // found a wildcard token at the end of the wildcard topic name
-  if (wildcardTokenPos != std::string::npos) {
-    std::string wc = wildcardTopicName.substr(0, wildcardTokenPos);
-    std::string::size_type loc = topicName.find(wc);
+  if(s_star != std::string::npos) {
+    std::string word = subscriptionName.substr(0, s_star);
+    std::string::size_type t_start = topicName.find(word);
+    std::string::size_type s_newstar = 0;
+    std::string::size_type t_end = 0;
 
-    // found a substring matching topic name up to wildcard position
-    if (loc == 0) {
-      return true;
+    if(t_start == 0) {
+      while(t_start != std::string::npos) {
+        if(subscriptionName.length() == s_star) return true; 
+
+        t_end = t_start + word.length();
+        s_newstar = subscriptionName.find('*',s_star+1);
+        if(s_newstar == std::string::npos) s_newstar = subscriptionName.length();
+        word = subscriptionName.substr(s_star+1, s_newstar);
+        s_star = s_newstar; 
+
+        t_start = topicName.find(word,t_end+1);
+      }
     }
   }
+
+  std::string::size_type s_percent = subscriptionName.find('%');
+  if(s_percent != std::string::npos) {
+    std::string word = subscriptionName.substr(0, s_percent);
+    std::string::size_type t_start = topicName.find(word);
+    std::string::size_type s_newpercent = 0;
+    std::string::size_type t_end = 0;
+
+    if(t_start == 0) {
+      while(t_start != std::string::npos) {
+        if(subscriptionName.length() == s_percent) return true; 
+        
+        t_end = t_start + word.length();
+        s_newpercent = subscriptionName.find('%',s_percent+1);
+        if(s_newpercent == std::string::npos) s_newpercent = subscriptionName.length();
+        word = subscriptionName.substr(s_percent+1, s_newpercent);
+        s_percent = s_newpercent; 
+
+        t_start = topicName.find(word,t_end+1);
+        if(t_start != t_end+1) break;
+      }
+    }
+
+  }
+
 
   return false;
 }

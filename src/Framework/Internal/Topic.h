@@ -53,8 +53,8 @@ public:
   Event(const sci::cca::TypeMap::pointer& theHeader, const sci::cca::TypeMap::pointer& theBody)
      : header(theHeader), body(theBody) {}
 
-  virtual void setHeader(const sci::cca::TypeMap::pointer& h) { header = h; }
-  virtual void setBody(const sci::cca::TypeMap::pointer& b) { body = b; }
+  //virtual void setHeader(const sci::cca::TypeMap::pointer& h) { header = h; }
+  //virtual void setBody(const sci::cca::TypeMap::pointer& b) { body = b; }
 
   virtual sci::cca::TypeMap::pointer getHeader() { return header; }
   virtual sci::cca::TypeMap::pointer getBody() { return body; }
@@ -81,21 +81,7 @@ public:
    * Sends an Event with the specified \em eventBody.
    * The parameter \em eventBody is a pointer to a CCA TypeMap of the \em message to be sent.
    */
-  virtual void sendEvent(const sci::cca::Event::pointer& theEvent);
-
-  /**
-   * Adds a \em listener to the collection of listeners for this Topic.
-   * The parameter \em listenerKey is used as an index to the collection
-   * (STL map) and the parameter \em theListener is the Topic's handle
-   * on an EventListener object.
-   */
-  virtual void registerEventListener(const std::string& listenerKey, const sci::cca::EventListener::pointer& theListener);
-
-  /**
-   * Removes a listener from the collection of listeners for this Topic.
-   * The parameter \em listenerKey is used as an index.
-   */
-  virtual void unregisterEventListener(const std::string& listenerKey);
+  virtual void sendEvent(const std::string& topicName, const sci::cca::TypeMap::pointer& theBody);
 
   /**  Returns the \em topicName for this Topic. */
   virtual std::string getTopicName() { return topicName; }
@@ -115,18 +101,18 @@ public:
   void processEvents();
 
   /**
-   * Adds a WildcardTopic to the list of Wildcard Topics that correspond to this Topic.
-   * The Parameter \em theWildcardTopic is a pointer to the WildcardTopic that is to be added.
+   * Adds a Subscription to the list of Wildcard Topics that correspond to this Topic.
+   * The Parameter \em theSubscription is a pointer to the Subscription that is to be added.
    */
-  void addWildcardTopic(const std::string& topicName, const sci::cca::WildcardTopic::pointer& theWildcardTopic);
+  void addSubscription(const std::string& topicName, const sci::cca::Subscription::pointer& theSubscription);
 
-  /** Removes a WildcardTopic from the list of WildcardTopics. */
-  void removeWildcardTopic(const std::string& topicName);
+  /** Removes a Subscription from the list of Subscriptions. */
+  void removeSubscription(const std::string& topicName);
 
   std::string topicName;
   EventPtrList eventList;
   EventListenerMap eventListenerMap;
-  WildcardTopicMap wildcardTopicMap;
+  SubscriptionMap subscriptionMap;
   SCIRunFramework *framework;
 };
 

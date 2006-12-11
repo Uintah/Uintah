@@ -26,8 +26,8 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef Framework_WildcardTopic_h
-#define Framework_WildcardTopic_h
+#ifndef Framework_Subscription_h
+#define Framework_Subscription_h
 
 #include <Framework/Internal/EventService.h>
 #include <Framework/Internal/Topic.h>
@@ -36,20 +36,20 @@
 namespace SCIRun {
 
 /**
- * \class WildcardTopic
+ * \class Subscription
  *
- * A WildcardTopic is a collection of Topics.
- * One WildcardTopic may correspond to multiple \em Topics.
- * All listeners to WildcardTopics must also implement the EventListener interface.
+ * A Subscription is a collection of Topics.
+ * One Subscription may correspond to multiple \em Topics.
+ * All listeners to Subscriptions must also implement the EventListener interface.
  *
  * \sa Topic
  */
-class WildcardTopic : public sci::cca::WildcardTopic {
+class Subscription : public sci::cca::Subscription {
 public:
-  virtual ~WildcardTopic();
+  virtual ~Subscription();
 
   /**
-   * Adds a \em listener to the collection of listeners for this WildcardTopic.
+   * Adds a \em listener to the collection of listeners for this Subscription.
    * The parameter \em listenerKey is used as an index to the collection
    * (STL map) and the parameter \em theListener is a pointer to the /em Listener class
    */
@@ -61,15 +61,16 @@ public:
    */
   virtual void unregisterEventListener(const std::string &listenerKey);
 
-  /* Returns the \em topicName for this Topic. */
-  virtual std::string getTopicName() { return topicName; }
+  /* Returns the \em subscriptionName for this Subscription. */
+  virtual std::string getSubscriptionName() { return subscriptionName; }
 
 private:
   friend class EventService;
   friend class Topic;
+  const sci::cca::Subscription::pointer subscription;
 
   // private constructor used only by EventService
-  WildcardTopic(const std::string& name);
+  Subscription(const std::string& name);
 
   /**
    * Iterates through all the \em listeners for this Topic and calls processEvents()
@@ -77,7 +78,7 @@ private:
    */
   void processEvents(const EventPtrList& eventList);
 
-  std::string topicName;
+  std::string subscriptionName;
   EventListenerMap eventListenerMap;
 };
 
