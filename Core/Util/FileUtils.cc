@@ -32,19 +32,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #ifndef _WIN32
-#include <unistd.h>
-#include <dirent.h>
+#  include <unistd.h>
+#  include <dirent.h>
 #else
-#include <io.h>
-typedef unsigned short mode_t;
-#define MAXPATHLEN 256
+#  include <io.h>
+   typedef unsigned short mode_t;
+#  define MAXPATHLEN 256
 #endif
+
 #include <sys/stat.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h>
+
 namespace SCIRun {
 
+  using std::string;
+  using std::map;
+  using std::pair;
 
 /* Normally, I would just use sed via system() to edit a file,
    but for some reason system() calls never work from Dataflow 
@@ -52,7 +58,8 @@ namespace SCIRun {
    under windows, so I'd have to do something like this anyhow
    - Chris Moulding */ 
 
-void InsertStringInFile(char* filename, char* match, char* replacement)
+void
+InsertStringInFile(char* filename, char* match, char* replacement)
 {
   char* newfilename = new char[strlen(filename)+2];
   char c;
@@ -82,15 +89,15 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
     if (c==match[index2]) {
       foundat = index1;
       while (index2<strlen(match) && c!=(char)EOF && c==match[index2]) {
-	c = (char)fgetc(ifile);
-	index1++;
-	index2++;
+        c = (char)fgetc(ifile);
+        index1++;
+        index2++;
       }
       if (foundat>=0 && index2!=strlen(match)) {
-	foundat = -1;
-	index2 = 0;
+        foundat = -1;
+        index2 = 0;
       } else
-	break;
+        break;
     }
     c = (char)fgetc(ifile);
     index1++;
@@ -127,7 +134,7 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
 
   string = new char[strlen(match)+strlen(replacement)+100];
   sprintf(string,"sed -e 's,%s,%s,g' %s > %s.mod &\n",match,mod,
-	  filename,filename);
+          filename,filename);
   system(string);
 
   sprintf(string,"mv -f %s.mod %s\n",filename,filename);
@@ -138,9 +145,10 @@ void InsertStringInFile(char* filename, char* match, char* replacement)
 }
 #endif
 
-std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
+map<int,char*>*
+GetFilenamesEndingWith(char* d, char* ext)
 {
-  std::map<int,char*>* newmap = 0;
+  map<int,char*>* newmap = 0;
   dirent* file = 0;
   DIR* dir = opendir(d);
   char* newstring = 0;
@@ -148,15 +156,15 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   if (!dir) 
     return 0;
 
-  newmap = new std::map<int,char*>;
+  newmap = new map<int,char*>;
 
   file = readdir(dir);
   while (file) {
     if ((strlen(file->d_name)>=strlen(ext)) && 
-	(strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext)]),ext)==0)) {
+        (strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext)]),ext)==0)) {
       newstring = new char[strlen(file->d_name)+1];
       sprintf(newstring,"%s",file->d_name);
-      newmap->insert(std::pair<int,char*>(newmap->size(),newstring));
+      newmap->insert(pair<int,char*>(newmap->size(),newstring));
     }
     file = readdir(dir);
   }
@@ -165,9 +173,8 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   return newmap;
 }
 
-
 bool
-validFile(std::string filename) 
+validFile( string filename ) 
 {
   struct stat buf;
   if (stat(filename.c_str(), &buf) == 0)
@@ -178,10 +185,8 @@ validFile(std::string filename)
   return false;
 }
 
-
-
 bool
-validDir(std::string dirname) 
+validDir( string dirname ) 
 {
   struct stat buf;
   if (stat(dirname.c_str(), &buf) == 0)
@@ -192,8 +197,16 @@ validDir(std::string dirname)
   return false;
 }
     
-
-  
-
+bool
+isSymLink( string filename ) 
+{
+  struct stat buf;
+  if( lstat(filename.c_str(), &buf) == 0 )
+  {
+    mode_t &m = buf.st_mode;
+    return( m & S_ISLNK(m) );
+  }
+  return false;
+}
 
 } // End namespace SCIRun
