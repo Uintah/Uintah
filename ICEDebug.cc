@@ -623,7 +623,7 @@ void    ICE::symmetryTest_driver( int matl,
               if (abs_diff > d_dbgSym_absolute_tol || 
                   rel_diff > d_dbgSym_relative_tol){
                 if (printHeader) {  
-                  cerr << "____________________________________________Symmetry Test\n";
+                  cerr << "____________________________________________Symmetry Test L-"<<levelIndx<<"\n";
                   cerr << "$" << message2 <<"\t " << message1 <<endl;
                   printHeader = false; 
                 } 
@@ -754,7 +754,7 @@ void    ICE::symmetryTest_Vector( int matl,
                   rel_diff.length() > d_dbgSym_relative_tol){
                   
                if (printHeader) {  
-                  cerr << "____________________________________________Symmetry Test\n";
+                  cerr << "____________________________________________Symmetry Test L-"<<levelIndx<<"\n";
                   cerr << "$" << message2 <<"\t " << message1 <<endl;
                   printHeader = false; 
                 } 
