@@ -41,9 +41,9 @@ namespace SCIRun {
 
 class SCIRunFramework;
 class Topic;
-class WildcardTopic;
+class Subscription;
 
-typedef std::map<std::string, sci::cca::WildcardTopic::pointer> WildcardTopicMap;
+typedef std::map<std::string, sci::cca::Subscription::pointer> SubscriptionMap;
 typedef std::map<std::string, sci::cca::Topic::pointer> TopicMap;
 typedef std::map<std::string, sci::cca::EventListener::pointer> EventListenerMap;
 
@@ -57,7 +57,6 @@ typedef std::map<std::string, sci::cca::EventListener::pointer> EventListenerMap
  *
  * \sa SCIRunFramework
  * \sa Topic
- * \sa WildcardTopic
  */
 
 class EventService :  public sci::cca::ports::EventService,
@@ -96,13 +95,11 @@ public:
    */
   virtual sci::cca::Topic::pointer createTopic(const std::string& topicName);
 
-  /**
-   * Creates a new WildcardTopic and returns a reference-counted pointer
-   * to the newly created instance.
-   * If another WildcardTopic already exists with the same \em topicName
-   * then it returns a reference-counted pointer to that instance.
+  /*
+   * Creates a new Subscription and returns a reference-counted
+   * pointer to the newly created instance.  
    */
-  virtual sci::cca::WildcardTopic::pointer createWildcardTopic(const std::string& topicName);
+  virtual sci::cca::Subscription::pointer subscribeToEvents(const std::string& topicName);
 
   /**
    * Returns a reference-counted pointer to the Topic with the given
@@ -111,16 +108,16 @@ public:
   virtual sci::cca::Topic::pointer getTopic(const std::string& topicName);
 
   /**
-   * Returns a reference-counted pointer to the WildcardTopic with the given
+   * Returns a reference-counted pointer to the Subscription with the given
    * \em topicName.
    */
-  virtual sci::cca::WildcardTopic::pointer getWildcardTopic(const std::string& topicName);
+  virtual sci::cca::Subscription::pointer getSubscription(const std::string& topicName);
 
   /** Removes the Topic with this \em topicName from the list of Topics. */
   virtual void releaseTopic(const std::string& topicName);
 
-  /** Removes the WildcardTopic with this \em topicName from the list of Topics. */
-  virtual void releaseWildcardTopic(const std::string& topicName);
+  /** Removes the Subscription with this \em topicName from the list of Topics. */
+  virtual void releaseSubscription(const sci::cca::Subscription::pointer& subscription);
 
   /** Iterates through the list of topics and calls processEvents() for each Topic. */
   virtual void processEvents();
@@ -130,7 +127,7 @@ private:
   bool isMatch(const std::string& topicName, const std::string& wildcardTopicName);
 
   TopicMap topicMap;
-  WildcardTopicMap wildcardTopicMap;
+  SubscriptionMap subscriptionMap;
 };
 
 }

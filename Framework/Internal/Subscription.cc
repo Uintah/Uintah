@@ -26,21 +26,21 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <Framework/Internal/WildcardTopic.h>
+#include <Framework/Internal/Subscription.h>
 #include <Framework/Internal/EventServiceException.h>
 
 namespace SCIRun {
 
-WildcardTopic::WildcardTopic(const std::string& name) : topicName(name)
+Subscription::Subscription(const std::string& name) : subscriptionName(name)
 {
 }
 
-WildcardTopic::~WildcardTopic()
+Subscription::~Subscription()
 {
   eventListenerMap.clear();
 }
 
-void WildcardTopic::registerEventListener(const std::string &listenerKey, const sci::cca::EventListener::pointer& theListener)
+void Subscription::registerEventListener(const std::string &listenerKey, const sci::cca::EventListener::pointer& theListener)
 {
   if (listenerKey.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Listener key is empty", sci::cca::Unexpected));
@@ -56,7 +56,7 @@ void WildcardTopic::registerEventListener(const std::string &listenerKey, const 
   eventListenerMap[listenerKey] = theListener;
 }
 
-void WildcardTopic::unregisterEventListener(const std::string& listenerKey)
+void Subscription::unregisterEventListener(const std::string& listenerKey)
 {
   if (listenerKey.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Listener key is empty", sci::cca::Unexpected));
@@ -69,7 +69,7 @@ void WildcardTopic::unregisterEventListener(const std::string& listenerKey)
   eventListenerMap.erase(iter);
 }
 
-void WildcardTopic::processEvents(const EventPtrList& eventList)
+void Subscription::processEvents(const EventPtrList& eventList)
 {
   if (eventListenerMap.empty()) {
     return;
@@ -85,7 +85,7 @@ void WildcardTopic::processEvents(const EventPtrList& eventList)
     // Call processEvent() on each Listener
     for (unsigned int i = 0; i < eventList.size(); i++) {
       // Call processEvent() on each event
-      eventListenerIter->second->processEvent(topicName, eventList[i]);
+      eventListenerIter->second->processEvent(subscriptionName, eventList[i]);
     }
   }
 }
