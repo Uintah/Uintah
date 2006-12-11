@@ -26,12 +26,12 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := CCA/Components/TestWildcardTopic
+SRCDIR := CCA/Components/TestSubscription
 
-SRCS += $(SRCDIR)/TestWildcardTopic.cc \
+SRCS += $(SRCDIR)/TestSubscription.cc \
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL  \
-  Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
+           Core/Thread Core/Containers Core/Exceptions
 
 ifeq ($(HAVE_GUI),yes)
   LIBS := $(WX_LIBRARY)
@@ -39,5 +39,4 @@ endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/TestWildcardTopic.o: Core/CCA/spec/cca_sidl.h
-
+$(SRCDIR)/TestSubscription.o: Core/CCA/spec/cca_sidl.h
