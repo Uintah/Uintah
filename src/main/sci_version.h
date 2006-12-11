@@ -31,7 +31,7 @@
 
 // When changing the version, be sure to also update 
 // src/scirunrc's SCIRUN_RCFILE_VERSION variable
-#define SCIRUN_VERSION "1.25.3"
+#define SCIRUN_VERSION "3.0.0"
 #define SCIRUN_RCFILE_SUBVERSION "0"
 
 
