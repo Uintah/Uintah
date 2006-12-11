@@ -77,7 +77,8 @@ ELSE(NOT SCIRUN_THIRDPARTY_PATH)
 ENDIF(NOT SCIRUN_THIRDPARTY_PATH)
 
 IF(NOT SCIRUN_THIRDPARTY_PATH_SET)
-  MESSAGE(FATAL_ERROR "SCIRUN_THIRDPARTY_PATH must be specified to build. Please re-run cmake and specify a valid path to the SCIRun Thirdparty (version ${SCIRUN_VERSION_STRING}) using the SCIRUN_THIRDPARTY_PATH variable. This path must contain the SCIRUN_THIRDPARTY_VERSION file.")
+  SET(SCIRUN_THIRDPARTY_PATH "." CACHE PATH "Path to SCIRun's Thirdparty")
+  MESSAGE(FATAL_ERROR "\n\nSCIRUN_THIRDPARTY_PATH must be specified to build. Please re-run cmake and specify a valid path to the SCIRun Thirdparty (version ${SCIRUN_VERSION_STRING}) using the SCIRUN_THIRDPARTY_PATH variable. This path must contain the SCIRUN_THIRDPARTY_VERSION file.\n\n")
 ENDIF(NOT SCIRUN_THIRDPARTY_PATH_SET)
 
 FIND_PATH(SCIRUN_THIRDPARTY_PATH_CHECK SCIRUN_THIRDPARTY_VERSION ${SCIRUN_THIRDPARTY_PATH})
