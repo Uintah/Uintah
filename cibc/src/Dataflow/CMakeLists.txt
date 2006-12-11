@@ -277,6 +277,9 @@ ENDFOREACH( pkg )
 ADD_EXECUTABLE(scirun
 ${SCIRUN_CORE_SOURCE_DIR}/main/main.cc)
 
+ADD_EXECUTABLE(scirunremote
+${SCIRUN_CORE_SOURCE_DIR}/main/scirunremote.cc)
+
 SET(SCIRUN_LIBS
   Core_Basis         
   Core_Comm          
@@ -306,7 +309,8 @@ ENDIF(NOT WIN32)
 TARGET_LINK_LIBRARIES(scirun ${SCIRUN_LIBS}
 )
 
-
+TARGET_LINK_LIBRARIES(scirunremote ${SCIRUN_LIBS}
+)
 
 IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
     TARGET_LINK_LIBRARIES(scirun Core_Datatypes Core_ImportExport Core_Persistent)
