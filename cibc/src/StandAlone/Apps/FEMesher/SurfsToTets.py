@@ -39,6 +39,7 @@ import sys, os
 import time
 import thread
 import threading
+import re
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -51,7 +52,7 @@ import glob
 import pysci
 
  
-#import gtk.gtkgl
+path_exp = re.compile("(.+/)(.+)")
 
 def do_tetgen(stobj, in1, in2, out) :
         stobj.status = 0;
@@ -252,6 +253,14 @@ class SurfsToTets:
     self.shortcuts_added_ = 0
     self.pbar_state = 0
     self.pbar_ = self.xml_.get_widget("progress")
+    self.sbar_ = self.xml_.get_widget("status_bar")
+    print self.sbar_
+    print "^^^^^"
+    
+    self.sbar_ctx_ = self.sbar_.get_context_id("Main Notification Area")
+    print self.sbar_ctx_
+
+    
     self.drawing_area = None
     self.list_view_ = self.xml_.get_widget("model_treeview")
     self.mat_list_view_ = self.xml_.get_widget("material_treeview")
@@ -291,7 +300,7 @@ class SurfsToTets:
     return handler(str1, str2, int1, int2)
 
   def init_model_treeview(self) :
-
+	  
     ls = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
 		       gobject.TYPE_STRING)
 
@@ -347,6 +356,8 @@ class SurfsToTets:
     sel = self.list_view_.get_selection()
     l = sel.get_selected()[0]
     it = sel.get_selected()[1]
+
+    if it == None : return
  
 ##     print l.get_path(it)
 ##     print l.get_value(it, 1)
@@ -369,6 +380,7 @@ class SurfsToTets:
     # the selected field id.
     fid = -1
     fid = l.get_value(it, 2)
+    self.show_status_msg("%s is selected." % l.get_value(it, 1))
     pysci.selection_target_changed(int(fid))
 
 
@@ -412,8 +424,13 @@ class SurfsToTets:
 	print "Error loading file: %s" % self.file_
 	return
       pysci.show_field(fld_id)
+      fstr = self.file_
+      mo = path_exp.match(fstr)
+      if mo != None :
+        fstr = mo.group(2)
+
       ls = self.list_view_.get_model()
-      ls.insert(0, (gtk.STOCK_YES, self.file_, fld_id))
+      ls.insert(0, (gtk.STOCK_YES, fstr, fld_id))
 
       
   def on_chooser_open_clicked(self, button) :
@@ -440,7 +457,7 @@ class SurfsToTets:
 
   def create_ogl_window(self, str1, str2, int1, int2) :
     print "creation function"
-
+    
     # Query the OpenGL extension version.
     print "OpenGL extension version - %d.%d\n" % gtk.gdkgl.query_version()
 
@@ -594,6 +611,21 @@ class SurfsToTets:
     e.set_tool_mode("faces")
     pysci.add_tm_notify_event(e)
 
+  def on_test_mesh_clicked(self, a) :
+    sel = self.list_view_.get_selection()
+    it = sel.get_selected()[1]
+    if it == None :
+      self.show_status_msg("No mesh currently selected.")
+      return
+    
+    msg = "Testing selected mesh with TetGen."
+    self.show_status_msg(msg)
+
+
+  def show_status_msg(self, msg) :
+    self.sbar_.pop(self.sbar_ctx_)
+    self.sbar_.push(self.sbar_ctx_, msg)
+    
   #sel_cb is the check button in the menu.
   def on_show_model_manip_activate(self, sel_cb) :
     sel_tb = self.xml_.get_widget("model_manip")
@@ -614,9 +646,9 @@ class SurfsToTets:
     ls.remove(it)
 
 
-  def on_en_surf_button_clicked(self, w) :
-##     if self.proj_dir_ == None :
-##       return
+  def on_gen_surf_button_clicked(self, w) :
+    if self.proj_dir_ == None :
+      return
 
     ls = self.mat_list_view_.get_model()
     for i in ls :
