@@ -40,6 +40,8 @@ spacing_re = re.compile("space directions: \(([\-\d\.]+),?[\-\d\.]+,?[\-\d\.]+\)
 maxval = 0
 axsizes = ()
 small_ax = 99999999
+#maxaxis = 252
+maxaxis = 124
 
 def inspect_nrrd(innrrd) :
     global axsizes
@@ -117,6 +119,8 @@ def make_lut (idx) :
 def uniform_resample_nnrd(idx) :
     global small_ax
     global axsizes
+    global maxaxis
+    
     small_ax = 99999999
     if axsizes[0] < small_ax :
         small_ax = axsizes[0]
@@ -124,6 +128,9 @@ def uniform_resample_nnrd(idx) :
         small_ax = axsizes[1]
     if axsizes[2] < small_ax :
         small_ax = axsizes[2]
+
+    if small_ax > maxaxis :
+        small_ax = maxaxis
         
     # create a uniformly sampled nrrd
     cmmd = "unu resample -s %d %d %d -k cubic:0,0.5 "\
@@ -171,7 +178,7 @@ def afront_isosurface(f, t) :
     iv = t[1]
     
     exe = "/scratch/mjc/afront-claudio/afront"
-    cmmd = "%s -nogui %s -failsafe f -rho 0.5 -tri %f bspline" % (exe, f, iv)
+    cmmd = "%s -nogui %s -failsafe f -rho .52 -min_step .75 -idealNumThreads 4 -tri %f bspline" % (exe, f, iv)
     
     print cmmd
     os.system(cmmd)
@@ -191,8 +198,9 @@ if __name__ == "__main__" :
     inspect_nrrd(nrrd)
     # (index, isoval) pairs : We chose isovals such that adjacent surfaces
     # to not intersect, which would make tetgen fail.
-    mats = ((0, 0.501), (8, 0.63), (9, 0.501), (11, 0.68))
-    #mats = ((8, 0.63), (11, 0.68))
+    #mats = ((0, 0.501), (8, 0.63), (9, 0.501), (11, 0.68))
+    mats = ((0, 0.5),(7, 0.5), (8, 0.5), (9, 0.5), (10, 0.5))
+    #mats = ((8, 0.501),)
     for t in mats :
         idx = t[0]
         make_solo_material(idx, nrrd)
