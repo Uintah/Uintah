@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-//    File   : BuildNrrdGradients.cc
+//    File   : BuildNrrdGradient.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep  8 09:46:49 2003
 
@@ -40,26 +40,26 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class BuildNrrdGradients : public Module {
+class BuildNrrdGradient : public Module {
 public:
-  BuildNrrdGradients(SCIRun::GuiContext *ctx);
-  virtual ~BuildNrrdGradients();
+  BuildNrrdGradient(SCIRun::GuiContext *ctx);
+  virtual ~BuildNrrdGradient();
   virtual void execute();
 };
 
-DECLARE_MAKER(BuildNrrdGradients)
+DECLARE_MAKER(BuildNrrdGradient)
 
-BuildNrrdGradients::BuildNrrdGradients(SCIRun::GuiContext *ctx) : 
-  Module("BuildNrrdGradients", ctx, Filter, "Misc", "Teem")
+BuildNrrdGradient::BuildNrrdGradient(SCIRun::GuiContext *ctx) : 
+  Module("BuildNrrdGradient", ctx, Filter, "Misc", "Teem")
 {
 }
 
-BuildNrrdGradients::~BuildNrrdGradients()
+BuildNrrdGradient::~BuildNrrdGradient()
 {
 }
 
 void 
-BuildNrrdGradients::execute()
+BuildNrrdGradient::execute()
 {
   update_state(NeedData);
 

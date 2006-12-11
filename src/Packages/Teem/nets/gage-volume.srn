@@ -172,7 +172,7 @@
       <var name="resampAxis1" val="{128}"/>
       <var name="resampAxis2" val="{128}"/>
     </module>
-    <module category="Misc" id="m8" name="BuildTextureWithGradientsFromNrrds" package="Teem">
+    <module category="Misc" id="m8" name="BuildNrrdGradientAndMagnitude" package="Teem">
       <position x="1" y="140"/>
       <var name="realmin" val="{0.0}"/>
       <var name="realmax" val="{2407.0}"/>

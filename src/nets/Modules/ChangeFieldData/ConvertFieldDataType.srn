@@ -141,11 +141,7 @@
     </module>
     <module category="ChangeFieldData" id="m7" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="47" y="112"/>
-      <var name="function" val="{const double min1 = -5.25315;
-const double max1 = 4.31926;
-result = (v - min1) / (max1 - min1);
-result = result * 255.0;
-}"/>
+      <var name="function" val="{const double min1 = -5.25315; const double max1 = 4.31926; result = (v - min1) / (max1 - min1); result = result * 255.0; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
   </modules>

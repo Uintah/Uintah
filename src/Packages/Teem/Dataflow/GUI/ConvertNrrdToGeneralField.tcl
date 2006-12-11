@@ -25,16 +25,16 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-#    File   : ConvertNrrdToRasterField.tcl
+#    File   : ConvertNrrdToGeneralField.tcl
 #    Author : Darby Van Uitert
 #    Date   : March 2004
 
-catch {rename Teem_Converters_ConvertNrrdToRasterField ""}
+catch {rename Teem_Converters_ConvertNrrdToGeneralField ""}
 
-itcl_class Teem_Converters_ConvertNrrdToRasterField {
+itcl_class Teem_Converters_ConvertNrrdToGeneralField {
     inherit Module
     constructor {config} {
-        set name ConvertNrrdToRasterField
+        set name ConvertNrrdToGeneralField
         set_defaults
     }
 

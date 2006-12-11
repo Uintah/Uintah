@@ -165,8 +165,7 @@
     </module>
     <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="71" y="96"/>
-      <var name="function" val="{result = x + y + z;
-}"/>
+      <var name="function" val="{result = x + y + z; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="Visualization" id="m6" name="RescaleColorMap" package="SCIRun">

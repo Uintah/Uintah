@@ -30,8 +30,8 @@
 
 SET(Packages_Teem_Dataflow_Modules_Misc_SRCS
   BuildDerivedNrrdWithGage.cc
-  BuildNrrdGradients.cc
-  BuildTextureWithGradientsFromNrrds.cc
+  BuildNrrdGradient.cc
+  BuildNrrdGradientAndMagnitude.cc
   ClassifyHeadTissuesFromMultiMRI.cc
   ChooseNrrd.cc
   ReportNrrdInfo.cc

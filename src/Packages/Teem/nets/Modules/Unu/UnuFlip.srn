@@ -77,7 +77,7 @@
     <module category="Converters" id="m3" name="ConvertRasterFieldToNrrd" package="Teem">
       <position x="132" y="84"/>
     </module>
-    <module category="Converters" id="m4" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m4" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="26" y="285"/>
       <var name="datasets" val="{{Points : (none)} {Connections : (none)} {Data : Unknown-Data} {Original Field : Unknown} }"/>
     </module>

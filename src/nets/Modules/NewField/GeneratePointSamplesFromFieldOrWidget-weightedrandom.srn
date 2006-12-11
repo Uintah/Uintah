@@ -163,8 +163,7 @@
     </module>
     <module category="ChangeFieldData" id="m8" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="198" y="95"/>
-      <var name="function" val="{result = v * v;
-}"/>
+      <var name="function" val="{result = v * v; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
   </modules>

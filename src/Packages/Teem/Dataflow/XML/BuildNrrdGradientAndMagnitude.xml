@@ -30,46 +30,28 @@
 -->
 
 
-<component name="ConvertNrrdToRasterField" category="Converters">
+<component name="BuildNrrdGradientAndMagnitude" category="Misc">
   <overview>
     <authors>
-      <author>Darby Van Uitert</author>
+      <author>Michael Callahan</author>
     </authors>
-    <summary>Convert a combination of Nrrds to a SCIRun Field. This
-converter works on regular, unstructured and structured Data. If the
-module receives just Data, it will most likely be a regular Field
-(i.e. ScanLine, Image, LatVol).  For structured and unstructured
-Fields, the data is optional. If Points but no Connections are given,
-a structured dataset will most likely be created (i.e. StructQuad,
-StructHex).  If Points and Connections are given, an unstructured
-field will most likely be created (i.e. Curve, TriSurf, QuadSurf,
-TetVol, HexVol). If a Field is passed in, the module will try to use
-that Field's mesh.
-    </summary>
+    <summary>Set up a volume texture from a 3D scalar nrrd.</summary>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Points</name>
+        <name>Value</name>
         <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>Connections</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>Data</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>OriginalField</name>
-        <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>OutputField</name>
-        <datatype>SCIRun::Field</datatype>
+        <name>Normal/Value</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Gradient Magnitude</name>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

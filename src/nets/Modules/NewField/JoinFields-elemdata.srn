@@ -72,14 +72,12 @@
     </module>
     <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="95" y="144"/>
-      <var name="function" val="{result = x;
-}"/>
+      <var name="function" val="{result = x; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="ChangeFieldData" id="m6" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="322" y="143"/>
-      <var name="function" val="{result = y;
-}"/>
+      <var name="function" val="{result = y; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="ChangeMesh" id="m7" name="ConvertMeshToUnstructuredMesh" package="SCIRun">

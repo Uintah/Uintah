@@ -26,7 +26,7 @@
       <position x="216" y="5"/>
       <var name="filename" val="/tmp/sphere.nd"/>
     </module>
-    <module category="Converters" id="m5" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m5" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="216" y="83"/>
     </module>
     <module category="MiscField" id="m6" name="ReportFieldInfo" package="SCIRun">

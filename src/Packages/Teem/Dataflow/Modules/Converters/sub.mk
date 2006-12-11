@@ -49,7 +49,8 @@ SRCS     += \
         $(SRCDIR)/ConvertToNrrd.cc\
         $(SRCDIR)/ConvertRasterFieldToNrrd.cc\
         $(SRCDIR)/ConvertNrrdToColorMap2.cc\
-        $(SRCDIR)/ConvertNrrdToRasterField.cc\
+        $(SRCDIR)/ConvertNrrdToField.cc\
+        $(SRCDIR)/ConvertNrrdToGeneralField.cc\
         $(SRCDIR)/ConvertNrrdToMatrix.cc\
         $(SRCDIR)/ConvertMatrixToNrrd.cc\
 #[INSERT NEW CODE FILE HERE]

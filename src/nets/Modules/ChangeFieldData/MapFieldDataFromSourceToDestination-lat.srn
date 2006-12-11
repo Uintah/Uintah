@@ -15,8 +15,7 @@
     </module>
     <module category="ChangeFieldData" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="246" y="145"/>
-      <var name="function" val="{result = x*x + y*y;
-}"/>
+      <var name="function" val="{result = x*x + y*y; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="ChangeMesh" id="m3" name="EditMeshBoundingBox" package="SCIRun">

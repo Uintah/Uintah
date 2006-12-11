@@ -27,7 +27,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-itcl_class SCIRun_Converters_ConvertNrrdToField {
+itcl_class Teem_Converters_ConvertNrrdToField {
     inherit Module
     constructor {config} {
         set name ConvertNrrdToField
