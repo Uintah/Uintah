@@ -163,8 +163,9 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     BuilderWindow *bw = app->GetTopBuilderWindow();
     bw->DisplayErrorMessage("Warning: event service not available.");
   }
-  sci::cca::WildcardTopic::pointer topicPtr = ptr->createWildcardTopic("scirun2.services.builderservice.component.*");
-  topicPtr->registerEventListener(std::string("GUIBuilder"),evptr);
+  sci::cca::Topic::pointer topicPtr = ptr->createTopic("scirun2.services.builderservice.component");
+  sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scirun2.services.builderservice.component.*");
+  subPtr->registerEventListener(std::string("GUIBuilder"),evptr);
 
 
 
