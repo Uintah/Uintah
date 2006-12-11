@@ -26,6 +26,7 @@ using namespace std;
 
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream cout_dbg("IMPICE_DBG",false);
 
  
 /*___________________________________________________________________
@@ -654,7 +655,7 @@ void ICE::setupRHS(const ProcessorGroup*,
       delete varBasket;                         
     
       //__________________________________
-      //  sum Advecton (<vol_frac> vel_FC)
+      //  sum Advecton (<vol_frac> vel_FC )
       //  you need to multiply by vol
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -745,7 +746,6 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   double rhs_max = 0.0;
-  IntVector maxCell(0,0,0);
       
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -764,7 +764,22 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
       rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
-  } 
+
+    //__________________________________
+    // debugging output
+    if( cout_dbg.active() ) {
+      rhs_max = 0.0;
+      IntVector maxCell(0,0,0);
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        if(Abs(rhs[c]/vol) > rhs_max){
+          maxCell = c;
+        }
+        rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
+      }  
+      cout << " maxRHS: " << maxCell << " " << rhs_max << " \t L-" << level->getIndex() << endl;
+    }
+  } // patch loop
 }
 
 
