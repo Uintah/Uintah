@@ -831,6 +831,11 @@ SCISHARE void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* fine
 SCISHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
                                IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
 
+SCISHARE void getCoarseLevelRangeNodes(const Patch* finePatch,
+                                       const Level* coarseLevel, 
+                                       IntVector& cl, IntVector& ch,
+                                       IntVector& fl, IntVector& fh, int ngc);
+
 // find the range of a coarse-fine interface along a certain face
 SCISHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
                                   const int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);

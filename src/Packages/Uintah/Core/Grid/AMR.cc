@@ -64,6 +64,31 @@ void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
   fl = finePatch->getInteriorCellLowIndex();
   fh = finePatch->getInteriorCellHighIndex();
 }
+
+//______________________________________________________________________
+void getCoarseLevelRangeNodes(const Patch* finePatch, const Level* coarseLevel, 
+                              IntVector& cl, IntVector& ch,
+                              IntVector& fl, IntVector& fh, int ngc)
+{
+  finePatch->computeVariableExtents(Patch::NodeBased, IntVector(0,0,0), Ghost::AroundNodes,ngc, fl, fh); 
+  
+  // coarse region we need to get from the dw
+  cl = finePatch->getLevel()->mapNodeToCoarser(fl) - IntVector(ngc,ngc,ngc);
+  ch = finePatch->getLevel()->mapNodeToCoarser(fh) + IntVector(ngc,ngc,ngc);
+
+  //__________________________________
+  // coarseHigh and coarseLow cannot lie outside
+  // of the coarselevel index range
+  IntVector cl_tmp, ch_tmp;
+  coarseLevel->findNodeIndexRange(cl_tmp,ch_tmp);
+  cl = Max(cl_tmp, cl);
+  ch = Min(ch_tmp, ch);
+
+  // fine region to work over
+  fl = finePatch->getInteriorNodeLowIndex();
+  fh = finePatch->getInteriorNodeHighIndex();
+}
+
 //______________________________________________________________________
 void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
                             const int interpolationOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh) 
