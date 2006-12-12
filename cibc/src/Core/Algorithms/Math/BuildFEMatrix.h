@@ -352,7 +352,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
 
   if ((Ca==0)&&(Cb==0)&&(Cc==0)&&(Cd==0)&&(Ce==0)&&(Cf==0))
   {
-    for (unsigned int j = 0; j<local_dimension; j++)
+    for (int j = 0; j<local_dimension; j++)
     {
       l_stiff[j] = 0.0;
     }
@@ -491,7 +491,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
       // We assume the weight factors are the same as the local gradients 
       // Galerkin approximation:
        
-      for (unsigned int j = 0; j<local_dimension; j++)
+      for (int j = 0; j<local_dimension; j++)
       {
         const double &Nxj = Nxi[j];
         const double &Nyj = Nyi[j];
@@ -531,7 +531,7 @@ void FEMBuilder<FIELD>::build_local_matrix_regular(typename FIELD::mesh_type::El
 
   if ((Ca==0)&&(Cb==0)&&(Cc==0)&&(Cd==0)&&(Ce==0)&&(Cf==0))
   {
-    for (unsigned int j = 0; j<local_dimension; j++)
+    for (int j = 0; j<local_dimension; j++)
     {
       l_stiff[j] = 0.0;
     }
@@ -691,7 +691,7 @@ void FEMBuilder<FIELD>::build_local_matrix_regular(typename FIELD::mesh_type::El
         // We assume the weight factors are the same as the local gradients 
         // Galerkin approximation:
          
-        for (unsigned int j = 0; j<local_dimension; j++)
+        for (int j = 0; j<local_dimension; j++)
         {
           const double &Nxj = Nxi[j];
           const double &Nyj = Nyi[j];
@@ -741,7 +741,7 @@ void FEMBuilder<FIELD>::build_local_matrix_regular(typename FIELD::mesh_type::El
         // We assume the weight factors are the same as the local gradients 
         // Galerkin approximation:
          
-        for (unsigned int j = 0; j<local_dimension; j++)
+        for (int j = 0; j<local_dimension; j++)
         {
           const double &Nxj = Nxi[j];
           const double &Nyj = Nyi[j];
@@ -850,8 +850,8 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
       meshhandle_->get_elems(elems,nodes[0]);
       meshhandle_->get_elems(elems2,nodes[1]);
       ca.clear();
-      for (int v=0; v < elems.size(); v++)
-         for (int w=0; w <elems2.size(); w++)
+      for (unsigned int v=0; v < elems.size(); v++)
+         for (unsigned int w=0; w <elems2.size(); w++)
             if (elems[v] == elems2[w]) ca.push_back(elems[v]);
     }
     else
@@ -989,8 +989,8 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
       meshhandle_->get_elems(elems,nodes[0]);
       meshhandle_->get_elems(elems2,nodes[1]);
       ca.clear();
-      for (int v=0; v < elems.size(); v++)
-         for (int w=0; w <elems2.size(); w++)
+      for (unsigned int v=0; v < elems.size(); v++)
+         for (unsigned int w=0; w <elems2.size(); w++)
             if (elems[v] == elems2[w]) ca.push_back(elems[v]);
 
     }
