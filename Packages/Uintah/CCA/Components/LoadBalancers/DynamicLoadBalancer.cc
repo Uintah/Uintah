@@ -600,8 +600,9 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       {
         double patchCost = patch_costs[index];
         double takeimb=(procCost[currentProc]+patchCost-avgCostPerProc[i])/avgCostPerProc[i];
+        double notakeimb=(procCost[currentProc]-avgCostPerProc[i])/avgCostPerProc[i];
               
-        if (takeimb<d_targetImb || currentProc==lastProc) //assign to this proc
+        if ( (takeimb<d_targetImb && fabs(takeimb)<fabs(notakeimb)) || currentProc==lastProc) //assign to this proc
         {
           d_tempAssignment[index] = currentProc;
           procCost[currentProc] += patchCost;
