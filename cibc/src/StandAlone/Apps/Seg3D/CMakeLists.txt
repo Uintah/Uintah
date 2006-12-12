@@ -29,7 +29,7 @@
 # This is the root ITK CMakeLists file.  
 CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
 
-PROJECT(Seg3D)
+PROJECT(SEG3D)
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.
@@ -47,14 +47,16 @@ ENDIF(BUILD_TESTING)
 
 #----------------------------------------------------------------------------
 # Output directories.
-SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all libraries.")
-SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
-#output directory for installing all include files.")
-MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
+IF(NOT BUILD_FROM_TOP_LEVEL)
+  SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all libraries.")
+  SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+  #output directory for installing all include files.")
+  MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
+ENDIF(NOT BUILD_FROM_TOP_LEVEL)
 
 
 # DV Find SCIRun Core stuff
-SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
+SET(CMAKE_MODULE_PATH ${SEG3D_SOURCE_DIR})
 FIND_PACKAGE( SCIRUN )
 IF(SCIRUN_FOUND)
   INCLUDE(${SCIRUN_USE_FILE})
@@ -133,7 +135,7 @@ IF(APPLE)
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND}
                      ARGS  -E copy_directory
-                     ${Seg3D_SOURCE_DIR}/data
+                     ${SEG3D_SOURCE_DIR}/data
                      ${EXECUTABLE_OUTPUT_PATH}/Seg3D.app/Contents/MacOS/data)
 ELSE(APPLE)
   #ADD_EXECUTABLE(Seg3D WIN32 ${SEG3D_SRCS})
@@ -142,7 +144,7 @@ ELSE(APPLE)
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND}
                      ARGS  -E copy_directory
-                     ${Seg3D_SOURCE_DIR}/data
+                     ${SEG3D_SOURCE_DIR}/data
                      ${EXECUTABLE_OUTPUT_PATH}/data)
 ENDIF(APPLE)
 
