@@ -116,10 +116,26 @@ SET(Dataflow_Modules_Fields_SRCS
   CollectFields.cc  
 )
 
-IF (HAVE_TETGEN)
+IF(HAVE_TETGEN)
   SET(Dataflow_Modules_Fields_SRCS ${Dataflow_Modules_Fields_SRCS}
     InterfaceWithTetGen.cc)
-ENDIF (HAVE_TETGEN)
+ENDIF(HAVE_TETGEN)
+    
+IF (HAVE_CAMAL)
+  SET(Dataflow_Modules_Fields_SRCS ${Dataflow_Modules_Fields_SRCS}
+    InterfaceWithCamal.cc)  
+ENDIF(HAVE_CAMAL)    
+
+IF (HAVE_VERDICT)
+  SET(Dataflow_Modules_Fields_SRCS ${Dataflow_Modules_Fields_SRCS}
+    ReportMeshQualityMeasures.cc)  
+ENDIF(HAVE_VERDICT)    
+
+IF (HAVE_MESQUITE)
+  SET(Dataflow_Modules_Fields_SRCS ${Dataflow_Modules_Fields_SRCS}
+    SmoothMesh.cc 
+    MesquiteDomain.cc)  
+ENDIF(HAVE_MESQUITE)    
     
 ADD_LIBRARY(Dataflow_Modules_Fields ${Dataflow_Modules_Fields_SRCS})
 
@@ -158,6 +174,21 @@ IF (HAVE_TETGEN)
     ${TETGEN_LIBRARY})
 ENDIF(HAVE_TETGEN)
 
+IF (HAVE_CAMAL)
+  TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
+    ${CAMAL_LIBRARY}
+    ${F_LIBRARY})
+ENDIF(HAVE_CAMAL)
+
+IF (HAVE_MESQUITE)
+  TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
+    ${MESQUITE_LIBRARY})
+ENDIF(HAVE_MESQUITE)
+
+IF (HAVE_VERDICT)
+  TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
+    ${VERDICT_LIBRARY})
+ENDIF(HAVE_VERDICT)
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_Fields)
