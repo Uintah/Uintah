@@ -1153,30 +1153,40 @@ public:
 
 template <class FIELD>
 FieldHandle
-ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
-                                double isoval, bool lte, MatrixHandle &interp )
+ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter,
+                                             FieldHandle fieldh,
+                                             double isoval, bool lte,
+                                             MatrixHandle &interp )
 {
-    //This algorithm is divided up into several functional areas.
-    // 1- Get a surface onto which we can project the new mesh (a TriSurfMesh in this case)
-    // 2- Find all of the hexahedron which are completely inside this surface (inside is defined 
-    //    by the isoval and lte passed into the algorithm)
-    // 3- Find the boundary of the 'inside' hexahedron (minus the elements which were on the
-    //    old boundary
-    // 4- Insert a new sheet of hexes between the 'inside' hexahedron and the isosurface (defined
-    //    by the isoval)
-    // 5- Update the interpolation matrix and field values on the new mesh
+  // This algorithm is divided up into several functional areas.
+  //
+  // 1- Get a surface onto which we can project the new mesh (a
+  // TriSurfMesh in this case)
+  //
+  // 2- Find all of the hexahedron which are completely inside this
+  // surface (inside is defined by the isoval and lte passed into the
+  // algorithm)
+  //
+  // 3- Find the boundary of the 'inside' hexahedron (minus the
+  // elements which were on the old boundary
+  //
+  // 4- Insert a new sheet of hexes between the 'inside' hexahedron
+  // and the isosurface (defined by the isoval)
+  //
+  // 5- Update the interpolation matrix and field values on the new
+  // mesh.
 
-    //create a surface to use when projecting the new elements... 
+  // Create a surface to use when projecting the new elements.
   const TypeDescription *td = fieldh->get_type_description();
   LockingHandle<MarchingCubesAlg> mc_alg;
   if( !mc_alg.get_rep() )
   {
- 	  CompileInfoHandle ci = MarchingCubesAlg::get_compile_info(td);
- 	  if( !DynamicCompilation::compile( ci, mc_alg, reporter )) 
+    CompileInfoHandle ci = MarchingCubesAlg::get_compile_info(td);
+    if( !DynamicCompilation::compile( ci, mc_alg, reporter )) 
     {
- 	    reporter->error( "Marching Cubes can not work with this field.");
- 	    return fieldh;
- 	  }
+      reporter->error( "Marching Cubes can not work with this field.");
+      return fieldh;
+    }
   }
   
   int np = 1;
@@ -1186,22 +1196,22 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
   
   FieldHandle tri_field_h = mc_alg->get_field(0);
   TriSurfMesh<TriLinearLgn<Point> > *tri_mesh = 
-      dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_field_h->mesh().get_rep());
+    dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(tri_field_h->mesh().get_rep());
   mc_alg->release();
   
-    //create a place to put the new mesh
+  // Create a place to put the new mesh.
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =
-      dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+    dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
   clipped->copy_properties(mesh);
   
-    //Get a list of the original boundary elements (code from FieldBoundary)
+  // Get a list of the original boundary elements (code from FieldBoundary).
   map<typename FIELD::mesh_type::Face::index_type, typename FIELD::mesh_type::Face::index_type> original_boundary;
 
   mesh->synchronize(Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
   
-    // Walk all the cells in the mesh looking for faces on the boundary
+  // Walk all the cells in the mesh looking for faces on the boundary
   typename FIELD::mesh_type::Cell::iterator o_citer; 
   mesh->begin(o_citer);
   typename FIELD::mesh_type::Cell::iterator o_citere; 
@@ -1212,11 +1222,11 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     typename FIELD::mesh_type::Cell::index_type o_ci = *o_citer;
     ++o_citer;
     
-      // Get all the faces in the cell.
+    // Get all the faces in the cell.
     typename FIELD::mesh_type::Face::array_type o_faces;
     mesh->get_faces(o_faces, o_ci);
     
-      // Check each face for neighbors.
+    // Check each face for neighbors.
     typename FIELD::mesh_type::Face::array_type::iterator o_fiter = o_faces.begin();
     
     while (o_fiter != o_faces.end())
@@ -1227,25 +1237,25 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
       
       if( !mesh->get_neighbor( o_nci, o_ci, o_fi ) )
       {
-          // Faces with no neighbors are on the boundary...
+        // Faces with no neighbors are on the boundary.
         original_boundary[o_fi] = o_fi;
       }
     }
   }
   
-    //create a map to help differentiate between new nodes created for 
-    //  the inserted sheet, and the nodes on the stair stepped boundary...
+  // Create a map to help differentiate between new nodes created for
+  // the inserted sheet, and the nodes on the stair stepped boundary.
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> clipped_to_original_nodemap;
   
 #ifdef HAVE_HASH_MAP
   typedef hash_map<unsigned int,
-      typename FIELD::mesh_type::Node::index_type,
-      hash<unsigned int>,
-      equal_to<unsigned int> > hash_type;
+    typename FIELD::mesh_type::Node::index_type,
+    hash<unsigned int>,
+    equal_to<unsigned int> > hash_type;
 #else
   typedef map<unsigned int,
-      typename FIELD::mesh_type::Node::index_type,
-      less<unsigned int> > hash_type;
+    typename FIELD::mesh_type::Node::index_type,
+    less<unsigned int> > hash_type;
 #endif
   
   hash_type nodemap;
@@ -1254,7 +1264,8 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
   
-    //Find all of the hexes inside the isosurface and add them to the clipped mesh...
+  // Find all of the hexes inside the isosurface and add them to the
+  // clipped mesh.
   while (bi != ei)
   {
     bool inside = false;
@@ -1290,7 +1301,7 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
       typename FIELD::mesh_type::Node::array_type onodes;
       mesh->get_nodes(onodes, *bi);
       
-        // Add this element to the new mesh.
+      // Add this element to the new mesh.
       typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
       
       for (unsigned int i = 0; i<onodes.size(); i++)
@@ -1300,7 +1311,7 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
           Point np;
           mesh->get_center(np, onodes[i]);
           const typename FIELD::mesh_type::Node::index_type nodeindex =
-              clipped->add_point(np);
+            clipped->add_point(np);
           clipped_to_original_nodemap[nodeindex] = onodes[i];
           nodemap[(unsigned int)onodes[i]] = nodeindex;
           nnodes[i] = nodeindex;
@@ -1318,9 +1329,10 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     ++bi;
   }
   
-    //Get the boundary elements of the clipped mesh (code from FieldBoundary)
-    //  We'll use this list of boundary elements (minus the elements from the original boundary)
-    //  so we know which nodes to project to the isosurface to create the new sheet of hexes...
+  // Get the boundary elements of the clipped mesh (code from FieldBoundary)
+  // We'll use this list of boundary elements (minus the elements from
+  // the original boundary) so we know which nodes to project to the
+  // isosurface to create the new sheet of hexes.
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> vertex_map;
   typename map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type>::iterator node_iter;
   
@@ -1329,7 +1341,7 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
   
   clipped->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
   
-    //Walk all the cells in the clipped mesh to find the boundary faces...
+  // Walk all the cells in the clipped mesh to find the boundary faces.
   typename FIELD::mesh_type::Cell::iterator citer; clipped->begin(citer);
   typename FIELD::mesh_type::Cell::iterator citere; clipped->end(citere);
   
@@ -1338,11 +1350,11 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     typename FIELD::mesh_type::Cell::index_type ci = *citer;
     ++citer;
     
-      // Get all the faces in the cell.
+    // Get all the faces in the cell.
     typename FIELD::mesh_type::Face::array_type faces;
     clipped->get_faces( faces, ci );
     
-      // Check each face for neighbors.
+    // Check each face for neighbors.
     typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
     
     while( fiter != faces.end() )
@@ -1353,8 +1365,8 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
       
       if( !clipped->get_neighbor( nci, ci, fi ) )
       {
-          // Faces with no neighbors are on the boundary...
-          //  make sure that this face isn't on the original boundary
+        // Faces with no neighbors are on the boundary.  Make sure
+        // that this face isn't on the original boundary.
         bool is_old_boundary = false;
         unsigned int i;
         typename FIELD::mesh_type::Face::index_type old_face;
@@ -1374,8 +1386,9 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
           }
         }
         
-          //Don't add the nodes from the faces of the original boundary to the list of nodes
-          // that we'll be projecting later to create the new sheet of hex elements...
+        // Don't add the nodes from the faces of the original boundary
+        // to the list of nodes that we'll be projecting later to
+        // create the new sheet of hex elements.
         if( !is_old_boundary )
         {
           face_list.push_back( fi );
@@ -1400,9 +1413,10 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     }
   }
   
-    //for each new node on the clipped boundary, project a new node to the isosurface
-    //  create a map between the clipped boundary nodes and the new nodes to help us create
-    //  hexes with the correct connectivity later...
+  // For each new node on the clipped boundary, project a new node to
+  // the isosurface create a map between the clipped boundary nodes
+  // and the new nodes to help us create hexes with the correct
+  // connectivity later.
   tri_mesh->synchronize( Mesh::LOCATE_E );
   map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map;
   unsigned int i; 
@@ -1418,24 +1432,27 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     tri_mesh->find_closest_elem( new_result, face_id, n_p );
     Vector dist_vect = n_p - new_result;
     
-      //since finding the closest face can be slow, update the progress meter to let the
-      // user know that we are performing calculations and the process is not hung up...
+    // Since finding the closest face can be slow, update the progress
+    // meter to let the user know that we are performing calculations
+    // and the process is not hung up.
     if( i%50 == 0 )
     {
       double temp = 0.25 + 0.65*( (double)i/(double)node_list.size() );
       reporter->update_progress( temp );
     }
     
-      //add the new node to the clipped mesh
+    // Add the new node to the clipped mesh.
     Point new_point( new_result );
     typename FIELD::mesh_type::Node::index_type this_index = clipped->add_point( new_point );
     
-      //create a map for the new node to a node on the boundary of the clipped mesh...
+    // Create a map for the new node to a node on the boundary of the
+    // clipped mesh.
     new_map[this_node] = this_index;
   }
   
-    //for each quad on the clipped boundary we have a map to the new projected nodes
-    // so, create the new sheet of hexes from each quad on the clipped boundary
+  // For each quad on the clipped boundary we have a map to the new
+  // projected nodes so, create the new sheet of hexes from each quad
+  // on the clipped boundary
   vector<typename FIELD::mesh_type::Elem::index_type> new_elems;
   for( i = 0; i < face_list.size(); i++ )
   { 
@@ -1455,13 +1472,13 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     new_elems.push_back( clipped->add_elem( nnodes ) );
   }
   
-    //force all the synch data to be rebuilt on next synch call.
+  // Force all the synch data to be rebuilt on next synch call.
   clipped->unsynchronize();
   
   FIELD *ofield = scinew FIELD( clipped );
   ofield->copy_properties( fieldh.get_rep() );
   
-    //create the interpolation matrix for downstream use...
+  // Create the interpolation matrix for downstream use.
   typename hash_type::iterator hitr = nodemap.begin();
   
   const int nrows = nodemap.size() + node_list.size();
@@ -1470,8 +1487,8 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
   int *cc = scinew int[nrows+7*node_list.size()];
   double *d = scinew double[nrows+7*node_list.size()];
   
-    //nodes in the original mesh will have the same field values as before since
-    // we didn't move any of them...
+  // Nodes in the original mesh will have the same field values as
+  // before since we didn't move any of them.
   while( hitr != nodemap.end() )
   {
     typename FIELD::value_type val;
@@ -1482,14 +1499,15 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     ++hitr;
   }
   
-    //nodes in the original mesh have a one-to-one correspondence in the interp matrix...
+  // Nodes in the original mesh have a one-to-one correspondence in
+  // the interp matrix.
   for( i = 0; i < nodemap.size(); i++ )
   {
     rr[i] = i;
     d[i] = 1.0;
   }
   
-    //Now, figure out the correspondence for the new nodes with the original mesh...
+  // Figure out the correspondence for the new nodes with the original mesh.
   int counter = i;
   int rrvalue = i;
   
@@ -1503,8 +1521,8 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     Point p;
     clipped->get_center(p, ni);
     
-      //find the cell in the old mesh which the new node is located in and 
-      // interpolate values between the nodes in this cell for the new values...
+    // Find the cell in the old mesh which the new node is located in and 
+    // interpolate values between the nodes in this cell for the new values.
     typename FIELD::mesh_type::Elem::index_type el;
     if( mesh->locate( el, p ) )
     {
@@ -1526,7 +1544,7 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
     }
     else
     {
-        //just find nearest node in the mesh
+      // Just find nearest node in the mesh.
       typename FIELD::mesh_type::Node::index_type oi;
       mesh->locate( oi, p );
       cc[rrvalue] = oi;
@@ -1551,7 +1569,7 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHa
   }  
   rr[nrows] = rrvalue; // An extra entry goes on the end of rr.
   
-    //Create the interp matrix...
+  // Create the interp matrix.
   interp = scinew SparseRowMatrix( nrows, ncols, rr, cc, nrows+7*node_list.size(), d );
   
   return ofield;
