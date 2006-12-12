@@ -575,7 +575,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
 
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
-
+  regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.25);
   //bound tolerances
   if (tola_ < 0) {
     if (d_myworld->myrank() == 0)
@@ -687,7 +687,7 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
     volume+=patches[p].volume;
   }
 
-  int volume_threshold=volume/d_myworld->size();
+  int volume_threshold=volume/d_myworld->size()*d_patchRatioToTarget;
 
   //build a max heap
   make_heap(patches.begin(),patches.end());

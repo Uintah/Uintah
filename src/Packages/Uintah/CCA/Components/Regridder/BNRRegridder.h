@@ -70,6 +70,7 @@ WARNING
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
+    double d_patchRatioToTarget;    //percentage of target volume used to subdivide patches
     unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
    
     //tag information
