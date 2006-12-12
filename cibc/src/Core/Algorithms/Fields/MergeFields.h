@@ -339,13 +339,16 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
         std::sort(sortednewnodes.begin(),sortednewnodes.end());
         
         unsigned int key = 0;
-        for (int r=0; r<sortednewnodes.size(); r++) key += static_cast<unsigned int>(sortednewnodes[r]);
+        for (unsigned int r=0; r<sortednewnodes.size(); r++)
+        {
+          key += static_cast<unsigned int>(sortednewnodes[r]);
+        }
 
         range = elem_map_.equal_range(key);
         while (range.first != range.second)
         {
           n = (*(range.first)).second;
-          int r;
+          unsigned int r;
           for (r=0; r<sortednewnodes.size(); r++)
           {
             if (n[r] != sortednewnodes[r]) break;
