@@ -1017,7 +1017,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     p->getWithDefault("doSpaceCurve", spaceCurve, false);
     p->getWithDefault("timeRefinementWeight", d_timeRefineWeight, false);
     p->getWithDefault("levelIndependent", d_levelIndependent, true);
-    p->getWithDefault("targetImbalance",d_targetImb,.025);
+    p->getWithDefault("targetImbalance",d_targetImb,.05);
   }
 
   if (dynamicAlgo == "cyclic")
