@@ -116,6 +116,11 @@ SET(Dataflow_Modules_Fields_SRCS
   CollectFields.cc  
 )
 
+IF (HAVE_TETGEN)
+  SET(Dataflow_Modules_Fields_SRCS ${Dataflow_Modules_Fields_SRCS}
+    InterfaceWithTetGen.cc)
+ENDIF (HAVE_TETGEN)
+    
 ADD_LIBRARY(Dataflow_Modules_Fields ${Dataflow_Modules_Fields_SRCS})
 
 TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
@@ -147,6 +152,12 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
   ${THREAD_LIBRARY}
   ${TEEM_LIBRARY}
 )
+
+IF (HAVE_TETGEN)
+  TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
+    ${TETGEN_LIBRARY})
+ENDIF(HAVE_TETGEN)
+
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_Fields)
