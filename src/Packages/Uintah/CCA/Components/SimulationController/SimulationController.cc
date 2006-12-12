@@ -42,6 +42,7 @@ static DebugStream dbg("SimulationStats", true);
 static DebugStream dbgTime("SimulationTimeStats", false);
 static DebugStream simdbg("SimulationController", false);
 static DebugStream stats("ComponentTimings", false);
+static DebugStream istats("IndividualComponentTimings",false);
 extern DebugStream amrout;
 
 namespace Uintah {
@@ -569,6 +570,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   
   // output timestep statistics
 
+    if (istats.active() && d_myworld->size() > 1) {
+      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+        if (toReduce[i] > 0)
+          istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << endl;
+      }
+    } 
+  
   if(d_myworld->myrank() == 0){
     char walltime[96];
     if (d_n > 3) {
