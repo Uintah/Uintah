@@ -68,7 +68,7 @@ class SimpleServiceOutputInfo : public ServiceBase
 	std::list<IComPacketHandle>*  packet_list_;
  	ConditionVariable		wait_;
 	IComSocket				socket_;	  
-	bool					exit_;
+	bool							exit_;
 	ServiceLogHandle		log_;
 };
 
@@ -152,7 +152,7 @@ class SCISHARE SimpleService : public Service {
 	virtual ~SimpleService();
   
 	void			execute();						// Main loop
-    void            create_service_info();
+	void      create_service_info();
 	void			create_output_thread();			// Create a separate thread for handling sending over socket
 	void			kill_output_thread();			// Close the thread by signalling that it should exit
 													// After this the packages in the buffer are still being send
@@ -184,7 +184,7 @@ class SCISHARE SimpleService : public Service {
 	SystemCallHandle					exit_syscall_;
 	SimpleServiceOutputHandlerHandle	exit_handler_;
 
-    Thread*                         output_thread_;
+	Thread*                         output_thread_;
 	// Output thread data
 	SimpleServiceOutputInfoHandle   info_handle_;	
 	// File forwarding functions	

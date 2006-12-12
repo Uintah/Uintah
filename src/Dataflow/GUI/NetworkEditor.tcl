@@ -1117,6 +1117,8 @@ proc popupLoadMenu {} {
     } else {
 		loadnet $netedit_loadnet 
     }
+		
+		wm title . "SCIRun ([lindex [file split $netedit_loadnet] end])"		
 }
 
 proc ClearCanvas { { confirm 1 } { subnet 0 } } {
