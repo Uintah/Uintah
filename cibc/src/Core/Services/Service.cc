@@ -79,4 +79,101 @@ void Service::warningmsg(std::string warning)
 	ctx_.log->putmsg(std::string("Service (" + ctx_.servicename + std::string(") : warning = ") + warning));
 }
 
+bool Service::updateparameters()
+{
+	std::string filename = getparameter("rcfile");
+  FILE* filein = fopen(filename.c_str(),"r");
+  if (!filein) return (false);
+
+  string read_buffer;
+  size_t read_buffer_length = 512;
+  read_buffer.resize(read_buffer_length);
+
+  bool done = false;
+  bool need_new_read = true;
+	
+  string linebuffer;
+  size_t bytesread;
+  size_t linestart;
+  size_t lineend;
+  size_t lineequal;
+  size_t buffersize;
+  size_t linedata;
+  size_t linesize;
+  size_t linetag;
+  string tag;
+  string data;
+	
+  while(!done)
+	{
+		bytesread = fread(&(read_buffer[0]),1,read_buffer_length,filein);
+		if ((bytesread == 0)&&(!feof(filein)))
+			{
+				std::cerr << "Detected error while reading from file: " << filename << "\n";
+				return(false);
+			}
+		if (bytesread > 0) linebuffer += read_buffer.substr(0,bytesread);
+
+		if (feof(filein)) done = true;
+
+		need_new_read = false;
+		while (!need_new_read)
+		{	
+			linestart = 0;
+			buffersize = linebuffer.size();
+			// Skip all newlines returns tabs and spaces at the start of a line
+			while((linestart < buffersize)&&((linebuffer[linestart]=='\n')||(linebuffer[linestart]=='\r')||(linebuffer[linestart]=='\0')||(linebuffer[linestart]=='\t')||(linebuffer[linestart]==' '))) linestart++;			
+
+			string newline;
+			// if bytesread is 0, it indicates an EOF, hence we just need to add the remainder
+			// of what is in the buffer. The file has not properly terminated strings....
+			if (bytesread == 0)
+			{	
+				if(linestart < linebuffer.size()) newline = linebuffer.substr(linestart);
+			}
+			else
+			{
+				lineend = linestart;
+				while((lineend < buffersize)&&(linebuffer[lineend]!='\n')&&(linebuffer[lineend]!='\r')&&(linebuffer[lineend]!='\0')) lineend++;
+				if (lineend == linebuffer.size())
+				{	// end of line not yet read
+					need_new_read = true;
+				}
+				else
+				{	// split of the latest line read
+					newline = linebuffer.substr(linestart,(lineend-linestart));
+					linebuffer = linebuffer.substr(lineend+1);
+					need_new_read = false;
+				}
+			}
+	
+			if (!need_new_read)
+			{
+				if ((newline[0] == '#')||(newline[0] == '%'))
+				{   
+					// Comment
+				}
+				else
+				{
+					lineequal = 0;
+					linetag = 0;
+					linesize = newline.size();
+					while((linetag<linesize)&&((newline[linetag] != ' ')&&(newline[linetag] != '\t')&&(newline[linetag] != '='))) linetag++;
+					tag = newline.substr(0,linetag);
+					lineequal = linetag;
+					while((lineequal < linesize)&&(newline[lineequal] != '=')) lineequal++;
+					linedata = lineequal+1;
+					while((linedata < linesize)&&((newline[linedata] == ' ')||(newline[linedata] == '\t'))) linedata++;
+					data = newline.substr(linedata);
+					ctx_.parameters[tag] = data;
+				}
+			}
+		}
+	}
+		
+  fclose(filein);
+  return true;	
+}
+
+
 } // end namespace

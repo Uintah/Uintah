@@ -131,6 +131,23 @@ SET(SCIRUN_THIRDPARTY_PATH ${SCIRUN_THIRPDARTY_PATH} CACHE PATH "Path to SCIRun'
 # DV Fix need error checking to make sure SCIRun gets included
 SET(LOAD_PACKAGE "SCIRun,BioPSE,Teem,MatlabInterface" CACHE STRING "Building SCIRun, BioPSE, Teem, and MatlabInterface packages by default.")
 
+# Extension so collaborators can set this up easily
+IF(WITH_MODELCREATION_PACKAGE)
+	STRING(REGEX MATCH "ModelCreation" MODELCREATION_INCLUDED ${LOAD_PACKAGE})
+	IF (NOT MODELCREATTION_INCLUDED)
+		SET(LOAD_PACKAGE "${LOAD_PACKAGE},ModelCreation")
+		MESSAGE(STATUS "LoadPackage=${LOAD_PACKAGE}")		
+	ENDIF (NOT MODELCREATTION_INCLUDED)	
+ENDIF(WITH_MODELCREATION_PACKAGE)
+
+IF(WITH_INSIGHT_PACKAGE)
+	STRING(REGEX MATCH "ModelCreation" MODELCREATION_INCLUDED ${LOAD_PACKAGE})
+	IF (NOT MODELCREATTION_INCLUDED)
+		SET(LOAD_PACKAGE "${LOAD_PACKAGE},ModelCreation")
+		MESSAGE(STATUS "LoadPackage=${LOAD_PACKAGE}")		
+	ENDIF (NOT MODELCREATTION_INCLUDED)	
+ENDIF(WITH_INSIGHT_PACKAGE)
+
 # ----------------------------------------------------------------------------
 # SCIRun build configuration options
 IF(NOT BUILD_FROM_TOP_LEVEL)
