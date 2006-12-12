@@ -240,6 +240,7 @@ Teem::NrrdData::NrrdSelectTime		Teem::Misc::SelectTimeStepFromNrrd
 Teem::NrrdData::NrrdSetProperty		Teem::Misc::SetNrrdProperty
 Teem::NrrdData::NrrdSetupTexture		Teem::Misc::BuildNrrdGradientAndMagnitude
 Teem::Segmentation::MRITissueClassifier	Teem::Misc::ClassifyHeadTissuesFromMultiMRI
+Teem::Misc::BuildTextureWithGradientsFromNrrds Teem::Misc::BuildNrrdGradientAndMagnitude
 Teem::Tend::TendAnhist			Teem::Tend::TendAnhist
 Teem::Tend::TendAnplot			Teem::Tend::TendAnplot
 Teem::Tend::TendAnscale			Teem::Tend::TendAnscale
