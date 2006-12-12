@@ -67,9 +67,8 @@ bool MergeMeshesAlgoT<FIELD>::MergeMeshes(SCIRun::ProgressReporter *pr, std::vec
 
   node_index_type node_index_;
   elem_index_type elem_map_;
-  // Test whether all the fields have the save class
-  int basisorder = 1;
 
+  // Test whether all the fields have the save class
   for (size_t p = 0; p < fieldvec.size(); p++)
   {
     if (!(fieldvec[p]->mesh()->is_editable()))
@@ -278,13 +277,16 @@ bool MergeMeshesAlgoT<FIELD>::MergeMeshes(SCIRun::ProgressReporter *pr, std::vec
         std::sort(sortednewnodes.begin(),sortednewnodes.end());
         
         unsigned int key = 0;
-        for (int r=0; r<sortednewnodes.size(); r++) key += static_cast<unsigned int>(sortednewnodes[r]);
+        for (unsigned int r=0; r<sortednewnodes.size(); r++)
+        {
+          key += static_cast<unsigned int>(sortednewnodes[r]);
+        }
 
         range = elem_map_.equal_range(key);
         while (range.first != range.second)
         {
           n = (*(range.first)).second;
-          int r;
+          unsigned int r;
           for (r=0; r<sortednewnodes.size(); r++)
           {
             if (n[r] != sortednewnodes[r]) break;
