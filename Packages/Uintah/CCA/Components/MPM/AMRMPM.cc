@@ -172,6 +172,14 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
 void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
+
+  if (flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
+    cout << "doMPMOnLevel = " << level->getIndex() << endl;
+  }
+  else{
+    cout << "DontDoMPMOnLevel = " << level->getIndex() << endl;
+  }
+  
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
   Task* t = scinew Task("MPM::actuallyInitialize",
@@ -264,30 +272,62 @@ void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
 }
 
 void
-AMRMPM::scheduleTimeAdvance(const LevelP & level,
+AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
                             SchedulerP   & sched)
 {
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+//  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+//    return;
+  if(inlevel->getIndex() > 0)
     return;
 
-  const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-  scheduleApplyExternalLoads(             sched, patches, matls);
-  scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-  scheduleSetBCsInterpolated(             sched, patches, matls);
-  scheduleComputeStressTensor(            sched, patches, matls);
-  scheduleComputeInternalForce(           sched, patches, matls);
-  scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleIntegrateAcceleration(          sched, patches, matls);
-  scheduleSetGridBoundaryConditions(      sched, patches, matls);
-  scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleApplyExternalLoads(             sched, patches, matls);
+  }
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+  }
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleSetBCsInterpolated(             sched, patches, matls);
+  }
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleComputeStressTensor(            sched, patches, matls);
+  }
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleComputeInternalForce(           sched, patches, matls);
+  }
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleSolveEquationsMotion(           sched, patches, matls);
+    scheduleIntegrateAcceleration(          sched, patches, matls);
+    scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  }
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+  }
 
-  sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    d_sharedState->d_particleState_preReloc,
-                                    lb->pXLabel, 
-                                    d_sharedState->d_particleState,
-                                    lb->pParticleIDLabel, matls);
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
+                                      d_sharedState->d_particleState_preReloc,
+                                      lb->pXLabel, 
+                                      d_sharedState->d_particleState,
+                                      lb->pParticleIDLabel, matls);
+  }
 }
 
 void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -573,13 +613,28 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
                       this, &AMRMPM::interpolateToParticlesAndUpdate);
 
+  Task::DomainSpec DS = Task::NormalDomain;
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  bool  fat = false;  // possibly (F)rom (A)nother (T)askgraph
+  const MaterialSubset* mss = matls->getUnion();
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  Ghost::GhostType gac   = Ghost::AroundCells;
-  Ghost::GhostType gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
+  if(getLevel(patches)->hasCoarserLevel()){
+    t->requires(Task::CoarseNewDW, lb->gAccelerationLabel, 0,
+                Task::CoarseLevel, mss, DS, gac, NGN);
+    t->requires(Task::CoarseNewDW, lb->gVelocityStarLabel, 0,
+                Task::CoarseLevel, mss, DS, gac, NGN);
+  }
+  if(getLevel(patches)->hasFinerLevel()){
+    t->requires(Task::NewDW, lb->gAccelerationLabel,
+                 0, Task::FineLevel,  mss, DS, gac, NGN, fat);
+    t->requires(Task::NewDW, lb->gVelocityStarLabel,
+                 0, Task::FineLevel,  mss, DS, gac, NGN, fat);
+  }
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,                gnone);
@@ -1411,6 +1466,44 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
+
+      // Get finer level data
+      if(getLevel(patches)->hasFinerLevel()){
+         const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
+         Level::selectType finePatches;
+         patch->getFineLevelPatches(finePatches);
+         IntVector one(1,1,1);
+         for(int i=0;i<finePatches.size();i++){
+            const Patch* finePatch = finePatches[i];
+
+            IntVector cl, ch, fl, fh;
+            getFineLevelRangeNodes(patch, finePatch, cl, ch, fl, fh, one);
+            constNCVariable<Vector> gv_star_fine, gacc_fine;
+            new_dw->getRegion(gv_star_fine,  lb->gVelocityStarLabel, dwi,
+                                             fineLevel, fl, fh, false);
+            new_dw->getRegion(gacc_fine,     lb->gAccelerationLabel, dwi,
+                                             fineLevel, fl, fh, false);
+//            for(NodeIterator iter(fl, fh); !iter.done(); iter++){
+//              IntVector n = *iter;
+//              cout << "F = " << n << " " <<  gv_star_fine[n] << endl;
+//            }
+         }
+      }
+      // Get coarser level data
+      if(getLevel(patches)->hasCoarserLevel()){
+         const Level* coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
+         IntVector cl, ch, fl, fh;
+         getCoarseLevelRangeNodes(patch, coarseLevel, cl, ch, fl, fh, 1);
+         constNCVariable<Vector> gv_star_coarse, gacc_coarse;
+         new_dw->getRegion(gv_star_coarse, lb->gVelocityStarLabel, dwi,
+                                           coarseLevel, cl, ch, false);
+         new_dw->getRegion(gacc_coarse,    lb->gAccelerationLabel, dwi,
+                                           coarseLevel, cl, ch, false);
+//         for(NodeIterator iter(cl, ch); !iter.done(); iter++){
+//           IntVector n = *iter;
+//           cout << "C = " << n << " " <<  gv_star_coarse[n] << endl;
+//         }
+      }
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
