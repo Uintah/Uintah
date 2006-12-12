@@ -440,6 +440,8 @@ SET(DEF_CBLAS "#define HAVE_CLBLAS 0")
 # DV Fix these libraries!
 # blas, f, 
 
+
+
 #-----------------------------------------------------------------------------
 # Search for SGI's or Win32's traceback library
 # traceback_lib exc_lib_dir_flag exc_lib_flag
@@ -716,6 +718,7 @@ IF(WITH_MESQUITE)
     NAMES mesquite
     PATHS ${MESQUITE_PATH}
     ${MESQUITE_PATH}/lib
+    ${SCIRUN_THIRDPARTY_PATH}/lib/
     /usr/local/lib
     /usr/lib
     /lib)
@@ -723,6 +726,7 @@ IF(WITH_MESQUITE)
   FIND_PATH(MESQUITE_INCLUDE1 AddQualityMetric.hpp
     ${MESQUITE_PATH}/includeLinks
     ${MESQUITE_PATH}/../includeLinks
+    ${SCIRUN_THIRDPARTY_PATH}/includeLinks
     /usr/local/include/
     /usr/include
     /include)
@@ -730,6 +734,7 @@ IF(WITH_MESQUITE)
   FIND_PATH(MESQUITE_INCLUDE2 Mesquite.hpp
     ${MESQUITE_PATH}/include
     ${MESQUITE_PATH}/../include
+    ${SCIRUN_THIRDPARTY_PATH}/include
     /usr/local/include/
     /usr/include
     /include)
@@ -748,6 +753,60 @@ IF(WITH_MESQUITE)
 ELSE(WITH_MESQUITE)
    SET(HAVE_MESQUITE "NO" CACHE INTERNAL "Do not edit" FORCE)
 ENDIF(WITH_MESQUITE)
+
+#----------------------------------------------------------------------------
+# Search for Verdict (http://tetgen.berlios.de)
+
+IF(VERDICT_PATH)
+  SET(VERDICT_PATH ${VERDICT_PATH} CACHE PATH "Path to verdict" FORCE)
+  SET(WITH_VERDICT ON CACHE BOOL "Build SCIRun with VERDICT library" FORCE)
+  MARK_AS_ADVANCED(CLEAR WITH_VERDICT VERDICT_PATH)
+ELSE (VERDICT_PATH)
+  SET(WITH_VERDICT OFF CACHE BOOL "Build SCIRun with VERDICT library" FORCE)
+  MARK_AS_ADVANCED(FORCE WITH_VERDICT VERDICT_PATH)
+ENDIF(VERDICT_PATH)
+
+IF(WITH_VERDICT)
+
+  MESSAGE(STATUS "Configuring SCIRun with VERDICT")
+  IF(NOT VERDICT_PATH)
+    SET(VERDICT_PATH /usr/local/ CACHE PATH "Path to verdict")
+    MARK_AS_ADVANCED(CLEAR WITH_VERDICT VERDICT_PATH)
+  ENDIF(NOT VERDICT_PATH)
+
+  SET(VERDICT_LIBRARY VERDICT_LIBRARY-NOTFOUND CACHE FILEPATH "Verdict library" FORCE)
+  SET(VERDICT_INCLUDE VERDICT_INCLUDE1-NOTFOUND CACHE FILEPATH "Verdict include" FORCE)
+
+  FIND_LIBRARY(VERDICT_LIBRARY 
+    NAMES verdict110 
+    PATHS ${VERDICT_PATH}
+    ${VERDICT_PATH}/lib
+    ${SCIRUN_THIRDPARTY_PATH}/lib
+    /usr/local/lib
+    /usr/lib
+    /lib)
+
+  FIND_PATH(VERDICT_INCLUDE verdict.h
+    ${VERDICT_PATH}
+    ${VERDICT_PATH}/include
+    ${SCIRUN_THIRDPARTY_PATH}/include
+    /usr/local/include/
+    /usr/include
+    /include)
+
+   IF(VERDICT_LIBRARY)
+     SET(HAVE_VERDICT "YES" CACHE INTERNAL "Do not edit" FORCE)
+     SET(DEF_VERDICT "#define HAVE_VERDICT 1" CACHE INTERNAL "Do not edit" FORCE)
+     SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${VERDICT_INCLUDE})
+   ELSE(VERDICT_LIBRARY)
+     MESSAGE(FATAL_ERROR "Cannot find verdict library.") 
+   ENDIF(VERDICT_LIBRARY)
+
+  MARK_AS_ADVANCED(VERDICT_LIBRARY)
+  MARK_AS_ADVANCED(VERDICT_INCLUDE)
+ELSE(WITH_VERDICT)
+   SET(HAVE_VERDICT "NO" CACHE INTERNAL "Do not edit" FORCE)
+ENDIF(WITH_VERDICT)
 
 #----------------------------------------------------------------------------
 # Search for Tetgen (http://tetgen.berlios.de)
@@ -770,12 +829,13 @@ IF(WITH_TETGEN)
   ENDIF(NOT TETGEN_PATH)
 
   SET(TETGEN_LIBRARY TETGEN_LIBRARY-NOTFOUND CACHE FILEPATH "Tetgen library" FORCE)
-  SET(TETGEN_INCLUDE1 TETGEN_INCLUDE1-NOTFOUND CACHE FILEPATH "Tetgen include" FORCE)
+  SET(TETGEN_INCLUDE TETGEN_INCLUDE-NOTFOUND CACHE FILEPATH "Tetgen include" FORCE)
 
   FIND_LIBRARY(TETGEN_LIBRARY 
     NAMES tet 
     PATHS ${TETGEN_PATH}
     ${TETGEN_PATH}/lib
+    ${SCIRUN_THIRDPARTY_PATH}/lib
     /usr/local/lib
     /usr/lib
     /lib)
@@ -783,6 +843,7 @@ IF(WITH_TETGEN)
   FIND_PATH(TETGEN_INCLUDE tetgen.h
     ${TETGEN_PATH}
     ${TETGEN_PATH}/include
+    ${SCIRUN_THIRDPARTY_PATH}/include
     /usr/local/include/
     /usr/include
     /include)
