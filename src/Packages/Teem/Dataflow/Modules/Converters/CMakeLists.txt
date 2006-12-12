@@ -43,6 +43,7 @@ SET(Packages_Teem_Dataflow_Modules_Converters_SRCS
 ADD_LIBRARY(Packages_Teem_Dataflow_Modules_Converters ${Packages_Teem_Dataflow_Modules_Converters_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Teem_Dataflow_Modules_Converters
+  Core_Algorithms_Converter
   Core_Basis
   Core_Containers
   Core_Datatypes
