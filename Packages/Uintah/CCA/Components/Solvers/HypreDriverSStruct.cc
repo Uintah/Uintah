@@ -30,7 +30,7 @@
 using namespace Uintah;
 using namespace std;
 
-#define test 
+//#define DEBUG
 
 //__________________________________
 //  To turn on normal output
@@ -339,9 +339,15 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     HyprePatch_CC hpatch(_patches->get(p),matl); 
     int level = hpatch.getLevel();
     
+    // Looking Down
     if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingFineToCoarse);
+    }
+    // Looking up
+    if (level < numLevels-1) {
+      hpatch.makeConnections(_HA, _A_dw, _A_label,
+                             _stencilSize, DoingCoarseToFine);
     }
   } 
   HYPRE_SStructMatrixAssemble(_HA);
@@ -526,7 +532,7 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
         CellIterator f_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
         fineLevel_CFI_Iterator(face, coarsePatch, finePatch, f_iter, isRight_CP_FP_pair);
         if(isRight_CP_FP_pair){
-#ifdef SPEW       // spew
+#ifdef DEBUG       // spew
           cout << mpiRank << "-----------------Face " << finePatch->getFaceName(face) 
                << " iter " << f_iter.begin() << " " << f_iter.end() 
                << " offset " << offset
@@ -541,8 +547,8 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
 
             if(viewpoint == DoingFineToCoarse){
 
-              //cout <<mpiRank<<" looking Down: fineCell " << fineCell 
-              //   << " -> coarseCell " << coarseCell;
+             // cout <<mpiRank<<" looking Down: fineCell " << fineCell 
+             //    << " -> coarseCell " << coarseCell;
 
               HYPRE_SStructGraphAddEntries(graph,
                                            fineIndex, fineCell.get_pointer(),
@@ -804,7 +810,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
         fineLevel_CFI_Iterator(face, coarsePatch, finePatch, f_iter, isRight_CP_FP_pair);
         
         if(isRight_CP_FP_pair){
-#ifdef SPEW           
+#ifdef DEBUG           
           cout << mpiRank << "-----------------Face " << finePatch->getFaceName(face) 
                << " iter " << f_iter.begin() << " " << f_iter.end() 
                << " offset " << offset
@@ -838,6 +844,14 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
                                            const_cast<double*>(stencilValue));
 
               counter_fine[fineCell]++;
+        #if DEBUG
+              cout << " looking Down: finePatch "<< fineCell
+                   << " f_index " << graphIndex_fine[0]
+                   << " s_index " << stencilIndex_fine[0]
+                   << " value " << graphValue[0] 
+                   << " \t| Coarse " << coarseCell
+                   << " s_index " << stencilIndex_coarse[0]<<endl;  
+        #endif
             }
             if(viewpoint == DoingCoarseToFine){     // ----------------------------
 
@@ -860,9 +874,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
                                              const_cast<double*>(stencilValue));
               } 
               counter_coarse[coarseCell]++;
-        #if 0
-              cout << " finePatch "<< fineCell
-                   << " f_index " << graphIndex_fine[0]
+        #if DEBUG
+              cout << " looking Up: finePatch "<< fineCell
                    << " s_index " << stencilIndex_fine[0]
                    << " value " << graphValue[0] 
                    << " \t| Coarse " << coarseCell
@@ -907,10 +920,9 @@ HypreDriverSStruct::HyprePatch_CC::getSolution(HYPRE_SStructVector& HX,
   }
 }
 
-//#####################################################################
+//___________________________________________________________________
 // Utilities
-//#####################################################################
-
+//___________________________________________________________________
 void printLine(const string& s, const unsigned int len)
 {
   for (unsigned int i = 0; i < len; i++) {
