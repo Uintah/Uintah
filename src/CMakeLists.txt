@@ -689,29 +689,52 @@ ENDIF(WITH_PETSC)
 # DV FIX check for unipetsc if petsc not found
 
 # Search for Tetgen (http://tetgen.berlios.de)
-OPTION(WITH_TETGEN "Use tetgen library" OFF)
-MARK_AS_ADVANCED(WITH_TETGEN)
+IF(TETGEN_PATH)
+  SET(TETGEN_PATH ${TETGEN_PATH} CACHE PATH "Path to tetgen" FORCE)
+  SET(WITH_TETGEN ON CACHE BOOL "Build SCIRun with TETGEN library" FORCE)
+  MARK_AS_ADVANCED(CLEAR WITH_TETGEN TETGEN_PATH)
+ELSE (TETGEN_PATH)
+  SET(WITH_TETGEN OFF CACHE BOOL "Build SCIRun with TETGEN library" FORCE)
+  MARK_AS_ADVANCED(FORCE WITH_TETGEN TETGEN_PATH)
+ENDIF(TETGEN_PATH)
+
 IF(WITH_TETGEN)
+
+  MESSAGE(STATUS "Configuring SCIRun with TETGEN")
+  IF(NOT TETGEN_PATH)
+    SET(TETGEN_PATH /usr/local/ CACHE PATH "Path to tetgen")
+    MARK_AS_ADVANCED(CLEAR WITH_TETGEN TETGEN_PATH)
+  ENDIF(NOT TETGEN_PATH)
+
   FIND_LIBRARY(TETGEN_LIBRARY 
-    NAMES tetgen 
-    PATHS /usr/local/lib
+    NAMES tet 
+    PATHS ${TETGEN_PATH}
+    ${TETGEN_PATH}/lib
+    /usr/local/lib
     /usr/lib
     /lib)
 
   FIND_PATH(TETGEN_INCLUDE tetgen.h
+    ${TETGEN_PATH}
+    ${TETGEN_PATH}/include
     /usr/local/include/
     /usr/include
     /include)
 
    IF(TETGEN_LIBRARY)
-     SET(HAVE_TETGEN "YES")
-     SET(DEF_TETGEN "#define HAVE_TETGEN 1")
+     SET(HAVE_TETGEN "YES" CACHE INTERNAL "Do not edit" FORCE)
+     SET(DEF_TETGEN "#define HAVE_TETGEN 1" CACHE INTERNAL "Do not edit" FORCE)
+     SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${TETGEN_INCLUDE})
    ELSE(TETGEN_LIBRARY)
-     SET(HAVE_TETGEN "NO")
+     MESSAGE(FATAL_ERROR "Cannot find tetgen library.") 
    ENDIF(TETGEN_LIBRARY)
+
+  MARK_AS_ADVANCED(TETGEN_LIBRARY)
+  MARK_AS_ADVANCED(TETGEN_INCLUDE)
 ELSE(WITH_TETGEN)
-   SET(HAVE_TETGEN "NO")
+   SET(HAVE_TETGEN "NO" CACHE INTERNAL "Do not edit" FORCE)
 ENDIF(WITH_TETGEN)
+
 
 #----------------------------------------------------------------------------
 # Insight Toolkit
