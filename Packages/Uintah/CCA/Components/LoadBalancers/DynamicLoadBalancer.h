@@ -133,6 +133,7 @@ namespace Uintah {
     ProblemSpecP d_pspec;
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
+    double d_targetImb;
     float d_cellFactor;
     int d_dynamicAlgorithm;
     bool d_levelIndependent;

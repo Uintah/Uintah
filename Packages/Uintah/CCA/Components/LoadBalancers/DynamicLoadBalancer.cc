@@ -520,6 +520,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     avgCostPerProc[i] = groupCost[i] / numProcs;
   
 
+#if 0
   // TODO - bring back excessive patch clumps?
   startingPatch = 0;
   for (unsigned i = 0; i < groupCost.size(); i++) {
@@ -544,10 +545,10 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       // re-update the cost, so we use all procs (and don't go over)
       double patchCost = patch_costs[index];
 
-      double imb1=fabs(currentProcCost-avgCostPerProc[i]);
-      double imb2=fabs(currentProcCost+patchCost-avgCostPerProc[i]);
+      double notakeimb=fabs(currentProcCost-avgCostPerProc[i]);
+      double takeimb=fabs(currentProcCost+patchCost-avgCostPerProc[i]);
               
-      if (imb1<imb2) {
+      if (notakeimb<takeimb) {
         // move to next proc and add this patch
         currentProc++;
         d_tempAssignment[index] = currentProc;
@@ -568,6 +569,66 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     }
     startingPatch += groupSize[i];
   }
+#else
+  startingPatch = 0;
+  for (unsigned i = 0; i < groupCost.size(); i++) 
+  {
+    int startProc = 0;
+    int lastProc=numProcs-1;
+    vector<double> procCost(numProcs,0);
+     
+    for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) 
+    {
+      int index;
+      if (d_doSpaceCurve) 
+      {
+        //index = sfc[p] + startingPatch;
+        index = (int)ceil( double(sfc[p].p*groupSize[i]) /d_myworld->size() ) +sfc[p].i + startingPatch;
+        //cout << d_myworld->myrank() << ": mapping " << sfc[p].p << ":" << sfc[p].i << " to " << index << endl;
+      }
+      else 
+      {
+        // not attempting space-filling curve
+        index = p;
+      }
+      
+      if (allParticles[index].assigned)
+        continue;
+      
+      int currentProc=startProc;
+      while(true)
+      {
+        double patchCost = patch_costs[index];
+        double takeimb=(procCost[currentProc]+patchCost-avgCostPerProc[i])/avgCostPerProc[i];
+              
+        if (takeimb<d_targetImb || currentProc==lastProc) //assign to this proc
+        {
+          d_tempAssignment[index] = currentProc;
+          procCost[currentProc] += patchCost;
+          if (d_myworld->myrank() == 0)
+            dbg << "Patch " << index << "-> proc " << currentProc 
+                << " PatchCost: " << patchCost << ", ProcCost: " 
+                << procCost[currentProc] << " group cost " << groupCost[i] << "  avg cost " << avgCostPerProc[i]
+                << ", idcheck: " << patchset[index]->getGridIndex() << " (" << patchset[index]->getID() << ")" << endl;
+          break;
+        }
+        else  //move forward
+        {
+          //assign forward
+          currentProc++;
+        }
+      }
+    
+      double myimb=fabs((procCost[startProc]-avgCostPerProc[i])/avgCostPerProc[i]);
+      if(myimb<d_targetImb && startProc!=lastProc)   //front proc is close to target advance it
+      {
+         startProc++;
+      }
+    }
+    startingPatch += groupSize[i];
+  }
+  
+#endif
 
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
 
@@ -956,6 +1017,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     p->getWithDefault("doSpaceCurve", spaceCurve, false);
     p->getWithDefault("timeRefinementWeight", d_timeRefineWeight, false);
     p->getWithDefault("levelIndependent", d_levelIndependent, true);
+    p->getWithDefault("targetImbalance",d_targetImb,.025);
   }
 
   if (dynamicAlgo == "cyclic")
