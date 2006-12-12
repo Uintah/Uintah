@@ -822,7 +822,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   int cnt = 0;
   int size_gd = end_gd-start_gd;
     
-  for (unsigned int i = start_gd; i<end_gd; i++)
+  for (int i = start_gd; i<end_gd; i++)
   {
     rows_[i] = mycols.size();
 
@@ -1057,7 +1057,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
         {
           for(int k = 0; k < (int)ea.size(); k++)
           {
-            if (global_dimension + ea[k] == i)
+            if (global_dimension + (int)ea[k] == i)
             {
               build_local_matrix(ca[j], k+(int)na.size() , lsml, ni_points, ni_weights, ni_derivatives);
               add_lcl_gbl(i, neib_dofs, lsml);
