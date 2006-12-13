@@ -125,9 +125,9 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme,
       v1 = (Point)end1 - center;
       v2 = (Point)end2 - center;
       if ((v1.length2() >= Epsilon) && (v2.length2() >= Epsilon)) {
-	 v2 = Cross(v2.normal(), v1.normal());
+	 v2 = Cross(v2.safe_normal(), v1.safe_normal());
 	 if (v2.length2() >= Epsilon) {
-	    v2 = Cross(v1, v2.normal()); // Find orthogonal v2.
+	    v2 = Cross(v1, v2.safe_normal()); // Find orthogonal v2.
 	    v = (v1 * cos(angle) + v2 * sin(angle));
 	    
 	    if (v.length2() < Epsilon) {
@@ -147,9 +147,9 @@ AngleConstraint::Satisfy( const Index index, const Scheme scheme,
       v2 = (Point)end2 - center;
       if ((v.length2() >= Epsilon)
 	  && (v1.length2() >= Epsilon) && (v2.length2() >= Epsilon)) {
-	 v2 = Cross(v2.normal(), v1.normal());
+	 v2 = Cross(v2.safe_normal(), v1.safe_normal());
 	 if (v2.length2() >= Epsilon) {
-	    v2 = Cross(v1, v2.normal()); // Find orthogonal v2.
+	    v2 = Cross(v1, v2.safe_normal()); // Find orthogonal v2.
 	    
 	    const double x(Dot(v1, v)), y(Dot(v2, v));
 
