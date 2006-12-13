@@ -44,6 +44,8 @@
 #include <Core/Services/ServiceLog.h>
 #include <Core/Containers/LockingHandle.h>
 
+#include <Core/Services/share.h>
+
 #ifdef _WIN32
 #define DECLARE_SERVICE_MAKER(name) \
 extern "C" __declspec(dllexport) Service* make_service_##name(ServiceContext& ctx) \
@@ -76,7 +78,7 @@ class Service;
 typedef LockingHandle<Service> ServiceHandle;
 
 
-class Service : public ServiceBase {
+class SCISHARE Service : public ServiceBase {
 public:
 
   // Constructor/destructor
