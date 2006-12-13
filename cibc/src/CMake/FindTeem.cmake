@@ -13,13 +13,13 @@
 
 # DV Fix finding teem library in thirdparty
 FIND_LIBRARY(TEEM_LIBRARY teem
-  PATHS ${SCIRUN_THIRDPARTY_PATH}/lib
+  PATHS ${SCIRUN_THIRDPARTY_DIR}/lib
   /usr/local/lib
   /usr/lib
 )
 
 FIND_PATH(TEEM_INCLUDE_DIR teem/nrrd.h
-  ${SCIRUN_THIRDPARTY_PATH}/include
+  ${SCIRUN_THIRDPARTY_DIR}/include
   /usr/local/include
   /usr/include
  )

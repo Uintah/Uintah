@@ -175,7 +175,7 @@ fi
 # Build SCIRun Core w/ cmake in SCIRunCore-bin
 try mkdir -p $DIR/SCIRunCore-bin
 try cd $DIR/SCIRunCore-bin
-try $cmakebin $DIR/SCIRunCore-src -DSCIRUN_THIRDPARTY_PATH=$TP -DCMAKE_BUILD_TYPE=$buildtype -DWITH_X11=$LINK_X11
+try $cmakebin $DIR/SCIRunCore-src -DSCIRUN_THIRDPARTY_DIR=$TP -DCMAKE_BUILD_TYPE=$buildtype -DWITH_X11=$LINK_X11
 try make $makeflags
 
 # Build Seg3d cmake in seg3d-bin
