@@ -53,8 +53,7 @@ EventService::createInstance(const std::string& instanceName,
 {
   if (instanceName.size()) {
     if (framework->lookupComponent(instanceName) != 0) {
-      //throw CCAExceptionPtr(new CCAException("Component instance name " + instanceName + " is not unique"));
-      throw sci::cca::CCAException::pointer (new CCAException("Component instance name " + instanceName + " is not unique"));
+      throw CCAExceptionPtr(new CCAException("Component instance name " + instanceName + " is not unique"));
     }
     return framework->createComponentInstance(instanceName, className, properties);
   }
