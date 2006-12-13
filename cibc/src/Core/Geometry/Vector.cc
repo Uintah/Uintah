@@ -106,6 +106,14 @@ Vector::normal() const
    return v;			// 
 }
 
+Vector
+Vector::safe_normal() const
+{
+   Vector v(*this);
+   v.safe_normalize();
+   return v;			// 
+}
+
 ostream& operator<<( ostream& os, const Vector& v )
 {
   os << '[' << v.x() << ' ' << v.y() << ' ' << v.z() << ']';
