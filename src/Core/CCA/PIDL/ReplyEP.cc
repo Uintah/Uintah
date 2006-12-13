@@ -80,31 +80,31 @@ ReplyEP::ReplyEP()
 {
   globus_nexus_endpointattr_t attr;
   if(int gerr=globus_nexus_endpointattr_init(&attr))
-    throw CommError("endpointattr_init", gerr);
+    throw CommError("endpointattr_init", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
 							  reply_table,
 							  1))
-    throw CommError("endpointattr_set_handler_table", gerr);
+    throw CommError("endpointattr_set_handler_table", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
 							    unknown_handler,
 							    GLOBUS_NEXUS_HANDLER_TYPE_THREADED))
-    throw CommError("endpointattr_set_unknown_handler", gerr);
+    throw CommError("endpointattr_set_unknown_handler", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_endpoint_init(&d_ep, &attr))
-    throw CommError("endpoint_init", gerr);
+    throw CommError("endpoint_init", __FILE__, __LINE__, gerr);
   globus_nexus_endpoint_set_user_pointer(&d_ep, this);
   if(int gerr=globus_nexus_endpointattr_destroy(&attr))
-    throw CommError("endpointattr_destroy", gerr);
+    throw CommError("endpointattr_destroy", __FILE__, __LINE__, gerr);
 
   if(int gerr=globus_nexus_startpoint_bind(&d_sp, &d_ep))
-    throw CommError("bind_startpoint", gerr);
+    throw CommError("bind_startpoint", __FILE__, __LINE__, gerr);
 }
 
 ReplyEP::~ReplyEP()
 {
   if(int gerr=globus_nexus_endpoint_destroy(&d_ep))
-    throw CommError("endpoint_destroy", gerr);
+    throw CommError("endpoint_destroy", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_startpoint_destroy(&d_sp))
-    throw CommError("nexus_startpoint_destroy", gerr);
+    throw CommError("nexus_startpoint_destroy", __FILE__, __LINE__, gerr);
   
   // TODO: free endpoint...
 }
@@ -135,7 +135,7 @@ void ReplyEP::release(ReplyEP* r)
 void ReplyEP::get_startpoint_copy(globus_nexus_startpoint_t* spp)
 {
   if(int gerr=globus_nexus_startpoint_copy(spp, &d_sp))
-    throw CommError("startpoint_copy", gerr);
+    throw CommError("startpoint_copy", __FILE__, __LINE__, gerr);
 }
 
 globus_nexus_buffer_t ReplyEP::wait()

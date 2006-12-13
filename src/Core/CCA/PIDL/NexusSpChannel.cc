@@ -52,7 +52,7 @@ NexusSpChannel::~NexusSpChannel() {
 
   if (&d_sp != NULL) {
     if(int gerr=globus_nexus_startpoint_destroy_and_notify(&d_sp)){
-      throw CommError("nexus_startpoint_destroy_and_notify", gerr);
+      throw CommError("nexus_startpoint_destroy_and_notify", __FILE__, __LINE__, gerr);
     }
   }
 }
@@ -65,7 +65,7 @@ SpChannel* NexusSpChannel::SPFactory(bool deep) {
     if(!globus_nexus_startpoint_is_null(&d_sp)) { 
       if( int gerr = globus_nexus_startpoint_copy
 	  (&(new_sp->d_sp), const_cast<globus_nexus_startpoint_t*>(&d_sp)) ) {
-	throw CommError("startpoint_copy", gerr);
+	throw CommError("startpoint_copy", __FILE__, __LINE__, gerr);
       }
     }
   }
@@ -85,7 +85,7 @@ void NexusSpChannel::openConnection(const URL& url) {
   std::string s(url.getString());
   char* str=const_cast<char*>(s.c_str());
   if(int gerr=globus_nexus_attach(str, &d_sp)){
-    throw CommError("nexus_attach", gerr);
+    throw CommError("nexus_attach", __FILE__, __LINE__, gerr);
   }
 }
 
@@ -96,18 +96,18 @@ void NexusSpChannel::closeConnection() {
   globus_nexus_buffer_t buffer;
 
   if(int gerr=globus_nexus_buffer_init(&buffer, size, 0)) {
-    throw CommError("buffer_init", gerr);
+    throw CommError("buffer_init", __FILE__, __LINE__, gerr);
   }
 
   //Send the message
   int handler=TypeInfo::vtable_deleteReference_handler;
   if(int gerr=globus_nexus_send_rsr(&buffer, &d_sp,
   				    handler, GLOBUS_TRUE, GLOBUS_FALSE)) {
-    throw CommError("ProxyBase: send_rsr", gerr);
+    throw CommError("ProxyBase: send_rsr", __FILE__, __LINE__, gerr);
   }
   //No reply is sent for this
   if(int gerr=globus_nexus_startpoint_destroy_and_notify(&d_sp)){
-    throw CommError("nexus_startpoint_destroy_and_notify", gerr);
+    throw CommError("nexus_startpoint_destroy_and_notify", __FILE__, __LINE__, gerr);
   }
 }
 

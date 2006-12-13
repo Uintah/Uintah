@@ -95,7 +95,7 @@ static void service(DTMessage *dtmsg)
       delete dtmsg;
     } else {
       if (id >= chan->getTableSize()) {
-        throw CommError("Handler function does not exist",1101);
+        throw CommError("Handler function does not exist", __FILE__, __LINE__, 1101);
       }
       SocketMessage* msg = new SocketMessage(dtmsg);
       Thread *t = new Thread(new SocketThread(chan, msg, id), "HANDLER_THREAD");
@@ -144,7 +144,7 @@ void SocketEpChannel::activateConnection(void* obj)
 
 Message* SocketEpChannel::getMessage()
 {
-  throw CommError("SocketEpChannel::getMessage should never be called", -1);
+  throw CommError("SocketEpChannel::getMessage should never be called", __FILE__, __LINE__, -1);
 }
 
 void SocketEpChannel::allocateHandlerTable(int size)

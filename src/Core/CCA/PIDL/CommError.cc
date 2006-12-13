@@ -29,19 +29,22 @@
 
 
 #include <Core/CCA/PIDL/CommError.h>
+#include <sci_defs/framework_defs.h>
 
 #include <iostream>
 #include <sstream>
 
 using namespace SCIRun;
 
-CommError::CommError(const std::string& msg, int code)
-    : d_msg(msg), d_code(code)
+CommError::CommError(const std::string& msg, const char* file, int line, int errorCode)
+    : d_msg(msg), d_code(errorCode)
 {
     std::ostringstream o;
-    o << d_msg << "(return code=" << d_code << ")";
+    o << d_msg << " (error code=" << d_code << ")";
     d_msg = o.str();
-    std::cerr << "CommError: " << d_msg << '\n';
+#ifdef FWK_DEBUG
+    std::cerr << "CommError: " << d_msg << " thrown in\n" << file << ":" << line << std::endl;
+#endif
 }
 
 CommError::CommError(const CommError& copy)
@@ -62,4 +65,3 @@ const char* CommError::type() const
 {
     return "PIDL::CommError";
 }
-

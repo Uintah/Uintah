@@ -56,7 +56,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <Core/CCA/PIDL/CommError.h>
 #include <Core/CCA/PIDL/SocketMessage.h>
 #include <Core/CCA/PIDL/SocketEpChannel.h>
 #include <Core/CCA/PIDL/SocketSpChannel.h>

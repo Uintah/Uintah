@@ -75,7 +75,7 @@ DataTransmitter::DataTransmitter() : newMsgCnt(0), sending_thread(0), recving_th
 {
   struct sockaddr_in my_addr;    // my address information
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-    throw CommError("socket", errno);
+    throw CommError("socket", __FILE__, __LINE__, errno);
   }
 
   my_addr.sin_family = AF_INET;         // host byte order
@@ -84,24 +84,26 @@ DataTransmitter::DataTransmitter() : newMsgCnt(0), sending_thread(0), recving_th
   memset(&(my_addr.sin_zero), '\0', 8); // zero the rest of the struct
 
   if (::bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
-    throw CommError("bind", errno);
+    throw CommError("bind", __FILE__, __LINE__, errno);
   }
 
   hostname = new char[128];
   if (gethostname(hostname, 127) == -1) {
-    throw CommError("gethostname", errno);
+    throw CommError("gethostname", __FILE__, __LINE__, errno);
   }
 
   struct hostent *he;
   if ((he = gethostbyname(hostname)) == 0) {
-    throw CommError("gethostbyname", errno);
+    int saveErrno = errno;
+    char* buf =  strerror(saveErrno);
+    throw CommError(std::string("\'gethostbyname\' ") + buf, __FILE__, __LINE__, saveErrno);
   }
 
   addr.setIP(*((long*)he->h_addr));
 
   socklen_t namelen = sizeof(struct sockaddr);
   if (getsockname(sockfd, (struct sockaddr*)&my_addr, &namelen ) == -1) {
-    throw CommError("getsockname", errno);
+    throw CommError("getsockname", __FILE__, __LINE__, errno);
   }
   addr.setPort(ntohs(my_addr.sin_port));
 
@@ -148,7 +150,7 @@ DataTransmitter::putMessage(DTMessage *msg)
     if (pt->service != 0) {
       pt->service(msg);
     } else {
-      throw CommError("Client trying to send a message to a client.",-1);
+      throw CommError("Client trying to send a message to a client.", __FILE__, __LINE__, -1);
     }
   } else {
     msg->offset = 0;
@@ -205,7 +207,7 @@ DataTransmitter::putReplyMessage(DTMessage *msg)
     DTPoint *pt = msg->recver;
 
     if (pt->service != 0) {
-      throw CommError("Server trying to send a message to a server.", -1);
+      throw CommError("Server trying to send a message to a server.", __FILE__, __LINE__, -1);
     } else {
       recvQ_mutex->lock();
       recv_msgQ.push_back(msg);
@@ -255,7 +257,7 @@ DataTransmitter::getMessage(const DTMessageTag &tag)
       return msg;
     }
   }
-  throw CommError("Semaphore up but not message received",-1);
+  throw CommError("Semaphore up but not message received", __FILE__, __LINE__, -1);
   return 0;
 }
 
@@ -275,7 +277,7 @@ DataTransmitter::getMsg()
       return msg;
     }
   }
-  throw CommError("Semaphore up but not message received",-1);
+  throw CommError("Semaphore up but not message received", __FILE__, __LINE__, -1);
   return 0;
 }
 
@@ -284,7 +286,7 @@ DataTransmitter::run()
 {
   //at most 10 waiting clients
   if (listen(sockfd, 10) == -1) {
-    throw CommError("listen", errno);
+    throw CommError("listen", __FILE__, __LINE__, errno);
   }
   std::cout << "DataTransmitter is listening: URL=" << getUrl() << std::endl;
 
@@ -426,7 +428,7 @@ DataTransmitter::runRecvingThread()
       int saveErrno = errno;
       // lock?
       char* buf =  strerror(saveErrno);
-      throw CommError(std::string("select error: ") + buf, saveErrno);
+      throw CommError(std::string("select error: ") + buf, __FILE__, __LINE__, saveErrno);
     }
 
     // run through the existing connections looking for data to read
@@ -504,7 +506,7 @@ DataTransmitter::runRecvingThread()
       //Waiting for socket connections ...;
       if ((new_fd = accept(sockfd, (struct sockaddr *)&their_addr,
                            &sin_size)) == -1) {
-        throw CommError("accept", errno);
+        throw CommError("accept", __FILE__, __LINE__, errno);
       }
 
       static int protocol_id = -1;
@@ -577,7 +579,7 @@ DataTransmitter::sendPacket(DTMessage *msg, int packetLen)
   if (iter == send_sockmap.end()) {
     new_fd = socket(AF_INET, SOCK_STREAM, 0);
     if ( new_fd  == -1) {
-      throw CommError("socket", errno);
+      throw CommError("socket", __FILE__, __LINE__, errno);
     }
 
     static int protocol_id = -1;
@@ -617,7 +619,7 @@ DataTransmitter::sendPacket(DTMessage *msg, int packetLen)
 
     if (connect(new_fd, (struct sockaddr *)&their_addr,sizeof(struct sockaddr)) == -1) {
       perror("connect");
-      throw CommError("connect", errno);
+      throw CommError("connect", __FILE__, __LINE__, errno);
     }
     //immediate register the listening port
     //cout<<"register port "<<addr.port<<endl;
@@ -640,7 +642,7 @@ DataTransmitter::sendall(int sockfd, void *buf, int len)
   int total = 0;        // how many bytes we've sent
   while (total < len) {
     int n = send(sockfd, (char*)buf+total, left, 0);
-    if (n == -1) throw CommError("recv", errno);
+    if (n == -1) throw CommError("recv", __FILE__, __LINE__, errno);
     total += n;
     left -= n;
   }
@@ -654,7 +656,7 @@ DataTransmitter::recvall(int sockfd, void *buf, int len)
   int total = 0;        // how many bytes we've recved
   while (total < len) {
     int n = recv(sockfd, (char*)buf+total, left, MSG_WAITALL);
-    if (n == -1) throw CommError("recv", errno);
+    if (n == -1) throw CommError("recv", __FILE__, __LINE__, errno);
     if (n == 0) return 0;
     total += n;
     left -= n;
@@ -689,8 +691,6 @@ DataTransmitter::isLocal(DTAddress& addr)
 void
 DataTransmitter::exit()
 {
-std::cerr << "DataTransmitter::exit()" << std::endl;
-
   quit = true;
   sendQ_cond->conditionSignal(); //wake up the sendingThread
 

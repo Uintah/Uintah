@@ -39,13 +39,13 @@
 
 namespace SCIRun {
   /**************************************
- 
+
   CLASS
      CommError
-   
+
   KEYWORDS
      Exception, Error, PIDL
-   
+
   DESCRIPTION
      Exception class for communication functions.  An unhandled negative return
      code from a socket function will get mapped to this exception.  The
@@ -58,7 +58,7 @@ namespace SCIRun {
     //////////
     // Construct the exception with the given reason and the
     // return code from the Communication class
-    CommError(const std::string& msg, int code);
+    CommError(const std::string& msg, const char* file, int line, int errorCode);
 
     //////////
     // Copy ctor
