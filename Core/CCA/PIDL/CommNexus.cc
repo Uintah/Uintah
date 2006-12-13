@@ -49,7 +49,7 @@ void
 CommNexus::initialize()
 {
   if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
-    throw CommError("Unable to initialize nexus", gerr);
+    throw CommError("Unable to initialize nexus", __FILE__, __LINE__, gerr);
   globus_nexus_enable_fault_tolerance(NULL, 0);
 }
 
@@ -57,6 +57,6 @@ void
 CommNexus::finalize()
 {
   if(int gerr=globus_module_deactivate(GLOBUS_NEXUS_MODULE))
-    throw CommError("Unable to initialize nexus", gerr);
+    throw CommError("Unable to initialize nexus", __FILE__, __LINE__, gerr);
 }
 

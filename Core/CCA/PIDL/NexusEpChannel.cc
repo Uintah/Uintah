@@ -69,9 +69,9 @@ void unknown_handler(globus_nexus_endpoint_t* endpoint,
   NexusEpChannel *chan = dynamic_cast<NexusEpChannel*>(sc->chan);
   if (chan) {
     if (handler_id >= chan->table_size)
-      throw CommError("Handler function does not exist",1101);
+      throw CommError("Handler function does not exist", __FILE__, __LINE__, 1101);
     if(int _gerr=globus_nexus_buffer_save(buffer))
-      throw CommError("buffer_save", _gerr);
+      throw CommError("buffer_save", __FILE__, __LINE__, _gerr);
     chan->msgbuffer = *buffer;
     Thread *t = new Thread(new NexusHandlerThread(chan, handler_id), "HANDLER_THREAD");
     t->detach(); 
@@ -100,7 +100,7 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
     if (chan)
       return chan->approve(sp, obj);
     else
-      throw CommError("You aren't using consistent communication libraries", 1007);		
+      throw CommError("You aren't using consistent communication libraries", __FILE__, __LINE__, 1007);
   } catch(const SCIRun::Exception& e) {
     std::cerr << "Caught exception (" << e.message() << "): " << urlstring
               << ", rejecting client (code=1005)\n";
@@ -143,9 +143,9 @@ void NexusEpChannel::openConnection() {
     dbg << "NexusEpChannel::openConnection()\n";
   
     if(int gerr=globus_module_activate(GLOBUS_NEXUS_MODULE))
-      throw CommError("Unable to initialize nexus", gerr);
+      throw CommError("Unable to initialize nexus", __FILE__, __LINE__, gerr);
     if(int gerr=globus_nexus_allow_attach(&port, &hostname, approval_fn, 0))
-      throw CommError("globus_nexus_allow_attach failed", gerr);
+      throw CommError("globus_nexus_allow_attach failed", __FILE__, __LINE__, gerr);
     globus_nexus_enable_fault_tolerance(NULL, 0);
   }
 }
@@ -154,7 +154,7 @@ void NexusEpChannel::closeConnection() {
   dbg << "NexusEpChannel::closeConnection()\n";
 
   if(int gerr=globus_nexus_endpoint_destroy(&d_endpoint))
-    throw CommError("endpoint_destroy", gerr);
+    throw CommError("endpoint_destroy", __FILE__, __LINE__, gerr);
 }
 
 string NexusEpChannel::getUrl() {
@@ -176,19 +176,19 @@ void NexusEpChannel::activateConnection(void * obj) {
 
   globus_nexus_endpointattr_t attr;
   if(int gerr=globus_nexus_endpointattr_init(&attr))
-    throw CommError("endpointattr_init", gerr);
+    throw CommError("endpointattr_init", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
 							  emptytable, 0))
-    throw CommError("endpointattr_set_handler_table", gerr);
+    throw CommError("endpointattr_set_handler_table", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
 							    unknown_handler,
 							    GLOBUS_NEXUS_HANDLER_TYPE_NON_THREADED))
-    throw CommError("endpointattr_set_unknown_handler", gerr);
+    throw CommError("endpointattr_set_unknown_handler", __FILE__, __LINE__, gerr);
   if(int gerr=globus_nexus_endpoint_init(&d_endpoint, &attr))
-    throw CommError("endpoint_init", gerr);    
+    throw CommError("endpoint_init", __FILE__, __LINE__, gerr);
   globus_nexus_endpoint_set_user_pointer(&d_endpoint, obj);
   if(int gerr=globus_nexus_endpointattr_destroy(&attr))
-    throw CommError("endpointattr_destroy", gerr);
+    throw CommError("endpointattr_destroy", __FILE__, __LINE__, gerr);
 
 }
 
@@ -205,7 +205,7 @@ void NexusEpChannel::registerHandler(int num, void* handle){
 void NexusEpChannel::bind(SpChannel* spchan) {
   NexusSpChannel* nspchan = dynamic_cast<NexusSpChannel*>(spchan);
   if (nspchan == NULL) 
-    throw CommError("Communication Library discrepancy detected\n",1000);
+    throw CommError("Communication Library discrepancy detected\n", __FILE__, __LINE__, 1000);
   if(int gerr=globus_nexus_startpoint_bind(&(nspchan->d_sp), &d_endpoint))
-    throw CommError("startpoint_bind", gerr);    
+    throw CommError("startpoint_bind", __FILE__, __LINE__, gerr);    
 }

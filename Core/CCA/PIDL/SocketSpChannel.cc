@@ -90,7 +90,7 @@ void SocketSpChannel::openConnection(const URL& url)
   struct hostent *he;
   // get the host info
   if ((he = gethostbyname(url.getHostname().c_str())) == NULL) {
-    throw CommError("gethostbyname", errno);
+    throw CommError("gethostbyname", __FILE__, __LINE__, errno);
   }
   ep_addr.setIP( (( struct in_addr * ) he->h_addr )->s_addr);
   ep_addr.setPort(url.getPortNumber());

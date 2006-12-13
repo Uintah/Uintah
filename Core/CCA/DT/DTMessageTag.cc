@@ -57,7 +57,7 @@
 
 
 #include <iostream>
-#include <Core/CCA/PIDL/CommError.h>
+
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>

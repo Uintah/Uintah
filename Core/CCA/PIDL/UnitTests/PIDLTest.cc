@@ -85,9 +85,7 @@ void PIDLTest::testWarehouse()
   CPPUNIT_ASSERT(warehouse != 0);
 }
 
-// doesn't return because of DataTransmitter bug
 void PIDLTest::testFinalize()
 {
-  std::cout << "\ntestFinalize\n";
   SCIRun::PIDL::finalize();
 }
