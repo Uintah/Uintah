@@ -81,6 +81,12 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
   typedef typename FIELD::mesh_type FMT;
   typedef typename FMT::basis_type MBT;
 
+  static bool ud_pair_less(const std::pair<unsigned int, double> &a,
+                           const std::pair<unsigned int, double> &b)
+  {
+      return a.first < b.first;
+  };
+
   void execute_dipole(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, ColumnMatrix** rhs, SparseRowMatrix **w)
   {
     FMT *mesh=dynamic_cast<FMT *>(hField->mesh().get_rep());
@@ -112,7 +118,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
     PCMesh::Node::iterator ii_end;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
-    vector<double> weights;
+    vector<pair<unsigned int, double> > weights;
     vector<double> coords;
     vector<double> wd(MBT::dofs()*MBT::domain_dimension());
 
@@ -137,18 +143,15 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
 
         if (fabs(dir.x()) > 0.000001)
         {
-          weights.push_back(loc*3);
-          weights.push_back(dir.x());
+          weights.push_back(pair<unsigned int, double>(loc*3+0, dir.x()));
         }
         if (fabs(dir.y()) > 0.000001)
         {
-          weights.push_back(loc*3+1);
-          weights.push_back(dir.y());
+          weights.push_back(pair<unsigned int, double>(loc*3+1, dir.y()));
         }
         if (fabs(dir.z()) > 0.000001)
         {
-          weights.push_back(loc*3+2);
-          weights.push_back(dir.z());
+          weights.push_back(pair<unsigned int, double>(loc*3+2, dir.z()));
         }
 	
 
@@ -206,16 +209,17 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
       }
     }
 
-    int *rr = scinew int[2]; rr[0] = 0; rr[1] = static_cast<int>(weights.size()/2);
-    int *cc = scinew int[weights.size()/2];
-    double *dd = scinew double[weights.size()/2];
-    for (int i=0; i < static_cast<int>(weights.size()/2); i++)
+    int *rr = scinew int[2]; rr[0] = 0; rr[1] = (int)weights.size();
+    int *cc = scinew int[weights.size()];
+    double *dd = scinew double[weights.size()];
+    std::sort(weights.begin(), weights.end(), ud_pair_less);
+    for (unsigned int i=0; i < weights.size(); i++)
     {
-      cc[i] = static_cast<int>(weights[2*i]);
-      dd[i] = static_cast<double>(weights[2*i+1]);
+      cc[i] = weights[i].first;
+      dd[i] = weights[i].second;
     }
     
-    *w = scinew SparseRowMatrix(1,3*sz,rr,cc,static_cast<int>(weights.size()/2),dd);
+    *w = scinew SparseRowMatrix(1, 3*sz, rr, cc, (int)weights.size(), dd);
   }
 
   void execute_sources_and_sinks(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs)
