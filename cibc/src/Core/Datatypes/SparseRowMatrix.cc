@@ -256,8 +256,6 @@ SparseRowMatrix::transpose() const
   int t_nnz = nnz;
   int t_nncols = nrows_;
   int t_nnrows = ncols_;
-  SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
-					      t_columns, t_nnz, t_a);
 
   int *at = scinew int[t_nnrows+1];
   int i;
@@ -289,7 +287,8 @@ SparseRowMatrix::transpose() const
   }
 
   delete at;
-  return t;
+  return scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
+                                t_columns, t_nnz, t_a);
 }
 
 
