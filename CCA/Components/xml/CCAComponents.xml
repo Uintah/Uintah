@@ -115,8 +115,8 @@
   <library name="libCCA_Components_TestProcessEvents.so">
     <component name="SCIRun.TestProcessEvents" />
   </library>
-  <library name="libCCA_Components_TestWildcardTopic.so">
-    <component name="SCIRun.TestWildcardTopic" />
+  <library name="libCCA_Components_TestSubscription.so">
+    <component name="SCIRun.TestSubscription" />
   </library>
   <library name="libCCA_Components_samploecomponent.so">
     <component name="SCIRun.samploecomponent" />
