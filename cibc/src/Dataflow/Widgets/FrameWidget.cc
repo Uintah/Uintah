@@ -692,7 +692,7 @@ FrameWidget::GetRightAxis()
   }
   else
   {
-    return (oldrightaxis = axis.normal());
+    return (oldrightaxis = axis.safe_normal());
   }
 }
 
@@ -707,7 +707,7 @@ FrameWidget::GetDownAxis()
   }
   else
   {
-    return (olddownaxis = axis.normal());
+    return (olddownaxis = axis.safe_normal());
   }
 }
 

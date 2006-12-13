@@ -426,7 +426,7 @@ GaugeWidget::GetAxis()
   if (axis.length2() <= 1e-6)
     return oldaxis;
   else 
-    return (oldaxis = axis.normal());
+    return (oldaxis = axis.safe_normal());
 }
 
 

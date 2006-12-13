@@ -301,7 +301,7 @@ ArrowWidget::SetDirection( const Vector& v )
 {
 
   // variables[Dist]*(v.norm()-direction.norm())
-  variables[HeadVar]->MoveDelta((v.normal()-direction.normal())*variables[DistVar]->real());
+  variables[HeadVar]->MoveDelta((v.safe_normal()-direction.safe_normal())*variables[DistVar]->real());
   //   variables[HeadVar]->SetDelta(v-direction, Scheme1);
   direction = v;
   execute(0);
@@ -318,7 +318,7 @@ ArrowWidget::GetDirection()
   }
   else
   {
-    return (direction = dir.normal());
+    return (direction = dir.safe_normal());
   }
 }
 

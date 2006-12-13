@@ -175,7 +175,7 @@ CriticalPointWidget::redraw()
   const double conelen(1.5*widget_scale_), conerad(0.8*widget_scale_), cyllen(extent-conelen);
   const Point center(variables[PointVar]->point());
   Vector v1, v2;
-  direct.normal().find_orthogonal(v1,v2);
+  direct.safe_normal().find_orthogonal(v1,v2);
 
   Point cylinder1end1, cylinder1end2;
   Point cylinder2end1, cylinder2end2;

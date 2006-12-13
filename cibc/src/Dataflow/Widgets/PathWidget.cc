@@ -205,9 +205,9 @@ PathPoint::SetIndex( const Index i )
 void
 PathPoint::execute()
 {
-  const Vector v1(((Point)TangentVar-PointVar).normal());
-  const Vector v2(((Point)OrientVar-PointVar).normal());
-  const Vector v3(((Point)UpVar-PointVar).normal());
+  const Vector v1(((Point)TangentVar-PointVar).safe_normal());
+  const Vector v2(((Point)OrientVar-PointVar).safe_normal());
+  const Vector v3(((Point)UpVar-PointVar).safe_normal());
   const double shaftlen(3.0*widget->widget_scale_);
   const double arrowlen(5.0*widget->widget_scale_);
   const double sphererad(widget->widget_scale_);
@@ -293,9 +293,9 @@ void
 PathPoint::Get( Point& p, Vector& tangent, Vector& orient, Vector& up ) const
 {
   p = PointVar;
-  tangent = ((Point)TangentVar-PointVar).normal();
-  orient = ((Point)OrientVar-PointVar).normal();
-  up = ((Point)UpVar-PointVar).normal();
+  tangent = ((Point)TangentVar-PointVar).safe_normal();
+  orient = ((Point)OrientVar-PointVar).safe_normal();
+  up = ((Point)UpVar-PointVar).safe_normal();
 }
 
 
