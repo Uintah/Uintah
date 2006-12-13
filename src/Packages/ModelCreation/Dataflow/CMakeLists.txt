@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/ModelCreation/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 

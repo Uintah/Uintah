@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/Teem/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 

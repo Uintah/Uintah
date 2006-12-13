@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/BioPSE/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 
