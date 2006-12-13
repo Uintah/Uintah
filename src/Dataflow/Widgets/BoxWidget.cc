@@ -821,7 +821,7 @@ BoxWidget::GetRightAxis()
   }
   else
   {
-    return (oldrightaxis = axis.normal());
+    return (oldrightaxis = axis.safe_normal());
   }
 }
 
@@ -836,7 +836,7 @@ BoxWidget::GetDownAxis()
   }
   else
   {
-    return (olddownaxis = axis.normal());
+    return (olddownaxis = axis.safe_normal());
   }
 }
 
@@ -851,7 +851,7 @@ BoxWidget::GetInAxis()
   }
   else
   {
-    return (oldinaxis = axis.normal());
+    return (oldinaxis = axis.safe_normal());
   }
 }
 
