@@ -284,7 +284,7 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
       fwk->getFrameworkService("cca.FrameworkProperties", ""));
   if (fwkProperties.isNull()) {
-    std::cerr << "Error: Cannot find framework properties" ;
+      std::cerr << "Error: Cannot find framework properties" << std::endl;
     return false;
   } else {
     tm = fwkProperties->getProperties();
