@@ -62,7 +62,7 @@ public:
   int nnz;
   double* a;
 
-  void validate();
+  bool validate();
 
   //! Constructors
   // Here's what the arguements for the constructor should be:
