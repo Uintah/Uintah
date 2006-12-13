@@ -701,15 +701,15 @@ ViewWindow::unicam_rot(int x, int y)
   double opsq = op[0] * op[0], oesq = oe[0] * oe[0];
   double lop  = opsq > radsq ? 0 : sqrt(radsq - opsq);
   double loe  = oesq > radsq ? 0 : sqrt(radsq - oesq);
-  Vector nop = Vector(op[0], 0, lop).normal();
-  Vector noe = Vector(oe[0], 0, loe).normal();
+  Vector nop = Vector(op[0], 0, lop).safe_normal();
+  Vector noe = Vector(oe[0], 0, loe).safe_normal();
   double dot = Dot(nop, noe);
 
   if (fabs(dot) > 0.0001) {
     double angle = -2*acos(Clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
     MyRotateCamera(center, Vector(0,1,0), angle);
     double rdist = te[1]-tp[1];
-    Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).normal();
+    Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).safe_normal();
     MyRotateCamera(center, right_v, rdist);
     View tmpview = gui_view_.get(); // update tmpview given last rotation
     tmpview.up(Vector(0,1,0));
@@ -732,7 +732,7 @@ ViewWindow::unicam_zoom(int X, int Y)
   // PART A: Zoom in/out (assume perspective projection for now..)
   View tmpview(gui_view_.get());
   Vector movec   = (down_pt_ - tmpview.eyep());
-  Vector movec_n = movec.normal(); // normalized movec
+  Vector movec_n = movec.safe_normal(); // normalized movec
   Vector trans1  = movec_n * (movec.length() * delta[1] * -4);
   MyTranslateCamera(trans1);
 
@@ -784,7 +784,7 @@ ViewWindow::film_dir(double x, double y)
 {
   View tmpview(gui_view_.get());
   Point at = tmpview.eyespace_to_objspace(Point( x, y, 1), WindowAspect());
-  return (at - tmpview.eyep()).normal();
+  return (at - tmpview.eyep()).safe_normal();
 }
 
 Point
@@ -861,7 +861,7 @@ ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       } else {
 	// XXX - need to select 's' to make focus_sphere_ 1/4 or so
 	// inches on the screen always...  how?
-	Vector at_v=(gui_view_.get().lookat()-gui_view_.get().eyep()).normal();
+	Vector at_v=(gui_view_.get().lookat()-gui_view_.get().eyep()).safe_normal();
 	Vector vec  = (down_pt_ - gui_view_.get().eyep()) * at_v;
 	double s = 0.008 * vec.length();
 	focus_sphere_->move(down_pt_, s);
