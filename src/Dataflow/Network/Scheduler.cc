@@ -330,11 +330,18 @@ Scheduler::do_scheduling_real(Module* exclude)
   }
 
   // Execute all the modules.
+  
+  bool found_exclude = false;
+  unsigned int exclude_serial = 0;
+  
   for(i=0;i<nmodules;i++)
   {
     Module* module = net->module(i);
+
     if (module == exclude)
     {
+      found_exclude = true;
+      exclude_serial = serial_base+i;
       // we'll call report_execution_finished_real after we unlockNeedExecute
     }
     else if (module->need_execute_)
@@ -351,15 +358,7 @@ Scheduler::do_scheduling_real(Module* exclude)
   }
 
   unlockNeedExecute();
-
-  for(i=0;i<nmodules;i++)
-  {
-    Module* module = net->module(i);
-    if (module == exclude)
-    {
-      report_execution_finished_real(serial_base + i);
-    }
-  }
+  if (found_exclude) report_execution_finished_real(exclude_serial);
 }
 
 
@@ -412,6 +411,7 @@ Scheduler::report_execution_started()
 void
 Scheduler::report_execution_finished_real(unsigned int serial)
 {
+
   int found = 0;
   list<SerialSet>::iterator itr = serial_set.begin();
   while (itr != serial_set.end())
@@ -421,6 +421,7 @@ Scheduler::report_execution_finished_real(unsigned int serial)
       found++;
 
       itr->callback_count++;
+
       if (itr->callback_count == itr->size)
       {
         serial_set.erase(itr);
