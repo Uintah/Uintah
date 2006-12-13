@@ -98,7 +98,7 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
   a(a_)
 {
   if (a == 0) { a = scinew double[nnz]; }
-  //validate();
+  ASSERT(validate());
 }
 
 
@@ -112,7 +112,7 @@ SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy) :
   memcpy(a, copy.a, sizeof(double)*nnz);
   memcpy(rows, copy.rows, sizeof(int)*(nrows_+1));
   memcpy(columns, copy.columns, sizeof(int)*nnz);
-  //validate();
+  ASSERT(validate());
 }
 
 
@@ -133,7 +133,7 @@ SparseRowMatrix::~SparseRowMatrix()
 }
 
 
-void
+bool
 SparseRowMatrix::validate()
 {
   int i, j;
@@ -157,6 +157,7 @@ SparseRowMatrix::validate()
     }
   }
   ASSERTMSG(rows[nrows_] == nnz, "Row end is incorrect.");
+  return true;
 }
 
 
