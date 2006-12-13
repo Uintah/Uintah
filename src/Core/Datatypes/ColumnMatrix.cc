@@ -154,15 +154,19 @@ ColumnMatrix::get_data_size() const
 }
 
 
-Matrix *ColumnMatrix::transpose() {
+Matrix *
+ColumnMatrix::transpose() const
+{
   DenseMatrix *dm = scinew DenseMatrix(1, nrows_);
   for (int i=0; i<nrows_; i++)
     (*dm)[0][i] = data[i];
   return dm;
 }
 
-ColumnMatrix* ColumnMatrix::clone() {
-    return scinew ColumnMatrix(*this);
+
+ColumnMatrix* ColumnMatrix::clone()
+{
+  return scinew ColumnMatrix(*this);
 }
 
 ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)

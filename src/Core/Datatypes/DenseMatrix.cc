@@ -285,7 +285,7 @@ DenseMatrix::add(int r, int c, double d)
 
 
 DenseMatrix *
-DenseMatrix::transpose()
+DenseMatrix::transpose() const
 {
   DenseMatrix *m=scinew DenseMatrix(ncols_, nrows_);
   double *mptr = &((*m)[0][0]);
