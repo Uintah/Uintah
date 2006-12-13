@@ -277,7 +277,7 @@ CreateAndEditCameraPath::execute()
 	  Point lookp=c_view.lookat();
 	  Vector lookdir=lookp-eye;
 	  Vector rdir=wpos-eye;
-	  const double proj=Dot(lookdir.normal(), rdir.normal())*rdir.length();
+	  const double proj=Dot(lookdir.safe_normal(), rdir.safe_normal())*rdir.length();
 	  const double radius=(proj>0)?proj:-proj;
 	  if (rdir.length()<10e-7|| radius<10e-5){
 	    message="Bad Geometry: No circle";
@@ -292,7 +292,7 @@ CreateAndEditCameraPath::execute()
 	    Vector tang=Cross(lookdir, c_view.up());
 	    Vector u=Cross(tang, lookdir);
 	    double f=c_view.fov();
-	    Point center=eye+lookdir.normal()*proj;	   
+	    Point center=eye+lookdir.safe_normal()*proj;
 	    vector<Point> pts(npts);
        
 	    u.normalize();
