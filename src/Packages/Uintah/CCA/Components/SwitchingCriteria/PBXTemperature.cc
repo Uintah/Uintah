@@ -50,11 +50,13 @@ void PBXTemperature::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   MaterialSubset* one_matl = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
-
+#if 0
   t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
   t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
                                                   Ghost::AroundCells, 1);
+#endif
+  t->requires(Task::OldDW, Mlb->pTemperatureLabel,Ghost::None,0);
 
   t->computes(d_sharedState->get_switch_label(), level.get_rep());
 
@@ -82,9 +84,26 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
     int indx = mpm_matl->getDWIndex();
 
+    constParticleVariable<double> pTemperature;
+    ParticleSubset* pset = old_dw->getParticleSubset(indx, patch,
+                                                     Ghost::AroundNodes, 1,
+                                                     Mlb->pXLabel);
+
+    old_dw->get(pTemperature,Mlb->pTemperatureLabel,       pset);
+
+
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+      if (pTemperature[*iter] >= d_temperature) {
+        sw=1;
+        cout << "particle_temp = " << pTemperature[*iter] << endl;
+        break;
+      }
+    }
+
+#if 0
     constNCVariable<double> gmass, gtemperature;
     constNCVariable<double> NC_CCweight;
-
     Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
     new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
@@ -121,6 +140,7 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
         }
       }
     }
+#endif
 
   }
 
