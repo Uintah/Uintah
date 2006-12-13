@@ -1528,7 +1528,6 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter,
     {
       double w[8];
       typename FIELD::mesh_type::Node::array_type nodes;
-      mesh->get_nodes( nodes, el );
       mesh->get_weights(p, nodes, w);
       
       typename FIELD::value_type val;
