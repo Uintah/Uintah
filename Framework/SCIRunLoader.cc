@@ -160,7 +160,7 @@ int SCIRunLoader::createInstance(const std::string& componentName, const std::st
 
   //TODO: assume type is always good?
 
-  std::cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<std::endl;
+  std::cerr << "SCIRunLoader::getReferenceCount()=" << getReferenceCount() << std::endl;
 
 
   std::string lastname=componentType.substr(componentType.find('.')+1);

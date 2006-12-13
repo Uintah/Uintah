@@ -295,7 +295,7 @@ void Object::resetRankAndSize()
 
 void Object::getException() {}
 
-int Object::getRefCount()
+int Object::getReferenceCount()
 {
   return ref_cnt;
 }
