@@ -142,8 +142,8 @@ public:
   // Dummy method (needed by PIDL/proxy_sample
   virtual void getException();
 
-  //DEBUG:: remove
-  int getRefCount();
+  //DEBUG:: remove?
+  int getReferenceCount();
 protected:
   //////////
   // Constructor.  Initializes d_serverContext to null,
