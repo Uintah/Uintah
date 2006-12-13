@@ -79,7 +79,7 @@ IF(WITH_ITK)
 ENDIF(WITH_ITK)
 
 # TCL include directories
-SET(TCL_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tcl CACHE PATH "Path to tcl source")
+SET(TCL_SRC_PATH ${SCIRUN_THIRDPARTY_DIR}/src/tcl CACHE PATH "Path to tcl source")
 SET(TCL_INCLUDE1 ${TCL_SRC_PATH}/generic)
 IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
   SET(TCL_INCLUDE2 ${TCL_SRC_PATH}/mac ${TCL_SRC_PATH}/unix)
@@ -88,7 +88,7 @@ ELSE(CMAKE_SYSTEM_NAME MATCHES Darwin)
 ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
 
 FIND_PATH(TCL_INCLUDE tcl.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
+           ${SCIRUN_THIRDPARTY_DIR}/include
            /usr/local/include
            /usr/include
            /include
@@ -97,7 +97,7 @@ MARK_AS_ADVANCED(TCL_SRC_PATH TCL_INCLUDE1 TCL_INCLUDE2 TCL_INCLUDE)
 INCLUDE_DIRECTORIES(${TCL_INCLUDE1} ${TCL_INCLUDE2})
 
 # TK include directories
-SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
+SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_DIR}/src/tk CACHE PATH "Path to tk source")
 SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
 IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
   SET(TK_INCLUDE2 ${TK_SRC_PATH}/mac ${TK_SRC_PATH}/unix)
@@ -106,7 +106,7 @@ ELSE(CMAKE_SYSTEM_NAME MATCHES Darwin)
 ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
 
 FIND_PATH(TK_INCLUDE tk.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
+           ${SCIRUN_THIRDPARTY_DIR}/include
            /usr/local/include
            /usr/include
            /include
@@ -195,9 +195,9 @@ Widgets)
 # createTclIndex and tclIndex files
 # DV Fix for each packages, create their tclIndex file
 SET(CREATETCLINDEX ${SCIRUN_DATAFLOW_BINARY_DIR}/createTclIndex CACHE INTERNAL "createTclIndex script file")
-SET(TCLSH ${SCIRUN_THIRDPARTY_PATH}/bin/tclsh${TCL_VERSION})
-SET(TCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/tcl/)
-SET(ITCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/itcl/)
+SET(TCLSH ${SCIRUN_THIRDPARTY_DIR}/bin/tclsh${TCL_VERSION})
+SET(TCL_INIT_DIR ${SCIRUN_THIRDPARTY_DIR}/lib/tcl/)
+SET(ITCL_INIT_DIR ${SCIRUN_THIRDPARTY_DIR}/lib/itcl/)
 MESSAGE(STATUS "Creating createTclIndex")
 
 IF(WIN32) 

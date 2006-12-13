@@ -17,7 +17,7 @@ SET(SCIRUN_BUILD_SETTINGS_FILE ${PROJECT_BINARY_DIR}/SCIRUNBuildSettings.cmake)
 # Library directory.
 SET(SCIRUN_LIBRARY_DIRS_CONFIG 
   ${LIBRARY_OUTPUT_PATH}
-  ${SCIRUN_THIRDPARTY_PATH}/lib
+  ${SCIRUN_THIRDPARTY_DIR}/lib
 )
 
 # Set specific libraries we may want for Dataflow or StandAlone apps
