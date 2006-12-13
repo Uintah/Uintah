@@ -346,7 +346,7 @@ ShowAndEditDipoles::new_input_data(PCField *in)
     double str = v.length();
     new_magnitudes_[i]->set(str);
     if (str < 0.0000001) v.z(1);
-    v.normalize();
+    v.safe_normalize();
     widget_[i]->SetDirection(v);
     new_directions_[i]->set(v);
     double sc = widgetSizeGui_.get();
