@@ -33,6 +33,7 @@ SRCDIR := Framework/UnitTests
 PROGRAM := $(SRCDIR)/test
 
 SRCS := \
+        $(SRCDIR)/TypeMapTest.cc \
         $(SRCDIR)/AbstractFrameworkTest.cc \
         $(SRCDIR)/main.cc
 

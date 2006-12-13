@@ -26,41 +26,39 @@
   DEALINGS IN THE SOFTWARE.
 */
 
+#include <Framework/UnitTests/TypeMapTest.h>
+#include <Framework/SCIRunFramework.h>
 
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
-#include <cppunit/BriefTestProgressListener.h>
-#include <cppunit/CompilerOutputter.h>
-#include <cppunit/TestResult.h>
-#include <cppunit/TestResultCollector.h>
+// Registers the fixture into the 'registry'
+CPPUNIT_TEST_SUITE_REGISTRATION( TypeMapTest );
 
-#include <Framework/UnitTests/PIDLBootstrap.h>
-
-int main( int argc, char **argv)
+TypeMapTest::TypeMapTest()
 {
-  bootstrapPIDL();
+}
 
-  // Create the event manager and test controller
-  CPPUNIT_NS::TestResult controller;
+TypeMapTest::~TypeMapTest()
+{
+}
 
-  // Add a listener that colllects test result
-  CPPUNIT_NS::TestResultCollector result;
-  controller.addListener( &result );
+void TypeMapTest::setUp()
+{
+}
 
-  // Add a listener that print dots as test run.
-  CPPUNIT_NS::BriefTestProgressListener progress;
-  controller.addListener( &progress );
+void TypeMapTest::tearDown()
+{
+}
 
-  // Add the top suite to the test runner
-  CPPUNIT_NS::TestRunner runner;
-  runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
-  runner.run( controller );
+void TypeMapTest::testInstantiate()
+{
+  CPPUNIT_FAIL("TypeMapTest::testInstantiate() not implemented");
+}
 
-  // Print test in a compiler compatible format.
-  CPPUNIT_NS::CompilerOutputter outputter( &result, CPPUNIT_NS::stdCOut() );
-  outputter.write();
+void TypeMapTest::testClone()
+{
+  CPPUNIT_FAIL("TypeMapTest::testClone() not implemented");
+}
 
-  cleanupPIDL();
-
-  return result.wasSuccessful() ? 0 : 1;
+void TypeMapTest::testCloneEmpty()
+{
+  CPPUNIT_FAIL("TypeMapTest::testCloneEmpty() not implemented");
 }

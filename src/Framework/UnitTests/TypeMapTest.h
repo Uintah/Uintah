@@ -26,41 +26,36 @@
   DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Framework_UnitTests_TypeMapTest_h
+#define Framework_UnitTests_TypeMapTest_h
 
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
-#include <cppunit/BriefTestProgressListener.h>
-#include <cppunit/CompilerOutputter.h>
-#include <cppunit/TestResult.h>
-#include <cppunit/TestResultCollector.h>
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
-#include <Framework/UnitTests/PIDLBootstrap.h>
+#include <Core/CCA/spec/cca_sidl.h>
 
-int main( int argc, char **argv)
-{
-  bootstrapPIDL();
+class TypeMapTest : public CppUnit::TestFixture {
+public:
+  TypeMapTest();
+  virtual ~TypeMapTest();
 
-  // Create the event manager and test controller
-  CPPUNIT_NS::TestResult controller;
+  // Set up context before running a test.
+  virtual void setUp();
 
-  // Add a listener that colllects test result
-  CPPUNIT_NS::TestResultCollector result;
-  controller.addListener( &result );
+  // Clean up after the test run.
+  virtual void tearDown();
 
-  // Add a listener that print dots as test run.
-  CPPUNIT_NS::BriefTestProgressListener progress;
-  controller.addListener( &progress );
+protected:
+    void testInstantiate();
+    void testClone();
+    void testCloneEmpty();
 
-  // Add the top suite to the test runner
-  CPPUNIT_NS::TestRunner runner;
-  runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
-  runner.run( controller );
+private:
+  CPPUNIT_TEST_SUITE( TypeMapTest );
+  CPPUNIT_TEST( testInstantiate );
+  CPPUNIT_TEST( testClone );
+  CPPUNIT_TEST( testCloneEmpty );
+  CPPUNIT_TEST_SUITE_END();
+};
 
-  // Print test in a compiler compatible format.
-  CPPUNIT_NS::CompilerOutputter outputter( &result, CPPUNIT_NS::stdCOut() );
-  outputter.write();
-
-  cleanupPIDL();
-
-  return result.wasSuccessful() ? 0 : 1;
-}
+#endif

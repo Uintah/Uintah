@@ -32,7 +32,6 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <Framework/SCIRunFramework.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 class AbstractFrameworkTest : public CppUnit::TestFixture {
@@ -46,17 +45,23 @@ public:
   // Clean up after the test run.
   virtual void tearDown();
 
+protected:
   void testInstantiate();
+  void testCreateTypeMap();
   void testGetServices();
+  void testReleaseServices();
+  void testShutdownFramework();
 
 private:
   CPPUNIT_TEST_SUITE( AbstractFrameworkTest );
   CPPUNIT_TEST( testInstantiate );
+  CPPUNIT_TEST( testCreateTypeMap );
   CPPUNIT_TEST( testGetServices );
+  CPPUNIT_TEST( testReleaseServices );
+  CPPUNIT_TEST( testShutdownFramework );
   CPPUNIT_TEST_SUITE_END();
 
-//   sci::cca::AbstractFramework::pointer abstractFramework;
-//   SCIRun::SCIRunFramework *fwk;
+  sci::cca::AbstractFramework::pointer abstractFramework;
 };
 
 #endif
