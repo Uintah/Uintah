@@ -1144,6 +1144,13 @@ template <class FIELD>
 class ClipVolumeByIsovalueAlgoHex : public ClipVolumeByIsovalueAlgo
 {
 public:
+
+  static bool ud_pair_less(const std::pair<unsigned int, double> &a,
+                           const std::pair<unsigned int, double> &b)
+  {
+      return a.first < b.first;
+  };
+
   //! virtual interface. 
   virtual FieldHandle execute( ProgressReporter *reporter, FieldHandle fieldh,
                                double isoval, bool lte,
@@ -1529,15 +1536,22 @@ ClipVolumeByIsovalueAlgoHex<FIELD>::execute( ProgressReporter *reporter,
       double w[8];
       typename FIELD::mesh_type::Node::array_type nodes;
       mesh->get_weights(p, nodes, w);
-      
+
+      vector<pair<unsigned int, double> > snodes(8);
+      for (int k = 0; k < 8; k++)
+      {
+        snodes[k].first = nodes[k];
+        snodes[k].second = w[k];
+      }
+      std::sort(snodes.begin(), snodes.end(), ud_pair_less);
       typename FIELD::value_type val;
       typename FIELD::value_type actual_val = 0;
       for( int k = 0; k < 8; k++ )
       {
-        field->value( val, nodes[k] );
-        actual_val += w[k]*val;
-        cc[rrvalue+k] = nodes[k];
-        d[rrvalue+k] = w[k];
+        field->value( val, (typename FIELD::mesh_type::Node::index_type)(snodes[k].first) );
+        actual_val += snodes[k].first * val;
+        cc[rrvalue+k] = snodes[k].first;
+        d[rrvalue+k] = snodes[k].second;
       }
       ofield->set_value( actual_val, ni );
     }
