@@ -203,7 +203,7 @@ MESSAGE(STATUS "Creating createTclIndex")
 IF(WIN32) 
   # On Windows, we would just make a batch file to do the same thing as the createTCLIndex sh script,
   # but the << operator is not accepted.  So we must create a file per tcl index
-  set (CREATE_TCL_PACKAGE ${SCIRUN_CORESOURCE_DIR}/Core/GUI)
+  set (CREATE_TCL_PACKAGE ${SCIRUN_CORE_SOURCE_DIR}/Core/GUI)
   CONFIGURE_FILE (
     "${SCIRUN_CORE_SOURCE_DIR}/scripts/cmake_win32createTclIndex.in"
     "${SCIRUN_DATAFLOW_BINARY_DIR}/createCoreTclIndex.tcl"

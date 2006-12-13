@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/CardioWaveInterface/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 
