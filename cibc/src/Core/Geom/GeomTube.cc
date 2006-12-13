@@ -91,7 +91,7 @@ void GeomTube::add(GeomVertex* vtx, double radius, const Vector& dir)
 {
     GeomVertexPrim::add(vtx);  // Add the vertex - point and maybe color
     radii.add(radius);     // specify the radius of that point
-    directions.add(dir.normal());    // and the direction 
+    directions.add(dir.safe_normal());    // and the direction 
 }
 
 // Given a center point and its normal, compute those points on the 
