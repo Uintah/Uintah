@@ -106,7 +106,6 @@ public:
                                     int *&cols, double *&vals);
 
   //! 
-  virtual SparseRowMatrix *transpose();
   virtual SparseRowMatrix *transpose() const;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs, int beg=-1, int end=-1,
