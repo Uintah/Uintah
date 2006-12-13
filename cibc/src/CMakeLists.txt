@@ -793,7 +793,7 @@ ELSE(WITH_MESQUITE OR MESQUITE_DIR)
 ENDIF(WITH_MESQUITE OR MESQUITE_DIR)
 
 #----------------------------------------------------------------------------
-# Search for Verdict (http://tetgen.berlios.de)
+# Search for Verdict 
 
 IF(VERDICT_DIR)
   SET(VERDICT_DIR ${VERDICT_DIR} CACHE PATH "Path to verdict" FORCE)
@@ -867,73 +867,40 @@ ENDIF(WITH_VERDICT OR VERDICT_DIR)
 #----------------------------------------------------------------------------
 # Search for Tetgen (http://tetgen.berlios.de)
 
-IF(TEGEN_DIR)
-  SET(TEGEN_DIR ${TEGEN_DIR} CACHE PATH "Path to tetgen" FORCE)
-  MARK_AS_ADVANCED(CLEAR TEGEN_DIR)
-ENDIF(TEGEN_DIR)
+IF(TETGEN_DIR)
+  SET(TETGEN_DIR ${TETGEN_DIR} CACHE PATH "Path to tetgen" FORCE)
+  MARK_AS_ADVANCED(CLEAR TETGEN_DIR)
+ENDIF(TETGEN_DIR)
 
-OPTION(WITH_TETGEN "compile with tetgen" OFF)
-MARK_AS_ADVANCED(WITH_TETGEN)
-
-IF(WITH_TETGEN)
-  MARK_AS_ADVANCED(CLEAR WITH_TETGEN)
-ENDIF(WITH_TETGEN)
-
-IF(WITH_TETGEN OR TEGEN_DIR)
+IF(TETGEN_DIR)
 
   MESSAGE(STATUS "Configuring SCIRun with TETGEN")
 
-  SET(TETGEN_LIBRARY TETGEN_LIBRARY-NOTFOUND CACHE FILEPATH "Tetgen library" FORCE)
-  SET(TETGEN_INCLUDE TETGEN_INCLUDE-NOTFOUND CACHE FILEPATH "Tetgen include" FORCE)
-  
-  IF(TEGEN_DIR)
-    FIND_LIBRARY(TETGEN_LIBRARY 
-      NAMES tet 
-      PATHS ${TEGEN_DIR}
-      ${TEGEN_DIR}/lib
-      ${SCIRUN_THIRDPARTY_DIR}/lib
-      /usr/local/lib
-      /usr/lib
-      /lib)
+  SET(TETGEN_LIBRARY TETGEN_LIBRARY-NOTFOUND CACHE FILEPATH 
+      "Tetgen library" FORCE)
+  SET(TETGEN_INCLUDE TETGEN_INCLUDE-NOTFOUND CACHE FILEPATH 
+      "Tetgen include" FORCE)
 
-    FIND_PATH(TETGEN_INCLUDE tetgen.h
-      ${TEGEN_DIR}
-      ${TEGEN_DIR}/include
-      ${SCIRUN_THIRDPARTY_DIR}/include
-      /usr/local/include/
-      /usr/include
-      /include)
-  
-  ELSE(TEGEN_DIR)
-    FIND_LIBRARY(TETGEN_LIBRARY 
-      NAMES tet 
-      PATHS ${SCIRUN_THIRDPARTY_DIR}/lib
-      /usr/local/lib
-      /usr/lib
-      /lib)
-
-    FIND_PATH(TETGEN_INCLUDE tetgen.h
-      ${SCIRUN_THIRDPARTY_DIR}/include
-      /usr/local/include/
-      /usr/include
-      /include)
-  
-  ENDIF(TEGEN_DIR)
+  IF(TETGEN_DIR)
+    FIND_LIBRARY(TETGEN_LIBRARY tet ${TETGEN_DIR})
+    FIND_PATH(TETGEN_INCLUDE tetgen.h ${TETGEN_DIR})  
+  ENDIF(TETGEN_DIR)
 
   IF(TETGEN_LIBRARY AND TETGEN_INCLUDE)
     SET(HAVE_TETGEN "YES" CACHE INTERNAL "Do not edit" FORCE)
     SET(DEF_TETGEN "#define HAVE_TETGEN 1" CACHE INTERNAL "Do not edit" FORCE)
-    SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${TETGEN_INCLUDE})
+    SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} 
+        ${TETGEN_INCLUDE})
   ELSE(TETGEN_LIBRARY AND TETGEN_INCLUDE)
     MESSAGE(FATAL_ERROR "Cannot find tetgen library.") 
   ENDIF(TETGEN_LIBRARY AND TETGEN_INCLUDE)
 
   MARK_AS_ADVANCED(TETGEN_LIBRARY)
   MARK_AS_ADVANCED(TETGEN_INCLUDE)
-ELSE(WITH_TETGEN OR TEGEN_DIR)
+ELSE(TETGEN_DIR)
   SET(HAVE_TETGEN "NO" CACHE INTERNAL "Do not edit" FORCE)
   SET(DEF_TETGEN "" CACHE INTERNAL "Do not edit" FORCE)
-ENDIF(WITH_TETGEN OR TEGEN_DIR)
+ENDIF(TETGEN_DIR)
 
 #----------------------------------------------------------------------------
 # Search for CBlas
