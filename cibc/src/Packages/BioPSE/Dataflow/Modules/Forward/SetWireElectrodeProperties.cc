@@ -133,17 +133,17 @@ SetWireElectrodeProperties::execute()
     pts[i].resize(nu);
     pts_idx[i].resize(nu);
     if (i==0) {
-      up=(c[i+1]-c[i]).normal();
+      up=(c[i+1]-c[i]).safe_normal();
     } else if (i==(unsigned int)(nn-1)) {
-      up=(c[i]-c[i-1]).normal();
+      up=(c[i]-c[i-1]).safe_normal();
     } else {
-      up=(c[i+1]-c[i-1]).normal();
+      up=(c[i+1]-c[i-1]).safe_normal();
     }
     if (i==0) {
       up.find_orthogonal(b1, b2);
     } else {
-      b2=(Cross(up, b1)).normal();
-      b1=(Cross(b2, up)).normal();
+      b2=(Cross(up, b1)).safe_normal();
+      b1=(Cross(b2, up)).safe_normal();
     }
     for (int u=0; u<nu; u++) {
       pts[i][u]=c[i]+(b1*cos(u*du)+b2*sin(u*du))*radius;
