@@ -338,6 +338,7 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
   // Hence we do not have to load and parse an rcfile
 	
   string rcname = new_service->parameters["rcfile"];
+  new_service->parameters["fullrcfile"] = "";
   if (rcname == "") return;
 	
   // First check whether the SCIRUN_DIR/services directory exists 
@@ -352,10 +353,19 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
 	{
 		filename = objdir+std::string("/services/") + rcname;
 		foundrc = parse_service_rcfile(new_service,filename);
-		if (foundrc) return;
-		filename = objdir+std::string("/") + rcname;
+		if (foundrc)
+    {
+      new_service->parameters["fullrcfile"] = filename;
+      return;
+		}
+    filename = objdir+std::string("/") + rcname;
 		foundrc = parse_service_rcfile(new_service,filename);
-		if (foundrc) return;
+		if (foundrc)
+    {
+      new_service->parameters["fullrcfile"] = filename;
+      return;
+		}
+
 	}
 
   // 2. check sourcedir where xml file was located as well
@@ -368,7 +378,7 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
 				 << "' for service " << new_service->servicename << "\n";
 		return;
 	}
-	
+  
   // If this one is a success 
   // try to copy this rc file to the SCIRun directory in the
   // users home directory
@@ -406,7 +416,12 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
 
 		filename = objdir+string("/services/") + rcname;
 		foundrc = parse_service_rcfile(new_service,filename);
-		if (foundrc) return;
+		if (foundrc) 
+    {
+      new_service->parameters["fullrcfile"] = filename;
+      return;
+    }
+
 	}
 
   return;
