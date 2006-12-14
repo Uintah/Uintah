@@ -37,7 +37,16 @@ namespace Uintah {
      WARNING
       
      ****************************************/
-    
+  struct ProcInfo {
+    int rank;
+    double cost;
+  };
+  class ProcCostCompare {
+    public:
+      inline bool operator()(const ProcInfo& p1, const ProcInfo& p2) const {
+        return p1.cost>p2.cost;
+    }
+  };
   struct PatchInfo {
     PatchInfo(int i, int n, int a) {id = i; numParticles = n; assigned = a;}
     PatchInfo() {assigned = 0;}
@@ -45,6 +54,7 @@ namespace Uintah {
     int id;
     int numParticles;
     int assigned;
+    double cost;
   };
 
   class ParticleCompare {
@@ -59,6 +69,12 @@ namespace Uintah {
   public:
     inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
       return p1.id < p2.id;
+    }
+  };
+  class CostCompare {
+    public:
+    inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
+      return p1.cost > p2.cost;
     }
   };
 
@@ -112,7 +128,7 @@ namespace Uintah {
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, DistributedIndex* output);
-    bool thresholdExceeded(const std::vector<double>& patch_costs);
+    bool thresholdExceeded(const std::vector<PatchInfo>& patches);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on

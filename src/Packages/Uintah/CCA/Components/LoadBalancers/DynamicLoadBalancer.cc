@@ -15,6 +15,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
 #include <Core/Exceptions/InternalError.h>
+#include <float.h>
 
 #include <iostream> // debug only
 
@@ -448,17 +449,16 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     numPatches += level->numPatches();
   }
 
-  vector<PatchInfo> allParticles(numPatches, PatchInfo(0,0,0));
+  vector<PatchInfo> allPatches(numPatches, PatchInfo(0,0,0));
   if (d_collectParticles && (d_processorAssignment.size() != 0) && d_scheduler->get_dw(0) != 0)
-    collectParticles(grid, allParticles);
+    collectParticles(grid, allPatches);
   else {
     for (int i = 0; i < numPatches; i++) {
-      allParticles[i] = PatchInfo(i,0,0);
+      allPatches[i] = PatchInfo(i,0,0);
     }
   }
 
   vector<Patch*> patchset;
-  vector<double> patch_costs;
 
   // these variables are "groups" of costs.  If we are doing level independent, then
   // the variables will be size one, and we can share functionality
@@ -474,10 +474,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   }
   // make a list of Patch*'s and costs per patch
 
-  sort(allParticles.begin(), allParticles.end(), PatchCompare());
+  sort(allPatches.begin(), allPatches.end(), PatchCompare());
   int timeWeight = 1;
   int index = 0;
   int startingPatch = 0;
+  double minPatchCost=DBL_MAX;
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
     double levelcost = 0;
@@ -497,16 +498,18 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       Patch* patch = *iter;
       int id = patch->getGridIndex();
 
-      ASSERTEQ(id, allParticles[id].id);
+      ASSERTEQ(id, allPatches[id].id);
       patchset.push_back(patch);
       IntVector range = patch->getHighIndex() - patch->getLowIndex();
-      double cost = allParticles[id].numParticles + d_cellFactor * 
+      double cost = allPatches[id].numParticles + d_cellFactor * 
         range.x() * range.y() * range.z();
       cost *= timeWeight;
       if ( d_myworld->myrank() == 0)
-        dbg << d_myworld->myrank() << "  Patch: " << id << " cost: " << cost << " " << allParticles[id].numParticles << " " << range.x() * range.y() * range.z() << " " << d_cellFactor << " TW " << timeWeight << endl;
-      patch_costs.push_back(cost);
+        dbg << d_myworld->myrank() << "  Patch: " << id << " cost: " << cost << " " << allPatches[id].numParticles << " " << range.x() * range.y() * range.z() << " " << d_cellFactor << " TW " << timeWeight << endl;
+      allPatches[id].cost=cost;
       levelcost += cost;
+      if(cost<minPatchCost)
+        minPatchCost=cost;
     }
     groupCost[index] += levelcost;
     groupSize[index] += level->numPatches();
@@ -518,7 +521,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
   for (unsigned i = 0; i < groupCost.size(); i++)
     avgCostPerProc[i] = groupCost[i] / numProcs;
-  
+
 
 #if 0
   // TODO - bring back excessive patch clumps?
@@ -538,12 +541,12 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         // not attempting space-filling curve
         index = p;
       }
-      if (allParticles[index].assigned)
+      if (allPatches[index].assigned)
         continue;
       
       // assign the patch to a processor.  When we advance procs,
       // re-update the cost, so we use all procs (and don't go over)
-      double patchCost = patch_costs[index];
+      double patchCost = allPatches[index].cost;
 
       double notakeimb=fabs(currentProcCost-avgCostPerProc[i]);
       double takeimb=fabs(currentProcCost+patchCost-avgCostPerProc[i]);
@@ -573,9 +576,15 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   startingPatch = 0;
   for (unsigned i = 0; i < groupCost.size(); i++) 
   {
+    vector<PatchInfo> toassign;
     int startProc = 0;
     int lastProc=numProcs-1;
-    vector<double> procCost(numProcs,0);
+    vector<ProcInfo> procInfos(numProcs);
+    for(int p=0;p<numProcs;p++)
+    {
+      procInfos[p].rank=p;
+      procInfos[p].cost=0;
+    }
      
     for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) 
     {
@@ -592,46 +601,107 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         index = p;
       }
       
-      if (allParticles[index].assigned)
+      if (allPatches[index].assigned)
         continue;
       
       int currentProc=startProc;
       while(true)
       {
-        double patchCost = patch_costs[index];
-        double takeimb=(procCost[currentProc]+patchCost-avgCostPerProc[i])/avgCostPerProc[i];
-        double notakeimb=(procCost[currentProc]-avgCostPerProc[i])/avgCostPerProc[i];
-              
-        if ( (takeimb<d_targetImb && fabs(takeimb)<fabs(notakeimb)) || currentProc==lastProc) //assign to this proc
+        double patchCost = allPatches[index].cost;
+        
+        if ( patchCost+procInfos[currentProc].cost<=avgCostPerProc[i] ) //assign to this proc
         {
           d_tempAssignment[index] = currentProc;
-          procCost[currentProc] += patchCost;
+          procInfos[currentProc].cost += patchCost;
           if (d_myworld->myrank() == 0)
+          {
             dbg << "Patch " << index << "-> proc " << currentProc 
                 << " PatchCost: " << patchCost << ", ProcCost: " 
-                << procCost[currentProc] << " group cost " << groupCost[i] << "  avg cost " << avgCostPerProc[i]
+                << procInfos[currentProc].cost << "  avg cost " << avgCostPerProc[i]
                 << ", idcheck: " << patchset[index]->getGridIndex() << " (" << patchset[index]->getID() << ")" << endl;
+          }
           break;
         }
         else  //move forward
         {
-          //assign forward
-          currentProc++;
+          if(currentProc==lastProc) //was not assigned 
+          {
+              toassign.push_back(allPatches[index]);
+              break;
+          }
+          else
+          {
+            //assign forward
+            currentProc++;
+          }
         }
-      }
-    
-      double myimb=fabs((procCost[startProc]-avgCostPerProc[i])/avgCostPerProc[i]);
-      if(myimb<d_targetImb && startProc!=lastProc)   //front proc is close to target advance it
+      } //end while(true)
+      
+      if(procInfos[startProc].cost+minPatchCost>avgCostPerProc[i])   //front proc no longer needs to be searched
       {
          startProc++;
+         if(startProc==numProcs)
+         {
+          for (; p < groupSize[i] + startingPatch; p++)
+          {
+            index = (int)ceil( double(sfc[p].p*groupSize[i]) /d_myworld->size() ) +sfc[p].i + startingPatch;
+            toassign.push_back(allPatches[index]);
+          }
+         }
+      }
+    } //end for (int p = startingPatch; p < groupSize[i] + startingPatch; p++)
+   
+    //assign remaining patches
+    if(!toassign.empty())
+    {
+      /*
+      if(d_myworld->myrank()==0)
+      {
+        cout << "To assign:" << toassign.size() << endl;
+      }
+      */
+      //sort to assign patches by size 
+      sort(toassign.begin(),toassign.end(),CostCompare());
+
+      //make a heap out of proc costs
+      make_heap(procInfos.begin(),procInfos.end(),ProcCostCompare());
+    
+      //for each patch needing to be assigned
+      for(unsigned int p=0;p<toassign.size();p++)
+      {
+        /*
+        if(d_myworld->myrank()==0)
+        {
+          cout << "patch with cost:" << toassign[p].cost << " needs assignment\n";
+          cout << "assigning to: " << procInfos[0].rank << " with cost:" << procInfos[0].cost << endl;
+        }
+        */
+        //find the proc with the minimum cost
+        pop_heap(procInfos.begin(),procInfos.end(),ProcCostCompare());
+        //assign patch to proc
+        d_tempAssignment[toassign[p].id] = procInfos.back().rank;
+        //update cost
+        procInfos.back().cost+=toassign[p].cost;
+        //update heap
+        push_heap(procInfos.begin(),procInfos.end(),ProcCostCompare());
       }
     }
+    /*
+    if(d_myworld->myrank()==0)
+    {
+      cout << "Target Cost:" << avgCostPerProc[i] << endl;
+      for(int p=0;p<numProcs;p++)
+      {
+        cout << "Proc:" << procInfos[p].rank << " procCost:" << procInfos[p].cost << endl;
+      }
+    }
+    */
     startingPatch += groupSize[i];
   }
   
 #endif
 
-  bool doLoadBalancing = force || thresholdExceeded(patch_costs);
+  bool doLoadBalancing = force || thresholdExceeded(allPatches);
 
   time = Time::currentSeconds() - time;
   if (d_myworld->myrank() == 0)
@@ -641,7 +711,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   return doLoadBalancing;
 }
 
-bool DynamicLoadBalancer::thresholdExceeded(const vector<double>& patch_costs)
+bool DynamicLoadBalancer::thresholdExceeded(const vector<PatchInfo>& patches)
 {
   // add up the costs each processor for the current assignment
   // and for the temp assignment, then calculate the standard deviation
@@ -653,8 +723,8 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<double>& patch_costs)
   vector<double> tempProcCosts(numProcs);
   
   for (unsigned i = 0; i < d_tempAssignment.size(); i++) {
-    currentProcCosts[d_processorAssignment[i]] += patch_costs[i];
-    tempProcCosts[d_tempAssignment[i]] += patch_costs[i];
+    currentProcCosts[d_processorAssignment[i]] += patches[i].cost;
+    tempProcCosts[d_tempAssignment[i]] += patches[i].cost;
   }
   
   // use the std dev formula:
