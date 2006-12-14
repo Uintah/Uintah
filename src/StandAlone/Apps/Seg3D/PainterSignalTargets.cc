@@ -569,7 +569,7 @@ Painter::ReloadVolumeTexture(event_handle_t event) {
 }
 #endif
 
-#if defined(_WIN32) && !defined(BUILD_STATIC)
+#if defined(_WIN32) && !defined(BUILD_CORE_STATIC)
 #undef SCISHARE
 #define SCISHARE __declspec(dllimport)
 #else

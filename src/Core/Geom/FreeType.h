@@ -60,8 +60,8 @@
 
 #endif
 
-#include <Core/Geom/share.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geom/share.h>
 
 #include <string>
 #include <vector>
