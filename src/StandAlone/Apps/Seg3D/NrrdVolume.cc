@@ -161,6 +161,31 @@ NrrdVolume::reset_data_range()
 }
   
 
+NrrdDataHandle
+NrrdVolume::get_nrrd() 
+{
+  NrrdDataHandle nrrd_handle = nrrd_handle_;
+  nrrd_handle.detach();
+  NrrdDataHandle nrrd2_handle = scinew NrrdData();
+
+  //   nrrdBasicInfoCopy(nrrd->nrrd, nrrd_handle_->nrrd_,0);
+  //   nrrdAxisInfoCopy(nrrd->nrrd, nrrd_handle_->nrrd_, 0,0);
+  //   nrrd->nrrd->data = nrrd_handle_->nrrd_->data;
+
+  for (int s = stub_axes_.size()-1; s >= 0 ; --s) {
+    nrrdAxesDelete(nrrd2_handle->nrrd_, nrrd_handle->nrrd_, stub_axes_[s]);
+    nrrd_handle = nrrd2_handle;
+  }
+  nrrdKeyValueCopy(nrrd_handle->nrrd_, nrrd_handle_->nrrd_);
+  
+  //  unsigned long ptr = (unsigned long)(&painter_);
+  //  nrrdKeyValueAdd(nrrd_handle->nrrd_, 
+  //                  "progress_ptr", to_string(ptr).c_str());
+
+  return nrrd_handle;
+}
+
+
 
 Point
 NrrdVolume::center(int axis, int slice) {
@@ -390,39 +415,30 @@ NrrdVolume::compute_label_mask(unsigned int label)
   return label;
 }
 
-unsigned int
-NrrdVolume::compute_free_label_mask() {
-  const unsigned char max_bit = sizeof(unsigned int)*8;
-  unsigned char bit = 0;
-  unsigned int used_labels = anchor()->compute_label_mask();
-  while (bit < max_bit && (used_labels & (1 << bit))) ++bit;
-  if (bit == max_bit) {
-    cerr << "compute_free_label_mask reached max bit!";
-    return 0;
-  }
-  return 1 << bit;
-}
-
-NrrdVolumeHandle
-NrrdVolume::anchor() {
-  NrrdVolumeHandle parent = this;
-  while (parent->parent_.get_rep()) parent = parent->parent_;
-  return parent;
-}
-
 
 
 NrrdVolumeHandle
 NrrdVolume::create_child_label_volume(unsigned int label)
 {
+  NrrdVolumeHandle parent = this;
+  while (parent->parent_.get_rep()) parent = parent->parent_;
+
   if (!label) {
-    label = compute_free_label_mask();
-    if (!label) return 0;
+    const unsigned char max_bit = sizeof(unsigned int)*8;
+    unsigned char bit = 0;
+    unsigned int used_labels = parent->compute_label_mask();
+    while (bit < max_bit && (used_labels & (1 << bit))) ++bit;
+    if (bit == max_bit) {
+      cerr << "Cannot create child label volume!\n";
+      return 0;
+    }
+    label = 1 << bit;
   }
 
-  string name = anchor()->name_+" "+to_string(label);
-  
-  NrrdVolumeHandle vol = new NrrdVolume(painter_, name, nrrd_handle_, label);
+  NrrdVolumeHandle vol = 
+    new NrrdVolume(painter_, 
+                   parent->name_+" "+to_string(label), 
+                   nrrd_handle_, label);
   vol->parent_ = this;
   children_.push_back(vol);
   return vol;
