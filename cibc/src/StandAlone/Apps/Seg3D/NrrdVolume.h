@@ -81,13 +81,14 @@ public:
   bool                write(string filename);
 
   void                set_nrrd(NrrdDataHandle &);
-  NrrdDataHandle      get_nrrd();
   void                set_dirty(bool d = true) { dirty_ = d; }
 
+  NrrdVolumeHandle    anchor();
   NrrdVolumeHandle    create_label_volume(unsigned int label=1, 
                                           NrrdDataHandle nrrdh = 0);
   NrrdVolumeHandle    create_child_label_volume(unsigned int label=0);
   unsigned int        compute_label_mask(unsigned int label = 0);
+  unsigned int        compute_free_label_mask();
 
   // Generates a VolumeSlice class if Plane intersects the volume,
   // Returns 0 if the Plane does not intersect the volume
