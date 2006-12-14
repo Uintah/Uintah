@@ -346,10 +346,16 @@ proc SciRaise { window } {
 # centerWindow w1 w2 
 #
 # Centers window w1 over window w2.  If w2 is blank, then the window is 
-# centered in the middle of the screen.
+# centered in the middle of the screen.  (If there are two monitors,
+# then attempt to only center on the left one.)
 #
 proc centerWindow { w1 { w2 "" } } {
+
+    # The 'update', I think, allows the window to finish resizing itself
+    # (in the case that it is newly created and actually hasn't been completely
+    # finalized).
     update
+
 #    wm overrideredirect $w1 1
     wm geometry $w1 ""
     update idletasks
@@ -365,8 +371,21 @@ proc centerWindow { w1 { w2 "" } } {
 	set y 0
     }
 
-    if {$w < 2} { set w [winfo screenwidth .] }
     if {$h < 2} { set h [winfo screenheight .] }    
+
+    if {$w < 2} { 
+        set w [winfo screenwidth .]
+
+        # Determine the ratio between width and height... If it is
+        # greater than 2, then we probably have two screens.  The '.'
+        # in "$w." is to turn it into a floating point number.
+        set ratio [expr $w./$h]
+
+        if { $ratio > 2 } {
+            # Assume the two screens are the same dimensions... so set w = w/2.
+            set w [expr $w / 2]
+        }
+    }
 
     set x [expr $x+($w - [winfo width $w1])/2]
     set y [expr $y+($h - [winfo height $w1])/2]
