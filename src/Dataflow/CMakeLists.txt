@@ -159,12 +159,12 @@ SET(OTFL_CFLAGS "${OTFL_CFLAGS} ${CMAKE_SHARED_LIBRARY_CXX_FLAGS}")
 IF(WIN32)
   CONFIGURE_FILE (
     "${SCIRUN_CORE_SOURCE_DIR}/on-the-fly-libs/cmake_win32make.in"
-    "${SCIRUN_BINARY_DIR}/on-the-fly-libs/win32make.bat"
+    "${SCIRUN_CORE_BINARY_DIR}/on-the-fly-libs/win32make.bat"
   )
 ELSE(WIN32)
   CONFIGURE_FILE (
     "${SCIRUN_CORE_SOURCE_DIR}/on-the-fly-libs/cmake_Makefile.in"
-    "${SCIRUN_BINARY_DIR}/on-the-fly-libs/Makefile"
+    "${SCIRUN_CORE_BINARY_DIR}/on-the-fly-libs/Makefile"
   )
 ENDIF(WIN32)
 

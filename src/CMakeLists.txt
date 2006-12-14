@@ -37,28 +37,44 @@ PROJECT(SCIRUN_CORE)
 INCLUDE (CMakeBackwardCompatibilityC)
 
 #-----------------------------------------------------------------------------
+# SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
+# in src/scirunrc
+SET(SCIRUN_VERSION_MAJOR "3")
+SET(SCIRUN_VERSION_MINOR "0")
+SET(SCIRUN_VERSION_PATCH "0")
+
+SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCIRUN_VERSION_PATCH}")
+
+
+#-----------------------------------------------------------------------------
 # Configure testing support.  This should be done before any
 # MESSAGE(FATAL_ERROR ...) commands are invoked.
-IF(NOT BUILD_FROM_TOP_LEVEL)
-  INCLUDE( CTest )
-  IF(BUILD_TESTING)
-    ENABLE_TESTING()
-    SET(BUILDNAME "${BUILDNAME}" CACHE STRING "Name of build on the dashboard")
-    MARK_AS_ADVANCED(BUILDNAME)
-  ENDIF(BUILD_TESTING)
-ENDIF(NOT BUILD_FROM_TOP_LEVEL)
+INCLUDE( CTest )
+IF(BUILD_TESTING)
+  ENABLE_TESTING()
+  SET(BUILDNAME "${BUILDNAME}" CACHE STRING "Name of build on the dashboard")
+  MARK_AS_ADVANCED(BUILDNAME)
+ENDIF(BUILD_TESTING)
 
 SET(SCIRUN_CORE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 #----------------------------------------------------------------------------
-# Output directories.
-IF(NOT BUILD_FROM_TOP_LEVEL)
-  SET (LIBRARY_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-  SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
-  #output directory for installing all include files.")
-  MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
-ENDIF(NOT BUILD_FROM_TOP_LEVEL)
+# shared/static
+OPTION(BUILD_SHARED_LIBS "Build shared libraries" ON)
+MARK_AS_ADVANCED(BUILD_SHARED_LIBS)
 
+#----------------------------------------------------------------------------
+# Output directories.
+SET (LIBRARY_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
+SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+#output directory for installing all include files.")
+MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
+
+SET(BUILD_FROM_TOP_LEVEL 1)
+
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
 #-----------------------------------------------------------------------------
 # Force user to use our Thirdparty, and verify for looking for
@@ -150,10 +166,6 @@ ENDIF(WITH_INSIGHT_PACKAGE)
 
 # ----------------------------------------------------------------------------
 # SCIRun build configuration options
-IF(NOT BUILD_FROM_TOP_LEVEL)
-  OPTION(BUILD_SHARED_LIBS "Build SCIRun with shared libraries." ON)
-  MARK_AS_ADVANCED(BUILD_SHARED_LIBS)
-ENDIF(NOT BUILD_FROM_TOP_LEVEL)
 
 # Add correct flags for win32
 IF(WIN32)
@@ -544,7 +556,7 @@ ENDIF(WIN32 AND NOT CYGWIN)
 SET(scirun_src_dir "${SCIRUN_CORE_SOURCE_DIR}" CACHE INTERNAL "Path to SCIRun's src directory")
 # DV Technically, I don't have access to this variable once we fix building
 # these projets separately!!!
-SET(scirun_obj_dir ${SCIRUN_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
+SET(scirun_obj_dir ${SCIRUN_CORE_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
 
 SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_DIR}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 SET(ITCL_LIB_DIR ${SCIRUN_THIRDPARTY_DIR}/lib)
@@ -1068,3 +1080,22 @@ INSTALL_FILES(/lib/SCIRun .cmake UseSCIRUN SCIRUNLibraryDepends)
 SUBDIRS(include Core StandAlone)
 
 MARK_AS_ADVANCED(BLT_INCLUDE BLT_LIBRARY FREETYPE_INCLUDE FREETYPE_LIBRARY TCL_LIBRARY TCL_INCLUDE ITCL_INCLUDE ITCL_LIBRARY ITK_INCLUDE ITK_LIBRARY TK_INCLUDE TK_LIBRARY PNG_INCLUDE PNG_LIBRARY ZLIB_INCLUDE ZLIB_LIBRARY XML2_LIBRARY XML2_INCLUDE TEEM_LIBRARY TEEM_INCLUDE_DIR MPEG_LIBRARY MPEG_INCLUDE GLEW_LIBRARY GLEW_INCLUDE M_LIBRARY WITH_MPEG)
+
+
+# Option for building scirun executable, dataflow, packages
+OPTION(BUILD_DATAFLOW "Build SCIRun executable, dataflow, and packages" ON)
+IF(BUILD_DATAFLOW)
+  SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
+  SUBDIRS(Dataflow)
+ENDIF(BUILD_DATAFLOW)
+MARK_AS_ADVANCED(BUILD_DATAFLOW)
+
+# Option for building Seg3D
+OPTION(BUILD_SEG3D "Build Seg3D Application" OFF)
+IF(BUILD_SEG3D)
+  SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
+  SUBDIRS(StandAlone/Apps/Seg3D)
+ENDIF(BUILD_SEG3D)
+MARK_AS_ADVANCED(BUILD_SEG3D)
+
+MARK_AS_ADVANCED(CMAKE_INSTALL_PREFIX DART_TESTING_TIMEOUT)

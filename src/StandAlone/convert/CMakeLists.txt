@@ -27,7 +27,7 @@
 #
 PROJECT(SCIRUN_STANDALONE_CONVERT)
 
-SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_BINARY_DIR}/bin/convert CACHE INTERNAL "Single output directory for building all executables.")
+SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/bin/convert CACHE INTERNAL "Single output directory for building all executables.")
 #output directory for installing all include files.")
 MARK_AS_ADVANCED(EXECUTABLE_OUTPUT_PATH)
 
