@@ -854,6 +854,7 @@ proc biopseFDialog_Config {w type argList} {
             {-imgwidth "" "" ""}
             {-imgheight "" "" ""}
             {-confirmvar "" "" ""}
+            {-confirmoncevar "" "" ""}
                 {-incrementvar "" "" ""}
                 {-currentvar "" "" ""}
             {-selectedfiletype "" "" ""}
@@ -1202,16 +1203,25 @@ proc biopseFDialog_Create {w} {
             set data(is_split) 1
         }
 
+        if {$data(-confirmoncevar) != ""} {
+            set f10 [frame $w.f10 -bd 0]
+            label $f10.lab -text "" -width 15 -anchor e
+            checkbutton $f10.button  -text "Confirm only once for each file name " \
+              -variable $data(-confirmoncevar) 
+            pack $f10.lab -side left -padx 2
+            pack $f10.button -side left -padx 2
+            pack $f10 -side bottom -fill x -pady 4
+        } 
+				
         if {$data(-confirmvar) != ""} {
             set f6 [frame $w.f6 -bd 0]
             label $f6.lab -text "" -width 15 -anchor e
-            checkbutton $f6.button  -text "Confirm Before Overwriting File " \
+            checkbutton $f6.button  -text "Confirm before overwriting file " \
               -variable $data(-confirmvar) 
             pack $f6.lab -side left -padx 2
             pack $f6.button -side left -padx 2
             pack $f6 -side bottom -fill x -pady 4
         }
-            
 
         if {$data(-imgwidth) != ""} {
             set f5 [frame $w.f5 -bd 0]
@@ -1947,7 +1957,7 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
              [string length $data(-confirmvar)] } {
             set confirm 0
         }
-        
+
         if {$confirm && 
             [file exists $selectFilePath] && 
             ![string compare $data(type) save]} {
@@ -1959,6 +1969,7 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
                 return
             }
         }
+
     }
     
     # AS: final steps before returning: setting filename variable and executing command
