@@ -812,7 +812,14 @@ SolveLinearSystem::init_parallel_conjugate_gradient()
 
   data.P = new ColumnMatrix(size);
 
-  data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  if (data.bnorm > 0)
+  {
+    data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  }
+  else
+  {
+    data.err = 0;
+  }
   if (data.err == 0)
   {
     lhs = rhs;
@@ -1074,7 +1081,14 @@ SolveLinearSystem::init_parallel_bi_conjugate_gradient()
   // BiCG
   data.P1 = new ColumnMatrix(size);
 
-  data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  if (data.bnorm > 0.0)
+  {
+    data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  }
+  else
+  {
+    data.err = 0.0;
+  }
   if (data.err == 0)
   {
     lhs = rhs;
