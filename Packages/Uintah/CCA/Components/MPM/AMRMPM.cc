@@ -337,15 +337,12 @@ void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
-    
+
   printSchedule(patches,cout_doing,"MPM::scheduleApplyExternalLoads\t\t\t\t");
- /*
-  * applyExternalLoads
-  *   in(p.externalForce, p.externalheatrate)
-  *   out(p.externalForceNew, p.externalheatrateNew) */
+
   Task* t=scinew Task("MPM::applyExternalLoads",
                     this, &AMRMPM::applyExternalLoads);
-                  
+
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
 
@@ -366,14 +363,56 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   Task* t = scinew Task("MPM::interpolateParticlesToGrid",
                         this,&AMRMPM::interpolateParticlesToGrid);
   Ghost::GhostType  gan = Ghost::AroundNodes;
+  t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
+  t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pMassLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,           gan,NGP);
-  t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
-  t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
-  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
-  t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pErosionLabel,          gan,NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
+  t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
+  t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
+  t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
+
+  if(getLevel(patches)->hasCoarserLevel()){
+    const MaterialSubset* mss = matls->getUnion();
+    Task::DomainSpec DS = Task::NormalDomain;
+    t->requires(Task::CoarseOldDW, lb->pXLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseOldDW, lb->pMassLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseOldDW, lb->pSizeLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseOldDW, lb->pVolumeLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseOldDW, lb->pErosionLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseOldDW, lb->pVelocityLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseOldDW, lb->pTemperatureLabel, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+    t->requires(Task::CoarseNewDW, lb->pExtForceLabel_preReloc, 0,
+                Task::CoarseLevel, mss, DS, gan, NGP);
+  }
+  if(getLevel(patches)->hasFinerLevel()){
+    const MaterialSubset* mss = matls->getUnion();
+    Task::DomainSpec DS = Task::NormalDomain;
+    bool  fat = false;  // possibly (F)rom (A)nother (T)askgraph
+    t->requires(Task::OldDW, lb->pXLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP, fat);
+    t->requires(Task::OldDW, lb->pMassLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+    t->requires(Task::OldDW, lb->pSizeLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+    t->requires(Task::OldDW, lb->pVolumeLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+    t->requires(Task::OldDW, lb->pErosionLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+    t->requires(Task::OldDW, lb->pVelocityLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+    t->requires(Task::OldDW, lb->pTemperatureLabel, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+    t->requires(Task::NewDW, lb->pExtForceLabel_preReloc, 0,
+                Task::FineLevel, mss, DS, gan, NGP,fat);
+  }
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gVolumeLabel);
@@ -452,15 +491,10 @@ void AMRMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls)
 {
-//  Ghost::GhostType gac = Ghost::AroundCells;
-                                                                                
   printSchedule(patches,cout_doing,"MPM::scheduleComputeParticleTempFromGrid");
-                                                                                
+
   Task* t = scinew Task("MPM::computeParticleTempFromGrid",
                         this, &AMRMPM::computeParticleTempFromGrid);
-//  t->requires(Task::NewDW, lb->gTemperatureLabel, gac, NGN);
-//  t->requires(Task::OldDW, lb->pXLabel,    Ghost::None);
-//  t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel, Ghost::None);
   t->computes(lb->pTempCurrentLabel);
   sched->addTask(t, patches, matls);
@@ -474,7 +508,7 @@ void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
     
-  printSchedule(patches,cout_doing,"MPM::scheduleUpdateErosionParameter\t\t\t\t");
+  printSchedule(patches,cout_doing,"MPM::scheduleUpdateErosionParameter\t\t\t");
 
   Task* t = scinew Task("MPM::updateErosionParameter",
                         this, &AMRMPM::updateErosionParameter);
@@ -885,14 +919,90 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
+      // Create arrays for the coarse particle data
+      if(getLevel(patches)->hasCoarserLevel()){
+        constParticleVariable<Point>  pxC;
+        constParticleVariable<double> pmassC, pvolumeC, pTemperatureC;
+        constParticleVariable<Vector> pvelocityC, pexternalforceC,psizeC;
+        constParticleVariable<double> pErosionC;
+
+        const Level* coarseLevel = 
+                                 getLevel(patches)->getCoarserLevel().get_rep();
+
+        IntVector lowI, highI, fl, fh;
+        getCoarseLevelRangeNodes(patch, coarseLevel, lowI, highI, fl, fh, 1);
+//        cout << "lowC = " << lowI << endl;
+//        cout << "highC = " << highI << endl;
+
+        ParticleSubset* psetC = old_dw->getParticleSubset(dwi, lowI, highI,
+                                                          coarseLevel, NULL,
+                                                          lb->pXLabel);
+
+        old_dw->get(pxC,             lb->pXLabel,                 psetC);
+        old_dw->get(pmassC,          lb->pMassLabel,              psetC);
+        old_dw->get(pvolumeC,        lb->pVolumeLabel,            psetC);
+        old_dw->get(pvelocityC,      lb->pVelocityLabel,          psetC);
+        old_dw->get(pTemperatureC,   lb->pTemperatureLabel,       psetC);
+        old_dw->get(psizeC,          lb->pSizeLabel,              psetC);
+        old_dw->get(pErosionC,       lb->pErosionLabel,           psetC);
+        new_dw->get(pexternalforceC, lb->pExtForceLabel_preReloc, psetC);
+        for (ParticleSubset::iterator iter = psetC->begin();
+             iter != psetC->end(); 
+             iter++){
+//          particleIndex idx = *iter;
+//          cout << "pxC = " << pxC[idx] << endl;
+        }
+      }
+
+      // Create arrays for the finer particle data
+      if(getLevel(patches)->hasFinerLevel()){
+        constParticleVariable<Point>  pxF;
+        constParticleVariable<double> pmassF, pvolumeF, pTemperatureF;
+        constParticleVariable<Vector> pvelocityF, pexternalforceF,psizeF;
+        constParticleVariable<double> pErosionF;
+
+        const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
+
+        IntVector cl, ch, fl, fh;
+        patch->computeVariableExtents(Patch::NodeBased, IntVector(0,0,0),
+                                      gan, 1, cl, ch);
+
+        fl = patch->getLevel()->mapNodeToFiner(cl);// - ghost;
+        fh = patch->getLevel()->mapNodeToFiner(ch);// + ghost;
+
+//        cout << "FL = " << fl << endl;
+//        cout << "FH = " << fh << endl;
+
+        // get with a ghost cell to make sure you get all patches
+        ParticleSubset*  psetF = old_dw->getParticleSubset(dwi, fl, fh,
+                                                           fineLevel, NULL,
+                                                           lb->pXLabel);
+
+        old_dw->get(pxF,             lb->pXLabel,                 psetF);
+        old_dw->get(pmassF,          lb->pMassLabel,              psetF);
+        old_dw->get(pvolumeF,        lb->pVolumeLabel,            psetF);
+        old_dw->get(pvelocityF,      lb->pVelocityLabel,          psetF);
+        old_dw->get(pTemperatureF,   lb->pTemperatureLabel,       psetF);
+        old_dw->get(psizeF,          lb->pSizeLabel,              psetF);
+        old_dw->get(pErosionF,       lb->pErosionLabel,           psetF);
+        new_dw->get(pexternalforceF, lb->pExtForceLabel_preReloc, psetF);
+
+        for (ParticleSubset::iterator iter = psetF->begin();
+             iter != psetF->end(); 
+             iter++){
+//          particleIndex idx = *iter;
+//          cout << "pxF = " << pxF[idx] << endl;
+        }
+      }
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<Vector> pvelocity, pexternalforce,psize;
       constParticleVariable<double> pErosion;
-
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                                       gan, NGP, lb->pXLabel);
 
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
@@ -997,7 +1107,7 @@ void AMRMPM::computeStressTensor(const ProcessorGroup*,
 {
 
   printTask(patches, patches->get(0),cout_doing,
-            "Doing interpolateParticlesToGrid\t\t\t");
+            "Doing computeSTressTensor\t\t\t");
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
