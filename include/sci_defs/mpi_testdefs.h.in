@@ -30,9 +30,11 @@
 #ifndef SCI_MPI_DEFS_H
 #define SCI_MPI_DEFS_H
 
-/* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
-   it from  being included.  We don't use it anyway. */
+/* MPI++ (MPIPP_H) on SGI has a bad interaction with <iostream>.  On some linuxes, mpicxx also
+   causes problems, so we turn it off too. This prevents it from being included (from mpi.h).
+   We don't use it anyway. */
 #define MPIPP_H
+#define MPICH_SKIP_MPICXX
 
 @DEF_MPI@
 @DEF_MPI_UNI@
