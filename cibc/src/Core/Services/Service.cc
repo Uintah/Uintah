@@ -81,7 +81,8 @@ void Service::warningmsg(std::string warning)
 
 bool Service::updateparameters()
 {
-	std::string filename = getparameter("rcfile");
+	std::string filename = getparameter("fullrcfile");
+
   FILE* filein = fopen(filename.c_str(),"r");
   if (!filein) return (false);
 
@@ -172,6 +173,7 @@ bool Service::updateparameters()
 	}
 		
   fclose(filein);
+  
   return true;	
 }
 

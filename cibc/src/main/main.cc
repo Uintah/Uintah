@@ -304,6 +304,12 @@ start_eai() {
   // to other instances of SCIRun over the internet, 
   // the second manager will not be launched
   
+
+  
+  IComAddress internaladdress("internal","servicemanager");
+
+// Only build log file if needed for debugging  
+#ifdef DEBUG  
   const char *chome = sci_getenv("HOME");
   string scidir("");
   if (chome)
@@ -313,9 +319,13 @@ start_eai() {
   ServiceLogHandle internallogfile = 
     scinew ServiceLog(scidir+"scirun_internal_servicemanager.log");
   
-  IComAddress internaladdress("internal","servicemanager");
   ServiceManager* internal_service_manager = 
     scinew ServiceManager(servicedb, internaladdress, internallogfile); 
+#else
+  ServiceManager* internal_service_manager = 
+    scinew ServiceManager(servicedb, internaladdress); 
+#endif
+
   Thread* t_int = 
     scinew Thread(internal_service_manager, "internal service manager",
 		  0, Thread::NotActivated);
@@ -341,12 +351,21 @@ start_eai() {
   // a secure version which will run over ssl. 
   
   // A log file is not necessary but handy for debugging purposes
+
+  IComAddress externaladdress("scirun","",serviceport_str,ipstr);
+
+#ifdef DEBUG
   ServiceLogHandle externallogfile = 
     scinew ServiceLog(scidir+"scirun_external_servicemanager.log"); 
   
-  IComAddress externaladdress("scirun","",serviceport_str,ipstr);
   ServiceManager* external_service_manager = 
     scinew ServiceManager(servicedb,externaladdress,externallogfile); 
+#else
+  ServiceManager* external_service_manager = 
+    scinew ServiceManager(servicedb,externaladdress); 
+
+#endif
+
   Thread* t_ext = 
     scinew Thread(external_service_manager,"external service manager",
 		  0, Thread::NotActivated);

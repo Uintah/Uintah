@@ -274,6 +274,11 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
 
   // Get all the matrices that specify the field
   
+
+
+  mlfield     = findfield(mlarray,"field;scalarfield;scalardata;potvals;data;");
+  mlfieldtype =       findfield(mlarray,"fieldtype;datatype;");
+
   // Make it compatible with some old versions
   matlabarray mlfieldvector = findfield(mlarray,"vectorfield;vectordata;");
   if (mlfieldvector.isdense()) 
@@ -285,8 +290,7 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   { 
     mlfield = mlfieldtensor; mlfieldtype.createstringarray("tensor");
   }
-
-  mlfield     = findfield(mlarray,"field;scalarfield;scalardata;potvals;data;");
+  
   mlfieldedge = findfield(mlarray,"fieldedge;edge;line;");
   mlfieldface = findfield(mlarray,"fieldface;face;quad;fac;tri;");
   mlfieldcell = findfield(mlarray,"fieldcell;cell;prism;hex;tet;");
@@ -294,7 +298,6 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   mlfieldderivatives  = findfield(mlarray,"fieldderivatives;derivatives;");
   mlfieldscalefactors = findfield(mlarray,"fieldscalefactors;scalefactors;");
 
-  mlfieldtype =       findfield(mlarray,"fieldtype;datatype;");
   mlfieldbasis =      findfield(mlarray,"fieldbasis;basis;");
   mlfieldbasisorder = findfield(mlarray,"fieldbasisorder;basisorder;fieldat;fieldlocation;dataat;");
 
@@ -1236,9 +1239,11 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
   //////////////
   // IT IS GOOD TO HAVE THE NUMBER OF ELEMENTS IN THE FIELD
 
+
+
   numfield = 0;  
   datasize = 1;
-  
+
   if (mlfield.isdense())
   {
     if (fieldtype == "Vector")
@@ -1351,7 +1356,7 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     // This has no connectivity data => it must be a pointcloud ;)
     // Supported mesh/field types here:
     // PointCloudField
-    
+        
     if (meshtype == "") meshtype = "PointCloudMesh";
     
     if (meshtype != "PointCloudMesh")
