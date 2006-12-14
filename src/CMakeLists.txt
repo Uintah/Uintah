@@ -722,6 +722,9 @@ ENDIF(WITH_PETSC)
 #----------------------------------------------------------------------------
 # Search for Mesquite
 
+#----------------------------------------------------------------------------
+# Search for Mesquite
+
 IF(MESQUITE_DIR)
   SET(MESQUITE_DIR ${MESQUITE_DIR} CACHE PATH "Path to MESQUITE" FORCE)
   MARK_AS_ADVANCED(CLEAR MESQUITE_DIR)
@@ -746,27 +749,17 @@ IF(WITH_MESQUITE OR MESQUITE_DIR)
     FIND_LIBRARY(MESQUITE_LIBRARY 
       NAMES mesquite
       PATHS ${MESQUITE_DIR}
-      ${MESQUITE_DIR}/lib
-      ${SCIRUN_THIRDPARTY_DIR}/lib/
-      /usr/local/lib
-      /usr/lib
-      /lib)
+      ${MESQUITE_DIR}/lib)
 
     FIND_PATH(MESQUITE_INCLUDE1 AddQualityMetric.hpp
-      ${MESQUITE_DIR}/includeLinks
-      ${MESQUITE_DIR}/../includeLinks
-      ${SCIRUN_THIRDPARTY_DIR}/includeLinks
-      /usr/local/include/
-      /usr/include
-      /include)
+      ${MESQUITE_DIR}
+			${MESQUITE_DIR}/includeLinks
+      ${MESQUITE_DIR}/../includeLinks)
 
     FIND_PATH(MESQUITE_INCLUDE2 Mesquite.hpp
-      ${MESQUITE_DIR}/include
-      ${MESQUITE_DIR}/../include
-      ${SCIRUN_THIRDPARTY_DIR}/include
-      /usr/local/include/
-      /usr/include
-      /include)
+      ${MESQUITE_DIR}
+			${MESQUITE_DIR}/include
+      ${MESQUITE_DIR}/../include)
   ELSE (MESQUITE_DIR)
     FIND_LIBRARY(MESQUITE_LIBRARY 
       NAMES mesquite
@@ -831,19 +824,12 @@ IF(WITH_VERDICT OR VERDICT_DIR)
     FIND_LIBRARY(VERDICT_LIBRARY 
       NAMES verdict110 
       PATHS ${VERDICT_DIR}
-      ${VERDICT_DIR}/lib
-      ${SCIRUN_THIRDPARTY_DIR}/lib
-      /usr/local/lib
-      /usr/lib
-      /lib)
+      ${VERDICT_DIR}/lib)
 
     FIND_PATH(VERDICT_INCLUDE verdict.h
       ${VERDICT_DIR}
       ${VERDICT_DIR}/include
-      ${SCIRUN_THIRDPARTY_DIR}/include
-      /usr/local/include/
-      /usr/include
-      /include)
+			${VERDICT_DIR}/../include)
 
   ELSE(VERDICT_DIR)
     FIND_LIBRARY(VERDICT_LIBRARY 
@@ -893,11 +879,16 @@ IF(TETGEN_DIR)
   SET(TETGEN_INCLUDE TETGEN_INCLUDE-NOTFOUND CACHE FILEPATH 
       "Tetgen include" FORCE)
 
-  IF(TETGEN_DIR)
-    FIND_LIBRARY(TETGEN_LIBRARY tet ${TETGEN_DIR})
-    FIND_PATH(TETGEN_INCLUDE tetgen.h ${TETGEN_DIR})  
-  ENDIF(TETGEN_DIR)
-
+	IF(TETGEN_DIR)
+    FIND_LIBRARY(TETGEN_LIBRARY tet 
+			${TETGEN_DIR}
+			${TETGEN_DIR}/lib)
+    FIND_PATH(TETGEN_INCLUDE tetgen.h 
+			${TETGEN_DIR}
+			${TETGEN_DIR}/include
+			${TETGEN_DIR}/../include)
+	ENDIF(TETGEN_DIR)
+	
   IF(TETGEN_LIBRARY AND TETGEN_INCLUDE)
     SET(HAVE_TETGEN "YES" CACHE INTERNAL "Do not edit" FORCE)
     SET(DEF_TETGEN "#define HAVE_TETGEN 1" CACHE INTERNAL "Do not edit" FORCE)
@@ -946,17 +937,12 @@ IF(WITH_CBLAS OR CLBAS_DIR)
     FIND_LIBRARY(CBLAS_LIBRARY 
       NAMES cblas 
       PATHS ${CLBAS_DIR}
-      ${CLBAS_DIR}/lib
-      /usr/local/lib
-      /usr/lib
-      /lib)
+      ${CLBAS_DIR}/lib)
 
     FIND_PATH(CBLAS_INCLUDE cblas.h
       ${CLBAS_DIR}
       ${CLBAS_DIR}/include
-      /usr/local/include/
-      /usr/include
-      /include)
+			${CLBAS_DIR}/../include)
 
   ELSE(CLBAS_DIR)
 
