@@ -63,7 +63,7 @@ WARNING
 
   inline bool operator<(PseudoPatch p1, PseudoPatch p2)
   {
-    return p2.volume>p1.volume;
+    return p1.volume<p2.volume;
   }
   inline ostream& operator<<(ostream& out, PseudoPatch p1)
   {
