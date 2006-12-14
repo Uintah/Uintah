@@ -43,7 +43,6 @@ ADD_LIBRARY(Packages_Insight_Dataflow_Modules_DataIO ${Packages_Insight_Dataflow
 TARGET_LINK_LIBRARIES(Packages_Insight_Dataflow_Modules_DataIO
   Core_Datatypes
   Dataflow_Network
-  Packages_Insight_Dataflow_Ports
   Core_Algorithms_DataIO
   Core_Persistent
   Core_Containers
