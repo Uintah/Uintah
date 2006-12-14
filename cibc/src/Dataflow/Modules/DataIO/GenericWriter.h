@@ -62,6 +62,7 @@ protected:
   GuiFilename filename_;
   GuiString   filetype_;
   GuiInt      confirm_;
+	GuiInt			confirm_once_;
   bool        exporting_;
 
   virtual bool overwrite();
@@ -83,6 +84,7 @@ GenericWriter<HType>::GenericWriter(const string &name, GuiContext* ctx,
     filename_(get_ctx()->subVar("filename"), ""),
     filetype_(get_ctx()->subVar("filetype"), "Binary"),
     confirm_(get_ctx()->subVar("confirm"), sci_getenv_p("SCIRUN_CONFIRM_OVERWRITE")),
+		confirm_once_(get_ctx()->subVar("confirm-once"),0),
     exporting_(false)
 {
 }

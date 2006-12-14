@@ -98,8 +98,10 @@ itcl_class SCIRun_ChangeFieldData_CalculateFieldData3 {
         pack $w.of -side top -anchor w -fill x
         
         labelcombo $otype.otype "Field Output Data Type" \
-          {Scalar Vector Tensor "Same as Input"} \
+          {Scalar Vector Tensor "Same as Input" "char" "unsigned char" \
+					"short" "unsigned short" "int" "unsigned int" "float" "double"} \
           $this-format
+
 
         iwidgets::labeledframe $w.ff -labeltext "function"
         set function [$w.ff childsite]
