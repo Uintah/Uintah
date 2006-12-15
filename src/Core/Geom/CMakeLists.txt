@@ -29,6 +29,7 @@
 # Sources of Core/Geom classes
 
 SET(Core_Geom_SRCS 
+  glew.c
   BBoxCache.cc		                
   CallbackOpenGLContext.cc              
   ColorMap.cc		                
@@ -132,7 +133,6 @@ TARGET_LINK_LIBRARIES( Core_Geom
   ${M_LIBRARY}
   ${TEEM_LIBRARY}
   ${FREETYPE_LIBRARY}
-  ${GLEW_LIBRARY}
 )
 
 IF(X11_FOUND)

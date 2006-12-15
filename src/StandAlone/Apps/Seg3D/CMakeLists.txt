@@ -77,17 +77,6 @@ ELSE(ITK_FOUND)
 ENDIF(ITK_FOUND)
 
 
-#-----------------------------------------------------------------------------
-# Glew
-FIND_LIBRARY(GLEW_LIBRARY GLEW glew32
-             /usr/local/lib
-             /usr/lib
-             /lib)
-FIND_PATH(GLEW_INCLUDE glew.h
-           /usr/local/include
-           /usr/include
-           /include)
-
 IF(WIN32)
   IF(NOT BUILD_CORE_LIBS_SHARED)
     ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
@@ -156,7 +145,6 @@ TARGET_LINK_LIBRARIES(Seg3D
   ${GL_LIBRARY} 
   ${GLU_LIBRARY} 
   ${TEEM_LIBRARY}
-  ${GLEW_LIBRARY}
   Core_Algorithms_Visualization 
   Core_Basis 
   Core_Bundle 

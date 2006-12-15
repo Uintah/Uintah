@@ -43,13 +43,13 @@ ADD_LIBRARY(Dataflow_TkExtensions ${Dataflow_TkExtensions_SRCS})
 
 TARGET_LINK_LIBRARIES(Dataflow_TkExtensions
   Core_Thread
+  Core_Geom
   ${BLT_LIBRARY}
   ${PLPLOT_LIBRARY}
   ${ITK_LIBRARY}
   ${ITCL_LIBRARY}
   ${TK_LIBRARY}
   ${TCL_LIBRARY}
-  ${GLEW_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
   ${X_LIBRARY}
