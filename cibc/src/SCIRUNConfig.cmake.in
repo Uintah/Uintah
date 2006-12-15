@@ -110,7 +110,6 @@ ENDIF(NOT SCIRUN_NO_LIBRARY_DEPENDS AND
 # SCIRun Thirdparty 
 #----------------------------
 # Additional Thirdparty Libraries/directories
-SET(GLEW_LIBRARY "@GLEW_LIBRARY@")
 SET(GL_LIBRARY "@GL_LIBRARY@")
 SET(GL_INCLUDE "@GL_INCLUDE@")
 SET(TEEM_LIBRARY "@TEEM_LIBRARY@")
