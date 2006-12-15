@@ -547,8 +547,8 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
 
             if(viewpoint == DoingFineToCoarse){
 
-             // cout <<mpiRank<<" looking Down: fineCell " << fineCell 
-             //    << " -> coarseCell " << coarseCell;
+              //cout <<mpiRank<<" looking Down: fineCell " << fineCell 
+              //   << " -> coarseCell " << coarseCell;
 
               HYPRE_SStructGraphAddEntries(graph,
                                            fineIndex, fineCell.get_pointer(),
@@ -844,7 +844,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
                                            const_cast<double*>(stencilValue));
 
               counter_fine[fineCell]++;
-        #if DEBUG
+        #ifdef DEBUG
               cout << " looking Down: finePatch "<< fineCell
                    << " f_index " << graphIndex_fine[0]
                    << " s_index " << stencilIndex_fine[0]
@@ -874,7 +874,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
                                              const_cast<double*>(stencilValue));
               } 
               counter_coarse[coarseCell]++;
-        #if DEBUG
+        #ifdef DEBUG
               cout << " looking Up: finePatch "<< fineCell
                    << " s_index " << stencilIndex_fine[0]
                    << " value " << graphValue[0] 
