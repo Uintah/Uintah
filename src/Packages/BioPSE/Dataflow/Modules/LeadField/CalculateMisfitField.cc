@@ -153,20 +153,21 @@ void
 CalculateMisfitField::execute()
 {
   MatrixHandle leadfield_in;
-  if (!get_input_handle("Leadfield (nelecs x nelemsx3)", leadfield_in)) return;
+  MatrixHandle measurements_in;
 
-  DenseMatrix *dm = dynamic_cast<DenseMatrix*>(leadfield_in.get_rep());
-  if (!dm) {
-    error("Leadfield wasn't a DenseMatrix.");
+  get_input_handle("Leadfield (nelecs x nelemsx3)",leadfield_in,true);
+  get_input_handle("Measurement Vector", measurements_in,true);
+	
+  DenseMatrix *dm = dynamic_cast<DenseMatrix*>(leadfield_in->dense());
+  if (!dm) 
+	{
+    error("Could not obtain LeadField Matrix");
     return;
   }
 
-  MatrixHandle measurements_in;
-  if (!get_input_handle("Measurement Vector", measurements_in)) return;
-
-  ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(measurements_in.get_rep());
+  ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(measurements_in->column());
   if (!cm) {
-    error("Measurement vectors wasn't a ColumnMatrix.");
+    error("Could not obtain measurement vector");
     return;
   }
 
