@@ -1090,7 +1090,8 @@ NetworkIO::add_module_variable(const string &id, const string &var,
   {
     if ((nval.size() >0) &&  (nval[0] == '{'))
     {
-      make_relative_filename(nval.substr(1, nval.size() - 2), out_fname_);
+      nval = make_relative_filename(nval.substr(1, nval.size() - 2), out_fname_);
+			nval = "{"+nval+"}";
     }
     else
     {
