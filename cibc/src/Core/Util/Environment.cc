@@ -221,7 +221,7 @@ SCIRun::create_sci_environment(char **env, char *execname)
     else {
       string objdir(execname);
       if (execname[0] != '/' && execname[1] != ':') { // unix and windows compatible
-        if (string(execname).find("/") == string::npos) {
+        if (string(execname).find("/") == string::npos && string(execname).find("\\") == string::npos) {
           objdir = findFileInPath(execname, sci_getenv("PATH"));
           ASSERT(objdir.length());
         } else {

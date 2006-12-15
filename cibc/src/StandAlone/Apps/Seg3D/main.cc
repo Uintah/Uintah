@@ -49,15 +49,41 @@ namespace Carbon {
 
 using namespace SCIRun;
 
-#if 0 && defined(_WIN32)
+#if defined(_WIN32)
+#include <windows.h>
 // this makes it a "windows" app instead of a "console" app.  The downside is that
-// we get argv all in one string, and no environment pointer
-int WinMain(HINSTANCE, HINSTANCE, LPSTR cmdline, int show)
+// we get argv1-n all in one string, and no environment pointer
+__stdcall int WinMain(HINSTANCE, HINSTANCE, LPSTR cmdline, int show)
 {
-#endif
+  // TODO - parse the command line and env into argv and environment (where environment is 
+  // a set of var=val) so we can call create_sci_environment.
+  // Maybe move this to core-util...
+  const char* env = GetEnvironmentStrings();
+  //string commandLine(cmdline);
+  string commandLine(GetCommandLine());
+  
+
+  // grab either the end of the first quotes or the first space to find the executable
+  char executable[256];
+  int pos = commandLine.find('"');
+  if (pos != string::npos) {
+    pos = commandLine.find('"', pos+1);
+    if (pos == string::npos) pos = commandLine.length();
+    strcpy(executable, commandLine.substr(1, pos-2).c_str());  
+  }
+  else {
+    pos = commandLine.find(' ');
+    if (pos == string::npos) pos = commandLine.length();
+    strcpy(executable, commandLine.substr(0, pos).c_str());  
+  }
+  vector<char*> argv;
+  argv.push_back(executable);
+  char** environment = 0;
+#else
 
 int
 main(int argc, char *argv[], char **environment) {
+#endif
   create_sci_environment(environment, argv[0]);  
   
   Skinner::XMLIO::register_maker<Painter>();
