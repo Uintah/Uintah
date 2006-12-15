@@ -140,20 +140,20 @@ ViewScene::~ViewScene()
     sched_->remove_callback(check_autoview_on_load, this);
   }
 
+  view_window_lock_.lock();
   for(unsigned int i=0;i<view_window_.size();i++)
   {
-    view_window_lock_.lock();
 #ifdef __linux    
     CleanupManager::invoke_remove_callback(delete_viewwindow_callback,
                                            (void *)view_window_[i]);
 #else
     delete view_window_[i];
 #endif
-    view_window_lock_.unlock();
   }
-  
-
+  view_window_.clear();
+  view_window_lock_.unlock();
 }
+
 
 //----------------------------------------------------------------------
 void
@@ -541,6 +541,7 @@ ViewScene::delete_patch_portnos(int portid)
 	    si->getString().substr(0, loc+1) + to_string(i) + ")";
 	  string cached_name = si->getString();
 	  // Do a rename here.
+          view_window_lock_.lock();
 	  for (unsigned int j = 0; j < view_window_.size(); j++)
 	  {
 	    // itemRenamed will set si->name_ = newname
@@ -548,6 +549,7 @@ ViewScene::delete_patch_portnos(int portid)
 	    si->getString() = cached_name;
 	    view_window_[j]->itemRenamed(si, newname);
 	  }
+          view_window_lock_.unlock();
 	  si->getString() = newname;
 	}
       }
