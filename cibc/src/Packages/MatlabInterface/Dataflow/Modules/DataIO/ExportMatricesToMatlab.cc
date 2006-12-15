@@ -99,11 +99,11 @@ class ExportMatricesToMatlab : public Module
     enum { NUMPORTS = 6};
     
     // GUI variables
-    GuiString guifilename_; // .mat filename (import from GUI)
-    GuiString guifilenameset_;
-    GuiString guimatrixname_; // A list of the matrix names
-    GuiString guidataformat_; // A list of the dataformat for each matrix (int, double etc.)
-    GuiString guimatrixformat_; // A list of the matlabarray format (numeric array, structured array)
+    GuiFilename guifilename_; // .mat filename (import from GUI)
+    GuiString   guifilenameset_;
+    GuiString   guimatrixname_; // A list of the matrix names
+    GuiString   guidataformat_; // A list of the dataformat for each matrix (int, double etc.)
+    GuiString   guimatrixformat_; // A list of the matlabarray format (numeric array, structured array)
   
 };
 
