@@ -906,118 +906,44 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t");
+    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     int n8or27=flags->d_8or27;
-
     Ghost::GhostType  gan = Ghost::AroundNodes;
+
+    IntVector cl, ch, fl, fh, CL, CH, FL, FH;
+    // Determine extents for coarser level particle data
+    const Level* coarseLevel = 0;
+    const Level* fineLevel = 0;
+    if(getLevel(patches)->hasCoarserLevel()){
+      coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
+
+      getCoarseLevelRangeNodes(patch, coarseLevel, CL, CH, FL, FH, 1);
+    }
+    // Determine extents for finer level particle data
+    if(getLevel(patches)->hasFinerLevel()){
+      fineLevel = getLevel(patches)->getFinerLevel().get_rep();
+
+      patch->computeVariableExtents(Patch::NodeBased, IntVector(0,0,0),
+                                    gan, 1, cl, ch);
+
+      fl = patch->getLevel()->mapNodeToFiner(cl);// - ghost;
+      fh = patch->getLevel()->mapNodeToFiner(ch);// + ghost;
+    }
+
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      // Create arrays for the coarse particle data
-      if(getLevel(patches)->hasCoarserLevel()){
-        constParticleVariable<Point>  pxC;
-        constParticleVariable<double> pmassC, pvolumeC, pTemperatureC;
-        constParticleVariable<Vector> pvelocityC, pexternalforceC,psizeC;
-        constParticleVariable<double> pErosionC;
-
-        const Level* coarseLevel = 
-                                 getLevel(patches)->getCoarserLevel().get_rep();
-
-        IntVector lowI, highI, fl, fh;
-        getCoarseLevelRangeNodes(patch, coarseLevel, lowI, highI, fl, fh, 1);
-//        cout << "lowC = " << lowI << endl;
-//        cout << "highC = " << highI << endl;
-
-        ParticleSubset* psetC = old_dw->getParticleSubset(dwi, lowI, highI,
-                                                          coarseLevel, NULL,
-                                                          lb->pXLabel);
-
-        old_dw->get(pxC,             lb->pXLabel,                 psetC);
-        old_dw->get(pmassC,          lb->pMassLabel,              psetC);
-        old_dw->get(pvolumeC,        lb->pVolumeLabel,            psetC);
-        old_dw->get(pvelocityC,      lb->pVelocityLabel,          psetC);
-        old_dw->get(pTemperatureC,   lb->pTemperatureLabel,       psetC);
-        old_dw->get(psizeC,          lb->pSizeLabel,              psetC);
-        old_dw->get(pErosionC,       lb->pErosionLabel,           psetC);
-        new_dw->get(pexternalforceC, lb->pExtForceLabel_preReloc, psetC);
-        for (ParticleSubset::iterator iter = psetC->begin();
-             iter != psetC->end(); 
-             iter++){
-//          particleIndex idx = *iter;
-//          cout << "pxC = " << pxC[idx] << endl;
-        }
-      }
-
-      // Create arrays for the finer particle data
-      if(getLevel(patches)->hasFinerLevel()){
-        constParticleVariable<Point>  pxF;
-        constParticleVariable<double> pmassF, pvolumeF, pTemperatureF;
-        constParticleVariable<Vector> pvelocityF, pexternalforceF,psizeF;
-        constParticleVariable<double> pErosionF;
-
-        const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
-
-        IntVector cl, ch, fl, fh;
-        patch->computeVariableExtents(Patch::NodeBased, IntVector(0,0,0),
-                                      gan, 1, cl, ch);
-
-        fl = patch->getLevel()->mapNodeToFiner(cl);// - ghost;
-        fh = patch->getLevel()->mapNodeToFiner(ch);// + ghost;
-
-//        cout << "FL = " << fl << endl;
-//        cout << "FH = " << fh << endl;
-
-        // get with a ghost cell to make sure you get all patches
-        ParticleSubset*  psetF = old_dw->getParticleSubset(dwi, fl, fh,
-                                                           fineLevel, NULL,
-                                                           lb->pXLabel);
-
-        old_dw->get(pxF,             lb->pXLabel,                 psetF);
-        old_dw->get(pmassF,          lb->pMassLabel,              psetF);
-        old_dw->get(pvolumeF,        lb->pVolumeLabel,            psetF);
-        old_dw->get(pvelocityF,      lb->pVelocityLabel,          psetF);
-        old_dw->get(pTemperatureF,   lb->pTemperatureLabel,       psetF);
-        old_dw->get(psizeF,          lb->pSizeLabel,              psetF);
-        old_dw->get(pErosionF,       lb->pErosionLabel,           psetF);
-        new_dw->get(pexternalforceF, lb->pExtForceLabel_preReloc, psetF);
-
-        for (ParticleSubset::iterator iter = psetF->begin();
-             iter != psetF->end(); 
-             iter++){
-//          particleIndex idx = *iter;
-//          cout << "pxF = " << pxF[idx] << endl;
-        }
-      }
-
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                                       gan, NGP, lb->pXLabel);
-
-      // Create arrays for the particle data
-      constParticleVariable<Point>  px;
-      constParticleVariable<double> pmass, pvolume, pTemperature;
-      constParticleVariable<Vector> pvelocity, pexternalforce,psize;
-      constParticleVariable<double> pErosion;
-
-      old_dw->get(px,             lb->pXLabel,             pset);
-      old_dw->get(pmass,          lb->pMassLabel,          pset);
-      old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
-      old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
-      old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
-      old_dw->get(psize,          lb->pSizeLabel,          pset);
-      old_dw->get(pErosion,       lb->pErosionLabel,       pset);
-      new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+      vector<ParticleSubset* > UberPset(3);
 
       // Create arrays for the grid data
-      NCVariable<double> gmass;
-      NCVariable<double> gvolume;
-      NCVariable<Vector> gvelocity,gvelocityInterp;
-      NCVariable<Vector> gexternalforce;
+      NCVariable<double> gmass, gvolume;
+      NCVariable<Vector> gvelocity,gvelocityInterp,gexternalforce;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
@@ -1032,30 +958,66 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
 
-      for (ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); 
-           iter++){
-        particleIndex idx = *iter;
+      // Create arrays for the particle data on this patch
+      constParticleVariable<Point>  px;
+      constParticleVariable<double> pmass, pvolume, pTemperature;
+      constParticleVariable<Vector> pvelocity, pexternalforce,psize;
+      constParticleVariable<double> pErosion;
 
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
-
-        Vector pmom = pvelocity[idx]*pmass[idx];
-
-        // Add each particles contribution to the local mass & velocity 
-        // Must use the node indices
-        IntVector node;
-        for(int k = 0; k < n8or27; k++) {
-          node = ni[k];
-          if(patch->containsNode(node)) {
-            S[k] *= pErosion[idx];
-            gmass[node]          += pmass[idx]                     * S[k];
-            gvelocity[node]      += pmom                           * S[k];
-            gvolume[node]        += pvolume[idx]                   * S[k];
-            gexternalforce[node] += pexternalforce[idx]            * S[k];
-          }
+      ParticleSubset* pset=0;
+      for(int whichLevel=0;whichLevel<3;whichLevel++){
+        bool doit = false;
+        if(getLevel(patches)->hasCoarserLevel() && whichLevel==0){
+          pset = old_dw->getParticleSubset(dwi, CL, CH, coarseLevel, NULL,
+                                                             lb->pXLabel);
+          doit = true;
         }
-      } // End of particle loop
+        if(whichLevel==1){
+          pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, lb->pXLabel);
+          doit = true;
+        }
+        if(getLevel(patches)->hasFinerLevel() && whichLevel==2){
+          pset = old_dw->getParticleSubset(dwi, fl, fh, fineLevel, NULL,
+                                                           lb->pXLabel);
+          doit = true;
+        }
+
+        if(doit){
+          old_dw->get(px,             lb->pXLabel,                 pset);
+          old_dw->get(pmass,          lb->pMassLabel,              pset);
+          old_dw->get(pvolume,        lb->pVolumeLabel,            pset);
+          old_dw->get(pvelocity,      lb->pVelocityLabel,          pset);
+          old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
+          old_dw->get(psize,          lb->pSizeLabel,              pset);
+          old_dw->get(pErosion,       lb->pErosionLabel,           pset);
+          new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+
+          for (ParticleSubset::iterator iter = pset->begin();
+               iter != pset->end(); 
+               iter++){
+            particleIndex idx = *iter;
+    
+            // Get the node indices that surround the cell
+            interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
+    
+            Vector pmom = pvelocity[idx]*pmass[idx];
+    
+            // Add each particles contribution to the local mass & velocity 
+            // Must use the node indices
+            IntVector node;
+            for(int k = 0; k < n8or27; k++) {
+              node = ni[k];
+              if(patch->containsNode(node)) {
+                S[k] *= pErosion[idx];
+                gmass[node]          += pmass[idx]                     * S[k];
+                gvelocity[node]      += pmom                           * S[k];
+                gvolume[node]        += pvolume[idx]                   * S[k];
+                gexternalforce[node] += pexternalforce[idx]            * S[k];
+              }
+            }
+          } // End of particle loop
+        }
+      }
 
       for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
         IntVector c = *iter; 
