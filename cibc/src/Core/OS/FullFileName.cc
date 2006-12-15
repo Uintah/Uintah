@@ -370,7 +370,7 @@ FullFileName::make_relative_filename(std::string name, std::string path)
 
 		while (ddpos != std::string::npos)
 		{
-			if (ddpos > 1 && nname[ddpos-1] == '/')
+			if (ddpos > 2 && nname[ddpos-1] == '/')
 			{
 				std::string::size_type slashpos = nname.find_last_of("/",ddpos-2);
 				if (slashpos == std::string::npos)
@@ -387,7 +387,7 @@ FullFileName::make_relative_filename(std::string name, std::string path)
 				}
 				else
 				{
-					if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
+					if ((nname.substr(slashpos+1,ddpos-slashpos-2)!="..")&&(nname.substr(slashpos+1,ddpos-slashpos-2)!=".")) 
 					{
 						nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
 						ddpos = nname.find("../");
@@ -454,7 +454,7 @@ FullFileName::make_relative_filename(std::string name, std::string path)
 
 		while (ddpos != std::string::npos)
 		{
-			if (ddpos > 1 && nname[ddpos-1] == '/')
+			if (ddpos > 2 && nname[ddpos-1] == '/')
 			{
 				std::string::size_type slashpos = nname.find_last_of("/",ddpos-2);
 				if (slashpos == std::string::npos)
@@ -471,7 +471,7 @@ FullFileName::make_relative_filename(std::string name, std::string path)
 				}
 				else
 				{
-					if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
+					if ((nname.substr(slashpos+1,ddpos-slashpos-2)!="..")&&(nname.substr(slashpos+1,ddpos-slashpos-2)!=".")) 
 					{
 						nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
 						ddpos = nname.find("../");

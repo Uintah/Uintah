@@ -1582,22 +1582,26 @@ NetworkIO::make_relative_filename(string name, string path)
 
   // Remove blanks and tabs from the input 
   // (Some could have editted the XML file manually and may have left spaces)
-  while (name.size() > 0 && ((name[0] == ' ') || (name[0] == '\t'))) {
+  while (name.size() > 0 && ((name[0] == ' ') || (name[0] == '\t'))) 
+	{
     name = name.substr(1);
   }
   while (name.size() > 0 && 
-	 ((name[name.size() - 1] == ' ') || (name[name.size() - 1] == '\t'))) {
+	 ((name[name.size() - 1] == ' ') || (name[name.size() - 1] == '\t'))) 
+	 {
     name = name.substr(1, name.size() - 1);
   }
 
   // Check whether filename is absolute:
 	
   bool abspath = false;
-  if ( name.size() > 0 && name[0] == '/') {
+  if ( name.size() > 0 && name[0] == '/') 
+	{
     abspath = true; // Unix absolute path
   }
   if ( name.size() > 2 && name[1] == ':' && 
-       ((name[2] == '\\') ||(name[2] == '/'))) {
+       ((name[2] == '\\') ||(name[2] == '/'))) 
+	{
     abspath = true; // Windows absolute path
   }
 
@@ -1606,6 +1610,7 @@ NetworkIO::make_relative_filename(string name, string path)
     // We could not make it relative as it is already relative
     return (name); 
   }
+	
   if ( name.size() > 0 && name[0] == '/')
   {
     string npath = path;
@@ -1614,17 +1619,16 @@ NetworkIO::make_relative_filename(string name, string path)
     bool backtrack = false;
     while(slashpos != string::npos)
     {
-      if (npath.substr(0,slashpos) == nname.substr(0, slashpos) && 
-	  backtrack == false)
+      if (npath.substr(0,slashpos) == nname.substr(0, slashpos) && backtrack == false)
       {
-	npath = npath.substr(slashpos+1);
-	nname = nname.substr(slashpos+1);
+				npath = npath.substr(slashpos+1);
+				nname = nname.substr(slashpos+1);
       }
       else
       {
-	backtrack = true;
-	npath = npath.substr(slashpos+1);
-	nname = "../" + nname;
+				backtrack = true;
+				npath = npath.substr(slashpos+1);
+				nname = "../" + nname;
       }
       slashpos = npath.find("/");
     }
@@ -1635,40 +1639,39 @@ NetworkIO::make_relative_filename(string name, string path)
 
     while (ddpos != string::npos)
     {
-      if (ddpos > 1 && nname[ddpos-1] == '/')
+      if (ddpos > 2 && nname[ddpos-1] == '/')
       {
-	string::size_type slashpos = nname.find_last_of("/", ddpos-2);
-	if (slashpos == string::npos)
-	{
-	  if ((nname.substr(0,ddpos-1) != "..") &&
-	      (nname.substr(0,ddpos-1) != "."))
-	  {
-	    nname = nname.substr(ddpos+3); 
-	    ddpos = nname.find("../");
-	  }
-	  else 
-	  {
-	    ddpos = nname.find("../",ddpos+3);
-	  }
-	}
-	else
-	{
-	  if ((nname.substr(slashpos+1,ddpos-1) != "..") &&
-	      (nname.substr(slashpos+1,ddpos-1) != ".")) 
-	  {
-	    nname = nname.substr(0,slashpos+1)+nname.substr(ddpos + 3);
-	    ddpos = nname.find("../");
-	  }
-	  else
-	  {
-	    ddpos = nname.find("../",ddpos+3);
-	  }
-	}
-				
+				string::size_type slashpos = nname.find_last_of("/", ddpos-2);
+				if (slashpos == string::npos)
+				{
+					if ((nname.substr(0,ddpos-1) != "..") &&
+							(nname.substr(0,ddpos-1) != "."))
+					{
+						nname = nname.substr(ddpos+3); 
+						ddpos = nname.find("../");
+					}
+					else 
+					{
+						ddpos = nname.find("../",ddpos+3);
+					}
+				}
+				else
+				{
+					if ((nname.substr(slashpos+1,ddpos-slashpos-2) != "..") &&
+							(nname.substr(slashpos+1,ddpos-slashpos-2) != ".")) 
+					{
+						nname = nname.substr(0,slashpos+1)+nname.substr(ddpos + 3);
+						ddpos = nname.find("../");
+					}
+					else
+					{
+						ddpos = nname.find("../",ddpos+3);
+					}
+				}
       }
       else
       {
-	ddpos = nname.find("../",ddpos+3);
+				ddpos = nname.find("../",ddpos+3);
       }
     }
 
@@ -1685,16 +1688,16 @@ NetworkIO::make_relative_filename(string name, string path)
     {
       if (path.substr(0,3) != name.substr(0,3))
       {
-	cerr << "WARNING: Could not make pathname relative as it"
-	     <<" is on another drive" << endl;
-	return (name);
+				cerr << "WARNING: Could not make pathname relative as it"
+						 <<" is on another drive" << endl;
+						 return (name);
       }
     }
     else
     {
-      cerr << "WARNING: Failed to convert network pathname to"
-	   << " an absolute path name" << endl;
-      return (name);
+      cerr	<< "WARNING: Failed to convert network pathname to"
+						<< " an absolute path name" << endl;
+						return (name);
     }
 	
     string npath = path;
@@ -1704,16 +1707,16 @@ NetworkIO::make_relative_filename(string name, string path)
     while(slashpos != string::npos)
     {
       if (npath.substr(0, slashpos) == nname.substr(0, slashpos) && 
-	  backtrack == false)
+					backtrack == false)
       {
-	npath = npath.substr(slashpos+1);
-	nname = nname.substr(slashpos+1);
+				npath = npath.substr(slashpos+1);
+				nname = nname.substr(slashpos+1);
       }
       else
       {
-	backtrack = true;
-	npath = npath.substr(slashpos+1);
-	nname = "../" + nname;
+				backtrack = true;
+				npath = npath.substr(slashpos+1);
+				nname = "../" + nname;
       }
       slashpos = npath.find("/");
     }
@@ -1724,36 +1727,35 @@ NetworkIO::make_relative_filename(string name, string path)
 
     while (ddpos != string::npos)
     {
-      if (ddpos > 1 && nname[ddpos-1] == '/')
+      if (ddpos > 2 && nname[ddpos-1] == '/')
       {
-	string::size_type slashpos = nname.find_last_of("/", ddpos - 2);
-	if (slashpos == string::npos)
-	{
-	  if ((nname.substr(0, ddpos - 1) != "..") &&
-	      (nname.substr(0, ddpos - 1) != "."))
-	  {
-	    nname = nname.substr(ddpos+3); 
-	    ddpos = nname.find("../");
-	  }
-	  else 
-	  {
-	    ddpos = nname.find("../",ddpos+3);
-	  }
-	}
-	else
-	{
-	  if ((nname.substr(slashpos + 1, ddpos - 1) != "..") &&
-	      (nname.substr(slashpos + 1, ddpos - 1) != ".")) 
-	  {
-	    nname = nname.substr(0, slashpos + 1) + nname.substr(ddpos + 3);
-	    ddpos = nname.find("../");
-	  }
-	  else
-	  {
-	    ddpos = nname.find("../", ddpos + 3);
-	  }
-	}
-				
+				string::size_type slashpos = nname.find_last_of("/", ddpos - 2);
+				if (slashpos == string::npos)
+				{
+					if ((nname.substr(0, ddpos - 1) != "..") &&
+							(nname.substr(0, ddpos - 1) != "."))
+					{
+						nname = nname.substr(ddpos+3); 
+						ddpos = nname.find("../");
+					}
+					else 
+					{
+						ddpos = nname.find("../",ddpos+3);
+					}
+				}
+				else
+				{
+					if ((nname.substr(slashpos + 1, ddpos-slashpos - 2) != "..") &&
+							(nname.substr(slashpos + 1, ddpos-slashpos - 2) != ".")) 
+					{
+						nname = nname.substr(0, slashpos + 1) + nname.substr(ddpos + 3);
+						ddpos = nname.find("../");
+					}
+					else
+					{
+						ddpos = nname.find("../", ddpos + 3);
+					}
+				}
       }
       else
       {
