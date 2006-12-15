@@ -127,7 +127,7 @@ if [ -d "$DIR/3P" ]; then
         rebuildtp=1
     fi
 else
-    tpurl="https://code.sci.utah.edu/svn/3P/branches/core"
+    tpurl="https://code.sci.utah.edu/svn/Thirdparty/3.0.0"
     try $svnbin co $tpurl 3P
     rebuildtp=1
 fi
@@ -135,8 +135,9 @@ fi
 if test "$rebuildtp" = "1"; then
     # rebuild the Thirdparty from scratch
     try rm -rf $DIR/Thirdparty
+    try mkdir -p $DIR/Thirdparty
     try cd $DIR/3P
-    try ./install.sh $DIR/Thirdparty $makeflags
+    try ./install.sh --seg3d-only $DIR/Thirdparty $makeflags
 fi
 
 try export TP=`cat $DIR/3P/thirdparty_dir`
@@ -165,22 +166,15 @@ try cd $TP/lib/InsightToolkit
 
 # Get the latest SVN version of SCIRun Core
 try cd $DIR
-if [ -d "$DIR/SCIRunCore-src" ]; then
-    try cd $DIR/SCIRunCore-src
+if [ -d "$DIR/src" ]; then
+    try cd $DIR/src
     try $svnbin update
 else
-    try $svnbin co https://code.sci.utah.edu/svn/SCIRun/branches/cibc SCIRunCore-src
+    try $svnbin co https://code.sci.utah.edu/svn/SCIRun/branches/cibc/src src
 fi
 
 # Build SCIRun Core w/ cmake in SCIRunCore-bin
-try mkdir -p $DIR/SCIRunCore-bin
-try cd $DIR/SCIRunCore-bin
-try $cmakebin $DIR/SCIRunCore-src -DSCIRUN_THIRDPARTY_DIR=$TP -DCMAKE_BUILD_TYPE=$buildtype -DWITH_X11=$LINK_X11
+try mkdir -p $DIR/bin
+try cd $DIR/bin
+try $cmakebin $DIR/src -DSCIRUN_THIRDPARTY_DIR=$TP -DCMAKE_BUILD_TYPE=$buildtype -DWITH_X11=$LINK_X11 -DBUILD_SHARED_LIBS=0 -DBUILD_DATAFLOW=0 -DBUILD_SEG3D=1
 try make $makeflags
-
-# Build Seg3d cmake in seg3d-bin
-try mkdir -p $DIR/seg3d-bin
-try cd $DIR/seg3d-bin
-try $cmakebin $DIR/SCIRunCore-src/src/StandAlone/Apps/Seg3D/ -DSCIRUN_DIR=$DIR/SCIRunCore-bin -DCMAKE_BUILD_TYPE=$buildtype
-try make $makeflags
-
