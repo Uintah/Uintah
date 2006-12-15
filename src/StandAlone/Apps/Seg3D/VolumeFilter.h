@@ -58,7 +58,7 @@ class VolumeFilterBase : public Skinner::Parent
 public:
   VolumeFilterBase      (NrrdVolumeHandle volume  = 0,
                          Skinner::Variables *vars = 0)  
-    : Parent::Parent(vars ? vars : new Skinner::Variables("VolumeFilter", 0)),
+  : Skinner::Parent(vars ? vars : new Skinner::Variables("VolumeFilter", 0)),
       volume_(volume),
       abort_(false),
       progress_(0.0),
