@@ -73,9 +73,9 @@ Vector::find_orthogonal(Vector& v1, Vector& v2) const
 	v0=Cross(*this, Vector(0,1,0));
     }
     v1=Cross(*this, v0);
-    v1.normalize();
+    v1.safe_normalize();
     v2=Cross(*this, v1);
-    v2.normalize();
+    v2.safe_normalize();
 }
 
 bool
