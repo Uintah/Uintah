@@ -44,14 +44,13 @@ SET(StandAlone_Convert_Libs
   Core_ImportExport
   Core_Basis
   Core_Geom
-  ${ZLIB_LIBRARY}
-  ${PNG_LIBRARY}
   ${TEEM_LIBRARY}
   ${FREETYPE_LIBRARY}
   ${XML2_LIBRARY}
   ${M_LIBRARY}
   ${F_LIBRARY}
-
+  ${PNG_LIBRARY}
+  ${ZLIB_LIBRARY}
 )
 
 ADD_EXECUTABLE(CurveFieldToText ${SCIRUN_CORE_SOURCE_DIR}/StandAlone/convert/CurveFieldToText.cc)
