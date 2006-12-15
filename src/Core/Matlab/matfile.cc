@@ -490,8 +490,6 @@ bool matfile::openchild()
 
 bool matfile::opencompression()
 {
-    std::cout << "open opencompression\n";
-
 	// If the datablock cannot be found, there is nothing to do
 	// except to report an error
     if (m_->curptr_.datptr == -1) return(false);
@@ -621,7 +619,6 @@ bool matfile::opencompression()
 			destbufferheader = 0;
 			throw;
 		}
-    std::cout << "end opencompression\n";
 	}
 	
     matfileptr childptr;
