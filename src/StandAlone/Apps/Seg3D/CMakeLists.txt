@@ -151,6 +151,12 @@ ENDIF(APPLE)
 
                 
 TARGET_LINK_LIBRARIES(Seg3D 
+  ${XML_LIBRARY} 
+  ${M_LIBRARY} 
+  ${GL_LIBRARY} 
+  ${GLU_LIBRARY} 
+  ${TEEM_LIBRARY}
+  ${GLEW_LIBRARY}
   Core_Algorithms_Visualization 
   Core_Basis 
   Core_Bundle 
@@ -168,12 +174,6 @@ TARGET_LINK_LIBRARIES(Seg3D
   Core_Util 
   Core_Volume
   Core_Malloc
-  ${XML_LIBRARY} 
-  ${M_LIBRARY} 
-  ${GL_LIBRARY} 
-  ${GLU_LIBRARY} 
-  ${TEEM_LIBRARY}
-  ${GLEW_LIBRARY}
 )
 
 IF(ITK_FOUND)   
