@@ -238,7 +238,7 @@ FIND_PATH(ZLIB_INCLUDE zlib.h
 IF(ZLIB_LIBRARY)
    MESSAGE(STATUS "Found ZLIB: ${ZLIB_LIBRARY}")
 ELSE(ZLIB_LIBRARY)
-   MESSAGE(FATAL_ERROR ": z library required.")
+   MESSAGE(FATAL_ERROR "z library required to be in SCIRun's Thirdparty. Please re-install your Thirdparty and verify that the z library installed propery.")
 ENDIF(ZLIB_LIBRARY)
 
 #-----------------------------------------------------------------------------
@@ -256,7 +256,7 @@ IF(PNG_LIBRARY)
    SET(HAVE_PNG "YES")
    SET(DEF_PNG "#define HAVE_PNG 1")
 ELSE(PNG_LIBRARY)
-   MESSAGE(FATAL_ERROR ": png library required.")
+   MESSAGE(FATAL_ERROR "PNG library required to be in SCIRun's Thirdparty. Please re-install your Thirdparty and verify that the PNG library installed propery.")
 ENDIF(PNG_LIBRARY)
 
 
@@ -983,34 +983,47 @@ ENDIF(WITH_CBLAS OR CLBAS_DIR)
 
 #----------------------------------------------------------------------------
 # Insight Toolkit
+
+# Look for it in the Thirdparty
 IF(EXISTS ${SCIRUN_THIRDPARTY_DIR}/lib/InsightToolkit)
+  MESSAGE(STATUS "Found ITK in SCIRun Thirdparty: ${SCIRUN_THIRDPARTY_DIR}/lib/InsightToolkit")
   SET(ITK_DIR ${SCIRUN_THIRDPARTY_DIR}/lib/InsightToolkit CACHE PATH "Path to IInsight Toolkit")
+  MESSAGE(STATUS "Setting ITK_DIR to ${ITK_DIR}")
+  SET(FIND_ITK 1 CACHE INTERNAL "Do not edit" FORCE)
 ENDIF(EXISTS ${SCIRUN_THIRDPARTY_DIR}/lib/InsightToolkit)
 
+STRING(REGEX MATCH "Insight" BUILDING_INSIGHT ${LOAD_PACKAGE})
 IF(ITK_DIR)
-  OPTION(WITH_ITK "Build SCIRun with support for the Insight Toolkit." ON)
+  MESSAGE(STATUS "ITK_DIR defined")
+  # Check if Insight in LOAD_PACKAGE
+  IF(NOT BUILDING_INSIGHT)
+    MESSAGE(STATUS "ITK_DIR specified as ${ITK_DIR} but Insight not included in LOAD_PACKAGE. Adding Insight to LOAD_PACKAGE.")
+    SET(LOAD_PACKAGE "${LOAD_PACKAGE},Insight")
+    MESSAGE(STATUS "LoadPackage=${LOAD_PACKAGE}")		
+  ELSE(NOT BUILDING_INSIGHT)
+    MESSAGE(STATUS "LOAD_PACKAGE contains Insight: ${LOAD_PACKAGE}")
+  ENDIF(NOT BUILDING_INSIGHT)
 ELSE(ITK_DIR)
-  OPTION(WITH_ITK "Build SCIRun with support for the Insight Toolkit." OFF)
+  MESSAGE(STATUS "ITK_DIR not defined")
+  # Force user to define it if they specified Insight in LOAD_PACKAGE
+  IF(BUILDING_INSIGHT)
+    MESSAGE(SEND_ERROR "Insight specified in LOAD_PACKAGE, but ITK_DIR not set and can't find it in Thirdparty. Please set ITK to the directory that contains the ITKConfig.cmake file")
+    SET(FIND_ITK 1)
+  ENDIF(BUILDING_INSIGHT)
 ENDIF(ITK_DIR)
 
-IF(WITH_ITK)
-  FIND_PACKAGE( ITK )
+IF(ITK_DIR OR FIND_ITK)
+  # Turn building Seg3D on
+  FIND_PACKAGE(ITK)
   IF(ITK_FOUND)
     INCLUDE(${ITK_USE_FILE})
     SET(DEF_INSIGHT "#define HAVE_INSIGHT 1" CACHE INTERNAL "Have insight")
     SET(HAVE_INSIGHT "yes" CACHE INTERNAL "Linking against ITK")
-    # add Insight to LOAD_PACKAGE if not all ready there
-    STRING(REGEX MATCH "Insight" BUILDING_INSIGHT ${LOAD_PACKAGE})
-    IF(NOT BUILDING_INSIGHT)
-      SET(LOAD_PACKAGE "${LOAD_PACKAGE},Insight")
-    ENDIF(NOT BUILDING_INSIGHT)
   ELSE(ITK_FOUND)
     MESSAGE(FATAL_ERROR "Cannot find ITK. Please set ITK_DIR.")
   ENDIF(ITK_FOUND)
-ENDIF(WITH_ITK)
-
-MARK_AS_ADVANCED(WITH_ITK)
-
+ENDIF(ITK_DIR OR FIND_ITK)
+    
 #-----------------------------------------------------------------------------
 # The entire SCIRun tree should use the same include path
 
@@ -1072,15 +1085,28 @@ MARK_AS_ADVANCED(BLT_INCLUDE BLT_LIBRARY FREETYPE_INCLUDE FREETYPE_LIBRARY TCL_L
 OPTION(BUILD_DATAFLOW "Build SCIRun executable, dataflow, and packages" ON)
 IF(BUILD_DATAFLOW)
   SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
+  MARK_AS_ADVANCED(SCIRUN_DIR)
   SUBDIRS(Dataflow)
 ENDIF(BUILD_DATAFLOW)
 MARK_AS_ADVANCED(BUILD_DATAFLOW)
 
 # Option for building Seg3D
-OPTION(BUILD_SEG3D "Build Seg3D Application" OFF)
+IF(ITK_FOUND)
+  OPTION(BUILD_SEG3D "Build Seg3D Application" ON)
+  MESSAGE(STATUS "Building Seg3D by default because ITK found.")
+ELSE(ITK_FOUND)
+  OPTION(BUILD_SEG3D "Build Seg3D Application" OFF)
+ENDIF(ITK_FOUND)
+
 IF(BUILD_SEG3D)
   SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
+  MARK_AS_ADVANCED(SCIRUN_DIR)
   SUBDIRS(StandAlone/Apps/Seg3D)
+  IF(ITK_FOUND)
+
+  ELSE(ITK_FOUND)
+    MESSAGE(SEND_ERROR "BUILD_SEG3D set to ON, but ITK not specified. Please make sure ITK_DIR is set to be the directory where the ITKConfig.cmake file is located or make sure to install ITK into your ${SCIRUN_THIRDPARTY_DIR} directory.")
+  ENDIF(ITK_FOUND)
 ENDIF(BUILD_SEG3D)
 MARK_AS_ADVANCED(BUILD_SEG3D)
 

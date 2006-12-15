@@ -65,6 +65,7 @@ ELSE(SCIRUN_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build SCIRun Dataflow without SCIRUN Core. Please set SCIRUN_DIR.")
 ENDIF(SCIRUN_FOUND)
 
+# DV Fix when fixing separate building option
 IF(WITH_ITK)
   IF(NOT ITK_DIR)
     SET(ITK_DIR ${SCIRUN_ITK_DIR})
