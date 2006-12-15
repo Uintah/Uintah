@@ -852,9 +852,6 @@ void ICE::updatePressure(const ProcessorGroup*,
            d_customBC_var_basket);
            
     delete_CustomBCs(d_customBC_var_basket);
-    
-    set_imp_DelP_BC(imp_delP, patch, lb->imp_delPLabel, new_dw);
-     
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
       ostringstream desc;
