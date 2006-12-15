@@ -117,22 +117,21 @@ ADD_LIBRARY(Core_Geom ${Core_Geom_SRCS})
 
 
 TARGET_LINK_LIBRARIES( Core_Geom 
+  ${THREAD_LIBRARY} 
+  ${GL_LIBRARY}
+  ${ZLIB_LIBRARY}
+  ${PNG_LIBRARY}
+  ${TEEM_LIBRARY}
+  ${FREETYPE_LIBRARY}
+  ${M_LIBRARY}
+  Core_Exceptions
   Core_Persistent
   Core_Geometry
   Core_Containers 
-  Core_Exceptions
   Core_Datatypes
   Core_Math
   Core_Util
   Core_Thread
-  ${THREAD_LIBRARY} 
-  ${FTGL_LIBRARY}
-  ${GL_LIBRARY}
-  ${PNG_LIBRARY}
-  ${ZLIB_LIBRARY}
-  ${M_LIBRARY}
-  ${TEEM_LIBRARY}
-  ${FREETYPE_LIBRARY}
 )
 
 IF(X11_FOUND)

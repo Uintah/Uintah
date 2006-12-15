@@ -32,22 +32,26 @@ SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/bin/convert CACHE INTERNAL
 MARK_AS_ADVANCED(EXECUTABLE_OUTPUT_PATH)
 
 SET(StandAlone_Convert_Libs
+  Core_Exceptions
   Core_Datatypes
   Core_Util
   Core_Containers
   Core_Persistent
-  Core_Util
-  Core_Exceptions
   Core_Init
   Core_Thread
   Core_Geometry
   Core_Math
-  Core_Geom
   Core_ImportExport
   Core_Basis
+  Core_Geom
+  ${ZLIB_LIBRARY}
+  ${PNG_LIBRARY}
+  ${TEEM_LIBRARY}
+  ${FREETYPE_LIBRARY}
   ${XML2_LIBRARY}
   ${M_LIBRARY}
   ${F_LIBRARY}
+
 )
 
 ADD_EXECUTABLE(CurveFieldToText ${SCIRUN_CORE_SOURCE_DIR}/StandAlone/convert/CurveFieldToText.cc)
