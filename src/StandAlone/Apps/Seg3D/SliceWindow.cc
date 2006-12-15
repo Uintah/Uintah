@@ -38,6 +38,7 @@
 #include <typeinfo>
 #include <iostream>
 #include <sci_gl.h>
+#include <sci_glu.h>
 #include <sci_algorithm.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Containers/Array3.h>
