@@ -357,18 +357,27 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             if(region->linearInitialize){
               f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
             }
+            if(region->quadraticInitialize){    
+              if(d.x() <= 0.5)
+                f[c] = pow(d.x(),2) - d.x();
+              else{
+                f[c] = pow( (1.0 - d.x()),2) - d.x();
+              } 
+            }
             if(region->cubicInitialize){    
               if(d.x() <= 0.5)
                 f[c] = -1.3333333*pow(d.x(),3)  + pow(d.x(),2);
               else{
                 f[c] = -1.3333333*pow( (1.0 - d.x()),3) + pow( (1.0 - d.x()),2);
               } 
-            }            
+            }
+#if 0            
             if(region->quadraticInitialize){
               f[c] = coeff.x() * d.x() * d.x() 
                    + coeff.y() * d.y() * d.y() 
                    + coeff.z() * d.z() * d.z();
             }
+#endif
           }
         }
       }  // sinusoidal Initialize  
