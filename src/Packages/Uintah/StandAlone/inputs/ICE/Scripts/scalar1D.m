@@ -24,7 +24,7 @@ pDir   = 1;
 symbol = {'+','*r','xg','squarem','diamondb'};
 mat    = 0;
 
-exactSolution = 'cubic' %'sinusoidal'; %linear; %cubic
+exactSolution = 'cubic' %'sinusoidal'; %linear; %cubic; %quad
 velocity    = 1.23456;
 exactSolMin = 0.15;
 exactSolMax = 0.35;
@@ -32,7 +32,7 @@ freq  = 1;
 slope = 1;
 
 numPlotCols = 1;
-numPlotRows = 3;
+numPlotRows = 2;
 
 plotScalarF        = true;
 plotError          = true;
@@ -40,15 +40,15 @@ plotRHS            = false;
 plotScalarFaceflux = false;
 plotScalarFaceCorr = false;
 plotSumScalarF     = false;
-plotScalarLimiter  = true
+plotScalarLimiter  = false
 
 
 % lineExtract start and stop
-startEnd ={'-istart -1 0 0 -iend 10000 0 0';
-           '-istart -1 0 0 -iend 400 0 0';
-           '-istart -1 0 0 -iend 400 0 0';
-           '-istart -1 0 0 -iend 400 0 0';
-           '-istart -1 0 0 -iend 400 0 0'};
+startEnd ={'-istart 0 0 0 -iend 10000 0 0';
+           '-istart 0 0 0 -iend 400 0 0';
+           '-istart 0 0 0 -iend 400 0 0';
+           '-istart 0 0 0 -iend 400 0 0';
+           '-istart 0 0 0 -iend 400 0 0'};
 %________________________________
 %  extract the physical time for each dump
 c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
@@ -128,6 +128,13 @@ for(n = 1:nDumps )
                 exactSol(i) = -1.3333333*(1.0 - d)^3 + (1.0 - d)^2;
               end
             end
+     	      if(strcmp(exactSolution,'quad'))
+              if(d <= 0.5)
+                exactSol(i) = d^2 -d;
+              else
+                exactSol(i) = (1.0 - d)^3 - (1.0 - d);
+              end
+            end
           end
         end
 
@@ -136,9 +143,9 @@ for(n = 1:nDumps )
         LInfinity  = max(difference)
          
         % plot the results
-        subplot(numPlotRows,numPlotCols,plotNum), plot(xindx,scalar,symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,scalar,symbol{L})
         hold on;
-        plot(xindx,exactSol,'-r');
+        plot(xx,exactSol,'-r');
         t = sprintf('%s Time: %s\n%s',desc, time,desc2);
         title(t);
         %xlim([200 600]);
@@ -155,7 +162,7 @@ for(n = 1:nDumps )
       %____________________________
       %   error
       if plotError
-        subplot(numPlotRows,numPlotCols,plotNum), plot(xindx,difference,symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,difference,symbol{L})
         ylabel('error');
         %xlim([200 600]);
         grid on;
