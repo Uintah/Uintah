@@ -102,6 +102,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-field-name-update
 	global $this-tensors-emphasis
 	global $this-approx-div
+	global $this-use-defaults
 	set $this-node_display_type Points
 	set $this-edge_display_type Lines
 	set $this-data_display_type Arrows
@@ -170,6 +171,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-field-name-update 1
 	set $this-tensors-emphasis 0.825
 	set $this-approx-div 1
+	set $this-use-defaults 1
 
 	trace variable $this-node_scaleNV w "$this new_node_scale"
 	trace variable $this-edge_scaleNV w "$this new_edge_scale"
