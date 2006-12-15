@@ -549,6 +549,14 @@ NetworkIO::process_filename(const string &orig)
 	
   // Remove blanks and tabs from the input 
   // (Some could have editted the XML file manually and may have left spaces)
+
+  if (filename.size() > 0)
+  {
+    if (filename[0] == '{')
+    {
+      filename = filename.substr(1,filename.size()-2);
+    }
+  }
   while (filename.size() > 0 && 
 	 ((filename[0] == ' ')||(filename[0] == '\t'))) {
     filename = filename.substr(1);
@@ -1082,9 +1090,7 @@ NetworkIO::add_module_variable(const string &id, const string &var,
   {
     if ((nval.size() >0) &&  (nval[0] == '{'))
     {
-      nval = string("{") + 
-	make_relative_filename(nval.substr(1, nval.size() - 2), out_fname_) + 
-	string("}");
+      make_relative_filename(nval.substr(1, nval.size() - 2), out_fname_);
     }
     else
     {
@@ -1473,41 +1479,41 @@ NetworkIO::make_absolute_filename(string name)
 
       while (ddpos != string::npos)
       {
-	if (ddpos > 1 && name[ddpos-1] == '/')
-	{
-	  string::size_type slashpos = name.find_last_of("/",ddpos-2);
-	  if (slashpos == string::npos)
-	  {
-	    if ((name.substr(0,ddpos-1) != "..") && 
-		(name.substr(0,ddpos-1) != "."))
-	    {
-	      name = name.substr(ddpos+3); 
-	      ddpos = name.find("../");
-	    }
-	    else 
-	    {
-	      ddpos = name.find("../",ddpos+3);
-	    }
-	  }
-	  else
-	  {
-	    if ((name.substr(slashpos+1,ddpos-1)!="..") &&
-		(name.substr(slashpos+1,ddpos-1)!=".")) 
-	    {
-	      name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
-	      ddpos = name.find("../");
-	    }
-	    else
-	    {
-	      ddpos = name.find("../",ddpos+3);
-	    }
-	  }
-					
-	}
-	else
-	{
-	  ddpos = name.find("../",ddpos+3);
-	}
+        if (ddpos > 1 && name[ddpos-1] == '/')
+        {
+          string::size_type slashpos = name.find_last_of("/",ddpos-2);
+          if (slashpos == string::npos)
+          {
+            if ((name.substr(0,ddpos-1) != "..") && 
+          (name.substr(0,ddpos-1) != "."))
+            {
+              name = name.substr(ddpos+3); 
+              ddpos = name.find("../");
+            }
+            else 
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+          else
+          {
+            if ((name.substr(slashpos+1,ddpos-1)!="..") &&
+          (name.substr(slashpos+1,ddpos-1)!=".")) 
+            {
+              name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
+              ddpos = name.find("../");
+            }
+            else
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+                
+        }
+        else
+        {
+          ddpos = name.find("../",ddpos+3);
+        }
       }
     }
     else
@@ -1515,53 +1521,51 @@ NetworkIO::make_absolute_filename(string name)
       // Windows filename
       
       if (cwd[cwd.size()-1]!='/') cwd +='/';
-			
+      
       name = cwd+name;
-			
+      
       // collapse name further
-			
+      
       string::size_type ddpos = name.find("../");
 
       while (ddpos != string::npos)
       {
-	if (ddpos > 1 && name[ddpos-1] == '/')
-	{
-	  string::size_type slashpos = name.find_last_of("/",ddpos-2);
-	  if (slashpos == string::npos)
-	  {
-	    if ((name.substr(0,ddpos-1) != "..") &&
-		(name.substr(0,ddpos-1) != "."))
-	    {
-	      name = name.substr(ddpos+3); 
-	      ddpos = name.find("../");
-	    }
-	    else 
-	    {
-	      ddpos = name.find("../",ddpos+3);
-	    }
-	  }
-	  else
-	  {
-	    if ((name.substr(slashpos+1,ddpos-1)!="..") &&
-		(name.substr(slashpos+1,ddpos-1)!=".")) 
-	    {
-	      name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
-	      ddpos = name.find("../");
-	    }
-	    else
-	    {
-	      ddpos = name.find("../",ddpos+3);
-	    }
-	  }
-					
-	}
-	else
-	{
-	  ddpos = name.find("../",ddpos+3);
-	}
+        if (ddpos > 1 && name[ddpos-1] == '/')
+        {
+          string::size_type slashpos = name.find_last_of("/",ddpos-2);
+          if (slashpos == string::npos)
+          {
+            if ((name.substr(0,ddpos-1) != "..") &&
+          (name.substr(0,ddpos-1) != "."))
+            {
+              name = name.substr(ddpos+3); 
+              ddpos = name.find("../");
+            }
+            else 
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+          else
+          {
+            if ((name.substr(slashpos+1,ddpos-1)!="..") &&
+          (name.substr(slashpos+1,ddpos-1)!=".")) 
+            {
+              name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
+              ddpos = name.find("../");
+            }
+            else
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+                
+        }
+        else
+        {
+          ddpos = name.find("../",ddpos+3);
+        }
       }
-			
-			
     }
   }
 	
