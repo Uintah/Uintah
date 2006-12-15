@@ -339,16 +339,25 @@
             
             <object class="Root::GLWindow" id="Splash">
               <var name="id">Splash</var>
-              <var name="width" type="int">800</var>
-              <var name="height" type="int">200</var>
-              <var name="posx" type="int">300</var>
-              <var name="posy" type="int">325</var>
+              <var name="width" type="int">500</var>
+              <var name="height" type="int">400</var>
+              <var name="posx" type="int">400</var>
+              <var name="posy" type="int">225</var>
               <var name="border" type="bool">1</var>
               
               <signal name="GLWindow::Destructor"
                       target="Root::GLWindow_Destructor"/>
               
-              <object class="Splash"/>
+              <object class="Box">
+                <signal name="button_1_clicked" 
+                        target="GLWindow::close"/>
+                
+                <object class="Texture">
+                  <var name="file">splash-seg3d.png</var>
+                  <var name="color">#FFFFFFFF</var>
+                </object>          
+              </object>
+
             </object>
           </object>
         </object>
