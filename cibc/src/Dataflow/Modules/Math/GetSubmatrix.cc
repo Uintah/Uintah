@@ -88,8 +88,13 @@ GetSubmatrix::execute()
   MatrixHandle imatrix;
   if (!get_input_handle("Input Matrix", imatrix))
 
+  std::cout << "nrows= "<< imatrix->nrows() << "\n";
+  std::cout << "ncols= "<< imatrix->ncols() << "\n";
+
+
   nrow_.set(to_string(imatrix->nrows()));
   ncol_.set(to_string(imatrix->ncols()));
+  get_ctx()->reset();
   
   MatrixHandle cmatrix;
   int mincol, maxcol, minrow, maxrow;
@@ -103,13 +108,13 @@ GetSubmatrix::execute()
 
       if (cmatrix->ncols() > 1)
       {
-	mincol = (int)cmatrix->get(0, 1);
-	maxcol = (int)cmatrix->get(1, 1);
+        mincol = (int)cmatrix->get(0, 1);
+        maxcol = (int)cmatrix->get(1, 1);
       }
       else
       {
-	mincol = 0;
-	maxcol = imatrix->ncols() - 1;
+        mincol = 0;
+        maxcol = imatrix->ncols() - 1;
       }
     }
     else

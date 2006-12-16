@@ -72,7 +72,7 @@ void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int
     AtA[0][1] += A[0][i]*A[1][i];
     AtA[0][2] += A[0][i]*A[2][i];
     AtA[1][1] += A[1][i]*A[1][i];
-    AtA[1][2] += A[1][i]*A[2][i];
+    AtA[1][2] += A[1][i]*A[2][i];  
     AtA[2][2] += A[2][i]*A[2][i];
   }
   AtA[1][0] = AtA[0][1];
