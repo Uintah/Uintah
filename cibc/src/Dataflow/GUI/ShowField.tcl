@@ -171,7 +171,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-field-name-update 1
 	set $this-tensors-emphasis 0.825
 	set $this-approx-div 1
-	set $this-use-defaults 1
+	set $this-use-defaults 0
 
 	trace variable $this-node_scaleNV w "$this new_node_scale"
 	trace variable $this-edge_scaleNV w "$this new_edge_scale"
