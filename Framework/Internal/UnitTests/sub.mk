@@ -3,7 +3,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  Copyright (c) 2006 Scientific Computing and Imaging Institute,
 #  University of Utah.
 #
 #  License for the specific language governing rights and limitations under
@@ -28,13 +28,13 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Framework/UnitTests
+SRCDIR := Framework/Internal/UnitTests
 
 PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
 SRCS := \
-        $(SRCDIR)/TypeMapTest.cc \
-        $(SRCDIR)/AbstractFrameworkTest.cc \
+        $(SRCDIR)/EventServiceExceptionTest.cc \
+        $(SRCDIR)/EventServiceTest.cc \
         $(SRCDIR)/main.cc
 
 PSELIBS := \

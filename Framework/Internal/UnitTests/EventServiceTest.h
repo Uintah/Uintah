@@ -3,7 +3,7 @@
 
   The MIT License
 
-  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  Copyright (c) 2006 Scientific Computing and Imaging Institute,
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -26,43 +26,47 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <Framework/Internal/EventServiceException.h>
-#include <Core/Util/NotFinished.h>
+#ifndef Framework_UnitTests_EventServiceTest_h
+#define Framework_UnitTests_EventServiceTest_h
 
-namespace SCIRun {
+#include <cppunit/TestFixture.h>
+#include <cppunit/extensions/HelperMacros.h>
 
-// TODO: this code allows empty strings as message types.
-// Check CCA spec to see if this is OK (probably not).
-EventServiceException::EventServiceException(const std::string &msg, sci::cca::CCAExceptionType type)
-  : message(msg), type(type)
-{
-  // Omitting this will cause the framework to
-  // segfault when an exception is thrown.
-  addReference();
-}
+#include <Core/CCA/spec/cca_sidl.h>
+#include <vector>
 
-EventServiceException::~EventServiceException()
-{
-  deleteReference();
-}
+#define MAX_TEST_TOPICS 10
 
+class EventServiceTest : public CppUnit::TestFixture {
+public:
+  EventServiceTest();
+  virtual ~EventServiceTest();
 
-// TODO: implement stack trace
-std::string EventServiceException::getTrace()
-{
-  NOT_FINISHED("string .SSIDL.BaseException.getTrace()");
-  return std::string();
-}
+  // Set up context before running a test.
+  virtual void setUp();
 
-// TODO: implement add functions
-void EventServiceException::add(const std::string &traceline)
-{
-  NOT_FINISHED("void .SSIDL.BaseException.add(in string traceline)");
-}
+  // Clean up after the test run.
+  virtual void tearDown();
 
-void EventServiceException::add(const std::string &filename, int lineno, const std::string &methodname)
-{
-  NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
-}
+protected:
+  void testInstantiate();
+  void testCreateTopicWithEmptyString();
+  void testCreateTopic();
+  void testCreateTopicBadNameFormat();
+  void testGetTopic();
 
-}
+private:
+  CPPUNIT_TEST_SUITE( EventServiceTest );
+  CPPUNIT_TEST(testInstantiate);
+  CPPUNIT_TEST(testCreateTopicWithEmptyString);
+  CPPUNIT_TEST(testCreateTopic);
+  CPPUNIT_TEST(testGetTopic);
+  CPPUNIT_TEST_SUITE_END();
+
+  sci::cca::AbstractFramework::pointer abstractFramework;
+  sci::cca::Services::pointer services;
+  sci::cca::ports::EventService::pointer eventServicePort;
+  std::vector<std::string> testTopicNames;
+};
+
+#endif

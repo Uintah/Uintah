@@ -3,7 +3,7 @@
 
   The MIT License
 
-  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  Copyright (c) 2006 Scientific Computing and Imaging Institute,
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -26,43 +26,41 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <Framework/Internal/EventServiceException.h>
-#include <Core/Util/NotFinished.h>
 
-namespace SCIRun {
+#include <cppunit/extensions/TestFactoryRegistry.h>
+#include <cppunit/ui/text/TestRunner.h>
+#include <cppunit/BriefTestProgressListener.h>
+#include <cppunit/CompilerOutputter.h>
+#include <cppunit/TestResult.h>
+#include <cppunit/TestResultCollector.h>
 
-// TODO: this code allows empty strings as message types.
-// Check CCA spec to see if this is OK (probably not).
-EventServiceException::EventServiceException(const std::string &msg, sci::cca::CCAExceptionType type)
-  : message(msg), type(type)
+#include <Framework/UnitTests/PIDLBootstrap.h>
+
+int main( int argc, char **argv)
 {
-  // Omitting this will cause the framework to
-  // segfault when an exception is thrown.
-  addReference();
-}
+  bootstrapPIDL();
 
-EventServiceException::~EventServiceException()
-{
-  deleteReference();
-}
+  // Create the event manager and test controller
+  CPPUNIT_NS::TestResult controller;
 
+  // Add a listener that colllects test result
+  CPPUNIT_NS::TestResultCollector result;
+  controller.addListener( &result );
 
-// TODO: implement stack trace
-std::string EventServiceException::getTrace()
-{
-  NOT_FINISHED("string .SSIDL.BaseException.getTrace()");
-  return std::string();
-}
+  // Add a listener that print dots as test run.
+  CPPUNIT_NS::BriefTestProgressListener progress;
+  controller.addListener( &progress );
 
-// TODO: implement add functions
-void EventServiceException::add(const std::string &traceline)
-{
-  NOT_FINISHED("void .SSIDL.BaseException.add(in string traceline)");
-}
+  // Add the top suite to the test runner
+  CPPUNIT_NS::TestRunner runner;
+  runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
+  runner.run( controller );
 
-void EventServiceException::add(const std::string &filename, int lineno, const std::string &methodname)
-{
-  NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
-}
+  // Print test in a compiler compatible format.
+  CPPUNIT_NS::CompilerOutputter outputter( &result, CPPUNIT_NS::stdCOut() );
+  outputter.write();
 
+  cleanupPIDL();
+
+  return result.wasSuccessful() ? 0 : 1;
 }
