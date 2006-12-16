@@ -73,7 +73,9 @@ MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 SET(BUILD_FROM_TOP_LEVEL 1)
 
 IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
+  IF(NOT WIN32)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel." FORCE)
+  ENDIF(NOT WIN32)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 #-----------------------------------------------------------------------------
