@@ -207,12 +207,24 @@ OptimizeDipole::send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci)
   // build columns for MatrixSelectVec
   // each column is an interpolant vector or index/weight pairs
   // we just have one entry for each -- index=leadFieldColumn, weight=1
-  DenseMatrix *leadfield_select_out = scinew DenseMatrix(2, 3);
-  for (j=0; j<3; j++)
+  
+  int *rr = scinew int[4];   rr[0] = 0; rr[1] = 1; rr[2] = 2; rr[3] =3;
+  int *cc = scinew int[3];
+  double *dd = scinew double[3];
+  
+  for (int i=0;i<3;i++)
   {
-    (*leadfield_select_out)[0][j] = ci*3+j;
-    (*leadfield_select_out)[1][j] = 1;
+    cc[i] = ci*3+i;
+    dd[i] = 1.0;
   }
+
+
+  TVMesh::Cell::size_type matrix_size;
+  vol_mesh_->size(matrix_size);
+  matrix_size = matrix_size*3;
+  
+  
+  leadfield_selectH_ = scinew SparseRowMatrix(3,matrix_size,rr,cc,3,dd); 
 
   PCMesh::handle_type pcm = scinew PCMesh;
   for (j=0; j<NSEEDS_; j++)
@@ -227,7 +239,6 @@ OptimizeDipole::send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci)
   PCFieldV *pcd = scinew PCFieldV(pcm);
 
   // send out data
-  leadfield_selectH_ = leadfield_select_out;
   simplexH_ = pcv;
   dipoleH_ = pcd;
   send_output_handle("LeadFieldSelectionMatrix",
@@ -352,12 +363,12 @@ OptimizeDipole::find_better_neighbor(int best, Array1<double>& sum)
       int i;
       for (i=0; i<NDIM_; i++)
       {
-	sum[i] = sum[i] + dipoles_(NSEEDS_,i)-dipoles_(best,i);
-	dipoles_(best,i) = dipoles_(NSEEDS_,i);
+        sum[i] = sum[i] + dipoles_(NSEEDS_,i)-dipoles_(best,i);
+        dipoles_(best,i) = dipoles_(NSEEDS_,i);
       }
       for (i=NDIM_; i<NDIM_+3; i++)
       {
-	dipoles_(best,i) = dipoles_(NSEEDS_,i);  // copy orientation data
+        dipoles_(best,i) = dipoles_(NSEEDS_,i);  // copy orientation data
       }
     }
     return 1;
@@ -435,15 +446,15 @@ OptimizeDipole::simplex_search()
       if (misfit_[i] <= misfit_[best]) best=i;
       if (misfit_[i] > misfit_[worst])
       {
-	next_worst = worst;
-	worst = i;
+        next_worst = worst;
+        worst = i;
       }
       else if (misfit_[i] > misfit_[next_worst] && (i != worst))
       {
         next_worst=i;
       }
       relative_tolerance = 2*(misfit_[worst]-misfit_[best])/
-	(misfit_[worst]+misfit_[best]);
+        (misfit_[worst]+misfit_[best]);
     }
 
     if (num_evals > MAX_EVALS_ || stop_search_) break;
@@ -453,8 +464,8 @@ OptimizeDipole::simplex_search()
     {
       if (misfit_[best]>1.e-12 && find_better_neighbor(best, sum))
       {
-	num_evals++;
-	continue;
+        num_evals++;
+        continue;
       }
       break;
     }
@@ -473,32 +484,32 @@ OptimizeDipole::simplex_search()
       num_evals++;
       if (step_misfit >= old_misfit)
       {
-	for (i=0; i<NSEEDS_; i++)
+        for (i=0; i<NSEEDS_; i++)
         {
-	  if (i != best)
+          if (i != best)
           {
-	    int j;
-	    for (j=0; j<NDIM_; j++)
-            {
-	      dipoles_(i,j) = dipoles_(NSEEDS_,j) =
-		0.5 * (dipoles_(i,j) + dipoles_(best,j));
-	      dipoles_(NSEEDS_,j)=dipoles_(i,j);
-	    }
-	    Vector dir = eval_test_dipole();
-	    misfit_[i] = misfit_[NSEEDS_];
-	    dipoles_(i,3) = dir.x();
-	    dipoles_(i,4) = dir.y();
-	    dipoles_(i,5) = dir.z();
-	    num_evals++;
-	  }
-	}
+            int j;
+            for (j=0; j<NDIM_; j++)
+                  {
+              dipoles_(i,j) = dipoles_(NSEEDS_,j) =
+          0.5 * (dipoles_(i,j) + dipoles_(best,j));
+              dipoles_(NSEEDS_,j)=dipoles_(i,j);
+            }
+            Vector dir = eval_test_dipole();
+            misfit_[i] = misfit_[NSEEDS_];
+            dipoles_(i,3) = dir.x();
+            dipoles_(i,4) = dir.y();
+            dipoles_(i,5) = dir.z();
+            num_evals++;
+          }
+        }
       }
       sum.initialize(0);
       for (i=0; i<NSEEDS_; i++)
       {
-	for (j=0; j<NDIM_; j++)
+        for (j=0; j<NDIM_; j++)
         {
-	  sum[j]+=dipoles_(i,j);
+          sum[j]+=dipoles_(i,j);
         }
       }
     }
@@ -543,7 +554,7 @@ OptimizeDipole::read_field_ports(int &valid_data, int &new_data)
   }
   else
   {
-    valid_data = false;
+    valid_data = 0;
     error("No input available on the mesh field port.");
   }
   
@@ -609,7 +620,7 @@ OptimizeDipole::organize_last_send()
     best_cell_idx << "\n    at position " << best_pt << 
     " with a misfit of " << bestMisfit << "\n";
 
-  int *rr = scinew int[2];   rr[0] = 0; rr[1] = 3;
+  int *rr = scinew int[4];   rr[0] = 0; rr[1] = 1; rr[2] = 2; rr[3] =3;
   int *cc = scinew int[3];
   double *dd = scinew double[3];
   
@@ -617,10 +628,9 @@ OptimizeDipole::organize_last_send()
   {
     cc[i] = best_cell_idx*3+i;
     dd[i] = 1.0;
-    if (matrix_size < best_cell_idx*3+i+1) matrix_size = best_cell_idx*3+i+1;
   }
 
-  leadfield_selectH_ = scinew SparseRowMatrix(1,matrix_size,rr,cc,3,dd);
+  leadfield_selectH_ = scinew SparseRowMatrix(3,matrix_size,rr,cc,3,dd);
   PCMesh::handle_type pcm = scinew PCMesh;
   pcm->add_point(best_pt);
   PCFieldV *pcd = scinew PCFieldV(pcm);
@@ -640,6 +650,7 @@ OptimizeDipole::execute()
 
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
+
   if (!new_data)
   {
     if (simplexH_.get_rep())
@@ -649,9 +660,9 @@ OptimizeDipole::execute()
       send_output_handle("DipoleSimplex", simplexH_, true);
       send_output_handle("TestDipole", dipoleH_, true);
 
-      MatrixHandle dummy_mat;
-      get_input_handle("TestMisfit", dummy_mat, false);
-      get_input_handle("TestDirection", dummy_mat, false);
+//      MatrixHandle dummy_mat;
+//      get_input_handle("TestMisfit", dummy_mat, false);
+//     get_input_handle("TestDirection", dummy_mat, false);
       return;
     }
     else
@@ -676,6 +687,7 @@ OptimizeDipole::execute()
     }
     if (stop_search_ || state_ == "DONE") break;
   }
+  
   if (last_intermediate_)
   { // last sends were send_intermediates
     // gotta do final sends and clear the ports
