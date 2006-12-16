@@ -464,7 +464,8 @@ Painter::ITKGradientMagnitude(event_handle_t) {
   typedef itk::GradientMagnitudeImageFilter
     < ITKImageFloat3D, ITKImageFloat3D > FilterType;
 
-  VolumeFilter<FilterType>(copy_current_layer(" Gradient Magnitude"))();
+  VolumeFilter<FilterType> filter(copy_current_layer(" Gradient Magnitude"));
+  filter();
   current_volume_->reset_data_range();
   extract_all_window_slices();
   redraw_all();
