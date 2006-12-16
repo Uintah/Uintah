@@ -69,13 +69,15 @@ EventService::create(SCIRunFramework* framework)
 sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
 {
   if (topicName.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty"));
   }
 
   //Check if Topic Name has '*'
-  for(unsigned int i=0;i<topicName.size();i++)
-    if(topicName.at(i) == '*')
-      throw EventServiceExceptionPtr(new EventServiceException("Topic Name format not supported:'*' not allowed", sci::cca::Unexpected));
+  for (unsigned int i = 0; i < topicName.size(); i++) {
+    if (topicName.at(i) == '*') {
+      throw EventServiceExceptionPtr(new EventServiceException("Topic Name format not supported:'*' not allowed"));
+    }
+  }
 
   sci::cca::Topic::pointer topicPtr;
   TopicMap::iterator iter = topicMap.find(topicName);
@@ -106,12 +108,12 @@ sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
 sci::cca::Topic::pointer EventService::getTopic(const std::string &topicName)
 {
   if (topicName.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty"));
   }
 
   TopicMap::iterator iter = topicMap.find(topicName);
   if (iter == topicMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found"));
   } else {
     return iter->second;
   }
@@ -120,7 +122,7 @@ sci::cca::Topic::pointer EventService::getTopic(const std::string &topicName)
 sci::cca::Subscription::pointer EventService::subscribeToEvents(const std::string &topicName)
 {
   if (topicName.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty"));
   }
 
   sci::cca::Subscription::pointer subscriptionPtr;
@@ -149,12 +151,12 @@ sci::cca::Subscription::pointer EventService::subscribeToEvents(const std::strin
 sci::cca::Subscription::pointer EventService::getSubscription(const std::string &topicName)
 {
   if (topicName.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty"));
   }
 
   SubscriptionMap::iterator iter = subscriptionMap.find(topicName);
   if (iter == subscriptionMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found"));
   } else {
     return iter->second;
   }
@@ -163,12 +165,12 @@ sci::cca::Subscription::pointer EventService::getSubscription(const std::string 
 void EventService::releaseTopic(const std::string &topicName)
 {
   if (topicName.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty"));
   }
 
   TopicMap::iterator iter = topicMap.find(topicName);
   if (iter == topicMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found"));
   }
   topicMap.erase(iter);
 }
@@ -176,12 +178,12 @@ void EventService::releaseTopic(const std::string &topicName)
 void EventService::releaseSubscription(const sci::cca::Subscription::pointer& subscription)
 {
   if (subscription.isNull()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty"));
   }
 
   SubscriptionMap::iterator iter = subscriptionMap.find(subscription->getSubscriptionName());
   if (iter == subscriptionMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found"));
   }
 
   // for all Topics that match this Subscription: remove this Subscription from the subscriptionsMap
@@ -228,13 +230,13 @@ bool EventService::isMatch(const std::string& topicName, const std::string& subs
 
     if(t_start == 0) {
       while(t_start != std::string::npos) {
-        if(subscriptionName.length() == s_star) return true; 
+        if(subscriptionName.length() == s_star) return true;
 
         t_end = t_start + word.length();
         s_newstar = subscriptionName.find('*',s_star+1);
         if(s_newstar == std::string::npos) s_newstar = subscriptionName.length();
         word = subscriptionName.substr(s_star+1, s_newstar);
-        s_star = s_newstar; 
+        s_star = s_newstar;
 
         t_start = topicName.find(word,t_end+1);
       }
@@ -250,13 +252,13 @@ bool EventService::isMatch(const std::string& topicName, const std::string& subs
 
     if(t_start == 0) {
       while(t_start != std::string::npos) {
-        if(subscriptionName.length() == s_percent) return true; 
-        
+        if(subscriptionName.length() == s_percent) return true;
+
         t_end = t_start + word.length();
         s_newpercent = subscriptionName.find('%',s_percent+1);
         if(s_newpercent == std::string::npos) s_newpercent = subscriptionName.length();
         word = subscriptionName.substr(s_percent+1, s_newpercent);
-        s_percent = s_newpercent; 
+        s_percent = s_newpercent;
 
         t_start = topicName.find(word,t_end+1);
         if(t_start != t_end+1) break;

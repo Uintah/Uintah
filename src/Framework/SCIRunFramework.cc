@@ -102,9 +102,6 @@ SCIRunFramework::SCIRunFramework()
 
 SCIRunFramework::~SCIRunFramework()
 {
-#if FWK_DEBUG
-  std::cout << "SCIRunFramework::~SCIRunFramework()" << std::endl;
-#endif
   // cleanup component models
   for (std::vector<ComponentModel*>::iterator iter = models.begin(); iter != models.end(); iter++) {
     delete *iter;

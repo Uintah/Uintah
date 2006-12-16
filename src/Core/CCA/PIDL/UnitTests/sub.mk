@@ -30,7 +30,7 @@
 
 SRCDIR := Core/CCA/PIDL/UnitTests
 
-PROGRAM := $(SRCDIR)/test
+PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
 SRCS := \
         $(SRCDIR)/PIDLTest.cc \

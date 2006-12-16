@@ -319,6 +319,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
   CPPUNIT_LIBRARY := @CPPUNIT_LIB_FLAG@ @CPPUNIT_LIB_DIR_FLAG@
   ifeq ($(HAVE_CPPUNIT),yes)
     BUILD_UNIT_TESTS := yes
+    UNIT_TEST_EXE := unittest
   endif
 
   HAVE_RUBY := @HAVE_RUBY@

@@ -97,7 +97,7 @@ public:
 
   /*
    * Creates a new Subscription and returns a reference-counted
-   * pointer to the newly created instance.  
+   * pointer to the newly created instance.
    */
   virtual sci::cca::Subscription::pointer subscribeToEvents(const std::string& topicName);
 

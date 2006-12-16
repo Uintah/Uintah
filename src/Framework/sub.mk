@@ -127,7 +127,9 @@ SUBDIRS := \
            $(SRCDIR)/StandAlone
 
 ifeq ($(BUILD_UNIT_TESTS),yes)
-  SUBDIRS += $(SRCDIR)/UnitTests
+  SUBDIRS += \
+             $(SRCDIR)/UnitTests \
+             $(SRCDIR)/Internal/UnitTests
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
