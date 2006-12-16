@@ -159,6 +159,7 @@ CalculateMisfitField::execute()
   get_input_handle("Measurement Vector", measurements_in,true);
 	
   DenseMatrix *dm = dynamic_cast<DenseMatrix*>(leadfield_in->dense());
+  leadfield_in = dm;
   if (!dm) 
 	{
     error("Could not obtain LeadField Matrix");
@@ -166,6 +167,7 @@ CalculateMisfitField::execute()
   }
 
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(measurements_in->column());
+  measurements_in = cm;
   if (!cm) {
     error("Could not obtain measurement vector");
     return;

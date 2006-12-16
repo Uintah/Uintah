@@ -431,54 +431,56 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
       xmlNodePtr pnode = node->children;
       for (; pnode != 0; pnode = pnode->next) 
       {	
-	if (string(to_char_ptr(pnode->name)) == string("gui_callback")) 
-	{
-	  xmlNodePtr gc_node = pnode->children;
-	  for (; gc_node != 0; gc_node = gc_node->next) {
-	    if (string(to_char_ptr(gc_node->name)) == string("callback")) 
-	    {
-	      string call = string(to_char_ptr(gc_node->children->content));
-	      gui_call_module_callback(
-			    string(to_char_ptr(id_att->children->content)),
-			    call);
-								 
-	    }
-	  }
-	}
-	else if (string(to_char_ptr(pnode->name)) == string("var")) 
-	{
-	  xmlAttrPtr name_att = get_attribute_by_name(pnode, "name");
-	  xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
-	  xmlAttrPtr filename_att = get_attribute_by_name(pnode,"filename");
-	  xmlAttrPtr substitute_att= get_attribute_by_name(pnode,"substitute");
+        if (string(to_char_ptr(pnode->name)) == string("gui_callback")) 
+        {
+          xmlNodePtr gc_node = pnode->children;
+          for (; gc_node != 0; gc_node = gc_node->next) {
+            if (string(to_char_ptr(gc_node->name)) == string("callback")) 
+            {
+              string call = string(to_char_ptr(gc_node->children->content));
+              gui_call_module_callback(
+                string(to_char_ptr(id_att->children->content)),
+                call);
+                       
+            }
+          }
+        }
+        else if (string(to_char_ptr(pnode->name)) == string("var")) 
+        {
+          xmlAttrPtr name_att = get_attribute_by_name(pnode, "name");
+          xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
+          xmlAttrPtr filename_att = get_attribute_by_name(pnode,"filename");
+          xmlAttrPtr substitute_att= get_attribute_by_name(pnode,"substitute");
 
-	  string val = string(to_char_ptr(val_att->children->content));
-					
-	  string filename = "no";
-	  if (filename_att != 0) filename = 
-			 string(to_char_ptr(filename_att->children->content));
-	  if (filename == "yes") 
-	  {
-	    val = process_filename(val); 
-	  }
-	  else
-	  {
-	    string substitute = "yes";
-	    if (substitute_att != 0) substitute = 
-			string(to_char_ptr(substitute_att->children->content));
-	    if (substitute == "yes") val = process_substitute(val);
-	  }
-					
-	  gui_set_modgui_variable(
-			   string(to_char_ptr(id_att->children->content)),
-			   string(to_char_ptr(name_att->children->content)),
-			   val);
-	}
+          string val = string(to_char_ptr(val_att->children->content));
+                
+          string filename = "no";
+          if (filename_att != 0) filename = 
+             string(to_char_ptr(filename_att->children->content));
+          if (filename == "yes") 
+          {
+            val = process_filename(val); 
+            if (val.size() > 0 && val[0] == '{')
+              val = std::string("\"")+val.substr(1,val.size()-2)+std::string("\"");
+          }
+          else
+          {
+            string substitute = "yes";
+            if (substitute_att != 0) substitute = 
+            string(to_char_ptr(substitute_att->children->content));
+            if (substitute == "yes") val = process_substitute(val);
+          }
+                
+          gui_set_modgui_variable(
+               string(to_char_ptr(id_att->children->content)),
+               string(to_char_ptr(name_att->children->content)),
+               val);
+        }
       }
       if (visible_att && 
-	  string(to_char_ptr(visible_att->children->content)) == "yes")
+        string(to_char_ptr(visible_att->children->content)) == "yes")
       {
-	gui_open_module_gui(string(to_char_ptr(id_att->children->content)));
+        gui_open_module_gui(string(to_char_ptr(id_att->children->content)));
       }
     }
   }

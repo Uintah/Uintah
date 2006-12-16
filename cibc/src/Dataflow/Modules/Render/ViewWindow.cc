@@ -1254,14 +1254,17 @@ ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
       pick_y_ = last_y_;
       renderer_->get_pick(x, y, pick_obj_, pick_pick_, pick_n_);
 
-      if (pick_obj_.get_rep()){
-	update_mode_string(pick_obj_);
-	pick_pick_->set_picked_obj(pick_obj_);
-	pick_pick_->pick(this,bs);
+      if (pick_obj_.get_rep())
+      {
+        update_mode_string(pick_obj_);
+        pick_pick_->set_picked_obj(pick_obj_);
+        pick_pick_->pick(this,bs);
 
-	need_redraw_=1;
-      } else {
-	update_mode_string("pick: none");
+        need_redraw_=1;
+      } 
+      else 
+      {
+        update_mode_string("pick: none");
       }
     }
     break;
