@@ -282,6 +282,16 @@ AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
+  cout << "IS REGRID = " << d_sharedState->getCurrentTopLevelTimeStep() << endl;
+  if(d_sharedState->getCurrentTopLevelTimeStep()==0){
+  }
+
+  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+    const LevelP& level = inlevel->getGrid()->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleComputeZoneOfInfluence(         sched, patches, matls);
+  }
+
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& level = inlevel->getGrid()->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -328,6 +338,30 @@ AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
                                       d_sharedState->d_particleState,
                                       lb->pParticleIDLabel, matls);
   }
+}
+
+void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  MaterialSubset* one_matl = scinew MaterialSubset();
+  one_matl->add(0);
+  one_matl->addReference();
+                                                                                
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeZoneOfInfluence\t\t\t");                                                                                
+  Task* t = scinew Task("MPM::computeZoneOfInfluence",
+                        this, &AMRMPM::computeZoneOfInfluence);
+                                                                                
+  t->computes(lb->gZOILabel);
+                                                                                
+  sched->addTask(t, patches, matls);
+
+  if (one_matl->removeReference())
+    delete one_matl;
 }
 
 void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -1371,6 +1405,123 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
     } // matl loop
   }  // patch loop
+}
+
+void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing computeZoneOfInfluence\t\t\t\t");
+
+    IntVector cl, ch, fl, fh, CL, CH, FL, FH;
+    // Determine extents for coarser level particle data
+    const Level* coarseLevel = 0;
+    const Level* fineLevel = 0;
+    const Level* curLevel = 0;
+    bool coarser = false;
+    bool finer = false;
+    curLevel = getLevel(patches);
+
+    // Find finer level
+    if(getLevel(patches)->hasCoarserLevel()){
+      coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
+      coarser = true;
+    }
+    // Find finer level
+    if(getLevel(patches)->hasFinerLevel()){
+      fineLevel = getLevel(patches)->getFinerLevel().get_rep();
+      finer = true;
+    }
+                                                                                
+    NCVariable<Stencil7> zoi;
+    new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
+    Vector dx = patch->dCell();
+
+    if(!coarser && !finer){
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+          !iter.done();iter++){
+        IntVector c = *iter;
+        zoi[c].p=1.;
+        zoi[c].w=dx.x();
+        zoi[c].e=dx.x();
+        zoi[c].s=dx.y();
+        zoi[c].n=dx.y();
+        zoi[c].b=dx.z();
+        zoi[c].t=dx.z();
+      }
+      return;
+    }
+
+    // T-B is z+,z-, E-W is x+,x-, N-S is y+ y-
+    Point TBNSEW[8];
+    Vector TBNSEWh[8];
+    Vector tne = .25*Vector( dx.x(), dx.y(), dx.z());
+    Vector tnw = .25*Vector(-dx.x(), dx.y(), dx.z());
+    Vector tse = .25*Vector( dx.x(),-dx.y(), dx.z());
+    Vector tsw = .25*Vector(-dx.x(),-dx.y(), dx.z());
+    Vector bne = .25*Vector( dx.x(), dx.y(),-dx.z());
+    Vector bnw = .25*Vector(-dx.x(), dx.y(),-dx.z());
+    Vector bse = .25*Vector( dx.x(),-dx.y(),-dx.z());
+    Vector bsw = .25*Vector(-dx.x(),-dx.y(),-dx.z());
+
+    for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+        !iter.done();iter++){
+      IntVector c = *iter;
+
+      Point node_pos = curLevel->getNodePosition(c);
+      TBNSEW[0] = node_pos+tne;
+      TBNSEW[1] = node_pos+tnw;
+      TBNSEW[2] = node_pos+tse;
+      TBNSEW[3] = node_pos+tsw;
+      TBNSEW[4] = node_pos+bne;
+      TBNSEW[5] = node_pos+bnw;
+      TBNSEW[6] = node_pos+bse;
+      TBNSEW[7] = node_pos+bsw;
+
+      for(int i=0;i<8;i++){
+        if(curLevel->containsPoint(TBNSEW[i])){
+          // The the resolution at that point is at least the current resolution
+          TBNSEWh[i]=dx;
+          if(finer){
+            if(fineLevel->containsPoint(TBNSEW[i])){
+              // The resolution is that of the finer level at this point
+              TBNSEWh[i]=0.5*dx;
+            }
+          }
+        }
+        else{
+          if(coarser){
+            if(coarseLevel->containsPoint(TBNSEW[i])){
+              // The resolution is that of the coarser level at this point
+              TBNSEWh[i]=2.0*dx;
+            }
+          }
+          else{
+            // We're off the edge of the domain, now what?
+            TBNSEWh[i]=dx;  // or 0.;
+          }
+        }
+      }
+
+      zoi[c][0]=1.;
+      zoi[c].t=min(min(TBNSEWh[0].z(),TBNSEWh[1].z()),
+                   min(TBNSEWh[2].z(),TBNSEWh[3].z()));
+      zoi[c].b=min(min(TBNSEWh[4].z(),TBNSEWh[5].z()),
+                   min(TBNSEWh[6].z(),TBNSEWh[7].z()));
+      zoi[c].e=min(min(TBNSEWh[0].x(),TBNSEWh[2].x()),
+                   min(TBNSEWh[4].x(),TBNSEWh[6].x()));
+      zoi[c].w=min(min(TBNSEWh[1].x(),TBNSEWh[3].x()),
+                   min(TBNSEWh[5].x(),TBNSEWh[7].x()));
+      zoi[c].n=min(min(TBNSEWh[0].y(),TBNSEWh[1].y()),
+                   min(TBNSEWh[4].y(),TBNSEWh[5].y()));
+      zoi[c].s=min(min(TBNSEWh[2].y(),TBNSEWh[3].y()),
+                   min(TBNSEWh[6].y(),TBNSEWh[7].y()));
+    }
+  }
 }
 
 void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
