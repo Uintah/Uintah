@@ -125,7 +125,7 @@ int OptimizeDipole::NDIM_ = 3;
 int OptimizeDipole::NSEEDS_ = 4;
 int OptimizeDipole::NDIPOLES_ = 5;
 int OptimizeDipole::MAX_EVALS_ = 1001;
-double OptimizeDipole::CONVERGENCE_ = 0.0001;
+double OptimizeDipole::CONVERGENCE_ = 0.00003;
 double OptimizeDipole::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
 
@@ -249,11 +249,11 @@ OptimizeDipole::send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci)
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
-  if (!get_input_handle("TestMisfit", mH)) return;
+  if (!get_input_handle("TestMisfit", mH, false)) return;
 
   cell_err_[ci] = misfit_[which_dipole] = mH->get(0, 0);
 
-  if (!get_input_handle("TestDirection", mH)) return;
+  if (!get_input_handle("TestDirection", mH, false)) return;
   if (mH->nrows() < 3)
   {
     error("TestDirection had wrong size (not 3 rows).");
@@ -660,9 +660,9 @@ OptimizeDipole::execute()
       send_output_handle("DipoleSimplex", simplexH_, true);
       send_output_handle("TestDipole", dipoleH_, true);
 
-//      MatrixHandle dummy_mat;
-//      get_input_handle("TestMisfit", dummy_mat, false);
-//     get_input_handle("TestDirection", dummy_mat, false);
+      MatrixHandle dummy_mat;
+      get_input_handle("TestMisfit", dummy_mat, false);
+     get_input_handle("TestDirection", dummy_mat, false);
       return;
     }
     else
