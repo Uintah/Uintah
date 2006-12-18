@@ -1426,20 +1426,24 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     bool finer = false;
     curLevel = getLevel(patches);
 
+    Vector dx = patch->dCell();
+    Vector dxfine=dx;
+    Vector dxcoarse=dx;
     // Find finer level
     if(getLevel(patches)->hasCoarserLevel()){
       coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
       coarser = true;
+      dxcoarse = coarseLevel->dCell();
     }
     // Find finer level
     if(getLevel(patches)->hasFinerLevel()){
       fineLevel = getLevel(patches)->getFinerLevel().get_rep();
       finer = true;
+      dxfine = fineLevel->dCell();
     }
                                                                                 
     NCVariable<Stencil7> zoi;
     new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
-    Vector dx = patch->dCell();
 
     if(!coarser && !finer){
       for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
@@ -1482,26 +1486,33 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
       TBNSEW[6] = node_pos+bse;
       TBNSEW[7] = node_pos+bsw;
 
+
       for(int i=0;i<8;i++){
         if(curLevel->containsPoint(TBNSEW[i])){
-          // The the resolution at that point is at least the current resolution
+          // The resolution at that point is at least the current resolution
           TBNSEWh[i]=dx;
-          if(finer){
+          if(finer){  // If there's a finer level, check for the point there
             if(fineLevel->containsPoint(TBNSEW[i])){
               // The resolution is that of the finer level at this point
-              TBNSEWh[i]=0.5*dx;
+              TBNSEWh[i]=dxfine;
             }
           }
         }
         else{
-          if(coarser){
+          // Point is either off the edge of the fine level, either on
+          // coarse level or outside the domain.
+          if(coarser){  // If there's a finer level, check for the point there
             if(coarseLevel->containsPoint(TBNSEW[i])){
               // The resolution is that of the coarser level at this point
-              TBNSEWh[i]=2.0*dx;
+              TBNSEWh[i]=dxcoarse;
+            }
+            else{
+              // There's a coarser level, but this point isn't in it
+              TBNSEWh[i]=dxcoarse;  // or 0.;
             }
           }
           else{
-            // We're off the edge of the domain, now what?
+            // There isn't a coarser level, and the point isn't in curLevel
             TBNSEWh[i]=dx;  // or 0.;
           }
         }
@@ -1520,6 +1531,16 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                    min(TBNSEWh[4].y(),TBNSEWh[5].y()));
       zoi[c].s=min(min(TBNSEWh[2].y(),TBNSEWh[3].y()),
                    min(TBNSEWh[6].y(),TBNSEWh[7].y()));
+
+//      if(coarser){
+//      cout << "node = " << c << endl
+//           << "zoi.t = " << zoi[c].t << endl
+//           << "zoi.b = " << zoi[c].b << endl
+//           << "zoi.n = " << zoi[c].n << endl
+//           << "zoi.s = " << zoi[c].s << endl
+//           << "zoi.e = " << zoi[c].e << endl
+//           << "zoi.w = " << zoi[c].w << endl;
+//      }
     }
   }
 }
