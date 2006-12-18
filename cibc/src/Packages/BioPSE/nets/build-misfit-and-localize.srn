@@ -9,7 +9,7 @@
   <modules>
     <module id="m1" package="SCIRun" category="DataIO" name="ReadField" version="1.0">
       <position x="282" y="7"/>
-      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld" filename="yes" substitute="yes"/>
+      <var name="filename" val="{scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld}" filename="yes" substitute="yes"/>
       <var name="filetype" val="{SCIRun Field File (*.fld)}" substitute="no"/>
       <var name="ui_geometry" val="{412x395+236+233}" substitute="no"/>
     </module>
@@ -167,13 +167,13 @@
     </module>
     <module id="m9" package="SCIRun" category="DataIO" name="ReadField" version="1.0">
       <position x="668" y="10"/>
-      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-dipole.pcv.fld" filename="yes" substitute="yes"/>
+      <var name="filename" val="{scisub_datadir/scisub_dataset/scisub_dataset-dipole.pcv.fld}" filename="yes" substitute="yes"/>
       <var name="filetype" val="{SCIRun Field File (*.fld)}" substitute="no"/>
       <var name="ui_geometry" val="{412x395+628+242}" substitute="no"/>
     </module>
     <module id="m10" package="SCIRun" category="DataIO" name="ReadMatrix" version="1.0">
       <position x="530" y="199"/>
-      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-leadfield.mat" filename="yes" substitute="yes"/>
+      <var name="filename" val="{scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat}" filename="yes" substitute="yes"/>
       <var name="filetype" val="{SCIRun Matrix File (*.mat)}" substitute="no"/>
       <var name="ui_geometry" val="{412x265+621+264}" substitute="no"/>
     </module>
@@ -202,7 +202,7 @@
     </module>
     <module id="m14" package="SCIRun" category="DataIO" name="ReadField" version="1.0">
       <position x="452" y="8"/>
-      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcv.fld" filename="yes" substitute="yes"/>
+      <var name="filename" val="{scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcv.fld}" filename="yes" substitute="yes"/>
       <var name="filetype" val="{SCIRun Field File (*.fld)}" substitute="no"/>
       <var name="ui_geometry" val="{412x395+404+233}" substitute="no"/>
     </module>
