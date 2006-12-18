@@ -140,6 +140,14 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  virtual void computeZoneOfInfluence(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
   virtual void interpolateParticlesToGrid(const ProcessorGroup*,
 					  const PatchSubset* patches,
 					  const MaterialSubset* matls,
@@ -240,6 +248,9 @@ protected:
                             const MaterialSubset* matls,
                             DataWarehouse*,
                             DataWarehouse* new_dw);
+
+  virtual void scheduleComputeZoneOfInfluence(SchedulerP&, const PatchSet*,
+					      const MaterialSet*);
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
