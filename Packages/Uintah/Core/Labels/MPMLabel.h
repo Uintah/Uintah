@@ -114,6 +114,7 @@ using std::vector;
       const VarLabel* gStressLabel;
       const VarLabel* gStressForSavingLabel;
       const VarLabel* gVolumeLabel;
+      const VarLabel* gZOILabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* gWeightLabel; //for who knows what?
       const VarLabel* gradPAccNCLabel;
