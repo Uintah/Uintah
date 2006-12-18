@@ -457,17 +457,19 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
           string filename = "no";
           if (filename_att != 0) filename = 
              string(to_char_ptr(filename_att->children->content));
+          string substitute = "yes";
+            if (substitute_att != 0) substitute = 
+            string(to_char_ptr(substitute_att->children->content));             
+             
           if (filename == "yes") 
           {
+            if (substitute == "yes") val = process_substitute(val);
             val = process_filename(val); 
             if (val.size() > 0 && val[0] == '{')
               val = std::string("\"")+val.substr(1,val.size()-2)+std::string("\"");
           }
           else
           {
-            string substitute = "yes";
-            if (substitute_att != 0) substitute = 
-            string(to_char_ptr(substitute_att->children->content));
             if (substitute == "yes") val = process_substitute(val);
           }
                 
