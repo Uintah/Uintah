@@ -77,7 +77,8 @@ const int Piostream::PERSISTENT_VERSION = 2;
   // Mac philosophy on when to load dynamic libraries.)
   extern Mutex persistentTypeIDMutex;
 #else
-  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");  
+Mutex* PersistentTypeID::persistentTypeIDMutex = 0;
+//Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");  
 #endif
 
 
@@ -102,7 +103,9 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   printf("   maker:      %p\n\n", maker );
 #endif
 
-  persistentTypeIDMutex.lock();
+  if (persistentTypeIDMutex == 0)
+    persistentTypeIDMutex = scinew Mutex("Persistent Type ID Table Lock");  
+  persistentTypeIDMutex->lock();
   if (!table)
   {
     table = scinew Piostream::MapStringPersistentTypeID;
@@ -127,7 +130,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     {
       printf( "WARNING: duplicate type in Persistent Object Type Database: %s\n",
               type.c_str() );
-      persistentTypeIDMutex.unlock();
+      persistentTypeIDMutex->unlock();
       return;
     }
   }
@@ -137,7 +140,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
 #endif
 
   (*table)[type] = this;
-  persistentTypeIDMutex.unlock();
+  persistentTypeIDMutex->unlock();
 }
 
 
@@ -145,13 +148,13 @@ PersistentTypeID::~PersistentTypeID()
 {
   Piostream::MapStringPersistentTypeID::iterator iter;
 
-  persistentTypeIDMutex.lock();
+  persistentTypeIDMutex->lock();
 
   if (table == NULL)
   {
     printf( "WARNING: Persistent.cc: ~PersistentTypeID(): table is NULL\n" );
     printf( "         For: %s, %s\n", type.c_str(), parent.c_str() );
-    persistentTypeIDMutex.unlock();
+    persistentTypeIDMutex->unlock();
 
     return;
   }
@@ -172,7 +175,7 @@ PersistentTypeID::~PersistentTypeID()
     delete table;
     table = 0;
   }
-  persistentTypeIDMutex.unlock();
+  persistentTypeIDMutex->unlock();
 
 }
 
@@ -319,7 +322,7 @@ find_derived( const string& classname, const string& basename )
 #if DEBUG
   printf("looking for %s, %s\n", classname.c_str(), basename.c_str());
 #endif
-  persistentTypeIDMutex.lock();
+  PersistentTypeID::persistentTypeIDMutex->lock();
 #if DEBUG
   printf("table is: %p\n", table);
 #endif
@@ -342,10 +345,10 @@ find_derived( const string& classname, const string& basename )
     }
 #endif
 
-    persistentTypeIDMutex.unlock();
+    PersistentTypeID::persistentTypeIDMutex->unlock();
     return 0;
   }
-  persistentTypeIDMutex.unlock();
+  PersistentTypeID::persistentTypeIDMutex->unlock();
   
   pid = (*iter).second;
   if( pid->parent.size() == 0 ) {

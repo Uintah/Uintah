@@ -58,6 +58,7 @@ using std::map;
 using std::pair;
 
 class Persistent;
+class Mutex;
 class Piostream;
 
 //----------------------------------------------------------------------
@@ -73,6 +74,10 @@ struct SCISHARE PersistentTypeID {
   ~PersistentTypeID();
   Persistent* (*bc_maker1)();
   Persistent* (*bc_maker2)();
+
+#ifndef __APPLE__
+  static Mutex* persistentTypeIDMutex;
+#endif
 };
 
 
