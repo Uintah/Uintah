@@ -41,7 +41,7 @@ itcl_class SCIRun_Visualization_GenerateStreamLines {
         }
         toplevel $w
 
-	frame $w.e
+	frame $w.e -relief groove -borderwidth 2
 	frame $w.e.labs
 	frame $w.e.ents
 	label $w.e.labs.tolerance -text "Error Tolerance" -just left
@@ -105,25 +105,26 @@ itcl_class SCIRun_Visualization_GenerateStreamLines {
 
 
 	frame $w.meth -relief groove -borderwidth 2
-	label $w.meth.label -text "Streamline Computation Method"
-	radiobutton $w.meth.cw -text "Cell Walk" \
-	    -variable $this-method -value 5
-	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
-	    -variable $this-method -value 0
-	#radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" \
-	    -variable $this-method \
+#	label $w.meth.label -text "Streamline Computation Method"
+#	radiobutton $w.meth.cw -text "Cell Walk" \
+#	    -variable $this-method -value 5
+#	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
+#	    -variable $this-method -value 0
+#	radiobutton $w.meth.o2 -text "Adams Moulton Multi Step" \
+#	    -variable $this-method \
 #	    -value 1
-	radiobutton $w.meth.heun -text "Heun Method" \
-	    -variable $this-method -value 2
-	radiobutton $w.meth.rk4 -text "Classic 4th Order Runge-Kutta" \
-	    -variable $this-method -value 3
-	radiobutton $w.meth.rkf -text "Adaptive Runge-Kutta-Fehlberg" \
-	    -variable $this-method -value 4
+#	radiobutton $w.meth.heun -text "Heun Method" \
+#	    -variable $this-method -value 2
+#	radiobutton $w.meth.rk4 -text "Classic 4th Order Runge-Kutta" \
+#	    -variable $this-method -value 3
+#	radiobutton $w.meth.rkf -text "Adaptive Runge-Kutta-Fehlberg" \
+#	    -variable $this-method -value 4
 	
-	pack $w.meth.label -side top -fill both
-	pack $w.meth.cw $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
-	    -side top -anchor w
+#	pack $w.meth.label -side top -fill both
+#	pack $w.meth.cw $w.meth.ab $w.meth.heun $w.meth.rk4 $w.meth.rkf \
+# 	 -side top -anchor w
 
+  set $this-method 5
 
 	checkbutton $w.filter -text "Filter Colinear Points" \
 		-variable $this-remove-colinear-pts -justify left
