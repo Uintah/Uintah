@@ -23,7 +23,7 @@
       <var name="faces-on" val="{0}"/>
       <var name="has_scalar_data" val="{1}"/>
       <var name="scalars_scale" val="{0.3}"/>
-      <var name="use-defaults" val="{0}"/>
+      <var name="use-default-size" val="{0}"/>
       <var name="ui_geometry" val="{370x655+360+323}"/>
     </module>
     <module category="Visualization" id="m4" name="ShowField" package="SCIRun">
@@ -34,7 +34,7 @@
       <var name="edge_display_type" val="{Cylinders}"/>
       <var name="edge_scale" val="{0.0042}"/>
       <var name="scalars_scale" val="{0.3}"/>
-      <var name="use-defaults" val="{0}"/>
+      <var name="use-default-size" val="{0}"/>
       <var name="ui_geometry" val="{370x655+27+323}"/>
     </module>
     <module category="Render" id="m5" name="ViewScene" package="SCIRun">

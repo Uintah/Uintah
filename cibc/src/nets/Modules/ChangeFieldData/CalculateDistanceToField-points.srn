@@ -63,7 +63,7 @@
       <var name="node_scale" substitute="no" val="{0.03}"/>
       <var name="edge_scale" substitute="no" val="{0.015}"/>
       <var name="scalars_scale" substitute="no" val="{0.3}"/>
-      <var name="use-defaults" substitute="no" val="{0}"/>
+      <var name="use-default-size" substitute="no" val="{0}"/>
       <var name="ui_geometry" substitute="no" val="{366x646+348+230}"/>
     </module>
     <module category="Visualization" id="m6" name="ShowField" package="SCIRun">
@@ -82,7 +82,7 @@
       <var name="tensors_scaleNV" substitute="no" val="{-0.0}"/>
       <var name="scalars_scale" substitute="no" val="{-0.0}"/>
       <var name="scalars_scaleNV" substitute="no" val="{-0.0}"/>
-      <var name="use-defaults" substitute="no" val="{0}"/>
+      <var name="use-default-size" substitute="no" val="{0}"/>
       <var name="ui_geometry" substitute="no" val="{366x646+180+208}"/>
     </module>
     <module category="Render" id="m7" name="ViewScene" package="SCIRun">

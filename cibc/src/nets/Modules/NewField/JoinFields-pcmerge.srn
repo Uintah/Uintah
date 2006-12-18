@@ -31,7 +31,7 @@
       <var name="def-color-b" substitute="no" val="{1.0}"/>
       <var name="node_display_type" substitute="no" val="{Spheres}"/>
       <var name="show_progress" substitute="no" val="{}"/>
-      <var name="use-defaults" substitute="no" val="{0}"/>
+      <var name="use-default-size" substitute="no" val="{0}"/>
     </module>
     <module category="DataIO" id="m3" name="ReadField" package="SCIRun" version="1.0">
       <position x="64" y="41"/>

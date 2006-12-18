@@ -15,7 +15,7 @@
       <position x="10" y="87"/>
       <var name="nodes-as-disks" val="{1}" substitute="no"/>
       <var name="has_vector_data" val="{1}" substitute="no"/>
-      <var name="use-defaults" val="{0}" substitute="no"/>
+      <var name="use-default-size" val="{0}" substitute="no"/>
     </module>
     <module id="m3" package="SCIRun" category="Render" name="ViewScene">
       <position x="10" y="164"/>
