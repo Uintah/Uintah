@@ -1512,7 +1512,7 @@ OpenGL::real_get_pick(int x, int y,
 #endif
 
     glFlush();
-    const int hits = glRenderMode(GL_RENDER);
+    int hits = glRenderMode(GL_RENDER);
 
 //    CHECK_OPENGL_ERROR("OpenGL::real_get_pick");
 
@@ -1529,6 +1529,8 @@ OpenGL::real_get_pick(int x, int y,
     GLuint hit_pick = 0;
     //GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
+    
+    if (drawinfo_->show_bbox_) hits = 0;
     
     if (hits >= 1)
     {
