@@ -102,7 +102,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-field-name-update
 	global $this-tensors-emphasis
 	global $this-approx-div
-	global $this-use-defaults
+	global $this-use-default-size
 	set $this-node_display_type Points
 	set $this-edge_display_type Lines
 	set $this-data_display_type Arrows
@@ -171,7 +171,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-field-name-update 1
 	set $this-tensors-emphasis 0.825
 	set $this-approx-div 1
-	set $this-use-defaults 0
+	set $this-use-default-size 1
 
 	trace variable $this-node_scaleNV w "$this new_node_scale"
 	trace variable $this-edge_scaleNV w "$this new_edge_scale"
@@ -817,11 +817,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	addColorSelection $window.def.col.f "Default Color" \
 	    $this-def-color "default_color_change"
 
-	button $window.def.vals.calcdefs -text "Calculate Defaults" \
+	button $window.def.vals.calcdefs -text "Calculate Default Size" \
 		-command "$this-c calcdefs"
 	checkbutton $window.def.vals.use_defaults \
-		-text "Use Defaults" \
-		-variable $this-use-defaults
+		-text "Use Default Size" \
+		-variable $this-use-default-size
 
 	pack $window.def.col.f $window.def.col.le -side top -pady 2 -anchor w
 	pack $window.def.col.le.approxl $window.def.col.le.approx -side left

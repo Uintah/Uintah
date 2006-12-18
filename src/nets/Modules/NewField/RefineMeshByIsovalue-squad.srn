@@ -19,7 +19,7 @@
       <var name="normalize-vectors" val="{}"/>
       <var name="has_scalar_data" val="{1}"/>
       <var name="show_progress" val="{}"/>
-      <var name="use-defaults" val="{0}"/>
+      <var name="use-default-size" val="{0}"/>
     </module>
     <module category="Render" id="m3" name="ViewScene" package="SCIRun">
       <position x="79" y="867"/>
