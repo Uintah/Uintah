@@ -42,7 +42,8 @@ itcl_class SCIRun_NewField_GeneratePointSamplesFromFieldOrWidget {
         toplevel $w
 
 	iwidgets::tabnotebook $w.tabs -raiseselect true \
-	    -width 350 -height 220 -tabpos n -backdrop gray
+	    -width 350 -height 220 -tabpos n -backdrop gray\
+      -scrollcommand "$this-c needexecute"
 	pack $w.tabs -side top -expand 1 -fill both
 	set wtab [$w.tabs add -label "Widget" \
 		  -command "set $this-whichtab Widget"]
