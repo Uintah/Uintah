@@ -549,12 +549,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
      //  time to add a new material
      d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
    }
-
-   sched->scheduleParticleRelocation(mpm_level,
-                                 Mlb->pXLabel_preReloc, 
-                                 d_sharedState->d_particleState_preReloc,
-                                 Mlb->pXLabel, d_sharedState->d_particleState,
-                                 Mlb->pParticleIDLabel, mpm_matls);
 } // end scheduleTimeAdvance()
 
 
@@ -574,6 +568,7 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   const PatchSet* ice_patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
@@ -585,7 +580,14 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
                                                               all_matls);
 
-  //__________________________________
+  if (level->getIndex() == 0)
+    sched->scheduleParticleRelocation(level,
+                                  Mlb->pXLabel_preReloc, 
+                                  d_sharedState->d_particleState_preReloc,
+                                  Mlb->pXLabel, d_sharedState->d_particleState,
+                                  Mlb->pParticleIDLabel, mpm_matls);
+
+   //__________________________________
   // clean up memory
   if(d_ice->d_customBC_var_basket->usingLodi){
     for(int f=0;f<Patch::numFaces;f++){

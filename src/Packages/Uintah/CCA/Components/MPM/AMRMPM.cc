@@ -285,7 +285,6 @@ AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
   cout << "IS REGRID = " << d_sharedState->getCurrentTopLevelTimeStep() << endl;
   if(d_sharedState->getCurrentTopLevelTimeStep()==0){
   }
-
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& level = inlevel->getGrid()->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -329,9 +328,13 @@ AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
+}
 
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
+void
+AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+{
+  if (level->getIndex() == 0) {
+    const MaterialSet* matls = d_sharedState->allMPMMaterials();
     sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
                                       d_sharedState->d_particleState_preReloc,
                                       lb->pXLabel, 

@@ -7,6 +7,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <mpi.h>
+
 namespace Uintah {
   class DataWarehouse;
   class LoadBalancer;
@@ -44,6 +46,8 @@ WARNING
   
 ****************************************/
 
+  class MPIScatterRecords; // defined in .cc
+
   class Relocate {
   public:
     Relocate();
@@ -51,25 +55,32 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual void scheduleParticleRelocation(Scheduler*,
-					    const ProcessorGroup* pg,
-					    LoadBalancer* lb,
-					    const LevelP& level,
-					    const VarLabel* old_posLabel,
-					    const vector<vector<const VarLabel*> >& old_labels,
-					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
-					    const VarLabel* particleIDLabel,
-					    const MaterialSet* matls);
+    void scheduleParticleRelocation(Scheduler*,
+			const ProcessorGroup* pg,
+			LoadBalancer* lb,
+			const LevelP& level,
+			const VarLabel* old_posLabel,
+			const vector<vector<const VarLabel*> >& old_labels,
+			const VarLabel* new_posLabel,
+			const vector<vector<const VarLabel*> >& new_labels,
+			const VarLabel* particleIDLabel,
+			const MaterialSet* matls);
 
     const MaterialSet* getMaterialSet() const { return reloc_matls;}
 
-  protected:
-    virtual void relocateParticles(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw) = 0;
+  private:
+    void relocateParticles(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+    void exchangeParticles(const ProcessorGroup*, 
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw, MPIScatterRecords* scatter_records, 
+                           int total_reloc[3]);
+    void finalizeCommunication();
     const VarLabel* reloc_old_posLabel;
     vector<vector<const VarLabel*> > reloc_old_labels;
     const VarLabel* reloc_new_posLabel;
@@ -77,32 +88,11 @@ WARNING
     const VarLabel* particleIDLabel_;
     const MaterialSet* reloc_matls;
     LoadBalancer* lb;
-  };
+    vector<char*> recvbuffers;
+    vector<char*> sendbuffers;
+    vector<MPI_Request> sendrequests;
 
-  class MPIRelocate : public Relocate {
-  public:
-    MPIRelocate();
-    virtual ~MPIRelocate();
-    
-  private:
-    virtual void relocateParticles(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
-  };
 
-  class SPRelocate : public Relocate {
-  public:
-    SPRelocate();
-    virtual ~SPRelocate();
-    
-  private:
-    virtual void relocateParticles(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
   };
 } // End namespace Uintah
    

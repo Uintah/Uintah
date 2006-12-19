@@ -771,12 +771,6 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
   return 0;
 }
 
-const Patch* Level::getPatchByID(int id) const
-{
-  return d_realPatches[id - d_realPatches[0]->getID()];
-}
-
-
 const LevelP& Level::getCoarserLevel() const
 {
   return getRelativeLevel(-1);
