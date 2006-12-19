@@ -1,0 +1,32 @@
+
+class Margaritaville {
+   void jimmy_buffet(in coctail.Margarita m);
+};
+	
+%ininterface 
+
+  class GoPort implements-all gov.cca.ports.GoPort{
+        void setService(in gov.cca.Services svc);
+  };
+  interface iStringPort extends gov.cca.Port
+  {
+        string getString();
+        int m1();
+  };
+
+%/ininterface 
+	
+%outinterface 
+
+  interface oStringPort extends gov.cca.Port
+  {
+        string getString();
+        int m2();
+  };
+
+%/outinterface
+
+%map iStringPort -> oStringPort
+>m1 -> m2
+	
+	

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <xi:include href="Button2.skin" parse="xml"/>
+  <object class="Painter">
+    <object class="Root::GLWindow">
+      <var name="width" type="int">1100</var>
+      <var name="height" type="int">1100</var>
+      <var name="posx" type="int">100</var>
+      <var name="posy" type="int">200</var>
+      <var name="border" type="bool">$Window::borders</var>
+      <object class="Grid">
+        <var name="cols" type="int">10</var>
+        <var name="rows" type="int">4</var>        
+        
+        <object class="Button">
+          <var name="col" type="int">1</var>
+          <var name="row" type="int">1</var>
+          
+          <var name="Button::Text::text" propagate="yes">CThead</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::ITKImageFileRead">
+            <var name="filename">/SCIRun/Data/volume/CThead.nhdr</var>
+          </signal>
+        </object>              
+        
+        <object class="Button">
+          <var name="col" type="int">2</var>
+          <var name="row" type="int">1</var>
+          
+          <var name="Button::Text::text" propagate="yes">Isosurface</var>
+          <signal name="Button::clicked" 
+                  target="Painter::ShowIsosurface"/>
+        </object>              
+
+        <object class="Button">
+          <var name="col" type="int">3</var>
+          <var name="row" type="int">1</var>
+          <var name="Button::Text::text" propagate="yes">Quit</var>
+          <var name="cell-height">35</var>
+          <signal name="Button::clicked" 
+                  target="Quit">
+          </signal>
+        </object>
+
+
+        <object class="SceneGraph">
+          <var name="col-begin" type="int">4</var>
+          <var name="col-end" type="int">10</var>
+          <var name="row-begin" type="int">2</var>
+          <var name="row-end" type="int">4</var>
+          <var name="axis">0</var>
+          <signal name="SliceWindow::mark_redraw" 
+                  target="GLWindow::mark_redraw"/>
+        </object>   
+
+        <object class="Root::FocusRegion">
+          <var name="col-begin" type="int">1</var>
+          <var name="col-end" type="int">3</var>
+          <var name="row-begin" type="int">2</var>
+          <var name="row-end" type="int">2</var>
+
+        <object class="Painter::SliceWindow">
+          <var name="axis">0</var>
+          <signal name="SliceWindow::mark_redraw" 
+                  target="GLWindow::mark_redraw"/>
+        </object>   
+        </object>   
+
+        <object class="Root::FocusRegion">        
+          <var name="col-begin" type="int">1</var>
+          <var name="col-end" type="int">3</var>
+          <var name="row-begin" type="int">3</var>
+          <var name="row-end" type="int">3</var>
+
+        <object class="Painter::SliceWindow">
+          <var name="axis">1</var>
+          <signal name="SliceWindow::mark_redraw" 
+                  target="GLWindow::mark_redraw"/>
+        </object>   
+        </object>   
+        
+        <object class="Root::FocusRegion">        
+          <var name="col-begin" type="int">1</var>
+          <var name="col-end" type="int">3</var>
+          <var name="row-begin" type="int">4</var>
+          <var name="row-end" type="int">4</var>
+
+        <object class="Painter::SliceWindow">
+          <var name="axis">2</var>
+          <signal name="SliceWindow::mark_redraw" 
+                  target="GLWindow::mark_redraw"/>
+        </object>
+        </object>
+      </object>   
+    </object>
+  </object>
+</skinner>
+
+

@@ -1,0 +1,184 @@
+/*
+  For more information, please see: http://software.sci.utah.edu
+
+  The MIT License
+
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
+
+  
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
+*/
+
+distribution array DMatrix <double,2>;
+distribution array DArray <double,1>;
+
+interface Loader {
+  //returns 0 if successful
+  distribution array dURL <string, 1>;
+
+  collective
+  int createPInstance(in string componentName, in string componentType,
+                      in TypeMap properties, out dURL componentURLs);
+  int createInstance(in string componentName, in string componentType,
+                     in TypeMap properties, out string componentURL);
+
+  int destroyInstance(in string componentName, in float timeout);
+
+  int getAllComponentTypes(out array<string,1> componentTypes);
+  int shutdown(in float timeout);
+}
+
+interface CorbaServices {
+  int registerUsesPort(in string portName, in string portType);
+  int unregisterUsesPort(in string portName);
+  int addProvidesPort(in  string portName, in string portType, in string ior);
+  int removeProvidesPort(in string portName);
+  int check();
+  int done();
+  bool go();
+  string getIOR(in string portName);
+}
+
+interface TaoServices {
+  void registerUsesPort(in string portName, in string type, in TypeMap properties);
+  void unregisterUsesPort(in string portName);
+  void addProvidesPort(in string portName, in string type, in TypeMap properties);
+  void removeProvidesPort(in string portName);
+}
+
+interface Builder extends sci.cca.Component {
+  string getFrameworkURL();
+  string getConfigDir();
+
+  // wrapper for ComponentRepository
+
+  void getComponentClassDescriptions(out array<cca.ComponentClassDescription>);
+
+  // wrappers for BuilderService mostly
+
+  void getPortInfo(in cca.ComponentID cid, in string portName, out string model, out string type);
+
+  // manage component creation/destruction
+  ComponentID createInstance(in ComponentClassDescription classDesc);
+  void destroyInstance(in cca.ComponentID cid, in float timeout);
+  int destroyInstances(in array<cca.ComponentID> cidArray, in float timeout);
+
+  ComponentID generateBridge(in ComponentID user, in string usesPortName, in ComponentID provider, in string providesPortName, out ConnectionID connID1, out ConnectionID connID2);
+
+  void getUsedPortNames(in cca.ComponentID cid, out array<string>);
+  void getProvidedPortNames(in cca.ComponentID cid, out array<string>);
+
+  void getCompatiblePortList(in sci.cca.ComponentID c1, in string port1,
+                             in sci.cca.ComponentID c2, out array<string>);
+
+  void getBridgeablePortList(in sci.cca.ComponentID c1, in string port1,
+                             in sci.cca.ComponentID c2, out array<string>);
+
+  // manage connections
+  ConnectionID connect(in cca.ComponentID usesCID, in string usesPortName, in cca.ComponentID providesCID, in string providesPortName);
+  void disconnect(in cca.ConnectionID connID, in float timeout); // note: don't support timeout yet
+  // void disconnectAll(); note: not implemented in BuilderService yet
+
+  void addComponentFromXML(in string filePath, in string componentModel);
+
+  void addFrameworkProxy(in string loaderName, in string user, in string domain, in string loaderPath);
+  void removeFrameworkProxy(in string name);
+
+  // manage go ports for the UI
+  bool connectGoPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectGoPort(in string goPortName);
+  int go(in string goPortName);
+
+  bool applicationFileExists();
+  void saveApplication();
+}
+
+// text builder also should have an implementing class
+class GUIBuilder implements-all sci.cca.Builder,sci.cca.EventListener {
+  // manage UI ports for the GUI
+  // note: no UI handling for TxtBuilder
+  bool connectUIPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectUIPort(in string uiPortName);
+  int ui(in string uiPortName);
+
+  void updateProgress(in cca.ComponentID cid, in int progressPercent);
+
+  //   // manage Progress ports for the GUI
+  //   bool connectProgress(in string providesName, in string usesPortName, in cca.ComponentID cid, out string providesPortName);
+  //   void disconnectProgress(in string progressPortName);
+
+  // manage ComponentIcon ports for the GUI
+  bool connectComponentIcon(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectComponentIcon(in string ciPortName);
+
+  bool setPortColor(in string portName, in string colorName);
+  // see Bugzilla bug #2834:
+  //bool setPortColor(in string portName, in opaque color);
+  // opaque type is wxColor*
+  opaque getPortColor(in string portName);
+}
+
+/**
+ * Stores event header and event body:
+ * Header: should not be empty, may contain delivery metadata
+ *         about the event, framework, component etc.
+ * Body: may be empty, may contain event data
+ */
+interface Event {
+  void setHeader(in cca.TypeMap header);
+  void setBody(in cca.TypeMap body);
+
+  cca.TypeMap getHeader();
+  cca.TypeMap getBody();
+}
+
+/** Interface implemented by components interested in events. */
+interface EventListener {
+  /** This is where event processing by a listener takes place. */
+  void processEvent(in string topicName, in Event theEvent);
+}
+
+/** Topics are channels in which events are sent. */
+interface AbstractTopic {
+  /**
+   * Register an EventListener on a Topic or a group of Topics (through WildcardTopic).
+   * @exception if listenerKey is null or empty or if listener is null
+   */
+  void registerEventListener(in string listenerKey, in EventListener theListener) throws EventServiceException;
+
+  /**
+   * Unregister an EventListener on a Topic or a group of Topics (through WildcardTopic).
+   * @exception if listenerKey is null or empty
+   */
+  void unregisterEventListener(in string listenerKey);
+  /**
+   * @return Topic name (from EventService.createTopic)
+   */
+  string getTopicName();
+}
+
+interface Topic extends AbstractTopic {
+  /** Publish an event. */
+  void sendEvent(in Event theEvent) throws EventServiceException;
+}
+
+/** Mechanism for grouping hierarchically related Topics for subscribers. */
+interface WildcardTopic extends AbstractTopic {
+}

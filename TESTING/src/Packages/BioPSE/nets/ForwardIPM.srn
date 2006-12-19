@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{28 24 673 301}" creationDate="{Thu Mar 16 2006}" creationTime="{11:06:10}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="NeuroFEM" id="m1" name="InterfaceWithNeuroFEMForward" package="BioPSE">
+      <position x="239" y="244"/>
+    </module>
+    <module category="DataIO" id="m2" name="ReadField" package="SCIRun">
+      <position x="28" y="24"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld"/>
+      <var name="filetype" val="{SCIRun Field File (*.fld)}"/>
+    </module>
+    <module category="DataIO" id="m3" name="ReadField" package="SCIRun">
+      <position x="290" y="32"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcv.fld"/>
+      <var name="filetype" val="{SCIRun Field File (*.fld)}"/>
+    </module>
+    <module category="DataIO" id="m4" name="ReadField" package="SCIRun">
+      <position x="508" y="32"/>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-dipole.pcv.fld"/>
+      <var name="filetype" val="{SCIRun Field File (*.fld)}"/>
+    </module>
+    <module category="Forward" id="m5" name="ConvertFieldDataFromIndicesToTensors" package="BioPSE">
+      <position x="78" y="128"/>
+    </module>
+    <module category="ChangeFieldData" id="m6" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
+      <position x="500" y="151"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module category="ChangeMesh" id="m7" name="SwapNodeLocationsWithMatrixEntries" package="SCIRun">
+      <position x="348" y="140"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m5" fromport="0" id="c1" to="m1" toport="0"/>
+    <connection from="m2" fromport="0" id="c2" to="m5" toport="0"/>
+    <connection from="m4" fromport="0" id="c3" to="m6" toport="0"/>
+    <connection from="m4" fromport="0" id="c4" to="m7" toport="0"/>
+    <connection from="m3" fromport="0" id="c5" to="m1" toport="1"/>
+    <connection from="m7" fromport="1" id="c6" to="m1" toport="2"/>
+    <connection from="m6" fromport="1" id="c7" to="m1" toport="3"/>
+  </connections>
+</network>

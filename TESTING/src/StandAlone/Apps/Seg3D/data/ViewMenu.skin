@@ -1,0 +1,69 @@
+<definition class="ViewMenu">
+  <object class="MenuList">
+    <var name="width">150</var>
+    <var name="height">216</var>
+
+    <definition class="ViewMenuButton">
+      <object class="MenuButton">
+        <var name="Button::Text::text" propagate="yes">$view_id</var>
+        
+        <signal name="Button::clicked" 
+                target="VisibilityGroup::show_VisibleItem">
+          <var name="id">$view_id</var>
+          <var name="group">MainLayout</var>
+        </signal>
+        
+        <signal name="Button::clicked" 
+                target="GLWindow::mark_redraw"/>
+        <signal name="Button::clicked" 
+                target="Painter::Autoview"/>
+        <signal name="Button::clicked" 
+                target="GLWindow::mark_redraw"/>      
+        
+      </object>
+    </definition>
+    
+    <definition class="MenuList::child">
+      <object class="Grid">
+        <var name="rows">6</var>
+        <var name="cols">1</var>
+        
+        <object class="ViewMenuButton">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="view_id" propagate="yes">FourView</var>
+        </object>
+        
+        <object class="ViewMenuButton">
+            <var name="row">2</var>
+            <var name="col">1</var>
+            <var name="view_id" propagate="yes">ThreeView</var>
+        </object>
+        
+        <object class="ViewMenuButton">
+          <var name="row">3</var>
+          <var name="col">1</var>
+          <var name="view_id" propagate="yes">Four3DView</var>
+        </object>
+        
+        <object class="ViewMenuButton">
+          <var name="row">4</var>
+          <var name="col">1</var>
+          <var name="view_id" propagate="yes">3DView</var>
+        </object>
+        
+        <object class="ViewMenuButton">
+          <var name="row">5</var>
+          <var name="col">1</var>
+          <var name="view_id" propagate="yes">16View</var>
+        </object>
+        
+          <object class="ViewMenuButton">
+            <var name="row">6</var>
+            <var name="col">1</var>
+            <var name="view_id" propagate="yes">4X4CenterView</var>
+          </object>                    
+      </object>
+    </definition>
+  </object>
+</definition>
