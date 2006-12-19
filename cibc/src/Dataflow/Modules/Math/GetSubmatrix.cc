@@ -88,10 +88,6 @@ GetSubmatrix::execute()
   MatrixHandle imatrix;
   if (!get_input_handle("Input Matrix", imatrix))
 
-  std::cout << "nrows= "<< imatrix->nrows() << "\n";
-  std::cout << "ncols= "<< imatrix->ncols() << "\n";
-
-
   nrow_.set(to_string(imatrix->nrows()));
   ncol_.set(to_string(imatrix->ncols()));
   get_ctx()->reset();
