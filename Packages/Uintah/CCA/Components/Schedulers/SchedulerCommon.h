@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
@@ -132,7 +133,8 @@ WARNING
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) { d_generation = id; }
-    virtual const MaterialSet* getMaterialSet() const {return 0;}
+
+    virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
 
     // This function will copy the data from the old grid to the new grid.
     // The PatchSubset structure will contain a patch on the new grid.
@@ -142,6 +144,16 @@ WARNING
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
 
+    //////////
+    // Insert Documentation Here:
+    virtual void scheduleParticleRelocation(const LevelP& level,
+					    const VarLabel* old_posLabel,
+					    const vector<vector<const VarLabel*> >& old_labels,
+					    const VarLabel* new_posLabel,
+					    const vector<vector<const VarLabel*> >& new_labels,
+					    const VarLabel* particleIDLabel,
+					    const MaterialSet* matls);
+    
     virtual void setPositionVar(const VarLabel* posLabel) { reloc_new_posLabel_ = posLabel; }
 
     virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim);
@@ -217,6 +229,7 @@ WARNING
     bool emit_taskgraph;
     GhostOffsetVarMap m_ghostOffsetVarMap;
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
+    Relocate         reloc_;
 
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in

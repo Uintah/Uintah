@@ -54,6 +54,9 @@ public:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&);
 
+  virtual void scheduleFinalizeTimestep(const LevelP& level, 
+                                        SchedulerP&);
+
   virtual void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
   virtual void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
