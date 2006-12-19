@@ -67,7 +67,7 @@ if [ ! -e "$cmakebin" ]; then
         try $getcommand http://www.cmake.org/files/v2.4/cmake-2.4.5.tar.gz
         try tar xvzf cmake-2.4.5.tar.gz
         try cd cmake-2.4.5
-        try ./configure --prefix=$DIR/local
+        try ./configure --prefix=$DIR/cmake/local
         try make $makeflags
         try make install
     fi
