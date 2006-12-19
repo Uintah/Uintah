@@ -280,6 +280,9 @@ SolveLinearSystem::execute()
   MatrixHandle rhs;
   if (!get_input_handle("RHS", rhs)) return;
 
+  // Convert this one into a column matrix
+  { MatrixHandle tmp = rhs->column(); rhs = tmp; }
+
   if (use_previous_soln.get() && solution.get_rep() &&
      solution->nrows() == rhs->nrows())
   {
@@ -688,8 +691,8 @@ SolveLinearSystem::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& r
 
       if (ep && niter%epcount == 0)
       {
-        MatrixHandle rhsH(rhs.clone());
-        send_output_handle("Solution", rhsH, false, true);
+        MatrixHandle lhsH(lhs.clone());
+        send_output_handle("Solution", lhsH, false, true);
       }
     }
   }
