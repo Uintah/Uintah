@@ -72,7 +72,7 @@ namespace SCIRun {
   // This mutex is used in Core/Persistent/Persistent.cc.  It is
   // declared here because it is not initializing properly when declared
   // in Persistent.cc.
-  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
+//  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
   const string ext("dylib");
 #elif defined(_WIN32)
   const string ext("dll");
