@@ -75,9 +75,9 @@ struct SCISHARE PersistentTypeID {
   Persistent* (*bc_maker1)();
   Persistent* (*bc_maker2)();
 
-#ifndef __APPLE__
+//#ifndef __APPLE__
   static Mutex* persistentTypeIDMutex;
-#endif
+//#endif
 };
 
 

@@ -68,18 +68,18 @@ namespace SCIRun {
 static Piostream::MapStringPersistentTypeID* table = 0;  
 const int Piostream::PERSISTENT_VERSION = 2;
 
-#ifdef __APPLE__
+//#ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
   // the constructor will actually fire from there.  When it is declared
   // in this file, it does not "construct" and thus causes seg faults.
   // (Yes, this is a hack.  Perhaps this problem will go away in later
   // OSX releases, but probably not as it has something to do with the
   // Mac philosophy on when to load dynamic libraries.)
-  extern Mutex persistentTypeIDMutex;
-#else
+//  extern Mutex persistentTypeIDMutex;
+//#else
 Mutex* PersistentTypeID::persistentTypeIDMutex = 0;
 //Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");  
-#endif
+//#endif
 
 
 //----------------------------------------------------------------------
