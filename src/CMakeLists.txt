@@ -1071,23 +1071,33 @@ SUBDIRS(include Core StandAlone)
 
 MARK_AS_ADVANCED(BLT_INCLUDE BLT_LIBRARY FREETYPE_INCLUDE FREETYPE_LIBRARY TCL_LIBRARY TCL_INCLUDE ITCL_INCLUDE ITCL_LIBRARY ITK_INCLUDE ITK_LIBRARY TK_INCLUDE TK_LIBRARY PNG_INCLUDE PNG_LIBRARY ZLIB_INCLUDE ZLIB_LIBRARY XML2_LIBRARY XML2_INCLUDE TEEM_LIBRARY TEEM_INCLUDE_DIR MPEG_LIBRARY MPEG_INCLUDE M_LIBRARY WITH_MPEG)
 
-
-# Option for building scirun executable, dataflow, packages
-OPTION(BUILD_DATAFLOW "Build SCIRun executable, dataflow, and packages" ON)
-IF(BUILD_DATAFLOW)
-  SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
-  MARK_AS_ADVANCED(SCIRUN_DIR)
-  SUBDIRS(Dataflow)
-ENDIF(BUILD_DATAFLOW)
-MARK_AS_ADVANCED(BUILD_DATAFLOW)
-
 # Option for building Seg3D
+SET(DEFAULT_SEG3D OFF)
+
 IF(ITK_FOUND)
-  OPTION(BUILD_SEG3D "Build Seg3D Application" ON)
-  MESSAGE(STATUS "Building Seg3D by default because ITK found.")
-ELSE(ITK_FOUND)
-  OPTION(BUILD_SEG3D "Build Seg3D Application" OFF)
+  # if windows, check if itk was built statically or shared
+  # if shared, core must be shared and turn off seg3d
+  # if static, core must be static, and turn on seg3d
+  IF(WIN32)
+    IF(ITK_BUILD_SHARED)
+      IF(BUILD_SHARED_LIBS)
+	SET(DEFAULT_SEG3D OFF)
+	MESSAGE("ITK is built with shared libraries, and SCIRun Core is specified to build shared libraries. Seg3D does not currently work with this configuration. Turning Seg3D off. To build Seg3D on Windows, you must link against static ITK libraries, build SCIRun Core libraries as static, and turn BUILD_DATALFOW to OFF.")
+      ELSE(BUILD_SHARED_LIBS)
+	SET(BUILD_DATAFLOW OFF)
+	SET(DEFAULT_SEG3D ON)
+	MESSAGE("ITK is built with static libraries, and SCIRun Core is built with static libraries. Turning Dataflow off because it must be built with shared libraries on Windows. Turning Seg3D on by default.")
+      ENDIF(BUILD_SHARED_LIBS)
+    ELSE(ITK_BUILD_SHARED)
+
+    ENDIF(ITK_BUILD_SHARED)
+  ELSE(WIN32)
+    MESSAGE(STATUS "Building Seg3D by default because ITK found.")
+    SET(DEFAULT_SEG3D ON)
+  ENDIF(WIN32)
 ENDIF(ITK_FOUND)
+
+OPTION(BUILD_SEG3D "Build Seg3D Application" ${DEFAULT_SEG3D})
 
 IF(BUILD_SEG3D)
   SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
@@ -1100,5 +1110,14 @@ IF(BUILD_SEG3D)
   ENDIF(ITK_FOUND)
 ENDIF(BUILD_SEG3D)
 MARK_AS_ADVANCED(BUILD_SEG3D)
+
+# Option for building scirun executable, dataflow, packages
+OPTION(BUILD_DATAFLOW "Build SCIRun executable, dataflow, and packages" ON)
+IF(BUILD_DATAFLOW)
+  SET(SCIRUN_DIR ${SCIRUN_CORE_BINARY_DIR})
+  MARK_AS_ADVANCED(SCIRUN_DIR)
+  SUBDIRS(Dataflow)
+ENDIF(BUILD_DATAFLOW)
+MARK_AS_ADVANCED(BUILD_DATAFLOW)
 
 MARK_AS_ADVANCED(CMAKE_INSTALL_PREFIX DART_TESTING_TIMEOUT)
