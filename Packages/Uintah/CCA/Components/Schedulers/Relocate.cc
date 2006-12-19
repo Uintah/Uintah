@@ -199,10 +199,10 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
-    for (unsigned i = level->getIndex(); i < grid->numLevels(); i++) {
+    for (int i = level->getIndex(); i < grid->numLevels(); i++) {
       const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
-      for (unsigned proc = 0; proc < pg->size(); proc++) {
-        for (unsigned j = 0; j < p->getSubset(proc)->size(); i++) {
+      for (int proc = 0; proc < pg->size(); proc++) {
+        for (int j = 0; j < p->getSubset(proc)->size(); i++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
         }
@@ -506,7 +506,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
 
       // find the patch from the id
       const Patch* toPatch = 0;
-      for (unsigned i = coarsestLevel->getIndex(); i < grid->numLevels(); i++) {
+      for (int i = coarsestLevel->getIndex(); i < grid->numLevels(); i++) {
         LevelP checkLevel = grid->getLevel(i);
         int levelBaseID = checkLevel->getPatch(0)->getID();
         if (patchid >= levelBaseID && patchid < levelBaseID+checkLevel->numPatches()) {
@@ -664,7 +664,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           else {
             // This loop should change - linear searches are not good! However, since not very many particles leave the patches
 	    // and there are a limited number of neighbors, perhaps it won't matter much
-            for(int i=0;i<(int)neighbors.size();i++){
+            int i=0;
+            for(;i<(int)neighbors.size();i++){
 	      if(neighbors[i]->getBox().contains(px[idx])){
 	        break;
 	      }
@@ -833,7 +834,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 	    unpackset->set(p, idx);
 	  newpos->unpackMPI(buf->databuf, buf->bufsize, &position,
 			    pg, unpackset);
-	  for(v=0;v<numVars;v++)
+	  for(int v=0;v<numVars;v++)
 	    vars[v]->unpackMPI(buf->databuf, buf->bufsize, &position,
 			       pg, unpackset);
 	  ASSERT(position <= buf->bufsize);
@@ -842,7 +843,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 	ASSERTEQ(idx, totalParticles);
 
 #if 0
-	for(v=0;v<numVars;v++){
+	for(int v=0;v<numVars;v++){
 	  const VarLabel* label = reloc_new_labels[m][v];
 	  if (label == particleIDLabel_)
 	    break;
@@ -856,7 +857,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 	// Put the data back in the data warehouse
 	new_dw->put(*newpos, reloc_new_posLabel);
 	delete newpos;
-	for(v=0;v<numVars;v++){
+	for(int v=0;v<numVars;v++){
 	  new_dw->put(*vars[v], reloc_new_labels[m][v]);
 	  delete vars[v];
 	}
@@ -883,7 +884,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 
     // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
-    if (pg->myrank() > 1) {
+    if (pg->size() > 1) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
       MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,
                 pg->getComm());
