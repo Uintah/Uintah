@@ -1909,7 +1909,7 @@ proc promptUserToCopySCIRunrc {} {
     }
 
     wm title $w "Copy v$version .scirunrc file?"
-    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for new features.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by copying.\n\nIf you copy, your existing file will be moved to\n ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n" -justify left
+    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are necessary\nfor new features.\n\nPlease note: If you have made changes to your .scirunrc file they will\nbe undone by creating a new .scirunrc.\n\nIf you generate a new .scirunrc, your existing file will be moved to\n .scirunrc.$version\n\nWould you like SCIRun to generate a new .scirunrc?\n" -justify left
 
     frame $w.but
     button $w.but.ok -text Copy -command "set copyResult 1"
