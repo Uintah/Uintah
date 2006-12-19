@@ -66,7 +66,7 @@ MARK_AS_ADVANCED(BUILD_SHARED_LIBS)
 #----------------------------------------------------------------------------
 # Output directories.
 SET (LIBRARY_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/lib CACHE INTERNAL "Single output directory for building all libraries.")
-SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
+SET (EXECUTABLE_OUTPUT_PATH ${SCIRUN_CORE_BINARY_DIR} CACHE INTERNAL "Single output directory for building all executables.")
 #output directory for installing all include files.")
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
