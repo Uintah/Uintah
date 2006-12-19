@@ -42,9 +42,9 @@ itcl_class SCIRun_NewField_GeneratePointSamplesFromFieldOrWidget {
         toplevel $w
 
 	iwidgets::tabnotebook $w.tabs -raiseselect true \
-	    -width 350 -height 220 -tabpos n -backdrop gray\
-      -scrollcommand "$this-c needexecute"
+	    -width 350 -height 220 -tabpos n -backdrop gray
 	pack $w.tabs -side top -expand 1 -fill both
+
 	set wtab [$w.tabs add -label "Widget" \
 		  -command "set $this-whichtab Widget"]
 	set rtab [$w.tabs add -label "Random" \
@@ -134,6 +134,8 @@ itcl_class SCIRun_NewField_GeneratePointSamplesFromFieldOrWidget {
         checkbutton $rtab.f3.clamp -text "Clamp to nodes" -var $this-clamp
         pack $rtab.f3.clamp -anchor w -padx 8
 
+#	$w.tabs configure -scrollcommand "$this-c needexecute"
+
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
@@ -159,5 +161,6 @@ itcl_class SCIRun_NewField_GeneratePointSamplesFromFieldOrWidget {
 	set $quantity $newquantity
 	$spinner delete 0 end
 	$spinner insert 0 [set $quantity]
+	
     }
 }
