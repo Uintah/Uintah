@@ -169,8 +169,6 @@ ServiceDB::findmaker(ServiceInfo* info)
 void
 ServiceDB::loadpackages() 
 {
-  // Inform the user on what the program is doing
-  cout << "Loading services, please wait...\n";
 
   // Find the path to the package directory
 	
