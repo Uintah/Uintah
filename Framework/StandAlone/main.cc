@@ -114,10 +114,10 @@ parse_args( int argc, char *argv[])
 }
 
 int
-main(int argc, char *argv[]) {
+main(int argc, char *argv[], char **environment) {
   bool framework = true;
   bool loadNet = parse_args(argc, argv);
-  create_sci_environment(0, 0);
+  create_sci_environment(environment, 0);
 
   try {
     // TODO: Move this out of here???
