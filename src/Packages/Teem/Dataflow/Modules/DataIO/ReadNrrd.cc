@@ -142,8 +142,6 @@ ReadNrrd::read_nrrd()
     const string pic_ext(".pic");
     const string pic_ext2(".pict");
     const string pic_conv_command("PictToNrrd %f %t");
-    const string vol_ext(".vol");
-    const string vol_conv_command("GeoProbeToNhdr %f %t");
     const string vista_ext(".v");
     const string vista_conv_command("VistaToNrrd %f %t");
 
@@ -176,11 +174,6 @@ ReadNrrd::read_nrrd()
 		  fn.substr(len - pic_ext2.size(), pic_ext2.size()) == pic_ext2){
 	string tmpfilename;
 	write_tmpfile(filename, &tmpfilename, pic_conv_command);
-	return read_file(tmpfilename);
-	
-      } else if (fn.substr(len - vol_ext.size(), vol_ext.size()) == vol_ext){
-	string tmpfilename;
-	write_tmpfile(filename, &tmpfilename, vol_conv_command);
 	return read_file(tmpfilename);
 	
       } else if (fn.substr(len - vista_ext.size(), vista_ext.size()) == vista_ext){
