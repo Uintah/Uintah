@@ -476,7 +476,7 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
         label $childframe.f5.info -text "Note: leave the addressbar empty for a matlab engine on local machine"
         pack $childframe.f5.info -anchor w -side left
 
-        button $childframe.f6.localconfig -text "Edit Local Config of InterfaceWithMatlab Engine" -command "$this editconfig"
+        button $childframe.f6.localconfig -text "Edit Local Config of Matlab Engine" -command "$this editconfig"
         pack $childframe.f6.localconfig -anchor w -side left
 
         pack $childframe.f1.addresslabel -side left -padx 3p -pady 2p -padx 4p
@@ -494,9 +494,9 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
         pack $w.matlabframe -fill both -expand yes
         
         iwidgets::tabnotebook $childframe.pw -tabpos n -height 300
-        $childframe.pw add -label "InterfaceWithMatlab Code"
-        $childframe.pw add -label "InterfaceWithMatlab Engine Output" 
-        $childframe.pw add -label "InterfaceWithMatlab Engine Status" 
+        $childframe.pw add -label "Matlab Code"
+        $childframe.pw add -label "Matlab Engine Output" 
+        $childframe.pw add -label "Matlab Engine Status" 
         $childframe.pw select 0
 
         pack $childframe.pw -fill both -expand yes
@@ -520,7 +520,7 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
 
         option add *textBackground white	
         iwidgets::scrolledtext $code.f1.cmd -vscrollmode dynamic \
-            -labeltext "InterfaceWithMatlab Commands" -height 150 
+            -labeltext "Matlab Commands" -height 150 
         $code.f1.cmd insert end [set $this-matlab-code]
         pack $code.f1.cmd -fill both -expand yes
         button $code.f2.clear -text "clear" -command "$this ClearMCode"
@@ -533,7 +533,7 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
         pack $code.f3.info -anchor w -side left
 
         iwidgets::scrolledtext $output.f1.display -vscrollmode dynamic \
-            -labeltext "InterfaceWithMatlab Output" -height 150 
+            -labeltext "Matlab Output" -height 150 
         
         set textwidget [$output.f1.display component text]
         bind $textwidget <KeyPress> "$this KeyStroke %A %K"
@@ -546,7 +546,7 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
 
 
         iwidgets::scrolledtext $status.f1.status -vscrollmode dynamic \
-            -labeltext "InterfaceWithMatlab Engine Information" -height 150
+            -labeltext "Matlab Engine Information" -height 150
         $status.f1.status clear	
         $status.f1.status insert end [set $this-matlab-status]
         pack $status.f1.status -fill both -expand yes
@@ -688,7 +688,7 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
             -commandname "Open" \
             -cancel "wm withdraw $w" \
             -title "SELECT M FILE" \
-            -filetypes {{ "InterfaceWithMatlab files" "*.m" } { "All files"  "*" } }\
+            -filetypes {{ "Matlab files" "*.m" } { "All files"  "*" } }\
             -initialdir $initdir \
             -defaultextension "*.m" \
             -selectedfiletype 0
@@ -758,7 +758,7 @@ itcl_class MatlabInterface_Interface_InterfaceWithMatlab {
             -commandname "Save" \
             -cancel "wm withdraw $w" \
             -title "SELECT M FILE" \
-            -filetypes {{ "InterfaceWithMatlab files" "*.m" } }\
+            -filetypes {{ "Matlab files" "*.m" } }\
             -initialdir $initdir \
             -defaultextension "*.m" \
             -selectedfiletype 0 \
