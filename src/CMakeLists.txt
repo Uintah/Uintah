@@ -33,7 +33,6 @@ ELSE(WIN32)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.2.3)
 ENDIF(WIN32)
 
-# DV Change to SCIRun Core or something?
 PROJECT(SCIRUN_CORE)
 
 #-----------------------------------------------------------------------------
