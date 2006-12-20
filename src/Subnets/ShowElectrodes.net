@@ -51,9 +51,9 @@ set bbox {3 26 216 367}
 set Name {ShowElectrides}
 
 # Create the Modules
-set m0 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 21 151]
-set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 21 26]
-set m2 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 3 92]
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "CreateStandardColorMaps" 21 151]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "ReadField" 21 26]
+set m2 [addModuleAtPosition "SCIRun" "ChangeFieldData" "MapFieldDataFromSourceToDestination" 3 92]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 21 214]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 3 310]
 

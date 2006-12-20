@@ -51,7 +51,7 @@ set bbox {0 22 165 158}
 set Name {ShowBoundary}
 
 # Create the Modules
-set m0 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 0 22]
+set m0 [addModuleAtPosition "SCIRun" "NewField" "GetFieldBoundary" 0 22]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 0 101]
 
 # Set the Module Notes Dispaly Options
