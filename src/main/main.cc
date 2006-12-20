@@ -271,7 +271,7 @@ public:
     Thread::yield();
     Time::waitFor(1.0);
     TCLTask::lock();
-    Thread::exitAll(1);
+    Thread::exitAll(0);
   }
 };
 

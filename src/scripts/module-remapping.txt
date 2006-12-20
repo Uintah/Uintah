@@ -62,6 +62,7 @@ SCIRun::FieldsCreate::TetMesher		SCIRun::NewField::InterfaceWithCamal
 SCIRun::FieldsData::ApplyMappingMatrix	SCIRun::ChangeFieldData::ApplyMappingMatrix
 SCIRun::FieldsData::AttractNormals		SCIRun::ChangeFieldData::CalculateNodeNormals
 SCIRun::FieldsData::BuildMappingMatrix	SCIRun::MiscField::BuildMappingMatrix
+SCIRun::FieldsData::ChangeFieldDataAt	SCIRun::ChangeFieldData::ConvertFieldBasis
 SCIRun::FieldsData::ChangeFieldBasis	SCIRun::ChangeFieldData::ConvertFieldBasis
 SCIRun::FieldsData::ChangeFieldDataType	SCIRun::ChangeFieldData::ConvertFieldDataType
 SCIRun::FieldsData::DirectInterpolate		SCIRun::ChangeFieldData::MapFieldDataFromSourceToDestination
@@ -121,7 +122,7 @@ SCIRun::Math::LinearAlgebra			SCIRun::Math::EvaluateLinAlgGeneral
 SCIRun::Math::MappingMatrixToMaskVector	SCIRun::Math::ConvertMappingMatrixToMaskVector
 SCIRun::Math::MaskVectorToMappingMatrix	SCIRun::Math::ConvertMaskVectorToMappingMatrix
 SCIRun::Math::MatrixInfo			SCIRun::Math::ReportMatrixInfo
-SCIRun::Math::MatrixSelectVector		SCIRun::Math::GetColumnMatrixFromMatrix
+SCIRun::Math::MatrixSelectVector		SCIRun::Math::GetColumnOrRowFromMatrix
 SCIRun::Math::MinNormLeastSq		SCIRun::Math::SolveMinNormLeastSqSystem
 SCIRun::Math::SolveMatrix			SCIRun::Math::SolveLinearSystem
 SCIRun::Math::Submatrix			SCIRun::Math::GetSubmatrix
@@ -140,6 +141,7 @@ SCIRun::String::SprintfMatrix		SCIRun::String::PrintStringIntoString
 SCIRun::String::SprintfString		SCIRun::String::PrintMatrixIntoString
 SCIRun::String::StringInfo			SCIRun::String::ReportStringInfo
 SCIRun::Visualization::AddLight		SCIRun::Visualization::CreateLightForViewer
+SCIRun::Visualization::EditTransferFunc2	SCIRun::Visualization::CreateAndEditColorMap2D
 SCIRun::Visualization::EditColorMap2D	SCIRun::Visualization::CreateAndEditColorMap2D
 SCIRun::Visualization::EditColorMap		SCIRun::Visualization::CreateAndEditColorMap
 SCIRun::Visualization::GenAxes		SCIRun::Visualization::CreateViewerAxes
