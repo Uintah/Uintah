@@ -9,7 +9,7 @@ clear all;
 close all;
 %_____________________________________________________________________
 % Problem specific variables
-uda           = sprintf('pistonValidationTest_hack.uda.000');    % uda to compare against
+uda           = sprintf('imp_pistonVal.uda');    % uda to compare against
 piston_vel    = 0.001;
 piston_height = 0.001;
 delta_y        = 0.0025./100.0;           % domain length/# cells
@@ -18,13 +18,17 @@ h_initial2     = piston_height;
 t_final        = 0.8;                     % when the piston stops
 gamma          = 1.4;   
 p_initial      = 1.01325;                 % initial pressure in chamber
-delT_dump      = 1e-2;                    % how often printdata is dumped
-
+delT_dump      = 1e-2;                    % how often data is dumped
+desc = 'Piston Validation problem, Pressure probe at the bottom of the cylinder';
 startEnd = '-istart 0 0 0 -iend 0 100 0'  % lineExtract start and stop
 
 %_____________________________________________________________________
+% exact solution
 % gamma law for the gas.
 % P_chamber = p_initial(Vol_initial/Vol_t) ^ gamma
+% Since we don't know where the exact surface is we compute
+% an upper and lower bound.
+
 time_sec=[0:delT_dump:t_final];
 
 tmp = (h_initial1./(h_initial1-(piston_vel*time_sec)));
@@ -73,6 +77,9 @@ end
 figure
 plot(time_sec, p_chamber_1, time_sec, p_chamber_2, time_probe, p_probe, '.')
 legend('Exact Solutions', '', 'Simulation results');
+title(desc)
+xlabel('time [sec]');
+ylabel('Pressure');
 grid on;
   
 unix('/bin/rm press pistonVal.dat');
