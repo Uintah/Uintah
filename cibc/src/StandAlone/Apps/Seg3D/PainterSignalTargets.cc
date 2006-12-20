@@ -355,11 +355,35 @@ Painter::MemMapFileRead(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::ITKBinaryDilate(event_handle_t event) {
 #ifdef HAVE_INSIGHT
+  string name = "ITKBinaryDilateImageFilterTool::";
+  typedef itk::Image<unsigned  int, 3> LabelImage;
+  typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
+  typedef itk::BinaryDilateImageFilter
+    < LabelImage, LabelImage, StructuringElementType > FilterType;
+  VolumeFilter<FilterType> filter(current_volume);
+
+  StructuringElementType structuringElement;
+  structuringElement.SetRadius(get_vars()->get_int(name+"::DilateRadius"));
+  structuringElement.CreateStructuringElement();
+  
+  filter->SetKernel(structuringElement);
+  filter->SetErodeValue(current_volume_->label_);
+
+  filter();
+
+#endif
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::ITKBinaryDilate(event_handle_t event) {
+#ifdef HAVE_INSIGHT
   string name = "ITKBinaryDilate";
   typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
     < ITKImageFloat3D, ITKImageFloat3D, StructuringElementType > FilterType;
-  FilterType::Pointer filter = FilterType::New();
+  VolumeFilter<FilterType> filter;
 
   StructuringElementType structuringElement;
   structuringElement.SetRadius(get_vars()->get_int(name+"::radius"));
@@ -368,10 +392,8 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   filter->SetKernel(structuringElement);
   filter->SetDilateValue(get_vars()->get_double(name+"::dilateValue"));
 
-  NrrdVolumeHandle &vol = current_volume_;
-  vol->nrrd_handle_ = 
-    do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
-  redraw_all();
+  filter(current_volume_->nrrd_handle_);
+
 #endif
   return CONTINUE_E;
 }
@@ -412,42 +434,31 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   return STOP_E;
 #else
   string name = "ITKBinaryDilateErode";
-  typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
+
+  typedef itk::Image<unsigned  int, 3> LabelImage;
+  typedef itk::BinaryBallStructuringElement
+    < float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
-    < ITKImageFloat3D, 
-    ITKImageFloat3D,
-    StructuringElementType > FilterType;
-  FilterType::Pointer filter = FilterType::New();
+    < LabelImage, LabelImage, StructuringElementType > FilterType1;
+  typedef itk::BinaryErodeImageFilter
+    < LabelImage, LabelImage, StructuringElementType > FilterType2;
 
   StructuringElementType structuringElement;
-  structuringElement.SetRadius
-    (get_vars()->get_int(name+"::radius"));
+  structuringElement.SetRadius(get_vars()->get_int(name+"::radius"));
   structuringElement.CreateStructuringElement();
 
-  filter->SetKernel(structuringElement);
-  filter->SetDilateValue
-    (get_vars()->get_double(name+"::dilateValue"));
+  VolumeFilter<FilterType1> filter1(current_volume_);
+  VolumeFilter<FilterType2> filter2(current_volume_);
 
-  typedef itk::BinaryErodeImageFilter
-    < ITKImageFloat3D, 
-    ITKImageFloat3D, 
-    StructuringElementType > FilterType2;
-  FilterType2::Pointer filter2 = FilterType2::New();
+  filter1->SetKernel(structuringElement);
+  filter1->SetDilateValue(current_volume_->label_);
 
   filter2->SetKernel(structuringElement);
-  filter2->SetErodeValue
-    (get_vars()->get_double(name+"::erodeValue"));
+  filter2->SetErodeValue(current_volume_->label_);
+  
+  filter1();//current_volume_->nrrd_handle_);
+  filter2();//current_volume_->nrrd_handle_);
 
-  NrrdVolumeHandle vol = 
-    new NrrdVolume(this, name, current_volume_->nrrd_handle_);
-  volumes_.push_back(vol);
-
-  vol->nrrd_handle_ = do_itk_filter<FilterType>(filter, vol->nrrd_handle_);
-  vol->nrrd_handle_ = do_itk_filter<FilterType2>(filter2, vol->nrrd_handle_);
-
-  set_all_slices_tex_dirty();
-  redraw_all();
-  current_volume_ = vol;
   return CONTINUE_E;
 #endif
 }

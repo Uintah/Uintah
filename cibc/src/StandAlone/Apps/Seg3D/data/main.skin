@@ -24,6 +24,8 @@
   <var name="ITKConfidenceConnectedImageFilterTool::initialNeighborhoodRadius"
        type="int" propagate="yes">1</var>
 
+  <var name="ITKBinaryDilateErodeImageFilterTool::DilateRadius" propagate="yes">3</var>
+  <var name="ITKBinaryDilateErodeImageFilterTool::ErodeRadius" propagate="yes">3</var>
   <var name="ITKBinaryDilateErode::radius" propagate="yes">3</var>
   <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
   <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>

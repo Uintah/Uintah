@@ -66,9 +66,10 @@ PointerToolSelectorTool::pointer_down(int button, int x, int y,
   switch (button) {
   case 1:
     if (modifiers & EventModifiers::SHIFT_E)
-      tm_.add_tool(new CLUTLevelsTool(painter_), 100);      
-    else
       tm_.add_tool(new PanTool(painter_), 100);
+    else
+      tm_.add_tool(new CLUTLevelsTool(painter_), 100);
+
 
     break;
     
