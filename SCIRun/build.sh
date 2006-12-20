@@ -116,30 +116,14 @@ try rm -rf $DIR/thirdparty.bin/*
 try mkdir -p $DIR/thirdparty.bin
 try ./install.sh $DIR/thirdparty.bin $makeflags
 
-export TP=`grep SCIRUN_THIRDPARTY_DIR $DIR/thirdparty.src/install_command.txt | awk -F '\=' '{print $2}'`
-try echo "SCIRUN_THIRDPARTY_DIR=$TP"
-
-if [ ! -d "$TP" ]; then
-    echo "Thirdparty failed to build in $TP. Exiting"
-    exit 1
-fi
-
 try cd $DIR/bin
 
-try $cmakebin ../src -DSCIRUN_THIRDPARTY_DIR=${TP}
+try $cmakebin ../src
 
 if [ -e "$ctestbin" ]; then
-    try $ctestbin -D ExperimentalStart
-    try $ctestbin -D ExperimentalConfigure
+    try $ctestbin -D Experimental
+else 
+    try make $makeflags
 fi
-
-try make $makeflags
-
-if [ -e "$ctestbin" ]; then
-    try $ctestbin -D ExperimentalBuild
-    try $ctestbin -D ExperimentalSubmit
-fi
-
-
 
 
