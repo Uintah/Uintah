@@ -125,17 +125,16 @@ if [ ! -d "$TP" ]; then
 fi
 
 try cd $DIR/bin
-if [ -e "$ctestbin" ]; then
-    try $ctestbin -D ExperimentalStart
-fi
 
 try $cmakebin ../src -DSCIRUN_THIRDPARTY_DIR=${TP}
 
 if [ -e "$ctestbin" ]; then
+    try $ctestbin -D ExperimentalStart
     try $ctestbin -D ExperimentalConfigure
 fi
 
 try make $makeflags
+
 if [ -e "$ctestbin" ]; then
     try $ctestbin -D ExperimentalBuild
     try $ctestbin -D ExperimentalSubmit
