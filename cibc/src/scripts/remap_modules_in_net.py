@@ -56,7 +56,9 @@ mod_exp = re.compile('(.+addModuleAtPosition)\s+"(\w+)"\s+"(\w+)"\s+"(\w+)"(.+)'
 def parse_net(fn) :
   global remap
 
+  var_tup = ()
   outfile = []
+  newln = ''
   f = open(fn, 'r')
   for ln in f.readlines() :
     mo = mod_exp.match(ln)
@@ -68,10 +70,16 @@ def parse_net(fn) :
                                             nmo.group(2), nmo.group(3),
                                             mo.group(5))
         outfile.append(newln)
+
+    
       else :
         outfile.append(ln)
     else :
-      outfile.append(ln)
+      t = fix_old_variables(ln)
+      if t[0] :
+        outfile.append(t[1])
+      else :
+        outfile.append(ln)
 
   f = open(fn, 'w')
   f.writelines(outfile)
@@ -117,6 +125,19 @@ def repair_each(arg, dirname, names) :
     fn = dirname + os.sep + f
     if os.path.isfile(fn) and fn[-4:] == '.net' :
       parse_net(fn)
+
+def fix_old_variables(ln) :
+  var_rn_exp = re.compile('(.*)on release(.*)')
+  mo = var_rn_exp.match(ln)
+  if mo != None :
+    newln = ln
+    print "found"
+    newln = "%sOn Release%s\n" % (mo.group(1), mo.group(2))
+    return (True, newln)
+  
+  newln = ln
+  return (False, newln)
+
 
 if __name__ == '__main__' :
   fn = ''
