@@ -118,10 +118,10 @@ try ./install.sh $DIR/thirdparty.bin $makeflags
 
 try cd $DIR/bin
 
-try $cmakebin ../src
+$cmakebin ../src
 
 if [ -e "$ctestbin" ]; then
-    try $ctestbin -D Experimental
+    try $ctestbin -D Experimental -A $DIR/bin/CMakeCache.txt
 else 
     try make $makeflags
 fi
