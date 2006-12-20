@@ -101,6 +101,8 @@ namespace Uintah {
       void q_FC_flux_operator(CellIterator iter, 
                               IntVector adj_offset,
                               const int face,
+                              const Patch* patch,
+                              const bool is_Q_massSpecific,
                               const CCVariable<facedata<V> >& q_OAFS,
                               T& q_FC_flux);
                                   

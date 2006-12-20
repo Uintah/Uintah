@@ -237,7 +237,7 @@ void SecondOrderAdvector::advectMass( const CCVariable<double>& mass,
   new_dw->allocateTemporary(mass_grad_x, patch,gac,1);
   new_dw->allocateTemporary(mass_grad_y, patch,gac,1);
   new_dw->allocateTemporary(mass_grad_z, patch,gac,1);
-  new_dw->allocateTemporary(q_vertex,   patch,gac,1);
+  new_dw->allocateTemporary(q_vertex,    patch,gac,1);
   bool compatible = false;
   d_smokeOnOff = false;
   
@@ -274,11 +274,18 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
                                    advectVarBasket* varBasket)
 {
   // pull variables out of the basket
-  const Patch* patch = varBasket->patch;
-  DataWarehouse* new_dw = varBasket->new_dw;
+  const Patch* patch       = varBasket->patch;
+  DataWarehouse* new_dw    = varBasket->new_dw;
   bool useCompatibleFluxes = varBasket->useCompatibleFluxes;
-  bool is_Q_massSpecific = varBasket ->is_Q_massSpecific;
+  bool is_Q_massSpecific   = varBasket ->is_Q_massSpecific;
+  
   d_smokeOnOff = false;
+#if 0
+  if(varBasket->desc == "scalar-f"){
+    cout << " SCALAR-F--------------------------------- L-" <<patch->getLevel()->getIndex()<< endl;
+    d_smokeOnOff = true;
+  }
+#endif
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<double> > q_OAFS;
@@ -298,6 +305,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
                              patch, A_CC, mass, q_CC); 
   
   // compute the limited gradients of q_CC
+  // q_CC: (cv * T), sp_vol, scalar-f 
   gradQ<double>(q_CC, patch, q_grad_x, q_grad_y, q_grad_z); 
   
   Q_vertex<double>(compatible, q_CC, q_vertex, patch,
@@ -373,10 +381,10 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& A_CC,
 {
 
   // pull variables out of the basket
-  const Patch* patch = varBasket->patch;
-  DataWarehouse* new_dw = varBasket->new_dw;
+  const Patch* patch       = varBasket->patch;
+  DataWarehouse* new_dw    = varBasket->new_dw;
   bool useCompatibleFluxes = varBasket->useCompatibleFluxes;
-  bool is_Q_massSpecific = varBasket->is_Q_massSpecific;
+  bool is_Q_massSpecific   = varBasket->is_Q_massSpecific;
   d_smokeOnOff = false;
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -432,7 +440,7 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
 {
                                  //  W A R N I N G
   Vector dx = patch->dCell();    // assumes equal cell spacing             
-  double invvol = 1.0/(dx.x() * dx.y() * dx.z());     
+  double invVol = 1.0/(dx.x() * dx.y() * dx.z());     
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     const IntVector& c = *iter;
@@ -449,13 +457,13 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
       T q_faceFlux_tmp = q_OAFS[ac].d_data[IF_slab[f]] * influxVol
-                        - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
+                       - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
                                 
       faceVol[f]       = outfluxVol +  influxVol;
       q_face_flux[f]   = q_faceFlux_tmp; 
       sum_q_face_flux += q_faceFlux_tmp;
     }  
-    q_advected[c] = sum_q_face_flux*invvol;
+    q_advected[c] = sum_q_face_flux*invVol;
     
 
     //__________________________________
@@ -610,9 +618,18 @@ template<class T, class V>
 void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter, 
                                              IntVector adj_offset,
                                              const int face,
+                                             const Patch* patch,
+                                             const bool is_Q_massSpecific,
                                              const CCVariable<facedata<V> >& q_OAFS,
                                              T& q_FC_flux)
 { 
+  Vector dx = patch->dCell();
+  double invVol = 1.0;
+  
+  if(is_Q_massSpecific){
+    invVol = 1.0/(dx.x() * dx.y() * dx.z());
+  }
+
   int out_indx = OF_slab[face];
   int in_indx  = IF_slab[face];
   
@@ -625,8 +642,14 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
     double outfluxVol = d_OFS[c].d_fflux[out_indx];
     double influxVol  = d_OFS[ac].d_fflux[in_indx];
                        
-    q_FC_flux[c] += q_OAFS[ac].d_data[in_indx] * influxVol 
-                  - q_OAFS[c].d_data[out_indx] * outfluxVol;
+    //  if(is_Q_massSpecific) then
+    //    q_OAFS = (mass, momentum, sp_vol*mass, transportedVars) 
+    //  else
+    //    q_OAFS = (vol_frac)
+    //  be careful with the units.
+    //
+    q_FC_flux[c] += (q_OAFS[ac].d_data[in_indx] * influxVol 
+                   - q_OAFS[c].d_data[out_indx] * outfluxVol) * invVol;
   }
 }
 /*_____________________________________________________________________
@@ -647,8 +670,9 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     const Patch* patch = vb->patch;
     DataWarehouse* new_dw = vb->new_dw;
     DataWarehouse* old_dw = vb->old_dw;
-    const double AMR_subCycleProgressVar = vb->AMR_subCycleProgressVar;  
-
+    bool is_Q_massSpecific = vb->is_Q_massSpecific;
+    const double AMR_subCycleProgressVar = vb->AMR_subCycleProgressVar;
+    
     // form the label names
     string x_name = desc + "_X_FC_flux";
     string y_name = desc + "_Y_FC_flux";
@@ -698,14 +722,14 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     CellIterator YFC_iter = patch->getSFCYIterator(offset);
     CellIterator ZFC_iter = patch->getSFCZIterator(offset);
     
-    q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
-                                           q_OAFS,q_X_FC_flux); 
+    q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT, patch,
+                                           is_Q_massSpecific, q_OAFS,q_X_FC_flux); 
 
-    q_FC_flux_operator<SFCYVariable<T>, T>(YFC_iter, adj_offset[1],BOTTOM,
-                                           q_OAFS,q_Y_FC_flux); 
+    q_FC_flux_operator<SFCYVariable<T>, T>(YFC_iter, adj_offset[1],BOTTOM, patch,
+                                           is_Q_massSpecific, q_OAFS,q_Y_FC_flux); 
 
-    q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
-                                           q_OAFS,q_Z_FC_flux);
+    q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK, patch,
+                                           is_Q_massSpecific, q_OAFS,q_Z_FC_flux);
                                            
  /*`==========TESTING==========*/    
 #ifdef REFLUX_DBG                
