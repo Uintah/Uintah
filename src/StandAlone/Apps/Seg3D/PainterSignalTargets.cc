@@ -123,6 +123,8 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::LoadColorMap1D);
 
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
+  REGISTER_CATCHER_TARGET(Painter::ITKBinaryErode);  
+
   REGISTER_CATCHER_TARGET(Painter::ITKGradientMagnitude);
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
   REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
@@ -363,7 +365,7 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   VolumeFilter<FilterType> filter(current_volume_);
 
   StructuringElementType structuringElement;
-  structuringElement.SetRadius(get_vars()->get_int(name+"::DilateRadius"));
+  structuringElement.SetRadius(get_vars()->get_int(name+"DilateRadius"));
   structuringElement.CreateStructuringElement();
   
   filter->SetKernel(structuringElement);
@@ -386,7 +388,7 @@ Painter::ITKBinaryErode(event_handle_t event) {
   VolumeFilter<FilterType> filter(current_volume_);
 
   StructuringElementType structuringElement;
-  structuringElement.SetRadius(get_vars()->get_int(name+"::ErodeRadius"));
+  structuringElement.SetRadius(get_vars()->get_int(name+"ErodeRadius"));
   structuringElement.CreateStructuringElement();
   
   filter->SetKernel(structuringElement);
