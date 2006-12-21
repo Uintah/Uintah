@@ -5,6 +5,8 @@
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <vector>
 
 namespace Uintah {
