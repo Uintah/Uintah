@@ -329,8 +329,8 @@ CalculateFieldDataCompiled3Algo::get_compile_info(const TypeDescription *field0_
   field0_td->fill_compile_info(rval);
   field1_td->fill_compile_info(rval);
   field2_td->fill_compile_info(rval);
-  rval->add_data_include("../src/Core/Geometry/Vector.h");
-  rval->add_data_include("../src/Core/Geometry/Tensor.h");
+  rval->add_data_include("Core/Geometry/Vector.h");
+  rval->add_data_include("Core/Geometry/Tensor.h");
   return rval;
 }
 
