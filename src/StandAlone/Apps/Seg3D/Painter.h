@@ -229,6 +229,7 @@ private:
   CatcherFunction_t     LoadColorMap1D;
 
   CatcherFunction_t     ITKBinaryDilate;
+  CatcherFunction_t     ITKBinaryErode;
 
   CatcherFunction_t     ITKImageFileWrite;
   CatcherFunction_t     ITKGradientMagnitude;
