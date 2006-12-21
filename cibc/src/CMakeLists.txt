@@ -197,6 +197,24 @@ IF(WIN32)
   ELSE(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W1")
   ENDIF(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+  
+  # DON'T Build with /MDd on debug (or runtime checks)
+  # it conflicts with thirdparty and dynamic compiled libs
+  STRING(REGEX REPLACE "/MDd" "/MD" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  STRING(REGEX REPLACE "/MDd" "/MD" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+  STRING(REGEX REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  STRING(REGEX REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+  
+  IF(NOT CYGWIN)
+    IF(CMAKE_GENERATOR MATCHES "Visual Studio 7")
+      STRING(REGEX REPLACE "Common7/IDE/devenv.com" "Vc7" VC "${CMAKE_MAKE_PROGRAM}")
+    ENDIF(CMAKE_GENERATOR MATCHES "Visual Studio 7")
+    IF(CMAKE_GENERATOR MATCHES "Visual Studio 8")
+      STRING(REGEX REPLACE "Common7/IDE/VCExpress.exe" "VC" VC "${CMAKE_MAKE_PROGRAM}")
+    ENDIF(CMAKE_GENERATOR MATCHES "Visual Studio 8")
+    SET (PATH_TO_VC "${VC}" CACHE PATH "Path to Visual Studio")
+  ENDIF(NOT CYGWIN)
+
 ENDIF(WIN32)
 
 
@@ -547,11 +565,6 @@ MARK_AS_ADVANCED(WITH_X11)
 # Set Make for MAKE_COMMAND in compile_defs.h
 # DV Fix Make sure this works for win
 SET(MAKE ${CMAKE_BUILD_TOOL})
-
-IF(WIN32 AND NOT CYGWIN)
-  SET (PATH_TO_VC "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7" CACHE PATH "Path to Visual Studio")
-#  SET (PATH_TO_PSDK "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7/PlatformSDK" CACHE PATH "Path to PSDK")
-ENDIF(WIN32 AND NOT CYGWIN)
 
 # sci_defs/environment_defs.h
 SET(scirun_src_dir "${SCIRUN_CORE_SOURCE_DIR}" CACHE INTERNAL "Path to SCIRun's src directory")
