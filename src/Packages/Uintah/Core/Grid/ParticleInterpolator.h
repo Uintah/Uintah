@@ -7,9 +7,11 @@
 #include <vector>
 
 #include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 namespace Uintah {
 
   class Patch;
+  class Stencil7;
   using SCIRun::Vector;
   using SCIRun::IntVector;
   using SCIRun::Point;
@@ -27,17 +29,23 @@ namespace Uintah {
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
 				    vector<double>& S,const Vector& size) = 0;
     virtual void findCellAndShapeDerivatives(const Point& pos,
-					     vector<IntVector>& ni,
-					     vector<Vector>& d_S,
-					     const Vector& size) = 0;
+                                             vector<IntVector>& ni,
+                                             vector<Vector>& d_S,
+                                             const Vector& size) = 0;
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
-						       vector<IntVector>& ni,
-						       vector<double>& S,
-						       vector<Vector>& d_S,
-						       const Vector& size) = 0;
-    virtual int size() = 0;
+                                                       vector<IntVector>& ni,
+                                                       vector<double>& S,
+                                                       vector<Vector>& d_S,
+                                                       const Vector& size) = 0;
 
-    
+    virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni,
+                                    vector<double>& S,
+                                    constNCVariable<Stencil7>& zoi,
+                                    constNCVariable<Stencil7>& zoi_fine,
+                                    const bool& getFiner,
+                                    int& num_cur,int& num_fine,int& num_coarse,                                     const Vector& size) {};
+
+    virtual int size() = 0;
   };
 }
 
