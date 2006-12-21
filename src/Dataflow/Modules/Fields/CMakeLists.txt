@@ -111,7 +111,7 @@ SET(Dataflow_Modules_Fields_SRCS
   MapFieldDataFromNodeToElem.cc
   SelectAndSetFieldData.cc
   SelectAndSetFieldData3.cc
-  SplitAndMergeFieldByDomain.cc
+  SplitAndJoinFieldByDomain.cc
   GetDomainBoundary.cc
   CollectFields.cc  
 )

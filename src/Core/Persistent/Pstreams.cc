@@ -428,7 +428,10 @@ BinaryPiostream::io(long& data)
   }
   else
   {
-    gen_io(data, "long");
+		// For 32bits for now (we need to update this later in the next version of Pio)
+		int tmp = data;
+    gen_io(tmp, "long");
+		data = tmp;
   }
 }
 
@@ -447,7 +450,10 @@ BinaryPiostream::io(unsigned long& data)
   }
   else
   {
-    gen_io(data, "unsigned long");
+		// For 32bits for now (we need to update this later in the next version of Pio)
+		unsigned int tmp = data;
+    gen_io(tmp, "unsigned long");
+		data = tmp;
   }
 }
 
