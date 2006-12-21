@@ -233,12 +233,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
   // Convert that matrix in the conducivity table
   if (ctable.get_rep())
   {
+    tensors_.clear();
     DenseMatrix* mat = ctable->dense();
+    MatrixHandle temphandle = mat;
     // Only if we can convert it into a denso matrix, otherwise skip it
     if (mat)
     {
-      double* data = ctable->get_data_pointer();
-      int m = ctable->nrows();
+      double* data = mat->get_data_pointer();
+      int m = mat->nrows();
+      int n = mat->ncols();
       Tensor T; 
 
       // Case the table has isotropic conductivities
@@ -247,15 +250,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
         for (int p=0; p<m;p++)
         {
           // Set the diagonals to the proper version.
-          T.mat_[0][0] = data[0*m+p];
+          T.mat_[0][0] = data[p*n+0];
           T.mat_[1][0] = 0.0;
           T.mat_[2][0] = 0.0;
           T.mat_[0][1] = 0.0;
-          T.mat_[1][1] = data[0*m+p];
+          T.mat_[1][1] = data[p*n+0];
           T.mat_[2][1] = 0.0;
           T.mat_[0][2] = 0.0;
           T.mat_[1][2] = 0.0;
-          T.mat_[2][2] = data[0*m+p];
+          T.mat_[2][2] = data[p*n+0];
           tensors_.push_back(std::pair<string, Tensor>("",T));
         }
       }
@@ -265,15 +268,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
       {
         for (int p=0; p<m;p++)
         {
-          T.mat_[0][0] = data[0*m+p];
-          T.mat_[1][0] = data[1*m+p];
-          T.mat_[2][0] = data[2*m+p];
-          T.mat_[0][1] = data[1*m+p];
-          T.mat_[1][1] = data[3*m+p];
-          T.mat_[2][1] = data[4*m+p];
-          T.mat_[0][2] = data[2*m+p];
-          T.mat_[1][2] = data[4*m+p];
-          T.mat_[2][2] = data[5*m+p];
+          T.mat_[0][0] = data[0+p*n];
+          T.mat_[1][0] = data[1+p*n];
+          T.mat_[2][0] = data[2+p*n];
+          T.mat_[0][1] = data[1+p*n];
+          T.mat_[1][1] = data[3+p*n];
+          T.mat_[2][1] = data[4+p*n];
+          T.mat_[0][2] = data[2+p*n];
+          T.mat_[1][2] = data[4+p*n];
+          T.mat_[2][2] = data[5+p*n];
           tensors_.push_back(std::pair<string, Tensor>("",T));
         }
       }
@@ -283,15 +286,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
       {
         for (int p=0; p<m;p++)
         {
-          T.mat_[0][0] = data[0*m+p];
-          T.mat_[1][0] = data[1*m+p];
-          T.mat_[2][0] = data[2*m+p];
-          T.mat_[0][1] = data[1*m+p];
-          T.mat_[1][1] = data[4*m+p];
-          T.mat_[2][1] = data[5*m+p];
-          T.mat_[0][2] = data[2*m+p];
-          T.mat_[1][2] = data[5*m+p];
-          T.mat_[2][2] = data[8*m+p];
+          T.mat_[0][0] = data[0+p*n];
+          T.mat_[1][0] = data[1+p*n];
+          T.mat_[2][0] = data[2+p*n];
+          T.mat_[0][1] = data[1+p*n];
+          T.mat_[1][1] = data[4+p*n];
+          T.mat_[2][1] = data[5+p*n];
+          T.mat_[0][2] = data[2+p*n];
+          T.mat_[1][2] = data[5+p*n];
+          T.mat_[2][2] = data[8+p*n];
           tensors_.push_back(std::pair<string, Tensor>("",T));
         }
       }

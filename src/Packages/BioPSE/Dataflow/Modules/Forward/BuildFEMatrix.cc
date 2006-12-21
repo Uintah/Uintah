@@ -74,32 +74,31 @@ void BuildFEMatrix::execute()
   if (!(get_input_handle("Mesh",Field,true))) return;
   get_input_handle("Conductivity Table", Conductivity, false);
   
-  if (inputs_changed_ || !oport_cached("Stiffness Matrix"))
+  if (inputs_changed_ || uiUseCond_.changed() || uiUseBasis_.changed() || !oport_cached("Stiffness Matrix") )
   {
     SCIRunAlgo::MathAlgo numericalgo(this);
   
     if (uiUseBasis_.get())
     {
-      if (Conductivity.get_rep()!=0)
-      {
-        Conductivity.detach();
-      }
-      else
+      
+      
+      if (Conductivity.get_rep()==0)
       {
         convert_tensortable(Field,Conductivity);
+        
+        double* data = Conductivity->get_data_pointer();
       }
+      
       
       if (Conductivity.get_rep())
       {
         int nconds = Conductivity->nrows();
         if ((Field->mesh()->generation != gen_)||(BasisMatrix_.get_rep()==0))
         {
-        
           MatrixHandle con = scinew DenseMatrix(nconds,1);
           double* data = con->get_data_pointer();
           for (int i=0; i<nconds;i++) data[i] = 0.0;
           if(!(numericalgo.BuildFEMatrix(Field,BasisMatrix_,-1,con))) return;
-          nconds = Conductivity->nrows();
           
           DataBasis_.resize(nconds);
           for (int s=0; s< nconds; s++)
@@ -124,13 +123,24 @@ void BuildFEMatrix::execute()
         SysMatrix.detach();
         SparseRowMatrix *m = SysMatrix->sparse();
         double *sum = m->a;
+        double *cdata = Conductivity->get_data_pointer();
+        int n = Conductivity->ncols();
+        
+        if (DataBasis_.size() > 0) for (unsigned int p=0; p < DataBasis_[0].size(); p++) sum[p] = 0.0;
+        
         for (int s=0; s<nconds; s++)
         {
-          double weight = Conductivity->get(s,0);
+          double weight = cdata[s*n];
           for (unsigned int p=0; p < DataBasis_[s].size(); p++)
+          {
             sum[p] += weight * DataBasis_[s][p];
+          }
         }
 
+      }
+      else
+      {
+        error("No conductivity table present");
       }
     }
     else
@@ -154,9 +164,10 @@ BuildFEMatrix::convert_tensortable(FieldHandle field, MatrixHandle& matrix)
   {
     matrix = scinew DenseMatrix(tens.size(),1);
     double* data = matrix->get_data_pointer();
-    for (size_t i; i<tens.size();i++)
+    for (size_t i=0; i<tens.size();i++)
     {
-      data[i] = tens[i].second.mat_[0][0];
+      double t = tens[i].second.mat_[0][0];
+      data[i] = t;
     }
   }
 }
