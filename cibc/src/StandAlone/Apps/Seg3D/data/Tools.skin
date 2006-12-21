@@ -226,7 +226,7 @@
                     target="FocusGrab::Ungrab"/>
 
             <object class="ITKBinaryDilateErodeImageFilterToolDialog">
-              <signal name="ToolDialog::Cancel" 
+              <signal name="ToolDialog::Done" 
                       target="VisibilityGroup::show_VisibleItem">
                 <var name="id">Nothing</var>
                 <var name="group">ToolsVisibleGroup</var>
