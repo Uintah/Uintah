@@ -407,7 +407,7 @@ public:
   // constant value. This means node splitting at the edges between the
   // different areas/volumes. The result will be a mesh with unconnected
   // regions of the same value type.
-  bool SplitAndMergeFieldByDomain(FieldHandle input, FieldHandle& output);    
+  bool SplitAndJoinFieldByDomain(FieldHandle input, FieldHandle& output);    
 
   // SplitFieldByConnectedRegion:
   // Use the connectivity data to split the field so each unconnected region is its own

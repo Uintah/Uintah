@@ -44,7 +44,8 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_ArrayMath
   Core_Exceptions 
   Core_Thread 
   Core_Geom 
-  Core_Geometry 
+  Core_Geometry
+	Core_Algorithms_Util 
   ${M_LIBRARY} 
 )
 

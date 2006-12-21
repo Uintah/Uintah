@@ -59,7 +59,7 @@
 #include <Core/Algorithms/Fields/RemoveUnusedNodes.h>
 #include <Core/Algorithms/Fields/ScaleFieldMeshAndData.h>
 #include <Core/Algorithms/Fields/SetFieldData.h>
-#include <Core/Algorithms/Fields/SplitAndMergeFieldByDomain.h>
+#include <Core/Algorithms/Fields/SplitAndJoinFieldByDomain.h>
 #include <Core/Algorithms/Fields/SplitByConnectedRegion.h>
 #include <Core/Algorithms/Fields/TransformMeshWithTransform.h>
 #include <Core/Algorithms/Fields/ConvertMeshToPointCloud.h>
@@ -480,12 +480,12 @@ bool FieldsAlgo::MergeNodes(FieldHandle input, FieldHandle& output, double toler
 }
 
 
-bool FieldsAlgo::SplitAndMergeFieldByDomain(FieldHandle input, FieldHandle& output)
+bool FieldsAlgo::SplitAndJoinFieldByDomain(FieldHandle input, FieldHandle& output)
 {
   FieldHandle input_editable;
   if (!MakeEditable(input,input_editable)) return (false);
-  SplitAndMergeFieldByDomainAlgo algo;
-  return(algo.SplitAndMergeFieldByDomain(pr_,input_editable,output));
+  SplitAndJoinFieldByDomainAlgo algo;
+  return(algo.SplitAndJoinFieldByDomain(pr_,input_editable,output));
 }
 
 

@@ -64,7 +64,7 @@ SET(Core_Algorithms_Fields_SRCS
   RemoveUnusedNodes.cc
   ScaleFieldMeshAndData.cc
   SetFieldData.cc
-  SplitAndMergeFieldByDomain.cc
+  SplitAndJoinFieldByDomain.cc
   SplitByConnectedRegion.cc
   ConvertMeshToPointCloud.cc
   TransformMeshWithTransform.cc

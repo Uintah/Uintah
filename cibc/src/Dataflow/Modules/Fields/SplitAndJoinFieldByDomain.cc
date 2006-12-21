@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "component.dtd">
-<?xml-stylesheet href="component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
-
-<!--
+/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -29,31 +24,55 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
--->
+*/
 
-<component name="SplitAndMergeFieldByDomain" category="NewField">
-  <overview>
-    <authors>
-      <author>Jeroen Stinstra</author>
-    </authors>
-    <summary>
-      This module uses the data at the elements to split the mesh into segements
-       that all have the same element data.
-    </summary>
-  </overview>
-  <io>
-    <inputs lastportdynamic="no">
-      <port>
-        <name>Field</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-    </inputs>
-    <outputs>
-      <port>
-        <name>SplitField</name>
-        <datatype>SCIRun::Field</datatype>
-      </port>
-    </outputs>
-  </io>
-</component>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+
+#include <Core/Datatypes/Field.h>
+#include <Core/Malloc/Allocator.h>
+
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+
+namespace SCIRun {
+
+class SplitAndJoinFieldByDomain : public Module {
+public:
+  SplitAndJoinFieldByDomain(GuiContext*);
+  virtual void execute();
+
+};
+
+
+DECLARE_MAKER(SplitAndJoinFieldByDomain)
+SplitAndJoinFieldByDomain::SplitAndJoinFieldByDomain(GuiContext* ctx)
+  : Module("SplitAndJoinFieldByDomain", ctx, Source, "NewField", "SCIRun")
+{
+}
+
+
+void SplitAndJoinFieldByDomain::execute()
+{
+  // Define local handles of data objects:
+  FieldHandle input;
+  FieldHandle output;
+  
+  // Get the new input data:    
+  if(!(get_input_handle("Field",input,true))) return;
+
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("SplitField"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.SplitAndJoinFieldByDomain(input,output))) return;
+
+    // send new output if there is any:   
+    send_output_handle("SplitField",output,false);
+  }
+}
+
+
+
+} // End namespace SCIRun
 

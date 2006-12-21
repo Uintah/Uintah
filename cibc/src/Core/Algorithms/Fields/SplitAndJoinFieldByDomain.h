@@ -36,27 +36,27 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class SplitAndMergeFieldByDomainAlgo : public DynamicAlgoBase
+class SplitAndJoinFieldByDomainAlgo : public DynamicAlgoBase
 {
   public:
-    virtual bool SplitAndMergeFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+    virtual bool SplitAndJoinFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
 };
 
 template<class FIELD>
-class SplitAndMergeFieldByDomainAlgoT: public SplitAndMergeFieldByDomainAlgo
+class SplitAndJoinFieldByDomainAlgoT: public SplitAndJoinFieldByDomainAlgo
 {
   public:
-    virtual bool SplitAndMergeFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
+    virtual bool SplitAndJoinFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output);
 };
 
 
 template<class FIELD>
-bool SplitAndMergeFieldByDomainAlgoT<FIELD>::SplitAndMergeFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool SplitAndJoinFieldByDomainAlgoT<FIELD>::SplitAndJoinFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   FIELD *field = dynamic_cast<FIELD *>(input.get_rep());
   if (field == 0)
   {
-    pr->error("SplitAndMergeFieldByDomain: No field on input");
+    pr->error("SplitAndJoinFieldByDomain: No field on input");
     return(false);
   }
   
@@ -100,7 +100,7 @@ bool SplitAndMergeFieldByDomainAlgoT<FIELD>::SplitAndMergeFieldByDomain(Progress
   output = dynamic_cast<SCIRun::Field* >(ofield);
   if (ofield == 0)
   {
-    pr->error("SplitAndMergeFieldByDomain: Could not create output field");
+    pr->error("SplitAndJoinFieldByDomain: Could not create output field");
     return(false);
   }
   

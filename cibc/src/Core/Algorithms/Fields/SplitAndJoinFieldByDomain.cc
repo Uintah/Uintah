@@ -26,43 +26,43 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/SplitAndMergeFieldByDomain.h>
+#include <Core/Algorithms/Fields/SplitAndJoinFieldByDomain.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool SplitAndMergeFieldByDomainAlgo::SplitAndMergeFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool SplitAndJoinFieldByDomainAlgo::SplitAndJoinFieldByDomain(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
 {
   if (input.get_rep() == 0)
   {
-    pr->error("SplitAndMergeFieldByDomain: No input field");
+    pr->error("SplitAndJoinFieldByDomain: No input field");
     return (false);
   }
 
   FieldInformation fi(input);
   if (fi.is_nonlinear())
   {
-    pr->error("SplitAndMergeFieldByDomain: This function has not yet been defined for non-linear elements.");
+    pr->error("SplitAndJoinFieldByDomain: This function has not yet been defined for non-linear elements.");
     return (false);
   }
 
   if (!(fi.is_constantdata()))
   {
-    pr->error("SplitAndMergeFieldByDomain: This function only works for data located at the elements");
+    pr->error("SplitAndJoinFieldByDomain: This function only works for data located at the elements");
     return (false);
   }
 
   if (!(fi.is_unstructuredmesh()))
   {
-    pr->error("SplitAndMergeFieldByDomain: This function only works for unstructured meshes");
+    pr->error("SplitAndJoinFieldByDomain: This function only works for unstructured meshes");
     return (false);
   }
 
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOSplitAndMergeFieldByDomainAlgoT." + fi.get_field_filename() + ".",
-    "SplitAndMergeFieldByDomainAlgo","SplitAndMergeFieldByDomainAlgoT",
+    "ALGOSplitAndJoinFieldByDomainAlgoT." + fi.get_field_filename() + ".",
+    "SplitAndJoinFieldByDomainAlgo","SplitAndJoinFieldByDomainAlgoT",
     fi.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
@@ -74,7 +74,7 @@ bool SplitAndMergeFieldByDomainAlgo::SplitAndMergeFieldByDomain(ProgressReporter
   if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;  
   
   // Handle dynamic compilation
-  SCIRun::Handle<SplitAndMergeFieldByDomainAlgo> algo;
+  SCIRun::Handle<SplitAndJoinFieldByDomainAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
@@ -83,7 +83,7 @@ bool SplitAndMergeFieldByDomainAlgo::SplitAndMergeFieldByDomain(ProgressReporter
   }
 
 
-  return(algo->SplitAndMergeFieldByDomain(pr,input,output));    
+  return(algo->SplitAndJoinFieldByDomain(pr,input,output));    
 }
 
 } // namespace SCIRunAlgo
