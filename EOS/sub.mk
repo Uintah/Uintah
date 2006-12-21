@@ -11,8 +11,6 @@ SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/Gruneisen.cc     \
 	$(SRCDIR)/Tillotson.cc     \
 	$(SRCDIR)/Murnahan.cc
-#	$(SRCDIR)/Harlow.cc \
-#	$(SRCDIR)/StiffGas.cc
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports \
