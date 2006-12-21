@@ -121,7 +121,7 @@ try cd $DIR/bin
 $cmakebin ../src
 
 if [ -e "$ctestbin" ]; then
-    try $ctestbin -D Experimental -A $DIR/bin/CMakeCache.txt
+    try $ctestbin -VV -D Experimental -A $DIR/bin/CMakeCache.txt
 else 
     try make $makeflags
 fi
