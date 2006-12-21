@@ -211,6 +211,32 @@
 
 
 
+          <object class="VisibilityGroup::VisibleItem" 
+                  id="ITKBinaryDilateErodeImageFilterToolDialog">
+            <var name="group">ToolsVisibleGroup</var>
+            <var name="visible">0</var>
+            
+            <xi:include href="ITKBinaryDilateErodeImageFilterToolDialog.skin" parse="xml"/>
+            
+            <signal name="VisibleItem::made_visible" 
+                    target="GLWindow::mark_redraw"/>
+            <signal name="VisibleItem::made_invisible" 
+                    target="GLWindow::mark_redraw"/>
+            <signal name="VisibleItem::made_invisible" 
+                    target="FocusGrab::Ungrab"/>
+
+            <object class="ITKBinaryDilateErodeImageFilterToolDialog">
+              <signal name="ToolDialog::Cancel" 
+                      target="VisibilityGroup::show_VisibleItem">
+                <var name="id">Nothing</var>
+                <var name="group">ToolsVisibleGroup</var>
+              </signal>
+
+            </object>
+          </object>
+
+
+
         </object>
       </definition>
     </object>
