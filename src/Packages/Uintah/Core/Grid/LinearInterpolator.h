@@ -7,13 +7,12 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <vector>
 
-#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   using namespace SCIRun;
   using std::vector;
 
-  class SCISHARE LinearInterpolator : public ParticleInterpolator {
+  class LinearInterpolator : public ParticleInterpolator {
     
   public:
     
@@ -55,6 +54,14 @@ namespace Uintah {
       };
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni, 
 				    vector<double>& S,const Vector& size);
+    virtual void findCellAndWeights(const Point& p,
+                                    vector<IntVector>& ni,
+                                    vector<double>& S,
+                                    constNCVariable<Stencil7>& zoi,
+                                    constNCVariable<Stencil7>& zoi_fine,
+                                    const bool& getFiner,
+                                    int& num_cur,int& num_fine,int& num_coarse,
+                                    const Vector& size);
     inline void findCellAndShapeDerivatives(const Point& pos,
 					    vector<IntVector>& ni,
 					    vector<Vector>& d_S)
@@ -130,6 +137,26 @@ namespace Uintah {
 	d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
 	d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
       };
+
+    inline void findNodes(const Point& pos,
+                          vector<IntVector>& cur,
+                          const Level* level)
+      {
+        Point cellpos = level->positionToIndex(pos);
+        int ix = Floor(cellpos.x());
+        int iy = Floor(cellpos.y());
+        int iz = Floor(cellpos.z());
+                                                                                
+        cur[0] = IntVector(ix, iy, iz);
+        cur[1] = IntVector(ix, iy, iz+1);
+        cur[2] = IntVector(ix, iy+1, iz);
+        cur[3] = IntVector(ix, iy+1, iz+1);
+        cur[4] = IntVector(ix+1, iy, iz);
+        cur[5] = IntVector(ix+1, iy, iz+1);
+        cur[6] = IntVector(ix+1, iy+1, iz);
+        cur[7] = IntVector(ix+1, iy+1, iz+1);
+      };
+
     virtual void findCellAndWeightsAndShapeDerivatives(const Point& pos,
 						       vector<IntVector>& ni,
 						       vector<double>& S,
@@ -140,6 +167,12 @@ namespace Uintah {
   private:
     const Patch* d_patch;
     int d_size;
+
+    inline void uS(double& S, const double& r,
+                   const double& zoiP, const double& zoiM) {
+      S=(r<0.?(-zoiM<=r?1.+r/zoiM:0.):(r<zoiP?1.-r/zoiP:0.));
+      return;
+    }
 
     
   };
