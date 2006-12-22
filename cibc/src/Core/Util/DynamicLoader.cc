@@ -144,17 +144,35 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 {
 }
 
+//! filter out ../../(../)*src from inc
+//!   only do on windows for now
+//! relative strings should only refer to SCIRun Core headers
+string CompileInfo::include_filter(const string& inc)
+{
+#ifdef _WIN32
+  int pos;
+  if ((pos=inc.find("../src/")) != string::npos ||
+      (pos=inc.find("..\\src\\")) != string::npos)
+    return inc.substr(pos+7, inc.length());
+  else
+    return inc;
+#else
+  return inc;
+#endif
+}
+
 
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = includes_.begin();
   while (iter != includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  includes_.push_front(inc);
+  includes_.push_front(filtered);
 }
 
 //! Only add unique include strings to the list, and
@@ -162,68 +180,75 @@ CompileInfo::add_include(const string &inc)
 void
 CompileInfo::add_data_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = data_includes_.begin();
   while (iter != data_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  data_includes_.push_front(inc);
+  data_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_basis_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = basis_includes_.begin();
   while (iter != basis_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  basis_includes_.push_front(inc);
+  basis_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_mesh_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = mesh_includes_.begin();
   while (iter != mesh_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  mesh_includes_.push_front(inc);
+  mesh_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_container_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = container_includes_.begin();
   while (iter != container_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  container_includes_.push_front(inc);
+  container_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_field_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = field_includes_.begin();
   while (iter != field_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  field_includes_.push_front(inc);
+  field_includes_.push_front(filtered);
 }
 
 
 void
 CompileInfo::add_pre_include(const string &pre)
 {
-  pre_include_extra_ = pre_include_extra_ + pre;
+  string filtered = include_filter(pre);
+  pre_include_extra_ = pre_include_extra_ + filtered;
 }
 
 void
 CompileInfo::add_post_include(const string &post)
 {
-  post_include_extra_ = post_include_extra_ + post;
+  string filtered = include_filter(post);
+  post_include_extra_ = post_include_extra_ + filtered;
 }
 
 
