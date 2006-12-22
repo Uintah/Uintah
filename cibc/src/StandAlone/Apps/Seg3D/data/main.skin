@@ -24,8 +24,8 @@
   <var name="ITKConfidenceConnectedImageFilterTool::initialNeighborhoodRadius"
        type="int" propagate="yes">1</var>
 
-  <var name="ITKBinaryDilateErodeImageFilterTool::DilateRadius" propagate="yes">3</var>
-  <var name="ITKBinaryDilateErodeImageFilterTool::ErodeRadius" propagate="yes">3</var>
+  <var name="ITKBinaryDilateErodeImageFilterTool::DilateRadius" type="int" propagate="yes">3</var>
+  <var name="ITKBinaryDilateErodeImageFilterTool::ErodeRadius" type="int" propagate="yes">3</var>
   <var name="ITKBinaryDilateErode::radius" propagate="yes">3</var>
   <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
   <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
@@ -298,6 +298,16 @@
               <var name="posx" type="int">120</var>
               <var name="posy" type="int">50</var>
               <var name="border" type="bool">$Window::borders</var>
+
+              <signal name="GLWindow::Destroy" 
+                      target="Arithmetic::set_value">
+                <var name="variable">$QuitDialog::visible</var>
+                <var name="value">1</var>            
+              </signal>
+
+              <signal name="GLWindow::Destroy" 
+                      target="GLWindow::mark_redraw"/>
+
               <object class="MainWindow"/>
             </object>
             
@@ -349,17 +359,28 @@
               
               <signal name="GLWindow::Destructor"
                       target="Root::GLWindow_Destructor"/>
+
+              <signal name="GLWindow::Destroy"
+                      target="GLWindow::close"/>
               
               <object class="Box">
+                <var name="color">#000000FF</var>
                 <signal name="button_1_clicked" 
                         target="GLWindow::close"/>
-                
-                <object class="Texture">
-                  <var name="file">splash-seg3d.png</var>
-                  <var name="color">#FFFFFFFF</var>
-                </object>          
-              </object>
 
+                <object class="Grid">
+                  <var name="rows">3</var>
+                  <var name="cols">3</var>
+                  <object class="Texture">
+                    <var name="row">2</var>
+                    <var name="col">2</var>
+                    <var name="cell-width">500</var>
+                    <var name="cell-height">400</var>
+                    <var name="file">splash-seg3d.png</var>
+                    <var name="color">#FFFFFFFF</var>
+                  </object>                  
+                </object>
+              </object>
             </object>
           </object>
         </object>
