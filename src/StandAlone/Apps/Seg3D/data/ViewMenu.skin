@@ -1,7 +1,7 @@
 <definition class="ViewMenu">
   <object class="MenuList">
     <var name="width">150</var>
-    <var name="height">216</var>
+    <var name="height">180</var>
 
     <definition class="ViewMenuButton">
       <object class="MenuButton">

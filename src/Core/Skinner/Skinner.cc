@@ -201,7 +201,7 @@ namespace SCIRun {
       while (mailbox_->tryReceive(event)) {
         if (!redraw_) {
           WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-          if (window && window->get_window_state() && WindowEvent::REDRAW_E) {
+          if (window && window->get_window_state() & WindowEvent::REDRAW_E) {
             redraw_ = true;
           }
         }

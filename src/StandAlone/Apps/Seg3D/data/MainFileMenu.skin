@@ -1,7 +1,7 @@
 <definition class="MainFileMenu">
   <object class="MenuList">
     <var name="width">150</var>
-    <var name="height">111</var>
+    <var name="height">150</var>
     <definition class="MenuList::child">
       <object class="Grid">
         <var name="rows">5</var>

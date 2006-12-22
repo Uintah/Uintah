@@ -26,7 +26,7 @@
 //  DEALINGS IN THE SOFTWARE.
 //  
 //    File   : Win32EventSpawner.cc
-//    Author : McKay Davis
+//    Author : McKay Davis, Bryan Worthen
 //    Date   : Thu Jun  1 19:28 MDT 2006
 
 #include <Core/Geom/X11Lock.h>
@@ -391,7 +391,7 @@ bool Win32GLContextRunnable::iterate()
       break;
     }
     case WM_CLOSE: 
-      event = scinew QuitEvent(); break;
+      event = scinew WindowEvent(WindowEvent::DESTROY_E, target_); break;
     default:
       CallWindowProc(WindowEventProc, msg.hwnd, msg.message, msg.wParam, msg.lParam);
       if (sci_getenv_p("SCI_DEBUG")) 
