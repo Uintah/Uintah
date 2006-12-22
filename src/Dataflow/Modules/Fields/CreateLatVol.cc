@@ -49,6 +49,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
@@ -151,6 +152,35 @@ CreateLatVol::execute()
     minb = bbox.min();
     maxb = bbox.max();
   }
+
+	MatrixHandle  Size;
+  if (get_input_handle("LatVol Size",Size,false))
+	{
+		if (Size->get_data_size() == 1)
+		{
+	  	double* data = Size->get_data_pointer();
+			unsigned int size = static_cast<unsigned int>(data[0]);
+			size_x_.set(size);
+			size_y_.set(size);
+			size_z_.set(size);
+			get_ctx()->reset();
+		}
+		else if (Size->get_data_size() == 3)
+		{
+			double* data = Size->get_data_pointer();
+			unsigned int size1 = static_cast<unsigned int>(data[0]);
+			unsigned int size2 = static_cast<unsigned int>(data[1]);
+			unsigned int size3 = static_cast<unsigned int>(data[2]);
+			size_x_.set(size1);
+			size_y_.set(size2);
+			size_z_.set(size3);		
+			get_ctx()->reset();		
+		}
+		else
+		{
+			error("LatVol size matrix needs to have or one element or three elements");
+		}	
+	}
 
   Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
   minb -= diag;

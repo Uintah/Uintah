@@ -216,7 +216,6 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
       pr->error("ClipFieldBySelectionMask: Could not allocate Interpolant Matrix");
       return(false);
     }
-    interpolant = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d));
 
     int k = 0;
     for (int p=0; p < static_cast<int>(numnodes); p++)
@@ -234,6 +233,8 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
       d[i] = 1.0;
     }
     rr[i] = i; // An extra entry goes on the end of rr.
+
+    interpolant = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d));
   }
   else if (ifield->basis_order() == 0)
   {
@@ -248,7 +249,6 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
       return(false);
     }
 
-    interpolant = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d));
 
     for (unsigned int i=0; i < elemmap.size(); i++)
     {
@@ -268,6 +268,8 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
       d[j] = 1.0;
     }
     rr[j] = j; // An extra entry goes on the end of rr
+
+    interpolant = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d));
   }
   else
   {
