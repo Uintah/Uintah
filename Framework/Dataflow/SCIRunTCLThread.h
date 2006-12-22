@@ -40,21 +40,25 @@ class Network;
 class TCLInterface;
 
 class SCIRunTCLThread : public Runnable {
-// This class is a simplified version of SCIRun::TCLThread...
+// This class is a simplified version of SCIRun::TCLThread:
+// see Dataflow/TCLThread/TCLThread.h.
 public:
-    SCIRunTCLThread(Network *net);
-    virtual void run();
-    int startTCL();
-    void tclWait();
-    inline TCLInterface* getTclInterface() { return gui;};
+  SCIRunTCLThread(Network *net);
+  virtual ~SCIRunTCLThread();
+  virtual void run();
+  void initSemDown() { initSem->down(); }
+  void initSemUp() { initSem->up(); }
 
 private:
-    static int wait(Tcl_Interp *interp);
-    static SCIRunTCLThread *init_ptr_;
+  static int wait(Tcl_Interp *interp);
+  static SCIRunTCLThread *init_ptr_;
+  static int appInit(Tcl_Interp *interp);
+  bool check_for_newer_scirunrc();
+  int startNetworkEditor();
 
-    TCLInterface* gui;
-    Network* net;
-    Semaphore start;
+  TCLInterface* gui;
+  Network* net;
+  Semaphore* initSem;
 };
 
 }

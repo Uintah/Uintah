@@ -39,7 +39,6 @@
  */
 
 #include <Framework/Dataflow/SCIRunComponentModel.h>
-#include <Framework/Dataflow/SCIRunTCLThread.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
@@ -47,18 +46,18 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
+
+#include <Framework/Dataflow/SCIRunTCLThread.h>
+
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Framework/Dataflow/SCIRunComponentDescription.h>
 #include <Framework/Dataflow/SCIRunComponentInstance.h>
 #include <Framework/SCIRunFramework.h>
 #include <iostream>
 
-//#include <Core/Util/sci_system.h>
-#include <main/sci_version.h>
-
 namespace SCIRun {
 
-TCLInterface*
+GuiInterface*
 SCIRunComponentModel::gui(0);
 
 Network*
@@ -88,10 +87,11 @@ split_name(const std::string &type,
 SCIRunComponentModel::SCIRunComponentModel(SCIRunFramework* framework)
   : ComponentModel("scirun", framework)
 {
-  create_sci_environment(0,0);
-  packageDB = new PackageDB(0);
-  // load the packages
-  packageDB->loadPackage();
+  if (gui == 0) {
+    packageDB = new PackageDB(0);
+    // load the packages
+    packageDB->loadPackage();
+  }
 }
 
 SCIRunComponentModel::~SCIRunComponentModel()
@@ -112,7 +112,6 @@ SCIRunComponentModel::createInstance(const std::string& name,
                                      const std::string& type,
                                      const sci::cca::TypeMap::pointer& tm)
 {
-std::cerr << "SCIRunComponentModel::createInstance: type=" << type << std::endl;
     std::string package, category, module;
     if (! split_name(type, package, category, module) ) { return 0; }
 
@@ -129,34 +128,27 @@ SCIRunComponentModel::initGuiInterface()
 {
   if (SCIRunComponentModel::gui) { return; }
 
-std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
-
   sci_putenv("SCIRUN_NOSPLASH", "1");
   sci_putenv("SCIRUN_HIDE_PROGRESS", "1");
 
   SCIRunInit();
 
   net = new Network();
+  ASSERT(net);
 
-  SCIRunTCLThread *thr = new SCIRunTCLThread(net);
-  Thread* t = new Thread(thr, "SR2 TCL event loop", 0, Thread::NotActivated);
+  // Activate the scheduler.  Arguments and return values are meaningless
+  Thread* scheduler = new Thread(new Scheduler(net), "Scheduler");
+  scheduler->setDaemon(true);
+  scheduler->detach();
 
-  t->setStackSize(1024*1024);
-  t->activate(false);
-  t->detach();
-
-  thr->tclWait();
+  SCIRunTCLThread* tclThreadRun = new SCIRunTCLThread(net);
+  Thread* tcl = new Thread(tclThreadRun, "SR2 TCL event loop", 0, Thread::Activated, 1024*1024);
+  tcl->detach();
+  tclThreadRun->initSemDown();
 
   // Create user interface link
-  gui = thr->getTclInterface();
-
-  Scheduler* sched_task=new Scheduler(net);
-
-  // Activate the scheduler.  Arguments and return
-  // values are meaningless
-  Thread* t2 = new Thread(sched_task, "Scheduler");
-  t2->setDaemon(true);
-  t2->detach();
+  gui = GuiInterface::getSingleton();
+  ASSERT(gui);
 }
 
 bool
@@ -191,24 +183,24 @@ SCIRunComponentModel::setComponentDescription(const std::string& type, const std
 void
 SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
-    std::vector<std::string> packages = packageDB->packageNames();
-    typedef std::vector<std::string>::iterator striter;
+  std::vector<std::string> packages = packageDB->packageNames();
+  typedef std::vector<std::string>::iterator striter;
 
-    for (striter iter = packages.begin(); iter != packages.end(); ++iter) {
-        std::string package = *iter;
-        std::vector<std::string> categories =
-            packageDB->categoryNames(package);
-        for (striter iter = categories.begin(); iter != categories.end(); ++iter) {
-            std::string category = *iter;
-            std::vector<std::string> modules =
-                packageDB->moduleNames(package, category);
-            for (striter iter = modules.begin(); iter != modules.end(); ++iter) {
-                std::string module = *iter;
-                list.push_back(
-                    new SCIRunComponentDescription(this, package, category, module));
-            }
-        }
+  for (striter iter = packages.begin(); iter != packages.end(); ++iter) {
+    std::string package = *iter;
+    std::vector<std::string> categories =
+      packageDB->categoryNames(package);
+    for (striter iter = categories.begin(); iter != categories.end(); ++iter) {
+      std::string category = *iter;
+      std::vector<std::string> modules =
+        packageDB->moduleNames(package, category);
+      for (striter iter = modules.begin(); iter != modules.end(); ++iter) {
+        std::string module = *iter;
+        list.push_back(
+          new SCIRunComponentDescription(this, package, category, module));
+      }
     }
+  }
 }
 
 }// end namespace SCIRun

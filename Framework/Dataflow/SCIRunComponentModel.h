@@ -48,7 +48,7 @@ namespace SCIRun {
 class Network;
 class SCIRunComponentDescription;
 class SCIRunFramework;
-class TCLInterface;
+class GuiInterface;
 class DataflowScheduler;
 class BridgeModule;
 
@@ -107,7 +107,7 @@ private:
 
   SCIRunFramework* framework;
 
-  static TCLInterface* gui;
+  static GuiInterface *gui;
   static Network* net;
 
   virtual void setComponentDescription(const std::string& type, const std::string& library);
