@@ -2946,15 +2946,20 @@ case $host in
     ;;
   *linux*)
     # Linux Library Check
-    if test "$F77" = "pgf77"; then
-      SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
-    elif test "$F77" = "gfortran-4.0" -o "$F77" = "gfortran"; then
-      SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
-    elif test "$F77" = "ifort"; then
-      SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
-    else
-      SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
-    fi
+    case $F77 in
+      *pgf77*)
+        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
+        ;;
+      *gfortran*)
+        SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+        ;;
+      *ifort*)
+        SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
+        ;;
+      *)
+        SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
+        ;;
+     esac
     ;;
   *dec*)
     SCI_TRY_LINK(F,fortran libraries,,,for Ufor,$_sci_lib,,,$_sci_optional)
