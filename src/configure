@@ -28649,7 +28649,8 @@ _sci_includes=''
     ;;
   *linux*)
     # Linux Library Check
-    if test "$F77" = "pgf77"; then
+    case $F77 in
+      *pgf77*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -29106,7 +29107,8 @@ _sci_includes=''
 ##
 
 
-    elif test "$F77" = "gfortran-4.0" -o "$F77" = "gfortran"; then
+        ;;
+      *gfortran*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -29563,7 +29565,8 @@ _sci_includes=''
 ##
 
 
-    elif test "$F77" = "ifort"; then
+        ;;
+      *ifort*)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -30020,7 +30023,8 @@ _sci_includes=''
 ##
 
 
-    else
+        ;;
+      *)
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -30477,7 +30481,8 @@ _sci_includes=''
 ##
 
 
-    fi
+        ;;
+     esac
     ;;
   *dec*)
 
@@ -48643,7 +48648,6 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
   _sci_inc=
 
   for petsc_arch in "$PETSC_ARCH" linux-gnu; do
-    echo "PETSC_ARCH=$petsc_arch" PAL=$PETSC_ARCH_LIST
     if test "$HAVE_PETSC" = "yes"; then
       break
     fi
