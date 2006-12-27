@@ -1,0 +1,24 @@
+<definition class="3DView">
+  <object class="ShadowedBox">
+    <var name="GradientBackground::bottom-color" 
+         type="color" propagate="yes">#999999EE</var>
+    <var name="LabeledGradientBackground::text" 
+         propagate="yes">3D Viewer</var>
+    
+    <var name="size" propagate="yes">50</var>
+    <var name="shadow" propagate="yes">1</var>
+    <var name="offsetx" propagate="yes">-5</var>
+    <var name="offsety" propagate="yes">5</var>
+    <var name="bgcolor" propagate="yes">#00000060</var>
+    
+    
+    
+    <definition class="ShadowedBox::child">
+      <object class="LabeledGradientBackground">
+        <definition class="LabeledGradientBackground::child">
+          <object class="SceneGraph"/>
+        </definition>
+      </object>
+    </definition>                
+  </object>    
+</definition>
