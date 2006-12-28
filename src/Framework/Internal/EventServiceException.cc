@@ -36,6 +36,14 @@ namespace SCIRun {
 EventServiceException::EventServiceException(const std::string &msg, sci::cca::CCAExceptionType type)
   : message(msg), type(type)
 {
+  // If the message string supplied to the constructor is empty,
+  // set a default message.
+  // This could be an exception, however an empty message is not a serious
+  // errror, so let's not bog down the framework with unnecessary error handling.
+  if (message.empty()) {
+    message = "EventServiceException: no message was created by the caller.";
+  }
+
   // Omitting this will cause the framework to
   // segfault when an exception is thrown.
   addReference();

@@ -171,6 +171,7 @@ private:
 
   //////////
   // The index of the mutex in the mutex pool.
+  // (not currently used)
   int mutex_index;
 
   //////////

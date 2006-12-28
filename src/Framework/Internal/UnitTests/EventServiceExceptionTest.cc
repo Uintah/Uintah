@@ -27,7 +27,6 @@
 */
 
 #include <Framework/Internal/UnitTests/EventServiceExceptionTest.h>
-#include <Framework/Internal/EventServiceException.h>
 #include <Framework/Internal/Topic.h>
 #include <Framework/SCIRunFramework.h>
 
@@ -47,21 +46,22 @@ EventServiceExceptionTest::~EventServiceExceptionTest()
 
 void EventServiceExceptionTest::setUp()
 {
+  exEmptyMessage = SCIRun::EventServiceExceptionPtr(new SCIRun::EventServiceException(""));
+  exEmptyMessageAndType = SCIRun::EventServiceExceptionPtr(new SCIRun::EventServiceException("", sci::cca::OutOfMemory));
+  exWithMessage = SCIRun::EventServiceExceptionPtr(new SCIRun::EventServiceException("EventServiceException test message"));
+  exWithMessageAndType = SCIRun::EventServiceExceptionPtr(new SCIRun::EventServiceException("EventServiceException with type test message", sci::cca::NetworkError));
 }
 
 void EventServiceExceptionTest::tearDown()
 {
+  // smart pointers do cleanup
 }
 
 void EventServiceExceptionTest::testInstantiate()
 {
-  SCIRun::EventServiceExceptionPtr exEmptyMessage(new SCIRun::EventServiceException(""));
   CPPUNIT_ASSERT_MESSAGE("EventServiceException with empty message smart pointer is not null", ! exEmptyMessage.isNull());
-
-  SCIRun::EventServiceExceptionPtr exWithMessage(new SCIRun::EventServiceException("EventServiceException test message"));
+  CPPUNIT_ASSERT_MESSAGE("EventServiceException with empty message and type smart pointer is not null", ! exEmptyMessage.isNull());
   CPPUNIT_ASSERT_MESSAGE("EventServiceException with message smart pointer is not null", ! exWithMessage.isNull());
-
-  SCIRun::EventServiceExceptionPtr exWithMessageAndType(new SCIRun::EventServiceException("EventServiceException with type test message", sci::cca::NetworkError));
   CPPUNIT_ASSERT_MESSAGE("EventServiceException with message and type smart pointer is not null", ! exWithMessageAndType.isNull());
 }
 
@@ -75,25 +75,50 @@ void EventServiceExceptionTest::testAdd()
   CPPUNIT_FAIL("Not implemented yet");
 }
 
-void EventServiceExceptionTest::testThrowAndCatch()
+void EventServiceExceptionTest::testThrowAndCatchDefault()
 {
-  struct ExceptionThrower {
-    void exceptionThrow() {
-      throw SCIRun::EventServiceExceptionPtr(new SCIRun::EventServiceException("EventServiceException throw and catch test message"));
-    }
-  } exceptionThrower;
-
   try {
-    exceptionThrower.exceptionThrow();
+    throw exEmptyMessage;
   }
   catch (SCIRun::EventServiceExceptionPtr ex) {
-    std::cout << "\nEventServiceExceptionTest::testThrowAndCatch() caught exception: " << ex->getNote() << std::endl;
-    std::cout << "\nEventServiceExceptionTest::testThrowAndCatch() get exception trace: " << ex->getTrace() << std::endl;
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchDefault() caught exception: " << ex->getNote() << std::endl;
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchDefault() get exception trace: " << ex->getTrace() << std::endl;
     CPPUNIT_ASSERT(ex->getCCAExceptionType() == sci::cca::Nonstandard);
   }
 }
 
-void EventServiceExceptionTest::testThrowAndCatchWithType()
+void EventServiceExceptionTest::testThrowAndCatchSetType()
 {
-  CPPUNIT_FAIL("Not implemented yet");
+  try {
+    throw exEmptyMessageAndType;
+  }
+  catch (SCIRun::EventServiceExceptionPtr ex) {
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchSetType() caught exception: " << ex->getNote() << std::endl;
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchSetType() get exception trace: " << ex->getTrace() << std::endl;
+    CPPUNIT_ASSERT(ex->getCCAExceptionType() == sci::cca::OutOfMemory);
+  }
+}
+
+void EventServiceExceptionTest::testThrowAndCatchSetMessage()
+{
+  try {
+    throw exWithMessage;
+  }
+  catch (SCIRun::EventServiceExceptionPtr ex) {
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchSetMessage() caught exception: " << ex->getNote() << std::endl;
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchSetMessage() get exception trace: " << ex->getTrace() << std::endl;
+    CPPUNIT_ASSERT(ex->getCCAExceptionType() == sci::cca::Nonstandard);
+  }
+}
+
+void EventServiceExceptionTest::testThrowAndCatchSetMessageAndType()
+{
+  try {
+    throw exWithMessageAndType;
+  }
+  catch (SCIRun::EventServiceExceptionPtr ex) {
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchSetMessageAndType() caught exception: " << ex->getNote() << std::endl;
+    std::cout << "\nEventServiceExceptionTest::testThrowAndCatchSetMessageAndType() get exception trace: " << ex->getTrace() << std::endl;
+    CPPUNIT_ASSERT(ex->getCCAExceptionType() == sci::cca::NetworkError);
+  }
 }

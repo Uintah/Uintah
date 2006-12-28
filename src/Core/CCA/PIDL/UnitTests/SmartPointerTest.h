@@ -26,20 +26,20 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef Framework_UnitTests_EventServiceExceptionTest_h
-#define Framework_UnitTests_EventServiceExceptionTest_h
+#ifndef Framework_UnitTests_SmartPointerTest_h
+#define Framework_UnitTests_SmartPointerTest_h
 
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include <Framework/Internal/EventServiceException.h>
-#include <Core/CCA/spec/cca_sidl.h>
-#include <vector>
+// The SmartPointer class is defined in Core/CCA/SmartPointer.h.
+// There didn't seem to be much point in setting up a unit test directory
+// in Core/CCA for a single class, so the SmartPointer tests reside here.
 
-class EventServiceExceptionTest : public CppUnit::TestFixture {
+class SmartPointerTest : public CppUnit::TestFixture {
 public:
-  EventServiceExceptionTest();
-  virtual ~EventServiceExceptionTest();
+  SmartPointerTest();
+  virtual ~SmartPointerTest();
 
   // Set up context before running a test.
   virtual void setUp();
@@ -49,28 +49,13 @@ public:
 
 protected:
   void testInstantiate();
-  void testSetNote();
-  void testAdd();
-  void testThrowAndCatchDefault();
-  void testThrowAndCatchSetType();
-  void testThrowAndCatchSetMessage();
-  void testThrowAndCatchSetMessageAndType();
+  void testAddReference();
 
 private:
-  CPPUNIT_TEST_SUITE( EventServiceExceptionTest );
+  CPPUNIT_TEST_SUITE( SmartPointerTest );
   CPPUNIT_TEST(testInstantiate);
-  CPPUNIT_TEST(testSetNote);
-  CPPUNIT_TEST(testAdd);
-  CPPUNIT_TEST(testThrowAndCatchDefault);
-  CPPUNIT_TEST(testThrowAndCatchSetType);
-  CPPUNIT_TEST(testThrowAndCatchSetMessage);
-  CPPUNIT_TEST(testThrowAndCatchSetMessageAndType);
+  CPPUNIT_TEST(testAddReference);
   CPPUNIT_TEST_SUITE_END();
-
-  SCIRun::EventServiceExceptionPtr exEmptyMessage;
-  SCIRun::EventServiceExceptionPtr exEmptyMessageAndType;
-  SCIRun::EventServiceExceptionPtr exWithMessage;
-  SCIRun::EventServiceExceptionPtr exWithMessageAndType;
 };
 
 #endif
