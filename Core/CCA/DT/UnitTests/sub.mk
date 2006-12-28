@@ -28,13 +28,11 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Core/CCA/PIDL/UnitTests
+SRCDIR := Core/CCA/DT/UnitTests
 
 PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
 SRCS := \
-        $(SRCDIR)/SmartPointerTest.cc \
-        $(SRCDIR)/PIDLTest.cc \
         $(SRCDIR)/main.cc
 
 PSELIBS := \
