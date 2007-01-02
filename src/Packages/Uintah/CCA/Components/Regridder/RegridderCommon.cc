@@ -41,6 +41,12 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
 
 RegridderCommon::~RegridderCommon()
 {
+  VarLabel::destroy(d_dilatedCellsCreationLabel);
+#if 0
+  VarLabel::destroy(d_dilatedCellsCreationOldLabel);
+#endif
+  VarLabel::destroy(d_dilatedCellsDeletionLabel);
+
 }
 
 bool
