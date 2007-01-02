@@ -476,8 +476,10 @@ link_regression_tester:
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
 	   fi )
 
-faster_gmake:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
+noFortran:
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/noRadiation $(SRCTOP_ABS) \
+          $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
+       
 fake_arches:
 	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
