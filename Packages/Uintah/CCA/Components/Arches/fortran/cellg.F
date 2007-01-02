@@ -23,7 +23,7 @@ c*********************************************************************
       double precision E_face, W_face, E_face_to_E, W_face_to_W
       double precision N_face, S_face, N_face_to_N, S_face_to_S
       double precision T_face, B_face, T_face_to_T, B_face_to_B
-      double precision XUxplus, YVyplus, ZWzplus;
+      double precision XUxplus, YVyplus, ZWzplus
 
 c*********************************************************************
 c     Start :
