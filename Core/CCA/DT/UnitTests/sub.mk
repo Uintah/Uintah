@@ -33,7 +33,8 @@ SRCDIR := Core/CCA/DT/UnitTests
 PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
 SRCS := \
-        $(SRCDIR)/main.cc
+        $(SRCDIR)/main.cc	\
+	$(SRCDIR)/DTTest.cc
 
 PSELIBS := \
             Framework \
