@@ -204,7 +204,15 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   if(mpm_ps){ 
     mpm_ps->get("testForNegTemps_mpm",d_testForNegTemps_mpm);
   }
-  
+  //__________________________________
+  //  bulletproofing
+  if(d_doAMR && !d_sharedState->isLockstepAMR()){
+    ostringstream msg;
+    msg << "\n ERROR: You must add \n"
+        << " <useLockStep> true </useLockStep> \n"
+        << " inside of the <AMR> section for MPMICE and AMR. \n"; 
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
     
   if (cout_norm.active()) {
     cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
