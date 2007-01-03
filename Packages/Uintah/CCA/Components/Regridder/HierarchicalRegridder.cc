@@ -38,8 +38,6 @@ HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : Regridd
 HierarchicalRegridder::~HierarchicalRegridder()
 {
   rdbg << "HierarchicalRegridder::~HierarchicalRegridder() BGN" << endl;
-  VarLabel::destroy(d_dilatedCellsCreationLabel);
-  VarLabel::destroy(d_dilatedCellsDeletionLabel);
   VarLabel::destroy(d_activePatchesLabel);
 
   for (int k = 0; k < d_maxLevels; k++) {
