@@ -137,10 +137,6 @@ WARNING
     // the user run on a different number of processors.
     // static const double PATCH_TOLERANCE_ = 3;  
 
-    // whether or not this is a 'lockstep' AMR grid.  This is stored here since the time refinement
-    // ratio is to be defined by the level's refinement ratio, and the level can query this from the Grid.
-    // Can potentially change if the Switcher changes from a lockstep component to a W-cycle component
-    bool d_lockstepAMRGrid;
   };
 
 } // End namespace Uintah
