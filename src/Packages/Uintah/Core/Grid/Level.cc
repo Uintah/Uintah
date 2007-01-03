@@ -660,6 +660,7 @@ void Level::setBCTypes()
 	  IntVector coarseHigh = mapCellToCoarser(fineHigh);
 	  const LevelP& coarseLevel = getCoarserLevel();
           
+#if 0
           // add 1 to the corresponding index on the plus edges 
           // because the upper corners are sort of one cell off (don't know why)
           if (d_extraCells.x() != 0 && face == Patch::xplus) {
@@ -674,6 +675,7 @@ void Level::setBCTypes()
             coarseLow[2] ++;
             coarseHigh[2]++;
           }
+#endif
 	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
 	  if(neighbors.size() == 0){
 	    patch->setBCType(face, Patch::None);
