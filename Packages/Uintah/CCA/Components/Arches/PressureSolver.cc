@@ -87,6 +87,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure", d_norm_pres, false);
+  db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
   d_discretize = scinew Discretization();
 
@@ -472,6 +473,17 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
       // put back the results
     }
 
+  if (d_do_only_last_projection)
+    if ((timelabels->integrator_step_name == "Predictior")||
+        (timelabels->integrator_step_name == "Intermediate")) {
+      pressureVars.pressure.initialize(0.0);
+      if (pg->myrank() == 0) cout << "Projection skipped" << endl;
+    }
+    else 
+      if (!((timelabels->integrator_step_name == "Corrector")||
+            (timelabels->integrator_step_name == "CorrectorRK3")))
+        throw InvalidValue("Projection can only be skipped for RK SSP methods",
+		           __FILE__, __LINE__); 
   // destroy matrix
   d_linearSolver->destroyMatrix();
 }
