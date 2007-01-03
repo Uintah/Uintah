@@ -575,6 +575,9 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 			       DataWarehouse* new_dw)
 {
   if (patches->size() == 0) return;
+
+  // this is the coarsest level involved in the relocation
+  const Level* coarsestLevel = patches->get(0)->getLevel();
   
   int me = pg->myrank();
   int total_reloc[3] = {0,0,0};
@@ -592,7 +595,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     // AMR stuff
     const Level* curLevel = patch->getLevel();
     bool hasFiner   = curLevel->hasFinerLevel();
-    bool hasCoarser = curLevel->hasCoarserLevel();
+    bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
     Level* fineLevel=0;
     Level* coarseLevel=0;
     if(hasFiner){
