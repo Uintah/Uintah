@@ -202,7 +202,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     for (int i = level->getIndex(); i < grid->numLevels(); i++) {
       const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
       for (int proc = 0; proc < pg->size(); proc++) {
-        for (int j = 0; j < p->getSubset(proc)->size(); i++) {
+        for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
         }
