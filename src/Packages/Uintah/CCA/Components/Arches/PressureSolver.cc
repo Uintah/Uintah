@@ -474,7 +474,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     }
 
   if (d_do_only_last_projection)
-    if ((timelabels->integrator_step_name == "Predictior")||
+    if ((timelabels->integrator_step_name == "Predictor")||
         (timelabels->integrator_step_name == "Intermediate")) {
       pressureVars.pressure.initialize(0.0);
       if (pg->myrank() == 0) cout << "Projection skipped" << endl;
