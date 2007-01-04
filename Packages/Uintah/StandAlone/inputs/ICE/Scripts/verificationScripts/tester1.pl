@@ -151,7 +151,7 @@ for ($i=0;$i<$num_of_tests;$i++)
     
     if ($int eq "")
     {
-	print statsFile "Queue file (pbs) : "."test_pbs"."\n";
+	print statsFile "Queue file (pbs) : "."$test_pbs"."\n";
 	$tmp=`qsub $test_pbs`;
     }
     else 
