@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -51,6 +52,10 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
         child = child->findNextBlock("heat_flux") )
     {
        mpmPhysicalBCs.push_back(scinew HeatFluxBC(child));
+    }
+    for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); 
+        child != 0; child = child->findNextBlock("arches_heat_flux") ) {
+       mpmPhysicalBCs.push_back(scinew ArchesHeatFluxBC(child));
     }
   }
 }
