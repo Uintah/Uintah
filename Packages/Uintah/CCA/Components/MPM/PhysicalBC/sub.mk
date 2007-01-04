@@ -8,5 +8,6 @@ SRCS     += \
 	$(SRCDIR)/NormalForceBC.cc              \
 	$(SRCDIR)/PressureBC.cc          	\
 	$(SRCDIR)/CrackBC.cc			\
-	$(SRCDIR)/HeatFluxBC.cc
+	$(SRCDIR)/HeatFluxBC.cc			
+
 
