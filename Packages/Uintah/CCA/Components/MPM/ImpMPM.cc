@@ -1271,9 +1271,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
     bool restart_neg_residual=false;
     bool restart_num_iters=false;
 
-#ifdef __APPLE__
-#  define isnan  __isnand
-#endif
     if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
       restart_nan=true;
