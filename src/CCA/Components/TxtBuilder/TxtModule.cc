@@ -99,7 +99,7 @@ TxtModule::~TxtModule(){
 
 void
 TxtModule::draw(){
-  mvwprintw(win,1,1,name.c_str());  
+  mvwprintw(win,1,1,const_cast<char *>(name.c_str()));  
   box(win,0,0);
   wrefresh(win);
 }
