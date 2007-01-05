@@ -1942,10 +1942,23 @@ void AMRICE::set_refineFlags( constCCVariable<double>& mag_grad_q_CC,
   PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
   for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
     IntVector c = *iter;
-    if( mag_grad_q_CC[c] > threshold){
+   /* if( mag_grad_q_CC[c] > threshold){
       refineFlag[c] = true;
       refinePatch->set();
+    }*/
+   // HARDWIRED
+    const Level* level = patch->getLevel();
+    Point here = level->getCellPosition(c);
+    if(0.0<here.y()&&here.y()<0.65){
+      double frac = here.y()/0.65;
+      double xlo = (1.0 - frac)*2.67 + frac*1.0;
+      double xhi = (1.0 - frac)*2.99 + frac*3.44;
+      if(xlo<here.x()&&here.x()<xhi){
+        refineFlag[c] = true;
+        refinePatch->set();
+      }
     }
+  // TO HERE
   }
 }
 /*_____________________________________________________________________
