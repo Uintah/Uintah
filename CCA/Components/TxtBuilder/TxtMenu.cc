@@ -227,7 +227,7 @@ TxtMenu::drawInactiveMenu(WINDOW* win_menu)
   }
 
   for (int i = 0; i < n_main_menu_choices; ++i) {
-    mvwprintw(win_menu,0, 1+i*(max_item_size+2), main_menu_choices[i].c_str());
+    mvwprintw(win_menu,0, 1+i*(max_item_size+2), const_cast<char *>(main_menu_choices[i].c_str()));
   }
   wrefresh(win_menu);
   // Update the stacking order

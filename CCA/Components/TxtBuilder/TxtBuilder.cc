@@ -532,7 +532,7 @@ TxtBuilder::getString(string prompt){
   string s=prompt;
   int c;
   werase(win_cmd);
-  mvwprintw(win_cmd,0,0,s.c_str());
+  mvwprintw(win_cmd,0,0, const_cast<char *>(s.c_str()));
   wrefresh(win_cmd);
   while(true){
     switch(c=wgetch(stdscr)){	
@@ -540,7 +540,7 @@ TxtBuilder::getString(string prompt){
       if(s.size()>prompt.size()){
 	werase(win_cmd);
 	s=s.substr(0, s.size()-1);
-	mvwprintw(win_cmd,0,0,s.c_str());
+	mvwprintw(win_cmd,0,0, const_cast<char *>(s.c_str()));
 	wrefresh(win_cmd);
       }
       break;
@@ -557,7 +557,7 @@ TxtBuilder::getString(string prompt){
     default:
       s=s+(char)c;
       werase(win_cmd);
-      mvwprintw(win_cmd, 0,0, s.c_str());
+      mvwprintw(win_cmd, 0,0, const_cast<char *>(s.c_str()));
       wrefresh(win_cmd);
       break;
     }

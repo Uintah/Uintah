@@ -117,7 +117,7 @@ TxtMessage::print(int offset, int num){
     s[next]='\0';
     stringstream os;
     os<<"["<<cur_msg<<"]";
-    wprintw(win, os.str().c_str());
+    wprintw(win, const_cast<char *>(os.str().c_str()));
     wprintw(win, s);
     wprintw(win, "\n\r");
 
