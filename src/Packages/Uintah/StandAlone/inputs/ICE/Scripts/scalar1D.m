@@ -24,12 +24,13 @@ pDir   = 1;
 symbol = {'+','*r','xg','squarem','diamondb'};
 mat    = 0;
 
-exactSolution = 'cubic' %'sinusoidal'; %linear; %cubic; %quad
+exactSolution = 'exponential' %'linear' %'sinusoidal'; %linear; %cubic; %quad
 velocity    = 1.23456;
-exactSolMin = 0.15;
-exactSolMax = 0.35;
+exactSolMin = 0.0;
+exactSolMax = 1.0;
 freq  = 1;
 slope = 1;
+coeff = 100;
 
 numPlotCols = 1;
 numPlotRows = 2;
@@ -132,8 +133,11 @@ for(n = 1:nDumps )
               if(d <= 0.5)
                 exactSol(i) = d^2 -d;
               else
-                exactSol(i) = (1.0 - d)^3 - (1.0 - d);
+                exactSol(i) = (1.0 - d)^2 - (1.0 - d);
               end
+            end
+            if(strcmp(exactSolution,'exponential'))
+                exactSol(i) = coeff * exp(-1.0/( d * ( 1.0 - d ) + 1e-100) );
             end
           end
         end
