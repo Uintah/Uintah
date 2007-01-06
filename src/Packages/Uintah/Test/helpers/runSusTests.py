@@ -137,7 +137,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   chdir(resultsdir)
 
-  if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, ALGO)) != True:
+  if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, ALGO)) != 1:
     mkdir("%s/%s-results" % (outputpath, ALGO))
 
   environ['MPI_TYPE_MAX'] = '10000'
