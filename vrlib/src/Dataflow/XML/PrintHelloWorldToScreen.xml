@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<component name="PrintHelloWorldToScreen" category="Examples" optional="false">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+      Most basic example SCIRun module.
+    </summary>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no"/>
+  </io>
+</component>

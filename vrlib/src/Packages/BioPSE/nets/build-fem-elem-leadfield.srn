@@ -1,0 +1,124 @@
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{209 14 794 669}" creationDate="{Thu Mar 16 2006}" creationTime="{11:05:06}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_DATA"/>
+    <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
+    <var name="scisub_dataset" val="SCIRUN_DATASET"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
+      <position x="404" y="14"/>
+      <note position="{def}">{TetVolField input is the finite element mesh --  
+data values at the elements are conductivity  
+tensors.                                                         }</note>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-mesh.tvt.fld"/>
+    </module>
+    <module category="Forward" id="m2" name="BuildFEMatrix" package="BioPSE">
+      <position x="209" y="319"/>
+      <note position="{n}">{Using the zero'th node as a
+ground reference,we build  
+the finite element stiffness
+matrix for the incoming
+TetVolField.  The 
+TetVolField has a 
+conductivity tensor at each
+element.}</note>
+    </module>
+    <module category="DataIO" id="m3" name="ReadField" package="SCIRun">
+      <position x="629" y="105"/>
+      <note position="{def}">{The nodes of this field specify
+the electrode positions.}</note>
+      <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-electrodes.pcd.fld"/>
+    </module>
+    <module category="LeadField" id="m4" name="BuildElemLeadField" package="BioPSE">
+      <position x="440" y="319"/>
+      <note position="{def}">{Build the element-centered leadfield matrix for the input finite element mesh (port 1) and electrode interpolant Field (port 2).
+We set the last electrode to ground, and iteratively pair it with each of the other electrodes.  For each pairing, we build a
+right-hand-side column matrix that specifies the source-sink pair to have unit current.  That right-hand-side is passed
+to a solve matrix module, the system is solved, the gradient is computed, and the ouput is passed back to us and stored as
+one column in our lead-field matrix.}</note>
+    </module>
+    <module category="Math" id="m5" name="SolveLinearSystem" package="SCIRun">
+      <position x="422" y="403"/>
+      <note position="{w}">{Solve the: A x phi = flux linear system.  A is the stiffness matrix, with
+node 0 pinned to ground, the flux vector is all zeroes except for the
+TetVol source and sink node positions, which have a 1 and a -1
+respectively (unit current passed between them).  Solving for phi
+gives us the voltages everywhere at the nodes in the TetVolMesh.}</note>
+      <var name="target_error" val="{1e-06}"/>
+      <var name="flops" val="{           344578}"/>
+      <var name="floprate" val="{24.1205}"/>
+      <var name="memrefs" val="{6152750.0}"/>
+      <var name="memrate" val="{430.693}"/>
+      <var name="orig_error" val="{                1}"/>
+      <var name="current_error" val="{9.82593e-05}"/>
+      <var name="method" val="{Conjugate Gradient &amp; Precond. (SCI)}"/>
+      <var name="precond" val="{jacobi}"/>
+      <var name="iteration" val="{102}"/>
+      <var name="maxiter" val="{2000}"/>
+      <var name="use_previous_soln" val="{0}"/>
+      <var name="emit_partial" val="{0}"/>
+      <var name="emit_iter" val="{50}"/>
+      <var name="status" val="{}"/>
+      <var name="np" val="{16}"/>
+    </module>
+    <module category="DataIO" id="m6" name="WriteMatrix" package="SCIRun">
+      <position x="600" y="403"/>
+      <note position="{def}">{Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).
+Each row is stored [ex1 ey1 ez1 ex2 ey2 ez2 ex3 ey3 ez3 ... exn eyn ezn] where
+[exi eyi ezi] is the electric field vector in element i.}</note>
+      <var name="filename" val="scisub_datadir/scisub_dataset/generated/scisub_dataset-leadfield.mat"/>
+      <var name="filetype" val="{ASCII}"/>
+      <var name="exporttype" val="{Binary}"/>
+      <var name="split" val="{0}"/>
+    </module>
+    <module category="ChangeFieldData" id="m7" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
+      <position x="404" y="473"/>
+      <note position="{def}">{Having solved for the voltages at the nodes of the TetVolMesh, we
+combine those scalar values with the TetVolMesh to produce a
+TetVolField of scalar double potentials at the nodes.}</note>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module category="MiscField" id="m8" name="BuildMappingMatrix" package="SCIRun">
+      <position x="458" y="192"/>
+      <note position="{def}">{Build the interpolant weights for the electrodes.  For each node in the electrode field (second input
+field port), we record the single nearest node from the finite element mesh and assign it a weight of 1.}</note>
+      <var name="interpolation_basis" val="{linear}"/>
+      <var name="map_source_to_single_dest" val="{0}"/>
+      <var name="exhaustive_search" val="{1}"/>
+      <var name="exhaustive_search_max_dist" val="{-1}"/>
+      <var name="np" val="{1}"/>
+    </module>
+    <module category="ChangeFieldData" id="m9" name="CalculateGradients" package="SCIRun">
+      <position x="404" y="543"/>
+    </module>
+    <module category="ChangeFieldData" id="m10" name="SwapFieldDataWithMatrixEntries" package="SCIRun">
+      <position x="404" y="612"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module category="ChangeFieldData" id="m11" name="ConvertFieldBasis" package="SCIRun">
+      <position x="458" y="106"/>
+      <var name="output-basis" val="{Linear}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection from="m2" fromport="0" id="c1" to="m5" toport="0"/>
+    <connection from="m4" fromport="1" id="c2" to="m6" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c4" to="m4" toport="0"/>
+    <connection from="m1" fromport="0" id="c5" to="m11" toport="0"/>
+    <connection from="m1" fromport="0" id="c6" to="m7" toport="0"/>
+    <connection from="m11" fromport="0" id="c7" to="m8" toport="0"/>
+    <connection from="m9" fromport="0" id="c8" to="m10" toport="0"/>
+    <connection from="m7" fromport="0" id="c9" to="m9" toport="0"/>
+    <connection from="m4" fromport="0" id="c10" to="m5" toport="1"/>
+    <connection from="m3" fromport="0" id="c11" to="m8" toport="1"/>
+    <connection from="m8" fromport="0" id="c12" to="m4" toport="1"/>
+    <connection from="m5" fromport="0" id="c13" to="m7" toport="1"/>
+    <connection from="m10" fromport="1" id="c14" to="m4" toport="2"/>
+  </connections>
+</network>

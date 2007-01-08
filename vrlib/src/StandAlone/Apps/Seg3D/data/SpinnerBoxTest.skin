@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <var name="text1" propagate="yes">text1</var>
+  <var name="text2" propagate="yes">text2</var>
+  <var name="text3" propagate="yes">text3</var>
+
+  <xi:include href="ShadowedBox.skin" parse="xml"/>  
+  <xi:include href="SpinnerBox.skin" parse="xml"/>  
+
+  <object class="Root::GLWindow">
+    <object class="Root::FocusRegion">
+      <object class="Grid">
+        <var name="cell-width">200</var>
+        <var name="rows">3</var>
+        <var name="cols">3</var>
+        <object class="Root::FocusRegion">
+          <var name="row">2</var>
+          <var name="col">2</var>
+          <object class="Box">
+            <var name="color">#0000FFFF</var>
+          </object>
+
+          <object class="Grid">
+            <var name="rows">3</var>
+            <var name="cols">1</var>
+            <var name="size" propagate="yes">50</var>
+            <object class="Root::FocusRegion">              
+              <var name="row">1</var>
+              <var name="col">1</var>
+              <object class="TextEntry">
+                <var name="cursor">$FocusRegion::focused</var>
+                <var name="variable">text1</var>
+              </object>
+            </object>
+
+            <object class="SpinnerBox">
+              <var name="row">2</var>
+              <var name="col">1</var>
+            </object>
+
+            <object class="Root::FocusRegion">              
+              <var name="row">3</var>
+              <var name="col">1</var>
+              <object class="TextEntry">
+                <var name="cursor">$FocusRegion::focused</var>
+                <var name="variable">text3</var>
+              </object>
+            </object>            
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+</skinner>
+
