@@ -46,6 +46,7 @@
 #include <wx/filedlg.h>
 #include <wx/dirdlg.h>
 #include <wx/textdlg.h>
+#include <wx/numdlg.h>
 #include <wx/utils.h>
 
 #endif
