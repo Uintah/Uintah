@@ -67,6 +67,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
                                             int& num_coarse, const Vector& size)
 {
   num_coarse=0;
+  num_fine=0;
   const Level* lvl = d_patch->getLevel();
   vector<IntVector> cur(8);
                                                                                 
