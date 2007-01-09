@@ -247,7 +247,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     # copy results to web server
     if outputpath != startpath:
-      if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != True:
+      if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != 1:
         mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
       system("cp `ls -1 | grep -v uda` %s/%s-results/%s/" % (outputpath, ALGO, testname))
     # rc of 2 means it failed comparison or memory test, so try to run restart
@@ -274,7 +274,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
         # copy results to web server
         if outputpath != startpath:
-          if path.exists("%s/%s-results/%s/restart" % (outputpath, ALGO, testname)) != True:
+          if path.exists("%s/%s-results/%s/restart" % (outputpath, ALGO, testname)) != 1:
             mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
           system("cp `ls -1 | grep -v uda` %s/%s-results/%s/restart/" % (outputpath, ALGO, testname))
 
