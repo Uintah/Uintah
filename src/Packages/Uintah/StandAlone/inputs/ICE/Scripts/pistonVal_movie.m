@@ -14,7 +14,7 @@ clear function;
 
 %________________________________
 % USER INPUTS
-udas = {'pistonValidationTest_hack.uda.000';'pistonValidationTest.uda.000'};
+udas = {'imp_pistonVal2.uda.001';'imp_pistonVal.uda.001'};
 %udas = cellstr(udas);
 desc = 'hack vs stock pistonVal,mpmice';
 legendText = {'hack','stock'}
@@ -52,13 +52,13 @@ for(ts = 1:nDumps )
     i
     uda = udas{i}
     %use line extract to pull out the data
-    c1 = sprintf('lineextract -v rho_CC   -timestep %i %s -o rho      -uda %s',ts,startEnd,uda);
-    c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel_tmp  -uda %s',ts,startEnd,uda);
-    c3 = sprintf('lineextract -v temp_CC  -timestep %i %s -o temp     -uda %s',ts,startEnd,uda);
-    c4 = sprintf('lineextract -v press_CC -timestep %i %s -o press    -m 0   -uda %s',ts,startEnd,uda);
-    c5 = sprintf('lineextract -v sp_vol_CC     -timestep %i %s -o sp_vol     -uda %s',ts,startEnd,uda);
-    c6 = sprintf('lineextract -v vol_frac_CC   -timestep %i %s -o vol_frac   -uda %s',ts,startEnd,uda);
-    c7 = sprintf('lineextract -v speedSound_CC -timestep %i %s -o speedSound -uda %s',ts,startEnd,uda);
+    c1 = sprintf('lineextract -v rho_CC   -timestep %i %s -o rho.dat      -uda %s',ts,startEnd,uda);
+    c2 = sprintf('lineextract -v vel_CC   -timestep %i %s -o vel_tmp.dat  -uda %s',ts,startEnd,uda);
+    c3 = sprintf('lineextract -v temp_CC  -timestep %i %s -o temp.dat     -uda %s',ts,startEnd,uda);
+    c4 = sprintf('lineextract -v press_CC -timestep %i %s -o press.dat    -m 0   -uda %s',ts,startEnd,uda);
+    c5 = sprintf('lineextract -v sp_vol_CC     -timestep %i %s -o sp_vol.dat     -uda %s',ts,startEnd,uda);
+    c6 = sprintf('lineextract -v vol_frac_CC   -timestep %i %s -o vol_frac.dat   -uda %s',ts,startEnd,uda);
+    c7 = sprintf('lineextract -v speedSound_CC -timestep %i %s -o speedSound.dat -uda %s',ts,startEnd,uda);
     
     [status1, result1]=unix(c1);
     [status2, result2]=unix(c2);
@@ -69,19 +69,19 @@ for(ts = 1:nDumps )
     [status7, result7]=unix(c7);
 
     % rip out [ ] from velocity data
-    c7 = sprintf('sed ''s/\\[//g'' vel_tmp | sed ''s/\\]//g'' >vel');
+    c7 = sprintf('sed ''s/\\[//g'' vel_tmp.dat | sed ''s/\\]//g'' >vel.dat');
     [status7, result7]=unix(c7);
 
     % import the data into arrays
-    press1{1,i}  = importdata('press');
-    temp1{1,i}   = importdata('temp');
-    rho1{1,i}    = importdata('rho');
-    vel1{1,i}    = importdata('vel');
-    f1{1,i}      = importdata('sp_vol');
-    vf{1,i}      = importdata('vol_frac');
-    c{1,i}       = importdata('speedSound');
+    press1{1,i}  = importdata('press.dat');
+    temp1{1,i}   = importdata('temp.dat');
+    rho1{1,i}    = importdata('rho.dat');
+    vel1{1,i}    = importdata('vel.dat');
+    f1{1,i}      = importdata('sp_vol.dat');
+    vf{1,i}      = importdata('vol_frac.dat');
+    c{1,i}       = importdata('speedSound.dat');
 
-    unix('/bin/rm press temp rho vel sp_vol vol_frac');
+    unix('/bin/rm *.dat');
 
     %__________________________________________________
     %  Now plot it up
