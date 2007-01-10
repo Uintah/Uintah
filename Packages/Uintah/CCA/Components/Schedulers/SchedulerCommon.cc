@@ -1177,6 +1177,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             oldsub->addReference();
           }
 
+
           ParticleSubset* newsub = newsubsets[matl];
           // it might have been created in Refine
           if (!newsub) {
@@ -1194,19 +1195,20 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           newv->allocate(newsub);
           // don't get and copy if there were no old patches
           if (oldsub->getNeighbors().size() > 0) {
-            
+
             constParticleVariableBase* var = newv->cloneConstType();
             oldDataWarehouse->get(*var, label, oldsub);
-            
+
             // reset the bounds of the old var's data so copyData doesn't complain
             ParticleSet* pset = scinew ParticleSet(oldsub->numParticles());
-            ParticleSubset* tempset = scinew ParticleSubset(pset, true, matl, newPatch, newPatch->getLowIndex(), 
+            ParticleSubset* tempset = scinew ParticleSubset(pset, true, matl, newPatch, newPatch->getLowIndex(),
                                                             newPatch->getHighIndex(), 0);
             const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
             newv->copyData(&var->getBaseRep());
             delete var; //pset and tempset are deleted with it.
           }
           newDataWarehouse->put(*newv, label, true);
+          delete newv; // the container is copied
         }
       } // end matls
     } // end label_matls
