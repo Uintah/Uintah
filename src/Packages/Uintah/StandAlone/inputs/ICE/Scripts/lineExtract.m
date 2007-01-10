@@ -22,8 +22,8 @@ legendText = {'L-0','L-1', 'L-2'}
 pDir   = 1;                    
 symbol = {'+','*r','xg'};
 mat    = 0;
-xlo    = 0;
-xhi    = 1.0;
+xlo    = 0.3;
+xhi    = 0.5;
 
 numPlotCols = 1;
 numPlotRows = 5;
@@ -72,7 +72,7 @@ end
 %_________________________________
 % Loop over all the timesteps
 for(ts = 0:nDumps )
-  %ts = input('input timestep ') 
+  ts = input('input timestep ') 
   time = sprintf('%d sec',physicalTime(ts+1));
   
   %find max number of levels
@@ -392,36 +392,42 @@ for(ts = 0:nDumps )
         else
             hold on;
         end;
+        xlim([xlo xhi]); grid on;
         subplot(7,1,2), plot(x,A{1,L}(:,5),symbol{L}); ylabel('A.w');
         if (L == maxLevel)
             hold off;
         else
             hold on;
         end
+        xlim([xlo xhi]); grid on;
         subplot(7,1,3), plot(x,A{1,L}(:,6),symbol{L}); ylabel('A.e');
         if (L == maxLevel)
             hold off;
         else
             hold on;
         end
+        xlim([xlo xhi]); grid on;
         subplot(7,1,4), plot(x,A{1,L}(:,7),symbol{L}); ylabel('A.s');
         if (L == maxLevel)
             hold off;
         else
             hold on;
         end
+        xlim([xlo xhi]); grid on;
         subplot(7,1,5), plot(x,A{1,L}(:,8),symbol{L}); ylabel('A.n');
         if (L == maxLevel)
             hold off;
         else
             hold on;
         end
+        xlim([xlo xhi]); grid on;
         subplot(7,1,6), plot(x,A{1,L}(:,9),symbol{L}); ylabel('A.b');
         if (L == maxLevel)
             hold off;
         else
             hold on;
         end
+        xlim([xlo xhi]); grid on;
         subplot(7,1,7), plot(x,A{1,L}(:,10),symbol{L}); ylabel('A.t');
         if (L == maxLevel)
             hold off;
