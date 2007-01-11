@@ -22,7 +22,7 @@
         <delt_min>           2.4e-16    </delt_min>
         <delt_max>           2.0e-05    </delt_max>
         <delt_init>          1.0e-07    </delt_init>
-        <timestep_multiplier>1.0          </timestep_multiplier>
+        <timestep_multiplier>0.5          </timestep_multiplier>
     </Time>
      <!--____________________________________________________________________-->
      <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -150,7 +150,7 @@
      <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
      <!--____________________________________________________________________-->
      <CFD>
-        <cfl>0.9</cfl>
+        <cfl>0.45</cfl>
         <ICE>
          <ClampSpecificVolume>true</ClampSpecificVolume>
          <!--<max_iteration_equilibration>1000</max_iteration_equilibration>-->
