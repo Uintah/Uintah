@@ -260,6 +260,8 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
   // Initialize for frameless
   priv->last_changed = true;
   priv->accum_count = 0;
+
+  priv->dumpFrame = 0;
 }
 
 Dpy::~Dpy()
