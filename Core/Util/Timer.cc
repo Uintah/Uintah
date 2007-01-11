@@ -85,9 +85,11 @@ struct tms
 #include <sys/timeb.h>
 #endif
 
-#ifdef CLK_TCK
+#if defined(CLK_TCK)
 extern "C" long _sysconf(int);
 #define CLOCK_INTERVAL CLK_TCK
+#elif defined(CLOCKS_PER_SEC)
+#define CLOCK_INTERVAL CLOCKS_PER_SEC
 #else
 #include <sys/param.h>
 #define CLOCK_INTERVAL HZ
