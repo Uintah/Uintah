@@ -20,9 +20,9 @@
         <maxTime>            2.00e-3    </maxTime>
         <initTime>           0.0        </initTime>
         <delt_min>           2.4e-16    </delt_min>
-        <delt_max>           2.0e-06    </delt_max>
+        <delt_max>           2.0e-05    </delt_max>
         <delt_init>          1.0e-07    </delt_init>
-        <timestep_multiplier>0.5          </timestep_multiplier>
+        <timestep_multiplier>1.0          </timestep_multiplier>
     </Time>
      <!--____________________________________________________________________-->
      <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -150,7 +150,7 @@
      <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
      <!--____________________________________________________________________-->
      <CFD>
-        <cfl>0.4</cfl>
+        <cfl>0.9</cfl>
         <ICE>
          <ClampSpecificVolume>true</ClampSpecificVolume>
          <!--<max_iteration_equilibration>1000</max_iteration_equilibration>-->
@@ -160,7 +160,7 @@
          <advection type = "FirstOrder"/>
          
          <TimeStepControl>
-           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+           <Scheme_for_delT_calc>  aggressive  </Scheme_for_delT_calc>
            <knob_for_speedSound>  1.0            </knob_for_speedSound>
          </TimeStepControl>
 
@@ -404,7 +404,7 @@
           </material>
          <material>
            <EOS type = "SFEOS">
-              <eps0>0.1</eps0>
+              <eps0>8.43E-02</eps0>
               <eps1>0.0</eps1>
               <eps2>-4.88E-02</eps2>
               <eps3>-9.53E-02</eps3>
@@ -414,7 +414,7 @@
               <eps7>-4.05E-01</eps7>
               <eps8>-4.70E-01</eps8>
               <eps9>-5.88E-01</eps9>
-              <p0>100000.0</p0>
+              <p0>1.0</p0>
               <p1>101325.0</p1>
               <p2>8.02E+07</p2>
               <p3>1.57E+08</p3>
