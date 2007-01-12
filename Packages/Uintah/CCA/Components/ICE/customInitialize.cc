@@ -116,9 +116,9 @@ void customInitialization(const Patch* patch,
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
       double x = pt.x();
-      double coeff = 10;
+      double coeff = 1000;
        //temp_CC[c]  = 300 + coeff * x;
-       temp_CC[c]  = coeff * exp(-1.0/( x * ( 1.0 - x ) + 1e-100) );
+       temp_CC[c]  = 300.0 + coeff * exp(-1.0/( x * ( 1.0 - x ) + 1e-100) );
     }
   } 
   //__________________________________
