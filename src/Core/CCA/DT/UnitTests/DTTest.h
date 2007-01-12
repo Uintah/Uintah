@@ -48,19 +48,20 @@ public:
   // Clean up after the test run.
   virtual void tearDown();
 
-  void testPingPong();
+  void testPing();
+  void testMethods();
 
 private:
   CPPUNIT_TEST_SUITE( DTTest );
-  CPPUNIT_TEST( testPingPong );
+  CPPUNIT_TEST( testPing );
+  CPPUNIT_TEST( testMethods );
   CPPUNIT_TEST_SUITE_END();
   
   DataTransmitter* epDataTransmitter;
   DataTransmitter* spDataTransmitter;
   DTPoint* ep;
   DTPoint* sp;
-
-  DTMessageTag tag;
+  DTMessage* wmsg;
 };
 
 #endif

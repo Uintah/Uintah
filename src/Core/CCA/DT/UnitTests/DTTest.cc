@@ -45,14 +45,26 @@ DTTest::~DTTest()
 
 void DTTest::setUp()
 {
+  //Start Data Transmitters
   spDataTransmitter = new DataTransmitter;
   spDataTransmitter->run();
   epDataTransmitter = new DataTransmitter;
   epDataTransmitter->run();
-
+  
+  //A start point and an end point
   ep = new DTPoint(epDataTransmitter);
   sp = new DTPoint(spDataTransmitter);
-  //ep->service = ::service;
+
+  //A message 
+  int* msg = (int*) malloc(sizeof(int));
+  (*msg) = 13;
+  wmsg = new DTMessage;
+  wmsg->buf = (char*)msg;
+  wmsg->length = sizeof(int);
+  wmsg->autofree = false;
+  wmsg->recver = ep;
+  wmsg->to_addr= epDataTransmitter->getAddress();
+  wmsg->sender = sp;
 }
 
 void DTTest::tearDown()
@@ -61,24 +73,41 @@ void DTTest::tearDown()
   epDataTransmitter->exit();
 }
 
-void DTTest::testPingPong()
+void DTTest::testMethods()
 {
   DTMessage* xmsg;
-  int* msg;
+
+  DTMessageTag tag = spDataTransmitter->putMessage(wmsg);
+  xmsg = epDataTransmitter->getMessage(tag);
+
+  CPPUNIT_ASSERT_EQUAL(xmsg->length, (int)(sizeof(int)));
+  CPPUNIT_ASSERT_EQUAL((int)(*(xmsg->buf)), 13);
+
+/*
+  wmsg->display();
+  spDataTransmitter->putMsg(wmsg);
+  xmsg = epDataTransmitter->getMsg(); 
+
+  CPPUNIT_ASSERT_EQUAL(xmsg->length, (int)(sizeof(int)));
+  CPPUNIT_ASSERT_EQUAL((int)(*(xmsg->buf)), 13);
+*/
+
+/*
+UNTESTED:
+  void putReplyMessage(DTMessage *msg);
+  std::string getUrl();
+  DTAddress getAddress();
+  bool isLocal(DTAddress& addr);
+*/
+}
+
+void DTTest::testPing()
+{
+  DTMessage* xmsg;
 
   try {
-    msg = (int*) malloc(sizeof(int));
-    (*msg) = 13;
-    
-    DTMessage *wmsg = new DTMessage;
-    wmsg->buf = (char*)msg;
-    wmsg->length = sizeof(int);
-    wmsg->autofree = true;
-    wmsg->recver = ep;
-    wmsg->to_addr= epDataTransmitter->getAddress();
 
-    tag = sp->putInitialMessage(wmsg);
-    
+    DTMessageTag tag = sp->putInitialMessage(wmsg);   
     xmsg = ep->getMessage(tag);
 
   } catch (const SCIRun::Exception& e2) {
