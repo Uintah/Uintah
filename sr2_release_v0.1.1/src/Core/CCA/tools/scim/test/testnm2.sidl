@@ -1,0 +1,57 @@
+
+class Margaritaville {
+   void jimmy_buffet(in coctail.Margarita m);
+};
+	
+%ininterface 
+
+  class GoPort implements-all gov.cca.ports.GoPort{
+        void setService(in gov.cca.Services svc);
+  };
+  interface iStringPort extends gov.cca.Port
+  {
+        int m1(out Thing t1);
+	int m3(in OneT t1);
+        int m5(in OneT t1);   
+        int m6(in ThreeT t1);
+        int m7(in ThreeT t1);
+
+  };
+
+%/ininterface
+
+	
+%outinterface 
+
+  interface oStringPort extends gov.cca.Port
+  {
+        int m2(out SameThing t1);
+	int m4(in TwoT t2);
+        int m5(in TwoT t1);
+	int m6(in FourT t1);
+        int m7(in FourT t1);
+
+  };
+
+%/outinterface
+
+%map
+>OneT -> TwoT
+
+//regular 3 step rule
+%map iStringPort -> oStringPort
+>m1 -> m2
+>>Thing -> SameThing
+
+//add method map to a forall typemap
+>m3 -> m4
+
+//2nd level data map
+>ThreeT -> FourT
+
+
+
+
+
+	
+	

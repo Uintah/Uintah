@@ -1,0 +1,33 @@
+To extend the Semotus Visum protocols, follow this procedure:
+
+* Add the protocol to the documentation storage, with the other
+  protocols.
+
+* Create a new .h file with the name of the protocol. The class should
+  be named after the major protocol name, and should inheirit from 
+  MessageBase. Don't forget all the relevent docs and headers, as well
+  as namespaces (SemotusVisum::Message). This .h file should include
+  all the fields and methods to access/set/encapsulate the data from
+  the protocol. If the message is bidirectional, make sure to add an
+  isRequest() method that gives the status of the message (and add an
+  appropriate field to the constructor, as well ).
+
+* Create a new .cpp file that contains the implementation of the class
+  declared in the .h file. Again, don't forget the namespace. Make
+  sure to init all fields in the constructor, and delete in destructor.
+  Create a finish() function that will take the current state of the
+  message object and serialize it into XML.
+  Create a mk<Protocol> function that will take in XML and create the 
+  appropriate message object.
+
+* Add an entry in MakeMessage.h (in message_t), and in the
+  makeMessage() function.
+
+* Add a new entry for the message into Message/Makefile.in
+
+* Add a test driver for the message in Drivers/Message/
+
+* Add a test driver for the message in
+  Drivers/Message/MakeMessageDriver.cpp
+
+* Add & Commit to cvs

@@ -1,0 +1,158 @@
+%
+%  For more information, please see: http://software.sci.utah.edu
+% 
+%  The MIT License
+% 
+%  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+%  University of Utah.
+% 
+%  License for the specific language governing rights and limitations under
+%  Permission is hereby granted, free of charge, to any person obtaining a
+%  copy of this software and associated documentation files (the "Software"),
+%  to deal in the Software without restriction, including without limitation
+%  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+%  and/or sell copies of the Software, and to permit persons to whom the
+%  Software is furnished to do so, subject to the following conditions:
+% 
+%  The above copyright notice and this permission notice shall be included
+%  in all copies or substantial portions of the Software.
+% 
+%  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+%  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+%  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+%  DEALINGS IN THE SOFTWARE.
+%
+
+
+% intro.tex
+%
+
+\chapter{Introduction}
+\label{ch:intro}
+
+This is the \etitle{\srug}.  It describes the purpose and use of the
+\sr{} problem solving environment (\pse).  This guide is for users who
+are building and executing \dfn{networks} within the \sr{}
+environment.
+
+Users installing \sr{} should read the
+\htmladdnormallinkfoot{\srig}{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/index.html}.
+
+Users of the BioTensor PowerApp should see the
+\htmladdnormallinkfoot{BioTensor
+  tutorial}{\latexhtml{\scisoftware/doc/User/Tutorials/BioTensor/BioTensor.html}{../../Tutorials/BioTensor/BioTensor.html}}.
+
+Users of the BioFEM PowerApp should see the
+\htmladdnormallinkfoot{BioFEM
+  tutorial}{\latexhtml{\scisoftware/doc/User/Tutorials/BioFEM/BioFEM.html}{../../Tutorials/BioFEM/BioFEM.html}}.
+
+Users of the BioImage PowerApp should see the
+\htmladdnormallinkfoot{BioImage
+  tutorial}{\latexhtml{\scisoftware/doc/User/Tutorials/BioImage/bioimage.html}{../../Tutorials/BioImage/bioimage.html}}.
+
+%\section{Conventions}
+%\label{sec:conventions}
+
+%\missing{Discussion of typographic conventions}
+
+\section{Road Map}
+\label{sec:roadmap}
+
+This document is organized into the following sections:
+
+\begin{description}
+  \descitem{\chref{Introduction}{ch:intro}} This introduction.
+  
+  \descitem{\chref{Concepts}{ch:concepts}} Introduces the concept of
+  an integrated problem solving environment and describes how \SR{}
+  embodies these ideas.
+  
+  \descitem{\chref{Packages}{ch:packages}} Gives an overview
+  of the \sr{} and \biopse{} packages.
+  
+  \descitem{\chref{Starting \sr}{ch:startingup}} Outlines procedure
+  for starting \sr{} and related information.
+
+  \descitem{\chref{Working with Networks}{ch:workwithnets}}
+  Discusses building, editing, and executing
+  networks.
+
+  \descitem{\chref{Visualization}{ch:viewer}}
+  Describes the purpose and use of the \viewer{} (visualization) module.
+
+  \descitem{\chref{Importing data into \sr{}}{ch:import_export}}
+  Describes ways to import/export ``foreign'' data into/out of \SR{}.
+
+  \descitem{\chref{Wrapping  ITK Filters in \sr{}
+      Modules}{ch:itk_mods}}
+  Describes the mechanism for wrapping ITK filters in \sr{} modules.
+\end{description}
+
+\section{Help}
+\label{sec:help}
+
+Help is available from the following sources.
+
+\subsection{Documentation Distribution}
+
+\sr{} documentation is distributed separately from its source code.
+\sr{}'s documentation distribution can be downloaded from
+\htmladdnormallinkfoot{\sr{}'s software download
+  page}{\scisoftwarearchiveurl}.  See the 
+\htmladdnormallinkfoot{\srig}{\latexhtml{\scisoftware/doc}{../../..}/Installation/Guide/index.html}
+for instructions on downloading and installing the documentation
+distribution.
+
+After installing the documentation, visit the
+\filename{index.html} file located in the distribution's top level
+\directory{doc} directory (\ie{} \ab{top of documentation
+  distribution}/doc/index.html).
+
+\subsection{The Web}
+
+This and other documents related to \sr{} can be found 
+\htmladdnormallinkfoot{online}{\scidocurl{}}.
+
+Visit the \htmladdnormallinkfoot{\sci}{\sciurl} web site for more
+information related to \sr{} and the \scii{}.
+
+\subsection{Mailing Lists}
+\index{mailing lists}
+
+The \sr{} \emph{users} mail list is a forum for discussing \sr{}
+related issues.  Users are given the opportunity to subscribe to this
+list when downloading \sr{} for the first time from the software
+download page.  Users may also subscribe by sending mail to:
+
+\mailto{Majordomo@sci.utah.edu}
+
+with the following command in the body of the message:
+
+\keyboard{subscribe scirun-users}
+
+After subscribing,  questions can be sent to
+\mailto{scirun-users@sci.utah.edu}.
+
+The \sr{} \emph{developers} list is a forum for network and module
+developers.  To subscribe send mail to:
+
+\mailto{Majordomo@sci.utah.edu}
+
+with the following command in the body of the message:
+
+\keyboard{subscribe scirun-develop}
+
+After subscribing, questions can be sent to
+\mailto{scirun-develop@sci.utah.edu}.
+
+\section{Reporting Bugs}
+\label{sec:bugs}
+
+Please report bugs!  To report a bug visit \sr{}'s
+\htmladdnormallinkfoot{bug database}{\bugsurl} web page.
+
+Reporting bugs to the bug database, rather than the mailing list,  ensures
+bugs are fixed in a timely manner.

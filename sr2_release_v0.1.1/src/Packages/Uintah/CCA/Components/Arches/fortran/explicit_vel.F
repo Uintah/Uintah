@@ -1,0 +1,44 @@
+c*********************************************************************
+c
+c
+c*********************************************************************
+
+#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
+C-----------------------------------------------------------------------
+*	PHI	Variable for which equation is being solved (i/p) 
+*	AE,AW,AN,AS,AT,AB,AP
+*		Coefficients of the seven-diagonal finite difference
+*		equation (i/p) (=A in the previous discussion).
+*	SU	Source term for the PHI-equation (i/p) (=b in the previous
+*               discussion).
+C-----------------------------------------------------------------------
+
+c*********************************************************************
+c     Local Variables :
+c*********************************************************************
+      double precision vol      
+      double precision apo
+      double precision rhs
+      integer i,j,k
+
+      do 200 k = idxLo(3), idxHi(3)
+         do 190 j = idxLo(2), idxHi(2)
+            do 180 i = idxLo(1), idxHi(1)
+               vol = sew(i)*sns(j)*stb(k)
+            apo = 0.5D0*(old_den(i,j,k)+old_den(i-ioff,j-joff,k-koff))
+     $                *vol/dtime
+               rhs = ae(i,j,k)*old_phi(i+1,j,k)+ 
+     $              aw(i,j,k)*old_phi(i-1,j,k) +
+     $              an(i,j,k)*old_phi(i,j+1,k) + 
+     $              as(i,j,k)*old_phi(i,j-1,k) +
+     &              at(i,j,k)*old_phi(i,j,k+1) + 
+     $              ab(i,j,k)*old_phi(i,j,k-1) +
+     &              su(i,j,k) -ap(i,j,k)*old_phi(i,j,k)
+               phi(i,j,k) = rhs/apo
+ 180        continue
+ 190     continue
+ 200  continue
+      return
+      end
+
+

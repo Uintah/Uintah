@@ -1,0 +1,708 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+  <!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+  --><!--
+
+  This is supposed to be a valid xhtml file!  Please visit
+  http://validator.w3.org/file-upload.html after editing this file.
+
+  -->
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org" name="generator"><title>FusionViewer Tutorial</title>
+    
+
+    <style type="text/css">
+      body {
+      background: #999999;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      }
+      div.body {
+      background: #CCCCCC;
+      margin-left: 8%;
+      padding-left: 2%;
+      margin-right: 5%;
+      padding-right: 2%;
+      padding-bottom: 1em;
+      padding-top: 1em;
+      }
+      pre {
+      margin-left: 2%;
+      }
+      dt {
+      font-weight: bold;
+      }
+      dd {
+      margin-left: 2%;
+      margin-bottom: 0.5em;
+      }
+      ins {
+      color: black;
+      background-color: #FF8800;
+      text-decoration: none;
+      }
+      caption {
+      margin-top: 1em;
+      }
+      table {
+      border-collapse: collapse;
+      margin-bottom: 1em;
+      }
+      th {
+      text-align: left;
+      }
+      th, td {
+      border: thin solid #999999;
+      padding: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="body">
+      <center><img src="images/fusion_viewer_banner.jpg" alt="FusionViewer Banner" usemap="fvt-banner-main" border="0"></center>
+
+      <map id="fvt-banner-main" name="fvt-banner-main"><area shape="rect" coords="405,170,497,194" href="http://www.sci.utah.edu/" alt="SCI Web Site"><area shape="rect" coords="510,172,590,193" href="http://software.sci.utah.edu/" alt="SCI Software Site"></map>
+
+      <h2>Contents</h2>
+      <h3>Sections</h3>
+      <ol>
+	<li value="1">
+	  <a href="#section_1">Introduction</a>
+	</li>
+	<li value="2">
+	  <a href="#section_2">Getting Started</a> 
+	  <ol>
+	    <li value="1">
+	      <a href="#section_2_1">Preparations</a>
+	    </li>
+	    <li value="2">
+	      <a href="#section_2_2">Launching FusionViewer</a>
+	    </li>
+	    <li value="3">
+	      <a href="#section_2_3">User Interface Organization</a>
+	    </li>
+	  </ol>
+	</li>
+	<li value="3">
+	  <a href="#section_3">Interaction with the Rendering Window</a>
+	</li>
+	<li value="4">
+	  <a href="#section_4">Visualization</a> 
+	  <ol>
+	    <li value="1">
+	      <a href="#section_4_1">Data Selection Tab</a>
+	    </li>
+	    <li value="2">
+	      <a href="#section_4_1_1">Data Source</a>
+	    </li>
+	    <li value="3">
+	      <a href="#section_4_1_2">Data Animation</a>
+	    </li>
+	    <li value="4">
+	      <a href="#section_4_2">Vis Options Tab</a>
+	    </li>
+	    <li value="5">
+	      <a href="#section_4_2_1">Scalar Data Visualization</a>
+	    </li>
+	    <li value="6">
+	      <a href="#section_4_2_1_1">Slice Visualization</a>
+	    </li>
+	    <li value="7">
+	      <a href="#section_4_2_1_2">IsoSurface Visualization</a>
+	    </li>
+	    <li value="8">
+	      <a href="#section_4_2_2">Vector Data Visualization</a>
+	    </li>
+	    <li value="9">
+	      <a href="#section_4_2_2_1">Fieldline Visualization</a>
+	    </li>
+	    <li value="10">
+	      <a href="#section_4_2_3">Probes</a>
+	    </li>
+	    <li value="11">
+	      <a href="#section_4_2_4">Misc</a>
+	    </li>
+	    <li value="12">
+	      <a href="#section_4_2_4_1">Color Maps</a>
+	    </li>
+	    <li value="13">
+	      <a href="#section_4_2_4_2">Synchronize</a>
+	    </li>
+	    <li value="14">
+	      <a href="#section_4_3">Viewer Options Tab</a>
+	    </li>
+	  </ol>
+	</li>
+      </ol>
+
+      <a name="section_1" id="section_1"></a>
+<h2><a name="section_1" id="section_1">Section
+1&#8211;Introduction</a></h2> 
+<p>FusionViewer is a SCIRun
+PowerApp that is designed to allow scientists to quickly and easily
+visualize 3D scalar and vector magnetic fusion data. Scalar data such
+as pressure or temperature may be viewed a series of iso-surfaces
+and/or as a series of slices. Vector data such as the magnetic field
+can be interactively explored using a 3D widget to produce 3D
+fieldlines. The data can either be viewed as a single time slice or
+stepped through when multiple time slices are provided. In addition to
+viewing, data may be probed to look at the values at specific
+locations.</p>
+
+<p>FusionViewer can read data that has been stored as
+either a local HDF5 file or in MDSplus. The data may be either
+structured volume elements such as Hexahedrons or unstructured Prisms.</p>
+
+<ul> 
+	<li>
+	<p><b>Data Requirements:</b></p>
+
+	<table border="0" cellpadding="0" cellspacing="0" width="600">
+	<tbody><tr>
+		<td class="onlight" valign="top">
+		<p><b>Structured Grid</b></p>
+		<ul>
+			<li>Points</li>
+			<li>Scalar Field and/or Vector Field</li>
+		</ul>
+		</td>
+
+		<td class="onlight" valign="top">
+		<p><b>Unstructured Grid</b></p>
+		<ul>
+			<li>Points</li>
+			<li>Connections</li>
+			<li>Scalar Field and/or Vector Field</li>
+		</ul>
+		</td>
+	</tr></tbody>
+	</table>
+	</li>
+</ul>
+
+<a name="section_1" id="section_1"></a>
+<p>No data set preparations are needed to run this tutorial.  Sample HDF5
+data is part of the SCIRun Fusion sample data set collection and can
+be <a href="/fusionviewer_beta/SCIRun_FusionViewer_Sample.tar.gz">downloaded</a>
+from SCI's web site.</p>
+
+<a name="section_2" id="section_2"></a>
+<h2>Section 2&#8211;Getting Started</a></h2>
+<p>This section demonstrates how to start FusionViewer. Subsequent sections demonstrate how to load
+and visualize data.</p>
+
+<h3><a name="section_2_1" id="section_2_1">2.1 Preparations</a></h3>
+
+<a name="section_2_1" id="section_2_1"></a>
+<p>When running FusionViewer on Apple's OSX operating system, the limit on the number of open files must be increased.</p>
+
+<a name="section_2_1" id="section_2_1"></a>
+<p>For csh-like shells type:</p>
+<pre>
+   limit descriptors unlimited
+</pre>
+
+<a name="section_2_1" id="section_2_1"></a>
+<p>For sh-like shells type:</p>
+<pre>
+   ulimit -n unlimited
+</pre>
+
+
+<h3><a name="section_2_2" id="section_2_2">2.2 Launching FusionViewer</a></h3>
+<p>Change the working directory (using the <tt>cd</tt> command) to the directory containing the FusionViewer executable.  This directory will be <tt>/usr/local/SCIRun/bin/</tt> if SCIRun has been installed via RPM.  Then type <tt>./FusionViewer</tt> to start FusionViewer:</p>
+<pre>
+   cd /usr/local/SCIRun/bin
+   ./FusionViewer
+</pre>
+
+<p>FusionViewer takes a few moments to start up, then
+displays the window shown in <a href="#figure_1">Figure 1.</a> The
+<tt>FusionViewer</tt> command accepts one optional argument, which is
+the name of a <i>session</i> file:</p>
+<pre>
+    ./FusionViewer mysession.ses
+</pre>
+
+<p>where <tt>mysession.ses</tt> has been previously created by
+FusionViewer. See <a href="#section_2_3">below</a> for information on
+sessions.</p>
+
+<p /><br />
+
+<a name="figure_1" id="figure_1"></a>
+<center>
+<a href="figures/f01_inital.gif"><img src="figures/f01_inital.gif" width="500" alt="FusionViewer Application Window" border="1"></a><br>
+<b>Figure 1: FusionViewer Interface Window (Initial State).</b>
+</center><br>
+
+<a name="section_2_3" id="section_2_3"></a>
+<h3><a name="section_2_3" id="section_2_3">2.3 User Interface Organization</a></h3>
+
+<p>The FusionViewer window contains two panes: the
+Rendering Pane and the Visualization Pane.  The Rendering Pane is on
+the left side of the window. All data interaction and visualization is
+performed in the Rendering Pane. The Visualization Pane is on the
+right side of the window. The Visualization Pane guides the user
+through the application and controls visualization parameters for the
+Rendering window. The panes may be detached from one another by
+clicking on the pane detachment/attachment controls&#8212;these are
+the vertical dashed lines separating the panes. When separated, the
+panes appear as displayed in </a><a href="#figure_2">Figure 2.</a>
+Detaching the Rendering window allows it to be viewed at maximum
+resolution.  Panes are re-attached by clicking on the pane
+detachment/attachment controls.</p><br>
+
+<a name="figure_2" id="figure_2"></a>
+<center>
+<a href="figures/f02_inital_split.jpg"><img src="figures/f02_inital_split.jpg" width="500" alt="FusionViewer Application detached Windows" border="1"></a><br>
+<b>Figure 2: FusionViewer Interface Window (Detached State)</b>
+</center>
+
+<p>The Rendering window contains two top-level menus: File and Help.  The File menu, displayed in <a href="#figure_3">Figure&nbsp;3</a> contains the following items:</p>
+
+<dl>
+	<dt>Load Session...</dt>
+	<dd>Loads a previously saved session.</dd>
+	<dt>Save Session...</dt>
+	<dd>Saves a session, which can be resumed later.</dd>
+	<dt>Save Session As...</dt>
+	<dd>Saves a session under a new name.</dd>
+	<dt>Save Image...</dt>
+	<dd>Saves the content of the Rendering pane as an image.</dd>
+	<dt>Quit</dt>
+	<dd>Quits FusionViewer.</dd>
+</dl>
+
+<p>The user is not required to complete all processing steps
+before exiting FusionViewer.  A FusionViewer session can be stopped
+and resumed using File menu items Save Session... (or Save Session
+As...)  and Load Session..., respectively.  After loading a saved
+session with Load Session..., resume processing and visualization by
+clicking Execute.</p>
+<br><br>
+
+<center>
+<a name="figure_3" id="figure_3"></a>
+<a href="figures/f03_file_menu.jpg"><img src="figures/f03_file_menu.jpg" alt="File Menu"><br>
+<b>Figure 3: File Menu.</b></a>
+</center>
+
+<a name="figure_3" id="figure_3"></a>
+<p><a name="figure_3" id="figure_3">The Help menu, shown in </a><a href="#figure_4">Figure&nbsp;4</a>, contains these items:</p>
+
+<dl>
+	<dt>Show Tooltips</dt>
+	<dd>A checkbox that toggles tooltips on and off.</dd>
+	<dt>Help Contents</dt>
+	<dd>Provides help on the FusionViewer application.</dd>
+	<dt>About FusionViewer</dt>
+	<dd>Provides information about FusionViewer.</dd>
+</dl>
+<br><br>
+      
+<center>
+<a name="figure_4" id="figure_4"></a><a href="figures/f04_help_menu.jpg">
+<img src="figures/f04_help_menu.jpg" alt="Help Menu" border="1"><br>
+<b>Figure 4: Help Menu.</b></a>
+</center>
+
+<a name="figure_4" id="figure_4"></a>
+<p>A Progress Indicator and an Execute button are found at
+the bottom of the Visualization Pane.  The Execute button starts the
+current processing step.  The Execute button is pressed after
+parameters for the current processing step have been set.  The Progress
+Indicator and the text above show information about the current state
+of processing and suggest the next processing step.  It can also
+indicate when modules are dynamically compiling or when they are in an
+execution state.</p>
+
+<a name="section_3" id="section_3"></a>
+<h2>Section 3&#8211;Interaction with the Rendering Window</h2>
+
+<p>Interaction with the Rendering window is performed with the
+mouse.  The Rendering window's scene can be translated, zoomed,
+rotated, etc.  </a><a href="#table_1">Table 1</a> shows all mouse
+actions.  See also <a
+href="/doc/User/Guide/usersguide/srug6_3.html">6.3
+of User's Guide (Mouse Control in the Viewer Window)</a> for more
+information.</p>
+
+<a name="table_1" id="table_1"></a>
+<center>
+<table>
+  <caption><b>Table 1</b>: Rendering Window's Mouse Controls</caption>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Modifier Key</th>
+      <th>Mouse Button</th>
+      <th>Renderer Window Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="6"><b>Scene<br>Controls</b></td>
+      <td rowspan="3">none</td>
+      <td>Left</td>
+      <td>Translate scene</td>
+    </tr>
+    <tr>
+      <td>Middle</td>
+      <td>Rotate scene</td>
+    </tr>
+    <tr>
+      <td>Right</td>
+      <td>Zoom scene</td>
+    </tr>
+    <tr>
+      <td rowspan="3">Control</td>
+      <td>Left</td>
+      <td>Translate scene in Z-direction</td>
+    </tr>
+    <tr>
+      <td>Middle</td>
+      <td>Rotate the camera view about the eye point</td>
+    </tr>
+    <tr>
+      <td>Right</td>
+      <td>Unicam movement</td>
+    </tr>
+    <tr>
+      <td rowspan="3"><b>Rake Widget<br>Controls</b></td>
+      <td rowspan="3">Shift</td>
+      <td>Left</td>
+      <td>Position and orient rake widget</td>
+    </tr>
+    <tr>
+      <td>Middle</td>
+      <td>Toggle widget's modes</td>
+    </tr>
+    <tr>
+      <td>Right</td>
+      <td>Display widget help window</td>
+    </tr>
+  </tbody>
+</table>
+</center>
+
+<a name="section_4" id="section_4"></a>
+<h2>Section 4&#8211;Visualization</h2>
+
+<a name="section_4_1" id="section_4_1"></a>
+<h3>4.1 Data Selection Tab</h3>
+
+<p><a href="#figure_5">Figure 5</a> displays the
+Visualization Pane's Data Selection Tab.  The Data Selection Tab
+provides controls for loading data from either HDF5 or MDSplus, for
+animating the data, and for subsampling the data.</p>
+
+<a name="figure_5" id="figure_5"></a>
+<center>
+<a href="figures/f05_data_selection.jpg"><img src="figures/f05_data_selection.jpg" alt="Data Selection Tab" border="1"><br>
+<b>Figure 5: Data Selection Tab</b></a>
+</center><br>
+
+<h3><a name="section_4_1_1" id="section_4_1_1">4.1.1 Data Source</a></h3>
+
+<p><a href="#figure_6">Figure 6</a> displays the Visualization Pane's Data
+Source Pane for loading a particular data set. Data may be loaded from either HDF5 or MDSplus.
+<a href="#figure_7">Figure 7</a> displays the Visualization Pane's
+Data Source Pane for loading HDF5 data. </a><a href="#figure_8">Figure
+8</a> displays a similar pane for loading MDSplus data. Data may be
+loaded from either HDF5 or MDSplus. Although the data may all be
+contained in one file the data must be loaded (specified) as either
+points, connections, scalar or vector. in addition, there can only be
+one set of each.  The required data is outlined in Section 1. See also
+<a href="/doc/Developer/Modules/DataIO.html">DataIO
+Module Descriptions of Module Reference Guide </a> for more
+information.</p>
+
+<a name="figure_6" id="figure_6"></a>
+<center>
+<a href="figures/f06_data_source.jpg"><img src="figures/f06_data_source.jpg" alt="Data Selection Tab" border="1"><br>
+<b>Figure 6: Data Source Pane</b>
+</center><br>
+
+<a name="figure_7" id="figure_7"></a>
+<center>
+<a href="figures/f07_hdf5_pane.jpg"><img src="figures/f07_hdf5_pane.jpg" width="500" alt="HDF5 Data Source Pane" border="1"><br>
+<b>Figure 7: HDF5 Data Source Pane</b></a>
+</center><br>
+
+<p /><br />
+<a name="figure_8" id="figure_8"></a>
+<center>
+<a href="figures/f08_mdsplus_pane.jpg"><img src="figures/f08_mdsplus_pane.jpg" width="500" alt="MDSplus Data Source Pane" border="1"><br>
+<b>Figure 8: MDSplus Data Source Pane</b></a>
+</center><br>
+
+<a name="section_4_1_2" id="section_4_1_2"></a>
+<h3>4.1.2 Data Animation</h3>
+
+<p><a href="#figure_9">Figure 9</a> displays the Visualization Pane's Data
+Animation VCR Pane for loading a particular data slice. Data may be
+loaded as either a single frame or as a series of animation
+frames. There are two animators, one for the scalar and the vector data
+respectively. This allows different time sliced to be viewed at one
+time. Or more commonly, they will be locked in the Data
+Animation Locking tab as shown in </a><a
+href="#figure_10">Figure 10</a> . For more on the VCR controls see  </a><a href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug?.html">Chapter ? of
+the SCIRun User's Guide</a>.</p>
+
+<table align="center" cellspacing="0" cellpadding="10" border="0">
+<tr>
+	<td align="center">
+	<a name="figure_9" id="figure_9"></a>
+	<a href="figures/f09_animation_pane.jpg"><img src="figures/f09_animation_pane.jpg" alt="Data Animation Pane" border="1" hspace="20"><br>
+	<b>Figure 9:  Data Animation Pane</b></a>
+	</td>
+	<td align="center">
+	<a name="figure_10" id="figure_10"></a>
+	<a href="figures/f10_animation_locking_pane.jpg"><img src="figures/f10_animation_locking_pane.jpg" alt="Data Animation Locking Pane" border="1" hspace="20"><br>
+	<b>Figure 10:  Data Animation Locking Tab</b></a>
+	</td>
+</tr>
+</table>
+
+<a name="section_4_2" id="section_4_2"></a>
+<h3>4.2 Vis Options Tab</h3>
+
+<p><a href="#figure_11">Figure 11</a> displays the
+Visualization Pane's Vis Options tab.  Controls in the Vis Options tab
+allow selection of visualization type, visualization parameters, and
+colormap.  Visualizations can be viewed individually or together. For
+example, <a href="#figure_5">Figure 12</a> displays 
+visualization of streamlines and iso-surfaces.</p>
+
+<p>There are individual tabs for visualizing the scalar and
+vector data as well as for the probes and colormaps (under the
+Misc. tab). There usage is demonstrated in the following sections.</p>
+
+<center>
+<p><a name="figure_11" id="figure_11"></a>
+<a href="figures/f11_vis_pane.jpg"><img src="figures/f11_vis_pane.jpg" alt="Vis Options Tab" border="1"><br>
+<b>Figure 11: Vis Options Scalar Tab</b></p>
+
+<p /><br />
+<p><a name="figure_12" id="figure_12"></a>
+<a href="figures/f12_iso_stream_vis.jpg"><img src="figures/f12_iso_stream_vis.jpg" width="400" alt="Streamline and Isosurface Visualization" border="1"><br>
+<b>Figure 12: Streamline and Isosurface Visualization</b></p>
+</center>
+
+<a name="section_4_2_1" id="section_4_2_1"></a>
+<h3>4.2.1 Scalar Data Visualization</h3>
+
+<p><a href="#figure_13">Figure 13</a> displays the Vis Option's Scalar Pane. Scalar data may be visualized as either a one or more slices in the either the phi or z directions. Further these slices may be in the form of either a face or as one or more isocontours. In addition to faces, data may be visualized as one or more isosurfaces.</p>
+
+<a name="figure_13" id="figure_13"></a>
+<center>
+<a href="figures/f13_scalar_vis.jpg"><img src="figures/f13_scalar_vis.jpg" alt="Scalar Data Visualization Pane" border="1"><br>
+<b>Figure 13: Scalar Data Visualization Pane</b></a>
+</center><br>
+
+<a name="section_4_2_1_1" id="section_4_2_1_1"></a>
+<h3>4.2.1.1 Slice Visualization</h3>
+
+<p>A scalar slice surface is a surface of constant phi or z value. </a><a href="#figure_14">Figure
+14</a> displays a slice at phi = 0 degrees.  To produce the
+visualization in <a href="#figure_14">Figure 14</a> select the
+checkbox labeled "Show Scalar Slice Contours" (from the Vis Options
+Scalar tab), select the checkbox labeled "Slice Direction: Phi" and
+select the "Slider" tab, move the value slider to 0, and select the "Show Scalar Slices as Faces". To produce a one or more contours unselect the "Show Scalar Slices as Faces", select "Contours", "Slider" tab and move the value slider to 4. This porduce a slice with four contours.</p>
+
+<br><br>
+<a name="figure_14" id="figure_14"></a>
+<center>
+<a href="figures/f14_scalar_slice.jpg"><img src="figures/f14_scalar_slice.jpg" width="400" alt="Scalar Slice Visualization" border="1"><br>
+<b>Figure 14: Scalar Slice Visualization.</b></a>
+</center>
+
+<br><br>
+<a name="section_4_2_1_2" id="section_4_2_1_2"></a>
+<h3>4.2.1.2 Isosurface Visualization</h3>
+
+<p>An iso-surface is a surface of constant
+value. </a><a href="#figure_15">Figure 15</a> displays an iso-temperature
+surface.  To produce the visualization in <a
+href="#figure_15">Figure 15</a> select the checkbox labeled "Show
+Isosurface" (from the Vis Options Scalar tab), select the "Slider" tab, 
+and  move the value slider to 0.</p>
+
+<br><br>
+<a name="figure_15" id="figure_15"></a>
+<center>
+<a href="figures/f15_scalar_isosurface.jpg"><img src="figures/f15_scalar_isosurface.jpg" width="400" alt="Isosurface Visualization" border="1"><br>
+<b>Figure 15: Isosurface Visualization.</b></a>
+</center>
+
+<br><br>
+<a name="section_4_2_2" id="section_4_2_2"></a>
+<h3>4.2.2 Vector Data Visualization</h3>
+
+<p><a href="#figure_16">Figure 16</a> displays the Vis Option's Vector Pane. Vector data may be visualized as a one or more fieldlines. In addition, the fieldline integration steps maybe shown. Both the fieldlines and integration steps may be color using several techniques.</p>
+
+<br><br>
+<a name="figure_16" id="figure_16"></a>
+<center>
+<a href="figures/f16_vector_vis.jpg"><img src="figures/f16_vector_vis.jpg" alt="Vector Data Visualization Pane" border="1"><br>
+<b>Figure 16: Vector Data Visualization Pane.</b></a>
+</center>
+
+<br><br>
+
+<a name="section_4_2_2_1" id="section_4_2_2_1"></a>
+<h3>4.2.2.1 Fieldlines Visualization</h3>
+<p>Fieldlines are traces of paths taken by the
+magnetic field. The rake widget is used to establish (or seed) the
+initial positions within the magnetic field.</a><a
+href="#figure_17">Figure 17</a> shows fieldlines visualization.</p>
+      
+<p>Fieldlines visualization is controlled with the rake widget
+and settings in the Vis Options tab.</p>
+
+<p>The rake widget's position determine fieldline paths. The
+mouse is used to translate, rotate, and resize the rake widget.  In
+each case, the Shift key and left mouse button are pressed while
+dragging a component of the rake. Drag the rake's blue bar to
+translate the rake, drag a rake's blue spheres to rotate the rake, and
+drag the rake's green ends to resize the rake.  Fieldlines are redrawn
+after the "Execute" button is pressed.</p>
+
+<p>The slider bar labeled "Field Lines" selects the number of
+seed points along the rake widget.  Seed points are evenly spaced
+along the rake.</p>
+      
+<p>Fieldlines are computed using a fast or an adaptive
+algorithm. Select an algorithm using the radio buttons labeled Fast
+Tracking or Adaptive Tracking.  The fast method walks a mesh directly.
+The fast method's accuracy is determined by a model's accuracy.  The
+adaptive (slower) method interpolates between cells in a model. The
+adaptive method walks over discontinuities, producing a smoother
+fieldline appearance.</p>
+
+<br><br>
+<a name="figure_17" id="figure_17"></a>
+<center>
+<a href="figures/f17_vector_fieldlines.jpg"><img src="figures/f17_vector_fieldlines.jpg" width="400" alt="Fieldlines Visualization" border="1"><br>
+<b>Figure 17: Fieldlines Visualization.</b></a>
+</center>
+
+<br><br>
+<a name="section_4_2_3" id="section_4_2_3"></a>
+<h3>4.2.3 Probes</h3>
+<p><a href="#figure_18">Figure 18</a> displays the Vis Option's Probe Pane.
+By checking the "Show Probe" in either the Scalar or Vector Pane will
+display a GUI probe that may be used probe the location and value of
+the data as well as mesh information. The probe may be placed at
+specific locations by entering the location values.</p>
+
+<br><br>
+<a name="figure_18" id="figure_18"></a>
+<center>
+<a href="figures/f18_probes_pane.jpg">
+<img src="figures/f18_probes_pane.jpg" alt="Probe
+Visualization Pane" border="1"><br>
+<b>Figure 18: Probe Visualization Pane.</b></a>
+</center>
+
+<br><br>
+<a name="section_4_2_4" id="section_4_2_4"></a>
+<h3>4.2.4 Misc.</h3>
+<p><a href="#figure_19">Figure 19</a> displays the Vis Option's Misc
+Pane. This pane controls the colormaps used and syncronizes the
+display.</p>
+
+<br><br>
+
+<a name="figure_19" id="figure_19"></a>
+<center>
+<a href="figures/f19_misc_pane.jpg"><img src="figures/f19_misc_pane.jpg" alt="Misc. Visualization Pane" border="1"><br>
+<b>Figure 19: Misc. Visualization Pane.</b></a>
+</center>
+
+<br><br>
+<a name="section_4_2_4_1" id="section_4_2_4_1"></a>
+<h3>4.2.4.1 Colormap Selection</h3>
+
+<p>Scalar and vector magnitude values are color coded using a colormap.  Six colormaps are
+available (</a><a href="#figure_20">Figure 20</a>).  A colormap is
+selected from the Vis Option Misc tab.  <a href="#figure_21">Figure
+21</a> displays the isotemperature surfaces colored with the Balckbody
+colormap selected rather than the default Rainbow coloring. There are
+colr maps for scalar and vector data. The misc color map is used to
+color the integration steps.</p>
+
+<p>In addition, it is also possible to set the usable
+color map range. See </a><a href="/doc/User/Guide/usersguide/srug2_7.html">Chapter
+2.7 of the SCIRun User's Guide</a>, which is a complete reference to
+Colormaps.</p>
+
+<br><br>
+<a name="figure_20" id="figure_20"></a>
+<center>
+<a href="figures/f20_colormaps.jpg"><img src="figures/f20_colormaps.jpg" alt="ColorMaps" border="1"><br>
+<b>Figure 20: ColorMaps.</b></a>
+</center>
+
+<br><br>
+<a name="figure_21" id="figure_21"></a>
+<center>
+<a href="figures/f21_blackbody.jpg"><img src="figures/f21_blackbody.jpg" width="400" alt="Blackbody
+Colormap Visualization" border="1"><br>
+<b>Figure 21: Visualization with the Blackbody colormap selected.</b></a>
+</center>
+
+<br><br>
+<a name="section_4_2_4_2" id="section_4_2_4_2"></a>
+<h3>4.2.4.2 Syncronize</h3>
+<p>Depending on complexity of the data when geometry such as the isosurfaces are generated they
+may complete before other geometery such as the fieldlines. Normally,
+the view is updates on a first generated first viewed basis. This may
+or may not desired. By checking the "Enforce" syncronization the
+viewer will up date only when all of the geometry has been generated.</p>
+
+<br><br>
+<h3>4.3 Viewer Options Tab</h3>
+<p><a href="#figure_22">Figure 22</a> displays the
+Visualization Pane's Viewer Options tab.  The Viewer Options tab
+provides controls for changing the properties of the Rendering Window.
+Hovering the mouse pointer over a control (e.g., Views pop-up menu
+button) displays a tooltip describing a control.</p>
+
+<a name="figure_22" id="figure_6"></a>
+<center>
+<a href="figures/f22_viewer_pane.jpg"><img src="figures/f22_viewer_pane.jpg" alt="Viewer Options
+Tab" border="1"><br>
+<b>Figure 22: Viewer Options Tab</b></a>
+</center><br>
+
+      <center><img src="images/footer.gif" alt="BioFEM bottom banner"/><br /></center>
+    </div>
+  </body>
+</html>

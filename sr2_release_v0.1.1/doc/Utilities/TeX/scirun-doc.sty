@@ -1,0 +1,82 @@
+% -*-latex-*-
+
+%
+%  For more information, please see: http://software.sci.utah.edu
+% 
+%  The MIT License
+% 
+%  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+%  University of Utah.
+% 
+%  License for the specific language governing rights and limitations under
+%  Permission is hereby granted, free of charge, to any person obtaining a
+%  copy of this software and associated documentation files (the "Software"),
+%  to deal in the Software without restriction, including without limitation
+%  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+%  and/or sell copies of the Software, and to permit persons to whom the
+%  Software is furnished to do so, subject to the following conditions:
+% 
+%  The above copyright notice and this permission notice shall be included
+%  in all copies or substantial portions of the Software.
+% 
+%  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+%  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+%  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+%  DEALINGS IN THE SOFTWARE.
+%
+
+%
+% Latex package to be used by scirun documents.  Markup commands exist
+% in two files.  This one and scirun-doc.tex.  Scirun-doc.tex contains
+% commands that are processed by both latex and by the builtin
+% capabilities of latex2html.  This file contains commands that are
+% completely ignored by latex2html or are processed by functions in
+% the latex2html extension file scirun-doc.perl.
+%
+% Documents should include the
+% following latex commands:
+%
+% \usepackage{scirun-doc}
+% \input{scirun-doc.tex}
+%
+
+% Define \newmucmd --- ``new markup command''.  Use \newmucmd to
+% define new markup commands.  \newmucmd takes 2 arguments.  The first
+% is the name of the new markup command and the second is a command to
+% stylize the markup command's content when processed by latex.  The
+% new markup command takes one argument which is the markup command's
+% content.   When processed by latex, content will be stylized
+% according to the second argument given to \newmucmd.  When
+% processed by latex2html, content will be a child of a <span> element
+% and stylized by a css class named after the markup command.
+\def\newmucmd#1#2{%
+  \expandafter\def\csname #1\endcsname##1{%
+    \csname #2\endcsname{##1}} }
+
+% XML start and end tags
+\newcommand{\xmlstarttag}[1]{\texttt{\textless{}#1\textgreater}}
+\newcommand{\xmlendtag}[1]{\texttt{/\textless{}#1\textgreater}}
+
+% Vertical elide.
+\newcommand{\velide}{\(\vdots\)}
+
+% Acronym
+\newcommand{\acronym}[1]{{\scshape\lowercase{#1}}}
+ 
+% A Note.  The first optional argument is the note's title.  If
+% missing then ``Note'' is used.  The next argument is the note's
+% text. 
+\newcommand{\note}[2][Note]{%
+  \vspace{1em}%
+  \begin{center}%
+    \parbox{.75\linewidth}{%
+      {\large\bfseries #1}\vspace{0.5em}\hrule\vspace{0.5em}%
+      #2
+      \vspace*{0.5em}\hrule
+    }%
+  \end{center}%
+  \vspace*{0.5em}%
+}%

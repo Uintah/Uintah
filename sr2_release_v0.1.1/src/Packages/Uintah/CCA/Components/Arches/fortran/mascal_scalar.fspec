@@ -1,0 +1,7 @@
+void mascalscalar(IntVector valid_lo, IntVector valid_hi,
+     const Array3<double> phi, Array3<double> ae, Array3<double> aw,
+     Array3<double> an, Array3<double> as, Array3<double> at,
+     Array3<double> ab, Array3<double> su,
+     Array3<double> cesav, Array3<double> cwsav, Array3<double> cnsav,
+     Array3<double> cssav, Array3<double> ctsav, Array3<double> cbsav,
+     int conv_scheme);

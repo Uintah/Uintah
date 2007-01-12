@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
+<network version="v1.25.2" name="{Main}" bbox="{30 10 434 338}" creationDate="{Thu Mar 16 2006}" creationTime="{10:38:32}" geometry="{800x800+0+0}">
+  <note>{}</note>
+  <modules>
+    <module id="m1" package="Teem" category="UnuNtoZ" name="UnuPad" gui_visible="yes">
+      <position x="45" y="195"/>
+      <var name="dim" val="{3}"/>
+      <var name="ui_geometry" val="{314x300+62+72}"/>
+    </module>
+    <module id="m2" package="Teem" category="NrrdData" name="NrrdInfo" gui_visible="yes">
+      <position x="61" y="281"/>
+      <var name="ui_geometry" val="{451x513+59+54}"/>
+    </module>
+    <module id="m3" package="Teem" category="NrrdData" name="NrrdInfo" gui_visible="yes">
+      <position x="269" y="203"/>
+      <var name="ui_geometry" val="{451x513+56+36}"/>
+    </module>
+    <module id="m4" package="SCIRun" category="FieldsCreate" name="SampleLattice" gui_visible="yes">
+      <position x="30" y="10"/>
+      <var name="sizex" val="{16}"/>
+      <var name="sizey" val="{16}"/>
+      <var name="sizez" val="{16}"/>
+      <var name="padpercent" val="{0.0}"/>
+      <var name="data-at" val="{Nodes}"/>
+      <var name="ui_geometry" val="{314x263+53+18}"/>
+    </module>
+    <module id="m5" package="Teem" category="Converters" name="FieldToNrrd">
+      <position x="31" y="88"/>
+      <var name="label" val="{empty}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection id="c1" from="m4" fromport="0" to="m5" toport="0"/>
+    <connection id="c2" from="m5" fromport="2" to="m3" toport="0"/>
+    <connection id="c3" from="m5" fromport="2" to="m1" toport="0"/>
+    <connection id="c4" from="m1" fromport="0" to="m2" toport="0"/>
+  </connections>
+</network>

@@ -1,0 +1,61 @@
+OUTPORTS: *************************
+  <n:port name="oStringPort">
+    <n:method name="yes1" retType="int">
+      <n:argument mode="in" type="int" name="i"></n:argument>
+      <n:argument mode="out" type="int" name="j"></n:argument>
+    </n:method>
+    <n:method name="yes2" retType="void">
+      <n:argument mode="in" type="array<int,1>" name="blah"></n:argument>
+      <n:argument mode="inout" type="string" name="zzz"></n:argument>
+    </n:method>
+    <n:method name="no1" retType="int">
+      <n:argument mode="in" type="int" name="i"></n:argument>
+      <n:argument mode="out" type="int" name="j"></n:argument>
+    </n:method>
+    <n:method name="no2" retType="void">
+      <n:argument mode="in" type="array<int,1>" name="blah"></n:argument>
+      <n:argument mode="inout" type="string" name="zzz"></n:argument>
+    </n:method>
+    <n:method name="getString" retType="string">
+    </n:method>
+  </n:port>
+INPORTS: *************************
+  <n:port name="GoPort">
+    <n:method name="setService" retType="void">
+      <n:argument mode="in" type="gov.cca.Services" name="svc"></n:argument>
+    </n:method>
+  </n:port>
+  <n:port name="iStringPort">
+    <n:method name="yes1" retType="int">
+      <n:argument mode="in" type="int" name="i"></n:argument>
+      <n:argument mode="out" type="int" name="j"></n:argument>
+    </n:method>
+    <n:method name="yes2" retType="void">
+      <n:argument mode="in" type="array<int,1>" name="blah"></n:argument>
+      <n:argument mode="inout" type="string" name="zzz"></n:argument>
+    </n:method>
+    <n:method name="no1" retType="int">
+      <n:argument mode="in" type="int" name="i"></n:argument>
+    </n:method>
+    <n:method name="no2" retType="void">
+      <n:argument mode="in" type="array<int,1>" name="blah"></n:argument>
+      <n:argument mode="in" type="string" name="zzz"></n:argument>
+    </n:method>
+    <n:method name="no1" retType="void">
+    </n:method>
+    <n:method name="getString" retType="string">
+    </n:method>
+  </n:port>
+INOUTPORTS: *************************
+  <n:port name="Margaritaville">
+    <n:method name="jimmy_buffet" retType="void">
+      <n:argument mode="in" type="coctail.Margarita" name="m"></n:argument>
+    </n:method>
+  </n:port>
+MAPS: *************************
+map iStringPort --> oStringPort
+	method map yes1 --> yes1
+	method map yes2 --> yes2
+	method map getString --> getString
+map Margaritaville --> Margaritaville
+	method map jimmy_buffet --> jimmy_buffet

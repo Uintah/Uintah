@@ -1,0 +1,271 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.24.1 (Full Release) Release Notes (Detailed)</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes (Detailed) for SCIRun Version 1.24.1 (Full Release)<br/>March 9, 2005
+    </h1>
+
+    Note: The release notes from the previous 1.24.0b (Beta) release
+    contain a list of the majority of updates for the 1.24 release.
+    Please refer to those notes if you need a comprehensive list of
+    updates from the 1.22 version of SCIRun.
+
+    <a id="begin-toc">Content:H1,H2</a>
+
+    <h1> New Modules </h1>
+
+    <h2> SCIRun Modules (Category in parentheses) </h2> 
+
+    <ul>
+      <li>BuildMappingMatrix (FieldsData) - Was BuildInterpMatrix</li>
+      <li>ApplyMappingMatrix (FieldsData) - Was ApplyInterpMatrix</li>
+      <li>DirectMapping (FieldsData) - Was DirectInterpolate</li>
+      <li>MatrixInfo (Math) - Information about a SCIRun matrix.</li>
+      <li>EditColorMap2D (Visualization) - Was EditTransferFunc2</li>
+    </ul>
+
+    <h2> Teem Modules (Category in parentheses) </h2>
+    
+    <ul>
+      <li>NrrdSetupTexture (NrrdData) - More efficiently building volume rendering data.</li>
+    </ul>
+
+    <h2> BioPSE Modules (Category in parentheses) </h2>
+    
+    <ul>
+      <li>ApplyFEMElectrodeSource (Forward) - Split 'electrode set' mode of ApplyFEMCurrentSource into separate module.</li>
+    </ul>
+
+    <h1> Module Enhancements </h1>
+
+    <h2> SCIRun Modules (Category in parentheses) </h2>
+    <ul>
+      <li>Add Generation output to the various Info modules.</li>
+      <li>ClipByFunction (FieldsCreate) - Fix compilation for gcc 3.4 (u0-u5 templating issue).</li>
+      <li>GatherFields (FieldsCreate) - Add support for elem data copying.</li>
+      <li>GatherFields (FieldsCreate) - Fix crash bug when no valid input fields are present.</li>
+      <li>SampleField (FieldsCreate) -  Lower the max number of samples to 201 on rake slider.</li>
+      <li>BuildMappingMatrix (FieldsData) - Re-enable parallel interpolation.</li>
+      <li>ChangeFieldBasis (FieldsData) - Emit identity mapping if basis is same.</li>
+      <li>ChangeFieldBasis (FieldsData) - Fix backward compatibility bug.</li>
+      <li>FieldMeasures (FieldsOther) - Add error checking and fix normals.</li>
+      <li>LinAlgUnary (Math) - Added support for SparseRowMatrices.</li>
+      <li>LinAlgBinary (Math) - Added support for SparseRowMatrices.</li>
+      <li>Viewer (Render) - Check for stereo support before using it in the viewer, bug #2478.</li>
+      <li>Viewer (Render) - Fix 'Use Global Controls' button on Viewer items, bug #2431.</li>
+      <li>Isosurface (Visualization) - Filter out degenerate output elements when isosurfacing, bug #2468.</li>
+      <li>EditColorMap2D (Visualization) - load/save use cmap2 format, not .xff files</li>
+      <li>EditColorMap2D (Visualization) - fix endian bug in ppm thumbnail images on macs</li>
+      <li>TransformMesh (modules with scrolling text dialog) - UI comes back to the size the user specifies</li>
+      
+    </ul>
+
+    <h2>Teem Modules (Category in parentheses)</h2>
+    <ul>
+      <li>Upgraded many Unu and Tend modules to work with new Teem, 1.8.0.</li>
+      <li>NrrdToField (Converters) - Now handles PointCloud points only case.</li>
+      <li>NrrdToField (Converters) - Fix gcc 3.4 compilation (reorder includes).</li>
+      <li>UnuFlip (UnuAToM) - Maintains axis min/max for flipped axis.</li>
+      <li>UnuCmedian (UnuAToM) - Module now caches.</li>
+    </ul>
+
+    <h2>Insight Modules (Category in parentheses)</h2>
+    <ul>
+      <li>ImageToField (Converters) - Bounding box and number of samples now set correctly.</li>
+      <li>BinaryThresholdImageFilter (Filters) - Initialize lower threshold to be lower than upper threshold.</li>
+    </ul>
+
+    <h2> BioPSE Modules (Category in parentheses)</h2>
+    <ul>
+      <li>ApplyFEMCurrentSource (Forward) - Changed to use a Mapping Matrix instead of an Interpolant Field.</li>
+    </ul>
+    
+    <h1> Deprecated Modules </h1>
+
+    <h2>SCIRun Modules (Category in parentheses)</h2> 
+    <ul>
+      <li>BuildInterpolant (FieldsData) - Use BuildMappingMatrix instead.</li>
+      <li>BuildInterpMatrix (FieldsData) - Use BuildMappingMatrix instead.</li>
+      <li>Interp2TransferMatrix (FieldsOther) - Use BuildMappingMatrix instead.</li>
+      <li>ApplyInterpolant (FieldsData) - Use ApplyMappingMatrix instead.</li>
+      <li>ApplyInterpMatrix (FieldsData) - Use ApplyMappingMatrix instead.</li>
+      <li>DirectInterpolate (FieldsData) - Use DirectMapping instead.</li>
+      <li>EditTransferFunc2 (Visualization) - Use EditColorMap2D instead.</li>
+    </ul>
+
+    <h1> Power App Enhancements </h1>
+
+    <h2>Power App (Package in parentheses)</h2> 
+    <ul>
+      <li>Help and about now work for all Power Apps.</li>
+      <li>BioTensor (Teem) - Now saves out glyph normalize scale.</li>
+      <li>BioTensor (Teem) - Autoviews correctly when loading tensors directly.</li>
+      <li>BioTensor (Teem) - Bug fixed when user selects Execute multiple times during load process.</li>
+      <li>BioTensor (Teem) - Coloring planes, isosurfaces, glyphs and fibers and switching between all of these color methods now works.</li>
+      <li>BioImage (Teem) - Handles reseting of crops and resamples correctly when loading a saved session as well as the filter type of a resample filter.</li>
+      <li>BioImage (Teem) - 'incr' call fixed when adding filters to the history.</li>
+      <li>BioImage (Teem) - Proper ViewSlices orientations now set when loading a session.</li>
+      <li>BioImage (Teem) - Progress indicator now works for loading large datasets.</li>
+      <li>BioImage (Teem) - Hide/Show icons reversed in filter history.</li>
+      <li>BioImage (Teem) - Uses correct paths to data directory.</li>
+      <li>BioImage (Teem) - References to Cmedian changed to Median Filtering.</li>
+      <li>BioImage (Teem) - Scroll wheel now works in history frame.</li>
+      <li>BioImage (Teem) - Now uses a RescaleColorMap module for volume rendering for machines that do not support shaders.</li>
+      <li>BioImage (Teem) - Now handles loading different datasets.</li>
+      <li>BioImage (Teem) - Allow user to change color of 2D text.</li>
+      <li>BioImage (Teem) - Allow user to turn 2D text on or off.</li>
+      <li>BioImage (Teem) - Updated tutorial figures.</li>
+      <li>BioImage (EditColorMap2d) - Allow user to paint directly in EditColorMap2D window when paint widget is selected.</li>
+      <li>BioImage (EditColorMap2d) - Widgets now save the value range in which they were created.</li>
+      <li>BioImage (EditColorMap2d) - Add 'X' Delete button to widgets to quickly delete widgets.</li>
+      <li>BioImage (EditColorMap2d) - Fix un-necessary multiple redraws of volume rendering when moving widgets.</li>
+      <li>BioImage (EditColorMap2d) - Paint strokes scale with window zoom level.</li>
+      <li>BioImage (EditColorMap2d) - Swatches save to ~/SCIRun/Colormaps directory</li>
+      <li>BioImage (ViewSlices) - Toggle button to display Anatomical or Cartesian Coordinates in Orientation labels</li>
+      <li>BioImage (ViewSlices) - Real-time update of volume rendering transfer function when painting.</li>
+      <li>BioImage (ViewSlices) - Over and Under Layers while painting volume rendering transfer function.</li>
+      <li>BioImage (ViewSlices) - Add 'Show Transfer Function in 2D' checkbutton.</li>
+      <li>BioImage (ViewSlices) - Autoviewing of 2D slice windows.</li>
+      <li>BioImage (ViewSlices) - Gradient Threshold slider masks paint in low gradient areas.</li>
+      <li>BioImage (ViewSlices) - Add lighting to 2D slices in 3D window</li>
+
+      <li>BioImage (ViewSlices) - Change Window Width and Window Level to handle floating point value ranges.</li>
+      <li>BioImage (ViewSlices) - Disable painting when cropping.</li>
+      <li>BioImage (ViewSlices) - Remove padding for cropping as eye now shows correct data.</li>
+      <li>BioImage (ViewSlices) - Fix display of data that was flipped by unu flip before loading.</li>
+      <li>BioImage (ViewSlices) - Change Zoom to be up/left is zoom out and down/right is zoom in to be consistent with 3D window.</li>
+      <li>BioImage (Viewer) - Fix 3D autoview when loading a dataset for the first time.</li>
+      <li>BioImage (GUI) - Move eye radio button to between filters and automatically update when changing eye.</li>
+      <li>BioImage (GUI) - Automatic Re-Organization of filters in Network Editor</li>
+
+
+	
+      <li>BioImage (GUI) - Crop filter has number spinners for changing bounds with mouse.</li>
+      <li>BioImage (GUI) - Add 'Show 2D Crop Region' checkbutton for crop filter to toggle display of crop region of interest.</li>
+      <li>BioImage (GUI) - Autoload corresponding .cmap2 file when loading all nrrds (not just distributed datasets).</li>
+      <li>BioImage - Fix connections between filters when inserting/deleting image processing filters.</li>
+      <li>BioImage - Gracefully refuse to load non-3D datasets.</li>
+      <li>All PowerApps (Teem) - changed the label of Nrrd file reader to reflect ability to read in generic raster data, such as .vff and .vol</li>      
+
+    </ul>
+
+    <h1>Infrastructure Enhancements</h1>
+    <ul>
+      <li>Fix permissions of SCIRun/src/include/sci_gl.h and SCIRun/src/include/sci_glx.h that were causing compiles to fail.</li>
+      <li>Fixed how we build tensors from eigenvectors/eigenvalues
+      (had been missing a transpose).</li>
+      <li>Add double and float types to PropertyManager so that all options in NrrdSetProperty work.</li>
+      <li>Add SparseRowMatrix multiply.</li>
+      <li>Fixed crash bug in SparseRowMatrix::submatrix.</li>
+      <li>Cleaned up matrix classes.</li>
+      <li>Change Matrix::get to return value rather than reference.</li>
+      <li>Use copy_properties instead of unsafe typecast in teem modules.</li>
+      <li>Cleanup Thread_pthreads.cc, do proper pthread error checking (not errno).</li>
+      <li>Templatize Import/Export ExecConverter code to reduce redundancy.</li>
+      <li>Throw error on invalid get_iport(string) or get_oport(string).  Remove much redundant error checking code from modules.</li>
+      <li>Add data_size() function to the Field class.</li>
+      <li>Simplify update_progress interface.</li>
+      <li>Add new send command to Mailbox class so that we don't spam redraw events on viewer expose and resize.</li>
+      <li>Use dynamic test for shader support in volume code.</li>
+      <li>Add support for get_normals to ImageMesh and StructQuadSurfMeshes.</li>
+      <li>Use std::vector for all Mesh::get_neighbors.  Cannot guarantee an upper bound on neighbor size so fixed-sized arrays won't work.</li>
+      <li>Work around bad parsing of exponents in our tcl expscale widget.  %d will not read integers with a leading zero as it thinks they are octal.  However %.0f works.</li>
+      <li>Wrap up OpenGL shader problems to avoid backwards linking compatibility problems.</li>
+      <li>Create virtual destructor for GeomColormapInterface.</li>
+      <li>Use const references for Masked*Field indices where appropriate.</li>
+      <li>Fix volume rendering transparency on apples with unsupported hardware.</li>
+      <li>Change FreeType texture to render to 1 channel to save texture memory</li>
+      <li>Change name of base RPMs from SCIRun to SCIRunBioPSE</li>
+      <li>Major re-factoring of SCIRun->Render->ViewSlices to use function pointers for common tasks</li>
+      <li>Re-Layout of BioImage underlying network makes network debugging easier.</li>
+      <li>Throttle ViewSlices redraw loop if mouse is not in GL window.</li>
+      <li>Fix bug rendering ViewSlices slice positions in wrong location on first draw.</li>
+      <li>Print name of mutex when displaying error about destroying locked mutex.</li>
+      <li>Fix bug that was creating new widgets in EditColorMap2D off-screen</li>
+      <li>Added 'bool GuiVar::changed()' method that return true if the TCL var has changed. Useful for determining if re-execution is necessary.</li>
+      <li>Fix bug that was disabling hardware widget rasterization in EditColorMap2D.</li>
+      <li>Flip input nrrd in Y in Teem->Converters->NrrdToColorMap2.</li>
+      <li>Added methods GuiArgs::get_int() &amp; GuiArgs::get_double(), that automatically convert TCL arguments to tcl_command to their numeric representation and handle error checking too.</li>
+      <li>Added versioning of .scirunrc file.  Prompts user to copy .scirunrc file if version of SCIRun is newer than the version the users .scirunrc file was written for.</li>
+      <li>Bug #2535.  Fix duplicating module on subnet.</li>
+      <li>Bug #2536: Support for double-quote character '"' in Tooltips.</li>
+      <li>Clear EditColorMap2d undo stack when loading new .cmap2 file</li>
+      <li>Package RPMS and OSX binary release with ITK 2.0.0.</li>
+      <li>Add button 'New ViewSlices Window' to open multiple ViewSlices GL windows for one module</li>
+      <li>Bug #2031, update wording and numbering of viewer windows in menus.</li>
+    </ul>
+
+    <h1>Environment Variables</h1>
+    <ul>
+      <li>SCIRUN_RCFILE_VERSION - Allows versioning of .scirunrc file.</li>
+      <li>SCIRUN_DISABLE_SHADERS - Manually disables GL ARB fragment shaders for debugging.</li>
+    </ul>
+
+    <h1>GUI Enhancements</h1>
+    <ul>
+      <li>Cleaned up and simplified the 'Component Wizard' (for new module creation).</li>
+    </ul>
+
+    <h1>Documentation</h1>
+    <ul>
+      <li>Added a Graphics Card and Accelerated Driver section to the FAQ</li>
+    </ul>
+
+    <h1>Data Sets</h1>
+    <ul>
+      <li>There is .cmap2 file for each dataset in the volume/
+      directory, which are the default cmap in BioImage when viewing
+      the respective datasets.</li>
+      <li>There are .jpg files for each dataset in the volume/
+      directory that show a screenshot of the volume rendered in BioImage.</li> 
+    </ul>
+
+    <h1>Known Bugs</h1>
+    <ul>
+      <li></li>
+    </ul>
+    
+    <script type="text/javascript">new Toc().build();</script>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+
+</html>

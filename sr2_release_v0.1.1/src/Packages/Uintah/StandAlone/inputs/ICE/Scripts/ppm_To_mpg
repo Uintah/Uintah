@@ -1,0 +1,171 @@
+#!/bin/csh
+
+
+#__________________________________
+# bulletproofing
+set tmp = (`which display` `which convert` `which composite` `which ffmpeg`)
+
+if ( $status ) then
+  echo " ERROR: Could not find one of the following image processing commands"
+  echo "    display"
+  echo "    convert"
+  echo "    composite"
+  echo "    ffmpeg"
+  exit(0)
+endif
+
+unalias rm
+unalias cp
+
+set ans = "n"
+
+while ( $ans == "n" || $ans == "N")
+  #__________________________________
+  #  User inputs
+  echo "Would you like to make a backup of your images?[n]"
+  set backup = $<
+
+  echo "Enter the size of the movie [640x480]"
+  set size = $<
+
+  echo  "Play back speed, frames per second [5]"
+  set playBackSpeed = $<  
+
+
+  #__________________________________
+  #  apply defaults
+  if ( $backup == "" ) then
+    set backup = "n"
+  endif
+  if ( $size == "" ) then
+    set size = "640x480"
+  endif
+  if ( $playBackSpeed == "" ) then
+    set playBackSpeed = "5"
+  endif
+
+  echo "-------------------"
+  echo "backup images..........$backup"
+  echo "movie size.............$size"
+  echo "movie playback speed...$playBackSpeed"
+  echo "-------------------"
+  echo ""
+  echo "Is this correct? [y]"
+  set ans = $<
+end
+
+#__________________________________
+#  Add Titles and show the user a sample image
+echo ""
+echo "Do you want to add titles to movie? [n]"
+set ans = $<
+set redo = ""
+set N_title = ""
+set S_title = ""
+
+
+while( $ans == "y" || $redo == "n" )
+  echo  "Enter the title for the top of the image"
+  set N_title = "$<"
+  echo  "Enter the title for the bottom of the movie"
+  set S_title = "$<"
+  
+  echo "white or black font color (w/b) [w]"
+  set fontColor = $<
+  if ( $fontColor == "" ) then
+   set fontColor  = "white"
+   set bkgrdColor = "black"
+  else
+   set fontColor  = "black"
+   set bkgrdColor = "white"
+  endif
+    
+  set moviePPM = movie.*.ppm
+  cat $moviePPM[1] | pnmsplit - %d.ppm
+  
+  #__________________________________
+  # generate the labels
+  cp 0.ppm test.0.ppm
+  rm -f Label*.ppm
+  
+  if ( "$N_title" != "" ) then
+    convert -font helvetica -pointsize 14 -fill $fontColor -background $bkgrdColor label:"$N_title"  Label0.ppm
+    composite -gravity north -geometry +0+5  Label0.ppm 0.ppm      test.0.ppm
+  endif
+  if ( "$S_title" != "" ) then
+    convert -font helvetica -pointsize 14 -fill $fontColor -background $bkgrdColor label:"$S_title"  Label1.ppm
+    composite -gravity south -geometry +0+5  Label1.ppm test.0.ppm test.a.ppm
+  endif
+  
+  
+  echo "Close the popup window to continue"
+  
+  display test.a.ppm
+  
+  echo "Is this correct? [y]"
+  set ans = "n"
+  set redo = $<
+  rm test.*.ppm   
+end
+
+#___________________________________________________-
+# Now do the work
+if( $backup == "y" || $backup == "Y" ) then
+  mkdir orgs
+  echo "copying images to orgs/"
+  cp * orgs/.
+endif
+
+#__________________________________
+#  convert ppm names to number.ppm
+echo "Now converting ppm names into something ffmpeg can digest"
+cat movie.*.ppm| pnmsplit - %d.ppm
+
+#__________________________________
+# resize all the ppm files
+set PPM = [0-9]*.ppm
+
+foreach T ($PPM:q)
+ echo "resizing "$T "& adding labels"
+ set num = `basename $T .ppm`
+ convert -resize $size\! $T $num.ppm
+
+ # add the titles to the indivdual frames
+ cp -f $num.ppm $num.0.ppm
+ cp -f $num.ppm $num.a.ppm
+ 
+ if ( "$N_title" != "" ) then
+  composite -gravity north -geometry +0+5   Label0.ppm $num.ppm   $num.0.ppm
+ endif
+ if ( "$S_title" != "" ) then
+  composite -gravity south -geometry +0+5   Label1.ppm $num.0.ppm $num.a.ppm
+ endif
+ rm $num.ppm
+ rm $num.0.ppm
+end 
+
+rm Label*.ppm
+#__________________________________
+# make the movies mpg
+echo "___________________________________"
+echo "Now making the movie"
+rm movie.mpeg
+ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.ppm -r 30 movie.mpeg
+
+#__________________________________
+echo "__________________________________"
+echo "Do you want to keep the individual titled frames as jpgs? [n]"
+set ans = $<
+
+foreach T ($PPM:q)
+  set num = `basename $T .ppm`
+  if( $ans == "y" ) then
+    convert $num.a.ppm $num.a.jpg      # ppms are huge compared to jpgs
+    echo "converting $num.a.ppm $num.a.jpg"
+  endif
+  rm $num.a.ppm 
+end
+
+
+
+exit

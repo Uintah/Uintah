@@ -1,0 +1,24 @@
+
+class Margaritaville {
+   void jimmy_buffet(in coctail.Margarita m);
+};
+	
+interface oStringPort extends gov.cca.Port
+{
+  int m2(out SameThing t1);
+  int m4(in TwoT t2);
+  int m5(in TwoT t1);
+  int m6(in FourT t1);
+  int m7(in FourT t1);
+};
+
+%inoutomit
+%inoutremap Margaritaville
+%inoutremap oStringPort
+%inoutomit oStringPort
+
+
+
+
+	
+	

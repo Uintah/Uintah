@@ -1,0 +1,24 @@
+This directory contains Doxygen configuration information
+and extra pages for the SCIRun2 documentation.
+
+TO GENERATE THE DOCUMENTATION:
+
+1) Edit the INPUT and EXCLUDE paths in the file SCIRun2.config to 
+reflect the location of your SCIRun checkout.
+
+2) Edit the OUTPUT_DIRECTORY, HTML_OUTPUT, LATEX_OUTPUT, etc. paths 
+in the file SCIRun2.config to reflect the desired output directories.
+
+3) run "doxygen SCIRun2.config"
+
+TO MODIFY OR ADD CODE DOCUMENTATION
+Edit the header file for the desired class using Doxygen formatting.
+
+TO MODIFY THE MAIN AND AUXILIARY PAGES
+Edit the appropriate *.dox files found in this directory, or add 
+new pages.
+
+FOR MORE INFORMATION
+See www.doxygen.org
+
+
