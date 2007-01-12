@@ -29,8 +29,8 @@
 
 
 
-#ifndef CCA_PIDL_CommError_h
-#define CCA_PIDL_CommError_h
+#ifndef Core_CCA_Exceptions_CommError_h
+#define Core_CCA_Exceptions_CommError_h
 
 #include <Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>

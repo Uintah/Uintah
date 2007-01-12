@@ -31,7 +31,7 @@
 #include <Core/CCA/PIDL/NexusSpMessage.h>
 #include <Core/CCA/PIDL/ReplyEP.h>
 #include <Core/CCA/PIDL/NexusSpChannel.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <iostream>
 
 using namespace SCIRun;

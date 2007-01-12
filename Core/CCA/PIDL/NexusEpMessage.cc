@@ -29,7 +29,7 @@
 
 
 #include "NexusEpMessage.h"
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <Core/CCA/PIDL/ReplyEP.h>
 #include <Core/CCA/PIDL/NexusSpChannel.h>
 #include <iostream>

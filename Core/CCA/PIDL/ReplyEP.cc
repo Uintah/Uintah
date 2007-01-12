@@ -41,7 +41,7 @@
  */
 
 #include <Core/CCA/PIDL/ReplyEP.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/NotFinished.h>
 #include <globus_nexus.h>

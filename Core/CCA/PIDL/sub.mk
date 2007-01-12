@@ -66,7 +66,6 @@ ifeq ($(HAVE_GLOBUS),yes)
             $(SRCDIR)/SocketEpChannel.cc \
             $(SRCDIR)/NexusEpChannel.cc \
             $(SRCDIR)/NexusSpChannel.cc \
-            $(SRCDIR)/CommError.cc \
             $(SRCDIR)/NexusSpMessage.cc \
             $(SRCDIR)/NexusEpMessage.cc \
             $(SRCDIR)/SocketMessage.cc \
@@ -79,13 +78,12 @@ else
             $(SRCDIR)/Message.cc \
             $(SRCDIR)/SocketSpChannel.cc \
             $(SRCDIR)/SocketEpChannel.cc \
-            $(SRCDIR)/CommError.cc \
             $(SRCDIR)/SocketMessage.cc \
             $(SRCDIR)/SocketThread.cc \
             $(SRCDIR)/PRMI.cc
 endif
 
-PSELIBS := Core/Exceptions Core/Util Core/Thread Core/CCA/DT
+PSELIBS := Core/Exceptions Core/Util Core/Thread Core/CCA/DT Core/CCA/Exceptions
 
 LIBS := $(M_LIBRARY)
 

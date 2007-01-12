@@ -41,7 +41,7 @@
  */
 
 #include <Core/CCA/PIDL/CommNexus.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 
 using namespace SCIRun;
 

@@ -33,7 +33,7 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/Warehouse.h>
 #include <Core/CCA/PIDL/ServerContext.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <Core/CCA/PIDL/NexusEpMessage.h>
 #include <Core/CCA/PIDL/NexusSpChannel.h>
 
