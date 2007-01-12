@@ -35,7 +35,7 @@
 #include <Core/CCA/PIDL/Warehouse.h>
 
 #include <Core/Exceptions/InternalError.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 
 #include <iostream>
 

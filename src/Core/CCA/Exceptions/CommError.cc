@@ -28,7 +28,7 @@
 
 
 
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <sci_defs/framework_defs.h>
 
 #include <iostream>

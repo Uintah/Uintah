@@ -29,7 +29,7 @@
 
 #include <Core/CCA/PIDL/NexusSpChannel.h>
 #include <Core/CCA/PIDL/NexusSpMessage.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <iostream>

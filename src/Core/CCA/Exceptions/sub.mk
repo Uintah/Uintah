@@ -27,28 +27,15 @@
 #
 
 
-
 # Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/CCA/DT
+SRCDIR   := Core/CCA/Exceptions
 
-SRCS := \
-        $(SRCDIR)/DataTransmitter.cc \
-        $(SRCDIR)/DTThread.cc \
-        $(SRCDIR)/DTPoint.cc \
-        $(SRCDIR)/DTMessage.cc \
-        $(SRCDIR)/DTMessageTag.cc
+SRCS     += \
+             $(SRCDIR)/CommError.cc
 
-LIBS :=
-
-
-PSELIBS := Core/Exceptions Core/Util Core/Thread Core/CCA/Exceptions
+PSELIBS := Core/Exceptions Core/Util
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-ifeq ($(BUILD_UNIT_TESTS),yes)
-  SUBDIRS := $(SRCDIR)/UnitTests
-	include $(SCIRUN_SCRIPTS)/recurse.mk
-endif

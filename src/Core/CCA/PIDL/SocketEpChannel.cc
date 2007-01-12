@@ -54,7 +54,7 @@
 #include <Core/CCA/PIDL/PRMI.h>
 #include <Core/CCA/PIDL/SocketEpChannel.h>
 #include <Core/CCA/PIDL/SocketSpChannel.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 #include <Core/CCA/PIDL/SocketMessage.h>
 #include <Core/CCA/PIDL/SocketThread.h>
 #include <Core/CCA/PIDL/Object.h>
