@@ -70,14 +70,14 @@ void TTClient::setServices(const sci::cca::Services::pointer& svc)
   ttUIPort *uip = new ttUIPort();
   uip->setParent(this);
   ttUIPort::pointer uiPortPtr(uip);
-  svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", sci::cca::TypeMap::pointer(0));
 
   ttGoPort *gop = new ttGoPort();
   gop->setParent(this);
   ttGoPort::pointer goPortPtr(gop);
-  svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort", props);
+  svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort", sci::cca::TypeMap::pointer(0));
 
-  svc->registerUsesPort("tt", "sci.cca.ports.TTPort", props);
+  svc->registerUsesPort("tt", "sci.cca.ports.TTPort", sci::cca::TypeMap::pointer(0));
 }
 
 int ttUIPort::ui()
@@ -153,7 +153,6 @@ int ttGoPort::go()
 #endif
 
   services->releasePort("tt");
-  services->releasePort("progress");
 
   return 0;
 }

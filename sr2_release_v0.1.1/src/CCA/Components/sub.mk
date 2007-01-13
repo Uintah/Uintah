@@ -39,15 +39,6 @@ SUBDIRS   := \
              $(SRCDIR)/TTClient                    \
              $(SRCDIR)/FEM                         \
              $(SRCDIR)/LinSolver                   \
-	     $(SRCDIR)/TestCreateTopic             \
-	     $(SRCDIR)/TestGetTopic                \
-	     $(SRCDIR)/TestReleaseTopic            \
-	     $(SRCDIR)/TestUnregisterEventListener \
-	     $(SRCDIR)/TestSendEvent               \
-	     $(SRCDIR)/TestEchoEvent               \
-	     $(SRCDIR)/TestRegisterEventListener   \
-	     $(SRCDIR)/TestProcessEvents           \
-	     $(SRCDIR)/TestSubscription 
 
 ifeq ($(HAVE_WX),yes)
   SUBDIRS += \
@@ -66,7 +57,7 @@ ifeq ($(HAVE_TAO),yes)
 endif
 
 ifeq ($(HAVE_MPI),yes)
-  SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello
+# SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello
 # $(SRCDIR)/PLinSolver
 endif
 
