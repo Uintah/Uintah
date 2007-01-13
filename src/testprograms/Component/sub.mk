@@ -36,10 +36,7 @@ SUBDIRS := \
            $(SRCDIR)/framework  \
            $(SRCDIR)/memstress  \
            $(SRCDIR)/mitest	    \
-           $(SRCDIR)/objects    \
            $(SRCDIR)/pingpong	  \
-           $(SRCDIR)/spectest   \
-           $(SRCDIR)/pp	        \
            $(SRCDIR)/stopserver
 
 ifeq ($(HAVE_MPI),yes)
@@ -49,10 +46,8 @@ ifeq ($(HAVE_MPI),yes)
              $(SRCDIR)/Jacobi        \
              $(SRCDIR)/LUFactor      \
              $(SRCDIR)/OESort        \
-             $(SRCDIR)/subsetter     \
              $(SRCDIR)/ppArr         \
              $(SRCDIR)/passPPtr      \
-             $(SRCDIR)/exceptiontest \
              $(SRCDIR)/testDT
 endif
 
