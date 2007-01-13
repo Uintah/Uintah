@@ -141,6 +141,7 @@ private:
 #endif // !defined(__ECC) && !defined(_MSC_VER)
   
 #else
+#ifndef PDT_PARSER
   struct edgepairless
   {
     bool operator()(const edgepair_t &a, const edgepair_t &b) const
@@ -148,6 +149,7 @@ private:
       return a < b;
     }
   };
+#endif /* PDT_PARSER */
 
   typedef map<edgepair_t,
 	      TSMesh::Node::index_type,
