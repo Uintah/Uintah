@@ -75,7 +75,7 @@ FRPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes,
                                         ::SSIDL::array1<int> &dirichletNodes,
                                         ::SSIDL::array1<double> &dirichletValues)
 {
-  wxString fn = wxFileSelector(wxT("Open mesh file"), wxT(""), wxT(""), wxT(""), wxT("PDE Description Files(*.pde)"), wxOPEN|wxFILE_MUST_EXIST);
+  wxString fn = wxFileSelector(wxT("Open mesh file"), wxT(""), wxT(""), wxT(""), wxT("*.pde"), wxOPEN|wxFILE_MUST_EXIST);
   if (fn.IsEmpty()) {
     return 1;
   }
