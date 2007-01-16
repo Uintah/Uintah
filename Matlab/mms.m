@@ -1,10 +1,10 @@
-% This routine computes various MMS solutions.
+% This routine plots the various MMS solutions.
 
 close all
 clear all
 
 %______________ Initializtion
-mms_solution = 1;  % 1 = Randy's
+mms_solution = 3;  % 1 = Randy's
                    % 2 = Ann Almgren
                    % 3 = "Code verification by the MMS" SAND2000-1444, pg60
                    %      Steady state solution
@@ -12,21 +12,24 @@ mms_solution = 1;  % 1 = Randy's
 if(mms_solution == 1)
   A  = 1;
   nu = 0.002;
-  L  = 2*pi;
+  L  = 0;
+  H  = 2*pi;
 end
 if(mms_solution == 2)
-  L = 1;
+  L = 0;
+  H = 1;
 end
 
 if(mms_solution == 3)
   density = 1;
-  L = 1;
+  L = -pi;
+  H =  pi;
 end
 
 tFinal  = 0;    % Final simulation time
 N       = 50;   % resolution
-h       = L/N;  % dx
-[x,y] = meshgrid(0:h:L,0:h:L);
+dx       = (H-L)/N;  % dx
+[x,y] = meshgrid(L:dx:H,L:dx:H);
  
 
 %____________________________________
@@ -80,7 +83,7 @@ for t = 0:dt:tFinal
   %Plot velocity field
   figure(2)
   quiver(x,y,u,v,2)
-  axis([0 L 0 L]);
+  axis([L H L H]);
   pause(0.1)
 
   % M = getframe;
