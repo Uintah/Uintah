@@ -47396,6 +47396,27 @@ _sci_includes=''
         fi
 
         if test "$HAVE_MPI" = "yes"; then
+	   if test "$HAVE_MPICH" != "yes"; then
+             ########################################################################
+             ## Determine if mpi is actually mpich...
+             cat > conftest-mpich.cc <<EOF
+#include <mpi.h>
+int main(int argc, char **argv)
+{
+  char * s = MPICH_VERSION;
+  return 0;
+}
+EOF
+             $CC $INC_MPI_H -c conftest-mpich.cc > /dev/null 2>&1
+             if test -f conftest-mpich.o; then
+		 { echo "$as_me:$LINENO: WARNING: Note: found what looked like mpi but was actually mpich." >&5
+echo "$as_me: WARNING: Note: found what looked like mpi but was actually mpich." >&2;}
+                 HAVE_MPICH=yes
+             fi
+             rm -rf conftest-mpich*
+             ########################################################################
+           fi
+
            if test "$IS_WIN" = "yes"; then
              header=""
            else
@@ -64621,7 +64642,7 @@ fi
 ## arg 2 : HYPRE libraries and headers
 ## arg 3 : HYPRE.h
 ## arg 4 : $_sci_inc
-## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu
+## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -64704,10 +64725,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu"; then
+if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities"; then
 
    found_framework=no
-   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu; do
+   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -65049,7 +65070,7 @@ echo "$as_me: error: Specifically requested HYPRE include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu; do
+  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities; do
     if test -z "$i"; then
        continue
     fi
