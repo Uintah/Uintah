@@ -42,22 +42,23 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
+#include <sci_defs/mpi_defs.h>
 #include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
 
 #ifdef USE_VAMPIR
-#include <Packages/Uintah/Core/Parallel/Vampir.h>
+#  include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
 
 #if HAVE_IEEEFP_H
-#include <ieeefp.h>
+#  include <ieeefp.h>
 #endif
 #if 0
-#include <fenv.h>
+#  include <fenv.h>
 #endif
 
 #ifdef _WIN32
-#include <process.h>
+#  include <process.h>
 #endif
 
 #include <iostream>
@@ -70,24 +71,23 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
+#undef SCISHARE
+#ifdef _WIN32
+#  define SCISHARE __declspec(dllimport)
+#else
+#  define SCISHARE
+#endif
+
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
 // Mutex cerrLock( "cerr lock" );
 // DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 // DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
-#undef SCISHARE
-#ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
-#else
-#define SCISHARE
-#endif
-
 extern SCISHARE Mutex cerrLock;
 extern SCISHARE DebugStream mixedDebug;
 extern SCISHARE DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
-//#define HAVE_MPICH
 
 static
 void
