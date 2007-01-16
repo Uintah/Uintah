@@ -3579,6 +3579,26 @@ if test "$sci_required_mpi" = "yes"; then
         fi
         
         if test "$HAVE_MPI" = "yes"; then
+	   if test "$HAVE_MPICH" != "yes"; then
+             ########################################################################
+             ## Determine if mpi is actually mpich...
+             cat > conftest-mpich.cc <<EOF
+#include <mpi.h>
+int main(int argc, char **argv)
+{
+  char * s = MPICH_VERSION;
+  return 0;
+}
+EOF
+             $CC $INC_MPI_H -c conftest-mpich.cc > /dev/null 2>&1
+             if test -f conftest-mpich.o; then
+		 AC_MSG_WARN(Note: found what looked like mpi but was actually mpich.)
+                 HAVE_MPICH=yes
+             fi
+             rm -rf conftest-mpich*
+             ########################################################################
+           fi
+
            if test "$IS_WIN" = "yes"; then
              header=""
            else
@@ -5301,7 +5321,7 @@ fi
 # so we aren't going to check for it in any version.  If the other 3
 # libs exist, we will assume that HYPRE_blas is there if it is needed.
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
                          $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
