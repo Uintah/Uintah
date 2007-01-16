@@ -967,7 +967,7 @@ proc popupLoadMenu {} {
 	return
     }
 
-    if { $netedit_loadnet == ""} return
+    if { $netedit_loadnet == "" } return
     #dont ask user before clearing canvas
     ClearCanvas 0
     if {[string match *.srn $netedit_loadnet]} {
