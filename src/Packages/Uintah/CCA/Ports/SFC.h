@@ -3744,12 +3744,12 @@ void SFC<DIM,LOCS>::SetCenterv(REAL *center)
 {
   for(int d=0;d<DIM;d++)
   {
-    center[d]=dim[d];
+    center[d]=center[d];
   }
   set=set|16;
 }
 template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetRefinementsByDeltav(REAL *deltax)
+void SFC<DIM,LOCS>::SetRefinementsByDeltav(REAL *delta)
 {
   char mask=8;
   if( (mask&SFC<2,LOCS>::set) != mask)
@@ -3757,8 +3757,11 @@ void SFC<DIM,LOCS>::SetRefinementsByDeltav(REAL *deltax)
     cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
     return;
   }
-  refinements=(int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
-  refinements=max(SFC<2,LOCS>::refinements,(int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
+  refinements=(int)ceil(log(dimensions[0]/delta[0])/log(2.0));
+  for(int d=1;d<DIM;d++)
+  {
+    refinements=max(SFC<2,LOCS>::refinements,(int)ceil(log(dimensions[d]/delta[d])/log(2.0)));
+  }
   set=set|32;
 }
 
