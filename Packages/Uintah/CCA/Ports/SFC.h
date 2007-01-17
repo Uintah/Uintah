@@ -21,7 +21,7 @@ double start, finish;
 const int TIMERS=7;
 double timers[TIMERS]={0};
 #endif
-enum Curve {HILBERT, MORTON, GREY};
+enum Curve {HILBERT=0, MORTON=1, GREY=2};
 enum CleanupType{BATCHERS,LINEAR};
 
 #define SERIAL 1
@@ -58,7 +58,13 @@ struct Group
     partner_group=partner;
     parent_group=parent;
   }
-  Group() {}
+  Group() 
+  {
+    size=-1;
+    start_rank=-1;
+    partner_group=-1;
+    parent_group=-1;
+  }
 };
 template <class BITS>
 inline bool operator<=(const History<BITS> &a, const History<BITS> &b)
@@ -139,7 +145,7 @@ template<int DIM, class LOCS>
 class SFC
 {
 public:
-  SFC(const ProcessorGroup *d_myworld) : set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
+  SFC(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
   {
     if(DIM==3)
     {
@@ -153,6 +159,58 @@ public:
     {
       dir=reinterpret_cast<int(*)[DIM]>(dir1);
     }
+    SetCurve(curve);
+  };
+  void SetCurve(Curve curve)
+  {
+      switch(DIM)
+      {
+        case 1:
+          order=reinterpret_cast<int(*)[BINS]>(order1);
+          orientation=reinterpret_cast<int(*)[BINS]>(orient1);
+          inverse=reinterpret_cast<int(*)[BINS]>(order1);
+          break;
+        case 2:
+          switch(curve)
+          {
+            case HILBERT:
+              order=reinterpret_cast<int(*)[BINS]>(horder2);
+              orientation=reinterpret_cast<int(*)[BINS]>(horient2);
+              inverse=reinterpret_cast<int(*)[BINS]>(hinv2);
+              break;
+            case MORTON:
+              order=reinterpret_cast<int(*)[BINS]>(morder2);
+              orientation=reinterpret_cast<int(*)[BINS]>(morient2);
+              inverse=reinterpret_cast<int(*)[BINS]>(morder2);
+              break;
+            case GREY:
+              order=reinterpret_cast<int(*)[BINS]>(gorder2);
+              orientation=reinterpret_cast<int(*)[BINS]>(gorient2);
+              inverse=reinterpret_cast<int(*)[BINS]>(ginv2);
+              break;
+          }
+          break;
+        case 3:
+          switch(curve)
+          {
+            case HILBERT:
+              order=reinterpret_cast<int(*)[BINS]>(horder3);
+              orientation=reinterpret_cast<int(*)[BINS]>(horient3);
+              inverse=reinterpret_cast<int(*)[BINS]>(hinv3);
+              break;
+            case MORTON:
+              order=reinterpret_cast<int(*)[BINS]>(morder3);
+              orientation=reinterpret_cast<int(*)[BINS]>(morient3);
+              inverse=reinterpret_cast<int(*)[BINS]>(morder3);
+              break;
+            case GREY:
+              order=reinterpret_cast<int(*)[BINS]>(gorder3);
+              orientation=reinterpret_cast<int(*)[BINS]>(gorient3);
+              inverse=reinterpret_cast<int(*)[BINS]>(ginv3);
+              break;
+          }
+          break;
+      }
   };
   virtual ~SFC() {};
   void GenerateCurve(int mode=0);
@@ -251,12 +309,7 @@ template<class LOCS>
 class SFC1D : public SFC<1,LOCS>
 {
   public:
-    SFC1D(const ProcessorGroup *d_myworld) : SFC<1,LOCS>(d_myworld) 
-    {
-      SFC<1,LOCS>::order=order1;
-      SFC<1,LOCS>::orientation=orient1;
-      SFC<1,LOCS>::inverse=order1;
-    }
+    SFC1D(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC<1,LOCS>(d_myworld,curve) {}
                         
     void SetDimensions(REAL wx);
     void SetCenter(REAL x);
@@ -270,9 +323,8 @@ class SFC2D : public SFC<2,LOCS>
 {
 
   public:
-    SFC2D(Curve curve,const ProcessorGroup *d_myworld) : SFC<2,LOCS>(d_myworld) {SetCurve(curve);};
+    SFC2D(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC<2,LOCS>(d_myworld,curve) {};
     virtual ~SFC2D() {};
-    void SetCurve(Curve curve);
     void SetDimensions(REAL wx, REAL wy);
     void SetCenter(REAL x, REAL y);
     void SetRefinementsByDelta(REAL deltax, REAL deltay);
@@ -286,9 +338,8 @@ template<class LOCS>
 class SFC3D : public SFC<3,LOCS>
 {
   public:
-    SFC3D(Curve curve,const ProcessorGroup *d_myworld) : SFC<3,LOCS>(d_myworld) {SetCurve(curve);};
+    SFC3D(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC<3,LOCS>(d_myworld,curve) {};
     virtual ~SFC3D() {};
-    void SetCurve(Curve curve);
     void SetDimensions(REAL wx, REAL wy, REAL wz);
     void SetCenter(REAL x, REAL y, REAL z);
     void SetRefinementsByDelta(REAL deltax, REAL deltay, REAL deltaz);
@@ -300,37 +351,37 @@ private:
 class SFC1f : public SFC1D<float>
 {
   public:
-    SFC1f(const ProcessorGroup *d_myworld) : SFC1D<float>(d_myworld) {};
+    SFC1f(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC1D<float>(d_myworld,curve) {};
 };
 
 class SFC1d : public SFC1D<double>
 {
   public:
-    SFC1d(const ProcessorGroup *d_myworld) : SFC1D<double>(d_myworld) {};
+    SFC1d(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC1D<double>(d_myworld,curve) {};
 };
 
 class SFC2f : public SFC2D<float>
 {
   public:
-    SFC2f(Curve curve,const ProcessorGroup *d_myworld) : SFC2D<float>(curve,d_myworld) {};
+    SFC2f(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC2D<float>(d_myworld,curve) {};
 };
 
 class SFC2d : public SFC2D<double>
 {
   public:
-    SFC2d(Curve curve,const ProcessorGroup *d_myworld) : SFC2D<double>(curve,d_myworld) {} ;
+    SFC2d(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC2D<double>(d_myworld,curve) {} ;
 };
 
 class SFC3f : public SFC3D<float>
 {
   public:
-    SFC3f(Curve curve,const ProcessorGroup *d_myworld) : SFC3D<float>(curve,d_myworld) {};
+    SFC3f(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC3D<float>(d_myworld,curve) {};
 };
 
 class SFC3d : public SFC3D<double>
 {
   public:
-    SFC3d(Curve curve,const ProcessorGroup *d_myworld) : SFC3D<double>(curve,d_myworld) {} ;
+    SFC3d(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : SFC3D<double>(d_myworld,curve) {} ;
 };
 
 
@@ -344,118 +395,6 @@ const char errormsg[6][30]={
   "Refinements not set\n",
            };
 
-/*
-int myrand(int N)
-{
-  int retval;
-  
-  do
-  {
-    retval=int(rand()/(double)RAND_MAX*N);
-  }
-  while(retval==N);
-  return retval;
-}
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::MergeTest(unsigned int N,int repeat)
-{
-  srand(time(0));
-   
-  
-  P=d_myworld->size();
-  Comm=d_myworld->getComm();
-  rank=d_myworld->myrank();
-
-  SetCleanup(LINEAR);
-  
-  //create list
-  vector<History<unsigned long long> > list;
-  vector<History<unsigned long long> > mylist,rbuf,mbuf;
-
-  vector<int> sendcounts(P,0), senddisp(P,0);
-  int recv_count;
-  
-  //create sendcounts & send disp
-  int n=N/P;
-  int rem=N%P;
-
-  if(rank<rem)
-     recv_count=n+1;
-  else
-     recv_count=n;
-
-  this->n=recv_count; 
-  mylist.resize(recv_count);
-  mbuf.resize(recv_count);
-  if(rank==0)
-  {
-    for(int p=0;p<P;p++)
-    {
-      if(p<rem)
-      {
-        sendcounts[p]=n+1;      
-      }
-      else
-      {
-        sendcounts[p]=n;
-      }
-    }
-    for(int p=1;p<P;p++)
-    {
-      senddisp[p]=senddisp[p-1]+sendcounts[p-1];
-    }
-    for(int p=0;p<P;p++)
-    {
-      
-      sendcounts[p]*=sizeof(History<unsigned long long>);
-      senddisp[p]*=sizeof(History<unsigned long long>);
-    }
-    
-    list.resize(N);
-    for(unsigned int i=0;i<N;i++)
-    {
-      list[i].bits=i;
-    }
-    
-  } 
-  int linear_max=0;
-  int total=0;
-  for(int i=0;i<repeat;i++)
-  {
-    linear_total=0;
-    if(rank==0)
-    {
-      //shuffle list
-      random_shuffle(list.begin(),list.end(),myrand);
-      
-      //scatter list      
-      MPI_Scatterv(&list[0],&sendcounts[0],&senddisp[0],MPI_BYTE,&mylist[0],recv_count*sizeof(History<unsigned long long>),MPI_BYTE,0,Comm);
-    }
-    else
-    {
-      //scatter list
-      MPI_Scatterv(0,0,0,MPI_BYTE,&mylist[0],recv_count*sizeof(History<unsigned long long>),MPI_BYTE,0,Comm);
-    }
-
-    //sort mylist
-    sort(mylist.begin(),mylist.end());
-   
-    //call primary merge
-    //PrimaryMerge2<unsigned long long>(mylist,rbuf,mbuf,P); 
-    PrimaryMerge<unsigned long long>(mylist,rbuf,mbuf); 
-    
-    //call cleanup
-    Cleanup<unsigned long long>(mylist,rbuf,mbuf);
-    
-    total+=linear_total;
-    if(linear_total>linear_max)
-            linear_max=linear_total;
-  }
-  if(rank==0)
-    cout << P << " " << N << " " << (float)total/repeat << " " << linear_max << endl;
-  //output linear_total/repeat;
-}
-*/
 template<int DIM, class LOCS>
 void SFC<DIM,LOCS>::ProfileMergeParameters(int repeat)
 {
@@ -3791,28 +3730,6 @@ void SFC1D<LOCS>::SetRefinementsByDelta(REAL deltax)
   SFC<1,LOCS>::refinements=(int)ceil(log(SFC<1,LOCS>::dimensions[0]/deltax)/log(2.0));
   SFC<1,LOCS>::set|=32;
 }
-template<class LOCS>
-void SFC2D<LOCS>::SetCurve(Curve curve)
-{
-  switch(curve)
-  {
-    case HILBERT:
-      SFC<2,LOCS>::order=horder2;
-      SFC<2,LOCS>::orientation=horient2;
-      SFC<2,LOCS>::inverse=hinv2;
-      break;
-    case MORTON:
-      SFC<2,LOCS>::order=morder2;
-      SFC<2,LOCS>::orientation=morient2;
-      SFC<2,LOCS>::inverse=morder2;
-      break;
-    case GREY:
-      SFC<2,LOCS>::order=gorder2;
-      SFC<2,LOCS>::orientation=gorient2;
-      SFC<2,LOCS>::inverse=ginv2;
-      break;
-  }
-}
      
 template<class LOCS>
 void SFC2D<LOCS>::SetDimensions(REAL wx, REAL wy)
@@ -3867,28 +3784,6 @@ unsigned char  SFC2D<LOCS>::Bin(LOCS *point, REAL *center)
 
 }
 /*****************SFC3D*********************/
-template<class LOCS>
-void SFC3D<LOCS>::SetCurve(Curve curve)
-{
-  switch(curve)
-  {
-    case HILBERT:
-      SFC<3,LOCS>::order=horder3;
-            SFC<3,LOCS>::orientation=horient3;
-      SFC<3,LOCS>::inverse=hinv3;
-            break;
-    case MORTON:
-      SFC<3,LOCS>::order=morder3;
-            SFC<3,LOCS>::orientation=morient3;
-      SFC<3,LOCS>::inverse=morder3;
-      break;
-    case GREY:
-      SFC<3,LOCS>::order=gorder3;
-            SFC<3,LOCS>::orientation=gorient3;
-      SFC<3,LOCS>::inverse=ginv3;
-            break;
-  }
-}
 template<class LOCS>
 void SFC3D<LOCS>::SetDimensions(REAL wx, REAL wy, REAL wz)
 {

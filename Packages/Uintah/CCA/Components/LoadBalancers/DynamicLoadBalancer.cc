@@ -289,9 +289,10 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
         positions.push_back(pos[dimensions[d]]);
       }
     }
+
     if(dim==3)
     {
-      SFC3f curve(HILBERT, d_myworld);
+      SFC3f curve(d_myworld);
       curve.SetLocalSize(level->numPatches());
       curve.SetDimensions(range.x(), range.y(), range.z());
       curve.SetLocations(&positions);
@@ -301,7 +302,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     }
     else if (dim==2)
     {
-      SFC2f curve(HILBERT, d_myworld);   
+      SFC2f curve(d_myworld);   
       curve.SetLocalSize(level->numPatches());
       curve.SetDimensions(range[dimensions[0]], range[dimensions[1]]);
       curve.SetLocations(&positions);
@@ -356,7 +357,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
 
     if(dim==3)
     {
-      SFC3f curve(HILBERT, d_myworld);
+      SFC3f curve(d_myworld);
       curve.SetLocalSize(positions.size()/3);
       curve.SetDimensions(range.x(), range.y(), range.z());
       curve.SetRefinementsByDelta(min_patch_size.x(),min_patch_size.y(),min_patch_size.z()); 
@@ -370,7 +371,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     }
     else if(dim==2)
     {
-      SFC2f curve(HILBERT, d_myworld);
+      SFC2f curve(d_myworld);
       curve.SetLocalSize(positions.size()/2);
       curve.SetDimensions(range[dimensions[0]],range[dimensions[1]]);
       curve.SetRefinementsByDelta(min_patch_size[dimensions[0]],min_patch_size[dimensions[1]]); 
@@ -396,7 +397,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
       curve.SetMergeParameters(3000,500,2,.15);
       curve.GenerateCurve();
     }
-
     //indices comes back in the size of each proc's patch set, pointing to the index
     // gather it all into one array
     
