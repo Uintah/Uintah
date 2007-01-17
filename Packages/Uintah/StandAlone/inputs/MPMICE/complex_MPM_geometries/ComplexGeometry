@@ -1,36 +1,71 @@
-	HOW TO CREATE A COMPLEX GEOMETRY AND INCORPORATE IT IN UINTAH
+HOW TO CREATE A COMPLEX GEOMETRY AND INCORPORATE IT IN UINTAH
+---------------------------------------------------------------------------------
 
-	1- Log on to a CADE machine
+There are 3 main steps to creating and incorporating a complex geometry piece into 
+an MPMICE calculation.
 
-	2- Open ProE:  proe2001
+1)  Generate the complex geometry.
+ __________________________________
+You can use any CAD package that will generate an output file that can be imported
+into Fluent/Gambit.  A variety of file formats can be used, these instructions
+have been tested with the IGES format.  Please see Gambit->help for more
+information on other formats.
 
-	3- Create the geometry or modify an existing geometry
+If you are going to use Pro-E select a "part" model.  If you don't then you
+won't be able to export the geometry piece into the IGES format.  
 
-	4- Once the geometry has been created, you will want to save it as a
-	part and also as an igs.  To do this go to File->Save a Copy.  In Type,
-	select prt and type in the name of your choice.  Then repeat, but in
-	Type, select igs.
+Gambit does have the ability to generate a complex object but it's not as
+sophisticated as Pro-E.  You can create multiple geometric objects and add and
+subtract them with boolean operators.  If you elect to use Gambit after you've 
+created the object go to step 2.
 
-	5- Open Gambit:  gambit
 
-	6- Go to File->Import->IGES and select the file, click Accept
+2)  Generate the triangulated surfaces
+------------------------------------
+- Open Gambit:  gambit
 
-	7- You can translate the geometry or move it, if needed 
+- Go to File->Import->IGES and select the file.
 
-	8- To mesh, click on the second button under Operation.  It is a yellow
-	block.  Then click on the 3rd button under Mesh.  In the Faces bar,
-	click on the arrow and select all of the faces.  Change the elements to
-	Tri and change the Spacing.  I have been using 0.01.  Then click Apply.
+- If you wish you can translate the geometry object.
 
-	9- Go to File->Export->Mesh.  Type the name of your choice, but leave
-	the extension .neu and click Accept.
+- Generate a triangulated surface mesh: 
+    - click the mesh command button (2nd button under Operation, yellow block).
+    
+    - click the face command button (3rd button under Mesh)
+        -Select all faces
+        -Change "Elements" to Tri (Triangulated faces)
+        -Choose an appropriate interval size so the triangulated surface
+         accurately represents the geometry piece
+   
+- Select Solver->Generic to generate a "neu" output file format.
 
-	10- Copy the .neu file to your SCIrun directory.
+- Export mesh:
+  File->Export->Mesh
+  <filename>.neu
 
-	11- Run gambitFileReader.  It will ask you the name of the .neu file and
-	then the name of the output. I usually use the same name.
 
-	12- Copy the geometry pts and tri file the the same location as your
-	input file.
-	
-	13- Add the geometry to your input file.
+3) Convert the triangulated mesh into something that Uintah can read.
+------------------------------------------------------------------------
+- Copy the <filename>.neu file to your SCIrun directory.
+
+- Run gambitFileReader.  Input the <filename>.neu file name and
+then the basename of the output files.  Use the same name minus the
+".neu" extension.  For example:
+
+
+fluids:51# gambitFileReader
+
+**********************************************
+Input the name of the Gambit output file: torus.neu
+Input the output file name for storing points and surfaces: torus
+I've found 4400 nodes and 8800 elements
+Node Coordinates
+connectivity
+I've successfully read in the file
+
+
+- Copy the geometry <filename>.pts and <filename>.tri files to location of sus.
+
+- Add the geometry to your input file in the same fashion as you would a 
+box, cylinder, sphere.
+
