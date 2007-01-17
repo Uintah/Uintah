@@ -139,7 +139,21 @@ template<int DIM, class LOCS>
 class SFC
 {
 public:
-  SFC(int dir[][DIM], const ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) {};
+  SFC(const ProcessorGroup *d_myworld) : set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
+  {
+    if(DIM==3)
+    {
+      dir=reinterpret_cast<int(*)[DIM]>(dir3);
+    }
+    else if(DIM==2)
+    {
+      dir=reinterpret_cast<int(*)[DIM]>(dir2);
+    }
+    else if(DIM==1)
+    {
+      dir=reinterpret_cast<int(*)[DIM]>(dir1);
+    }
+  };
   virtual ~SFC() {};
   void GenerateCurve(int mode=0);
   void SetRefinements(int refinements);
@@ -155,6 +169,10 @@ public:
   void SetMergeMode(int mode) {this->mergemode=mode;};
   void MergeTest(unsigned int N,int repeat);
   void ProfileMergeParameters(int repeat=21);
+
+ void SetDimensionsv(REAL *dim);
+ void SetCenterv(REAL *center);
+ void SetRefinementsByDeltav(REAL *deltax);
 protected:
 
   SCIRun::Time *timer;
@@ -233,7 +251,7 @@ template<class LOCS>
 class SFC1D : public SFC<1,LOCS>
 {
   public:
-    SFC1D(const ProcessorGroup *d_myworld) : SFC<1,LOCS>(dir1,d_myworld) 
+    SFC1D(const ProcessorGroup *d_myworld) : SFC<1,LOCS>(d_myworld) 
     {
       SFC<1,LOCS>::order=order1;
       SFC<1,LOCS>::orientation=orient1;
@@ -252,7 +270,7 @@ class SFC2D : public SFC<2,LOCS>
 {
 
   public:
-    SFC2D(Curve curve,const ProcessorGroup *d_myworld) : SFC<2,LOCS>(dir2,d_myworld) {SetCurve(curve);};
+    SFC2D(Curve curve,const ProcessorGroup *d_myworld) : SFC<2,LOCS>(d_myworld) {SetCurve(curve);};
     virtual ~SFC2D() {};
     void SetCurve(Curve curve);
     void SetDimensions(REAL wx, REAL wy);
@@ -268,7 +286,7 @@ template<class LOCS>
 class SFC3D : public SFC<3,LOCS>
 {
   public:
-    SFC3D(Curve curve,const ProcessorGroup *d_myworld) : SFC<3,LOCS>(dir3, d_myworld) {SetCurve(curve);};
+    SFC3D(Curve curve,const ProcessorGroup *d_myworld) : SFC<3,LOCS>(d_myworld) {SetCurve(curve);};
     virtual ~SFC3D() {};
     void SetCurve(Curve curve);
     void SetDimensions(REAL wx, REAL wy, REAL wz);
@@ -765,6 +783,10 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
   }
   else
   {
+    //if using cleanup only use Batchers
+    if(mergemode==1)
+      SetCleanup(BATCHERS);
+
     //make new sub group if needed?
     rank=d_myworld->myrank();
     Comm=d_myworld->getComm();
@@ -3708,6 +3730,37 @@ void SFC<DIM,LOCS>::SetOutputVector(vector<DistributedIndex> *orders)
     set=set|2;
   }
 }
+template<int DIM, class LOCS>
+void SFC<DIM,LOCS>::SetDimensionsv(REAL *dim)
+{
+  for(int d=0;d<DIM;d++)
+  {
+    dimensions[d]=dim[d];
+  }
+  set=set|8;
+}
+template<int DIM, class LOCS>
+void SFC<DIM,LOCS>::SetCenterv(REAL *center)
+{
+  for(int d=0;d<DIM;d++)
+  {
+    center[d]=dim[d];
+  }
+  set=set|16;
+}
+template<int DIM, class LOCS>
+void SFC<DIM,LOCS>::SetRefinementsByDeltav(REAL *deltax)
+{
+  char mask=8;
+  if( (mask&SFC<2,LOCS>::set) != mask)
+  {
+    cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
+    return;
+  }
+  refinements=(int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
+  refinements=max(SFC<2,LOCS>::refinements,(int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
+  set=set|32;
+}
 
 template<class LOCS>
 void SFC1D<LOCS>::SetDimensions(REAL wx)
@@ -3730,6 +3783,7 @@ void SFC1D<LOCS>::SetRefinementsByDelta(REAL deltax)
   if( (mask&SFC<1,LOCS>::set) != mask)
   {
     cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
+    return;
   }
   SFC<1,LOCS>::refinements=(int)ceil(log(SFC<1,LOCS>::dimensions[0]/deltax)/log(2.0));
   SFC<1,LOCS>::set|=32;
@@ -3780,6 +3834,7 @@ void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
   if( (mask&SFC<2,LOCS>::set) != mask)
   {
     cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
+    return;
   }
   SFC<2,LOCS>::refinements=(int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
   SFC<2,LOCS>::refinements=max(SFC<2,LOCS>::refinements,(int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
@@ -3855,6 +3910,7 @@ void SFC3D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay, REAL deltaz)
   if( (mask&SFC<3,LOCS>::set) != mask)
   {
     cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
+    return;
   }
 
   SFC<3,LOCS>::refinements=(int)ceil(log(SFC<3,LOCS>::dimensions[0]/deltax)/log(2.0));
