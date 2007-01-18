@@ -1,2 +1,1 @@
-0 0 * * * /local/csafe/raid1/tester/bin/tcsh_run "/local/csafe/raid1/tester/bin/startTester -j 8 -sendmail"
-0 19 * * 5 /local/csafe/raid1/tester/bin/tcsh_run "/local/csafe/raid1/tester/bin/startTester -j 8 -sendmail -weekly"
+0 0 * * * /usr/csafe/raid1/tester/bin/tcsh_run "/usr/csafe/raid1/tester/bin/startTester -j 8 -sendmail -malloc_strict"
