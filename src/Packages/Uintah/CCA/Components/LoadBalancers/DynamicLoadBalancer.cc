@@ -289,35 +289,37 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
         positions.push_back(pos[dimensions[d]]);
       }
     }
-
+    REAL r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
+    REAL c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
+    
     if(dim==3)
     {
-      SFC3f curve(d_myworld);
+      SFC<3,float> curve(d_myworld);
       curve.SetLocalSize(level->numPatches());
-      curve.SetDimensions(range.x(), range.y(), range.z());
+      curve.SetDimensions(r);
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
-      curve.SetCenter(center.x(),center.y(), center.z());
+      curve.SetCenter(c);
       curve.GenerateCurve(SERIAL);
     }
     else if (dim==2)
     {
-      SFC2f curve(d_myworld);   
+      SFC<2,float> curve(d_myworld);   
       curve.SetLocalSize(level->numPatches());
-      curve.SetDimensions(range[dimensions[0]], range[dimensions[1]]);
+      curve.SetDimensions(r);
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
-      curve.SetCenter(center[dimensions[0]],center[dimensions[1]]);
+      curve.SetCenter(c);
       curve.GenerateCurve(SERIAL);
     }
     else
     {
-      SFC1f curve(d_myworld);
+      SFC<1,float> curve(d_myworld);
       curve.SetLocalSize(level->numPatches());
-      curve.SetDimensions(range[dimensions[0]]);
+      curve.SetDimensions(r);
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
-      curve.SetCenter(center[dimensions[0]]);
+      curve.SetCenter(c);
       curve.GenerateCurve(SERIAL);
     }
     memcpy(output,&indices[0],sizeof(DistributedIndex)*level->numPatches());
@@ -355,15 +357,19 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
       }
     }
 
+    REAL r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
+    REAL c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
+    REAL delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
+
     if(dim==3)
     {
-      SFC3f curve(d_myworld);
+      SFC<3,float> curve(d_myworld);
       curve.SetLocalSize(positions.size()/3);
-      curve.SetDimensions(range.x(), range.y(), range.z());
-      curve.SetRefinementsByDelta(min_patch_size.x(),min_patch_size.y(),min_patch_size.z()); 
+      curve.SetDimensions(r);
+      curve.SetRefinementsByDelta(delta); 
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
-      curve.SetCenter(center.x(),center.y(), center.z());
+      curve.SetCenter(c);
       curve.SetMergeMode(1);
       curve.SetCleanup(BATCHERS);
       curve.SetMergeParameters(3000,500,2,.15);
@@ -371,13 +377,13 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     }
     else if(dim==2)
     {
-      SFC2f curve(d_myworld);
+      SFC<2,float> curve(d_myworld);
       curve.SetLocalSize(positions.size()/2);
-      curve.SetDimensions(range[dimensions[0]],range[dimensions[1]]);
-      curve.SetRefinementsByDelta(min_patch_size[dimensions[0]],min_patch_size[dimensions[1]]); 
+      curve.SetDimensions(r);
+      curve.SetRefinementsByDelta(delta); 
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
-      curve.SetCenter(center[dimensions[0]],center[dimensions[1]]);
+      curve.SetCenter(c);
       curve.SetMergeMode(1);
       curve.SetCleanup(BATCHERS);
       curve.SetMergeParameters(3000,500,2,.15);
@@ -385,13 +391,13 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     }
     else
     {
-      SFC1f curve(d_myworld);
+      SFC<1,float> curve(d_myworld);
       curve.SetLocalSize(positions.size());
-      curve.SetDimensions(range[dimensions[0]]);
-      curve.SetRefinementsByDelta(min_patch_size[dimensions[0]]); 
+      curve.SetDimensions(r);
+      curve.SetRefinementsByDelta(delta); 
       curve.SetLocations(&positions);
       curve.SetOutputVector(&indices);
-      curve.SetCenter(center[dimensions[0]]);
+      curve.SetCenter(c);
       curve.SetMergeMode(1);
       curve.SetCleanup(BATCHERS);
       curve.SetMergeParameters(3000,500,2,.15);
