@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/SFC.h>
 #include <set>
 #include <string>
 
