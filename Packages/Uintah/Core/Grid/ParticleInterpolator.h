@@ -43,7 +43,8 @@ namespace Uintah {
                                     constNCVariable<Stencil7>& zoi,
                                     constNCVariable<Stencil7>& zoi_fine,
                                     const bool& getFiner,
-                                    int& num_cur,int& num_fine,int& num_coarse,                                     const Vector& size) {};
+                                    int& num_cur,int& num_fine,int& num_coarse,                                     const Vector& size, bool coarse_part,
+                                    const Patch* patch) {};
 
     virtual int size() = 0;
   };
