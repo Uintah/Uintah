@@ -40,15 +40,20 @@ fi
 # Make sure that the src dir is in the correct location...
 #
 
-if test ! -d $1/../src; then
-    echo ""
-    echo "ERROR: The src directory was not found at:"
-    echo "       $1/../src"
-    echo ""
-    echo "       Contact dav@sci.utah.edu to udate this script"
-    echo "       to handle this case.  Sorry for the inconvenience."
-    echo ""
-    exit
+SRCDIR=$1/../src
+
+if test ! -d $SRCDIR; then
+    SRCDIR=$1/../../src
+    if test ! -d $SRCDIR; then
+        echo ""
+        echo "ERROR: The src directory was not found at:"
+        echo "       $1/../src"
+        echo ""
+        echo "       Contact dav@sci.utah.edu to udate this script"
+        echo "       to handle this case.  Sorry for the inconvenience."
+        echo ""
+        exit
+    fi
 fi
 
 # 
@@ -86,7 +91,7 @@ fi
 
 ## Determine how many useFakeXXXXs are in place
 
-filename=$1/../src/Packages/Uintah/StandAlone/sub.mk
+filename=$SRCDIR/Packages/Uintah/StandAlone/sub.mk
 using_fake_arches=`grep "#ARCHES_LIBS" $filename`
 using_fake_mpmice=`grep "#MPMICE_LIB" $filename`
 using_fake_ice=`grep "#ICE_LIB" $filename`
@@ -112,7 +117,7 @@ if test -z "$using_fake_arches"; then
     rm $filename.tmp
 
     ############
-    filename=$1/../src/Packages/Uintah/CCA/Components/sub.mk
+    filename=$SRCDIR/Packages/Uintah/CCA/Components/sub.mk
     echo "Applying FakeArches to $filename..."
     mv -f $filename $filename.tmp
     sed -e "s,^#DUMMY_LIB,DUMMY_LIB ,g" \
@@ -121,7 +126,7 @@ if test -z "$using_fake_arches"; then
     rm $filename.tmp
 
     ############
-    filename=$1/../src/Packages/Uintah/CCA/Components/Dummy/sub.mk
+    filename=$SRCDIR/Packages/Uintah/CCA/Components/Dummy/sub.mk
     echo "Applying FakeArches to $filename..."
 
     mv -f $filename $filename.tmp
@@ -130,7 +135,7 @@ if test -z "$using_fake_arches"; then
     rm $filename.tmp
 
     ############
-    filename=$1/../src/Packages/Uintah/CCA/Components/Parent/sub.mk
+    filename=$SRCDIR/Packages/Uintah/CCA/Components/Parent/sub.mk
     echo "Applying FakeArches to $filename..."
 
     mv -f $filename $filename.tmp
@@ -148,7 +153,7 @@ else # Fake arches has already been specified, reverse it
         exit
     fi
 
-    filename=$1/../src/Packages/Uintah/StandAlone/sub.mk
+    filename=$SRCDIR/Packages/Uintah/StandAlone/sub.mk
     echo "Reversing FakeArches from $filename..."
 
     if test -z "$using_fake_ice" -a -z "$using_fake_mpmice"; then
@@ -162,7 +167,7 @@ else # Fake arches has already been specified, reverse it
     rm $filename.tmp
 
     ############
-    filename=$1/../src/Packages/Uintah/CCA/Components/sub.mk
+    filename=$SRCDIR/Packages/Uintah/CCA/Components/sub.mk
     echo "Reversing FakeArches from $filename..."
 
     sed_line2='-e "s,#ARCHES,ARCHES ,g"'
@@ -173,7 +178,7 @@ else # Fake arches has already been specified, reverse it
     rm $filename.tmp
 
     ############
-    filename=$1/../src/Packages/Uintah/CCA/Components/Dummy/sub.mk
+    filename=$SRCDIR/Packages/Uintah/CCA/Components/Dummy/sub.mk
     echo "Reversing FakeArches from $filename..."
 
     mv -f $filename $filename.tmp
@@ -182,7 +187,7 @@ else # Fake arches has already been specified, reverse it
     rm $filename.tmp
 
     ############
-    filename=$1/../src/Packages/Uintah/CCA/Components/Parent/sub.mk
+    filename=$SRCDIR/Packages/Uintah/CCA/Components/Parent/sub.mk
     echo "Reversing FakeArches from $filename..."
 
     if test -z "$using_fake_ice" -a -z "$using_fake_mpmice"; then
