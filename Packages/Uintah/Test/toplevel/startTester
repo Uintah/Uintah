@@ -22,21 +22,23 @@ MONTHLYBACKUP="no"
 mallocstrict="no"
 USER=""
 
+BUILD_DIR=/home/csafe/csafe-tester/"$OS"
+TEST_DATA=/home/csafe/csafe-tester/"$OS"/TestData
+TEMP_DIR=/home/csafe/csafe-tester/"$OS"
+
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
     CC=cc
     CXX=CC
     F77=f77
-    BUILD_DIR=/home/csafe/csafe-tester/"$OS"
-    TEST_DATA=/home/csafe/csafe-tester/"$OS"/TestData
-    TEMP_DIR=/home/csafe/csafe-tester/"$OS"
 elif [ "$OS" == "Linux" ]; then
     CC=gcc
     CXX=c++
     F77=g77
-    BUILD_DIR=/home/csafe/csafe-tester/"$OS"
-    TEST_DATA=/home/csafe/csafe-tester/"$OS"/TestData
-    TEMP_DIR=/home/csafe/csafe-tester/"$OS"
+elif [ "$OS" == "Darwin" ]; then
+    CC=gcc
+    CXX=c++
+    F77=gfortran
 else
     echo "Unknown OS. Abort"
     exit -1
@@ -280,7 +282,7 @@ else
     cd "$BUILDROOT"
 
 
-    This block is a workaround for svn not working on raid1 or raid2
+#    This block is a workaround for svn not working on raid1 or raid2
     if [ "$OS" == "Linux" ]; then
         cd /usr/sci/projects/Uintah/tester/temp_checkouts/
         svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src "SCIRun.${ID}/src"  > "$BUILDROOT"/svn_co.log 2>&1
@@ -356,9 +358,13 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 	DBG_CONFIGURE="'--enable-package=Uintah' --enable-debug '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o' --enable-sci-malloc --enable-scinew-line-numbers"
 #	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o'"
         OPT_CONFIGURE="--enable-package=Uintah --enable-64bit --enable-optimize='-O3 -G0 -OPT:div_split=OFF:Olimit=0:roundoff=3:alias=typed' --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o"
-else
+elif [ "$OS" == "Linux" ]; then
 	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.9.0b-o --with-mpi=/usr/local/lam-mpi --enable-sci-malloc --enable-scinew-line-numbers"
 	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.9.0b-o --with-mpi=/usr/local/lam-mpi"
+else
+# Darwin
+	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/hypre-1.9.0b/ --with-mpi=/usr/local/lam-7.1.1 --enable-sci-malloc --enable-scinew-line-numbers"
+	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/hypre-1.9.0b/ --with-mpi=/usr/local/lam-7.1.1"
 fi
 
 rm -f $HTMLLOG
