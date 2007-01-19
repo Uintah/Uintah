@@ -86,33 +86,37 @@ inline bool operator>(const History<BITS> &a, const History<BITS> &b)
 {
   return a.bits>b.bits;
 }
-extern SCISHARE int dir3[8][3];
-extern SCISHARE int dir2[4][2];
-extern SCISHARE int dir1[2][1];
+extern SCISHARE int dir3[][3];
+extern SCISHARE int dir2[][3];
+extern SCISHARE int dir1[][3];
 
 extern SCISHARE int hinv3[][8];
 extern SCISHARE int ginv3[][8];
-extern SCISHARE int hinv2[][4];
-extern SCISHARE int ginv2[][4];
+extern SCISHARE int minv3[][8];
+extern SCISHARE int hinv2[][8];
+extern SCISHARE int ginv2[][8];
+extern SCISHARE int minv2[][8];
 
 extern SCISHARE int horder3[][8];
 extern SCISHARE int gorder3[][8];
 extern SCISHARE int morder3[][8];
-extern SCISHARE int horder2[][4];
-extern SCISHARE int gorder2[][4];
-extern SCISHARE int morder2[][4];
+extern SCISHARE int horder2[][8];
+extern SCISHARE int gorder2[][8];
+extern SCISHARE int morder2[][8];
 
 extern SCISHARE int horient3[][8];
 extern SCISHARE int gorient3[][8];
 extern SCISHARE int morient3[][8];
-extern SCISHARE int horient2[][4];
-extern SCISHARE int gorient2[][4];
-extern SCISHARE int morient2[][4];
+extern SCISHARE int horient2[][8];
+extern SCISHARE int gorient2[][8];
+extern SCISHARE int morient2[][8];
 
-extern SCISHARE int orient1[][2];
-extern SCISHARE int order1[][2];
+extern SCISHARE int orient1[][8];
+extern SCISHARE int order1[][8];
+extern SCISHARE int inv1[][8];
 
-typedef double REAL;
+extern SCISHARE const char errormsg[][30];
+
 #define EPSILON 1e-6
 #define BINS (1<<DIM)
 
@@ -142,23 +146,20 @@ void outputhistory(BITS history)
 }
 
 /******************Bin helper functions*****************************/
-//template<int DIM, class LOCS> inline unsigned char Bin(LOCS *point, REAL *center);
-
-
 template<int DIM, class LOCS> struct Binner
 {
-  static inline unsigned char Bin(LOCS *point, REAL *center);
+  static inline unsigned char Bin(LOCS *point, LOCS *center);
 };
 template<class LOCS> struct Binner<1,LOCS>
 {
-  static inline unsigned char Bin(LOCS *point, REAL *center)
+  static inline unsigned char Bin(LOCS *point, LOCS *center)
   {
     return point[0]<center[0];
   }
 };
 template<class LOCS> struct Binner<2,LOCS>
 {
-  static inline unsigned char Bin(LOCS *point, REAL *center)
+  static inline unsigned char Bin(LOCS *point, LOCS *center)
   {
     unsigned char bin=0;
     if(point[0]<center[0])
@@ -170,7 +171,7 @@ template<class LOCS> struct Binner<2,LOCS>
 };
 template<class LOCS> struct Binner<3,LOCS>
 {
-  static inline unsigned char Bin(LOCS *point, REAL *center)
+  static inline unsigned char Bin(LOCS *point, LOCS *center)
   {
     unsigned char bin=0;
     if(point[0]>=center[0]) 
@@ -184,112 +185,64 @@ template<class LOCS> struct Binner<3,LOCS>
 };
 
 /********************************************************************/
-
-template<int DIM, class LOCS>
+template<class LOCS>
 class SFC
 {
 public:
-  SFC(const ProcessorGroup *d_myworld,Curve curve=HILBERT) : set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
+  SFC(int dim, const ProcessorGroup *d_myworld,Curve curve=HILBERT) : dim(dim), curve(curve), set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
   {
-    if(DIM==3)
+    switch(dim)
     {
-      dir=reinterpret_cast<int(*)[DIM]>(dir3);
-    }
-    else if(DIM==2)
-    {
-      dir=reinterpret_cast<int(*)[DIM]>(dir2);
-    }
-    else if(DIM==1)
-    {
-      dir=reinterpret_cast<int(*)[DIM]>(dir1);
+      case 1:
+        dir=dir1;
+        break;
+      case 2:
+        dir=dir2;
+        break;
+      case 3:
+        dir=dir3;
+        break;
     }
     SetCurve(curve);
-  };
-  void SetCurve(Curve curve)
-  {
-      switch(DIM)
-      {
-        case 1:
-          order=reinterpret_cast<int(*)[BINS]>(order1);
-          orientation=reinterpret_cast<int(*)[BINS]>(orient1);
-          inverse=reinterpret_cast<int(*)[BINS]>(order1);
-          break;
-        case 2:
-          switch(curve)
-          {
-            case HILBERT:
-              order=reinterpret_cast<int(*)[BINS]>(horder2);
-              orientation=reinterpret_cast<int(*)[BINS]>(horient2);
-              inverse=reinterpret_cast<int(*)[BINS]>(hinv2);
-              break;
-            case MORTON:
-              order=reinterpret_cast<int(*)[BINS]>(morder2);
-              orientation=reinterpret_cast<int(*)[BINS]>(morient2);
-              inverse=reinterpret_cast<int(*)[BINS]>(morder2);
-              break;
-            case GREY:
-              order=reinterpret_cast<int(*)[BINS]>(gorder2);
-              orientation=reinterpret_cast<int(*)[BINS]>(gorient2);
-              inverse=reinterpret_cast<int(*)[BINS]>(ginv2);
-              break;
-          }
-          break;
-        case 3:
-          switch(curve)
-          {
-            case HILBERT:
-              order=reinterpret_cast<int(*)[BINS]>(horder3);
-              orientation=reinterpret_cast<int(*)[BINS]>(horient3);
-              inverse=reinterpret_cast<int(*)[BINS]>(hinv3);
-              break;
-            case MORTON:
-              order=reinterpret_cast<int(*)[BINS]>(morder3);
-              orientation=reinterpret_cast<int(*)[BINS]>(morient3);
-              inverse=reinterpret_cast<int(*)[BINS]>(morder3);
-              break;
-            case GREY:
-              order=reinterpret_cast<int(*)[BINS]>(gorder3);
-              orientation=reinterpret_cast<int(*)[BINS]>(gorient3);
-              inverse=reinterpret_cast<int(*)[BINS]>(ginv3);
-              break;
-          }
-          break;
-      }
-  };
-  virtual ~SFC() {};
+  }
+  void SetCurve(Curve curve);
+  ~SFC() {};
   void GenerateCurve(int mode=0);
   void SetRefinements(int refinements);
   void SetLocalSize(unsigned int n);
   void SetLocations(vector<LOCS> *locs);
   void SetOutputVector(vector<DistributedIndex> *orders);
   void SetMergeParameters(unsigned int comm_block_size,unsigned int merge_block_size, unsigned int blocks_in_transit, float sample_percent);
+  void SetNumDimensions(int dim);
   void SetCommBlockSize(unsigned int b) {comm_block_size=b;};
   void SetMergeBlockSize(unsigned int b) {merge_block_size=b;};
   void SetBlocksInTransit(unsigned int b) {blocks_in_transit=b;};
   void SetSamplePercent(float p) {sample_percent=p;};
   void SetCleanup(CleanupType cleanup) {this->cleanup=cleanup;};
   void SetMergeMode(int mode) {this->mergemode=mode;};
-  void MergeTest(unsigned int N,int repeat);
-  void ProfileMergeParameters(int repeat=21);
-
-  void SetDimensions(REAL *dim);
-  void SetCenter(REAL *center);
-  void SetRefinementsByDelta(REAL *deltax);
+  void SetDimensions(LOCS *dimensions);
+  void SetCenter(LOCS *center);
+  void SetRefinementsByDelta(LOCS *deltax);
+  
+  template<int DIM> void ProfileMergeParameters(int repeat=21);
 protected:
+  
+  int dim;
+  Curve curve;
 
   SCIRun::Time *timer;
   
   //order and orientation arrays
-  int (*order)[BINS];
-  int (*orientation)[BINS];
-  int (*inverse)[BINS];
+  int (*order)[8];
+  int (*orientation)[8];
+  int (*inverse)[8];
   
   //direction array
-  int (*dir)[DIM];
+  int (*dir)[3];
 
   //curve parameters
-  REAL dimensions[DIM];
-  REAL center[DIM];
+  LOCS dimensions[3];
+  LOCS center[3];
   int refinements;
   unsigned int n;
   
@@ -321,17 +274,18 @@ protected:
   int b;
   int mergemode;
   
-  void Serial();
-  void SerialR(DistributedIndex* orders,vector<DistributedIndex> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0);
+  template<int DIM> void GenerateDim(int mode);
+  template<int DIM> void Serial();
+  template<int DIM> void SerialR(DistributedIndex* orders,vector<DistributedIndex> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o=0);
 
-  template<class BITS> void SerialH(History<BITS> *histories);
-  template<class BITS> void SerialHR(DistributedIndex* orders,History<BITS>* corders,vector<DistributedIndex> *bin, unsigned int n, REAL *center, REAL *dimension,                                     unsigned int o=0, int r=1, BITS history=0);
-  template<class BITS> void Parallel();
-  template<class BITS> void Parallel0();
-  template<class BITS> void Parallel1();
-  template<class BITS> void Parallel2();
-  template<class BITS> void Parallel3();
-  template<class BITS> void ProfileMergeParametersT(int repeat);
+  template<int DIM, class BITS> void SerialH(History<BITS> *histories);
+  template<int DIM, class BITS> void SerialHR(DistributedIndex* orders,History<BITS>* corders,vector<DistributedIndex> *bin, unsigned int n, LOCS *center, LOCS *dimension,                                     unsigned int o=0, int r=1, BITS history=0);
+  template<int DIM, class BITS> void Parallel();
+  template<int DIM, class BITS> void Parallel0();
+  template<int DIM, class BITS> void Parallel1();
+  template<int DIM, class BITS> void Parallel2();
+  template<int DIM, class BITS> void Parallel3();
+  template<int DIM, class BITS> void ProfileMergeParametersT(int repeat);
 
   template<class BITS> void BlockedMerge(History<BITS>* start1, History<BITS>* end1, History<BITS>*start2,History<BITS>* end2,History<BITS>* out);
 
@@ -345,21 +299,22 @@ protected:
   template<class BITS> void Cleanup(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf);
   template<class BITS> void Batchers(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf);
   template<class BITS> void Linear(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf);
-
 };
 
 /***********SFC**************************/
-const char errormsg[6][30]={
-  "Locations vector not set\n",
-  "Output vector not set\n", 
-  "Local size not set\n",
-  "Dimensions not set\n",
-  "Center not set\n", 
-  "Refinements not set\n",
+/*
+const char errormsg[7][30]={
+  "Locations vector is not set\n",
+  "Output vector is not set\n", 
+  "Local size is not set\n",
+  "Number of Dimensions is not set\n";
+  "Size of Dimensions not set\n",
+  "Center is not set\n", 
+  "Refinements is not set\n",
            };
-
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::ProfileMergeParameters(int repeat)
+*/
+template<class LOCS> template<int DIM>
+void SFC<LOCS>::ProfileMergeParameters(int repeat)
 {
   int errors=0;
   unsigned char mask;
@@ -397,19 +352,19 @@ void SFC<DIM,LOCS>::ProfileMergeParameters(int repeat)
         
   if((int)refinements*DIM<=(int)sizeof(unsigned char)*8)
   {
-    ProfileMergeParametersT<unsigned char>(repeat);
+    ProfileMergeParametersT<DIM,unsigned char>(repeat);
   }
   else if((int)refinements*DIM<=(int)sizeof(unsigned short)*8)
   {
-    ProfileMergeParametersT<unsigned short>(repeat);
+    ProfileMergeParametersT<DIM, unsigned short>(repeat);
   }
   else if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
   {
-    ProfileMergeParametersT<unsigned int>(repeat);
+    ProfileMergeParametersT<DIM,unsigned int>(repeat);
   }
   else if((int)refinements*DIM<=(int)sizeof(unsigned long)*8)
   {
-    ProfileMergeParametersT<unsigned long>(repeat);
+    ProfileMergeParametersT<DIM,unsigned long>(repeat);
   }
   else
   {
@@ -417,7 +372,7 @@ void SFC<DIM,LOCS>::ProfileMergeParameters(int repeat)
     {
       refinements=sizeof(unsigned long long)*8/DIM;
     }
-    ProfileMergeParametersT<unsigned long long>(repeat);
+    ProfileMergeParametersT<DIM,unsigned long long>(repeat);
   }
 }  
 
@@ -445,8 +400,8 @@ void SFC<DIM,LOCS>::ProfileMergeParameters(int repeat)
 }
 
 
-template<int DIM, class LOCS> template <class BITS>
-void SFC<DIM,LOCS>::ProfileMergeParametersT(int repeat)
+template<class LOCS> template <int DIM, class BITS>
+void SFC<LOCS>::ProfileMergeParametersT(int repeat)
 {
   float sig=.01;
   int max_iter=20;
@@ -645,8 +600,8 @@ void SFC<DIM,LOCS>::ProfileMergeParametersT(int repeat)
 
 }
 
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::GenerateCurve(int mode)
+template<class LOCS>
+void SFC<LOCS>::GenerateCurve(int mode)
 {
   int errors=0;
   unsigned char mask;
@@ -679,9 +634,26 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
     cerr << "************************\n";  
     return;
   }
+  switch(dim)
+  {
+      case 1:
+        GenerateDim<1>(mode);
+        break;
+      case 2:
+        GenerateDim<2>(mode);
+        break;
+      case 3:
+        GenerateDim<3>(mode);
+        break;
+  }
+}
+
+template<class LOCS> template<int DIM>
+void SFC<LOCS>::GenerateDim(int mode)
+{
   if(P==1 || mode==1 )
   {
-    Serial();
+    Serial<DIM>();
   }
   else
   {
@@ -695,19 +667,19 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
     //Pick which generate to use
     if((int)refinements*DIM<=(int)sizeof(unsigned char)*8)
     {
-      Parallel<unsigned char>();
+      Parallel<DIM,unsigned char>();
     }
     else if((int)refinements*DIM<=(int)sizeof(unsigned short)*8)
     {
-      Parallel<unsigned short>();
+      Parallel<DIM,unsigned short>();
     }
     else if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
     {
-      Parallel<unsigned int>();
+      Parallel<DIM,unsigned int>();
     }
     else if((int)refinements*DIM<=(int)sizeof(unsigned long)*8)
     {
-      Parallel<unsigned long>();
+      Parallel<DIM,unsigned long>();
     }
     else
     {
@@ -717,13 +689,13 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
         if(rank==0)
           cerr << "Warning: Not enough bits to form full SFC lowering refinements to: " << refinements << endl;
       }       
-      Parallel<unsigned long long>();
+      Parallel<DIM,unsigned long long>();
     }
   }
 }
 
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::Serial()
+template<class LOCS> template<int DIM>
+void SFC<LOCS>::Serial()
 {
   if(n!=0)
   {
@@ -742,12 +714,12 @@ void SFC<DIM,LOCS>::Serial()
       bin[b].reserve(n/BINS);
     }
     //Recursive call
-    SerialR(o,bin,n,center,dimensions);
+    SerialR<DIM>(o,bin,n,center,dimensions);
   }
 }
 
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::SerialH(History<BITS> *histories)
+template<class LOCS> template<int DIM, class BITS>
+void SFC<LOCS>::SerialH(History<BITS> *histories)
 {
   if(n!=0)
   {
@@ -766,14 +738,14 @@ void SFC<DIM,LOCS>::SerialH(History<BITS> *histories)
       bin[b].reserve(n/BINS);
     }
     //Recursive call
-    SerialHR<BITS>(o,histories,bin,n,center,dimensions);
+    SerialHR<DIM,BITS>(o,histories,bin,n,center,dimensions);
   }
 }
 
-template<int DIM, class LOCS> 
-void SFC<DIM,LOCS>::SerialR(DistributedIndex* orders,vector<DistributedIndex> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o)
+template<class LOCS> template <int DIM>
+void SFC<LOCS>::SerialR(DistributedIndex* orders,vector<DistributedIndex> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o)
 {
-  REAL newcenter[BINS][DIM], newdimension[DIM];
+  LOCS newcenter[BINS][DIM], newdimension[DIM];
   unsigned int size[BINS];
 
   unsigned char b;
@@ -837,22 +809,22 @@ void SFC<DIM,LOCS>::SerialR(DistributedIndex* orders,vector<DistributedIndex> *b
 
       if(!same)
       {
-        SerialR(orders,bin,size[b],newcenter[b],newdimension,orientation[o][b]);
+        SerialR<DIM>(orders,bin,size[b],newcenter[b],newdimension,orientation[o][b]);
       }
 
     }
     else if(size[b]>1 )
     {
-        SerialR(orders,bin,size[b],newcenter[b],newdimension,orientation[o][b]);
+        SerialR<DIM>(orders,bin,size[b],newcenter[b],newdimension,orientation[o][b]);
     }
     orders+=size[b];
   }
 }
 
-template<int DIM, class LOCS> template<class BITS> 
-void SFC<DIM,LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,vector<DistributedIndex> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o, int r, BITS history)
+template<class LOCS> template<int DIM, class BITS> 
+void SFC<LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,vector<DistributedIndex> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o, int r, BITS history)
 {
-  REAL newcenter[BINS][DIM], newdimension[DIM];
+  LOCS newcenter[BINS][DIM], newdimension[DIM];
   unsigned int size[BINS];
 
   unsigned char b;
@@ -861,7 +833,7 @@ void SFC<DIM,LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,ve
 
   if(n==1)
   {
-    REAL newcenter[DIM];
+    LOCS newcenter[DIM];
     //initialize newdimension and newcenter
     for(int d=0;d<DIM;d++)
     {
@@ -928,7 +900,7 @@ void SFC<DIM,LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,ve
 
     if(r==refinements)
     {
-      NextHistory= ((history<<DIM)|b);
+      NextHistory=((history<<DIM)|b);
       //save history for each point in bucket
       for(unsigned int j=0;j<size[b];j++)
       {
@@ -939,15 +911,15 @@ void SFC<DIM,LOCS>::SerialHR(DistributedIndex* orders, History<BITS>* corders,ve
     else if(size[b]>=1)
     {
       NextHistory= ((history<<DIM)|b);
-      SerialHR<BITS>(orders,corders,bin,size[b],newcenter[b],newdimension,orientation[o][b],r+1,NextHistory);
+      SerialHR<DIM,BITS>(orders,corders,bin,size[b],newcenter[b],newdimension,orientation[o][b],r+1,NextHistory);
     }
     corders+=size[b];
     orders+=size[b];
   }
 }
 
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::ComputeLocalHistogram(BITS *histogram,vector<History<BITS> > &histories)
+template<class LOCS> template<class BITS>
+void SFC<LOCS>::ComputeLocalHistogram(BITS *histogram,vector<History<BITS> > &histories)
 {
   //initialize to zero
   for(unsigned int i=0;i<buckets;i++)
@@ -961,7 +933,7 @@ void SFC<DIM,LOCS>::ComputeLocalHistogram(BITS *histogram,vector<History<BITS> >
     mask<<=1;
     mask|=1;
   } 
-  int shift=refinements*DIM-b;
+  int shift=refinements*dim-b;
   mask<<=shift;
   
   for(unsigned int i=0;i<n;i++)
@@ -972,14 +944,14 @@ void SFC<DIM,LOCS>::ComputeLocalHistogram(BITS *histogram,vector<History<BITS> >
   }
 
 }
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::CalculateHistogramsAndCuts(vector<BITS> &histograms, vector<BITS> &cuts, vector<History<BITS> > &histories)
+template< class LOCS> template<class BITS>
+void SFC<LOCS>::CalculateHistogramsAndCuts(vector<BITS> &histograms, vector<BITS> &cuts, vector<History<BITS> > &histories)
 {
   float max_imbalance;
   //calculate b
   b=(int)ceil(log(2.0*P)/log(2.0));
-  if(b>refinements*DIM)
-      b=refinements*DIM;
+  if(b>refinements*dim)
+      b=refinements*dim;
  
   cuts.resize(P+1); 
   do
@@ -1045,18 +1017,18 @@ void SFC<DIM,LOCS>::CalculateHistogramsAndCuts(vector<BITS> &histograms, vector<
     cuts[p]=buckets;
    
     //increase b
-    b+=DIM;
+    b+=dim;
     /*
-    if(max_imbalance>.15 && b<refinements*DIM)
+    if(max_imbalance>.15 && b<refinements*dim)
     {
   cout << "repeat: " << max_imbalance << "P:" << P << " b:" << b << " buckets:" << buckets << endl;
     }
     */
-  }while(max_imbalance>.15 && b<refinements*DIM);
+  }while(max_imbalance>.15 && b<refinements*dim);
 }
 
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::BlockedMerge(History<BITS>* start1, History<BITS>* end1, History<BITS>*start2,History<BITS>* end2,History<BITS>* out)
+template<class LOCS> template<class BITS>
+void SFC<LOCS>::BlockedMerge(History<BITS>* start1, History<BITS>* end1, History<BITS>*start2,History<BITS>* end2,History<BITS>* out)
 {
   History<BITS> *outend=out+(end1-start1)+(end2-start2);
   //merge
@@ -1103,22 +1075,22 @@ void SFC<DIM,LOCS>::BlockedMerge(History<BITS>* start1, History<BITS>* end1, His
     }
   }
 }
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::Parallel()
+template<class LOCS> template<int DIM, class BITS>
+void SFC<LOCS>::Parallel()
 {
   switch (mergemode)
   {
     case 0:case 1:
-            Parallel0<BITS>();
+            Parallel0<DIM,BITS>();
             break;
     case 2: case 3: case 4:
-            Parallel1<BITS>();
+            Parallel1<DIM,BITS>();
             break;
     case 5: 
-            Parallel2<BITS>();
+            Parallel2<DIM,BITS>();
             break;
     case 6: 
-            Parallel3<BITS>();
+            Parallel3<DIM,BITS>();
             break;
     default:
             if(rank==0)
@@ -1145,8 +1117,8 @@ struct Comm_Partner
   unsigned int rank;
   queue<Comm_Msg<BITS> > in_transit;
 };
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::Parallel3()
+template<class LOCS> template<int DIM, class BITS>
+void SFC<LOCS>::Parallel3()
 {
   vector<Comm_Partner<BITS> > spartners(4), rpartners(4);
   vector<MPI_Request> rreqs(rpartners.size()), sreqs(spartners.size());
@@ -1157,7 +1129,7 @@ void SFC<DIM,LOCS>::Parallel3()
   vector<History<BITS> > myhistories(n);//,recv_histories(n),merge_histories(n),temp_histories(n);
 
   //calculate local curves 
-  SerialH<BITS>(&myhistories[0]);  //Saves results in sendbuf
+  SerialH<DIM,BITS>(&myhistories[0]);  //Saves results in sendbuf
   
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
@@ -1893,8 +1865,8 @@ void SFC<DIM,LOCS>::Parallel3()
 #endif
   //cout << rank << ": all done!\n"; 
 }
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::Parallel2()
+template<class LOCS> template<int DIM, class BITS>
+void SFC<LOCS>::Parallel2()
 {
   int total_recvs=0;
   int num_recvs=0;
@@ -1904,7 +1876,7 @@ void SFC<DIM,LOCS>::Parallel2()
   vector<History<BITS> > myhistories(n);//,recv_histories(n),merge_histories(n),temp_histories(n);
 
   //calculate local curves 
-  SerialH<BITS>(&myhistories[0]);  //Saves results in sendbuf
+  SerialH<DIM,BITS>(&myhistories[0]);  //Saves results in sendbuf
   
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
@@ -2516,8 +2488,8 @@ void SFC<DIM,LOCS>::Parallel2()
 #endif
 }
         
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::Parallel1()
+template<class LOCS> template<int DIM, class BITS>
+void SFC<LOCS>::Parallel1()
 {
  
 #ifdef _TIMESFC_
@@ -2527,7 +2499,7 @@ void SFC<DIM,LOCS>::Parallel1()
  
   
   //calculate local curves 
-  SerialH<BITS>(&myhistories[0]);
+  SerialH<DIM,BITS>(&myhistories[0]);
   
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
@@ -2902,8 +2874,8 @@ void SFC<DIM,LOCS>::Parallel1()
 #endif
 
 }
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::Parallel0()
+template<class LOCS> template<int DIM, class BITS>
+void SFC<LOCS>::Parallel0()
 {
 #ifdef _TIMESFC_
   start=timer->currentSeconds();
@@ -2911,7 +2883,7 @@ void SFC<DIM,LOCS>::Parallel0()
   vector<History<BITS> > histories(n);
   unsigned int i;
  
-  SerialH<BITS>(&histories[0]);  //Saves results in sendbuf
+  SerialH<DIM,BITS>(&histories[0]);  //Saves results in sendbuf
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[0]+=finish-start;
@@ -2973,8 +2945,8 @@ struct MergeInfo
 
 #define ASCENDING 0
 #define DESCENDING 1
-template<int DIM, class LOCS> template<class BITS>
-int SFC<DIM,LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<History<BITS> >&recievebuf, vector<History<BITS> > &mergebuf)
+template<class LOCS> template<class BITS>
+int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<History<BITS> >&recievebuf, vector<History<BITS> > &mergebuf)
 {
   float inv_denom=1.0/sizeof(History<BITS>);
   //cout << rank <<  ": Merge Exchange started with " << to << endl;
@@ -3396,8 +3368,8 @@ struct HC_MERGE
   unsigned int P;
 };
 
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::PrimaryMerge(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
+template<class LOCS> template<class BITS>
+void SFC<LOCS>::PrimaryMerge(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
 {
   queue<HC_MERGE> q;
   HC_MERGE cur;
@@ -3467,8 +3439,8 @@ void SFC<DIM,LOCS>::PrimaryMerge(vector<History<BITS> > &histories, vector<Histo
   }
 
 }
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::PrimaryMerge2(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf, int P, int base)
+template<class LOCS> template<class BITS>
+void SFC<LOCS>::PrimaryMerge2(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf, int P, int base)
 {
   if(P==1)
     return;
@@ -3493,8 +3465,8 @@ void SFC<DIM,LOCS>::PrimaryMerge2(vector<History<BITS> > &histories, vector<Hist
   
   
 }
-template<int DIM, class LOCS> template<class BITS>
-void SFC<DIM,LOCS>::Cleanup(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
+template<class LOCS> template<class BITS>
+void SFC<LOCS>::Cleanup(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
 {
   switch(cleanup)
   {
@@ -3506,8 +3478,8 @@ void SFC<DIM,LOCS>::Cleanup(vector<History<BITS> > &histories, vector<History<BI
       break;
   };
 }
-template<int DIM, class LOCS> template <class BITS>
-void SFC<DIM,LOCS>::Batchers(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
+template<class LOCS> template <class BITS>
+void SFC<LOCS>::Batchers(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
 {
   int p, r, t, q, d;
 
@@ -3546,8 +3518,8 @@ void SFC<DIM,LOCS>::Batchers(vector<History<BITS> > &histories, vector<History<B
     }while(more);
   }
 }
-template<int DIM, class LOCS> template <class BITS>
-void SFC<DIM,LOCS>::Linear(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
+template<class LOCS> template <class BITS>
+void SFC<LOCS>::Linear(vector<History<BITS> > &histories, vector<History<BITS> >&rbuf, vector<History<BITS> > &mbuf)
 {
   unsigned int i=1, c=1, val=0, iter=0;
   int mod=(int)ceil(log((float)P)/log(3.0f));
@@ -3589,31 +3561,17 @@ void SFC<DIM,LOCS>::Linear(vector<History<BITS> > &histories, vector<History<BIT
   }
 
 }
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetMergeParameters(unsigned int comm_block_size,unsigned int merge_block_size, unsigned int blocks_in_transit, float sample_percent)
+template<class LOCS>
+void SFC<LOCS>::SetMergeParameters(unsigned int comm_block_size,unsigned int merge_block_size, unsigned int blocks_in_transit, float sample_percent)
 {
   this->comm_block_size=comm_block_size;
   this->blocks_in_transit=blocks_in_transit;
   this->sample_percent=sample_percent;
   this->merge_block_size=merge_block_size;
 }
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetRefinements(int refinements)
-{
-  this->refinements=refinements;
-  set=set|32;
-}
 
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetLocalSize(unsigned int n)
-{
-  this->n=n;
-  set=set|4;
-}
-
-
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetLocations(vector<LOCS> *locsv)
+template<class LOCS>
+void SFC<LOCS>::SetLocations(vector<LOCS> *locsv)
 {
   if(locsv!=0)
   {
@@ -3623,8 +3581,8 @@ void SFC<DIM,LOCS>::SetLocations(vector<LOCS> *locsv)
   }
 }
 
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetOutputVector(vector<DistributedIndex> *orders)
+template<class LOCS>
+void SFC<LOCS>::SetOutputVector(vector<DistributedIndex> *orders)
 {
   if(orders!=0)
   {
@@ -3632,26 +3590,38 @@ void SFC<DIM,LOCS>::SetOutputVector(vector<DistributedIndex> *orders)
     set=set|2;
   }
 }
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetDimensions(REAL *dim)
+template<class LOCS>
+void SFC<LOCS>::SetLocalSize(unsigned int n)
 {
-  for(int d=0;d<DIM;d++)
+  this->n=n;
+  set=set|4;
+}
+template<class LOCS>
+void SFC<LOCS>::SetDimensions(LOCS *dimensions)
+{
+  for(int d=0;d<dim;d++)
   {
-    dimensions[d]=dim[d];
+    this->dimensions[d]=dimensions[d];
   }
   set=set|8;
 }
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetCenter(REAL *center)
+template<class LOCS>
+void SFC<LOCS>::SetCenter(LOCS *center)
 {
-  for(int d=0;d<DIM;d++)
+  for(int d=0;d<dim;d++)
   {
-    center[d]=center[d];
+    this->center[d]=center[d];
   }
   set=set|16;
 }
-template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetRefinementsByDelta(REAL *delta)
+template<class LOCS>
+void SFC<LOCS>::SetRefinements(int refinements)
+{
+  this->refinements=refinements;
+  set=set|32;
+}
+template<class LOCS>
+void SFC<LOCS>::SetRefinementsByDelta(LOCS *delta)
 {
   char mask=8;
   if( (mask&set) != mask)
@@ -3660,11 +3630,69 @@ void SFC<DIM,LOCS>::SetRefinementsByDelta(REAL *delta)
     return;
   }
   refinements=(int)ceil(log(dimensions[0]/delta[0])/log(2.0));
-  for(int d=1;d<DIM;d++)
+  for(int d=1;d<dim;d++)
   {
     refinements=max(refinements,(int)ceil(log(dimensions[d]/delta[d])/log(2.0)));
   }
   set=set|32;
+}
+template<class LOCS>
+void SFC<LOCS>::SetNumDimensions(int dimensions)
+{
+  dim=dimensions;
+  SetCurve(curve);
+}
+template<class LOCS>
+void SFC<LOCS>::SetCurve(Curve curve)
+{
+  switch(dim)
+  {
+    case 1:
+      order=order1;
+      orientation=orient1;
+      inverse=inv1;
+      break;
+    case 2:
+      switch(curve)
+      {
+        case HILBERT:
+          order=horder2;
+          orientation=horient2;
+          inverse=hinv2;
+          break;
+        case MORTON:
+          order=morder2;
+          orientation=morient2;
+          inverse=minv2;
+          break;
+        case GREY:
+          order=gorder2;
+          orientation=gorient2;
+          inverse=ginv2;
+           break;
+      }
+       break;
+     case 3:
+      switch(curve)
+      {
+        case HILBERT:
+          order=horder3;
+          orientation=horient3;
+          inverse=hinv3;
+          break;
+        case MORTON:
+          order=morder3;
+          orientation=morient3;
+          inverse=morder3;
+          break;
+        case GREY:
+          order=gorder3;
+          orientation=gorient3;
+          inverse=ginv3;
+          break;
+      }
+      break;
+  }
 }
 } //End Namespace Uintah
 
