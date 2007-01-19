@@ -22,7 +22,7 @@
         <delt_min>           2.4e-16    </delt_min>
         <delt_max>           2.0e-05    </delt_max>
         <delt_init>          1.0e-07    </delt_init>
-        <timestep_multiplier>0.5          </timestep_multiplier>
+        <timestep_multiplier>0.4          </timestep_multiplier>
     </Time>
      <!--____________________________________________________________________-->
      <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -99,7 +99,7 @@
      <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
      <!--____________________________________________________________________-->
     <DataArchiver>
-       <filebase>/home/martin/projects/blast/guptaAMR/REI.Gupta.uda</filebase>
+       <filebase>/scratch/mkd/guptaAMR/REI.Gupta.uda</filebase>
        <outputInterval>.00005</outputInterval>
        <compression>gzip</compression>
        <save label = "press_CC"/>
@@ -141,7 +141,7 @@
        <save label="modelVol_src"/>
        <save label="modelMom_src"/>
 -->
-       <checkpoint cycle = "2" timestepInterval = "100"/>
+       <checkpoint cycle = "2" timestepInterval = "1000"/>
     </DataArchiver>
 
 
@@ -150,7 +150,7 @@
      <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
      <!--____________________________________________________________________-->
      <CFD>
-        <cfl>0.45</cfl>
+        <cfl>0.3</cfl>
         <ICE>
          <ClampSpecificVolume>true</ClampSpecificVolume>
          <!--<max_iteration_equilibration>1000</max_iteration_equilibration>-->
@@ -404,7 +404,8 @@
           </material>
          <material>
            <EOS type = "SFEOS">
-              <eps0>8.43E-02</eps0>
+              <npts>11</npts>
+              <eps0>0.1</eps0>
               <eps1>0.0</eps1>
               <eps2>-4.88E-02</eps2>
               <eps3>-9.53E-02</eps3>
@@ -413,8 +414,9 @@
               <eps6>-3.36E-01</eps6>
               <eps7>-4.05E-01</eps7>
               <eps8>-4.70E-01</eps8>
-              <eps9>-5.88E-01</eps9>
-              <p0>1.0</p0>
+              <eps9>-5.31E-01</eps9>
+              <eps10>-5.88E-01</eps10>
+              <p0>91600.0</p0>
               <p1>101325.0</p1>
               <p2>8.02E+07</p2>
               <p3>1.57E+08</p3>
@@ -423,7 +425,8 @@
               <p6>1.50E+09</p6>
               <p7>2.68E+09</p7>
               <p8>4.45E+09</p8>
-              <p9>1.03E+10</p9>
+              <p9>4.45E+09</p9>
+              <p10>1.03E+10</p10>
              <rho0>1700.0</rho0>
            </EOS>
            <includeFlowWork>        false               </includeFlowWork>
