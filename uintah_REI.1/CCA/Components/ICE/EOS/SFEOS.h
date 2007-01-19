@@ -74,8 +74,8 @@ WARNING
                                                CCVariable<double>&);
 
       private:
-        double eps[10], p[10], lnp[10];
-        double slope[9];
+        int npts;
+        std::vector<double> eps, p, lnp, slope;
         double   rho0;  // kg/m^3
 
       };

@@ -11,33 +11,32 @@ using namespace Uintah;
 SFEOS::SFEOS(ProblemSpecP& ps)
 {
    // Constructor
-  ps->require("eps0",eps[0]);
-  ps->require("eps1",eps[1]);
-  ps->require("eps2",eps[2]);
-  ps->require("eps3",eps[3]);
-  ps->require("eps4",eps[4]);
-  ps->require("eps5",eps[5]);
-  ps->require("eps6",eps[6]);
-  ps->require("eps7",eps[7]);
-  ps->require("eps8",eps[8]);
-  ps->require("eps9",eps[9]);
-  ps->require("p0",p[0]);
-  ps->require("p1",p[1]);
-  ps->require("p2",p[2]);
-  ps->require("p3",p[3]);
-  ps->require("p4",p[4]);
-  ps->require("p5",p[5]);
-  ps->require("p6",p[6]);
-  ps->require("p7",p[7]);
-  ps->require("p8",p[8]);
-  ps->require("p9",p[9]);
+  ps->require("npts",npts);
+  eps.resize(npts);
+  p.resize(npts);
+  lnp.resize(npts);
+  slope.resize(npts);
+  char str[100], str1[20];
+  int i;
+  for(i=0; i<npts; i++){
+     strcpy(str,"eps");
+     sprintf(str1,"%d",i);
+     strcat(str,str1);
+     ps->require(str,eps[i]);
+  }
+  for(i=0; i<npts; i++){
+     strcpy(str,"p");
+     sprintf(str1,"%d",i);
+     strcat(str,str1);
+     ps->require(str,p[i]);
+  }
+  
   ps->require("rho0",rho0);
 
-  int i;
-  for(i=0; i<10; i++){
+  for(i=0; i<npts; i++){
     if(p[i]>0.0) lnp[i] = log(p[i]);
   }
-  for(i=0; i<9; i++){
+  for(i=0; i<npts-1; i++){
     if(eps[i+1]<eps[i]) slope[i] = (lnp[i+1] - lnp[i])/(eps[i+1] - eps[i]);
   }
 }
@@ -50,26 +49,21 @@ void SFEOS::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("EOS");
   eos_ps->setAttribute("type","SFEOS");
-  eos_ps->appendElement("eps0",eps[0]);
-  eos_ps->appendElement("eps1",eps[1]);
-  eos_ps->appendElement("eps2",eps[2]);
-  eos_ps->appendElement("eps3",eps[3]);
-  eos_ps->appendElement("eps4",eps[4]);
-  eos_ps->appendElement("eps5",eps[5]);
-  eos_ps->appendElement("eps6",eps[6]);
-  eos_ps->appendElement("eps7",eps[7]);
-  eos_ps->appendElement("eps8",eps[8]);
-  eos_ps->appendElement("eps9",eps[9]);
-  eos_ps->appendElement("p0",p[0]);
-  eos_ps->appendElement("p1",p[1]);
-  eos_ps->appendElement("p2",p[2]);
-  eos_ps->appendElement("p3",p[3]);
-  eos_ps->appendElement("p4",p[4]);
-  eos_ps->appendElement("p5",p[5]);
-  eos_ps->appendElement("p6",p[6]);
-  eos_ps->appendElement("p7",p[7]);
-  eos_ps->appendElement("p8",p[8]);
-  eos_ps->appendElement("p9",p[9]);
+  eos_ps->appendElement("npts",npts);
+  char str[100], str1[20];
+  int i;
+  for(i=0; i<npts; i++){
+     strcpy(str,"eps");
+     sprintf(str1,"%d",i);
+     strcat(str,str1);
+     eos_ps->appendElement(str,eps[i]);
+  }
+  for(i=0; i<npts; i++){
+     strcpy(str,"p");
+     sprintf(str1,"%d",i);
+     strcat(str,str1);
+     eos_ps->appendElement(str,p[i]);
+  }
   eos_ps->appendElement("rho0",rho0);
 }
 
@@ -78,7 +72,7 @@ double SFEOS::computeRhoMicro(double press, double,
                              double cv, double Temp,double rho_guess)
 {
   int i1 = 0, i;
-  for(i=1; i<9; i++){
+  for(i=1; i<npts-1; i++){
     if(eps[i+1]<eps[i])
       if(press>p[i]) i1 = i;
   }
@@ -96,7 +90,7 @@ void SFEOS::computePressEOS(double rho, double, double, double,
   double vol_strain = log(rho0/rho);
 
   int i1 = 0, i;
-  for(i=1; i<9; i++){
+  for(i=1; i<npts-1; i++){
     if(eps[i+1]<eps[i])
       if(vol_strain<eps[i]) i1 = i;
   }
