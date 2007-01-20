@@ -1,0 +1,112 @@
+Only in itcl3.1.0-patched/itcl/generic: itclStubLib.o
+diff -ru itcl3.1.0/itcl/unix/Makefile.in itcl3.1.0-patched/itcl/unix/Makefile.in
+--- itcl3.1.0/itcl/unix/Makefile.in	Tue Aug 17 13:51:00 1999
++++ itcl3.1.0-patched/itcl/unix/Makefile.in	Thu Nov 28 09:53:37 2002
+@@ -194,13 +194,13 @@
+ 
+ @ITCL_LIB_FILE@:  $(OBJS)
+ 	rm -f $(ITCL_LIB_FILE)
+-	@MAKE_LIB@
++	@MAKE_LIB@ 
+ 	$(RANLIB) $(ITCL_LIB_FILE)
+ 
+ $(ITCL_STUB_LIB_FILE): $(STUB_OBJS)
+ 	rm -f $(ITCL_STUB_LIB_FILE)
+-	@MAKE_STUB_LIB@
+-	$(RANLIB) $(ITCL_STUB_LIB_FILE)
++	(mv itclStubLib.o $(STUB_OBJS))
++	libtool -static -o $(ITCL_STUB_LIB_FILE)  $(STUB_OBJS)
+ 
+ itclsh: tclAppInit.o $(ITCL_LIB_FILE)
+ 	$(CC) @LD_FLAGS@ tclAppInit.o @ITCL_BUILD_LIB_SPEC@ \
+diff -ru itcl3.1.0/itcl/unix/configure itcl3.1.0-patched/itcl/unix/configure
+--- itcl3.1.0/itcl/unix/configure	Tue Aug 17 13:51:00 1999
++++ itcl3.1.0-patched/itcl/unix/configure	Sun Dec  1 10:12:39 2002
+@@ -1161,8 +1161,9 @@
+     SHLIB_CFLAGS="${SHLIB_CFLAGS}"
+     TCL_STUB_FLAGS=-DUSE_TCL_STUBS
+     eval "ITCL_LIB_FILE=libitcl${VERSION}${SHLIB_SUFFIX}"
+-    ITCL_PKG_FILE="[file join [file dirname \$dir] ${ITCL_LIB_FILE}]"
+-    MAKE_LIB="\$(SHLIB_LD) -o ${ITCL_LIB_FILE} \$(OBJS) ${SHLIB_LD_LIBS}"
++	ITCL_PKG_FILE="[file join [file dirname \$dir] ${ITCL_LIB_FILE}]"
++    echo "*****  install name = ${libdir}/${ITCL_LIB_FILE}"
++    MAKE_LIB="\$(SHLIB_LD) -prebind -install_name ${libdir}/${ITCL_LIB_FILE} -o ${ITCL_LIB_FILE} \$(OBJS) ${SHLIB_LD_LIBS} ${TCL_LIB_SPEC}"
+     RANLIB=":"
+ else
+     SHLIB_CFLAGS=""
+diff -ru itcl3.1.0/itk/unix/Makefile.in itcl3.1.0-patched/itk/unix/Makefile.in
+--- itcl3.1.0/itk/unix/Makefile.in	Tue Aug 17 13:51:00 1999
++++ itcl3.1.0-patched/itk/unix/Makefile.in	Wed Nov 27 23:30:17 2002
+@@ -228,7 +228,7 @@
+ 
+ @ITK_LIB_FILE@: ${OBJS}
+ 	rm -f $(ITK_LIB_FILE)
+-	@MAKE_LIB@
++	@MAKE_LIB@ 
+ 	$(RANLIB) $(ITK_LIB_FILE)
+ 
+ itkwish: tkAppInit.o $(ITK_LIB_FILE) $(ITK_STUB_LIB_FILE)
+@@ -237,8 +237,7 @@
+ 
+ $(ITK_STUB_LIB_FILE): $(STUB_OBJS) 
+ 	rm -f $(ITK_STUB_LIB_FILE)
+-	@MAKE_STUB_LIB@
+-	$(RANLIB) $(ITCL_STUB_LIB_FILE)
++	libtool -static -o $(ITK_STUB_LIB_FILE) $(STUB_OBJS)
+ 
+ # Note, in the target below TCL_LIBRARY needs to be set or else
+ # "make test" won't work in the case where the compilation directory
+diff -ru itcl3.1.0/itk/unix/configure itcl3.1.0-patched/itk/unix/configure
+--- itcl3.1.0/itk/unix/configure	Tue Aug 17 13:51:00 1999
++++ itcl3.1.0-patched/itk/unix/configure	Sun Dec  1 10:12:21 2002
+@@ -1215,7 +1215,8 @@
+     TCL_STUB_FLAGS=-DUSE_TCL_STUBS
+     eval "ITK_LIB_FILE=libitk${VERSION}${SHLIB_SUFFIX}"
+     ITK_PKG_FILE="[file join [file dirname \$dir] ${ITK_LIB_FILE}]"
+-    MAKE_LIB="\$(SHLIB_LD) -o ${ITK_LIB_FILE} \$(OBJS) ${SHLIB_LD_LIBS}"
++
++    MAKE_LIB="\$(SHLIB_LD) -prebind -install_name ${libdir}/${ITK_LIB_FILE} -o ${ITK_LIB_FILE}  \$(OBJS) ${SHLIB_LD_LIBS} ${ITCL_BUILD_LIB_SPEC} ${TK_LIB_SPEC} ${TCL_LIB_SPEC} ${TK_LIBS}"
+     RANLIB=":"
+ else
+     SHLIB_CFLAGS=""
+diff -ru itcl3.1.0/itk/unix/itkConfig.sh itcl3.1.0-patched/itk/unix/itkConfig.sh
+--- itcl3.1.0/itk/unix/itkConfig.sh	Tue Aug 17 13:51:00 1999
++++ itcl3.1.0-patched/itk/unix/itkConfig.sh	Wed Dec 18 22:08:21 2002
+@@ -17,26 +17,26 @@
+ ITCL_MINOR_VERSION='1'
+ 
+ # The name of the Itk library (may be either a .a file or a shared library):
+-ITK_LIB_FILE=libitk3.1.so
++ITK_LIB_FILE=libitk3.1.dylib
+ 
+ # String to pass to linker to pick up the Itk library from its
+ # build directory.
+-ITK_BUILD_LIB_SPEC='-L/home/build.new/ws/ws-pro-19990812-2221/itcl3.1.0/itk/unix -litk3.1'
++ITK_BUILD_LIB_SPEC='-L/Users/yarden/projects/SCIRun/1.7/Darwin/cc-32bit/src/itcl3.1.0/itk/unix -litk3.1'
+ 
+ # String to pass to linker to pick up the Itk library from its
+ # installed directory.
+-ITK_LIB_SPEC='-L/home/build/WS/ws-pro-19990812-2221/lib -litk3.1'
++ITK_LIB_SPEC='-L/Users/yarden/projects/SCIRun/1.7/Darwin/cc-32bit/lib -litk3.1'
+ 
+ # The name of the Itk stub library (a .a file):
+ ITK_STUB_LIB_FILE=libitkstub3.1.a
+ 
+ # String to pass to linker to pick up the Itk stub library from its
+ # build directory.
+-ITK_BUILD_STUB_LIB_SPEC='-L/home/build.new/ws/ws-pro-19990812-2221/itcl3.1.0/itk/unix -litkstub3.1'
++ITK_BUILD_STUB_LIB_SPEC='-L/Users/yarden/projects/SCIRun/1.7/Darwin/cc-32bit/src/itcl3.1.0/itk/unix -litkstub3.1'
+ 
+ # String to pass to linker to pick up the Itk stub library from its
+ # installed directory.
+-ITK_STUB_LIB_SPEC='-L/home/build/WS/ws-pro-19990812-2221/lib -litkstub3.1'
++ITK_STUB_LIB_SPEC='-L/Users/yarden/projects/SCIRun/1.7/Darwin/cc-32bit/lib -litkstub3.1'
+ 
+ # Location of the top-level source directories from which [incr Tk]
+ # was built.  This is the directory that contains a README file as well
+@@ -44,4 +44,4 @@
+ # compiled in a different place than the directory containing the source
+ # files, this points to the location of the sources, not the location
+ # where [incr Tk] was compiled.
+-ITK_SRC_DIR='/home/build.new/ws/ws-pro-19990812-2221/itcl3.1.0/itk'
++ITK_SRC_DIR='/Users/yarden/projects/SCIRun/1.7/Darwin/cc-32bit/src/itcl3.1.0/itk'

@@ -1,0 +1,71 @@
+Only in blt2.4z-patched/demos: Makefile
+Only in blt2.4z-patched/library: Makefile
+Only in blt2.4z-patched: log
+Only in blt2.4z-patched/man: Makefile
+diff -ru blt2.4z/man/Makefile.in blt2.4z-patched/man/Makefile.in
+--- blt2.4z/man/Makefile.in	Mon Feb 18 17:11:46 2002
++++ blt2.4z-patched/man/Makefile.in	Mon Nov 11 15:01:06 2002
+@@ -10,7 +10,7 @@
+ 
+ instdirs	= $(mandir) $(mandir)/mann $(mandir)/man3
+ 
+-MAN_N		= BLT.n barchart.n beep.n bgexec.n bitmap.n \
++MAN_N		= BLT.n barchart.n beep.n bgexec.n \
+ 		  bltdebug.n busy.n container.n cutbuffer.n \
+ 		  dragdrop.n eps.n graph.n hierbox.n  \
+ 		  hiertable.n htext.n spline.n stripchart.n \
+Only in blt2.4z-patched/src: Makefile
+Only in blt2.4z-patched/src: bltConfig.h
+Only in blt2.4z-patched/src: bltHash.h
+Only in blt2.4z/src: pure_api.c
+Only in blt2.4z-patched/src/shared: Makefile
+diff -ru blt2.4z/src/shared/Makefile.in blt2.4z-patched/src/shared/Makefile.in
+--- blt2.4z/src/shared/Makefile.in	Tue May 14 15:37:19 2002
++++ blt2.4z-patched/src/shared/Makefile.in	Mon Nov 11 17:36:50 2002
+@@ -2,7 +2,7 @@
+ # 	Makefile for shared version of BLT library
+ # ------------------------------------------------------------------------
+ 
+-SHLIB_SUFFIX =	@SHLIB_SUFFIX@
++SHLIB_SUFFIX =	.dylib
+ version =	@BLT_MAJOR_VERSION@@BLT_MINOR_VERSION@
+ 
+ # ------------------------------------------------------------------------
+@@ -136,7 +136,7 @@
+ 	$(RM) $(bltsh)
+ 	$(CC) $(CC_SWITCHES) $(LDFLAGS) -DTCL_ONLY -o $(bltsh) \
+ 		$(srcdir)/bltUnixMain.c $(tcl_only_lib_so) \
+-		$(TCL_ONLY_LIB_SPECS) 
++		$(LIBS) 
+ 
+ build_lib: $(lib_so) $(tcl_only_lib_so)
+ 
+@@ -144,19 +144,19 @@
+ 	$(CC) -c $(CC_SWITCHES) -DBLT_LIBRARY=\"$(scriptdir)\" \
+ 		$(srcdir)/bltInit.c
+ 	$(RM) $@
+-	$(SHLIB_LD) $(SHLIB_LD_FLAGS) -o $@ bltInit.o $(OBJS) \
+-		$(SHLIB_LIB_SPECS)
++	$(SHLIB_LD) $(SHLIB_LD_FLAGS) -o $@ -install_name $(libdir)/$@ bltInit.o $(OBJS) \
++		$(LIBS)
+ 
+ $(tcl_only_lib_so): $(TCL_ONLY_OBJS)
+ 	$(CC) -c $(CC_SWITCHES) -DTCL_ONLY -DBLT_LIBRARY=\"$(scriptdir)\" \
+ 		$(srcdir)/bltInit.c
+ 	$(RM) $@
+-	$(SHLIB_LD) $(SHLIB_LD_FLAGS) -o $@ bltInit.o $(TCL_ONLY_OBJS) \
+-		$(SHLIB_TCL_ONLY_LIB_SPECS)
++	$(SHLIB_LD) $(SHLIB_LD_FLAGS) -o $@ -install_name $(libdir)/$@ bltInit.o $(TCL_ONLY_OBJS) \
++		$(TCL_ONLY_LIB_SPECS)
+ 
+ install: mkdirs install-lib install-demo
+ 
+-install-demo: $(bltwish)
++install-demo: $(bltwish) $(bltsh)
+ 	$(INSTALL) -m 0755 bltwish$(version) $(INSTALL_ROOT)$(bindir)
+ 	$(INSTALL) -m 0755 bltsh$(version) $(INSTALL_ROOT)$(bindir)
+ 
+Only in blt2.4z-patched/src/shared: Makefile.in.rej
+Only in blt2.4z-patched/src/shared: Makefile.in~
+Only in blt2.4z-patched/src/shared: Makefile~
+Only in blt2.4z-patched/src/shared: bltInit.o

@@ -1,0 +1,17 @@
+This directory has some information on how to get various Thirdparty
+libraries to build on non-standard systems.  For the most part,
+general users can ignore this directory as everything should install
+correctly on most machines.
+
+Files:
+
+ImageMagick.txt
+---------------
+   Hack to allow ImageMagick to install on machines with bad
+installations of jasper.
+
+blt-patch
+---------
+BLT 2.4 patch.  This patch has already been applied to the BLT in the
+Thirdparty install directory.
+

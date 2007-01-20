@@ -1,0 +1,9 @@
+diff -r blt2.4y/src/bltTreeView.h blt2.4y-orig/src/bltTreeView.h
+955,956d954
+< extern TreeViewStyle *Blt_TreeViewCreateStyle _ANSI_ARGS_((TreeView *tvPtr, 
+< 	int type, char *name));
+diff -r blt2.4y/src/bltTreeViewCmd.c blt2.4y-orig/src/bltTreeViewCmd.c
+4504c4504
+<     stylePtr = Blt_TreeViewCreateStyle(tvPtr, type, string);
+---
+>     stylePtr = Blt_TreeViewCreateStyle(type, string);

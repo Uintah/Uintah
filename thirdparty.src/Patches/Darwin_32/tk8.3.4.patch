@@ -1,0 +1,37 @@
+diff -ru tk8.3.4/unix/configure tk8.3.4-patched/unix/configure
+--- tk8.3.4/unix/configure	Fri Oct 19 18:24:40 2001
++++ tk8.3.4-patched/unix/configure	Fri Jul 25 22:52:33 2003
+@@ -2370,16 +2370,15 @@
+ 	    ;;
+ 	Rhapsody-*|Darwin-*)
+ 	    SHLIB_CFLAGS="-fno-common"
+-	    SHLIB_LD="cc -dynamiclib \${LDFLAGS}"
+-	    TCL_SHLIB_LD_EXTRAS="-compatibility_version ${TCL_MAJOR_VERSION} -current_version \${VERSION} -install_name \${LIB_RUNTIME_DIR}/\${TCL_LIB_FILE} -prebind -seg1addr a000000"
+-	    SHLIB_LD_LIBS="${LIBS}"
++	    SHLIB_LD="cc -dynamiclib -flat_namespace -undefined suppress \${LDFLAGS} -compatibility_version ${TK_MAJOR_VERSION} -current_version \${VERSION} -install_name ${libdir}/\${TK_LIB_FILE}"
++	    SHLIB_LD_LIBS=""
+ 	    SHLIB_SUFFIX=".dylib"
+ 	    DL_OBJS="tclLoadDyld.o"
+ 	    DL_LIBS=""
+-	    LDFLAGS="-prebind"
++	    LDFLAGS=""
++           STLIB_LD="libtool -static -o"
+ 	    LD_SEARCH_FLAGS=""
+ 	    CFLAGS_OPTIMIZE="-O3"
+-	    EXTRA_CFLAGS="-arch ppc -pipe"
+ 	    ;;
+ 	NEXTSTEP-*)
+ 	    SHLIB_CFLAGS=""
+diff -ru tk8.3.4/unix/tkUnixPort.h tk8.3.4-patched/unix/tkUnixPort.h
+--- tk8.3.4/unix/tkUnixPort.h	Fri Oct 12 19:25:10 2001
++++ tk8.3.4-patched/unix/tkUnixPort.h	Sun Jul 27 22:50:37 2003
+@@ -53,7 +53,9 @@
+ #include <sys/types.h>
+ #include <sys/file.h>
+ #ifdef HAVE_SYS_SELECT_H
++#   undef panic
+ #   include <sys/select.h>
++#   define panic Tcl_Panic
+ #endif
+ #include <sys/stat.h>
+ #ifndef _TCL
