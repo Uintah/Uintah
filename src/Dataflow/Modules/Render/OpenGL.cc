@@ -1455,13 +1455,13 @@ OpenGL::real_get_pick(int x, int y,
 #ifdef SCI_64BITS
     glPushName(0);
     glPushName(0);
-    glPushName(0x12345678);
-    glPushName(0x12345678);
-    glPushName(0x12345678);
+    glPushName(0);
+    glPushName(0);
+    glPushName(0);
 #else
     glPushName(0); //for the pick
-    glPushName(0x12345678); //for the object
-    glPushName(0x12345678); //for the object's face index
+    glPushName(0); //for the object
+    glPushName(0); //for the object's face index
 #endif
 
     // Picking
@@ -1513,7 +1513,7 @@ OpenGL::real_get_pick(int x, int y,
 #endif
 
     glFlush();
-    const int hits = glRenderMode(GL_RENDER);
+    int hits = glRenderMode(GL_RENDER);
 
 //    CHECK_OPENGL_ERROR("OpenGL::real_get_pick");
 
@@ -1530,6 +1530,9 @@ OpenGL::real_get_pick(int x, int y,
     GLuint hit_pick = 0;
     //GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
+    
+    if (drawinfo_->show_bbox_) hits = 0;
+    
     if (hits >= 1)
     {
       int idx = 0;
@@ -1572,11 +1575,15 @@ OpenGL::real_get_pick(int x, int y,
         }
       }
 
-      pick_obj = (GeomObj*)hit_obj;
-      pick_pick = (GeomPick*)hit_pick;
-      pick_obj->getId(pick_index); //(int)hit_pick_index;
+      if ((hit_obj != 0)&&(hit_pick != 0))
+      {
+        pick_obj = (GeomObj*)hit_obj;
+        pick_pick = (GeomPick*)hit_pick;
+        pick_obj->getId(pick_index); //(int)hit_pick_index;
+      }
     }
   }
+  
   viewer_->geomlock_.readUnlock();
 }
 

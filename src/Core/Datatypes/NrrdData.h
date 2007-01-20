@@ -113,7 +113,7 @@ typedef LockingHandle<NrrdData> NrrdDataHandle;
 SCISHARE int string_to_nrrd_type(const string &str);
 
 template <class T>
-SCISHARE int get_nrrd_type();
+int get_nrrd_type();
 
 template <>
 SCISHARE int get_nrrd_type<char>();

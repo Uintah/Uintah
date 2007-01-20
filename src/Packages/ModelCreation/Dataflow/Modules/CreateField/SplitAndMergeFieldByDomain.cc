@@ -67,7 +67,7 @@ void SplitAndMergeFieldByDomain::execute()
   if (inputs_changed_ || !oport_cached("SplitField"))
   {
     SCIRunAlgo::FieldsAlgo algo(this);
-    if(!(algo.SplitAndMergeFieldByDomain(input,output))) return;
+    if(!(algo.SplitAndJoinFieldByDomain(input,output))) return;
 
     // send new output if there is any:   
     send_output_handle("SplitField",output,false);

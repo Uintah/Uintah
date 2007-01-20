@@ -135,11 +135,13 @@ ReportColumnMatrixMisfit::execute()
      if (!get_input_handle("Vec1", ivec1H)) return;
      ColumnMatrix* ivec1;
      ivec1 = ivec1H->column();
+     ivec1H = ivec1;  // prevent mem leakage
 
      MatrixHandle ivec2H;
      if (!get_input_handle("Vec2", ivec2H)) return;
      ColumnMatrix *ivec2;
      ivec2 = ivec2H->column();
+     ivec2H = ivec2; // prevent mem leakage
      
      if (ivec1->nrows() != ivec2->nrows()) {
          error("Can't compute error on vectors of different lengths!");
@@ -158,9 +160,10 @@ ReportColumnMatrixMisfit::execute()
      
      double avg1=0, avg2=0;
      int iterate;
-     for (iterate=0; iterate<ne; iterate++) {
-	 avg1+=(*ivec1)[iterate];
-	 avg2+=(*ivec2)[iterate];
+     for (iterate=0; iterate<ne; iterate++) 
+     {
+       avg1+=(*ivec1)[iterate];
+       avg2+=(*ivec2)[iterate];
      }
      avg1/=ne;
      avg2/=ne;
@@ -172,9 +175,10 @@ ReportColumnMatrixMisfit::execute()
      double rms=0;
      double pp;
      string_to_double(pTCL_.get(), pp);
-     for (iterate=0; iterate<ne; iterate++) {
-	 double shift1=((*ivec1)[iterate]-avg1);
-	 double shift2=((*ivec2)[iterate]-avg2);
+     for (iterate=0; iterate<ne; iterate++) 
+     {
+       double shift1=((*ivec1)[iterate]-avg1);
+    	 double shift2=((*ivec2)[iterate]-avg2);
 
          ccNum+=shift1*shift2;
          ccDenom1+=shift1*shift1;

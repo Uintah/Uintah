@@ -731,7 +731,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       error("DMDBuildSimulation: Could get information from membrane field");
       return(false);    
     }
-      
+
     // This is the expensive function, it figures out how the membrane pannels
     // are linked into the volumetric model. As we need not save this information
     // we are reconstructing it here. The reason for not keeping it is that this
@@ -742,7 +742,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       error("DMDBuildSimulation: Could build membrane model");
       return(false);
     }
-    
+		
     // Figure out how many synapse nodes are needed.
     num_synnodes += membranetable[p].size();
   }

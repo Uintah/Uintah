@@ -61,7 +61,8 @@ public:
 private:
   vector<GeometryComm*> msg_heads_;
   vector<GeometryComm*> msg_tails_;
-  vector<int> physical_portno_;
+  vector<int>           physical_portno_;
+  vector<int>           synchronized_map_;  
   vector<map<GeomID, GeomID, less<GeomID> > > geom_ids_;
 
   int max_portno_;
@@ -132,6 +133,8 @@ SynchronizeGeometry::process_event(MessageBase* msg)
   case MessageTypes::GeometryInit:
     gmsg->reply->send(GeomReply(max_portno_));
     physical_portno_.push_back(num_input_ports()-1);
+    synchronized_map_.push_back(0);
+
     max_portno_++;
     msg_heads_.push_back(NULL);
     msg_tails_.push_back(NULL);
@@ -146,9 +149,9 @@ SynchronizeGeometry::process_event(MessageBase* msg)
       int counter = 0;
       while (itr != geom_ids_[gmsg->portno].end())
       {
-	ogeom_->delObj((*itr).second);
-	++itr;
-	counter++;
+        ogeom_->delObj((*itr).second);
+        ++itr;
+        counter++;
       }
       geom_ids_[gmsg->portno].clear();
       if (counter) { ogeom_->flush(); }
@@ -157,24 +160,54 @@ SynchronizeGeometry::process_event(MessageBase* msg)
       gui_enforce_.reset();
       if (gui_enforce_.get())
       {
-	forward_saved_msg();
+        forward_saved_msg();
       }
       else
       {
-	flush_all_msgs();
+        flush_all_msgs();
       }
 
       // Fix the portnos.
       for (unsigned int i=gmsg->portno + 1; i < physical_portno_.size(); i++)
       {
-	if (physical_portno_[i] != -1) { physical_portno_[i]--; }
+        if (physical_portno_[i] != -1) { physical_portno_[i]--; }
       }
       physical_portno_[gmsg->portno] = -1;
+      synchronized_map_[gmsg->portno] = -1;
 
       // Push changed portno strings to output port?
     }
     break;
 
+  case MessageTypes::GeometrySynchronize:
+  
+    {
+      synchronized_map_[gmsg->portno]++;
+    
+      bool all = true;
+      for (unsigned int i=0; i < synchronized_map_.size(); i++)
+      {
+        if (synchronized_map_[i] < 0) continue;
+        if (synchronized_map_[i] == 0)
+        {
+          all = false;
+          break;
+        }
+      }
+    
+      if (all)
+      {
+        for (unsigned int i = 0; i < synchronized_map_.size(); i++)
+        {
+          if (synchronized_map_[i] < 0) continue;
+          synchronized_map_[i]--;
+        }
+
+        ogeom_->synchronize();
+      }
+    }
+    break;
+    
   case MessageTypes::GeometryDelAll:
     gui_enforce_.reset();
     if (gui_enforce_.get())
@@ -189,8 +222,8 @@ SynchronizeGeometry::process_event(MessageBase* msg)
       itr = geom_ids_[gmsg->portno].begin();
       while (itr != geom_ids_[gmsg->portno].end())
       {
-	ogeom_->delObj((*itr).second);
-	++itr;
+        ogeom_->delObj((*itr).second);
+        ++itr;
       }
       geom_ids_[gmsg->portno].clear();
     }
@@ -210,7 +243,6 @@ SynchronizeGeometry::process_event(MessageBase* msg)
       ogeom_->delObj(geom_ids_[gmsg->portno][gmsg->serial]);
       geom_ids_[gmsg->portno].erase(gmsg->serial);
     }
-    break;
     break;
 
   case MessageTypes::GeometryAddObj:

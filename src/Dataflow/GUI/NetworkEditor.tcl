@@ -71,14 +71,22 @@ set inserting 0
 set netedit_savefile ""
 set NetworkChanged 0
 set CurrentlySelectedModules ""
-
+set disable_network_locking "0"
 set network_executing "0"
 trace variable network_executing w handle_network_executing
 
+proc set_network_executing {val} {
+    global network_executing disable_network_locking
+    if { $disable_network_locking == "1" } {
+	set network_executing "0"
+	return
+    }
+    set network_executing $val
+}
+
 proc restore_not_executing_interface {} {
-    global network_executing maincanvas Color
-    set network_executing "0"
-    $maincanvas itemconfigure bgRect -fill $Color(NetworkEditor) \
+    global network_executing maincanvas Color disable_network_locking
+     $maincanvas itemconfigure bgRect -fill $Color(NetworkEditor) \
 	-outline $Color(NetworkEditor)
     
     bind . <Control-d> "moduleDestroySelected"
@@ -100,6 +108,11 @@ proc restore_not_executing_interface {} {
     .main_menu.file.menu entryconfig 11 -state active
 }
 
+proc disable_netedit_locking {} {
+    global disable_network_locking
+    set disable_network_locking "1"
+    restore_not_executing_interface
+}
 
 proc handle_network_executing { var op1 op2} {
     global network_executing maincanvas Color
@@ -108,7 +121,7 @@ proc handle_network_executing { var op1 op2} {
 	$maincanvas itemconfigure bgRect -fill $Color(NetworkEditorLocked) \
 	    -outline $Color(NetworkEditorLocked)
 
-	bind . <Control-u> "restore_not_executing_interface"
+	bind . <Control-u> "disable_netedit_locking"
 	bind . <Control-d> ""
 	bind . <Control-l> ""
 	bind . <Control-z> ""
@@ -285,7 +298,7 @@ proc makeNetworkEditor {} {
 	    -command ".bot.neteditFrame.canvas postscript -file /tmp/canvas.ps -x 0 -y 0 -width 4500 -height 4500" -state disabled
     }
     .main_menu.file.menu add command -label "Execute All" -underline 0 \
-	-command "updateRunDateAndTime 0; netedit scheduleall" -state disabled
+	-command "backupNetwork; updateRunDateAndTime 0; netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
     .main_menu.file.menu add cascade -label "Wizards" -underline 0 \
@@ -922,36 +935,36 @@ proc popupInsertMenu { {subnet 0} } {
     
     #get the net to be inserted
     set types {
-	{{SCIRun Net} {.srn} }
-	{{old SCIRun Net} {.net} }
+      {{SCIRun Net} {.srn} }
+      {{old SCIRun Net} {.net} }
     } 
-    set netedit_loadnet [tk_getOpenFile -filetypes $types ]
-    if { [check_filename $netedit_loadnet] == "invalid" } {
-		set netedit_loadnet ""
-		return
+    set netedit_insertnet [tk_getOpenFile -filetypes $types ]
+    if { [check_filename $netedit_insertnet] == "invalid" } {
+      set netedit_insertnet ""
+      return
     }
-    if { ![file exists $netedit_loadnet]} { 
-		return
+    if { ![file exists $netedit_insertnet]} { 
+      return
     }
     
     set canvas $Subnet(Subnet${subnet}_canvas)    
     # get the bbox for the net being inserted by
     # parsing netedit_loadnet for bbox 
-    set fchannel [open $netedit_loadnet]
+    set fchannel [open $netedit_insertnet]
     set curr_line ""
     set curr_line [gets $fchannel]
     while { ![eof $fchannel] } {
-	if { [string match "set bbox*" $curr_line] } {
+    if { [string match "set bbox*" $curr_line] } {
 	    eval $curr_line
 	    break
-	}
-	set curr_line [gets $fchannel]
-	set val [string match "set bbox*" $curr_line]
+    }
+    set curr_line [gets $fchannel]
+    set val [string match "set bbox*" $curr_line]
 
     }
     set viewBox "0 0 [winfo width $canvas] [winfo width $canvas]"
     if { ![info exists bbox] || [llength $bbox] != 4 } {
-	set bbox $viewBox
+      set bbox $viewBox
     }
     set w [expr [lindex $bbox 2] - [lindex $bbox 0]]
     set h [expr [lindex $bbox 3] - [lindex $bbox 1]]
@@ -961,37 +974,37 @@ proc popupInsertMenu { {subnet 0} } {
     set done 0
     set bbox [list 0 0 $w $h] ;# start inserting in upper left corner
     while {!$done} {
-	set done 1
-	set modules [eval $canvas find overlapping $bbox]
-	foreach modid $modules {
-	    if { [lsearch [$canvas gettags $modid] module] != -1 } {
-		set overlap [clipBBoxes [compute_bbox $canvas $modid] $bbox]
-		if ![string equal $overlap "0 0 0 0"] {
-		    set done 0
-		    break
-		}
-	    }
-	}
-	if {!$done} {
-	    # move the insert position left by half a screen
-	    for {set i 0} {$i < 4} {incr i} {
-		set bbox [lreplace $bbox $i $i \
+      set done 1
+      set modules [eval $canvas find overlapping $bbox]
+      foreach modid $modules {
+        if { [lsearch [$canvas gettags $modid] module] != -1 } {
+          set overlap [clipBBoxes [compute_bbox $canvas $modid] $bbox]
+          if ![string equal $overlap "0 0 0 0"] {
+            set done 0
+            break
+          }
+        }
+      }
+      if {!$done} {
+        # move the insert position left by half a screen
+        for {set i 0} {$i < 4} {incr i} {
+          set bbox [lreplace $bbox $i $i \
 			      [expr [lindex $moveBoxX $i]+[lindex $bbox $i]]]
-	    }
-	    if {[lindex $bbox 2] > $mainCanvasWidth} {
-		set bbox [lreplace $bbox 2 2 \
-			  [expr [lindex $bbox 2] -[lindex $bbox 0]]]
-		set bbox [lreplace $bbox 0 0 0]
-		for {set i 0} {$i < 4} {incr i} {
-		    set bbox [lreplace $bbox $i $i \
+        }
+        if {[lindex $bbox 2] > $mainCanvasWidth} {
+          set bbox [lreplace $bbox 2 2 \
+          [expr [lindex $bbox 2] -[lindex $bbox 0]]]
+          set bbox [lreplace $bbox 0 0 0]
+          for {set i 0} {$i < 4} {incr i} {
+            set bbox [lreplace $bbox $i $i \
 			       [expr [lindex $moveBoxY $i]+[lindex $bbox $i]]]
-		}
-		if {[lindex $bbox 3] > $mainCanvasHeight} {
-		    set bbox [list 50 50 [expr 50+$w] [expr 50+$h]]
-		    set done 1
-		}
-	    }
-	}
+          }
+          if {[lindex $bbox 3] > $mainCanvasHeight} {
+            set bbox [list 50 50 [expr 50+$w] [expr 50+$h]]
+            set done 1
+          }
+        }
+      }
     }
 
     set insertOffset [list [expr [lindex $bbox 0]-[lindex $oldbox 0]] \
@@ -1000,21 +1013,23 @@ proc popupInsertMenu { {subnet 0} } {
     $canvas yview moveto [expr [lindex $bbox 1]/$mainCanvasHeight-0.01]
     set preLoadModules $Subnet(Subnet${subnet}_Modules)
     set inserting 1
-    if {[string match *.net $netedit_loadnet]} {
-	loadnet $netedit_loadnet
+    if {[string match *.net $netedit_insertnet]} {
+      loadnet $netedit_insertnet
     } else {
-	uplevel \#0 netedit load_srn $netedit_loadnet
+      global netedit_savefile
+      set tmp $netedit_savefile
+      uplevel \#0 netedit load_srn $netedit_insertnet
+      set netedit_savefile $tmp
     }
     set inserting 0
     unselectAll
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	if { [lsearch $preLoadModules $module] == -1 } {
-	    $module addSelected
-	}
+      if { [lsearch $preLoadModules $module] == -1 } {
+        $module addSelected
+      }
     }
     
     set NetworkChanged 1
-
 }
 
 proc subnet_bbox { subnet { cheat 1} } {
@@ -1056,6 +1071,7 @@ proc check_filename {name} {
 	if {$name == ""} {
 		return "invalid"
 	}
+
     set ext_ind [expr [string length $name] - 4]
     set ext [string range $name $ext_ind end]
     
@@ -1101,6 +1117,8 @@ proc popupLoadMenu {} {
     } else {
 		loadnet $netedit_loadnet 
     }
+		
+		wm title . "SCIRun ([lindex [file split $netedit_loadnet] end])"		
 }
 
 proc ClearCanvas { { confirm 1 } { subnet 0 } } {
@@ -1363,7 +1381,7 @@ proc loadfile {netedit_loadfile} {
     return
 }
 
-proc loadnet { netedit_loadfile } {
+proc loadnet { netedit_loadfile} {
     # Check to see of the file exists; warn user if it doesnt
     if { ![file exists $netedit_loadfile] } {
 	set message "File \"$netedit_loadfile\" does not exist."
@@ -1373,10 +1391,10 @@ proc loadnet { netedit_loadfile } {
 
     global netedit_savefile inserting PowerApp Subnet geometry
     if { !$inserting || ![string length $netedit_savefile] } {
-	# Cut off the path from the net name and put in on the title bar:
-	wm title . "SCIRun ([lindex [file split $netedit_loadfile] end])"
-	# Remember the name of this net for future "Saves".
-	set netedit_savefile $netedit_loadfile
+      # Cut off the path from the net name and put in on the title bar:
+      wm title . "SCIRun ([lindex [file split $netedit_loadfile] end])"
+      # Remember the name of this net for future "Saves".
+      set netedit_savefile $netedit_loadfile
     }
 
     renameSourceCommand
@@ -1891,11 +1909,11 @@ proc promptUserToCopySCIRunrc {} {
     }
 
     wm title $w "Copy v$version .scirunrc file?"
-    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for new features.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by copying.\n\nIf you copy, your existing file will be moved to\n ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?\n" -justify left
+    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are necessary\nfor new features.\n\nPlease note: If you have made changes to your .scirunrc file they will\nbe undone by creating a new .scirunrc.\n\nIf you generate a new .scirunrc, your existing file will be moved to\n .scirunrc.$version\n\nWould you like SCIRun to generate a new .scirunrc?\n" -justify left
 
     frame $w.but
-    button $w.but.ok -text Copy -command "set copyResult 1"
-    button $w.but.no -text "Don't Copy" -command "set copyResult 0"
+    button $w.but.ok -text Generate -command "set copyResult 1"
+    button $w.but.no -text "Don't Generate" -command "set copyResult 0"
     button $w.but.dontask -text "Don't Ask Again" -command "set copyResult 2"
 
     pack $w.but.ok $w.but.no $w.but.dontask  -side left -pady 5 -padx 5 -ipadx 5 -expand 1
@@ -2174,14 +2192,68 @@ proc init_DATADIR_and_DATASET {} {
     netedit setenv SCIRUN_NET_SUBSTITUTE_DATADIR true
 }
     
+proc backupNetwork { } {
+  # check if we have a filename and if so save it to #filename#
+  global netedit_savefile
+  if { [file exists $netedit_savefile] } {
+      set root_filename [lindex [file split $netedit_savefile] end]
+
+      # don't save back ups of back up files as ##filename##!!!
+      if {[string index $root_filename 0] == "#" && 
+	  [string index $root_filename end] == "#"} {
+	      set root_filename [string range $root_filename 1 end-1]
+      }
+
+      set current_path [lrange [file split $netedit_savefile] 0 end-1]
+      if {[llength $current_path] > 0} {
+	  set current_path [eval file join [lrange [file split $netedit_savefile] 0 end-1]]
+      } else {
+	  # net in current directory so we need something to the path
+	  # so the file joins work
+	  set current_path [pwd]
+      }
+
+      # First attempt to save it to same directory as netedit_savefile
+      if {[file writable $current_path]} {
+	  set dest [eval file join $current_path \#$root_filename\#]
+	  writeNetwork $dest
+      } else {
+	  # else save to home/SCIRun directory as nedetit_savefile
+	  set src "[file split [netedit getenv HOME]]"
+	  set src [lappend src SCIRun \#$root_filename\#]
+	  set dest [eval file join $src]
+	  writeNetwork $dest
+      }
+  } else {
+      # Attempt to write to #MyNetwork.srn# in current directory
+      set src  "[file split [pwd]] MyNetwork.srn"
+      set src [eval file join $src]
+      set parts [file split $src]
+      set parts [lreplace $parts end end \#[lindex $parts end]\#]
+      set dir [pwd]
+
+      if {[file writable $dir]} {
+          set dest [eval file join $parts]
+	  writeNetwork $dest
+      } else {
+	  # Else write to home/SCIRun directory
+	  set src "[file split [netedit getenv HOME]]"
+	  set src [lappend src SCIRun \#MyNetwork.srn\#]
+	  set dest [eval file join $src]
+	  writeNetwork $dest
+      }
+  }
+}
 
 proc writeNetwork { filename { subnet 0 } } {
-    # if the file already exists, back it up to "#filename"
-    if { [file exists $filename] } {
+    # if the file already exists, back it up to "filename.bak"
+    if { [file exists $filename] &&
+	 [string index $filename 0] != "#" &&
+	 [string index $filename end] != "#"} {
 	set src  "[file split [pwd]] [file split ${filename}]"
 	set src [eval file join $src]
 	set parts [file split $src]
-	set parts [lreplace $parts end end \#[lindex $parts end]]
+	set parts "[lreplace $parts end end [lindex $parts end]].bak"
 	set dest [eval file join $parts]
 	catch [file rename -force $src $dest]
     }

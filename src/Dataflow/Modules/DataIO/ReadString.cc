@@ -43,9 +43,7 @@
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
 
-namespace ModelCreation {
-
-using namespace SCIRun;
+namespace SCIRun {
 
 class ReadString : public GenericReader<StringHandle> {
 public:
@@ -64,7 +62,7 @@ protected:
 DECLARE_MAKER(ReadString)
 
 ReadString::ReadString(GuiContext* ctx)
-  : GenericReader<StringHandle>("ReadString", ctx, "DataIO", "ModelCreation"),
+  : GenericReader<StringHandle>("ReadString", ctx, "DataIO", "SCIRun"),
     gui_types_(get_ctx()->subVar("types", false))
 {
   gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
@@ -115,6 +113,6 @@ ReadString::call_importer(const string &filename)
 }
 
 
-} // End namespace ModelCreation
+} // End namespace SCIRun
 
 

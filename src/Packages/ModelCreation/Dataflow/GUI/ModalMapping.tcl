@@ -1,4 +1,4 @@
-itcl_class ModelCreation_FieldsData_ModalMapping {
+itcl_class ModelCreation_ChangeFieldData_ModalMapping {
     inherit Module
     constructor {config} {
         set name ModalMapping

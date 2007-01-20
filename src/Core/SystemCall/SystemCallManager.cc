@@ -178,7 +178,7 @@ void SystemCallManager::create()
     // Hence we need to do this before we split.
 #ifndef _WIN32
 
-    tfm_.create_tempdir("systemcall",tempdir_);
+    tfm_.create_tempdir("systemcall.XXXXXX",tempdir_);
         
     int    fd_tochild[2];
     int    fd_fromchild[2];

@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/CardiacVis/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 

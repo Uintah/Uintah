@@ -122,35 +122,44 @@ GetColumnOrRowFromMatrix::send_selection(MatrixHandle mh, int which,
 				   int ncopy, bool cache)
 {
   MatrixHandle matrix(0);
-  if (use_row_) {
-    if (ncopy == 1) {
+  if (use_row_) 
+  {
+    if (ncopy == 1) 
+    {
       ColumnMatrix *cm = scinew ColumnMatrix(mh->ncols());
       double *data = cm->get_data();
       for (int c = 0; c<mh->ncols(); c++)
       {
-	data[c] = mh->get(which, c);
+        data[c] = mh->get(which, c);
       }
       matrix = cm;
-    } else {
+    } 
+    else 
+    {
       DenseMatrix *dm = scinew DenseMatrix(ncopy, mh->ncols());
       for (int i = 0; i < ncopy; i++)
-	for (int c = 0; c < mh->ncols(); c++)
-	  dm->put(i, c, mh->get(which + i, c));
+        for (int c = 0; c < mh->ncols(); c++)
+          dm->put(i, c, mh->get(which + i, c));
 
       matrix = dm;
     }
-  } else {
-    if (ncopy == 1) {
+  } 
+  else 
+  {
+    if (ncopy == 1) 
+    {
       ColumnMatrix *cm = scinew ColumnMatrix(mh->nrows());
       double *data = cm->get_data();
       for (int r = 0; r<mh->nrows(); r++)
-	data[r] = mh->get(r, which);
+        data[r] = mh->get(r, which);
       matrix = cm;
-    } else {
+    } 
+    else 
+    {
       DenseMatrix *dm = scinew DenseMatrix(mh->nrows(), ncopy);
       for (int r = 0; r < mh->nrows(); r++)
-	for (int i = 0; i < ncopy; i++)
-	  dm->put(r, i, mh->get(r, which + i));
+        for (int i = 0; i < ncopy; i++)
+            dm->put(r, i, mh->get(r, which + i));
 
       matrix = dm;
     }

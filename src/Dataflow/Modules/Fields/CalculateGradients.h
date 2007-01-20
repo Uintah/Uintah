@@ -96,14 +96,29 @@ CalculateGradientsAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   ofield->get_typed_mesh()->begin( out );
 
   typename OFIELD::value_type gradient;
-  while (in != end) {
-    DenseMatrix *grad = 0;
-    ifield->cell_gradient(*in, grad);
-    gradient.x(grad->get(0, 0));
-    gradient.y(grad->get(1, 0));
-    gradient.z(grad->get(2, 0));
-    delete grad;
-    grad = 0;
+  
+  // calculate element center
+  typename IFIELD::mesh_type::basis_type basis = imesh->get_basis();
+  
+  int dim = basis.domain_dimension();
+  int num = basis.number_of_vertices();
+  std::vector<double> coords(dim);
+
+  for (int j=0;j<dim;j++) coords[j] = 0.0;
+  
+  for (int i=0; i<num;i++) 
+    for (int j=0;j<dim;j++) coords[j] += basis.unit_vertices[i][j];
+  
+  for (int j=0;j<dim;j++) coords[j] /= static_cast<double>(num);
+  
+  std::vector<typename IFIELD::value_type> grad;
+  
+  while (in != end) 
+  {
+    ifield->gradient(grad,coords,*in);
+    gradient.x(static_cast<double>(grad[0]));
+    gradient.y(static_cast<double>(grad[1]));
+    gradient.z(static_cast<double>(grad[2]));
     ofield->set_value(gradient, *out);
     ++in; ++out;
   }

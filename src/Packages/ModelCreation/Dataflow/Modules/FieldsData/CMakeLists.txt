@@ -29,29 +29,9 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/FieldsData
 
 SET(Packages_ModelCreation_Dataflow_Modules_FieldsData_SRCS
-  CalculateFieldData.cc
-  CalculateFieldsData.cc
-  CreateFieldData.cc
-  CalculateCalculateDistanceToFieldBoundary.cc
-  CalculateDistanceToField.cc
-  MapFieldDataFromElemToNode.cc
-  MapFieldDataFromNodeToElem.cc
-  CalculateIsInsideField.cc
-  SelectAndSetFieldData.cc
-  SelectAndSetFieldsData.cc
+  ModalMapping.cc
   SelectByFieldData.cc
   SelectByFieldsData.cc
-  SignedCalculateDistanceToField.cc
-  ConvertMappingMatrixToFieldData.cc
-  GetFieldData.cc
-  SetFieldData.cc
-  ConvertIndicesToFieldData.cc
-  MapFieldDataOntoFieldNodes.cc
-  ModalMapping.cc
-  MapCurrentDensityOntoField.cc
-  CalculateCalculateInsideWhichField.cc
-  MapFieldDataGradientOntoField.cc
-  ReportFieldDataMeasures.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_FieldsData ${Packages_ModelCreation_Dataflow_Modules_FieldsData_SRCS})

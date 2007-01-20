@@ -51,11 +51,11 @@ set bbox {0 26 201 331}
 set Name {ShowStreamlines}
 
 # Create the Modules
-set m0 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 18 26]
-set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 36 89]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 18 150]
+set m0 [addModuleAtPosition "SCIRun" "ChangeFieldData" "CalculateGradients" 18 26]
+set m1 [addModuleAtPosition "SCIRun" "NewField" "GeneratePointSamplesFromFieldOrWidget" 36 89]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenerateStreamLines" 18 150]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 0 274]
-set m4 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 0 211]
+set m4 [addModuleAtPosition "SCIRun" "ChangeFieldData" "MapFieldDataFromSourceToDestination" 0 211]
 
 # Set the Module Notes Dispaly Options
 

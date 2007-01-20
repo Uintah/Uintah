@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/DDDAS/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 

@@ -40,6 +40,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/DynamicCompilation.h>
+#include <Core/Util/ProgressReporter.h>
 #include <Core/Containers/HashTable.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
@@ -91,7 +92,8 @@ public:
                                              SCIRunAlgo::ArrayObjectList& Output,
                                              std::string function,
                                              int hashoffset);
-  virtual void function(SCIRunAlgo::ArrayObjectList& Input,SCIRunAlgo::ArrayObjectList& Output,int n) = 0;                                             
+  virtual void function(SCIRunAlgo::ArrayObjectList& Input,
+            SCIRunAlgo::ArrayObjectList& Output,int n,SCIRun::ProgressReporter* pr) = 0;                                             
 };
 
 } // end namespace

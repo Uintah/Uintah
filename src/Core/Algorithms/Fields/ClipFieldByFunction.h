@@ -260,7 +260,7 @@ ClipFieldByFunctionAlgoT<FIELD>::execute(ProgressReporter *reporter,
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
     typename hash_type::iterator hitr = nodemap.begin();
 
-    const int nrows = nodemap.size();;
+    const int nrows = nodemap.size();
     const int ncols = field->fdata().size();
     int *rr = scinew int[nrows+1];
     int *cc = scinew int[nrows];
@@ -326,6 +326,7 @@ ClipFieldByFunctionAlgoT<FIELD>::execute(ProgressReporter *reporter,
     reporter->warning("No interpolant computed for field data location.");
     interpolant = 0;
   }
+
 
   return ofield;
 }

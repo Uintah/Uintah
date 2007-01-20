@@ -132,34 +132,27 @@ GeomHandle ShowString::generate( string str )
   int nchars = 0;
   int nlines = 1;
 
+  group->add( generateTitle( str, nchars, nlines ) );
+    
+  return scinew GeomSticky(group);
+}
+
+
+GeomHandle ShowString::generateTitle( string istr, int &nchars, int &nlines )
+{
+  nchars = 0;
+  nlines = 0;
+    
+  GeomTexts* texts = scinew GeomTexts();
+  texts->set_font_index(gui_size_.get());
+  texts->set_is_2d(true);
+
   double border = 0.025;    
   double scale = .000225;
   double fsizes[5] = { 60,100,140,180,240 };  
 
-  group->add( generateTitle( str, nchars, nlines ) );
-    
   double dx = (nchars * 0.75 * fsizes[gui_size_.get()] * scale + 2.0 * border);
   double dy = (nlines * 1.80 * fsizes[gui_size_.get()] * scale + 2.0 * border);
-
-/*  if( gui_bbox_.get() ) 
-  {
-    GeomGroup *box = scinew GeomGroup();
-    
-    box->add( new GeomLine( Point(-border,-border,0),
-			    Point(dx,-border,0) ) );
-    
-    box->add( new GeomLine( Point(dx,-border,0),
-			    Point(dx,dy,0) ) );
-
-    box->add( new GeomLine( Point(dx,dy,0),
-			    Point(-border,dy,0) ) );
-    
-    box->add( new GeomLine( Point(-border,dy,0),
-			    Point(-border,-border,0) ) );
-    
-    group->add( scinew GeomMaterial(box, material_handle_) );
-  }
-*/
 
   // Use an offset so the edge of the title is visable.
   Vector refVec = 31.0/32.0 *
@@ -177,27 +170,11 @@ GeomHandle ShowString::generate( string str )
   else if( gui_location_x_.get() >= 0 &&
 	   gui_location_y_.get() <= 0 )  // Bottom Right
     refVec += Vector( -dx/2,  0, 0 );
-
-  Transform trans;
-  trans.pre_translate( refVec );
-
-  return scinew GeomSticky( scinew GeomTransform( group, trans ) );
-}
-
-
-GeomHandle ShowString::generateTitle( string istr, int &nchars, int &nlines )
-{
-  nchars = 0;
-  nlines = 0;
-    
-  GeomTexts* texts = scinew GeomTexts();
-  texts->set_font_index(gui_size_.get());
  
   std::string ostr;
-  double scale = .000225;  
-  double fsizes[5] = { 60,100,140,180,240 };  
+
   
-  double dy =  (1.8 * fsizes[gui_size_.get()] * scale);
+  double dy2 =  (1.8 * fsizes[gui_size_.get()] * scale);
   double offset = 0.025;
 
   size_t ind = 0;
@@ -245,8 +222,9 @@ GeomHandle ShowString::generateTitle( string istr, int &nchars, int &nlines )
     if (ostr.size() > 0)
     {
       nlines++;
-      texts->add(ostr,Point(0,(totlines-nlines)*dy+offset,0),
-		 material_handle_->diffuse);
+      Point loc(0, (totlines - nlines) * dy2 + offset, 0);
+      loc += refVec;
+      texts->add(ostr, loc, material_handle_->diffuse);
     }
   }
   

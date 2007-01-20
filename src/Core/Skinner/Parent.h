@@ -29,8 +29,8 @@
 //    Author : McKay Davis
 //    Date   : Thu Jun 29 19:23:31 2006
 
-#ifndef SKINNER_CONTAINER_H
-#define SKINNER_CONTAINER_H
+#ifndef SKINNER_PARENT_H
+#define SKINNER_PARENT_H
 
 #include <Core/Skinner/Drawable.h>
 

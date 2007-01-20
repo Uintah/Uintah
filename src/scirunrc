@@ -59,7 +59,7 @@
 #   The version number of this .scirunrc file.
 #   Used in determining if the users existing.scirunrc 
 #   needs to be updated upon starup of SCIRun.
-SCIRUN_RCFILE_VERSION = 1.25.3.0
+SCIRUN_RCFILE_VERSION = 3.0.0.0
 
 
 # The MALLOC_* environment variables can be set in order to help

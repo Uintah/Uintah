@@ -317,7 +317,7 @@ RingWidget::redraw()
   Vector slide(variables[SliderVar]->point()-variables[CenterVar]->point());
   if (slide.length2() > 1e-6)
   {
-    slide = Cross(normal, slide.normal());
+    slide = Cross(normal, slide.safe_normal());
     if (slide.length2() < 1e-6)  { slide = Vector(0.0, 1.0, 0.0); }
   }
   else
@@ -619,7 +619,7 @@ RingWidget::GetRightAxis()
   }
   else
   {
-    return (oldrightaxis = axis.normal());
+    return (oldrightaxis = axis.safe_normal());
   }
 }
 
@@ -634,7 +634,7 @@ RingWidget::GetDownAxis()
   }
   else
   {
-    return (olddownaxis = axis.normal());
+    return (olddownaxis = axis.safe_normal());
   }
 }
 

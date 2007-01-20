@@ -148,7 +148,6 @@ namespace SCIRun {
     SignalThrower::throw_signal(SignalToAllCatchers_t &catchers,
                                 event_handle_t &signalh)
     {
-
       Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
       ASSERT(signal);
       const string &signalname = signal->get_signal_name();
@@ -202,32 +201,62 @@ namespace SCIRun {
       return allcatchers;
     }
                
-#if 0
     SignalCallback::SignalCallback(Drawable *thrower,
                                    const string &signalname)
       : signal_(new Signal(signalname, thrower, thrower->get_vars())),
-        catcher_(0)
+        signalh_(signal_),
+        catchers_(),
+        init_(false)
     {
-
-      SignalToAllCatchers_t &acatchers = thrower->all_catchers_;
-      SignalToAllCatchers_t::iterator aciter = catchers.find(signalname);
-      if (citer == catchers.end()) return;
-      AllSignalCatchers_t::iterator citer = aciter->second.begin();
-      AllSignalCatchers_t::iterator cend = aciter->second.end();
-      
-      for (;riter != rend; ++riter) {
-      }
     }
-#endif
-      
 
+    SignalCallback::SignalCallback(Signal *signal)
+      : signal_(signal),
+        signalh_(signal),
+        catchers_(),
+        init_(false)
+    {
+    }
 
-      
+    SignalCallback::~SignalCallback()
+    {
+    }
 
-      
+    event_handle_t
+    SignalCallback::operator()() {
 
+      if (!init_) {
+        SignalThrower::SignalToAllCatchers_t::iterator aciter = 
+          signal_->get_signal_thrower()->all_catchers_.find
+            (signal_->get_signal_name());
+        
+        if (aciter != signal_->get_signal_thrower()->all_catchers_.end()) {
+          catchers_ = aciter->second;
+        }
+        init_ = true;
+      }
 
+      SignalThrower::AllSignalCatchers_t::iterator iter = catchers_.begin();
+      SignalThrower::AllSignalCatchers_t::iterator iend = catchers_.end();
+      BaseTool::propagation_state_e state = BaseTool::CONTINUE_E;
+      for(;iter != iend; ++iter) {
+        SignalCatcher::CatcherTargetInfoBase* callback = *iter;
+        signal_->set_vars(callback->variables_);
+        bool threaded = 
+          callback->variables_ && callback->variables_->get_bool("threaded");
 
+        if (!threaded) {
+          state = callback->doCallback(signal_);
+        } else {
+          ThreadedCallback *thread = new ThreadedCallback(callback, signalh_);
+          (new Thread(thread, signal_->get_signal_name().c_str()))->detach();
+        }
+        if (state == BaseTool::STOP_E) break;
+      }
+
+      signal_->set_signal_result(state);
+      return signalh_;
+    }      
   }
 }
     

@@ -129,7 +129,7 @@ void GeomCone::adjust()
 	zrotaxis=Vector(0,-1,0);
     } else {
 	zrotaxis=Cross(axis, z);
-	zrotaxis.normalize();
+	zrotaxis.safe_normalize();
     }
     double cangle=Dot(z, axis)/height;
     zrotangle=-Acos(cangle);

@@ -17,7 +17,7 @@
     <module category="Converters" id="m2" name="ConvertRasterFieldToNrrd" package="Teem">
       <position x="267" y="254"/>
     </module>
-    <module category="Converters" id="m3" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m3" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="267" y="322"/>
     </module>
     <module category="Render" id="m4" name="ViewScene" package="SCIRun">

@@ -235,7 +235,7 @@ DenseColMajMatrix::add(int r, int c, double d)
 
 
 DenseColMajMatrix *
-DenseColMajMatrix::transpose()
+DenseColMajMatrix::transpose() const
 {
   DenseColMajMatrix *m = scinew DenseColMajMatrix(ncols_, nrows_);
   for (int c=0; c<ncols_; c++)

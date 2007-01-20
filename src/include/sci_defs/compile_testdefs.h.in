@@ -32,12 +32,5 @@
 
 #define MAKE_COMMAND "@MAKE@"
 
-#ifdef _MSC_VER
-#define PATH_TO_VC "@PATH_TO_VC@"
-#define PATH_TO_PSDK "@PATH_TO_PSDK@"
-#define PATH_TO_MSYS_BIN "@PATH_TO_MSYS_BIN@"
-#endif
-
-
 #endif
 

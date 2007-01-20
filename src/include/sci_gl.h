@@ -115,7 +115,6 @@ typedef unsigned short wchar_t;
 #endif // _WIN32
 
 #if defined(HAVE_GLEW)
-#define GLEW_STATIC 1
 #include <GL/glew.h>
 
 #ifdef __cplusplus

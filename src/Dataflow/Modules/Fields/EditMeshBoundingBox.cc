@@ -289,9 +289,9 @@ EditMeshBoundingBox::build_widget(FieldHandle f, bool reset)
     box_initial_transform_.pre_scale(Vector((right-center).length(),
 					    (down-center).length(),
 					    (in-center).length()));
-    r.load_frame(unused, (right-center).normal(),
-		 (down-center).normal(),
-		 (in-center).normal());
+    r.load_frame((right-center).safe_normal(),
+		 (down-center).safe_normal(),
+		 (in-center).safe_normal());
     box_initial_transform_.pre_trans(r);
     box_initial_transform_.pre_translate(center.asVector());
 
@@ -392,9 +392,9 @@ EditMeshBoundingBox::execute()
     field_initial_transform_.pre_scale(Vector((right-center).length(),
 					      (down-center).length(),
 					      (in-center).length()));
-    r.load_frame(unused, (right-center).normal(),
-		 (down-center).normal(),
-		 (in-center).normal());
+    r.load_frame((right-center).safe_normal(),
+		 (down-center).safe_normal(),
+		 (in-center).safe_normal());
     field_initial_transform_.pre_trans(r);
     field_initial_transform_.pre_translate(center.asVector());
 
@@ -443,9 +443,9 @@ EditMeshBoundingBox::execute()
   t.pre_scale(Vector((right-center).length(),
        (down-center).length(),
        (in-center).length()));
-  r.load_frame(unused, (right-center).normal(),
-	 (down-center).normal(),
-	 (in-center).normal());
+  r.load_frame((right-center).safe_normal(),
+               (down-center).safe_normal(),
+               (in-center).safe_normal());
   t.pre_trans(r);
   t.pre_translate(center.asVector());
 

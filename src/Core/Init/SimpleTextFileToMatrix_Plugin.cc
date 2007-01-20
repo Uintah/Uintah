@@ -234,7 +234,7 @@ bool SimpleTextFileMatrix_writer(ProgressReporter *pr, MatrixHandle matrix, cons
   return (true);
 }
 
-static MatrixIEPlugin SimpleTextFileMatrix_plugin("TextFile","", "",SimpleTextFileMatrix_reader,SimpleTextFileMatrix_writer);
+static MatrixIEPlugin SimpleTextFileMatrix_plugin("SimpleTextFile","", "",SimpleTextFileMatrix_reader,SimpleTextFileMatrix_writer);
 
 } // end namespace
 

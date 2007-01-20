@@ -105,6 +105,7 @@ namespace SCIRun {
       virtual event_handle_t            throw_signal(const string &);
       Var<bool>                         visible_;
       Var<string>                       class_;
+      SignalCallback                    redraw_callback_;
     private:
       RectRegion                        region_;
       Variables *                       variables_;

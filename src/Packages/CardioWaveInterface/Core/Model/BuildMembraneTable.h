@@ -827,11 +827,21 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   for (int r=0; r < nummembranenodes; r++)
   {
     int q = membranetablelist[r].node0; 
-    mcc[2*q] = membranetablelist[r].node2;
-    mcc[2*q+1] = membranetablelist[r].node1;
-    mvv[2*q] = 1.0;
-    mvv[2*q+1] = -1.0;
-  }
+		if (membranetablelist[r].node2>membranetablelist[r].node1)
+		{
+			mcc[2*q] = membranetablelist[r].node1;
+			mcc[2*q+1] = membranetablelist[r].node2;
+			mvv[2*q] = -1.0;
+			mvv[2*q+1] = 1.0;		
+		}
+		else
+		{
+			mcc[2*q] = membranetablelist[r].node2;
+			mcc[2*q+1] = membranetablelist[r].node1;
+			mvv[2*q] = 1.0;
+			mvv[2*q+1] = -1.0;
+		}
+	}
  
   for (int r=0; r < nummembranenodes; r++)
   {

@@ -213,12 +213,15 @@ namespace SCIRun {
 
     class SCISHARE SignalCallback {
     public:
-      SignalCallback(Drawable *, const string &signal);
+      SignalCallback(Drawable *, const string &signalname);
+      SignalCallback(Signal *signal);
       virtual ~SignalCallback();
-      event_handle_t    operator()();
+      event_handle_t                            operator()();
     private:
       Signal *                                  signal_;
-      SignalCatcher::CatcherTargetInfoBase *    catcher_;
+      event_handle_t                            signalh_;
+      SignalThrower::AllSignalCatchers_t        catchers_;
+      bool                                      init_;
     };
 
       

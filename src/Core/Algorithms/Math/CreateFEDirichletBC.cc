@@ -129,6 +129,8 @@ bool CreateFEDirichletBCAlgo::CreateFEDirichletBC(ProgressReporter *pr,
   int idcNzstride;
   
 #ifdef HAVE_TEEM  
+
+  int cnt = 0;
   for (int p=0; p<m;p++)
   {
     if (airExists(bc[p]))
@@ -140,9 +142,11 @@ bool CreateFEDirichletBCAlgo::CreateFEDirichletBC(ProgressReporter *pr,
         rhs[j] += - bc[p] * valNz[i*idcNzstride]; 
       }    
     }
+    cnt++; if (cnt == 1000) { cnt = 0; pr->update_progress(p,2*m); }
   }
   
-  
+
+  cnt = 0;
   for (int p=0; p<m;p++)
   {
     if (airExists(bc[p]))
@@ -160,6 +164,7 @@ bool CreateFEDirichletBCAlgo::CreateFEDirichletBC(ProgressReporter *pr,
       FEout->put(p, p, 1.0);
       rhs[p] = bc[p];
     }
+    cnt++; if (cnt == 1000) { cnt = 0; pr->update_progress(p+m,2*m); }
   }
 
 #endif  

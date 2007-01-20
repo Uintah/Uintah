@@ -72,7 +72,8 @@ SplitVectorArrayInXYZ::execute()
       return;
     }
     
-    V = V->dense();
+    MatrixHandle tmp;
+    tmp = V->dense(); V = tmp;
     X = scinew DenseMatrix(n, 1);
     Y = scinew DenseMatrix(n, 1);
     Z = scinew DenseMatrix(n, 1);

@@ -29,8 +29,6 @@
 # CMakeLists.txt for Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SET(Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS
-  Matlab.cc
-  InterfaceWithMatlabViaBundles.cc
   ImportColorMapsFromMatlab.cc
   ImportDatatypesFromMatlab.cc
   ExportDatatypesToMatlab.cc
@@ -40,8 +38,8 @@ SET(Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS
   ExportMatricesToMatlab.cc
   ImportNrrdsFromMatlab.cc
   ExportNrrdsToMatlab.cc
-  MatlabViaBundlessReader.cc
-  MatlabViaBundlessWriter.cc
+  ImportBundlesFromMatlab.cc
+  ExportBundlesToMatlab.cc
 )
 
 ADD_LIBRARY(Packages_MatlabInterface_Dataflow_Modules_DataIO ${Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS})

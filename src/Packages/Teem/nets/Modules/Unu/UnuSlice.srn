@@ -23,10 +23,7 @@
     </module>
     <module category="ChangeFieldData" id="m4" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="291" y="90"/>
-      <var name="function" val="{result = x*x + y*y + z*z + sin(x*30.) + sin(y*30.) + sin(z*30.);
-
-
-}"/>
+      <var name="function" val="{result = x*x + y*y + z*z + sin(x*30.) + sin(y*30.) + sin(z*30.);   }"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x175+205+336}"/>
     </module>
@@ -124,7 +121,7 @@
       <var name="max" val="{5.96409487228}"/>
       <var name="makeSymmetric" val="{0}"/>
     </module>
-    <module category="Converters" id="m9" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m9" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="304" y="338"/>
       <var name="datasets" val="{{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }"/>
     </module>

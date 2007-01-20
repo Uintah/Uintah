@@ -101,9 +101,13 @@ bool MapFieldDataFromNodeToElemAlgoT<FIELD,OFIELD>::MapFieldDataFromNodeToElem(P
   if (field->basis_order() > 0)
   {
     typename FIELD::mesh_type::Elem::iterator it, eit;
+		typename FIELD::mesh_type::Elem::size_type sz;
 
     mesh->begin(it);
     mesh->end(eit);
+		mesh->size(sz);
+		unsigned int total = static_cast<unsigned int>(sz);
+		unsigned int cnt = 0, c = 0;
 
     if ((method == "Interpolate")||(method == "Average"))
     {
@@ -119,7 +123,8 @@ bool MapFieldDataFromNodeToElemAlgoT<FIELD,OFIELD>::MapFieldDataFromNodeToElem(P
         }
         val = val * static_cast<double>((1.0/static_cast<double>(nsize)));
         ofield->set_value(val,*it);
-        ++it;         
+        ++it;
+				cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
       }
     }
     
@@ -142,6 +147,7 @@ bool MapFieldDataFromNodeToElemAlgoT<FIELD,OFIELD>::MapFieldDataFromNodeToElem(P
         }
         ofield->set_value(val,*it);
         ++it;                 
+				cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
       }
     }
     
@@ -163,7 +169,8 @@ bool MapFieldDataFromNodeToElemAlgoT<FIELD,OFIELD>::MapFieldDataFromNodeToElem(P
           }
         }
         ofield->set_value(val,*it);
-        ++it;        
+        ++it;
+				cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }				
       } 
     }
 
@@ -179,7 +186,8 @@ bool MapFieldDataFromNodeToElemAlgoT<FIELD,OFIELD>::MapFieldDataFromNodeToElem(P
           val += field->value(nodearray[p]);
         }
         ofield->set_value(val,*it);
-        ++it;                
+        ++it;
+				cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }				
       }
     }
 
@@ -198,6 +206,7 @@ bool MapFieldDataFromNodeToElemAlgoT<FIELD,OFIELD>::MapFieldDataFromNodeToElem(P
         int idx = static_cast<int>((valarray.size()/2));
         ofield->set_value(valarray[idx],*it);        
         ++it;
+				cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }				
       }
     }
   }

@@ -275,8 +275,10 @@ namespace SCIRun {
       } break;
 
       case DOUBLE_E: {
-        double typed_value;
+        double typed_value, str_value;
         vars->get_by_idx(cache_index_, typed_value);
+        if (string_to_double(string_value_, str_value) &&
+            str_value == typed_value) return;
         string_value_ = to_string(typed_value);
       } break;
 
@@ -478,6 +480,8 @@ namespace SCIRun {
       case DOUBLE_E: { 
         double temp = 0;
         if (!string_to_double(val, temp)) return false;
+        pair<Variables *, value_t *> value_ptr = find_value_ptr(var);
+        value_ptr.second->string_value_ = val;
         Var<double>(this, var) = temp;
         return true;
       } break;

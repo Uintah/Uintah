@@ -147,6 +147,7 @@ namespace SCIRun {
     int
     GLWindow::get_signal_id(const string &name) const {
       if (name == "GLWindow::Destructor") return 1;
+      if (name == "GLWindow::Destroy") return 2;
       return 0;
     }
 
@@ -159,6 +160,15 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     GLWindow::process_event(event_handle_t event) {
       lock_.lock();
+
+      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      if (window && (window->get_window_state() & WindowEvent::DESTROY_E)) 
+      {
+        throw_signal("GLWindow::Destroy");
+        lock_.unlock();
+        return CONTINUE_E;
+      }
+
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       if (pointer) {
 
@@ -188,7 +198,6 @@ namespace SCIRun {
       }
 
 
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       bool redraw = (window && 
                      window->get_window_state() & WindowEvent::REDRAW_E);
       bool subdraw = redraw && redrawables_.size() && !force_redraw_;
@@ -335,7 +344,7 @@ namespace SCIRun {
 
       const char *fname = sci_getenv("SKINNER_MOVIE_BASE_FILENAME");
       static int i = 0;
-      char name[strlen(fname)+32];
+      char name[256];
       sprintf (name, fname, ++i);
       FILE *fp = fopen(name, "wb");
       png_init_io(png_write, fp);

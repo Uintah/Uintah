@@ -140,20 +140,20 @@ ViewScene::~ViewScene()
     sched_->remove_callback(check_autoview_on_load, this);
   }
 
+  view_window_lock_.lock();
   for(unsigned int i=0;i<view_window_.size();i++)
   {
-    view_window_lock_.lock();
 #ifdef __linux    
     CleanupManager::invoke_remove_callback(delete_viewwindow_callback,
                                            (void *)view_window_[i]);
 #else
     delete view_window_[i];
 #endif
-    view_window_lock_.unlock();
   }
-  
-
+  view_window_.clear();
+  view_window_lock_.unlock();
 }
+
 
 //----------------------------------------------------------------------
 void
@@ -167,17 +167,17 @@ ViewScene::do_execute()
       int did_some=1;
       while(did_some)
       {
-	did_some=0;
-	for(unsigned int i=0;i<view_window_.size();i++)
-	{
-	  if (view_window_[i]) {
-	    if (view_window_[i]->need_redraw_)
-	    {
-	      did_some++;
-	      view_window_[i]->redraw_if_needed();
-	    }
-	  }
-	}
+        did_some=0;
+        for(unsigned int i=0;i<view_window_.size();i++)
+        {
+          if (view_window_[i]) {
+            if (view_window_[i]->need_redraw_)
+            {
+              did_some++;
+              view_window_[i]->redraw_if_needed();
+            }
+          }
+        }
       }
     }
     if (process_event() == 86)  
@@ -186,10 +186,10 @@ ViewScene::do_execute()
       for(unsigned int i=0;i<view_window_.size();i++)
       {
       	ViewWindow* r=view_window_[i];
-	if (r && r->renderer_)
-	{
-	  r->renderer_->kill_helper();
-	  r->viewer_ = 0;
+        if (r && r->renderer_)
+        {
+          r->renderer_->kill_helper();
+          r->viewer_ = 0;
       	}
       }
       return;
@@ -221,7 +221,8 @@ ViewScene::process_event()
     if (synchronized_debt_ < 0)
     {
       synchronized_debt_++;
-      sched_->report_execution_finished(msg);
+      Scheduler_Module_Message *smmsg = (Scheduler_Module_Message *)msg;
+      sched_->report_execution_finished(smmsg->serial);
     }
     else
     {
@@ -242,9 +243,9 @@ ViewScene::process_event()
       unsigned int i;
       for(i=0;i<view_window_.size();i++)
       {
-	r=view_window_[i];
-	if(r->id_ == rmsg->rid)
-	  break;
+        r=view_window_[i];
+        if(r->id_ == rmsg->rid)
+          break;
       }
       if(i==view_window_.size())
       {
@@ -540,6 +541,7 @@ ViewScene::delete_patch_portnos(int portid)
 	    si->getString().substr(0, loc+1) + to_string(i) + ")";
 	  string cached_name = si->getString();
 	  // Do a rename here.
+          view_window_lock_.lock();
 	  for (unsigned int j = 0; j < view_window_.size(); j++)
 	  {
 	    // itemRenamed will set si->name_ = newname
@@ -547,6 +549,7 @@ ViewScene::delete_patch_portnos(int portid)
 	    si->getString() = cached_name;
 	    view_window_[j]->itemRenamed(si, newname);
 	  }
+          view_window_lock_.unlock();
 	  si->getString() = newname;
 	}
       }

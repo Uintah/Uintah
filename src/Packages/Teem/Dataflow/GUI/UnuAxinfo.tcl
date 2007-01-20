@@ -115,7 +115,7 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
     method make_optionmenu {win l var use_var intial_val values} {
 	global $var
 
-	puts stderr $values
+#	puts stderr $values
 
 	frame $win
 	pack $win -side left -padx 5 -pady 1 -fill x

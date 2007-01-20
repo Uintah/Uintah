@@ -51,10 +51,7 @@ namespace SCIRun {
     private:
       CatcherFunction_t                 do_PointerEvent;
       CatcherFunction_t                 redraw;
-      
       Var<Color>                        color_;
-      Var<bool>                         focus_mode_;
-      bool                              focus_;
     };
   }
 }

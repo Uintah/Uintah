@@ -111,10 +111,12 @@
 #ifndef JGS_MATLABIO_MATLABCONVERTER_FIELDTOMATLAB_H
 #define JGS_MATLABIO_MATLABCONVERTER_FIELDTOMATLAB_H 1
 
+#include <Core/Matlab/share.h>
+
 namespace MatlabIO {
 
 
-class FieldToMatlabAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
+class SCISHARE FieldToMatlabAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
 {
   public:
 
@@ -970,7 +972,7 @@ bool FieldToMatlabAlgo::mladdtransform(MESH* mesh,matlabarray mlarray)
   T.get_trans(data);
   transform.createdensearray(4,4,matlabarray::miDOUBLE);
   transform.setnumericarray(data,16);
-  mlarray.setfield(0,"tranform",transform);
+  mlarray.setfield(0,"transform",transform);
   return(true);
 }
 

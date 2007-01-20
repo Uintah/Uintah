@@ -89,34 +89,30 @@ ModuleHelper::run()
       MessageBase* msg = module->mailbox_.receive();
       switch(msg->type) 
       {
-        case MessageTypes::GoAway:
-          delete msg;
-          return;
-
-        case MessageTypes::GoAwayWarn:
-          break;
-
-        case MessageTypes::ExecuteModule:
-          module->do_execute();
-          module->do_synchronize();
-          module->sched_->report_execution_finished(msg);
-          break;
-
-        case MessageTypes::SynchronizeModule:
-          module->do_synchronize();
-          module->sched_->report_execution_finished(msg);
-          break;
-
-        case MessageTypes::TriggerPort:
-          {
-            Scheduler_Module_Message *smsg = (Scheduler_Module_Message*)msg;
-            smsg->conn->oport->resend(smsg->conn);
-          }
-          break;
-
-        default:
-          std::cerr << "(ModuleHelper.cc) Illegal Message type: " << msg->type << std::endl;
-          break;
+      case MessageTypes::GoAway:
+        delete msg;
+        return;
+      case MessageTypes::GoAwayWarn:
+        break;
+      case MessageTypes::ExecuteModule:
+        module->do_execute();
+        module->do_synchronize();
+        module->sched_->report_execution_finished(msg);
+        break;
+      case MessageTypes::SynchronizeModule:
+        module->do_synchronize();
+        module->sched_->report_execution_finished(msg);
+        break;
+      case MessageTypes::TriggerPort:
+        {
+          Scheduler_Module_Message *smsg = (Scheduler_Module_Message*)msg;
+          smsg->conn->oport->resend(smsg->conn);
+        }
+        break;
+      default:
+        cerr << "(ModuleHelper.cc) Illegal Message type: " << msg->type
+                   << std::endl;
+        break;
       }
 
       delete msg;

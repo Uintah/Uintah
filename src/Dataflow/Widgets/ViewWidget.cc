@@ -481,7 +481,7 @@ ViewWidget::GetEyeAxis()
   }
   else
   {
-    return (oldaxis1 = axis.normal());
+    return (oldaxis1 = axis.safe_normal());
   }
 }
 
@@ -496,7 +496,7 @@ ViewWidget::GetUpAxis()
   }
   else
   {
-    return (oldaxis2 = axis.normal());
+    return (oldaxis2 = axis.safe_normal());
   }
 }
 

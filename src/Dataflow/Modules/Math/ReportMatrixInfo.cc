@@ -157,7 +157,7 @@ void ReportMatrixInfo::execute()
 
     send_output_handle("NumRows", NumRows);
     send_output_handle("NumCols", NumCols);
-    send_output_handle("NuMElements", NumElements);
+    send_output_handle("NumElements", NumElements);
   }
 }
 

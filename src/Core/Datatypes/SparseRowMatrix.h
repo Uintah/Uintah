@@ -62,7 +62,7 @@ public:
   int nnz;
   double* a;
 
-  void validate();
+  bool validate();
 
   //! Constructors
   // Here's what the arguements for the constructor should be:
@@ -106,7 +106,6 @@ public:
                                     int *&cols, double *&vals);
 
   //! 
-  virtual SparseRowMatrix *transpose();
   virtual SparseRowMatrix *transpose() const;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs, int beg=-1, int end=-1,

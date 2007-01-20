@@ -15,8 +15,7 @@
     </module>
     <module category="ChangeFieldData" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="87" y="104"/>
-      <var name="function" val="{result = Cross(Vector(0.0, 0.0, 1.0), Vector(x, y, z));
-}"/>
+      <var name="function" val="{result = Cross(Vector(0.0, 0.0, 1.0), Vector(x, y, z)); }"/>
       <var name="outputdatatype" val="{Vector}"/>
     </module>
     <module category="NewField" id="m3" name="GeneratePointSamplesFromFieldOrWidget" package="SCIRun">

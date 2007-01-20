@@ -42,6 +42,7 @@ ADD_LIBRARY(Packages_Teem_Dataflow_Modules_DataIO ${Packages_Teem_Dataflow_Modul
 TARGET_LINK_LIBRARIES(Packages_Teem_Dataflow_Modules_DataIO
   Core_Containers
   Core_Datatypes
+  Core_Algorithms_DataIO
   Core_Exceptions
   Core_Geom
   Core_Geometry

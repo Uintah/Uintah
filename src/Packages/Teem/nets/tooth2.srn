@@ -222,7 +222,7 @@
       <var name="resampAxis1" val="{128}"/>
       <var name="resampAxis2" val="{128}"/>
     </module>
-    <module category="Converters" id="m9" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m9" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="108" y="220"/>
       <note color="{white}" position="{none}">{GM_F}</note>
       <var name="datasets" val="{{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }"/>

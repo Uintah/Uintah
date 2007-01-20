@@ -113,7 +113,7 @@ class SCISHARE ArrayObjectFieldDataAlgo : public SCIRun::DynamicAlgoBase {
 ////////// ArrayObjectFieldDataScalarAlgoT //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldDataScalarAlgoT : public ArrayObjectFieldDataAlgo {
+class ArrayObjectFieldDataScalarAlgoT : public ArrayObjectFieldDataAlgo {
   public:
     virtual void getnextscalar(DataArrayMath::Scalar& scalar);
     virtual void setnextscalar(DataArrayMath::Scalar& scalar);
@@ -198,7 +198,7 @@ int ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::size()
 ////////// ArrayObjectFieldVectorAlgo //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldDataVectorAlgoT : public ArrayObjectFieldDataAlgo {
+class ArrayObjectFieldDataVectorAlgoT : public ArrayObjectFieldDataAlgo {
   public:
     virtual void getnextvector(DataArrayMath::Vector& vector);
     virtual void setnextvector(DataArrayMath::Vector& vector);
@@ -282,7 +282,7 @@ int ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::size()
 ////////// ArrayObjectFieldDataTensorAlgo //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldDataTensorAlgoT : public ArrayObjectFieldDataAlgo {
+class ArrayObjectFieldDataTensorAlgoT : public ArrayObjectFieldDataAlgo {
   public:
     virtual void getnexttensor(DataArrayMath::Tensor& tensor);
     virtual void setnexttensor(DataArrayMath::Tensor& tensor);
@@ -384,7 +384,7 @@ class SCISHARE ArrayObjectFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
 
 ////////// ArrayObjectFSetieldLocationAlgo //////////////////
 
-class SCISHARE ArrayObjectSetFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
+class ArrayObjectSetFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
   public:
     virtual void setnextlocation(DataArrayMath::Vector& vector) = 0;
     virtual int  size() = 0;
@@ -399,7 +399,7 @@ class SCISHARE ArrayObjectSetFieldLocationAlgo : public SCIRun::DynamicAlgoBase 
 ////////// ArrayObjectFieldLocationNodeAlgoT //////////////////
 
 template<class FIELD>
-class SCISHARE ArrayObjectFieldLocationAlgoT : public ArrayObjectFieldLocationAlgo {
+class ArrayObjectFieldLocationAlgoT : public ArrayObjectFieldLocationAlgo {
   public:
     virtual void getnextlocation(DataArrayMath::Vector& vector);
     virtual void setnextlocation(DataArrayMath::Vector& vector);
@@ -472,7 +472,7 @@ int ArrayObjectFieldLocationAlgoT<FIELD>::size()
 ////////// ArrayObjectFieldLocationNodeAlgoT //////////////////
 
 template<class FIELD>
-class SCISHARE ArrayObjectFieldLocationNodeAlgoT : public ArrayObjectFieldLocationAlgo {
+class ArrayObjectFieldLocationNodeAlgoT : public ArrayObjectFieldLocationAlgo {
   public:
     virtual void getnextlocation(DataArrayMath::Vector& vector);
     virtual void setnextlocation(DataArrayMath::Vector& vector);
@@ -541,7 +541,7 @@ int ArrayObjectFieldLocationNodeAlgoT<FIELD>::size()
 ////////// ArrayObjectFieldLocationElemAlgoT //////////////////
 
 template<class FIELD>
-class SCISHARE ArrayObjectFieldLocationElemAlgoT : public ArrayObjectFieldLocationAlgo {
+class ArrayObjectFieldLocationElemAlgoT : public ArrayObjectFieldLocationAlgo {
   public:
     virtual void getnextlocation(DataArrayMath::Vector& vector);
     virtual void setnextlocation(DataArrayMath::Vector& vector);
@@ -674,7 +674,7 @@ class SCISHARE ArrayObjectFieldElemAlgo : public SCIRun::DynamicAlgoBase {
 ////////// ArrayObjectFieldElemPointAlgo //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldElemPointAlgoT : public ArrayObjectFieldElemAlgo {
+class ArrayObjectFieldElemPointAlgoT : public ArrayObjectFieldElemAlgo {
   public:
     virtual void getcenter(DataArrayMath::Vector& node);
     virtual void getdimension(DataArrayMath::Scalar& dim);
@@ -752,7 +752,7 @@ void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::getdimension(DataArrayMath::Scal
 ////////// ArrayObjectFieldElemLineAlgo //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldElemLineAlgoT : public ArrayObjectFieldElemAlgo {
+class ArrayObjectFieldElemLineAlgoT : public ArrayObjectFieldElemAlgo {
   public:
     virtual void getcenter(DataArrayMath::Vector& node);
     virtual void getsize(DataArrayMath::Scalar& size);
@@ -843,7 +843,7 @@ void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::getsize(DataArrayMath::Scalar& si
 ////////// ArrayObjectFieldElemSurfAlgo //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldElemSurfAlgoT : public ArrayObjectFieldElemAlgo {
+class ArrayObjectFieldElemSurfAlgoT : public ArrayObjectFieldElemAlgo {
   public:
     virtual void getcenter(DataArrayMath::Vector& node);
     virtual void getsize(DataArrayMath::Scalar& size);
@@ -956,7 +956,7 @@ void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::getnormal(DataArrayMath::Vector& 
 ////////// ArrayObjectFieldElemVolumeAlgo //////////////////
 
 template<class FIELD, class LOC>
-class SCISHARE ArrayObjectFieldElemVolumeAlgoT : public ArrayObjectFieldElemAlgo {
+class ArrayObjectFieldElemVolumeAlgoT : public ArrayObjectFieldElemAlgo {
   public:
     virtual void getcenter(DataArrayMath::Vector& node);
     virtual void getsize(DataArrayMath::Scalar& size);

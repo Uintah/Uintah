@@ -26,25 +26,13 @@
     </module>
     <module category="ChangeFieldData" id="m4" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="157" y="197"/>
-      <var name="function" val="{double val = 100.* drand48();
-result = x*x + y*y + z*z + val;
-
-
-
-
-}"/>
+      <var name="function" val="{double val = 100.* drand48(); result = x*x + y*y + z*z + val;     }"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x169+608+348}"/>
     </module>
     <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="332" y="196"/>
-      <var name="function" val="{double val = 100. * drand48();
-result = x*x + y*y + 0.4*z*z + val;
-
-
-
-
-}"/>
+      <var name="function" val="{double val = 100. * drand48(); result = x*x + y*y + 0.4*z*z + val;     }"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x169+798+348}"/>
     </module>

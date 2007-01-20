@@ -44,6 +44,8 @@
 #include <Core/Services/ServiceLog.h>
 #include <Core/Containers/LockingHandle.h>
 
+#include <Core/Services/share.h>
+
 #ifdef _WIN32
 #define DECLARE_SERVICE_MAKER(name) \
 extern "C" __declspec(dllexport) Service* make_service_##name(ServiceContext& ctx) \
@@ -63,9 +65,9 @@ namespace SCIRun {
 class ServiceContext 
 {
 public:
-  std::string				       servicename;
+  std::string				 servicename;
   int					       session;
-  std::string				       packagename;
+  std::string		     packagename;
   std::map<std::string,std::string>            parameters;
   IComSocket				       socket;
   ServiceLogHandle			       log;
@@ -76,7 +78,7 @@ class Service;
 typedef LockingHandle<Service> ServiceHandle;
 
 
-class Service : public ServiceBase {
+class SCISHARE Service : public ServiceBase {
 public:
 
   // Constructor/destructor
@@ -91,14 +93,15 @@ public:
   virtual void	execute();
 
   // Get information about this services
-  int				getsession();
-  void            setsession(int session);
+	bool					updateparameters();
+  int						getsession();
+  void          setsession(int session);
   std::string		getservicename();
   std::string		getpackagename();
   std::string		getparameter(std::string);
   IComSocket		getsocket();
   ServiceLogHandle getlog();
-  void			putmsg(std::string line);
+  void					putmsg(std::string line);
   // Communication functions
 	
   inline bool			send(IComPacketHandle &packet);
@@ -111,9 +114,9 @@ public:
 	
   // Error retrieval mechanisms for communication errors
 	
-  inline std::string		geterror();
-  inline int				geterrno();
-  inline bool			haserror();
+  inline std::string	geterror();
+  inline int					geterrno();
+  inline bool					haserror();
 	
   // Error reporting, services log file
 	

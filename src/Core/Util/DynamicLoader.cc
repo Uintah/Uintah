@@ -54,26 +54,6 @@ using namespace std;
 
 #ifdef _WIN32
 #  include <windows.h>
-#  ifdef _MSC_VER
-
-string vstext;
-void set_vc_dirs()
-{
-  string path_to_vc = PATH_TO_VC;
-  string path_to_psdk = PATH_TO_PSDK;
-  string path_to_make = PATH_TO_MSYS_BIN;
-
-  // path is path-to-vc/bin + path-to-vc/../Common7/IDE (for a dependent dll) + path_to_make
-  vstext = "@SET PATH=" + path_to_vc + "\\..\\Common7\\IDE;" + path_to_vc + "\\bin;" + path_to_make + ";%PATH%\n";
-
-  // include is path-to-vc/include and path-to-psdk/Include
-  vstext+= "@SET INCLUDE=" + path_to_vc + "\\include;" + path_to_psdk + "\\Include\n";
-
-  // lib (libpaths) is the same, with lib
-  vstext+= "@SET LIB=" + path_to_vc + "\\lib;" + path_to_psdk + "\\Lib";
-}
-
-#  endif
 #  undef SCISHARE
 #  ifndef BUILD_CORE_STATIC
 #    define SCISHARE __declspec(dllexport)
@@ -92,7 +72,7 @@ namespace SCIRun {
   // This mutex is used in Core/Persistent/Persistent.cc.  It is
   // declared here because it is not initializing properly when declared
   // in Persistent.cc.
-  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
+//  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
   const string ext("dylib");
 #elif defined(_WIN32)
   const string ext("dll");
@@ -164,17 +144,35 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 {
 }
 
+//! filter out ../../(../)*src from inc
+//!   only do on windows for now
+//! relative strings should only refer to SCIRun Core headers
+string CompileInfo::include_filter(const string& inc)
+{
+#ifdef _WIN32
+  int pos;
+  if ((pos=inc.find("../src/")) != string::npos ||
+      (pos=inc.find("..\\src\\")) != string::npos)
+    return inc.substr(pos+7, inc.length());
+  else
+    return inc;
+#else
+  return inc;
+#endif
+}
+
 
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = includes_.begin();
   while (iter != includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  includes_.push_front(inc);
+  includes_.push_front(filtered);
 }
 
 //! Only add unique include strings to the list, and
@@ -182,68 +180,75 @@ CompileInfo::add_include(const string &inc)
 void
 CompileInfo::add_data_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = data_includes_.begin();
   while (iter != data_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  data_includes_.push_front(inc);
+  data_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_basis_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = basis_includes_.begin();
   while (iter != basis_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  basis_includes_.push_front(inc);
+  basis_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_mesh_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = mesh_includes_.begin();
   while (iter != mesh_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  mesh_includes_.push_front(inc);
+  mesh_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_container_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = container_includes_.begin();
   while (iter != container_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  container_includes_.push_front(inc);
+  container_includes_.push_front(filtered);
 }
 //! Only add unique include strings to the list, and
 //! preserve the push front behavior
 void
 CompileInfo::add_field_include(const string &inc)
 {
+  string filtered = include_filter(inc);
   list<string>::iterator iter = field_includes_.begin();
   while (iter != field_includes_.end()) {
-    if (*iter++ == inc) return;
+    if (*iter++ == filtered) return;
   }
-  field_includes_.push_front(inc);
+  field_includes_.push_front(filtered);
 }
 
 
 void
 CompileInfo::add_pre_include(const string &pre)
 {
-  pre_include_extra_ = pre_include_extra_ + pre;
+  string filtered = include_filter(pre);
+  pre_include_extra_ = pre_include_extra_ + filtered;
 }
 
 void
 CompileInfo::add_post_include(const string &post)
 {
-  post_include_extra_ = post_include_extra_ + post;
+  string filtered = include_filter(post);
+  post_include_extra_ = post_include_extra_ + filtered;
 }
 
 
@@ -404,10 +409,6 @@ DynamicLoader::DynamicLoader() :
   map_lock_.lock();
   algo_map_.clear();
   map_lock_.unlock();
-
-#ifdef _MSC_VER
-  set_vc_dirs();
-#endif
 }
 
 
@@ -595,7 +596,10 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " +
 		    info.filename_ + ext);
 
+#ifndef _WIN32
+  // windows will change command and post this message later
   pr->add_raw_message("DynamicLoader - Executing: " + command + "\n");
+#endif
 
   FILE *pipe = 0;
   bool result = true;
@@ -629,17 +633,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   strcpy(otfdir, otf_dir().c_str());
   // We need to make Windows create a command and read it since windows
   // system can't handle a ';' to split commands
-  int loc = command.find(';');
 
-  // give it \ instead of / so windows can read it correctly
-  string command1 = command.substr(0, loc);
-  for (unsigned i = 0; i < command1.length(); i++)
-  {
-    if (command1[i] == '/')
-    {
-      command1[i] = '\\';
-    }
-  }
   for (unsigned i = 0; i < strlen(otfdir); i++)
   {
     if (otfdir[i] == '/')
@@ -647,16 +641,11 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
       otfdir[i] = '\\';
     }
   }
-  string command2 = command.substr(loc+1, command.length());
-  // hardcoded...
-  string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
-  FILE* batch = fopen(batch_filename.c_str(), "w");
-#ifdef _MSC_VER
-  fprintf(batch, "\n%s\n%s\n%s\n", vstext.c_str(), command1.c_str(), command2.c_str());
-#else
-  fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
-#endif
-  fclose(batch);
+  string batch_filename = string(otfdir)+"\\win32make.bat";
+
+  // reset command
+  command = batch_filename + " " + info.filename_ + "dll " + info.filename_ + "cc " + info.filename_ + "log";
+  pr->add_raw_message("DynamicLoader - Executing: " + command + "\n");
 
   si_.cb = sizeof(STARTUPINFO);
 
@@ -664,7 +653,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   // Otherwise it will get confused while trying to run in the same shell as the
   // tcl interpreter.
   bool retval =
-    CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
+    CreateProcess((char*)batch_filename.c_str(),(char*)command.c_str(),0,0,0,CREATE_NO_WINDOW,0,otfdir, &si_, &pi_);
   if (!retval)
   {
     const char *soerr = SOError();

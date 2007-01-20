@@ -40,6 +40,8 @@ ServiceManager::ServiceManager(ServiceDBHandle db, IComAddress address,
   db_(db),
   address_(address)
 {
+  // create an empty log
+  if (log_.get_rep() == 0) log_ = scinew ServiceLog("");
 }
 
 ServiceManager::~ServiceManager()
