@@ -1,0 +1,66 @@
+diff -ru mpeg_encode/libpnmrw.c mpeg_encode-patch/libpnmrw.c
+--- mpeg_encode/libpnmrw.c	2001-11-27 20:54:05.000000000 -0700
++++ mpeg_encode-patch/libpnmrw.c	2005-05-19 12:22:21.000000000 -0600
+@@ -1,3 +1,4 @@
++#include <errno.h>
+ /* libpnmrw.c - PBM/PGM/PPM read/write library
+  **
+  ** Copyright (C) 1988, 1989, 1991, 1992 by Jef Poskanzer.
+@@ -129,7 +130,7 @@
+ #if !defined(LINUX)
+   extern char* sys_errlist[];
+ #endif
+-  extern int errno;
++  
+   char* e;
+ 
+   e = sys_errlist[errno];
+diff -ru mpeg_encode/Makefile mpeg_encode-patch/Makefile
+--- mpeg_encode/Makefile	1995-08-16 16:16:56.000000000 -0600
++++ mpeg_encode-patch/Makefile	2005-05-19 12:47:32.000000000 -0600
+@@ -57,7 +57,7 @@
+ #################
+ # INCLUDE FILES # 
+ #################
+-INCLUDEDIR = -Iheaders -I/usr/include $(JPEG_DIR)
++INCLUDEDIR = -Iheaders $(JPEG_DIR)
+ 
+ ############################################################################
+ # LIBRARIES # specify library directories; need jpg lib and maybe pbm	   #
+@@ -117,7 +117,7 @@
+ #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) -Wall -Wmissing-prototypes $(PROFLAG) $(PROTOFLAG) -DMIPS
+ 
+ # 	SGI cc
+-#CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -cckr -DIRIX
++#CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG)  
+ 
+ #	Intel-based SVR4.0 cc
+ #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -DLONG_32 -DSVR4 -DSYSV386
+@@ -126,13 +126,13 @@
+ #CFLAGS =  $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -Dsco -m486
+ 
+ # linux CFLAGS
+-#CFLAGS  = $(INCLUDEDIR) -m486 -fomit-frame-pointer -ffast-math -finline-functions $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -DLONG_32 -DSYSV -DLINUX
++CFLAGS  = $(INCLUDEDIR) -mcpu=i486 -fomit-frame-pointer -ffast-math -finline-functions $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG) -DLONG_32 -DSYSV -DLINUX -fPIC
+ 
+ #	IBM RS/6000 cc
+ #CFLAGS = $(INCLUDEDIR) $(DEBUGFLAG) $(PROFLAG) $(PROTOFLAG)
+ 
+ # DOS
+-#CFLAGS        =  $(INCLUDEDIR) $(DEBUGFLAG) -O1 -DSYSV -DFORCE_LITTLE_ENDIAN -w-rvl -w-rch -w-eff -w-ccc -w-par -w-use -w-aus -w-pro $(PROFLAG) $(PROTOFLAG)
++##CFLAGS        =  $(INCLUDEDIR) $(DEBUGFLAG) -O1 -DSYSV -DFORCE_LITTLE_ENDIAN -w-rvl -w-rch -w-eff -w-ccc -w-par -w-use -w-aus -w-pro $(PROFLAG) $(PROTOFLAG)
+ 
+ 
+ #########################################################################
+diff -ru mpeg_encode/Makefile.lib mpeg_encode-patch/Makefile.lib
+--- mpeg_encode/Makefile.lib	2005-05-19 12:25:05.000000000 -0600
++++ mpeg_encode-patch/Makefile.lib	2005-05-19 12:22:26.000000000 -0600
+@@ -19,7 +19,7 @@
+ INSTALL= cp
+ 
+ # by default this is installed in your home dir
+-prefix = $$HOME
++prefix=@INSTALL_DIR@
+ libdir = $(prefix)/lib
+ incdir = $(prefix)/include
+ 

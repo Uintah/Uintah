@@ -1,0 +1,33 @@
+diff -c teem-1.8.0-src/src/make/aix.mk aix.mk.patch 
+*** teem-1.8.0-src/src/make/aix.mk	Mon Feb  7 13:10:10 2005
+--- aix.mk.patch	Thu Jan 19 22:35:23 2006
+***************
+*** 19,30 ****
+  #
+  #
+  
+! TEEM_SHEXT =
+  
+  OPT_CFLAG ?= -O2 -qmaxmem=16384
+  STATIC_CFLAG = 
+! SHARED_CFLAG = -Bdynamic
+! SHARED_LDFLAG = -G
+  ARCH_CFLAG = 
+  ARCH_LDFLAG = 
+  
+--- 19,32 ----
+  #
+  #
+  
+! TEEM_SHEXT = so
+  
++ LD = xlC
++ 
+  OPT_CFLAG ?= -O2 -qmaxmem=16384
+  STATIC_CFLAG = 
+! SHARED_CFLAG = 
+! SHARED_LDFLAG = -G -qmkshrobj
+  ARCH_CFLAG = 
+  ARCH_LDFLAG = 
+  
+ds001:77:~/utah> 

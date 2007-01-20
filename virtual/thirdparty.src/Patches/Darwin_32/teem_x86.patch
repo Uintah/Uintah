@@ -1,0 +1,11 @@
+--- teem-1.9.0-src/src/make/darwin.mk	2006-03-30 11:40:32.000000000 -0700
++++ darwin.mk	2006-03-30 11:43:18.000000000 -0700
+@@ -48,7 +48,7 @@
+   endif
+ endif
+ 
+-TEEM_ENDIAN = 4321
++TEEM_ENDIAN = 1234
+ TEEM_QNANHIBIT = 1
+ TEEM_DIO = 0
+ TEEM_32BIT = 1
