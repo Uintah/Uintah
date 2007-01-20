@@ -26,7 +26,7 @@
       <position x="241" y="326"/>
       <var name="ui_geometry" val="{464x263+59+54}"/>
     </module>
-    <module category="Converters" id="m5" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m5" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="65" y="246"/>
     </module>
     <module category="Misc" id="m6" name="ReportNrrdInfo" package="Teem">

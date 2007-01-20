@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/MatlabInterface/Dataflow
 
-SUBDIRS(GUI Modules)
+SUBDIRS(Modules)
 

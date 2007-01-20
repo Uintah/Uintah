@@ -15,8 +15,7 @@
     </module>
     <module category="ChangeFieldData" id="m2" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="81" y="93"/>
-      <var name="function" val="{result = x + y + z;
-}"/>
+      <var name="function" val="{result = x + y + z; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="Visualization" id="m3" name="ExtractIsosurface" package="SCIRun">

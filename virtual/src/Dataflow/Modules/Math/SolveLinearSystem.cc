@@ -280,6 +280,9 @@ SolveLinearSystem::execute()
   MatrixHandle rhs;
   if (!get_input_handle("RHS", rhs)) return;
 
+  // Convert this one into a column matrix
+  { MatrixHandle tmp = rhs->column(); rhs = tmp; }
+
   if (use_previous_soln.get() && solution.get_rep() &&
      solution->nrows() == rhs->nrows())
   {
@@ -321,13 +324,10 @@ SolveLinearSystem::execute()
   epcount = Max(1, emit_iter.get());
   const string meth = method.get();
 
-  bool intermediate = false;
-
   if (meth == "Conjugate Gradient & Precond. (SCI)") {
     conjugate_gradient_sci(mat, *solp, *rhsp);
   } else if (meth == "BiConjugate Gradient & Precond. (SCI)") {
     bi_conjugate_gradient_sci(mat, *solp, *rhsp);
-    intermediate = true;
   } else if (meth == "Jacobi & Precond. (SCI)") {
     jacobi_sci(mat, *solp, *rhsp);
 #ifdef PETSC_UNI
@@ -361,7 +361,7 @@ SolveLinearSystem::execute()
     return;
   }
 
-  send_output_handle("Solution", solution, false, intermediate);
+  send_output_handle("Solution", solution, false);
 
   if (delete_rhsp) { delete rhsp; }
 }
@@ -691,8 +691,8 @@ SolveLinearSystem::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& r
 
       if (ep && niter%epcount == 0)
       {
-        MatrixHandle rhsH(rhs.clone());
-        send_output_handle("Solution", rhsH, false, true);
+        MatrixHandle lhsH(lhs.clone());
+        send_output_handle("Solution", lhsH, false, true);
       }
     }
   }
@@ -815,7 +815,14 @@ SolveLinearSystem::init_parallel_conjugate_gradient()
 
   data.P = new ColumnMatrix(size);
 
-  data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  if (data.bnorm > 0)
+  {
+    data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  }
+  else
+  {
+    data.err = 0;
+  }
   if (data.err == 0)
   {
     lhs = rhs;
@@ -1077,7 +1084,14 @@ SolveLinearSystem::init_parallel_bi_conjugate_gradient()
   // BiCG
   data.P1 = new ColumnMatrix(size);
 
-  data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  if (data.bnorm > 0.0)
+  {
+    data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
+  }
+  else
+  {
+    data.err = 0.0;
+  }
   if (data.err == 0)
   {
     lhs = rhs;

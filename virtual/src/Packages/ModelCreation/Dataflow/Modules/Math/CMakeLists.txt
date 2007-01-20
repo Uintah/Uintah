@@ -29,13 +29,13 @@
 # CMakeLists.txt for Packages/ModelCreation/Dataflow/Modules/Math
 
 SET(Packages_ModelCreation_Dataflow_Modules_Math_SRCS
-  ResizeMatrix.cc
-  ReverseReorderMatrixByCuthillMcKee.cc
-  ReorderMatrixByCuthillMcKee.cc
-  ReportMatrixRowMeasure.cc
-  ReportMatrixColumnMeasure.cc
   AppendMatrix.cc
   GetSubMatrix.cc
+  ReorderMatrixByCuthillMcKee.cc
+  ReorderMatrixByReverseCuthillMcKee.cc
+  ReportMatrixColumnMeasure.cc
+  ReportMatrixRowMeasure.cc
+  ResizeMatrix.cc
 )
 
 ADD_LIBRARY(Packages_ModelCreation_Dataflow_Modules_Math ${Packages_ModelCreation_Dataflow_Modules_Math_SRCS})

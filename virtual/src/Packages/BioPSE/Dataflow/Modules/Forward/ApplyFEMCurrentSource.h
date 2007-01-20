@@ -81,7 +81,13 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
   typedef typename FIELD::mesh_type FMT;
   typedef typename FMT::basis_type MBT;
 
-  void execute_dipole(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, ColumnMatrix** rhs, SparseRowMatrix **w)
+  static bool ud_pair_less(const std::pair<unsigned int, double> &a,
+                           const std::pair<unsigned int, double> &b)
+  {
+      return a.first < b.first;
+  };
+
+  void execute_dipole(ProgressReporter *pr, FieldHandle &hField, FieldHandle &hSource, ColumnMatrix** rhs, SparseRowMatrix **w)
   {
     FMT *mesh=dynamic_cast<FMT *>(hField->mesh().get_rep());
     ASSERT(mesh);
@@ -90,7 +96,9 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
     typename FMT::Node::size_type nsize; 
     mesh->size(nsize);
 
-    typename FMT::Cell::size_type sz;
+    typename FMT::Node::array_type nodes;
+    
+    typename FMT::Elem::size_type sz;
     mesh->size(sz);
 
     if (*rhs == 0)
@@ -103,7 +111,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
     PCVecField *hDipField = dynamic_cast<PCVecField*> (hSource.get_rep());
     if (!hDipField)
     {
-      PR->error("Sources field is not of type PointCloudField<Vector>.");
+      pr->error("Sources field is not of type PointCloudField<Vector>.");
       return;
     }
 
@@ -112,9 +120,13 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
     PCMesh::Node::iterator ii_end;
     hDipField->get_typed_mesh()->begin(ii);
     hDipField->get_typed_mesh()->end(ii_end);
-    vector<double> weights;
+    vector<pair<unsigned int, double> > weights;
     vector<double> coords;
-    vector<double> wd(MBT::dofs()*MBT::domain_dimension());
+    unsigned int dofs = MBT::dofs();
+    int dim = mesh->get_basis().domain_dimension();
+    double J[9], Ji[9];
+    double grad[3];
+    vector<double> wd(dofs*dim);
 
     for (; ii != ii_end; ++ii)
     {
@@ -132,23 +144,20 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
       typename FMT::Cell::index_type loc;
       if (mesh->locate(loc, pos))
       {
-        PR->msg_stream() << "Source pos="<<pos<<" dir="<<dir<<
+        pr->msg_stream() << "Source pos="<<pos<<" dir="<<dir<<
           " found in elem "<<loc<<endl;
 
         if (fabs(dir.x()) > 0.000001)
         {
-          weights.push_back(loc*3);
-          weights.push_back(dir.x());
+          weights.push_back(pair<unsigned int, double>(loc*3+0, dir.x()));
         }
         if (fabs(dir.y()) > 0.000001)
         {
-          weights.push_back(loc*3+1);
-          weights.push_back(dir.y());
+          weights.push_back(pair<unsigned int, double>(loc*3+1, dir.y()));
         }
         if (fabs(dir.z()) > 0.000001)
         {
-          weights.push_back(loc*3+2);
-          weights.push_back(dir.z());
+          weights.push_back(pair<unsigned int, double>(loc*3+2, dir.z()));
         }
 	
 
@@ -159,64 +168,98 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
         }
         //	cerr << "coords: " << coords[0] << " " << coords[1] << " " << coords[2] << endl;
 	  
-
-        MBT::get_derivate_weights(coords, &wd[0]);
-	  
+        // get the mesh Jacobian for the element.
         vector<Point> Jv;
         mesh->derivate(coords, loc, Jv);
 
-        DenseMatrix J(3, Jv.size());
-        int i=0;
-        vector<Point>::iterator iter = Jv.begin();
-        while(iter != Jv.end()) {
-          Point &p = *iter++;
-          J.put(i, 0, p.x());
-          J.put(i, 1, p.y());
-          J.put(i, 2, p.z());
-          ++i;
+
+
+        // TO DO:
+        // Squeeze out more STL vector operations as they require memory
+        // being reserved, we should have simple C style arrays which are build
+        // directly on the stack. As this is mostly used for volume data, it has 
+        // only been optimized for this kind of data
+
+        ASSERT(dim >=1 && dim <=3);
+        if (dim == 3)
+        {
+          J[0] = Jv[0].x();
+          J[1] = Jv[0].y();
+          J[2] = Jv[0].z();
+          J[3] = Jv[1].x();
+          J[4] = Jv[1].y();
+          J[5] = Jv[1].z();
+          J[6] = Jv[2].x();
+          J[7] = Jv[2].y();
+          J[8] = Jv[2].z();        
+        }
+        else if (dim == 2)
+        {
+          Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+          J2.normalize();
+          J[0] = Jv[0].x();
+          J[1] = Jv[0].y();
+          J[2] = Jv[0].z();
+          J[3] = Jv[1].x();
+          J[4] = Jv[1].y();
+          J[5] = Jv[1].z();
+          J[6] = J2.x();
+          J[7] = J2.y();
+          J[8] = J2.z();    
+        }
+        else
+        {
+          // The same thing as for the surface but then for a curve.
+          // Again this matrix should have a positive determinant as well. It actually
+          // has an internal degree of freedom, which is not being used.
+          Vector J1, J2;
+          Jv[0].asVector().find_orthogonal(J1,J2);
+          J[0] = Jv[0].x();
+          J[1] = Jv[0].y();
+          J[2] = Jv[0].z();
+          J[3] = J1.x();
+          J[4] = J1.y();
+          J[5] = J1.z();
+          J[6] = J2.x();
+          J[7] = J2.y();
+          J[8] = J2.z();          
         }
 
-        Vector dirl;
-        dirl.x(J.get(0,0)*dir.x()+J.get(0,1)*dir.y()+J.get(0,2)*dir.z());
-        dirl.y(J.get(1,0)*dir.x()+J.get(1,1)*dir.y()+J.get(1,2)*dir.z());
-        dirl.z(J.get(2,0)*dir.x()+J.get(2,1)*dir.y()+J.get(2,2)*dir.z());
+        InverseMatrix3x3(J,Ji);    
+    
+        MBT::get_derivate_weights(coords, &wd[0]);
+	  
+        mesh->get_nodes(nodes, loc);
+        
+        for(int i=0; i<MBT::number_of_vertices(); i++) 
+        {
+          grad[0] = wd[i]*Ji[0]+wd[i+dofs]*Ji[1]+wd[i+2*dofs]*Ji[2];
+          grad[1] = wd[i]*Ji[3]+wd[i+dofs]*Ji[4]+wd[i+2*dofs]*Ji[5];
+          grad[2] = wd[i]*Ji[6]+wd[i+dofs]*Ji[7]+wd[i+2*dofs]*Ji[8];
+          
+          (**rhs)[nodes[i]] += grad[0]*dir.x() + grad[1]*dir.y() + grad[2]*dir.z();
+        }
 
-        typename FMT::Node::array_type cell_nodes;
-        mesh->get_nodes(cell_nodes, loc);
-        for(int i=0; i<MBT::number_of_vertices(); i++) {
-          Vector g;
-          g.x(wd[i]);
-          g.y(wd[i+MBT::dofs()]);
-          g.z(wd[i+2*MBT::dofs()]);
-          const double dp=Dot(g,dirl);
-
-          // cerr << g << '\t' << dp << endl;
-
-          if (i<MBT::number_of_mesh_vertices()) {
-            (**rhs)[cell_nodes[i]] += dp;
-          }
-          else {
-            // to do
-          }
-        }	  
       }
       else
       {
-        PR->msg_stream() << "Dipole: "<< pos <<" not located within mesh!"<<endl;
+        pr->error("Dipole not located within mesh");
       }
     }
 
-    int *rr = scinew int[2]; rr[0] = 0; rr[1] = static_cast<int>(weights.size());
-    int *cc = scinew int[weights.size()/2];
-    double *dd = scinew double[weights.size()/2];
-    for (int i=0; i < static_cast<int>(weights.size()); i+=2)
+    int *rr = scinew int[2]; rr[0] = 0; rr[1] = (int)weights.size();
+    int *cc = scinew int[weights.size()];
+    double *dd = scinew double[weights.size()];
+    std::sort(weights.begin(), weights.end(), ud_pair_less);
+    for (unsigned int i=0; i < weights.size(); i++)
     {
-      cc[i] = static_cast<int>(weights[i]);
-      dd[i] = static_cast<double>(weights[i+1]);
+      cc[i] = weights[i].first;
+      dd[i] = weights[i].second;
     }
     
-    *w = scinew SparseRowMatrix(1,3*sz,rr,cc,weights.size(),dd);
+    *w = scinew SparseRowMatrix(1, 3*sz, rr, cc, (int)weights.size(), dd);
   }
+
 
   void execute_sources_and_sinks(ProgressReporter *PR, FieldHandle &hField, FieldHandle &hSource, MatrixHandle &hMapping, unsigned int sourceNode, unsigned int sinkNode, ColumnMatrix** rhs)
   {   
@@ -250,7 +293,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
         PR->error("Source field and Mapping matrix size mismatch.");
         return;
       }
-      if (nsize != hMapping->ncols())
+      if (static_cast<unsigned int>(nsize) != static_cast<unsigned int>(hMapping->ncols()))
       {
         PR->error("Mesh field and Mapping matrix size mismatch.");
         return;
@@ -272,7 +315,7 @@ class ApplyFEMCurrentSourceAlgoT : public ApplyFEMCurrentSourceAlgo
 
     if (!hMapping.get_rep())
     {
-      if ((int)sourceNode >= nsize || (int)sinkNode >= nsize)
+      if (sourceNode >= nsize || sinkNode >= nsize)
       {
         PR->error("SourceNode or SinkNode was out of mesh range.");
         return;

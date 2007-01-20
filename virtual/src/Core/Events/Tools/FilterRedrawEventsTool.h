@@ -48,7 +48,7 @@ public:
 
   virtual propagation_state_e process_event(event_handle_t event) {
     WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-    if (window && window->get_window_state() && WindowEvent::REDRAW_E) {
+    if (window && (window->get_window_state() & WindowEvent::REDRAW_E)) {
       return invert_ ? BaseTool::STOP_E : BaseTool::CONTINUE_E;
     }
     return invert_ ?  BaseTool::CONTINUE_E : BaseTool::STOP_E;

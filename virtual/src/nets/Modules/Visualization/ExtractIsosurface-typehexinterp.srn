@@ -35,8 +35,7 @@
     </module>
     <module category="ChangeFieldData" id="m5" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="55" y="165"/>
-      <var name="function" val="{result = x*x + y*y + z*z;
-}"/>
+      <var name="function" val="{result = x*x + y*y + z*z; }"/>
       <var name="outputdatatype" val="{input}"/>
     </module>
     <module category="Visualization" id="m6" name="ShowField" package="SCIRun">

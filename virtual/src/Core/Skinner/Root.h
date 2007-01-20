@@ -57,6 +57,8 @@ namespace SCIRun {
       CatcherFunction_t GLWindow_Destructor;
       CatcherFunction_t Graph2D_Maker;
       CatcherFunction_t MenuManager_Maker;
+      CatcherFunction_t Progress_Maker;
+
       CatcherFunction_t Text_Maker;
       CatcherFunction_t ViewSubRegion_Maker;
       CatcherFunction_t VisibilityGroup_Maker;

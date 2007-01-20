@@ -182,7 +182,7 @@ void GeomSave::translate(ostream& out, const Point& p)
 
 void GeomSave::rotateup(ostream& out, const Vector& up, const Vector& /*new_up*/)
 {
-    Vector axis(Cross(Vector(0,1,0), up.normal()));
+    Vector axis(Cross(Vector(0,1,0), up.safe_normal()));
     if(axis.length2() > 1.e-6){
 	double l=axis.normalize();
 	double angle=Asin(l);
@@ -206,7 +206,7 @@ void GeomSave::orient(ostream& out, const Point& center, const Vector& up,
     indent(out);
     out << "translation " << center.x() << " " << center.y() << " " << center.z() << "\n";
     indent(out);
-    Vector axis(Cross(Vector(0,1,0), up.normal()));
+    Vector axis(Cross(Vector(0,1,0), up.safe_normal()));
     if(axis.length2() > 1.e-6){
 	double l=axis.normalize();
 	double angle=Asin(l);
@@ -225,14 +225,14 @@ void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
 {
     indent(out);
 
-    Vector upn(up.normal());
+    Vector upn(up.safe_normal());
 
     Vector axis(Cross(upn, Vector(0,0,1)));
     if(axis.length2() > 1.e-6) {
-      Vector NewX = axis.normal();
+      Vector NewX = axis.safe_normal();
 
       Vector NewY1(Cross(NewX, upn));
-      Vector NewY = NewY1.normal();
+      Vector NewY = NewY1.safe_normal();
 
       out << "ConcatTransform [ "
 	  << -NewX.x() << " " << -NewX.y() << " " << -NewX.z() << " 0  "

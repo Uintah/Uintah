@@ -72,7 +72,6 @@ TARGET_LINK_LIBRARIES( Core_Events
   Core_Algorithms_Visualization
   ${THREAD_LIBRARY} 
   ${GL_LIBRARY} 
-  ${GLEW_LIBRARY} 
   ${PNG_LIBRARY} 
 )
 

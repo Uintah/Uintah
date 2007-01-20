@@ -55,6 +55,7 @@ private:
   GuiInt    guimergenodes_;
   GuiInt    guiforcepointcloud_;
   GuiInt    guimatchval_;
+  GuiInt    guimeshonly_;
   
   FieldHandle fHandle_;
 };
@@ -68,7 +69,8 @@ JoinFields::JoinFields(GuiContext* ctx)
   guitolerance_(get_ctx()->subVar("tolerance"), 0.0001),
   guimergenodes_(get_ctx()->subVar("force-nodemerge"),1),
   guiforcepointcloud_(get_ctx()->subVar("force-pointcloud"),0),
-  guimatchval_(get_ctx()->subVar("matchval"),0)
+  guimatchval_(get_ctx()->subVar("matchval"),0),
+  guimeshonly_(get_ctx()->subVar("meshonly"),0)  
 {
 }
 
@@ -105,21 +107,37 @@ void JoinFields::execute()
 
   // Only reexecute if the input changed. SCIRun uses simple scheduling
   // that executes every module downstream even if no data has changed: 
-  if (inputs_changed_ ||  guitolerance_.changed() || guimergenodes_.changed() || guiforcepointcloud_.changed() || guimatchval_.changed() || !oport_cached("Output Field"))
+
+  if (inputs_changed_ ||  guitolerance_.changed() ||
+      guimergenodes_.changed() || guiforcepointcloud_.changed() ||
+      guimatchval_.changed() || guimeshonly_.changed() ||
+      !oport_cached("Output Field"))
   {
     double tolerance = 0.0;
     bool   mergenodes = false;
     bool   forcepointcloud = false;
     bool   matchval = false;
-  
+    bool   meshonly = false;
+    
     tolerance = guitolerance_.get();
     if (guimergenodes_.get()) mergenodes = true;
     if (guiforcepointcloud_.get()) forcepointcloud = true;
     if (guimatchval_.get()) matchval = true;
+    if (guimeshonly_.get()) meshonly = true;
 
     SCIRunAlgo::FieldsAlgo algo(this);  
-    if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval))) return;
-
+    
+    if (meshonly)
+    {
+      if (!(algo.MergeMeshes(fields,output,tolerance,mergenodes,true)))
+        return;    
+    }
+    else
+    {
+      if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval)))
+        return;
+    }
+    
     // This option is here to be compatible with the old GatherFields module:
     // This is a separate algorithm now
     if (forcepointcloud)

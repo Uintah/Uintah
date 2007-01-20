@@ -423,7 +423,7 @@ LightWidget::GetAxis()
   }
   else
   {
-    return (oldaxis = axis.normal());
+    return (oldaxis = axis.safe_normal());
   }
 }
 Point 

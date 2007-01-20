@@ -170,15 +170,13 @@
     </module>
     <module category="ChangeFieldData" gui_visible="yes" id="m8" name="CalculateFieldDataCompiled" package="SCIRun">
       <position x="202" y="164"/>
-      <var name="function" val="{result = x;
-}"/>
+      <var name="function" val="{result = x; }"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x169+56+36}"/>
     </module>
     <module category="ChangeFieldData" gui_visible="yes" id="m9" name="CalculateFieldDataCompiled2" package="SCIRun">
       <position x="35" y="252"/>
-      <var name="function" val="{Vector v(v0); v.normalize(); result = v * v1;
-}"/>
+      <var name="function" val="{Vector v(v0); v.normalize(); result = v * v1; }"/>
       <var name="outputdatatype" val="{Vector}"/>
       <var name="ui_geometry" val="{433x169+53+18}"/>
     </module>

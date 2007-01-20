@@ -186,17 +186,17 @@ Bundle::io(Piostream& stream)
   } 
   else 
   { 
-    size_t size, tsize;
+    int size, tsize;
     stream.begin_cheap_delim();
     tsize = 0;
     size = bundleName_.size();
-    for (size_t p = 0; p < size; p ++)
+    for (int p = 0; p < size; p ++)
     {
       if (bundle_[p].get_rep()) tsize++;
     }
 
     stream.io(tsize);
-    for (size_t p = 0; p < size; p++)
+    for (int p = 0; p < size; p++)
     {
       if (bundle_[p].get_rep())
       {

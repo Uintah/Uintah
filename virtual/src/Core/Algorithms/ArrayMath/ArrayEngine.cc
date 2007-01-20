@@ -166,7 +166,7 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
     hoffset++;
   }
 
-  algo->function(Input,Output,n);
+  algo->function(Input,Output,n,pr_);
   return(true);
 }
 
@@ -230,7 +230,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   fcn = std::string("namespace DataArrayMath {\ntemplate <class DATATYPE>\n") +
     "class " + template_name + " : public ArrayEngineAlgo\n" +
     "{\nvirtual void function(SCIRunAlgo::ArrayObjectList& input_," + 
-    "SCIRunAlgo::ArrayObjectList& output_, int size_)\n  {\n";
+    "SCIRunAlgo::ArrayObjectList& output_, int size_, SCIRun::ProgressReporter* pr_)\n  {\n";
   fcn += "    DATATYPE dummy_ = 0.0; dummy_ += 1.0;\n\n";   // Make compiler happy
   
   for (size_t p = 0; p< Input.size(); p++)
@@ -270,6 +270,7 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
   }
   
   fcn += "\n\n";
+  fcn += "int cnt_ = 0;";
   fcn += "    for (int p_ = 0; p_ < size_; p_++)\n    {\n";
   
   for (size_t p = 0; p< Input.size(); p++)
@@ -315,6 +316,8 @@ SCIRun::CompileInfoHandle ArrayEngineAlgo::get_compile_info(
     if (Output[p].islocation())      fcn += "     output_[" + oss.str() + "].setnextfieldlocation(" + Output[p].getname() + ");\n"; 
 
   }
+  
+  fcn += std::string("    cnt_++; if (cnt_ == 200) { cnt_ = 0; pr_->update_progress(p_,size_); }\n");
   
   fcn += std::string("    }\n  }\n\n") +
     "  virtual std::string identify()\n" +

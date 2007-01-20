@@ -60,6 +60,7 @@ public:
   CompileInfo(const string &fn, const string &bcn, 
 	      const string &tcn, const string &tcdec);
   
+  string include_filter(const string& inc);
   //! add to the list of files to include.
   void add_include(const string &inc);
   void add_data_include(const string &inc);

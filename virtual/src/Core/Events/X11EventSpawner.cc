@@ -260,8 +260,7 @@ namespace SCIRun {
     if (sci_getenv_p("SCI_DEBUG")) {
       cerr << target_ << ": Aussimg Quit\n";
     }
-    //    return new WindowEvent(WindowEvent::DESTROY_E);
-    return new QuitEvent();
+    return new  WindowEvent(WindowEvent::DESTROY_E, target_);
   }
 
 
@@ -280,7 +279,7 @@ namespace SCIRun {
     if (sci_getenv_p("SCI_DEBUG")) {
       cerr << target_ << ": FocusOut\n";
     }
-    return new WindowEvent(WindowEvent::DESTROY_E);
+    return new WindowEvent(WindowEvent::REDRAW_E);
   }
 
   event_handle_t
@@ -337,6 +336,7 @@ namespace SCIRun {
       }
 
       if (event.get_rep()) {
+
         event->set_target(target_);
         EventManager::add_event(event);
       }

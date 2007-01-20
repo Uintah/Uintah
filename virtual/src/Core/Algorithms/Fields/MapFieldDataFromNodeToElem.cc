@@ -44,7 +44,7 @@ bool MapFieldDataFromNodeToElemAlgo::MapFieldDataFromNodeToElem(ProgressReporter
   }
 
   FieldInformation fi(input);
-  FieldInformation fo(output);
+  FieldInformation fo(input);
   
   fo.make_constantdata();
 

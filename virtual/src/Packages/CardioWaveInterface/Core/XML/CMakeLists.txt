@@ -28,7 +28,7 @@
 
 # CMakeLists.txt for Packages/CardioWaveInterface/Core/XML
 
-SET(Packages_CardioWave_Core_XML_SRCS
+SET(Packages_CardioWaveInterface_Core_XML_SRCS
   MembraneXML.cc
   SynapseXML.cc
   OutputXML.cc
@@ -40,9 +40,9 @@ SET(Packages_CardioWave_Core_XML_SRCS
   NeuroWaveXML.cc
 )
 
-ADD_LIBRARY(Packages_CardioWave_Core_XML ${Packages_CardioWave_Core_XML_SRCS})
+ADD_LIBRARY(Packages_CardioWaveInterface_Core_XML ${Packages_CardioWaveInterface_Core_XML_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_XML
+TARGET_LINK_LIBRARIES(Packages_CardioWaveInterface_Core_XML
   Core_Datatypes
   Core_Persistent
   Core_Containers
@@ -52,5 +52,5 @@ TARGET_LINK_LIBRARIES(Packages_CardioWave_Core_XML
 )
 
 IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_CardioWave_Core_XML)
+  ADD_DEFINITIONS(-DBUILD_Packages_CardioWaveInterface_Core_XML)
 ENDIF(BUILD_SHARED_LIBS)

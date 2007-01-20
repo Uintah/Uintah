@@ -112,6 +112,8 @@ StreamMatrixFromDisk::execute()
   filename = guifilename_.get();
   if (filename == "") return;
 
+  FileName = scinew String(filename); 
+
   // Get Indices or Weights 
   get_input_handle("Indices",Indices,false);
   get_input_handle("Weights",Weights,false);
@@ -206,10 +208,7 @@ StreamMatrixFromDisk::execute()
       
         if( delay > 0) 
         {
-          const unsigned int secs = delay / 1000;
-          const unsigned int msecs = delay % 1000;
-          if (secs)  { sleep(secs); }
-          if (msecs) { usleep(msecs * 1000); }
+          Time::waitFor(delay/1000.0);
         }
     
         int next = increment(current, lower, upper);    

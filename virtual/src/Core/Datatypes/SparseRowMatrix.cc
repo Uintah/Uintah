@@ -98,7 +98,7 @@ SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
   a(a_)
 {
   if (a == 0) { a = scinew double[nnz]; }
-  //validate();
+  ASSERT(validate());
 }
 
 
@@ -112,7 +112,7 @@ SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy) :
   memcpy(a, copy.a, sizeof(double)*nnz);
   memcpy(rows, copy.rows, sizeof(int)*(nrows_+1));
   memcpy(columns, copy.columns, sizeof(int)*nnz);
-  //validate();
+  ASSERT(validate());
 }
 
 
@@ -133,7 +133,7 @@ SparseRowMatrix::~SparseRowMatrix()
 }
 
 
-void
+bool
 SparseRowMatrix::validate()
 {
   int i, j;
@@ -157,6 +157,7 @@ SparseRowMatrix::validate()
     }
   }
   ASSERTMSG(rows[nrows_] == nnz, "Row end is incorrect.");
+  return true;
 }
 
 
@@ -256,8 +257,6 @@ SparseRowMatrix::transpose() const
   int t_nnz = nnz;
   int t_nncols = nrows_;
   int t_nnrows = ncols_;
-  SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
-					      t_columns, t_nnz, t_a);
 
   int *at = scinew int[t_nnrows+1];
   int i;
@@ -289,52 +288,8 @@ SparseRowMatrix::transpose() const
   }
 
   delete at;
-  return t;
-}
-
-SparseRowMatrix *
-SparseRowMatrix::transpose()
-{
-  double *t_a = scinew double[nnz];
-  int *t_columns = scinew int[nnz];
-  int *t_rows = scinew int[ncols_+1];
-  int t_nnz = nnz;
-  int t_nncols = nrows_;
-  int t_nnrows = ncols_;
-  SparseRowMatrix *t = scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
-					      t_columns, t_nnz, t_a);
-
-  int *at = scinew int[t_nnrows+1];
-  int i;
-  for (i=0; i<t_nnrows+1;i++)
-  {
-    at[i] = 0;
-  }
-  for (i=0; i<t_nnz;i++)
-  {
-    at[columns[i]+1]++;
-  }
-  t_rows[0] = 0;
-  for (i=1; i<t_nnrows+1; i++)
-  {
-    at[i] += at[i-1];
-    t_rows[i] = at[i];
-  }
-
-  int c = 0;
-  for (int r=0; r<nrows_; r++)
-  {
-    for (; c<rows[r+1]; c++)
-    {
-      int mcol = columns[c];
-      t_columns[at[mcol]] = r;
-      t_a[at[mcol]] = a[c];
-      at[mcol]++;
-    }
-  }
-
-  delete at;
-  return t;
+  return scinew SparseRowMatrix(t_nnrows, t_nncols, t_rows,
+                                t_columns, t_nnz, t_a);
 }
 
 

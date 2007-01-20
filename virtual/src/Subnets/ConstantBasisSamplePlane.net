@@ -11,16 +11,16 @@ set notes {}
 set geometry {380x333+506+206}
 
 # Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
-set m1 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 184 99]
+set m1 [addModuleAtPosition "SCIRun" "ChangeMesh" "EditMeshBoundingBox" 184 99]
 
 # Create a SCIRun->Visualization->ShowField Module
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 104]
 
 # Create a SCIRun->FieldsData->DirectMapping Module
-set m3 [addModuleAtPosition "SCIRun" "FieldsData" "DirectMapping" 10 34]
+set m3 [addModuleAtPosition "SCIRun" "ChangeFieldData" "MapFieldDataFromSourceToDestination" 10 34]
 
 # Create a SCIRun->FieldsCreate->SamplePlane Module
-set m4 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 184 25]
+set m4 [addModuleAtPosition "SCIRun" "NewField" "CreateImage" 184 25]
 
 # Create the Connections between Modules
 set c1 [addConnection $m4 0 $m1 0]

@@ -420,50 +420,57 @@ NetworkIO::process_modules_pass2(const xmlNodePtr enode)
 
       xmlNodePtr pnode = node->children;
       for (; pnode != 0; pnode = pnode->next) 
-			{	
-				if (string(to_char_ptr(pnode->name)) == string("gui_callback")) 
-				{
-					xmlNodePtr gc_node = pnode->children;
-					for (; gc_node != 0; gc_node = gc_node->next) {
-						if (string(to_char_ptr(gc_node->name)) == string("callback")) 
-						{
-							string call = string(to_char_ptr(gc_node->children->content));
-							gui_call_module_callback(
-									string(to_char_ptr(id_att->children->content)),
-									call);
-								 
-						}
-					}
-				}
-				else if (string(to_char_ptr(pnode->name)) == string("var")) 
-				{
-					xmlAttrPtr name_att = get_attribute_by_name(pnode, "name");
-					xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
-					xmlAttrPtr filename_att = get_attribute_by_name(pnode,"filename");
-					xmlAttrPtr substitute_att = get_attribute_by_name(pnode,"substitute");
+      {	
+        if (string(to_char_ptr(pnode->name)) == string("gui_callback")) 
+        {
+          xmlNodePtr gc_node = pnode->children;
+          for (; gc_node != 0; gc_node = gc_node->next) {
+            if (string(to_char_ptr(gc_node->name)) == string("callback")) 
+            {
+              string call = string(to_char_ptr(gc_node->children->content));
+              gui_call_module_callback(
+                string(to_char_ptr(id_att->children->content)),
+                call);
+                       
+            }
+          }
+        }
+        else if (string(to_char_ptr(pnode->name)) == string("var")) 
+        {
+          xmlAttrPtr name_att = get_attribute_by_name(pnode, "name");
+          xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
+          xmlAttrPtr filename_att = get_attribute_by_name(pnode,"filename");
+          xmlAttrPtr substitute_att= get_attribute_by_name(pnode,"substitute");
 
-					string val = string(to_char_ptr(val_att->children->content));
-					
-					string filename = "no";
-					if (filename_att != 0) filename = string(to_char_ptr(filename_att->children->content));
-					if (filename == "yes") 
-					{
-						val = process_filename(val); 
-					}
-					else
-					{
-						string substitute = "yes";
-						if (substitute_att != 0) substitute = string(to_char_ptr(substitute_att->children->content));
-					  if (substitute == "yes") val = process_substitute(val);
-					}
-					
-					gui_set_modgui_variable(
-									string(to_char_ptr(id_att->children->content)),
-									string(to_char_ptr(name_att->children->content)),
-									val);
-				}
+          string val = string(to_char_ptr(val_att->children->content));
+                
+          string filename = "no";
+          if (filename_att != 0) filename = 
+             string(to_char_ptr(filename_att->children->content));
+          string substitute = "yes";
+            if (substitute_att != 0) substitute = 
+            string(to_char_ptr(substitute_att->children->content));             
+             
+          if (filename == "yes") 
+          {
+            if (substitute == "yes") val = process_substitute(val);
+            val = process_filename(val); 
+            if (val.size() > 0 && val[0] == '{')
+              val = std::string("\"")+val.substr(1,val.size()-2)+std::string("\"");
+          }
+          else
+          {
+            if (substitute == "yes") val = process_substitute(val);
+          }
+                
+          gui_set_modgui_variable(
+               string(to_char_ptr(id_att->children->content)),
+               string(to_char_ptr(name_att->children->content)),
+               val);
+        }
       }
-      if (visible_att && string(to_char_ptr(visible_att->children->content)) == "yes")
+      if (visible_att && 
+        string(to_char_ptr(visible_att->children->content)) == "yes")
       {
 				gui_open_module_gui(string(to_char_ptr(id_att->children->content)));
       }
@@ -534,9 +541,27 @@ NetworkIO::process_filename(const string &orig)
 	// Copy the string and remove TCL brackets
 	std::string filename = orig.substr(1,orig.size()-2);
 	
-	// Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
-	while (filename.size() > 0 && ((filename[0] == ' ')||(filename[0] == '\t'))) filename = filename.substr(1);
-	while (filename.size() > 0 && ((filename[filename.size()-1] == ' ')||(filename[filename.size()-1] == '\t'))) filename = filename.substr(1,filename.size()-1);
+
+  // Remove blanks and tabs from the input 
+  // (Some could have editted the XML file manually and may have left spaces)
+
+  if (filename.size() > 0)
+  {
+    if (filename[0] == '{')
+    {
+      filename = filename.substr(1,filename.size()-2);
+    }
+  }
+  while (filename.size() > 0 && 
+	 ((filename[0] == ' ')||(filename[0] == '\t'))) {
+    filename = filename.substr(1);
+  }
+
+  while (filename.size() > 0 && 
+	 ((filename[filename.size()-1] == ' ')||
+	  (filename[filename.size()-1] == '\t'))) {
+    filename = filename.substr(1,filename.size()-1);
+  }
 	
 	// Check whether filename is absolute:
 	
@@ -1047,18 +1072,19 @@ NetworkIO::add_module_variable(const string &id, const string &var,
   xmlNodePtr tmp = xmlNewChild(node, 0, BAD_CAST "var", 0);
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST var.c_str());
 	
-	string nval = val;
-	if (filename && userelfilenames)
-	{
-		if ((nval.size() >0) &&  (nval[0] == '{'))
-		{
-			nval = string("{") + make_relative_filename(nval.substr(1,nval.size()-2),out_fname_) + string("}");
-		}
-		else
-		{
-			nval = make_relative_filename(nval,out_fname_);		
-		}
-	}
+  string nval = val;
+  if (filename && userelfilenames)
+  {
+    if ((nval.size() >0) &&  (nval[0] == '{'))
+    {
+      nval = make_relative_filename(nval.substr(1, nval.size() - 2), out_fname_);
+			nval = "{"+nval+"}";
+    }
+    else
+    {
+      nval = make_relative_filename(nval,out_fname_);		
+    }
+  }
 	
   xmlNewProp(tmp, BAD_CAST "val", BAD_CAST nval.c_str());
 	if (filename) xmlNewProp(tmp, BAD_CAST "filename", BAD_CAST "yes"); 
@@ -1428,94 +1454,98 @@ NetworkIO::make_absolute_filename(string name)
 			
 			std::string::size_type ddpos = name.find("../");
 
-			while (ddpos != std::string::npos)
-			{
-				if (ddpos > 1 && name[ddpos-1] == '/')
-				{
-					std::string::size_type slashpos = name.find_last_of("/",ddpos-2);
-					if (slashpos == std::string::npos)
-					{
-						if ((name.substr(0,ddpos-1) != "..")&&(name.substr(0,ddpos-1) != "."))
-						{
-							name = name.substr(ddpos+3); 
-							ddpos = name.find("../");
-						}
-						else 
-						{
-							ddpos = name.find("../",ddpos+3);
-						}
-					}
-					else
-					{
-						if ((name.substr(slashpos+1,ddpos-1)!="..")&&(name.substr(slashpos+1,ddpos-1)!=".")) 
-						{
-							name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
-							ddpos = name.find("../");
-						}
-						else
-						{
-							ddpos = name.find("../",ddpos+3);
-						}
-					}
-					
-				}
-				else
-				{
-					ddpos = name.find("../",ddpos+3);
-				}
-			}
-		}
-		else
-		{
+      while (ddpos != string::npos)
+      {
+        if (ddpos > 1 && name[ddpos-1] == '/')
+        {
+          string::size_type slashpos = name.find_last_of("/",ddpos-2);
+          if (slashpos == string::npos)
+          {
+            if ((name.substr(0,ddpos-1) != "..") && 
+          (name.substr(0,ddpos-1) != "."))
+            {
+              name = name.substr(ddpos+3); 
+              ddpos = name.find("../");
+            }
+            else 
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+          else
+          {
+            if ((name.substr(slashpos+1,ddpos-1)!="..") &&
+          (name.substr(slashpos+1,ddpos-1)!=".")) 
+            {
+              name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
+              ddpos = name.find("../");
+            }
+            else
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+                
+        }
+        else
+        {
+          ddpos = name.find("../",ddpos+3);
+        }
+      }
+    }
+    else
+    {
+
       // Windows filename
       
 			if (cwd[cwd.size()-1]!='/') cwd +='/';
-			
+      
 			name = cwd+name;
-			
+      
 					// collapse name further
-			
+      
 			std::string::size_type ddpos = name.find("../");
 
-			while (ddpos != std::string::npos)
-			{
-				if (ddpos > 1 && name[ddpos-1] == '/')
-				{
-					std::string::size_type slashpos = name.find_last_of("/",ddpos-2);
-					if (slashpos == std::string::npos)
-					{
-						if ((name.substr(0,ddpos-1) != "..")&&(name.substr(0,ddpos-1) != "."))
-						{
-							name = name.substr(ddpos+3); 
-							ddpos = name.find("../");
-						}
-						else 
-						{
-							ddpos = name.find("../",ddpos+3);
-						}
-					}
-					else
-					{
-						if ((name.substr(slashpos+1,ddpos-1)!="..")&&(name.substr(slashpos+1,ddpos-1)!=".")) 
-						{
-							name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
-							ddpos = name.find("../");
-						}
-						else
-						{
-							ddpos = name.find("../",ddpos+3);
-						}
-					}
-
+      while (ddpos != string::npos)
+      {
+        if (ddpos > 1 && name[ddpos-1] == '/')
+        {
+          string::size_type slashpos = name.find_last_of("/",ddpos-2);
+          if (slashpos == string::npos)
+          {
+            if ((name.substr(0,ddpos-1) != "..") &&
+          (name.substr(0,ddpos-1) != "."))
+            {
+              name = name.substr(ddpos+3); 
+              ddpos = name.find("../");
+            }
+            else 
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+          else
+          {
+            if ((name.substr(slashpos+1,ddpos-1)!="..") &&
+          (name.substr(slashpos+1,ddpos-1)!=".")) 
+            {
+              name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
+              ddpos = name.find("../");
+            }
+            else
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+                
         }
-				else
-				{
-					ddpos = name.find("../",ddpos+3);
-				}
-			}			
-
-		}
-	}
+        else
+        {
+          ddpos = name.find("../",ddpos+3);
+        }
+      }
+    }
+  }
 	
 	return (name);
 }
@@ -1528,39 +1558,58 @@ NetworkIO::make_relative_filename(string name, string path)
 	// if it is not absolute assume it is relative to current directory
 	path = make_absolute_filename(path);
 
-	// Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
-	while (name.size() > 0 && ((name[0] == ' ')||(name[0] == '\t'))) name = name.substr(1);
-	while (name.size() > 0 && ((name[name.size()-1] == ' ')||(name[name.size()-1] == '\t'))) name = name.substr(1,name.size()-1);
+  // Remove blanks and tabs from the input 
+  // (Some could have editted the XML file manually and may have left spaces)
+  while (name.size() > 0 && ((name[0] == ' ') || (name[0] == '\t'))) 
+	{
+    name = name.substr(1);
+  }
+  while (name.size() > 0 && 
+	 ((name[name.size() - 1] == ' ') || (name[name.size() - 1] == '\t'))) 
+	 {
+    name = name.substr(1, name.size() - 1);
+  }
 
 	// Check whether filename is absolute:
 	
-	bool abspath = false;
-	if ( name.size() > 0 && name[0] == '/') abspath = true; // Unix absolute path
-	if ( name.size() > 2 && name[1] == ':' && ((name[2] == '\\') ||(name[2] == '/'))) abspath = true; // Windows absolute path
-
-	if (abspath == false) return (name); // We could not make it relative as it is already relative
-
-	if ( name.size() > 0 && name[0] == '/')
+  bool abspath = false;
+  if ( name.size() > 0 && name[0] == '/') 
 	{
-		string npath = path;
-	  string nname = name;
-		string::size_type slashpos = path.find("/");
-		bool backtrack = false;
-		while(slashpos != string::npos)
-		{
-			if (npath.substr(0,slashpos) == nname.substr(0,slashpos) && backtrack == false)
-			{
+    abspath = true; // Unix absolute path
+  }
+  if ( name.size() > 2 && name[1] == ':' && 
+       ((name[2] == '\\') ||(name[2] == '/'))) 
+	{
+    abspath = true; // Windows absolute path
+  }
+
+  
+  if (abspath == false) {
+    // We could not make it relative as it is already relative
+    return (name); 
+  }
+	
+  if ( name.size() > 0 && name[0] == '/')
+  {
+    string npath = path;
+    string nname = name;
+    string::size_type slashpos = path.find("/");
+    bool backtrack = false;
+    while(slashpos != string::npos)
+    {
+      if (npath.substr(0,slashpos) == nname.substr(0, slashpos) && backtrack == false)
+      {
 				npath = npath.substr(slashpos+1);
 				nname = nname.substr(slashpos+1);
-			}
-			else
-			{
+      }
+      else
+      {
 				backtrack = true;
 				npath = npath.substr(slashpos+1);
 				nname = "../" + nname;
-			}
-			slashpos = npath.find("/");
-		}
+      }
+      slashpos = npath.find("/");
+    }
 		
 		// collapse name further
 		
@@ -1596,12 +1645,12 @@ NetworkIO::make_relative_filename(string name, string path)
 					}
 				}
 				
-			}
-			else
-			{
+      }
+      else
+      {
 				ddpos = nname.find("../",ddpos+3);
-			}
-		}
+      }
+    }
 
 		nname = "scisub_networkdir/"+nname;		
 		return (nname);
@@ -1611,53 +1660,56 @@ NetworkIO::make_relative_filename(string name, string path)
     // Convert everything to forward slash
     for (size_t i=0; i< name.size(); i++) if (name[i] == '\\') name[i] = '/';
 
-		if (path.size() > 2)
-		{
-			if (path.substr(0,3) != name.substr(0,3))
-			{
-				std::cerr << "WARNING: Could not make pathname relative as it is on another drive\n";
-				return (name);
-			}
-		}
-		else
-		{
-			std::cerr << "WARNING: Failed to convert network pathname to an absolute path name\n";
-			return (name);
-		}
+    if (path.size() > 2)
+    {
+      if (path.substr(0,3) != name.substr(0,3))
+      {
+				cerr << "WARNING: Could not make pathname relative as it"
+						 <<" is on another drive" << endl;
+						 return (name);
+      }
+    }
+    else
+    {
+      cerr	<< "WARNING: Failed to convert network pathname to"
+						<< " an absolute path name" << endl;
+						return (name);
+    }
 	
-		string npath = path;
-	  string nname = name;
-		string::size_type slashpos = path.find("/");
-		bool backtrack = false;
-		while(slashpos != string::npos)
-		{
-			if (npath.substr(0,slashpos) == nname.substr(0,slashpos) && backtrack == false)
-			{
+    string npath = path;
+    string nname = name;
+    string::size_type slashpos = path.find("/");
+    bool backtrack = false;
+    while(slashpos != string::npos)
+    {
+      if (npath.substr(0, slashpos) == nname.substr(0, slashpos) && 
+					backtrack == false)
+      {
 				npath = npath.substr(slashpos+1);
 				nname = nname.substr(slashpos+1);
-			}
-			else
-			{
+      }
+      else
+      {
 				backtrack = true;
 				npath = npath.substr(slashpos+1);
 				nname = "../" + nname;
-			}
-			slashpos = npath.find("/");
-		}
+      }
+      slashpos = npath.find("/");
+    }
 
 		// collapse name further
 		
 		std::string::size_type ddpos = nname.find("../");
 
-
-		while (ddpos != std::string::npos)
-		{
-			if (ddpos > 1 && nname[ddpos-1] == '/')
-			{
-				std::string::size_type slashpos = nname.find_last_of("/",ddpos-2);
-				if (slashpos == std::string::npos)
+    while (ddpos != string::npos)
+    {
+      if (ddpos > 2 && nname[ddpos-1] == '/')
+      {
+				string::size_type slashpos = nname.find_last_of("/", ddpos - 2);
+				if (slashpos == string::npos)
 				{
-					if ((nname.substr(0,ddpos-1) != "..")&&(nname.substr(0,ddpos-1) != "."))
+					if ((nname.substr(0, ddpos - 1) != "..") &&
+							(nname.substr(0, ddpos - 1) != "."))
 					{
 						nname = nname.substr(ddpos+3); 
 						ddpos = nname.find("../");
@@ -1669,22 +1721,25 @@ NetworkIO::make_relative_filename(string name, string path)
 				}
 				else
 				{
-					if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
+					if ((nname.substr(slashpos + 1, ddpos-slashpos - 2) != "..") &&
+							(nname.substr(slashpos + 1, ddpos-slashpos - 2) != ".")) 
 					{
-						nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
+						nname = nname.substr(0, slashpos + 1) + nname.substr(ddpos + 3);
 						ddpos = nname.find("../");
 					}
 					else
 					{
-						ddpos = nname.find("../",ddpos+3);
+						ddpos = nname.find("../", ddpos + 3);
 					}
 				}
-			}
-			else
-			{
-				ddpos = nname.find("../",ddpos+3);
-			}
-		}
+      }
+      else
+      {
+	ddpos = nname.find("../", ddpos + 3);
+      }
+    }
+		
+		
     nname = "scisub_networkdir/"+nname;
 		return (nname);
 	}

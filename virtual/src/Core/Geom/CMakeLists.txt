@@ -29,6 +29,7 @@
 # Sources of Core/Geom classes
 
 SET(Core_Geom_SRCS 
+  glew.c
   BBoxCache.cc		                
   CallbackOpenGLContext.cc              
   ColorMap.cc		                
@@ -114,28 +115,40 @@ ENDIF(WIN32)
 
 ADD_LIBRARY(Core_Geom ${Core_Geom_SRCS})
 
+
 TARGET_LINK_LIBRARIES( Core_Geom 
+  ${THREAD_LIBRARY} 
+  ${GL_LIBRARY}
+  ${ZLIB_LIBRARY}
+  ${PNG_LIBRARY}
+  ${TEEM_LIBRARY}
+  ${FREETYPE_LIBRARY}
+  ${M_LIBRARY}
+  Core_Exceptions
   Core_Persistent
   Core_Geometry
   Core_Containers 
-  Core_Exceptions
   Core_Datatypes
   Core_Math
   Core_Util
   Core_Thread
-  ${FTGL_LIBRARY}
-  ${GLEW_LIBRARY}
-  ${GL_LIBRARY}
-  ${PNG_LIBRARY}
-  ${ZLIB_LIBRARY}
-  ${M_LIBRARY}
-  ${TEEM_LIBRARY}
-  ${FREETYPE_LIBRARY}
 )
-#  ${DEFAULT_LIBRARY}
 
+IF(X11_FOUND)
+  TARGET_LINK_LIBRARIES( Core_Geom
+    ${X_LIBRARY}
+  )      
+ENDIF(X11_FOUND)
+
+IF(APPLE)
+ TARGET_LINK_LIBRARIES( Core_Geom "-lGLU -framework Carbon")
+ IF(X11_FOUND)
+  ADD_DEFINITIONS(-DGLEW_APPLE_GLX)
+ ENDIF(X11_FOUND)
+ENDIF(APPLE)
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Geom)
+  ADD_DEFINITIONS(-DGLEW_BUILD)
 ENDIF(BUILD_SHARED_LIBS)
 

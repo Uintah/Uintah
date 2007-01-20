@@ -65,6 +65,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_DataIO
   Dataflow_TkExtensions
   Core_Util
   Core_Volume
+	Core_OS
   Core_Algorithms_DataStreaming
   ${TK_LIBRARY}
   ${GL_LIBRARY}

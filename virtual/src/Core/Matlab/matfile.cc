@@ -561,8 +561,11 @@ bool matfile::opencompression()
 			// uncompress the first few bytes
 			// we need to do a few ugly casts as somehow the compiler does not recognize
 			// they are all pointers.
-			uncompress(reinterpret_cast<Bytef *>(destbufferheader),reinterpret_cast<uLongf *>(&destlen),reinterpret_cast<const Bytef *>(sourcebuffer),compressblocksize);
-			
+      
+			uLongf clen = static_cast<uLongf>(destlen);
+      uncompress(reinterpret_cast<Bytef *>(destbufferheader),&clen,reinterpret_cast<const Bytef *>(sourcebuffer),(uLong)compressblocksize);
+			destlen = static_cast<int>(clen);
+      
 			// In case something weird happened
 			if (destlen != 8) throw compression_error();
 			
@@ -578,7 +581,10 @@ bool matfile::opencompression()
 			// Uncompress the full thing including the previously read header		
 			destbuffer.newdatabuffer(destlen,miUINT8);
 			//			destbuffer = new char[destlen];
-			uncompress(reinterpret_cast<Bytef *>(destbuffer.databuffer()),reinterpret_cast<uLongf *>(&destlen),reinterpret_cast<const Bytef *>(sourcebuffer),compressblocksize);
+      
+      clen = static_cast<uLongf>(destlen);
+			uncompress(reinterpret_cast<Bytef *>(destbuffer.databuffer()),&clen,reinterpret_cast<const Bytef *>(sourcebuffer),(uLong)compressblocksize);
+      destlen = static_cast<int>(clen);
 			if (destlen != destbufferheader[1]+8) throw compression_error();
 			
 			// enter the information in the cmpbuffer structure

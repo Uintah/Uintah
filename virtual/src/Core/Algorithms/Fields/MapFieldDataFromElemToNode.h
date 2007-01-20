@@ -110,10 +110,14 @@ bool MapFieldDataFromElemToNodeAlgoT<FIELD,OFIELD>::MapFieldDataFromElemToNode(P
   
   typename FIELD::mesh_type::Elem::array_type elems;
   typename FIELD::mesh_type::Node::iterator it, eit;
+  typename FIELD::mesh_type::Node::size_type sz;
 
   mesh->synchronize(SCIRun::Mesh::NODE_NEIGHBORS_E);
   mesh->begin(it);
   mesh->end(eit);
+	mesh->size(sz);
+	unsigned int total = static_cast<unsigned int>(sz);
+	unsigned int cnt = 0, c = 0;
 
   if ((method == "Interpolate")||(method == "Average")||(method == "interpolate")||(method == "average"))
   {
@@ -129,6 +133,7 @@ bool MapFieldDataFromElemToNodeAlgoT<FIELD,OFIELD>::MapFieldDataFromElemToNode(P
       val = static_cast<typename FIELD::value_type>(val*(1.0/static_cast<double>(nsize)));
       ofield->set_value(val,*(it));
       ++it;
+			cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
     }
   }
   
@@ -151,6 +156,7 @@ bool MapFieldDataFromElemToNodeAlgoT<FIELD,OFIELD>::MapFieldDataFromElemToNode(P
       }
       ofield->set_value(val,*(it));
       ++it;
+			cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
     }
   }
   
@@ -173,6 +179,7 @@ bool MapFieldDataFromElemToNodeAlgoT<FIELD,OFIELD>::MapFieldDataFromElemToNode(P
       }
       ofield->set_value(val,*(it));
       ++it;
+			cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
     }    
   }
 
@@ -189,6 +196,7 @@ bool MapFieldDataFromElemToNodeAlgoT<FIELD,OFIELD>::MapFieldDataFromElemToNode(P
       }
       ofield->set_value(val,*(it));
       ++it;
+			cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
     }
   }
 
@@ -207,6 +215,7 @@ bool MapFieldDataFromElemToNodeAlgoT<FIELD,OFIELD>::MapFieldDataFromElemToNode(P
       int idx = static_cast<int>((valarray.size()/2));
       ofield->set_value(valarray[idx],*(it));
       ++it;
+			cnt++; if (cnt==400) { cnt=0; c+=400; pr->update_progress(c,total); }
     }
   }
 

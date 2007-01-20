@@ -89,7 +89,7 @@ public:
   virtual void    getRowNonzerosNoCopy(int r, int &size, int &stride,
                                        int *&cols, double *&vals);
 
-  virtual DenseColMajMatrix* transpose();
+  virtual DenseColMajMatrix* transpose() const;
   virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
 		       int& flops, int& memrefs, int beg=-1, int end=-1, 
 		       int spVec=0) const;

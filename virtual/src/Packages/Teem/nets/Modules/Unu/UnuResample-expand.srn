@@ -86,7 +86,7 @@
     <module category="Converters" id="m4" name="ConvertRasterFieldToNrrd" package="Teem">
       <position x="266" y="79"/>
     </module>
-    <module category="Converters" id="m5" name="ConvertNrrdToRasterField" package="Teem">
+    <module category="Converters" id="m5" name="ConvertNrrdToGeneralField" package="Teem">
       <position x="295" y="274"/>
       <var name="datasets" val="{{Points : (none)} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }"/>
       <var name="ui_geometry" val="{314x326+255+532}"/>

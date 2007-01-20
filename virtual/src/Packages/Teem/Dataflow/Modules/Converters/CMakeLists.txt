@@ -34,7 +34,8 @@ SET(Packages_Teem_Dataflow_Modules_Converters_SRCS
   ConvertToNrrd.cc
   ConvertRasterFieldToNrrd.cc
   ConvertNrrdToColorMap2.cc
-  ConvertNrrdToRasterField.cc
+  ConvertNrrdToField.cc
+  ConvertNrrdToGeneralField.cc
   ConvertNrrdToMatrix.cc
   ConvertMatrixToNrrd.cc
 )
@@ -42,6 +43,7 @@ SET(Packages_Teem_Dataflow_Modules_Converters_SRCS
 ADD_LIBRARY(Packages_Teem_Dataflow_Modules_Converters ${Packages_Teem_Dataflow_Modules_Converters_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Teem_Dataflow_Modules_Converters
+  Core_Algorithms_Converter
   Core_Basis
   Core_Containers
   Core_Datatypes
@@ -49,6 +51,7 @@ TARGET_LINK_LIBRARIES(Packages_Teem_Dataflow_Modules_Converters
   Core_Geom
   Core_Geometry
   Core_GeomInterface
+  Core_Math
   Dataflow_GuiInterface
   Core_Persistent
   Core_Thread

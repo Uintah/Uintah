@@ -87,6 +87,9 @@ SolveMinNormLeastSqSystem::execute()
   if (!get_input_handle("BasisVec3(Col)", in[2])) return;
   if (!get_input_handle("TargetVec(Col)", in[3])) return;
 
+  MatrixHandle tmp;
+  for (i = 0; i < 4; i++) { tmp = in[i]->column(); in[i] = tmp; }  
+
   vector<ColumnMatrix *> Ac(4);
   for (i = 0; i < 4; i++) {
     Ac[i] = in[i]->column();
@@ -103,17 +106,17 @@ SolveMinNormLeastSqSystem::execute()
     A[i]=Ac[i]->get_data();
   }
   double *b = Ac[3]->get_data();
-  double *bprime = new double[size];
-  double *x = new double[3];
+  double *bprime = scinew double[size];
+  double *x = scinew double[3];
 
   min_norm_least_sq_3(A, b, x, bprime, size);
    
-  ColumnMatrix* w_vec = new ColumnMatrix(3);
+  ColumnMatrix* w_vec = scinew ColumnMatrix(3);
   w_vec->set_data(x);   
   MatrixHandle w_vecH(w_vec);
   send_output_handle("WeightVec(Col)", w_vecH);
 
-  ColumnMatrix* bprime_vec = new ColumnMatrix(size);
+  ColumnMatrix* bprime_vec = scinew ColumnMatrix(size);
   bprime_vec->set_data(bprime);
   MatrixHandle bprime_vecH(bprime_vec);
   send_output_handle("ResultVec(Col)", bprime_vecH);

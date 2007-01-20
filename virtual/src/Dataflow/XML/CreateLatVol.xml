@@ -45,14 +45,18 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input Field</name>
-	<datatype>SCIRun::Field</datatype>
+				<name>Input Field</name>
+				<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+				<name>LatVol Size</name>
+				<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Output Sample Field</name>
-	<datatype>SCIRun::Field</datatype>
+				<name>Output Sample Field</name>
+				<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>

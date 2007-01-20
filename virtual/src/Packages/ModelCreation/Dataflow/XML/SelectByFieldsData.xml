@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="SelectByFieldsData" category="FieldsData">
+<component name="SelectByFieldsData" category="ChangeFieldData">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>

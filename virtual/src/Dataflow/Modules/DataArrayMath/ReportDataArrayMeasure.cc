@@ -27,6 +27,7 @@
 */
 
 #include <string>
+#include <algorithm>
 #include <float.h>
 
 #include <Core/Datatypes/Matrix.h>

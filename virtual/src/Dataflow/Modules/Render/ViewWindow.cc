@@ -175,7 +175,8 @@ ViewWindow::ViewWindow(ViewScene* viewer, GuiInterface* gui, GuiContext* ctx)
     gui_currentvisual_(ctx->subVar("currentvisual")),
     gui_autoav_(ctx->subVar("autoav")),
     gui_caxes_(ctx->subVar("caxes")),
-    gui_pos_(ctx->subVar("pos"))
+    gui_pos_(ctx->subVar("pos")),
+		mpick_(false)
 {
   gui_->add_command(id_ + "-c", this, 0);
 
@@ -700,15 +701,15 @@ ViewWindow::unicam_rot(int x, int y)
   double opsq = op[0] * op[0], oesq = oe[0] * oe[0];
   double lop  = opsq > radsq ? 0 : sqrt(radsq - opsq);
   double loe  = oesq > radsq ? 0 : sqrt(radsq - oesq);
-  Vector nop = Vector(op[0], 0, lop).normal();
-  Vector noe = Vector(oe[0], 0, loe).normal();
+  Vector nop = Vector(op[0], 0, lop).safe_normal();
+  Vector noe = Vector(oe[0], 0, loe).safe_normal();
   double dot = Dot(nop, noe);
 
   if (fabs(dot) > 0.0001) {
     double angle = -2*acos(Clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
     MyRotateCamera(center, Vector(0,1,0), angle);
     double rdist = te[1]-tp[1];
-    Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).normal();
+    Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).safe_normal();
     MyRotateCamera(center, right_v, rdist);
     View tmpview = gui_view_.get(); // update tmpview given last rotation
     tmpview.up(Vector(0,1,0));
@@ -731,7 +732,7 @@ ViewWindow::unicam_zoom(int X, int Y)
   // PART A: Zoom in/out (assume perspective projection for now..)
   View tmpview(gui_view_.get());
   Vector movec   = (down_pt_ - tmpview.eyep());
-  Vector movec_n = movec.normal(); // normalized movec
+  Vector movec_n = movec.safe_normal(); // normalized movec
   Vector trans1  = movec_n * (movec.length() * delta[1] * -4);
   MyTranslateCamera(trans1);
 
@@ -783,7 +784,7 @@ ViewWindow::film_dir(double x, double y)
 {
   View tmpview(gui_view_.get());
   Point at = tmpview.eyespace_to_objspace(Point( x, y, 1), WindowAspect());
-  return (at - tmpview.eyep()).normal();
+  return (at - tmpview.eyep()).safe_normal();
 }
 
 Point
@@ -860,7 +861,7 @@ ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       } else {
 	// XXX - need to select 's' to make focus_sphere_ 1/4 or so
 	// inches on the screen always...  how?
-	Vector at_v=(gui_view_.get().lookat()-gui_view_.get().eyep()).normal();
+	Vector at_v=(gui_view_.get().lookat()-gui_view_.get().eyep()).safe_normal();
 	Vector vec  = (down_pt_ - gui_view_.get().eyep()) * at_v;
 	double s = 0.008 * vec.length();
 	focus_sphere_->move(down_pt_, s);
@@ -1253,14 +1254,17 @@ ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
       pick_y_ = last_y_;
       renderer_->get_pick(x, y, pick_obj_, pick_pick_, pick_n_);
 
-      if (pick_obj_.get_rep()){
-	update_mode_string(pick_obj_);
-	pick_pick_->set_picked_obj(pick_obj_);
-	pick_pick_->pick(this,bs);
+      if (pick_obj_.get_rep())
+      {
+        update_mode_string(pick_obj_);
+        pick_pick_->set_picked_obj(pick_obj_);
+        pick_pick_->pick(this,bs);
 
-	need_redraw_=1;
-      } else {
-	update_mode_string("pick: none");
+        need_redraw_=1;
+      } 
+      else 
+      {
+        update_mode_string("pick: none");
       }
     }
     break;
@@ -1441,9 +1445,12 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     ViewSceneMessage *msg = scinew ViewSceneMessage(id_, tbeg, tend, num, framerate);
     if(!viewer_->mailbox_.trySend(msg))
        cerr << "Redraw event dropped, mailbox full!\n";
-  } else if(args[1] == "mtranslate") {
+  } 
+	else if(args[1] == "mtranslate") 
+	{
     do_mouse(&ViewWindow::mouse_translate, args);
-  } else if(args[1] == "mdolly") {
+  } 
+	else if(args[1] == "mdolly") {
     do_mouse(&ViewWindow::mouse_dolly, args);
   } else if(args[1] == "mrotate") {
     do_mouse(&ViewWindow::mouse_rotate, args);
@@ -1615,15 +1622,21 @@ ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
     args.error(args[1]+" needs start/move/end and x y");
     return;
   }
+	
   int action;
   if(args[2] == "start"){
     action=MouseStart;
     mouse_action_ = true;
+		if (args[1] == "mpick") mpick_ = true;
+				
   } else if(args[2] == "end"){
     action=MouseEnd;
     mouse_action_ = false;
+		if (mpick_) handler = &ViewWindow::mouse_pick;
+		mpick_ = false;
   } else if(args[2] == "move"){
     action=MouseMove;
+		if (mpick_) handler = &ViewWindow::mouse_pick;
   } else {
     args.error("Unknown mouse action");
     return;
@@ -1662,6 +1675,7 @@ ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
       return;
     }
   }
+
 
   // We have to send this to the Viewer thread...
   ViewWindowMouseMessage *msg = scinew ViewWindowMouseMessage

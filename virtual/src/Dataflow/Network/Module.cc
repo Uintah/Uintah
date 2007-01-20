@@ -763,12 +763,14 @@ Module::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "needexecute"){
     if(!abort_flag_){
       abort_flag_=1;
+      // Back up the network on any module executes
+      gui_->eval("backupNetwork");
       want_to_execute();
     }
   } else if(args[1] == "getpid"){
     args.result(to_string(pid_));
   } else if(args[1] == "help"){
-    args.result("http://www.sci.utah.edu/ncrr/wiki/index.php/CIBC:Documentation:SCIRun:Reference:" + package_name_ + ":" + module_name_);
+    args.result("http://software.sci.utah.edu/SCIRunDocs/index.php/CIBC:Documentation:SCIRun:Reference:" + package_name_ + ":" + module_name_);
   } else if(args[1] == "remark"){
     remark(args[2]);
   } else if(args[1] == "warning"){

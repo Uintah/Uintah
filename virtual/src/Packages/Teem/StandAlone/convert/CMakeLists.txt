@@ -38,6 +38,7 @@ TARGET_LINK_LIBRARIES(Packages_Teem_StandAlone_convert
   Core_Containers
   Core_Persistent
   Core_Exceptions
+  Core_Datatypes
   Core_Math
   Core_Thread
   Core_Geometry

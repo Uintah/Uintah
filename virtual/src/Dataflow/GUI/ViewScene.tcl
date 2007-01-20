@@ -174,8 +174,8 @@ itcl_class BaseViewWindow {
 
     method set_defaults {} {
 	# set defaults values for parameters that weren't set in a script
-	initGlobal $this-saveFile "MyImage.ppm"
-	initGlobal $this-saveType "ppm"
+	initGlobal $this-saveFile "MyImage.png"
+	initGlobal $this-saveType "png"
 
 	# Animation parameters
 	initGlobal $this-current_time 0
@@ -344,7 +344,7 @@ itcl_class BaseViewWindow {
 
 	set initdir [pwd]
 	set defext "" ;# extension to append if no extension supplied by user
-	set defname "MyImage.ppm" ;# filename to appear initially
+	set defname "MyImage.png" ;# filename to appear initially
 	set title "Save ViewWindow Image"
 
 	# file types to appers in filter box
@@ -352,7 +352,7 @@ itcl_class BaseViewWindow {
 	    {{All Files}    {.*}}
 	    {{PPM File}     {.ppm}}
 	    {{Raw File}     {.raw}}
-            {{PNG File}     {.png}}
+      {{PNG File}     {.png}}
 	}
 	
 	makeSaveFilebox \
@@ -367,7 +367,7 @@ itcl_class BaseViewWindow {
 	    -initialdir $initdir \
 	    -defaultextension $defext \
 	    -formatvar $this-saveType \
-	    -formats {ppm raw png "by_extension"} \
+	    -formats {png ppm raw "by_extension"} \
 	    -imgwidth $this-resx \
 	    -imgheight $this-resy
 	moveToCursor $w
@@ -1587,7 +1587,7 @@ itcl_class ViewWindow {
         entry $w.moviebase.entry -relief sunken -width 15 -textvariable "$this-global-movieName" 
 
         TooltipMultiWidget "$w.moviebase.label $w.moviebase.entry" \
-            "Name of the movie file.  The %%#d specifies number of digits\nto use in the frame number.  Eg: movie.%%04d will\nproduce names such as movie.0001.ppm"
+            "Name of the movie file.  The %%#d specifies number of digits\nto use in the frame number.  Eg: movie.%%04d will\nproduce names such as movie.0001.png"
 
 	frame $w.movieframe
 	label $w.movieframe.label -text "Next Frame No:" -width 15

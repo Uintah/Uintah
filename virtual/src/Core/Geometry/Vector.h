@@ -131,6 +131,7 @@ public:
   inline double normalize();
   inline double safe_normalize();
   SCISHARE Vector normal() const;
+  SCISHARE Vector safe_normal() const;
   friend inline Vector Cross(const Vector&, const Vector&);
   friend inline Vector Abs(const Vector&);
   inline void x(double);

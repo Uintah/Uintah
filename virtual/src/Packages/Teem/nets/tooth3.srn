@@ -228,7 +228,7 @@
       <var name="card_mem_auto" val="{1}"/>
       <var name="is_uchar" val="{1}"/>
     </module>
-    <module category="Misc" id="m9" name="BuildTextureWithGradientsFromNrrds" package="Teem">
+    <module category="Misc" id="m9" name="BuildNrrdGradientAndMagnitude" package="Teem">
       <position x="136" y="216"/>
       <var name="realmin" val="{2.0}"/>
       <var name="realmax" val="{1284.0}"/>

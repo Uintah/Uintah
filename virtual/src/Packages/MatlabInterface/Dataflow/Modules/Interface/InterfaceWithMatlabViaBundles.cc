@@ -676,7 +676,8 @@ InterfaceWithMatlabViaBundles::open_matlab_engine()
     if(!(matlab_engine_->open(address,"matlabengine",sessionnum,passwd)))
     {
       error(std::string("InterfaceWithMatlabViaBundles: Could not open matlab engine (error=") + matlab_engine_->geterror() + std::string(")"));
-      error(std::string("InterfaceWithMatlabViaBundles: Make sure the matlab engine has not been disabled in $HOME/SCIRun/services/matlabengine.rc"));
+			error(std::string("InterfaceWithMatlabViaBundles: Please check whether '[MATLAB_DIRECTORY]/services/matlabengine.rc' has been setup properly"));
+			error(std::string("InterfaceWithMatlabVuaBundles: Press the 'Edit Local Config of Matlab Engine' to change the configuration"));      
       error(std::string("InterfaceWithMatlabViaBundles: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
       error(std::string("InterfaceWithMatlabViaBundles: If using matlab engine on local machine start engine with '-eai' option"));
 
@@ -690,7 +691,8 @@ InterfaceWithMatlabViaBundles::open_matlab_engine()
       matlab_engine_->close();
 
       error(std::string("InterfaceWithMatlabViaBundles: Could not open matlab engine file transfer service (error=") + matlab_engine_->geterror() + std::string(")"));
-      error(std::string("InterfaceWithMatlabViaBundles: Make sure the matlab engine file transfer service has not been disabled in $HOME/SCIRun/services/matlabengine.rc"));
+			error(std::string("InterfaceWithMatlabViaBundles: Please check whether '[MATLAB_DIRECTORY]/services/matlabengine.rc' has been setup properly"));
+			error(std::string("InterfaceWithMatlabVuaBundles: Press the 'Edit Local Config of Matlab Engine' to change the configuration"));      
       error(std::string("InterfaceWithMatlabViaBundles: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
       error(std::string("InterfaceWithMatlabViaBundles: If using matlab engine on local machine start engine with '-eai' option"));
 			
@@ -720,7 +722,8 @@ InterfaceWithMatlabViaBundles::open_matlab_engine()
       file_transfer_->close();
 
       error(std::string("InterfaceWithMatlabViaBundles: Matlab engine returned an error (error=") + packet->getstring() + std::string(")"));
-      error(std::string("InterfaceWithMatlabViaBundles: Please check whether '$HOME/SCIRun/services/matlabengine.rc' has been setup properly"));
+			error(std::string("InterfaceWithMatlabViaBundles: Please check whether '[MATLAB_DIRECTORY]/services/matlabengine.rc' has been setup properly"));
+			error(std::string("InterfaceWithMatlabVuaBundles: Press the 'Edit Local Config of Matlab Engine' to change the configuration"));      
       error(std::string("InterfaceWithMatlabViaBundles: Edit the 'startmatlab=' line to start matlab properly"));
       error(std::string("InterfaceWithMatlabViaBundles: If you running matlab remotely, this file must be edited on the machine running matlab"));
 

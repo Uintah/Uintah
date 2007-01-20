@@ -29,6 +29,7 @@
 # Sources of Core/Basis classes
 
 SET(Core_Basis_SRCS
+  Constant.cc
   CrvLinearLgn.cc
   CrvQuadraticLgn.cc
   HexTrilinearLgn.cc

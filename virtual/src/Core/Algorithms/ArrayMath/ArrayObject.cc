@@ -27,6 +27,7 @@
 */
 
 #include <Core/Algorithms/ArrayMath/ArrayObject.h>
+#include <Core/Algorithms/Util/FieldInformation.h>
 
 namespace SCIRunAlgo {
 
@@ -54,6 +55,15 @@ void ArrayObject::clear()
 bool ArrayObject::create_inputdata(SCIRun::FieldHandle field, std::string name)
 {
   clear();
+	
+	// This code needs to be rewritten to fully use FieldInformation, so it
+	// will consistently handle every mesh and field type.
+	FieldInformation fi(field);
+	if (fi.is_nodata())
+	{
+		pr_->error("Input field does not have data");
+		return (false);
+	}
   
   if (field.get_rep() == 0) return(false);
   

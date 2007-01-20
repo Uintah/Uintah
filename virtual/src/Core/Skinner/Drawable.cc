@@ -39,7 +39,8 @@ namespace SCIRun {
       SignalCatcher(),
       SignalThrower(),
       visible_(variables, "visible",1),
-      class_(variables, "class"),
+      class_(variables, "class", ""),
+      redraw_callback_(this, class_()+"::redraw"),
       region_(),
       variables_(variables)
     {
@@ -62,34 +63,27 @@ namespace SCIRun {
     {
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      WindowEvent *win = dynamic_cast<WindowEvent *>(event.get_rep());
 
       if (visible_.exists() && !visible_()) {
-        return (pointer || key || window) ? STOP_E : CONTINUE_E;
+        return (pointer || key || win) ? STOP_E : CONTINUE_E;
       } 
-      string signalname = "";
-      Signal *signal = 0;
-      event_handle_t result;
 
-      if (pointer) {
-        signalname = class_()+"::do_PointerEvent";
-        event_handle_t psignal = new PointerSignal(signalname, pointer);
-        result = SignalThrower::throw_signal(psignal);
+      event_handle_t result;
+      if (win && win->get_window_state() == WindowEvent::REDRAW_E) {
+        result = redraw_callback_();
+      } else if (pointer) {
+        result = new PointerSignal(class_()+"::do_PointerEvent", pointer);
+        result = SignalThrower::throw_signal(result);
       } else if (key) {
-        signalname = class_()+"::do_KeyEvent";
-        event_handle_t ksignal = new KeySignal(signalname, key);
-        result = SignalThrower::throw_signal(ksignal);
-      } else if (window && 
-                 window->get_window_state() == WindowEvent::REDRAW_E) {
-        signalname = class_()+"::redraw";
-        result = throw_signal(signalname);
+        result = new KeySignal(class_()+"::do_KeyEvent", key);
+        result = SignalThrower::throw_signal(result);
       }
 
       if (result.get_rep()) {
-        signal = dynamic_cast<Signal *>(result.get_rep());
-        if (signal) {
-          return signal->get_signal_result();
-        }
+        Signal *signal = dynamic_cast<Signal *>(result.get_rep());
+        ASSERT(signal);
+        return signal->get_signal_result();
       }
 
       return CONTINUE_E;

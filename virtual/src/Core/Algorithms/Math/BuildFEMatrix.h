@@ -49,12 +49,13 @@
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Algorithms/Math/share.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class BuildFEMatrixAlgo : public DynamicAlgoBase
+class SCISHARE BuildFEMatrixAlgo : public DynamicAlgoBase
 {
 public:
   virtual bool BuildFEMatrix(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, MatrixHandle& ctable, int numproc = 1);
@@ -83,7 +84,8 @@ class FEMBuilder : public DynamicAlgoBase
 public:
 
   // Constructor needed as Barrier needs to have name
-  FEMBuilder() :
+  FEMBuilder(ProgressReporter* pr) :
+    pr_(pr),
     barrier_("FEMBuilder Barrier")
   {
   }
@@ -94,6 +96,7 @@ public:
 private:
 
   // For parallel implementation
+  ProgressReporter* pr_;
   Barrier barrier_;
 
   typename FIELD::mesh_type::basis_type fieldbasis_;
@@ -192,7 +195,7 @@ bool BuildFEMatrixAlgoT<FIELD>::BuildFEMatrix(ProgressReporter *pr, FieldHandle 
   // original main class is pure and we can use one instance to do multiple
   // computations. This helps when precomputing dynamic algorithms
 
-  Handle<FEMBuilder<FIELD> > builder = scinew FEMBuilder<FIELD>;
+  Handle<FEMBuilder<FIELD> > builder = scinew FEMBuilder<FIELD>(pr);
   // Call the the none pure version
   builder->build_matrix(input,output,ctable,numproc);
 
@@ -230,12 +233,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
   // Convert that matrix in the conducivity table
   if (ctable.get_rep())
   {
+    tensors_.clear();
     DenseMatrix* mat = ctable->dense();
+    MatrixHandle temphandle = mat;
     // Only if we can convert it into a denso matrix, otherwise skip it
     if (mat)
     {
-      double* data = ctable->get_data_pointer();
-      int m = ctable->nrows();
+      double* data = mat->get_data_pointer();
+      int m = mat->nrows();
+      int n = mat->ncols();
       Tensor T; 
 
       // Case the table has isotropic conductivities
@@ -244,15 +250,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
         for (int p=0; p<m;p++)
         {
           // Set the diagonals to the proper version.
-          T.mat_[0][0] = data[0*m+p];
+          T.mat_[0][0] = data[p*n+0];
           T.mat_[1][0] = 0.0;
           T.mat_[2][0] = 0.0;
           T.mat_[0][1] = 0.0;
-          T.mat_[1][1] = data[0*m+p];
+          T.mat_[1][1] = data[p*n+0];
           T.mat_[2][1] = 0.0;
           T.mat_[0][2] = 0.0;
           T.mat_[1][2] = 0.0;
-          T.mat_[2][2] = data[0*m+p];
+          T.mat_[2][2] = data[p*n+0];
           tensors_.push_back(std::pair<string, Tensor>("",T));
         }
       }
@@ -262,15 +268,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
       {
         for (int p=0; p<m;p++)
         {
-          T.mat_[0][0] = data[0*m+p];
-          T.mat_[1][0] = data[1*m+p];
-          T.mat_[2][0] = data[2*m+p];
-          T.mat_[0][1] = data[1*m+p];
-          T.mat_[1][1] = data[3*m+p];
-          T.mat_[2][1] = data[4*m+p];
-          T.mat_[0][2] = data[2*m+p];
-          T.mat_[1][2] = data[4*m+p];
-          T.mat_[2][2] = data[5*m+p];
+          T.mat_[0][0] = data[0+p*n];
+          T.mat_[1][0] = data[1+p*n];
+          T.mat_[2][0] = data[2+p*n];
+          T.mat_[0][1] = data[1+p*n];
+          T.mat_[1][1] = data[3+p*n];
+          T.mat_[2][1] = data[4+p*n];
+          T.mat_[0][2] = data[2+p*n];
+          T.mat_[1][2] = data[4+p*n];
+          T.mat_[2][2] = data[5+p*n];
           tensors_.push_back(std::pair<string, Tensor>("",T));
         }
       }
@@ -280,15 +286,15 @@ void FEMBuilder<FIELD>::build_matrix(FieldHandle input, MatrixHandle& output, Ma
       {
         for (int p=0; p<m;p++)
         {
-          T.mat_[0][0] = data[0*m+p];
-          T.mat_[1][0] = data[1*m+p];
-          T.mat_[2][0] = data[2*m+p];
-          T.mat_[0][1] = data[1*m+p];
-          T.mat_[1][1] = data[4*m+p];
-          T.mat_[2][1] = data[5*m+p];
-          T.mat_[0][2] = data[2*m+p];
-          T.mat_[1][2] = data[5*m+p];
-          T.mat_[2][2] = data[8*m+p];
+          T.mat_[0][0] = data[0+p*n];
+          T.mat_[1][0] = data[1+p*n];
+          T.mat_[2][0] = data[2+p*n];
+          T.mat_[0][1] = data[1+p*n];
+          T.mat_[1][1] = data[4+p*n];
+          T.mat_[2][1] = data[5+p*n];
+          T.mat_[0][2] = data[2+p*n];
+          T.mat_[1][2] = data[5+p*n];
+          T.mat_[2][2] = data[8+p*n];
           tensors_.push_back(std::pair<string, Tensor>("",T));
         }
       }
@@ -349,7 +355,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
 
   if ((Ca==0)&&(Cb==0)&&(Cc==0)&&(Cd==0)&&(Ce==0)&&(Cf==0))
   {
-    for (unsigned int j = 0; j<local_dimension; j++)
+    for (int j = 0; j<local_dimension; j++)
     {
       l_stiff[j] = 0.0;
     }
@@ -488,7 +494,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
       // We assume the weight factors are the same as the local gradients 
       // Galerkin approximation:
        
-      for (unsigned int j = 0; j<local_dimension; j++)
+      for (int j = 0; j<local_dimension; j++)
       {
         const double &Nxj = Nxi[j];
         const double &Nyj = Nyi[j];
@@ -528,7 +534,7 @@ void FEMBuilder<FIELD>::build_local_matrix_regular(typename FIELD::mesh_type::El
 
   if ((Ca==0)&&(Cb==0)&&(Cc==0)&&(Cd==0)&&(Ce==0)&&(Cf==0))
   {
-    for (unsigned int j = 0; j<local_dimension; j++)
+    for (int j = 0; j<local_dimension; j++)
     {
       l_stiff[j] = 0.0;
     }
@@ -688,7 +694,7 @@ void FEMBuilder<FIELD>::build_local_matrix_regular(typename FIELD::mesh_type::El
         // We assume the weight factors are the same as the local gradients 
         // Galerkin approximation:
          
-        for (unsigned int j = 0; j<local_dimension; j++)
+        for (int j = 0; j<local_dimension; j++)
         {
           const double &Nxj = Nxi[j];
           const double &Nyj = Nyi[j];
@@ -738,7 +744,7 @@ void FEMBuilder<FIELD>::build_local_matrix_regular(typename FIELD::mesh_type::El
         // We assume the weight factors are the same as the local gradients 
         // Galerkin approximation:
          
-        for (unsigned int j = 0; j<local_dimension; j++)
+        for (int j = 0; j<local_dimension; j++)
         {
           const double &Nxj = Nxi[j];
           const double &Nyj = Nyi[j];
@@ -803,8 +809,8 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   barrier_.wait(numprocessors_);
 
   //! distributing dofs among processors
-  const int start_gd = global_dimension * proc_num/numprocessors_;
-  const int end_gd  = global_dimension * (proc_num+1)/numprocessors_;
+  const int start_gd = (global_dimension * proc_num)/numprocessors_;
+  const int end_gd  = (global_dimension * (proc_num+1))/numprocessors_;
 
   //! creating sparse matrix structure
   std::vector<unsigned int> mycols;
@@ -816,7 +822,10 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   std::vector<int> neib_dofs;
 
   //! loop over system dofs for this thread
-  for (unsigned int i = start_gd; i<end_gd; i++)
+  int cnt = 0;
+  int size_gd = end_gd-start_gd;
+    
+  for (int i = start_gd; i<end_gd; i++)
   {
     rows_[i] = mycols.size();
 
@@ -844,8 +853,8 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
       meshhandle_->get_elems(elems,nodes[0]);
       meshhandle_->get_elems(elems2,nodes[1]);
       ca.clear();
-      for (int v=0; v < elems.size(); v++)
-         for (int w=0; w <elems2.size(); w++)
+      for (unsigned int v=0; v < elems.size(); v++)
+         for (unsigned int w=0; w <elems2.size(); w++)
             if (elems[v] == elems2[w]) ca.push_back(elems[v]);
     }
     else
@@ -883,6 +892,11 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
         mycols.push_back(neib_dofs[j]);
       }
     }
+    if (proc_num == 0) 
+    {
+      cnt++;
+      if (cnt == 200) { cnt = 0; pr_->update_progress(i,2*size_gd); }
+    }    
   }
 
   colidx_[proc_num] = mycols.size();
@@ -927,7 +941,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   {
     rows_[global_dimension] = st;
     double* vals_ = scinew double[st];
-    for (int p=0; p <st; p++) vals_[p] = 0.0;
+    // for (int p=0; p <st; p++) vals_[p] = 0.0;
     fematrix_ = scinew SparseRowMatrix(global_dimension, global_dimension, rows_, allcols_, st,vals_);
     fematrixhandle_ = fematrix_;
   }
@@ -938,8 +952,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   //! zeroing in parallel
   const int ns = colidx_[proc_num];
   const int ne = colidx_[proc_num+1];
-  double* a = &fematrix_->a[ns], *ae=&fematrix_->a[ne];
-
+  double* a = &(fematrix_->a[ns]), *ae=&(fematrix_->a[ne]);
   while (a<ae) *a++=0.0;
 
   std::vector<std::vector<double> > ni_points;
@@ -951,6 +964,9 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   lsml.resize(local_dimension);
       	
   //! loop over system dofs for this thread
+  cnt = 0;
+  
+  size_gd = end_gd-start_gd;
   for (int i = start_gd; i<end_gd; i++)
   {
     if (i < global_dimension_nodes)
@@ -976,8 +992,8 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
       meshhandle_->get_elems(elems,nodes[0]);
       meshhandle_->get_elems(elems2,nodes[1]);
       ca.clear();
-      for (int v=0; v < elems.size(); v++)
-         for (int w=0; w <elems2.size(); w++)
+      for (unsigned int v=0; v < elems.size(); v++)
+         for (unsigned int w=0; w <elems2.size(); w++)
             if (elems[v] == elems2[w]) ca.push_back(elems[v]);
 
     }
@@ -1044,7 +1060,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
         {
           for(int k = 0; k < (int)ea.size(); k++)
           {
-            if (global_dimension + ea[k] == i)
+            if (global_dimension + (int)ea[k] == i)
             {
               build_local_matrix(ca[j], k+(int)na.size() , lsml, ni_points, ni_weights, ni_derivatives);
               add_lcl_gbl(i, neib_dofs, lsml);
@@ -1052,6 +1068,12 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
           }
         }
       }
+    }
+    
+    if (proc_num == 0) 
+    {
+      cnt++;
+      if (cnt == 200) { cnt = 0; pr_->update_progress(i+size_gd,2*size_gd); }
     }
   }
 

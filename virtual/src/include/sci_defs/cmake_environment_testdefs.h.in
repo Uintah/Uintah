@@ -36,7 +36,7 @@
 
 #define SCIRUN_SRCDIR "@scirun_src_dir@"
 #define SCIRUN_OBJDIR "@scirun_obj_dir@"
-#define SCIRUN_THIRDPARTY_DIR "@SCIRUN_THIRDPARTY_PATH@"
+#define SCIRUN_THIRDPARTY_DIR "@SCIRUN_THIRDPARTY_DIR@"
 
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
 

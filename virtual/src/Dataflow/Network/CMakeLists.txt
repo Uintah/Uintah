@@ -75,6 +75,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Network
   Core_Thread
   Core_Volume
   Core_XMLUtil
+  Core_OS
   ${TCL_LIBRARY}
   ${XML2_LIBRARY}
 )

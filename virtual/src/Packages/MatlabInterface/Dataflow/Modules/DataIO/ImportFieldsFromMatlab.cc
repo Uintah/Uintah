@@ -113,7 +113,7 @@ class ImportFieldsFromMatlab : public Module
     enum { NUMPORTS = 6};
     
     // GUI variables
-    GuiString				guifilename_;		// .mat filename (import from GUI)
+    GuiFilename			guifilename_;		// .mat filename (import from GUI)
     GuiString       guifilenameset_;
     GuiString				guimatrixinfotexts_;   	// A list of matrix-information strings of the contents of a .mat-file
     GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 

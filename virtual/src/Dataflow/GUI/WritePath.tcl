@@ -42,16 +42,29 @@ itcl_class SCIRun_DataIO_WritePath {
     }
 
     method overwrite {} {
-	global $this-confirm $this-filetype
-	if {[info exists $this-confirm] && [info exists $this-filename] && \
-		[set $this-confirm] && [file exists [set $this-filename]] } {
-	    set value [tk_messageBox -type yesno -parent . \
-			   -icon warning -message \
-			   "File [set $this-filename] already exists.\n Would you like to overwrite it?"]
-	    if [string equal "no" $value] { return 0 }
-	}
-	return 1
+        global $this-confirm $this-confirm-once $this-filename $this-old-filename
+				
+				if {![info exists $this-old-filename]} {
+					set $this-old-filename ""
+				}
+				
+				if {[set $this-confirm-once] == 1} {
+					if { [string equal [set $this-filename] [set $this-old-filename] ]} {
+					  return 1
+					}
+				}
+        if {[info exists $this-confirm] && [info exists $this-filename] && \
+                [set $this-confirm] && [file exists [set $this-filename]] } {
+            set value [tk_messageBox -type yesno -parent . \
+                           -icon warning -message \
+                           "File [set $this-filename] already exists.\n Would you like to overwrite it?"]
+            if [string equal "no" $value] { return 0 }
+        }
+				
+				set $this-old-filename [set $this-filename]
+        return 1
     }
+
 
     
     method ui {} {
@@ -93,12 +106,12 @@ itcl_class SCIRun_DataIO_WritePath {
 		-command "$this-c needexecute; wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
-	        -initialfile $defname \
+	  -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
-	        -confirmvar $this-confirm
-		#-splitvar $this-split
+	  -confirmvar $this-confirm \
+	  -confirmoncevar $this-confirm-once 
 
 	moveToCursor $w	
     }

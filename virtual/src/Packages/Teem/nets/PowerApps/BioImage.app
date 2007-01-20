@@ -374,11 +374,11 @@ class BioImageApp {
 		set ChooseNrrd2 [lindex [lindex $filters(0) $modules] 35]
 		set execute_choose 0
 	    }
-	} elseif { [string first "BuildTextureWithGradientsFromNrrds" $which] != -1 && \
+	} elseif { [string first "BuildNrrdGradientAndMagnitude" $which] != -1 && \
 		       $juststarted} {
 	    change_indicator_labels "NrrdSetup Volume Rendering..."
 	    change_indicate_val 1
-	} elseif {[string first "BuildTextureWithGradientsFromNrrds" $which] != -1 && \
+	} elseif {[string first "BuildNrrdGradientAndMagnitude" $which] != -1 && \
 		      $completed} {
 	    change_indicate_val 2
 	} elseif {[string first "ConvertNrrdsToTexture" $which] != -1 && \
@@ -1111,7 +1111,7 @@ class BioImageApp {
 	set m15 [addModuleAtPosition "Teem" "Misc" "ReportNrrdInfo" 28 1042]
 	set m16 [addModuleAtPosition "Teem" "Misc" "ChooseNrrd" 174 1637]
 	set m17 [addModuleAtPosition "Teem" "Misc" "ReportNrrdInfo" 459 1897]
-	set m18 [addModuleAtPosition "Teem" "Misc" "BuildTextureWithGradientsFromNrrds" 174 1895]
+	set m18 [addModuleAtPosition "Teem" "Misc" "BuildNrrdGradientAndMagnitude" 174 1895]
 	set m19 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 410 1996]
 	set m20 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 141 1985]
 	set m21 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 392 2068]
