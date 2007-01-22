@@ -36,6 +36,7 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
 #endif
   d_dilatedCellsDeletionLabel = VarLabel::create("DilatedCellsDeletion",
                              CCVariable<int>::getTypeDescription());
+
   rdbg << "RegridderCommon::RegridderCommon() END" << endl;
 }
 
@@ -75,11 +76,11 @@ bool RegridderCommon::needsToReGrid()
   return retval;
 }
 
-bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched)
+bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
 {
   rdbg << "RegridderCommon::flaggedCellsOnFinestLevel() BGN" << endl;
   const Level* level = grid->getLevel(grid->numLevels()-1).get_rep();
-  DataWarehouse* newDW = sched->getLastDW();
+  DataWarehouse* newDW = sched_->getLastDW();
 
   // mpi version
   if (d_myworld->size() > 1) {
@@ -88,7 +89,7 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& s
     for (Level::const_patchIterator iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       // here we assume that the per-patch has been set
       PerPatch<PatchFlagP> flaggedPatchCells;
-      if (sched->getLoadBalancer()->getPatchwiseProcessorAssignment(*iter) == d_myworld->myrank()) {
+      if (lb_->getPatchwiseProcessorAssignment(*iter) == d_myworld->myrank()) {
         newDW->get(flaggedPatchCells, d_sharedState->get_refinePatchFlag_label(), 0, *iter);
         if (flaggedPatchCells.get().get_rep()->flag) {
           thisproc = true;
@@ -126,6 +127,11 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 {
   rdbg << "RegridderCommon::problemSetup() BGN" << endl;
   d_sharedState = state;
+
+  grid_ps_ = params->findBlock("Grid");
+
+  sched_=dynamic_cast<Scheduler*>(getPort("scheduler"));
+  lb_=dynamic_cast<LoadBalancer*>(getPort("load balancer"));
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
@@ -200,9 +206,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   dilate_dbg << "Initializing patch extension filter\n";
   initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
 
-  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   // we need these so they don't get scrubbed
-  sched->overrideVariableBehavior("DilatedCellsCreation", true, false, false);
+  sched_->overrideVariableBehavior("DilatedCellsCreation", true, false, false);
 
 
   rdbg << "RegridderCommon::problemSetup() END" << endl;
@@ -386,7 +391,7 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
   }
 }
 
-void RegridderCommon::scheduleDilation(SchedulerP& sched, const LevelP& level)
+void RegridderCommon::scheduleDilation(const LevelP& level)
 {
 
   if (level->getIndex() >= d_maxLevels)
@@ -404,12 +409,12 @@ void RegridderCommon::scheduleDilation(SchedulerP& sched, const LevelP& level)
 
   // we need this task on the init task, but will get bad if you require from old on the init task :)
 #if 0
-  if (sched->get_dw(0) != 0)
+  if (sched_->get_dw(0) != 0)
     dilate_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None, 0);
   dilate_task->computes(d_dilatedCellsCreationOldLabel);
 #endif
   dilate_task->computes(d_dilatedCellsCreationLabel, d_sharedState->refineFlagMaterials());
-  sched->addTask(dilate_task, level->eachPatch(), d_sharedState->allMaterials());
+  sched_->addTask(dilate_task, level->eachPatch(), d_sharedState->allMaterials());
 #if 0
   if (d_cellCreationDilation != d_cellDeletionDilation) {
     // dilate flagged cells (for deletion) on this level)
@@ -566,7 +571,7 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
   rdbg << "RegridderCommon::Dilate() END" << endl;
 }
 
-void RegridderCommon::scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level)
+void RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
 {
   Task* task = scinew Task("initializeErrorEstimate", this,
                            &RegridderCommon::initializeErrorEstimate);
@@ -574,7 +579,7 @@ void RegridderCommon::scheduleInitializeErrorEstimate(SchedulerP& sched, const L
   task->computes(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
   task->computes(d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials());
   task->computes(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
-  sched->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
+  sched_->addTask(task, level->eachPatch(), d_sharedState->allMaterials());
   
 }
 

@@ -50,10 +50,10 @@ class VarLabel;
 
       
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups);
+    virtual Grid* regrid(Grid* oldGrid);
 
   private:
-    Grid* CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups);
+    Grid* CreateGrid2(Grid* oldGrid);
     void GatherSubPatches(const GridP& origGrid, SchedulerP& sched);
     void MarkPatches2(const ProcessorGroup*,
                       const PatchSubset* patches,
