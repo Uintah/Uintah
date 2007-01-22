@@ -88,7 +88,6 @@ void SFEOS::computePressEOS(double rho, double, double, double,
                           double& press, double& dp_drho, double& dp_de)
 {
   double vol_strain = log(rho0/rho);
-
   int i1 = 0, i;
   for(i=1; i<npts-1; i++){
     if(eps[i+1]<eps[i])
