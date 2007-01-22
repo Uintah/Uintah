@@ -262,7 +262,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
   center[0]=(high[0]+low[0])/2.0;
   center[1]=(high[1]+low[1])/2.0;
   center[2]=(high[2]+low[2])/2.0;
-  IntVector dimensions;
+  IntVector dimensions(0,0,0);
   int dim=0;
   for(int d=0;d<3;d++)
   {
@@ -298,38 +298,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     curve.SetOutputVector(&indices);
     curve.SetCenter(c);
     curve.GenerateCurve(SERIAL);
-    /*
-    if(dim==3)
-    {
-      SFC<float> curve(3,d_myworld);
-      curve.SetLocalSize(level->numPatches());
-      curve.SetDimensions(r);
-      curve.SetLocations(&positions);
-      curve.SetOutputVector(&indices);
-      curve.SetCenter(c);
-      curve.GenerateCurve(SERIAL);
-    }
-    else if (dim==2)
-    {
-      SFC<float> curve(2,d_myworld);   
-      curve.SetLocalSize(level->numPatches());
-      curve.SetDimensions(r);
-      curve.SetLocations(&positions);
-      curve.SetOutputVector(&indices);
-      curve.SetCenter(c);
-      curve.GenerateCurve(SERIAL);
-    }
-    else
-    {
-      SFC<float> curve(1,d_myworld);
-      curve.SetLocalSize(level->numPatches());
-      curve.SetDimensions(r);
-      curve.SetLocations(&positions);
-      curve.SetOutputVector(&indices);
-      curve.SetCenter(c);
-      curve.GenerateCurve(SERIAL);
-    }
-    */
     memcpy(output,&indices[0],sizeof(DistributedIndex)*level->numPatches());
   }
   else  //calculate in parallel
@@ -368,7 +336,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     float delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
 
     SFC<float> curve(dim,d_myworld);
-    curve.SetLocalSize(positions.size()/3);
+    curve.SetLocalSize(positions.size()/dim);
     curve.SetDimensions(r);
     curve.SetRefinementsByDelta(delta); 
     curve.SetLocations(&positions);
@@ -379,50 +347,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     curve.SetMergeParameters(3000,500,2,.15);
     curve.GenerateCurve();
 
-    /*
-    if(dim==3)
-    {
-      SFC<float> curve(3,d_myworld);
-      curve.SetLocalSize(positions.size()/3);
-      curve.SetDimensions(r);
-      curve.SetRefinementsByDelta(delta); 
-      curve.SetLocations(&positions);
-      curve.SetOutputVector(&indices);
-      curve.SetCenter(c);
-      curve.SetMergeMode(1);
-      curve.SetCleanup(BATCHERS);
-      curve.SetMergeParameters(3000,500,2,.15);
-      curve.GenerateCurve();
-    }
-    else if(dim==2)
-    {
-      SFC<float> curve(2,d_myworld);
-      curve.SetLocalSize(positions.size()/2);
-      curve.SetDimensions(r);
-      curve.SetRefinementsByDelta(delta); 
-      curve.SetLocations(&positions);
-      curve.SetOutputVector(&indices);
-      curve.SetCenter(c);
-      curve.SetMergeMode(1);
-      curve.SetCleanup(BATCHERS);
-      curve.SetMergeParameters(3000,500,2,.15);
-      curve.GenerateCurve();
-    }
-    else
-    {
-      SFC<float> curve(1,d_myworld);
-      curve.SetLocalSize(positions.size());
-      curve.SetDimensions(r);
-      curve.SetRefinementsByDelta(delta); 
-      curve.SetLocations(&positions);
-      curve.SetOutputVector(&indices);
-      curve.SetCenter(c);
-      curve.SetMergeMode(1);
-      curve.SetCleanup(BATCHERS);
-      curve.SetMergeParameters(3000,500,2,.15);
-      curve.GenerateCurve();
-    }
-    */
     //indices comes back in the size of each proc's patch set, pointing to the index
     // gather it all into one array
     
