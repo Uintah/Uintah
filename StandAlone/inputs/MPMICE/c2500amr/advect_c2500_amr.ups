@@ -1,0 +1,724 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
+<Uintah_specification>
+
+   <Meta>
+       <title>Advection test for a MPM and ICE material</title>
+   </Meta>
+   <SimulationComponent>
+        <type> mpmice </type>
+   </SimulationComponent>
+   <doAMR>true</doAMR>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.1       </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-4      </delt_init>
+       <timestep_multiplier>0.8         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"  var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = " Level 0">
+              <lower>        [-2.,  0.0, -.05]    </lower>
+              <upper>        [ 5.2,  3.2,  .05]   </upper>
+              <extraCells>   [1,1,1]              </extraCells>
+              <patches>      [2,2,1]              </patches>
+           </Box>
+           <spacing>        [0.1,0.1,0.1]  </spacing>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>Advect_c2500_amr.uda</filebase>
+      <outputTimestepInterval>10</outputTimestepInterval>
+      <outputInitTimestep/>
+      <save label = "mom_L_ME_CC"/>
+      <save label = "vel_CC"/>
+      <save label = "press_CC"/>
+      <save label = "press_equil_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "p.particleID"    levels = "-1"/>
+      <save label = "p.x"             levels = "-1"/>
+      <save label = "p.volume"        levels = "-1"/>
+      <save label = "p.velocity"      levels = "-1"/>
+      <save label = "p.temperature"   levels = "-1"/>
+   <!--
+    -->
+      <checkpoint cycle = "2" timestepInterval = "100"/>
+   </DataArchiver>
+
+   <Debug>
+   </Debug>
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+        <advection type = "FirstOrder"/>
+      </ICE>        
+    </CFD>
+    <AMR>
+      <ICE>
+        <do_Refluxing>        false    </do_Refluxing>
+        <orderOfInterpolation>1         </orderOfInterpolation>
+        
+        <Refinement_Criteria_Thresholds>
+        </Refinement_Criteria_Thresholds>
+      </ICE>
+      <MPM>
+        <min_grid_level>-1</min_grid_level>
+        <max_grid_level>-1</max_grid_level>
+      </MPM>
+      <Regridder>
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+        <cell_creation_dilation>   [2,2,0]    </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,0]    </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,0]    </min_boundary_cells>
+ 
+
+        <type>BNR</type>
+        
+        <min_patch_size>           [8,8,1] </min_patch_size>
+        <patch_split_tolerance>     1        </patch_split_tolerance>
+        <patch_combine_tolerance>   1        </patch_combine_tolerance>
+        <patches_per_level_per_proc> 8       </patches_per_level_per_proc>
+      </Regridder>
+      <useLockStep>       true  </useLockStep>
+    </AMR>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <nodes8or27>8</nodes8or27>
+        <testForNegTemps_mpm>false</testForNegTemps_mpm>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+         <material>
+                <density>   1.1792946927374306e+00   </density>
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>      40000.0          </bulk_modulus>
+                    <shear_modulus>     30000.0          </shear_modulus>
+                </constitutive_model>
+                <thermal_conductivity>  400.0           </thermal_conductivity>
+                <specific_heat>         716.0           </specific_heat>
+                <geom_object>
+                  <union>
+                    <tri><name>part2000001</name></tri>
+                    <tri><name>part2000002</name></tri>
+                    <tri><name>part2000003</name></tri>
+                    <tri><name>part2000004</name></tri>
+                    <tri><name>part2000005</name></tri>
+                    <tri><name>part2000006</name></tri>
+                    <tri><name>part2000007</name></tri>
+                    <tri><name>part2000008</name></tri>
+                    <tri><name>part2000009</name></tri>
+                    <tri><name>part2000010</name></tri>
+                    <tri><name>part2000011</name></tri>
+                    <tri><name>part2000012</name></tri>
+                    <tri><name>part2000013</name></tri>
+                    <tri><name>part2000014</name></tri>
+                    <tri><name>part2000015</name></tri>
+                    <tri><name>part2000016</name></tri>
+                    <tri><name>part2000017</name></tri>
+                    <tri><name>part2000018</name></tri>
+                    <tri><name>part2000019</name></tri>
+                    <tri><name>part2000020</name></tri>
+                    <tri><name>part2000021</name></tri>
+                    <tri><name>part2000022</name></tri>
+                    <tri><name>part2000023</name></tri>
+                    <tri><name>part2000024</name></tri>
+                    <tri><name>part2000025</name></tri>
+                    <tri><name>part2000026</name></tri>
+                    <tri><name>part2000027</name></tri>
+                    <tri><name>part2000028</name></tri>
+                    <tri><name>part2000029</name></tri>
+                    <tri><name>part2000030</name></tri>
+                    <tri><name>part2000031</name></tri>
+                    <tri><name>part2000032</name></tri>
+                    <tri><name>part2000033</name></tri>
+                    <tri><name>part2000034</name></tri>
+                    <tri><name>part2000035</name></tri>
+                    <tri><name>part2000036</name></tri>
+                    <tri><name>part2000037</name></tri>
+                    <tri><name>part2000038</name></tri>
+                    <tri><name>part2000039</name></tri>
+                    <tri><name>part2000040</name></tri>
+                    <tri><name>part2000041</name></tri>
+                    <tri><name>part2000042</name></tri>
+                    <tri><name>part2000043</name></tri>
+                    <tri><name>part2000044</name></tri>
+                    <tri><name>part2000045</name></tri>
+                    <tri><name>part2000046</name></tri>
+                    <tri><name>part2000047</name></tri>
+                    <tri><name>part2000048</name></tri>
+                    <tri><name>part2000049</name></tri>
+                    <tri><name>part2000050</name></tri>
+                    <tri><name>part2000051</name></tri>
+                    <tri><name>part2000052</name></tri>
+                    <tri><name>part2000053</name></tri>
+                    <tri><name>part2000054</name></tri>
+                    <tri><name>part2000055</name></tri>
+                    <tri><name>part2000056</name></tri>
+                    <tri><name>part2000057</name></tri>
+                    <tri><name>part2000058</name></tri>
+                    <tri><name>part2000059</name></tri>
+                    <tri><name>part2000060</name></tri>
+                    <tri><name>part2000061</name></tri>
+                    <tri><name>part2000062</name></tri>
+                    <tri><name>part2000063</name></tri>
+                    <tri><name>part2000064</name></tri>
+                    <tri><name>part2000065</name></tri>
+                    <tri><name>part2000066</name></tri>
+                    <tri><name>part2000067</name></tri>
+                    <tri><name>part2000068</name></tri>
+                    <tri><name>part2000069</name></tri>
+                    <tri><name>part2000070</name></tri>
+                    <tri><name>part2000071</name></tri>
+                    <tri><name>part2000072</name></tri>
+                    <tri><name>part2000073</name></tri>
+                    <tri><name>part2000074</name></tri>
+                    <tri><name>part2000075</name></tri>
+                    <tri><name>part2000076</name></tri>
+                    <tri><name>part2000077</name></tri>
+                    <tri><name>part2000078</name></tri>
+                    <tri><name>part2000079</name></tri>
+                    <tri><name>part2000080</name></tri>
+                    <tri><name>part2000081</name></tri>
+                    <tri><name>part2000082</name></tri>
+                    <tri><name>part2000083</name></tri>
+                    <tri><name>part2000084</name></tri>
+                    <tri><name>part2000085</name></tri>
+                    <tri><name>part2000086</name></tri>
+                    <tri><name>part2000087</name></tri>
+                    <tri><name>part2000088</name></tri>
+                    <tri><name>part2000089</name></tri>
+                    <tri><name>part2000090</name></tri>
+                    <tri><name>part2000091</name></tri>
+                    <tri><name>part2000092</name></tri>
+                    <tri><name>part2000093</name></tri>
+                    <tri><name>part2000094</name></tri>
+                    <tri><name>part2000095</name></tri>
+                    <tri><name>part2000096</name></tri>
+                    <tri><name>part2000097</name></tri>
+                    <tri><name>part2000098</name></tri>
+                    <tri><name>part2000099</name></tri>
+                    <tri><name>part2000100</name></tri>
+                    <tri><name>part2000101</name></tri>
+                    <tri><name>part2000102</name></tri>
+                    <tri><name>part2000103</name></tri>
+                    <tri><name>part2000104</name></tri>
+                    <tri><name>part2000105</name></tri>
+                    <tri><name>part2000106</name></tri>
+                    <tri><name>part2000107</name></tri>
+                    <tri><name>part2000108</name></tri>
+                    <tri><name>part2000109</name></tri>
+                    <tri><name>part2000110</name></tri>
+                    <tri><name>part2000111</name></tri>
+                    <tri><name>part2000112</name></tri>
+                    <tri><name>part2000113</name></tri>
+                    <tri><name>part2000114</name></tri>
+                    <tri><name>part2000115</name></tri>
+                    <tri><name>part2000116</name></tri>
+                    <tri><name>part2000117</name></tri>
+                    <tri><name>part2000118</name></tri>
+                    <tri><name>part2000119</name></tri>
+                    <tri><name>part2000120</name></tri>
+                    <tri><name>part2000121</name></tri>
+                    <tri><name>part2000122</name></tri>
+                    <tri><name>part2000123</name></tri>
+                    <tri><name>part2000124</name></tri>
+                    <tri><name>part2000125</name></tri>
+                    <tri><name>part2000126</name></tri>
+                    <tri><name>part2000127</name></tri>
+                    <tri><name>part2000128</name></tri>
+                    <tri><name>part2000129</name></tri>
+                    <tri><name>part2000130</name></tri>
+                    <tri><name>part2000131</name></tri>
+                    <tri><name>part2000132</name></tri>
+                    <tri><name>part2000133</name></tri>
+                    <tri><name>part2000134</name></tri>
+                    <tri><name>part2000135</name></tri>
+                    <tri><name>part2000136</name></tri>
+                    <tri><name>part2000137</name></tri>
+                    <tri><name>part2000138</name></tri>
+                    <tri><name>part2000139</name></tri>
+                    <tri><name>part2000140</name></tri>
+                    <tri><name>part2000141</name></tri>
+                    <tri><name>part2000142</name></tri>
+                    <tri><name>part2000143</name></tri>
+                    <tri><name>part2000144</name></tri>
+                    <tri><name>part2000145</name></tri>
+                    <tri><name>part2000146</name></tri>
+                    <tri><name>part2000147</name></tri>
+                    <tri><name>part2000148</name></tri>
+                    <tri><name>part2000149</name></tri>
+                    <tri><name>part2000154</name></tri>
+                    <tri><name>part2000155</name></tri>
+                    <tri><name>part2000156</name></tri>
+                    <tri><name>part2000157</name></tri>
+                    <tri><name>part2000158</name></tri>
+                    <tri><name>part2000159</name></tri>
+                    <tri><name>part2000160</name></tri>
+                    <tri><name>part2000161</name></tri>
+                    <tri><name>part2000162</name></tri>
+                    <tri><name>part2000163</name></tri>
+                    <tri><name>part2000164</name></tri>
+                    <tri><name>part2000165</name></tri>
+                    <tri><name>part2000166</name></tri>
+                    <tri><name>part2000167</name></tri>
+                    <tri><name>part2000168</name></tri>
+                    <tri><name>part2000169</name></tri>
+                    <tri><name>part2000170</name></tri>
+                    <tri><name>part2000171</name></tri>
+                    <tri><name>part2000173</name></tri>
+                    <tri><name>part2000174</name></tri>
+                    <tri><name>part2000175</name></tri>
+                    <tri><name>part2000176</name></tri>
+                    <tri><name>part2000177</name></tri>
+                    <tri><name>part2000178</name></tri>
+                    <tri><name>part2000179</name></tri>
+                    <tri><name>part2000180</name></tri>
+                    <tri><name>part2000181</name></tri>
+                    <tri><name>part2000182</name></tri>
+                    <tri><name>part2000183</name></tri>
+                    <tri><name>part2000184</name></tri>
+                    <tri><name>part2000185</name></tri>
+                    <tri><name>part2000186</name></tri>
+                    <tri><name>part2000188</name></tri>
+                    <tri><name>part2000189</name></tri>
+                    <tri><name>part2000190</name></tri>
+                    <tri><name>part2000191</name></tri>
+                    <tri><name>part2000192</name></tri>
+                    <tri><name>part2000194</name></tri>
+                    <tri><name>part2000195</name></tri>
+                    <tri><name>part2000196</name></tri>
+                    <tri><name>part2000197</name></tri>
+                    <tri><name>part2000198</name></tri>
+                    <tri><name>part2000199</name></tri>
+                    <tri><name>part2000200</name></tri>
+                    <tri><name>part2000201</name></tri>
+                    <tri><name>part2000202</name></tri>
+                    <tri><name>part2000203</name></tri>
+                    <tri><name>part2000205</name></tri>
+                    <tri><name>part2000206</name></tri>
+                    <tri><name>part2000207</name></tri>
+                    <tri><name>part2000208</name></tri>
+                    <tri><name>part2000209</name></tri>
+                    <tri><name>part2000210</name></tri>
+                    <tri><name>part2000211</name></tri>
+                    <tri><name>part2000212</name></tri>
+                    <tri><name>part2000213</name></tri>
+                    <tri><name>part2000214</name></tri>
+                    <tri><name>part2000215</name></tri>
+                    <tri><name>part2000216</name></tri>
+                    <tri><name>part2000217</name></tri>
+                    <tri><name>part2000218</name></tri>
+                    <tri><name>part2000219</name></tri>
+                    <tri><name>part2000220</name></tri>
+                    <tri><name>part2000221</name></tri>
+                    <tri><name>part2000222</name></tri>
+                    <tri><name>part2000223</name></tri>
+                    <tri><name>part2000224</name></tri>
+                    <tri><name>part2000225</name></tri>
+                    <tri><name>part2000226</name></tri>
+                    <tri><name>part2000227</name></tri>
+                    <tri><name>part2000228</name></tri>
+                    <tri><name>part2000229</name></tri>
+                    <tri><name>part2000230</name></tri>
+                    <tri><name>part2000231</name></tri>
+                    <tri><name>part2000232</name></tri>
+                    <tri><name>part2000233</name></tri>
+                    <tri><name>part2000235</name></tri>
+                    <tri><name>part2000236</name></tri>
+                    <tri><name>part2000237</name></tri>
+                    <tri><name>part2000238</name></tri>
+                    <tri><name>part2000239</name></tri>
+                    <tri><name>part2000240</name></tri>
+                    <tri><name>part2000241</name></tri>
+                    <tri><name>part2000242</name></tri>
+                   </union>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [10.0,0.0,0.0]   </velocity>
+                  <temperature>        300.0            </temperature>
+                 </geom_object>
+         </material>
+
+            <contact>
+              <type>null</type>
+              <materials>              [0]         </materials>
+            </contact>
+      </MPM>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0           </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <difference>
+                <box label = "world">
+                    <min>           [-10.0,-10.0,-10.0]    </min>
+                    <max>           [10.0,10.0, 10.0]    </max>
+                </box>
+                <union>
+                  <tri><name>part2000001</name></tri>
+                  <tri><name>part2000002</name></tri>
+                  <tri><name>part2000003</name></tri>
+                  <tri><name>part2000004</name></tri>
+                  <tri><name>part2000005</name></tri>
+                  <tri><name>part2000006</name></tri>
+                  <tri><name>part2000007</name></tri>
+                  <tri><name>part2000008</name></tri>
+                  <tri><name>part2000009</name></tri>
+                  <tri><name>part2000010</name></tri>
+                  <tri><name>part2000011</name></tri>
+                  <tri><name>part2000012</name></tri>
+                  <tri><name>part2000013</name></tri>
+                  <tri><name>part2000014</name></tri>
+                  <tri><name>part2000015</name></tri>
+                  <tri><name>part2000016</name></tri>
+                  <tri><name>part2000017</name></tri>
+                  <tri><name>part2000018</name></tri>
+                  <tri><name>part2000019</name></tri>
+                  <tri><name>part2000020</name></tri>
+                  <tri><name>part2000021</name></tri>
+                  <tri><name>part2000022</name></tri>
+                  <tri><name>part2000023</name></tri>
+                  <tri><name>part2000024</name></tri>
+                  <tri><name>part2000025</name></tri>
+                  <tri><name>part2000026</name></tri>
+                  <tri><name>part2000027</name></tri>
+                  <tri><name>part2000028</name></tri>
+                  <tri><name>part2000029</name></tri>
+                  <tri><name>part2000030</name></tri>
+                  <tri><name>part2000031</name></tri>
+                  <tri><name>part2000032</name></tri>
+                  <tri><name>part2000033</name></tri>
+                  <tri><name>part2000034</name></tri>
+                  <tri><name>part2000035</name></tri>
+                  <tri><name>part2000036</name></tri>
+                  <tri><name>part2000037</name></tri>
+                  <tri><name>part2000038</name></tri>
+                  <tri><name>part2000039</name></tri>
+                  <tri><name>part2000040</name></tri>
+                  <tri><name>part2000041</name></tri>
+                  <tri><name>part2000042</name></tri>
+                  <tri><name>part2000043</name></tri>
+                  <tri><name>part2000044</name></tri>
+                  <tri><name>part2000045</name></tri>
+                  <tri><name>part2000046</name></tri>
+                  <tri><name>part2000047</name></tri>
+                  <tri><name>part2000048</name></tri>
+                  <tri><name>part2000049</name></tri>
+                  <tri><name>part2000050</name></tri>
+                  <tri><name>part2000051</name></tri>
+                  <tri><name>part2000052</name></tri>
+                  <tri><name>part2000053</name></tri>
+                  <tri><name>part2000054</name></tri>
+                  <tri><name>part2000055</name></tri>
+                  <tri><name>part2000056</name></tri>
+                  <tri><name>part2000057</name></tri>
+                  <tri><name>part2000058</name></tri>
+                  <tri><name>part2000059</name></tri>
+                  <tri><name>part2000060</name></tri>
+                  <tri><name>part2000061</name></tri>
+                  <tri><name>part2000062</name></tri>
+                  <tri><name>part2000063</name></tri>
+                  <tri><name>part2000064</name></tri>
+                  <tri><name>part2000065</name></tri>
+                  <tri><name>part2000066</name></tri>
+                  <tri><name>part2000067</name></tri>
+                  <tri><name>part2000068</name></tri>
+                  <tri><name>part2000069</name></tri>
+                  <tri><name>part2000070</name></tri>
+                  <tri><name>part2000071</name></tri>
+                  <tri><name>part2000072</name></tri>
+                  <tri><name>part2000073</name></tri>
+                  <tri><name>part2000074</name></tri>
+                  <tri><name>part2000075</name></tri>
+                  <tri><name>part2000076</name></tri>
+                  <tri><name>part2000077</name></tri>
+                  <tri><name>part2000078</name></tri>
+                  <tri><name>part2000079</name></tri>
+                  <tri><name>part2000080</name></tri>
+                  <tri><name>part2000081</name></tri>
+                  <tri><name>part2000082</name></tri>
+                  <tri><name>part2000083</name></tri>
+                  <tri><name>part2000084</name></tri>
+                  <tri><name>part2000085</name></tri>
+                  <tri><name>part2000086</name></tri>
+                  <tri><name>part2000087</name></tri>
+                  <tri><name>part2000088</name></tri>
+                  <tri><name>part2000089</name></tri>
+                  <tri><name>part2000090</name></tri>
+                  <tri><name>part2000091</name></tri>
+                  <tri><name>part2000092</name></tri>
+                  <tri><name>part2000093</name></tri>
+                  <tri><name>part2000094</name></tri>
+                  <tri><name>part2000095</name></tri>
+                  <tri><name>part2000096</name></tri>
+                  <tri><name>part2000097</name></tri>
+                  <tri><name>part2000098</name></tri>
+                  <tri><name>part2000099</name></tri>
+                  <tri><name>part2000100</name></tri>
+                  <tri><name>part2000101</name></tri>
+                  <tri><name>part2000102</name></tri>
+                  <tri><name>part2000103</name></tri>
+                  <tri><name>part2000104</name></tri>
+                  <tri><name>part2000105</name></tri>
+                  <tri><name>part2000106</name></tri>
+                  <tri><name>part2000107</name></tri>
+                  <tri><name>part2000108</name></tri>
+                  <tri><name>part2000109</name></tri>
+                  <tri><name>part2000110</name></tri>
+                  <tri><name>part2000111</name></tri>
+                  <tri><name>part2000112</name></tri>
+                  <tri><name>part2000113</name></tri>
+                  <tri><name>part2000114</name></tri>
+                  <tri><name>part2000115</name></tri>
+                  <tri><name>part2000116</name></tri>
+                  <tri><name>part2000117</name></tri>
+                  <tri><name>part2000118</name></tri>
+                  <tri><name>part2000119</name></tri>
+                  <tri><name>part2000120</name></tri>
+                  <tri><name>part2000121</name></tri>
+                  <tri><name>part2000122</name></tri>
+                  <tri><name>part2000123</name></tri>
+                  <tri><name>part2000124</name></tri>
+                  <tri><name>part2000125</name></tri>
+                  <tri><name>part2000126</name></tri>
+                  <tri><name>part2000127</name></tri>
+                  <tri><name>part2000128</name></tri>
+                  <tri><name>part2000129</name></tri>
+                  <tri><name>part2000130</name></tri>
+                  <tri><name>part2000131</name></tri>
+                  <tri><name>part2000132</name></tri>
+                  <tri><name>part2000133</name></tri>
+                  <tri><name>part2000134</name></tri>
+                  <tri><name>part2000135</name></tri>
+                  <tri><name>part2000136</name></tri>
+                  <tri><name>part2000137</name></tri>
+                  <tri><name>part2000138</name></tri>
+                  <tri><name>part2000139</name></tri>
+                  <tri><name>part2000140</name></tri>
+                  <tri><name>part2000141</name></tri>
+                  <tri><name>part2000142</name></tri>
+                  <tri><name>part2000143</name></tri>
+                  <tri><name>part2000144</name></tri>
+                  <tri><name>part2000145</name></tri>
+                  <tri><name>part2000146</name></tri>
+                  <tri><name>part2000147</name></tri>
+                  <tri><name>part2000148</name></tri>
+                  <tri><name>part2000149</name></tri>
+                  <tri><name>part2000154</name></tri>
+                  <tri><name>part2000155</name></tri>
+                  <tri><name>part2000156</name></tri>
+                  <tri><name>part2000157</name></tri>
+                  <tri><name>part2000158</name></tri>
+                  <tri><name>part2000159</name></tri>
+                  <tri><name>part2000160</name></tri>
+                  <tri><name>part2000161</name></tri>
+                  <tri><name>part2000162</name></tri>
+                  <tri><name>part2000163</name></tri>
+                  <tri><name>part2000164</name></tri>
+                  <tri><name>part2000165</name></tri>
+                  <tri><name>part2000166</name></tri>
+                  <tri><name>part2000167</name></tri>
+                  <tri><name>part2000168</name></tri>
+                  <tri><name>part2000169</name></tri>
+                  <tri><name>part2000170</name></tri>
+                  <tri><name>part2000171</name></tri>
+                  <tri><name>part2000173</name></tri>
+                  <tri><name>part2000174</name></tri>
+                  <tri><name>part2000175</name></tri>
+                  <tri><name>part2000176</name></tri>
+                  <tri><name>part2000177</name></tri>
+                  <tri><name>part2000178</name></tri>
+                  <tri><name>part2000179</name></tri>
+                  <tri><name>part2000180</name></tri>
+                  <tri><name>part2000181</name></tri>
+                  <tri><name>part2000182</name></tri>
+                  <tri><name>part2000183</name></tri>
+                  <tri><name>part2000184</name></tri>
+                  <tri><name>part2000185</name></tri>
+                  <tri><name>part2000186</name></tri>
+                  <tri><name>part2000188</name></tri>
+                  <tri><name>part2000189</name></tri>
+                  <tri><name>part2000190</name></tri>
+                  <tri><name>part2000191</name></tri>
+                  <tri><name>part2000192</name></tri>
+                  <tri><name>part2000194</name></tri>
+                  <tri><name>part2000195</name></tri>
+                  <tri><name>part2000196</name></tri>
+                  <tri><name>part2000197</name></tri>
+                  <tri><name>part2000198</name></tri>
+                  <tri><name>part2000199</name></tri>
+                  <tri><name>part2000200</name></tri>
+                  <tri><name>part2000201</name></tri>
+                  <tri><name>part2000202</name></tri>
+                  <tri><name>part2000203</name></tri>
+                  <tri><name>part2000205</name></tri>
+                  <tri><name>part2000206</name></tri>
+                  <tri><name>part2000207</name></tri>
+                  <tri><name>part2000208</name></tri>
+                  <tri><name>part2000209</name></tri>
+                  <tri><name>part2000210</name></tri>
+                  <tri><name>part2000211</name></tri>
+                  <tri><name>part2000212</name></tri>
+                  <tri><name>part2000213</name></tri>
+                  <tri><name>part2000214</name></tri>
+                  <tri><name>part2000215</name></tri>
+                  <tri><name>part2000216</name></tri>
+                  <tri><name>part2000217</name></tri>
+                  <tri><name>part2000218</name></tri>
+                  <tri><name>part2000219</name></tri>
+                  <tri><name>part2000220</name></tri>
+                  <tri><name>part2000221</name></tri>
+                  <tri><name>part2000222</name></tri>
+                  <tri><name>part2000223</name></tri>
+                  <tri><name>part2000224</name></tri>
+                  <tri><name>part2000225</name></tri>
+                  <tri><name>part2000226</name></tri>
+                  <tri><name>part2000227</name></tri>
+                  <tri><name>part2000228</name></tri>
+                  <tri><name>part2000229</name></tri>
+                  <tri><name>part2000230</name></tri>
+                  <tri><name>part2000231</name></tri>
+                  <tri><name>part2000232</name></tri>
+                  <tri><name>part2000233</name></tri>
+                  <tri><name>part2000235</name></tri>
+                  <tri><name>part2000236</name></tri>
+                  <tri><name>part2000237</name></tri>
+                  <tri><name>part2000238</name></tri>
+                  <tri><name>part2000239</name></tri>
+                  <tri><name>part2000240</name></tri>
+                  <tri><name>part2000241</name></tri>
+                  <tri><name>part2000242</name></tri>
+                 </union>
+              </difference>
+               <res>                      [2,2,2]        </res>
+               <velocity>           [10.0,0.0,0.0]       </velocity>
+               <temperature>        300.0                </temperature>
+               <density>            1.1792946927374306   </density>
+               <pressure>           101325.0             </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       
+        <exchange_properties>
+         <exchange_coefficients>
+               <momentum>              [1e15]         </momentum>
+               <heat>                  [1e15]         </heat>
+         </exchange_coefficients>
+        </exchange_properties>
+    </MaterialProperties>
+            
+
+       
+</Uintah_specification>
