@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
@@ -44,6 +45,15 @@ ArchesHeatFluxBC::ArchesHeatFluxBC(ProblemSpecP& ps)
 
   // Read and save the load curve information
   d_loadCurve = new LoadCurve<double>(ps); 
+
+  if (d_surfaceType == "cylinder") {
+    CylinderGeometryPiece* cgp = 
+      dynamic_cast<CylinderGeometryPiece*>(d_surface);
+    Point bottom = cgp->bottom();
+    Point top = cgp->top();
+    d_polyData = new PolynomialData(ps,bottom,top);
+  }
+
 }
 
 // Destroy the heatflux BCs
@@ -51,6 +61,7 @@ ArchesHeatFluxBC::~ArchesHeatFluxBC()
 {
   delete d_surface;
   delete d_loadCurve;
+  delete d_polyData;
 }
 
 // Get the type of this object for BC application
@@ -68,7 +79,7 @@ ArchesHeatFluxBC::getType() const
 // contains the surface on which the heatflux is to be applied.
 bool
 ArchesHeatFluxBC::flagMaterialPoint(const Point& p, 
-                              const Vector& dxpp) const
+                                    const Vector& dxpp) const
 {
   bool flag = false;
   if (d_surfaceType == "box") {
@@ -167,6 +178,14 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     flux = fluxPerParticle;
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
+    double length = gp->height();
+    cout << "length = " << length << endl;
+
+    double new_flux = d_polyData->interpolateValue(px);
+    cout << "interpolated new_flux = " << new_flux << endl;
+
+    cout << "FLUX PER PARTICLE = " << fluxPerParticle << endl;
+
     Vector normal = gp->radialDirection(px);
     double theta = atan(px.y()/px.x());
     double theta_n = atan(normal.y()/normal.x());
@@ -178,7 +197,9 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     cout << "flux = " << fluxPerParticle  << " flux_variation = " 
          << flux_variation <<  endl;
 
-    flux = fluxPerParticle;
+    //    flux = fluxPerParticle;
+    flux = new_flux;
+    cout << "flux = " << flux << endl;
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);

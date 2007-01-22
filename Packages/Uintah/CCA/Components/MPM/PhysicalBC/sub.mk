@@ -9,6 +9,6 @@ SRCS     += \
 	$(SRCDIR)/PressureBC.cc          	\
 	$(SRCDIR)/CrackBC.cc			\
 	$(SRCDIR)/HeatFluxBC.cc			\
-	$(SRCDIR)/ArchesHeatFluxBC.cc			
-
+	$(SRCDIR)/ArchesHeatFluxBC.cc		\
+	$(SRCDIR)/PolynomialData.cc		
 
