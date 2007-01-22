@@ -239,11 +239,15 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
   // output needs to be at least the number of patches in the level
 
   vector<DistributedIndex> indices; //output
+  vector<double> positions;
+  
   vector<int> recvcounts(d_myworld->size(), 0);
 
-  // positions will be in float triplets
-  vector<float> positions;
+  //this should be removed when dimensions in shared state is done
+  IntVector dimensions(0,1,2);
+  int dim=3;
 
+  IntVector min_patch_size(INT_MAX,INT_MAX,INT_MAX);  
 
   // get the overall range in all dimensions from all patches
   IntVector high(INT_MIN,INT_MIN,INT_MIN);
@@ -252,104 +256,57 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
   for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
   {
     const Patch* patch = *iter;
-    
+   
+    //calculate patchset bounds
     high = Max(high, patch->getInteriorCellHighIndex());
     low = Min(low, patch->getInteriorCellLowIndex());
-
-  }
-  IntVector range = high-low;
-  Vector center;
-  center[0]=(high[0]+low[0])/2.0;
-  center[1]=(high[1]+low[1])/2.0;
-  center[2]=(high[2]+low[2])/2.0;
-  IntVector dimensions(0,0,0);
-  int dim=0;
-  for(int d=0;d<3;d++)
-  {
-     if(range[d]>1)
-     {
-        dimensions[dim]=d;
-        dim++;
-     }
-  }
-  float r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
-  float c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
-  
-  if( (level->numPatches()<d_myworld->size()) || d_myworld->size()==1)  //do in serial
-  {
-    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
+    
+    //calculate minimum patch size
+    IntVector size=patch->getInteriorCellHighIndex()-patch->getInteriorCellLowIndex();
+    min_patch_size=min(min_patch_size,size);
+    
+    //create positions vector
+    int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
+    if(d_myworld->myrank()==proc)
     {
-      // use center*2, like PatchRangeTree
-      const Patch* patch = *iter;
-
-      IntVector ipos = patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex();
-      Vector pos(ipos[0]/ 2.0, ipos[1] / 2.0, ipos[2] / 2.0);
-
+      Vector point=(patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex()).asVector()/2.0;
       for(int d=0;d<dim;d++)
       {
-        positions.push_back(pos[dimensions[d]]);
+        positions.push_back(point[dimensions[d]]);
       }
     }
-      
-    SFC<float> curve(dim,d_myworld);
-    curve.SetLocalSize(level->numPatches());
-    curve.SetDimensions(r);
-    curve.SetLocations(&positions);
-    curve.SetOutputVector(&indices);
-    curve.SetCenter(c);
-    curve.GenerateCurve(SERIAL);
+  }
+  
+  //patchset dimensions
+  IntVector range = high-low;
+  
+  //center of patchset
+  Vector center=(high+low).asVector()/2.0;
+ 
+  double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
+  double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
+  double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
+
+  //create SFC
+  SFC<double> curve(dim,d_myworld);
+  curve.SetLocalSize(positions.size()/dim);
+  curve.SetDimensions(r);
+  curve.SetRefinementsByDelta(delta); 
+  curve.SetLocations(&positions);
+  curve.SetOutputVector(&indices);
+  curve.SetCenter(c);
+  curve.SetMergeMode(1);
+  curve.SetCleanup(BATCHERS);
+  curve.SetMergeParameters(3000,500,2,.15);
+  curve.GenerateCurve();
+
+
+  if(d_myworld->size()==1)
+  {
     memcpy(output,&indices[0],sizeof(DistributedIndex)*level->numPatches());
   }
-  else  //calculate in parallel
+  else  
   {
-    IntVector min_patch_size(INT_MAX,INT_MAX,INT_MAX);  
-    // go through the patches, to place them on processors and to calculate the high
-    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
-    {
-      // use center*2, like PatchRangeTree
-      const Patch* patch = *iter;
-    
-      IntVector size=patch->getInteriorCellHighIndex()-patch->getInteriorCellLowIndex();
-      for(int d=0;d<3;d++)
-      {
-        if(size[d]<min_patch_size[d])
-        {
-          min_patch_size[d]=size[d];
-        }
-      }
-      // since the new levels and patches haven't been assigned processors yet, go through the
-      // patches and determine processor base this way.
-      int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
-      recvcounts[proc]++;
-      if (d_myworld->myrank() == proc) 
-      {
-        IntVector ipos = patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex();
-        Vector pos(ipos[0]/ 2.0, ipos[1] / 2.0, ipos[2] / 2.0);
-
-        for(int d=0;d<dim;d++)
-        {
-          positions.push_back(pos[dimensions[d]]);
-        }
-      }
-    }
-
-    float delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
-
-    SFC<float> curve(dim,d_myworld);
-    curve.SetLocalSize(positions.size()/dim);
-    curve.SetDimensions(r);
-    curve.SetRefinementsByDelta(delta); 
-    curve.SetLocations(&positions);
-    curve.SetOutputVector(&indices);
-    curve.SetCenter(c);
-    curve.SetMergeMode(1);
-    curve.SetCleanup(BATCHERS);
-    curve.SetMergeParameters(3000,500,2,.15);
-    curve.GenerateCurve();
-
-    //indices comes back in the size of each proc's patch set, pointing to the index
-    // gather it all into one array
-    
     int rsize=indices.size();
      
     //gather recv counts
@@ -368,7 +325,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     //gather curve
     MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, output, &recvcounts[0], 
                    &displs[0], MPI_BYTE, d_myworld->getComm());
-  } 
+  }
+
   /*
   for (int i = 0; i < level->numPatches(); i++) 
   {

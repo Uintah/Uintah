@@ -50,8 +50,7 @@ WARNING
     virtual ~BNRRegridder();
     void SetTolerance(float tola, float tolb) {tola_=tola;tolb_=tolb;};
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, 
-                         const ProblemSpecP& ups);
+    virtual Grid* regrid(Grid* oldGrid);
 		
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,
@@ -59,14 +58,20 @@ WARNING
 
     /***** these should be private (public for testing)*******/
     void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
-    void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
-  private:
-    //function for outputing grid in parsable format
-    void writeGrid(Grid* grid,vector<vector<IntVector> > flag_sets);
+    void PostFixup(vector<PseudoPatch> &patches);
+  protected:
     void problemSetup_BulletProofing(const int k);
     void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
                         const vector<const Patch*>& coarse_patches, int level);
+    void CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets);
+    Grid* CreateGrid(Grid* oldGrid, vector< vector<PseudoPatch> > &patch_sets );
+    
     bool getTags(int &tag1, int &tag2);
+    void OutputGridStats(vector< vector<PseudoPatch> > &patch_sets);
+
+    template<int DIM> void LoadBalance(vector<PseudoPatch> &patches);
+
+    bool d_loadBalance;             //should the regridder also assign patches to processors
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
@@ -89,8 +94,6 @@ WARNING
     vector<int> indicies_;            //return value from waitsome
     vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
     stack<int>  free_requests_;       //list of free requests
-
-    ofstream fout;                    //debug stream for outputing patches. should be moved into the debug stream.
   };
 
 } // End namespace Uintah

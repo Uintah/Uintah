@@ -8,6 +8,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/SFC.h>
 using namespace Uintah;
 
 #include <vector>
@@ -16,11 +17,7 @@ using namespace Uintah;
 #include <iomanip>
 using namespace std;
 
-static DebugStream dbgpatches("BNRPatches",false);
 static DebugStream dbgstats("BNRStats",false);
-static DebugStream dbgtimes("BNRTimes",false);
-static DebugStream dbgflags("BNRFlags",false);
-
 
 bool BNRRegridder::getTags(int &tag1, int &tag2)
 {
@@ -93,47 +90,87 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     if(rank==0)
       free_tag_start_++;
   }
-  
-  if(dbgpatches.active() && rank==0)
-  {
-     fout.open("patches.bin");
-     int flags;
-     if(dbgflags.active())
-      flags=1;
-     else
-      flags=0;
-     fout.write((char*)&flags,sizeof(int));
-  }
 }
 
 BNRRegridder::~BNRRegridder()
 {
-  if(dbgpatches.active() && d_myworld->myrank()==0)
-  {
-    fout.close();
-  }
 }
-Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
+
+template<int DIM> 
+void BNRRegridder::LoadBalance(vector<PseudoPatch> &patches)
 {
-  double start;
-  double brtotal=0,futotal=0,sltotal=0,pfutotal=0,crtotal=0, ctotal=0, ftotal=0, atotal=0;
-  LoadBalancer *lb=sched->getLoadBalancer();
-  
-  Grid* newGrid = scinew Grid();
-  ProblemSpecP grid_ps = ups->findBlock("Grid");
+    vector<double> positions;
+    vector<DistributedIndex> indices;
+
+    int dimensions[3]={0,1,2};
+
+    IntVector low=patches[0].low,high=patches[0].high;
+    
+    //bound patches and compute positions
+    for(unsigned int p=0;p<patches.size();p++)
+    {
+      PseudoPatch &patch=patches[p];
+      low=min(low,patch.low);
+      high=max(high,patch.high);
+      Vector point=(patch.high+patch.low).asVector()/2.0;
+
+      int proc = (p*d_myworld->size())/patches.size();
+      if(d_myworld->myrank()==proc)
+      {
+        for(int d=0;d<DIM;d++)
+        {
+          positions.push_back(point[dimensions[d]]);
+        }
+      }
+    }
+    Vector range=(high-low).asVector();
+    Vector center=(high+low).asVector()/2.0;
+
+    //make parameters for SFC curve
+    double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
+    double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
+    double delta[3]={d_minPatchSize[dimensions[0]],d_minPatchSize[dimensions[1]],d_minPatchSize[dimensions[2]]};
+
+    //[enerate curve
+
+    //move to load balancer
+    SFC<double> sfc(DIM,d_myworld);
+    //end move to load balacner
+
+
+    sfc.SetLocalSize(positions.size()/DIM);
+    sfc.SetDimensions(r);
+    sfc.SetRefinementsByDelta(delta);
+    sfc.SetCenter(c);
+    sfc.SetLocations(&positions);
+    sfc.SetOutputVector(&indices);
+    
+    //move to load balancer
+    sfc.SetMergeMode(1);
+    sfc.SetCleanup(BATCHERS);
+    sfc.SetMergeParameters(3000,500,2,.15);  //add profiling every X timesteps?
+    //end move to load balancer
+
+    sfc.GenerateCurve();
+
+    //get costs
+
+    //balance curve
+       //split where necessary
+          //split by calculating optimal split or in half along longest dimension?
+}
+
+
+Grid* BNRRegridder::regrid(Grid* oldGrid)
+{
 
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
-  vector<vector <IntVector> > flag_sets;
-
-  if(dbgpatches.active() && dbgflags.active())
-  {
-    flag_sets.resize(oldGrid->numLevels());
-  }
-
   vector< vector<PseudoPatch> > patch_sets(oldGrid->numLevels());
-  //create flags sets
-  
-  vector<bool> regrid(oldGrid->numLevels()+1,false);
+
+  vector<int> processor_assignments;
+
+//  //create coarse flag sets
+  CreateCoarseFlagSets(oldGrid,coarse_flag_sets);
 
   //For each level Fine to Coarse
   for(int l=oldGrid->numLevels()-1; l >= 0;l--)
@@ -141,95 +178,12 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     if(l>=d_maxLevels-1)
       continue;
 
-    start=MPI_Wtime();
-    const LevelP level=oldGrid->getLevel(l);
-    //create coarse flag set 
-    const PatchSubset *ps=lb->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
-    for(int p=0;p<ps->size();p++)
-    {
-      const Patch *patch=ps->get(p);
-      DataWarehouse *dw=sched->getLastDW();
-      constCCVariable<int> flags;
-      dw->get(flags, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
-      for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
-      {
-        if (flags[*ci])
-        {
-         coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
-         
-         if(dbgpatches.active() && dbgflags.active())
-         {
-            flag_sets[l].push_back(*ci);
-         }
-        }
-      }
-    }
+    //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
-#if 1
-  regrid.assign(oldGrid->numLevels(),true);
-  regrid[0]=false;
-#else
-    if (oldGrid->numLevels() > l+1) 
-    {
-      const LevelP fineLevel = oldGrid->getLevel(l+1);
-      for(unsigned int f=0;f<coarse_flag_vector.size();f++)
-      {
-        //if(coarse flag is not bounded by old grid finer level)
-        
-        Level::selectType n;
-        IntVector low=coarse_flag_vector[f]*d_minPatchSize;
-        IntVector high=low+IntVector(1,1,1);
-        fineLevel->selectPatches(low,high,n);
-        if(n.size()==0)
-        {
-          regrid[l+1]=true;
-          break;
-        }
-      }
-        
-      int total_flags=coarse_flag_vector.size();;
-      if(d_myworld->size()>1)
-      {
-        int recvs[2];
-        int sends[2] = { (int) regrid[l+1], coarse_flag_vector.size() };
-        MPI_Allreduce(sends,recvs,2,MPI_INT,MPI_SUM,d_myworld->getComm());
-        regrid[l+1]=(bool)recvs[0];
-        total_flags=recvs[1];
-      }
-      
-      if(!regrid[l+1])
-      {
-
-        //calculate volume of level
-        int volume = 0;
-        for (Level::const_patchIterator iter = fineLevel->patchesBegin(); iter != fineLevel->patchesEnd(); iter++)
-        {
-          IntVector range = (*iter)->getInteriorCellHighIndex() - (*iter)->getInteriorCellLowIndex();
-          volume += range.x() * range.y() * range.z();
-        }
-
-        if( (total_flags*d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2])/(float)volume<.8)
-        {
-          regrid[l+1]=true;
-        }
-      }
-    }
-    else
-    {        
-      regrid[l+1] = true;
-    }
-    if(!regrid[l+1])   
-    {
-      continue;   //do not regrid this level
-    }
-#endif
-
-    ctotal+=MPI_Wtime()-start;
-    start=MPI_Wtime(); 
+  
     //Parallel BR over coarse flags
     RunBR(coarse_flag_vector,patch_sets[l]);  
-    brtotal+=MPI_Wtime()-start;
 
     if(patch_sets[l].empty()) //no patches goto next level
        continue;
@@ -237,80 +191,34 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     //add saftey layers for finer level
     if(l>0)
     {
-      start=MPI_Wtime();
-      AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
-      sltotal+=MPI_Wtime()-start;
+      AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
     }
     //Fixup patchlist:  this forces neighbor constraints
-    start=MPI_Wtime();
     patchfixer_.FixUp(patch_sets[l]);
-    futotal+=MPI_Wtime()-start;
-    //Post fixup patchlist: this creates more patches as specified in the input file
-    start=MPI_Wtime();
-    PostFixup(patch_sets[l],d_minPatchSize);
-    pfutotal+=MPI_Wtime()-start;
+     
+    if(!d_loadBalance)
+    {
+      //Post fixup patchlist: this creates more patches as specified in the input file in order to improve load balance
+      PostFixup(patch_sets[l]);
+    }
+    //uncoarsen
+    for(unsigned int p=0;p<patch_sets[l].size();p++)
+    {
+      patch_sets[l][p].low=patch_sets[l][p].low*d_minPatchSize;
+      patch_sets[l][p].high=patch_sets[l][p].high*d_minPatchSize;
+    }
+
+    //if lb
+    if(d_loadBalance)
+    {
+
+      LoadBalance<3>(patch_sets[l]);
+    }
   }
+
   //Create the grid
-  start=MPI_Wtime(); 
+  Grid *newGrid = CreateGrid(oldGrid,patch_sets);
 
-  Vector spacing = oldGrid->getLevel(0)->dCell();
-  Point anchor = oldGrid->getLevel(0)->getAnchor();
-  IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
-  IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-  
-  //For each level Coarse -> Fine
-  for(int l=-1; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
-  {
-    // if level is not needed, don't create any more levels
-    if(regrid[l+1] && patch_sets[l].size()==0)
-       break;
-
-    // parameters based on next-fine level.
-    if(l!=-1)
-      spacing = spacing / d_cellRefinementRatio[l];
-  
-    LevelP level = newGrid->addLevel(anchor, spacing);
-    level->setExtraCells(extraCells);
-
-    if(l+1 < oldGrid->numLevels() && !regrid[l+1])
-    {
-      //cout << "Copying level " << l+1 << endl;
-      for (Level::const_patchIterator iter = oldGrid->getLevel(l+1)->patchesBegin(); iter != oldGrid->getLevel(l+1)->patchesEnd(); iter++)
-      {
-        const Patch* p = *iter;
-        IntVector inlow = p->getInteriorCellLowIndex();
-        IntVector low = p->getCellLowIndex();
-        IntVector inhigh = p->getInteriorCellHighIndex();
-        IntVector high = p->getCellHighIndex();
-        level->addPatch(low, high, inlow, inhigh);
-      }
-    }
-    else
-    {
-      //cout << "New level " << l+1 << " num patches " << patch_sets[l].size() << endl;
-      //for each patch
-      for(unsigned int p=0;p<patch_sets[l].size();p++)
-      {
-        //uncoarsen
-        IntVector low = patch_sets[l][p].low = patch_sets[l][p].low*d_minPatchSize;
-        IntVector high = patch_sets[l][p].high = patch_sets[l][p].high*d_minPatchSize;
-        //create patch
-        level->addPatch(low, high, low, high);
-      }
-    }
-
-    crtotal+=MPI_Wtime()-start;
-    start=MPI_Wtime();
-    level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-    ftotal+=MPI_Wtime()-start;
-    start=MPI_Wtime();
-    level->assignBCS(grid_ps);
-    atotal+=MPI_Wtime()-start;
-    start=MPI_Wtime();
-  }
-  crtotal+=MPI_Wtime()-start;
-  if(dbgtimes.active() && d_myworld->myrank()==0)
-          cout << "BRTime:" << brtotal << " SLTime:" << sltotal << " FUTime:" << futotal << " PFUTime:" << pfutotal << " CoarsenTime: " << ctotal << " CRTime:" << crtotal << " FTime: " << ftotal << " ATime: " << atotal << endl; 
   if (*newGrid == *oldGrid) 
   {
     delete newGrid;
@@ -319,57 +227,104 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
 
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
- /* 
-  if(d_myworld->myrank()==0)
-    cout << *newGrid;
-//*/
-  if (dbgpatches.active())
-  {
-     if(d_myworld->myrank()==0)
-     { 
-        if(dbgflags.active())
-        { 
-          //gather flags
-          //for each processors
-          for(int p=1;p<d_myworld->size();p++)
-          {
-            //for each level
-            for(unsigned int l=0;l<flag_sets.size();l++)
-            {
-                int numFlags;
-                MPI_Status status;
-                //recieve the number of flags they have
-                MPI_Recv(&numFlags,1,MPI_INT,p,0,MPI_COMM_WORLD,&status);
-                int size=flag_sets[l].size();
-                //resize vector
-                flag_sets[l].resize(size+numFlags);
-                //recieve the flags
-                MPI_Recv(&flag_sets[l][size],sizeof(IntVector)*numFlags,MPI_BYTE,p,1,MPI_COMM_WORLD,&status);
-             }
-          }
-        }
-        writeGrid(newGrid,flag_sets);
-     }
-     else
-     {
-      
-        //for each level
-        for(unsigned int l=0;l<flag_sets.size();l++)
-        {
-          int size=flag_sets[l].size();
+  
+  OutputGridStats(patch_sets);
 
-          //send the number of flags i have
-          MPI_Send(&size,1,MPI_INT,0,0,MPI_COMM_WORLD);
-          //send the flags
-          MPI_Send(&flag_sets[l][0],sizeof(IntVector)*size,MPI_BYTE,0,1,MPI_COMM_WORLD);
-        }
-     }
+  newGrid->performConsistencyCheck();
+  return newGrid;
+}
+Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector< vector<PseudoPatch> > &patch_sets )
+{
+  Grid* newGrid = scinew Grid();
+  
+  Vector spacing = oldGrid->getLevel(0)->dCell();
+  Point anchor = oldGrid->getLevel(0)->getAnchor();
+  IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
+  IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+  
+    
+  //Create Level 0
+  LevelP level = newGrid->addLevel(anchor, spacing);
+  level->setExtraCells(extraCells);
+
+  for (Level::const_patchIterator iter = oldGrid->getLevel(0)->patchesBegin(); iter != oldGrid->getLevel(0)->patchesEnd(); iter++)
+  {
+    const Patch* p = *iter;
+    IntVector inlow = p->getInteriorCellLowIndex();
+    IntVector low = p->getCellLowIndex();
+    IntVector inhigh = p->getInteriorCellHighIndex();
+    IntVector high = p->getCellHighIndex();
+    level->addPatch(low, high, inlow, inhigh);
   }
+  level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+  level->assignBCS(grid_ps_);
+
+  //For each level Coarse -> Fine
+  for(int l=1; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++)
+  {
+    // if level is not needed, don't create any more levels
+    if(patch_sets[l-1].size()==0)
+       break;
+
+    // parameters based on next-fine level.
+    spacing = spacing / d_cellRefinementRatio[l];
+  
+    LevelP level = newGrid->addLevel(anchor, spacing);
+    level->setExtraCells(extraCells);
+
+    //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
+    //for each patch
+    for(unsigned int p=0;p<patch_sets[l-1].size();p++)
+    {
+      IntVector low = patch_sets[l-1][p].low;
+      IntVector high = patch_sets[l-1][p].high;
+      //create patch
+      level->addPatch(low, high, low, high);
+    }
+
+    level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+    level->assignBCS(grid_ps_);
+  }
+  return newGrid;
+}
+void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
+{
+  for(int l=oldGrid->numLevels()-1; l >= 0;l--)
+  {
+    if(l>=d_maxLevels-1)
+      continue;
+
+    const LevelP level=oldGrid->getLevel(l);
+    //create coarse flag set
+    const PatchSubset *ps=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
+    for(int p=0;p<ps->size();p++)
+    {
+      const Patch *patch=ps->get(p);
+      DataWarehouse *dw=sched_->getLastDW();
+      constCCVariable<int> flags;
+      dw->get(flags, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+      for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
+      {
+        if (flags[*ci])
+        {
+         coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
+        }
+      }
+    }
+  }
+}
+
+
+void BNRRegridder::OutputGridStats(vector< vector<PseudoPatch> > &patch_sets)
+{
   if (dbgstats.active() && d_myworld->myrank() == 0) 
   {
     dbgstats << " Grid Statistics:\n";
-    for (int l = 0; l < newGrid->numLevels()-1; l++) 
+    for (unsigned int l = 0; l < patch_sets.size(); l++) 
     {
+      if(patch_sets[l].empty())
+        break;
+
       double total_vol=0;
       double sum_of_vol_squared=0;
       int n = patch_sets[l].size();
@@ -387,9 +342,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
       dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Volume: " << setw(8) << total_vol<< " Mean Volume: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << endl;
     }
   }
-
-  newGrid->performConsistencyCheck();
-  return newGrid;
 }
 
 void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches)
@@ -573,6 +525,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   // get min patch size
   regrid_spec->require("min_patch_size", d_minPatchSize);
 
+  regrid_spec->getWithDefault("do_loadBalancing",d_loadBalance,false);
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
   regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.25);
@@ -678,7 +631,7 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
  * *************************************************/
 //I am doing this in serial for now, it should be very quick and more expensive 
 //to do in parallel since the number of patches is typically very small
-void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_size)
+void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
 {
   //calculate total volume
   int volume=0;
@@ -687,7 +640,7 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
     volume+=patches[p].volume;
   }
 
-  int volume_threshold=volume/d_myworld->size()*d_patchRatioToTarget;
+  double volume_threshold=volume/(d_myworld->size()*d_patchRatioToTarget);
 
   //build a max heap
   make_heap(patches.begin(),patches.end());
@@ -792,40 +745,3 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
   }
 }
 
-void BNRRegridder::writeGrid(Grid* grid,vector<vector<IntVector> > flag_sets)
-{
-  int levels=grid->numLevels();
-  flag_sets.resize(levels);
-  //write #of levels
-  fout.write((char*)&levels,sizeof(int));
-
-  //for each level
-  for(int l=0;l<levels;l++)
-  {
-    const LevelP level=grid->getLevel(l);     
-    int patches=level->numPatches();
-    //write # of patches
-    fout.write((char*)&patches,sizeof(int));
-
-    //write patches
-    for(Level::const_patchIterator iter=level->patchesBegin();iter!=level->patchesEnd();iter++)
-    {
-      const Patch *patch=*iter;
-      IntVector low=patch->getInteriorCellLowIndex();
-      IntVector high=patch->getInteriorCellHighIndex();
-      fout.write((char*)&low,sizeof(IntVector));
-      fout.write((char*)&high,sizeof(IntVector));
-
-    }
-    if(dbgflags.active())
-    {
-      int numFlags=flag_sets[l].size();
-      //write number of flags
-      fout.write((char*)&numFlags,sizeof(int));
-      //write flags
-      if(numFlags>0)
-        fout.write((char*)&flag_sets[l][0],sizeof(IntVector)*numFlags);
-    }
-  }
-  fout.flush();
-}

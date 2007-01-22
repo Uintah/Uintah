@@ -508,10 +508,10 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         
         if (d_regridder) {
           // so we can initially regrid
-          d_regridder->scheduleInitializeErrorEstimate(d_scheduler, grid->getLevel(i));
+          d_regridder->scheduleInitializeErrorEstimate(grid->getLevel(i));
           d_sim->scheduleInitialErrorEstimate(grid->getLevel(i), d_scheduler);
           if (i < d_regridder->maxLevels()-1) // we don't use error estimates if we don't make another level, so don't dilate
-            d_regridder->scheduleDilation(d_scheduler, grid->getLevel(i));
+            d_regridder->scheduleDilation(grid->getLevel(i));
         }
       }
       scheduleComputeStableTimestep(grid,d_scheduler);
@@ -526,7 +526,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
-      
+     
       haveNewLevel = d_regridder && d_regridder->isAdaptive() && doRegridding(grid, true);
     } while (haveNewLevel);
     
@@ -542,7 +542,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 {
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
-  currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
+  currentGrid = d_regridder->regrid(oldGrid.get_rep());
   double regridTime = Time::currentSeconds() - start;
   d_sharedState->regriddingTime += regridTime;
   d_sharedState->setRegridTimestep(false);
@@ -551,6 +551,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
  
   if (currentGrid != oldGrid) {
     d_lb->possiblyDynamicallyReallocate(currentGrid, lbstate); 
+    
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
       d_sharedState->setRegridTimestep(true);
@@ -560,21 +561,21 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
       }
       cout << endl;
       if (amrout.active()) {
-	amrout << "---------- NEW GRID ----------" << endl;
-	amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
-	for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
-	  LevelP level = currentGrid->getLevel( levelIndex );
-	  amrout << "  Level " << level->getID()
-		 << ", indx: "<< level->getIndex()
-		 << " has " << level->numPatches() << " patch(es)" << endl;
-	  for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
-	    const Patch* patch = *patchIter;
-	    amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
-		   << ": box=" << patch->getBox()
-		   << ", lowIndex=" << patch->getCellLowIndex() << ", highIndex="
-		   << patch->getCellHighIndex() << ")" << endl;
-	  }
-	}
+	      amrout << "---------- NEW GRID ----------" << endl;
+	      amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
+	      for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+	        LevelP level = currentGrid->getLevel( levelIndex );
+	        amrout << "  Level " << level->getID()
+		        << ", indx: "<< level->getIndex()
+		        << " has " << level->numPatches() << " patch(es)" << endl;
+	        for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+	          const Patch* patch = *patchIter;
+	          amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+		        << ": box=" << patch->getBox()
+		        << ", lowIndex=" << patch->getCellLowIndex() << ", highIndex="
+		        << patch->getCellHighIndex() << ")" << endl;
+	        }
+	      }
       }
     }
 
@@ -655,10 +656,10 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   for(int i = currentGrid->numLevels()-1; i >= 0; i--){
     dbg << d_myworld->myrank() << "   final TG " << i << endl;
     if (d_regridder) {
-      d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
+      d_regridder->scheduleInitializeErrorEstimate(currentGrid->getLevel(i));
       d_sim->scheduleErrorEstimate(currentGrid->getLevel(i), d_scheduler);
       if (i < d_regridder->maxLevels()-1) // we don't use error estimates if we don't make another level, so don't dilate
-        d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
+        d_regridder->scheduleDilation(currentGrid->getLevel(i));
     }    
   }
   scheduleComputeStableTimestep(currentGrid, d_scheduler);

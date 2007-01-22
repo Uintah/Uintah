@@ -49,6 +49,8 @@ WARNING
 ****************************************/
 
   class ProcessorGroup;
+  class LoadBalancer;
+  class Scheduler;
 
   //! Takes care of AMR Regridding.  Parent class which takes care
   //! of common regridding functionality.
@@ -74,13 +76,13 @@ WARNING
     virtual bool isAdaptive() { return d_isAdaptive; }
 
     //! Schedules task to initialize the error flags to 0
-    virtual void scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level);
+    virtual void scheduleInitializeErrorEstimate(const LevelP& level);
 
     //! Schedules task to dilate existing error flags
-    virtual void scheduleDilation(SchedulerP& sched, const LevelP& level);
+    virtual void scheduleDilation(const LevelP& level);
 
     //! Asks if we are going to do regridding
-    virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched);
+    virtual bool flaggedCellsOnFinestLevel(const GridP& grid);
 
     //! Returns the max number of levels this regridder will store
     virtual int maxLevels() { return d_maxLevels; }
@@ -109,8 +111,13 @@ WARNING
                 DataWarehouse* new_dw, DilationType type);
 
   protected:
-     SimulationStateP d_sharedState; ///< to keep track of timesteps
-     bool d_isAdaptive; //!< if false, do not regrid (stick with what you got)
+
+    ProblemSpecP grid_ps_;
+    LoadBalancer *lb_;
+    Scheduler *sched_;
+
+    SimulationStateP d_sharedState; ///< to keep track of timesteps
+    bool d_isAdaptive; //!< if false, do not regrid (stick with what you got)
 
     // input parameters from ups file
     SizeList  d_cellNum; 
