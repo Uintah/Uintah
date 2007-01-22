@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -91,7 +92,7 @@ WARNING
       // Get the flux vector to be applied at a point 
       virtual double getFlux(const Point& px, double forcePerParticle) const;
 
-   protected:
+   private:
 
       // Prevent empty constructor
       ArchesHeatFluxBC();
@@ -108,6 +109,8 @@ WARNING
 
       // Load curve information (HeatFlux and time)
       LoadCurve<double>* d_loadCurve;
+
+      PolynomialData* d_polyData;
 
       friend std::ostream& operator<<(std::ostream& out, const Uintah::ArchesHeatFluxBC& bc);
    };
