@@ -3,9 +3,6 @@
 <Uintah_specification>
    <SimulationComponent>
         <type> mpmice </type>
-        <Solver>
-          <type> hypre </type>
-        </Solver>
    </SimulationComponent>
 
     <Meta>
