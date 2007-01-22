@@ -222,7 +222,7 @@
                 <box label="ground">              </box>
                <res>            [2,2,2]                 </res>
                <velocity>       [0,0,0]                 </velocity>
-               <density>        1.789990995722571500e+00</density>
+               <density>        1700.0                  </density>
                <pressure>       101325.0                </pressure>
                <temperature>    300.0                   </temperature>
            </geom_object>
