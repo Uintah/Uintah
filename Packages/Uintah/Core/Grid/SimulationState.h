@@ -170,6 +170,10 @@ public:
 
   bool isLockstepAMR() { return d_lockstepAMR; }
 
+  int getNumDims() { return d_numDims; }
+  int* getActiveDims() { return d_activeDims; }
+  void setDimensionality(bool x, bool y, bool z);
+
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 
@@ -240,6 +244,11 @@ private:
   int    d_topLevelTimeStep;
   double d_elapsed_time;
 
+  // which dimensions are active.  Get the number of dimensions, and then
+  // that many indices of activeDims are set to which dimensions are being used
+  int d_numDims;           
+  int d_activeDims[3];     
+  
   // some places need to know if this is a copy data timestep or
   // a normal timestep.  (A copy data timestep is AMR's current 
   // method of getting data from an old to a new grid).
