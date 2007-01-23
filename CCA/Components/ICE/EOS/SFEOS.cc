@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/SFEOS.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -10,8 +11,12 @@ using namespace Uintah;
 
 SFEOS::SFEOS(ProblemSpecP& ps)
 {
+  ProblemSpecP eos_ps = ps->findBlock("EOS");
+  if(!eos_ps){
+    throw ProblemSetupException("Cannot find EOS tag", __FILE__, __LINE__);
+  }
    // Constructor
-  ps->require("npts",npts);
+  eos_ps->require("npts",npts);
   eps.resize(npts);
   p.resize(npts);
   lnp.resize(npts);
@@ -22,17 +27,19 @@ SFEOS::SFEOS(ProblemSpecP& ps)
      strcpy(str,"eps");
      sprintf(str1,"%d",i);
      strcat(str,str1);
-     ps->require(str,eps[i]);
+     eos_ps->require(str,eps[i]);
   }
   for(i=0; i<npts; i++){
      strcpy(str,"p");
      sprintf(str1,"%d",i);
      strcat(str,str1);
-     ps->require(str,p[i]);
+     eos_ps->require(str,p[i]);
   }
   
-  ps->require("rho0",rho0);
-
+  //  find the microscopic density
+  ProblemSpecP go_ps = ps->findBlock("geom_object");
+  go_ps->require("density",rho0);
+  
   for(i=0; i<npts; i++){
     if(p[i]>0.0) lnp[i] = log(p[i]);
   }
