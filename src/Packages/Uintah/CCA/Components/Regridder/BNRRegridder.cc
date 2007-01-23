@@ -102,7 +102,7 @@ void BNRRegridder::LoadBalance(vector<PseudoPatch> &patches)
     vector<double> positions;
     vector<DistributedIndex> indices;
 
-    int dimensions[3]={0,1,2};
+    int *dimensions=d_sharedState->getActiveDims();
 
     IntVector low=patches[0].low,high=patches[0].high;
     
@@ -127,11 +127,13 @@ void BNRRegridder::LoadBalance(vector<PseudoPatch> &patches)
     Vector center=(high+low).asVector()/2.0;
 
     //make parameters for SFC curve
-    double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
-    double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
-    double delta[3]={d_minPatchSize[dimensions[0]],d_minPatchSize[dimensions[1]],d_minPatchSize[dimensions[2]]};
-
-    //[enerate curve
+    double r[DIM], c[DIM], delta[DIM];
+    for(int d=0;d<DIM;d++)
+    {
+      r[d]=range[dimensions[d]];
+      c[d]=center[dimensions[d]];
+      delta[d]=d_minPatchSize[dimensions[d]];
+    }
 
     //move to load balancer
     SFC<double> sfc(DIM,d_myworld);
@@ -211,8 +213,20 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //if lb
     if(d_loadBalance)
     {
-
-      LoadBalance<3>(patch_sets[l]);
+      switch(d_sharedState->getNumDims())
+      {
+        case 1:
+          LoadBalance<1>(patch_sets[l]);
+          break;
+        case 2:
+          LoadBalance<2>(patch_sets[l]);
+          break;
+        case 3:
+          LoadBalance<3>(patch_sets[l]);
+          break;
+        default:
+          throw InternalError("Invalid Number of Dimensions",__FILE__,__LINE__);
+      }
     }
   }
 

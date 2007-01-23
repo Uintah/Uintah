@@ -244,8 +244,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
   vector<int> recvcounts(d_myworld->size(), 0);
 
   //this should be removed when dimensions in shared state is done
-  IntVector dimensions(0,1,2);
-  int dim=3;
+  int dim=d_sharedState->getNumDims();
+  int *dimensions=d_sharedState->getActiveDims();
 
   IntVector min_patch_size(INT_MAX,INT_MAX,INT_MAX);  
 
