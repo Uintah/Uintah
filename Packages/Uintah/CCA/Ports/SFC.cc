@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SFC.h>
+#include <Packages/Uintah/CCA/Ports/SFC.h>
 
 
 namespace Uintah

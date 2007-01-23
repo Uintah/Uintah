@@ -2,7 +2,7 @@
 using namespace std;
 
 #define _TIMESFC_
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SFC.h>
+#include <Packages/Uintah/CCA/Ports/SFC.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include<Core/Thread/Time.h>
 using namespace Uintah;
