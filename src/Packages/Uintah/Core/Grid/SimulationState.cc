@@ -80,6 +80,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   d_switchState = false;
   d_simTime = 0;
+  d_numDims = 0;
+  d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
   clearStats();  
 }
 
@@ -333,4 +335,19 @@ void SimulationState::clearStats()
   taskExecTime = 0;
   taskCommTime = 0;
   outputTime = 0;
+}
+
+void SimulationState::setDimensionality(bool x, bool y, bool z)
+{
+  d_numDims = 0;
+  int currentDim = 0;
+  bool args[3] = {x,y,z};
+
+  for (int i = 0; i < 3; i++) {
+    if (args[i]) {
+      d_numDims++;
+      d_activeDims[currentDim] = i;
+      currentDim++;
+    }
+  }
 }

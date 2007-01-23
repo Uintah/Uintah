@@ -201,6 +201,13 @@ namespace Uintah {
     
       amrout << "Restart grid\n" << *grid.get_rep() << endl;
     }
+
+    // set the dimensionality of the problem.
+    IntVector low, high, size;
+    grid->getLevel(0)->findCellIndexRange(low, high);
+    size = high-low - oldGrid->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+    d_sharedState->setDimensionality(size[0] > 1, size[1] > 1, size[2] > 1);
+
     return grid;
   }
 
