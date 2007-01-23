@@ -8,7 +8,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SFC.h>
+#include <Packages/Uintah/CCA/Ports/SFC.h>
 using namespace Uintah;
 
 #include <vector>

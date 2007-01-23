@@ -11,8 +11,7 @@ SRCS += \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
 	$(SRCDIR)/DynamicLoadBalancer.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \
-	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
-	$(SRCDIR)/SFC.cc
+	$(SRCDIR)/SingleProcessorLoadBalancer.cc 
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
