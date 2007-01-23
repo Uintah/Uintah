@@ -21,6 +21,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/CCA/Components/LoadBalancers \
 	Core/Geometry			 \
 	Core/Exceptions			 \
 	Core/Thread			 \
