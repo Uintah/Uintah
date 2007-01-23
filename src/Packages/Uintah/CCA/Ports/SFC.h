@@ -10,10 +10,10 @@ using namespace std;
 
 #include<Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include<Core/Thread/Time.h>
-
 #include <Packages/Uintah/CCA/Ports/share.h>
 #include <Core/Exceptions/InternalError.h>
-
+using namespace SCIRun;
+using namespace Uintah;
 namespace Uintah{
 
 #ifdef _TIMESFC_
@@ -344,6 +344,7 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
       mask=mask<<1;
     }
     cerr << "************************\n";
+    throw InternalError("SFC Generation error",__FILE__,__LINE__);
     return;
   }
 
@@ -632,7 +633,7 @@ void SFC<LOCS>::GenerateCurve(int mode)
       mask=mask<<1;
     }
     cerr << "************************\n";  
-    return;
+    throw InternalError("SFC Generation error",__FILE__,__LINE__);
   }
   switch(dim)
   {
@@ -1093,12 +1094,7 @@ void SFC<LOCS>::Parallel()
             Parallel3<DIM,BITS>();
             break;
     default:
-            if(rank==0)
-            {
-              cout << "Error invalid merge mode\n";
-            }
-            exit(0);
-            break;
+            throw InternalError("Invalid Merge Mode",__FILE__,__LINE__);
   }
 }
 
@@ -3626,8 +3622,7 @@ void SFC<LOCS>::SetRefinementsByDelta(LOCS *delta)
   char mask=8;
   if( (mask&set) != mask)
   {
-    cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
-    return;
+    throw InternalError("SFC Dimensions not set",__FILE__,__LINE__);
   }
   refinements=(int)ceil(log(dimensions[0]/delta[0])/log(2.0));
   for(int d=1;d<dim;d++)
