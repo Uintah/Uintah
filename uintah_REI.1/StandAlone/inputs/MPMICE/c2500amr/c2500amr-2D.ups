@@ -852,7 +852,6 @@
               <p8>4.45E+09</p8>
               <p9>4.45E+09</p9>
               <p10>1.03E+10</p10>
-             <rho0>1700.0</rho0>
            </EOS>
            <includeFlowWork>        false               </includeFlowWork>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>

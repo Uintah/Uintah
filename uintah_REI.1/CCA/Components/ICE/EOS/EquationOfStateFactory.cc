@@ -49,7 +49,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     else if (mat_type == "Tillotson") 
       return(scinew Tillotson(child));
     else if (mat_type == "SFEOS") 
-      return(scinew SFEOS(child));
+      return(scinew SFEOS(ps));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 
