@@ -444,34 +444,34 @@ main( int argc, char** argv )
 
     //__________________________________
     // Load balancer
-    LoadBalancer* bal;
-    UintahParallelComponent* lb; // to add scheduler as a port
     LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
-    lb = lbc;
-    lb->attachPort("sim", sim);
-    bal = lbc;
+    lbc->attachPort("sim", sim);
+    if(reg)
+      reg->attachPort("load balancer", lbc);
     
     //__________________________________
     // Output
     DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
     Output* output = dataarchiver;
-    ctl->attachPort("output", output);
-    dataarchiver->attachPort("load balancer", bal);
-    comp->attachPort("output", output);
+    ctl->attachPort("output", dataarchiver);
+    dataarchiver->attachPort("load balancer", lbc);
+    comp->attachPort("output", dataarchiver);
     dataarchiver->attachPort("sim", sim);
     
     //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
-    Scheduler* sch = sched;
-    sched->attachPort("load balancer", bal);
+    sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
-    lb->attachPort("scheduler", sched);
+    lbc->attachPort("scheduler", sched);
     comp->attachPort("scheduler", sched);
-    if (reg) reg->attachPort("scheduler", sched);
-    sch->addReference();
     
-    if (emit_graphs) sch->doEmitTaskGraphDocs();
+    if (reg) 
+      reg->attachPort("scheduler", sched);
+    sched->addReference();
+    
+    if (emit_graphs) 
+      sched->doEmitTaskGraphDocs();
     
     /*
      * Start the simulation controller
@@ -484,10 +484,11 @@ main( int argc, char** argv )
     delete ctl;
     
 
-    sch->removeReference();
-    delete sch;
-    if (reg) delete reg;
-    delete bal;
+    sched->removeReference();
+    delete sched;
+    if (reg) 
+      delete reg;
+    delete lbc;
     delete sim;
     delete solve;
     delete output;
