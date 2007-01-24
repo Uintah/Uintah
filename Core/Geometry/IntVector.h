@@ -49,6 +49,7 @@
 
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
@@ -201,6 +202,9 @@ public:
   }
   inline Vector asVector() const {
     return Vector(value_[0], value_[1], value_[2]);
+  }
+  inline Point asPoint() const {
+    return Point(value_[0], value_[1], value_[2]);
   }
   friend inline Vector operator*(const Vector&, const IntVector&);
   friend inline Vector operator*(const IntVector&, const Vector&);
