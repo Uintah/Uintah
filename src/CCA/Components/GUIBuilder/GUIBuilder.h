@@ -108,9 +108,9 @@ public:
   // progress
   virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
 
-  virtual bool connectComponentIcon(const std::string& usesName, const std::string& providesPortName,
+  virtual bool connectComponentIconUI(const std::string& usesName, const std::string& providesPortName,
                                     const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
-  virtual void disconnectComponentIcon(const std::string& ciPortName);
+  virtual void disconnectComponentIconUI(const std::string& ciPortName);
 
 
   // events
@@ -146,7 +146,7 @@ public:
   static const std::string GOPORT;
   static const std::string UIPORT;
   static const std::string PROGRESS_PORT;
-  static const std::string COMPONENTICON_PORT;
+  static const std::string COMPONENTICONUI_PORT;
   static const std::string APP_EXT_WILDCARD;
 
 private:
