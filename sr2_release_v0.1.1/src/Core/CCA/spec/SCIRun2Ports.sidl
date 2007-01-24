@@ -95,25 +95,13 @@ interface StringPort extends sci.cca.Port
 }
 
 /**
- * Component representation in GUI - set Qt widgets
- * and other properties in Module class.
+ * Component representation in UI:
+ *  use to set properties in UI classes.
  */
-interface ComponentIcon extends sci.cca.Port {
+interface ComponentIconUI extends sci.cca.Port {
   collective string getDisplayName();
   collective string getDescription();
-
-  //collective string getIconShape();
-
-  // set steps = 0 to omit progress bar from icon
-  // progress bar - return # steps
-  //collective int getProgressBar();
 }
-
-
-// // report component progress
-// interface Progress extends sci.cca.Port {
-//   collective void updateProgress(in int progressPercent);
-// }
 
 /**
  * Provide a user interface for a component - a UI button
@@ -295,5 +283,3 @@ interface EventService extends cca.Port {
   void processEvents();
 
 }
-
-

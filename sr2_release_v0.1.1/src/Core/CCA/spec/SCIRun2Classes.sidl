@@ -126,8 +126,8 @@ class GUIBuilder implements-all sci.cca.Builder, sci.cca.EventListener {
   //   void disconnectProgress(in string progressPortName);
 
   // manage ComponentIcon ports for the GUI
-  bool connectComponentIcon(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
-  void disconnectComponentIcon(in string ciPortName);
+  bool connectComponentIconUI(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectComponentIconUI(in string ciPortName);
 
   bool setPortColor(in string portName, in string colorName);
   // see Bugzilla bug #2834:
