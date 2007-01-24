@@ -1,5 +1,0 @@
-void enthalpyradthinsrc(IntVector idxLo, IntVector idxHi,
-	CCVariable<double> su, CCVariable<double> tg,
-	constCCVariable<double> absorp, OffsetArray1<double> sew,
-	OffsetArray1<double> sns, OffsetArray1<double> stb,
-	double tref);
