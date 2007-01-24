@@ -71,9 +71,9 @@ void LinSolver::setServices(const sci::cca::Services::pointer& svc)
   svc->addProvidesPort(lsp, "linsolver", "sci.cca.ports.LinSolverPort",
                        sci::cca::TypeMap::pointer(0));
 
-  LSComponentIcon::pointer ciPortPtr = LSComponentIcon::pointer(new LSComponentIcon);
+  LSComponentIconUI::pointer ciPortPtr = LSComponentIconUI::pointer(new LSComponentIconUI);
 
-  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
+  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIconUI",
                        sci::cca::TypeMap::pointer(0));
 }
 
@@ -125,12 +125,12 @@ LSLinSolverPort::jacobi(const SSIDL::array2<double> &A,
 }
 
 
-std::string LSComponentIcon::getDisplayName()
+std::string LSComponentIconUI::getDisplayName()
 {
   return "Jacobi Linear Solver";
 }
 
-std::string LSComponentIcon::getDescription()
+std::string LSComponentIconUI::getDescription()
 {
   return "Jacobi Linear Solver Component";
 }

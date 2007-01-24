@@ -46,18 +46,9 @@ private:
   sci::cca::Services::pointer services;
 };
 
-// class ZListPort : public virtual sci::cca::ports::ZListPort {
-// public:
-//     virtual ~ZListPort(){}
-//     virtual SSIDL::array1<double> getList();
-//     void setParent(ZListWriter *com){ this->com = com; }
-// private:
-//     ZListWriter *com;
-// };
-
-class ZLComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+class ZLComponentIconUI : public virtual sci::cca::ports::ComponentIconUI {
 public:
-  virtual ~ZLComponentIcon() {}
+  virtual ~ZLComponentIconUI() {}
 
   virtual std::string getDisplayName() { return "ZList Writer"; }
   virtual std::string getDescription() { return "ZList Writer Component: write output read from a ZList component to file."; }
