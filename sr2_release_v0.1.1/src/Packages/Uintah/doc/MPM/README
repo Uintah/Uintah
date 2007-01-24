@@ -1,8 +1,0 @@
-The LaTeX files are designed to be converted into PDF files
-by default (using: pdflatex <texfile>).  If you want to 
-create postscript files you have to comment out the pdftex
-lines and uncomment the dvips lines in the preambles. You
-also have to comment out the includegraphics of pdf files
-and uncomment the includegrpahics of eps files.  Then 
-create the dvi files (using: latex <texfile>).  The dvi files
-can be converted into PS using dvips.
