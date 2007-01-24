@@ -38,13 +38,17 @@
  *
  */
 
+#include <sci_defs/framework_defs.h>
 #include <Framework/ComponentDescription.h>
 
 namespace SCIRun {
 
-ComponentDescription::ComponentDescription(ComponentModel* model, const std::string& type, const std::string& library, const std::string& loader)
-  : model(model), type(type), library(library), loaderName(loader)
+ComponentDescription::ComponentDescription(ComponentModel* model, const std::string& type, const std::string& libName, const std::string& loader)
+  : model(model), type(type), library(libName), loaderName(loader)
 {
+  if (! library.empty()) {
+    library = "lib" + libName + "." + SO_OR_ARCHIVE_EXTENSION;
+  }
 }
 
 ComponentDescription::~ComponentDescription()
