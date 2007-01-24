@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Malloc/Allocator.h>
@@ -29,6 +30,8 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   readTri(d_file);
   makePlanes();
   makeTriBoxes();
+  
+  cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
   list<Tri> tri_list;
   Tri tri;
@@ -171,8 +174,11 @@ TriGeometryPiece::readPoints(const string& file)
   string f = file + ".pts";
   ifstream source(f.c_str());
   if (!source) {
-    throw ProblemSetupException("ERROR: opening MPM Tri points file: \n The file must be in the same directory as sus",
-                                __FILE__, __LINE__);
+    ostringstream warn;
+    warn << "\n ERROR: opening geometry pts points file ("<< f 
+         << ").\n  The file must be in the same directory as sus \n"
+         << "  Do not enclose the filename in quotation marks\n";
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 
   double x,y,z;
@@ -202,15 +208,17 @@ TriGeometryPiece::readTri(const string& file)
   string f = file + ".tri";
   ifstream source(f.c_str());
   if (!source) {
-    throw ProblemSetupException("ERROR: opening MPM Tri file: \n The file must be in the same directory as sus",
-                                __FILE__, __LINE__);
+    ostringstream warn;
+    warn << "\n ERROR: opening geometry tri points file ("<< f 
+         << ").\n   The file must be in the same directory as sus"
+         << "   Do not enclose the filename in quotation marks\n";
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 
   int x,y,z;
   while (source >> x >> y >> z) {
     d_tri.push_back(IntVector(x,y,z));
   }
-
   source.close();
 }
 
@@ -275,10 +283,20 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
   double largest = plane_normal_abs.maxComponent();
   // WARNING: if dominant_coord is not 1-3, then this code breaks...
   int dominant_coord = -1;
-  if (largest == plane_normal_abs.x()) dominant_coord = 1;
-  else if (largest == plane_normal_abs.y()) dominant_coord = 2;
-  else if (largest == plane_normal_abs.z()) dominant_coord = 3;
+  if (largest == plane_normal_abs.x()){
+   dominant_coord = 1;
+  }
+  else if (largest == plane_normal_abs.y()){
+    dominant_coord = 2;
+  }
+  else if (largest == plane_normal_abs.z()){
+    dominant_coord = 3;
+  }
 
+  if (dominant_coord == -1){
+   cout << " dominant coordinate not found " << endl;
+   throw InternalError("Dominant coordinate not found", __FILE__, __LINE__);
+  }
   Point p[3];
   p[0] = d_points[d_tri[num].x()];
   p[1] = d_points[d_tri[num].y()];
