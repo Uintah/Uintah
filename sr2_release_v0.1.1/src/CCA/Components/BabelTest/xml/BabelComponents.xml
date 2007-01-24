@@ -29,30 +29,30 @@
 -->
 
 <metacomponentmodel name = "babel">
-  <library name="libCCA_Components_BabelTest_BridgeTest.so">
+  <library name="CCA_Components_BabelTest_BridgeTest">
     <component name="BridgeTest.Com" />
   </library>
-  <library name="libCCA_Components_BabelTest_hello.so">
+  <library name="CCA_Components_BabelTest_hello">
     <component name="hello.Com" />
   </library>
-  <library name="libCCA_Components_BabelTest_NewPort.so">
+  <library name="CCA_Components_BabelTest_NewPort">
     <component name="NewPort.Com">
       <interface file="CCA/Components/BabelTest/NewPort.sidl" />
     </component>
   </library>
-  <library name="libCCA_Components_BabelTest_PrinterComponent.so">
+  <library name="CCA_Components_BabelTest_PrinterComponent">
     <component name="PrinterComponent.Com" />
   </library>
-  <library name="libCCA_Components_BabelTest_StarterComponent.so">
+  <library name="CCA_Components_BabelTest_StarterComponent">
     <component name="StarterComponent.Com" />
   </library>
-  <library name="libCCA_Components_BabelTest_who.so">
+  <library name="CCA_Components_BabelTest_who">
     <component name="who.Com" />
   </library>
-  <library name="libCCA_Components_BabelTest_whoc.so">
+  <library name="CCA_Components_BabelTest_whoc">
     <component name="whoc.Com" />
   </library>
-  <library name="libCCA_Components_BabelTest_whof77.so">
+  <library name="CCA_Components_BabelTest_whof77">
     <component name="whof77.Com" />
   </library>
 </metacomponentmodel>
