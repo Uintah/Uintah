@@ -84,9 +84,9 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
                             "sci.cca.ports.GoPort",
                             sci::cca::TypeMap::pointer(0));
 
-  services->addProvidesPort(sci::cca::ports::ComponentIcon::pointer(this),
+  services->addProvidesPort(sci::cca::ports::ComponentIconUI::pointer(this),
                             "icon",
-                            "sci.cca.ports.ComponentIcon",
+                            "sci.cca.ports.ComponentIconUI",
                             sci::cca::TypeMap::pointer(0));
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();

@@ -60,10 +60,10 @@ void ZListWriter::setServices(const sci::cca::Services::pointer& svc)
 
   svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", props);
 
-  ZLComponentIcon::pointer ciPortPtr =
-    ZLComponentIcon::pointer(new ZLComponentIcon);
+  ZLComponentIconUI::pointer ciPortPtr =
+    ZLComponentIconUI::pointer(new ZLComponentIconUI);
 
-  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon", props);
+  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIconUI", props);
   svc->registerUsesPort("listport","ZListPort", props);
 }
 
