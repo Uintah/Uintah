@@ -49,7 +49,7 @@ BEGIN_EVENT_TABLE(PortIcon, wxWindow)
   EVT_PAINT(PortIcon::OnPaint)
   EVT_LEFT_DOWN(PortIcon::OnLeftDown)
   EVT_LEFT_UP(PortIcon::OnLeftUp)
-  EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu
+  //EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu (disabled for now...)
   //EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
   EVT_MOTION(PortIcon::OnMouseMove)
 END_EVENT_TABLE()
