@@ -130,7 +130,7 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
-     if (d_regridder && d_regridder->needsToReGrid() && (!first || (d_restarting))) {
+     if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
        doRegridding(currentGrid, false);
      }
 

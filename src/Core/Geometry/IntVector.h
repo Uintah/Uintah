@@ -70,7 +70,12 @@ public:
       value_[indx] = copy.value_[indx];
     return *this;	
   }
-
+  inline explicit IntVector(const Point& p)
+  {
+    value_[0]=static_cast<int>(p.x());
+    value_[1]=static_cast<int>(p.y());
+    value_[2]=static_cast<int>(p.z());
+  }
   inline bool operator==(const IntVector& a) const {
     return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
   }

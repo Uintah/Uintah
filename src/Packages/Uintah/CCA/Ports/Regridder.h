@@ -56,7 +56,7 @@ WARNING
 			       const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
-    virtual bool needsToReGrid() = 0;
+    virtual bool needsToReGrid(const GridP&) = 0;
 
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() = 0;

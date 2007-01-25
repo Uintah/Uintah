@@ -240,7 +240,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid)
     MaterialSubset* msub = scinew MaterialSubset;
     msub->add(0);
     DataWarehouse* old_dw = tempsched->get_dw(2);
-    old_dw->transferFrom(parent_dw, d_dilatedCellsCreationLabel, psub, msub);
+    old_dw->transferFrom(parent_dw, d_dilatedCellsRegridLabel, psub, msub);
     delete msub;
 
     if (perproc->removeReference())
@@ -250,7 +250,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid)
     // level will be created).
     Task* mark_task = scinew Task("HierarchicalRegridder::MarkPatches2",
                                this, &HierarchicalRegridder::MarkPatches2);
-    mark_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None);
+    mark_task->requires(Task::OldDW, d_dilatedCellsRegridLabel, Ghost::None);
 #if 0
     if (d_cellCreationDilation != d_cellDeletionDilation)
       mark_task->requires(Task::OldDW, d_dilatedCellsDeletionLabel, Ghost::None);
@@ -298,19 +298,19 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
     SubPatchFlag* subpatches = scinew SubPatchFlag(startidx, startidx+numSubPatches);
     PerPatch<SubPatchFlagP> activePatches(subpatches);
     
-    constCCVariable<int> dilatedCellsCreated;
+    constCCVariable<int> dilatedCellsRegrid;
     // FIX Deletion - CCVariable<int>* dilatedCellsDeleted;
     new_dw->put(activePatches, d_activePatchesLabel, 0, patch);
-    old_dw->get(dilatedCellsCreated, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+    old_dw->get(dilatedCellsRegrid, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
     
-    if (d_cellCreationDilation != d_cellDeletionDilation) {
+    if (d_cellRegridDilation != d_cellDeletionDilation) {
       //FIX Deletion
       //constCCVariable<int> dcd;
       //old_dw->get(dcd, d_dilatedCellsDeletionLabel, 0, patch, Ghost::None, 0);
       //dilatedCellsDeleted = dynamic_cast<CCVariable<int>*>(const_cast<CCVariableBase*>(dcd.clone()));
     }
     else {
-      // Fix Deletion - dilatedCellsDeleted = dilatedCellsCreated;
+      // Fix Deletion - dilatedCellsDeleted = dilatedCellsRegrid;
     }
 
     for (CellIterator iter(IntVector(0,0,0), numSubPatches); !iter.done(); iter++) {
@@ -329,7 +329,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
 //       rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
 //       rdbg << "MarkPatches() endCellSubPatch   = " << endCellSubPatch   << endl;
 
-      if (flaggedCellsExist(dilatedCellsCreated, startCellSubPatch, endCellSubPatch)) {
+      if (flaggedCellsExist(dilatedCellsRegrid, startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         subpatches->set(latticeStartIdx);
 //       } else if (!flaggedCellsExist(*dilatedCellsDeleted, startCellSubPatch, endCellSubPatch)) {
