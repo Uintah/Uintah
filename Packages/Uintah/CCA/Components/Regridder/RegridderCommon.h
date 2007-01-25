@@ -70,7 +70,7 @@ WARNING
 			       const GridP& grid);
 
     //! Do we need to regrid this timestep?
-    virtual bool needsToReGrid();
+    virtual bool needsToReGrid(const GridP& grid);
 
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() { return d_isAdaptive; }
@@ -93,7 +93,8 @@ WARNING
     };
 
     enum DilationType {
-      DILATE_CREATION,
+      DILATE_STABILITY,
+      DILATE_REGRID,
       DILATE_DELETION,
       DILATE_PATCH
     };
@@ -122,32 +123,38 @@ WARNING
     // input parameters from ups file
     SizeList  d_cellNum; 
     SizeList  d_cellRefinementRatio;
-    IntVector d_cellCreationDilation;
+    IntVector d_cellStabilityDilation;
+    IntVector d_cellRegridDilation;
     IntVector d_cellDeletionDilation;
     IntVector d_minBoundaryCells; //! min # of cells to be between levels' boundaries
     FilterType d_filterType;
 
     vector< CCVariable<int>* > d_flaggedCells;
-    vector< CCVariable<int>* > d_dilatedCellsCreated;
+    vector< CCVariable<int>* > d_dilatedCellsStability;
+    vector< CCVariable<int>* > d_dilatedCellsRegrid;
     vector< CCVariable<int>* > d_dilatedCellsDeleted;
 
-    CCVariable<int> d_creationFilter;
+    CCVariable<int> d_stabilityFilter;
+    CCVariable<int> d_regridFilter;
     CCVariable<int> d_deletionFilter;
     CCVariable<int> d_patchFilter;
 
     int d_maxLevels;
 
     // var labels for interior task graph
-    const VarLabel* d_dilatedCellsCreationLabel;
-    const VarLabel* d_dilatedCellsCreationOldLabel;
+    const VarLabel* d_dilatedCellsStabilityLabel;
+    const VarLabel* d_dilatedCellsStabilityOldLabel;
+    const VarLabel* d_dilatedCellsRegridLabel;
     const VarLabel* d_dilatedCellsDeletionLabel;
 
-    vector<int> d_numCreated;
+    vector<int> d_numStability;
+    vector<int> d_numRegrid;
     vector<int> d_numDeleted;
 
     bool d_newGrid;
     int d_lastRegridTimestep;
     int d_maxTimestepsBetweenRegrids;
+    int d_minTimestepsBetweenRegrids;
 
     bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
 

@@ -303,6 +303,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector< vector<PseudoPatch> > &pat
 }
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
 {
+  DataWarehouse *dw=sched_->getLastDW();
   for(int l=oldGrid->numLevels()-1; l >= 0;l--)
   {
     if(l>=d_maxLevels-1)
@@ -314,9 +315,8 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
     for(int p=0;p<ps->size();p++)
     {
       const Patch *patch=ps->get(p);
-      DataWarehouse *dw=sched_->getLastDW();
       constCCVariable<int> flags;
-      dw->get(flags, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+      dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
       for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
       {
         if (flags[*ci])
