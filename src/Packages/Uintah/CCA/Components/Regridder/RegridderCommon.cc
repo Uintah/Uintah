@@ -147,7 +147,6 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     }
     GATHER:
     MPI_Allreduce(&result,&retval,1,MPI_INT,MPI_LOR,d_myworld->getComm());
-    cout << "NEEDS TO REGRID=" << retval << endl;
   }
 
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
