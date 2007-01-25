@@ -758,7 +758,7 @@ for i in $package; do
    fi
 done
 
-if test "$sci_required_unipetsc" = "yes" -o "$sci_required_petsc" = "yes" -o "$sci_required_hypre" = "yes"; then
+if test "$sci_required_unipetsc" = "yes" -o "$sci_required_petsc" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
