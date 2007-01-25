@@ -147,6 +147,9 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     }
     GATHER:
     MPI_Allreduce(&result,&retval,1,MPI_INT,MPI_LOR,d_myworld->getComm());
+    
+    if(retval)
+      d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   }
 
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
