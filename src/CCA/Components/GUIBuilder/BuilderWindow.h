@@ -44,11 +44,6 @@
 #define CCA_Components_GUIBuilder_BuilderWindow_h
 
 
-// turn off for release
-#ifndef GUI_TEST
-#  define GUI_TEST 0
-#endif
-
 #include <sci_wx.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
@@ -113,9 +108,6 @@ public:
     ID_NET_WINDOW,
     ID_MINI_WINDOW,
     ID_TEXT_WINDOW,
-#if GUI_TEST
-    ID_MENU_TEST,
-#endif
     ID_MENU_LOAD,
     ID_MENU_INSERT,
     ID_MENU_CLEAR,
@@ -151,9 +143,6 @@ public:
   void OnAbout(wxCommandEvent& event);
   void OnSize(wxSizeEvent& event);
   void OnSashDrag(wxSashEvent& event);
-#if GUI_TEST
-  void OnTest(wxCommandEvent& event);
-#endif
   void OnLoad(wxCommandEvent& event);
   void OnSave(wxCommandEvent& event);
   void OnSaveAs(wxCommandEvent& event);
@@ -171,6 +160,7 @@ public:
   void DisplayErrorMessage(const wxString& line);
   void DisplayMessages(const std::vector<wxString>& lines);
   void DisplayErrorMessages(const std::vector<wxString>& lines);
+  void DisplayMousePosition(const wxString& widgetName, const wxPoint& p);
 
   //const MenuMap& GetComponentMenus() { return menus; }
 
@@ -205,17 +195,19 @@ private:
   // This class handles events
   DECLARE_EVENT_TABLE()
 
-  static const int MIN = 4;
+  static const int MIN = 10;
   static const int WIDTH = 1000;
   static const int HEIGHT = 800;
   static const int TOP_HEIGHT = 300;
-  static const int BOTTOM_HEIGHT = 500;
-  static const int MINI_WIDTH = 350;
-  static const int TEXT_WIDTH = 650;
+  static const int MINI_WIDTH = 250;
+  static const int BOTTOM_HEIGHT = HEIGHT - TOP_HEIGHT;
+  static const int TEXT_WIDTH = WIDTH - MINI_WIDTH;
   static int IdCounter;
 
   sci::cca::GUIBuilder::pointer builder;
   std::string url;
+  wxString pointerLocationX;
+  wxString pointerLocationY;
 
   // Component menus:
   // Need to build the menu bar and network window popup menu items

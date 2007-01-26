@@ -74,6 +74,8 @@ typedef BuilderWindow::MenuMap MenuMap;
 BEGIN_EVENT_TABLE(NetworkCanvas, wxScrolledWindow)
   EVT_PAINT(NetworkCanvas::OnPaint)
   EVT_ERASE_BACKGROUND(NetworkCanvas::OnEraseBackground)
+//   EVT_ENTER_WINDOW(NetworkCanvas::OnEnter)
+//   EVT_LEAVE_WINDOW(NetworkCanvas::OnLeave)
   EVT_LEFT_DOWN(NetworkCanvas::OnLeftDown)
   EVT_LEFT_UP(NetworkCanvas::OnLeftUp)
   EVT_RIGHT_UP(NetworkCanvas::OnRightClick) // show popup menu
@@ -128,6 +130,18 @@ bool NetworkCanvas::Create(wxWindow *parent,
 ///////////////////////////////////////////////////////////////////////////
 // event handlers
 
+void NetworkCanvas::OnEnter(wxMouseEvent& WXUNUSED(event))
+{
+std::cerr << "NetworkCanvas::OnEnter" << std::endl;
+  CaptureMouse();
+}
+
+void NetworkCanvas::OnLeave(wxMouseEvent& WXUNUSED(event))
+{
+std::cerr << "NetworkCanvas::OnLeave" << std::endl;
+  ReleaseMouse();
+}
+
 void NetworkCanvas::OnLeftDown(wxMouseEvent& event)
 {
 //   wxPoint p = event.GetPosition();
@@ -164,6 +178,11 @@ void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
 
 void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
 {
+  wxPoint mp;
+  GetUnscrolledMousePosition(event, mp);
+  builderWindow->DisplayMousePosition(wxT("NetworkCanvas"), mp);
+
+
 //   if (movingIcon) {
 // #if DEBUG
 //     std::cerr << "NetworkCanvas::OnMouseMove(..)" << std::endl;
@@ -527,6 +546,9 @@ NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
   for (int icol = 0; icol < max_col; icol++) {
     for (int irow = 0; irow < max_row; irow++) {
       wxRect candidateRect(origin.x + (displ.GetWidth() * icol), origin.y + (displ.GetHeight() * irow), ci_w, ci_h);
+// dc.SetPen(*wxWHITE_PEN);
+// dc.DrawRectangle(candidateRect.x, candidateRect.y, candidateRect.width, candidateRect.height);
+// Refresh();
 
       // check with all the viewable modules - can new icon be placed?
       // searching for intersections with existing icons
@@ -637,6 +659,14 @@ void NetworkCanvas::GetUnscrolledPosition(const wxPoint& p, wxPoint& position)
   wxClientDC dc(this);
   DoPrepareDC(dc);
   CalcUnscrolledPosition(p.x, p.y, &position.x, &position.y);
+}
+
+void NetworkCanvas::GetUnscrolledMousePosition(const wxMouseEvent& event, wxPoint& position)
+{
+  // DoPrepareDC must be called before GetLogicalPosition
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  position = event.GetLogicalPosition(dc);
 }
 
 void NetworkCanvas::GetUnscrolledMousePosition(wxPoint& position)
@@ -759,5 +789,6 @@ void NetworkCanvas::DrawConnections(wxDC& dc)
 
 ///////////////////////////////////////////////////////////////////////////
 // private member functions
+// ...none at the moment
 
 }
