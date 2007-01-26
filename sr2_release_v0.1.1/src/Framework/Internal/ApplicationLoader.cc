@@ -77,15 +77,15 @@ void ApplicationLoader::setFileName(const std::string& fn)
   }
 }
 
-void ApplicationLoader::loadFile(const std::string& fn)
+void ApplicationLoader::loadFile(const std::string& fn, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
 {
   fileName = fn;
-  loadFile();
+  loadFile(cidList, connList);
 }
 
 // options: get builder as argument or use GUIService to get any and all builders?
 // OR call ApplicationLoader from GUIService?
-void ApplicationLoader::loadFile()
+void ApplicationLoader::loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
 {
   if (fileName.empty()) {
     throw CCAExceptionPtr(new CCAException("Empty file name"));

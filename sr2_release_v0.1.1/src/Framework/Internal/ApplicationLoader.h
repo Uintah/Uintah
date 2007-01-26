@@ -45,20 +45,6 @@ namespace SCIRun {
 
 class SCIRunFramework;
 
-class ComponentInfo {
-};
-
-class ConnectionInfo {
-};
-
-// fill in with relevant info
-class ApplicationInfo {
-public:
-
-private:
-
-};
-
 // TODO: Eventually the following functions should be moved to a service.
 // TODO: Need to be able to load SCIRun files too.
 
@@ -92,8 +78,8 @@ public:
   virtual std::string getFileName() { return fileName; }
   virtual void setFileName(const std::string& fn);
 
-  virtual void loadFile();
-  virtual void loadFile(const std::string& filename);
+  virtual void loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList);
+  virtual void loadFile(const std::string& fn, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList);
 
   virtual void saveFile();
   virtual void saveFile(const std::string& filename);

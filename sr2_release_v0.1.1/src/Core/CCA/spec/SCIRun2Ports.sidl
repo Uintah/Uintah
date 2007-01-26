@@ -62,8 +62,8 @@ interface ApplicationLoaderService extends sci.cca.Port {
   string getFileName();
   void setFileName(in string filename);
 
-  void loadFile();
-  void loadFile[As](in string filename);
+  void loadFile(out array<sci.cca.ComponentID> cidList, out array<sci.cca.ConnectionID> connList);
+  void loadFile[As](in string filename, out array<sci.cca.ComponentID> cidList, out array<sci.cca.ConnectionID> connList);
 
   void saveFile();
   void saveFile[As](in string filename);

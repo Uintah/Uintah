@@ -829,6 +829,21 @@ bool GUIBuilder::applicationFileExists()
   return true;
 }
 
+void GUIBuilder::loadApplication(const std::string& filename, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
+{
+  try {
+    sci::cca::ports::ApplicationLoaderService::pointer appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    appLoader->loadFile(filename, cidList, connList);
+    services->releasePort("cca.ApplicationLoaderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    return;
+  }
+
+}
+
 void GUIBuilder::saveApplication()
 {
   try {

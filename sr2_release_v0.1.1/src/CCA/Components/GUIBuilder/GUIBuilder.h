@@ -136,6 +136,7 @@ public:
 
   // test ApplicationLoader
   virtual bool applicationFileExists();
+  virtual void loadApplication(const std::string& fileName, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList);
   virtual void saveApplication();
   virtual void saveApplication(const std::string& fileName);
 
