@@ -39,6 +39,7 @@
  *
  */
 
+#include <sci_defs/framework_defs.h>
 #include <CCA/Components/GUIBuilder/Connection.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 #include <CCA/Components/GUIBuilder/PortIcon.h>
@@ -49,10 +50,8 @@
 #include <wx/gdicmn.h>
 #include <wx/dc.h>
 
-#ifndef DEBUG
-#  define DEBUG 1
-#endif
-
+// // let's be sure this is off while troubleshooting connections
+// #define FWK_DEBUG 0
 
 namespace GUIBuilder {
 
@@ -87,14 +86,14 @@ void Connection::ResetPoints()
   u.y +=  u.y/2; // connect at vertical halfway point on port
 
   wxPoint usesIconPos;
-  pUses->GetParent()->GetCanvasPosition(usesIconPos);
+  pUses->GetParent()->GetCanvas()->GetUnscrolledMousePosition(usesIconPos);
   wxPoint up = usesIconPos + u; // position rel. to component icon parent
 
   wxPoint p = pProvides->GetPosition();
   p.y += p.y/2;
 
   wxPoint providesIconPos;
-  pProvides->GetParent()->GetCanvasPosition(providesIconPos);
+  pProvides->GetParent()->GetCanvas()->GetUnscrolledMousePosition(providesIconPos);
   wxPoint pp = providesIconPos + p; // position rel. to component icon parent
 
   wxRect ru(usesIconPos, pUses->GetParent()->GetSize());
@@ -104,26 +103,26 @@ void Connection::ResetPoints()
   int h = PortIcon::PORT_HEIGHT;
   int mid;
 
-#if DEBUG
-std::cerr << "Uses icon pos=("
-	  << usesIconPos.x
-	  << ", "
-	  << usesIconPos.y
-          << ") Uses port pos=("
-	  << up.x
-	  << ", "
-	  << up.y
-	  << ") Provides icon pos=("
-	  << providesIconPos.x
-	  << ", "
-	  << providesIconPos.y
-          << ") Provides port pos=("
-	  << pp.x
-	  << ", "
-	  << pp.y
-	  << ")"
-          << std::endl;
-#endif
+// #if FWK_DEBUG
+// std::cerr << "Uses icon pos=("
+// 	  << usesIconPos.x
+// 	  << ", "
+// 	  << usesIconPos.y
+//           << ") Uses port pos=("
+// 	  << up.x
+// 	  << ", "
+// 	  << up.y
+// 	  << ") Provides icon pos=("
+// 	  << providesIconPos.x
+// 	  << ", "
+// 	  << providesIconPos.y
+//           << ") Provides port pos=("
+// 	  << pp.x
+// 	  << ", "
+// 	  << pp.y
+// 	  << ")"
+//           << std::endl;
+// #endif
 
   if ( (up.x + h) < (pp.x - h) ) {
     mid = (up.y + pp.y) / 2;
@@ -213,10 +212,10 @@ void Connection::OnDraw(wxDC& dc)
   ResetPoints();
   setConnection();
   if (highlight) {
-    wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 2, wxSOLID);
+    wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 4, wxSOLID);
     dc.SetPen(*pen);
   } else {
-    wxPen* pen = wxThePenList->FindOrCreatePen(color, 2, wxSOLID);
+    wxPen* pen = wxThePenList->FindOrCreatePen(color, 4, wxSOLID);
     dc.SetPen(*pen);
   }
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
@@ -240,42 +239,42 @@ bool Connection::IsMouseOver(const wxPoint& position)
 
     pr = wxRect(pTopLeft, pBottomRight);
 
-#if DEBUG
-std::cerr << "Connection::IsMouseOver point top left ("
-	  << pTopLeft.x << ", " << pTopLeft.y << ") point bottom right ("
-	  << pBottomRight.x << ", " << pBottomRight.y << ")"
-          << std::endl;
-#endif
+// #if FWK_DEBUG
+// std::cerr << "Connection::IsMouseOver point top left ("
+// 	  << pTopLeft.x << ", " << pTopLeft.y << ") point bottom right ("
+// 	  << pBottomRight.x << ", " << pBottomRight.y << ")"
+//           << std::endl;
+// #endif
 
     if (drawPoints[i].x > drawPoints[i+1].x) {
       wxPoint topLeft(drawPoints[i+1].x - tolerance, drawPoints[i+1].y - tolerance);
       wxPoint bottomRight(drawPoints[i].x + tolerance, drawPoints[i].y + tolerance);
-#if DEBUG
-      std::cerr << "Connection::IsMouseOver (if) y_i = y_i+1, x_i > x_i+1" << std::endl
-		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
-		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
-		<< std::endl;
-#endif
+// #if FWK_DEBUG
+//       std::cerr << "Connection::IsMouseOver (if) y_i = y_i+1, x_i > x_i+1" << std::endl
+// 		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+// 		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+// 		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+// 		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
+// 		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+// 		<< std::endl;
+// #endif
       r = wxRect(topLeft, bottomRight);
     } else {
       wxPoint topLeft(drawPoints[i].x - tolerance, drawPoints[i].y - tolerance);
       wxPoint bottomRight(drawPoints[i+1].x + tolerance, drawPoints[i+1].y + tolerance);
-#if DEBUG
-      std::cerr << "Connection::IsMouseOver (else) y_i = y_i+1, x_i <= x_i+1" << std::endl
-		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
-		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
-		<< std::endl;
-#endif
+// #if FWK_DEBUG
+//       std::cerr << "Connection::IsMouseOver (else) y_i = y_i+1, x_i <= x_i+1" << std::endl
+// 		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
+// 		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
+// 		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
+// 		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
+// 		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
+// 		<< std::endl;
+// #endif
       r = wxRect(topLeft, bottomRight);
     }
     if (r.Intersects(pr)) {
-#if DEBUG
+#if FWK_DEBUG
       std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
 #endif
       return true;
@@ -300,14 +299,14 @@ void Connection::setConnection()
     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]);
     drawPoints[i].x /= 2;
     drawPoints[i].y /= 2;
-#if DEBUG
-    std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
-              << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
-              << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", "
-              << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
-              << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
-              << std::endl;
-#endif
+// #if FWK_DEBUG
+//     std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
+//               << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
+//               << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", "
+//               << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
+//               << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
+//               << std::endl;
+// #endif
   }
 }
 

@@ -105,7 +105,6 @@ public:
   const PortList& GetProvidesPorts() const { return providesPorts; }
   const PortList& GetUsesPorts() const { return usesPorts; }
 
-  void GetCanvasPosition(wxPoint& p);
   NetworkCanvas* GetCanvas() const { return canvas; }
 
   // possible to set shape w/ bitmap region?
@@ -129,7 +128,7 @@ protected:
 
   bool hasUIPort;
   bool hasGoPort;
-  bool hasComponentIcon;
+  bool hasComponentIconUI;
   bool isMoving;
 
   sci::cca::ComponentID::pointer cid;

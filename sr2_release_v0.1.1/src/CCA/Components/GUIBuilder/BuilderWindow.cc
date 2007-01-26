@@ -58,9 +58,6 @@
 #include <Core/Containers/StringUtil.h>
 
 # include <Framework/TypeMap.h>
-#if GUI_TEST
-# include <Framework/CCA/CCAException.h>
-#endif
 
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <CCA/Components/GUIBuilder/MiniCanvas.h>
@@ -182,9 +179,6 @@ const wxColor BuilderWindow::BACKGROUND_COLOUR(0, 51, 102);
 BEGIN_EVENT_TABLE(BuilderWindow, wxFrame)
   EVT_MENU(wxID_ABOUT, BuilderWindow::OnAbout)
   EVT_MENU(wxID_EXIT, BuilderWindow::OnQuit)
-#if GUI_TEST
-  EVT_MENU(ID_MENU_TEST, BuilderWindow::OnTest)  // test GUI, components etc.
-#endif
   EVT_MENU(ID_MENU_LOAD, BuilderWindow::OnLoad)
   EVT_MENU(wxID_SAVE, BuilderWindow::OnSave)
   EVT_MENU(wxID_SAVEAS, BuilderWindow::OnSaveAs)
@@ -201,7 +195,7 @@ IMPLEMENT_DYNAMIC_CLASS(BuilderWindow, wxFrame)
 
 int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
-BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent) : builder(bc)
+BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent) : builder(bc), pointerLocationX("0"), pointerLocationY("0")
 {
 #if DEBUG
   std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
@@ -223,9 +217,9 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   setDefaultText();
 
   //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
-  statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
-  int statusBarWidths[] = { 350, -1 };
-  statusBar->SetStatusWidths(2, statusBarWidths);
+  statusBar = CreateStatusBar(3, wxST_SIZEGRIP);
+  int statusBarWidths[] = { 350, 150, -1 };
+  statusBar->SetStatusWidths(3, statusBarWidths);
   statusBar->SetStatusText("SCIRun2 started", 0);
 
   return true;
@@ -304,6 +298,14 @@ void BuilderWindow::DisplayErrorMessages(const std::vector<wxString>& lines)
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
+// TODO: should only be available in debug mode?
+void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoint& p)
+{
+  pointerLocationX.Printf("%d", p.x);
+  pointerLocationY.Printf("%d", p.y);
+  statusBar->SetStatusText(widgetName + ": " + pointerLocationX + ", " + pointerLocationY, 1);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // event handlers
 
@@ -327,8 +329,11 @@ void BuilderWindow::OnQuit(wxCommandEvent &event)
 
 void BuilderWindow::OnSashDrag(wxSashEvent& event)
 {
-#if DEBUG
-  std::cerr << "BuilderWindow::OnSashDrag(..): event drag status="  << event.GetDragStatus() << std::endl;
+#if 0
+// #if DEBUG
+//   std::cerr << "BuilderWindow::OnSashDrag(..): event drag status="  << event.GetDragStatus() << std::endl;
+//   std::cerr << "Drag rect = (" << event.GetDragRect().x << ", " << event.GetDragRect().y << ", " << event.GetDragRect().width << ", " << event.GetDragRect().height << ")" << std::endl;
+// #endif
 #endif
   if (event.GetDragStatus() == wxSASH_STATUS_OUT_OF_RANGE) {
     return;
@@ -340,9 +345,12 @@ void BuilderWindow::OnSashDrag(wxSashEvent& event)
     // errors.
   case ID_WINDOW_LEFT:
     leftWindow->SetDefaultSize(wxSize(event.GetDragRect().width, MIN));
+    //rightWindow->SetMinimumSizeX(MIN);
     break;
   case ID_WINDOW_BOTTOM:
     bottomWindow->SetDefaultSize(wxSize(MIN, event.GetDragRect().height));
+    leftWindow->SetMinimumSizeY(MIN);
+    rightWindow->SetMinimumSizeY(MIN);
     break;
   }
 
@@ -360,43 +368,6 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
   layout.LayoutFrame(this);
   Refresh();
 }
-
-#if GUI_TEST
-void BuilderWindow::OnTest(wxCommandEvent&/* event */)
-{
-  wxBusyCursor wait;
-  statusBar->SetStatusText("Build components", 0);
-  try {
-    sci::cca::ComponentID::pointer helloCid = builder->createInstance("SCIRun.Hello", sci::cca::TypeMap::pointer(0));
-    if (! helloCid.isNull()) {
-#if DEBUG
-      std::cerr << "wx: Got hello: " << helloCid->getInstanceName() << std::endl;
-#endif
-      networkCanvas->AddIcon(helloCid);
-    }
-
-    sci::cca::ComponentID::pointer worldCid = builder->createInstance("SCIRun.World", sci::cca::TypeMap::pointer(0));
-    if (! worldCid.isNull()) {
-#if DEBUG
-      std::cerr << "wx: Got world: " << worldCid->getInstanceName() << std::endl;
-#endif
-      networkCanvas->AddIcon(worldCid);
-    }
-
-    sci::cca::ComponentID::pointer pdeDriverCid = builder->createInstance("SCIRun.PDEdriver", sci::cca::TypeMap::pointer(0));
-    if (! pdeDriverCid.isNull()) {
-#if DEBUG
-      std::cerr << "wx: Got pdeDriver: " << pdeDriverCid->getInstanceName() << std::endl;
-#endif
-      networkCanvas->AddIcon(pdeDriverCid);
-    }
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    DisplayErrorMessage(e->getNote());
-  }
-  statusBar->SetStatusText("Components built", 0);
-}
-#endif
 
 // network file handling will have to be moved outside of GUI classes
 void BuilderWindow::OnLoad(wxCommandEvent& event)
@@ -544,10 +515,6 @@ void BuilderWindow::SetMenus()
   compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
 
   wxMenu* fileMenu = new wxMenu();
-#if GUI_TEST
-  fileMenu->Append(ID_MENU_TEST, wxT("&Test\tAlt-T"), wxT("Test component build"));
-  fileMenu->AppendSeparator();
-#endif
   fileMenu->Append(ID_MENU_LOAD, wxT("&Load\tAlt-L"), wxT("Load saved application from file"));
   //fileMenu->Append(ID_MENU_INSERT, wxT("&Insert\tAlt-L"), wxT("Insert components from file"));
   fileMenu->Append(wxID_SAVE, wxT("&Save\tAlt-S"), wxT("Save application to file"));
@@ -569,13 +536,18 @@ void BuilderWindow::SetMenus()
   fileMenu->AppendSeparator();
   fileMenu->Append(wxID_EXIT, wxT("E&xit\tAlt-X"), wxT("Quit this program"));
 
-  wxMenu* proxyFwkMenu = new wxMenu();
-  proxyFwkMenu->Append(ID_MENU_ADD_PROXY, wxT("Add Proxy Framework"), wxT("Instantiate a new proxy framework to the master framework"));
-  //proxyFwkMenu->Append(ID_MENU_REMOVE_PROXY, wxT("Remove Proxy Framework"), wxT("Remove a new proxy framework from the master framework"));
+#if 0
+  // Disabled until xterm crashing problem is fixed.
+//   wxMenu* proxyFwkMenu = new wxMenu();
+//   proxyFwkMenu->Append(ID_MENU_ADD_PROXY, wxT("Add Proxy Framework"), wxT("Instantiate a new proxy framework to the master framework"));
+//   //proxyFwkMenu->Append(ID_MENU_REMOVE_PROXY, wxT("Remove Proxy Framework"), wxT("Remove a new proxy framework from the master framework"));
+#endif
 
   menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, wxT("&File"));
-  menuBar->Append(proxyFwkMenu, wxT("&Proxy Frameworks"));
+#if 0
+//   menuBar->Append(proxyFwkMenu, wxT("&Proxy Frameworks"));
+#endif
 
   BuildAllPackageMenus();
 
@@ -606,8 +578,8 @@ void BuilderWindow::SetLayout()
   leftWindow->SetSashVisible(wxSASH_RIGHT, true);
 
   // add mini-canvas (scrolled window) to leftWindow
-  miniCanvas = new MiniCanvas(leftWindow, networkCanvas, ID_MINI_WINDOW, wxPoint(0, 0),
-                              wxSize(MINI_WIDTH, TOP_HEIGHT));
+  miniCanvas = new MiniCanvas(leftWindow, this, networkCanvas, ID_MINI_WINDOW,
+                              wxPoint(0, 0), wxSize(MINI_WIDTH, TOP_HEIGHT));
 
   // A window to the left of the client window
   rightWindow = new wxSashLayoutWindow(this, ID_WINDOW_RIGHT, wxPoint(MINI_WIDTH, 0),

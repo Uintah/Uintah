@@ -146,11 +146,10 @@ void MiniCanvas::OnMouseMove(wxMouseEvent& event)
   wxClientDC dc(this);
   DoPrepareDC(dc);
   wxPoint ep = event.GetLogicalPosition(dc);
-  builderWindow->DisplayMousePosition(ep);
+  builderWindow->DisplayMousePosition(wxT("MiniCanvas"), ep);
   if (insideViewport && event.Dragging()) {
     scrollCanvas(ep);
   }
-  Refresh();
 }
 
 void MiniCanvas::OnPaint(wxPaintEvent& event)
@@ -205,7 +204,9 @@ void MiniCanvas::scrollCanvas(const wxPoint& point)
   double scaleH, scaleV;
   getScale(scaleH, scaleV);
   //SetTargetWindow(canvas);
-  canvas->Scroll((point.x * scaleH) / NetworkCanvas::DEFAULT_SCROLLX, (point.y * scaleV) / NetworkCanvas::DEFAULT_SCROLLY);
+  int xu = 0, yu = 0;
+  canvas->GetScrollPixelsPerUnit(&xu, &yu);
+  canvas->Scroll((point.x * scaleH) / xu, (point.y * scaleV) / yu);
 }
 
 ///////////////////////////////////////////////////////////////////////////
