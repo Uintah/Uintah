@@ -107,6 +107,7 @@ interface Builder extends sci.cca.Component {
   int go(in string goPortName);
 
   bool applicationFileExists();
+  void loadApplication(in string fileName, out array<sci.cca.ComponentID> cidList, out array<sci.cca.ConnectionID> connList);
   void saveApplication();
   void saveApplication[As](in string fileName);
 }
