@@ -54,6 +54,7 @@ interface GUIService extends sci.cca.Port
   void addBuilder(in string builderName, in sci.cca.GUIBuilder builder);
   void removeBuilder(in string builderName);
   void updateProgress(in cca.ComponentID cid, in int progressPercent);
+  void updateComponentModels();
 }
 
 // Should part of an extended builder service.
