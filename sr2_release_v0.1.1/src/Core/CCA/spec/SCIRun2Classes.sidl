@@ -120,6 +120,7 @@ class GUIBuilder implements-all sci.cca.Builder, sci.cca.EventListener {
   int ui(in string uiPortName);
 
   void updateProgress(in cca.ComponentID cid, in int progressPercent);
+  void updateComponentModels();
 
   //   // manage Progress ports for the GUI
   //   bool connectProgress(in string providesName, in string usesPortName, in cca.ComponentID cid, out string providesPortName);
