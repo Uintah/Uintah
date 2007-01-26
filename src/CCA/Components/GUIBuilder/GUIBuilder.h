@@ -105,8 +105,9 @@ public:
   virtual void disconnectUIPort(const std::string& uiPortName);
   virtual int ui(const std::string& uiPortName);
 
-  // progress
+  // GUIService
   virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
+  virtual void updateComponentModels();
 
   virtual bool connectComponentIconUI(const std::string& usesName, const std::string& providesPortName,
                                     const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
@@ -148,6 +149,7 @@ public:
   static const std::string PROGRESS_PORT;
   static const std::string COMPONENTICONUI_PORT;
   static const std::string APP_EXT_WILDCARD;
+  static const std::string GUI_THREAD_NAME;
 
 private:
   GUIBuilder(const GUIBuilder &);
@@ -175,7 +177,6 @@ private:
   // Note: implement using wxColorDatabase instead?
   PortColorMap portColors;
 
-  static const std::string GUI_THREAD_NAME;
   static SCIRun::Mutex builderLock;
   static wxSCIRunApp* app;
 };

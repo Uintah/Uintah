@@ -690,10 +690,16 @@ int GUIBuilder::ui(const std::string& uiPortName)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// component progress
+// sci.cca.ports.GUIService
 
 void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
 {
+  if (Thread::self()->getThreadName() != GUI_THREAD_NAME) {
+    // TODO: This needs to be an exception!
+    std::cerr << "ERROR: do NOT call GUI functions from a non-gui thread!" << std::endl;
+    return;
+  }
+
   // get all builder windows
   // this should be done in a worker thread
   BuilderWindow *bw = app->GetTopBuilderWindow();
@@ -703,6 +709,21 @@ void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int p
       ci->UpdateProgress(progressPercent);
     }
   }
+}
+
+void GUIBuilder::updateComponentModels()
+{
+  if (Thread::self()->getThreadName() != GUI_THREAD_NAME) {
+    // TODO: This needs to be an exception!
+    std::cerr << "ERROR: do NOT call GUI functions from a non-gui thread!" << std::endl;
+    return;
+  }
+  BuilderWindow *bw = app->GetTopBuilderWindow();
+  if (!bw) {
+    std::cerr << "ERROR: could not get top builder window from wxSCIRunApp." << std::endl;
+    return;
+  }
+  bw->BuildAllPackageMenus();
 }
 
 //////////////////////////////////////////////////////////////////////////
