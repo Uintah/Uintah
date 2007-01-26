@@ -323,7 +323,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
         << " You must specifify cell_stablity_dilation, cell_deletion_dilation & min_boundary_cells = 0 in that direction \n"
         << "Grid Size " << d_cellNum[k] 
         << " cell_stablity_dilation " << d_cellStabilityDilation
-        << " cell_regrid_dilation " << d_cellRegridDilation
+        << " cell_regrid_dilation " << d_cellRegridDilation-d_cellStabilityDilation
         << " cell_deletion_dilation " << d_cellDeletionDilation
         << " min_boundary_cells " << d_minBoundaryCells << endl;
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
