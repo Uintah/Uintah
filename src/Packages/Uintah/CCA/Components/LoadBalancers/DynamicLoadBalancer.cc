@@ -484,7 +484,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   if (d_myworld->myrank() == 0)
     dbg << " Time to LB: " << time << endl;
   doing << d_myworld->myrank() << "   APF END\n";
-  MPI_Barrier(d_myworld->getComm());
   return doLoadBalancing;
 }
 
