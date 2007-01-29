@@ -41,7 +41,7 @@ created the object go to step 2.
 
 - Export mesh:
   File->Export->Mesh
-  <filename>.neu
+  <filename>.neu 
 
 
 3) Convert the triangulated mesh into something that Uintah can read.
@@ -69,3 +69,18 @@ I've successfully read in the file
 - Add the geometry to your input file in the same fashion as you would a 
 box, cylinder, sphere.
 
+
+--------------------------------------------------
+Useful commands to shift and scale the geometry:
+
+Shift:
+set x = 0.0
+set y = 0.0
+set z = 0.0
+awk '{printf( "%15.16f %15.16f %15.16f \n", $1 + '$x', $2 + '$y', $3 + '$z') }' inputFilename
+
+Scale:
+set x = 1.0
+set y = 1.0
+set z = 1.0
+awk '{printf( "%15.16f %15.16f %15.16f \n", $1 * '$x', $2 * '$y', $3 * '$z') }' inputFilename
