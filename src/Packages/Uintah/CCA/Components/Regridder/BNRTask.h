@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
 #include <queue>
+#include <Packages/Uintah/Core/Grid/PseudoPatch.h>
 
 namespace Uintah {
 
@@ -54,22 +55,7 @@ WARNING
     IntVector* locs;                                // flag location
     int size;                                       // number of flags
   };
-  struct PseudoPatch
-  {
-    IntVector low;                                  // low point of patch
-    IntVector high;                                 // high point of patch
-    int volume;                                     // volume of patch
-  };
-
-  inline bool operator<(PseudoPatch p1, PseudoPatch p2)
-  {
-    return p1.volume<p2.volume;
-  }
-  inline ostream& operator<<(ostream& out, PseudoPatch p1)
-  {
-      out << "{" << p1.low << " " << p1.high << " (" << p1.volume << ")}";
-      return out;
-  }
+  
   struct Split
   {
     int d;                                         //dimension of split

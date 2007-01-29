@@ -624,14 +624,12 @@ void BNRTask::BoundSignatures()
     }
     patch_.low=low;
     patch_.high=high;
-    size=high-low;
-    patch_.volume=size[0]*size[1]*size[2];
 }
 
 void BNRTask::CheckTolA()
 {
   IntVector size=patch_.high-patch_.low;
-  acceptable_= float(total_flags_)/patch_.volume>=controller_->tola_;
+  acceptable_= float(total_flags_)/patch_.getVolume()>=controller_->tola_;
 }
 
 void BNRTask::CheckTolB()
@@ -640,10 +638,10 @@ void BNRTask::CheckTolB()
   int children_vol=0;
   for(unsigned int p=0;p<my_patches_.size();p++)
   {
-      children_vol+=my_patches_[p].volume;
+      children_vol+=my_patches_[p].getVolume();
   }
   //compare to patch volume of parent
-  if(float(children_vol)/patch_.volume>=controller_->tolb_)
+  if(float(children_vol)/patch_.getVolume()>=controller_->tolb_)
   {
     acceptable_=false;
   }

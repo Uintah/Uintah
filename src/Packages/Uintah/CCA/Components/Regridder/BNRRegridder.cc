@@ -346,7 +346,7 @@ void BNRRegridder::OutputGridStats(vector< vector<PseudoPatch> > &patch_sets)
       double vol_mult=double(d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2]);
       for(int p=0;p<n;p++)
       {
-        double vol=double(patch_sets[l][p].volume*vol_mult);
+        double vol=double(patch_sets[l][p].getVolume()*vol_mult);
         total_vol+=vol;
         sum_of_vol_squared+=vol*vol;
       }
@@ -651,7 +651,7 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
   int volume=0;
   for(unsigned int p=0;p<patches.size();p++)
   {
-    volume+=patches[p].volume;
+    volume+=patches[p].getVolume();
   }
 
   double volume_threshold=volume/(d_myworld->size()*d_patchRatioToTarget);
@@ -661,9 +661,9 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
  
   unsigned int i=patches.size()-1; 
   //split max and place children on heap until i have enough patches and patches are not to big
-  while(patches.size()<target_patches_ || patches[0].volume>volume_threshold)
+  while(patches.size()<target_patches_ || patches[0].getVolume()>volume_threshold)
   {
-    if(patches[0].volume==1)  //check if patch is to small to split
+    if(patches[0].getVolume()==1)  //check if patch is to small to split
        return;
     
     pop_heap(patches.begin(),patches.end());
@@ -687,10 +687,6 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
     //adjust patches by split
     patches[i].high[max_d]=right.low[max_d]=index;
 
-    //recalculate volumes
-    size=right.high-right.low;
-    right.volume=size[0]*size[1]*size[2];
-    patches[i].volume-=right.volume;
     //heapify
     push_heap(patches.begin(),patches.end());
     patches.push_back(right);
