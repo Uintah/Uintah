@@ -18,7 +18,8 @@
    <DataArchiver>
        <filebase>VocalFold-VF.uda</filebase>
        <outputInterval>.0001</outputInterval>
-       <compression>gzip</compression>
+       <compression>gzip</compression> 
+       <outputDoubleAsFloat/>
        <save label = "p.x"/>
        <save label = "p.mass"/>
        <save label = "p.stress"/>
