@@ -93,7 +93,7 @@
               <specific_heat>5</specific_heat>
               <geom_object>
                 <tri label = "vocalFold_L">
-                  <name>VF_L.0</name>   <!-- pts & tri file must be in the same directory as sus -->
+                  <name>inputs/MPMICE/complex_MPM_geometries/VF_L.0</name>
                 </tri>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
@@ -110,7 +110,7 @@
               <specific_heat>5</specific_heat>
               <geom_object>
                 <tri label = "vocalFold_R"> 
-                  <name>VF_R.0</name> <!-- pts & tri file must be in the same directory as sus -->
+                  <name>inputs/MPMICE/complex_MPM_geometries/VF_R.0</name>
                 </tri>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
