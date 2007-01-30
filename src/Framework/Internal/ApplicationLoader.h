@@ -92,10 +92,10 @@ public:
 private:
   ApplicationLoader(SCIRunFramework* fwk);
 
-  xmlNode* writeComponentNode(const sci::cca::ComponentID::pointer& cid,
+  void writeComponentNode(const sci::cca::ComponentID::pointer& cid,
                               const sci::cca::TypeMap::pointer& properties,
                               xmlNode** rootNode);
-  xmlNode* writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode);
+  void writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode);
   void readComponentNode(const sci::cca::ports::BuilderService::pointer& bs, xmlNode** node,
                          SSIDL::array1<sci::cca::ComponentID::pointer>& cids);
   void readConnectionNode(const sci::cca::ports::BuilderService::pointer& bs, xmlNode** node,

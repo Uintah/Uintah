@@ -239,15 +239,13 @@ void ApplicationLoader::saveFile()
     // to associate components with their Builders if a Builder was used.
     bool isInternalComponent = props->getBool("internal component", false);
     if (! isInternalComponent) {
-      xmlNode *node = writeComponentNode(*cidIter, props, &rootNode);
-      xmlAddChild(rootNode, node);
+      writeComponentNode(*cidIter, props, &rootNode);
     }
   }
 
   for (ConnectionIDPtrList::iterator connIDIter = connIDArray.begin();
        connIDIter != connIDArray.end(); connIDIter++) {
-    xmlNode *node = writeConnectionNode(*connIDIter, &rootNode);
-    xmlAddChild(rootNode, node);
+    writeConnectionNode(*connIDIter, &rootNode);
   }
 
   framework->releaseFrameworkService("cca.BuilderService", "cca.ApplicationLoaderService");
@@ -258,7 +256,7 @@ void ApplicationLoader::saveFile()
   xmlDoc = 0;
 }
 
-xmlNode* ApplicationLoader::writeComponentNode(const sci::cca::ComponentID::pointer& cid,
+void ApplicationLoader::writeComponentNode(const sci::cca::ComponentID::pointer& cid,
                                                const sci::cca::TypeMap::pointer& properties,
                                                xmlNode** rootNode)
 {
@@ -268,21 +266,25 @@ xmlNode* ApplicationLoader::writeComponentNode(const sci::cca::ComponentID::poin
   if (! b.empty()) {
     xmlNewProp(componentNode, BAD_CAST "builder", BAD_CAST b.c_str());
   }
-  return componentNode;
+  xmlAddChild(*rootNode, componentNode);
 }
 
 
-xmlNode* ApplicationLoader::writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode)
+void ApplicationLoader::writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode)
 {
-  xmlNode* connectionNode = xmlNewChild(*rootNode, 0, BAD_CAST "connection", 0);
   sci::cca::ComponentID::pointer user = cid->getUser();
   sci::cca::ComponentID::pointer provider = cid->getProvider();
+
+  //not writing the GO and UI port connections 
+  if(user->getInstanceName() == "SCIRun.GUIBuilder") return;
+
+  xmlNode* connectionNode = xmlNewChild(*rootNode, 0, BAD_CAST "connection", 0);
 
   xmlNewProp(connectionNode, BAD_CAST "user", BAD_CAST user->getInstanceName().c_str());
   xmlNewProp(connectionNode, BAD_CAST "usesport", BAD_CAST cid->getUserPortName().c_str());
   xmlNewProp(connectionNode, BAD_CAST "provider", BAD_CAST provider->getInstanceName().c_str());
   xmlNewProp(connectionNode, BAD_CAST "providesport", BAD_CAST cid->getProviderPortName().c_str());
-  return connectionNode;
+  xmlAddChild(*rootNode, connectionNode);
 }
 
 void ApplicationLoader::readComponentNode(const sci::cca::ports::BuilderService::pointer& bs,
