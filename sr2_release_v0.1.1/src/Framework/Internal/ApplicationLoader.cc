@@ -77,15 +77,18 @@ void ApplicationLoader::setFileName(const std::string& fn)
   }
 }
 
-void ApplicationLoader::loadFile(const std::string& fn, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
+void ApplicationLoader::loadFile(const std::string& fn, 
+                                 SSIDL::array1<sci::cca::ComponentID::pointer>& cids,
+                                 SSIDL::array1<sci::cca::ConnectionID::pointer>& connids)
 {
   fileName = fn;
-  loadFile(cidList, connList);
+  loadFile(cids,connids);
 }
 
 // options: get builder as argument or use GUIService to get any and all builders?
 // OR call ApplicationLoader from GUIService?
-void ApplicationLoader::loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
+void ApplicationLoader::loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cids,
+                                 SSIDL::array1<sci::cca::ConnectionID::pointer>& connids)
 {
   if (fileName.empty()) {
     throw CCAExceptionPtr(new CCAException("Empty file name"));
@@ -96,7 +99,7 @@ void ApplicationLoader::loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& 
   xmlParserCtxtPtr ctxt; /* the parser context */
   xmlDocPtr doc; /* the resulting document tree */
 
-  string srcDir = string(sci_getenv("SCIRUN_SRCDIR")) + string("/SCIRun/XML/application.dtd");
+  string srcDir = string(sci_getenv("SCIRUN_SRCDIR")) + string("/Framework/XML/application.dtd");
 
   xmlInitializeCatalog();
   xmlCatalogAdd(BAD_CAST "public", BAD_CAST "-//SCIRun2/Application DTD", BAD_CAST srcDir.c_str());
@@ -139,6 +142,31 @@ void ApplicationLoader::loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& 
 
   // iterate over nodes in XML tree and create instances, connections
   // position info -> GUI Service???
+  xmlNode* node = doc->children;
+  for(; node != 0; node = node->next) {
+    if(node->type == XML_ELEMENT_NODE &&
+       std::string(to_char_ptr(node->name)) == std::string("application")) {
+
+      xmlNode* libNode = node->children;
+      for(;libNode != 0; libNode = libNode->next) {
+        if(libNode->type == XML_ELEMENT_NODE &&
+           std::string(to_char_ptr(libNode->name)) == std::string("component")) {
+
+          readComponentNode(bs,&libNode,cids);          
+        }
+
+        if(libNode->type == XML_ELEMENT_NODE &&
+           std::string(to_char_ptr(libNode->name)) == std::string("connection")) {
+
+          readConnectionNode(bs,&libNode,connids);
+        }
+      }
+
+    }
+
+  }
+
+
 
   framework->releaseFrameworkService("cca.BuilderService", "cca.ApplicationLoaderService");
 
@@ -184,7 +212,7 @@ void ApplicationLoader::saveFile()
    * xmlNewChild() creates a new node, which is "attached" as child node
    * of rootNode node.
    */
-  xmlNewProp(rootNode, BAD_CAST "version", BAD_CAST SR2_VERSION);
+  //xmlNewProp(rootNode, BAD_CAST "version", BAD_CAST SR2_VERSION);
 
   sci::cca::Port::pointer bsp =
     framework->getFrameworkService("cca.BuilderService", "cca.ApplicationLoaderService");
@@ -257,14 +285,49 @@ xmlNode* ApplicationLoader::writeConnectionNode(const sci::cca::ConnectionID::po
   return connectionNode;
 }
 
-void ApplicationLoader::readComponentNode()
+void ApplicationLoader::readComponentNode(const sci::cca::ports::BuilderService::pointer& bs,
+                                          xmlNode** node,
+                                          SSIDL::array1<sci::cca::ComponentID::pointer>& cids)
 {
+  xmlAttrPtr nameAttr = get_attribute_by_name(*node, "name");
+  if(nameAttr != 0) {
+    std::string component_name(to_char_ptr(nameAttr->children->content));
+    std::cerr << "component_name = " << component_name << "\n";
+    sci::cca::ComponentID::pointer cid = bs->createInstance(std::string(), component_name, sci::cca::TypeMap::pointer(0));
+    cids.push_back(cid);
+  }
 }
 
 
-void ApplicationLoader::readConnectionNode()
+void ApplicationLoader::readConnectionNode(const sci::cca::ports::BuilderService::pointer& bs,
+                                           xmlNode** node,
+                                           SSIDL::array1<sci::cca::ConnectionID::pointer>& connids)
 {
+  xmlAttrPtr userAttr = get_attribute_by_name(*node, "user");
+  xmlAttrPtr usesportAttr = get_attribute_by_name(*node, "usesport");
+  xmlAttrPtr providerAttr = get_attribute_by_name(*node, "provider");
+  xmlAttrPtr providesportAttr = get_attribute_by_name(*node, "providesport");
+
+  if((userAttr != 0)&&(usesportAttr != 0)&&
+     (providerAttr != 0)&&(providesportAttr != 0)) {
+
+    std::string user(to_char_ptr(userAttr->children->content));
+    std::string usesport(to_char_ptr(usesportAttr->children->content));
+    std::string provider(to_char_ptr(providerAttr->children->content));
+    std::string providesport(to_char_ptr(providesportAttr->children->content));
+
+    sci::cca::ComponentID::pointer user_cid = bs->getComponentID(user);
+    sci::cca::ComponentID::pointer provider_cid = bs->getComponentID(provider);
+
+    sci::cca::ConnectionID::pointer connid = bs->connect(user_cid,usesport,provider_cid,providesport);
+    connids.push_back(connid);
+
+  }
+  else {
+    //error
+  }
 }
 
 
-}
+}  //end namespace SCIRun
+

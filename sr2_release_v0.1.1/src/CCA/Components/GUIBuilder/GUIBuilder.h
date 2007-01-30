@@ -150,6 +150,7 @@ public:
   static const std::string PROGRESS_PORT;
   static const std::string COMPONENTICONUI_PORT;
   static const std::string APP_EXT_WILDCARD;
+  static const std::string APP_EXT;
   static const std::string GUI_THREAD_NAME;
 
 private:

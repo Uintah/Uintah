@@ -78,8 +78,11 @@ public:
   virtual std::string getFileName() { return fileName; }
   virtual void setFileName(const std::string& fn);
 
-  virtual void loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList);
-  virtual void loadFile(const std::string& fn, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList);
+  virtual void loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cids,
+                        SSIDL::array1<sci::cca::ConnectionID::pointer>& connids);
+  virtual void loadFile(const std::string& fn, 
+                        SSIDL::array1<sci::cca::ComponentID::pointer>& cids,
+                        SSIDL::array1<sci::cca::ConnectionID::pointer>& connids);
 
   virtual void saveFile();
   virtual void saveFile(const std::string& filename);
@@ -93,8 +96,10 @@ private:
                               const sci::cca::TypeMap::pointer& properties,
                               xmlNode** rootNode);
   xmlNode* writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode);
-  void readComponentNode();
-  void readConnectionNode();
+  void readComponentNode(const sci::cca::ports::BuilderService::pointer& bs, xmlNode** node,
+                         SSIDL::array1<sci::cca::ComponentID::pointer>& cids);
+  void readConnectionNode(const sci::cca::ports::BuilderService::pointer& bs, xmlNode** node,
+                          SSIDL::array1<sci::cca::ConnectionID::pointer>& connids);
 
   std::string fileName;
   std::stack<xmlNodePtr> nodeStack;
