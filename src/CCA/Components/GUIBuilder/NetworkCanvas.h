@@ -115,6 +115,7 @@ public:
   void OnDisconnect(wxCommandEvent& event);
 
   void Connect(PortIcon* pUsed);
+  void Connect(sci::cca::ConnectionID::pointer connid); 
   bool ShowPossibleConnections(PortIcon* usesPort);
   void HighlightConnection(const wxPoint& point);
 

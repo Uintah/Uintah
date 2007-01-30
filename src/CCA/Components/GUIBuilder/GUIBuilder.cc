@@ -75,6 +75,7 @@ const std::string GUIBuilder::UIPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_
 const std::string GUIBuilder::PROGRESS_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "Progress");
 const std::string GUIBuilder::COMPONENTICONUI_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIconUI");
 const std::string GUIBuilder::APP_EXT_WILDCARD("*." + ApplicationLoader::APP_EXT);
+const std::string GUIBuilder::APP_EXT(ApplicationLoader::APP_EXT);
 
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;

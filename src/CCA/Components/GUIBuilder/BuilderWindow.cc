@@ -373,20 +373,49 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
 void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
   // need to save current app if user agrees and clear
+  wxBusyCursor wait;
+  wxString wildcard = wxT(GUIBuilder::APP_EXT_WILDCARD);
+  wxFileDialog fDialog(this, 
+                       wxT("Open application file"), 
+                       wxT(GUIBuilder::DEFAULT_OBJ_DIR), 
+                       wxT(wxEmptyString), 
+                       wildcard, 
+                       wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
+  statusBar->SetStatusText("Loading application file", 0);
 
-//   wxBusyCursor wait;
+  if(fDialog.ShowModal() == wxID_OK) {
+    wxString path = fDialog.GetPath();
+    SSIDL::array1<sci::cca::ComponentID::pointer> cidList;
+    SSIDL::array1<sci::cca::ConnectionID::pointer> connList;
 
-//   wxString wildcard(wxT("SCIRun2 application files"));
-//   wildcard += wxT(GUIBuilder::APP_EXT_WILDCARD);
-//   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
-//   statusBar->SetStatusText("Loading application file", 0);
-//   if (fDialog.ShowModal() == wxID_OK) {
-//     wxString path = fDialog.GetPath();
-//     // use GUIBuilder to load file
-//     statusBar->SetStatusText("Application file loaded", 0);
-//   } else {
-//     statusBar->SetStatusText("", 0);
-//   }
+    //Read XML and loads components and connections using BuilderService:
+    builder->loadApplication(path.c_str(),cidList,connList);
+
+    //Graphical parts of loading:
+    for(SSIDL::array1<sci::cca::ComponentID::pointer>::iterator cidIter = cidList.begin();
+        cidIter != cidList.end(); cidIter++) {
+
+      if(!(*cidIter).isNull()) {
+        networkCanvas->AddIcon(*cidIter);
+      }
+    }
+
+
+    for(SSIDL::array1<sci::cca::ConnectionID::pointer>::iterator connIDIter = connList.begin();
+        connIDIter != connList.end(); connIDIter++) {
+      
+      if(!(*connIDIter).isNull()) {
+        networkCanvas->Connect(*connIDIter);
+      }  
+
+    }
+
+
+
+    statusBar->SetStatusText("Application file loaded", 0);
+  } else {
+    statusBar->SetStatusText("", 0);
+  }
 }
 
 void BuilderWindow::OnSave(wxCommandEvent& event)
@@ -405,29 +434,28 @@ void BuilderWindow::OnSave(wxCommandEvent& event)
 void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 {
   wxBusyCursor wait;
-//   wxString wildcard(wxT("SCIRun2 application files"));
-//   wildcard += "(" + wxT(GUIBuilder::APP_EXT_WILDCARD) + ") | " + wxT(GUIBuilder::APP_EXT_WILDCARD);
-// std::cerr << "Default dir: " << GUIBuilder::DEFAULT_OBJ_DIR << std::endl;
-//   wxString path = wxFileSelector(wxT("Save application file"),
-//                                  wxT(GUIBuilder::DEFAULT_OBJ_DIR.c_str()),
-//                                  wxT(""),
-//                                  wxT(""),
-//                                  wildcard,
-//                                  wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
-  wxString path = wxFileSelector(wxEmptyString,
-                                 wxEmptyString,
-                                 wxEmptyString,
-                                 wxEmptyString,
-                                 wxEmptyString,
-                                 0,
-                                 this);
-//   if (! path.empty()) {
-//     statusBar->SetStatusText("Saving application file", 0);
-//     builder->saveApplication(path.c_str());
-//     statusBar->SetStatusText("Application file saved", 0);
-//   } else {
-//     statusBar->SetStatusText("", 0);
-//   }
+  wxString wildcard(wxT(GUIBuilder::APP_EXT_WILDCARD));
+  wxString extension(wxT(GUIBuilder::APP_EXT));
+  wxFileDialog fDialog(this,
+                       wxT("Save application file"),
+                       wxT(GUIBuilder::DEFAULT_OBJ_DIR),
+                       wxT(wxEmptyString),
+                       wildcard,
+                       wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
+
+  statusBar->SetStatusText("Saving application file", 0);
+  if(fDialog.ShowModal() == wxID_OK) {
+    wxString path = fDialog.GetPath();
+    wxString name = fDialog.GetFilename(); 
+    if(name.Find('.') == -1) {
+      path.Append('.');
+      path.Append(extension);
+    }  
+    builder->saveApplication(path.c_str());
+    statusBar->SetStatusText("Application file saved", 0);
+  } else {
+    statusBar->SetStatusText("", 0);
+  }
 }
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)

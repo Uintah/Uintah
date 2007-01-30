@@ -343,6 +343,23 @@ void NetworkCanvas::Connect(PortIcon* usesPortIcon)
   ClearPossibleConnections();
 }
 
+void NetworkCanvas::Connect(sci::cca::ConnectionID::pointer connid) {
+
+  sci::cca::ComponentID::pointer ucid = connid->getUser();
+  sci::cca::ComponentID::pointer pcid = connid->getProvider();
+
+  ComponentIcon* userCIcon = GetIcon(ucid);
+  ComponentIcon* providerCIcon = GetIcon(pcid);  
+
+  PortIcon* usesPortIcon = userCIcon->GetPortIcon(connid->getUserPortName());
+  PortIcon* providesPortIcon = providerCIcon->GetPortIcon(connid->getProviderPortName());
+
+  Connection *con = new Connection(usesPortIcon, providesPortIcon, connid);
+  connections.insert(std::make_pair(usesPortIcon, con));
+
+}
+
+
 bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
 {
   ComponentIcon* pCI = port->GetParent();
