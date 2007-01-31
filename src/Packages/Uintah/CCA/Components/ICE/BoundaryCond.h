@@ -309,6 +309,14 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     }
     IveSetBC = true;
   }
+  
+  
+//______________________________________________________________________
+//  Theoretically, we don't need to set the transverse face centered velocities
+//  boundary conditions.  This is from the days of doing corner coupling.  Not
+//  positive that it won't create a problem. Leave this weed for while
+//  01/31/07  
+#if 0
   //__________________________________
   // Neumann
   // -- Only modify the velocities that are tangential to a face.
@@ -339,6 +347,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     value = 0.0;  // so the debugging output is accurate 
   } 
   return IveSetBC; 
+#endif
 }
 
 /* --------------------------------------------------------------------- 
