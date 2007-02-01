@@ -167,7 +167,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==27){
+  } else if(flags->d_8or27==27 || flags->d_8or27==64){
     NGP=2;
     NGN=2;
   }
