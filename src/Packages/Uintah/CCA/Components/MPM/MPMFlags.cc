@@ -2,6 +2,8 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
+#include <Packages/Uintah/Core/Grid/BSplineInterpolator.h>
+//#include <Packages/Uintah/Core/Grid/AMRInterpolator.h>
 #include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -19,6 +21,7 @@ MPMFlags::MPMFlags()
   d_ref_temp = 0.0; // for thermal stress
   d_integrator_type = "explicit";
   d_integrator = Explicit;
+  d_AMR = false;
 
   d_artificial_viscosity = false;
   d_artificialViscCoeff1 = 0.2;
@@ -79,6 +82,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_integrator = Explicit;
   }
   mpm_flag_ps->get("nodes8or27", d_8or27);
+  mpm_flag_ps->get("AMR", d_AMR);
   mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
@@ -114,9 +118,11 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   delete d_interpolator;
 
   if(d_8or27==8){
-    d_interpolator = scinew LinearInterpolator();
+      d_interpolator = scinew LinearInterpolator();
   } else if(d_8or27==27){
     d_interpolator = scinew Node27Interpolator();
+  } else if(d_8or27==64){
+    d_interpolator = scinew BSplineInterpolator();
   }
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
