@@ -245,10 +245,11 @@
        <Level>
            <Box label = "throat">
               <lower>       [0.0,  0.0, 0.0]      </lower>
-              <upper>       [0.02,0.04,0.00025]  </upper>
+              <upper>       [0.02,0.06,0.00025]  </upper>
               <extraCells>  [1,1,1]               </extraCells>
-              <patches>     [1,1,1]               </patches>
+              <patches>     [1,2,1]               </patches>
            </Box>
+<!--
            <Box label = "mouth">
               <lower>       [0.00, 0.04,0.00]     </lower>
               <upper>       [0.02,0.06,0.00025]  </upper>
@@ -267,6 +268,7 @@
               <extraCells>  [1,1,1]               </extraCells>
               <patches>     [1,1,1]               </patches>
            </Box>
+-->
            <spacing>[.00025,.00025,.00025]</spacing>
        </Level>
     </Grid>
