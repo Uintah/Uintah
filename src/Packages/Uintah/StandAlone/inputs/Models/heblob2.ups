@@ -16,7 +16,8 @@
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-9      </delt_init>
+       <max_delt_increase>  2.0         </max_delt_increase>
+       <delt_init>          1.0e-5      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -154,6 +155,7 @@
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="delP_Dilatate"/>
+      <save label="viscosity"/>
       <save label= "modelEng_src"/>
       <save label= "cumulativeEnergyReleased"/>
       <save label= "rhs"/>
@@ -163,27 +165,7 @@
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
    
-   <Debug>
-       <dbg_timeStart>       1.00       </dbg_timeStart>
-       <dbg_timeStop>        0.05       </dbg_timeStop>
-       <dbg_outputInterval>  1e-9       </dbg_outputInterval>
-       <dbg_BeginIndex>     [[-1, -1,-1]]</dbg_BeginIndex>
-       <dbg_EndIndex>       [[2, 2,2]]  </dbg_EndIndex>
-       <dbg_Matls>           [0]        </dbg_Matls>
-       <dbg_SigFigs>         4          </dbg_SigFigs>
-       <debug label = "switchDebug_advance_advect"/>
-       <debug label = "switchDebug_explicit_press"/> 
-       <debug label = "switchDebug_equil_press"/>
-        <debug label = "switchTestConservation"/>
-       
-    <!--<debug label = "switchDebug_Initialize"/>        
-       <debug label = "switchDebug_vel_FC"/>                
-       <debug label = "switchDebug_explicit_press"/>      
-       <debug label = "switchDebug_PressFC"/>             
-       <debug label = "switchDebug_LagrangianValues"/>    
-       <debug label = "switchDebug_Source_Sink"/>         
-       <debug label = "switchDebug_advance_advect"/>  
-    -->         
+   <Debug>        
    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -289,10 +271,7 @@
         </constants>
        <geom_object>
               <difference>
-                <box label="world">
-                  <min>       [ -6.0, -6.0, -6.0 ]   </min>
-                  <max>       [ 6.0, 6.0, 6.0 ]      </max>
-                </box>
+                <box label="world">                  </box>
                 <cylinder label = "HeBlob">          </cylinder>
               </difference>
               <scalar>    0.00   </scalar>
