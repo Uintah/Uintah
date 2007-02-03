@@ -36,7 +36,7 @@ SRCS     += \
             $(SRCDIR)/ZListWriter.cc
 
 PSELIBS  := \
-            Core/CCA/PIDL Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
             Core/Thread Core/Containers Core/Exceptions
 
 LIBS := $(WX_LIBRARY)

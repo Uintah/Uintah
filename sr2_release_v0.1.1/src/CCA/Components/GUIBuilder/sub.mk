@@ -50,9 +50,13 @@ SRCS    += \
            $(SRCDIR)/ComponentWizardHelper.cc 
 
 PSELIBS := \
-           Framework Core/CCA/spec Core/CCA/PIDL \
-           Core/OS Core/Util Core/Thread Core/Exceptions
+           Framework Core/CCA/spec Core/CCA/PIDL Core/CCA/SSIDL \
+           Core/OS Core/Util Core/Containers Core/Thread Core/Exceptions
 
 LIBS := $(WX_LIBRARY)
+
+ifeq ($(HAVE_BABEL), yes)
+  LIBS += $(SIDL_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
