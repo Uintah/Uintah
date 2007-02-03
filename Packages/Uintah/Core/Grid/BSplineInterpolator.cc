@@ -119,23 +119,23 @@ double BSplineInterpolator::evalType3BSpline(const double& dx)
 void BSplineInterpolator::getBSplineGrads(double* dSd, const int* xn,
                                           const int& count,
                                           const int& low, const int& hi,
-                                          const double& cellpos, const double& h)
+                                          const double& cellpos)
 {
   for(int n=0;n<count;n++){
      if(xn[n]==low){
-       dSd[n]=evalType3BSplineGrad(cellpos-xn[n])/h;
+       dSd[n]=evalType3BSplineGrad(cellpos-xn[n]);
      }
      else if(xn[n]==hi-1){
-       dSd[n]=-evalType3BSplineGrad(xn[n]-cellpos)/h;
+       dSd[n]=-evalType3BSplineGrad(xn[n]-cellpos);
      }
      else if(xn[n]==low+1){
-       dSd[n]=evalType2BSplineGrad(cellpos-xn[n])/h;
+       dSd[n]=evalType2BSplineGrad(cellpos-xn[n]);
      }
      else if(xn[n]==hi-2){
-       dSd[n]=-evalType2BSplineGrad(xn[n]-cellpos)/h;
+       dSd[n]=-evalType2BSplineGrad(xn[n]-cellpos);
      }
      else{
-       dSd[n]=evalType1BSplineGrad(cellpos-xn[n])/h;
+       dSd[n]=evalType1BSplineGrad(cellpos-xn[n]);
      }
   }
 }
@@ -260,9 +260,9 @@ void BSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
   getBSplineWeights(Sy, yn, county, low.y(), hi.y(), cellpos.y());
   getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
 
-  getBSplineGrads(dSx,  xn, countx, low.x(), hi.x(), cellpos.x(), dx.x());
-  getBSplineGrads(dSy,  yn, county, low.y(), hi.y(), cellpos.y(), dx.y());
-  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z(), dx.z());
+  getBSplineGrads(dSx,  xn, countx, low.x(), hi.x(), cellpos.x());
+  getBSplineGrads(dSy,  yn, county, low.y(), hi.y(), cellpos.y());
+  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z());
 
   int n=0;
   for(int i=0;i<countx;i++){
@@ -297,26 +297,26 @@ BSplineInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
-                                                                                  
+
   int xn[4], yn[4], zn[4];
   int countx = 2;
   int county = 2;
   int countz = 2;
   double Sx[4],Sy[4],Sz[4];
   double dSx[4],dSy[4],dSz[4];
-                                                                                  
+
   findNodeComponents(ix,xn,countx,low.x(),hi.x());
   findNodeComponents(iy,yn,county,low.y(),hi.y());
   findNodeComponents(iz,zn,countz,low.z(),hi.z());
-                                                                                  
+
   getBSplineWeights(Sx, xn, countx, low.x(), hi.x(), cellpos.x());
   getBSplineWeights(Sy, yn, county, low.y(), hi.y(), cellpos.y());
   getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
-                                                                                  
-  getBSplineGrads(dSx,  xn, countx, low.x(), hi.x(), cellpos.x(), dx.x());
-  getBSplineGrads(dSy,  yn, county, low.y(), hi.y(), cellpos.y(), dx.y());
-  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z(), dx.z());
-                                                                                  
+
+  getBSplineGrads(dSx,  xn, countx, low.x(), hi.x(), cellpos.x());
+  getBSplineGrads(dSy,  yn, county, low.y(), hi.y(), cellpos.y());
+  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z());
+
   int n=0;
   for(int i=0;i<countx;i++){
     for(int j=0;j<county;j++){
