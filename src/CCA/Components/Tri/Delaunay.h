@@ -142,7 +142,7 @@ private:
 
   unsigned int next; //index of next node to be inserted into the mesh
   double xmin, xmax, ymin, ymax;
-  const static double INF = 1e300;
+  static const double INF;
 };
 
 }
