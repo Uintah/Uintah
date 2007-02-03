@@ -41,7 +41,7 @@ namespace Uintah {
 
     void getBSplineGrads(double* dSd, const int* xn,
                          const int& low, const int& hi, const int& count,
-                         const double& cellpos, const double& h);
+                         const double& cellpos);
 
     double evalType1BSpline(const double& cp);
     double evalType2BSpline(const double& cp);
