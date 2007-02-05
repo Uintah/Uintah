@@ -2,7 +2,7 @@
 #define UINTAH_HOMEBREW_Patch_H
 
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-//#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Region.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 
@@ -10,7 +10,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-
 #undef None
 
 #include <sgi_stl_warnings_off.h>
@@ -69,7 +68,7 @@ WARNING
      
 ****************************************/
     
-   class SCISHARE Patch {
+   class SCISHARE Patch : public Region {
    public:
 
      SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
@@ -548,38 +547,6 @@ WARNING
      void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
      int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
 
-
-   public:
-     
-    /********************
-      The following are needed in order to use Patch as a Box in
-      Core/Container/SuperBox.h (see
-      Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
-    *********************/
-    
-    IntVector getLow() const
-    { return getLowIndex(); }
-    
-    IntVector getHigh() const
-    { return getHighIndex(); }
-    
-    int getVolume() const
-    { return getVolume(getLow(), getHigh()); }
-    
-    int getArea(int side) const
-    {
-      int area = 1;
-      for (int i = 0; i < 3; i++)
-        if (i != side)
-          area *= getHigh()[i] - getLow()[i];
-      return area;
-    }
-    
-    static int getVolume(const IntVector& low, const IntVector& high)
-    {
-      return (high.x() - low.x()) * (high.y() - low.y()) * (high.z() - low.z());
-    }
-
    protected:
      friend class Level;
      friend class NodeIterator;     
@@ -614,8 +581,9 @@ WARNING
      // Locations in space of opposite box corners.
      // These are in terms of cells positioned from the level's anchor,
      // and they include extra cells
-     IntVector d_lowIndex;
-     IntVector d_highIndex;
+     // Defined in parent class Region
+     //IntVector d_lowIndex;
+     //IntVector d_highIndex;
 
      //////////
      // Locations in space of opposite box corners.
