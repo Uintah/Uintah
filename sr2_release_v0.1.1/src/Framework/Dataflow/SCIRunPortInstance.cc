@@ -50,6 +50,7 @@ SCIRunPortInstance::SCIRunPortInstance(SCIRunComponentInstance* component, Port*
                                        const sci::cca::TypeMap::pointer& properties, DataflowPortType porttype)
   : component(component), port(port), porttype(porttype), properties(properties)
 {
+  setDefaultProperties();
 }
 
 SCIRunPortInstance::~SCIRunPortInstance()
