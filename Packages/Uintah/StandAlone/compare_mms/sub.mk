@@ -55,3 +55,4 @@ LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
 include $(SCIRUN_SCRIPTS)/program.mk
 
 
+compare_mms: prereqs Packages/Uintah/StandAlone/compare_mms/compare_mms
