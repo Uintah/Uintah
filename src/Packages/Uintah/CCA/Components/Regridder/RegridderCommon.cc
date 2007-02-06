@@ -146,7 +146,15 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       }
     }
     GATHER:
-    MPI_Allreduce(&result,&retval,1,MPI_INT,MPI_LOR,d_myworld->getComm());
+    //Only reduce if we are running in parallel
+    if(d_myworld->size()>1)
+    {
+      MPI_Allreduce(&result,&retval,1,MPI_INT,MPI_LOR,d_myworld->getComm());
+    }
+    else
+    {
+      retval=result;
+    }
     
     if(retval)
       d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
