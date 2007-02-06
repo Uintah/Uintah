@@ -104,7 +104,7 @@ if [ -z "$THIRDPARTY_INSTALL_DIR" ] ; then
 fi
 
 export ROOT_DIR=`pwd`
-export TEMP_DIR="build"
+export BUILD_DIR="build"
 
 function getbabel() {
   build_dir="$ROOT_DIR/babel/local"
@@ -159,8 +159,14 @@ function getwxwidgets_linux() {
 # ensure make is on the system
 ensure make --version
 
-babelbin=`which babel`
+# without gui
+export CONFIG_ARGS="--enable-scirun2 --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
 
+if [ $DEBUG_BUILD ] ; then
+  export CONFIG_ARGS="$CONFIG_ARGS --enable-debug"
+fi
+
+babelbin=`which babel`
 babeldir=
 if [ -e "$babelbin" ] ; then
   babelbindir=`dirname $babelbin`
@@ -169,24 +175,25 @@ else
   getbabel $babeldir
 fi
 echo -e "Using Babel installation in $babeldir."
+export CONFIG_ARGS="$CONFIG_ARGS --with-babel=$babeldir"
 
-wxconfigbin=`which wx-config`
-wxdir=
-if [ -e "$wxconfigbin" ] ; then
-  wxbindir=`dirname $wxconfigbin`
-  wxdir=`dirname $wxbindir`
-else
-  if test $platform = "darwin" ; then
-    getwxwidgets_darwin $wxdir
+if [ ! $NO_GUI ] ; then
+  wxconfigbin=`which wx-config`
+  wxdir=
+  if [ -e "$wxconfigbin" ] ; then
+    wxbindir=`dirname $wxconfigbin`
+    wxdir=`dirname $wxbindir`
   else
-    getwxwidgets_linux $wxdir
+    if test $platform = "darwin" ; then
+      getwxwidgets_darwin $wxdir
+    else
+      getwxwidgets_linux $wxdir
+    fi
   fi
+  echo -e "Using wxWidgets installation in $wxdir."
+  export CONFIG_ARGS="$CONFIG_ARGS --with-wxwidgets=$wxdir"
 fi
-echo -e "Using wxWidgets installation in $wxdir."
 
-# without gui
-export CONFIG_MIN="--enable-scirun2 --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
-
-#if test -n "$DEBUG_BUILD" -a -n "$NO_GUI" ; then
-#elif
-#fi
+try "cd $BUILD_DIR"
+try "$ROOT_DIR/src/configure $CONFIG_ARGS"
+try "make"
