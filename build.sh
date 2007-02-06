@@ -37,27 +37,19 @@
 #
 
 function usage() {
-  echo -e "Usage: build.sh [--debug] [--no-gui] [--help] <path to SCIRun Thirdparty>\nSCIRun Thirdparty libraries available from www.sci.utah.edu."
-  exit 0
+  #echo -e "Usage: build.sh [--debug] [--no-gui] [--help] [--mpi] path to SCIRun Thirdparty"
+  echo -e "Usage: build.sh [OPTION...] SCIRun Thirdparty path"
+  echo -e "Help options\n  --help, -h\t\t\tShow this help message."
+  echo -e "Build options\n  --debug, -d\t\t\tBuild SCIRun2 in debug mode."
+  echo -e "  --no-gui\t\t\tBuild SCIRun2 without a gui."
+  echo -e "  --mpi[=DIR]\t\t\tBuild SCIRun2 with MPI (optional path)."
+  echo -e "\nThis script will configure and build SCIRun2 based on the options provided to this script.\nSee (site?) for more configuration options.\n"
+  echo -e "This script will attempt to detect Babel (site?) libraries on your system.\nIf not found, version 1.0.2 will be downloaded and built.\n"
+  echo -e "This script will also attempt to detect wxWidgets (site?) 2.6.x on your system if configuring with a GUI.\nIf not found and if configuring with a GUI, version 2.6.3 will be downloaded and built.\n"
+  echo -e "To build SCIRun2 with parallel component support, use the --mpi option.\nIf an MPI implementation is not installed in standard system directories, provide the path.\nLAM-MPI and MPICH are supported.\n"
+  echo -e "SCIRun Thirdparty libraries (required) are available for download from www.sci.utah.edu."
+  exit $1
 }
-
-## check and process args
-if [ $# -lt 1 ] ; then
-  usage
-fi
-
-
-## from SCIRun build script, author McKay Davis
-if test `uname` = "Darwin"; then
-  getcommand="curl -O"
-  platform="darwin"
-elif test `uname` = "Linux"; then
-  getcommand="wget"
-  platform="linux"
-else
-  echo "Unsupported system.  Please run on OSX or Linux"
-  exit 1
-fi
 
 ## from SCIRun build script, author McKay Davis
 # will cause the script to bailout if the passed in command fails
@@ -75,32 +67,61 @@ function try() {
 function ensure() {
   $* >& /dev/null
   if [ $? != "0" ]; then
-      echo -e "\n***ERROR, $* is required but not found on this system\n"
+      echo -e "\n***ERROR: $* is required but not found on this system\n"
       exit 1
   fi
 }
 
-for a in $* ; do
-  if [ $a = "--help" ] ; then
-    usage
-  elif [ $a = "--debug" ] ; then
-    export DEBUG_BUILD=1
-  elif [ $a = "--no-gui" ] ; then
-    export NO_GUI=1
-  else
-    # check for SCIRun thirdparty
-    if [ -d $a ] ; then
-      export THIRDPARTY_INSTALL_DIR=$a
-    else
-      echo "Error: bad path to SCIRun Thirdparty libraries: $a"
-      usage
-    fi
-  fi
+## check and process args
+if [ $# -lt 1 ] ; then
+  usage 1
+fi
+
+## from SCIRun build script, author McKay Davis
+if test `uname` = "Darwin"; then
+  getcommand="curl -O"
+  platform="darwin"
+elif test `uname` = "Linux"; then
+  getcommand="wget"
+  platform="linux"
+else
+  echo "Unsupported system.  Please run on OSX or Linux"
+  exit 1
+fi
+
+mpidir=
+while [ "$1" != "" ] ; do
+  case $1 in
+    -h | --help )
+      usage 0
+      ;;
+    --no-gui )
+      export NO_GUI=1
+      ;;
+    -d | --debug )
+      export DEBUG_BUILD=1
+      ;;
+    --mpi )
+      export MPI_BUILD=1
+      ;;
+    --mpi=* )
+      export MPI_BUILD=1
+      mpidir=${1#--mpi=}
+      #echo "mpidir=$mpidir"
+      ;;
+    * )
+      if [ -d $1 ] ; then
+        export THIRDPARTY_INSTALL_DIR=$1
+      fi
+      usage 1
+      ;;
+  esac
+  shift
 done
 
 if [ -z "$THIRDPARTY_INSTALL_DIR" ] ; then
-  echo "Error: missing path to SCIRun Thirdparty libraries."
-  usage
+  echo -e "***ERROR: missing path to SCIRun Thirdparty libraries.\n"
+  usage 2
 fi
 
 export ROOT_DIR=`pwd`
@@ -192,6 +213,14 @@ if [ ! $NO_GUI ] ; then
   fi
   echo -e "Using wxWidgets installation in $wxdir."
   export CONFIG_ARGS="$CONFIG_ARGS --with-wxwidgets=$wxdir"
+fi
+
+if [ $MPI_BUILD ] ; then
+  if [ -n "$mpidir" ] ; then
+    export CONFIG_ARGS="$CONFIG_ARGS --with-mpi=$mpidir"
+  else
+    export CONFIG_ARGS="$CONFIG_ARGS --with-mpi"
+  fi
 fi
 
 try "cd $BUILD_DIR"
