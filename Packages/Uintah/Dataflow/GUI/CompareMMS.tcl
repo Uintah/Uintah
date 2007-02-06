@@ -43,10 +43,10 @@ itcl_class Uintah_Operators_CompareMMS {
         pack  $w.f2
         set the_com "$this-c needexecute"
         
-        #label -text "Include extra cells in difference calculation"
-        radiobutton $w.f2.extraCells_x  -text "(x)" -value 1  -variable $this-extraCells_x -command $the_com
-        radiobutton $w.f2.extraCells_y  -text "(y)" -value 1  -variable $this-extraCells_y -command $the_com
-        radiobutton $w.f2.extraCells_z  -text "(z)" -value 1  -variable $this-extraCells_z -command $the_com
+        label $w.f2.header -text "Include extra cells in difference calculation"
+        checkbutton $w.f2.extraCells_x  -text "(x)" -variable $this-extraCells_x -command $the_com
+        checkbutton $w.f2.extraCells_y  -text "(y)" -variable $this-extraCells_y -command $the_com
+        checkbutton $w.f2.extraCells_z  -text "(z)" -variable $this-extraCells_z -command $the_com
         
         # Select the type of output you'd like
         frame $w.output_choice -borderwidth 2 -relief groove
@@ -56,6 +56,7 @@ itcl_class Uintah_Operators_CompareMMS {
         radiobutton $w.output_choice.diff      -text "Difference (1) - (2)"                -value 2  -variable $the_var -command $the_com
         
         pack $w.output_choice.original $w.output_choice.exact $w.output_choice.diff -anchor w
+        pack $w.f2.header -padx 10
         pack $w.f2.extraCells_x $w.f2.extraCells_y $w.f2.extraCells_z  -anchor w
 
         pack $w.f1.field_name $w.f1.field_time -padx 10
