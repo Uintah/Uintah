@@ -491,8 +491,11 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
             if (pLoadCurveID[idx] == nofHeatFluxBCs) {
               if (bcs_type == "HeatFlux")
                 pExternalHeatFlux[idx] = phf->getFlux(px[idx], fluxPerPart);
-              if (bcs_type == "ArchesHeatFlux")
+              if (bcs_type == "ArchesHeatFlux") {
                 pExternalHeatFlux[idx] = pahf->getFlux(px[idx], fluxPerPart);
+                cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx] 
+                     << endl;
+              }
             }
           }
         } // matl loop
@@ -1495,7 +1498,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         }
         if (!heatFluxMagPerPart.empty()) {
           double mag = heatFluxMagPerPart[0];
-	  //          cout << "heat flux mag = " << mag << endl;
+	  cout << "heat flux mag = " << mag << endl;
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             //input the theta calculation here.
@@ -1504,7 +1507,8 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
             if (loadCurveID < 0) {
               pExternalHeatFlux_new[idx] = 0.;
             } else {
-              pExternalHeatFlux_new[idx] = mag;
+              //              pExternalHeatFlux_new[idx] = mag;
+              pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
             }
           }
         }
