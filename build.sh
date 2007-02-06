@@ -51,7 +51,7 @@ function usage() {
   exit $1
 }
 
-## from SCIRun build script, author McKay Davis
+## try function from SCIRun build script, author McKay Davis
 # will cause the script to bailout if the passed in command fails
 function try() {
   $*
@@ -61,7 +61,7 @@ function try() {
   fi
 }
 
-## from SCIRun build script, author McKay Davis
+## ensure function from SCIRun build script, author McKay Davis
 # functionally equivalent to try(),
 # but it prints a different error message
 function ensure() {
@@ -77,7 +77,7 @@ if [ $# -lt 1 ] ; then
   usage 1
 fi
 
-## from SCIRun build script, author McKay Davis
+## code snippet from SCIRun build script, author McKay Davis
 if test `uname` = "Darwin"; then
   getcommand="curl -O"
   platform="darwin"
@@ -112,8 +112,9 @@ while [ "$1" != "" ] ; do
     * )
       if [ -d $1 ] ; then
         export THIRDPARTY_INSTALL_DIR=$1
+      else
+	usage 1
       fi
-      usage 1
       ;;
   esac
   shift
@@ -128,6 +129,7 @@ export ROOT_DIR=`pwd`
 export BUILD_DIR="build"
 
 function getbabel() {
+  echo "***Downloading Babel 1.0.2***"
   build_dir="$ROOT_DIR/babel/local"
   babel_version="babel-1.0.2"
   babel_archive="$babel_version.tar.gz"
@@ -147,6 +149,7 @@ function getbabel() {
 }
 
 function getwxwidgets_darwin() {
+  echo "***Downloading wxMac 2.6.3***"
   wxwidgets_version="wxMac-2.6.3"
   wxwidgets_archive="$wxwidgets_version.tar.gz"
   build_dir="$ROOT_DIR/wxwidgets/local"
@@ -162,6 +165,7 @@ function getwxwidgets_darwin() {
 }
 
 function getwxwidgets_linux() {
+  echo "***Downloading wxGTK 2.6.3***"
   wxwidgets_version="wxGTK-2.6.3"
   wxwidgets_archive="$wxwidgets_version.tar.gz"
 
