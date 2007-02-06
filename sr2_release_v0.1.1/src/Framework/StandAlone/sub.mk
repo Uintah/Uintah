@@ -54,6 +54,10 @@ endif
 
 LIBS := $(GLOBUS_LIBRARY)
 
+ifeq ($(HAVE_BABEL), yes)
+  LIBS += $(SIDL_LIBRARY)
+endif
+
 ifeq ($(HAVE_MPI),yes)
   LIBS += $(MPI_LIBRARY)
 endif
@@ -81,6 +85,10 @@ else
   ifeq ($(HAVE_GLOBUS),yes)
 	PSELIBS += Core/globus_threads
   endif
+endif
+
+ifeq ($(HAVE_BABEL), yes)
+  LIBS += $(SIDL_LIBRARY)
 endif
 
 ifeq ($(HAVE_MPI),yes)
