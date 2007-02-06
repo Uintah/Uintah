@@ -118,6 +118,27 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   }
   
   double theta = atan(test_pt.y()/test_pt.x());
+  // First quadrant
+  if (test_pt.x() >= 0 && test_pt.y() >= 0) {
+    theta += 2.*M_PI;
+  }
+
+  // Second quadrant
+  if (test_pt.x() < 0 && test_pt.y() >= 0) {
+    theta += M_PI;
+  }
+
+  // Third quadrant
+  if (test_pt.x() < 0 && test_pt.y() < 0) {
+    theta += M_PI;
+
+  }
+
+  // Fourth quadrant
+  if (test_pt.x() >= 0 && test_pt.y() < 0) {
+    theta += 2.* M_PI;
+
+  }
 
   double minValue = interpolateRadial(min,theta);
   double maxValue = interpolateRadial(max,theta);

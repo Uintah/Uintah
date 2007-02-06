@@ -49,6 +49,7 @@ GENERAL INFORMATION
 
    double d_length;
    Point d_top, d_bottom;
+   double d_thetaBegin, d_thetaEnd;
  };
 
 }

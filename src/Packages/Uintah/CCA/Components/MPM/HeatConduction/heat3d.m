@@ -547,7 +547,7 @@ function [K,F] = apply_bcs(K,F,bcs)
           kvalue = K(j,node);
           F(j) -= kvalue*bcvalue;
           if (j != node)
-            K(j,node) = 0;
+	    K(j,node) = 0;
             K(node,j) = 0;
           else
             K(j,node) = 1;
