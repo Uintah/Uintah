@@ -59,26 +59,6 @@ else
   exit 1
 fi
 
-for a in $* ; do
-  if [ $a = "--help" ] ; then
-    usage
-  elif [ $a = "--debug" ] ; then
-    export DEBUG_BUILD=1
-  elif [ $a = "--no-gui" ] ; then
-    export NO_GUI=1
-  else
-    # check for SCIRun thirdparty
-    if [ -d $a ] ; then
-      export THIRDPARTY_INSTALL_DIR=$a
-    else
-      usage
-    fi
-  fi
-done
-
-export ROOT_DIR=`pwd`
-export TEMP_DIR="build"
-
 ## from SCIRun build script, author McKay Davis
 # will cause the script to bailout if the passed in command fails
 function try() {
@@ -100,26 +80,113 @@ function ensure() {
   fi
 }
 
+for a in $* ; do
+  if [ $a = "--help" ] ; then
+    usage
+  elif [ $a = "--debug" ] ; then
+    export DEBUG_BUILD=1
+  elif [ $a = "--no-gui" ] ; then
+    export NO_GUI=1
+  else
+    # check for SCIRun thirdparty
+    if [ -d $a ] ; then
+      export THIRDPARTY_INSTALL_DIR=$a
+    else
+      echo "Error: bad path to SCIRun Thirdparty libraries: $a"
+      usage
+    fi
+  fi
+done
+
+if [ -z "$THIRDPARTY_INSTALL_DIR" ] ; then
+  echo "Error: missing path to SCIRun Thirdparty libraries."
+  usage
+fi
+
+export ROOT_DIR=`pwd`
+export TEMP_DIR="build"
 
 function getbabel() {
   build_dir="$ROOT_DIR/babel/local"
-  try "$getcommand http://www.llnl.gov/CASC/components/docs/babel-1.0.2.tar.gz"
-  try "tar xzvf babel-1.0.0.tar.gz"
+  babel_version="babel-1.0.2"
+  babel_archive="$babel_version.tar.gz"
+  try "$getcommand http://www.llnl.gov/CASC/components/docs/$babel_archive"
+  try "tar xzvf $babel_archive"
   try "mkdir -p $build_dir"
-  try "cd babel-1.0.0"
+  try "cd $babel_version"
   if [ $platform = "darwin" ] ; then
-    try "./configure --prefix=$ROOT_DIR/babel/local --disable-fortran77"
+    try "./configure --prefix=$build_dir --disable-fortran77"
   else
-    try "./configure --prefix=$ROOT_DIR/babel/local"
+    try "./configure --prefix=$build_dir"
   fi
   try "make"
   try "make install"
+  try "cd $ROOT_DIR"
+  return $build_dir
 }
 
+function getwxwidgets_darwin() {
+  wxwidgets_version="wxMac-2.6.3"
+  wxwidgets_archive="$wxwidgets_version.tar.gz"
+  build_dir="$ROOT_DIR/wxwidgets/local"
+  try "$getcommand http://prdownloads.sourceforge.net/wxwindows/$wxwidgets_archive"
+  try "tar xzvf $wxwidgets_archive"
+  try "mkdir -p $build_dir"
+  try "cd $wxwidgets_version"
+  try "./configure --prefix=$build_dir --enable-shared --enable-stl --enable-debug_gdb --enable-debug_flag --enable-debug_info --enable-debug_cntxt --enable-mem_tracing --enable-profile --with-opengl --enable-debug --enable-tabdialog --enable-std_string --enable-std_iostreams"
+  try "make"
+  try "make install"
+  try "cd $ROOT_DIR"
+  eval "$1=$build_dir"
+}
+
+function getwxwidgets_linux() {
+  wxwidgets_version="wxGTK-2.6.3"
+  wxwidgets_archive="$wxwidgets_version.tar.gz"
+
+  build_dir="$ROOT_DIR/wxwidgets/local"
+  try "$getcommand http://prdownloads.sourceforge.net/wxwindows/$wxwidgets_archive"
+  try "tar xzvf $wxwidgets_archive"
+  try "mkdir -p $build_dir"
+  try "cd $wxwidgets_version"
+  try "./configure --prefix=$build_dir --enable-shared --enable-stl --enable-debug_gdb --enable-debug_flag --enable-debug_info --enable-debug_cntxt --enable-mem_tracing --enable-profile --with-opengl --enable-debug --enable-tabdialog --enable-std_string --enable-std_iostreams"
+  try "make"
+  try "make install"
+  try "cd $ROOT_DIR"
+  eval "$1=$build_dir"
+}
 
 # ensure make is on the system
 ensure make --version
-babelbin=`which babel`
-wxconfigbin=`which wx-config`
 
-export CONFIG_MIN="--enable-scirun2 --with-thirdparty=???"
+babelbin=`which babel`
+
+babeldir=
+if [ -e "$babelbin" ] ; then
+  babelbindir=`dirname $babelbin`
+  babeldir=`dirname $babelbindir`
+else
+  getbabel $babeldir
+fi
+echo -e "Using Babel installation in $babeldir."
+
+wxconfigbin=`which wx-config`
+wxdir=
+if [ -e "$wxconfigbin" ] ; then
+  wxbindir=`dirname $wxconfigbin`
+  wxdir=`dirname $wxbindir`
+else
+  if test $platform = "darwin" ; then
+    getwxwidgets_darwin $wxdir
+  else
+    getwxwidgets_linux $wxdir
+  fi
+fi
+echo -e "Using wxWidgets installation in $wxdir."
+
+# without gui
+export CONFIG_MIN="--enable-scirun2 --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
+
+#if test -n "$DEBUG_BUILD" -a -n "$NO_GUI" ; then
+#elif
+#fi
