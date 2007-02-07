@@ -131,12 +131,15 @@ export ROOT_DIR=`pwd`
 export BUILD_DIR="build"
 
 function getbabel() {
-  echo "***Downloading Babel 1.0.2***"
   build_dir="$ROOT_DIR/babel/local"
   babel_version="babel-1.0.2"
   babel_archive="$babel_version.tar.gz"
-  try "$getcommand http://www.llnl.gov/CASC/components/docs/$babel_archive"
-  try "tar xzvf $babel_archive"
+
+  if [ ! -e "$ROOT_DIR/$babel_version" ] ; then
+    echo "***Downloading Babel 1.0.2***"
+    try "$getcommand http://www.llnl.gov/CASC/components/docs/$babel_archive"
+    try "tar xzvf $babel_archive"
+  fi
   try "mkdir -p $build_dir"
   try "cd $babel_version"
   if [ $platform = "darwin" ] ; then
@@ -152,15 +155,18 @@ function getbabel() {
 }
 
 function getwxwidgets_darwin() {
-  echo "***Downloading wxMac 2.6.3***"
   wxwidgets_version="wxMac-2.6.3"
   wxwidgets_archive="$wxwidgets_version.tar.gz"
   build_dir="$ROOT_DIR/wxwidgets/local"
-  try "$getcommand http://prdownloads.sourceforge.net/wxwindows/$wxwidgets_archive"
-  try "tar xzvf $wxwidgets_archive"
+
+  if [ ! -e "$ROOT_DIR/wxwidgets_version" ] ; then
+    echo "***Downloading wxMac 2.6.3***"
+    try "$getcommand http://umn.dl.sourceforge.net/sourceforge/wxwindows/$wxwidgets_archive"
+    try "tar xzvf $wxwidgets_archive"
+  fi
   try "mkdir -p $build_dir"
   try "cd $wxwidgets_version"
-  try "./configure --prefix=$build_dir --enable-shared --enable-stl --enable-debug_gdb --enable-debug_flag --enable-debug_info --enable-debug_cntxt --enable-mem_tracing --enable-profile --with-opengl --enable-debug --enable-tabdialog --enable-std_string --enable-std_iostreams"
+  try "./configure --prefix=$build_dir --enable-shared --enable-stl --with-opengl --enable-tabdialog --enable-std_string --enable-std_iostreams"
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
@@ -169,16 +175,18 @@ function getwxwidgets_darwin() {
 }
 
 function getwxwidgets_linux() {
-  echo "***Downloading wxGTK 2.6.3***"
   wxwidgets_version="wxGTK-2.6.3"
   wxwidgets_archive="$wxwidgets_version.tar.gz"
-
   build_dir="$ROOT_DIR/wxwidgets/local"
-  try "$getcommand http://prdownloads.sourceforge.net/wxwindows/$wxwidgets_archive"
-  try "tar xzvf $wxwidgets_archive"
+
+  if [ ! -e "$ROOT_DIR/wxwidgets_version" ] ; then
+    echo "***Downloading wxGTK 2.6.3***"
+    try "$getcommand http://umn.dl.sourceforge.net/sourceforge/wxwindows/$wxwidgets_archive"
+    try "tar xzvf $wxwidgets_archive"
+  fi
   try "mkdir -p $build_dir"
   try "cd $wxwidgets_version"
-  try "./configure --prefix=$build_dir --enable-shared --enable-stl --enable-debug_gdb --enable-debug_flag --enable-debug_info --enable-debug_cntxt --enable-mem_tracing --enable-profile --with-opengl --enable-debug --enable-tabdialog --enable-std_string --enable-std_iostreams"
+  try "./configure --prefix=$build_dir --enable-shared --enable-stl --with-opengl --enable-tabdialog --enable-std_string --enable-std_iostreams"
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
