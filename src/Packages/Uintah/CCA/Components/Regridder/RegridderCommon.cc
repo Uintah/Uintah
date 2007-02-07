@@ -100,7 +100,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       //fine patch deque
       for(int p=0;p<cp->size();p++)
       {
-        deque<Box> cpq, fpq, difference;  
+        deque<Region> cpq, fpq, difference;  
         const Patch *patch=cp->get(p);
 
         Patch::selectType fp;
@@ -112,29 +112,25 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         }
         
         //add coarse patch to cpq
-        cpq.push_back(Box(patch->getInteriorCellLowIndex().asPoint(),
-                          patch->getInteriorCellHighIndex().asPoint()));
+        cpq.push_back(Region(patch->getInteriorCellLowIndex(),
+                          patch->getInteriorCellHighIndex()));
 
         //add overlapping fine patches to fpq
         for(int p=0;p<fp.size();p++)
-          fpq.push_back(Box(fine_level->mapCellToCoarser(fp[p]->getInteriorCellLowIndex()).asPoint(),
-                            fine_level->mapCellToCoarser(fp[p]->getInteriorCellHighIndex()).asPoint()));
+          fpq.push_back(Region(fine_level->mapCellToCoarser(fp[p]->getInteriorCellLowIndex()),
+                            fine_level->mapCellToCoarser(fp[p]->getInteriorCellHighIndex())));
 
         //compute region of coarse patches that do not contain fine patches
-        difference=Box::difference(cpq,fpq);
+        difference=Region::difference(cpq,fpq);
       
         //get flags for coarse patch
         constCCVariable<int> flags;
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(deque<Box>::iterator box=difference.begin();box<difference.end();box++)
+        for(deque<Region>::iterator region=difference.begin();region<difference.end();region++)
         {
-          //convert back to intvectors
-          IntVector low(IntVector(box->lower()));
-          IntVector high(IntVector(box->upper()));
-
-          for (CellIterator ci(low, high); !ci.done(); ci++)
+          for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
             if (flags[*ci])
             {
