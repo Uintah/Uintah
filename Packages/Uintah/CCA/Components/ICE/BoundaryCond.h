@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
@@ -109,6 +110,11 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                         const Patch* patch,
                         const VarLabel* label,
                         DataWarehouse* new_dw);  
+  
+  
+  void set_CFI_BC( CCVariable<double>& q_CC, const Patch* patch);
+  
+  
 template<class T> 
   void setBC(T& variable, 
              const  string& kind,
@@ -304,7 +310,9 @@ bool getIteratorBCValueBCKind( const Patch* patch,
       }
     }else {    // (xplus, yplus, zplus) faces
       for (iter=bound.begin(); iter != bound.end(); iter++) {
-        vel_FC[*iter] = value;
+        IntVector c = *iter;
+        vel_FC[c] = value;
+ 
       }
     }
     IveSetBC = true;
@@ -461,6 +469,57 @@ void setBC(T& vel_FC,
     }  // bcKind != notSet
   }  // face loop
 }
-  
+/* --------------------------------------------------------------------- 
+ Function~  set_CFI_BC--      
+ Purpose~  set the boundary condition at the coarse fine interface.  Use
+  A Taylor's series expansion
+ ---------------------------------------------------------------------  */
+template <class T>
+void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)        
+{ 
+  BC_doing << "set_CFI_BC "<< endl; 
+  //__________________________________
+  // On the fine levels at the coarse fine interface 
+  BC_dbg << *patch << " ";
+  patch->printPatchBCs(BC_dbg);
+
+  if(patch->hasCoarseFineInterfaceFace() ){  
+    BC_dbg << " BC at coarse/Fine interfaces " << endl;
+    //__________________________________
+    // Iterate over coarsefine interface faces
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+      
+      IntVector oneCell = patch->faceDirection(face);
+      int p_dir = patch->faceAxes(face)[0];  //principal dir.
+      Vector dx = patch->dCell();
+      
+      for(CellIterator itr = patch->getFaceCellIterator(face, "minusEdgeCells"); !itr.done(); itr++){
+        IntVector f_cell = *itr;
+        IntVector f_adj  = f_cell  - oneCell;
+        IntVector f_adj2 = f_cell  - IntVector(2,2,2)*oneCell;
+        
+        // backward differencing
+        T grad_q = (q_CC[f_adj] - q_CC[f_adj2])/dx[p_dir];
+        T q_new  =  q_CC[f_adj] + grad_q * dx[p_dir]; 
+            
+        T correction =  q_CC[f_cell] - q_new; 
+        q_CC[f_cell] = q_new;
+       
+        cout << " face " << patch->getFaceName(face) 
+             << " f_cell " << f_cell 
+             << " f_adj " << f_adj
+             << " f_adj2 " << f_adj2 
+             << " grad_q " << grad_q << endl;
+             
+             
+        cout << " q_CC " << q_CC[f_cell] << " correction " << correction << endl;  
+      }
+    }  // face loop
+     
+  }  // patch has coarse fine interface 
+}
 } // End namespace Uintah
 #endif
