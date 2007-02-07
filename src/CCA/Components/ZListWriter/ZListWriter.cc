@@ -53,18 +53,16 @@ void ZListWriter::setServices(const sci::cca::Services::pointer& svc)
   services = svc;
   //register provides ports here ...
 
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
   ZLUIPort *uip = new ZLUIPort(services);
   uip->setParent(this);
   ZLUIPort::pointer uiPortPtr = ZLUIPort::pointer(uip);
 
-  svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", svc->createTypeMap());
 
-  ZLComponentIcon::pointer ciPortPtr =
-    ZLComponentIcon::pointer(new ZLComponentIcon);
+  ZLComponentIconUI::pointer ciPortPtr = ZLComponentIconUI::pointer(new ZLComponentIconUI);
 
-  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon", props);
-  svc->registerUsesPort("listport","ZListPort", props);
+  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIconUI", svc->createTypeMap());
+  svc->registerUsesPort("listport","ZListPort", svc->createTypeMap());
 }
 
 int ZLUIPort::ui()
