@@ -132,7 +132,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         //__________________________________
         //  debugging
         #if 0
-        cout <<"Face: "<< face << " one_or_zero " << one_or_zero
+        cout <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
              <<"\t child " << child  <<" NumChildren "<<numChildren 
              <<"\t BC kind "<< bc_kind
              <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
@@ -198,7 +198,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face
+          BC_dbg <<"Face: "<< patch->getFaceName(face)
                <<"\t child " << child  <<" NumChildren "<<numChildren
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
@@ -232,12 +232,38 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
 
       constCCVariable<double> imp_delP_coarse;
       new_dw->getRegion(imp_delP_coarse, label, 0, coarseLevel,cl, ch);
-      
+ #if 1 
+      // piece wise constant 
       for(CellIterator iter(fl,fh); !iter.done(); iter++){
         IntVector f_cell = *iter;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-        imp_delP[f_cell] =  imp_delP_coarse[c_cell];      
+        imp_delP[f_cell] =  imp_delP_coarse[c_cell];
       }
+ #endif
+ #if 0     
+      IntVector oneCell = patch->faceDirection(face);
+      IntVector R = fineLevel->getRefinementRatio();
+      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      Vector dx = patch->dCell();
+      
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        IntVector f_adj  = f_cell - oneCell;
+        double normDX = 2.0/(R[P_dir] + 1);
+        
+        IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+        imp_delP[f_cell] = imp_delP_coarse[c_cell] * (normDX)
+                         + imp_delP[f_adj] * (1.0 - normDX);  
+                         
+        cout << " face " << patch->getFaceName(face) << " f_cell " << f_cell << " f_adj " << f_adj 
+             << " c_cell " << c_cell << " normDX "<< normDX << endl;
+             
+             
+        cout << " 1 " <<    imp_delP_coarse[c_cell] * (1.0 - normDX)
+             << " 2 " <<    imp_delP[f_adj] * normDX
+             << " 3 " <<    imp_delP[f_cell] << endl;  
+      }
+#endif
     }  // face loop 
   }  // patch has coarse fine interface 
 }
@@ -488,7 +514,7 @@ void setBC(CCVariable<double>& press_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
@@ -607,7 +633,7 @@ void setBC(CCVariable<double>& var_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
@@ -717,7 +743,7 @@ void setBC(CCVariable<Vector>& var_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
@@ -795,7 +821,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
                <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)

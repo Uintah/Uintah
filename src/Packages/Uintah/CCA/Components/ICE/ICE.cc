@@ -51,6 +51,10 @@
 #define isnan _isnan
 #endif
 
+
+#define SET_CFI_BC 0
+
+
 using std::vector;
 using std::max;
 using std::min;
@@ -3551,7 +3555,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw,
           d_customBC_var_basket);
-       
+#if SET_CFI_BC          
+    set_CFI_BC<double>(press_CC,patch);
+#endif   
     delete_CustomBCs(d_customBC_var_basket);      
        
    //---- P R I N T   D A T A ------  
@@ -4877,6 +4883,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                                         d_customBC_var_basket);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState, 
                                          indx, new_dw,  d_customBC_var_basket);
+#if SET_CFI_BC                                         
+//      set_CFI_BC<Vector>(vel_CC[m],  patch);
+//      set_CFI_BC<double>(Temp_CC[m], patch);
+#endif
     }
     
     delete_CustomBCs(d_customBC_var_basket);
@@ -5148,10 +5158,15 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       if (switchDebug_advance_advect ) {
        ostringstream desc;
        desc <<"BOT_Advection_Mat_" <<indx<<"_patch_"<<patch->getID();
-       printData(   indx, patch,1, desc.str(), "mass_L",        mass_L); 
+       printData(   indx, patch,1, desc.str(), "mass_L",      mass_L); 
        printVector( indx, patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
        printData(   indx, patch,1, desc.str(), "sp_vol_L",    sp_vol_L);
        printData(   indx, patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
+       
+       printData(   indx, patch,1, desc.str(), "mass_adv",     mass_adv); 
+       printVector( indx, patch,1, desc.str(), "mom_adv", 0,   mom_adv); 
+       printData(   indx, patch,1, desc.str(), "sp_vol_adv",   sp_vol_adv);
+       printData(   indx, patch,1, desc.str(), "int_eng_adv",  int_eng_adv);
       }
  
       delete varBasket;
