@@ -147,7 +147,8 @@ function getbabel() {
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
-  eval $1=${build_dir}
+  export PATH="$PATH:$build_dir/bin"
+  export BUILDDIR_TMP=$build_dir
 }
 
 function getwxwidgets_darwin() {
@@ -163,7 +164,8 @@ function getwxwidgets_darwin() {
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
-  eval $1=${build_dir}
+  export PATH="$PATH:$build_dir/bin"
+  export BUILDDIR_TMP=$build_dir
 }
 
 function getwxwidgets_linux() {
@@ -180,18 +182,9 @@ function getwxwidgets_linux() {
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
-  eval $1=${build_dir}
+  export PATH="$PATH:$build_dir/bin"
+  export BUILDDIR_TMP=$build_dir
 }
-
-# ensure make is on the system
-ensure make --version
-
-# without gui
-export CONFIG_ARGS="--enable-scirun2 --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
-
-if [ $DEBUG_BUILD ] ; then
-  export CONFIG_ARGS="$CONFIG_ARGS --enable-debug"
-fi
 
 function versioncheck() {
   if [ ! -e "$1" -o -z "$2" ] ; then
@@ -221,6 +214,16 @@ function versioncheck() {
   fi
 }
 
+# ensure make is on the system
+ensure make --version
+
+# without gui
+export CONFIG_ARGS="--enable-scirun2 --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
+
+if [ $DEBUG_BUILD ] ; then
+  export CONFIG_ARGS="$CONFIG_ARGS --enable-debug"
+fi
+
 babelbin=`which babel`
 babeldir=
 versioncheck $babelbin 1 0
@@ -228,7 +231,9 @@ if [ $? == "0" ] ; then
   babelbindir=`dirname $babelbin`
   babeldir=`dirname $babelbindir`
 else
-  getbabel $babeldir
+  getbabel
+  babeldir=$BUILDDIR_TMP
+  unset BUILDDIR_TMP
 fi
 
 echo -e "Using Babel installation in $babeldir."
@@ -243,10 +248,12 @@ if [ ! $NO_GUI ] ; then
     wxdir=`dirname $wxbindir`
   else
     if test $platform = "darwin" ; then
-      getwxwidgets_darwin $wxdir
+      getwxwidgets_darwin
     else
-      getwxwidgets_linux $wxdir
+      getwxwidgets_linux
     fi
+    wxdir=$BUILDDIR_TMP
+    unset BUILDDIR_TMP
   fi
   echo -e "Using wxWidgets installation in $wxdir."
   export CONFIG_ARGS="$CONFIG_ARGS --with-wxwidgets=$wxdir"
