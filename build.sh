@@ -81,9 +81,11 @@ fi
 if test `uname` = "Darwin"; then
   getcommand="curl -O"
   platform="darwin"
+  sed_re="-E"
 elif test `uname` = "Linux"; then
   getcommand="wget"
   platform="linux"
+  sed_re="-r"
 else
   echo "Unsupported system.  Please run on OSX or Linux"
   exit 1
@@ -113,7 +115,7 @@ while [ "$1" != "" ] ; do
       if [ -d $1 ] ; then
         export THIRDPARTY_INSTALL_DIR=$1
       else
-	usage 1
+        usage 1
       fi
       ;;
   esac
@@ -145,7 +147,7 @@ function getbabel() {
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
-  return $build_dir
+  eval $1=${build_dir}
 }
 
 function getwxwidgets_darwin() {
@@ -161,7 +163,7 @@ function getwxwidgets_darwin() {
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
-  eval "$1=$build_dir"
+  eval $1=${build_dir}
 }
 
 function getwxwidgets_linux() {
@@ -178,7 +180,7 @@ function getwxwidgets_linux() {
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
-  eval "$1=$build_dir"
+  eval $1=${build_dir}
 }
 
 # ensure make is on the system
@@ -191,21 +193,52 @@ if [ $DEBUG_BUILD ] ; then
   export CONFIG_ARGS="$CONFIG_ARGS --enable-debug"
 fi
 
+function versioncheck() {
+  if [ ! -e "$1" -o -z "$2" ] ; then
+    return 1
+  else
+    v=`$1 --version`
+    ## cleanup possible junk in error messages...
+    ## babel will give a warning if there are configure problems
+    vc=`echo $v | tr -d [:cntrl:] | tr [:upper:] [:lower:] | grep 'warning'`
+    if [ -n "$vc" ] ; then
+      echo -e "Encountered problem after executing: $1 --version."
+      return 1
+    fi
+    version=`echo $v | sed $sed_re 's/[A-Za-z ]//g'`
+    ## split digits and compare
+    major=`echo $version | sed 's/\.[0-9]*\.*[0-9]*//g'`
+    if [ $major -lt $2 ] ; then
+      return 1
+    fi
+    if [ -n "$3" ] ; then
+      minor=`echo $version | sed 's/^[0-9]*\.//g' | sed $sed_re 's/\.[0-9]*\.*[0-9]*//g'`
+      if [ $minor -lt $3 ] ; then
+        return 1
+      fi
+    fi
+    return 0
+  fi
+}
+
 babelbin=`which babel`
 babeldir=
-if [ -e "$babelbin" ] ; then
+versioncheck $babelbin 1 0
+if [ $? == "0" ] ; then
   babelbindir=`dirname $babelbin`
   babeldir=`dirname $babelbindir`
 else
   getbabel $babeldir
 fi
+
 echo -e "Using Babel installation in $babeldir."
 export CONFIG_ARGS="$CONFIG_ARGS --with-babel=$babeldir"
 
 if [ ! $NO_GUI ] ; then
   wxconfigbin=`which wx-config`
   wxdir=
-  if [ -e "$wxconfigbin" ] ; then
+  versioncheck $wxconfigbin 2 6
+  if [ $? == "0" ] ; then
     wxbindir=`dirname $wxconfigbin`
     wxdir=`dirname $wxbindir`
   else
@@ -227,6 +260,8 @@ if [ $MPI_BUILD ] ; then
   fi
 fi
 
+try "mkdir -p $BUILD_DIR"
 try "cd $BUILD_DIR"
+echo "***Configuring SCIRun2***"
 try "$ROOT_DIR/src/configure $CONFIG_ARGS"
 try "make"
