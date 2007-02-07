@@ -60,15 +60,14 @@ ZList::~ZList()
 void ZList::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
   ImUIPort *uip = new ImUIPort();
   uip->setParent(this);
-  svc->addProvidesPort(ImUIPort::pointer(uip), "ui", "sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(ImUIPort::pointer(uip), "ui", "sci.cca.ports.UIPort", svc->createTypeMap());
 
   ImZListPort *lp = new ImZListPort();
   lp->setParent(this);
-  svc->addProvidesPort(ImZListPort::pointer(lp), "listport", "ZListPort", props);
+  svc->addProvidesPort(ImZListPort::pointer(lp), "listport", "ZListPort", svc->createTypeMap());
 }
 
 int ImUIPort::ui()
