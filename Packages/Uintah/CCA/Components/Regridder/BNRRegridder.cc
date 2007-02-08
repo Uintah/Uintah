@@ -96,83 +96,22 @@ BNRRegridder::~BNRRegridder()
 {
 }
 
-template<int DIM> 
-void BNRRegridder::LoadBalance(vector<PseudoPatch> &patches)
-{
-    vector<double> positions;
-    vector<DistributedIndex> indices;
-
-    int *dimensions=d_sharedState->getActiveDims();
-
-    IntVector low=patches[0].low,high=patches[0].high;
-    
-    //bound patches and compute positions
-    for(unsigned int p=0;p<patches.size();p++)
-    {
-      PseudoPatch &patch=patches[p];
-      low=min(low,patch.low);
-      high=max(high,patch.high);
-      Vector point=(patch.high+patch.low).asVector()/2.0;
-
-      int proc = (p*d_myworld->size())/patches.size();
-      if(d_myworld->myrank()==proc)
-      {
-        for(int d=0;d<DIM;d++)
-        {
-          positions.push_back(point[dimensions[d]]);
-        }
-      }
-    }
-    Vector range=(high-low).asVector();
-    Vector center=(high+low).asVector()/2.0;
-
-    //make parameters for SFC curve
-    double r[DIM], c[DIM], delta[DIM];
-    for(int d=0;d<DIM;d++)
-    {
-      r[d]=range[dimensions[d]];
-      c[d]=center[dimensions[d]];
-      delta[d]=d_minPatchSize[dimensions[d]];
-    }
-
-    //move to load balancer
-    SFC<double> sfc(DIM,d_myworld);
-    //end move to load balacner
-
-
-    sfc.SetLocalSize(positions.size()/DIM);
-    sfc.SetDimensions(r);
-    sfc.SetRefinementsByDelta(delta);
-    sfc.SetCenter(c);
-    sfc.SetLocations(&positions);
-    sfc.SetOutputVector(&indices);
-    
-    //move to load balancer
-    sfc.SetMergeMode(1);
-    sfc.SetCleanup(BATCHERS);
-    sfc.SetMergeParameters(3000,500,2,.15);  //add profiling every X timesteps?
-    //end move to load balancer
-
-    sfc.GenerateCurve();
-
-    //get costs
-
-    //balance curve
-       //split where necessary
-          //split by calculating optimal split or in half along longest dimension?
-}
-
-
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
 
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
-  vector< vector<PseudoPatch> > patch_sets(oldGrid->numLevels());
+  vector< vector<Region> > patch_sets(oldGrid->numLevels()+1);
 
   vector<int> processor_assignments;
 
-//  //create coarse flag sets
+  //create coarse flag sets
   CreateCoarseFlagSets(oldGrid,coarse_flag_sets);
+ 
+  //add old level 0 to patch sets
+  for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
+  {
+    patch_sets[0].push_back(Region((*p)->getInteriorCellLowIndex(),(*p)->getInteriorCellHighIndex()));
+  }
 
   //For each level Fine to Coarse
   for(int l=oldGrid->numLevels()-1; l >= 0;l--)
@@ -185,51 +124,37 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
   
     //Parallel BR over coarse flags
-    RunBR(coarse_flag_vector,patch_sets[l]);  
-
-    if(patch_sets[l].empty()) //no patches goto next level
+    RunBR(coarse_flag_vector,patch_sets[l+1]);  
+    
+    if(patch_sets[l+1].empty()) //no patches goto next level
        continue;
 
     //add saftey layers for finer level
     if(l>0)
     {
-      AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
+      AddSafetyLayer(patch_sets[l+1], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
     }
     //Fixup patchlist:  this forces neighbor constraints
-    patchfixer_.FixUp(patch_sets[l]);
+    patchfixer_.FixUp(patch_sets[l+1]);
      
     if(!d_loadBalance)
     {
       //Post fixup patchlist: this creates more patches as specified in the input file in order to improve load balance
-      PostFixup(patch_sets[l]);
+      PostFixup(patch_sets[l+1]);
     }
     //uncoarsen
-    for(unsigned int p=0;p<patch_sets[l].size();p++)
+    for(unsigned int p=0;p<patch_sets[l+1].size();p++)
     {
-      patch_sets[l][p].low=patch_sets[l][p].low*d_minPatchSize;
-      patch_sets[l][p].high=patch_sets[l][p].high*d_minPatchSize;
-    }
-
-    //if lb
-    if(d_loadBalance)
-    {
-      switch(d_sharedState->getNumDims())
-      {
-        case 1:
-          LoadBalance<1>(patch_sets[l]);
-          break;
-        case 2:
-          LoadBalance<2>(patch_sets[l]);
-          break;
-        case 3:
-          LoadBalance<3>(patch_sets[l]);
-          break;
-        default:
-          throw InternalError("Invalid Number of Dimensions",__FILE__,__LINE__);
-      }
+      patch_sets[l+1][p].low()=patch_sets[l+1][p].getLow()*d_minPatchSize;
+      patch_sets[l+1][p].high()=patch_sets[l+1][p].getHigh()*d_minPatchSize;
     }
   }
-
+  //if lb
+  if(d_loadBalance)
+  {
+    lb_->dynamicallyLoadBalanceAndSplit(oldGrid,d_minPatchSize,patch_sets,true);
+  }
+ 
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,patch_sets);
 
@@ -247,8 +172,9 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   newGrid->performConsistencyCheck();
   return newGrid;
 }
-Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector< vector<PseudoPatch> > &patch_sets )
+Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
 {
+
   Grid* newGrid = scinew Grid();
   
   Vector spacing = oldGrid->getLevel(0)->dCell();
@@ -256,48 +182,31 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector< vector<PseudoPatch> > &pat
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
   
-    
-  //Create Level 0
-  LevelP level = newGrid->addLevel(anchor, spacing);
-  level->setExtraCells(extraCells);
-
-  for (Level::const_patchIterator iter = oldGrid->getLevel(0)->patchesBegin(); iter != oldGrid->getLevel(0)->patchesEnd(); iter++)
-  {
-    const Patch* p = *iter;
-    IntVector inlow = p->getInteriorCellLowIndex();
-    IntVector low = p->getCellLowIndex();
-    IntVector inhigh = p->getInteriorCellHighIndex();
-    IntVector high = p->getCellHighIndex();
-    level->addPatch(low, high, inlow, inhigh);
-  }
-  level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-  level->assignBCS(grid_ps_);
-
   //For each level Coarse -> Fine
-  for(int l=1; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++)
+  for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++)
   {
     // if level is not needed, don't create any more levels
-    if(patch_sets[l-1].size()==0)
+    if(patch_sets[l].size()==0)
        break;
-
-    // parameters based on next-fine level.
-    spacing = spacing / d_cellRefinementRatio[l];
   
     LevelP level = newGrid->addLevel(anchor, spacing);
     level->setExtraCells(extraCells);
 
     //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
     //for each patch
-    for(unsigned int p=0;p<patch_sets[l-1].size();p++)
+    for(unsigned int p=0;p<patch_sets[l].size();p++)
     {
-      IntVector low = patch_sets[l-1][p].low;
-      IntVector high = patch_sets[l-1][p].high;
+      IntVector low = patch_sets[l][p].getLow();
+      IntVector high = patch_sets[l][p].getHigh();
       //create patch
       level->addPatch(low, high, low, high);
     }
 
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     level->assignBCS(grid_ps_);
+    
+    // parameters based on next-fine level.
+    spacing = spacing / d_cellRefinementRatio[l];
   }
   return newGrid;
 }
@@ -329,7 +238,7 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
 }
 
 
-void BNRRegridder::OutputGridStats(vector< vector<PseudoPatch> > &patch_sets)
+void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets)
 {
   if (dbgstats.active() && d_myworld->myrank() == 0) 
   {
@@ -358,7 +267,7 @@ void BNRRegridder::OutputGridStats(vector< vector<PseudoPatch> > &patch_sets)
   }
 }
 
-void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches)
+void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
 {
   int rank=d_myworld->myrank();
   int numprocs=d_myworld->size();
@@ -368,39 +277,32 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     procs[p]=p;
   
   //bound local flags
-  PseudoPatch patch;
+  Region patch;
   if(flags.size()>0)
   {
-    patch.low=patch.high=flags[0];
+    patch.low()=patch.high()=flags[0];
     for(unsigned int f=1;f<flags.size();f++)
     {
-      for(int d=0;d<3;d++)
-      {
-        if(flags[f][d]<patch.low[d])
-          patch.low[d]=flags[f][d];
-        if(flags[f][d]>patch.high[d])
-          patch.high[d]=flags[f][d];
-      }
+      patch.low()=Min(patch.getLow(),flags[f]);
+      patch.high()=Max(patch.getHigh(),flags[f]);
     }
     //make high bounds non-inclusive
-    patch.high[0]++;
-    patch.high[1]++;
-    patch.high[2]++;
+    patch.high()=patch.getHigh()+IntVector(1,1,1);
   }
   else
   {
     //use INT_MAX to signal no patch;
-    patch.low[0]=INT_MAX;
+    patch.low()[0]=INT_MAX;
   }
   //Calculate global bounds
   if(numprocs>1)
   {
-    vector<PseudoPatch> bounds(numprocs);
-    MPI_Allgather(&patch,sizeof(PseudoPatch),MPI_BYTE,&bounds[0],sizeof(PseudoPatch),MPI_BYTE,d_myworld->getComm());
+    vector<Region> bounds(numprocs);
+    MPI_Allgather(&patch,sizeof(Region),MPI_BYTE,&bounds[0],sizeof(Region),MPI_BYTE,d_myworld->getComm());
 
     //search for first processor that has flags 
     int p=0;
-    while(bounds[p].low[0]==INT_MAX && p<numprocs )
+    while(bounds[p].getLow()[0]==INT_MAX && p<numprocs )
     {
       p++;
     }
@@ -412,19 +314,13 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     }
  
     //find the bounds
-    patch.low=bounds[p].low;
-    patch.high=bounds[p].high;
+    patch=bounds[p];
     for(p++;p<numprocs;p++)
     {
-      for(int d=0;d<3;d++)
-      {
-        if(bounds[p].low[0]!=INT_MAX)
-        { 
-          if(bounds[p].low[d]<patch.low[d])
-            patch.low[d]=bounds[p].low[d];
-          if(bounds[p].high[d]>patch.high[d])
-            patch.high[d]=bounds[p].high[d];
-        }
+      if(bounds[p].getLow()[0]!=INT_MAX)
+      { 
+          patch.low()=Min(patch.getLow(),bounds[p].getLow());
+          patch.high()=Max(patch.getHigh(),bounds[p].getHigh());
       }
     }
   }
@@ -516,7 +412,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     //resize patchlist
     patches.resize(size);
     //broadcast patches
-    MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
+    MPI_Bcast(&patches[0],size*sizeof(Region),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
   }
  
   tasks_.clear();
@@ -645,7 +541,7 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
  * *************************************************/
 //I am doing this in serial for now, it should be very quick and more expensive 
 //to do in parallel since the number of patches is typically very small
-void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
+void BNRRegridder::PostFixup(vector<Region> &patches)
 {
   //calculate total volume
   int volume=0;
@@ -657,7 +553,7 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
   double volume_threshold=volume/(d_myworld->size()*d_patchRatioToTarget);
 
   //build a max heap
-  make_heap(patches.begin(),patches.end());
+  make_heap(patches.begin(),patches.end(),Region::VolumeCompare());
  
   unsigned int i=patches.size()-1; 
   //split max and place children on heap until i have enough patches and patches are not to big
@@ -666,10 +562,10 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
     if(patches[0].getVolume()==1)  //check if patch is to small to split
        return;
     
-    pop_heap(patches.begin(),patches.end());
+    pop_heap(patches.begin(),patches.end(),Region::VolumeCompare());
 
     //find max dimension
-    IntVector size=patches[i].high-patches[i].low;
+    IntVector size=patches[i].getHigh()-patches[i].getLow();
     
     int max_d=0;
     
@@ -681,22 +577,22 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches)
     }
 
     //calculate split point
-    int index=(patches[i].high[max_d]+patches[i].low[max_d])/2;
+    int index=(patches[i].getHigh()[max_d]+patches[i].getLow()[max_d])/2;
 
-    PseudoPatch right=patches[i];
+    Region right=patches[i];
     //adjust patches by split
-    patches[i].high[max_d]=right.low[max_d]=index;
+    patches[i].high()[max_d]=right.low()[max_d]=index;
 
     //heapify
-    push_heap(patches.begin(),patches.end());
+    push_heap(patches.begin(),patches.end(),Region::VolumeCompare());
     patches.push_back(right);
-    push_heap(patches.begin(),patches.end());
+    push_heap(patches.begin(),patches.end(),Region::VolumeCompare());
 
     i++;
   }
 }
 
-void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags, 
+void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int level)
 {
   if (coarse_patches.size() == 0)
@@ -708,11 +604,11 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
   for(unsigned p=0;p<patches.size();p++)
   {
     //add saftey layer and convert from coarse coordinates to real coordinates on the coarser level
-    IntVector low = (patches[p].low*d_minPatchSize-d_minBoundaryCells)/d_cellRefinementRatio[level]/d_cellRefinementRatio[level-1];
+    IntVector low = (patches[p].getLow()*d_minPatchSize-d_minBoundaryCells)/d_cellRefinementRatio[level]/d_cellRefinementRatio[level-1];
     IntVector high;
-    high[0] = (int)ceil((patches[p].high[0]*d_minPatchSize[0]+d_minBoundaryCells[0])/(float)d_cellRefinementRatio[level][0]/d_cellRefinementRatio[level-1][0]);
-    high[1] = (int)ceil((patches[p].high[1]*d_minPatchSize[1]+d_minBoundaryCells[1])/(float)d_cellRefinementRatio[level][1]/d_cellRefinementRatio[level-1][1]);
-    high[2] = (int)ceil((patches[p].high[2]*d_minPatchSize[2]+d_minBoundaryCells[2])/(float)d_cellRefinementRatio[level][2]/d_cellRefinementRatio[level-1][2]);
+    high[0] = (int)ceil((patches[p].getHigh()[0]*d_minPatchSize[0]+d_minBoundaryCells[0])/(float)d_cellRefinementRatio[level][0]/d_cellRefinementRatio[level-1][0]);
+    high[1] = (int)ceil((patches[p].getHigh()[1]*d_minPatchSize[1]+d_minBoundaryCells[1])/(float)d_cellRefinementRatio[level][1]/d_cellRefinementRatio[level-1][1]);
+    high[2] = (int)ceil((patches[p].getHigh()[2]*d_minPatchSize[2]+d_minBoundaryCells[2])/(float)d_cellRefinementRatio[level][2]/d_cellRefinementRatio[level-1][2]);
      
     //clamp low and high points to domain boundaries 
     for(int d=0;d<3;d++)

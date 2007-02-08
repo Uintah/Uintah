@@ -57,21 +57,19 @@ WARNING
 			      const SimulationStateP& state);
 
     /***** these should be private (public for testing)*******/
-    void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
-    void PostFixup(vector<PseudoPatch> &patches);
+    void RunBR(vector<IntVector> &flags, vector<Region> &patches);
+    void PostFixup(vector<Region> &patches);
   protected:
     void problemSetup_BulletProofing(const int k);
-    void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
+    void AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags,
                         const vector<const Patch*>& coarse_patches, int level);
     void CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets);
-    Grid* CreateGrid(Grid* oldGrid, vector< vector<PseudoPatch> > &patch_sets );
+    Grid* CreateGrid(Grid* oldGrid, vector< vector<Region> > &patch_sets );
     
     bool getTags(int &tag1, int &tag2);
-    void OutputGridStats(vector< vector<PseudoPatch> > &patch_sets);
+    void OutputGridStats(vector< vector<Region> > &patch_sets);
 
-    template<int DIM> void LoadBalance(vector<PseudoPatch> &patches);
-
-    bool d_loadBalance;             //should the regridder also assign patches to processors
+    bool d_loadBalance;             //should the regridder call the load balancer before creating the grid
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
