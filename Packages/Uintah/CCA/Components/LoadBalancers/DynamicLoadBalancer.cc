@@ -766,16 +766,20 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
     int *dimensions=d_sharedState->getActiveDims();
     vector<double> positions;
     vector<DistributedIndex> indices;
-    int mode=PARALLEL;
+    int mode;
     unsigned int numProcs=d_myworld->size();
     int myRank=d_myworld->myrank();
 
     //decide to run serial or parallel
-    if(patches.size()<numProcs) //compute in serial if the number of patches is small
+    if(numProcs==1 || patches.size()<numProcs) //compute in serial if the number of patches is small
     {
       mode=SERIAL;
       numProcs=1;
       myRank=0;
+    }
+    else 
+    {
+      mode=PARALLEL;
     }
     //create locations array on each processor
     for(unsigned int p=0;p<patches.size();p++)
