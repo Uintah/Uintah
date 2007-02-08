@@ -16,7 +16,8 @@
 #include <Core/Exceptions/InternalError.h>
 
 #include <iostream> // debug only
-
+#include <stack>
+#include <vector>
 using namespace Uintah;
 using namespace SCIRun;
 using std::cerr;
@@ -25,7 +26,7 @@ static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
-   : LoadBalancerCommon(myworld)
+   : LoadBalancerCommon(myworld), sfc(myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
@@ -234,10 +235,8 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
   }
 }
 
-void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
+void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
 {
-  // output needs to be at least the number of patches in the level
-
   vector<DistributedIndex> indices; //output
   vector<double> positions;
   
@@ -288,31 +287,22 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
   double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
 
   //create SFC
-  SFC<double> curve(dim,d_myworld);
-  curve.SetLocalSize(positions.size()/dim);
-  curve.SetDimensions(r);
-  curve.SetRefinementsByDelta(delta); 
-  curve.SetLocations(&positions);
-  curve.SetOutputVector(&indices);
-  curve.SetCenter(c);
-  curve.SetMergeMode(1);
-  curve.SetCleanup(BATCHERS);
-  curve.SetMergeParameters(3000,500,2,.15);
-  curve.GenerateCurve();
+  sfc.SetLocalSize(positions.size()/dim);
+  sfc.SetDimensions(r);
+  sfc.SetCenter(c);
+  sfc.SetRefinementsByDelta(delta); 
+  sfc.SetLocations(&positions);
+  sfc.SetOutputVector(&indices);
+  sfc.GenerateCurve();
 
-
-  if(d_myworld->size()==1)
-  {
-    memcpy(output,&indices[0],sizeof(DistributedIndex)*level->numPatches());
-  }
-  else  
+  vector<int> displs(d_myworld->size(), 0);
+  if(d_myworld->size()>1)  
   {
     int rsize=indices.size();
      
     //gather recv counts
     MPI_Allgather(&rsize,1,MPI_INT,&recvcounts[0],1,MPI_INT,d_myworld->getComm());
     
-    vector<int> displs(d_myworld->size(), 0);
     
     for (unsigned i = 0; i < recvcounts.size(); i++)
     {
@@ -322,19 +312,34 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
     {
        displs[i] = recvcounts[i-1] + displs[i-1];
     }
+
+    vector<DistributedIndex> rbuf(level->numPatches());
+
     //gather curve
-    MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, output, &recvcounts[0], 
+    MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0], &recvcounts[0], 
                    &displs[0], MPI_BYTE, d_myworld->getComm());
+
+    indices.swap(rbuf);
   }
 
+  //convert distributed indices to normal indices
+  for(unsigned int i=0;i<indices.size();i++)
+  {
+    DistributedIndex di=indices[i];
+    order[i]=displs[di.p]/sizeof(DistributedIndex)+di.i;
+  }
   /*
+  if(d_myworld->myrank()==0)
+  {
+    cout << "Warning checking SFC correctness\n";
+  }
   for (int i = 0; i < level->numPatches(); i++) 
   {
     for (int j = i+1; j < level->numPatches(); j++)
     {
-      if (output[i].p == output[j].p && output[i].i == output[j].i) 
+      if (order[i] == order[j]) 
       {
-        cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index " << i << " has the same value as index " << j << " " << output[i].p << ":" << output[j].i << endl;
+        cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index " << i << " has the same value as index " << j << " " << order[i] << endl;
         throw InternalError("SFC unsuccessful", __FILE__, __LINE__);
       }
     }
@@ -345,7 +350,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, DistributedIndex* output)
 
 bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 {
-
+  
   doing << d_myworld->myrank() << "   APF\n";
   double time = Time::currentSeconds();
 
@@ -373,7 +378,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   vector<double> groupCost(1,0);
   vector<double> avgCostPerProc(1,0);
   vector<int> groupSize(1,0);
-  vector<DistributedIndex> sfc(numPatches);
+  vector<int> order(numPatches);
 
   if (d_levelIndependent) {
     groupCost.resize(grid->numLevels());
@@ -396,7 +401,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
     if (d_doSpaceCurve) {
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
-      useSFC(level, &sfc[startingPatch]);
+      useSFC(level, &order[startingPatch]);
     }
 
     for (Level::const_patchIterator iter = level->patchesBegin(); 
@@ -437,9 +442,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) {
       int index;
       if (d_doSpaceCurve) {
-        //index = sfc[p] + startingPatch;
-        index = (int)ceil( double(sfc[p].p*groupSize[i]) /d_myworld->size() ) +sfc[p].i + startingPatch;
-        //cout << d_myworld->myrank() << ": mapping " << sfc[p].p << ":" << sfc[p].i << " to " << index << endl;
+        index = order[p] + startingPatch;
+        //cout << d_myworld->myrank() << ": mapping " << order[p] << " to " << index << " startingPatch:" << startingPatch << endl;
       }
       else {
         // not attempting space-filling curve
@@ -755,8 +759,278 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
   }
 }
 
+void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
+{
+  if(d_doSpaceCurve) //reorder by sfc
+  {
+    int *dimensions=d_sharedState->getActiveDims();
+    vector<double> positions;
+    vector<DistributedIndex> indices;
+    int mode=PARALLEL;
+    unsigned int numProcs=d_myworld->size();
+    int myRank=d_myworld->myrank();
+
+    //decide to run serial or parallel
+    if(patches.size()<numProcs) //compute in serial if the number of patches is small
+    {
+      mode=SERIAL;
+      numProcs=1;
+      myRank=0;
+    }
+    //create locations array on each processor
+    for(unsigned int p=0;p<patches.size();p++)
+    {
+      int proc = (p*numProcs)/patches.size();
+      if(proc==myRank)
+      {
+        Vector center=(patches[p].getHigh()+patches[p].getLow()).asVector()/2;
+        for(int d=0;d<d_sharedState->getNumDims();d++)
+        {
+          positions.push_back(center[dimensions[d]]);
+        }
+      }
+    }
+    //generate curve
+    sfc.SetOutputVector(&indices);
+    sfc.SetLocations(&positions);
+    sfc.SetLocalSize(positions.size()/d_sharedState->getNumDims());
+    sfc.GenerateCurve(mode);
+
+    vector<int> displs(numProcs, 0);
+    vector<int> recvcounts(numProcs,0); // init the counts to 0
+    //gather curve onto each processor
+    if(mode==PARALLEL) 
+    {
+      //gather curve
+      int rsize=indices.size();
+      //gather recieve size
+      MPI_Allgather(&rsize,1,MPI_INT,&recvcounts[0],1,MPI_INT,d_myworld->getComm());
+
+      for (unsigned i = 0; i < recvcounts.size(); i++)
+      {
+        recvcounts[i]*=sizeof(DistributedIndex);
+      }
+      for (unsigned i = 1; i < recvcounts.size(); i++)
+      {
+        displs[i] = recvcounts[i-1] + displs[i-1];
+      }
+     
+      vector<DistributedIndex> rbuf(patches.size());
+
+      //gather curve
+      MPI_Allgatherv(&indices[0], recvcounts[myRank], MPI_BYTE, &rbuf[0], &recvcounts[0],
+                    &displs[0], MPI_BYTE, d_myworld->getComm());
+      
+      indices.swap(rbuf);
+    }
+    
+    //reorder patches
+    vector<Region> reorderedPatches(patches.size());
+    for(unsigned int i=0;i<indices.size();i++)
+    {
+        DistributedIndex di=indices[i];
+        //index is equal to the diplacement for the processor converted to struct size plus the local index
+        int index=displs[di.p]/sizeof(DistributedIndex)+di.i;
+        reorderedPatches[i]=patches[index];
+    }
+  }
+  //random? cyclicic?
+}
+void DynamicLoadBalancer::getCosts(const LevelP& level, const vector<Region> &patches, vector<double> &costs)
+{
+  //level can be null?  do we need level?  or old grid instead maybe?  
+  costs.resize(0);
+  cout << "need to implment costs\n";
+  for(vector<Region>::const_iterator patch=patches.begin();patch!=patches.end();patch++)
+  {
+    costs.push_back(patch->getVolume());
+  }
+}
+void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, IntVector min_patch_size,vector<vector<Region> > &levels, bool canSplit)
+{
+  double start = Time::currentSeconds();
+
+  int *dimensions=d_sharedState->getActiveDims();
+  
+  d_tempAssignment.resize(0);
+
+  //loop over levels
+  for(unsigned int l=0;l<levels.size();l++)
+  {
+    vector<Region> &patches=levels[l];
+    vector<double> costs;
+
+    //set SFC parameters here so they are the same if we need to sort after splitting later
+    if (d_doSpaceCurve)        
+    {
+
+      Region bounds=*patches.begin();
+      //find domain bounds
+      for(vector<Region>::iterator patch=patches.begin();patch<patches.end();patch++)
+      {
+         bounds.low()=min(patch->low(),bounds.low());
+         bounds.high()=max(patch->high(),bounds.high());
+      }
+      Vector range=(bounds.high()-bounds.low()).asVector();
+      Vector center=(bounds.high()+bounds.low()).asVector()/2;
+  
+      double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
+      double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
+      double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
+     
+      sfc.SetDimensions(r);
+      sfc.SetCenter(c);
+      sfc.SetRefinementsByDelta(delta);
+    }
+
+    sortPatches(patches);
+
+    LevelP level=0;
+
+    //get costs (get costs will determine algorithm)  
+    if(l<(unsigned int)oldGrid->numLevels())
+    {
+      level=oldGrid->getLevel(l);
+    }
+    getCosts(level,patches,costs);
+
+    double totalCost=0;
+    double targetCost=0;
+    double currentCost=0;
+    for(unsigned int i=0;i<costs.size();i++)
+    {
+      totalCost+=costs[i];
+    }
+    targetCost=totalCost/d_myworld->size();
+   
+    vector<Region> assignedPatches;
+    stack<Region> unassignedPatches;
+    stack<double> unassignedPatchesCost;
+    vector<Region>::iterator toAssignPatch=patches.begin();
+    vector<double>::iterator toAssignCost=costs.begin();
+
+    int currentProc=0;
+    int numProcs=d_myworld->size();
+    while(toAssignPatch!=patches.end() || !unassignedPatches.empty())
+    {
+      Region patch;
+      double cost;
+
+      //get patch that needs assignment
+      if(!unassignedPatches.empty())    //first grab from stack where we place patches after splitting
+      {
+        patch=unassignedPatches.top();
+        cost=unassignedPatchesCost.top();
+        unassignedPatches.pop();
+        unassignedPatchesCost.pop();
+      }
+      else                              //then grab from original patch list
+      {
+        patch=*toAssignPatch;
+        cost=*toAssignCost;
+        toAssignPatch++;
+        toAssignCost++;
+      }
+      
+
+      if(currentCost+cost<targetCost)  //if patch fits in current processor
+      {
+        //assign to current proc
+        d_tempAssignment.push_back(currentProc);
+        assignedPatches.push_back(patch);
+        
+        //update vars
+        currentCost+=cost;
+        totalCost-=cost;
+      }
+      else
+      {
+        //calculate number of possible patches in each dimension
+        Vector size;
+        int dim=0; 
+        if(canSplit)
+        {
+          size=(patch.high()-patch.low()).asVector()/min_patch_size.asVector();
+        
+          //find maximum dimension
+          for(int d=1;d<3;d++)
+          {
+            if(size[d]>size[dim])
+              dim=d;
+          }
+        }
+
+        if(canSplit && size[dim]>1) //if can be split further
+        {
+          //calculate split point
+          int mid=(int(size[dim])/2)*min_patch_size[dim];
+          
+          //split patch
+          Region left=patch,right=patch;
+          left.high()[dim]=mid;
+          right.low()[dim]=mid;
+          
+          vector<Region> newpatches;
+          newpatches.push_back(left);
+          newpatches.push_back(right);
+           
+          //sort both patches in serial
+          sortPatches(newpatches);
+
+          //place in reverse order on to assign stack
+          unassignedPatches.push(newpatches[0]);
+          unassignedPatches.push(newpatches[1]);
+
+          //derive costs by a percentage of old costs
+            //ideally we would recalculate costs but particles cause a problem currently
+          double newCost=cost * double(newpatches[0].getVolume())/patch.getVolume();
+
+          unassignedPatchesCost.push(newCost);
+          unassignedPatchesCost.push(cost-newCost);
+        }
+        else  //cannot be split so assign it with the least imbalance
+        {
+          double takeimb=fabs(currentCost+cost-targetCost);
+          double notakeimb=fabs(currentCost-targetCost);
+
+          if(notakeimb<takeimb)
+          {
+            //move to next proc
+            currentProc++;
+
+            //assign patch
+            d_tempAssignment.push_back(currentProc);
+            assignedPatches.push_back(patch);
+  
+            //update vars
+            currentCost=cost;
+            targetCost=totalCost/(numProcs-currentProc);
+            totalCost-=cost;
+          }
+          else
+          {
+            //assign to this proc
+            d_tempAssignment.push_back(currentProc);
+            assignedPatches.push_back(patch);
+
+            //update vars
+            currentCost+=cost;
+            totalCost-=cost;
+          } 
+        } //end if can be split else
+      } //end if fits onto the processor without splitting else
+    } //end while() patches to assign
+    
+    //update patchlist
+    patches=assignedPatches;
+
+  }  //end for each level
+  d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
+}
+
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
+
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
 
@@ -776,28 +1050,35 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
         d_lastLbTime = d_sharedState->getElapsedTime();
       }
     }
-    int numProcs = d_myworld->size();
-    int numPatches = 0;
-    
-    for(int l=0;l<grid->numLevels();l++){
-      const LevelP& level = grid->getLevel(l);
-      numPatches += level->numPatches();
-    }
-    
-    int myrank = d_myworld->myrank();
-    
     d_oldAssignment = d_processorAssignment;
     d_oldAssignmentBasePatch = d_assignmentBasePatch;
-    d_tempAssignment.clear();
-    d_tempAssignment.resize(numPatches);
-    if (d_myworld->myrank() == 0)
-      doing << d_myworld->myrank() << "  Checking whether we need to LB\n";
+    
     bool dynamicAllocate = false;
-    switch (d_dynamicAlgorithm) {
-    case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
-    case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
-    case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
+    //temp assignment can be set if the regridder has already called the load balancer
+    if(d_tempAssignment.size()==0)
+    {
+      int numPatches = 0;
+      for(int l=0;l<grid->numLevels();l++){
+        const LevelP& level = grid->getLevel(l);
+        numPatches += level->numPatches();
+      }
+    
+    
+      d_tempAssignment.clear();
+      d_tempAssignment.resize(numPatches);
+      if (d_myworld->myrank() == 0)
+        doing << d_myworld->myrank() << "  Checking whether we need to LB\n";
+      switch (d_dynamicAlgorithm) {
+        case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
+        case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
+        case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
+      }
     }
+    else  //regridder has called dynamic load balancer so we must dynamically Allocate
+    {
+        dynamicAllocate=true;
+    }
+
     if (dynamicAllocate || state != check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
@@ -810,17 +1091,19 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
       if (lb.active()) {
+        int numProcs = d_myworld->size();
+        int myrank = d_myworld->myrank();
         if (myrank == 0) {
           LevelP curLevel = grid->getLevel(0);
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
           vector<int> costs(numProcs);
-          for (int i = 0; i < numPatches; i++) {
+          for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
             lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
             IntVector range = ((*iter)->getHighIndex() - (*iter)->getLowIndex());
             costs[d_processorAssignment[i]] += range.x() * range.y() * range.z();
             iter++;
-            if (iter == curLevel->patchesEnd() && i+1 < numPatches) {
+            if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
               curLevel = curLevel->getFinerLevel();
               iter = curLevel->patchesBegin();
             }
@@ -830,11 +1113,11 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
           }
         }
       }
-      
     }
   }
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, (changed || state == restart) ? regrid : check);
+  d_tempAssignment.resize(0);
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
   return changed;
 }
@@ -891,4 +1174,11 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   d_doSpaceCurve = spaceCurve;
   d_lbThreshold = threshold;
   d_cellFactor = cellFactor;
+  
+  ASSERT(d_sharedState->getNumDims()>0 || d_sharedState->getNumDims()<4);
+  //set curve parameters that do not change between timesteps
+  sfc.SetNumDimensions(d_sharedState->getNumDims());
+  sfc.SetMergeMode(1);
+  sfc.SetCleanup(BATCHERS);
+  sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
 }

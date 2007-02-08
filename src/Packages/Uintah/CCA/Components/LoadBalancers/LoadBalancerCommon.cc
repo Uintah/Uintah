@@ -143,6 +143,13 @@ bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int st
   return false;
 }
 
+void LoadBalancerCommon::dynamicallyLoadBalanceAndSplit(const GridP&, IntVector,vector<vector<Region> >&, bool)
+{
+  //This should not be called
+  cout << "Warning dynamicallyLoadBalanceAndSplit not implemented for this configuration\n"; 
+}
+
+
 // Creates a PatchSet containing PatchSubsets for each processor for a
 // single level.
 const PatchSet*
