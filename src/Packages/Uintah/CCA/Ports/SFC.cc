@@ -5,16 +5,6 @@
 namespace Uintah
 {
 
-const char errormsg[6][30]={
-  "Locations vector is not set\n",
-  "Output vector is not set\n",
-  "Local size is not set\n",
-  "Size of Dimensions not set\n",
-  "Center is not set\n",
-  "Refinements is not set\n",
-           };
-
-
 int dir3[8][3]={
 	{-1,1,1},
 	{-1,1,-1},

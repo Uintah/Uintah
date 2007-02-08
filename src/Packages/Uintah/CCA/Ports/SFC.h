@@ -115,8 +115,6 @@ extern SCISHARE int orient1[][8];
 extern SCISHARE int order1[][8];
 extern SCISHARE int inv1[][8];
 
-extern SCISHARE const char errormsg[][30];
-
 #define EPSILON 1e-6
 #define BINS (1<<DIM)
 
@@ -189,21 +187,16 @@ template<class LOCS>
 class SFC
 {
 public:
-  SFC(int dim, const ProcessorGroup *d_myworld,Curve curve=HILBERT) : dim(dim), curve(curve), set(0), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
+  SFC(const ProcessorGroup *d_myworld,int dim=0,Curve curve=HILBERT) : curve(curve),n(INT_MAX),refinements(-1), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1) 
   {
-    switch(dim)
-    {
-      case 1:
-        dir=dir1;
-        break;
-      case 2:
-        dir=dir2;
-        break;
-      case 3:
-        dir=dir3;
-        break;
-    }
-    SetCurve(curve);
+      dimensions[0]=INT_MAX;
+      dimensions[1]=INT_MAX;
+      dimensions[2]=INT_MAX;
+      center[0]=INT_MAX;
+      center[1]=INT_MAX;
+      center[2]=INT_MAX;
+
+      SetNumDimensions(dim);
   }
   void SetCurve(Curve curve);
   ~SFC() {};
@@ -243,11 +236,9 @@ protected:
   //curve parameters
   LOCS dimensions[3];
   LOCS center[3];
-  int refinements;
   unsigned int n;
+  int refinements;
   
-  //byte variable used to determine what curve parameters are set
-  unsigned char set;
 
   //XY(Z) locations of points
   vector<LOCS> *locsv;
@@ -273,7 +264,52 @@ protected:
   unsigned int buckets;
   int b;
   int mergemode;
-  
+  bool BulletProof(int mode)
+  {
+    bool retval=true;
+
+    if(dim<1 || dim >3)
+    {
+      cout << "SFC curve: invalid number of dimensions (" << dim << ")\n";
+      retval=false;
+    }
+    if(locsv==0)
+    {
+      cout << "SFC curve: location vector not set\n";
+      retval=false;
+    }
+    if(orders==0)
+    {
+      cout << "SFC curve: orders not set\n";
+      retval=false;
+    }
+    if(center[0]==INT_MAX && center[1]==INT_MAX && center[2]==INT_MAX)
+    {
+      cout << "SFC curve: center not set\n";
+      retval=false;
+    }
+    if(dimensions[0]==INT_MAX && dimensions[1]==INT_MAX && dimensions[2]==INT_MAX)
+    {
+      cout << "SFC curve: dimensions not set\n";
+      retval=false;
+    }
+    if((P>1 && mode==PARALLEL) && n==INT_MAX)
+    {
+      if(n==INT_MAX)
+      {
+        cout << "SFC curve: Local size not set\n";
+        retval=false;
+      }
+      if(refinements==INT_MAX)
+      {
+        cout << "SFC curve: Refinements not set\n";
+        retval=false;
+      }
+    }
+    //check and set retval to false and produce output
+    return retval;
+  }
+
   template<int DIM> void GenerateDim(int mode);
   template<int DIM> void Serial();
   template<int DIM> void SerialR(DistributedIndex* orders,vector<DistributedIndex> *bin, unsigned int n, LOCS *center, LOCS *dimension, unsigned int o=0);
@@ -302,51 +338,10 @@ protected:
 };
 
 /***********SFC**************************/
-/*
-const char errormsg[7][30]={
-  "Locations vector is not set\n",
-  "Output vector is not set\n", 
-  "Local size is not set\n",
-  "Number of Dimensions is not set\n";
-  "Size of Dimensions not set\n",
-  "Center is not set\n", 
-  "Refinements is not set\n",
-           };
-*/
 template<class LOCS> template<int DIM>
 void SFC<LOCS>::ProfileMergeParameters(int repeat)
 {
-  int errors=0;
-  unsigned char mask;
-  P=d_myworld->size();
-  if(P==1)
-  {
-    return;
-  }
-  else
-  {
-    errors=6;
-    mask=0x1f;
-  }
-
-  char res=mask&set;
-  if(res!=mask)
-  {
-    cerr << "Error(s) forming SFC:\n************************\n";
-    mask=1;
-    for(int i=0;i<errors;i++)
-    {
-      res=mask&set;
-      if(res!=mask)
-      {
-        cerr << "  " << errormsg[i];
-      }
-      mask=mask<<1;
-    }
-    cerr << "************************\n";
-    throw InternalError("SFC Generation error",__FILE__,__LINE__);
-    return;
-  }
+  ASSERT(BulletProof(Parallel));
 
   rank=d_myworld->myrank();
   Comm=d_myworld->getComm();
@@ -604,55 +599,27 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
 template<class LOCS>
 void SFC<LOCS>::GenerateCurve(int mode)
 {
-  int errors=0;
-  unsigned char mask;
+  ASSERT(BulletProof(mode)); 
+  
   P=d_myworld->size();
-  if(P==1 || mode==1)
-  {
-    errors=5;
-    mask=0x0f;
-  }
-  else 
-  {
-    errors=6;
-    mask=0x1f;
-  }  
-    
-  char res=mask&set;
-  if(res!=mask)
-  {  
-    cerr << "Error(s) forming SFC:\n************************\n";
-    mask=1;
-    for(int i=0;i<errors;i++)
-    {
-      res=mask&set;
-      if(res!=mask)
-      {
-        cerr << "  " << errormsg[i];
-      }
-      mask=mask<<1;
-    }
-    cerr << "************************\n";  
-    throw InternalError("SFC Generation error",__FILE__,__LINE__);
-  }
   switch(dim)
   {
-      case 1:
-        GenerateDim<1>(mode);
-        break;
-      case 2:
-        GenerateDim<2>(mode);
-        break;
-      case 3:
-        GenerateDim<3>(mode);
-        break;
+    case 1:
+      GenerateDim<1>(mode);
+      break;
+    case 2:
+      GenerateDim<2>(mode);
+      break;
+    case 3:
+      GenerateDim<3>(mode);
+      break;
   }
 }
 
 template<class LOCS> template<int DIM>
 void SFC<LOCS>::GenerateDim(int mode)
 {
-  if(P==1 || mode==1 )
+  if(mode==SERIAL)
   {
     Serial<DIM>();
   }
@@ -2906,7 +2873,7 @@ void SFC<LOCS>::Parallel0()
   finish=timer->currentSeconds();
   timers[2]+=finish-start;
 #endif
-  
+ 
   orders->resize(n);
   
   //copy permutation to orders
@@ -3573,7 +3540,6 @@ void SFC<LOCS>::SetLocations(vector<LOCS> *locsv)
   {
     this->locsv=locsv;
     this->locs=&(*locsv)[0];
-    set=set|1;
   }
 }
 
@@ -3583,14 +3549,12 @@ void SFC<LOCS>::SetOutputVector(vector<DistributedIndex> *orders)
   if(orders!=0)
   {
     this->orders=orders;
-    set=set|2;
   }
 }
 template<class LOCS>
 void SFC<LOCS>::SetLocalSize(unsigned int n)
 {
   this->n=n;
-  set=set|4;
 }
 template<class LOCS>
 void SFC<LOCS>::SetDimensions(LOCS *dimensions)
@@ -3599,7 +3563,6 @@ void SFC<LOCS>::SetDimensions(LOCS *dimensions)
   {
     this->dimensions[d]=dimensions[d];
   }
-  set=set|8;
 }
 template<class LOCS>
 void SFC<LOCS>::SetCenter(LOCS *center)
@@ -3608,19 +3571,16 @@ void SFC<LOCS>::SetCenter(LOCS *center)
   {
     this->center[d]=center[d];
   }
-  set=set|16;
 }
 template<class LOCS>
 void SFC<LOCS>::SetRefinements(int refinements)
 {
   this->refinements=refinements;
-  set=set|32;
 }
 template<class LOCS>
 void SFC<LOCS>::SetRefinementsByDelta(LOCS *delta)
 {
-  char mask=8;
-  if( (mask&set) != mask)
+  if(dimensions[0]==INT_MAX && dimensions[1]==INT_MAX && dimensions[2]==INT_MAX)
   {
     throw InternalError("SFC Dimensions not set",__FILE__,__LINE__);
   }
@@ -3629,12 +3589,23 @@ void SFC<LOCS>::SetRefinementsByDelta(LOCS *delta)
   {
     refinements=max(refinements,(int)ceil(log(dimensions[d]/delta[d])/log(2.0)));
   }
-  set=set|32;
 }
 template<class LOCS>
 void SFC<LOCS>::SetNumDimensions(int dimensions)
 {
   dim=dimensions;
+  switch(dim)
+  {
+    case 1:
+      dir=dir1;
+      break;
+    case 2:
+      dir=dir2;
+      break;
+    case 3:
+      dir=dir3;
+      break;
+  }
   SetCurve(curve);
 }
 template<class LOCS>
