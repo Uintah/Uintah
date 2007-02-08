@@ -47,22 +47,22 @@ WARNING
 		{
 		};
     ~PatchFixer() {};
-		void FixUp(vector<PseudoPatch> &patches);	
+		void FixUp(vector<Region> &patches);	
 	private:
 		const ProcessorGroup *d_myworld;
 		vector<int> lattice_;                   //lattice of ints
 		vector<int> cellstolattice_[3];         //map from cells to lattice
 		vector<int> latticetocells_[3];         //map from lattice to cells
-		PseudoPatch bounds_;                    //bounds of the patches
+		Region bounds_;                    //bounds of the patches
 		IntVector csize_,lsize_;		            // size of the cells and lattice
 		
-		void FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side);
-		void SplitPatch(int index, vector<PseudoPatch> &patches, const Split &split);
-		void BuildLattice(const vector<PseudoPatch> &patches);
-		void Fill(const PseudoPatch patch,const int id);
+		void FixFace(vector<Region> &patches,Region patch, int dim, int side);
+		void SplitPatch(int index, vector<Region> &patches, const Split &split);
+		void BuildLattice(const vector<Region> &patches);
+		void Fill(const Region patch,const int id);
 		inline int CellToLattice(int c, int d)
 		{
-		  return cellstolattice_[d][c-bounds_.low[d]];
+		  return cellstolattice_[d][c-bounds_.getLow()[d]];
 		};
 		inline void CellToLattice( int* c)
 		{
