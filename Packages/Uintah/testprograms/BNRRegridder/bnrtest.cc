@@ -52,8 +52,8 @@ int main(int argc, char** argv)
 	srand(rank*rank*rank);
 	BNRRegridder bnr(d_myworld);
 	PatchFixer fixup(d_myworld);
-	vector<PseudoPatch> patches;
-	PseudoPatch patch;
+	vector<Region> patches;
+	Region patch;
 
 	vector<IntVector> flags;
 	int size=X_RES*Y_RES/numprocs;
@@ -79,7 +79,6 @@ int main(int argc, char** argv)
 		{
 			if(f>=mystart && f<mystart+mysize)
 			{
-				float r=drand48();				
 				if(f_array[x][y]==1)
 				//if(r<=prob)
 				{
@@ -139,9 +138,9 @@ int main(int argc, char** argv)
 			for(unsigned int p=0;p<patches.size();p++)
 			{
 					cout << "{";
-					cout << patches[p].low[0] << "-" <<patches[p].high[0] << ", ";
-					cout << patches[p].low[1] << "-" <<patches[p].high[1] << ", ";
-					cout << patches[p].low[2] << "-" <<patches[p].high[2] << "} ";
+					cout << patches[p].getLow()[0] << "-" <<patches[p].getHigh()[0] << ", ";
+					cout << patches[p].getLow()[1] << "-" <<patches[p].getHigh()[1] << ", ";
+					cout << patches[p].getLow()[2] << "-" <<patches[p].getHigh()[2] << "} ";
 			}
 			cout << endl;
 			
