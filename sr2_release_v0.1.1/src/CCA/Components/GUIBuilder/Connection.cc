@@ -86,14 +86,14 @@ void Connection::ResetPoints()
   u.y +=  u.y/2; // connect at vertical halfway point on port
 
   wxPoint usesIconPos;
-  pUses->GetParent()->GetCanvas()->GetUnscrolledMousePosition(usesIconPos);
+  pUses->GetParent()->GetCanvasPosition(usesIconPos);
   wxPoint up = usesIconPos + u; // position rel. to component icon parent
 
   wxPoint p = pProvides->GetPosition();
   p.y += p.y/2;
 
   wxPoint providesIconPos;
-  pProvides->GetParent()->GetCanvas()->GetUnscrolledMousePosition(providesIconPos);
+  pProvides->GetParent()->GetCanvasPosition(providesIconPos);
   wxPoint pp = providesIconPos + p; // position rel. to component icon parent
 
   wxRect ru(usesIconPos, pUses->GetParent()->GetSize());
@@ -102,27 +102,6 @@ void Connection::ResetPoints()
   int t = PortIcon::PORT_WIDTH;
   int h = PortIcon::PORT_HEIGHT;
   int mid;
-
-// #if FWK_DEBUG
-// std::cerr << "Uses icon pos=("
-// 	  << usesIconPos.x
-// 	  << ", "
-// 	  << usesIconPos.y
-//           << ") Uses port pos=("
-// 	  << up.x
-// 	  << ", "
-// 	  << up.y
-// 	  << ") Provides icon pos=("
-// 	  << providesIconPos.x
-// 	  << ", "
-// 	  << providesIconPos.y
-//           << ") Provides port pos=("
-// 	  << pp.x
-// 	  << ", "
-// 	  << pp.y
-// 	  << ")"
-//           << std::endl;
-// #endif
 
   if ( (up.x + h) < (pp.x - h) ) {
     mid = (up.y + pp.y) / 2;
@@ -239,44 +218,17 @@ bool Connection::IsMouseOver(const wxPoint& position)
 
     pr = wxRect(pTopLeft, pBottomRight);
 
-// #if FWK_DEBUG
-// std::cerr << "Connection::IsMouseOver point top left ("
-// 	  << pTopLeft.x << ", " << pTopLeft.y << ") point bottom right ("
-// 	  << pBottomRight.x << ", " << pBottomRight.y << ")"
-//           << std::endl;
-// #endif
-
     if (drawPoints[i].x > drawPoints[i+1].x) {
       wxPoint topLeft(drawPoints[i+1].x - tolerance, drawPoints[i+1].y - tolerance);
       wxPoint bottomRight(drawPoints[i].x + tolerance, drawPoints[i].y + tolerance);
-// #if FWK_DEBUG
-//       std::cerr << "Connection::IsMouseOver (if) y_i = y_i+1, x_i > x_i+1" << std::endl
-// 		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-// 		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-// 		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-// 		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
-// 		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
-// 		<< std::endl;
-// #endif
       r = wxRect(topLeft, bottomRight);
     } else {
       wxPoint topLeft(drawPoints[i].x - tolerance, drawPoints[i].y - tolerance);
       wxPoint bottomRight(drawPoints[i+1].x + tolerance, drawPoints[i+1].y + tolerance);
-// #if FWK_DEBUG
-//       std::cerr << "Connection::IsMouseOver (else) y_i = y_i+1, x_i <= x_i+1" << std::endl
-// 		<< "\tposition=(" << position.x << ", " << position.y << ") " << std::endl
-// 		<< "\tpoint " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") " << std::endl
-// 		<< "\tpoint " << i+1 << "=(" << drawPoints[i+1].x << ", " << drawPoints[i+1].y << ")" << std::endl
-// 		<< "\ttopLeft=(" << topLeft.x << ", " << topLeft.y <<  ") " << std::endl
-// 		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
-// 		<< std::endl;
-// #endif
       r = wxRect(topLeft, bottomRight);
     }
     if (r.Intersects(pr)) {
-#if FWK_DEBUG
-      std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
-#endif
+      //std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
       return true;
     }
   }
@@ -299,14 +251,13 @@ void Connection::setConnection()
     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]);
     drawPoints[i].x /= 2;
     drawPoints[i].y /= 2;
-// #if FWK_DEBUG
-//     std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
-//               << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
-//               << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", "
-//               << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
-//               << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
-//               << std::endl;
-// #endif
+    if (drawPoints[i].x < 0) {
+      drawPoints[i].x = 0;
+    }
+    if (drawPoints[i].y < 0) {
+      drawPoints[i].y = 0;
+    }
+    //std::cerr << "(drawPoints[i].x, drawPoints[i].y) = (" << drawPoints[i].x << ", " << drawPoints[i].y << ")" << std::endl;
   }
 }
 
