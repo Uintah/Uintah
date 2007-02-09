@@ -445,7 +445,7 @@ DataArchive::query( Variable& var, const std::string& name,
   ProblemSpecP vnode = findVariable(name, patch->getRealPatch(), matlIndex, time, url);
   d_lock.unlock();
   if(vnode == 0){
-    cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
+    cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time " << time << "\nPlease make sure the correct material index is specified\n";
     throw InternalError("DataArchive::query:Variable not found",
                         __FILE__, __LINE__);
   }
