@@ -320,7 +320,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
           if(!n->get("periodic", periodicBoundaries))
             throw InternalError("DataArchive::queryGrid:Error parsing periodoc", __FILE__, __LINE__);
         } else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
-          cerr << "DataArchive::queryGrid:WARNING: Unknown level data: " << r->getNodeName() << '\n';
+          //cerr << "DataArchive::queryGrid:WARNING: Unknown level data: " << r->getNodeName() << '\n';
         }
       }
       ASSERTEQ(level->numPatches(), numPatches);
@@ -341,7 +341,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
        }
 
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
-      cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
+      //cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
     }
   }
   
