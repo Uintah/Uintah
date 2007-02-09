@@ -844,7 +844,7 @@ void DynamicLoadBalancer::getCosts(const LevelP& level, const vector<Region> &pa
 {
   //level can be null?  do we need level?  or old grid instead maybe?  
   costs.resize(0);
-  cout << "need to implment costs\n";
+  //cout << "need to implment costs\n";
   for(vector<Region>::const_iterator patch=patches.begin();patch!=patches.end();patch++)
   {
     costs.push_back(patch->getVolume());
@@ -936,7 +936,6 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
         toAssignCost++;
       }
       
-
       if(currentCost+cost<targetCost)  //if patch fits in current processor
       {
         //assign to current proc
@@ -952,10 +951,10 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
         //calculate number of possible patches in each dimension
         Vector size;
         int dim=0; 
-        if(canSplit)
+        if(canSplit && l!=0)
         {
           size=(patch.high()-patch.low()).asVector()/min_patch_size.asVector();
-        
+      
           //find maximum dimension
           for(int d=1;d<3;d++)
           {
@@ -963,17 +962,14 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
               dim=d;
           }
         }
-
-        if(canSplit && size[dim]>1) //if can be split further
+        if(canSplit && l!=0 && size[dim]>1) //if can be split further
         {
           //calculate split point
-          int mid=(int(size[dim])/2)*min_patch_size[dim];
-          
+          int mid=patch.getLow()[dim]+(int(size[dim])/2)*min_patch_size[dim];
           //split patch
           Region left=patch,right=patch;
           left.high()[dim]=mid;
           right.low()[dim]=mid;
-          
           vector<Region> newpatches;
           newpatches.push_back(left);
           newpatches.push_back(right);
