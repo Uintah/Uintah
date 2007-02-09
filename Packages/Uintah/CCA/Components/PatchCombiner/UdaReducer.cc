@@ -235,9 +235,6 @@ GridP UdaReducer::getGrid()
   if (oldGrid_ == 0 || !(*newGrid.get_rep() == *oldGrid_.get_rep())) {
     gridChanged = true;
     if (d_myworld->myrank() == 0) cout << "     NEW GRID!!!!\n";
-    cout << "   NEW GRID: " << *newGrid.get_rep() << endl;
-    if (oldGrid_.get_rep())
-      cout << "   OLD GRID: " << *oldGrid_.get_rep() << endl;
     oldGrid_ = newGrid;
     lb->possiblyDynamicallyReallocate(newGrid, true);
   }
