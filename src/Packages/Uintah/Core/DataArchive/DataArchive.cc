@@ -449,7 +449,9 @@ DataArchive::query( Variable& var, const std::string& name,
     throw InternalError("DataArchive::query:Variable not found",
                         __FILE__, __LINE__);
   }
+  const char* tag = AllocatorSetDefaultTag("QUERY");
   query(var, vnode, url, matlIndex, patch);
+  AllocatorSetDefaultTag(tag);
   dbg << "DataArchive::query() completed in "
       << Time::currentSeconds()-tstart << " seconds\n";
 }
@@ -885,9 +887,18 @@ DataArchive::TimeHashMaps::findTimeData(double time)
       dbg << "timestep_cache_size = "<<timestep_cache_size<<", d_lastNtimesteps.size() = "<<d_lastNtimesteps.size()<<"\n";
       if (timestep_cache_size > 0 &&
           (int)(d_lastNtimesteps.size()) >= timestep_cache_size) {
-        dbg << "Making room.  Purging "<<(*(d_lastNtimesteps.back())).first<<"\n";
+        double cacheTime = (*(d_lastNtimesteps.back())).first;
+        dbg << "Making room.  Purging "<< cacheTime <<"\n";
         (*(d_lastNtimesteps.back())).second.purgeCache();
         d_lastNtimesteps.pop_back();
+        
+        // get rid of the timestep.xml cache too
+        int timestep;
+        for(timestep=0;timestep<(int)archive->d_tstimes.size();timestep++)
+          if(cacheTime == archive->d_tstimes[timestep])
+            break;
+        archive->d_tstop[timestep]->releaseDocument();
+        archive->d_tstop[timestep] = 0;
       }
     }
     // Finally insert our new candidate at the top of the list.
@@ -934,6 +945,19 @@ DataArchive::TimeHashMaps::updateCacheSize(int new_size)
   int kill_count = current_size - timestep_cache_size;
   dbg << "kill_count = "<<kill_count<<"\n";
   for(int i = 0; i < kill_count; i++) {
+    double cacheTime = (*(d_lastNtimesteps.back())).first;
+    dbg << "Making room.  Purging "<< cacheTime <<"\n";
+    (*(d_lastNtimesteps.back())).second.purgeCache();
+    d_lastNtimesteps.pop_back();
+    
+    // get rid of the timestep.xml cache too
+    int timestep;
+    for(timestep=0;timestep<(int)archive->d_tstimes.size();timestep++)
+      if(cacheTime == archive->d_tstimes[timestep])
+        break;
+    archive->d_tstop[timestep]->releaseDocument();
+    archive->d_tstop[timestep] = 0;
+
     dbg << "purging "<<(*(d_lastNtimesteps.back())).first<<"\n";
     (*(d_lastNtimesteps.back())).second.purgeCache();
     d_lastNtimesteps.pop_back();
