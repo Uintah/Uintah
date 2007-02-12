@@ -41,7 +41,8 @@ inline Point CreatePoint(int n, vector<int>& res, double dx, double dy, double d
   int j = n / res[0];
   int i = n % res[0];
 
-  return Point( dx*((double)i + 0.5), dy*((double)j + 0.5), dz*((double)k + 0.5));
+  return Point( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
+//  return Point( dx*((double)i + 0.5), dy*(((double)(j)) + 0.5),dz*((double)k + 0.5));
 }
 
 //-----------------------------------------------------------------------------------------
@@ -101,41 +102,41 @@ int main(int argc, char *argv[])
           geom_obj_ps != 0;
           geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-	  fprintf(stderr, "\n--- Reading geometry object --- \n");
+          fprintf(stderr, "\n--- Reading geometry object --- \n");
 
-	  string imgname;  // raw image file name
-	  vector<int> res; // image resolution
-	  vector<int> ppc; // nr particles per cell
-	  vector<int> L;   // lower and upper threshold
-	  string f_name;   // the base name of the output file
-	  string of_name;  // actual output file name
-	  int ncols = 0;   // nr. of additional data columns
-	  int ncheck = 0;  // check to make sure we have a "image" section and a "file" section
+          string imgname;  // raw image file name
+          vector<int> res; // image resolution
+          vector<int> ppc; // nr particles per cell
+          vector<int> L;   // lower and upper threshold
+          string f_name;   // the base name of the output file
+          string of_name;  // actual output file name
+          int ncols = 0;   // nr. of additional data columns
+          int ncheck = 0;  // check to make sure we have a "image" and a "file" section
 
-	  // read the particles per cell
-	  geom_obj_ps->require("res", ppc);
+          // read the particles per cell
+          geom_obj_ps->require("res", ppc);
 
-	  fprintf(stderr, "ppc = %d, %d, %d\n", ppc[0], ppc[1], ppc[2]);
-	  double dx = DX.x() / ppc[0];
-	  double dy = DX.y() / ppc[1];
-	  double dz = DX.z() / ppc[2];
-	  fprintf(stderr, "Voxel dimensions : %g, %g, %g\n", dx, dy, dz);
+          fprintf(stderr, "ppc = %d, %d, %d\n", ppc[0], ppc[1], ppc[2]);
+          double dx = DX.x() / ppc[0];
+          double dy = DX.y() / ppc[1];
+          double dz = DX.z() / ppc[2];
+          fprintf(stderr, "Voxel dimensions : %g, %g, %g\n", dx, dy, dz);
 
           for(ProblemSpecP child = geom_obj_ps->findBlock(); child != 0;
                            child = child->findNextBlock()){
             std::string go_type = child->getNodeName();
 
-	    // get the image data
-	    if (go_type == "image") {
-	      child->require("name", imgname);
-	      cout << "Image name : " << imgname << endl;
-	      child->require("res", res);
-	      cout << "Resolution : " << res[0] << ", " << res[1] << ", " << res[2] << endl;
-	      child->require("threshold", L);
-	      cout << "Min threshold : " << L[0] << endl;
-	      cout << "Max threshold : " << L[1] << endl;
-	      ncheck++;
-	    }
+          // get the image data
+          if (go_type == "image") {
+              child->require("name", imgname);
+              cout << "Image name : " << imgname << endl;
+              child->require("res", res);
+              cout << "Resolution : " << res[0] << ", " << res[1] << ", " << res[2] << endl;
+              child->require("threshold", L);
+              cout << "Min threshold : " << L[0] << endl;
+              cout << "Max threshold : " << L[1] << endl;
+              ncheck++;
+          }
             
             // Read the output file data
             if (go_type == "file"){
@@ -152,137 +153,130 @@ int main(int argc, char *argv[])
                 else 
                   throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
               }
-	      cout << "Output file name : " << f_name << endl;
-	      cout << "Nr of additional columns :" << ncols << endl;
-	      ncheck++;
-	    }
-	  }
+              cout << "Output file name : " << f_name << endl;
+              cout << "Nr of additional columns :" << ncols << endl;
+              ncheck++;
+            }
+          }
 
-	  // only do the following if we found an image section and a file section
-	  if (ncheck != 2) {
-	    fprintf(stderr, "  ...Skipping\n");
-	    continue;
-	  }
-	     
-	  // read the image data
-	  int nsize = res[0]*res[1]*res[2];
-	  cout << "Reading " << nsize << " bytes\n";
-	  byte* pimg = scinew byte[nsize];
-	  if (ReadImage(imgname.c_str(), nsize, pimg) == false) {
-	    cout << "FATAL ERROR : Failed reading image data" << endl;
-	    exit(0);
-	  }
+          // only do the following if we found an image section and a file section
+          if (ncheck != 2) {
+            fprintf(stderr, "  ...Skipping\n");
+            continue;
+          }
 
-	  // these points define the extremas of the grid
+          // read the image data
+          int nsize = res[0]*res[1]*res[2];
+          cout << "Reading " << nsize << " bytes\n";
+          byte* pimg = scinew byte[nsize];
+          if (ReadImage(imgname.c_str(), nsize, pimg) == false) {
+            cout << "FATAL ERROR : Failed reading image data" << endl;
+            exit(0);
+          }
+
+          // these points define the extremas of the grid
           Point min(1.e30,1.e30,1.e30),max(-1.e30,-1.e30,-1.e30);
 
-	  // create the points
-	  // It was noted that the original algorithm was using
-	  // a lot of memory. To reduce memory we don't store the
-	  // actual points anymore but an index that can be used
-	  // to recreate the points
-	  int npatches = level->numPatches();
-	  //vector< vector<Point> > points(npatches);
-	  vector< vector<int> > points(npatches);
-	  vector<int> sizes(npatches);
 
-	  int i, j, k, n;
-	  Point pt;
-	  byte* pb = pimg;
+          // create the points
+          // It was noted that the original algorithm was using
+          // a lot of memory. To reduce memory we don't store the
+          // actual points anymore but an index that can be used
+          // to recreate the points
+          int npatches = level->numPatches();
+          //vector< vector<Point> > points(npatches);
+          vector< vector<int> > points(npatches);
+          vector<int> sizes(npatches);
 
-	  // first determine the nr of points for each patch
-	  for (i=0; i<npatches; i++) sizes[i] = 0;
+          int i, j, k, n;
+          Point pt;
+          byte* pb = pimg;
 
-	  const Patch* currentpatch;
-	  n = 0;
-	  for (k=0; k<res[2]; k++) {
-	    for (j=0; j<res[1]; j++) {
-	      for (i=0; i<res[0]; i++, pb++, n++) {
-		if ((*pb >= L[0]) && (*pb <= L[1])) {
+          // first determine the nr of points for each patch
+          for (i=0; i<npatches; i++) sizes[i] = 0;
 
-		  pt = CreatePoint(n, res, dx, dy, dz);
-	          // pt.x(dx*((double)i + 0.5));
-		  // pt.y(dy*((double)j + 0.5));
-		  // pt.z(dz*((double)k + 0.5));
-
+          const Patch* currentpatch;
+          n = 0;
+          for (k=0; k<res[2]; k++) {
+            for (j=0; j<res[1]; j++) {
+              for (i=0; i<res[0]; i++, pb++, n++) {
+                if ((*pb >= L[0]) && (*pb <= L[1])) {
+                  pt = CreatePoint(n, res, dx, dy, dz);
                   currentpatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
                   int pid = currentpatch->getID();
-
-		  sizes[pid]++;
+                  sizes[pid]++;
                 }
-	      }
-	    }
-	  fprintf(stderr, "%s : %.1f%\r", "Preprocessing ", 50.0*(k+1.0)/(double)res[2]);
-	  }
+              }
+            }
+            fprintf(stderr, "%s : %.1f\n", "Preprocessing ", 50.0*(k+1.0)/(double)res[2]);
+          }
 
-	  // allocate storage for the patches
-	  for (i=0; i<npatches; i++) { points[i].resize(sizes[i]); sizes[i] = 0; }
+          // allocate storage for the patches
+          for (i=0; i<npatches; i++) { points[i].resize(sizes[i]); sizes[i] = 0; }
 
-	  // put the points in the correct patches
-	  pb = pimg;
+          // put the points in the correct patches
+          pb = pimg;
 
-	  n = 0;
-	  for (k=0; k<res[2]; k++) {
-	    for (j=0; j<res[1]; j++) {
-	      for (i=0; i<res[0]; i++, pb++, n++) {
-		if ((*pb >= L[0])  && (*pb <= L[1])) {
+          n = 0;
+          for (k=0; k<res[2]; k++) {
+            for (j=0; j<res[1]; j++) {
+              for (i=0; i<res[0]; i++, pb++, n++) {
+                if ((*pb >= L[0])  && (*pb <= L[1])) {
 
-		  pt = CreatePoint(n, res, dx, dy, dz);
-		  // pt.x(dx*((double)i + 0.5));
-		  // pt.y(dy*((double)j + 0.5));
-		  // pt.z(dz*((double)k + 0.5));
+                  pt = CreatePoint(n, res, dx, dy, dz);
 
-                  const Patch* currentpatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
+                 const Patch* currentpatch =
+                                      level->selectPatchForCellIndex(level->getCellIndex(pt));
                   int pid = currentpatch->getID();
                   min = Min(pt,min);
                   max = Max(pt,max);
                   points[pid][ sizes[pid] ] = n;
-		  sizes[pid]++;
+                  sizes[pid]++;
                 }
-	      }
-	    }
-	  fprintf(stderr, "%s : %.1f%\r", "Preprocessing ", 50+50.0*(k+1.0)/(double)res[2]);
-	  }
+              }
+            }
+            fprintf(stderr, "%s : %.1f\r", "Preprocessing ", 50+50.0*(k+1.0)/(double)res[2]);
+          }
 
-	  // clean up image data
-	  delete [] pimg;
+          // clean up image data
+          delete [] pimg;
 
-	  // loop over all patches
-	  for(Level::const_patchIterator iter = level->patchesBegin();
-	      iter != level->patchesEnd(); iter++){
-	    const Patch* patch = *iter;
-	    int pid = patch->getID();
+          // loop over all patches
+          for(Level::const_patchIterator iter = level->patchesBegin();
+              iter != level->patchesEnd(); iter++){
+            const Patch* patch = *iter;
+            int pid = patch->getID();
 
-	    char fnum[5];
-	    sprintf(fnum,".%d",pid);
-	    of_name = f_name+fnum;
-	    fprintf(stderr, "Writing %s   \r", of_name.c_str());
+            char fnum[5];
+            sprintf(fnum,".%d",pid);
+            of_name = f_name+fnum;
+            fprintf(stderr, "Writing %s   \r", of_name.c_str());
 
-	    // ADB: change this to always be 128 bytes, so that we can 
-	    // cleanly read the header off a binary file
-	    FILE* dest = fopen(of_name.c_str(), "wb");
-	    double x[6];
-	    x[0] = min.x(), x[1] = min.y(), x[2] = min.z();
-	    x[3] = max.x(), x[4] = max.y(), x[5] = max.z();
-	    if(binmode) {
-	      fwrite(x, sizeof(double),6,dest);
-	    } else {
-	      fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
-	    }
-	    for (int I = 0; I < sizes[pid]; I++) {
-	          pt = CreatePoint(points[pid][I], res, dx, dy, dz);
-		  x[0] = pt.x();		  
-		  x[1] = pt.y();	
-		  x[2] = pt.z();
+            // ADB: change this to always be 128 bytes, so that we can 
+            // cleanly read the header off a binary file
+            FILE* dest = fopen(of_name.c_str(), "wb");
+            double x[6];
+            x[0] = min.x(), x[1] = min.y(), x[2] = min.z();
+            x[3] = max.x(), x[4] = max.y(), x[5] = max.z();
+            if(binmode) {
+              fwrite(x, sizeof(double),6,dest);
+            } else {
+              fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
+            }
+            for (int I = 0; I < sizes[pid]; I++) {
+                  pt = CreatePoint(points[pid][I], res, dx, dy, dz);
+                  x[0] = pt.x();
+                  x[1] = pt.y();
+                  x[2] = pt.z();
                   // FIXME: should have way of specifying endiness
-		  if(binmode) {
-		    fwrite(x, sizeof(double), 3, dest);
-		  } else {
-		    fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
-		  }
-	    }
-	    fclose(dest);
-	  } // loop over patches
+                  if(binmode) {
+                    fwrite(x, sizeof(double), 3, dest);
+                  } else {
+                    fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
+                  }
+            }
+            fclose(dest);
+          } // loop over patches
         } // loop over geometry objects
       } // loop over materials
     } // loop over grid levels
