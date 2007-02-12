@@ -18,7 +18,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_iterations>  10 </max_iterations>
+      <!-- <max_iterations>  10 </max_iterations> -->
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
@@ -189,7 +189,7 @@
                   <min>       [ -6.0, -6.0, -6.0 ]    </min>
                   <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
-                <cylinder label = "He vortex">
+                <cylinder label = "HeVortex">
                    <bottom>           [0.0,0.0,-1]   </bottom>
                    <top>              [0.0,0.0, 1]   </top>
                    <radius>           0.5             </radius>
@@ -202,7 +202,7 @@
               <temperature>   300.0                    </temperature>
            </geom_object>
            <geom_object>
-                <cylinder label = "He Vortex">         </cylinder>
+              <cylinder label = "HeVortex">         </cylinder>
               <res>                [2,2,2]             </res>
               <velocity>           [0.0,10.0,0.0]      </velocity>
               <density>        0.162527864325          </density>
@@ -237,24 +237,13 @@
            </constants>
            <geom_object>
              <difference>
-               <box label="world">
-                 <min>       [ -6.0, -6.0, -6.0 ]   </min>
-                 <max>       [ 6.0, 6.0, 6.0 ]      </max>
-               </box>
-               <cylinder label = "HeVortex">
-                  <bottom>           [0.0,0.0,-5]   </bottom>
-                  <top>              [0.0,0.0, 5]    </top>
-                  <radius>           0.5             </radius>
-               </cylinder>
+               <box label="world">            </box>
+               <cylinder label = "HeVortex">  </cylinder>
              </difference>
              <scalar>    0.00   </scalar>
            </geom_object>
            <geom_object>
-             <cylinder label = "He Vortex">
-                <bottom>           [0.0,0.,-5]   </bottom>
-                <top>              [0.0,0., 5]   </top>
-                <radius>           0.5           </radius>
-             </cylinder>
+             <cylinder label = "HeVortex">   </cylinder>
              <scalar>    1.00   </scalar>
            </geom_object>
         </scalar>
