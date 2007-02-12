@@ -298,6 +298,10 @@ DESCRIPTION
 	    // harmless.
 	    static void allow_sgi_OpenGL_page0_sillyness();
 	    static void disallow_sgi_OpenGL_page0_sillyness();
+
+            // set to "exit" (or something else) so we don't have to always 
+            // wait for the user to input something
+            static void setDefaultAbortMode(const char* abortMode);
 	private:
 #ifdef _WIN32
             // in windows, we can't get around this with #define private public
@@ -324,6 +328,8 @@ DESCRIPTION
 	    static bool initialized;
 	    static void initialize();
 	    static void checkExit();
+
+            static const char* defaultAbortMode;
 	    int cpu_;
 	    ~Thread();
 	    Thread_private* priv_;

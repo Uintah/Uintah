@@ -107,10 +107,17 @@ public:
 };
 
 bool Thread::initialized = false;
+const char* Thread::defaultAbortMode = "ask";
+
 
 bool Thread::isInitialized()
 {
   return initialized;
+}
+
+void Thread::setDefaultAbortMode(const char* abortMode)
+{
+  defaultAbortMode = abortMode;
 }
 
 Thread::~Thread()
@@ -287,9 +294,9 @@ void
 Thread::niceAbort(void* context /* = 0 */)
 {
   fprintf(stderr, getStackTrace(context).c_str());
-  char* smode = getenv("SCI_SIGNALMODE");
+  const char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
-    smode = "ask"; //"e"; 
+    smode = defaultAbortMode; //"e"; 
 	
   Thread* s=Thread::self();
   print_threads();
