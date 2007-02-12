@@ -34,6 +34,7 @@
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h>
 
+#include <sci_metacomponents.h>
 #include <CCA/Components/GUIBuilder/PortIcon.h>
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
@@ -50,7 +51,6 @@ BEGIN_EVENT_TABLE(PortIcon, wxWindow)
   EVT_LEFT_DOWN(PortIcon::OnLeftDown)
   EVT_LEFT_UP(PortIcon::OnLeftUp)
   //EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu (disabled for now...)
-  //EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
   EVT_MOTION(PortIcon::OnMouseMove)
 END_EVENT_TABLE()
 
@@ -114,6 +114,9 @@ void PortIcon::OnMouseMove(wxMouseEvent& WXUNUSED(event))
   wxPoint mp;
   canvas->GetUnscrolledMousePosition(mp);
   canvas->HighlightConnection(mp);
+#if FWK_DEBUG
+  canvas->GetBuilderWindow()->DisplayMousePosition(wxT("PortIcon"), mp);
+#endif
 }
 
 void PortIcon::OnRightClick(wxMouseEvent& event)
@@ -155,7 +158,6 @@ void PortIcon::OnPaint(wxPaintEvent& event)
     dc.DrawRectangle(hRect);
   }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // protected constructor and member functions
