@@ -158,6 +158,9 @@ usage( const std::string & message,
 int
 main( int argc, char** argv )
 {
+  // turn off Thread asking so sus can cleanly exit on abortive behavior.  
+  // Can override this behavior with the environment variable SCI_SIGNALMODE
+  Thread::setDefaultAbortMode("exit");
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
