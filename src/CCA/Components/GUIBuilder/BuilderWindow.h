@@ -160,7 +160,9 @@ public:
   void DisplayErrorMessage(const wxString& line);
   void DisplayMessages(const std::vector<wxString>& lines);
   void DisplayErrorMessages(const std::vector<wxString>& lines);
+#if FWK_DEBUG
   void DisplayMousePosition(const wxString& widgetName, const wxPoint& p);
+#endif
 
   //const MenuMap& GetComponentMenus() { return menus; }
 

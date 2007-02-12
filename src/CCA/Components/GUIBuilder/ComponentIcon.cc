@@ -67,9 +67,9 @@ using namespace SCIRun;
 
 BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
   EVT_RIGHT_UP(ComponentIcon::OnRightClick) // show popup menu
-  EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
-  EVT_LEFT_UP(ComponentIcon::OnLeftUp)
-  EVT_MOTION(ComponentIcon::OnMouseMove)
+  //EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
+  //EVT_LEFT_UP(ComponentIcon::OnLeftUp)
+  //EVT_MOTION(ComponentIcon::OnMouseMove)
   EVT_MENU(ID_MENU_GO, ComponentIcon::OnGo)
   EVT_MENU(ID_MENU_DELETE, ComponentIcon::OnDelete)
   EVT_BUTTON(ID_BUTTON_UI, ComponentIcon::OnUI)
@@ -91,10 +91,6 @@ ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
 
   Init();
   Create(parent, winid, wxPoint(x, y));
-#if DEBUG
-  std::cerr << "ComponentIcon " << compID->getInstanceName() << " position: "
-            << "(" << ")" << std::endl;
-#endif
 }
 
 ComponentIcon::~ComponentIcon()
@@ -146,49 +142,76 @@ void ComponentIcon::OnLeftDown(wxMouseEvent& WXUNUSED(event))
 {
 }
 
-void ComponentIcon::OnLeftUp(wxMouseEvent& WXUNUSED(event))
+void ComponentIcon::OnLeftUp(wxMouseEvent& event)
 {
-  isMoving = false;
-  wxPoint p;
-  canvas->GetUnscrolledMousePosition(p);
-  if (p.x < 0) {
-    p.x = 0;
-  }
-  if (p.y < 0) {
-    p.y = 0;
-  }
-  CaptureMouse();
-std::cerr << "Move p.x=" << p.x << ", p.y=" << p.y << std::endl;
-  Move(p.x, p.y);
-  wxPoint pp;
-  canvas->GetScrolledPosition(p, pp);
-  //canvas->Scroll(p.x / NetworkCanvas::DEFAULT_SCROLLX, p.y / NetworkCanvas::DEFAULT_SCROLLY);
-  ReleaseMouse();
+#if 0
+//   if (isMoving) {
+//     wxPoint p;
+//     canvas->GetUnscrolledMousePosition(p);
+//     std::cerr << "OnLeftUp Position (" << p.x << ", " << p.y << ")" << std::endl;
+//      if (p.x < 0) {
+//        p.x = 0;
+//      }
+//      if (p.y < 0) {
+//        p.y = 0;
+//      }
+//      int cw = 0, ch = 0;
+//      canvas->GetSize(&cw, &ch);
+//      if (p.x > cw) {
+//        p.x = cw - 1;
+//      }
+//      if (p.y > ch) {
+//        p.y = ch - 1;
+//      }
+//     std::cerr << "OnLeftUp Move (" << p.x << ", " << p.y << ")" <<  std::endl;
+//     Move(p.x, p.y);
+
+// //     int xu = 0, yu = 0;
+// //     canvas->GetScrollPixelsPerUnit(&xu, &yu);
+// //     canvas->Scroll(p.x / xu, p.y / yu);
+//   }
+//   Show(true);
+//   isMoving = false;
+#endif
 }
 
 void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 {
   wxPoint p;
   canvas->GetUnscrolledMousePosition(p);
+#if FWK_DEBUG
   canvas->GetBuilderWindow()->DisplayMousePosition(wxT("ComponentIcon"), p);
-  if (event.Dragging()) {
-    if (p.x < 0) {
-      p.x = 0;
-    }
-    if (p.y < 0) {
-      p.y = 0;
-    }
-    CaptureMouse();
-    isMoving = true;
-std::cerr << "Move p.x=" << p.x << ", p.y=" << p.y << std::endl;
-    Move(p.x, p.y);
-    wxPoint pp;
-    canvas->GetScrolledPosition(p, pp);
-    //canvas->Scroll(p.x / NetworkCanvas::DEFAULT_SCROLLX, p.y / NetworkCanvas::DEFAULT_SCROLLY);
-    ReleaseMouse();
-  }
+#endif
+#if 0
+//   if (event.Dragging()) {
+//     isMoving = true;
+//     std::cerr << "OnMouseMove Position (" << p.x << ", " << p.y << ")" << std::endl;
+//      if (p.x < 0) {
+//        p.x = 0;
+//      }
+//      if (p.y < 0) {
+//        p.y = 0;
+//      }
+//      int cw = 0, ch = 0;
+//      canvas->GetSize(&cw, &ch);
+//      if (p.x > cw) {
+//        p.x = cw - 1;
+//      }
+//      if (p.y > ch) {
+//        p.y = ch - GetSize().width;
+//      }
+//     std::cerr << "OnMouseMove Move (" << p.x << ", " << p.y << ")" <<  std::endl;
+//     Move(p.x, p.y);
+
+// //     int xu = 0, yu = 0;
+// //     canvas->GetScrollPixelsPerUnit(&xu, &yu);
+// //     canvas->Scroll(p.x / xu, p.y / yu);
+//   }
+#endif
+  Show(true);
 }
 
+#if 0
 // void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 // {
 //   if (event.LeftIsDown() && event.Dragging() && isMoving) {
@@ -299,6 +322,7 @@ std::cerr << "Move p.x=" << p.x << ", p.y=" << p.y << std::endl;
 
 //   event.StopPropagation();
 // }
+#endif
 
 void ComponentIcon::OnRightClick(wxMouseEvent& event)
 {
@@ -348,6 +372,12 @@ PortIcon* ComponentIcon::GetPortIcon(const std::string& portName)
     }
   }
   return 0;
+}
+
+void ComponentIcon::GetCanvasPosition(wxPoint& pos)
+{
+  wxPoint p = GetPosition();
+  canvas->GetUnscrolledPosition(p, pos);
 }
 
 void ComponentIcon::UpdateProgress(int p)
@@ -431,13 +461,11 @@ void ComponentIcon::SetPortIcons()
     for (unsigned int i = 0, j = 0; i < providedPorts.size(); i++) {
       std::string model, type;
       builder->getPortInfo(GetComponentInstance(), providedPorts[i], model, type);
-std::cerr << "Provides model=" << model << " type=" << type << std::endl;
 
       // would be useful to have the namespace string stored somewhere...
       if (type == GUIBuilder::UIPORT) {
         if (builder->connectUIPort(cid->getInstanceName(), providedPorts[i], cid, uiPortName)) {
           hasUIPort = true;
-std::cerr << "Provides model=" << model << " type=" << type  << " had UI port!" << std::endl;
         }
       } else if (type == GUIBuilder::GOPORT) {
         if (builder->connectGoPort(cid->getInstanceName(), providedPorts[i], cid, goPortName)) {
@@ -469,7 +497,6 @@ std::cerr << "Provides model=" << model << " type=" << type  << " had UI port!" 
     for (unsigned int i = 0, j = 0; i < usedPorts.size(); i++) {
       std::string model, type;
       builder->getPortInfo(GetComponentInstance(), usedPorts[i], model, type);
-std::cerr << "Uses model=" << model << " type=" << type << std::endl;
 
       // It doesn't make sense for a component that isn't a UI to use these ports.
       if (type == GUIBuilder::UIPORT ||

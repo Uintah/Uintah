@@ -52,6 +52,7 @@
 #include <map>
 #include <iostream>
 
+#include <sci_metacomponents.h>
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 
 #include <Core/Thread/Thread.h>
@@ -66,10 +67,6 @@
 #include <CCA/Components/GUIBuilder/ComponentWizardDialog.h>
 #include <CCA/Components/GUIBuilder/XMLPathDialog.h>
 #include <CCA/Components/GUIBuilder/FrameworkProxyDialog.h>
-
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
 
 namespace GUIBuilder {
 
@@ -197,7 +194,7 @@ int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
 BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent) : builder(bc), pointerLocationX("0"), pointerLocationY("0")
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
 #endif
 
@@ -217,10 +214,17 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   setDefaultText();
 
   //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
+#if FWK_DEBUG
   statusBar = CreateStatusBar(3, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, 150, -1 };
   statusBar->SetStatusWidths(3, statusBarWidths);
   statusBar->SetStatusText("SCIRun2 started", 0);
+#else
+  statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
+  int statusBarWidths[] = { 350, -1 };
+  statusBar->SetStatusWidths(2, statusBarWidths);
+  statusBar->SetStatusText("SCIRun2 started", 0);
+#endif
 
   return true;
 }
@@ -245,7 +249,7 @@ void BuilderWindow::BuildAllPackageMenus() {
 
 BuilderWindow::~BuilderWindow()
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::~BuilderWindow()" << std::endl;
 #endif
   // framework shutdown instead!!!
@@ -298,6 +302,7 @@ void BuilderWindow::DisplayErrorMessages(const std::vector<wxString>& lines)
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
+#if FWK_DEBUG
 // TODO: should only be available in debug mode?
 void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoint& p)
 {
@@ -305,6 +310,7 @@ void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoi
   pointerLocationY.Printf("%d", p.y);
   statusBar->SetStatusText(widgetName + ": " + pointerLocationX + ", " + pointerLocationY, 1);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // event handlers
@@ -312,7 +318,7 @@ void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoi
 void BuilderWindow::OnAbout(wxCommandEvent &event)
 {
   wxString msg;
-  msg.Printf(wxT("Hello and welcome to %s"), wxVERSION_STRING);
+  msg.Printf(wxT("Copyright (c) 2006 Scientific Computing and Imaging Institute, University of Utah.\n\nSCIRun2 information is available at\nhttps://code.sci.utah.edu/SCIRun2/index.php/Main_Page."));
 
   // show license
   wxMessageBox(msg, wxT("About SCIRun2"), wxOK|wxICON_INFORMATION, this);
@@ -320,7 +326,7 @@ void BuilderWindow::OnAbout(wxCommandEvent &event)
 
 void BuilderWindow::OnQuit(wxCommandEvent &event)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::OnQuit(..)" << std::endl;
 #endif
   // Destroy the frame
@@ -330,7 +336,7 @@ void BuilderWindow::OnQuit(wxCommandEvent &event)
 void BuilderWindow::OnSashDrag(wxSashEvent& event)
 {
 #if 0
-// #if DEBUG
+// #if FWK_DEBUG
 //   std::cerr << "BuilderWindow::OnSashDrag(..): event drag status="  << event.GetDragStatus() << std::endl;
 //   std::cerr << "Drag rect = (" << event.GetDragRect().x << ", " << event.GetDragRect().y << ", " << event.GetDragRect().width << ", " << event.GetDragRect().height << ")" << std::endl;
 // #endif
@@ -375,11 +381,11 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
   // need to save current app if user agrees and clear
   wxBusyCursor wait;
   wxString wildcard = wxT(GUIBuilder::APP_EXT_WILDCARD);
-  wxFileDialog fDialog(this, 
-                       wxT("Open application file"), 
-                       wxT(GUIBuilder::DEFAULT_OBJ_DIR), 
-                       wxT(wxEmptyString), 
-                       wildcard, 
+  wxFileDialog fDialog(this,
+                       wxT("Open application file"),
+                       wxT(GUIBuilder::DEFAULT_OBJ_DIR),
+                       wxT(wxEmptyString),
+                       wildcard,
                        wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
   statusBar->SetStatusText("Loading application file", 0);
 
@@ -403,10 +409,10 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
 
     for(SSIDL::array1<sci::cca::ConnectionID::pointer>::iterator connIDIter = connList.begin();
         connIDIter != connList.end(); connIDIter++) {
-      
+
       if(!(*connIDIter).isNull()) {
         networkCanvas->Connect(*connIDIter);
-      }  
+      }
 
     }
 
@@ -446,11 +452,11 @@ void BuilderWindow::OnSaveAs(wxCommandEvent& event)
   statusBar->SetStatusText("Saving application file", 0);
   if(fDialog.ShowModal() == wxID_OK) {
     wxString path = fDialog.GetPath();
-    wxString name = fDialog.GetFilename(); 
+    wxString name = fDialog.GetFilename();
     if(name.Find('.') == -1) {
       path.Append('.');
       path.Append(extension);
-    }  
+    }
     builder->saveApplication(path.c_str());
     statusBar->SetStatusText("Application file saved", 0);
   } else {
@@ -507,7 +513,7 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
   // Assumes that the GUI builder component class will be named "SCIRun.GUIBuilder".
   // Is there a better way to check if this is a GUI builder?
   if (! cid.isNull() && cd->getComponentClassName() != "SCIRun.GUIBuilder") {
-#if DEBUG
+#if FWK_DEBUG
     std::cerr << "wx: Got " << cid->getInstanceName() << std::endl;
 #endif
     networkCanvas->AddIcon(cid);

@@ -146,7 +146,9 @@ void MiniCanvas::OnMouseMove(wxMouseEvent& event)
   wxClientDC dc(this);
   DoPrepareDC(dc);
   wxPoint ep = event.GetLogicalPosition(dc);
+#if FWK_DEBUG
   builderWindow->DisplayMousePosition(wxT("MiniCanvas"), ep);
+#endif
   if (insideViewport && event.Dragging()) {
     scrollCanvas(ep);
   }
