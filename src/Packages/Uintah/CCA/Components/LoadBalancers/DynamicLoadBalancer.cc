@@ -326,8 +326,10 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   for(unsigned int i=0;i<indices.size();i++)
   {
     DistributedIndex di=indices[i];
-    order[i]=displs[di.p]/sizeof(DistributedIndex)+di.i;
+    //order[i]=displs[di.p]/sizeof(DistributedIndex)+di.i;
+    order[i]=(int)ceil((float)di.p*level->numPatches()/d_myworld->size())+di.i;
   }
+ 
   /*
   if(d_myworld->myrank()==0)
   {
@@ -350,7 +352,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
 
 bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 {
-  
   doing << d_myworld->myrank() << "   APF\n";
   double time = Time::currentSeconds();
 
@@ -438,7 +439,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   for (unsigned i = 0; i < groupCost.size(); i++) {
     int currentProc = 0;
     double currentProcCost = 0;
-    
+     
     for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) {
       int index;
       if (d_doSpaceCurve) {
@@ -455,7 +456,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       // assign the patch to a processor.  When we advance procs,
       // re-update the cost, so we use all procs (and don't go over)
       double patchCost = patch_costs[index];
-
       double notakeimb=fabs(currentProcCost-avgCostPerProc[i]);
       double takeimb=fabs(currentProcCost+patchCost-avgCostPerProc[i]);
               
@@ -475,7 +475,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       }
       if (d_myworld->myrank() == 0)
         dbg << "Patch " << index << "-> proc " << currentProc 
-            << " PatchCost: " << patchCost << ", ProcCost: " 
+            << " PatchCost: " << patchCost << ", ProcCost: "
             << currentProcCost << " group cost " << groupCost[i] << "  avg cost " << avgCostPerProc[i]
             << ", idcheck: " << patchset[index]->getGridIndex() << " (" << patchset[index]->getID() << ")" << endl;
     }
@@ -834,7 +834,8 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
     {
         DistributedIndex di=indices[i];
         //index is equal to the diplacement for the processor converted to struct size plus the local index
-        int index=displs[di.p]/sizeof(DistributedIndex)+di.i;
+        //int index=displs[di.p]/sizeof(DistributedIndex)+di.i;
+        int index=(int)ceil((float)di.p*patches.size()/d_myworld->size())+di.i;
         reorderedPatches[i]=patches[index];
     }
   }
@@ -1055,7 +1056,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
     
     bool dynamicAllocate = false;
     //temp assignment can be set if the regridder has already called the load balancer
-    if(d_tempAssignment.size()==0)
+    if(d_tempAssignment.empty())
     {
       int numPatches = 0;
       for(int l=0;l<grid->numLevels();l++){
@@ -1063,8 +1064,6 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
         numPatches += level->numPatches();
       }
     
-    
-      d_tempAssignment.clear();
       d_tempAssignment.resize(numPatches);
       if (d_myworld->myrank() == 0)
         doing << d_myworld->myrank() << "  Checking whether we need to LB\n";
@@ -1115,9 +1114,9 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
       }
     }
   }
+  d_tempAssignment.resize(0);
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, (changed || state == restart) ? regrid : check);
-  d_tempAssignment.resize(0);
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
   return changed;
 }
