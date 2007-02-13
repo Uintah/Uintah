@@ -40,13 +40,13 @@ function usage() {
   #echo -e "Usage: build.sh [--debug] [--no-gui] [--help] [--mpi] path to SCIRun Thirdparty"
   echo -e "Usage: build.sh [OPTION...] SCIRun Thirdparty path"
   echo -e "Help options\n  --help, -h\t\t\tShow this help message."
-  echo -e "Build options\n  --debug, -d\t\t\tBuild SCIRun2 in debug mode."
-  echo -e "  --no-gui\t\t\tBuild SCIRun2 without a gui."
-  echo -e "  --mpi[=DIR]\t\t\tBuild SCIRun2 with MPI (optional path)."
-  echo -e "\nThis script will configure and build SCIRun2 based on the options provided to this script.\nSee (site?) for more configuration options.\n"
+  echo -e "Build options\n  --debug, -d\t\t\tBuild SCIJump in debug mode."
+  echo -e "  --no-gui\t\t\tBuild SCIJump without a gui."
+  echo -e "  --mpi[=DIR]\t\t\tBuild SCIJump with MPI (optional path)."
+  echo -e "\nThis script will configure and build SCIJump based on the options provided to this script.\nSee (site?) for more configuration options.\n"
   echo -e "This script will attempt to detect Babel (site?) libraries on your system.\nIf not found, version 1.0.2 will be downloaded and built.\n"
   echo -e "This script will also attempt to detect wxWidgets (site?) 2.6.x on your system if configuring with a GUI.\nIf not found and if configuring with a GUI, version 2.6.3 will be downloaded and built.\n"
-  echo -e "To build SCIRun2 with parallel component support, use the --mpi option.\nIf an MPI implementation is not installed in standard system directories, provide the path.\nLAM-MPI and MPICH are supported.\n"
+  echo -e "To build SCIJump with parallel component support, use the --mpi option.\nIf an MPI implementation is not installed in standard system directories, provide the path.\nLAM-MPI and MPICH are supported.\n"
   echo -e "SCIRun Thirdparty libraries (required) are available for download from www.sci.utah.edu."
   exit $1
 }
@@ -226,7 +226,7 @@ function versioncheck() {
 ensure make --version
 
 # without gui
-export CONFIG_ARGS="--enable-scirun2 --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
+export CONFIG_ARGS="--enable-scijump --with-thirdparty=$THIRDPARTY_INSTALL_DIR"
 
 if [ $DEBUG_BUILD ] ; then
   export CONFIG_ARGS="$CONFIG_ARGS --enable-debug"
@@ -277,6 +277,6 @@ fi
 
 try "mkdir -p $BUILD_DIR"
 try "cd $BUILD_DIR"
-echo "***Configuring SCIRun2***"
+echo "***Configuring SCIJump***"
 try "$ROOT_DIR/src/configure $CONFIG_ARGS"
 try "make"
