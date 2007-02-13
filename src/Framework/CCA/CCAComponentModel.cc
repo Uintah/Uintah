@@ -38,17 +38,13 @@
  *
  */
 
+#include <sci_defs/framework_defs.h>
 #include <Framework/CCA/CCAComponentModel.h>
 #include <Framework/CCA/CCAComponentInstance.h>
 #include <Framework/SCIRunFramework.h>
 #include <Framework/resourceReference.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Thread/Guard.h>
-
-
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
 
 namespace SCIRun {
 
@@ -116,7 +112,7 @@ CCAComponentModel::createServices(const std::string& instanceName,
                                   const std::string& className,
                                   const sci::cca::TypeMap::pointer& properties)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cout << "CCAComponentModel::createServices: " << instanceName << ", " << className << std::endl;
 #endif
   // get unique name?
@@ -141,7 +137,7 @@ bool CCAComponentModel::destroyServices(const sci::cca::Services::pointer& svc)
 bool CCAComponentModel::haveComponent(const std::string& type)
 {
   SCIRun::Guard g1(&lock_components);
-#if DEBUG
+#if FWK_DEBUG
   std::cout << "CCA looking for component of type: " << type << std::endl;
 #endif
   return components.find(type) != components.end();
@@ -160,7 +156,7 @@ CCAComponentModel::createInstance(const std::string& name,
     properties->addReference();
     loaderName = properties->getString("LOADER NAME", "");
   }
-#if DEBUG
+#if FWK_DEBUG
   std::cout <<"creating cca component <" << name << "," << type << "> with loader:"
             << loaderName << std::endl;
 #endif
@@ -255,7 +251,7 @@ int CCAComponentModel::addLoader(resourceReference *rr)
   lock_loaderList.lock();
   loaderList.push_back(rr);
   lock_loaderList.unlock();
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "Loader " << rr->getName()
             << " is added into cca component model" << std::endl;
 #endif
@@ -266,12 +262,12 @@ int CCAComponentModel::removeLoader(const std::string &loaderName)
 {
   resourceReference *rr = getLoader(loaderName);
   if (rr != 0) {
-#if DEBUG
+#if FWK_DEBUG
     std::cerr << "loader " << rr->getName() << " is removed from cca component model\n";
 #endif
     delete rr;
   } else {
-#if DEBUG
+#if FWK_DEBUG
     std::cerr << "loader " << loaderName << " not found in cca component model\n";
 #endif
   }
