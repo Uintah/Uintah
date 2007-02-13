@@ -93,7 +93,8 @@ LIBS := $(XML2_LIBRARY)
 
 ifeq ($(BUILD_DATAFLOW),yes)
  PSELIBS += Dataflow/Network Dataflow/TCLThread
- LIBS := $(TK_LIBRARY) $(TCL_LIBRARY) $(LIBS)
+ LIBS := $(TK_LIBRARY) $(TCL_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY) $(LIBS)
+
 endif
 
 ifeq ($(HAVE_RUBY),yes)
