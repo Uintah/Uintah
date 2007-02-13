@@ -70,10 +70,10 @@ FrameworkProxyDialog::FrameworkProxyDialog(wxWindow *parent,
                                            const std::string& defaultDomain,
                                            const std::string& defaultLogin)
   : wxDialog(parent, id, title, pos, size, style),
-    proxy(wxT(defaultProxy)),
-    domain(wxT(defaultDomain)),
-    login(wxT(defaultLogin)),
-    path(wxT(GUIBuilder::DEFAULT_OBJ_DIR))
+    proxy(defaultProxy),
+    domain(defaultDomain),
+    login(defaultLogin),
+    path(GUIBuilder::DEFAULT_OBJ_DIR)
 {
   SetLayout();
 }
