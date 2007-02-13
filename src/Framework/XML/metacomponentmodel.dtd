@@ -26,6 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
+<!-- add BuilderWindow or distinct GUI builder id element -->
+
 <!ELEMENT metacomponentmodel (library+)>
 <!ELEMENT library (component+)>
 <!ELEMENT component (interface?)>
