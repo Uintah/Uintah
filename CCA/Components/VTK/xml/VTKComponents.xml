@@ -29,17 +29,17 @@
 -->
 
 <metacomponentmodel name = "vtk">
-  <library name="libCCA_Components_VTK_IO.so">
+  <library name="CCA_Components_VTK_IO">
     <component name="Vtk.ImageReader" />
     <component name="Vtk.StructuredPointsReader" />
     <component name="Vtk.JPEGReader" />
   </library>
-  <library name="libCCA_Components_VTK_Rendering.so">
+  <library name="CCA_Components_VTK_Rendering">
     <component name="Vtk.PolyDataMapper" />
     <component name="Vtk.Actor" />
     <component name="Vtk.Renderer" />
   </library>
-  <library name="libCCA_Components_VTK_Graphics.so">
+  <library name="CCA_Components_VTK_Graphics">
     <component name="Vtk.ContourFilter" />
   </library>
 </metacomponentmodel>

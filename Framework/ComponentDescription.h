@@ -68,7 +68,7 @@ class SCIRunFramework;
  */
 class ComponentDescription {
 public:
-  ComponentDescription(ComponentModel* model, const std::string& type, const std::string& library="", const std::string& loader = "");
+  ComponentDescription(ComponentModel* model, const std::string& type, const std::string& libName="", const std::string& loader = "");
 
   virtual ~ComponentDescription();
 
