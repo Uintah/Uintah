@@ -38,6 +38,7 @@
  *
  */
 
+#include <sci_defs/framework_defs.h>
 #include <Framework/ComponentModel.h>
 #include <Framework/SCIRunFramework.h>
 #include <Core/OS/Dir.h>
@@ -47,10 +48,6 @@
 #include <Core/Util/Assert.h>
 
 #include <iostream>
-
-#ifndef DEBUG
- #define DEBUG 0
-#endif
 
 namespace SCIRun {
 
@@ -147,7 +144,7 @@ ComponentModel::getMakerAddress(const std::string& type, const ComponentDescript
       makername[i] = '_';
     }
   }
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "looking for symbol:" << makername << std::endl;
 #endif
   void* makerPtr = GetHandleSymbolAddress(handle, makername.c_str());
@@ -238,7 +235,7 @@ bool parseComponentModelXML(const std::string& file, ComponentModel* model)
             if (nameAttrLib != 0) {
               std::string component_type;
               std::string library_name(to_char_ptr(nameAttrLib->children->content));
-#if DEBUG
+#if FWK_DEBUG
               std::cerr << "Library name = ->" << library_name << "<-" << std::endl;
 #endif
               xmlNode* componentNode = libNode->children;
@@ -248,7 +245,7 @@ bool parseComponentModelXML(const std::string& file, ComponentModel* model)
                   xmlAttrPtr nameAttrComp = get_attribute_by_name(componentNode, "name");
                   if (nameAttrComp != 0) {
                     component_type = std::string(to_char_ptr(nameAttrComp->children->content));
-#if DEBUG
+#if FWK_DEBUG
                     std::cerr << "Component name = ->" << component_type << "<-" << std::endl;
 #endif
                     model->setComponentDescription(component_type, library_name);
@@ -296,6 +293,7 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
        dirIter != sArray.end(); dirIter++) {
     StringVector files;
     Dir d(*dirIter);
+std::cerr << "getXMLPaths: dir=" << d.getName() << std::endl;
     d.getFilenamesBySuffix(".xml", files);
 
     // Dir::getFilenamesBySuffix returns file names only
