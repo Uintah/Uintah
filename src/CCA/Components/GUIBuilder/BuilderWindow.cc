@@ -148,10 +148,10 @@ void MenuTree::populateMenu(wxMenu* menu)
       wxMenu* submenu = new wxMenu(wxT(""), wxMENU_TEAROFF);
       //submenu->setFont(builderWindow->font());
       iter->second->populateMenu(submenu);
-      menu->Append(ID_MENU_COMPONENTS, wxT(iter->first), submenu);
+      menu->Append(ID_MENU_COMPONENTS, iter->first, submenu);
     } else {
       builderWindow->PushEventHandler(iter->second);
-      menu->Append(iter->second->id, wxT(iter->first), wxT(iter->first));
+      menu->Append(iter->second->id, iter->first, iter->first);
       iter->second->Connect(iter->second->id, wxEVT_COMMAND_MENU_SELECTED,
                             wxCommandEventHandler(MenuTree::OnInstantiateComponent));
     }
@@ -401,21 +401,6 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 // network file handling will have to be moved outside of GUI classes
 void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
-  // need to save current app if user agrees and clear
-
-//   wxBusyCursor wait;
-
-//   wxString wildcard(wxT("SCIRun2 application files"));
-//   wildcard += wxT(GUIBuilder::APP_EXT_WILDCARD);
-//   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
-//   statusBar->SetStatusText("Loading application file", 0);
-//   if (fDialog.ShowModal() == wxID_OK) {
-//     wxString path = fDialog.GetPath();
-//     // use GUIBuilder to load file
-//     statusBar->SetStatusText("Application file loaded", 0);
-//   } else {
-//     statusBar->SetStatusText("", 0);
-//   }
 }
 
 void BuilderWindow::OnSave(wxCommandEvent& event)
@@ -434,15 +419,6 @@ void BuilderWindow::OnSave(wxCommandEvent& event)
 void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 {
   wxBusyCursor wait;
-//   wxString wildcard(wxT("SCIRun2 application files"));
-//   wildcard += "(" + wxT(GUIBuilder::APP_EXT_WILDCARD) + ") | " + wxT(GUIBuilder::APP_EXT_WILDCARD);
-// std::cerr << "Default dir: " << GUIBuilder::DEFAULT_OBJ_DIR << std::endl;
-//   wxString path = wxFileSelector(wxT("Save application file"),
-//                                  wxT(GUIBuilder::DEFAULT_OBJ_DIR.c_str()),
-//                                  wxT(""),
-//                                  wxT(""),
-//                                  wildcard,
-//                                  wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
   wxString path = wxFileSelector(wxEmptyString,
                                  wxEmptyString,
                                  wxEmptyString,
@@ -450,13 +426,6 @@ void BuilderWindow::OnSaveAs(wxCommandEvent& event)
                                  wxEmptyString,
                                  0,
                                  this);
-//   if (! path.empty()) {
-//     statusBar->SetStatusText("Saving application file", 0);
-//     builder->saveApplication(path.c_str());
-//     statusBar->SetStatusText("Application file saved", 0);
-//   } else {
-//     statusBar->SetStatusText("", 0);
-//   }
 }
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
@@ -662,17 +631,16 @@ void BuilderWindow::buildPackageMenus(const ClassDescriptionList& list)
     iter->second->populateMenu(menu);
 
     // must be tested after adding components at runtime
-    int menuIndex = menuBar->FindMenu(wxT(iter->first));
+    int menuIndex = menuBar->FindMenu(iter->first);
     if (menuIndex == wxNOT_FOUND) {
-      if (menuBar->Append(menu, wxT(iter->first))) {
+      if (menuBar->Append(menu, iter->first)) {
         menus[menuIndex] = menu;
-        //menuIndex = menuBar->FindMenu(wxT(iter->first));
       } else {
         DisplayErrorMessage(std::string("Could not append menu ") + iter->first);
       }
     } else {
       menus[menuIndex] = menu;
-      wxMenu* oldMenu = menuBar->Replace(menuIndex, menu, wxT(iter->first));
+      wxMenu* oldMenu = menuBar->Replace(menuIndex, menu, iter->first);
       delete oldMenu;
     }
   }
@@ -719,12 +687,12 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
     iter->second->populateMenu(menu);
 
     // must be tested after adding components at runtime
-    int menuID = networkCanvas->popupMenu->FindItem(wxT(iter->first));
+    int menuID = networkCanvas->popupMenu->FindItem(iter->first);
     if (menuID == wxNOT_FOUND) {
-      networkCanvas->popupMenu->Append(wxID_ANY, wxT(iter->first), menu);
+      networkCanvas->popupMenu->Append(wxID_ANY, iter->first, menu);
     } else {
       networkCanvas->popupMenu->Destroy(menuID);
-      networkCanvas->popupMenu->Append(menuID, wxT(iter->first), menu);
+      networkCanvas->popupMenu->Append(menuID, iter->first, menu);
     }
   }
 }

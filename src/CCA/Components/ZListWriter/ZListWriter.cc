@@ -59,9 +59,9 @@ void ZListWriter::setServices(const sci::cca::Services::pointer& svc)
 
   svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", svc->createTypeMap());
 
-  ZLComponentIconUI::pointer ciPortPtr = ZLComponentIconUI::pointer(new ZLComponentIconUI);
+  ZLComponentIcon::pointer ciPortPtr = ZLComponentIcon::pointer(new ZLComponentIcon);
 
-  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIconUI", svc->createTypeMap());
+  svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon", svc->createTypeMap());
   svc->registerUsesPort("listport","ZListPort", svc->createTypeMap());
 }
 

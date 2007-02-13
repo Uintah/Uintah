@@ -736,7 +736,7 @@ void GUIBuilder::disconnectComponentIcon(const std::string& ciPortName)
 bool GUIBuilder::setPortColor(const std::string& portType, const std::string& colorName)
 {
   Guard g(&builderLock);
-  wxColor c = wxTheColourDatabase->Find(wxT(colorName));
+  wxColor c = wxTheColourDatabase->Find(colorName);
   if (! c.Ok()) {
     // colorName can't be found in wxTheColourDatabase
     return false;
