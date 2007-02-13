@@ -873,21 +873,19 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
       //find domain bounds
       for(vector<Region>::iterator patch=patches.begin();patch<patches.end();patch++)
       {
-         bounds.low()=min(patch->low(),bounds.low());
-         bounds.high()=max(patch->high(),bounds.high());
+         bounds.low()=Min(patch->low(),bounds.low());
+         bounds.high()=Max(patch->high(),bounds.high());
       }
       Vector range=(bounds.high()-bounds.low()).asVector();
       Vector center=(bounds.high()+bounds.low()).asVector()/2;
-  
       double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
       double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
       double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
-     
+    
       sfc.SetDimensions(r);
       sfc.SetCenter(c);
       sfc.SetRefinementsByDelta(delta);
     }
-
     sortPatches(patches);
 
     LevelP level=0;
