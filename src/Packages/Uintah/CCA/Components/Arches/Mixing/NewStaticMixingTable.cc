@@ -412,7 +412,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    c2h2_index = ii;
     else if(vars_names[ii]== "CH4")
 	     ch4_index = ii;
-    else if(vars_names[ii]== "Soot")
+    else if(vars_names[ii]== "sootFV")
 	     soot_index = ii;
     cout<<vars_names[ii]<<endl;
   }
@@ -445,7 +445,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
                        __FILE__, __LINE__);
 
   if ((d_tabulated_soot)&&(soot_index == -1))
-    throw InvalidValue("No soot found in table" + inputfile,
+    throw InvalidValue("No sootFV found in table" + inputfile,
                        __FILE__, __LINE__);
 
   cout << "CO2 index is "  << co2_index  << endl;
@@ -456,7 +456,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   cout << "CO index is "   << co_index   << endl;
   cout << "C2H2 index is " << c2h2_index << endl;
   cout << "CH4 index is "  << ch4_index  << endl;
-  cout << "Soot index is "  << soot_index  << endl;
+  cout << "sootFV index is "  << soot_index  << endl;
 
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);
