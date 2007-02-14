@@ -87,6 +87,7 @@ public:
       virtual bool getCOOutput() const = 0;
       virtual bool getSulfurChem() const = 0;
       virtual bool getSootPrecursors() const = 0;
+      virtual bool getTabulatedSoot() const = 0;
 
 
 
