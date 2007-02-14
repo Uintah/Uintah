@@ -55,6 +55,7 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("co_output",d_co_output,false);
   db->getWithDefault("sulfur_chem",d_sulfur_chem,false);
   db->getWithDefault("soot_precursors",d_soot_precursors,false);
+  db->getWithDefault("tabulated_soot",d_tabulated_soot,false);
 
   db->require("inputfile",d_inputfile);
   if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
@@ -186,6 +187,8 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_c2h2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, c2h2_index);
     outStream.d_ch4=tableLookUp(mixFrac, mixFracVars, current_heat_loss, ch4_index);
   }
+  if (d_tabulated_soot)
+    outStream.d_sootFV=tableLookUp(mixFrac, mixFracVars, current_heat_loss, soot_index);
 
   outStream.d_heatLoss = current_heat_loss;
 
@@ -380,6 +383,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   co_index = -1;
   c2h2_index = -1;
   ch4_index = -1;
+  soot_index = -1;
   for (int ii = 0; ii < d_varscount; ii++) {
     fd >> vars_names[ii];
     if(vars_names[ii]==  "density")
@@ -408,6 +412,8 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    c2h2_index = ii;
     else if(vars_names[ii]== "CH4")
 	     ch4_index = ii;
+    else if(vars_names[ii]== "Soot")
+	     soot_index = ii;
     cout<<vars_names[ii]<<endl;
   }
   if ((F_index == -1)||(Rho_index == -1)) 
@@ -438,6 +444,10 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     throw InvalidValue("No C2H2 or CH4 found in table" + inputfile,
                        __FILE__, __LINE__);
 
+  if ((d_tabulated_soot)&&(soot_index == -1))
+    throw InvalidValue("No soot found in table" + inputfile,
+                       __FILE__, __LINE__);
+
   cout << "CO2 index is "  << co2_index  << endl;
   cout << "H2O index is "  << h2o_index  << endl;
   cout << "H2S index is "  << h2s_index  << endl;
@@ -446,6 +456,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   cout << "CO index is "   << co_index   << endl;
   cout << "C2H2 index is " << c2h2_index << endl;
   cout << "CH4 index is "  << ch4_index  << endl;
+  cout << "Soot index is "  << soot_index  << endl;
 
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);
