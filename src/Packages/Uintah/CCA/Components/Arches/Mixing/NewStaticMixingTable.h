@@ -90,6 +90,9 @@ public:
       inline bool getSulfurChem() const{
 	return d_sulfur_chem;
       }
+      inline bool getTabulatedSoot() const{
+	return d_tabulated_soot;
+      }
 
       inline bool getSootPrecursors() const{
 	      return d_soot_precursors;
@@ -136,6 +139,8 @@ private:
       bool d_co_output;
       bool d_sulfur_chem;
       bool d_soot_precursors;
+      int soot_index;
+      bool d_tabulated_soot;
 
       std::vector <std::vector<double> > meanMix;
       std::vector<double> heatLoss;

@@ -255,6 +255,7 @@ private:
       bool d_3d_periodic;
       bool d_inverse_density_average;
       double d_H_air;
+      bool d_tabulated_soot;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif

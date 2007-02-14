@@ -112,6 +112,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_co_output = d_mixingModel->getCOOutput();
   d_sulfur_chem = d_mixingModel->getSulfurChem();
   d_soot_precursors = d_mixingModel->getSootPrecursors();
+  d_tabulated_soot = d_mixingModel->getTabulatedSoot();
 
   cout << "d_co_output "<< d_co_output << endl;
 
@@ -137,7 +138,14 @@ Properties::problemSetup(const ProblemSpecP& params)
       d_opl = 0.0;
       if (!d_DORadiationCalc)
         db->require("optically_thin_model_opl",d_opl);
-      db->getWithDefault("empirical_soot",d_empirical_soot,true);
+      if (d_tabulated_soot) {
+        db->getWithDefault("empirical_soot",d_empirical_soot,false);
+        if (d_empirical_soot)
+          throw InvalidValue("Table has soot, do not use empirical soot model!",
+                             __FILE__, __LINE__);
+      }
+      else
+        db->getWithDefault("empirical_soot",d_empirical_soot,true);
       if (d_empirical_soot)
         db->getWithDefault("SootFactor",d_sootFactor,1.0);
     }
@@ -627,7 +635,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    // bc is the mass-atoms of carbon per mass of reactant mixture
 	    // taken from radcoef.f
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
-	    if (d_calcReactingScalar) 
+	    if ((d_calcReactingScalar)||(d_tabulated_soot)) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
 	      if (d_empirical_soot) {
