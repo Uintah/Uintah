@@ -49,12 +49,14 @@ namespace Viewer {
 
 class Colormap : public wxPanel {
 public:
+  // type = Gray | Color
   Colormap(wxWindow *parent, const wxString& type = "Gray", double min = 0.0, double max = 1.0);
 
   void setValues(double min, double max);
   void setType(const wxString& type);
   wxColor getColor(double value);
 
+  int width();
   int height();
 
 protected:
@@ -63,7 +65,7 @@ protected:
 private:
   wxString type;
   double minVal, maxVal;
-  int borderY;
+  int borderX, borderY;
 
   DECLARE_EVENT_TABLE()
 };

@@ -3,7 +3,7 @@
 
   The MIT License
 
-  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  Copyright (c) 2006 Scientific Computing and Imaging Institute,
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -26,58 +26,48 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  Viewer.h
+ * ViewerDialog.h
  *
- *  Written by:
- *   Keming Zhang
- *   Department of Computer Science
- *   University of Utah
- *   May 2002
+ * Written by:
+ *
+ *  Scientific Computing and Imaging Institute
+ *  University of Utah
+ *
  *
  */
 
-#ifndef CCA_Components_Viewer_h
-#define CCA_Components_Viewer_h
 
+#ifndef CCA_Components_Viewer_ViewerDialog_h
+#define CCA_Components_Viewer_ViewerDialog_h
+
+#include <sci_wx.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace Viewer {
 
-class Viewer;
-class MainWindow;
+class ViewerWindow;
+class Colormap;
 
-class ViewPort : public virtual sci::cca::ports::ViewPort {
+class ViewerDialog : public wxDialog {
 public:
-  virtual ~ViewPort() {}
-  virtual int view2dPDE(const SSIDL::array1<double> &nodes,
-                        const SSIDL::array1<int> &triangles,
-                        const SSIDL::array1<double> &solution);
+  ViewerDialog(wxWindow* parent,
+               const SSIDL::array1<double> &nodes1d,
+               const SSIDL::array1<int> &triangles,
+               const SSIDL::array1<double> &solution,
+               wxWindowID id = wxID_ANY,
+               const wxString &caption = wxT("Viewer Component"),
+               const wxPoint &pos = wxDefaultPosition,
+               const wxSize &size = wxSize(500, 300),
+               long style = wxCAPTION|wxSYSTEM_MENU);
+  ~ViewerDialog();
+
+protected:
+  void SetLayout(const SSIDL::array1<double> &nodes1d, const SSIDL::array1<int> &triangles, const SSIDL::array1<double> &solution);
 
 private:
-  MainWindow* mw;
-};
-
-// class ViewerUIPort : public sci::cca::UIPort {
-// public:
-//   ViewerUIPort() {}
-//   void setParent(Viewer* v) { parent = v; }
-
-// private:
-//   Viewer* parent;
-// };
-
-class Viewer : public sci::cca::Component {
-public:
-  Viewer();
-  virtual ~Viewer();
-  virtual void setServices(const sci::cca::Services::pointer& svc);
-
-private:
-  Viewer(const Viewer&);
-  Viewer& operator=(const Viewer&);
-  sci::cca::Services::pointer services;
+  ViewerWindow* viewerWindow;
+  Colormap* colorMap;
 };
 
 

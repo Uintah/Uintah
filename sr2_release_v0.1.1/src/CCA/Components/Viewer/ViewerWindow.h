@@ -60,9 +60,9 @@ class ViewerWindow : public wxPanel
 public:
   ViewerWindow(wxWindow *parent,
                Colormap *cmap,
-               const std::vector<double> nodes1d,
-               const std::vector<int> triangles,
-               const std::vector<double> solution);
+               const std::vector<double> &nodes1d,
+               const std::vector<int> &triangles,
+               const std::vector<double> &solution);
 
   int height();
   int width();
@@ -80,6 +80,7 @@ public:
 
 protected:
   void OnPaint(wxPaintEvent& event);
+  void PaintBackground(wxDC& dc);
   void OnLeftClick(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
 
