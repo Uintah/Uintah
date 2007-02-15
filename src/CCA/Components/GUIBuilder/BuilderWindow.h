@@ -127,11 +127,11 @@ public:
 
   // two-step creation
   bool Create(wxWindow* parent, wxWindowID id,
-              const wxString& title = wxString(wxT("SCIRun2 GUI Builder")),
+              const wxString& title = wxString(wxT("SCIJump GUI Builder")),
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxSize(WIDTH, HEIGHT),
               long style = wxDEFAULT_FRAME_STYLE,
-              const wxString& name = wxString(wxT("SCIRun2")));
+              const wxString& name = wxString(wxT("SCIJump")));
 
   // set builder only if builder is null
   bool SetBuilder(const sci::cca::GUIBuilder::pointer& bc);
