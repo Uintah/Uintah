@@ -109,7 +109,12 @@ WARNING
                 const PatchSubset* patches,
                 const MaterialSubset* ,
                 DataWarehouse* old_dw,
-                DataWarehouse* new_dw, DilationType type);
+                DataWarehouse* new_dw,
+                const VarLabel* to_put,
+                CCVariable<int>* filter,
+                IntVector depth);
+
+
 
   protected:
 
@@ -134,9 +139,7 @@ WARNING
     vector< CCVariable<int>* > d_dilatedCellsRegrid;
     vector< CCVariable<int>* > d_dilatedCellsDeleted;
 
-    CCVariable<int> d_stabilityFilter;
-    CCVariable<int> d_regridFilter;
-    CCVariable<int> d_deletionFilter;
+    map<IntVector,CCVariable<int>* > filters;
     CCVariable<int> d_patchFilter;
 
     int d_maxLevels;

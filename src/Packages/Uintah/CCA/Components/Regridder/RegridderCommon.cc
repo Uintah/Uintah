@@ -51,6 +51,12 @@ RegridderCommon::~RegridderCommon()
 #endif
   VarLabel::destroy(d_dilatedCellsDeletionLabel);
 
+  //delete all filters that were created
+  for(map<IntVector,CCVariable<int>*>::iterator filter=filters.begin();filter!=filters.end();filter++)
+  {
+    delete (*filter).second;
+  }
+  filters.clear();
 }
 
 bool
@@ -281,19 +287,15 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
   regrid_spec->get("cell_regrid_dilation", d_cellRegridDilation);
-  d_cellRegridDilation=d_cellRegridDilation+d_cellStabilityDilation;
   regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
   regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
   regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
   regrid_spec->get("min_timestep_interval", d_minTimestepsBetweenRegrids);
-
   // set up filters
-  dilate_dbg << "Initializing cell stability filter\n";
-  initFilter(d_stabilityFilter, d_filterType, d_cellStabilityDilation);
-  dilate_dbg << "Initializing cell regrid filter\n";
-  initFilter(d_regridFilter, d_filterType, d_cellRegridDilation);
+  /* 
   dilate_dbg << "Initializing cell deletion filter\n";
   initFilter(d_deletionFilter, d_filterType, d_cellDeletionDilation);
+  */
   dilate_dbg << "Initializing patch extension filter\n";
   initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
 
@@ -327,7 +329,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
         << " You must specifify cell_stablity_dilation, cell_deletion_dilation & min_boundary_cells = 0 in that direction \n"
         << "Grid Size " << d_cellNum[k] 
         << " cell_stablity_dilation " << d_cellStabilityDilation
-        << " cell_regrid_dilation " << d_cellRegridDilation-d_cellStabilityDilation
+        << " cell_regrid_dilation " << d_cellRegridDilation
         << " cell_deletion_dilation " << d_cellDeletionDilation
         << " min_boundary_cells " << d_minBoundaryCells << endl;
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
@@ -450,15 +452,15 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
 
     case FILTER_STAR: {
       for (int x = 0; x < 2*depth.x()+1; x++) {
-	for (int y = 0; y < 2*depth.y()+1; y++) {
-	  for (int z = 0; z < 2*depth.z()+1; z++) {
-	    if ((fabs(static_cast<float>(x - depth.x()))/(depth.x()+1e-16) +
-		 fabs(static_cast<float>(y - depth.y()))/(depth.y()+1e-16) +
-		 fabs(static_cast<float>(z - depth.z()))/(depth.z()+1e-16)) <= 1.0) {
-	      filter[IntVector(x,y,z)] = 1;
-	    }
-	  }
-	}
+	      for (int y = 0; y < 2*depth.y()+1; y++) {
+	        for (int z = 0; z < 2*depth.z()+1; z++) {
+	          if ((fabs(static_cast<float>(x - depth.x()))/(depth.x()+1e-16) +
+		             fabs(static_cast<float>(y - depth.y()))/(depth.y()+1e-16) +
+		             fabs(static_cast<float>(z - depth.z()))/(depth.z()+1e-16)) <= 1.0) {
+	            filter[IntVector(x,y,z)] = 1;
+	          }
+	        }
+	      }
       }
       break;
     }
@@ -487,24 +489,65 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
   }
 }
 
+
 void RegridderCommon::scheduleDilation(const LevelP& level)
 {
 
+  GridP grid=level->getGrid(); 
+    
   if (level->getIndex() >= d_maxLevels)
     return;
 
+  IntVector stability_depth=d_cellStabilityDilation;
+  IntVector regrid_depth=d_cellRegridDilation;
+  //IntVector delete_depth=d_cellDeletionDilation;
+
+#if 1
+  //scale regrid dilation according to level
+  int max_level=grid->numLevels()-2;
+  int my_level=level->getIndex();
+    
+  Vector div(1,1,1);
+  //calculate divisor
+  for(int i=max_level;i>my_level;i--)
+  {
+    div=div*d_cellRefinementRatio[i-1].asVector();
+  }
+  regrid_depth=Ceil(regrid_depth.asVector()/div);
+#endif  
+  regrid_depth=regrid_depth+stability_depth;
+  //create filters if needed
+  if(filters.find(stability_depth)==filters.end())
+  {
+    filters[stability_depth]=scinew CCVariable<int>;
+    initFilter(*filters[stability_depth], d_filterType, stability_depth);
+  }
+  if(filters.find(regrid_depth)==filters.end())
+  {
+    filters[regrid_depth]=scinew CCVariable<int>;
+    initFilter(*filters[regrid_depth], d_filterType, regrid_depth);
+  }
+  /*
+  if(filters.find(delete_depth)==filters.end())
+  {
+    filters[delete_depth]=scinew CCVariable<int>;
+    initFilter(*filters[delete_depth], d_filterType, delete_depth);
+  }
+  */
+
+
   // dilate flagged cells on this level
   Task* dilate_stability_task = scinew Task("RegridderCommon::Dilate Stability", this,
-				  &RegridderCommon::Dilate, DILATE_STABILITY);
+				  &RegridderCommon::Dilate, d_dilatedCellsStabilityLabel, filters[stability_depth], stability_depth);
   
   Task* dilate_regrid_task = scinew Task("RegridderCommon::Dilate Regrid", this,
-				  &RegridderCommon::Dilate, DILATE_REGRID);
+				  &RegridderCommon::Dilate, d_dilatedCellsRegridLabel, filters[regrid_depth], regrid_depth);
 
-  int ngc_stability = Max(d_cellStabilityDilation.x(), d_cellStabilityDilation.y());
-  ngc_stability = Max(ngc_stability, d_cellStabilityDilation.z());
+  int ngc_stability = Max(stability_depth.x(), stability_depth.y());
+  ngc_stability = Max(ngc_stability, stability_depth.z());
   
-  int ngc_regrid = Max(d_cellRegridDilation.x(), d_cellRegridDilation.y());
-  ngc_regrid = Max(ngc_regrid, d_cellRegridDilation.z());
+  int ngc_regrid = Max(regrid_depth.x(), regrid_depth.y());
+  ngc_regrid = Max(ngc_regrid, regrid_depth.z());
   
   dilate_stability_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials(),
 			Ghost::AroundCells, ngc_stability);
@@ -523,59 +566,39 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   dilate_regrid_task->computes(d_dilatedCellsRegridLabel, d_sharedState->refineFlagMaterials());
   sched_->addTask(dilate_regrid_task, level->eachPatch(), d_sharedState->allMaterials());
 #if 0
-  if (d_cellStabilityDilation != d_cellDeletionDilation) {
+  if (stability_depth != delete_depth) {
     // dilate flagged cells (for deletion) on this level)
     Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate Deletion",
-					   dynamic_cast<RegridderCommon*>(this),
-					   &RegridderCommon::Dilate,
-					   DILATE_DELETION, old_dw);
+	  		   dynamic_cast<RegridderCommon*>(this),
+	  		   &RegridderCommon::Dilate, d_dilatedCellsDeletionLabel, filters[delete_depth],
+           delete_depth);
     
-    ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
-    ngc = Max(ngc, d_cellDeletionDilation.z());
-    
+    ngc = Max(delete_depth.x(), delete_depth.y());
+    ngc = Max(ngc, delete_depth.z());
+   
     dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), 
-				 d_sharedState->refineFlagMaterials(), Ghost::AroundCells, ngc);
+		       d_sharedState->refineFlagMaterials(), Ghost::AroundCells, ngc);
     dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
     tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), 
 		       d_sharedState->allMaterials());
   }
 #endif
-  
 }
 
 void RegridderCommon::Dilate(const ProcessorGroup*,
 			     const PatchSubset* patches,
 			     const MaterialSubset* ,
 			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw, DilationType type)
+			     DataWarehouse* new_dw, 
+           const VarLabel* to_put,
+           CCVariable<int>* filter,
+           IntVector depth)
+ 
 {
   rdbg << "RegridderCommon::Dilate() BGN" << endl;
 
   // change values based on which dilation it is
   const VarLabel* to_get = d_sharedState->get_refineFlag_label();
-  const VarLabel* to_put;
-  CCVariable<int>* filter;
-  IntVector depth;
-
-  switch (type) {
-  case DILATE_STABILITY:
-    to_put = d_dilatedCellsStabilityLabel;
-    filter = &d_stabilityFilter;
-    depth = d_cellStabilityDilation;
-    break;
-  case DILATE_REGRID:
-    to_put = d_dilatedCellsRegridLabel;
-    filter = &d_regridFilter;
-    depth = d_cellRegridDilation;
-    break;
-  case DILATE_DELETION:
-    to_put = d_dilatedCellsDeletionLabel;
-    filter = &d_deletionFilter;
-    depth = d_cellDeletionDilation;
-    break;
-  default:
-    throw InternalError("Dilate not implemented for this Dilation Type", __FILE__, __LINE__);
-  }
 
   int ngc;
   ngc = Max(depth.x(), depth.y());
@@ -611,23 +634,22 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
       // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
       // (see OnDemandDataWarehouse comment about dead cells)
-      deque<Box> b1, b2, difference;
+      deque<Region> b1, b2, difference;
       IntVector low = flaggedCells.getLowIndex(), high = flaggedCells.getHighIndex();
-      b1.push_back(Box(Point(low(0), low(1), low(2)), 
-                       Point(high(0), high(1), high(2))));
+      b1.push_back(Region(low,high));
       Level::selectType n;
       patch->getLevel()->selectPatches(low, high, n);
       for (int i = 0; i < n.size(); i++) {
         const Patch* p = n[i];
         IntVector low = p->getLowIndex(Patch::CellBased, IntVector(0,0,0));
         IntVector high = p->getHighIndex(Patch::CellBased, IntVector(0,0,0));
-        b2.push_back(Box(Point(low(0), low(1), low(2)), Point(high(0), high(1), high(2))));
+        b2.push_back(Region(low,high));
       }
-      difference = Box::difference(b1, b2);
+      difference = Region::difference(b1, b2);
       for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
-        IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
+        Region b = difference[i];
+        IntVector low=b.getLow();
+        IntVector high=b.getHigh();
         for (CellIterator iter(low, high); !iter.done(); iter++)
           flaggedCells.castOffConst()[*iter] = 0;
       }
@@ -639,12 +661,16 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
 
       low = Max(idx - depth, flaggedCells.getLowIndex());
       high = Min(idx + depth, flaggedCells.getHighIndex() - IntVector(1,1,1));
-      int temp = 0;
+      int flag=0;
       for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
         IntVector local_idx(*local_iter);
-        temp += flaggedCells[local_idx]*(*filter)[local_idx-idx+depth];
+        if(flaggedCells[local_idx]*(*filter)[local_idx-idx+depth])
+        {
+          flag=1;
+          break;
+        }
       }
-      dilatedFlaggedCells[idx] = static_cast<int>(temp > 0);
+      dilatedFlaggedCells[idx] = static_cast<int>(flag);
       //    dilate_dbg << idx << " = " << static_cast<int>(temp > 0) << endl;
     }
 
