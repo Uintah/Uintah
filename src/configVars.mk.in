@@ -310,7 +310,7 @@ HAVE_KEPLER := @HAVE_KEPLER@
 
 ifeq ($(BUILD_SCIRUN2),yes)
   # make configurable:
-  FWK_EXE := sr
+  FWK_EXE := scijump 
   SUBDIRS := $(SUBDIRS) Framework CCA
 
   ## tests (experimental)
