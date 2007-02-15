@@ -89,7 +89,7 @@ ComponentWizardDialog::ComponentWizardDialog(const sci::cca::GUIBuilder::pointer
   i+=2;
   std::string compdir(getCompDirName());
   topSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Location")), wxGBPosition(i,1) ,wxGBSpan(1,1), leftFlags);
-  location = new wxTextCtrl( this, wxID_ANY, wxT(compdir), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
+  location = new wxTextCtrl( this, wxID_ANY, compdir, wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
   topSizer->Add(location, wxGBPosition(i,2) ,wxGBSpan(1,2), centerFlags);
   wxBitmap bitmap(wxT("/home/collab/ashwinds/ashwin/SCIRun2/src/CCA/Components/GUIBuilder/load.xpm"), wxBITMAP_TYPE_XPM);
   topSizer->Add(new wxBitmapButton(this, ID_Choose ,bitmap,wxDefaultPosition, wxSize(30,30) ), wxGBPosition(i,4) ,wxGBSpan(1,1), centerFlags);

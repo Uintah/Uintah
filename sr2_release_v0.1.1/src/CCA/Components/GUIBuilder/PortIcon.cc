@@ -68,7 +68,7 @@ PortIcon::PortIcon(const sci::cca::GUIBuilder::pointer& bc,
     ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
   Init();
-  Create(parent, id, wxT(name));
+  Create(parent, id, name);
 }
 
 PortIcon::~PortIcon()
@@ -90,7 +90,8 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
     hColor = wxTheColourDatabase->Find("RED");
   }
   SetBackgroundColour(pColor);
-  SetToolTip(wxT(sidlType + " " + this->name));
+  std::string t = sidlType + " " + this->name;
+  SetToolTip(t.c_str());
 
   return true;
 }

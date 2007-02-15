@@ -216,6 +216,7 @@ private:
   // separately, since they will be owned by different parents.
   void buildPackageMenus(const ClassDescriptionList& list);
   void buildNetworkPackageMenus(const ClassDescriptionList& list);
+  void doSaveAs();
   void setDefaultText();
 };
 

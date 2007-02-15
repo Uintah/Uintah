@@ -145,7 +145,7 @@ int ttGoPort::go()
   stm << us << " us/rep" << std::endl;
 
 #if HAVE_GUI
-  wxMessageBox(wxT(stm.str().c_str()), wxT("TTClient"), wxOK|wxICON_INFORMATION, 0);
+  wxMessageBox(stm.str().c_str(), wxT("TTClient"), wxOK|wxICON_INFORMATION, 0);
   guiService->updateProgress(cid, 100);
   services->releasePort("cca.GUIService");
 #else
