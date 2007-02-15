@@ -87,7 +87,7 @@ XMLPathDialog::XMLPathDialog(wxWindow* parent,
 
 void XMLPathDialog::OnFilePath(wxCommandEvent& event)
 {
-  wxDirDialog dDialog(this, wxT("Choose component XML path"), wxT(GUIBuilder::DEFAULT_SRC_DIR));
+  wxDirDialog dDialog(this, wxT("Choose component XML path"), GUIBuilder::DEFAULT_SRC_DIR);
   if (dDialog.ShowModal() == wxID_OK) {
     fpTextCtrl->SetValue(dDialog.GetPath());
   }

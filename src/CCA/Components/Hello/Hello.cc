@@ -116,12 +116,12 @@ int Hello::go()
   try {
     guiService = pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
     if (guiService.isNull()) {
-      wxMessageBox(wxT("GUIService is not available"), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+      wxMessageBox(wxT("GUIService is not available"), getDisplayName().c_str(), wxOK|wxICON_ERROR, 0);
       return -2;
     }
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(e->getNote(), getDisplayName().c_str(), wxOK|wxICON_ERROR, 0);
   }
   sci::cca::ComponentID::pointer cid = services->getComponentID();
 #endif
@@ -138,7 +138,7 @@ int Hello::go()
   }
   catch (const sci::cca::CCAException::pointer &e) {
 #if HAVE_GUI
-    wxMessageBox(e->getNote(), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(e->getNote(), getDisplayName().c_str(), wxOK|wxICON_ERROR, 0);
 #else
     std::cerr << e->getNote() << std::endl;
 #endif
@@ -177,7 +177,7 @@ int Hello::go()
 int HelloUIPort::ui()
 {
 #if HAVE_GUI
-  wxMessageBox(com->getMessage(), wxT(com->getDisplayName()), wxOK|wxICON_INFORMATION, 0);
+  wxMessageBox(com->getMessage().c_str(), com->getDisplayName().c_str(), wxOK|wxICON_INFORMATION, 0);
 #endif
   return 0;
 }

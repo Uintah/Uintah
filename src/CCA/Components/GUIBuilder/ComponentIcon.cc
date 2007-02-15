@@ -502,8 +502,8 @@ void ComponentIcon::SetPortIcons()
       if (type == GUIBuilder::UIPORT ||
           type == GUIBuilder::GOPORT ||
           type == GUIBuilder::COMPONENTICONUI_PORT) {
-        canvas->GetBuilderWindow()->DisplayMessage(wxT(GetComponentInstanceName() +
-          " should provide, and not use, ports of type " + type));
+        canvas->GetBuilderWindow()->DisplayMessage(GetComponentInstanceName() +
+          " should provide, and not use, ports of type " + type);
         continue;
       }
 

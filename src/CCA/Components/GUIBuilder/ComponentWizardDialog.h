@@ -30,7 +30,7 @@
  * ComponentWizardDialog.h
  *
  * Written by:
- *  Ashwin Deepak Swaminathan  
+ *  Ashwin Deepak Swaminathan
  *  Scientific Computing and Imaging Institute
  *  University of Utah
  *  August 2006
@@ -98,7 +98,7 @@ private:
   wxTextCtrl *location;
   wxGrid *listofPorts;
   wxCheckBox *portInfo;
-  
+
   int count_table;
   bool isPreviewed;
   bool isWithSidl;
@@ -126,7 +126,7 @@ public:
   std::string GetDataTypeText() const;
   std::string GetDescriptionText() const;
   virtual bool Validate();
-  
+
 private:
   wxTextCtrl  *pname;
   wxTextCtrl  *dtype;

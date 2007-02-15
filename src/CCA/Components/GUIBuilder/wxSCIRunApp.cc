@@ -65,7 +65,7 @@ wxSCIRunApp::OnInit()
 
   std::string path(sci_getenv("SCIRUN_SRCDIR"));
   path += "/CCA/Components/GUIBuilder/scirun2-splash.png";
-  wxBitmap bitmap(wxT(path), wxBITMAP_TYPE_PNG);
+  wxBitmap bitmap(path.c_str(), wxBITMAP_TYPE_PNG);
   if (bitmap.Ok()) {
     wxSplashScreen splash(bitmap, wxSPLASH_TIMEOUT|wxSPLASH_CENTRE_ON_SCREEN, SPLASH_TIMEOUT, 0, wxID_ANY);
     splash.Show(true);

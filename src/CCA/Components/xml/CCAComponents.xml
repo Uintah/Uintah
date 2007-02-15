@@ -52,9 +52,6 @@
   <library name="CCA_Components_LinSolver">
     <component name="SCIRun.LinSolver" />
   </library>
-  <library name="CCA_Components_ListPlotter">
-    <component name="SCIRun.ListPlotter" />
-  </library>
   <library name="CCA_Components_PDEdriver">
     <component name="SCIRun.PDEdriver" />
   </library>
@@ -72,11 +69,5 @@
   </library>
   <library name="CCA_Components_Viewer">
     <component name="SCIRun.Viewer" />
-  </library>
-  <library name="CCA_Components_ZList">
-    <component name="SCIRun.ZList" />
-  </library>
-  <library name="CCA_Components_ZListWriter">
-    <component name="SCIRun.ZListWriter" />
   </library>
 </metacomponentmodel>

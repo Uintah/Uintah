@@ -64,7 +64,7 @@ Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID:
   drawPoints = new wxPoint[NUM_DRAW_POINTS];
 
   ResetPoints();
-  setConnection();
+  //setConnection();
   // set color
   if (possibleConnection) {
     color = wxTheColourDatabase->Find("BLACK");
@@ -189,12 +189,14 @@ void Connection::ResetPoints()
 void Connection::OnDraw(wxDC& dc)
 {
   ResetPoints();
-  setConnection();
+  //setConnection();
   if (highlight) {
     wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 4, wxSOLID);
+    pen->SetJoin(wxJOIN_BEVEL);
     dc.SetPen(*pen);
   } else {
     wxPen* pen = wxThePenList->FindOrCreatePen(color, 4, wxSOLID);
+    pen->SetJoin(wxJOIN_BEVEL);
     dc.SetPen(*pen);
   }
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
