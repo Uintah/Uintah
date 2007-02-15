@@ -306,7 +306,26 @@ protected:
         retval=false;
       }
     }
-    //check and set retval to false and produce output
+    //check that all points fall with the bounds of the domain.
+    int low[3],high[3];
+    for(int d=0;d<dim;d++)
+    {
+      low[d]=center[d]-dimensions[d]/2;
+      high[d]=center[d]+dimensions[d]/2;
+    }
+
+    for(int i=0;i<n;i++)
+    {
+      for(int d=0;d<dim;d++)
+      {
+        if(locs[i*dim+d]<low[d] || locs[i*dim+d]>high[d])
+        {
+          cout << "SFC curve: Points are not bounded by dimensions\n";
+          return false;
+        }
+      }
+    }
+    
     return retval;
   }
 
