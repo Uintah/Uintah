@@ -39,7 +39,7 @@
  */
 
 #include <CCA/Components/Viewer/Viewer.h>
-#include <CCA/Components/Viewer/MainWindow.h>
+#include <CCA/Components/Viewer/ViewerDialog.h>
 #include <Core/CCA/datawrapper/vector2d.h>
 
 #include <math.h>
@@ -72,8 +72,13 @@ void Viewer::setServices(const sci::cca::Services::pointer& svc)
 {
   std::cerr << "Viewer::setServices()" << std::endl;
   services = svc;
-  sci::cca::TypeMap::pointer props = services->createTypeMap();
-  services->addProvidesPort(ViewPort::pointer(new ViewPort), "viewer", "sci.cca.ports.ViewPort", props);
+  services->addProvidesPort(ViewPort::pointer(new ViewPort), "viewer",
+                            "sci.cca.ports.ViewPort", sci::cca::TypeMap::pointer(0));
+
+//   ViewerUIPort *uip = new ViewerUIPort();
+//   uip->setParent(this);
+//   ttUIPort::pointer uiPortPtr(uip);
+//   svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort", sci::cca::TypeMap::pointer(0));
 }
 
 int
@@ -81,19 +86,13 @@ ViewPort::view2dPDE(const SSIDL::array1<double> &nodes,
                     const SSIDL::array1<int> &triangles,
                     const SSIDL::array1<double> &solution)
 {
-  std::cerr << "Viewer::view2dPDE(..)" << std::endl;
-
   if (nodes.size() / 2 != solution.size()) {
     wxMessageBox(wxT("Mesh and Field do not match!"), wxT("Viewer"), wxOK|wxICON_ERROR, 0);
     return 1;
   }
 
-  mw = new MainWindow(0, 0, nodes,triangles, solution);
-  mw->Show();
-
-  std::cerr << "Viewer::view2dPDE(..): MainWindow shown and done" << std::endl;
-
-  delete mw;
+  ViewerDialog vd(0, nodes, triangles, solution);
+  vd.ShowModal();
 
   return 0;
 }
