@@ -225,12 +225,12 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   statusBar = CreateStatusBar(3, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, 150, -1 };
   statusBar->SetStatusWidths(3, statusBarWidths);
-  statusBar->SetStatusText("SCIRun2 started", 0);
+  statusBar->SetStatusText("SCIJump started", 0);
 #else
   statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, -1 };
   statusBar->SetStatusWidths(2, statusBarWidths);
-  statusBar->SetStatusText("SCIRun2 started", 0);
+  statusBar->SetStatusText("SCIJump started", 0);
 #endif
 
   return true;
@@ -325,10 +325,10 @@ void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoi
 void BuilderWindow::OnAbout(wxCommandEvent &event)
 {
   wxString msg;
-  msg.Printf(wxT("Copyright (c) 2006 Scientific Computing and Imaging Institute, University of Utah.\n\nSCIRun2 information is available at\nhttps://code.sci.utah.edu/SCIRun2/index.php/Main_Page."));
+  msg.Printf(wxT("Copyright (c) 2006 Scientific Computing and Imaging Institute, University of Utah.\n\nSCIJump information is available at\nhttps://code.sci.utah.edu/SCIJump/index.php/Main_Page."));
 
   // show license
-  wxMessageBox(msg, wxT("About SCIRun2"), wxOK|wxICON_INFORMATION, this);
+  wxMessageBox(msg, wxT("About SCIJump"), wxOK|wxICON_INFORMATION, this);
 }
 
 void BuilderWindow::OnQuit(wxCommandEvent &event)
@@ -774,7 +774,7 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
 void BuilderWindow::setDefaultText()
 {
   std::vector<wxString> v;
-  v.push_back(wxString("SCIRun2 v ") + wxString(SR2_VERSION));
+  v.push_back(wxString("SCIJump v ") + wxString(SR2_VERSION));
   v.push_back(wxString("Framework URL: ") + wxString(url.c_str()));
   v.push_back("--------------------\n");
   DisplayMessages(v);

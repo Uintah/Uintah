@@ -111,7 +111,7 @@ wxGUIThread::run()
     wxSCIRunApp::SetTopBuilder(builder);
     int argc = 1;
     char *argv[1];
-    argv[0] = "SCIRun2";
+    argv[0] = "SCIJump";
     // add framework URL to args???
     // initialize single wxApp instance and run main loop (Unix-specific):
     wxEntry(argc, argv);  // never returns, do initialization from OnInit
@@ -899,7 +899,7 @@ void GUIBuilder::setDefaultPortColors()
 {
   Guard g(&builderLock);
 
-  // sci.cca.ports from SCIRun2Ports.sidl
+  // sci.cca.ports from SCIRunPorts.sidl
   portColors[std::string("default")] = wxTheColourDatabase->Find(wxT("GOLD"));
   portColors[std::string("sci.cca.ports.StringPort")] = wxTheColourDatabase->Find(wxT("PINK"));
   portColors[std::string("sci.cca.ports.ZListPort")] = wxTheColourDatabase->Find(wxT("FIREBRICK"));

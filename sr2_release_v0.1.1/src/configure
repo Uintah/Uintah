@@ -930,8 +930,8 @@ Optional Features:
                           Have SCI malloc store the file and line that calls
                           'scinew'
 --enable-throw-level=N  Use throw level N (0-3)
---enable-scirun2        Build experimental SCIRun2
---enable-plume          Build Plume (based on SCIRun2)
+--enable-scijump        Build experimental SCIJump
+--enable-plume          Build Plume (based on SCIJump)
 --enable-rpath          Use the default runtime library search path
 --enable-chromium       Using Chromium so skip unsupported OGL calls
 --enable-ati-card-fix   Enable the ati car fix to repair bad polygons -
@@ -975,7 +975,7 @@ Optional Packages:
 --with-gdcm=DIR         Use the GDCM installation in DIR
 --with-ncurses=DIR      Use the Ncurses installation in DIR
 --with-babel=DIR        Use the Babel installation in DIR (strongly
-                          recommended for SCIRun2)
+                          recommended for SCIJump)
 --with-wxwidgets=DIR    Use the wxWidgets installation in DIR
 --with-ruby=DIR         Use the ruby installation in DIR where DIR points to
                           the --prefix option specified when installing ruby.
@@ -2790,15 +2790,15 @@ fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-throw-level --disable-throw-level"
 
 
-  # Check whether --enable-scirun2 or --disable-scirun2 was given.
-if test "${enable_scirun2+set}" = set; then
-  enableval="$enable_scirun2"
-  enable_scirun2="$enableval"
+  # Check whether --enable-scijump or --disable-scijump was given.
+if test "${enable_scijump+set}" = set; then
+  enableval="$enable_scijump"
+  enable_scijump="$enableval"
 
 
-eval pkg_SCIRun2=yes
+eval pkg_SCIJump=yes
 
-case SCIRun2 in
+case SCIJump in
   BioPSE)
   ;;
   Teem)
@@ -2873,17 +2873,17 @@ case SCIRun2 in
   Kepler)
   ;;
   *)
-    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&5
-echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package SCIRun2" >&2;}
+    { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package SCIJump" >&5
+echo "$as_me: WARNING: In aclocal.m4: No known dependencies for Package SCIJump" >&2;}
   ;;
 esac
 
 
 
 else
-  enable_scirun2=${enable_scirun2='no'}
+  enable_scijump=${enable_scijump='no'}
 fi;
-  sci_arg_enable_list="$sci_arg_enable_list --enable-scirun2 --disable-scirun2"
+  sci_arg_enable_list="$sci_arg_enable_list --enable-scijump --disable-scijump"
 
 
 
@@ -9924,7 +9924,7 @@ fi
 
 
 ## test for bison. yacc is not sufficient as it has no -o option.
-## Only need for SCIRun2 currently.
+## Only need for SCIJump currently.
 # Extract the first word of "bison", so it can be a program name with args.
 set dummy bison; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -9961,7 +9961,7 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-if test "$enable_scirun2" = "yes" -a "$YACC" = "nobison"; then
+if test "$enable_scijump" = "yes" -a "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable YACC to the appropriate bison executable,"
@@ -10247,7 +10247,7 @@ fi
 LEX_LIB_FLAG="$LEXLIB"
 
 
-if test "$enable_scirun2" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
+if test "$enable_scijump" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
   echo "configure: error: flex or lex is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable LEX to the appropriate lex executable,"
@@ -61174,7 +61174,7 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$enable_scirun2" = "yes" -o "$sci_required_ncurses" = "yes"; then
+if test "$enable_scijump" = "yes" -o "$sci_required_ncurses" = "yes"; then
   _sci_optional=required
 fi
 
@@ -61704,7 +61704,7 @@ _sci_inc=
 _sci_lib=
 _sci_optional=optional
 
-if test "$sci_required_wx" = "yes" -a "$enable_scirun2" = "yes" ; then
+if test "$sci_required_wx" = "yes" -a "$enable_scijump" = "yes" ; then
 
   if test "$with_wx" = "yes"; then
     _sci_optional=required
@@ -66851,12 +66851,12 @@ case $host in
     ;;
 esac
 
-##  --  See if we have everything needed for SCIRun2 ----------------------
+##  --  See if we have everything needed for SCIJump ----------------------
 
-if test "$enable_scirun2" = "yes"; then
+if test "$enable_scijump" = "yes"; then
   if test "$HAVE_BABEL" != "yes"; then
-    { echo "$as_me:$LINENO: WARNING: could not find a Babel installation (recommended for SCIRun2)." >&5
-echo "$as_me: WARNING: could not find a Babel installation (recommended for SCIRun2)." >&2;}
+    { echo "$as_me:$LINENO: WARNING: could not find a Babel installation (recommended for SCIJump)." >&5
+echo "$as_me: WARNING: could not find a Babel installation (recommended for SCIJump)." >&2;}
   fi
   if test "$DEBUG" = "yes"; then
     DEF_DEBUG="#define FWK_DEBUG 1"

@@ -356,7 +356,7 @@ SCI_ARG_WITH(ncurses,
   [with_ncurses=""])
 SCI_ARG_WITH(babel,
   AC_HELP_STRING(--with-babel=DIR,
-  Use the Babel installation in DIR (strongly recommended for SCIRun2)),
+  Use the Babel installation in DIR (strongly recommended for SCIJump)),
   [with_babel="$withval"
    sci_required_babel=yes
    sci_required_java=yes],
@@ -580,13 +580,13 @@ SCI_ARG_ENABLE(throw-level,
                  Use throw level N (0-3)),
   [enable_throw_level="$enableval"],
   [enable_throw_level=${enable_throw_level=0}])
-SCI_ARG_ENABLE(scirun2,
-  AC_HELP_STRING(--enable-scirun2,
-                 Build experimental SCIRun2),
-  [enable_scirun2="$enableval"
-   [SCI_SET_PACKAGE_CHECKS(SCIRun2, $host)]
+SCI_ARG_ENABLE(scijump,
+  AC_HELP_STRING(--enable-scijump,
+                 Build experimental SCIJump),
+  [enable_scijump="$enableval"
+   [SCI_SET_PACKAGE_CHECKS(SCIJump, $host)]
   ],
-  [enable_scirun2=${enable_scirun2='no'}])
+  [enable_scijump=${enable_scijump='no'}])
 SCI_ARG_WITH(cppunit,
   AC_HELP_STRING(--with-cppunit=DIR,
                  Enable cppunit based unit tests),
@@ -595,7 +595,7 @@ SCI_ARG_WITH(cppunit,
   [with_cppunit=""])
 SCI_ARG_ENABLE(plume,
   AC_HELP_STRING(--enable-plume,
-                 Build Plume (based on SCIRun2)),
+                 Build Plume (based on SCIJump)),
   [enable_plume="$enableval"
    [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
    ],
@@ -1727,9 +1727,9 @@ fi
 AC_SUBST(BUILD_PLUME)
 
 ## test for bison. yacc is not sufficient as it has no -o option.
-## Only need for SCIRun2 currently.
+## Only need for SCIJump currently.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
-if test "$enable_scirun2" = "yes" -a "$YACC" = "nobison"; then
+if test "$enable_scijump" = "yes" -a "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable YACC to the appropriate bison executable,"
@@ -1741,7 +1741,7 @@ AC_PROG_LEX
 LEX_LIB_FLAG="$LEXLIB"
 AC_SUBST(LEX_LIB_FLAG)
 
-if test "$enable_scirun2" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
+if test "$enable_scijump" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
   echo "configure: error: flex or lex is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable LEX to the appropriate lex executable,"
@@ -5017,7 +5017,7 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$enable_scirun2" = "yes" -o "$sci_required_ncurses" = "yes"; then
+if test "$enable_scijump" = "yes" -o "$sci_required_ncurses" = "yes"; then
   _sci_optional=required
 fi
 
@@ -5050,7 +5050,7 @@ _sci_inc=
 _sci_lib=
 _sci_optional=optional
 
-if test "$sci_required_wx" = "yes" -a "$enable_scirun2" = "yes" ; then
+if test "$sci_required_wx" = "yes" -a "$enable_scijump" = "yes" ; then
 
   if test "$with_wx" = "yes"; then
     _sci_optional=required
@@ -5568,11 +5568,11 @@ case $host in
     ;;
 esac
 
-##  --  See if we have everything needed for SCIRun2 ----------------------
+##  --  See if we have everything needed for SCIJump ----------------------
 
-if test "$enable_scirun2" = "yes"; then
+if test "$enable_scijump" = "yes"; then
   if test "$HAVE_BABEL" != "yes"; then
-    AC_MSG_WARN([could not find a Babel installation (recommended for SCIRun2).])
+    AC_MSG_WARN([could not find a Babel installation (recommended for SCIJump).])
   fi
   if test "$DEBUG" = "yes"; then
     DEF_DEBUG="#define FWK_DEBUG 1"
