@@ -192,7 +192,8 @@ public:
   double regriddingCopyDataTime;
   double loadbalancerTime;
   double taskExecTime;
-  double taskCommTime;
+  double taskLocalCommTime;
+  double taskGlobalCommTime;
   double outputTime;
 
 private:

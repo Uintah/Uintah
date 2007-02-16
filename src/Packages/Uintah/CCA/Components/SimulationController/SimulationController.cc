@@ -513,7 +513,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       toReduce.push_back(d_sharedState->regriddingCopyDataTime);
       toReduce.push_back(d_sharedState->loadbalancerTime);
       toReduce.push_back(d_sharedState->taskExecTime);
-      toReduce.push_back(d_sharedState->taskCommTime);
+      toReduce.push_back(d_sharedState->taskGlobalCommTime);
+      toReduce.push_back(d_sharedState->taskLocalCommTime);
       toReduce.push_back(d_sharedState->outputTime);
       statLabels.push_back("Recompile");
       statLabels.push_back("Regridding");
@@ -521,7 +522,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       statLabels.push_back("Regrid-copydata");
       statLabels.push_back("LoadBalance");
       statLabels.push_back("TaskExec");
-      statLabels.push_back("TaskComm");
+      statLabels.push_back("TaskGlobalComm");
+      statLabels.push_back("TaskLocalComm");
       statLabels.push_back("Output");
     }
     if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)

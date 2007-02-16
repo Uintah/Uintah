@@ -784,7 +784,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   if (d_sharedState != 0) { // subschedulers don't have a sharedState
     d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
-    d_sharedState->taskCommTime += mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce;
+    d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
+    d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.

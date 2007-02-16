@@ -1009,7 +1009,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
   double executeTime = d_sharedState->taskExecTime;
-  double commTime = d_sharedState->taskCommTime;
+  double globalCommTime = d_sharedState->taskGlobalCommTime;
+  double localCommTime = d_sharedState->taskLocalCommTime;
   
   start = Time::currentSeconds();
   this->execute();
@@ -1042,7 +1043,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   newDataWarehouse->refinalize();
   d_sharedState->regriddingCopyDataTime += Time::currentSeconds() - start;
   d_sharedState->taskExecTime = executeTime;
-  d_sharedState->taskCommTime = commTime;
+  d_sharedState->taskGlobalCommTime = globalCommTime;
+  d_sharedState->taskLocalCommTime = localCommTime;
   
 }
 
