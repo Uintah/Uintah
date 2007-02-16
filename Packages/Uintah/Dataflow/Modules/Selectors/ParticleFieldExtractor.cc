@@ -607,6 +607,8 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, double time,
   Mutex vmutex("VectorParticles Mutex");
   Mutex tmutex("TensorrParticles Mutex");
   Mutex imutex("ParticleIds Mutex");
+
+  Vector scale = archive->getCellScale();
 //   WallClockTimer my_timer;
 //   my_timer.start();
 //  double size = level->numPatches();  RNJ - Commented to get rid of unused warning.
@@ -618,14 +620,14 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, double time,
     sema->down();
     Thread *thrd =
       new Thread( scinew PFEThread( this, archive,
-                                    *patch,  sp, vp, tp, pseth,
+                                    *patch,  sp, vp, tp, pseth, scale,
                                     scalar_type, have_sp, have_vp,
                                     have_tp, have_ids, sema,
                                     &smutex, &vmutex, &tmutex, &imutex, gui_),
                   "Particle Field Extractor Thread");
     thrd->detach();
 //     PFEThread *thrd = scinew PFEThread( this, archive, *patch,
-//                           sp, vp, tp, pseth,
+//                           sp, vp, tp, pseth, scale,
 //                           scalar_type, have_sp, have_vp,
 //                           have_tp, have_ids, sema,
 //                           &smutex, &vmutex, &tmutex, &imutex, gui);
@@ -780,7 +782,7 @@ PFEThread::run()
       else
         ids[dest] = PARTICLE_FIELD_EXTRACTOR_BOGUS_PART_ID;
       
-      positions[dest]=pvp[*iter];
+      positions[dest]= ((pvp[*iter]).asVector() * scale_).asPoint();
     }
   }
   imutex->lock();

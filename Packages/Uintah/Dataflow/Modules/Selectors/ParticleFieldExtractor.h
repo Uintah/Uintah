@@ -195,7 +195,7 @@ private:
                  const DataArchiveHandle& archive,
 		 Patch *patch,
 		 ScalarParticles*& sp, VectorParticles*& vp,
-		 TensorParticles*& tp, PSetHandle pseth,
+		 TensorParticles*& tp, PSetHandle pseth, Vector scale,
 		 int scalar_type, bool have_sp,
 		 bool have_vp, bool have_tp, bool have_ids,
 		 Semaphore *sema, Mutex *smutex,
@@ -203,7 +203,8 @@ private:
 		 GuiInterface* gui):
 	pfe(pfe), archive(archive), patch(patch), 
 	sp(sp), vp(vp), tp(tp),
-	pseth(pseth), scalar_type(scalar_type), have_sp(have_sp),
+	pseth(pseth), scale_(scale), 
+        scalar_type(scalar_type), have_sp(have_sp),
 	have_vp(have_vp), have_tp(have_tp), have_ids(have_ids), sema(sema),
 	smutex(smutex), vmutex(vmutex), tmutex(tmutex), imutex(imutex),
       gui(gui){}
@@ -218,6 +219,7 @@ private:
       VectorParticles*& vp;
       TensorParticles*& tp;
       PSetHandle pseth;
+      Vector scale_;
       int scalar_type;
       bool have_sp;
       bool have_vp;
