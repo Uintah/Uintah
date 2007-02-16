@@ -333,7 +333,8 @@ void SimulationState::clearStats()
   regriddingCopyDataTime = 0;
   loadbalancerTime = 0;
   taskExecTime = 0;
-  taskCommTime = 0;
+  taskGlobalCommTime = 0;
+  taskLocalCommTime = 0;
   outputTime = 0;
 }
 
