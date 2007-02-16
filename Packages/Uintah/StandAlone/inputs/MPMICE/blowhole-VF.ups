@@ -23,6 +23,7 @@
        <save label = "p.x"/>
        <save label = "p.mass"/>
        <save label = "p.stress"/>
+       <save label = "p.color"/>
        <save label = "p.displacement"/>
        <save label = "p.velocity"/>
        <save label = "g.stressFS"/>
@@ -44,6 +45,7 @@
        <use_load_curves>false</use_load_curves>
        <do_grid_reset>true</do_grid_reset>
        <testForNegTemps_mpm>false</testForNegTemps_mpm>
+       <withColor>  true </withColor>
     </MPM>
     <CFD>
        <cfl>0.25</cfl>
@@ -99,6 +101,7 @@
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature>  300.       </temperature>
+                <color>        -1         </color>
               </geom_object>
            </material>
            <material>
@@ -116,6 +119,7 @@
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature> 300.        </temperature>
+                <color>        1          </color>
                </geom_object>
            </material>
 
