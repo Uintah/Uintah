@@ -102,10 +102,10 @@ namespace Uintah {
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
+    ParticleVariable<double> pcolor,ptempPrevious;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp;
-    ParticleVariable<Vector> pfiberdir;
-    ParticleVariable<double> ptempPrevious;  // for thermal stress 
+    ParticleVariable<Vector> pfiberdir; 
 
     ParticleVariable<int> pLoadCurveID;
 

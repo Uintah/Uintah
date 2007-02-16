@@ -101,6 +101,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   //int piece_num = 0;
   list<string> geom_obj_data;
   geom_obj_data.push_back("temperature");
+  geom_obj_data.push_back("color");
 
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
        geom_obj_ps != 0; 
