@@ -329,7 +329,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pVolumeLabel,            add_matl);
   t->computes(lb->pTemperatureLabel,       add_matl);
   t->computes(lb->pTempPreviousLabel,      add_matl); // for thermal stress 
-  t->computes(lb->pdTdtLabel,  add_matl);
+  t->computes(lb->pdTdtLabel,              add_matl);
   t->computes(lb->pVelocityLabel,          add_matl);
   t->computes(lb->pExternalForceLabel,     add_matl);
   t->computes(lb->pParticleIDLabel,        add_matl);
@@ -1432,12 +1432,14 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
 
+#if 0
       // scalar used for debugging
       if(flags->d_with_color) {
         ParticleVariable<double> pcolor;
         ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
         setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
       }
+#endif
 
     }
   }
