@@ -148,6 +148,7 @@ int main(int argc, char *argv[])
                 varblock->get(next_var_name);
                 if      (next_var_name=="p.volume")        ncols += 1;
                 else if (next_var_name=="p.temperature")   ncols += 1;
+                else if (next_var_name=="p.color")         ncols += 1;
                 else if (next_var_name=="p.externalforce") ncols += 3;
                 else if (next_var_name=="p.fiberdir")      ncols += 3;
                 else 

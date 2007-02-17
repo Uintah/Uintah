@@ -79,13 +79,17 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes       = 0;
     vector<double>* temperatures  = 0;
+    vector<double>* colors        = 0;
     vector<Vector>* pforces       = 0;
     vector<Vector>* pfiberdirs    = 0;
     if (sgp){
-      volumes = sgp->getVolume();
+      volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
-      pforces = sgp->getForces();
-      pfiberdirs = sgp->getFiberDirs();
+      pforces      = sgp->getForces();
+      pfiberdirs   = sgp->getFiberDirs();
+      if(d_with_color){
+        colors      = sgp->getColors();
+      }
     }
     
     // For getting particle volumes (if they exist)
@@ -114,6 +118,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     geomvecs::key_type pfiberkey(patch,*obj);
     if (pfiberdirs) {
       if (!pfiberdirs->empty()) fiberiter = d_object_fibers[pfiberkey].begin();
+    }
+    
+    // For getting particles colors (if they exist)
+    vector<double>::const_iterator coloriter;
+    geomvols::key_type colorkey(patch,*obj);
+    if (colors) {
+      if (!colors->empty()) coloriter = d_object_colors[colorkey].begin();
     }
 
     vector<Point>::const_iterator itr;
@@ -155,6 +166,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (!pfiberdirs->empty()) {
           pfiberdir[pidx] = *fiberiter;
           ++fiberiter;
+        }
+      }
+      
+      if (colors) {
+        if (!colors->empty()) {
+          pcolor[pidx] = *coloriter;
+          ++coloriter;
         }
       }
 
@@ -576,6 +594,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Point>* points      = sgp->getPoints();
     vector<double>* vols       = sgp->getVolume();
     vector<double>* temps      = sgp->getTemperature();
+    vector<double>* colors     = sgp->getColors();
     vector<Vector>* pforces    = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
     Point p;
@@ -602,6 +621,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!pfiberdirs->empty()) {
             Vector pfiber = pfiberdirs->at(ii); 
             d_object_fibers[fiberkey].push_back(pfiber);
+          }
+          if (!colors->empty()) {
+            double color = colors->at(ii); 
+            d_object_colors[volkey].push_back(color);
           }
         } 
       }  // patch contains cell
