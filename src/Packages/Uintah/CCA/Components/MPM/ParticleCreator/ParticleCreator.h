@@ -123,6 +123,7 @@ namespace Uintah {
     typedef map<pair<const Patch*,GeometryObject*>,vector<double> > geomvols;
     geomvols d_object_vols;
     geomvols d_object_temps;
+    geomvols d_object_colors;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;

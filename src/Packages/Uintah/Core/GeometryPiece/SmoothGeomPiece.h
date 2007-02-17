@@ -87,6 +87,11 @@ namespace Uintah {
     /*! Returns the vector containing the set of particle temperatures */
     //////////////////////////////////////////////////////////////////////
     vector<double>* getTemperature();
+    
+    //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle colors */
+    //////////////////////////////////////////////////////////////////////
+    vector<double>* getColors();
 
     //////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////
@@ -135,6 +140,7 @@ namespace Uintah {
     vector<Point> d_points;
     vector<double> d_volume;
     vector<double> d_temperature;
+    vector<double> d_color;
     vector<Vector> d_forces;
     vector<Vector> d_fiberdirs;
     double d_dx;

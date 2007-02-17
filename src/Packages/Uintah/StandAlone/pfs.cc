@@ -132,6 +132,7 @@ main(int argc, char *argv[])
                 varblock->get(next_var_name);
                 if      (next_var_name=="p.volume")        ncols += 1;
                 else if (next_var_name=="p.temperature")   ncols += 1;
+                else if (next_var_name=="p.color")         ncols += 1;
                 else if (next_var_name=="p.externalforce") ncols += 3;
                 else if (next_var_name=="p.fiberdir")      ncols += 3;
                 else 
@@ -144,12 +145,11 @@ main(int argc, char *argv[])
               double x,y,z;
               while (source >> x >> y >> z) {
                 vector<double> cols;
-                for(int ic=0;ic<ncols;ic++)
-                  {
-                    double v;
-                    source >> v;
-                    cols.push_back(v);
-                  }
+                for(int ic=0;ic<ncols;ic++){
+                  double v;
+                  source >> v;
+                  cols.push_back(v);
+                }
                 
                 Point pp(x,y,z);
                 if(level->containsPoint(pp)){
