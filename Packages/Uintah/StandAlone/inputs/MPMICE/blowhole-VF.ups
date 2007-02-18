@@ -95,13 +95,26 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                <tri label = "vocalFold_L">
-                  <name>inputs/MPMICE/complex_MPM_geometries/VF_L.0</name>
-                </tri>
+                <difference>
+                 <tri label = "vocalFold_L">
+                   <name>inputs/MPMICE/complex_MPM_geometries/VF_L.0</name>
+                 </tri>
+                 <box label = "diff_color_L">
+                     <min>           [.0,  .008,.0]      </min>
+                     <max>           [.005,.012,.00025]  </max>
+                 </box>
+                </difference>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature>  300.       </temperature>
                 <color>        -1         </color>
+              </geom_object>
+              <geom_object>
+                <box label = "diff_color_L"> </box>
+                <res>         [2,2,1]     </res>
+                <velocity>    [0.0,0.0,0] </velocity>
+                <temperature>  300.       </temperature>
+                <color>         1         </color>
               </geom_object>
            </material>
            <material>
@@ -113,14 +126,27 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                <tri label = "vocalFold_R"> 
-                  <name>inputs/MPMICE/complex_MPM_geometries/VF_R.0</name>
-                </tri>
+                <difference>
+                 <tri label = "vocalFold_R"> 
+                   <name>inputs/MPMICE/complex_MPM_geometries/VF_R.0</name>
+                 </tri>
+                  <box label = "diff_color_R">
+                      <min>           [.015,.008,.0]       </min>
+                      <max>           [.02,  .012,.00025]  </max>
+                  </box>
+                </difference>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature> 300.        </temperature>
                 <color>        1          </color>
-               </geom_object>
+              </geom_object>
+              <geom_object>
+                <box label = "diff_color_R"> </box>
+                <res>         [2,2,1]     </res>
+                <velocity>    [0.0,0.0,0] </velocity>
+                <temperature>  300.       </temperature>
+                <color>         -1        </color>
+              </geom_object>
            </material>
 
            <contact>
