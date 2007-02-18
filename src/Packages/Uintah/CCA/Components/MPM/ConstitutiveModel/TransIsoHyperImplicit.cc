@@ -16,25 +16,22 @@
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/NotFinished.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <TauProfilerForSCIRun.h>
 
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-// ____________________this is a transversely isotropic hyperelastic material [JW]
-//_____________________see Material 18 in LSDYNA manual
-//_____________________with strain-based failure criteria
-//_____________________implicit MPM
+// _________________this is a transversely isotropic hyperelastic material [JW]
+//__________________see Material 18 in LSDYNA manual
+//__________________with strain-based failure criteria
+//__________________implicit MPM
 
 TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag),ImplicitCM()
@@ -55,9 +52,9 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
   pStretchLabel = VarLabel::create("p.stretch",
-        ParticleVariable<double>::getTypeDescription());
+     ParticleVariable<double>::getTypeDescription());
   pStretchLabel_preReloc = VarLabel::create("p.stretch+",
-        ParticleVariable<double>::getTypeDescription());
+     ParticleVariable<double>::getTypeDescription());
 
   pFailureLabel = VarLabel::create("p.fail",
      ParticleVariable<double>::getTypeDescription());
@@ -68,7 +65,6 @@ TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,MPMFlags* Mflag)
 TransIsoHyperImplicit::TransIsoHyperImplicit(const TransIsoHyperImplicit* cm)
   : ConstitutiveModel(cm), ImplicitCM(cm)
 {
-
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
   d_initialData.Bulk = cm->d_initialData.Bulk;
@@ -117,9 +113,6 @@ void TransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
 }
 
-
-
-
 TransIsoHyperImplicit* TransIsoHyperImplicit::clone()
 {
   return scinew TransIsoHyperImplicit(*this);
@@ -128,17 +121,20 @@ TransIsoHyperImplicit* TransIsoHyperImplicit::clone()
 void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
-// _____________________STRESS FREE REFERENCE CONFIG,
-//______________________PLUS ESTIMATES TIME STEP THROUGHcomputeStableTimestep
+// _____________________STRESS FREE REFERENCE CONFIG
 {
+   // Initialize the variables shared by all constitutive models
+   // This method is defined in the ConstitutiveModel base class.
+
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
+
    Matrix3 Identity, zero(0.);
    Identity.Identity();
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> deformationGradient, pstress;
-   ParticleVariable<double> stretch,fail;//fail_label
+   ParticleVariable<double> stretch,fail;
 
    new_dw->allocateAndPut(deformationGradient,
                                              lb->pDeformationMeasureLabel,pset);
@@ -147,11 +143,11 @@ void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
    new_dw->allocateAndPut(fail,              pFailureLabel,               pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++) {
-          deformationGradient[*iter] = Identity;
-          pstress[*iter] = zero;
-	  stretch[*iter] = 1.0;
-	  fail[*iter] = 0.0;
+       iter != pset->end(); iter++){
+       deformationGradient[*iter] = Identity;
+       fail[*iter] = 0.0;
+       pstress[*iter] = zero;
+       stretch[*iter] = 1.0;
    }
 
 }
@@ -161,19 +157,13 @@ void TransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
                                                     MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pFailureLabel_preReloc,
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pStretchLabel_preReloc,
-                 matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, matlset, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,             matlset, Ghost::None);
 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
-                 matlset,Ghost::None);
+  // Add requires local to this model
+  task->requires(Task::NewDW,pFailureLabel_preReloc,      matlset, Ghost::None);
+  task->requires(Task::NewDW,pStretchLabel_preReloc,      matlset, Ghost::None);
 }
-
 
 void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
                                             ParticleSubset* addset,
@@ -195,10 +185,10 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(stretch,            addset);
   new_dw->allocateTemporary(fail,               addset);
 
-  new_dw->get(o_defGrad,     lb->pDeformationMeasureLabel_preReloc,   delset);
-  new_dw->get(o_stress,      lb->pStressLabel_preReloc,               delset);
   new_dw->get(o_stretch,     pStretchLabel_preReloc,                  delset);
   new_dw->get(o_fail,        pFailureLabel_preReloc,                  delset);
+  new_dw->get(o_defGrad,     lb->pDeformationMeasureLabel_preReloc,   delset);
+  new_dw->get(o_stress,      lb->pStressLabel_preReloc,               delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -215,14 +205,18 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 
 void TransIsoHyperImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
+//____________________KEEPS TRACK OF THE PARTICLES AND THE RELATED VARIABLES
+//____________________(EACH CM ADD ITS OWN STATE VARS)
+//____________________AS PARTICLES MOVE FROM PATCH TO PATCH
 {
+   // Add the local particle state data for this constitutive model.
    from.push_back(lb->pFiberDirLabel);
    from.push_back(pStretchLabel);
-   from.push_back(pFailureLabel);//fail_labels
+   from.push_back(pFailureLabel);
 
    to.push_back(lb->pFiberDirLabel_preReloc);
    to.push_back(pStretchLabel_preReloc);
-   to.push_back(pFailureLabel_preReloc);//fail_labels
+   to.push_back(pFailureLabel_preReloc);
 }
 
 void TransIsoHyperImplicit::computeStableTimestep(const Patch*,
@@ -236,7 +230,7 @@ Vector TransIsoHyperImplicit::getInitialFiberDir()
 {
   return d_initialData.a0;
 }
-//
+
 void
 TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                          const MPMMaterial* matl,
@@ -244,25 +238,22 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                          DataWarehouse* new_dw,
                                          Solver* solver,
                                          const bool )
-//___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
-//___________________________________CALLED ONCE PER TIME STEP
-//___________________________________CONTAINS A COPY OF computeStableTimestep
+//COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
+//CALLED ONCE PER TIME STEP CONTAINS A COPY OF computeStableTimestep
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-//    cerr <<"Doing computeStressTensor on " << patch->getID()
-//       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
-    Matrix3 Shear,fbar;
     Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
     Matrix3 pressure, deviatoric_stress, fiber_stress;
     double I1tilde,I2tilde,I4tilde,lambda_tilde;
     double dWdI4tilde,d2WdI4tilde2;
+    Matrix3 Shear;
     Vector deformed_fiber_vector;
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
@@ -363,11 +354,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
-
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
-        //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS of DEF GRAD
-        //_______________________Ftilde=J^(-1/3)*F and Fvol=J^1/3*Identity
-        //_______________________right Cauchy Green (C) tilde and invariants
+        //________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS of DEF GRAD
+        //________________Ftilde=J^(-1/3)*F and Fvol=J^1/3*Identity
+        //________________right Cauchy Green (C) tilde and invariants
         rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
                                 * deformationGradient_new[idx]*pow(J,-(2./3.));
         I1tilde = rightCauchyGreentilde_new.Trace();
@@ -387,14 +377,12 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                      * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
         //________________________________strain energy derivatives
-        if (lambda_tilde < 1.) {
+        if (lambda_tilde < 1.){
           dWdI4tilde = 0.;
           d2WdI4tilde2 = 0.;
         }
-        else
-        if (lambda_tilde < lambda_star) {
-          dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
-                           /(lambda_tilde*lambda_tilde);
+        else if (lambda_tilde < lambda_star) {
+          dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)/(lambda_tilde*lambda_tilde);
           d2WdI4tilde2 = 0.25*c3*(c4*exp(c4*(lambda_tilde-1.))
                         -1./lambda_tilde*(exp(c4*(lambda_tilde-1.))-1.))
                           /(lambda_tilde*lambda_tilde*lambda_tilde);
@@ -408,7 +396,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 	//_________________________________stiffness and stress vars.
         double matrix_failed,fiber_failed;
 
-	double K = Bulk;
         double cc1 = d2WdI4tilde2*I4tilde*I4tilde;
         double cc2MR = (4./3.)*(1./J)*(c1*I1tilde+2.*c2*I2tilde);
         double cc2FC = (4./3.)*(1./J)*dWdI4tilde*I4tilde;
@@ -419,11 +406,10 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         Matrix3 devsMR = (RB*(c1+c2*I1tilde)+RB2*(-c2)+I*(c1*I1tilde+2*c2*I2tilde))*(2./J)*(-2./3.);
         Matrix3 devsFC = (DY-I*(1./3.))*dWdI4tilde*I4tilde*(2./J)*(-2./3.);
         Matrix3 termMR = RB*(1./J)*c2*I1tilde-RB2*(1./J)*c2;
-	
-	double D[6][6]; //stiffness matrix
 
         //________________________________Failure+Stress+Stiffness
         fail[idx] = 0.;
+        double D[6][6]; //stiffness matrix
         if (failure == 1){
         matrix_failed = 0.;
         fiber_failed = 0.;
@@ -504,6 +490,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 	//________________________________STIFFNESS
         //________________________________________________________vol. term
         double cvol[6][6];//failure already recorded into p
+        double K = Bulk;
         cvol[0][0] = K*(1./J)-2*p;
         cvol[0][1] = K*(1./J);
         cvol[0][2] = K*(1./J);
@@ -661,7 +648,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 	}
 
         //________________________________________________________the STIFFNESS
-
         for(int i=0;i<6;i++){
           for(int j=0;j<6;j++){
             D[i][j] =cvol[i][j]+cMR[i][j]+cFC[i][j];
@@ -689,6 +675,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
             cvol[i][j] =  0.;
           }
         }
+        double K = Bulk;
+
         cvol[0][0] = K*(1./J)-2*p;
         cvol[0][1] = K*(1./J);
         cvol[0][2] = K*(1./J);
@@ -699,9 +687,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         cvol[4][4] = -p;
         cvol[5][5] = -p;
 
-        //_________________________________________________Mooney-Rivlin term
-        double cMR[6][6];
-	 cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)
+         //_________________________________________________Mooney-Rivlin term
+         double cMR[6][6];
+         cMR[0][0] = (4./J)*c2*RB(0,0)*RB(0,0)
                     -(4./J)*c2*(RB(0,0)*RB(0,0)+RB(0,0)*RB(0,0))
                     +(2./3.)*cc2MR+(4./9.)*(1./J)*2*c2*I2tilde
                     +devsMR(0,0)+devsMR(0,0)
@@ -811,7 +799,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
          cFC[5][5] =.5*cc2FC+(4./9.)*(1./J)*cc1+(4./J)*cc1*DY(2,0)*DY(2,0);
 
         //________________________________________________________the STIFFNESS
-
         for(int i=0;i<6;i++){
           for(int j=0;j<6;j++){
             D[i][j] =cvol[i][j]+cMR[i][j]+cFC[i][j];
@@ -863,13 +850,12 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
 
-     double J;
      Matrix3 Identity;
      Identity.Identity();
      Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
      Matrix3 pressure, deviatoric_stress, fiber_stress;
      double I1tilde,I2tilde,I4tilde,lambda_tilde;
-     double dWdI4tilde;//double d2WdI4tilde2;
+     double dWdI4tilde;
      Vector deformed_fiber_vector;
 
      LinearInterpolator* interpolator = new LinearInterpolator(patch);
@@ -886,31 +872,30 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      ParticleVariable<Matrix3> pstress;
      constParticleVariable<double> pvolumeold;
      ParticleVariable<double> pvolume_deformed;
-//
+
      ParticleVariable<double> stretch;
      ParticleVariable<double> fail;
      constParticleVariable<double> fail_old;
      constParticleVariable<Vector> pvelocity;
      constParticleVariable<Vector> pfiberdir;
      ParticleVariable<Vector> pfiberdir_carry;
-//
-     constNCVariable<Vector> dispNew;
-     delt_vartype delT;
 
+     delt_vartype delT;
      old_dw->get(delT,lb->delTLabel, getLevel(patches));
+
      old_dw->get(px,                  lb->pXLabel,                  pset);
      old_dw->get(pvolumeold,          lb->pVolumeLabel,             pset);
-     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);//fiber dir the initial one gets passed on
+     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
+     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
      old_dw->get(fail_old,            pFailureLabel,                pset);
 
-     new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc,   pset);//stress
-     new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,    pset);//def volume
-     old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel,pset);//deformation gradient label
+     new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc,   pset);
+     new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,    pset);
      new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
-     new_dw->allocateAndPut(pfiberdir_carry, lb->pFiberDirLabel_preReloc,pset);
-     new_dw->allocateAndPut(stretch,         pStretchLabel_preReloc,     pset);
-     new_dw->allocateAndPut(fail,            pFailureLabel_preReloc,     pset);
+                                 lb->pDeformationMeasureLabel_preReloc,   pset);
+     new_dw->allocateAndPut(pfiberdir_carry, lb->pFiberDirLabel_preReloc, pset);
+     new_dw->allocateAndPut(stretch,         pStretchLabel_preReloc,      pset);
+     new_dw->allocateAndPut(fail,            pFailureLabel_preReloc,      pset);
      //_____________________________________________material parameters
      double Bulk  = d_initialData.Bulk;
      //Vector a0 = d_initialData.a0;
@@ -935,7 +920,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
-     LinearInterpolator* interpolator = new LinearInterpolator(patch);
      Ghost::GhostType  gac   = Ghost::AroundCells;
      if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
@@ -956,12 +940,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
-
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
-
         // get the volumetric part of the deformation
-        J = deformationGradient_new[idx].Determinant();
+        double J = deformationGradient_new[idx].Determinant();
         double Jold = deformationGradient[idx].Determinant();
         double Jinc = J/Jold;
         // carry forward fiber direction
@@ -994,10 +974,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         double p = Bulk*log(J)/J;
         //________________________________strain energy derivatives
         if (lambda_tilde < 1.){
-           dWdI4tilde = 0.;
+          dWdI4tilde = 0.;
         }
-        else
-        if (lambda_tilde < lambda_star) {
+        else if (lambda_tilde < lambda_star) {
           dWdI4tilde = 0.5*c3*(exp(c4*(lambda_tilde-1.))-1.)
                            /lambda_tilde/lambda_tilde;
         }
@@ -1092,8 +1071,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           pstress[idx] = pressure + deviatoric_stress + fiber_stress;
       }
       pvolume_deformed[idx] = pvolumeold[idx]*Jinc;
-     }
-    }
+     }  // end loop over particles
+    }   // isn't rigid
     delete interpolator;
    }
 }
