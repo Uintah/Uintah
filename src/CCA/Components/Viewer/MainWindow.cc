@@ -51,11 +51,11 @@ namespace Viewer {
 
 
 MainWindow::MainWindow(wxWindow *parent,
-                       const char *name,
+                       const wxString &name,
                        SSIDL::array1<double> nodes1d,
                        SSIDL::array1<int> triangles,
                        SSIDL::array1<double> solution)
-  : wxFrame( parent, wxID_ANY, wxT(name), wxPoint(X, Y), wxSize(WIDTH, HEIGHT), wxMINIMIZE_BOX|wxCAPTION|wxCLOSE_BOX)
+  : wxFrame(parent, wxID_ANY, name, wxPoint(X, Y), wxSize(WIDTH, HEIGHT), wxMINIMIZE_BOX|wxCAPTION|wxCLOSE_BOX)
 {
 
   std::cerr << "MainWindow::MainWindow(..)" << std::endl;

@@ -32,6 +32,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 class wxRect;
 class wxPoint;

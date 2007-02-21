@@ -42,7 +42,7 @@
 #ifndef CCA_Components_GUIBuilder_FrameworkProxyDialog_h
 #define CCA_Components_GUIBuilder_FrameworkProxyDialog_h
 
-#include <wx/dialog.h>
+#include <sci_wx.h>
 
 class wxStaticText;
 class wxComboBox;
@@ -69,9 +69,9 @@ public:
                        const wxSize& size = wxDefaultSize,
                        long style = wxCAPTION|wxSYSTEM_MENU,
                        const wxString& name = wxT("Add Framework Proxy"),
-                       const std::string& defaultProxy = "localhost",
-                       const std::string& defaultDomain = "localhost",
-                       const std::string& defaultLogin = "localuser");
+                       const wxString& defaultProxy = wxT("localhost"),
+                       const wxString& defaultDomain = wxT("localhost"),
+                       const wxString& defaultLogin = wxT("localuser"));
   virtual ~FrameworkProxyDialog();
 
   void OnReset(wxCommandEvent& event);

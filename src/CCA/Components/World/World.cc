@@ -81,8 +81,8 @@ void World::setServices(const sci::cca::Services::pointer& svc)
 int WUIPort::ui()
 {
 #if HAVE_GUI
-  wxString t = wxGetTextFromUser(wxT("Enter some text"), displayName);
-  com->setText(t.c_str());
+  wxString t = wxGetTextFromUser(wxT("Enter some text"), STLTowxString(displayName));
+  com->setText(wxToSTLString(t));
 #endif
     return 0;
 }

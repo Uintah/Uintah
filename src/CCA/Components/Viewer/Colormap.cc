@@ -87,7 +87,7 @@ int Colormap::height()
 wxColor Colormap::getColor(double value)
 {
   double val = (value - minVal) / (maxVal - minVal);
-  if (type == "Color") {
+  if (type == wxT("Color")) {
     double r, g, b;
     if (val <= 0.5) {
       r = 0;
@@ -99,7 +99,7 @@ wxColor Colormap::getColor(double value)
       r = 1 - g;
     }
     return wxColor((unsigned char)(r * 255), (unsigned char)(g * 255), (unsigned char)(b * 255));
-  } else if (type == "Gray") { // grayscale
+  } else if (type == wxT("Gray")) { // grayscale
     unsigned char g = (unsigned char) floor(val * 255);
 #if 0
 //     if (g > 255) {
@@ -110,7 +110,7 @@ wxColor Colormap::getColor(double value)
 #endif
     return wxColor(g, g, g);
   } else {
-    wxMessageBox("Unknown Colormap type", wxT("Colormap Error"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(wxT("Unknown Colormap type"), wxT("Colormap Error"), wxOK|wxICON_ERROR, 0);
     return wxColor(0, 0, 0);
   }
 }

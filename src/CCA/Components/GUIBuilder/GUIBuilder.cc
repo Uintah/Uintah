@@ -161,7 +161,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
   if (ptr.isNull()) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Warning: event service not available.");
+    bw->DisplayErrorMessage(wxT("Warning: event service not available."));
   }
   sci::cca::Topic::pointer topicPtr = ptr->createTopic("scirun2.services.builderservice.component");
   sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scirun2.services.builderservice.component.*");
@@ -202,7 +202,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
@@ -258,7 +258,8 @@ GUIBuilder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClass
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get component descriptions from component repository; " + e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not get component descriptions from component repository; ") +
+                              STLTowxString(e->getNote()));
     }
   }
 }
@@ -301,7 +302,7 @@ GUIBuilder::createInstance(const sci::cca::ComponentClassDescription::pointer& c
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage(e->getNote());
+      bw->DisplayErrorMessage(STLTowxString(e->getNote()));
     }
   }
   return cid;
@@ -372,8 +373,10 @@ GUIBuilder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSID
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get uses ports for " +
-                              cid->getInstanceName() + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not get uses ports for "));
+      msg += STLTowxString(cid->getInstanceName()) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
@@ -393,8 +396,10 @@ GUIBuilder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get compatible port list for " +
-                              usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not get compatible port list for "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
@@ -415,8 +420,10 @@ GUIBuilder::getBridgeablePortList(const sci::cca::ComponentID::pointer &user,
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get compatible port list for " +
-                              usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not get compatible port list for "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
@@ -442,7 +449,10 @@ GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
     if (instanceName.empty()) {
       BuilderWindow *bw = app->GetTopBuilderWindow();
       if (bw) {
-        bw->DisplayErrorMessage("BuilderService was unable to generate bridge for " + usesPortName + " and " + providesPortName + ".");
+        wxString msg(wxT("BuilderService was unable to generate bridge for "));
+        msg += STLTowxString(usesPortName) + wxT(" and ");
+        msg += STLTowxString(providesPortName) + wxT(".");
+        bw->DisplayErrorMessage(msg);
       }
     } else {
       std::string className = "bridge:Bridge." + instanceName;
@@ -470,7 +480,11 @@ GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not generate bridge for " + usesPortName + " and " + providesPortName + ";" +  e->getNote());
+      wxString msg(wxT("Error: Could not generate bridge for "));
+      msg += STLTowxString(usesPortName) + wxT(" and ");
+      msg += STLTowxString(providesPortName) + wxT("; ");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 #endif
@@ -492,8 +506,11 @@ GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::st
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not connect" + usesPortName + " to " +
-			      providesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not connect "));
+      msg += STLTowxString(usesPortName) + wxT(" to ");
+      msg += STLTowxString(providesPortName) + wxT("; ");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
   return connID;
@@ -510,7 +527,7 @@ void GUIBuilder::disconnect(const sci::cca::ConnectionID::pointer &connID, float
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not disconnect; " +  e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not disconnect; ") + STLTowxString(e->getNote()));
     }
   }
 }
@@ -532,7 +549,7 @@ void GUIBuilder::addComponentFromXML(const std::string& filePath, const std::str
     fwkProperties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
   } catch (const sci::cca::CCAException::pointer &pe) {
-    bw->DisplayErrorMessage("Error: framework properties not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: framework properties not found; ") + STLTowxString(pe->getNote()));
     return;
   }
   sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
@@ -550,7 +567,7 @@ void GUIBuilder::addComponentFromXML(const std::string& filePath, const std::str
     reg->addComponentClass(componentModel);
   }
   catch(const sci::cca::CCAException::pointer &pe) {
-    bw->DisplayErrorMessage("Error: component repository not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: component repository not found; ") + STLTowxString(pe->getNote()));
     return;
   }
   services->releasePort("cca.ComponentRepository");
@@ -574,7 +591,7 @@ void GUIBuilder::addFrameworkProxy(const std::string &loaderName, const std::str
     services->releasePort("cca.FrameworkProxyService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: framework proxy service not found; ") + STLTowxString(pe->getNote()));
     return;
   }
 }
@@ -590,7 +607,7 @@ void GUIBuilder::removeFrameworkProxy(const std::string &loaderName)
     services->releasePort("cca.FrameworkProxyService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: framework proxy service not found; ") +  STLTowxString(pe->getNote()));
     return;
   }
 }
@@ -637,7 +654,7 @@ int GUIBuilder::go(const std::string& goPortName)
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not access go port; " +  e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not access go port; ") + STLTowxString(e->getNote()));
     }
     return -1;
   }
@@ -682,7 +699,7 @@ int GUIBuilder::ui(const std::string& uiPortName)
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not access ui port; " +  e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not access ui port; ") +  STLTowxString(e->getNote()));
     }
     return -1;
   }
@@ -736,7 +753,7 @@ void GUIBuilder::disconnectComponentIcon(const std::string& ciPortName)
 bool GUIBuilder::setPortColor(const std::string& portType, const std::string& colorName)
 {
   Guard g(&builderLock);
-  wxColor c = wxTheColourDatabase->Find(colorName);
+  wxColor c = wxTheColourDatabase->Find(STLTowxString(colorName));
   if (! c.Ok()) {
     // colorName can't be found in wxTheColourDatabase
     return false;
@@ -800,7 +817,7 @@ bool GUIBuilder::applicationFileExists()
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return false;
   }
   struct stat buf;
@@ -819,7 +836,7 @@ void GUIBuilder::saveApplication()
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
@@ -834,7 +851,7 @@ void GUIBuilder::saveApplication(const std::string& fileName)
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
@@ -891,7 +908,10 @@ bool GUIBuilder::connectPort(const std::string& usesPortName, const std::string&
   } catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not register port " + usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not register port "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
     return false;
   }
@@ -901,7 +921,9 @@ bool GUIBuilder::connectPort(const std::string& usesPortName, const std::string&
   if (connID.isNull()) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not connect port " + usesPortName + ".");
+      wxString msg(wxT("Error: Could not connect port "));
+      msg += STLTowxString(usesPortName) + wxT(".");
+      bw->DisplayErrorMessage(msg);
     }
     return false;
   }
@@ -924,7 +946,10 @@ void GUIBuilder::disconnectPort(const std::string& usesPortName)
   } catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not unregister port " + usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not unregister port "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
