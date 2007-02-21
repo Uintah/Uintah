@@ -44,6 +44,7 @@ Filter::Filter(const ArchesLabel* label,
 {
   d_perproc_patches= 0;
   d_matrixInitialize = false;
+  d_matrix_vectors_created = false;
 }
 
 // ****************************************************************************
@@ -51,9 +52,10 @@ Filter::Filter(const ArchesLabel* label,
 // ****************************************************************************
 Filter::~Filter()
 {
-  if(d_perproc_patches && d_perproc_patches->removeReference())
+  if (d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
-  destroyMatrix();
+  if (d_matrix_vectors_created)
+    destroyMatrix();
 }
 
 // ****************************************************************************
@@ -256,6 +258,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
     throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
+
+  d_matrix_vectors_created = true;
 }
 
 

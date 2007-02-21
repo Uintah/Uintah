@@ -116,6 +116,7 @@ private:
 
    bool d_3d_periodic;
    bool d_matrixInitialize;
+   bool d_matrix_vectors_created;
 #ifdef HAVE_PETSC
    map<const Patch*, int> d_petscGlobalStart;
    map<const Patch*, Array3<int> > d_petscLocalToGlobal;
