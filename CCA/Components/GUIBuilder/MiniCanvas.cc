@@ -73,10 +73,10 @@ bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, con
   SetBackgroundColour(BuilderWindow::BACKGROUND_COLOUR);
   //SetScrollRate(DEFAULT_SCROLLX, DEFAULT_SCROLLY);
 
-  vBoxColor = wxTheColourDatabase->Find("GOLDENROD");
+  vBoxColor = wxTheColourDatabase->Find(wxT("GOLDENROD"));
   goldenrodPen = new wxPen(vBoxColor, 1, wxSOLID);
 
-  iRectColor = wxTheColourDatabase->Find("LIGHT GREY");
+  iRectColor = wxTheColourDatabase->Find(wxT("LIGHT GREY"));
   lightGreyPen = new wxPen(iRectColor, 1, wxSOLID);
   lightGreyBrush = new wxBrush(iRectColor, wxSOLID);
 

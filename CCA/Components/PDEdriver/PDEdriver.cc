@@ -106,7 +106,7 @@ int PDEGoPort::go()
     }
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
   }
   sci::cca::ComponentID::pointer cid = services->getComponentID();
 
@@ -182,7 +182,7 @@ int PDEGoPort::go()
     viewPort = pidl_cast<sci::cca::ports::ViewPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   viewPort->view2dPDE(nodes, triangles, x);

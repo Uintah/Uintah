@@ -37,7 +37,7 @@
 
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
-# include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 // some useful headers
@@ -48,7 +48,51 @@
 #include <wx/textdlg.h>
 #include <wx/numdlg.h>
 #include <wx/utils.h>
+#include <wx/string.h>
+#include <wx/strconv.h>
 
-#endif
+wxString STLTowxString(const std::string& s);
+std::string wxToSTLString(const wxString& wxs);
+
+// Wrapping STL strings with Unicode support is problematic
+// at this time because the SIDL compiler does not have std::wstring
+// support.
+// TODO: Revisit this issue during Babel compiler changeover.
+
+#if wxUSE_STD_STRING && ! wxUSE_UNICODE
+inline wxString STLTowxString(const std::string& s)
+{
+  return wxString(s);
+}
+
+inline std::string wxToSTLString(const wxString& wxs)
+{
+  return (std::string) wxs;
+}
+#else
+# if wxUSE_UNICODE
+inline wxString STLTowxString(const std::string& s)
+{
+  return wxString(s.c_str(), *wxConvCurrent);
+}
+
+inline std::string wxToSTLString(const wxString& wxs)
+{
+  return std::string((const char*) wxs.mb_str(*wxConvCurrent));
+}
+# else // ANSI
+inline wxString STLTowxString(const std::string& s)
+{
+  return wxString(s.c_str());
+}
+
+inline std::string wxToSTLString(const wxString& wxs)
+{
+  return std::string(wxs.c_str());
+}
+# endif
+#endif // wxUSE_STD_STRING
+
+#endif // HAVE_WX
 
 #endif

@@ -30,7 +30,7 @@
  * ComponentWizardHelper.h
  *
  * Written by:
- *  Ashwin Deepak Swaminathan  
+ *  Ashwin Deepak Swaminathan
  *  Scientific Computing and Imaging Institute
  *  University of Utah
  *  August 2006
@@ -51,14 +51,19 @@
 #include <CCA/Components/GUIBuilder/CodePreviewDialog.h>
 #include <vector>
 namespace GUIBuilder {
-class ComponentWizardHelper
-{
- public: 
-  ComponentWizardHelper::ComponentWizardHelper(const sci::cca::GUIBuilder::pointer& bc,const std::string,const std::string,const std::vector<PortDescriptor*>,const std::vector<PortDescriptor*>,const bool isWithSidl);
+
+class ComponentWizardHelper {
+ public:
+  ComponentWizardHelper(const sci::cca::GUIBuilder::pointer& bc,
+                        const std::string,
+                        const std::string,
+                        const std::vector<PortDescriptor*>,
+                        const std::vector<PortDescriptor*>,
+                        const bool isWithSidl);
   ~ComponentWizardHelper();
-  void ComponentWizardHelper::createComponent();
-  void ComponentWizardHelper::previewCode(std::string &sopf,std::string &sosf,std::string &somf, std::string &sosidlf);
-  std::string ComponentWizardHelper::getTempDirName();
+  void createComponent();
+  void previewCode(std::string &sopf, std::string &sosf, std::string &somf, std::string &sosidlf);
+  std::string getTempDirName();
   sci::cca::GUIBuilder::pointer builder;
   std::string compName;
   std::string compDirName;
@@ -67,5 +72,7 @@ class ComponentWizardHelper
   std::vector <PortDescriptor*> usesPortsList;
   bool isWithSidl;
 };
+
 }
+
 #endif

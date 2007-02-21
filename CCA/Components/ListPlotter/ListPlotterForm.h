@@ -36,7 +36,7 @@ class ZGraph;
 class ListPlotterForm : public wxDialog
 {
 public:
-  ListPlotterForm(wxWindow* parent = 0, const wxString& name = wxString("ListPlotterForm"));
+  ListPlotterForm(wxWindow* parent = 0, const wxString& name = wxT("ListPlotterForm"));
   ~ListPlotterForm();
 
   ZGraph* listZGraph;

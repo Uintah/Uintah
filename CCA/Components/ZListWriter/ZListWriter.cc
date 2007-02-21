@@ -74,21 +74,26 @@ int ZLUIPort::ui()
       pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("ZListWriter"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("ZListWriter"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   SSIDL::array1<double> data = lport->getList();
   services->releasePort("listport");
 
-  wxString filename = wxFileSelector(wxT("Save ZList file"),  wxT(""), wxT(""), wxT(".lst"), wxT("ZList File (*.lst)"), wxSAVE|wxOVERWRITE_PROMPT);
+  wxString filename = wxFileSelector(wxT("Save ZList file"),
+                                     wxEmptyString,
+                                     wxEmptyString,
+                                     wxT(".lst"),
+                                     wxT("ZList File (*.lst)"),
+                                     wxSAVE|wxOVERWRITE_PROMPT);
   if (filename.IsEmpty()) {
     return -1;
   }
-  if (filename.Find(".lst") == -1) {
-    filename += ".lst";
+  if (filename.Find(wxT(".lst")) == -1) {
+    filename += wxT(".lst");
   }
 
-  std::ofstream saveOutputFile(filename.c_str());
+  std::ofstream saveOutputFile(wxToSTLString(filename).c_str());
   for (unsigned int i = 0; i < data.size(); i++) {
     saveOutputFile << data[i] << std::endl;
   }

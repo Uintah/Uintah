@@ -30,7 +30,7 @@
  * ComponentWizardDialog.h
  *
  * Written by:
- *  Ashwin Deepak Swaminathan  
+ *  Ashwin Deepak Swaminathan
  *  Scientific Computing and Imaging Institute
  *  University of Utah
  *  August 2006
@@ -77,7 +77,7 @@ public:
                         const wxPoint& pos = wxDefaultPosition,
                         const wxSize& size = wxDefaultSize,
                         long style = wxDEFAULT_DIALOG_STYLE,
-                        const wxString& name = "ComponentWizardDialogBox");
+                        const wxString& name = wxT("ComponentWizardDialogBox"));
 
   ~ComponentWizardDialog();
   void Generate();
@@ -88,17 +88,18 @@ public:
   void OnSize(wxSizeEvent &event);
   void OnChoose( wxCommandEvent &event );
   virtual bool Validate();
-  std::string getTempDirectoryName();
+  wxString getTempDirectoryName();
+
 private:
-  std::string getTempDirName();
-  std::string getCompDirName();
+  wxString getTempDirName();
+  wxString getCompDirName();
   //Helper function to add a Provides port or Uses port
-  void addPort(const std::string &portType);
+  void addPort(const wxString &portType);
   wxTextCtrl  *componentName;
   wxTextCtrl *location;
   wxGrid *listofPorts;
   wxCheckBox *portInfo;
-  
+
   int count_table;
   bool isPreviewed;
   bool isWithSidl;
@@ -120,13 +121,18 @@ private:
 //To generate the AddPorts Dialog Layout
 class AddPortDialog : public wxDialog {
 public:
-  AddPortDialog(wxWindow *parent,wxWindowID id,const wxString &title,const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE, const wxString& name = "Port dialog box");
+  AddPortDialog(wxWindow *parent,wxWindowID id,
+                const wxString &title,
+                const wxPoint& pos = wxDefaultPosition,
+                const wxSize& size = wxDefaultSize,
+                long style = wxDEFAULT_DIALOG_STYLE,
+                const wxString& name = wxT("Port dialog box"));
 
-  std::string GetPortNameText() const;
-  std::string GetDataTypeText() const;
-  std::string GetDescriptionText() const;
+  wxString GetPortNameText() const;
+  wxString GetDataTypeText() const;
+  wxString GetDescriptionText() const;
   virtual bool Validate();
-  
+
 private:
   wxTextCtrl  *pname;
   wxTextCtrl  *dtype;

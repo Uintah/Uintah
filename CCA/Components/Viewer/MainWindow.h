@@ -56,7 +56,7 @@ public:
     ID_CHECKBOX_COORDS = ID_CHECKBOX_MESH + 1,
   };
   MainWindow(wxWindow *parent,
-             const char *name,
+             const wxString &name,
              const SSIDL::array1<double> nodes1d,
              const SSIDL::array1<int> triangles,
              const SSIDL::array1<double> solution);

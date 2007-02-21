@@ -88,7 +88,7 @@ ViewPort::view2dPDE(const SSIDL::array1<double> &nodes,
     return 1;
   }
 
-  mw = new MainWindow(0, 0, nodes,triangles, solution);
+  mw = new MainWindow(0, wxT("Viewer"), nodes, triangles, solution);
   mw->Show();
 
   std::cerr << "Viewer::view2dPDE(..): MainWindow shown and done" << std::endl;
