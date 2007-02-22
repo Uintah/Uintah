@@ -5577,13 +5577,13 @@ if test "$enable_scijump" = "yes"; then
   if test "$DEBUG" = "yes"; then
     DEF_DEBUG="#define FWK_DEBUG 1"
   fi
-  BUILD_SCIRUN2="yes"
+  BUILD_SCIJUMP="yes"
 else
-  BUILD_SCIRUN2="no"
+  BUILD_SCIJUMP="no"
 fi
 
 AC_SUBST(DEF_DEBUG)
-AC_SUBST(BUILD_SCIRUN2)
+AC_SUBST(BUILD_SCIJUMP)
 sci_defs_files="$sci_defs_files include/sci_defs/framework_testdefs.h"
 
 ##  ---------------------------------------------------------------------

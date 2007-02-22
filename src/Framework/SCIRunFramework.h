@@ -73,7 +73,7 @@ class ComponentEventService;
 /**
  * \class SCIRunFramework
  *
- * \brief An implementation of the CCA AbstractFramework for SCIRun2.
+ * \brief An implementation of the CCA AbstractFramework for SCIJump.
  *
  * The SCIRunFramework is a wrapper around a set of services for creating and
  * connecting components (the underlying framework).  Most interaction with the

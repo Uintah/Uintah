@@ -84,7 +84,7 @@ VPATH := $(SRCTOP)
 PACKAGE_DIRS := @PACKAGE_DIRS@
 LOAD_PACKAGE := @LOAD_PACKAGE@
 BUILD_DATAFLOW := @BUILD_DATAFLOW@
-BUILD_SCIRUN2 := @BUILD_SCIRUN2@
+BUILD_SCIJUMP := @BUILD_SCIJUMP@
 BUILD_PLUME := @BUILD_PLUME@
 
 #DEF_BUILD_DATAFLOW := @DEF_BUILD_DATAFLOW@
@@ -308,9 +308,11 @@ PTOLEMY_CLASSPATH := @PTOLEMY_CLASSPATH@
 
 HAVE_KEPLER := @HAVE_KEPLER@
 
-ifeq ($(BUILD_SCIRUN2),yes)
+ifeq ($(BUILD_SCIJUMP),yes)
   # make configurable:
-  FWK_EXE := scijump 
+  FWK_EXE := scijump
+  # see also Framework/StandAlone/scijump_version.h
+  FWK_VERSION := 0.1.1
   SUBDIRS := $(SUBDIRS) Framework CCA
 
   ## tests (experimental)

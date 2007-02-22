@@ -153,7 +153,7 @@ throw (
   std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
   lockPorts->unlock();
   if (iter == ports.end()) {
-    // Using SCIRun2's version of CCAException for now.
+    // Using SCIJump's version of CCAException for now.
     // Replace with Babelized CCA exceptions!
     throw sci::cca::CCAException::pointer(
       new CCAException("Port " + portName + " not registered", sci::cca::PortNotDefined));
@@ -161,7 +161,7 @@ throw (
 
   BabelPortInstance* pr = dynamic_cast<BabelPortInstance*>(iter->second);
   if (pr->portType() == PortInstance::Provides) {
-    // Using SCIRun2's version of CCAException for now.
+    // Using SCIJump's version of CCAException for now.
     // Replace with Babelized CCA exceptions!
     throw sci::cca::CCAException::pointer(
       new CCAException("Cannot call getPort on a Provides port", sci::cca::BadPortName));
@@ -169,7 +169,7 @@ throw (
 
   // registered, but not yet connected
   if (pr->getConnectionCount() != 1) {
-    // Using SCIRun2's version of CCAException for now.
+    // Using SCIJump's version of CCAException for now.
     // Replace with Babelized CCA exceptions!
     throw sci::cca::CCAException::pointer(
 	    new CCAException("Port " + portName + " not connected", sci::cca::PortNotConnected));
@@ -212,7 +212,7 @@ throw (
 
   BabelPortInstance* pr = dynamic_cast<BabelPortInstance*>(iter->second);
   if (pr->portType() == PortInstance::Provides) {
-    // Using SCIRun2's version of CCAException for now.
+    // Using SCIJump's version of CCAException for now.
     // Replace with Babelized CCA exceptions!
       throw sci::cca::CCAException::pointer(new CCAException("Cannot call getPort on a Provides port", sci::cca::BadPortType));
   }

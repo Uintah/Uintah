@@ -67,7 +67,7 @@ SUBDIRS := \
 #[INSERT NEW CATEGORY DIR HERE]
 
 
-ifeq ($(BUILD_SCIRUN2),yes)
+ifeq ($(BUILD_SCIJUMP),yes)
 SUBDIRS := \
 	$(SUBDIRS) \
 	$(SRCDIR)/CCA \

@@ -774,7 +774,7 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
 void BuilderWindow::setDefaultText()
 {
   std::vector<wxString> v;
-  v.push_back(wxString("SCIJump v ") + wxString(SR2_VERSION));
+  v.push_back(wxString("SCIJump v ") + wxString(SCIJUMP_VERSION));
   v.push_back(wxString("Framework URL: ") + wxString(url.c_str()));
   v.push_back("--------------------\n");
   DisplayMessages(v);

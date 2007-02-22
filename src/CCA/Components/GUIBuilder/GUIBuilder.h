@@ -32,7 +32,7 @@
 #include <CCA/Components/GUIBuilder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
-#include <Framework/StandAlone/sr2_version.h>
+#include <Framework/StandAlone/scijump_version.h>
 
 #include <wx/gdicmn.h>
 
@@ -173,7 +173,7 @@ private:
   // Uses port names will be unique since they are generated from unique component instance names.
   ConnectionMap connectionMap;
 
-  // Set of port colours: the GUIBuilder will set up standard SCIRun2 ports (see SCIRun2Ports.sidl),
+  // Set of port colours: the GUIBuilder will set up standard SCIJump ports (see SCIJumpPorts.sidl),
   // or component authors can add their own.
   // Note: make this map static when support for static functions is available
   // Note: implement using wxColorDatabase instead?

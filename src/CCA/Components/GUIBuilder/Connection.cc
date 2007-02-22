@@ -50,9 +50,6 @@
 #include <wx/gdicmn.h>
 #include <wx/dc.h>
 
-// // let's be sure this is off while troubleshooting connections
-// #define FWK_DEBUG 0
-
 namespace GUIBuilder {
 
 const int Connection::NUM_POINTS(12);
