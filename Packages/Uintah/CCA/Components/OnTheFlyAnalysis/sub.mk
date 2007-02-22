@@ -6,8 +6,9 @@ SRCDIR   := Packages/Uintah/CCA/Components/OnTheFlyAnalysis
 
 SRCS     += \
 	$(SRCDIR)/AnalysisModuleFactory.cc \
-       $(SRCDIR)/AnalysisModule.cc \
-       $(SRCDIR)/lineExtract.cc
+	$(SRCDIR)/AnalysisModule.cc \
+	$(SRCDIR)/lineExtract.cc \
+	$(SRCDIR)/pointExtract.cc
 
 PSELIBS := \
 	Core/Geometry                    \
