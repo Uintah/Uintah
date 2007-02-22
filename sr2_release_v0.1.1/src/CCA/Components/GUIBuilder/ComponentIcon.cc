@@ -57,19 +57,15 @@
 
 #include <string>
 
-#ifndef DEBUG
-#  define DEBUG 1
-#endif
-
 namespace GUIBuilder {
 
 using namespace SCIRun;
 
 BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
   EVT_RIGHT_UP(ComponentIcon::OnRightClick) // show popup menu
-  //EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
-  //EVT_LEFT_UP(ComponentIcon::OnLeftUp)
-  //EVT_MOTION(ComponentIcon::OnMouseMove)
+  EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
+  EVT_LEFT_UP(ComponentIcon::OnLeftUp)
+  EVT_MOTION(ComponentIcon::OnMouseMove)
   EVT_MENU(ID_MENU_GO, ComponentIcon::OnGo)
   EVT_MENU(ID_MENU_DELETE, ComponentIcon::OnDelete)
   EVT_BUTTON(ID_BUTTON_UI, ComponentIcon::OnUI)
@@ -208,7 +204,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 // //     canvas->Scroll(p.x / xu, p.y / yu);
 //   }
 #endif
-  Show(true);
+  //Show(true);
 }
 
 #if 0

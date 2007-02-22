@@ -162,8 +162,8 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     BuilderWindow *bw = app->GetTopBuilderWindow();
     bw->DisplayErrorMessage("Warning: event service not available.");
   }
-  sci::cca::Topic::pointer topicPtr = ptr->createTopic("scirun2.services.builderservice.component");
-  sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scirun2.services.builderservice.component.*");
+  sci::cca::Topic::pointer topicPtr = ptr->createTopic("scijump.services.builderservice.component");
+  sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scijump.services.builderservice.component.*");
   subPtr->registerEventListener(std::string("GUIBuilder"),evptr);
 
 
@@ -236,7 +236,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 
   setDefaultPortColors();
 
-  // register for scirun2.services.builderservice.component.* topics
+  // register for scijump.services.builderservice.component.* topics
 
 }
 

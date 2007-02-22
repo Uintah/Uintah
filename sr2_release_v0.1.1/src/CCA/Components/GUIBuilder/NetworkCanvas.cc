@@ -292,7 +292,7 @@ void NetworkCanvas::Connect(sci::cca::ConnectionID::pointer connid) {
   sci::cca::ComponentID::pointer pcid = connid->getProvider();
 
   ComponentIcon* userCIcon = GetIcon(ucid);
-  ComponentIcon* providerCIcon = GetIcon(pcid);  
+  ComponentIcon* providerCIcon = GetIcon(pcid);
 
   PortIcon* usesPortIcon = userCIcon->GetPortIcon(connid->getUserPortName());
   PortIcon* providesPortIcon = providerCIcon->GetPortIcon(connid->getProviderPortName());

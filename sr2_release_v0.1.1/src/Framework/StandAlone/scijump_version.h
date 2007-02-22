@@ -26,10 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef Framework_StandAlone_sr2_version_h
-#define Framework_StandAlone_sr2_version_h
+#ifndef Framework_StandAlone_scijump_version_h
+#define Framework_StandAlone_scijump_version_h
 
-#define SR2_VERSION "0.1.1"
+#define SCIJUMP_VERSION "0.1.1"
 // add a release candidate number when necessary
 
 #endif

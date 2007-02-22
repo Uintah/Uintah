@@ -322,7 +322,7 @@ TxtMenu::exec(int main_menu_index, int sub_menu_index){
     case 7: //Quit GUI
       SCIRun::TxtBuilder::displayMessage("Quit GUI is not implemented!");
       break;
-    case 8: //Quit SCIRun2
+    case 8: //Quit SCIJump
       refresh();
       endwin();
       SCIRun::Thread::exitAll(0);

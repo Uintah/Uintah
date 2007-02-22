@@ -109,7 +109,7 @@ public:
   Module* add_module(const string& packageName,
 		     const string& categoryName,
 		     const string& moduleName);
-  // For SCIRun2
+  // For SCIJump
   Module* add_module2(const string& packageName,
 		      const string& categoryName,
 		      const string& moduleName);

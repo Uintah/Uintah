@@ -50,7 +50,7 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_mpi.h>
 #include <sci_wx.h>
-#include <Framework/StandAlone/sr2_version.h>
+#include <Framework/StandAlone/scijump_version.h>
 #include <iostream>
 
 using namespace SCIRun;
@@ -68,7 +68,7 @@ usage()
   std::cout << "       [-]-v[ersion]          : prints out version information\n";
   std::cout << "       [-]-h[elp]             : prints usage information\n";
   std::cout << "       [-]-b[uilder] gui/txt  : selects GUI or Textual builder\n";
-  std::cout << "       network file           : SCIRun Network Input File\n";
+  std::cout << "       network file           : SCIJump Network Input File\n";
   exit( 0 );
 }
 
@@ -82,7 +82,7 @@ parse_args( int argc, char *argv[])
     std::string arg( argv[ cnt ] );
     if( ( arg == "--version" ) || ( arg == "-version" )
         || ( arg == "-v" ) || ( arg == "--v" ) ) {
-      std::cout << "Version: " << SR2_VERSION << std::endl;
+      std::cout << "Version: " << SCIJUMP_VERSION << std::endl;
       exit( 0 );
     } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
                 ( arg == "-h" ) ||  ( arg == "--h" ) ) {
@@ -153,7 +153,7 @@ main(int argc, char *argv[], char **environment) {
 
     sci::cca::TypeMap::pointer mainProperties = sr->createTypeMap();
     mainProperties->putBool("internal component", true);
-    sci::cca::Services::pointer mainServices = sr->getServices("SCIRun main", "main", mainProperties);
+    sci::cca::Services::pointer mainServices = sr->getServices("SCIJump main", "main", mainProperties);
 
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
@@ -201,7 +201,7 @@ main(int argc, char *argv[], char **environment) {
     }
     mainServices->releasePort("cca.FrameworkProperties");
     mainServices->releasePort("cca.BuilderService");
-    std::cout << "SCIRun " << SR2_VERSION << " started..." << std::endl;
+    std::cout << "\nSCIJump " << SCIJUMP_VERSION << " started..." << std::endl;
 
     //broadcast, listen to URL periodically
     //sr->share(mainServices);

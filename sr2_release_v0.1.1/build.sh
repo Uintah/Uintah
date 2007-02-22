@@ -37,8 +37,7 @@
 #
 
 function usage() {
-  #echo -e "Usage: build.sh [--debug] [--no-gui] [--help] [--mpi] path to SCIRun Thirdparty"
-  echo -e "Usage: build.sh [OPTION...] SCIRun Thirdparty path"
+  echo -e "Usage: build.sh [OPTION...] SCIRun-Thirdparty-path"
   echo -e "Help options\n  --help, -h\t\t\tShow this help message."
   echo -e "Build options\n  --debug, -d\t\t\tBuild SCIJump in debug mode."
   echo -e "  --no-gui\t\t\tBuild SCIJump without a gui."

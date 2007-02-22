@@ -32,7 +32,7 @@ SRCDIR := Framework/StandAlone
 
 ########################################################################
 #
-# SCIRun2 Stuff:
+# SCIJump Stuff:
 #
 
 
@@ -75,7 +75,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # ploader
 #
 
-# build the SCIRun2 CCA Component Loader here
+# build the SCIJump CCA Component Loader here
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else

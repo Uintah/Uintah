@@ -319,7 +319,7 @@ SCIRunTCLThread::startNetworkEditor()
   }
 
   gui = new TCLInterface;
-  gui->eval("set scirun2 1");
+  gui->eval("set scijump 1");
   gui->execute("wm withdraw .");
 
   // We parse the scirunrc file here before creating the network
@@ -360,7 +360,7 @@ SCIRunTCLThread::startNetworkEditor()
   if (!sci_getenv_p("SCIRUN_RC_PARSED") || check_for_newer_scirunrc())
     copy_and_parse_scirunrc();
 
-  // Ignoring power apps in SCIRun2 (this is where the SCIRun TCLThread loads apps).
+  // Ignoring power apps in SCIJump (this is where the SCIRun TCLThread loads apps).
 
   //packageDB = new PackageDB(gui);
   // load the packages
@@ -378,7 +378,7 @@ SCIRunTCLThread::startNetworkEditor()
 
   Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
 
-  // Ignoring TCL Socket in SCIRun2 (this is where the SCIRun TCLThread creates a TCL Socket).
+  // Ignoring TCL Socket in SCIJump (this is where the SCIRun TCLThread creates a TCL Socket).
 
 #ifdef EXPERIMENTAL_TCL_THREAD
   // windows doesn't communicate TCL with threads like other OSes do.
@@ -388,7 +388,7 @@ SCIRunTCLThread::startNetworkEditor()
 
   SCIRun::ShaderProgramARB::init_shaders_supported();
 
-  // Ignoring SCIRun networks in SCIRun2 (this is where the SCIRun TCLThread loads a network).
+  // Ignoring SCIRun networks in SCIJump (this is where the SCIRun TCLThread loads a network).
 
   initSemUp();
   return TCL_OK;

@@ -140,8 +140,8 @@ bool CCAPortInstance::disconnect(PortInstance* to)
 /**
  * Allowing (according to the CCA spec) n PROVIDES (To) : 1 USES (From)
  * connections is framework-implementation dependent;
- * this is \em not allowed by SCIRun2.
- * The SCIRun2 framework allows 1 PROVIDES (To) : 1 USES (From) and
+ * this is \em not allowed by SCIJump.
+ * The SCIJump framework allows 1 PROVIDES (To) : 1 USES (From) and
  * 1 PROVIDES (To) : n USES (From) connections.
  */
 

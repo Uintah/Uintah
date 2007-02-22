@@ -67,7 +67,7 @@ class ConnectionEvent;
  *
  * A BuilderService port's interface is standard for any CCA-compliant
  * AbstractFramework.  This implementation of the BuilderService port is
- * specific for SCIRun2 and relies on much of the functionality in the
+ * specific for SCIJump and relies on much of the functionality in the
  * SCIRunFramework class and the various SCIRun component model classes.
  *
  *

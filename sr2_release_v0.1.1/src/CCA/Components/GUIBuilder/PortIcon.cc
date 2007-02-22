@@ -99,7 +99,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
 void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
   if (portType == GUIBuilder::Uses) {
-    parent->GetCanvas()->ShowPossibleConnections(this);
+    bool ret = parent->GetCanvas()->ShowPossibleConnections(this);
   }
 }
 

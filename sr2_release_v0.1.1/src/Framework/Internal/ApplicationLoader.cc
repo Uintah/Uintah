@@ -28,7 +28,7 @@
 
 #include <Framework/Internal/ApplicationLoader.h>
 #include <Framework/Internal/BuilderService.h>
-#include <Framework/StandAlone/sr2_version.h>
+#include <Framework/StandAlone/scijump_version.h>
 #include <Framework/SCIRunFramework.h>
 #include <Framework/CCA/CCAException.h>
 
@@ -102,7 +102,7 @@ void ApplicationLoader::loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& 
   string srcDir = string(sci_getenv("SCIRUN_SRCDIR")) + string("/Framework/XML/application.dtd");
 
   xmlInitializeCatalog();
-  xmlCatalogAdd(BAD_CAST "public", BAD_CAST "-//SCIRun2/Application DTD", BAD_CAST srcDir.c_str());
+  xmlCatalogAdd(BAD_CAST "public", BAD_CAST "-//SCIJump/Application DTD", BAD_CAST srcDir.c_str());
 
   /* create a parser context */
   ctxt = xmlNewParserCtxt();
@@ -206,13 +206,13 @@ void ApplicationLoader::saveFile()
   string dtdstr = string("application.dtd");
 
   dtd = xmlCreateIntSubset(xmlDoc, BAD_CAST "application",
-			   BAD_CAST "-//SCIRun2/Application DTD",
+			   BAD_CAST "-//SCIJump/Application DTD",
 			   BAD_CAST dtdstr.c_str());
   /*
    * xmlNewChild() creates a new node, which is "attached" as child node
    * of rootNode node.
    */
-  //xmlNewProp(rootNode, BAD_CAST "version", BAD_CAST SR2_VERSION);
+  //xmlNewProp(rootNode, BAD_CAST "version", BAD_CAST SCIJUMP_VERSION);
 
   sci::cca::Port::pointer bsp =
     framework->getFrameworkService("cca.BuilderService", "cca.ApplicationLoaderService");

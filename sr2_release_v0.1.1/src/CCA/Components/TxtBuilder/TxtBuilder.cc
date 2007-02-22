@@ -228,7 +228,7 @@ void TxtBuilder::run()
   // Show it on the screen 
   doupdate();
 
-  displayMessage("SCIRun2 Started");
+  displayMessage("SCIJump Started");
 
   //the main event loop
   int c;
