@@ -851,7 +851,7 @@ void DynamicLoadBalancer::getCosts(const LevelP& level, const vector<Region> &pa
     costs.push_back(patch->getVolume());
   }
 }
-void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, IntVector min_patch_size,vector<vector<Region> > &levels, bool canSplit)
+void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, SizeList min_patch_size,vector<vector<Region> > &levels, bool canSplit)
 {
   double start = Time::currentSeconds();
 
@@ -880,7 +880,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
       Vector center=(bounds.high()+bounds.low()).asVector()/2;
       double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
       double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
-      double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
+      double delta[3]={min_patch_size[l][dimensions[0]],min_patch_size[l][dimensions[1]],min_patch_size[l][dimensions[2]]};
     
       sfc.SetDimensions(r);
       sfc.SetCenter(c);
@@ -890,11 +890,11 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
 
     LevelP level=0;
 
-    //get costs (get costs will determine algorithm)  
     if(l<(unsigned int)oldGrid->numLevels())
     {
       level=oldGrid->getLevel(l);
     }
+    //get costs (get costs will determine algorithm)  
     getCosts(level,patches,costs);
 
     double totalCost=0;
@@ -952,7 +952,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
         int dim=0; 
         if(canSplit && l!=0)
         {
-          size=(patch.high()-patch.low()).asVector()/min_patch_size.asVector();
+          size=(patch.high()-patch.low()).asVector()/min_patch_size[l].asVector();
       
           //find maximum dimension
           for(int d=1;d<3;d++)
@@ -964,7 +964,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, I
         if(canSplit && l!=0 && size[dim]>1) //if can be split further
         {
           //calculate split point
-          int mid=patch.getLow()[dim]+(int(size[dim])/2)*min_patch_size[dim];
+          int mid=patch.getLow()[dim]+(int(size[dim])/2)*min_patch_size[l][dim];
           //split patch
           Region left=patch,right=patch;
           left.high()[dim]=mid;

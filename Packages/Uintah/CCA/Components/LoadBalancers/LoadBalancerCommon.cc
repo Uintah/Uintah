@@ -143,7 +143,7 @@ bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int st
   return false;
 }
 
-void LoadBalancerCommon::dynamicallyLoadBalanceAndSplit(const GridP&, IntVector,vector<vector<Region> >&, bool)
+void LoadBalancerCommon::dynamicallyLoadBalanceAndSplit(const GridP&, SizeList,vector<vector<Region> >&, bool)
 {
   //This should not be called
   cout << "Warning dynamicallyLoadBalanceAndSplit not implemented for this configuration\n"; 

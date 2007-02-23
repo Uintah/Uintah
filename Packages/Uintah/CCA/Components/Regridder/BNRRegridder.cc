@@ -98,7 +98,6 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
-
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
   vector< vector<Region> > patch_sets(oldGrid->numLevels()+1);
 
@@ -122,18 +121,14 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
-  
-    //Parallel BR over coarse flags
-    RunBR(coarse_flag_vector,patch_sets[l+1]);  
-    
-    if(patch_sets[l+1].empty()) //no patches goto next level
-       continue;
 
-    //add saftey layers for finer level
-    if(l>0)
-    {
-      AddSafetyLayer(patch_sets[l+1], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
-    }
+    //Parallel BR over coarse flags
+      //flags on level l are used to create patches on level l+1
+    RunBR(coarse_flag_vector,patch_sets[l+1]);  
+   
+    if(patch_sets[l+1].empty()) //no patches goto next level
+      continue;
+
     //Fixup patchlist:  this forces neighbor constraints
     patchfixer_.FixUp(patch_sets[l+1]);
      
@@ -145,8 +140,17 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //uncoarsen
     for(unsigned int p=0;p<patch_sets[l+1].size();p++)
     {
-      patch_sets[l+1][p].low()=patch_sets[l+1][p].getLow()*d_minPatchSize;
-      patch_sets[l+1][p].high()=patch_sets[l+1][p].getHigh()*d_minPatchSize;
+      patch_sets[l+1][p].low()=patch_sets[l+1][p].getLow()*d_minPatchSize[l+1];
+      patch_sets[l+1][p].high()=patch_sets[l+1][p].getHigh()*d_minPatchSize[l+1];
+    }
+    
+    //add saftey layers for finer level
+    if(l>0)
+    {
+      //patches on level l must be at least one cell more than on level l+1
+        //so use the patches on level l+1 to add extended flags to level l-1
+        //(thus extending patches on level l)
+      AddSafetyLayer(patch_sets[l+1], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
     }
   }
   //if lb
@@ -213,11 +217,10 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
 {
   DataWarehouse *dw=sched_->getLastDW();
-  for(int l=oldGrid->numLevels()-1; l >= 0;l--)
-  {
-    if(l>=d_maxLevels-1)
-      continue;
 
+  int toplevel=min(oldGrid->numLevels(),d_maxLevels-1);
+  for(int l=0; l<toplevel ;l++)
+  {
     const LevelP level=oldGrid->getLevel(l);
     //create coarse flag set
     const PatchSubset *ps=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
@@ -228,9 +231,13 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
       dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
       for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
       {
+        //cout << "Checking flag:" << *ci << " value is:" << flags[*ci] << endl;
         if (flags[*ci])
         {
-         coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
+         //to coarsen the flags on level l
+            //multiply by the cell refinement ratio on level l to convert to level l+1 coordinates
+            //divide by the minimum patch size on level l+1 to coarsen
+         coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize[l+1]);
         }
       }
     }
@@ -252,10 +259,9 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets)
       double sum_of_vol_squared=0;
       int n = patch_sets[l].size();
       //calculate total volume and volume squared
-      double vol_mult=double(d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2]);
       for(int p=0;p<n;p++)
       {
-        double vol=double(patch_sets[l][p].getVolume()*vol_mult);
+        double vol=double(patch_sets[l][p].getVolume());
         total_vol+=vol;
         sum_of_vol_squared+=vol*vol;
       }
@@ -435,6 +441,30 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   // get min patch size
   regrid_spec->require("min_patch_size", d_minPatchSize);
 
+  int size=d_minPatchSize.size();
+
+  //it is not required to specifiy the minimum patch size on each level
+  //if every level is not specified reuse the lowest level minimum patch size
+  IntVector lastSize = d_minPatchSize[size - 1];
+  if (size < d_maxLevels) {
+    d_minPatchSize.reserve(d_maxLevels);
+    for (int i = size; i < d_maxLevels; i++)
+      d_minPatchSize.push_back(lastSize);
+  }
+  
+  //calculate the minimum patch size on level 0
+  IntVector min_size(INT_MAX,INT_MAX,INT_MAX);
+
+  LevelP level=oldGrid->getLevel(0);
+
+  for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
+  {
+    IntVector size=(*patch)->getInteriorCellHighIndex()-(*patch)->getInteriorCellLowIndex();
+    min_size=Min(min_size,size);
+  }
+  d_minPatchSize.insert(d_minPatchSize.begin(),min_size);
+
+
   regrid_spec->getWithDefault("do_loadBalancing",d_loadBalance,false);
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
@@ -486,6 +516,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
       problemSetup_BulletProofing(k);
     }
   }
+  
 }
 
 //_________________________________________________________________
@@ -496,37 +527,37 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
   // For 2D problems the lattice refinement ratio 
   // and the cell refinement ratio must be 1 in that plane
   for(int dir = 0; dir <3; dir++){
-    if(d_cellNum[k][dir] == 1 && d_minPatchSize[dir] != 1) {
+    if(k!=0 && d_cellNum[k][dir] == 1 && d_minPatchSize[k][dir] != 1) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: The problem you're running is <3D. \n"
           << " The min Patch Size must be 1 in the other dimensions. \n"
           << "Grid Size: " << d_cellNum[k] 
-          << " min patch size: " << d_minPatchSize << endl;
+          << " min patch size: " << d_minPatchSize[k] << endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       
     }
 
-    if(d_cellNum[k][dir] != 1 && d_minPatchSize[dir] < 4) {
+    if(k!=0 && d_cellNum[k][dir] != 1 && d_minPatchSize[k][dir] < 4) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: Min Patch Size needs to be at least 4 cells in each dimension \n"
           << "except for 1-cell-wide dimensions.\n"
-          << "  Patch size on level " << k << ": " << d_minPatchSize << endl;
+          << "  Patch size on level " << k << ": " << d_minPatchSize[k] << endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 
     }
 
-    if(d_cellNum[k][dir] != 1 && d_minPatchSize[dir] % d_cellRefinementRatio[k][dir] != 0) {
+    if(k!=0 && d_cellNum[k][dir] != 1 && d_minPatchSize[k][dir] % d_cellRefinementRatio[k][dir] != 0) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: Min Patch Size needs to be divisible by the cell refinement ratio\n"
-          << "  Patch size on level " << k << ": " << d_minPatchSize 
+          << "  Patch size on level " << k << ": " << d_minPatchSize[k] 
           << ", refinement ratio on level " << k << ": " << d_cellRefinementRatio[k] << endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 
     }
   }
-  if ( Mod( d_cellNum[k], d_minPatchSize ) != IntVector(0,0,0) ) {
+  if (k!=0 && Mod( d_cellNum[k], d_minPatchSize[k] ) != IntVector(0,0,0) ) {
     ostringstream msg;
-    msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minPatchSize << ")\n";
+    msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minPatchSize[k] << ")\n";
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
     
@@ -592,24 +623,24 @@ void BNRRegridder::PostFixup(vector<Region> &patches)
   }
 }
 
+//patches are on level l+1
+//coarse flags are for level l-1
+//coarse patches are for level l-1
 void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags, 
-                                  const vector<const Patch*>& coarse_patches, int level)
+                                  const vector<const Patch*>& coarse_patches, int l)
 {
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches
   PatchRangeTree prt(coarse_patches);
-  //for each patch (padded with saftey layer) 
   
+  //for each patch
   for(unsigned p=0;p<patches.size();p++)
   {
-    //add saftey layer and convert from coarse coordinates to real coordinates on the coarser level
-    IntVector low = (patches[p].getLow()*d_minPatchSize-d_minBoundaryCells)/d_cellRefinementRatio[level]/d_cellRefinementRatio[level-1];
-    IntVector high;
-    high[0] = (int)ceil((patches[p].getHigh()[0]*d_minPatchSize[0]+d_minBoundaryCells[0])/(float)d_cellRefinementRatio[level][0]/d_cellRefinementRatio[level-1][0]);
-    high[1] = (int)ceil((patches[p].getHigh()[1]*d_minPatchSize[1]+d_minBoundaryCells[1])/(float)d_cellRefinementRatio[level][1]/d_cellRefinementRatio[level-1][1]);
-    high[2] = (int)ceil((patches[p].getHigh()[2]*d_minPatchSize[2]+d_minBoundaryCells[2])/(float)d_cellRefinementRatio[level][2]/d_cellRefinementRatio[level-1][2]);
-     
+    //add a saftey layer and convert coordinates to a coarser level by dividing by the refinement ratios.  
+    IntVector low = (patches[p].getLow()-d_minBoundaryCells)/d_cellRefinementRatio[l]/d_cellRefinementRatio[l-1];
+    IntVector high= Ceil( (patches[p].getHigh()+d_minBoundaryCells).asVector()/d_cellRefinementRatio[l].asVector()/d_cellRefinementRatio[l-1].asVector());
+    
     //clamp low and high points to domain boundaries 
     for(int d=0;d<3;d++)
     {
@@ -617,9 +648,9 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
       {
          low[d]=0;
       }
-      if(high[d]>d_cellNum[level-1][d])
+      if(high[d]>d_cellNum[l-1][d])
       {
-          high[d]=d_cellNum[level-1][d];
+          high[d]=d_cellNum[l-1][d];
       }
     }
     Level::selectType intersecting_patches;
@@ -634,13 +665,11 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
       IntVector int_low = Max(patch->getCellLowIndex(), low);
       IntVector int_high = Min(patch->getCellHighIndex(), high);
       
-      //round low coordinate down
-      int_low=int_low*d_cellRefinementRatio[level-1]/d_minPatchSize;
-      //round high coordinate up
-      int_high[0]=(int)ceil(int_high[0]*d_cellRefinementRatio[level-1][0]/(float)d_minPatchSize[0]);
-      int_high[1]=(int)ceil(int_high[1]*d_cellRefinementRatio[level-1][1]/(float)d_minPatchSize[1]);
-      int_high[2]=(int)ceil(int_high[2]*d_cellRefinementRatio[level-1][2]/(float)d_minPatchSize[2]);
-
+      //convert to coarsened coordinates
+        //multiply by refinement ratio to convert back to fine levels cell coordinates
+        //divide by minimum patch size to coarsen
+      int_low=int_low*d_cellRefinementRatio[l]/d_minPatchSize[l+1];
+      int_high=Ceil(int_high*d_cellRefinementRatio[l].asVector()/d_minPatchSize[l+1].asVector());
       //for overlapping cells
       for (CellIterator iter(int_low, int_high); !iter.done(); iter++)
       {
