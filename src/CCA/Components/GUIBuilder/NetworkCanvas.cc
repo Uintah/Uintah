@@ -275,7 +275,7 @@ void NetworkCanvas::Connect(PortIcon* usesPortIcon)
                          p->GetParent()->GetComponentInstance(),
                          p->GetPortName());
       if (connID.isNull()) {
-        builderWindow->DisplayErrorMessage("Connection failed.");
+        builderWindow->DisplayErrorMessage(wxT("Connection failed."));
       } else {
         Connection *con = new Connection(usesPortIcon, p, connID);
         connections.insert(std::make_pair(usesPortIcon, con));
@@ -439,7 +439,7 @@ void NetworkCanvas::Clear()
   // show warning if not all component instances were destroyed
   if (ret != destroyCount) {
     // get error message?
-    builderWindow->DisplayErrorMessage("Not all component instances were destroyed by the framework.");
+    builderWindow->DisplayErrorMessage(wxT("Not all component instances were destroyed by the framework."));
   }
 }
 

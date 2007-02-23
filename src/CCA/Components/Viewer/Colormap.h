@@ -50,7 +50,7 @@ namespace Viewer {
 class Colormap : public wxPanel {
 public:
   // type = Gray | Color
-  Colormap(wxWindow *parent, const wxString& type = "Gray", double min = 0.0, double max = 1.0);
+  Colormap(wxWindow *parent, const wxString& type = wxT("Gray"), double min = 0.0, double max = 1.0);
 
   void setValues(double min, double max);
   void setType(const wxString& type);

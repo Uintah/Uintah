@@ -30,7 +30,7 @@
  * ComponentWizardHelper.cc
  *
  * Written by:
- *  Ashwin Deepak Swaminathan  
+ *  Ashwin Deepak Swaminathan
  *  Scientific Computing and Imaging Institute
  *  University of Utah
  *  August 2006
@@ -48,7 +48,12 @@ namespace GUIBuilder {
 using namespace SCIRun;
 
 
-ComponentWizardHelper::ComponentWizardHelper(const sci::cca::GUIBuilder::pointer& bc, const std::string cName,const std::string cdName,const std::vector <PortDescriptor*> ppList,const std::vector <PortDescriptor*> upList,const bool isWithSidl)
+ComponentWizardHelper::ComponentWizardHelper(const sci::cca::GUIBuilder::pointer& bc,
+                                             const std::string cName,
+                                             const std::string cdName,
+                                             const std::vector <PortDescriptor*> ppList,
+                                             const std::vector <PortDescriptor*> upList,
+                                             const bool isWithSidl)
     :builder(bc),compName(cName),compDirName(cdName),providesPortsList(ppList),usesPortsList(upList),isWithSidl(isWithSidl)
 {
 }
@@ -74,7 +79,7 @@ void ComponentWizardHelper::createComponent()
       //  std::string tmpDir = getTempDirName();
 //   Dir temp(tmpDir);
 //   if((temp.exists())&&(isPreviewed)) {
-      
+
 //       destDir = Dir(compDirName + ComponentSkeletonWriter::DIR_SEP + compName + std::string(".h") );
 //       temp.copy("tempheader.txt", destDir);
 //       destDir = Dir(compDirName + ComponentSkeletonWriter::DIR_SEP + compName + std::string(".cc") );
@@ -97,9 +102,8 @@ void ComponentWizardHelper::createComponent()
       newComponent.generate(sopf,sosf,somf);
     //}
 }
-void ComponentWizardHelper::previewCode(std::string &sopf,std::string &sosf,std::string &somf, std::string &sosidlf)
+void ComponentWizardHelper::previewCode(std::string &sopf, std::string &sosf, std::string &somf, std::string &sosidlf)
 {
-  
   isPreviewed=true;
   std::string tmpDir = getTempDirName();
   Dir d1 = Dir(tmpDir);
@@ -111,11 +115,12 @@ void ComponentWizardHelper::previewCode(std::string &sopf,std::string &sosf,std:
   somf = tmpDir + ComponentSkeletonWriter::DIR_SEP + "tempsubmake.txt";
   sosidlf = tmpDir + ComponentSkeletonWriter::DIR_SEP + "tempsidl.txt";
   ComponentSkeletonWriter newComponent(compName,compDirName, providesPortsList,usesPortsList,isWithSidl);
-  if(isWithSidl)
+  if (isWithSidl)
     newComponent.GenerateWithSidl(sopf,sosf,somf,sosidlf);
   else
     newComponent.generate(sopf,sosf,somf);
 }
+
 std::string ComponentWizardHelper::getTempDirName()
 {
   std::string tmp(builder->getConfigDir());
