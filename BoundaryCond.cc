@@ -24,6 +24,8 @@
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
 
+//#define TEST
+#undef TEST
 using namespace Uintah;
 namespace Uintah {
 
@@ -141,6 +143,61 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       } // if (bc_kind !=notSet)
     } // child loop
   }  // face loop
+  
+ /*`==========TESTING==========*/
+#ifdef TEST
+  //__________________________________
+  // On the fine levels at the coarse fine interface 
+  // set A_(t,b,e,w,n,s) = c1 * A_(*)_org.
+  // We are assuming that the change in pressure impDelP is linearly interpolated
+  // between the coarse cell and the fine cell 
+  BC_dbg << *patch << " ";
+  patch->printPatchBCs(BC_dbg);
+
+  if(patch->hasCoarseFineInterfaceFace() ){  
+    cout << " Matrix BC at coarse/Fine interfaces " << endl;
+    //__________________________________
+    // Iterate over coarsefine interface faces
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+
+      const Level* fineLevel = patch->getLevel();
+      const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+      
+      IntVector cl, ch, fl, fh;
+      getCoarseFineFaceRange(patch, coarseLevel, face, 1, cl, ch, fl, fh);
+ 
+ 
+      IntVector refineRatio = fineLevel->getRefinementRatio();
+      Vector D = (refineRatio.asVector() + Vector(1))/Vector(2.0);
+      
+      //Vector C1 = Vector(1.0)/refineRatio.asVector();
+      
+      Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
+      Vector C2 = Vector(1.0) - C1;
+      
+      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      
+      IntVector offset = patch->faceDirection(face);
+      
+      
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        f_cell =  f_cell - offset;
+        A[f_cell].p += A[f_cell][face];
+        
+        A[f_cell][face] = C2[P_dir] * A[f_cell][face];
+        
+        A[f_cell].p -= A[f_cell][face];
+      }
+    }  // face loop 
+  }  // patch has coarse fine interface 
+#endif 
+/*===========TESTING==========`*/
+  
+  
 }
 
 
@@ -232,38 +289,36 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
 
       constCCVariable<double> imp_delP_coarse;
       new_dw->getRegion(imp_delP_coarse, label, 0, coarseLevel,cl, ch);
- #if 1 
+#ifndef TEST
       // piece wise constant 
       for(CellIterator iter(fl,fh); !iter.done(); iter++){
         IntVector f_cell = *iter;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
         imp_delP[f_cell] =  imp_delP_coarse[c_cell];
       }
- #endif
- #if 0     
-      IntVector oneCell = patch->faceDirection(face);
-      IntVector R = fineLevel->getRefinementRatio();
-      int P_dir = patch->faceAxes(face)[0];  //principal dir.
-      Vector dx = patch->dCell();
+#endif
+/*`==========TESTING==========*/
+#ifdef TEST
+      IntVector refineRatio = fineLevel->getRefinementRatio();
+      IntVector offset = patch->faceDirection(face);
       
+      Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
+      Vector C2 = Vector(1.0) - C1;
+      
+      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      
+      cout << " using linear Interpolation for impDelP " << endl;;
+     
       for(CellIterator iter(fl,fh); !iter.done(); iter++){
         IntVector f_cell = *iter;
-        IntVector f_adj  = f_cell - oneCell;
-        double normDX = 2.0/(R[P_dir] + 1);
-        
+        IntVector f_adj  = f_cell - offset;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-        imp_delP[f_cell] = imp_delP_coarse[c_cell] * (normDX)
-                         + imp_delP[f_adj] * (1.0 - normDX);  
-                         
-        cout << " face " << patch->getFaceName(face) << " f_cell " << f_cell << " f_adj " << f_adj 
-             << " c_cell " << c_cell << " normDX "<< normDX << endl;
-             
-             
-        cout << " 1 " <<    imp_delP_coarse[c_cell] * (1.0 - normDX)
-             << " 2 " <<    imp_delP[f_adj] * normDX
-             << " 3 " <<    imp_delP[f_cell] << endl;  
+        imp_delP[f_cell] =  C2[P_dir] * imp_delP_coarse[c_cell] +
+                            C1[P_dir] * imp_delP[f_adj];
       }
-#endif
+      
+#endif 
+/*===========TESTING==========`*/
     }  // face loop 
   }  // patch has coarse fine interface 
 }
