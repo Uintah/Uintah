@@ -70,17 +70,17 @@ public:
     ID_MENUTREE_HIGHEST = ID_MENU_COMPONENTS + 1,
   };
 
-  MenuTree(BuilderWindow* bw, const std::string &url);
+  MenuTree(BuilderWindow* bw, const wxString &url);
   virtual ~MenuTree();
 
-  void add(const std::vector<std::string>& name,
+  void add(const std::vector<wxString>& name,
            int nameindex,
            const sci::cca::ComponentClassDescription::pointer& desc,
-           const std::string& fullname);
+           const wxString& fullname);
   void coalesce();
   void populateMenu(wxMenu* menu);
   void clear();
-  const std::string& getURL() const { return url; }
+  const wxString& getURL() const { return url; }
   int getID() const { return id; }
 
   void OnInstantiateComponent(wxCommandEvent& event);
@@ -89,15 +89,15 @@ public:
 private:
   BuilderWindow* builderWindow;
   sci::cca::ComponentClassDescription::pointer cd;
-  std::map<std::string, MenuTree*> child;
-  std::string url;
+  std::map<wxString, MenuTree*> child;
+  wxString url;
   int id;
 };
 
 class BuilderWindow : public wxFrame {
 public:
   //typedef std::map<std::string, int> IntMap;
-  typedef std::map<std::string, MenuTree*> MenuTreeMap;
+  typedef std::map<wxString, MenuTree*> MenuTreeMap;
   typedef std::map<int, wxMenu*> MenuMap;
   typedef SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ClassDescriptionList;
 
@@ -219,6 +219,8 @@ private:
   void doSaveAs();
   void setDefaultText();
 };
+
+std::vector<wxString> split_string(const wxString& str, char sep);
 
 }
 

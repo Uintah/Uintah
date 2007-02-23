@@ -64,11 +64,11 @@ Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID:
   //setConnection();
   // set color
   if (possibleConnection) {
-    color = wxTheColourDatabase->Find("BLACK");
+    color = wxTheColourDatabase->Find(wxT("BLACK"));
   } else {
     color = pUses->GetPortColor();
   }
-  hColor = wxTheColourDatabase->Find("WHITE");
+  hColor = wxTheColourDatabase->Find(wxT("WHITE"));
 }
 
 Connection::~Connection()

@@ -65,17 +65,17 @@ XMLPathDialog::XMLPathDialog(wxWindow* parent,
   // The framework should have a way to query available component models
   // from a factory (available through the builder).
   // A dialog shouldn't know this much about framework's component models.
-  componentModels.Add("CCA");
+  componentModels.Add(wxT("CCA"));
   // SCIRun Dataflow is discovered using SCIRun packages.
 #if HAVE_BABEL
-  componentModels.Add("Babel");
+  componentModels.Add(wxT("Babel"));
 #endif
 #if HAVE_VTK
-  componentModels.Add("VTK");
+  componentModels.Add(wxT("VTK"));
 #endif
 #if HAVE_TAO
-  componentModels.Add("CORBA");
-  componentModels.Add("Tao");
+  componentModels.Add(wxT("CORBA"));
+  componentModels.Add(wxT("Tao"));
 #endif
 
   SetLayout();
@@ -87,7 +87,7 @@ XMLPathDialog::XMLPathDialog(wxWindow* parent,
 
 void XMLPathDialog::OnFilePath(wxCommandEvent& event)
 {
-  wxDirDialog dDialog(this, wxT("Choose component XML path"), GUIBuilder::DEFAULT_SRC_DIR);
+  wxDirDialog dDialog(this, wxT("Choose component XML path"), STLTowxString(GUIBuilder::DEFAULT_SRC_DIR));
   if (dDialog.ShowModal() == wxID_OK) {
     fpTextCtrl->SetValue(dDialog.GetPath());
   }
@@ -141,14 +141,14 @@ void XMLPathDialog::SetLayout()
 void XMLPathDialog::setTextCtrl(wxBoxSizer& sizer, const int flags)
 {
 
-  fpTextCtrl = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition,
+  fpTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition,
                               wxSize(320, wxDefaultSize.GetHeight()));
   fpTextCtrl->SetToolTip(wxT("Use the 'Get XML directory' button to set the directory with the component description XML file or enter the directory path here."));
 
   wxTextValidator val(wxFILTER_EXCLUDE_LIST, &filePath);
   wxArrayString valExcludes;
-  valExcludes.Add("!");
-  valExcludes.Add("%");
+  valExcludes.Add(wxT("!"));
+  valExcludes.Add(wxT("%"));
   val.SetExcludes(valExcludes);
   fpTextCtrl->SetValidator(val);
   sizer.Add(fpTextCtrl, 1, flags, 2);

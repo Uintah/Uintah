@@ -37,10 +37,6 @@
  *
  */
 
-
-//#include <wx/region.h>
-//#include <wx/dc.h>
-
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h> // color database
 #include <wx/stattext.h>
@@ -62,10 +58,9 @@ namespace GUIBuilder {
 using namespace SCIRun;
 
 BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
-  EVT_RIGHT_UP(ComponentIcon::OnRightClick) // show popup menu
-  EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
-  EVT_LEFT_UP(ComponentIcon::OnLeftUp)
-  EVT_MOTION(ComponentIcon::OnMouseMove)
+  //EVT_LEFT_DOWN(ComponentIcon::OnLeftDown)
+  //EVT_LEFT_UP(ComponentIcon::OnLeftUp)
+  //EVT_MOTION(ComponentIcon::OnMouseMove)
   EVT_MENU(ID_MENU_GO, ComponentIcon::OnGo)
   EVT_MENU(ID_MENU_DELETE, ComponentIcon::OnDelete)
   EVT_BUTTON(ID_BUTTON_UI, ComponentIcon::OnUI)
@@ -73,7 +68,7 @@ BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
 
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
-const wxString ComponentIcon::INIT_TIME("0.0");
+const wxString ComponentIcon::INIT_TIME(wxT("0.0"));
 
 ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
                              wxWindowID winid,
@@ -119,7 +114,8 @@ bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& po
     return false;
   }
 
-  SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "", wxFONTENCODING_SYSTEM));
+  SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL,
+                 false, wxEmptyString, wxFONTENCODING_SYSTEM));
 
   SetLayout();
   //SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
@@ -333,7 +329,7 @@ void ComponentIcon::OnGo(wxCommandEvent& event)
   double start = Time::currentSeconds();
   /*int status = */builder->go(goPortName);
   double time = Time::currentSeconds() - start;
-  timeLabel->SetLabel(wxString::Format("%.3f", time));
+  timeLabel->SetLabel(wxString::Format(wxT("%.3f"), time));
 }
 
 void ComponentIcon::OnInfo(wxCommandEvent& event)
@@ -410,13 +406,18 @@ void ComponentIcon::SetLayout()
 
   const wxSize UI_SIZE(30, 30);
   uiButton = new wxButton(this, ID_BUTTON_UI, wxT("UI"), wxDefaultPosition, UI_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
-  gridBagSizer->Add(uiButton, wxGBPosition(0, 1), /* wxDefaultSpan */ wxGBSpan(2, 1),
+  gridBagSizer->Add(uiButton, wxGBPosition(0, 1), wxGBSpan(2, 1),
                     wxFIXED_MINSIZE|wxALIGN_CENTER, BORDER_SIZE);
   if (! hasUIPort) {
     uiButton->Enable(false);
   }
 
-  label = new wxStaticText(this, wxID_ANY, cid->getInstanceName(), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
+  label = new wxStaticText(this,
+                           wxID_ANY,
+                           STLTowxString(cid->getInstanceName()),
+                           wxDefaultPosition,
+                           wxDefaultSize,
+                           wxALIGN_LEFT);
   gridBagSizer->Add(label, wxGBPosition(0, 2), wxGBSpan(1, 2), wxALL|wxALIGN_CENTER, BORDER_SIZE);
 
   timeLabel = new wxStaticText(this, wxID_ANY, INIT_TIME, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
@@ -498,8 +499,10 @@ void ComponentIcon::SetPortIcons()
       if (type == GUIBuilder::UIPORT ||
           type == GUIBuilder::GOPORT ||
           type == GUIBuilder::COMPONENTICONUI_PORT) {
-        canvas->GetBuilderWindow()->DisplayMessage(GetComponentInstanceName() +
-          " should provide, and not use, ports of type " + type);
+        wxString msg = STLTowxString(GetComponentInstanceName());
+        msg += wxT(" should provide, and not use, ports of type ");
+        msg += STLTowxString(type);
+        canvas->GetBuilderWindow()->DisplayMessage(msg);
         continue;
       }
 

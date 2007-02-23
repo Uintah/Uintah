@@ -81,7 +81,7 @@ FRPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes,
     return 1;
   }
 
-  std::ifstream is(fn);
+  std::ifstream is(wxToSTLString(fn).c_str());
   nodes.clear();
   boundaries.clear();
   dirichletNodes.clear();
@@ -120,7 +120,7 @@ FRPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes,
         is >> value;
         dirichletValues.push_back(value);
       }
-    } else if (name=="end") {
+    } else if (name == "end") {
       break;
     }
   }
