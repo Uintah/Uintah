@@ -472,7 +472,7 @@ void setBC(T& vel_FC,
 /* --------------------------------------------------------------------- 
  Function~  set_CFI_BC--      
  Purpose~  set the boundary condition at the coarse fine interface.  Use
-  A Taylor's series expansion
+  A Taylor's series expansion using only fine level data
  ---------------------------------------------------------------------  */
 template <class T>
 void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)        
@@ -507,18 +507,8 @@ void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)
             
         T correction =  q_CC[f_cell] - q_new; 
         q_CC[f_cell] = q_new;
-       
-        cout << " face " << patch->getFaceName(face) 
-             << " f_cell " << f_cell 
-             << " f_adj " << f_adj
-             << " f_adj2 " << f_adj2 
-             << " grad_q " << grad_q << endl;
-             
-             
-        cout << " q_CC " << q_CC[f_cell] << " correction " << correction << endl;  
       }
     }  // face loop
-     
   }  // patch has coarse fine interface 
 }
 } // End namespace Uintah
