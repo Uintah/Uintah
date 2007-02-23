@@ -85,7 +85,7 @@ WARNING
     queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
     stack<int> tags_;							  //available tags
     PatchFixer patchfixer_;         //Fixup class
-    IntVector d_minPatchSize;       //minimum patch size in each dimension
+    SizeList d_minPatchSize;       //minimum patch size in each dimension
 
     //request handeling variables
     vector<MPI_Request> requests_;    //MPI requests
