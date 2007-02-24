@@ -66,8 +66,22 @@ ifeq ($(HAVE_WX),yes)
   LIBS += $(WX_LIBRARY)
 endif
 
+$(FWK_EXE).app: $(FWK_EXE) $(SRCTOP)/scripts/scijump/Info.plist.in $(SRCTOP)/scripts/scijump/wxmac.icns
+	mkdir -p $(FWK_EXE).app/Contents
+	mkdir -p $(FWK_EXE).app/Contents/MacOS
+	mkdir -p $(FWK_EXE).app/Contents/Resources
+	cp -f $(SRCTOP)/scripts/scijump/Info.plist.in $(FWK_EXE).app/Contents/Info.plist
+	echo -n "APPL????" >$(FWK_EXE).app/Contents/PkgInfo
+	ln -f $(FWK_EXE) $(FWK_EXE).app/Contents/MacOS/$(FWK_EXE)
+	cp -f $(SRCTOP)/scripts/scijump/wxmac.icns $(FWK_EXE).app/Contents/Resources/wxmac.icns
+#sed -e "s/IDENTIFIER/`echo $(SRCTOP) | sed -e 's,\.\./,,g' | sed -e 's,/,.,g'`/" \ -e "s/EXECUTABLE/splitter/" \ -e "s/VERSION/$(FWK_VERSION)/" \ $(SRCTOP)/scripts/scijump/Info.plist.in >$(FWK_EXE).app/Contents/Info.plist
+
+
 PROGRAM := $(FWK_EXE)
 SRCS := $(SRCDIR)/main.cc
+ifeq ($(OS_NAME),Darwin)
+  ALLTARGETS := $(ALLTARGETS) $(FWK_EXE).app
+endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ########################################################################
