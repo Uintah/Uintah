@@ -51,6 +51,8 @@
 #include <wx/string.h>
 #include <wx/strconv.h>
 
+#include <string>
+
 wxString STLTowxString(const std::string& s);
 std::string wxToSTLString(const wxString& wxs);
 
