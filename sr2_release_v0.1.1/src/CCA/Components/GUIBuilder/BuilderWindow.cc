@@ -247,8 +247,8 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, -1 };
   statusBar->SetStatusWidths(2, statusBarWidths);
+#endif
   statusBar->SetStatusText(wxT("SCIJump started"), 0);
-
   return true;
 }
 
@@ -295,7 +295,7 @@ ComponentIcon* BuilderWindow::GetComponentIcon(const std::string& instanceName)
 void BuilderWindow::DisplayMessage(const wxString& line)
 {
   // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  wxStreamToTextRedirector redirect(textCtrl);
+  //wxStreamToTextRedirector redirect(textCtrl);
   *textCtrl << line << wxT("\n");
 }
 
@@ -303,14 +303,14 @@ void BuilderWindow::DisplayErrorMessage(const wxString& line)
 {
   textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
   // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  wxStreamToTextRedirector redirect(textCtrl);
+  //wxStreamToTextRedirector redirect(textCtrl);
   *textCtrl << line << wxT("\n");
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
 void BuilderWindow::DisplayMessages(const std::vector<wxString>& lines)
 {
-  wxStreamToTextRedirector redirect(textCtrl);
+  //wxStreamToTextRedirector redirect(textCtrl);
 
   for (std::vector<wxString>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
     *textCtrl << *iter << wxT("\n");
@@ -403,14 +403,14 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
   // need to save current app if user agrees and clear
   wxBusyCursor wait;
-  wxString wildcard = GUIBuilder::APP_EXT_WILDCARD;
+  wxString wildcard = STLTowxString(GUIBuilder::APP_EXT_WILDCARD);
   wxFileDialog fDialog(this,
                        wxT("Open application file"),
-                       GUIBuilder::DEFAULT_OBJ_DIR,
+                       STLTowxString(GUIBuilder::DEFAULT_OBJ_DIR),
                        wxEmptyString,
                        wildcard,
                        wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
-  statusBar->SetStatusText("Loading application file", 0);
+  statusBar->SetStatusText(wxT("Loading application file"), 0);
 
   if (fDialog.ShowModal() == wxID_OK) {
     wxString path = fDialog.GetPath();
@@ -418,7 +418,7 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
     SSIDL::array1<sci::cca::ConnectionID::pointer> connList;
 
     //Read XML and loads components and connections using BuilderService:
-    builder->loadApplication(path.c_str(), cidList, connList);
+    builder->loadApplication(wxToSTLString(path), cidList, connList);
 
     //Graphical parts of loading:
     for (SSIDL::array1<sci::cca::ComponentID::pointer>::iterator cidIter = cidList.begin();
@@ -438,9 +438,9 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
 
     }
 
-    statusBar->SetStatusText("Application file loaded", 0);
+    statusBar->SetStatusText(wxT("Application file loaded"), 0);
   } else {
-    statusBar->SetStatusText("", 0);
+    statusBar->SetStatusText(wxEmptyString, 0);
   }
 }
 
@@ -554,7 +554,7 @@ void BuilderWindow::SetMenus()
 {
   // The "About" item should be in the help menu
   wxMenu *helpMenu = new wxMenu();
-  helpMenu->Append(wxID_ABOUT, wxT("&About...\tF1"), wxT("Show about dialog"));
+  helpMenu->Append(wxID_ABOUT, wxT("&About..."), wxT("Show about dialog"));
 
   wxMenu* compWizardMenu = new wxMenu(wxEmptyString, wxMENU_TEAROFF);
   compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
@@ -746,7 +746,7 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
 void BuilderWindow::setDefaultText()
 {
   std::vector<wxString> v;
-  wxString ver = wxT("SCIJump v") + STLTowxString(SR2_VERSION);
+  wxString ver = wxT("SCIJump v") + STLTowxString(SCIJUMP_VERSION);
   wxString u = wxT("Framework URL: ") + STLTowxString(url.c_str());
   v.push_back(ver);
   v.push_back(u);
@@ -757,16 +757,16 @@ void BuilderWindow::setDefaultText()
 void BuilderWindow::doSaveAs()
 {
   wxBusyCursor wait;
-  wxString wildcard(GUIBuilder::APP_EXT_WILDCARD);
-  wxString extension(GUIBuilder::APP_EXT);
+  wxString wildcard = STLTowxString(GUIBuilder::APP_EXT_WILDCARD);
+  wxString extension = STLTowxString(GUIBuilder::APP_EXT);
   wxFileDialog fDialog(this,
                        wxT("Save application file"),
-                       GUIBuilder::DEFAULT_OBJ_DIR,
+                       STLTowxString(GUIBuilder::DEFAULT_OBJ_DIR),
                        wxEmptyString,
                        wildcard,
                        wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
 
-  statusBar->SetStatusText("Saving application file", 0);
+  statusBar->SetStatusText(wxT("Saving application file"), 0);
   if(fDialog.ShowModal() == wxID_OK) {
     wxString path = fDialog.GetPath();
     wxString name = fDialog.GetFilename();
@@ -774,10 +774,10 @@ void BuilderWindow::doSaveAs()
       path.Append('.');
       path.Append(extension);
     }
-    builder->saveApplication(path.c_str());
-    statusBar->SetStatusText("Application file saved", 0);
+    builder->saveApplication(wxToSTLString(path));
+    statusBar->SetStatusText(wxT("Application file saved"), 0);
   } else {
-    statusBar->SetStatusText("", 0);
+    statusBar->SetStatusText(wxEmptyString, 0);
   }
 }
 

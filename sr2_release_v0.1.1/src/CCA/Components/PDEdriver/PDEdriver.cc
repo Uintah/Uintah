@@ -116,7 +116,7 @@ int PDEGoPort::go()
     pdePort = pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
@@ -128,7 +128,7 @@ int PDEGoPort::go()
     meshPort = pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   meshPort->triangulate(nodes, boundries, triangles);
@@ -140,7 +140,7 @@ int PDEGoPort::go()
     fem_matrixPort = pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   fem_matrixPort->makeFEMmatrices(triangles, nodes,
@@ -154,7 +154,7 @@ int PDEGoPort::go()
     linsolverPort = pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   guiService->updateProgress(cid, 30);

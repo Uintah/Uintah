@@ -38,7 +38,8 @@ SRCS     += \
 
 PSELIBS  := \
             Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
-            Core/Thread Core/Containers Core/Exceptions
+            Core/Thread Core/Containers Core/Exceptions \
+            CCA/Components/GUIBuilder
 
 LIBS := $(WX_LIBRARY)
 

@@ -856,7 +856,7 @@ void GUIBuilder::loadApplication(const std::string& filename, SSIDL::array1<sci:
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
