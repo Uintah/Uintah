@@ -153,6 +153,14 @@ PROGRAM := Packages/Uintah/StandAlone/timeextract
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# faceextract
+
+SRCS := $(SRCDIR)/faceextract.cc
+PROGRAM := Packages/Uintah/StandAlone/faceextract
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # extractV
 
 SRCS := $(SRCDIR)/extractV.cc
@@ -407,6 +415,7 @@ uintah: sus \
         gambitFileReader \
         lineextract \
         timeextract \
+        faceextract \
         link_inputs \
         link_regression_tester
 
@@ -518,5 +527,7 @@ pfs: prereqs Packages/Uintah/StandAlone/pfs
 pfs2: prereqs Packages/Uintah/StandAlone/pfs2
 
 timeextract: Packages/Uintah/StandAlone/timeextract
+
+faceextract: Packages/Uintah/StandAlone/faceextract
 
 lineextract: Packages/Uintah/StandAlone/lineextract
