@@ -87,16 +87,8 @@ WARNING
         double   w;
 	double   Gamma;
 	
-	/* The following used only in TST::computeRhoMicro */
-	double   Pressure;
-	double   Temperature;
-	double   SpecificHeat;
-	double   IL, IR;
-
-	double func(double rhoM);
-	double deri(double rhoM);
-	void   setInterval(double f, double rhoM);
-
+	/* The following are constants */
+	double bb, bu, bw, bbuw, b1uw, bbuwuw, bubw, ab;
       };
 } // End namespace Uintah
       
