@@ -398,8 +398,10 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 	      
 	      if(burning == 0 && pFlag[cell] <= BP){
 		for (int m = 0; m < numAllMatls; m++){
-		  if(vol_frac_CC[m][cell] > 0.3 && temp_CC[m][cell] > ignitionTemp)   
+		  if(vol_frac_CC[m][cell] > 0.3 && temp_CC[m][cell] > ignitionTemp){
 		    burning = 1;
+		    break;
+		  }
 		}
 	      }//endif
 
