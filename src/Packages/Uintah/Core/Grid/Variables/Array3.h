@@ -198,7 +198,10 @@ WARNING
     }    
       
     IntVector size() const {
-      return d_window->getData()->size();
+      if (d_window)
+        return d_window->getData()->size();
+      else
+        return IntVector(0,0,0);
     }
     void initialize(const T& value) {
       d_window->initialize(value);
