@@ -43,6 +43,44 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
 
 }
 
+TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
+{
+  d_box = copy.d_box;
+  d_points = copy.d_points;
+  d_tri = copy.d_tri;
+  d_planes = copy.d_planes;
+  d_boxes = copy.d_boxes;
+
+  d_grid = scinew UniformGrid(*copy.d_grid);
+
+}
+
+TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  // Clean out lhs
+
+  d_points.clear();
+  d_tri.clear();
+  d_planes.clear();
+  d_boxes.clear();
+
+  delete d_grid;
+
+  // Copy the rhs stuff
+  d_box = rhs.d_box;
+  d_points = rhs.d_points;
+  d_tri = rhs.d_tri;
+  d_planes = rhs.d_planes;
+  d_boxes = rhs.d_boxes;
+
+  d_grid = scinew UniformGrid(*rhs.d_grid);
+
+  return *this;
+}
+
 TriGeometryPiece::~TriGeometryPiece()
 {
   delete d_grid;
@@ -417,6 +455,33 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
     SH = NSH;
   }
   
-  
-  
+}
+
+
+void TriGeometryPiece::scale(const double factor)
+{
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end(); 
+       itr++) {
+    *itr *= factor;
+  }
+}
+
+double TriGeometryPiece::surfaceArea() const
+{
+
+  double surfaceArea = 0.;
+  for (vector<IntVector>::const_iterator itr = d_tri.begin(); 
+       itr != d_tri.end(); itr++) {
+    Point pt[3];
+    pt[0] = d_points[itr->x()];
+    pt[1] = d_points[itr->y()];
+    pt[2] = d_points[itr->z()];
+    Vector v[2];
+    v[0] = pt[0].asVector() - pt[1].asVector();
+    v[1] = pt[2].asVector() - pt[1].asVector();
+
+    Vector area = Cross(v[0],v[1]);
+    surfaceArea += .5 * area.length();
+  }
+  return surfaceArea;
 }
