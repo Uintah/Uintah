@@ -115,11 +115,55 @@ Plane Tri::plane()
 
 UniformGrid::UniformGrid(Box& bound_box)
 {
-  IntVector low(0,0,0), hi(10,10,10);
+  const IntVector low(0,0,0), hi(10,10,10);
   Vector diff = Vector(hi.x(),hi.y(),hi.z()) - Vector(low.x(),low.y(),low.z());
   d_bound_box = bound_box;
   d_max_min = (bound_box.upper().asVector()-bound_box.lower().asVector())/diff;
   d_grid.resize(low,hi);
+}
+
+UniformGrid::UniformGrid(const UniformGrid& copy)
+{
+  d_bound_box = copy.d_bound_box;
+  d_max_min = copy.d_max_min;
+
+  d_grid.resize(copy.d_grid.getLowIndex(),copy.d_grid.getHighIndex());
+  for (Array3<list<Tri> >::const_iterator gridIter = copy.d_grid.begin();
+       gridIter != copy.d_grid.end(); gridIter++) {
+    IntVector index = gridIter.getIndex();
+    d_grid[index] = copy.d_grid[index];
+  }
+  
+}
+
+
+UniformGrid& UniformGrid::operator=(const UniformGrid& rhs) 
+{
+  if (this == &rhs)
+    return *this;
+
+  cout << "d_grid size = " << d_grid.size() << endl;
+  if (d_grid.size() != IntVector(0,0,0) ) {
+    // Delete the lhs stuff grid and copy the rhs to it
+    for (Array3<list<Tri> >::iterator gridIter = d_grid.begin();
+         gridIter != d_grid.end(); gridIter++) {
+      IntVector index = gridIter.getIndex();
+      d_grid[index].clear();
+    }
+  }
+
+  d_grid.resize(rhs.d_grid.getLowIndex(),rhs.d_grid.getHighIndex());
+  
+  d_bound_box = rhs.d_bound_box;
+  d_max_min = rhs.d_max_min;
+  
+  for (Array3<list<Tri> >::const_iterator gridIter = rhs.d_grid.begin();
+       gridIter != rhs.d_grid.end(); gridIter++) {
+    IntVector index = gridIter.getIndex();
+    d_grid[index] = rhs.d_grid[index];
+  }
+   
+  return *this;
 }
 
 UniformGrid::~UniformGrid()
