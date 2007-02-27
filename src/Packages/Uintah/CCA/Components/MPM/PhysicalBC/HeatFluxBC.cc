@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/TriGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
 
@@ -36,6 +37,9 @@ HeatFluxBC::HeatFluxBC(ProblemSpecP& ps)
   } else if (go_type == "cylinder") {
     d_surface = new CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
+  } else if (go_type == "tri") {
+    d_surface = new TriGeometryPiece(child);
+    d_surfaceType = "tri";
   } else {
     throw ParameterNotFound("** ERROR ** No surface specified for heatflux BC.",
                             __FILE__, __LINE__);
@@ -105,6 +109,20 @@ HeatFluxBC::flagMaterialPoint(const Point& p,
     if (volume->inside(p)) flag = true;
     delete volume;
 
+  } else if (d_surfaceType == "tri") {
+    // Create a spherical shell with radius-|dxpp|, radius+|dxpp|
+    double tol = dxpp.length();
+    TriGeometryPiece* tgp = dynamic_cast<TriGeometryPiece*>(d_surface);
+    TriGeometryPiece* outer = new TriGeometryPiece(*tgp);
+    outer->scale(1.+tol);
+    
+    TriGeometryPiece* inner = new TriGeometryPiece(*tgp);             
+    inner->scale(1.-tol);
+
+    GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
+    if (volume->inside(p)) flag = true;
+    delete volume;
+
   } else {
     throw ParameterNotFound("** ERROR ** Unknown surface specified for heatflux BC",
                             __FILE__, __LINE__);
@@ -127,6 +145,9 @@ HeatFluxBC::getSurfaceArea() const
     area = gp->surfaceArea();
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
+    area = gp->surfaceArea();
+  } else if (d_surfaceType == "tri") {
+    TriGeometryPiece* gp = dynamic_cast<TriGeometryPiece*>(d_surface);
     area = gp->surfaceArea();
   } else {
     throw ParameterNotFound("** ERROR ** Unknown surface specified for heatflux BC",
