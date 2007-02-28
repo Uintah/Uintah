@@ -503,17 +503,20 @@ void RegridderCommon::scheduleDilation(const LevelP& level)
   //IntVector delete_depth=d_cellDeletionDilation;
 
 #if 1
-  //scale regrid dilation according to level
-  int max_level=grid->numLevels()-2;
-  int my_level=level->getIndex();
-    
-  Vector div(1,1,1);
-  //calculate divisor
-  for(int i=max_level;i>my_level;i--)
+  if(d_sharedState->d_lockstepAMR)
   {
-    div=div*d_cellRefinementRatio[i-1].asVector();
+    //scale regrid dilation according to level
+    int max_level=min(grid->numLevels()-1,d_maxLevels-2);   //finest level that is dilated
+    int my_level=level->getIndex();
+    
+    Vector div(1,1,1);
+    //calculate divisor
+    for(int i=max_level;i>my_level;i--)
+    {
+      div=div*d_cellRefinementRatio[i-1].asVector();
+    }
+    regrid_depth=Ceil(regrid_depth.asVector()/div);
   }
-  regrid_depth=Ceil(regrid_depth.asVector()/div);
 #endif  
   regrid_depth=regrid_depth+stability_depth;
   //create filters if needed
