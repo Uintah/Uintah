@@ -131,7 +131,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 
     //Fixup patchlist:  this forces neighbor constraints
     patchfixer_.FixUp(patch_sets[l+1]);
-     
+
     if(!d_loadBalance)
     {
       //Post fixup patchlist: this creates more patches as specified in the input file in order to improve load balance
@@ -581,8 +581,8 @@ void BNRRegridder::PostFixup(vector<Region> &patches)
     volume+=patches[p].getVolume();
   }
 
-  double volume_threshold=volume/(d_myworld->size()*d_patchRatioToTarget);
-
+  double volume_threshold=volume/d_myworld->size()*d_patchRatioToTarget;
+  
   //build a max heap
   make_heap(patches.begin(),patches.end(),Region::VolumeCompare());
  
