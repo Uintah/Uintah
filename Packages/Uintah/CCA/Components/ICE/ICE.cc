@@ -2829,7 +2829,8 @@ void ICE::computeTempFC(const ProcessorGroup*,
 _____________________________________________________________________*/
 template<class T> void ICE::computeVelFace(int dir, 
                                            CellIterator it,
-                                           IntVector adj_offset,double dx,
+                                           IntVector adj_offset,
+                                           double dx,
                                            double delT, double gravity,
                                            constCCVariable<double>& rho_CC,
                                            constCCVariable<double>& sp_vol_CC,
@@ -2838,6 +2839,8 @@ template<class T> void ICE::computeVelFace(int dir,
                                            T& vel_FC,
                                            T& grad_P_FC)
 {
+  double inv_dx = 1.0/dx;
+  
   for(;!it.done(); it++){
     IntVector R = *it;
     IntVector L = R + adj_offset; 
@@ -2853,7 +2856,7 @@ template<class T> void ICE::computeVelFace(int dir,
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
                              
-    grad_P_FC[R] = (press_CC[R] - press_CC[L])/dx;
+    grad_P_FC[R] = (press_CC[R] - press_CC[L]) * inv_dx;
     double term2 = delT * sp_vol_brack * grad_P_FC[R];
      
     //__________________________________
@@ -3007,13 +3010,16 @@ void ICE::computeVel_FC(const ProcessorGroup*,
  - tack on delP to the face centered velocity
 _____________________________________________________________________*/
 template<class T> void ICE::updateVelFace(int dir, CellIterator it,
-                                          IntVector adj_offset,double dx,
+                                          IntVector adj_offset,
+                                          double dx,
                                           double delT,
                                           constCCVariable<double>& sp_vol_CC,
                                           constCCVariable<double>& imp_delP,
                                           T& vel_FC,
                                           T& grad_dp_FC)
 {
+  double inv_dx = 1.0/dx;
+  
   for(;!it.done(); it++){
     IntVector R = *it;
     IntVector L = R + adj_offset; 
@@ -3023,7 +3029,7 @@ template<class T> void ICE::updateVelFace(int dir, CellIterator it,
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
     
-    grad_dp_FC[R] = (imp_delP[R] - imp_delP[L])/dx;
+    grad_dp_FC[R] = (imp_delP[R] - imp_delP[L])*inv_dx;
     double term2 = delT * sp_vol_brack * grad_dp_FC[R];
     
     vel_FC[R] -= term2;
@@ -3403,7 +3409,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
-    double vol    = dx.x()*dx.y()*dx.z(); 
+    double inv_vol    = 1.0/(dx.x()*dx.y()*dx.z()); 
     
     bool newGrid = d_sharedState->isRegridTimestep();
     Advector* advector = d_advector->clone(new_dw,patch,newGrid );   
@@ -3516,7 +3522,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
          IntVector c = *iter;
-         term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]/vol);
+         term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]* inv_vol);
         }
       }
          
@@ -3540,8 +3546,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      delP_MassX[c]    =  term1[c]/sumKappa[c];
-      delP_Dilatate[c] = -term2[c]/sumKappa[c];
+      double inv_sumKappa = 1.0/sumKappa[c];
+      delP_MassX[c]    =  term1[c] * inv_sumKappa;
+      delP_Dilatate[c] = -term2[c] * inv_sumKappa;
       press_CC[c]      =  press_equil[c] + delP_MassX[c] + delP_Dilatate[c];
       press_CC[c]      = max(1.0e-12, press_CC[c]);  // CLAMP
 //      delP_Dilatate[c] = press_CC[c] - delP_MassX[c] - press_equil[c];
@@ -5235,9 +5242,10 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       // the conserved ones.
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
+        double inv_mass_adv = 1.0/mass_adv[c];
         rho_CC[c]    = mass_adv[c] * invvol;
-        vel_CC[c]    = mom_adv[c]/ mass_adv[c];
-        sp_vol_CC[c] = sp_vol_adv[c]/mass_adv[c];
+        vel_CC[c]    = mom_adv[c]    * inv_mass_adv;
+        sp_vol_CC[c] = sp_vol_adv[c] * inv_mass_adv;
       }
 
       //__________________________________
