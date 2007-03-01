@@ -9,7 +9,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
 SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/NewStaticMixingTable.cc \
 		$(SRCDIR)/StandardTable.cc \
-		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc \
+		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec   \
