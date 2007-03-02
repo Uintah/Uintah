@@ -7,18 +7,20 @@
  *
  */
 
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/OS/Dir.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
+#include <Core/OS/Dir.h>
 
 #include <iostream>
 #include <fstream>
