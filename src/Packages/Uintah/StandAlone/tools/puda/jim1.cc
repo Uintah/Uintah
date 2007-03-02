@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/Standalone/tools/puda/jim1.h>
+#include <Packages/Uintah/StandAlone/tools/puda/jim1.h>
 
-#include <Packages/Uintah/Standalone/tools/puda/util.h>
+#include <Packages/Uintah/StandAlone/tools/puda/util.h>
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 

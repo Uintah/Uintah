@@ -354,8 +354,8 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     IveSetBC = true; 
     value = 0.0;  // so the debugging output is accurate 
   } 
-  return IveSetBC; 
 #endif
+  return IveSetBC; 
 }
 
 /* --------------------------------------------------------------------- 

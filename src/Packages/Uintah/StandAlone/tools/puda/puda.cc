@@ -31,7 +31,7 @@
  *
  */
 
-#include <Packages/Uintah/Standalone/tools/puda/puda.h>
+#include <Packages/Uintah/StandAlone/tools/puda/puda.h>
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -44,12 +44,12 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 
-#include <Packages/Uintah/Standalone/tools/puda/asci.h>
-#include <Packages/Uintah/Standalone/tools/puda/jim1.h>
-#include <Packages/Uintah/Standalone/tools/puda/rtdata.h>
-#include <Packages/Uintah/Standalone/tools/puda/tecplot.h>
-#include <Packages/Uintah/Standalone/tools/puda/util.h>
-#include <Packages/Uintah/Standalone/tools/puda/varsummary.h>
+#include <Packages/Uintah/StandAlone/tools/puda/asci.h>
+#include <Packages/Uintah/StandAlone/tools/puda/jim1.h>
+#include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
+#include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
+#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <Packages/Uintah/StandAlone/tools/puda/varsummary.h>
 
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
