@@ -1,13 +1,13 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/compare_mms
+SRCDIR := Packages/Uintah/StandAlone/tools/compare_mms
 
 SRCS := $(SRCDIR)/compare_mms.cc \
         $(SRCDIR)/ExpMMS.cc \
         $(SRCDIR)/LinearMMS.cc \
         $(SRCDIR)/SineMMS.cc 
 
-PROGRAM := Packages/Uintah/StandAlone/compare_mms/compare_mms
+PROGRAM := $(SRCDIR)/compare_mms
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah

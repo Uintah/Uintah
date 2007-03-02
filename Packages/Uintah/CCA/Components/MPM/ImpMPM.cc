@@ -65,9 +65,9 @@
 #include <math.h>
 
 #ifdef _WIN32
-#include <process.h>
-#include <float.h>
-#define isnan _isnan
+#  include <process.h>
+#  include <float.h>
+#  define isnan _isnan
 #endif
 
 using namespace Uintah;

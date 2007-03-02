@@ -15,10 +15,11 @@
 
 //#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
 //#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
-#include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
-#include <Packages/Uintah/StandAlone/compare_mms/ExpMMS.h>
-#include <Packages/Uintah/StandAlone/compare_mms/LinearMMS.h>
-#include <Packages/Uintah/StandAlone/compare_mms/SineMMS.h>
+
+#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/LinearMMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/SineMMS.h>
 
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
@@ -35,9 +36,10 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Math/MinMax.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Thread.h>
 

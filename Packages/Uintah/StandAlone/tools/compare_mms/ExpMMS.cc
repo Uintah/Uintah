@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/StandAlone/compare_mms/ExpMMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
 
 #include <math.h>
 

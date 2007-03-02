@@ -2,7 +2,7 @@
 #define UINTAH_COMPARE_MMS_ExpMMS_H
 
 
-#include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
 
 class ExpMMS : public MMS {
 

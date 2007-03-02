@@ -12,23 +12,25 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/OS/Dir.h>
-#include <Core/Containers/Array3.h>
 
-#include <iostream>
+#include <Core/Containers/Array3.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MinMax.h>
+#include <Core/OS/Dir.h>
+
+#include <algorithm>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iomanip>
+
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include <algorithm>
 
 using namespace SCIRun;
 using namespace std;

@@ -21,10 +21,10 @@
 #include <fcntl.h>
 
 #ifdef _WIN32
-#include <io.h>
+#  include <io.h>
 #else
-#include <sys/param.h>
-#include <unistd.h>
+#  include <sys/param.h>
+#  include <unistd.h>
 #endif
 
 using namespace std;
@@ -781,9 +781,9 @@ DataArchive::initVariable(const Patch* patch,
 // cache size to one, so that this condition is held.
 void
 DataArchive::turnOffXMLCaching() {
-  d_lock.lock();
+  //  d_lock.lock();
   getTopLevelVarHashMaps()->updateCacheSize(1);
-  d_lock.unlock();
+  //  d_lock.unlock();
 }
 
 // Sets the number of timesteps to cache back to the default_cache_size
