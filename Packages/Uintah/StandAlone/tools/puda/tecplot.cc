@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Standalone/tools/puda/tecplot.h>
+#include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>

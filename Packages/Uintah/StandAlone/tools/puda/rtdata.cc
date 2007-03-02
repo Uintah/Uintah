@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/Standalone/tools/puda/rtdata.h>
+#include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
 
-#include <Packages/Uintah/Standalone/tools/puda/util.h>
+#include <Packages/Uintah/StandAlone/tools/puda/util.h>
 
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Box.h>

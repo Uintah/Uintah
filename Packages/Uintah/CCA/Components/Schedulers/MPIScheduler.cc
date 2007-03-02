@@ -630,7 +630,6 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
       break;
   }
   mpidbg << d_myworld->myrank() << " Done  waiting...\n";
-  
 
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
