@@ -2,7 +2,7 @@
 #define UINTAH_COMPARE_MMS_MMS1_H
 
 
-#include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
 
 class MMS1 : public MMS {
 

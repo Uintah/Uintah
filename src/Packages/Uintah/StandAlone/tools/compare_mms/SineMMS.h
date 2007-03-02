@@ -2,7 +2,7 @@
 #define UINTAH_COMPARE_MMS_SineMMS_H
 
 
-#include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
 
 class SineMMS : public MMS {
 

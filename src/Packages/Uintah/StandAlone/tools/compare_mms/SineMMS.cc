@@ -1,9 +1,11 @@
 
-#include <Packages/Uintah/StandAlone/compare_mms/SineMMS.h>
+#include <Packages/Uintah/StandAlone/tools/compare_mms/SineMMS.h>
 
 #include <math.h>
 #include <iostream>
+
 using std::cout;
+
 // Depending on speed issues and how large these functions become, it
 // is possible that they should be moved to the .h files.
 

@@ -4,7 +4,6 @@ SRCDIR := Packages/Uintah/StandAlone
 
 SUBDIRS := \
         $(SRCDIR)/tools       \
-        $(SRCDIR)/compare_mms \
         $(SRCDIR)/Benchmarks
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -58,12 +57,13 @@ ifeq ($(LARGESOS),yes)
 else
 
   PSELIBS := \
+        Core/Containers   \
         Core/Exceptions   \
-        Core/Thread       \
         Core/Geometry     \
-        Core/Util         \
         Core/Math         \
 	Core/Persistent   \
+        Core/Thread       \
+        Core/Util         \
         Packages/Uintah/Core/DataArchive \
         Packages/Uintah/Core/Grid        \
         Packages/Uintah/Core/Parallel    \
@@ -110,89 +110,6 @@ endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# puda
-
-SRCS := $(SRCDIR)/puda.cc
-PROGRAM := Packages/Uintah/StandAlone/puda
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        Core/XMLUtil \
-        Core/Exceptions  \
-        Core/Persistent  \
-        Core/Geometry    \
-        Core/Thread      \
-        Core/Util        \
-        Core/OS          \
-        Core/Containers
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# timeextract
-
-SRCS := $(SRCDIR)/timeextract.cc
-PROGRAM := Packages/Uintah/StandAlone/timeextract
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# faceextract
-
-SRCS := $(SRCDIR)/faceextract.cc
-PROGRAM := Packages/Uintah/StandAlone/faceextract
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# extractV
-
-SRCS := $(SRCDIR)/extractV.cc
-PROGRAM := Packages/Uintah/StandAlone/extractV
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# extractF
-
-SRCS := $(SRCDIR)/extractF.cc
-PROGRAM := Packages/Uintah/StandAlone/extractF
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# extractS
-
-SRCS := $(SRCDIR)/extractS.cc
-PROGRAM := Packages/Uintah/StandAlone/extractS
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# partextract
-
-SRCS := $(SRCDIR)/partextract.cc
-PROGRAM := Packages/Uintah/StandAlone/partextract
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # parvarRange
 
 SRCS := $(SRCDIR)/partvarRange.cc
@@ -232,14 +149,6 @@ else
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# lineextract
-
-SRCS := $(SRCDIR)/lineextract.cc
-PROGRAM := Packages/Uintah/StandAlone/lineextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -420,58 +329,6 @@ uintah: sus \
         link_regression_tester
 
 ###############################################
-# pfs
-
-SRCS := $(SRCDIR)/pfs.cc
-PROGRAM := Packages/Uintah/StandAlone/pfs
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-      Packages/Uintah/Core/Grid \
-      Packages/Uintah/Core/Util \
-      Packages/Uintah/Core/Parallel \
-      Packages/Uintah/Core/Exceptions \
-      Packages/Uintah/Core/Math \
-      Packages/Uintah/Core/ProblemSpec \
-      Packages/Uintah/CCA/Ports \
-      Packages/Uintah/CCA/Components/ProblemSpecification \
-      Core/Exceptions \
-      Core/Geometry 
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-###############################################
-# pfs 2 - Steve Maas' version
-
-SRCS := $(SRCDIR)/pfs2.cc
-PROGRAM := Packages/Uintah/StandAlone/pfs2
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-     Packages/Uintah/Core/Grid \
-     Packages/Uintah/Core/Util \
-     Packages/Uintah/Core/Parallel \
-     Packages/Uintah/Core/Exceptions \
-     Packages/Uintah/Core/Math \
-     Packages/Uintah/Core/ProblemSpec \
-     Packages/Uintah/CCA/Ports \
-     Packages/Uintah/CCA/Components/ProblemSpecification \
-     Core/Exceptions \
-     Core/Geometry
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-###############################################
 
 link_inputs:
 	@( if ! test -L Packages/Uintah/StandAlone/inputs; then \
@@ -494,7 +351,7 @@ fake_arches:
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
-puda: prereqs Packages/Uintah/StandAlone/puda
+puda: prereqs Packages/Uintah/StandAlone/tools/puda/puda
 
 dumpfields: prereqs Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
 
@@ -504,7 +361,7 @@ uda2nrrd: prereqs Packages/Uintah/StandAlone/uda2nrrd
 
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
-partextract: prereqs Packages/Uintah/StandAlone/partextract
+partextract: prereqs Packages/Uintah/StandAlone/tools/extractors/partextract
 
 partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 
@@ -512,11 +369,11 @@ selectpart: prereqs Packages/Uintah/StandAlone/selectpart
 
 async_mpi_test: prereqs Packages/Uintah/StandAlone/async_mpi_test
 
-extractV: prereqs Packages/Uintah/StandAlone/extractV
+extractV: prereqs Packages/Uintah/StandAlone/tools/extractors/extractV
 
-extractF: prereqs Packages/Uintah/StandAlone/extractF
+extractF: prereqs Packages/Uintah/StandAlone/tools/extractors/extractF
 
-extractS: prereqs Packages/Uintah/StandAlone/extractS
+extractS: prereqs Packages/Uintah/StandAlone/tools/extractors/extractS
 
 gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 
@@ -526,8 +383,8 @@ pfs: prereqs Packages/Uintah/StandAlone/pfs
 
 pfs2: prereqs Packages/Uintah/StandAlone/pfs2
 
-timeextract: Packages/Uintah/StandAlone/timeextract
+timeextract: Packages/Uintah/StandAlone/tools/extractors/timeextract
 
-faceextract: Packages/Uintah/StandAlone/faceextract
+faceextract: Packages/Uintah/StandAlone/tools/extractors/faceextract
 
-lineextract: Packages/Uintah/StandAlone/lineextract
+lineextract: Packages/Uintah/StandAlone/tools/extractors/lineextract
