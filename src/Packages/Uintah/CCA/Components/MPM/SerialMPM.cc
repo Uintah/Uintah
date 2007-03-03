@@ -126,7 +126,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     restart_mat_ps = prob_spec;
   }
 
-  ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+  ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 
   if(mpm_soln_ps) {
 
@@ -172,11 +172,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
 
-  MPMPhysicalBCFactory::create(prob_spec);
+  MPMPhysicalBCFactory::create(restart_mat_ps);
 
-  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, prob_spec,sharedState,lb,flags);
+  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, restart_mat_ps,sharedState,lb,flags);
   thermalContactModel =
-    ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
+    ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 

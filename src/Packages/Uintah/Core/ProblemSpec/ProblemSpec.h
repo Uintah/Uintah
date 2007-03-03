@@ -124,6 +124,12 @@ WARNING
    
 
       //////////
+      // add a comment
+      void addComment(std::string comment);
+
+      ProblemSpecP makeComment(std::string comment);
+
+      //////////
       // adds a newline with 'tabs' tabs, then creates, appends, and returns
       // a node with name str
       ProblemSpecP appendChild(const char *str);

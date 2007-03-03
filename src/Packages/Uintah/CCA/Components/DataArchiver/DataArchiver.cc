@@ -1068,9 +1068,6 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
     }
   }
 
-  // to check for output nth proc
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
-
   if (d_isCheckpointTimestep) {
     if (d_checkpointInterval != 0.0) {
       while (d_tempElapsedTime >= d_nextCheckpointTime)
@@ -1086,6 +1083,8 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
     }
   }
 
+  // to check for output nth proc
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
 
   // start dumping files to disk
   vector<Dir*> baseDirs;
@@ -1158,11 +1157,15 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         }
       }
       
-      
+      // Check if it's the first checkpoint timestep by checking if the "timesteps" field is in 
+      // checkpoints/index.xml.  If it is then there exists a timestep.xml file already.
+      // Use this below to change information in input.xml...
+      bool firstCheckpointTimestep = false;
       
       ProblemSpecP ts = indexDoc->findBlock("timesteps");
       if(ts == 0){
         ts = indexDoc->appendChild("timesteps");
+        firstCheckpointTimestep = (&d_checkpointsDir == baseDirs[i]);
       }
       bool found=false;
       for(ProblemSpecP n = ts->getFirstChild(); n != 0; n=n->getNextSibling()){
@@ -1299,7 +1302,32 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       rootElem->output(name.c_str());
+      // a small convenience to the user who wants to change things when he restarts
+      // let him know that some information to change will need to be done in the timestep.xml
+      // file instead of the input.xml file.  Only do this once, though.  
+      if (firstCheckpointTimestep) {
+        // loop over the blocks in timestep.xml and remove them from input.xml, with some exceptions.
+        string inputname = d_dir.getName()+"/input.xml";
+        ProblemSpecP inputDoc = loadDocument(inputname);
+        inputDoc->output((inputname + ".orig").c_str());
+
+        for (ProblemSpecP ps = rootElem->getFirstChild(); ps != 0; ps = ps->getNextSibling()) {
+          string nodeName = ps->getNodeName();
+          if (nodeName == "Meta" || nodeName == "Time" || nodeName == "Grid" || nodeName == "Data") 
+            continue;
+          ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
+          if (removeNode != 0) {
+            string comment = "The node " + nodeName + " has been removed.  Its original values are\n"
+              "    in input.xml.orig, and values used for restarts are in checkpoints/t*****/timestep.xml";
+            ProblemSpecP commentNode = inputDoc->makeComment(comment);
+            inputDoc->replaceChild(removeNode, commentNode);
+          }
+        }
+        inputDoc->output(inputname.c_str());
+        inputDoc->releaseDocument();
+      }
       rootElem->releaseDocument();
+
 
     }
   }
