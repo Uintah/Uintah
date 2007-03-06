@@ -321,6 +321,7 @@ uintah: sus \
         extractF \
         extractS \
         pfs \
+        pfs2 \
         gambitFileReader \
         lineextract \
         timeextract \
@@ -379,9 +380,9 @@ gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 
 slb: prereqs Packages/Uintah/StandAlone/slb
 
-pfs: prereqs Packages/Uintah/StandAlone/pfs
+pfs: prereqs Packages/Uintah/StandAlone/tools/pfs/pfs
 
-pfs2: prereqs Packages/Uintah/StandAlone/pfs2
+pfs2: prereqs Packages/Uintah/StandAlone/tools/pfs/pfs2
 
 timeextract: Packages/Uintah/StandAlone/tools/extractors/timeextract
 
