@@ -117,6 +117,8 @@ bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& po
   SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL,
                  false, wxEmptyString, wxFONTENCODING_SYSTEM));
 
+  SetBackgroundStyle(wxBG_STYLE_SYSTEM);
+  SetBackgroundColour(wxNullColour);
   SetLayout();
   //SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 
@@ -405,7 +407,7 @@ void ComponentIcon::SetLayout()
   SetPortIcons();
 
   const wxSize UI_SIZE(30, 30);
-  uiButton = new wxButton(this, ID_BUTTON_UI, wxT("UI"), wxDefaultPosition, UI_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
+  uiButton = new wxButton(this, ID_BUTTON_UI, wxT("UI"), wxDefaultPosition, UI_SIZE);
   gridBagSizer->Add(uiButton, wxGBPosition(0, 1), wxGBSpan(2, 1),
                     wxFIXED_MINSIZE|wxALIGN_CENTER, BORDER_SIZE);
   if (! hasUIPort) {
@@ -430,7 +432,7 @@ void ComponentIcon::SetLayout()
 
   const wxSize STATUS_SIZE(45, 15);
   msgButton = new wxButton(this, ID_BUTTON_STATUS, wxT(""), wxDefaultPosition,
-                           STATUS_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
+                           STATUS_SIZE);
   gridBagSizer->Add(msgButton, wxGBPosition(1, 4), wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_LEFT, BORDER_SIZE);
 
   // hide until implemented
