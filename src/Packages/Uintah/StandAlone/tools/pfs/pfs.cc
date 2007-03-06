@@ -28,6 +28,19 @@ using namespace std;
 
 void usage( char *prog_name );
 
+/*
+pfs is used in conjunction with particle geometries given as a series of
+points in a file.  (pfs=Particle File Splitter)  
+Given an ASCII file containing, at a minimum x,y and z for each particle,
+pfs reads an input file which contains a "file" geometry piece description, 
+and it also reads in the data in the "points" file associated with that
+geometry.  pfs then creates a separate file for each patch, and places
+in that file those points which lie within that patch.  These individual 
+files may be ASCII or binary.  Also, the input file may specify that each ofthe files is to contain additional per particle data (e.g. temperature), whichof course must also be present in the original points file.  All of this is 
+done to prevent numerous procs from trying to access the same file, which is
+hard on file systems.
+*/
+
 void
 parseArgs( int argc, char *argv[], string & infile, bool & binmode)
 {

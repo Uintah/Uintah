@@ -46,6 +46,18 @@ inline Point CreatePoint(int n, vector<int>& res, double dx, double dy, double d
 }
 
 //-----------------------------------------------------------------------------------------
+/*
+pfs2 is used in conjunction with particle geometries derived by 
+thresholding image data. (pfs=Particle File Splitter)  
+Given an raw file pfs2 reads an input file which contains an "image"
+geometry piece description, and it also reads in the data in the raw file
+and the intensity range associated with that
+geometry.  pfs2 then creates a separate file for each patch, and places
+in that file those points which lie within that patch.  These individual 
+files may be ASCII or binary.  All of this is 
+done to prevent numerous procs from trying to access the same file, which is
+hard on file systems.
+*/
 // function main : main entry point of application
 //
 int main(int argc, char *argv[])
