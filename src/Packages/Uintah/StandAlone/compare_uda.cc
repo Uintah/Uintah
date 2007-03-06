@@ -1085,8 +1085,8 @@ main(int argc, char** argv)
   cerr << "Using absolute tolerance: " << abs_tolerance << endl;
   cerr << "Using relative tolerance: " << rel_tolerance << endl;
   
-  if (rel_tolerance <= 0) {
-    cerr << "Must have a positive value rel_tolerance.\n";
+  if (rel_tolerance < 0) {
+    cerr << "Must have a non-negative value rel_tolerance.\n";
     Thread::exitAll(1);
   }
 
@@ -1427,26 +1427,34 @@ main(int argc, char** argv)
 	for(int l=0;l<grid->numLevels();l++){
 	  LevelP level = grid->getLevel(l);
 	  LevelP level2 = grid2->getLevel(l);
-	  
+	 
+    //check patch coverage
+    deque<Region> region1, region2, difference1, difference2;
+
+    for(int i=0;i<level->numPatches();i++)
+    {
+      const Patch* patch=level->getPatch(i);
+      region1.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
+    }
+    for(int i=0;i<level2->numPatches();i++)
+    {
+      const Patch* patch=level2->getPatch(i);
+      region2.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
+    }
+    difference1=Region::difference(region1,region2);
+    difference2=Region::difference(region1,region2);
+
+    if(!difference1.empty() || !difference2.empty())
+    {
+        cerr << "Patches on level:" << l << " do not cover the same area\n";
+        abort_uncomparable();
+    }
 	  // map nodes to patches in level and level2 respectively
 	  Array3<const Patch*> patchMap;
 	  Array3<const Patch*> patch2Map;
 	  
 	  buildPatchMap(level, filebase1, patchMap, time1);
 	  buildPatchMap(level2, filebase2, patch2Map, time2);
-	  
-	  if (patchMap.getLowIndex() != patch2Map.getLowIndex() ||
-	      patchMap.getHighIndex() != patch2Map.getHighIndex()) {
-	    cerr << "Inconsistent patch coverage on level " << l
-		 << " at time " << time1 << endl;
-	    cerr << "On " << filebase1 << "\n"
-		 << "\tRange: " << patchMap.getLowIndex() << " - "
-		 << patchMap.getHighIndex() << endl;
-	    cerr << "On " << filebase2 << "\n"
-		 << "\tRange: " << patch2Map.getLowIndex() << " - "
-		 << patch2Map.getHighIndex() << endl;	    
-	    abort_uncomparable();
-	  }
 	  
 	  for (Array3<const Patch*>::iterator nodePatchIter = patchMap.begin();
 	       nodePatchIter != patchMap.end(); nodePatchIter++) {
