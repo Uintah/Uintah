@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
+//#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -57,10 +57,10 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
     d_OrderOfAdvection = 1;
     return(scinew FirstOrderAdvector());
   } 
-  else if (advect_options["type"] == "SecondOrder"){
-    d_OrderOfAdvection = 2;
-    return(scinew SecondOrderAdvector());
-  }
+  //else if (advect_options["type"] == "SecondOrder"){
+  //  d_OrderOfAdvection = 2;
+  //  return(scinew SecondOrderAdvector());
+  //}
   else {
     throw ProblemSetupException("Unknown advection Type R ("+advect_options["type"]+")",
                                 __FILE__, __LINE__); 

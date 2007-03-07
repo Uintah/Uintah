@@ -637,10 +637,11 @@ void ICE::setupRHS(const ProcessorGroup*,
       advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
-      varBasket->patch = patch;
-      varBasket->level = level;
-      varBasket->lb  = lb;
+      varBasket->indx   = indx;
+      varBasket->patch  = patch;
+      varBasket->level  = level;
+      varBasket->lb     = lb;
+      varBasket->delT   = delT;
       varBasket->doRefluxing = d_doAMR;  // always reflux with amr
       varBasket->is_Q_massSpecific = false;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
@@ -649,8 +650,9 @@ void ICE::setupRHS(const ProcessorGroup*,
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
                                     bulletProof_test, pNewDW); 
 
-      advector->advectQ(vol_frac, patch, q_advected, varBasket, 
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw); 
+      advector->advectQ(vol_frac, q_advected, varBasket, 
+                        uvel_FC, vvel_FC, wvel_FC,
+                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC); 
                         
       delete varBasket;                         
     
