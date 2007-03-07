@@ -49,6 +49,16 @@ namespace GUIBuilder {
 class NetworkCanvas;
 class PortIcon;
 
+// to replace button?
+// class MessageControl : public wxWindow {
+// public:
+//   MessageControl();
+//   ~MessageControl();
+
+// private:
+// };
+
+
 typedef std::vector<PortIcon*> PortList;
 
 class ComponentIcon : public wxPanel {
@@ -82,6 +92,9 @@ public:
   void OnDelete(wxCommandEvent& event);
   void OnUI(wxCommandEvent& event);
 
+  //const wxSize& GetBorderSize() const { return borderSize; }
+  //void DrawPorts(wxDC& dc);
+
   const sci::cca::ComponentID::pointer GetComponentInstance() const { return cid; }
   const std::string GetComponentInstanceName() { return cid->getInstanceName(); }
   PortIcon* GetPortIcon(const std::string& portName);
@@ -92,8 +105,8 @@ public:
   const PortList& GetProvidesPorts() const { return providesPorts; }
   const PortList& GetUsesPorts() const { return usesPorts; }
 
+  void GetCanvasPosition(wxPoint& p);
   NetworkCanvas* GetCanvas() const { return canvas; }
-  void GetCanvasPosition(wxPoint& pos);
 
   // possible to set shape w/ bitmap region?
 

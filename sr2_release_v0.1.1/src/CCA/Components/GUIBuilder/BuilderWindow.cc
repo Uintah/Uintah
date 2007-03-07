@@ -53,12 +53,11 @@
 #include <iostream>
 
 #include <sci_metacomponents.h>
+
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 
 #include <Core/Thread/Thread.h>
-
-# include <Framework/TypeMap.h>
-
+#include <Framework/TypeMap.h>
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <CCA/Components/GUIBuilder/MiniCanvas.h>
 #include <CCA/Components/GUIBuilder/NetworkCanvas.h>
@@ -159,10 +158,6 @@ void MenuTree::populateMenu(wxMenu* menu)
 {
   for (std::map<wxString, MenuTree*>::iterator iter = child.begin();
        iter != child.end(); iter++) {
-//     if (iter->first == "GUIBuilder" || iter->first == "TxtBuilder") {
-//       child.erase(iter);
-//       continue;
-//     }
     if (iter->second->cd.isNull()) {
       wxMenu* submenu = new wxMenu(wxEmptyString, wxMENU_TEAROFF);
       //submenu->setFont(builderWindow->font());
@@ -217,7 +212,8 @@ IMPLEMENT_DYNAMIC_CLASS(BuilderWindow, wxFrame)
 
 int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
-BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent) : builder(bc), pointerLocationX("0"), pointerLocationY("0")
+BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent)
+  : builder(bc), pointerLocationX("0"), pointerLocationY("0")
 {
 #if FWK_DEBUG
   std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
@@ -239,16 +235,11 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   setDefaultText();
 
   //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
-#if FWK_DEBUG
   statusBar = CreateStatusBar(3, wxST_SIZEGRIP);
   int statusBarWidths[] = { 350, 150, -1 };
   statusBar->SetStatusWidths(3, statusBarWidths);
-#else
-  statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
-  int statusBarWidths[] = { 350, -1 };
-  statusBar->SetStatusWidths(2, statusBarWidths);
-#endif
   statusBar->SetStatusText(wxT("SCIJump started"), 0);
+
   return true;
 }
 
@@ -294,23 +285,19 @@ ComponentIcon* BuilderWindow::GetComponentIcon(const std::string& instanceName)
 
 void BuilderWindow::DisplayMessage(const wxString& line)
 {
-  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  //wxStreamToTextRedirector redirect(textCtrl);
   *textCtrl << line << wxT("\n");
 }
 
 void BuilderWindow::DisplayErrorMessage(const wxString& line)
 {
   textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
-  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  //wxStreamToTextRedirector redirect(textCtrl);
   *textCtrl << line << wxT("\n");
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
 void BuilderWindow::DisplayMessages(const std::vector<wxString>& lines)
 {
-  //wxStreamToTextRedirector redirect(textCtrl);
+  wxStreamToTextRedirector redirect(textCtrl);
 
   for (std::vector<wxString>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
     *textCtrl << *iter << wxT("\n");
@@ -325,15 +312,14 @@ void BuilderWindow::DisplayErrorMessages(const std::vector<wxString>& lines)
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
-#if FWK_DEBUG
-// TODO: should only be available in debug mode?
 void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoint& p)
 {
+#if FWK_DEBUG
   pointerLocationX.Printf("%d", p.x);
   pointerLocationY.Printf("%d", p.y);
   statusBar->SetStatusText(widgetName + ": " + pointerLocationX + ", " + pointerLocationY, 1);
-}
 #endif
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // event handlers
@@ -342,8 +328,9 @@ void BuilderWindow::OnAbout(wxCommandEvent &event)
 {
   wxString msg;
   msg.Printf(wxT("Copyright (c) 2006 Scientific Computing and Imaging Institute, University of Utah.\n\nSCIJump information is available at\nhttps://code.sci.utah.edu/SCIJump/index.php/Main_Page."));
+  msg.Printf(wxT("Hello and welcome to %s"), wxVERSION_STRING);
 
-  // show license
+  // TODO: show or direct to license
   wxMessageBox(msg, wxT("About SCIJump"), wxOK|wxICON_INFORMATION, this);
 }
 
@@ -358,11 +345,8 @@ void BuilderWindow::OnQuit(wxCommandEvent &event)
 
 void BuilderWindow::OnSashDrag(wxSashEvent& event)
 {
-#if 0
-// #if FWK_DEBUG
-//   std::cerr << "BuilderWindow::OnSashDrag(..): event drag status="  << event.GetDragStatus() << std::endl;
-//   std::cerr << "Drag rect = (" << event.GetDragRect().x << ", " << event.GetDragRect().y << ", " << event.GetDragRect().width << ", " << event.GetDragRect().height << ")" << std::endl;
-// #endif
+#if FWK_DEBUG
+  std::cerr << "BuilderWindow::OnSashDrag(..): event drag status="  << event.GetDragStatus() << std::endl;
 #endif
   if (event.GetDragStatus() == wxSASH_STATUS_OUT_OF_RANGE) {
     return;
@@ -374,12 +358,9 @@ void BuilderWindow::OnSashDrag(wxSashEvent& event)
     // errors.
   case ID_WINDOW_LEFT:
     leftWindow->SetDefaultSize(wxSize(event.GetDragRect().width, MIN));
-    //rightWindow->SetMinimumSizeX(MIN);
     break;
   case ID_WINDOW_BOTTOM:
     bottomWindow->SetDefaultSize(wxSize(MIN, event.GetDragRect().height));
-    leftWindow->SetMinimumSizeY(MIN);
-    rightWindow->SetMinimumSizeY(MIN);
     break;
   }
 
@@ -398,7 +379,7 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
   Refresh();
 }
 
-// network file handling will have to be moved outside of GUI classes
+ // network file handling will have to be moved outside of GUI classes
 void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
   // need to save current app if user agrees and clear
@@ -446,21 +427,20 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
 
 void BuilderWindow::OnSave(wxCommandEvent& event)
 {
-  wxBusyCursor wait;
-  bool exists = builder->applicationFileExists();
-  if (exists) {
-    // get file name?
+   bool exists = builder->applicationFileExists();
+   if (exists) {
+     // get file name?
     int answer = wxMessageBox(wxT("Overwrite current application file?"), wxT("Confirm"),
                               wxYES_NO|wxICON_QUESTION, this);
-    if (answer == wxYES) {
-      builder->saveApplication();
-    }
+     if (answer == wxYES) {
+       builder->saveApplication();
+     }
   } else {
     doSaveAs();
-  }
+   }
 }
 
-void BuilderWindow::OnSaveAs(wxCommandEvent& WXUNUSED(event))
+void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 {
   doSaveAs();
 }
@@ -554,7 +534,7 @@ void BuilderWindow::SetMenus()
 {
   // The "About" item should be in the help menu
   wxMenu *helpMenu = new wxMenu();
-  helpMenu->Append(wxID_ABOUT, wxT("&About..."), wxT("Show about dialog"));
+  helpMenu->Append(wxID_ABOUT, wxT("&About...\tF1"), wxT("Show about dialog"));
 
   wxMenu* compWizardMenu = new wxMenu(wxEmptyString, wxMENU_TEAROFF);
   compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
@@ -581,17 +561,16 @@ void BuilderWindow::SetMenus()
   fileMenu->AppendSeparator();
   fileMenu->Append(wxID_EXIT, wxT("E&xit\tAlt-X"), wxT("Quit this program"));
 
+  wxMenu* proxyFwkMenu = new wxMenu();
+  proxyFwkMenu->Append(ID_MENU_ADD_PROXY, wxT("Add Proxy Framework"), wxT("Instantiate a new proxy framework to the master framework"));
 #if 0
-  // Disabled until xterm crashing problem is fixed.
-//   wxMenu* proxyFwkMenu = new wxMenu();
-//   proxyFwkMenu->Append(ID_MENU_ADD_PROXY, wxT("Add Proxy Framework"), wxT("Instantiate a new proxy framework to the master framework"));
-//   //proxyFwkMenu->Append(ID_MENU_REMOVE_PROXY, wxT("Remove Proxy Framework"), wxT("Remove a new proxy framework from the master framework"));
+  //proxyFwkMenu->Append(ID_MENU_REMOVE_PROXY, wxT("Remove Proxy Framework"), wxT("Remove a new proxy framework from the master framework"));
 #endif
 
   menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, wxT("&File"));
 #if 0
-//   menuBar->Append(proxyFwkMenu, wxT("&Proxy Frameworks"));
+  //menuBar->Append(proxyFwkMenu, wxT("&Proxy Frameworks"));
 #endif
 
   BuildAllPackageMenus();
@@ -623,8 +602,8 @@ void BuilderWindow::SetLayout()
   leftWindow->SetSashVisible(wxSASH_RIGHT, true);
 
   // add mini-canvas (scrolled window) to leftWindow
-  miniCanvas = new MiniCanvas(leftWindow, this, networkCanvas, ID_MINI_WINDOW,
-                              wxPoint(0, 0), wxSize(MINI_WIDTH, TOP_HEIGHT));
+  miniCanvas = new MiniCanvas(leftWindow, this, networkCanvas, ID_MINI_WINDOW, wxPoint(0, 0),
+                              wxSize(MINI_WIDTH, TOP_HEIGHT));
 
   // A window to the left of the client window
   rightWindow = new wxSashLayoutWindow(this, ID_WINDOW_RIGHT, wxPoint(MINI_WIDTH, 0),
@@ -746,7 +725,7 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
 void BuilderWindow::setDefaultText()
 {
   std::vector<wxString> v;
-  wxString ver = wxT("SCIJump v") + STLTowxString(SCIJUMP_VERSION);
+  wxString ver = wxT("SCIJump v ") + STLTowxString(SCIJUMP_VERSION);
   wxString u = wxT("Framework URL: ") + STLTowxString(url.c_str());
   v.push_back(ver);
   v.push_back(u);
@@ -767,10 +746,10 @@ void BuilderWindow::doSaveAs()
                        wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
 
   statusBar->SetStatusText(wxT("Saving application file"), 0);
-  if(fDialog.ShowModal() == wxID_OK) {
+  if (fDialog.ShowModal() == wxID_OK) {
     wxString path = fDialog.GetPath();
     wxString name = fDialog.GetFilename();
-    if(name.Find('.') == -1) {
+    if (name.Find('.') == -1) {
       path.Append('.');
       path.Append(extension);
     }

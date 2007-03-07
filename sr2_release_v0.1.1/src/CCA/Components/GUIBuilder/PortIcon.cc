@@ -34,7 +34,6 @@
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h>
 
-#include <sci_metacomponents.h>
 #include <CCA/Components/GUIBuilder/PortIcon.h>
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
@@ -50,7 +49,8 @@ BEGIN_EVENT_TABLE(PortIcon, wxWindow)
   EVT_PAINT(PortIcon::OnPaint)
   EVT_LEFT_DOWN(PortIcon::OnLeftDown)
   EVT_LEFT_UP(PortIcon::OnLeftUp)
-  //EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu (disabled for now...)
+  EVT_RIGHT_UP(PortIcon::OnRightClick) // show compatible components menu
+  //EVT_MIDDLE_DOWN(PortIcon::OnMouseDown)
   EVT_MOTION(PortIcon::OnMouseMove)
 END_EVENT_TABLE()
 
@@ -91,7 +91,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
   }
   SetBackgroundColour(pColor);
   wxString s = STLTowxString(sidlType);
-  s += wxEmptyString;
+  s += wxT(" ");
   s += STLTowxString(this->name);
   SetToolTip(s);
 
@@ -101,7 +101,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
 void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
   if (portType == GUIBuilder::Uses) {
-    bool ret = parent->GetCanvas()->ShowPossibleConnections(this);
+    parent->GetCanvas()->ShowPossibleConnections(this);
   }
 }
 
@@ -161,6 +161,12 @@ void PortIcon::OnPaint(wxPaintEvent& event)
     dc.DrawRectangle(hRect);
   }
 }
+
+void PortIcon::GetCanvasPosition(wxPoint& p)
+{
+  parent->GetCanvas()->GetUnscrolledPosition(this->GetPosition(), p);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // protected constructor and member functions

@@ -76,8 +76,10 @@ public:
   static const int GetDrawingPointsSize() { return NUM_DRAW_POINTS; }
   void GetDrawingPoints(wxPoint **pa, const int size);
 
+  const static int PEN_WIDTH = 4;
+
 protected:
-  void setConnection();
+  void setConnection(wxDC& dc);
 
   static const int NUM_POINTS;
   static const int NUM_DRAW_POINTS;

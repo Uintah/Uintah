@@ -33,7 +33,6 @@
 #include <Core/Util/Environment.h>
 
 #include <wx/splash.h>
-#include <wx/image.h>
 
 #ifndef DEBUG
 #  define DEBUG 0

@@ -103,8 +103,8 @@ public:
   // Handle background paint in paint event handler (on GTK+ might also
   // want to use background style wxBG_STYLE_CUSTOM).
   void OnEraseBackground(wxEraseEvent& event) {}
-  //void OnLeftDown(wxMouseEvent& event);
-  //void OnLeftUp(wxMouseEvent& event);
+  void OnLeftDown(wxMouseEvent& event);
+  void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
   void OnMiddleClick(wxMouseEvent& event);
@@ -130,7 +130,7 @@ public:
   void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
   void GetUnscrolledMousePosition(const wxMouseEvent& event, wxPoint& position);
   void GetUnscrolledMousePosition(wxPoint& position);
-  void GetScrolledPosition(const wxPoint& p, wxPoint& position);
+  void GetScrolledPosition(const wxPoint& p, wxPoint& position, bool doScroll=false);
 
   ComponentIcon* FindIconAtPointer(wxPoint& position);
   PortIcon* FindPortIconAtPointer(wxPoint& position);
@@ -142,9 +142,6 @@ public:
 
 //   const ComponentMap& getComponentIcons() const { return components; }
 //   const std::vector<Connection*>& getConnections() const { return connections; }
-
-  const static int DEFAULT_SCROLLX = 10;
-  const static int DEFAULT_SCROLLY = 10;
 
 protected:
   NetworkCanvas();
@@ -176,6 +173,8 @@ private:
   // default scroll window virtual size, scroll rates
   const static int DEFAULT_VWIDTH = 2500;
   const static int DEFAULT_VHEIGHT = 2000;
+  const static int DEFAULT_SCROLLX = 10;
+  const static int DEFAULT_SCROLLY = 10;
 
   BuilderWindow* builderWindow;
   ComponentIcon* movingIcon;
