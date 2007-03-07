@@ -55,8 +55,6 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/pidl_cast.h>
 
-#define FWK_DEBUG 0
-
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -155,19 +153,6 @@ GUIBuilder::~GUIBuilder()
 void
 GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 {
-  sci::cca::EventListener::pointer evptr(sci::cca::GUIBuilder::pointer(this));
-  sci::cca::Port::pointer pp  = svc->getPort("cca.EventService");
-  sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
-  if (ptr.isNull()) {
-    BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage(wxT("Warning: event service not available."));
-  }
-  sci::cca::Topic::pointer topicPtr = ptr->createTopic("scijump.services.builderservice.component");
-  sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scijump.services.builderservice.component.*");
-  subPtr->registerEventListener(std::string("GUIBuilder"),evptr);
-
-
-
 #if FWK_DEBUG
   std::cerr << "GUIBuilder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
@@ -236,7 +221,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 
   setDefaultPortColors();
 
-  // register for scijump.services.builderservice.component.* topics
+  // register for scirun2.services.builderservice.component.* topics
 
 }
 
@@ -859,8 +844,8 @@ void GUIBuilder::loadApplication(const std::string& filename, SSIDL::array1<sci:
     bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
-
 }
+
 
 void GUIBuilder::saveApplication()
 {
@@ -916,7 +901,7 @@ void GUIBuilder::setDefaultPortColors()
 {
   Guard g(&builderLock);
 
-  // sci.cca.ports from SCIRunPorts.sidl
+  // sci.cca.ports from SCIRun2Ports.sidl
   portColors[std::string("default")] = wxTheColourDatabase->Find(wxT("GOLD"));
   portColors[std::string("sci.cca.ports.StringPort")] = wxTheColourDatabase->Find(wxT("PINK"));
   portColors[std::string("sci.cca.ports.ZListPort")] = wxTheColourDatabase->Find(wxT("FIREBRICK"));

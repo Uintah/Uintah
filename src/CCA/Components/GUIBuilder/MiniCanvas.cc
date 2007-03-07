@@ -209,6 +209,7 @@ void MiniCanvas::scrollCanvas(const wxPoint& point)
   int xu = 0, yu = 0;
   canvas->GetScrollPixelsPerUnit(&xu, &yu);
   canvas->Scroll((point.x * scaleH) / xu, (point.y * scaleV) / yu);
+  canvas->Update();
 }
 
 ///////////////////////////////////////////////////////////////////////////

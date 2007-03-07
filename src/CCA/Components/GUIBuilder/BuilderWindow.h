@@ -45,6 +45,7 @@
 
 
 #include <sci_wx.h>
+#include <sci_defs/framework_defs.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 #include <string>
@@ -160,9 +161,7 @@ public:
   void DisplayErrorMessage(const wxString& line);
   void DisplayMessages(const std::vector<wxString>& lines);
   void DisplayErrorMessages(const std::vector<wxString>& lines);
-#if FWK_DEBUG
   void DisplayMousePosition(const wxString& widgetName, const wxPoint& p);
-#endif
 
   //const MenuMap& GetComponentMenus() { return menus; }
 
@@ -197,19 +196,20 @@ private:
   // This class handles events
   DECLARE_EVENT_TABLE()
 
-  static const int MIN = 10;
+  static const int MIN = 4;
   static const int WIDTH = 1000;
   static const int HEIGHT = 800;
   static const int TOP_HEIGHT = 300;
-  static const int MINI_WIDTH = 250;
-  static const int BOTTOM_HEIGHT = HEIGHT - TOP_HEIGHT;
-  static const int TEXT_WIDTH = WIDTH - MINI_WIDTH;
+  static const int BOTTOM_HEIGHT = 500;
+  static const int MINI_WIDTH = 350;
+  static const int TEXT_WIDTH = 650;
   static int IdCounter;
 
   sci::cca::GUIBuilder::pointer builder;
   std::string url;
   wxString pointerLocationX;
   wxString pointerLocationY;
+
 
   // Component menus:
   // Need to build the menu bar and network window popup menu items

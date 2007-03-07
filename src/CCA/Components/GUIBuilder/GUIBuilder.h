@@ -105,7 +105,7 @@ public:
   virtual void disconnectUIPort(const std::string& uiPortName);
   virtual int ui(const std::string& uiPortName);
 
-  // GUIService
+  // progress
   virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
   virtual void updateComponentModels();
 
@@ -151,7 +151,6 @@ public:
   static const std::string COMPONENTICONUI_PORT;
   static const std::string APP_EXT_WILDCARD;
   static const std::string APP_EXT;
-  static const std::string GUI_THREAD_NAME;
 
 private:
   GUIBuilder(const GUIBuilder &);
@@ -173,12 +172,13 @@ private:
   // Uses port names will be unique since they are generated from unique component instance names.
   ConnectionMap connectionMap;
 
-  // Set of port colours: the GUIBuilder will set up standard SCIJump ports (see SCIJumpPorts.sidl),
+  // Set of port colours: the GUIBuilder will set up standard SCIJump ports (see SCIRun2Ports.sidl),
   // or component authors can add their own.
   // Note: make this map static when support for static functions is available
   // Note: implement using wxColorDatabase instead?
   PortColorMap portColors;
 
+  static const std::string GUI_THREAD_NAME;
   static SCIRun::Mutex builderLock;
   static wxSCIRunApp* app;
 };
