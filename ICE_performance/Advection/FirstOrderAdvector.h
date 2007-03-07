@@ -32,43 +32,72 @@ namespace Uintah {
                                      DataWarehouse* new_dw);
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
-                          const Patch* patch,
                           CCVariable<double>& q_advected,
                           advectVarBasket* varBasket,
+                          constSFCXVariable<double>& uvel_FC,
+                          constSFCYVariable<double>& vvel_FC,
+                          constSFCZVariable<double>& wvel_FC,
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
-                          SFCZVariable<double>& q_ZFC,
-                          DataWarehouse* /*new_dw*/);
+                          SFCZVariable<double>& q_ZFC);
  
     virtual void advectQ(const CCVariable<double>& q_CC,
                          const CCVariable<double>& mass,
                          CCVariable<double>& q_advected,
+                         constSFCXVariable<double>& uvel_FC,
+                         constSFCYVariable<double>& vvel_FC,
+                         constSFCZVariable<double>& wvel_FC,
                          advectVarBasket* vb);
  
     virtual void advectQ(const CCVariable<Vector>& q_CC,
                          const CCVariable<double>& mass,
                          CCVariable<Vector>& q_advected,
+                         constSFCXVariable<double>& uvel_FC,
+                         constSFCYVariable<double>& vvel_FC,
+                         constSFCZVariable<double>& wvel_FC,
                          advectVarBasket* vb); 
                          
     virtual void advectMass(const CCVariable<double>& mass,
                             CCVariable<double>& q_advected,
+                            constSFCXVariable<double>& uvel_FC,
+                            constSFCYVariable<double>& vvel_FC,
+                            constSFCZVariable<double>& wvel_FC,
                             advectVarBasket* vb);
     
   private:
     CCVariable<fflux> d_OFS;
     
-    friend class FirstOrderCEAdvector;
 
   private:
+    void outFluxVolume( double ofs[6],
+                        const SFCXVariable<double>& uvel_FC,
+                        const SFCYVariable<double>& vvel_FC,
+                        const SFCZVariable<double>& wvel_FC,
+                        const IntVector c,
+                        const double& delT, 
+                        const Vector dx);
+    
  
     template<class T, typename F> 
       void advectSlabs(const CCVariable<T>& q_CC,
-                       const Patch* patch,
                        CCVariable<T>& q_advected,
+                       advectVarBasket* vb,
+                       constSFCXVariable<double>& uvel_FC,
+                       constSFCYVariable<double>& vvel_FC,
+                       constSFCZVariable<double>& wvel_FC,
                        SFCXVariable<double>& q_XFC,
                        SFCYVariable<double>& q_YFC,
                        SFCZVariable<double>& q_ZFC,
                        F function); 
+ 
+    template<class T, class V, typename F>
+      void advect_operator(CellIterator iter,
+                	      const IntVector dir,
+                           advectVarBasket* varBasket,
+                           T& vel_FC,
+                	      const CCVariable<V>& q_CC,
+                           CCVariable<V>& q_advected,
+                           F save_q_FC);
                                                        
     template<class T>
       void q_FC_operator(CellIterator iter, 

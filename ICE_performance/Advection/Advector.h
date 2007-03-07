@@ -29,6 +29,7 @@ namespace Uintah {
       string desc;
       const Patch* patch;
       const Level* level;
+      double delT;
       bool doRefluxing;
   };
   
@@ -53,26 +54,36 @@ namespace Uintah {
                                      DataWarehouse* new_dw) = 0;
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
-                          const Patch* patch,
                           CCVariable<double>& q_advected,
                           advectVarBasket* vb,
+                          constSFCXVariable<double>& uvel_FC,
+                          constSFCYVariable<double>& vvel_FC,
+                          constSFCZVariable<double>& wvel_FC,
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
-                          SFCZVariable<double>& q_ZFC,
-			     DataWarehouse* /*new_dw*/)=0;
+                          SFCZVariable<double>& q_ZFC)=0;
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                          const CCVariable<double>& mass,
                          CCVariable<double>& q_advected,
+                         constSFCXVariable<double>& uvel_FC,
+                         constSFCYVariable<double>& vvel_FC,
+                         constSFCZVariable<double>& wvel_FC,                         
                          advectVarBasket* vb)=0;
     
     virtual void advectQ(const CCVariable<Vector>& q_CC,
                          const CCVariable<double>& mass,
                          CCVariable<Vector>& q_advected,
+                         constSFCXVariable<double>& uvel_FC,
+                         constSFCYVariable<double>& vvel_FC,
+                         constSFCZVariable<double>& wvel_FC,
                          advectVarBasket* vb)=0; 
                          
     virtual void advectMass(const CCVariable<double>& mass,
                            CCVariable<double>& q_advected,
+                           constSFCXVariable<double>& uvel_FC,
+                           constSFCYVariable<double>& vvel_FC,
+                           constSFCZVariable<double>& wvel_FC,
                            advectVarBasket* vb)=0;
 
                         
@@ -110,28 +121,16 @@ namespace Uintah {
    // we have the ignoreFaceFluxes functions.  This really cuts down on Code
    // bloat by eliminating the need for a specialized version of advect 
   
-  class ignore_q_FC_calc_D {     // does nothing
+  class ignore_q_FC_D {     // does nothing
     public:
-    inline void operator()( const IntVector&,
-			    SFCXVariable<double>&, 
-			    SFCYVariable<double>&,  
-			    SFCZVariable<double>&,  
-			    double[],  
-			    double[],
-			    const CCVariable<double>&)
+    inline void operator()( double& q_FC, double q_slab[])
     {
     }
   };
 
-  class ignore_q_FC_calc_V {    // does nothing
+  class ignore_q_FC_V {    // does nothing
     public:
-    inline void operator()( const IntVector&,
-			    SFCXVariable<double>&, 
-			    SFCYVariable<double>&,  
-			    SFCZVariable<double>&,  
-			    double[],  
-			    Vector[],
-			    const CCVariable<Vector>&)
+    inline void operator()( double& q_FC, double q_slab[])
     {
     }
   };
@@ -140,29 +139,9 @@ namespace Uintah {
   // compute Q at the face center
   class save_q_FC {
     public:
-    inline void operator()( const IntVector& c, 
-			    SFCXVariable<double>& q_XFC,           
-			    SFCYVariable<double>& q_YFC,           
-			    SFCZVariable<double>& q_ZFC,           
-			    double faceVol[], 
-			    double q_face_flux[],
-			    const CCVariable<double>& q_CC) 
+    inline void operator()( double& q_FC, double& q_slab) 
     {
-    
-      double tmp_XFC, tmp_YFC, tmp_ZFC, q_tmp;
-      q_tmp = q_CC[c];
-      tmp_XFC = fabs(q_face_flux[LEFT])  /(faceVol[LEFT]   + 1e-100);
-      tmp_YFC = fabs(q_face_flux[BOTTOM])/(faceVol[BOTTOM] + 1e-100);
-      tmp_ZFC = fabs(q_face_flux[BACK])  /(faceVol[BACK]   + 1e-100);
-    
-      // if q_(X,Y,Z)FC = 0.0 then set it equal to q_CC[c]
-      tmp_XFC = equalZero(q_face_flux[LEFT],   q_tmp, tmp_XFC);
-      tmp_YFC = equalZero(q_face_flux[BOTTOM], q_tmp, tmp_YFC);
-      tmp_ZFC = equalZero(q_face_flux[BACK],   q_tmp, tmp_ZFC);
-    
-      q_XFC[c] = tmp_XFC;
-      q_YFC[c] = tmp_YFC;
-      q_ZFC[c] = tmp_ZFC;    
+      q_FC = q_slab;   
     }
   };
 

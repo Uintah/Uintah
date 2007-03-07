@@ -3438,6 +3438,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
     
+    q_advected.initialize(0.);
     term1.initialize(0.);
     term2.initialize(0.);
     sum_rho_CC.initialize(0.0); 
@@ -3501,10 +3502,13 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //   advect vol_frac
       // common variables that get passed into the advection operators
       advectVarBasket* varBasket = scinew advectVarBasket();
+      varBasket->new_dw = new_dw;
+      varBasket->patch = patch;
       varBasket->doRefluxing = false;  // don't need to reflux here
       
-      advector->advectQ(vol_frac, patch, q_advected, varBasket,  
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
+      advector->advectQ(vol_frac, q_advected, varBasket,
+                        uvel_FC, vvel_FC, wvel_FC,  
+                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC);
                         
       delete varBasket; 
       
@@ -5072,10 +5076,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       advectVarBasket* varBasket = scinew advectVarBasket();
       varBasket->new_dw = new_dw;
       varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
+      varBasket->indx  = indx;
       varBasket->patch = patch;
       varBasket->level = level;
-      varBasket->lb  = lb;
+      varBasket->lb    = lb;
+      varBasket->delT  = delT;
       varBasket->doRefluxing = d_doRefluxing;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
@@ -5087,7 +5092,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                     bulletProof_test, new_dw); 
       //__________________________________
       // mass
-      advector->advectMass(mass_L, q_advected,  varBasket);
+      advector->advectMass(mass_L, q_advected,  
+                           uvel_FC, vvel_FC, wvel_FC, varBasket);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
@@ -5097,7 +5103,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       // momentum
       varBasket->is_Q_massSpecific   = true;
       varBasket->desc = "mom";
-      advector->advectQ(mom_L_ME,mass_L,qV_advected, varBasket);
+      advector->advectQ(mom_L_ME,mass_L,qV_advected, 
+                        uvel_FC, vvel_FC, wvel_FC, varBasket);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
@@ -5107,7 +5114,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       // internal energy
       varBasket->is_Q_massSpecific = true;
       varBasket->desc = "int_eng";
-      advector->advectQ(int_eng_L_ME, mass_L, q_advected, varBasket);
+      advector->advectQ(int_eng_L_ME, mass_L, q_advected, 
+                        uvel_FC, vvel_FC, wvel_FC, varBasket);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
@@ -5117,7 +5125,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       // sp_vol[m] * mass
       varBasket->is_Q_massSpecific = true;
       varBasket->desc = "sp_vol";
-      advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket); 
+      advector->advectQ(sp_vol_L,mass_L, q_advected, 
+                        uvel_FC, vvel_FC, wvel_FC, varBasket); 
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
@@ -5141,7 +5150,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             
             varBasket->desc = Labelname;
             varBasket->is_Q_massSpecific = true;
-            advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);  
+            advector->advectQ(q_L_CC,mass_L,q_advected, 
+                              uvel_FC, vvel_FC, wvel_FC, varBasket);  
    
             for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
               IntVector c = *iter;
