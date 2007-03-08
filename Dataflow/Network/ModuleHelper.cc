@@ -98,12 +98,12 @@ ModuleHelper::run()
       case MessageTypes::ExecuteModule:
         module->do_execute();
         module->do_synchronize();
-        module->sched_->report_execution_finished(msg);
+        module->sched_->report_execution_finished(module, msg);
 	break;
 
       case MessageTypes::SynchronizeModule:
         module->do_synchronize();
-        module->sched_->report_execution_finished(msg);
+        module->sched_->report_execution_finished(module, msg);
         break;
 
       case MessageTypes::TriggerPort:

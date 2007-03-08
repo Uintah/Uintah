@@ -251,6 +251,7 @@ public:
   virtual void do_execute();
   virtual void do_synchronize();
   virtual void execute() = 0;
+  virtual void moduleStarted();
 
   void request_multisend(OPort*);
   Mailbox<MessageBase*> mailbox_;

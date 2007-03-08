@@ -213,7 +213,7 @@ Viewer::process_event()
     if (synchronized_debt_ < 0)
     {
       synchronized_debt_++;
-      sched_->report_execution_finished(msg);
+      sched_->report_execution_finished(this, msg);
     }
     else
     {
@@ -224,7 +224,7 @@ Viewer::process_event()
 
   case MessageTypes::SynchronizeModule:
     // We (mostly) ignore these messages.
-    sched_->report_execution_finished(msg);
+    sched_->report_execution_finished(this, msg);
     break;
 
   case MessageTypes::ViewWindowRedraw:
@@ -890,7 +890,7 @@ Viewer::finishPort(int portid)
       cout << "\n";
 #endif
       
-      sched_->report_execution_finished(serial);
+      sched_->report_execution_finished(this, serial);
 
       // This turns on synchronous movie making.  It's very useful for
       // making movies that are driven by an event loop (such as

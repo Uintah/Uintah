@@ -45,6 +45,7 @@
 
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/GuiInterface/GuiCallback.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/Runnable.h>
 #include <string>
@@ -61,7 +62,7 @@ class MessageBase;
 class Module;
 class Network;
 class OPort;
-
+class SchedulerEventListener;
 
 struct SerialSet
 {
@@ -103,8 +104,9 @@ class SCISHARE Scheduler : public Runnable
     }
   };
 
+  std::vector<SchedulerEventListener*> listeners_;
   std::vector<SCData> callbacks_;
-  Mutex callback_lock_;
+  CrowdMonitor callback_lock_;
 
   virtual void run();
   void main_loop();
@@ -127,14 +129,18 @@ public:
   void request_multisend(OPort*);
 
   // msg must be of type ModuleExecute.
-  void report_execution_finished(const MessageBase *msg);
-  void report_execution_finished(unsigned int serial);
+  void report_execution_finished(Module* module, const MessageBase *msg);
+  void report_execution_finished(Module* module, unsigned int serial);
 
   // The callbacks will be called in order from highest priority to
   // lowest priority.  If a callback returns false then the callbacks
   // with lower priority will not be called.
   void add_callback(SchedulerCallback cv, void *data, int priority = 0);
   void remove_callback(SchedulerCallback cv, void *data);
+
+  void addEventListener(SchedulerEventListener* listener);
+  void removeEventListener(SchedulerEventListener* listener);
+
 };
 
 
