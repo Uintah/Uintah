@@ -109,7 +109,10 @@ typedef Module* (*ModuleMaker)(GuiContext* ctx);
 typedef std::multimap<string,int> port_map_type;
 typedef std::pair<port_map_type::iterator,
 		  port_map_type::iterator> port_range_type;
-
+typedef std::pair<std::vector<IPort*>::iterator,
+                  std::vector<IPort*>::iterator> iport_list_type;
+typedef std::pair<std::vector<OPort*>::iterator,
+                  std::vector<OPort*>::iterator> oport_list_type;
 
 template<class T> 
 class PortManager {
@@ -123,6 +126,7 @@ public:
   void remove(int item);
   const T& operator[](int);
   port_range_type operator[](string);
+  pair<typename vector<T>::iterator, typename vector<T>::iterator> get_all();
 };
 
 template<class T>
@@ -171,6 +175,13 @@ port_range_type
 PortManager<T>::operator[](string item)
 {
   return port_range_type(namemap_.equal_range(item));
+}
+
+template<class T>
+pair<typename vector<T>::iterator, typename vector<T>::iterator>
+PortManager<T>::get_all()
+{
+  return make_pair(ports_.begin(), ports_.end());
 }
 
 class SCISHARE Module : public ProgressReporter, public ModulePickable, 
@@ -222,6 +233,8 @@ public:
   virtual void          increment_progress();
 
   port_range_type get_input_ports(const string &name);
+  iport_list_type get_all_input_ports();
+  oport_list_type get_all_output_ports();
   IPort* get_input_port(const string &name);
   OPort* get_output_port(const string &name);
   OPort* get_output_port(int idx);

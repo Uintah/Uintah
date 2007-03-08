@@ -541,6 +541,18 @@ Module::get_input_ports(const string &name)
   return get_iports(name);
 }
 
+iport_list_type
+Module::get_all_input_ports()
+{
+  return iports_.get_all();
+}
+
+port_range_type
+Module::get_all_output_ports()
+{
+  return oports_.get_all();
+}
+
 IPort*
 Module::get_input_port(const string &name)
 {
