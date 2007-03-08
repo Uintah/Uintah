@@ -3173,50 +3173,60 @@ template<class V, class T>
   double b[MAX_MATLS], b_sp_vol[MAX_MATLS];
   double vel[MAX_MATLS], tmp[MAX_MATLS];
   FastMatrix a(numMatls, numMatls);
-  
-  for(;!iter.done(); iter++){
-    IntVector c = *iter;
-    IntVector adj = c + adj_offset; 
 
-    //__________________________________
-    //   Compute beta and off diagonal term of
-    //   Matrix A, this includes b[m][m].
-    //  You need to make sure that mom_exch_coeff[m][m] = 0
-    
-    // - Form diagonal terms of Matrix (A)
-    //  - Form RHS (b) 
-    for(int m = 0; m < numMatls; m++)  {
-      b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/
-	(sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
-      tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
-      vel[m] = vel_FC[m][c];
-    }
+  //__________________________________
+  //        Single material  
+  if(numMatls == 1){
+    int m = 0;
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + adj_offset; 
+      sp_vol_FC[m][c] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/(sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+      vel_FCME[m][c]  = vel_FC[m][c];    
+    } 
+  }else{ // multiply matrials
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + adj_offset; 
+      //__________________________________
+      //   Compute beta and off diagonal term of
+      //   Matrix A, this includes b[m][m].
+      //  You need to make sure that mom_exch_coeff[m][m] = 0
 
-    for(int m = 0; m < numMatls; m++)  {
-      double betasum = 1;
-      double bsum = 0;
-      double bm = b_sp_vol[m];
-      double vm = vel[m];
-      for(int n = 0; n < numMatls; n++)  {
-        double b = bm * tmp[n] * K(n,m);
-        a(m,n)    = b;
-	betasum -= b;
-	bsum -= b * (vel[n] - vm);
+      // - Form diagonal terms of Matrix (A)
+      // - Form RHS (b) 
+      for(int m = 0; m < numMatls; m++)  {
+        b_sp_vol[m] = 2.0 * (sp_vol_CC[m][adj] * sp_vol_CC[m][c])/(sp_vol_CC[m][adj] + sp_vol_CC[m][c]);
+        tmp[m] = -0.5 * delT * (vol_frac_CC[m][adj] + vol_frac_CC[m][c]);
+        vel[m] = vel_FC[m][c];
       }
-      a(m,m) = betasum;
-      b[m] = bsum;
-    }
 
-    //__________________________________
-    //  - solve and backout velocities
-    
-    a.destructiveSolve(b, b_sp_vol);
-    //  For implicit solve we need sp_vol_FC
-    for(int m = 0; m < numMatls; m++) {
-      vel_FCME[m][c] = vel_FC[m][c] + b[m];
-      sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
-    }
-  }  // iterator
+      for(int m = 0; m < numMatls; m++)  {
+        double betasum = 1;
+        double bsum    = 0;
+        double bm = b_sp_vol[m];
+        double vm = vel[m];
+        
+        for(int n = 0; n < numMatls; n++)  {
+          double b = bm * tmp[n] * K(n,m);
+          a(m,n)  = b;
+	   betasum -= b;
+	   bsum -= b * (vel[n] - vm);
+        }
+        a(m,m) = betasum;
+        b[m] = bsum;
+      }
+
+      //__________________________________
+      //  - solve and backout velocities
+      a.destructiveSolve(b, b_sp_vol);
+      
+      for(int m = 0; m < numMatls; m++) {
+        vel_FCME[m][c] = vel_FC[m][c] + b[m];
+        sp_vol_FC[m][c] = b_sp_vol[m];// only needed by implicit Pressure
+      }
+    }  // iterator
+  }  // numMatls conditional
 }
 
 /*_____________________________________________________________________
@@ -3318,7 +3328,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());     
     }   
-    
+
     vector<IntVector> adj_offset(3);
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
