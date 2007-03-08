@@ -90,7 +90,7 @@ WARNING
     virtual void scheduleTestConservation(SchedulerP&,
 					  const PatchSet* patches,
 					  const ModelInfo* mi);
-
+    
     virtual void setMPMLabel(MPMLabel* MLB);    
     
     
@@ -106,20 +106,21 @@ WARNING
                                         constNCVariable<double> &NC_CCweight,
                                         Vector &dx);
     
-    double computeBurnedMass(double To, double P, double Vc, double surfArea, 
-			     double delT, double solidMass, Vector& dx);
-                         
+    double computeBurnedMass(double To, double& Ts,  double P, double Vc, double surfArea, 
+			     double delT, double solidMass);
+    
     void printSchedule(const LevelP& level,
-                     const string& where); 
-                     
+		       const string& where); 
+    
     void printTask(const PatchSubset* patches,
-                 const Patch* patch,
+		   const Patch* patch,
                  const string& where);
     
     Steady_Burn(const Steady_Burn&);
     Steady_Burn& operator=(const Steady_Burn&);
-
+    
     const VarLabel* BurningCellLabel;
+    const VarLabel* TsLabel;
     const VarLabel* totalMassBurnedLabel;
     const VarLabel* totalHeatReleasedLabel;
     
@@ -133,12 +134,12 @@ WARNING
     ICELabel* Ilb;
     MPMLabel* Mlb;
     MaterialSet* mymatls;
-
-   // flags for the conservation test
-   struct saveConservedVars{
-     bool onOff;
-     bool mass;
-     bool energy;
+    
+    // flags for the conservation test
+    struct saveConservedVars{
+      bool onOff;
+      bool mass;
+      bool energy;
     };
     saveConservedVars* d_saveConservedVars;
     
@@ -152,9 +153,11 @@ WARNING
     double Kc;  /* HeatConductCondPh  */
     double Cp;  /* SpecificHeatCondPh */
     double MW;  /* MoleWeightGasPh    */
-    double BP;  /* Number of Particles at Boundary           */
+    double BP;  /* Number of Particles at Boundary          */
     double ThresholdPressure; /*Threshold Press for burning */
-    double ignitionTemp;      /* IgnitionTemp               */
+    double ignitionTemp;      /* IgnitionTemp  */
+    
+    double MIN_MASS_IN_A_CELL;
     
     double CC1; /* CC1 = Ac*R*Kc*Ec/Cp        */
     double CC2; /* CC2 = Qc/Cp/2              */
@@ -162,34 +165,31 @@ WARNING
     double CC4; /* CC4 = Qc/Cp                */
     double CC5; /* CC5 = Qg/Cp                */
     
-    /* C's, L's & R's, Tmin & Tmax, T_ignition are updated in UpdateConstants function  */
+    /* C's, IL & IR, Tmin & Tmax are updated in UpdateConstants function  */
     double C1; /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
     double C2; /* C2 = To + CC2     */
     double C3; /* C3 = CC3 * P * P  */
     double C4; /* C4 = To + CC4     */
     double C5; /* C5 = CC5 * C3     */
     
-    double T_ignition; /*  T_ignition = C2       */
     double Tmin, Tmax; /* define the range of Ts */
-    double L0, R0; /* for interval update, left values and right values */
-    double L1, R1;
-    double L2, R2;
-    double L3, R3; 
+    double IL, IR;     /* for interval update, left values and right values */
     
     void UpdateConstants(double To, double P, double Vc);
-    double Fxn_Ts(double Ts); /* function Ts = f(Ts)    */
-    double Fxn(double x);     /* function f = Ts -f(Ts) */
-    double Ts_max();
-    int Termination();        /* Convergence criteria   */
-    double Secant(double u, double w);
-    void SetInterval(double x);
-    double Bisection(double l, double r);
-    double BisectionSecant();
+    double F_Ts(double  Ts); /* function Ts = Ts(m(Ts))    */                    
+    double Ts_m(double m); /* function Ts = Ts(m)    */
+    double m_Ts(double Ts); /* function  m = m(Ts)    */
 
-    static const double EPS;
-    static const double UNDEFINED;
+    double Func(double Ts);  /* function f = Ts - F_Ts(Ts) */
+    double Deri(double Ts);  /* derivative of Func dF_dTs  */
+    
+    double Ts_max();
+    void SetInterval(double f, double Ts);
+    double BisectionNewton(double Ts);
+    
+    static const double EPSILON;   /* stop epsilon for Bisection-Newton method */
     #define d_SMALL_NUM 1e-100
-    #define d_TINY_RHO 1e-12
+    #define d_TINY_RHO  1e-12
   };
 }
 

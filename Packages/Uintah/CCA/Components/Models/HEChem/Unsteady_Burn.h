@@ -149,10 +149,11 @@ WARNING
     double BP;   /* Number of Particles at Boundary */
     double Bm;   /* BurnrateModCoef       */
     double Nc;   /* CondPhaseUnsteadyCoef */
-    double Ng;   /* GasPhaseUnsteadyCoef  */
-      
+    double Ng;   /* GasPhaseUnsteadyCoef  */      
     double ThresholdPressure; /*Threshold Press for burning */
     double ignitionTemp;      /* IgnitionTemp               */
+
+    double MIN_MASS_IN_A_CELL;
     
     double CC1;  /* CC1 = Ac*R*Kc*Ec/Cp        */
     double CC2;  /* CC2 = Qc/Cp/2              */
@@ -167,35 +168,31 @@ WARNING
     double C4;   /* C4 = To + CC4      */
     double C5;   /* C5 = CC5 * C3      */
 
-    double K1;   /* K1 = Cp/Kc;                  */ 
-    double K2;   /* K2 = Kc*rhoc/Cp;             */
-    double K3;   /* K3 = -2*Kc/Qc;               */
-    double K4;   /* K4 = 2*Ac*R*Kc*rhoc/(Ec*Qc); */
+    double NUM1;   /* K1 = Cp/Kc;                  */ 
+    double NUM2;   /* K2 = Kc*rhoc/Cp;             */
+    double NUM3;   /* K3 = -2*Kc/Qc;               */
+    double NUM4;   /* K4 = 2*Ac*R*Kc*rhoc/(Ec*Qc); */
     
-    double T_ignition; /* T_ignition = C2        */
     double Tmin, Tmax; /* define the range of Ts */
-    /* for interval update, left values and right values */
-    double L0, R0;     
-    double L1, R1;
-    double L2, R2;
-    double L3, R3; 
+    double IL, IR;     /* for interval update, left values and right values */
     
     void UpdateConstants(double To, double P, double Vc);
-    double Fxn_Ts(double Ts); /* function Ts = f(Ts)    */
-    double Fxn(double x);     /* function f = Ts -f(Ts) */
-    double Ts_max();
-    int Termination();        /* Convergence criteria   */
-    double Secant(double u, double w);
-    void SetInterval(double x);
-    double Bisection(double l, double r);
-    double BisectionSecant();
+    double F_Ts(double  Ts); /* function Ts = Ts(m(Ts))    */                    
+    double Ts_m(double m); /* function Ts = Ts(m)    */
+    double m_Ts(double Ts); /* function  m = m(Ts)    */
 
-    static const double EPS;
-    static const double UNDEFINED;
-    static const double INIT_TS;
-    static const double INIT_BETA;
+    double Func(double Ts);  /* function f = Ts - F_Ts(Ts) */
+    double Deri(double Ts);  /* derivative of Func dF_dTs  */
+    
+    double Ts_max();
+    void SetInterval(double f, double Ts);
+    double BisectionNewton(double Ts);
+    
+    static const double EPSILON;   /* stop epsilon for Bisection-Newton method */
+    static const double INIT_TS;   /* initial surface temperature          */
+    static const double INIT_BETA; /* initial surface temperature gradient */
     #define d_SMALL_NUM 1e-100
-    #define d_TINY_RHO 1e-12
+    #define d_TINY_RHO  1e-12
   };
 }
 
