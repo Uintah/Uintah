@@ -632,7 +632,14 @@ Module::set_context(Network* network)
     helper_thread_->setStackSize(stacksize_);
   }
   helper_thread_->activate(false);
+
+  moduleStarted();
   //helper_thread_->detach();  // Join on delete.
+}
+
+void
+Module::moduleStarted()
+{
 }
 
 void
