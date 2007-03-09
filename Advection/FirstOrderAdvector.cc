@@ -233,8 +233,110 @@ void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                       uvel_FC, vvel_FC, wvel_FC,
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
                       ignore_q_FC_V());
-} 
+}
 
+/*_____________________________________________________________________
+ Function~  Advect--  driver program that does the advection  
+_____________________________________________________________________*/
+template <class T, typename F> 
+  void FirstOrderAdvector::advectSlabs(const CCVariable<T>& q_CC,             
+                                       CCVariable<T>& q_advected,
+                                       advectVarBasket* vb,
+                                       constSFCXVariable<double>& uvel_FC,
+                                       constSFCYVariable<double>& vvel_FC,
+                                       constSFCZVariable<double>& wvel_FC,
+                                       SFCXVariable<double>& q_XFC,
+                                       SFCYVariable<double>& q_YFC,
+                                       SFCZVariable<double>& q_ZFC,
+                                       F save_q_FC) // function is passed in
+{
+  const Patch* patch = vb->patch;
+  Vector cell_dx = patch->dCell();
+  
+  T zero(0.0);
+  q_advected.initialize(zero);
+  const double delT = vb->delT;
+
+  double dx = cell_dx[0];
+  double dy = cell_dx[1];
+  double dz = cell_dx[2];
+
+  // To hit all x-,y-,z- faces increase the
+  // cell iterator by one cell in the x+,y+,z+ directions
+  CellIterator itr = patch->getCellIterator();
+  IntVector l = itr.begin();
+  IntVector h = itr.end()  + IntVector(1,1,1);
+  CellIterator iter(l,h);
+  
+  for(;!iter.done(); iter++){
+      
+    IntVector c = *iter;
+    
+    IntVector donor;
+    IntVector receive;
+    int i = c.x();
+    int j = c.y(); 
+    int k = c.z();
+    
+    //__________________________________
+    // X- face
+    double dx_slab = uvel_FC[c] * delT;
+    double fluxVol = dx_slab * dy * dz;     // volume fluxed through the face
+   
+    if(uvel_FC[c] < 0){
+      donor   = IntVector(i-1, j, k);    // donor cell
+      receive = c;
+    }else{
+      donor   = c;
+      receive = IntVector(i-1, j, k);    // receiving cell
+    }
+
+    // compute the flux of q and update the receiver/donor cells
+    T q_faceFlux         = q_CC[donor] * fluxVol;
+    q_advected[donor]   -= q_faceFlux;
+    q_advected[receive] += q_faceFlux;
+      
+    //__________________________________
+    // Y- face
+    double dy_slab = vvel_FC[c] * delT;
+    fluxVol = dx * dy_slab * dz;       
+   
+    if(vvel_FC[c] < 0){
+      donor   = IntVector(i, j-1, k);  
+      receive = c;
+    }else{
+      donor   = c;
+      receive = IntVector(i, j-1, k);  
+    }
+
+    q_faceFlux           = q_CC[donor] * fluxVol;
+    q_advected[donor]   -= q_faceFlux;
+    q_advected[receive] += q_faceFlux;
+    
+    //__________________________________
+    // Z- face
+    double dz_slab = wvel_FC[c] * delT;
+    fluxVol = dx * dy * dz_slab;   
+   
+    if(wvel_FC[c] < 0){
+      donor   = IntVector(i,j,k-1);
+      receive = c;
+    }else{
+      donor   = c;
+      receive = IntVector(i,j,k-1);
+    }
+
+    q_faceFlux           = q_CC[donor] * fluxVol;
+    q_advected[donor]   -= q_faceFlux;
+    q_advected[receive] += q_faceFlux;      
+       
+    //__________________________________
+    //  inline function to save crossing the cell face
+    //save_q_FC(q_FC[c], q_CC[up]);
+  } 
+}
+/*`==========TESTING==========*/
+#if 0 
 /*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
@@ -273,7 +375,7 @@ template <class T, typename F>
   // cell iterator by one cell in the x+,y+,z+ directions
   CellIterator itr = patch->getCellIterator();
   IntVector l = itr.begin();
-  IntVector h = itr.end()  + IntVector(1,1,1);svn 
+  IntVector h = itr.end()  + IntVector(1,1,1);
   CellIterator iter(l,h);
   
   for(;!iter.done(); iter++){
@@ -306,8 +408,7 @@ template <class T, typename F>
   } 
 }
 
-/*`==========TESTING==========*/
-#if 0 
+
 /*_____________________________________________________________________
  Function~ advect_operator
 ________________________________________________*/
@@ -407,7 +508,6 @@ template <class T, typename F>
 
 #endif 
 /*===========TESTING==========`*/
-
 /*_____________________________________________________________________
  Function~  q_FC_fluxes
  Computes the sum(flux of q at the face center) over all subcycle timesteps
