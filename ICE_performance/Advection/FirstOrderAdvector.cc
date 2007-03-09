@@ -234,6 +234,80 @@ void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
                       ignore_q_FC_V());
 } 
+
+/*_____________________________________________________________________
+ Function~  Advect--  driver program that does the advection  
+_____________________________________________________________________*/
+template <class T, typename F> 
+  void FirstOrderAdvector::advectSlabs(const CCVariable<T>& q_CC,             
+                                       CCVariable<T>& q_advected,
+                                       advectVarBasket* vb,
+                                       constSFCXVariable<double>& uvel_FC,
+                                       constSFCYVariable<double>& vvel_FC,
+                                       constSFCZVariable<double>& wvel_FC,
+                                       SFCXVariable<double>& q_XFC,
+                                       SFCYVariable<double>& q_YFC,
+                                       SFCZVariable<double>& q_ZFC,
+                                       F save_q_FC) // function is passed in
+{
+  const Patch* patch = vb->patch;
+  Vector cell_dx = patch->dCell();
+  
+  T zero(0.0);
+  q_advected.initialize(zero);
+  const double delT = vb->delT;
+  
+  //__________________________________
+  // precompute  dy * dz 
+  // pdir        dy_dz
+  // -----------------
+  //  x          dy * dz
+  //  y          dx * dz
+  //  z          dx * dy
+  Vector dy_dz;
+  dy_dz[0]= cell_dx[1] * cell_dx[2];
+  dy_dz[1]= cell_dx[0] * cell_dx[2];
+  dy_dz[2]= cell_dx[0] * cell_dx[1];
+
+  // To hit all x-,y-,z- faces increase the
+  // cell iterator by one cell in the x+,y+,z+ directions
+  CellIterator itr = patch->getCellIterator();
+  IntVector l = itr.begin();
+  IntVector h = itr.end()  + IntVector(1,1,1);svn 
+  CellIterator iter(l,h);
+  
+  for(;!iter.done(); iter++){
+      
+    IntVector c = *iter;
+    Vector velFC(uvel_FC[c],vvel_FC[c], wvel_FC[c]);
+    
+    // loop over the x-, y-, z- cell faces
+    for (int p_dir = 0; p_dir<3; p_dir ++){
+      double dx      = velFC[p_dir] * delT;   // vel_FC on the bottom, left, back cell face
+      double fluxVol = dx * dy_dz[p_dir];     // volume fluxed through the face
+      
+      // Find the donor/receiving cell
+      IntVector donor   = c;
+      IntVector receive = c;
+      if(velFC[p_dir] < 0){
+        donor[p_dir]   = c[p_dir] - 1;  // donor cell
+      }else{
+        receive[p_dir] = c[p_dir] - 1;    // receiving cell
+      }
+
+      // compute the flux of q and update the receiver/donor cells
+      T q_faceFlux         = q_CC[donor] * fluxVol;
+      q_advected[donor]   -= q_faceFlux;
+      q_advected[receive] += q_faceFlux;
+    }
+    //__________________________________
+    //  inline function to save crossing the cell face
+    //save_q_FC(q_FC[c], q_CC[up]);
+  } 
+}
+
+/*`==========TESTING==========*/
+#if 0 
 /*_____________________________________________________________________
  Function~ advect_operator
 ________________________________________________*/
@@ -263,7 +337,7 @@ void FirstOrderAdvector::advect_operator(CellIterator iter,
     //__________________________________
     //   #0          
     IntVector c = *iter;
-    IntVector doner   = c;
+    IntVector donor   = c;
     IntVector receive = c;
   
     double velFC   = vel_FC[c];
@@ -276,12 +350,12 @@ void FirstOrderAdvector::advect_operator(CellIterator iter,
     int minus_one_or_zero   = int(-0.5 - plus_minus_half);
     int one_or_zero         = abs(minus_one_or_zero);
     
-    doner[p_dir]   = c[p_dir] + minus_one_or_zero;  // donor cell
+    donor[p_dir]   = c[p_dir] + minus_one_or_zero;  // donor cell
     receive[p_dir] = c[p_dir] + one_or_zero - 1;    // receiving cell
     //__________________________________
     //   #2
-    V q_faceFlux          = q_CC[doner] * fluxVol;
-    q_advected[doner]    -= q_faceFlux;
+    V q_faceFlux          = q_CC[donor] * fluxVol;
+    q_advected[donor]    -= q_faceFlux;
     q_advected[receive]  += q_faceFlux;
     //__________________________________
     //  inline function to save crossing the cell face
@@ -331,6 +405,8 @@ template <class T, typename F>
                                       save_q_FC);
 }
 
+#endif 
+/*===========TESTING==========`*/
 
 /*_____________________________________________________________________
  Function~  q_FC_fluxes
