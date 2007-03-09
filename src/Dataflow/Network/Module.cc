@@ -547,7 +547,7 @@ Module::get_all_input_ports()
   return iports_.get_all();
 }
 
-port_range_type
+oport_list_type
 Module::get_all_output_ports()
 {
   return oports_.get_all();
