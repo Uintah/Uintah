@@ -148,7 +148,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    else
      restart_mat_ps = prob_spec;
 
-   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 
    string integrator_type;
    if (mpm_soln_ps) {
@@ -200,11 +200,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    //Search for the MaterialProperties block and then get the MPM section
 
-   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
+   ProblemSpecP mat_ps =  restart_mat_ps->findBlock("MaterialProperties");
 
-   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+   ProblemSpecP child = mat_ps->findBlock("contact");
 
-   ProblemSpecP child = mpm_mat_ps->findBlock("contact");
    d_con_type = "null";
    child->get("type",d_con_type);
    d_rigid_body = false;
@@ -219,7 +218,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
                                                   Vector(0,0,0));
    }
 
-   MPMPhysicalBCFactory::create(prob_spec);
+   MPMPhysicalBCFactory::create(restart_mat_ps);
    if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
      if(flags->d_useLoadCurves){
        throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
@@ -261,19 +260,19 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    heatConductionModel->problemSetup(d_solver_type);
 
    thermalContactModel =
-     ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
+     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
    d_switchCriteria = dynamic_cast<SwitchingCriteria*>
      (getPort("switch_criteria"));
    
    if (d_switchCriteria) {
-     d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
+     d_switchCriteria->problemSetup(restart_mat_ps,materials_ps,d_sharedState);
    }
     
    
    // Pull out from Time section
    d_initialDt = 10000.0;
-   ProblemSpecP time_ps = prob_spec->findBlock("Time");
+   ProblemSpecP time_ps = restart_mat_ps->findBlock("Time");
    time_ps->get("delt_init",d_initialDt);
 }
 
