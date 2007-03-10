@@ -670,7 +670,7 @@ double Steady_Burn::BisectionNewton(double Ts){
       if(fabs(y)<EPSILON)
 	return Ts;
       
-      if(Ts<IL | Ts>IR | fabs(delta_new)>fabs(delta_old*0.7))
+      if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
 	break;
 
       iter++; 

@@ -673,48 +673,48 @@ void Unsteady_Burn::setMPMLabel(MPMLabel* MLB){
 double Unsteady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, 
 					double solidMass, double& beta, double& Ts, Vector& dx){  
   UpdateConstants(To, P, Vc);
-
-  double   Ts_local = BisectionNewton(Ts);
-  double    m_local = m_Ts(Ts_local);
-  double beta_local = (Ts_local-To) * m_local * NUM1;
-  double m_unsteady = 0.0;
-
+  
+  double    Ts_local = BisectionNewton(Ts);
+  double     m_local = m_Ts(Ts_local);
+  double  beta_local = (Ts_local-To) * m_local * NUM1;
+  double m_nonsteady = 0.0;
+  
   if(beta<INIT_BETA && Ts>INIT_TS){
-    double b = NUM3*beta;
-    double c = NUM4*Ts*Ts*exp(-Ec/(R*Ts));
-    double para = b*b-4*c;
-    if(para < 0){
-      throw InvalidValue("Timestep is too large to correctly compute the unsteady burn rate", __FILE__, __LINE__);
-    }
-    m_unsteady = 2*c/(sqrt(para)+b);
- 
-    /* manually adjust the unsteady burn rate based on the local steady burn rate */
-    if(Bm!=1.0)
-      m_unsteady = m_local * pow(m_unsteady/m_local, Bm);
-
-    double n1 = (NUM2/(delT*m_unsteady*m_unsteady)) * Nc;
-    double n2 = n1 * Ng;
-    if(n1>1)
-      beta = (n1-1)/n1*beta + 1/n1*beta_local;
+    double n_coef = Nc * NUM2/(delT*m_local*m_local);
+    double m_coef = Ng * n_coef;
+    
+    if(n_coef>1)
+      beta = (n_coef-1)/n_coef*beta + 1/n_coef*beta_local;
     else 
       beta = beta_local;
     
-    if(n2>1)
-      Ts   = (n2-1)/n2*Ts   + 1/n2*Ts_local;
+    if(m_coef>1)
+      Ts   = (m_coef-1)/m_coef*Ts   + 1/m_coef*Ts_local;
     else 
       Ts = Ts_local;
+    
+    double b    = NUM3*beta;
+    double c    = NUM4*Ts*Ts*exp(-Ec/(R*Ts));
+    double para = b*b-4*c;
+    if(para < 0)
+      throw InvalidValue("Timestep is too large to correctly compute the unsteady burn rate", __FILE__, __LINE__);
 
-    //cout <<"  beta="<< beta <<" Ts="<< Ts <<" n1="<< n1<<endl;
-  
+    m_nonsteady = 2*c/(sqrt(para)+b);
+    
+    /* manually adjust the unsteady burn rate based on the local steady burn rate */  
+    if(Bm != 1.0)
+      m_nonsteady =  m_local * pow(m_nonsteady/m_local, Bm);
+    
   }else{
     beta = beta_local;
     Ts = Ts_local;
-    m_unsteady = m_local;
+    m_nonsteady = m_local;
   }
    
-  double burnedMass = delT * surfArea * m_unsteady;
+  double burnedMass = delT * surfArea * m_nonsteady;
   if (burnedMass + MIN_MASS_IN_A_CELL > solidMass) 
-    burnedMass = solidMass - MIN_MASS_IN_A_CELL;  
+    burnedMass = solidMass - MIN_MASS_IN_A_CELL;
+  
   return burnedMass;
 }
 
@@ -840,7 +840,7 @@ double Unsteady_Burn::BisectionNewton(double Ts){
       if(fabs(y)<EPSILON)
 	return Ts;
       
-      if(Ts<IL | Ts>IR | fabs(delta_new)>fabs(delta_old*0.7))
+      if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
 	break;
 
       iter++; 
