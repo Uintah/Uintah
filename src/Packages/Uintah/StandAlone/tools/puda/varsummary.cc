@@ -11,6 +11,8 @@
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
+#include <sci_defs/bits_defs.h>
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -23,8 +25,10 @@ namespace SCIRun {
 
   // Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
   //
+#if !defined(SCI_64BITS)
   long64  Min( long64 l, long64 r) { return l < r ? l : r;  }
   long64  Max( long64 l, long64 r) { return l > r ? l : r;  }
+#endif
   // The Matrix Min/Max functions are kind of arbitrary and should NOT
   // be propagated out of this file.  The only reason they are used
   // here is that the code was using a Norm comparison for Matrices,
