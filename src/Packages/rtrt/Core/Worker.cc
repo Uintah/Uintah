@@ -218,95 +218,83 @@ void Worker::run()
 	      //////////////////////////
 	      // Non jitter
 	      for(int y=sy;y<ey;y++){
-		for(int x=sx;x<ex;x++){
-		  camera->makeRayLR(ray, rayR, x+xoffset, y+yoffset,
-                                    ixres, iyres);
-		  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
-		  traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
-		  if( !hotSpotsMode ) {
-		    (*image)(x,y).set(result);
-		    (*image)(x,y+yres).set(Rcolor);
-		  } else {
-		    double etime=SCIRun::Time::currentSeconds();
-		    double dt=(etime-stime)*0.5;
-		    stime=etime;
-		    (*image)(x,y).set(CMAP(dt));
-		    (*image)(x,y+yres).set(CMAP(dt));
-		  }
-		}
+          for(int x=sx;x<ex;x++){
+            camera->makeRayLR(ray, rayR, x+xoffset, y+yoffset,
+                              ixres, iyres);
+            traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+            traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
+            if( !hotSpotsMode ) {
+              (*image)(x,y).set(result);
+              (*image)(x,y+yres).set(Rcolor);
+            } else {
+              double etime=SCIRun::Time::currentSeconds();
+              double dt=(etime-stime)*0.5;
+              stime=etime;
+              (*image)(x,y).set(CMAP(dt));
+              (*image)(x,y+yres).set(CMAP(dt));
+            }
+          }
 	      }
 	    } else {
 	      ///////////////////////////
 	      // Jitter
-              Color Lcolor, Rcolor;
-              Color Lcolor_sum, Rcolor_sum;
-              Ray rayR;
-              
-              // We use the pixel coordinate to index into the
-              // jittered samples.  We only have 1000 of these
-              // jittered samples, so we need to make sure that we
-              // loop back the indicies when x gets too large.
-              //
-              // The previous implementation reused the same x
-              // jittered samples for every row (they still had
-              // different y offets, though).  I'm going to use a
-              // contiguous chunk of indicies for the whole tile, now.
-              // This code will get you into trouble when the number
-              // of pixels in a given tile gets above 1000.
-              int xj_index = sx % (1000-(xtilesize*ytilesize*4));
-              int yj_index = sy % (1000-(ytilesize*ytilesize*4));
-	      for(int y=sy;y<ey;y++){
-		for(int x=sx;x<ex;x++){
-                  camera->makeRayLR(ray, rayR,
-                                    x+xoffset - 0.25 + jitter_vals[xj_index],
-                                    y+yoffset - 0.25 + jitter_valsb[yj_index],
-                                    ixres, iyres);
-                  traceRay(Lcolor_sum, ray, 0, 1.0, Color(0,0,0), &cx);
-                  traceRay(Rcolor_sum, rayR, 0, 1.0, Color(0,0,0), &cx);
-                  // Increment for the next set of pixels
-                  xj_index++; yj_index++;
-                  
-                  camera->makeRayLR(ray, rayR,
-                                    x+xoffset + 0.25 + jitter_vals[xj_index], 
-                                    y+yoffset - 0.25 + jitter_valsb[yj_index],
-                                    ixres, iyres);
-                  traceRay(Lcolor, ray, 0, 1.0, Color(0,0,0), &cx);
-                  traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
-                  Lcolor_sum += Lcolor;
-                  Rcolor_sum += Rcolor;
-                  xj_index++; yj_index++;
-                  
-                  camera->makeRayLR(ray, rayR,
-                                    x+xoffset + 0.25 + jitter_vals[xj_index],
-                                    y+yoffset + 0.25 + jitter_valsb[yj_index],
-                                    ixres, iyres);
-                  traceRay(Lcolor, ray, 0, 1.0, Color(0,0,0), &cx);
-                  traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
-                  Lcolor_sum += Lcolor;
-                  Rcolor_sum += Rcolor;
-                  xj_index++; yj_index++;
-                  
-                  camera->makeRayLR(ray, rayR,
-                                    x+xoffset - 0.25 + jitter_vals[xj_index],
-                                    y+yoffset + 0.25 + jitter_valsb[yj_index],
-                                    ixres, iyres);
-                  traceRay(Lcolor, ray, 0, 1.0, Color(0,0,0), &cx);
-                  traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
-                  Lcolor_sum += Lcolor;
-                  Rcolor_sum += Rcolor;
-                  xj_index++; yj_index++;
+        Color Lcolor, Rcolor;
+        Color Lcolor_sum, Rcolor_sum;
+        Ray rayR;
 
-		  if( !hotSpotsMode ) {
-		    (*image)(x,y).set(Lcolor_sum*0.25f);
-		    (*image)(x,y+yres).set(Rcolor_sum*0.25f);
-		  } else {
-		    double etime=SCIRun::Time::currentSeconds();
-		    double dt=(etime-stime)*0.5;
-		    stime=etime;
-		    (*image)(x,y).set(CMAP(dt));
-		    (*image)(x,y+yres).set(CMAP(dt));
-		  }
-		} // x loop
+        for(int y=sy;y<ey;y++){
+          for(int x=sx;x<ex;x++){
+            // We use the pixel coordinate to index into the jittered
+            // samples.  We only have 1000 of these jittered samples,
+            // so we need to make sure that we loop back the indicies
+            // when x gets too large.
+            int xj_index = x%(1000-4);
+            int yj_index = y%(1000-4);
+            camera->makeRayLR(ray, rayR,
+                              x+xoffset - 0.25 + jitter_vals[xj_index++],
+                              y+yoffset - 0.25 + jitter_valsb[yj_index++],
+                              ixres, iyres);
+            traceRay(Lcolor_sum, ray, 0, 1.0, Color(0,0,0), &cx);
+            traceRay(Rcolor_sum, rayR, 0, 1.0, Color(0,0,0), &cx);
+
+            camera->makeRayLR(ray, rayR,
+                              x+xoffset + 0.25 + jitter_vals[xj_index++],
+                              y+yoffset - 0.25 + jitter_valsb[yj_index++],
+                              ixres, iyres);
+            traceRay(Lcolor, ray, 0, 1.0, Color(0,0,0), &cx);
+            traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
+            Lcolor_sum += Lcolor;
+            Rcolor_sum += Rcolor;
+
+            camera->makeRayLR(ray, rayR,
+                              x+xoffset + 0.25 + jitter_vals[xj_index++],
+                              y+yoffset + 0.25 + jitter_valsb[yj_index++],
+                              ixres, iyres);
+            traceRay(Lcolor, ray, 0, 1.0, Color(0,0,0), &cx);
+            traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
+            Lcolor_sum += Lcolor;
+            Rcolor_sum += Rcolor;
+
+            camera->makeRayLR(ray, rayR,
+                              x+xoffset - 0.25 + jitter_vals[xj_index],
+                              y+yoffset + 0.25 + jitter_valsb[yj_index],
+                              ixres, iyres);
+            traceRay(Lcolor, ray, 0, 1.0, Color(0,0,0), &cx);
+            traceRay(Rcolor, rayR, 0, 1.0, Color(0,0,0), &cx);
+            Lcolor_sum += Lcolor;
+            Rcolor_sum += Rcolor;
+
+            if( !hotSpotsMode ) {
+              (*image)(x,y).set(Lcolor_sum*0.25f);
+              (*image)(x,y+yres).set(Rcolor_sum*0.25f);
+            } else {
+              double etime=SCIRun::Time::currentSeconds();
+              double dt=(etime-stime)*0.5;
+              stime=etime;
+              (*image)(x,y).set(CMAP(dt));
+              (*image)(x,y+yres).set(CMAP(dt));
+            }
+          } // x loop
 	      } // y loop
 	    } // jitter section
 	  } else {
@@ -317,54 +305,52 @@ void Worker::run()
 	      Color result2, result3, result4; // 4 samples
 	      double stime = 0;
 	      if( hotSpotsMode )
-		stime = SCIRun::Time::currentSeconds();
-              // See comments above for these two variables
-              int xj_index = sx % (1000-(xtilesize*ytilesize*4));
-              int yj_index = sy % (1000-(ytilesize*ytilesize*4));
+          stime = SCIRun::Time::currentSeconds();
 	      for(int y=sy;y<ey;y++){
-		for(int x=sx;x<ex;x++){
-		  // do central ray plus 3 jittered samples...
-                  camera->makeRay(ray,
-                                  x+xoffset - 0.25 + jitter_vals[xj_index],
-                                  y+yoffset - 0.25 + jitter_valsb[yj_index],
-                                  ixres, iyres);
-                  traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
-                  // Increment for the next set of pixels
-                  xj_index++; yj_index++;
-                  
-                  camera->makeRay(ray,
-                                  x+xoffset + 0.25 + jitter_vals[xj_index], 
-                                  y+yoffset - 0.25 + jitter_valsb[yj_index],
-                                  ixres, iyres);
-                  traceRay(result2, ray, 0, 1.0, Color(0,0,0), &cx);
-                  xj_index++; yj_index++;
-                  
-                  camera->makeRay(ray,
-                                  x+xoffset + 0.25 + jitter_vals[xj_index],
-                                  y+yoffset + 0.25 + jitter_valsb[yj_index],
-                                  ixres, iyres);
-                  traceRay(result3, ray, 0, 1.0, Color(0,0,0), &cx);
-                  xj_index++; yj_index++;
-                  
-                  camera->makeRay(ray,
-                                  x+xoffset - 0.25 + jitter_vals[xj_index],
-                                  y+yoffset + 0.25 + jitter_valsb[yj_index],
-                                  ixres, iyres);
-                  traceRay(result4, ray, 0, 1.0, Color(0,0,0), &cx);
-                  xj_index++; yj_index++;
+          for(int x=sx;x<ex;x++){
+            // We use the pixel coordinate to index into the jittered
+            // samples.  We only have 1000 of these jittered samples,
+            // so we need to make sure that we loop back the indicies
+            // when x gets too large.
+            int xj_index = x%(1000-4);
+            int yj_index = y%(1000-4);
+            camera->makeRay(ray,
+                            x+xoffset - 0.25 + jitter_vals[xj_index++],
+                            y+yoffset - 0.25 + jitter_valsb[yj_index++],
+                            ixres, iyres);
+            traceRay(result, ray, 0, 1.0, Color(0,0,0), &cx);
+
+            camera->makeRay(ray,
+                            x+xoffset + 0.25 + jitter_vals[xj_index++],
+                            y+yoffset - 0.25 + jitter_valsb[yj_index++],
+                            ixres, iyres);
+            traceRay(result2, ray, 0, 1.0, Color(0,0,0), &cx);
+
+            camera->makeRay(ray,
+                            x+xoffset + 0.25 + jitter_vals[xj_index++],
+                            y+yoffset + 0.25 + jitter_valsb[yj_index++],
+                            ixres, iyres);
+            traceRay(result3, ray, 0, 1.0, Color(0,0,0), &cx);
+
+            camera->makeRay(ray,
+                            x+xoffset - 0.25 + jitter_vals[xj_index],
+                            y+yoffset + 0.25 + jitter_valsb[yj_index],
+                            ixres, iyres);
+            traceRay(result4, ray, 0, 1.0, Color(0,0,0), &cx);
+            xj_index++; yj_index++;
 		  
-		  if( (hotSpotsMode == RTRT::HotSpotsOn) ||
-		      (hotSpotsMode == RTRT::HotSpotsHalfScreen &&
-                       (x < halfXres) ) ) {
-		    double etime=SCIRun::Time::currentSeconds();
-		    double t=etime-stime;	
-		    stime=etime;
-		    (*image)(x,y).set(CMAP(t));
-		  } else {
-		    result = (result+result2+result3+result4)*0.25f;
-		    (*image)(x,y).set(result);
-		  }
-		}
+            if( (hotSpotsMode == RTRT::HotSpotsOn) ||
+                (hotSpotsMode == RTRT::HotSpotsHalfScreen &&
+                 (x < halfXres) ) ) {
+              double etime=SCIRun::Time::currentSeconds();
+              double t=etime-stime;	
+              stime=etime;
+              (*image)(x,y).set(CMAP(t));
+            } else {
+              result = (result+result2+result3+result4)*0.25f;
+              (*image)(x,y).set(result);
+            }
+          }
 	      }
 	      // end if( do_jitter )
 	    } else {
