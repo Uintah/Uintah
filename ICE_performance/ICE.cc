@@ -4656,7 +4656,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
        
         new_dw->allocateTemporary(vel_CC[m],  patch);
         new_dw->allocateTemporary(Temp_CC[m], patch); 
-        cv[m].copyData(cv_ice);
+        cv[m].copy(cv_ice);
       }                             // A L L  M A T L S
 
       new_dw->get(mass_L[m],        lb->mass_L_CCLabel,   indx, patch,gn, 0);
@@ -4668,11 +4668,12 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx,patch);
       new_dw->allocateAndPut(int_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);
     }
+  
 
     // Convert momenta to velocities and internal energy to Temp
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numALLMatls; m++) {
+    for (int m = 0; m < numALLMatls; m++) {
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
         Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m][c]);
         vel_CC[m][c]  = mom_L[m][c]/mass_L[m][c];
       }
@@ -4693,190 +4694,199 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         printVector( indx, patch,1, desc.str(),"vel_CC", 0,  vel_CC[m]);
       }
     }
-
-    for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      //---------- M O M E N T U M   E X C H A N G E
-      //   Form BETA matrix (a), off diagonal terms
-      //   beta and (a) matrix are common to all momentum exchanges
-      for(int m = 0; m < numALLMatls; m++)  {
-        tmp = delT*sp_vol_CC[m][c];
-        for(int n = 0; n < numALLMatls; n++) {
-          beta(m,n) = vol_frac_CC[n][c]  * K(n,m) * tmp;
-          a(m,n) = -beta(m,n);
-        }
-      }
-      //   Form matrix (a) diagonal terms
-      for(int m = 0; m < numALLMatls; m++) {
-        a(m,m) = 1.0;
-        for(int n = 0; n < numALLMatls; n++) {
-          a(m,m) +=  beta(m,n);
-        }
-      }
-
-      for(int m = 0; m < numALLMatls; m++) {
-        Vector sum(0,0,0);
-        const Vector& vel_m = vel_CC[m][c];
-        for(int n = 0; n < numALLMatls; n++) {
-          sum += beta(m,n) *(vel_CC[n][c] - vel_m);
-        }
-        bb[m] = sum;
-      }
-
-      a.destructiveSolve(bb);
-
-      for(int m = 0; m < numALLMatls; m++) {
-        vel_CC[m][c] += bb[m];
-      }
-
-      //---------- E N E R G Y   E X C H A N G E     
-      for(int m = 0; m < numALLMatls; m++) {
-        tmp = delT*sp_vol_CC[m][c] / cv[m][c];
-        for(int n = 0; n < numALLMatls; n++)  {
-          beta(m,n) = vol_frac_CC[n][c] * H(n,m)*tmp;
-          a(m,n) = -beta(m,n);
-        }
-      }
-      //   Form matrix (a) diagonal terms
-      for(int m = 0; m < numALLMatls; m++) {
-        a(m,m) = 1.;
-        for(int n = 0; n < numALLMatls; n++)   {
-          a(m,m) +=  beta(m,n);
-        }
-      }
-      // -  F O R M   R H S   (b)
-      for(int m = 0; m < numALLMatls; m++)  {
-        b[m] = 0.0;
-
-       for(int n = 0; n < numALLMatls; n++) {
-         b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
-        }
-      }
-      //     S O L V E, Add exchange contribution to orig value
-      a.destructiveSolve(b);
-      for(int m = 0; m < numALLMatls; m++) {
-        Temp_CC[m][c] = Temp_CC[m][c] + b[m];
-      }
-    }  //end CellIterator loop
-
-  if(d_exchCoeff->convective()){
-    //  Loop over matls
-    //  if (mpm_matl)
-    //  Loop over cells
-    //  find surface and surface normals
-    //  choose adjacent cell
-    //  find mass weighted average temp in adjacent cell (T_ave)
-    //  compute a heat transfer to the container h(T-T_ave)
-    //  compute Temp_CC = Temp_CC + h_trans/(mass*cv)
-    //  end loop over cells
-    //  endif (mpm_matl)
-    //  endloop over matls
-    FastMatrix cet(2,2),ac(2,2);
-    double RHSc[2];
-    cet.zero();
-    int gm=d_exchCoeff->conv_fluid_matlindex();  // gas matl from which to get heat
-    int sm=d_exchCoeff->conv_solid_matlindex();  // solid matl that heat goes to
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    constNCVariable<double> NC_CCweight, NCsolidMass;
-    old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
-    Vector dx = patch->dCell();
-    double dxlen = dx.length();
-    const Level* level=patch->getLevel();
-
-    for (int m = 0; m < numALLMatls; m++)  {
-      Material* matl = d_sharedState->getMaterial( m );
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      int dwindex = matl->getDWIndex();
-      if(mpm_matl && dwindex==sm){
-        new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
-        for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          IntVector nodeIdx[8];
-          patch->findNodesFromCell(*iter,nodeIdx);
-          double MaxMass = d_SMALL_NUM;
-          double MinMass = 1.0/d_SMALL_NUM;
-          for (int nN=0; nN<8; nN++) {
-            MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
-                                       NCsolidMass[nodeIdx[nN]]);
-            MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
-                                       NCsolidMass[nodeIdx[nN]]);
+    //__________________________________
+    //
+    if(numALLMatls > 1){
+    
+      for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        //---------- M O M E N T U M   E X C H A N G E
+        //   Form BETA matrix (a), off diagonal terms
+        //   beta and (a) matrix are common to all momentum exchanges
+        for(int m = 0; m < numALLMatls; m++)  {
+          tmp = delT*sp_vol_CC[m][c];
+          for(int n = 0; n < numALLMatls; n++) {
+            beta(m,n) = vol_frac_CC[n][c]  * K(n,m) * tmp;
+            a(m,n) = -beta(m,n);
           }
-          if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
-            double gradRhoX = 0.25 *
-                   ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-                   -
-                   ( NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.x();
-            double gradRhoY = 0.25 *
-                   ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-                   - 
-                   ( NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.y();
-            double gradRhoZ = 0.25 *                          
-                   ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                  -
-                   ( NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-                     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-                     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-                     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])) / dx.z();
+        }
+        //   Form matrix (a) diagonal terms
+        for(int m = 0; m < numALLMatls; m++) {
+          a(m,m) = 1.0;
+          for(int n = 0; n < numALLMatls; n++) {
+            a(m,m) +=  beta(m,n);
+          }
+        }
 
-            double absGradRho = sqrt(gradRhoX*gradRhoX +
-                                      gradRhoY*gradRhoY +
-                                      gradRhoZ*gradRhoZ );
+        for(int m = 0; m < numALLMatls; m++) {
+          Vector sum(0,0,0);
+          const Vector& vel_m = vel_CC[m][c];
+          
+          for(int n = 0; n < numALLMatls; n++) {
+            sum += beta(m,n) *(vel_CC[n][c] - vel_m);
+          }
+          bb[m] = sum;
+        }
 
-            Vector surNorm(gradRhoX/absGradRho,
-                           gradRhoY/absGradRho,
-                           gradRhoZ/absGradRho);
+        a.destructiveSolve(bb);
 
+        for(int m = 0; m < numALLMatls; m++) {
+          vel_CC[m][c] += bb[m];
+        }
 
-            Point this_cell_pos = level->getCellPosition(c);
-            Point adja_cell_pos = this_cell_pos + .6*dxlen*surNorm; 
+        //---------- E N E R G Y   E X C H A N G E     
+        for(int m = 0; m < numALLMatls; m++) {
+          tmp = delT*sp_vol_CC[m][c] / cv[m][c];
+          for(int n = 0; n < numALLMatls; n++)  {
+            beta(m,n) = vol_frac_CC[n][c] * H(n,m)*tmp;
+            a(m,n) = -beta(m,n);
+          }
+        }
+        //   Form matrix (a) diagonal terms
+        for(int m = 0; m < numALLMatls; m++) {
+          a(m,m) = 1.;
+          for(int n = 0; n < numALLMatls; n++)   {
+            a(m,m) +=  beta(m,n);
+          }
+        }
+        // -  F O R M   R H S   (b)
+        for(int m = 0; m < numALLMatls; m++)  {
+          b[m] = 0.0;
+          
+          for(int n = 0; n < numALLMatls; n++) {
+            b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
+          }
+        }
+        //     S O L V E, Add exchange contribution to orig value
+        a.destructiveSolve(b);
+        for(int m = 0; m < numALLMatls; m++) {
+          Temp_CC[m][c] += b[m];
+        }
+      }  //end CellIterator loop
 
-            IntVector q;
-            if(patch->findCell(adja_cell_pos, q)){
-              cet(0,0)=0.;
-              cet(0,1)=delT*vol_frac_CC[gm][q]*H(sm,gm)*sp_vol_CC[sm][c]
-                       /cv[sm][c];
-              cet(1,0)=delT*vol_frac_CC[sm][c]*H(gm,sm)*sp_vol_CC[gm][q]
-                       /cv[gm][q];
-              cet(1,1)=0.;
+      //______________________________________________________________________
+      //  Convective heat transfer model
+      if(d_exchCoeff->convective()){
+        //  Loop over matls
+        //  if (mpm_matl)
+        //  Loop over cells
+        //  find surface and surface normals
+        //  choose adjacent cell
+        //  find mass weighted average temp in adjacent cell (T_ave)
+        //  compute a heat transfer to the container h(T-T_ave)
+        //  compute Temp_CC = Temp_CC + h_trans/(mass*cv)
+        //  end loop over cells
+        //  endif (mpm_matl)
+        //  endloop over matls
+        FastMatrix cet(2,2),ac(2,2);
+        double RHSc[2];
+        cet.zero();
+        int gm=d_exchCoeff->conv_fluid_matlindex();  // gas matl from which to get heat
+        int sm=d_exchCoeff->conv_solid_matlindex();  // solid matl that heat goes to
 
-              ac(0,1) = -cet(0,1);
-              ac(1,0) = -cet(1,0);
+        Ghost::GhostType  gac = Ghost::AroundCells;
+        constNCVariable<double> NC_CCweight, NCsolidMass;
+        old_dw->get(NC_CCweight,     MIlb->NC_CCweightLabel,  0,   patch,gac,1);
+        Vector dx = patch->dCell();
+        double dxlen = dx.length();
+        const Level* level=patch->getLevel();
 
-              //   Form matrix (a) diagonal terms
-              for(int m = 0; m < 2; m++) {
-                ac(m,m) = 1.;
-                for(int n = 0; n < 2; n++)   {
-                  ac(m,m) +=  cet(m,n);
-                }
+        for (int m = 0; m < numALLMatls; m++)  {
+          Material* matl = d_sharedState->getMaterial( m );
+          MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+          int dwindex = matl->getDWIndex();
+          if(mpm_matl && dwindex==sm){
+            new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
+            for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+              IntVector c = *iter;
+              IntVector nodeIdx[8];
+              patch->findNodesFromCell(*iter,nodeIdx);
+              double MaxMass = d_SMALL_NUM;
+              double MinMass = 1.0/d_SMALL_NUM;
+              for (int nN=0; nN<8; nN++) {
+                MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
+                                           NCsolidMass[nodeIdx[nN]]);
+                MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
+                                           NCsolidMass[nodeIdx[nN]]);
               }
-              
-              RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
-              RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
-              ac.destructiveSolve(RHSc);
-              Temp_CC[sm][c] += RHSc[0];
-              Temp_CC[gm][q] += RHSc[1];
-            }
-          }  // if a surface cell
-        }    // cellIterator
-      }      // if mpm_matl
-    }        // for ALL matls
-   }
+              if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
+                double gradRhoX = 0.25 *
+                       ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                         NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                         NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                         NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                       -
+                       ( NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                         NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                         NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                         NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.x();
+                double gradRhoY = 0.25 *
+                       ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                         NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                         NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                         NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                       - 
+                       ( NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                         NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                         NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                         NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])) / dx.y();
+                double gradRhoZ = 0.25 *                          
+                       ((NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                         NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                         NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                         NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                      -
+                       ( NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                         NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                         NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                         NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])) / dx.z();
+
+                double absGradRho = sqrt(gradRhoX*gradRhoX +
+                                          gradRhoY*gradRhoY +
+                                          gradRhoZ*gradRhoZ );
+
+                Vector surNorm(gradRhoX/absGradRho,
+                               gradRhoY/absGradRho,
+                               gradRhoZ/absGradRho);
+
+
+                Point this_cell_pos = level->getCellPosition(c);
+                Point adja_cell_pos = this_cell_pos + .6*dxlen*surNorm; 
+
+                IntVector q;
+                if(patch->findCell(adja_cell_pos, q)){
+                  cet(0,0)=0.;
+                  cet(0,1)=delT*vol_frac_CC[gm][q]*H(sm,gm)*sp_vol_CC[sm][c]
+                           /cv[sm][c];
+                  cet(1,0)=delT*vol_frac_CC[sm][c]*H(gm,sm)*sp_vol_CC[gm][q]
+                           /cv[gm][q];
+                  cet(1,1)=0.;
+
+                  ac(0,1) = -cet(0,1);
+                  ac(1,0) = -cet(1,0);
+
+                  //   Form matrix (a) diagonal terms
+                  for(int m = 0; m < 2; m++) {
+                    ac(m,m) = 1.;
+                    for(int n = 0; n < 2; n++)   {
+                      ac(m,m) +=  cet(m,n);
+                    }
+                  }
+
+                  RHSc[0] = cet(0,1)*(Temp_CC[gm][q] - Temp_CC[sm][c]);
+                  RHSc[1] = cet(1,0)*(Temp_CC[sm][c] - Temp_CC[gm][q]);
+                  ac.destructiveSolve(RHSc);
+                  Temp_CC[sm][c] += RHSc[0];
+                  Temp_CC[gm][q] += RHSc[1];
+                }
+              }  // if a surface cell
+            }  // cellIterator
+          }  // if mpm_matl
+        }  // for ALL matls
+      }  // if convective heat transfer
+      
+      
+    }  // if numMatls >1
 
     /*`==========TESTING==========*/ 
     if(d_customBC_var_basket->usingLodi || 
@@ -4896,7 +4906,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     preprocess_CustomBCs("CC_Exchange",old_dw, new_dw, lb, patch, 
                           999,d_customBC_var_basket);
     
-/*===========TESTING==========`*/  
+    /*===========TESTING==========`*/  
+
+    //__________________________________
+    //  Set boundary conditions
     for (int m = 0; m < numALLMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -4913,12 +4926,14 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     delete_CustomBCs(d_customBC_var_basket);
     //__________________________________
     // Convert vars. primitive-> flux 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter;
-      for (int m = 0; m < numALLMatls; m++) {
+    double inv_delT = 1.0/delT;
+   
+    for (int m = 0; m < numALLMatls; m++) {
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
         int_eng_L_ME[m][c] = Temp_CC[m][c]*cv[m][c] * mass_L[m][c];
         mom_L_ME[m][c]     = vel_CC[m][c]           * mass_L[m][c];
-        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
+        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c]) * inv_delT;
       }
     }
 
