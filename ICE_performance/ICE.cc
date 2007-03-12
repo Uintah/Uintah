@@ -34,7 +34,9 @@
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+
 #include <Core/Containers/StaticArray.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -2129,7 +2131,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       IntVector neg_cell;
       ostringstream warn, base;
       base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize, mat "<< indx <<" cell ";
-      
       if( !areAllValuesPositive(press_CC, neg_cell) ) {
         warn << base.str()<< neg_cell << " press_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
@@ -5736,8 +5737,8 @@ IntVector ICE::upwindCell_Z(const IntVector& c,
  _____________________________________________________________________  */
 bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
 { 
-  double numCells = 0;
-  double sum_src = 0;
+  int numCells = 0;
+  int sum_src = 0;
   int sumNan = 0;
   IntVector l = src.getLowIndex();
   IntVector h = src.getHighIndex();
@@ -5745,13 +5746,13 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   
   for(CellIterator iter=iterLim; !iter.done();iter++) {
     IntVector c = *iter;
-    sumNan += isnan(src[c]);       // check for nans
-    sum_src += src[c]/(fabs(src[c]) + d_SMALL_NUM);
+    sumNan  += isnan(src[c]);       // check for nans
+    sum_src += SCIRun::Sign(src[c]);
     numCells++;
   }
 
   // now find the first cell where the value is < 0   
-  if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
+  if ( (sum_src !=  numCells) || sumNan != 0) {
     for(CellIterator iter=iterLim; !iter.done();iter++) {
       IntVector c = *iter;
       if (src[c] < 0.0 || isnan(src[c]) !=0) {
