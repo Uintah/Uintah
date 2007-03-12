@@ -4700,13 +4700,27 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
+        
+        // To reduce cache hits
+        double vol_frac[MAX_MATLS];
+        double Temp[MAX_MATLS];
+        double sp_vol[MAX_MATLS];
+        Vector vel[MAX_MATLS];
+        
+        for(int m = 0; m < numALLMatls; m++)  {
+          vol_frac[m] = vol_frac_CC[m][c];
+          Temp[m]     = Temp_CC[m][c];
+          sp_vol[m]   = sp_vol_CC[m][c];
+          vel[m]      = vel_CC[m][c];
+        }
+        
         //---------- M O M E N T U M   E X C H A N G E
         //   Form BETA matrix (a), off diagonal terms
         //   beta and (a) matrix are common to all momentum exchanges
         for(int m = 0; m < numALLMatls; m++)  {
-          tmp = delT*sp_vol_CC[m][c];
+          tmp = delT*sp_vol[m];
           for(int n = 0; n < numALLMatls; n++) {
-            beta(m,n) = vol_frac_CC[n][c]  * K(n,m) * tmp;
+            beta(m,n) = vol_frac[n]  * K(n,m) * tmp;
             a(m,n) = -beta(m,n);
           }
         }
@@ -4720,10 +4734,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
         for(int m = 0; m < numALLMatls; m++) {
           Vector sum(0,0,0);
-          const Vector& vel_m = vel_CC[m][c];
+          const Vector& vel_m = vel[m];
           
           for(int n = 0; n < numALLMatls; n++) {
-            sum += beta(m,n) *(vel_CC[n][c] - vel_m);
+            sum += beta(m,n) *(vel[n] - vel_m);
           }
           bb[m] = sum;
         }
@@ -4736,15 +4750,15 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 
         //---------- E N E R G Y   E X C H A N G E     
         for(int m = 0; m < numALLMatls; m++) {
-          tmp = delT*sp_vol_CC[m][c] / cv[m][c];
+          tmp = delT*sp_vol[m] / cv[m][c];
           for(int n = 0; n < numALLMatls; n++)  {
-            beta(m,n) = vol_frac_CC[n][c] * H(n,m)*tmp;
+            beta(m,n) = vol_frac[n] * H(n,m) * tmp;
             a(m,n) = -beta(m,n);
           }
         }
         //   Form matrix (a) diagonal terms
         for(int m = 0; m < numALLMatls; m++) {
-          a(m,m) = 1.;
+          a(m,m) = 1.0;
           for(int n = 0; n < numALLMatls; n++)   {
             a(m,m) +=  beta(m,n);
           }
@@ -4754,7 +4768,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
           b[m] = 0.0;
           
           for(int n = 0; n < numALLMatls; n++) {
-            b[m] += beta(m,n) * (Temp_CC[n][c] - Temp_CC[m][c]);
+            b[m] += beta(m,n) * (Temp[n] - Temp[m]);
           }
         }
         //     S O L V E, Add exchange contribution to orig value
@@ -4796,19 +4810,23 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
           MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
           int dwindex = matl->getDWIndex();
           if(mpm_matl && dwindex==sm){
+            
             new_dw->get(NCsolidMass,     MIlb->gMassLabel,   dwindex,patch,gac,1);
+            
             for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
               IntVector c = *iter;
               IntVector nodeIdx[8];
               patch->findNodesFromCell(*iter,nodeIdx);
               double MaxMass = d_SMALL_NUM;
               double MinMass = 1.0/d_SMALL_NUM;
+              
               for (int nN=0; nN<8; nN++) {
                 MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
                                            NCsolidMass[nodeIdx[nN]]);
                 MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*
                                            NCsolidMass[nodeIdx[nN]]);
               }
+              
               if ((MaxMass-MinMass)/MaxMass == 1.0 && (MaxMass > d_SMALL_NUM)){
                 double gradRhoX = 0.25 *
                        ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
