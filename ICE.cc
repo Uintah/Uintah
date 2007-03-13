@@ -2389,8 +2389,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++) {
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
-        vol_frac[m][c] = rho_CC[m][c] * sp_vol_CC[m][c];
+        rho_micro[m][c]  = 1.0/sp_vol_CC[m][c];
+        vol_frac[m][c]   = rho_CC[m][c] * sp_vol_CC[m][c];
+        rho_CC_new[m][c] = rho_CC[m][c];
       }
     }
 
@@ -2417,11 +2418,28 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
-      IntVector c = *iter;   
+      IntVector c = *iter;
       double delPress = 0.;
       bool converged  = false;
       count           = 0;
 
+      double Temp_[MAX_MATLS];
+      double gamma_[MAX_MATLS];  // Put cell-centered data into temporary arrays
+      double cv_[MAX_MATLS];     // This helps minimize  
+      double rho_[MAX_MATLS];
+      double rho_micro_[MAX_MATLS];
+      double vol_frac_[MAX_MATLS];
+      double speedSound_[MAX_MATLS];
+      
+      for (int m = 0; m < numMatls; m++){
+        Temp_[m]        = Temp[m][c];
+        gamma_[m]       = gamma[m][c];
+        cv_[m]          = cv[m][c];
+        rho_[m]         = rho_CC[m][c];
+        rho_micro_[m]   = rho_micro[m][c];
+        vol_frac_[m]    = vol_frac[m][c];
+      }
+      
       while ( count < d_max_iter_equilibration && converged == false) {
         count++;
 
@@ -2429,8 +2447,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         // evaluate press_eos at cell i,j,k
         for (int m = 0; m < numMatls; m++)  {
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-          ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
-                                              cv[m][c], Temp[m][c],press_eos[m],
+          ice_matl->getEOS()->computePressEOS(rho_micro_[m], gamma_[m],
+                                              cv_[m], Temp_[m], press_eos[m],
                                               dp_drho[m], dp_de[m]);
         }
 
@@ -2440,9 +2458,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         double A = 0., B = 0., C = 0.;
         for (int m = 0; m < numMatls; m++)   {
           double Q =  press_new[c] - press_eos[m];
-          double div_y =  (vol_frac[m][c] * vol_frac[m][c])
-            / (dp_drho[m] * rho_CC[m][c] + d_SMALL_NUM);
-          A   +=  vol_frac[m][c];
+          double div_y =  (vol_frac_[m] * vol_frac_[m])
+                        / (dp_drho[m] * rho_[m] + d_SMALL_NUM);
+          A   +=  vol_frac_[m];
           B   +=  Q*div_y;
           C   +=  div_y;
         }
@@ -2455,21 +2473,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         // backout rho_micro_CC at this new pressure
         for (int m = 0; m < numMatls; m++) {
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-          rho_micro[m][c] = 
-           ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                          cv[m][c],Temp[m][c],rho_micro[m][c]);
+          rho_micro_[m] = 
+           ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma_[m],
+                                          cv_[m],Temp_[m],rho_micro_[m]);
 
-          double div = 1./rho_micro[m][c];
-      
           // - updated volume fractions
-          vol_frac[m][c]   = rho_CC[m][c]*div;
+          vol_frac_[m] = rho_[m]/rho_micro_[m];
         }
         //__________________________________
         // - Test for convergence 
         //  If sum of vol_frac_CC ~= vol_frac_not_close_packed then converged 
         sum = 0.0;
         for (int m = 0; m < numMatls; m++)  {
-          sum += vol_frac[m][c];
+          sum += vol_frac_[m];
         }
         if (fabs(sum-1.0) < convergence_crit){
           converged = true;
@@ -2477,13 +2493,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
           // Find the speed of sound based on converged solution
           for (int m = 0; m < numMatls; m++) {
             ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-            ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
-                                            cv[m][c],Temp[m][c],
+            ice_matl->getEOS()->computePressEOS(rho_micro_[m], gamma_[m],
+                                            cv_[m], Temp_[m],
                                             press_eos[m],dp_drho[m], dp_de[m]);
 
             tmp = dp_drho[m] 
-                + dp_de[m] * press_eos[m]/(rho_micro[m][c] * rho_micro[m][c]);
-            speedSound_new[m][c] = sqrt(tmp);
+                + dp_de[m] * press_eos[m]/(rho_micro_[m] * rho_micro_[m]);
+            speedSound_[m] = sqrt(tmp);
           }
         }
       }   // end of converged
@@ -2501,8 +2517,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
 
       for (int m = 0; m < numMatls; m++) {
-        ASSERT(( vol_frac[m][c] > 0.0 ) ||
-               ( vol_frac[m][c] < 1.0));
+        ASSERT(( vol_frac_[m] > 0.0 ) ||
+               ( vol_frac_[m] < 1.0));
       }
       if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
         throw MaxIteration(c,count,n_passes, L_indx,
@@ -2515,7 +2531,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
 
       for (int m = 0; m < numMatls; m++){
-        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) { 
+        if ( rho_micro_[m] < 0.0 || vol_frac_[m] < 0.0 && !tsr) { 
           cout << "m = " << m << endl;
           throw MaxIteration(c,count,n_passes, L_indx,
                "MaxIteration reached rho_micro < 0 || vol_frac < 0",
@@ -2526,18 +2542,26 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       if (switchDebug_equil_press) {
         n_iters_equil_press[c] = count;
       }
-    }     // end of cell interator
+      
+      //__________________________________
+      // - push data back into arrays
+      // - compute kappa & sum kappa
+      sumKappa[c] = 0.0;
+      
+      for (int m = 0; m < numMatls; m++)   {
+       sp_vol_new[m][c]    = 1.0/rho_micro_[m];
+       rho_micro[m][c]     = rho_micro_[m];
+       vol_frac[m][c]      = vol_frac_[m]; 
+       speedSound_new[m][c] = speedSound_[m];
+       double kappa_       = 1.0/(rho_micro_[m] * speedSound_[m] * speedSound_[m]);
+       kappa[m][c]         = kappa_;
+       sumKappa[c]        += vol_frac_[m] * kappa_;
+      }
+      
+    } // end of cell interator
 
     cout_norm << "max. iterations in any cell " << test_max_iter << 
-                 " on patch "<<patch->getID()<<endl; 
-
-    //__________________________________
-    // carry rho_cc forward 
-    // MPMICE computes rho_CC_new
-    // therefore need the machinery here
-    for (int m = 0; m < numMatls; m++)   {
-      rho_CC_new[m].copyData(rho_CC[m]);
-    }
+                 " on patch "<<patch->getID()<<endl;
 
     //__________________________________
     // - update Boundary conditions
@@ -2552,15 +2576,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
    
     
     //__________________________________
-    // compute sp_vol_CC
     // - Set BCs on rhoMicro. using press_CC 
-    // - backout sp_vol_new 
     for (int m = 0; m < numMatls; m++)   {
-      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        sp_vol_new[m][c] = 1.0/rho_micro[m][c]; 
-      }
-      
       ICEMaterial* matl = d_sharedState->getICEMaterial(m);
       int indx = matl->getDWIndex();
       setSpecificVolBC(sp_vol_new[m], "SpecificVol", false, rho_CC[m], vol_frac[m],
@@ -2569,14 +2586,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     
     //__________________________________
     //  compute f_theta  
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      sumKappa[c] = 0.0;
-      for (int m = 0; m < numMatls; m++) {
-        kappa[m][c] = sp_vol_new[m][c]/(speedSound_new[m][c]*speedSound_new[m][c]);
-        sumKappa[c] += vol_frac[m][c]*kappa[m][c];
-      }
-      for (int m = 0; m < numMatls; m++) {
+    for (int m = 0; m < numMatls; m++) {
+      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+        const IntVector c = *iter;
         f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
       }
     }
