@@ -123,6 +123,11 @@ namespace Uintah {
       void q_FC_fluxes(const CCVariable<T>& q_CC, 
                        const string& desc,
                        advectVarBasket* vb);
+                       
+    template<class T> 
+        inline T upstream_Q(double velFC, const T q_L, const T q_R ){
+          return T(velFC<0?q_L:q_R);
+        }            
   };
 }
 
