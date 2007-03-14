@@ -235,6 +235,111 @@ void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                       ignore_q_FC_V());
 }
 
+
+
+/*_____________________________________________________________________
+ Function~  Advect--  driver program that does the advection  
+_____________________________________________________________________*/
+template <class T, typename F> 
+  void FirstOrderAdvector::advectSlabs(const CCVariable<T>& q_CC,             
+                                       CCVariable<T>& q_advected,
+                                       advectVarBasket* vb,
+                                       constSFCXVariable<double>& uvel_FC,
+                                       constSFCYVariable<double>& vvel_FC,
+                                       constSFCZVariable<double>& wvel_FC,
+                                       SFCXVariable<double>& q_XFC,
+                                       SFCYVariable<double>& q_YFC,
+                                       SFCZVariable<double>& q_ZFC,
+                                       F save_q_FC) // function is passed in
+{
+  const Patch* patch = vb->patch;
+  Vector cell_dx = patch->dCell();
+  
+  T zero(0.0);
+  q_advected.initialize(zero);
+  const double delT = vb->delT;
+
+  double dx = cell_dx[0];
+  double dy = cell_dx[1];
+  double dz = cell_dx[2];
+
+  for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+      
+    IntVector c = *iter;
+
+    int i = c.x();
+    int j = c.y(); 
+    int k = c.z();
+    
+    T q_CC_c = q_CC[c];
+    
+    //__________________________________
+    // X faces
+    // x-
+    double uvelFC  = uvel_FC[c];
+    double dx_slab = uvelFC * delT;
+    double fluxVol = dx_slab * dy * dz;    // volume fluxed through the face
+    
+    T q_slab = upstream_Q(uvelFC, q_CC[IntVector(i-1,j,k)], q_CC_c);
+    T flux_xminus = fluxVol * q_slab;       
+       
+    // x+
+    uvelFC  = uvel_FC[IntVector(i+1,j,k)];
+    dx_slab = uvelFC * delT;
+    fluxVol = dx_slab * dy * dz; 
+    
+    q_slab = upstream_Q(uvelFC, q_CC_c, q_CC[IntVector(i+1,j,k)]);
+    T flux_xplus = fluxVol * q_slab;
+
+    //__________________________________
+    // Y faces
+    // y-
+    double vvelFC  = vvel_FC[c];
+    double dy_slab = vvelFC * delT;
+    fluxVol = dx * dy_slab * dz;    // volume fluxed through the face
+    
+    q_slab = upstream_Q(vvelFC, q_CC[IntVector(i,j-1,k)], q_CC_c);
+    T flux_yminus = fluxVol * q_slab;       
+       
+    // y+
+    vvelFC  = vvel_FC[IntVector(i,j+1,k)];
+    dy_slab = vvelFC * delT;
+    fluxVol = dx * dy_slab * dz; 
+    
+    q_slab = upstream_Q(vvelFC, q_CC_c, q_CC[IntVector(i,j+1,k)]);
+    T flux_yplus = fluxVol * q_slab;
+    
+    //__________________________________
+    // Z faces
+    // z-
+    double wvelFC  = wvel_FC[c];
+    double dz_slab = wvelFC * delT;
+    fluxVol = dz * dy * dz_slab;    // volume fluxed through the face
+    
+    q_slab = upstream_Q(wvelFC, q_CC[IntVector(i,j,k-1)], q_CC_c);
+    T flux_zminus = fluxVol * q_slab;  
+       
+    // z+
+    wvelFC  = wvel_FC[IntVector(i,j,k+1)];
+    dz_slab = wvelFC * delT;
+    fluxVol = dx * dy * dz_slab; 
+    
+    q_slab = upstream_Q(wvelFC, q_CC_c, q_CC[IntVector(i,j,k+1)]);
+    T flux_zplus = fluxVol * q_slab;        
+
+
+    // sum up all the fluxes;
+    q_advected[c] = flux_xminus + flux_xplus 
+                  + flux_yminus + flux_yplus
+                  + flux_zminus + flux_zplus;
+     
+    //__________________________________
+    //  inline function to save crossing the cell face
+    //save_q_FC(q_FC[c], q_CC[up]);
+  } 
+}
+/*`==========TESTING==========*/
+#if 0 
 /*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
@@ -335,8 +440,7 @@ template <class T, typename F>
     //save_q_FC(q_FC[c], q_CC[up]);
   } 
 }
-/*`==========TESTING==========*/
-#if 0 
+
 /*_____________________________________________________________________
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
