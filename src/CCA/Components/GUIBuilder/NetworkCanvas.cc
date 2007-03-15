@@ -74,8 +74,6 @@ typedef BuilderWindow::MenuMap MenuMap;
 BEGIN_EVENT_TABLE(NetworkCanvas, wxScrolledWindow)
   EVT_PAINT(NetworkCanvas::OnPaint)
   EVT_ERASE_BACKGROUND(NetworkCanvas::OnEraseBackground)
-  EVT_LEFT_DOWN(NetworkCanvas::OnLeftDown)
-  EVT_LEFT_UP(NetworkCanvas::OnLeftUp)
   EVT_RIGHT_UP(NetworkCanvas::OnRightClick) // show popup menu
   EVT_MOTION(NetworkCanvas::OnMouseMove)
   EVT_MIDDLE_UP(NetworkCanvas::OnMiddleClick)
@@ -128,40 +126,6 @@ bool NetworkCanvas::Create(wxWindow *parent,
 ///////////////////////////////////////////////////////////////////////////
 // event handlers
 
-void NetworkCanvas::OnLeftDown(wxMouseEvent& event)
-{
-//   wxPoint p = event.GetPosition();
-//   wxPoint pp;
-//   GetUnscrolledPosition(p, pp);
-//   wxPoint mp;
-//   GetUnscrolledMousePosition(mp);
-// #if DEBUG
-//   std::cerr << "NetworkCanvas::OnLeftDown(..):" << std::endl
-//             << "\t event position=(" << p.x << ", " << p.y << ")" << std::endl
-//             << "\t unscrolled event position=(" << pp.x << ", " << pp.y << ")" << std::endl
-//             << "\t unscrolled mouse position=(" << mp.x << ", " << mp.y << ")" << std::endl
-//             << std::endl;
-//   std::cerr << "NetworkCanvas::OnLeftDown(..)" << std::endl;
-//   if (movingIcon) {
-//     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
-//   }
-// #endif
-}
-
-void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
-{
-// #if DEBUG
-//   std::cerr << "NetworkCanvas::OnLeftUp(..)" << std::endl;
-// #endif
-//   if (movingIcon) {
-// #if DEBUG
-//     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
-// #endif
-//     movingIcon->OnLeftUp(event);
-//     movingIcon = 0;
-//   }
-}
-
 void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
 {
   wxPoint mp;
@@ -169,15 +133,6 @@ void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
 #if FWK_DEBUG
   builderWindow->DisplayMousePosition(wxT("NetworkCanvas"), mp);
 #endif
-//   if (movingIcon) {
-// #if DEBUG
-//     std::cerr << "NetworkCanvas::OnMouseMove(..)" << std::endl;
-//     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
-// #endif
-//     movingIcon->OnMouseMove(event);
-//     //wxPoint p = event.GetPosition();
-//     //WarpPointer(p.x, p.y);
-//   }
 }
 
 void NetworkCanvas::OnRightClick(wxMouseEvent& event)
@@ -275,8 +230,8 @@ void NetworkCanvas::PaintBackground(wxDC& dc)
   dc.DrawRectangle(windowRect);
 }
 
-void NetworkCanvas::Connect(sci::cca::ConnectionID::pointer connid) {
-
+void NetworkCanvas::Connect(sci::cca::ConnectionID::pointer connid)
+{
   sci::cca::ComponentID::pointer ucid = connid->getUser();
   sci::cca::ComponentID::pointer pcid = connid->getProvider();
 

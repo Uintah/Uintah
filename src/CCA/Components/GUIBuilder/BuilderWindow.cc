@@ -240,6 +240,14 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   statusBar->SetStatusWidths(3, statusBarWidths);
   statusBar->SetStatusText(wxT("SCIJump started"), 0);
 
+#ifdef __WXMAC__
+  // temporary fix for a layout bug in sash windows
+  bottomWindow->SetDefaultSize(wxSize(MIN, BOTTOM_HEIGHT + 1));
+  wxLayoutAlgorithm layout;
+  layout.LayoutFrame(this);
+  Refresh();
+#endif
+
   return true;
 }
 
@@ -297,8 +305,6 @@ void BuilderWindow::DisplayErrorMessage(const wxString& line)
 
 void BuilderWindow::DisplayMessages(const std::vector<wxString>& lines)
 {
-  wxStreamToTextRedirector redirect(textCtrl);
-
   for (std::vector<wxString>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
     *textCtrl << *iter << wxT("\n");
   }
@@ -328,7 +334,6 @@ void BuilderWindow::OnAbout(wxCommandEvent &event)
 {
   wxString msg;
   msg.Printf(wxT("Copyright (c) 2006 Scientific Computing and Imaging Institute, University of Utah.\n\nSCIJump information is available at\nhttps://code.sci.utah.edu/SCIJump/index.php/Main_Page."));
-  msg.Printf(wxT("Hello and welcome to %s"), wxVERSION_STRING);
 
   // TODO: show or direct to license
   wxMessageBox(msg, wxT("About SCIJump"), wxOK|wxICON_INFORMATION, this);
@@ -616,6 +621,7 @@ void BuilderWindow::SetLayout()
   textCtrl = new wxTextCtrl(rightWindow, ID_TEXT_WINDOW, wxEmptyString, wxPoint(MINI_WIDTH, 0),
                             wxSize(TEXT_WIDTH, TOP_HEIGHT),
                             wxSUNKEN_BORDER|wxTE_MULTILINE|wxTE_READONLY|wxTE_AUTO_URL|wxTE_CHARWRAP);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////

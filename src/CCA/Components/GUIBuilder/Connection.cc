@@ -59,9 +59,9 @@ Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID:
   points = new wxPoint[NUM_POINTS];
   drawPoints = new wxPoint[NUM_DRAW_POINTS];
 
-  ResetPoints();
-  wxClientDC dc(pUses->GetParent()->GetCanvas());
-  setConnection(dc);
+  //ResetPoints();
+  //wxClientDC dc(pUses->GetParent()->GetCanvas());
+  //setConnection(dc);
   // set color
   if (possibleConnection) {
     color = wxTheColourDatabase->Find(wxT("BLACK"));

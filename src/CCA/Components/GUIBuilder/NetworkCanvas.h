@@ -103,8 +103,6 @@ public:
   // Handle background paint in paint event handler (on GTK+ might also
   // want to use background style wxBG_STYLE_CUSTOM).
   void OnEraseBackground(wxEraseEvent& event) {}
-  void OnLeftDown(wxMouseEvent& event);
-  void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
   void OnMiddleClick(wxMouseEvent& event);
