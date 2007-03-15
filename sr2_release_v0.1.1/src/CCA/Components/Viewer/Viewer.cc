@@ -59,18 +59,15 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Viewer()
 
 Viewer::Viewer()
 {
-  std::cerr << "Viewer::Viewer()" << std::endl;
 }
 
 Viewer::~Viewer()
 {
-  std::cerr << "Viewer::~Viewer()" << std::endl;
   services->removeProvidesPort("viewer");
 }
 
 void Viewer::setServices(const sci::cca::Services::pointer& svc)
 {
-  std::cerr << "Viewer::setServices()" << std::endl;
   services = svc;
   services->addProvidesPort(ViewPort::pointer(new ViewPort), "viewer",
                             "sci.cca.ports.ViewPort", sci::cca::TypeMap::pointer(0));

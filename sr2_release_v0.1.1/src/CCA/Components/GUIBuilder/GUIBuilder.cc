@@ -496,7 +496,13 @@ GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::st
       msg += STLTowxString(e->getNote());
       bw->DisplayErrorMessage(msg);
     }
+
+else {
+std::cerr << "e->getNote()" << std::endl;
+}
+
   }
+
   return connID;
 }
 
