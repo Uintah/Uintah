@@ -948,11 +948,12 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
       else
       {
         //calculate number of possible patches in each dimension
-        Vector size;
+        int numPossiblePatches=1;
+        IntVector size;
         int dim=0; 
         if(canSplit && l!=0)
         {
-          size=(patch.high()-patch.low()).asVector()/min_patch_size[l].asVector();
+          size=(patch.high()-patch.low())/min_patch_size[l];
       
           //find maximum dimension
           for(int d=1;d<3;d++)
@@ -960,8 +961,11 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
             if(size[d]>size[dim])
               dim=d;
           }
+          numPossiblePatches=size[0]*size[1]*size[2];
         }
-        if(canSplit && l!=0 && size[dim]>1) //if can be split further
+        double minCost=cost/numPossiblePatches;  //estimate of the cost of the next patch if we split fully
+
+        if(canSplit && l!=0 && size[dim]>1 && currentCost+minCost<=targetCost) //if can be split and splitting should help
         {
           //calculate split point
           int mid=patch.getLow()[dim]+(int(size[dim])/2)*min_patch_size[l][dim];
@@ -975,10 +979,10 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
            
           //sort both patches in serial
           sortPatches(newpatches);
-
+          
           //place in reverse order on to assign stack
-          unassignedPatches.push(newpatches[0]);
           unassignedPatches.push(newpatches[1]);
+          unassignedPatches.push(newpatches[0]);
 
           //derive costs by a percentage of old costs
             //ideally we would recalculate costs but particles cause a problem currently
@@ -987,26 +991,25 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
           unassignedPatchesCost.push(newCost);
           unassignedPatchesCost.push(cost-newCost);
         }
-        else  //cannot be split so assign it with the least imbalance
+        else  //cannot be split so attempt to assign it to currentProc
         {
           double takeimb=fabs(currentCost+cost-targetCost);
           double notakeimb=fabs(currentCost-targetCost);
 
-          if(notakeimb<takeimb)
+          if(notakeimb<takeimb) //taking patch would cause more imbalance then not taking it
           {
             //move to next proc
             currentProc++;
+           
+            //place patch back in queue for assignment
+            unassignedPatches.push(patch);
+            unassignedPatchesCost.push(cost);
 
-            //assign patch
-            d_tempAssignment.push_back(currentProc);
-            assignedPatches.push_back(patch);
-  
             //update vars
-            currentCost=cost;
+            currentCost=0;
             targetCost=totalCost/(numProcs-currentProc);
-            totalCost-=cost;
           }
-          else
+          else  //take patch as it causes the least imbalance
           {
             //assign to this proc
             d_tempAssignment.push_back(currentProc);
