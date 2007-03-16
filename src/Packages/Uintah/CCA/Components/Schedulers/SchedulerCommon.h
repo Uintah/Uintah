@@ -203,6 +203,7 @@ WARNING
     vector<string> trackingVars_;
     vector<string> trackingTasks_;
     vector<Task::WhichDW> trackingDWs_;
+    int trackingPatchID_;
     double trackingStartTime_;
     double trackingEndTime_;
     int trackingLevel_;

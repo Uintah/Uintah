@@ -201,6 +201,7 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
       track->getWithDefault("level", trackingLevel_, -1);
       track->getWithDefault("start_index", trackingStartIndex_, IntVector(-9,-9,-9));
       track->getWithDefault("end_index", trackingEndIndex_, IntVector(-9,-9,-9));
+      track->getWithDefault("patchid", trackingPatchID_, -1);
 
       for (ProblemSpecP var=track->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
         map<string,string> attributes;
@@ -291,6 +292,8 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     for (int p = 0; patches && p < patches->size(); p++) {
 
       const Patch* patch = patches->get(p);
+      if (trackingPatchID_ != -1 && trackingPatchID_ != patch->getID())
+	continue;
 
       // don't print ghost patches (dw->get will yell at you)
       if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment(0,patch,0) != d_myworld->myrank()) ||
