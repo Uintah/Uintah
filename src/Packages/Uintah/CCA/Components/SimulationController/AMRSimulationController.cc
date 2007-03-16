@@ -758,6 +758,7 @@ void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,
                            &AMRSimulationController::coarsenDelt);
  
   task->computes(d_sharedState->get_delt_label());
+  task->setType(Task::OncePerProc);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
 
