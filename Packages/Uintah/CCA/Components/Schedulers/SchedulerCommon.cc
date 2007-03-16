@@ -1034,14 +1034,18 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
     const Level* oldLevel = currentReductionVar.domain_;
     const Level* newLevel = NULL;
-    if (oldLevel) {
+    if (oldLevel && oldLevel->getIndex() < grid->numLevels() ) {
       newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
     }
-    
-    ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
-    oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
-    newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
-    delete v; // copied on the put command
+   
+    //Either both levels need to be null or both need to exist (null levels mean global data)
+    if(!oldLevel || newLevel)
+    {
+      ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
+      oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
+      newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
+      delete v; // copied on the put command
+    }
   }
   newDataWarehouse->refinalize();
   d_sharedState->regriddingCopyDataTime += Time::currentSeconds() - start;
