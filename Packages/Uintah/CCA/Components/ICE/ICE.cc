@@ -2648,9 +2648,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     new_dw->allocateAndPut(speedSound,   lb->speedSound_CCLabel, indx,patch);       
     sum_imp_delP.initialize(0.0);       
 
-    //new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,        indx,patch);
-    //rho_CC_new.copyData(rho_CC);
-    new_dw->transferFrom(old_dw, lb->rho_CCLabel, patches, matls, true);
+    new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,        indx,patch);
 
     //---- P R I N T   D A T A ------   
     if (switchDebug_equil_press) {
@@ -2667,7 +2665,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
       IntVector c = *iter;
       vol_frac[c]      = 1.0;
-      rho_micro[0][c]  = rho_CC[c];
+      rho_micro[0][c]  = rho_CC_new[c] = rho_CC[c];
       sp_vol_new[c]    = 1.0/rho_CC[c];
       double dp_drho, dp_de, c_2;
       //__________________________________
@@ -5233,8 +5231,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
       new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);  
 
-      rho_CC.initialize(0.987654321);
-      temp_CC.initialize(0.987654321);
+      rho_CC.initialize(-d_EVIL_NUM);
+      temp_CC.initialize(-d_EVIL_NUM);
       vel_CC.initialize(Vector(0.0,0.0,0.0)); 
 
       //__________________________________
