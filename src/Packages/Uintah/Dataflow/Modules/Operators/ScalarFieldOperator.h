@@ -97,47 +97,22 @@ template<class T1, class T2>
 void
 ScalarFieldOperatorAlgo::set_properties( T1* sf1, T2* sf2, int op)
 {
-  for(size_t i = 0; i < sf1->nproperties(); i++){
-    string prop_name(sf1->get_property_name( i ));
-    if(prop_name == "name"){
-      string prop_component;
-      sf1->get_property( prop_name, prop_component);
+
+  sf2->copy_properties( sf1 );
+  string name;
+  if( sf1->get_property("name", name) ){
       switch(op) {
       case 0: // extract element 1
         sf2->set_property("name",
-                          string(prop_component +":ln"), true);
+                          string(name +":ln"), false);
         break;
       case 1: // extract element 2
         sf2->set_property("name", 
-                          string(prop_component +":e"), true);
+                          string(name +":e"), false);
         break;
       default:
-        sf2->set_property("name",
-                          string(prop_component.c_str()), true);
+        sf2->set_property("name", name, false);
       }
-    } else if( prop_name == "generation") {
-      int generation;
-      sf1->get_property( prop_name, generation);
-      sf2->set_property(prop_name.c_str(), generation , true);
-    } else if( prop_name == "timestep" ) {
-      int timestep;
-      sf1->get_property( prop_name, timestep);
-      sf2->set_property(prop_name.c_str(), timestep , true);
-    } else if( prop_name == "offset" ){
-      IntVector offset(0,0,0);        
-      sf1->get_property( prop_name, offset);
-      sf2->set_property(prop_name.c_str(), IntVector(offset) , true);
-    } else if( prop_name == "delta_t" ){
-      double dt;
-      sf1->get_property( prop_name, dt);
-      sf2->set_property(prop_name.c_str(), dt , true);
-    } else if( prop_name == "vartype" ){
-      int vartype;
-      sf1->get_property( prop_name, vartype);
-      sf2->set_property(prop_name.c_str(), vartype , true);
-    } else {
-      cerr<<"Unknown field property: "<<prop_name<<", not transferred.\n";
-    }
   }
 }
 

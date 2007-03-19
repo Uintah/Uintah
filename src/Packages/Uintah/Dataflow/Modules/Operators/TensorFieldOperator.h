@@ -115,68 +115,44 @@ TensorFieldOperatorAlgoT<TensorField>::execute(FieldHandle tensorfh, int op)
     performOperation( tensorField, sf, op );
     scalarField = sf;
   }
-
-  for(unsigned int i = 0; i < tensorField->nproperties(); i++){
-    string prop_name(tensorField->get_property_name( i ));
-    if(prop_name == "name"){
-      string prop_component;
-      tensorField->get_property( prop_name, prop_component);
-      switch(op) {
-      case 0: // extract element i,j
-        scalarField->set_property("name",
-                                  string(prop_component + ":" +
-                                         to_string( row_) + 
-                                         "," + to_string( column_)),
-                                  true);
-        break;
-      case 1: // extract eigen value
-        scalarField->set_property("name", 
-                                  string(prop_component +":eigen"), true);
-        break;
-      case 2: // extract pressure
-        scalarField->set_property("name", 
-                                  string(prop_component +":pressure"), true);
-        break;
-      case 3: // tensor stress
-        scalarField->set_property("name", 
-                                  string(prop_component +":equiv_stress"), true);
-        break;
-      case 4: // tensor stress
-        scalarField->set_property("name",
-                                  string(prop_component +":sheer_stress"), true);
-        break;
-      case 5: // tensor stress
-        scalarField->set_property("name",
-                                  string(prop_component +"NdotSigmadotT"), true);
-        break;
-      default:
-        scalarField->set_property("name",
-                                  string(prop_component.c_str()), true);
-      }
-    } else if( prop_name == "generation") {
-      int generation;
-      tensorField->get_property( prop_name, generation);
-      scalarField->set_property(prop_name.c_str(), generation , true);
-    } else if( prop_name == "timestep" ) {
-      int timestep;
-      tensorField->get_property( prop_name, timestep);
-      scalarField->set_property(prop_name.c_str(), timestep , true);
-    } else if( prop_name == "offset" ){
-      IntVector offset(0,0,0);        
-      tensorField->get_property( prop_name, offset);
-      scalarField->set_property(prop_name.c_str(), IntVector(offset) , true);
-    } else if( prop_name == "delta_t" ){
-      double dt;
-      tensorField->get_property( prop_name, dt);
-      scalarField->set_property(prop_name.c_str(), dt , true);
-    } else if( prop_name == "vartype" ){
-      int vartype;
-      tensorField->get_property( prop_name, vartype);
-      scalarField->set_property(prop_name.c_str(), vartype , true);
-    } else {
-      cerr<<"Unknown field property: "<<prop_name<<", not transferred.\n";
+  
+  scalarField->copy_properties( tensorField );
+  string name;
+  if(tensorField->get_property("name", name)){
+    switch(op) {
+    case 0: // extract element i,j
+      scalarField->set_property("name",
+                                string(name + ":" +
+                                       to_string( row_) + 
+                                       "," + to_string( column_)),
+                                false);
+      break;
+    case 1: // extract eigen value
+      scalarField->set_property("name", 
+                                string(name +":eigen"), false);
+      break;
+    case 2: // extract pressure
+      scalarField->set_property("name", 
+                                string(name +":pressure"), false);
+      break;
+    case 3: // tensor stress
+      scalarField->set_property("name", 
+                                string(name +":equiv_stress"), false);
+      break;
+    case 4: // tensor stress
+      scalarField->set_property("name",
+                                string(name +":sheer_stress"), false);
+      break;
+    case 5: // tensor stress
+      scalarField->set_property("name",
+                                string(name +"NdotSigmadotT"), false);
+      break;
+    default:
+      scalarField->set_property("name", name, true);
+                                
     }
   }
+
   return scalarField;
 }
 

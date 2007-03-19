@@ -194,6 +194,7 @@ VolumeVisualizer::execute()
   static Point oldmin(0,0,0), oldmax(0,0,0);
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
+  static string old_level("");
   
   if (!texture_iport_->get(texture_)) {
     warning("No texture, nothing done.");
@@ -338,7 +339,14 @@ VolumeVisualizer::execute()
     oldnj = texture_->ny();
     oldnk = texture_->nz();
     //    geom_oport_->delAll();
-    geomID = geom_oport_->addObj(volren_, "VolumeRenderer Transparent");
+    string level;
+    if( texture_->get_property("level", level) ){
+      geomID = geom_oport_->addObj(volren_, "VolumeRenderer Transparent L-" 
+                                   + level);
+      old_level = level;
+    } else {
+      geomID = geom_oport_->addObj(volren_, "VolumeRenderer Transparent");
+    }
   } else {
     volren_->set_texture(texture_);
     if(c1 && cmap1_dirty)
@@ -352,15 +360,25 @@ VolumeVisualizer::execute()
     int ni = texture_->nx();
     int nj = texture_->ny();
     int nk = texture_->nz();
+    string level("");
+    texture_->get_property("level", level);
     if(oldmin != texture_->bbox().min() || oldmax != texture_->bbox().max() ||
-       ni != oldni || nj != oldnj || nk != oldnk) {
+       ni != oldni || nj != oldnj || nk != oldnk || old_level != level){
       geom_oport_->delObj(geomID);
-      geomID = geom_oport_->addObj(volren_, "VolumeRenderer Transparent");
+      if( texture_->get_property("level", level) ){
+        geomID = geom_oport_->addObj(volren_, "VolumeRenderer Transparent L-" 
+                                     + level);
+        old_level = level;
+      } else {
+        geomID = geom_oport_->addObj(volren_, "VolumeRenderer Transparent");
+      } 
+      
       oldni = ni; oldnj = nj; oldnk = nk;
       oldmin = texture_->bbox().min();
       oldmax = texture_->bbox().max();
     }
   }
+
  
   volren_->set_interp(bool(gui_interp_mode_.get()));
 

@@ -161,6 +161,8 @@ VolumeSlicer::~VolumeSlicer()
 
 void VolumeSlicer::execute()
 {
+  static string old_level("");
+
   intexture_ = (TextureIPort*)get_iport("Texture");
   icmap1_ = (ColorMapIPort*)get_iport("ColorMap");
   icmap2_ = (ColorMap2IPort*)get_iport("ColorMap2");
@@ -257,7 +259,14 @@ void VolumeSlicer::execute()
       set_control_point(tex_->transform().unproject(control_widget_->
 						    ReferencePoint()));
     //    ogeom->delAll();
-    geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
+    string level;
+    if( tex_->get_property("level", level) ){
+      geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer L-" 
+                                     + level);
+      old_level = level;
+    } else {
+      geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
+    }
     cyl_active_.reset();
     draw_phi0_.reset();
     phi0_.reset();
@@ -275,14 +284,22 @@ void VolumeSlicer::execute()
   } else {
     BBox b;
     tex_->get_bounds(b);
+    string level("");
+    tex_->get_property("level", level);
     if(tex_.get_rep() != old_tex_.get_rep() ||
        b.min() != old_min_ || b.max() != old_max_) {
       old_tex_ = tex_;
       old_min_ = b.min();
       old_max_ = b.max();
-      if(geom_id_ != -1) {
-	ogeom_->delObj(geom_id_);
-	geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
+      if(geom_id_ != -1 ) { 
+        ogeom_->delObj( geom_id_ );
+        if( old_level != level  ){
+          geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer L-" 
+                                    + level);
+          old_level = level;
+        } else {
+          geom_id_ = ogeom_->addObj(slice_ren_, "Volume Slicer");
+        }
       }
       Vector dv(b.diagonal());
       int nx = tex_->nx();
