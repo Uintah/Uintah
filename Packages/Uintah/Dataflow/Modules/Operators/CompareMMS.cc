@@ -183,16 +183,16 @@ CompareMMS::execute()
                                     includeExtraCells,
                                     gui_field_time_.get());
       
-      
-    IntVector offset(0,0,0);        
-    string property_name = "offset";
-    fh->get_property( property_name, offset);
-    ofh->set_property(property_name.c_str(), IntVector(offset) , true);
+
+
+
+    ofh->copy_properties( fh.get_rep() );
     string prefix = "Exact_";
     if ( gui_output_choice_.get() == 2){
       prefix = "Diff_";
     }
-    ofh->set_property("varname", string(prefix+field_name.c_str()), true);
+    ofh->set_property("varname", string(prefix+field_name.c_str()), false);
+
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference(ofh);

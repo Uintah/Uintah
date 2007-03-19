@@ -78,72 +78,35 @@ VectorFieldOperatorAlgoT<VectorField>::execute(FieldHandle vectorfh, int op)
     scalarField = sf;
   }
 
-  for(unsigned int i = 0; i < vectorField->nproperties(); i++){
-    string prop_name(vectorField->get_property_name( i ));
-    if(prop_name == "name"){
-      string prop_component;
-      vectorField->get_property( prop_name, prop_component);
+  scalarField->copy_properties( vectorField );
+  string name;
+  if( vectorField->get_property("name", name) ){
       switch(op) {
       case 0: // extract element 1
         scalarField->set_property("name",
-                                  string(prop_component +":1"), true);
+                                  string(name +":1"), false);
         break;
       case 1: // extract element 2
         scalarField->set_property("name", 
-                                  string(prop_component +":2"), true);
+                                  string(name +":2"), false);
         break;
       case 2: // extract element 3
         scalarField->set_property("name", 
-                                  string(prop_component +":3"), true);
+                                  string(name +":3"), false);
         break;
       case 3: // Vector length
         scalarField->set_property("name", 
-                                  string(prop_component +":length"), true);
+                                  string(name +":length"), false);
         break;
       case 4: // Vector curvature
         scalarField->set_property("name",
-                                  string(prop_component +":vorticity"), true);
+                                  string(name +":vorticity"), false);
         break;
       default:
-        scalarField->set_property("name",
-                                  string(prop_component.c_str()), true);
+        scalarField->set_property("name", name, false);
       }
-    } else if( prop_name == "generation") {
-      int generation;
-      vectorField->get_property( prop_name, generation);
-      scalarField->set_property(prop_name.c_str(), generation , true);
-    } else if( prop_name == "timestep" ) {
-      int timestep;
-      vectorField->get_property( prop_name, timestep);
-      scalarField->set_property(prop_name.c_str(), timestep , true);
-    } else if( prop_name == "offset" ){
-      IntVector offset(0,0,0);        
-      vectorField->get_property( prop_name, offset);
-      scalarField->set_property(prop_name.c_str(), IntVector(offset) , true);
-    } else if( prop_name == "delta_t" ){
-      double dt;
-      vectorField->get_property( prop_name, dt);
-      scalarField->set_property(prop_name.c_str(), dt , true);
-    } else if( prop_name == "vartype" ){
-      int vartype;
-      vectorField->get_property( prop_name, vartype);
-      scalarField->set_property(prop_name.c_str(), vartype , true);
-    } else if( prop_name == "time" ){
-      double current_time;
-      vectorField->get_property( prop_name, current_time);
-      scalarField->set_property(prop_name.c_str(), current_time , true);
-    } else if( prop_name == "spatial_min" ){
-      Point spatial_min;
-      vectorField->get_property( prop_name, spatial_min);
-      scalarField->set_property(prop_name.c_str(), spatial_min , true);
-    } else if( prop_name == "spatial_max" ){
-      Point spatial_max;
-      vectorField->get_property( prop_name, spatial_max);
-      scalarField->set_property(prop_name.c_str(), spatial_max , true);
-    }else {
-      cerr<<"Unknown field property: "<<prop_name<<", not transferred.\n";
-    }
-  }
+  }    
+
   return scalarField;
 }   
 
