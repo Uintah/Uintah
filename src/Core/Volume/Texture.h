@@ -32,7 +32,7 @@
 #ifndef Volume_Texture_h
 #define Volume_Texture_h
 
-#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/Transform.h>
@@ -45,7 +45,7 @@
 
 namespace SCIRun {
 
-class SCISHARE Texture : public Datatype
+class SCISHARE Texture : public PropertyManager
 {
 public:
   Texture();
