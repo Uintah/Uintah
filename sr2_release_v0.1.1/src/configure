@@ -61792,7 +61792,6 @@ echo "$as_me: error: wx-config not found" >&2;}
 
   fi
   WX_DIR=`$WX_CONFIG --prefix`
-echo $WX_DIR
 
 
     ##  SCI_CHECK_VERSION

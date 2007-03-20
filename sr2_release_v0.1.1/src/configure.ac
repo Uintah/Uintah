@@ -5069,7 +5069,6 @@ if test "$sci_required_wx" = "yes" -a "$enable_scijump" = "yes" ; then
     SCI_MSG_ERROR(wx-config not found)
   fi
   WX_DIR=`$WX_CONFIG --prefix`
-echo $WX_DIR
 
   SCI_CHECK_VERSION($WX_CONFIG,--version,2.6,,echo configure: error: wrong wxWidgets version (2.6.x supported).; exit)
   HAVE_WX="yes"

@@ -144,7 +144,7 @@ void Colormap::OnPaint(wxPaintEvent& event)
 
   int ny = 5;
 
-  dc.SetPen(wxTheColourDatabase->Find("MAGENTA"));
+  dc.SetPen(wxTheColourDatabase->Find(wxT("MAGENTA")));
   //  p.setBrush(white);
   for (int iy = 0; iy <= ny; iy++) {
     double value = minVal + iy * (maxVal - minVal) / ny;
@@ -162,7 +162,7 @@ void Colormap::OnPaint(wxPaintEvent& event)
     int h = 14;
     wxRect r(width()/2 - w/2, y - h/2, w, h);
 
-    dc.DrawLabel(s, r, wxALIGN_CENTER);
+    dc.DrawLabel(STLTowxString(s), r, wxALIGN_CENTER);
   }
 }
 

@@ -6,8 +6,6 @@
 #include <Core/Thread/Guard.h>
 #include <Core/Thread/Thread.h>
 
-#define DEBUG 1
-
 namespace SCIRun {
 
 GUIService::GUIService(SCIRunFramework* framework)
@@ -43,7 +41,7 @@ GUIService::getService(const std::string&)
 void GUIService::addBuilder(const std::string& builderName, const sci::cca::GUIBuilder::pointer& builder)
 {
   Guard g(&lock);
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIService::AddBuilder(..): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   GUIBuilderMap::iterator iter = builders.find(builderName);

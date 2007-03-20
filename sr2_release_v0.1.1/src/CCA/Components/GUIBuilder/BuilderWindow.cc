@@ -213,7 +213,7 @@ IMPLEMENT_DYNAMIC_CLASS(BuilderWindow, wxFrame)
 int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
 BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent)
-  : builder(bc), pointerLocationX("0"), pointerLocationY("0")
+  : builder(bc), pointerLocationX(wxT("0")), pointerLocationY(wxT("0"))
 {
 #if FWK_DEBUG
   std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;

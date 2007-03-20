@@ -260,7 +260,7 @@ void ViewerWindow::OnPaint(wxPaintEvent& event)
 
   if (showMesh) {
     //p.setPen(wxColor(255, 0, 255));
-    dc.SetPen(wxTheColourDatabase->Find("MAGENTA"));
+    dc.SetPen(wxTheColourDatabase->Find(wxT("MAGENTA")));
     for (int i = 0; i < nTri; i++) {
       double x1 = nodes1d[triangles[i * 3] * 2];
       double y1 = nodes1d[triangles[i * 3] * 2 + 1];
@@ -295,7 +295,7 @@ void ViewerWindow::OnPaint(wxPaintEvent& event)
     int nx = 5;
     int ny = 5;
 
-    dc.SetPen(wxTheColourDatabase->Find("BLUE"));
+    dc.SetPen(wxTheColourDatabase->Find(wxT("BLUE")));
     dc.SetBrush(*wxTRANSPARENT_BRUSH);
     dc.DrawRectangle(borderX, borderY, width(), height());
     dc.SetBrush(*wxBLUE_BRUSH);
@@ -317,7 +317,7 @@ void ViewerWindow::OnPaint(wxPaintEvent& event)
         int dx = -12 * 2;
         int dy = iy == 0 ? 12 + 3 : (-3);
 
-        dc.DrawText(wxString(s), wp.x + dx, wp.y + dy);
+        dc.DrawText(STLTowxString(s), wp.x + dx, wp.y + dy);
       }
     }
 
@@ -338,7 +338,7 @@ void ViewerWindow::OnPaint(wxPaintEvent& event)
         int dy = 12 / 2;
         int dx = ix == 0 ? -12 * 5 : 3;
 
-        dc.DrawText(wxString(s), wp.x + dx, wp.y + dy);
+        dc.DrawText(STLTowxString(s), wp.x + dx, wp.y + dy);
       }
     }
   }
