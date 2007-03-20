@@ -115,8 +115,6 @@ parse_args( int argc, char *argv[])
 
 int
 main(int argc, char *argv[], char **environment) {
-std::cout << "main on stdout" << std::endl;
-std::cerr << "main on stderr" << std::endl;
   bool framework = true;
   bool loadNet = parse_args(argc, argv);
   create_sci_environment(environment, 0);
