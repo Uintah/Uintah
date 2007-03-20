@@ -66,21 +66,21 @@ ifeq ($(HAVE_WX),yes)
   LIBS += $(WX_LIBRARY)
 endif
 
-$(FWK_EXE).app: $(FWK_EXE) $(SRCTOP)/scripts/scijump/Info.plist.in $(SRCTOP)/scripts/scijump/wxmac.icns
-	mkdir -p $(FWK_EXE).app/Contents
-	mkdir -p $(FWK_EXE).app/Contents/MacOS
-	mkdir -p $(FWK_EXE).app/Contents/Resources
-	cp -f $(SRCTOP)/scripts/scijump/Info.plist.in $(FWK_EXE).app/Contents/Info.plist
-	echo -n "APPL????" >$(FWK_EXE).app/Contents/PkgInfo
-	ln -f $(FWK_EXE) $(FWK_EXE).app/Contents/MacOS/$(FWK_EXE)
-	cp -f $(SRCTOP)/scripts/scijump/wxmac.icns $(FWK_EXE).app/Contents/Resources/wxmac.icns
-#sed -e "s/IDENTIFIER/`echo $(SRCTOP) | sed -e 's,\.\./,,g' | sed -e 's,/,.,g'`/" \ -e "s/EXECUTABLE/splitter/" \ -e "s/VERSION/$(FWK_VERSION)/" \ $(SRCTOP)/scripts/scijump/Info.plist.in >$(FWK_EXE).app/Contents/Info.plist
-
-
 PROGRAM := $(FWK_EXE)
+bundle_prologue: $(SRCTOP)/scripts/scijump/Info.plist.in
+	mkdir -p $(FWK_APP)/Contents
+	echo -n "APPL????" >$(FWK_APP)/Contents/PkgInfo
+	mkdir -p $(FWK_APP)/Contents/MacOS
+	mkdir -p $(FWK_APP)/Contents/Resources
+	sed -e "s%KEYS%$(WX_DIR)/lib:$(OBJTOP_ABS)/lib%" \
+          $(SRCTOP)/scripts/scijump/Info.plist.in > $(FWK_APP)/Contents/Info.plist
+	cp -f $(SRCTOP)/scripts/scijump/scijump $(OBJTOP)/scijump
+
 SRCS := $(SRCDIR)/main.cc
 ifeq ($(OS_NAME),Darwin)
-  ALLTARGETS := $(ALLTARGETS) $(FWK_EXE).app
+  PROGRAM_LDFLAGS := -bind_at_load
+  #ALLTARGETS := bundle_prologue $(ALLTARGETS) bundle_epilogue
+  ALLTARGETS := bundle_prologue $(ALLTARGETS)
 endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -110,6 +110,11 @@ ifeq ($(HAVE_MPI),yes)
 endif
 
 PROGRAM := ploader
+ifeq ($(OS_NAME),Darwin)
+  PROGRAM_LDFLAGS := -bind_at_load
+endif
+
+
 SRCS := $(SRCDIR)/ploader.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 

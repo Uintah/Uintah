@@ -5068,35 +5068,13 @@ if test "$sci_required_wx" = "yes" -a "$enable_scijump" = "yes" ; then
   if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
     SCI_MSG_ERROR(wx-config not found)
   fi
+  WX_DIR=`$WX_CONFIG --prefix`
+echo $WX_DIR
 
-  SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
+  SCI_CHECK_VERSION($WX_CONFIG,--version,2.6,,echo configure: error: wrong wxWidgets version (2.6.x supported).; exit)
+  HAVE_WX="yes"
   WX_LIBS=`$WX_CONFIG --libs`
   WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
-
-  AC_LANG([C++])
-
-  case $host in
-  *linux*)
-    _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
-    _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
-    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
-
-    ;;
-  *-darwin*)
-    _wx_lib_dir_flags=$WX_LIBS
-    _wx_lib_flags=$WX_LIBS
-    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
-
-    ;;
-  *)
-    #assume there is no specific version
-    ;;
-  esac
-  SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
-  # Restore the previous settings.
-  AC_LANG([C])
 
  if test "$HAVE_WX" = "yes"; then
    DEF_WX="#define HAVE_WX 1"
@@ -5105,11 +5083,10 @@ fi
 
 AC_SUBST(HAVE_WX)
 AC_SUBST(DEF_WX)
+AC_SUBST(WX_CONFIG)
+AC_SUBST(WX_DIR)
 AC_SUBST(WX_CXXFLAGS)
 AC_SUBST(WX_LIBS)
-AC_SUBST(INC_WX_H)
-AC_SUBST(WX_LIB_FLAG)
-AC_SUBST(WX_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/wx_testdefs.h"
 
 ##  --  search for ruby  ------------------------------------------------
