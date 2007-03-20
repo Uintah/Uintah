@@ -185,14 +185,14 @@ function getwxwidgets_darwin() {
     try "$getcommand http://umn.dl.sourceforge.net/sourceforge/wxwindows/$wxwidgets_archive"
     try "tar xzvf $wxwidgets_archive"
   fi
-  #try "mkdir -p $build_dir"
-  #try "cd $wxwidgets_version"
-  #try "./configure --prefix=$build_dir --enable-shared --enable-stl --with-opengl --enable-tabdialog --enable-std_string --enable-std_iostreams"
-  #try "make"
-  #try "make install"
-  #try "cd $ROOT_DIR"
-  #export PATH="$PATH:$build_dir/bin"
-  #export BUILDDIR_TMP=$build_dir
+  try "mkdir -p $build_dir"
+  try "cd $wxwidgets_version"
+  try "./configure --prefix=$build_dir --enable-shared --with-opengl --enable-threads"
+  try "make"
+  try "make install"
+  try "cd $ROOT_DIR"
+  export PATH="$PATH:$build_dir/bin"
+  export BUILDDIR_TMP=$build_dir
 }
 
 function getwxwidgets_linux() {
@@ -207,7 +207,7 @@ function getwxwidgets_linux() {
   fi
   try "mkdir -p $build_dir"
   try "cd $wxwidgets_version"
-  try "./configure --prefix=$build_dir --enable-shared --enable-stl --with-opengl --enable-tabdialog --enable-std_string --enable-std_iostreams"
+  try "./configure --prefix=$build_dir --enable-shared --with-opengl --enable-threads"
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
