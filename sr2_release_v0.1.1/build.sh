@@ -27,13 +27,13 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 #    File   : build.sh
-#    Author :
-#    Date   :
+#    Author : Ayla Khan
+#    Date   : February 1, 2007
 
 
 # name? 0.1.1 build script
 #
-# This script will build name? from scratch
+# This script will build SCIJump from scratch
 #
 
 function usage() {
@@ -163,14 +163,14 @@ function getwxwidgets_darwin() {
     try "$getcommand http://umn.dl.sourceforge.net/sourceforge/wxwindows/$wxwidgets_archive"
     try "tar xzvf $wxwidgets_archive"
   fi
-  try "mkdir -p $build_dir"
-  try "cd $wxwidgets_version"
-  try "./configure --prefix=$build_dir --enable-shared --enable-stl --with-opengl --enable-tabdialog --enable-std_string --enable-std_iostreams"
-  try "make"
-  try "make install"
-  try "cd $ROOT_DIR"
-  export PATH="$PATH:$build_dir/bin"
-  export BUILDDIR_TMP=$build_dir
+  #try "mkdir -p $build_dir"
+  #try "cd $wxwidgets_version"
+  #try "./configure --prefix=$build_dir --enable-shared --enable-stl --with-opengl --enable-tabdialog --enable-std_string --enable-std_iostreams"
+  #try "make"
+  #try "make install"
+  #try "cd $ROOT_DIR"
+  #export PATH="$PATH:$build_dir/bin"
+  #export BUILDDIR_TMP=$build_dir
 }
 
 function getwxwidgets_linux() {
