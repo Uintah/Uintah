@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- HY100 Steel -->
-<Uintah_Include>
-  <shear_modulus>69.0e9</shear_modulus>
-  <bulk_modulus>150.0e9</bulk_modulus>
-</Uintah_Include>
-
