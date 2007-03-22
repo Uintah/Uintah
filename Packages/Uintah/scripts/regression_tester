@@ -237,7 +237,8 @@ REMOVE () {
 }
 
 num_proc () {
-	numproc=`grep -m1 patches $input_file | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' | sed -e 's/\[//g' | sed 's/\]//g' | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+	numproc=`grep -m1 patches $input_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+       echo "number of patches" $numproc
 }
 
 
