@@ -595,32 +595,33 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     else {
       sprintf(walltime, ", elap T = %.2lf", d_wallTime);
     }
-    
-    dbg << "Time="         << time
+    ostringstream message;
+
+    message << "Time="         << time
         << " (timestep "  << timestep 
         << "), delT="     << delt
         << walltime;
 #ifndef _WIN32
-    dbg << ", Mem Use (MB)= ";
+    message << ", Mem Use (MB)= ";
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-      dbg << toHumanUnits((unsigned long) avg_memuse);
+      message << toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
-        dbg << "/" << toHumanUnits((unsigned long) avg_highwater);
+        message << "/" << toHumanUnits((unsigned long) avg_highwater);
       }
     } else {
-      dbg << toHumanUnits((unsigned long) avg_memuse);
+      message << toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
-        dbg << "/" << toHumanUnits((unsigned long)avg_highwater);
+        message << "/" << toHumanUnits((unsigned long)avg_highwater);
       }
-      dbg << " (avg), " << toHumanUnits(max_memuse);
+      message << " (avg), " << toHumanUnits(max_memuse);
       if(max_highwater) {
-        dbg << "/" << toHumanUnits(max_highwater);
+        message << "/" << toHumanUnits(max_highwater);
       }
-      dbg << " (max)";
+      message << " (max)";
     }
     
 #endif
-    dbg << endl;
+    dbg << message << endl;
 
     if (stats.active() && d_myworld->size() > 1) {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
