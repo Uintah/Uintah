@@ -777,9 +777,9 @@ void AMRSimulationController::coarsenDelt(const ProcessorGroup*,
   const GridP grid = patches->get(0)->getLevel()->getGrid();
   for (int i = 0; i < grid->numLevels(); i++) {
     const LevelP level = grid->getLevel(i);
+    if (i > 0 && !d_sharedState->isLockstepAMR())
+      multiplier *= level->getRefinementRatioMaxDim();
     if (new_dw->exists(d_sharedState->get_delt_label(), -1, *level->patchesBegin())) {
-      if (i > 0 && !d_sharedState->isLockstepAMR())
-        multiplier *= level->getRefinementRatioMaxDim();
       delt_vartype deltvar;
       double delt;
       new_dw->get(deltvar, d_sharedState->get_delt_label(), level.get_rep());
@@ -787,5 +787,4 @@ void AMRSimulationController::coarsenDelt(const ProcessorGroup*,
       new_dw->put(delt_vartype(delt*multiplier), d_sharedState->get_delt_label());
     }
   }
-    
 }
