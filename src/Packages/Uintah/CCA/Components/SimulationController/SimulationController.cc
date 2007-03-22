@@ -621,7 +621,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
     
 #endif
-    dbg << message << endl;
+    dbg << message.str() << endl;
 
     if (stats.active() && d_myworld->size() > 1) {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
