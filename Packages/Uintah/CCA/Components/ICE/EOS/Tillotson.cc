@@ -206,7 +206,7 @@ void Tillotson::computePressEOS(double rho, double, double, double,
 // call this after set Dirchlet and Neuman BC
 void Tillotson::hydrostaticTempAdjustment(Patch::FaceType, 
                                     const Patch*,
-                                    const vector<IntVector>&,
+                                    const vector<IntVector>*,
                                     Vector&,
                                     const CCVariable<double>&,
                                     const CCVariable<double>&,

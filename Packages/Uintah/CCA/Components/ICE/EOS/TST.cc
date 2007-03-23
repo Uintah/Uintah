@@ -150,7 +150,7 @@ void TST::computePressEOS(double rhoM, double gamma,
 // call this after set Dirchlet and Neuman BC
 void TST::hydrostaticTempAdjustment(Patch::FaceType, 
                                     const Patch*,
-                                    const vector<IntVector>&,
+                                    const vector<IntVector>*,
                                     Vector&,
                                     const CCVariable<double>&,
                                     const CCVariable<double>&,
