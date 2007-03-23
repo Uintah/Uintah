@@ -171,13 +171,15 @@ void UnionBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
   vector<IntVector> sfx,sfy,sfz;
   for (vector<BCGeomBase*>::const_iterator bc = child.begin();
        bc != child.end(); ++bc) {
-    vector<IntVector> x_itr, y_itr, z_itr;
-    (*bc)->getSFCXIterator(x_itr);
-    (*bc)->getSFCYIterator(y_itr);
-    (*bc)->getSFCZIterator(z_itr);
-    copy(x_itr.begin(),x_itr.end(),back_inserter(sfx));
-    copy(y_itr.begin(),y_itr.end(),back_inserter(sfy));
-    copy(z_itr.begin(),z_itr.end(),back_inserter(sfz));
+    vector<IntVector> *x_itr_ptr;
+    vector<IntVector> *y_itr_ptr;
+    vector<IntVector> *z_itr_ptr;
+    (*bc)->getSFCXIterator(x_itr_ptr);
+    (*bc)->getSFCYIterator(y_itr_ptr);
+    (*bc)->getSFCZIterator(z_itr_ptr);
+    copy(x_itr_ptr->begin(), x_itr_ptr->end(), back_inserter(sfx));
+    copy(y_itr_ptr->begin(), y_itr_ptr->end(), back_inserter(sfy));
+    copy(z_itr_ptr->begin(), z_itr_ptr->end(), back_inserter(sfz));
   }
   setSFCXIterator(sfx);
   setSFCXIterator(sfy);

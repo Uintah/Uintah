@@ -345,11 +345,11 @@ WARNING
 
      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
                                            string type,
-                                           vector<IntVector>& b,
-                                           vector<IntVector>& nb,
-                                           vector<IntVector>& sfx,
-                                           vector<IntVector>& sfy,
-                                           vector<IntVector>& sfz,
+                                           vector<IntVector>*& b_ptr,
+                                           vector<IntVector>*& nb_ptr,
+                                           vector<IntVector>*& sfx_ptr,
+                                           vector<IntVector>*& sfy_ptr,
+                                           vector<IntVector>*& sfz_ptr,
                                            int child) const ;
      
      bool haveBC(FaceType face,int mat_id,string bc_type,

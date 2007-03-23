@@ -50,29 +50,29 @@ void BCGeomBase::setSFCZIterator(vector<IntVector>& i)
   sfcz = i;
 }
 
-void BCGeomBase::getBoundaryIterator(vector<IntVector>& b) const
+void BCGeomBase::getBoundaryIterator(vector<IntVector>*& b_ptr) 
 {
-  b = boundary;
+  b_ptr = &boundary;
 }
 
-void BCGeomBase::getNBoundaryIterator(vector<IntVector>& b) const
+void BCGeomBase::getNBoundaryIterator(vector<IntVector>*& b_ptr)
 {
-  b = nboundary;
+  b_ptr = &nboundary;
 }
 
-void BCGeomBase::getSFCXIterator(vector<IntVector>& i) const
+void BCGeomBase::getSFCXIterator(vector<IntVector>*& i_ptr)
 {
-  i = sfcx;
+  i_ptr = &sfcx;
 }
 
-void BCGeomBase::getSFCYIterator(vector<IntVector>& i) const
+void BCGeomBase::getSFCYIterator(vector<IntVector>*& i_ptr)
 {
-  i = sfcy;
+  i_ptr = &sfcy;
 }
 
-void BCGeomBase::getSFCZIterator(vector<IntVector>& i) const
+void BCGeomBase::getSFCZIterator(vector<IntVector>*& i_ptr)
 {
-  i = sfcz;
+  i_ptr = &sfcz;
 }
 
 void BCGeomBase::determineIteratorLimits(Patch::FaceType face, 
