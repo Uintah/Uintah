@@ -262,7 +262,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
                               const string& var_desc,
-                              const vector<IntVector> bound,
+                              const vector<IntVector>* bound_ptr,
                               const string& bc_kind,
                               const Vector wall_vel,
                               Slip_vars* sv)                     
@@ -302,7 +302,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
       cout_dbg << " SLIP"<< endl;
       
       vector<IntVector>::const_iterator iter;
-      for (iter=bound.begin(); iter != bound.end(); iter++) {
+      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
         IntVector c = *iter;
         IntVector in = c - offset;
         // normal direction velocity
@@ -321,7 +321,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
       cout_dbg << " CREEP"<< endl;
       
       vector<IntVector>::const_iterator iter;
-      for (iter=bound.begin(); iter != bound.end(); iter++) {
+      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
         IntVector c = *iter;
         IntVector in = c - offset;
         // normal direction velocity
@@ -346,7 +346,7 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
                                  const Patch::FaceType face,
                                  CCVariable<double>& temp_CC,
                                  const string& var_desc,
-                                 const vector<IntVector> bound,
+                                 const vector<IntVector>* bound_ptr,
                                  const string& bc_kind,
                                  const double wall_temp,
                                  Slip_vars* sv)  
@@ -379,7 +379,7 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
     double A =( 2.0 - alpha_temperature) /alpha_temperature;
     
     vector<IntVector>::const_iterator iter;
-    for (iter=bound.begin(); iter != bound.end(); iter++) {
+    for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
       IntVector c = *iter;
       IntVector in = c - offset;
       
