@@ -2076,17 +2076,19 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
           int numChildren = 
             patch->getBCDataArray(face)->getNumberChildren(matl);
           for (int child = 0; child < numChildren; child++) {
-            vector<IntVector> bound,nbound,sfx,sfy,sfz;
+            vector<IntVector> *nbound_ptr;
+            vector<IntVector> *nu;     // not used;
             vector<IntVector>::const_iterator boundary;
-            vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",bound,
-                                              nbound,sfx,sfy,sfz,child);
-            sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",bound,
-                                               nbound,sfx,sfy,sfz,child);
+            
+            vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",nu,
+                                              nbound_ptr,nu,nu,nu,child);
+            sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",nu,
+                                               nbound_ptr,nu,nu,nu,child);
             if (vel_bcs != 0) {
               const VelocityBoundCond* bc =
                 dynamic_cast<const VelocityBoundCond*>(vel_bcs);
               if (bc->getKind() == "Dirichlet") {
-                for (boundary=nbound.begin(); boundary != nbound.end();
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end();
                      boundary++) {
                   gvelocity_old[*boundary] = bc->getValue();
                   gacceleration[*boundary] = bc->getValue();
@@ -2110,7 +2112,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             }
             if (sym_bcs != 0) {
               if (face == Patch::xplus || face == Patch::xminus)
-                for (boundary=nbound.begin(); boundary != nbound.end(); 
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
                      boundary++) {
                   gvelocity_old[*boundary] = 
                     Vector(0.,gvelocity_old[*boundary].y(),
@@ -2120,7 +2122,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                            gacceleration[*boundary].z());
                 }
               if (face == Patch::yplus || face == Patch::yminus)
-                for (boundary=nbound.begin(); boundary != nbound.end(); 
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
                      boundary++) {
                   gvelocity_old[*boundary] = 
                     Vector(gvelocity_old[*boundary].x(),0.,
@@ -2130,7 +2132,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                            gacceleration[*boundary].z());
                 }
               if (face == Patch::zplus || face == Patch::zminus)
-                for (boundary=nbound.begin(); boundary != nbound.end(); 
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
                      boundary++) {
                   gvelocity_old[*boundary] = 
                     Vector(gvelocity_old[*boundary].x(),
