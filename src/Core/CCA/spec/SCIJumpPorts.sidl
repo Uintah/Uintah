@@ -54,6 +54,7 @@ interface GUIService extends sci.cca.Port
   void addBuilder(in string builderName, in sci.cca.GUIBuilder builder);
   void removeBuilder(in string builderName);
   void updateProgress(in cca.ComponentID cid, in int progressPercent);
+  void updateComponentModels();
 }
 
 // Should part of an extended builder service.
@@ -61,8 +62,8 @@ interface ApplicationLoaderService extends sci.cca.Port {
   string getFileName();
   void setFileName(in string filename);
 
-  void loadFile();
-  void loadFile[As](in string filename);
+  void loadFile(out array<sci.cca.ComponentID> cidList, out array<sci.cca.ConnectionID> connList);
+  void loadFile[As](in string filename, out array<sci.cca.ComponentID> cidList, out array<sci.cca.ConnectionID> connList);
 
   void saveFile();
   void saveFile[As](in string filename);
@@ -95,25 +96,13 @@ interface StringPort extends sci.cca.Port
 }
 
 /**
- * Component representation in GUI - set Qt widgets
- * and other properties in Module class.
+ * Component representation in UI:
+ *  use to set properties in UI classes.
  */
-interface ComponentIcon extends sci.cca.Port {
+interface ComponentIconUI extends sci.cca.Port {
   collective string getDisplayName();
   collective string getDescription();
-
-  //collective string getIconShape();
-
-  // set steps = 0 to omit progress bar from icon
-  // progress bar - return # steps
-  //collective int getProgressBar();
 }
-
-
-// // report component progress
-// interface Progress extends sci.cca.Port {
-//   collective void updateProgress(in int progressPercent);
-// }
 
 /**
  * Provide a user interface for a component - a UI button
@@ -295,5 +284,3 @@ interface EventService extends cca.Port {
   void processEvents();
 
 }
-
-

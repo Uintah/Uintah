@@ -67,6 +67,7 @@ public:
   GUIBuilder::PortType GetPortType() const { return portType; }
 
   ComponentIcon* GetParent() const { return parent; }
+  void GetCanvasPosition(wxPoint& p);
 
   const static int PORT_WIDTH = 7;
   const static int PORT_HEIGHT = 10;

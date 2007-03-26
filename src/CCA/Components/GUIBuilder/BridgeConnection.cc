@@ -38,7 +38,7 @@ BridgeConnection::BridgeConnection(PortIcon* pU, PortIcon* pP, const sci::cca::C
 void BridgeConnection::OnDraw(wxDC& dc)
 {
   ResetPoints();
-  setConnection();
+  setConnection(dc);
   if (IsHighlighted()) {
     wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 2, wxLONG_DASH);
     dc.SetPen(*pen);

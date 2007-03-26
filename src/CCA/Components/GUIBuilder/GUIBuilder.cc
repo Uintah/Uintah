@@ -55,10 +55,6 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/pidl_cast.h>
 
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
-
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -75,8 +71,9 @@ const std::string GUIBuilder::DEFAULT_CCA_COMP_DIR(GUIBuilder::DEFAULT_SRC_DIR +
 const std::string GUIBuilder::GOPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "GoPort");
 const std::string GUIBuilder::UIPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "UIPort");
 const std::string GUIBuilder::PROGRESS_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "Progress");
-const std::string GUIBuilder::COMPONENTICON_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIcon");
+const std::string GUIBuilder::COMPONENTICONUI_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIconUI");
 const std::string GUIBuilder::APP_EXT_WILDCARD("*." + ApplicationLoader::APP_EXT);
+const std::string GUIBuilder::APP_EXT(ApplicationLoader::APP_EXT);
 
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;
@@ -112,7 +109,7 @@ wxGUIThread::run()
     wxSCIRunApp::SetTopBuilder(builder);
     int argc = 1;
     char *argv[1];
-    argv[0] = "SCIRun2";
+    argv[0] = "SCIJump";
     // add framework URL to args???
     // initialize single wxApp instance and run main loop (Unix-specific):
     wxEntry(argc, argv);  // never returns, do initialization from OnInit
@@ -126,14 +123,14 @@ DestroyInstancesThread::run()
 
 GUIBuilder::GUIBuilder()
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
 }
 
 GUIBuilder::~GUIBuilder()
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::~GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   try {
@@ -167,9 +164,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scirun2.services.builderservice.component.*");
   subPtr->registerEventListener(std::string("GUIBuilder"),evptr);
 
-
-
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   builderLock.lock();
@@ -213,7 +208,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     t->detach();
     wxSCIRunApp::semDown();
   } else {
-#if DEBUG
+#if FWK_DEBUG
     std::cerr << "GUIBuilder::setServices(..) try to add top window." << std::endl;
 #endif
     if (Thread::self()->getThreadName() == GUI_THREAD_NAME) {
@@ -462,13 +457,13 @@ GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
       // get all ports for newly created bridge component
       SSIDL::array1<std::string> usesPorts = bs->getUsedPortNames(bridgeCID);
       SSIDL::array1<std::string> providesPorts = bs->getProvidedPortNames(bridgeCID);
-#if DEBUG
+#if FWK_DEBUG
       std::cerr << "Bridge: connect " << user->getInstanceName() << "->"
                 << usesPortName << " to " << bridgeCID->getInstanceName() << "->"
                 << providesPorts[0] << std::endl;
 #endif
       connID1 = bs->connect(user, usesPortName, bridgeCID, providesPorts[0]);
-#if DEBUG
+#if FWK_DEBUG
       std::cerr << "Bridge: connect " << bridgeCID->getInstanceName() << "->"
                 << usesPorts[0] << " to " << provider->getInstanceName() << "->"
                 << providesPortName << std::endl;
@@ -512,7 +507,13 @@ GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::st
       msg += STLTowxString(e->getNote());
       bw->DisplayErrorMessage(msg);
     }
+
+else {
+std::cerr << "e->getNote()" << std::endl;
+}
+
   }
+
   return connID;
 }
 
@@ -626,7 +627,7 @@ bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& p
                             const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "goPort";
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::connectGoPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
@@ -637,7 +638,7 @@ bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& p
 
 void GUIBuilder::disconnectGoPort(const std::string& goPortName)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::disconnectGoPort(..): go port name=" << goPortName << std::endl;
 #endif
   disconnectPort(goPortName);
@@ -671,7 +672,7 @@ int GUIBuilder::go(const std::string& goPortName)
 bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "uiPort";
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::connectUIPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
@@ -682,7 +683,7 @@ bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& p
 
 void GUIBuilder::disconnectUIPort(const std::string& uiPortName)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::disconnectUIPort(..): ui port name=" << uiPortName << std::endl;
 #endif
   disconnectPort(uiPortName);
@@ -709,10 +710,16 @@ int GUIBuilder::ui(const std::string& uiPortName)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// component progress
+// sci.cca.ports.GUIService
 
 void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
 {
+  if (Thread::self()->getThreadName() != GUI_THREAD_NAME) {
+    // TODO: This needs to be an exception!
+    std::cerr << "ERROR: do NOT call GUI functions from a non-gui thread!" << std::endl;
+    return;
+  }
+
   // get all builder windows
   // this should be done in a worker thread
   BuilderWindow *bw = app->GetTopBuilderWindow();
@@ -724,24 +731,39 @@ void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int p
   }
 }
 
-//////////////////////////////////////////////////////////////////////////
-// sci.cca.ports.ComponentIcon support
+void GUIBuilder::updateComponentModels()
+{
+  if (Thread::self()->getThreadName() != GUI_THREAD_NAME) {
+    // TODO: This needs to be an exception!
+    std::cerr << "ERROR: do NOT call GUI functions from a non-gui thread!" << std::endl;
+    return;
+  }
+  BuilderWindow *bw = app->GetTopBuilderWindow();
+  if (!bw) {
+    std::cerr << "ERROR: could not get top builder window from wxSCIRunApp." << std::endl;
+    return;
+  }
+  bw->BuildAllPackageMenus();
+}
 
-bool GUIBuilder::connectComponentIcon(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
+//////////////////////////////////////////////////////////////////////////
+// sci.cca.ports.ComponentIconUI support
+
+bool GUIBuilder::connectComponentIconUI(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "componenticon";
-#if DEBUG
-  std::cerr << "GUIBuilder::connectComponentIcon(..): uses port name=" << usesPortName
+#if FWK_DEBUG
+  std::cerr << "GUIBuilder::connectComponentIconUI(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
-  return connectPort(usesPortName, providesPortName, COMPONENTICON_PORT, cid);
+  return connectPort(usesPortName, providesPortName, COMPONENTICONUI_PORT, cid);
 }
 
-void GUIBuilder::disconnectComponentIcon(const std::string& ciPortName)
+void GUIBuilder::disconnectComponentIconUI(const std::string& ciPortName)
 {
-#if DEBUG
-  std::cerr << "GUIBuilder::disconnectComponentIcon(..): component icon port name=" << ciPortName << std::endl;
+#if FWK_DEBUG
+  std::cerr << "GUIBuilder::disconnectComponentIconUI(..): component icon port name=" << ciPortName << std::endl;
 #endif
   disconnectPort(ciPortName);
 }
@@ -826,6 +848,21 @@ bool GUIBuilder::applicationFileExists()
   }
   return true;
 }
+
+void GUIBuilder::loadApplication(const std::string& filename, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
+{
+  try {
+    sci::cca::ports::ApplicationLoaderService::pointer appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    appLoader->loadFile(filename, cidList, connList);
+    services->releasePort("cca.ApplicationLoaderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
+    return;
+  }
+}
+
 
 void GUIBuilder::saveApplication()
 {

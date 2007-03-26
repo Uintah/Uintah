@@ -28,7 +28,7 @@
 
 
 /*
- *  BuilderService.cc: Implementation of CCA BuilderService for SCIRun
+ *  BuilderService.cc: Implementation of CCA BuilderService for SCIJump
  *
  *  Written by:
  *   Steven G. Parker
@@ -64,8 +64,8 @@ BuilderService::BuilderService(SCIRunFramework* framework)
   if(ptr.isNull()){
     std::cout << "Pointer returned is Null!!!\n";
   }
-  sci::cca::Topic::pointer topicPtr1 = ptr->createTopic("scirun2.services.builderservice.component.create");
-  sci::cca::Topic::pointer topicPtr2 = ptr->createTopic("scirun2.services.builderservice.component.destroy"); 
+  sci::cca::Topic::pointer topicPtr1 = ptr->createTopic("scijump.services.builderservice.component.create");
+  sci::cca::Topic::pointer topicPtr2 = ptr->createTopic("scijump.services.builderservice.component.destroy"); 
   if(topicPtr1.isNull())
      std::cout << "Pointer returned from Create Topic is Null\n";
   framework->releaseFrameworkService("cca.EventService","EventService");
@@ -78,8 +78,8 @@ BuilderService::~BuilderService()
   if(ptr.isNull()){
     std::cout << "Pointer returned is Null!!!\n";
   }
-  ptr->releaseTopic("scirun2.services.builderservice.component.create");
-  ptr->releaseTopic("scirun2.services.builderservice.component.destroy");
+  ptr->releaseTopic("scijump.services.builderservice.component.create");
+  ptr->releaseTopic("scijump.services.builderservice.component.destroy");
   framework->releaseFrameworkService("cca.EventService","EventService");
 }
 
@@ -93,7 +93,7 @@ BuilderService::createInstance(const std::string& instanceName,
   if(ptr.isNull()){
     std::cout << "Pointer returned is Null!!!\n";
   }
-  std::string topicName = "scirun2.services.builderservice.component.create";
+  std::string topicName = "scijump.services.builderservice.component.create";
   sci::cca::Topic::pointer topicPtr = ptr->getTopic(topicName);
   sci::cca::TypeMap::pointer eventBody = framework->createTypeMap();
   eventBody->putString(std::string("Event-ComponentCreation"),std::string(("Class Name-")+className));
@@ -249,7 +249,7 @@ BuilderService::destroyInstance(const sci::cca::ComponentID::pointer &toDie, flo
 {
   sci::cca::Port::pointer pp = framework->getFrameworkService("cca.EventService","EventService");
   sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
-  std::string topicName = "scirun2.services.builderservice.component.destroy";
+  std::string topicName = "scijump.services.builderservice.component.destroy";
   sci::cca::Topic::pointer topicPtr = ptr->getTopic(topicName);
   sci::cca::TypeMap::pointer eventBody = framework->createTypeMap();
   eventBody->putString(std::string("Event-ComponentDestruction"),std::string(("Class Name-")+className));

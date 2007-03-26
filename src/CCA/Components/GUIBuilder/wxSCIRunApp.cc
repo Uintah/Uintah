@@ -33,6 +33,7 @@
 #include <Core/Util/Environment.h>
 
 #include <wx/splash.h>
+#include <wx/image.h>
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -63,7 +64,7 @@ wxSCIRunApp::OnInit()
   wxInitAllImageHandlers();
 
   wxString path = STLTowxString(sci_getenv("SCIRUN_SRCDIR"));
-  path += wxT("/CCA/Components/GUIBuilder/scirun2-splash.png");
+  path += wxT("/CCA/Components/GUIBuilder/scijump-splash.png");
   wxBitmap bitmap(path, wxBITMAP_TYPE_PNG);
   if (bitmap.Ok()) {
     wxSplashScreen splash(bitmap, wxSPLASH_TIMEOUT|wxSPLASH_CENTRE_ON_SCREEN, SPLASH_TIMEOUT, 0, wxID_ANY);

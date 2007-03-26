@@ -34,6 +34,7 @@ public:
 
   // tell guis to update progress for???
   virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
+  virtual void updateComponentModels();
 
 private:
   GUIService(SCIRunFramework* fwk);

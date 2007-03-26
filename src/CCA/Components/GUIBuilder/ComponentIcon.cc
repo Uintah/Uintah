@@ -38,9 +38,6 @@
  */
 
 
-//#include <wx/region.h>
-//#include <wx/dc.h>
-
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h> // color database
 #include <wx/stattext.h>
@@ -56,10 +53,6 @@
 #include <Core/Thread/Time.h>
 
 #include <string>
-
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
 
 namespace GUIBuilder {
 
@@ -85,16 +78,16 @@ ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
                              const sci::cca::ComponentID::pointer& compID,
                              int x, int y)
     : canvas(parent),
-      hasUIPort(false), hasGoPort(false), hasComponentIcon(false),
+      hasUIPort(false), hasGoPort(false), hasComponentIconUI(false),
       isMoving(false), cid(compID), builder(bc)
 {
 
   Init();
   Create(parent, winid, wxPoint(x, y));
-#if DEBUG
-  std::cerr << "ComponentIcon " << compID->getInstanceName() << " position: "
-            << "(" << ")" << std::endl;
-#endif
+// #if FWK_DEBUG
+//   std::cerr << "ComponentIcon " << compID->getInstanceName() << " position: "
+//             << "(" << ")" << std::endl;
+// #endif
 }
 
 ComponentIcon::~ComponentIcon()
@@ -107,8 +100,8 @@ ComponentIcon::~ComponentIcon()
     builder->disconnectUIPort(uiPortName);
   }
 
-  if (hasComponentIcon) {
-    builder->disconnectComponentIcon(ciPortName);
+  if (hasComponentIconUI) {
+    builder->disconnectComponentIconUI(ciPortName);
   }
 
   PortList::iterator iter;
@@ -130,6 +123,8 @@ bool ComponentIcon::Create(wxWindow* parent, wxWindowID winid, const wxPoint& po
   SetFont(wxFont(10, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL,
                  false, wxEmptyString, wxFONTENCODING_SYSTEM));
 
+  SetBackgroundStyle(wxBG_STYLE_SYSTEM);
+  SetBackgroundColour(wxNullColour);
   SetLayout();
   SetExtraStyle(wxWS_EX_BLOCK_EVENTS);
 
@@ -147,7 +142,7 @@ void ComponentIcon::OnLeftDown(wxMouseEvent& event)
 {
   canvas->GetUnscrolledMousePosition(movingStart);
 
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "ComponentIcon::OnLeftDown(..) pos=(" << movingStart.x << ", " << movingStart.y << ") "
             << std::endl;
 #endif
@@ -166,111 +161,116 @@ void ComponentIcon::OnLeftUp(wxMouseEvent& event)
 
 void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 {
-  if (event.LeftIsDown() && event.Dragging() && isMoving) {
-    CaptureMouse();
-    //Show(false);
-    wxPoint p;
-    canvas->GetUnscrolledPosition(event.GetPosition(), p);
-    wxPoint mp;
-    canvas->GetUnscrolledMousePosition(mp);
-
-    wxPoint pp;
-    GetCanvasPosition(pp);
-    //canvas->FindIconAtPointer(pp);
-
-    int dx = 0, dy = 0;
-    //int newX = pp.x + p.x - movingStart.x;
-    //int newY = pp.y + p.y - movingStart.y;
-    int newX = mp.x + pp.x + p.x - movingStart.x;
-    int newY = mp.y + pp.y + p.y - movingStart.y;
-    wxPoint topLeft;
-    canvas->GetUnscrolledPosition(wxPoint(newX, newY), topLeft);
-
-#if DEBUG
-    std::cerr << "ComponentIcon::OnMouseMove(..) "
-      //<< "event pos=(" << p.x << ", " << p.y << ")"
-              << std::endl
-              << "\tmouse canvas pos=(" << mp.x << ", " << mp.y << ")"
-              << std::endl
-              << "\ticon pos=(" << pp.x << ", " << pp.y << ")"
-              << std::endl
-              << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
-              << std::endl;
+#if FWK_DEBUG
+  wxPoint p;
+  canvas->GetUnscrolledMousePosition(p);
+  canvas->GetBuilderWindow()->DisplayMousePosition(wxT("ComponentIcon"), p);
 #endif
+//   if (event.LeftIsDown() && event.Dragging() && isMoving) {
+//     CaptureMouse();
+//     //Show(false);
+//     wxPoint p;
+//     canvas->GetUnscrolledPosition(event.GetPosition(), p);
+//     wxPoint mp;
+//     canvas->GetUnscrolledMousePosition(mp);
 
-    // adjust for canvas boundaries
-    if (topLeft.x < 0) {
-      newX -= topLeft.x;
-      if (p.x < 0) {
-        mp.x -= p.x;
-        p.x = 0;
-        WarpPointer(mp.x, mp.y); // move mouse pointer
-      }
-      dx -= 1;
-    }
+//     wxPoint pp;
+//     GetCanvasPosition(pp);
+//     //canvas->FindIconAtPointer(pp);
 
-    if (topLeft.y < 0) {
-      newY -= topLeft.y;
-      if (p.y < 0) {
-        mp.y -= p.y;
-        p.y = 0;
-        WarpPointer(mp.x, mp.y); // move mouse pointer
-      }
-      dy -= 1;
-    }
+//     int dx = 0, dy = 0;
+//     //int newX = pp.x + p.x - movingStart.x;
+//     //int newY = pp.y + p.y - movingStart.y;
+//     int newX = mp.x + pp.x + p.x - movingStart.x;
+//     int newY = mp.y + pp.y + p.y - movingStart.y;
+//     wxPoint topLeft;
+//     canvas->GetUnscrolledPosition(wxPoint(newX, newY), topLeft);
 
-    int cw = canvas->GetVirtualSize().GetWidth();
-    int mw = GetSize().GetWidth();
+// #if FWK_DEBUG
+//     std::cerr << "ComponentIcon::OnMouseMove(..) "
+//       //<< "event pos=(" << p.x << ", " << p.y << ")"
+//               << std::endl
+//               << "\tmouse canvas pos=(" << mp.x << ", " << mp.y << ")"
+//               << std::endl
+//               << "\ticon pos=(" << pp.x << ", " << pp.y << ")"
+//               << std::endl
+//               << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
+//               << std::endl;
+// #endif
 
-    if (topLeft.x > cw - mw) {
-      newX -= topLeft.x - (cw - mw);
-      if (p.x > cw) {
-        mp.x -= (p.x - cw);
-        p.x = cw - mw;
-        WarpPointer(mp.x, mp.y);
-      }
-      dx = 1;
-    }
+//     // adjust for canvas boundaries
+//     if (topLeft.x < 0) {
+//       newX -= topLeft.x;
+//       if (p.x < 0) {
+//         mp.x -= p.x;
+//         p.x = 0;
+//         WarpPointer(mp.x, mp.y); // move mouse pointer
+//       }
+//       dx -= 1;
+//     }
 
-    int ch = canvas->GetVirtualSize().GetHeight();
-    int mh = GetSize().GetHeight();
+//     if (topLeft.y < 0) {
+//       newY -= topLeft.y;
+//       if (p.y < 0) {
+//         mp.y -= p.y;
+//         p.y = 0;
+//         WarpPointer(mp.x, mp.y); // move mouse pointer
+//       }
+//       dy -= 1;
+//     }
 
-    if (topLeft.y > ch - mh) {
-      newY -= topLeft.y - (ch - mh);
-      if (p.y > ch) {
-        mp.y -= (p.y - ch);
-        p.y = ch;
-        WarpPointer(mp.x, mp.y);
-      }
-      dy = 1;
-    }
+//     int cw = canvas->GetVirtualSize().GetWidth();
+//     int mw = GetSize().GetWidth();
 
-    movingStart = p;
-    wxPoint np;
-    canvas->GetScrolledPosition(wxPoint(newX, newY), np);
+//     if (topLeft.x > cw - mw) {
+//       newX -= topLeft.x - (cw - mw);
+//       if (p.x > cw) {
+//         mp.x -= (p.x - cw);
+//         p.x = cw - mw;
+//         WarpPointer(mp.x, mp.y);
+//       }
+//       dx = 1;
+//     }
 
-    //     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
-    //Move(np.x, np.y);
-    Move(newX, newY);
-    //Show(true);
-    ReleaseMouse();
-    canvas->Refresh();
+//     int ch = canvas->GetVirtualSize().GetHeight();
+//     int mh = GetSize().GetHeight();
+
+//     if (topLeft.y > ch - mh) {
+//       newY -= topLeft.y - (ch - mh);
+//       if (p.y > ch) {
+//         mp.y -= (p.y - ch);
+//         p.y = ch;
+//         WarpPointer(mp.x, mp.y);
+//       }
+//       dy = 1;
+//     }
+
+//     movingStart = p;
+//     wxPoint np;
+//     canvas->GetScrolledPosition(wxPoint(newX, newY), np);
+
+//     //     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
+//     //Move(np.x, np.y);
+//     Move(newX, newY);
+//     //Show(true);
+//     ReleaseMouse();
+//     canvas->Refresh();
 
 
-    //     CalcScrolledPosition(newX, newY, &newX, &newY);
-    //     movingIcon->Move(newX, newY);
-    //     movingIcon->Show(true);
-    //     // reset moving icon connections
-    //     Refresh();
-    //     builderWindow->RedrawMiniCanvas();
+//     //     CalcScrolledPosition(newX, newY, &newX, &newY);
+//     //     movingIcon->Move(newX, newY);
+//     //     movingIcon->Show(true);
+//     //     // reset moving icon connections
+//     //     Refresh();
+//     //     builderWindow->RedrawMiniCanvas();
 
-    //     wxRect windowRect = GetClientRect();
-    //     if (! windowRect.Inside(newX + mw, newY + mh)) {
-    //       int xu = 0, yu = 0;
-    //       GetScrollPixelsPerUnit(&xu, &yu);
-    //       Scroll(newX/xu, newY/yu);
-    //     }
-  }
+//     //     wxRect windowRect = GetClientRect();
+//     //     if (! windowRect.Inside(newX + mw, newY + mh)) {
+//     //       int xu = 0, yu = 0;
+//     //       GetScrollPixelsPerUnit(&xu, &yu);
+//     //       Scroll(newX/xu, newY/yu);
+//     //     }
+//   }
 
   event.StopPropagation();
 }
@@ -363,7 +363,7 @@ void ComponentIcon::SetLayout()
   SetPortIcons();
 
   const wxSize UI_SIZE(30, 30);
-  uiButton = new wxButton(this, ID_BUTTON_UI, wxT("UI"), wxDefaultPosition, UI_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
+  uiButton = new wxButton(this, ID_BUTTON_UI, wxT("UI"), wxDefaultPosition, UI_SIZE);
   gridBagSizer->Add(uiButton, wxGBPosition(0, 1), wxGBSpan(2, 1),
                     wxFIXED_MINSIZE|wxALIGN_CENTER, BORDER_SIZE);
   if (! hasUIPort) {
@@ -388,7 +388,7 @@ void ComponentIcon::SetLayout()
 
   const wxSize STATUS_SIZE(45, 15);
   msgButton = new wxButton(this, ID_BUTTON_STATUS, wxT(""), wxDefaultPosition,
-                           STATUS_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
+                           STATUS_SIZE);
   gridBagSizer->Add(msgButton, wxGBPosition(1, 4), wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_LEFT, BORDER_SIZE);
 
   // hide until implemented
@@ -427,9 +427,9 @@ void ComponentIcon::SetPortIcons()
           hasGoPort = true;
           popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
         }
-      } else if (type == GUIBuilder::COMPONENTICON_PORT) {
-        if (builder->connectComponentIcon(cid->getInstanceName(), providedPorts[i], cid, ciPortName)) {
-          hasComponentIcon = true;
+      } else if (type == GUIBuilder::COMPONENTICONUI_PORT) {
+        if (builder->connectComponentIconUI(cid->getInstanceName(), providedPorts[i], cid, ciPortName)) {
+          hasComponentIconUI = true;
         }
       } else {
         PortIcon *pi = new PortIcon(builder, this, wxID_ANY,
@@ -456,7 +456,7 @@ void ComponentIcon::SetPortIcons()
       // It doesn't make sense for a component that isn't a UI to use these ports.
       if (type == GUIBuilder::UIPORT ||
           type == GUIBuilder::GOPORT ||
-          type == GUIBuilder::COMPONENTICON_PORT) {
+          type == GUIBuilder::COMPONENTICONUI_PORT) {
         wxString msg = STLTowxString(GetComponentInstanceName());
         msg += wxT(" should provide, and not use, ports of type ");
         msg += STLTowxString(type);

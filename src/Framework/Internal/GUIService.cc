@@ -4,9 +4,9 @@
 #include <Framework/SCIRunFramework.h>
 #include <Framework/CCA/CCAException.h>
 #include <Core/Thread/Guard.h>
+#include <Core/Thread/Thread.h>
 
 namespace SCIRun {
-
 
 GUIService::GUIService(SCIRunFramework* framework)
   : InternalFrameworkServiceInstance(framework, "internal:GUIService"), lock("GUIService lock")
@@ -41,7 +41,7 @@ GUIService::getService(const std::string&)
 void GUIService::addBuilder(const std::string& builderName, const sci::cca::GUIBuilder::pointer& builder)
 {
   Guard g(&lock);
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIService::AddBuilder(..): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   GUIBuilderMap::iterator iter = builders.find(builderName);
@@ -73,6 +73,15 @@ void GUIService::updateProgress(const sci::cca::ComponentID::pointer& cid, int p
   }
   for (GUIBuilderMap::iterator iter = builders.begin(); iter != builders.end(); iter++) {
     iter->second->updateProgress(cid, progressPercent);
+  }
+}
+
+void GUIService::updateComponentModels()
+{
+  Guard g(&lock);
+  //std::cerr << "GUIService::updateComponentModels() from thread " << Thread::self()->getThreadName() << std::endl;
+  for (GUIBuilderMap::iterator iter = builders.begin(); iter != builders.end(); iter++) {
+    iter->second->updateComponentModels();
   }
 }
 

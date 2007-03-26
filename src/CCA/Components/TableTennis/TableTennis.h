@@ -45,14 +45,6 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 
-#if 0
-// class myUIPort : public virtual sci::cca::ports::UIPort {
-// public:
-//    virtual ~myUIPort(){}
-//    virtual int ui();
-// };
-#endif
-
 class myTTPort : public virtual PP::PingPong {
 public:
   virtual ~myTTPort(){}

@@ -1869,12 +1869,12 @@ package cca {
 
 //########### ################## ################## ##################
 //<<<<<<<<<<<<<<<<<<<<<<<<<
-#include "SCIRun2Ports.sidl"
+#include "SCIJumpPorts.sidl"
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 
     } // end of package cca.ports
 //<<<<<<<<<<<<<<<<<<<<<<<<<
-#include "SCIRun2Classes.sidl"
+#include "SCIJumpClasses.sidl"
 //>>>>>>>>>>>>>>>>>>>>>>>>>
 } // end of package cca
 } // end package sci

@@ -44,12 +44,8 @@
 #define CCA_Components_GUIBuilder_BuilderWindow_h
 
 
-// turn off for release
-#ifndef GUI_TEST
-#  define GUI_TEST 0
-#endif
-
 #include <sci_wx.h>
+#include <sci_defs/framework_defs.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 #include <string>
@@ -113,9 +109,6 @@ public:
     ID_NET_WINDOW,
     ID_MINI_WINDOW,
     ID_TEXT_WINDOW,
-#if GUI_TEST
-    ID_MENU_TEST,
-#endif
     ID_MENU_LOAD,
     ID_MENU_INSERT,
     ID_MENU_CLEAR,
@@ -135,11 +128,11 @@ public:
 
   // two-step creation
   bool Create(wxWindow* parent, wxWindowID id,
-              const wxString& title = wxString(wxT("SCIRun2 GUI Builder")),
+              const wxString& title = wxString(wxT("SCIJump GUI Builder")),
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxSize(WIDTH, HEIGHT),
               long style = wxDEFAULT_FRAME_STYLE,
-              const wxString& name = wxString(wxT("SCIRun2")));
+              const wxString& name = wxString(wxT("SCIJump")));
 
   // set builder only if builder is null
   bool SetBuilder(const sci::cca::GUIBuilder::pointer& bc);
@@ -151,9 +144,6 @@ public:
   void OnAbout(wxCommandEvent& event);
   void OnSize(wxSizeEvent& event);
   void OnSashDrag(wxSashEvent& event);
-#if GUI_TEST
-  void OnTest(wxCommandEvent& event);
-#endif
   void OnLoad(wxCommandEvent& event);
   void OnSave(wxCommandEvent& event);
   void OnSaveAs(wxCommandEvent& event);
@@ -171,6 +161,7 @@ public:
   void DisplayErrorMessage(const wxString& line);
   void DisplayMessages(const std::vector<wxString>& lines);
   void DisplayErrorMessages(const std::vector<wxString>& lines);
+  void DisplayMousePosition(const wxString& widgetName, const wxPoint& p);
 
   //const MenuMap& GetComponentMenus() { return menus; }
 
@@ -216,12 +207,16 @@ private:
 
   sci::cca::GUIBuilder::pointer builder;
   std::string url;
+  wxString pointerLocationX;
+  wxString pointerLocationY;
+
 
   // Component menus:
   // Need to build the menu bar and network window popup menu items
   // separately, since they will be owned by different parents.
   void buildPackageMenus(const ClassDescriptionList& list);
   void buildNetworkPackageMenus(const ClassDescriptionList& list);
+  void doSaveAs();
   void setDefaultText();
 };
 

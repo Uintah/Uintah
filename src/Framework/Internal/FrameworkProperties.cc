@@ -64,7 +64,7 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
   frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
   frameworkProperties->putString("url", framework->getURL().getString());
 
-  // SCIRun2 configure and temp file directory is created by preference
+  // SCIJump configure and temp file directory is created by preference
   // in the user's home directory.
   // If this isn't possible, it should be created in the
   // build directory instead.

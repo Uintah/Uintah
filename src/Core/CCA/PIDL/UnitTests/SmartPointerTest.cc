@@ -34,7 +34,7 @@
 #include <iostream>
 #include <sstream>
 
-// In the SCIRun2 framework, SmartPointer objects are used with Objects
+// In the SCIJump framework, SmartPointer objects are used with Objects
 // (see Core/CCA/PIDL/Object.h).
 // To simplify testing SmartPointers, a simplified version of Object
 // is provided here:

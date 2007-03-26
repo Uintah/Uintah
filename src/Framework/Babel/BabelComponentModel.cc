@@ -233,7 +233,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
 #endif
   if (library._is_nil()) {
     std::cerr << "Could not find library for type " << type << ". "
-              << "Check your environment settings as described in the Babel and SCIRun2 usage instructions."
+              << "Check your environment settings as described in the Babel and SCIJump usage instructions."
               << std::endl;
     return 0;
   }
