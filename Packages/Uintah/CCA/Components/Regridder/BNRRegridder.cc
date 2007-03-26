@@ -99,13 +99,13 @@ BNRRegridder::~BNRRegridder()
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
-  vector< vector<Region> > patch_sets(oldGrid->numLevels()+1);
+  vector< vector<Region> > patch_sets(min(oldGrid->numLevels()+1,d_maxLevels));
 
   vector<int> processor_assignments;
 
   //create coarse flag sets
   CreateCoarseFlagSets(oldGrid,coarse_flag_sets);
- 
+
   //add old level 0 to patch sets
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
@@ -113,19 +113,16 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   }
 
   //For each level Fine to Coarse
-  for(int l=oldGrid->numLevels()-1; l >= 0;l--)
+  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
   {
-    if(l>=d_maxLevels-1)
-      continue;
-
     //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
 
     //Parallel BR over coarse flags
       //flags on level l are used to create patches on level l+1
-    RunBR(coarse_flag_vector,patch_sets[l+1]);  
    
+    RunBR(coarse_flag_vector,patch_sets[l+1]);  
     if(patch_sets[l+1].empty()) //no patches goto next level
       continue;
 
@@ -662,8 +659,8 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
     {
       const Patch* patch = intersecting_patches[i];
 
-      IntVector int_low = Max(patch->getCellLowIndex(), low);
-      IntVector int_high = Min(patch->getCellHighIndex(), high);
+      IntVector int_low = Max(patch->getInteriorCellLowIndex(), low);
+      IntVector int_high = Min(patch->getInteriorCellHighIndex(), high);
       
       //convert to coarsened coordinates
         //multiply by refinement ratio to convert back to fine levels cell coordinates
