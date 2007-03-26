@@ -491,9 +491,9 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init); 
     t = d_timeinfo->initTime;
 
-    bool haveNewLevel = false;
+    bool needNewLevel = false;
     do {
-      if (haveNewLevel) {
+      if (needNewLevel) {
         d_scheduler->initialize(1, 1);
         d_scheduler->advanceDataWarehouse(grid);
       }
@@ -527,8 +527,8 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
      
-      haveNewLevel = d_regridder && d_regridder->isAdaptive() && doRegridding(grid, true);
-    } while (haveNewLevel);
+      needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
+    } while (needNewLevel);
     
     
     if(d_output)
