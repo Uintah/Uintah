@@ -30,9 +30,10 @@
 
 SRCDIR := Framework/UnitTests
 
-PROGRAM := $(SRCDIR)/test
+PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
 SRCS := \
+        $(SRCDIR)/TypeMapTest.cc \
         $(SRCDIR)/AbstractFrameworkTest.cc \
         $(SRCDIR)/main.cc
 

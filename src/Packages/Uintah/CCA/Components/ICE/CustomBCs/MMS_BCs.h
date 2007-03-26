@@ -57,7 +57,7 @@ namespace Uintah {
                            const Patch::FaceType face,
                            CCVariable<Vector>& vel_CC,
                            const string& var_desc,
-                           const vector<IntVector> bound,
+                           const vector<IntVector>* bound_ptr,
                            const string& bc_kind,
                            SimulationStateP& sharedState,
                            mms_variable_basket* mms_var_basket,
@@ -67,7 +67,7 @@ namespace Uintah {
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
                               const string& var_desc,
-                              const vector<IntVector> bound,
+                              const vector<IntVector>* bound_ptr,
                               const string& bc_kind,
                               mms_variable_basket* mms_var_basket,
                               mms_vars* mms_v);
@@ -75,7 +75,7 @@ namespace Uintah {
   void set_MMS_press_BC(const Patch* patch,
                         const Patch::FaceType face,
                         CCVariable<double>& press_CC,
-                        const vector<IntVector> bound,
+                        const vector<IntVector>* bound_ptr,
                         const string& bc_kind,
                         SimulationStateP& sharedState,
                         mms_variable_basket* mms_var_basket,
@@ -90,7 +90,7 @@ namespace Uintah {
  bool set_MMS_BCs_FC( const Patch* patch,
                       const Patch::FaceType face,
                       T& vel_FC,
-                      const vector<IntVector> bound,
+                      const vector<IntVector>* bound_ptr,
                       string& bc_kind,
                       const Vector& dx,
                       const IntVector& /*P_dir*/,
@@ -136,7 +136,7 @@ namespace Uintah {
     double t  = sharedState->getElapsedTime();
     t += mms_v->delT;
     
-    for (iter=bound.begin(); iter != bound.end(); iter++) {
+    for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
       IntVector c = *iter - one_or_zero;
       Point pt = patch->cellPosition(c);
       double x_CC = pt.x(); 

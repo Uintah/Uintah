@@ -184,7 +184,7 @@ remove_spaces(const string& str)
 
 
 // SCIRunComponentModel uses Network::add_module2 to instantiate a
-// SCIRun module in the SCIRun2 framework.
+// SCIRun module in the SCIJump framework.
 Module*
 Network::add_module2(const string& packageName,
                      const string& categoryName,

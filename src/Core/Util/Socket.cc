@@ -37,9 +37,6 @@
 #ifdef _WIN32
 #  define socklen_t int
 #  define close closesocket
-#elif defined(_AIX)
-#  include <fcntl.h>
-#  define MSG_NOSIGNAL 0
 #else
 #  include <fcntl.h>
 #endif
@@ -47,7 +44,7 @@
 
 #if defined(__APPLE__)
 #  define SOCKET_NOSIGNAL SO_NOSIGPIPE
-#elif defined(_WIN32)
+#elif defined(_WIN32) || defined(__sgi) || defined(_AIX)
 #  define SOCKET_NOSIGNAL 0
 #else
 #  define SOCKET_NOSIGNAL MSG_NOSIGNAL

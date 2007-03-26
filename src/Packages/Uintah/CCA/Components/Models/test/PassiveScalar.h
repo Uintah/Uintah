@@ -138,8 +138,11 @@ WARNING
       IntVector freq;
       bool  linearInitialize;
       Vector slope;
+      bool cubicInitialize;
+      Vector direction;
       bool quadraticInitialize;
       Vector coeff;
+      bool exponentialInitialize;
       
       bool  uniformInitialize;
     };

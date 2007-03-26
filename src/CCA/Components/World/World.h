@@ -75,11 +75,11 @@ private:
   std::string displayName;
 };
 
-class ComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+class ComponentIconUI : public virtual sci::cca::ports::ComponentIconUI {
 public:
-  ComponentIcon() : displayName("World"),
+  ComponentIconUI() : displayName("World"),
                     description("Sample CCA component that provides a sci::cca::StringPort.") {}
-  virtual ~ComponentIcon() {}
+  virtual ~ComponentIconUI() {}
 
   virtual std::string getDisplayName() { return displayName; }
   virtual std::string getDescription() { return description; }

@@ -32,6 +32,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 class wxRect;
 class wxPoint;
@@ -45,16 +46,17 @@ class BuilderWindow;
 class NetworkCanvas;
 class Connection;
 
-// Scrolled window???
-
 class MiniCanvas : public wxScrolledWindow {
 public:
-  MiniCanvas(wxWindow* parent, NetworkCanvas* canvas, wxWindowID id, const wxPoint& pos, const wxSize& size);
+  MiniCanvas(wxWindow* parent, BuilderWindow* bw, NetworkCanvas* canvas, wxWindowID id, const wxPoint& pos, const wxSize& size);
   virtual ~MiniCanvas();
 
   bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED);
 
-  void OnPaint(wxPaintEvent& event);
+  inline void OnPaint(wxPaintEvent& event);
+  void OnLeftDown(wxMouseEvent& event);
+  void OnLeftUp(wxMouseEvent& event);
+  void OnMouseMove(wxMouseEvent& event);
   void PaintBackground(wxDC& dc);
   void OnDraw(wxDC& dc);
 
@@ -64,9 +66,7 @@ protected:
   void OnEraseBackground(wxEraseEvent& event) {}
 
 private:
-  void scaleRect(wxRect& rect, const double scaleV, const double scaleH);
-  void scalePoints(wxPoint **points, const int size, const double scaleV, const double scaleH);
-
+  BuilderWindow* builderWindow;
   NetworkCanvas *canvas;
   std::vector<wxRect> iRects;
   std::vector<Connection*> conns;
@@ -76,10 +76,19 @@ private:
   wxPen* goldenrodPen;
   wxPen* lightGreyPen;
   wxBrush* lightGreyBrush;
+  wxRect viewportRect;
+
+  bool insideViewport;
+
+  inline void getScale(double& scaleH, double& scaleV);
+  inline void scrollCanvas(const wxPoint& point);
 
   DECLARE_EVENT_TABLE()
   DECLARE_DYNAMIC_CLASS(MiniCanvas)
 };
+
+inline void scaleRect(wxRect& rect, const double scaleH, const double scaleV);
+inline void scalePoints(wxPoint **points, const int size, const double scaleH, const double scaleV);
 
 }
 

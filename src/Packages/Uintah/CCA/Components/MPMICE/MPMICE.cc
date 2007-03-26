@@ -51,9 +51,8 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                MPMType mpmtype, const bool doAMR)
   : UintahParallelComponent(myworld)
 {
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
+ 
   d_rigidMPM = false;
   d_doAMR = doAMR;
   d_testForNegTemps_mpm = true;
@@ -81,6 +80,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
     d_ice  = scinew ICE(myworld, false);
   }
 
+  Ilb=d_ice->lb;
+  Mlb=d_mpm->lb;
+
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = d_ice->d_TINY_RHO;
   
@@ -95,7 +97,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
 
 MPMICE::~MPMICE()
 {
-  delete Mlb;
   delete MIlb;
   delete d_mpm;
   delete d_ice;
@@ -124,8 +125,8 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  M P M
-  //  d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
+  d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->attachPort("scheduler",sched);
@@ -166,7 +167,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     d_ice->attachPort("modelmaker",models);
   }
   
-  d_ice->setICELabel(Ilb);
   d_ice->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
 
 
@@ -204,7 +204,15 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   if(mpm_ps){ 
     mpm_ps->get("testForNegTemps_mpm",d_testForNegTemps_mpm);
   }
-  
+  //__________________________________
+  //  bulletproofing
+  if(d_doAMR && !d_sharedState->isLockstepAMR()){
+    ostringstream msg;
+    msg << "\n ERROR: You must add \n"
+        << " <useLockStep> true </useLockStep> \n"
+        << " inside of the <AMR> section for MPMICE and AMR. \n"; 
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
     
   if (cout_norm.active()) {
     cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
@@ -549,12 +557,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
      //  time to add a new material
      d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
    }
-
-   sched->scheduleParticleRelocation(mpm_level,
-                                 Mlb->pXLabel_preReloc, 
-                                 d_sharedState->d_particleState_preReloc,
-                                 Mlb->pXLabel, d_sharedState->d_particleState,
-                                 Mlb->pParticleIDLabel, mpm_matls);
 } // end scheduleTimeAdvance()
 
 
@@ -574,6 +576,7 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   const PatchSet* ice_patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
@@ -585,7 +588,15 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
                                                               all_matls);
 
-  //__________________________________
+  // only do on finest level until we get AMR MPM
+  if (level->getIndex() == level->getGrid()->numLevels()-1)
+    sched->scheduleParticleRelocation(level,
+                                  Mlb->pXLabel_preReloc, 
+                                  d_sharedState->d_particleState_preReloc,
+                                  Mlb->pXLabel, d_sharedState->d_particleState,
+                                  Mlb->pParticleIDLabel, mpm_matls);
+
+   //__________________________________
   // clean up memory
   if(d_ice->d_customBC_var_basket->usingLodi){
     for(int f=0;f<Patch::numFaces;f++){

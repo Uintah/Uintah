@@ -31,8 +31,7 @@ Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex,
 	     int id)
-    : d_realPatch(0), d_level(level), d_level_index(-1),
-      d_lowIndex(lowIndex), d_highIndex(highIndex),
+    : Region(lowIndex,highIndex), d_realPatch(0), d_level(level), d_level_index(-1),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
 {
@@ -72,10 +71,9 @@ Patch::Patch(const Level* level,
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
-    : d_realPatch(realPatch), d_level(realPatch->d_level),
+    : Region(realPatch->d_lowIndex + virtualOffset, realPatch->d_highIndex + virtualOffset),
+      d_realPatch(realPatch), d_level(realPatch->d_level),
       d_level_index(realPatch->d_level_index),
-      d_lowIndex(realPatch->d_lowIndex + virtualOffset),
-      d_highIndex(realPatch->d_highIndex + virtualOffset),
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
@@ -391,22 +389,24 @@ const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 }
 
 const BoundCondBase*
-Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
-			vector<IntVector>& bound, 
-			vector<IntVector>& nbound,
-			vector<IntVector>& sfx, 
-			vector<IntVector>& sfy, 
-			vector<IntVector>& sfz,
+Patch::getArrayBCValues(Patch::FaceType face,
+                     int mat_id,
+                     string type,
+			vector<IntVector>*& bound_ptr, 
+			vector<IntVector>*& nbound_ptr,
+			vector<IntVector>*& sfx_ptr, 
+			vector<IntVector>*& sfy_ptr, 
+			vector<IntVector>*& sfz_ptr,
 			int child) const
 {
   map<Patch::FaceType,BCDataArray* >::const_iterator itr=array_bcs.find(face); 
   if (itr != array_bcs.end()) {
     const BoundCondBase* bc = itr->second->getBoundCondData(mat_id,type,child);
-    itr->second->getBoundaryIterator(mat_id,bound,child);
-    itr->second->getNBoundaryIterator(mat_id,nbound,child);
-    itr->second->getSFCXIterator(mat_id,sfx,child);
-    itr->second->getSFCYIterator(mat_id,sfy,child);
-    itr->second->getSFCZIterator(mat_id,sfz,child);
+    itr->second->getBoundaryIterator( mat_id,bound_ptr,  child);
+    itr->second->getNBoundaryIterator(mat_id,nbound_ptr, child);
+    itr->second->getSFCXIterator(mat_id,sfx_ptr,child);
+    itr->second->getSFCYIterator(mat_id,sfy_ptr,child);
+    itr->second->getSFCZIterator(mat_id,sfz_ptr,child);
     return bc;
   } else
     return 0;

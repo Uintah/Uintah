@@ -4,7 +4,6 @@ SRCDIR := Packages/Uintah/StandAlone
 
 SUBDIRS := \
         $(SRCDIR)/tools       \
-        $(SRCDIR)/compare_mms \
         $(SRCDIR)/Benchmarks
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -17,9 +16,9 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 #
 COMPONENTS      = Packages/Uintah/CCA/Components
 CA              = Packages/Uintah/CCA/Components/Arches
-#DUMMY_LIB      = Packages/Uintah/CCA/Components/Dummy
-ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
-ARCHES_LIBS     = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
+#DUMMY_LIB       = Packages/Uintah/CCA/Components/Dummy
+ARCHES_SUB_LIBS= $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
+ARCHES_LIBS    = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
 MPM_LIB         = Packages/Uintah/CCA/Components/MPM
 ICE_LIB         = Packages/Uintah/CCA/Components/ICE
 MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
@@ -58,12 +57,13 @@ ifeq ($(LARGESOS),yes)
 else
 
   PSELIBS := \
+        Core/Containers   \
         Core/Exceptions   \
-        Core/Thread       \
         Core/Geometry     \
-        Core/Util         \
         Core/Math         \
 	Core/Persistent   \
+        Core/Thread       \
+        Core/Util         \
         Packages/Uintah/Core/DataArchive \
         Packages/Uintah/Core/Grid        \
         Packages/Uintah/Core/Parallel    \
@@ -110,81 +110,6 @@ endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# puda
-
-SRCS := $(SRCDIR)/puda.cc
-PROGRAM := Packages/Uintah/StandAlone/puda
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        Core/XMLUtil \
-        Core/Exceptions  \
-        Core/Persistent  \
-        Core/Geometry    \
-        Core/Thread      \
-        Core/Util        \
-        Core/OS          \
-        Core/Containers
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# timeextract
-
-SRCS := $(SRCDIR)/timeextract.cc
-PROGRAM := Packages/Uintah/StandAlone/timeextract
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# extractV
-
-SRCS := $(SRCDIR)/extractV.cc
-PROGRAM := Packages/Uintah/StandAlone/extractV
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# extractF
-
-SRCS := $(SRCDIR)/extractF.cc
-PROGRAM := Packages/Uintah/StandAlone/extractF
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# extractS
-
-SRCS := $(SRCDIR)/extractS.cc
-PROGRAM := Packages/Uintah/StandAlone/extractS
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# partextract
-
-SRCS := $(SRCDIR)/partextract.cc
-PROGRAM := Packages/Uintah/StandAlone/partextract
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # parvarRange
 
 SRCS := $(SRCDIR)/partvarRange.cc
@@ -224,14 +149,6 @@ else
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# lineextract
-
-SRCS := $(SRCDIR)/lineextract.cc
-PROGRAM := Packages/Uintah/StandAlone/lineextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -404,63 +321,13 @@ uintah: sus \
         extractF \
         extractS \
         pfs \
+        pfs2 \
         gambitFileReader \
         lineextract \
         timeextract \
+        faceextract \
         link_inputs \
         link_regression_tester
-
-###############################################
-# pfs
-
-SRCS := $(SRCDIR)/pfs.cc
-PROGRAM := Packages/Uintah/StandAlone/pfs
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-      Packages/Uintah/Core/Grid \
-      Packages/Uintah/Core/Util \
-      Packages/Uintah/Core/Parallel \
-      Packages/Uintah/Core/Exceptions \
-      Packages/Uintah/Core/Math \
-      Packages/Uintah/Core/ProblemSpec \
-      Packages/Uintah/CCA/Ports \
-      Packages/Uintah/CCA/Components/ProblemSpecification \
-      Core/Exceptions \
-      Core/Geometry 
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-###############################################
-# pfs 2 - Steve Maas' version
-
-SRCS := $(SRCDIR)/pfs2.cc
-PROGRAM := Packages/Uintah/StandAlone/pfs2
-
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-     Packages/Uintah/Core/Grid \
-     Packages/Uintah/Core/Util \
-     Packages/Uintah/Core/Parallel \
-     Packages/Uintah/Core/Exceptions \
-     Packages/Uintah/Core/Math \
-     Packages/Uintah/Core/ProblemSpec \
-     Packages/Uintah/CCA/Ports \
-     Packages/Uintah/CCA/Components/ProblemSpecification \
-     Core/Exceptions \
-     Core/Geometry
-endif
-
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
 
 ###############################################
 
@@ -476,14 +343,16 @@ link_regression_tester:
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
 	   fi )
 
-faster_gmake:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
+noFortran:
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/noRadiation $(SRCTOP_ABS) ; \
+          $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
+
 fake_arches:
 	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
-puda: prereqs Packages/Uintah/StandAlone/puda
+puda: prereqs Packages/Uintah/StandAlone/tools/puda/puda
 
 dumpfields: prereqs Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
 
@@ -493,7 +362,7 @@ uda2nrrd: prereqs Packages/Uintah/StandAlone/uda2nrrd
 
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
-partextract: prereqs Packages/Uintah/StandAlone/partextract
+partextract: prereqs Packages/Uintah/StandAlone/tools/extractors/partextract
 
 partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 
@@ -501,20 +370,22 @@ selectpart: prereqs Packages/Uintah/StandAlone/selectpart
 
 async_mpi_test: prereqs Packages/Uintah/StandAlone/async_mpi_test
 
-extractV: prereqs Packages/Uintah/StandAlone/extractV
+extractV: prereqs Packages/Uintah/StandAlone/tools/extractors/extractV
 
-extractF: prereqs Packages/Uintah/StandAlone/extractF
+extractF: prereqs Packages/Uintah/StandAlone/tools/extractors/extractF
 
-extractS: prereqs Packages/Uintah/StandAlone/extractS
+extractS: prereqs Packages/Uintah/StandAlone/tools/extractors/extractS
 
 gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 
 slb: prereqs Packages/Uintah/StandAlone/slb
 
-pfs: prereqs Packages/Uintah/StandAlone/pfs
+pfs: prereqs Packages/Uintah/StandAlone/tools/pfs/pfs
 
-pfs2: prereqs Packages/Uintah/StandAlone/pfs2
+pfs2: prereqs Packages/Uintah/StandAlone/tools/pfs/pfs2
 
-timeextract: Packages/Uintah/StandAlone/timeextract
+timeextract: Packages/Uintah/StandAlone/tools/extractors/timeextract
 
-lineextract: Packages/Uintah/StandAlone/lineextract
+faceextract: Packages/Uintah/StandAlone/tools/extractors/faceextract
+
+lineextract: Packages/Uintah/StandAlone/tools/extractors/lineextract

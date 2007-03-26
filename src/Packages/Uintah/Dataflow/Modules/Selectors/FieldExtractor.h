@@ -278,9 +278,6 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 
   int vartype;
   if( remove_boundary == 1 ){
-    if(sfield->basis_order() == 0){
-      patch_low = patch->getInteriorCellLowIndex();
-      patch_high = patch->getInteriorCellHighIndex();
 #if 0
       cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
       cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
@@ -292,7 +289,17 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+
+      cerr<<"getHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
+      cerr<<"getInteriorHighIndex(Patch::XFaceBased) = "<<patch->getInteriorHighIndex(Patch::XFaceBased)<<"\n";
+      cerr<<"getInteriorHighIndex(Patch::YFaceBased) = "<<patch->getInteriorHighIndex(Patch::YFaceBased)<<"\n";
+      cerr<<"getInteriorHighIndex(Patch::ZFaceBased) = "<<patch->getInteriorHighIndex(Patch::ZFaceBased)<<"\n\n";
 #endif
+    if(sfield->basis_order() == 0){
+      patch_low = patch->getInteriorCellLowIndex();
+      patch_high = patch->getInteriorCellHighIndex();
     } else if(sfield->get_property("vartype", vartype)){
       patch_low = patch->getInteriorNodeLowIndex();
       switch (vartype) {
@@ -315,6 +322,7 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
     if( !patch_data.rewindow( patch_low, patch_high ) ) {
 //       warning("patch data thinks it needs reallocation, this will fail.");
     }
+
   } else {
 #if 0
       cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
@@ -326,7 +334,20 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
       cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
-      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n";
+      cerr<<"Patch low position is "<< patch->cellPosition(patch->getCellLowIndex())<<"\n";
+      cerr<<"Patch high position is "<< patch->cellPosition(patch->getCellHighIndex())<<"\n";
+      cerr<<"getHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
+      cerr<<"getInteriorHighIndex(Patch::XFaceBased) = "<<patch->getInteriorHighIndex(Patch::XFaceBased)<<"\n";
+      cerr<<"getInteriorHighIndex(Patch::YFaceBased) = "<<patch->getInteriorHighIndex(Patch::YFaceBased)<<"\n";
+      cerr<<"getInteriorHighIndex(Patch::ZFaceBased) = "<<patch->getInteriorHighIndex(Patch::ZFaceBased)<<"\n\n";
+
+      BBox b;
+      qinfo.grid->getInteriorSpatialRange(b);
+      cerr<<"grid low position is "<<b.min() <<"\n";
+      cerr<<"grid high position is "<< b.max()<<"\n\n";
 #endif
     if( sfield->basis_order() == 0) {
       patch_low = patch->getCellLowIndex();
@@ -402,19 +423,19 @@ void
 FieldExtractorAlgoT<Var, T>::build_field(QueryInfo& qinfo, IntVector& offset,
                                         FIELD* field, int remove_boundary)
 {
+
   // Initialize the data
   field->fdata().initialize(T(0));
 
 
   //  WallClockTimer my_timer;
   //  my_timer.start();
-  
   for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
        patch_it != qinfo.level->patchesEnd(); ++patch_it){
     getPatchData(qinfo, offset, field, *patch_it, remove_boundary);
   //      update_progress(somepercentage, my_timer);
   }
-
+  cerr<<"\n";
   //  timer.add( my_timer.time());
   //  my_timer.stop();
 }
@@ -481,6 +502,7 @@ FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo,
                                            range, pbox, qinfo.type->getType(), 
                                            mh, remove_boundary);
         LVFieldCB *field = scinew LVFieldCB( mh );
+        qinfo.level = level;
         set_field_properties(field, qinfo, patch_low);
 
         build_patch_field(qinfo, (*patch_it), patch_low,
@@ -532,6 +554,7 @@ FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo,
                                            range, pbox, qinfo.type->getType(),
                                            mh, remove_boundary);
         LVFieldLB *field = scinew LVFieldLB( mh );
+        qinfo.level = level;
         set_field_properties(field, qinfo, patch_low);
 
         build_patch_field(qinfo, (*patch_it), patch_low,
@@ -560,7 +583,11 @@ FieldExtractorAlgoT<Var, T>::getData(QueryInfo& qinfo, IntVector& offset,
                                      int remove_boundary, int basis_order)
 {
   if (qinfo.get_all_levels) {
-    return build_multi_level_field(qinfo, basis_order, remove_boundary);
+    FieldHandle fh = build_multi_level_field(qinfo, 
+                                             basis_order, remove_boundary);
+    set_field_properties( fh.get_rep(), qinfo, offset);
+    fh->set_property( "level", string("all"), false);
+    return fh;
   } else {
     typedef GenericField<LVMesh, ConstantBasis<T>, 
                          FData3d<T, LVMesh> > LVFieldCB;

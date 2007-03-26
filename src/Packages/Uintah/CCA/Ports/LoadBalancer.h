@@ -9,10 +9,11 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-
+#include <Packages/Uintah/Core/Grid/Region.h>
 #include <string>
 
 #include <Packages/Uintah/CCA/Ports/share.h>
+
 
 namespace Uintah {
 
@@ -21,6 +22,8 @@ namespace Uintah {
   class DetailedTasks;
   class Scheduler;
   class VarLabel;
+
+  typedef vector<SCIRun::IntVector> SizeList;
 /****************************************
 
 CLASS
@@ -106,6 +109,9 @@ WARNING
 
     //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
     virtual bool possiblyDynamicallyReallocate(const GridP&, int state) = 0;
+
+    //! For dymanic load balancers, Load balance patch set and possibly split patches to improve load balance.
+    virtual void dynamicallyLoadBalanceAndSplit(const GridP&, SizeList, vector<vector<Region> >&, bool) = 0;
 
     //! Returns the value of n (every n procs it performs output tasks).
     virtual int getNthProc() { return 1; }

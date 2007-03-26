@@ -51,6 +51,10 @@
 #define isnan _isnan
 #endif
 
+
+#define SET_CFI_BC 0
+
+
 using std::vector;
 using std::max;
 using std::min;
@@ -73,7 +77,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   : UintahParallelComponent(myworld)
 {
   lb   = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
   d_doRefluxing         = false;
@@ -118,7 +121,6 @@ ICE::~ICE()
   delete d_customBC_var_basket;
   delete d_conservationTest;
   delete lb;
-  delete MIlb;
   delete d_advector;
   delete d_exchCoeff;
 
@@ -278,6 +280,18 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
     d_recompileSubsched = true;
 
+    //__________________________________
+    // bulletproofing
+    double tol;
+    ProblemSpecP p = impSolver->findBlock("Parameters");
+    p->get("tolerance",tol);
+    if(tol>= d_outer_iter_tolerance){
+      ostringstream msg;
+      msg << "\n ERROR: implicit pressure: The <outer_iteration_tolerance>"
+          << " must be less than the solver tolerance <tolerance> \n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    } 
+    
     if(d_doAMR  && solver->getName() != "hypreamr"){
       ostringstream msg;
       msg << "\n ERROR: " << solver->getName()
@@ -2634,9 +2648,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     new_dw->allocateAndPut(speedSound,   lb->speedSound_CCLabel, indx,patch);       
     sum_imp_delP.initialize(0.0);       
 
-    //new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,        indx,patch);
-    //rho_CC_new.copyData(rho_CC);
-    new_dw->transferFrom(old_dw, lb->rho_CCLabel, patches, matls, true);
+    new_dw->allocateAndPut(rho_CC_new,   lb->rho_CCLabel,        indx,patch);
 
     //---- P R I N T   D A T A ------   
     if (switchDebug_equil_press) {
@@ -2653,7 +2665,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
       IntVector c = *iter;
       vol_frac[c]      = 1.0;
-      rho_micro[0][c]  = rho_CC[c];
+      rho_micro[0][c]  = rho_CC_new[c] = rho_CC[c];
       sp_vol_new[c]    = 1.0/rho_CC[c];
       double dp_drho, dp_de, c_2;
       //__________________________________
@@ -2815,7 +2827,8 @@ void ICE::computeTempFC(const ProcessorGroup*,
 _____________________________________________________________________*/
 template<class T> void ICE::computeVelFace(int dir, 
                                            CellIterator it,
-                                           IntVector adj_offset,double dx,
+                                           IntVector adj_offset,
+                                           double dx,
                                            double delT, double gravity,
                                            constCCVariable<double>& rho_CC,
                                            constCCVariable<double>& sp_vol_CC,
@@ -2824,6 +2837,8 @@ template<class T> void ICE::computeVelFace(int dir,
                                            T& vel_FC,
                                            T& grad_P_FC)
 {
+  double inv_dx = 1.0/dx;
+  
   for(;!it.done(); it++){
     IntVector R = *it;
     IntVector L = R + adj_offset; 
@@ -2839,7 +2854,7 @@ template<class T> void ICE::computeVelFace(int dir,
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
                              
-    grad_P_FC[R] = (press_CC[R] - press_CC[L])/dx;
+    grad_P_FC[R] = (press_CC[R] - press_CC[L]) * inv_dx;
     double term2 = delT * sp_vol_brack * grad_P_FC[R];
      
     //__________________________________
@@ -2993,13 +3008,16 @@ void ICE::computeVel_FC(const ProcessorGroup*,
  - tack on delP to the face centered velocity
 _____________________________________________________________________*/
 template<class T> void ICE::updateVelFace(int dir, CellIterator it,
-                                          IntVector adj_offset,double dx,
+                                          IntVector adj_offset,
+                                          double dx,
                                           double delT,
                                           constCCVariable<double>& sp_vol_CC,
                                           constCCVariable<double>& imp_delP,
                                           T& vel_FC,
                                           T& grad_dp_FC)
 {
+  double inv_dx = 1.0/dx;
+  
   for(;!it.done(); it++){
     IntVector R = *it;
     IntVector L = R + adj_offset; 
@@ -3009,7 +3027,7 @@ template<class T> void ICE::updateVelFace(int dir, CellIterator it,
     double sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
                              (sp_vol_CC[L] + sp_vol_CC[R]); 
     
-    grad_dp_FC[R] = (imp_delP[R] - imp_delP[L])/dx;
+    grad_dp_FC[R] = (imp_delP[R] - imp_delP[L])*inv_dx;
     double term2 = delT * sp_vol_brack * grad_dp_FC[R];
     
     vel_FC[R] -= term2;
@@ -3389,7 +3407,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
-    double vol    = dx.x()*dx.y()*dx.z(); 
+    double inv_vol    = 1.0/(dx.x()*dx.y()*dx.z()); 
     
     bool newGrid = d_sharedState->isRegridTimestep();
     Advector* advector = d_advector->clone(new_dw,patch,newGrid );   
@@ -3502,7 +3520,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                 
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
          IntVector c = *iter;
-         term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]/vol);
+         term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]* inv_vol);
         }
       }
          
@@ -3526,8 +3544,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      delP_MassX[c]    =  term1[c]/sumKappa[c];
-      delP_Dilatate[c] = -term2[c]/sumKappa[c];
+      double inv_sumKappa = 1.0/sumKappa[c];
+      delP_MassX[c]    =  term1[c] * inv_sumKappa;
+      delP_Dilatate[c] = -term2[c] * inv_sumKappa;
       press_CC[c]      =  press_equil[c] + delP_MassX[c] + delP_Dilatate[c];
       press_CC[c]      = max(1.0e-12, press_CC[c]);  // CLAMP
 //      delP_Dilatate[c] = press_CC[c] - delP_MassX[c] - press_equil[c];
@@ -3541,7 +3560,9 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw,
           d_customBC_var_basket);
-       
+#if SET_CFI_BC          
+    set_CFI_BC<double>(press_CC,patch);
+#endif   
     delete_CustomBCs(d_customBC_var_basket);      
        
    //---- P R I N T   D A T A ------  
@@ -4187,10 +4208,12 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
           
          }
+#if 1
          if(massGain > 0.0){
            cout << "Mass gained by the models this timestep = " 
                 << massGain << "\t L-" <<level->getIndex()<<endl;
          }
+#endif
        }  //  if (models.size() > 0)
 
         //---- P R I N T   D A T A ------ 
@@ -4865,6 +4888,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
                                                         d_customBC_var_basket);
       setBC(Temp_CC[m],"Temperature",gamma[m], cv[m], patch, d_sharedState, 
                                          indx, new_dw,  d_customBC_var_basket);
+#if SET_CFI_BC                                         
+//      set_CFI_BC<Vector>(vel_CC[m],  patch);
+//      set_CFI_BC<double>(Temp_CC[m], patch);
+#endif
     }
     
     delete_CustomBCs(d_customBC_var_basket);
@@ -5136,10 +5163,15 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       if (switchDebug_advance_advect ) {
        ostringstream desc;
        desc <<"BOT_Advection_Mat_" <<indx<<"_patch_"<<patch->getID();
-       printData(   indx, patch,1, desc.str(), "mass_L",        mass_L); 
+       printData(   indx, patch,1, desc.str(), "mass_L",      mass_L); 
        printVector( indx, patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
        printData(   indx, patch,1, desc.str(), "sp_vol_L",    sp_vol_L);
        printData(   indx, patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
+       
+       printData(   indx, patch,1, desc.str(), "mass_adv",     mass_adv); 
+       printVector( indx, patch,1, desc.str(), "mom_adv", 0,   mom_adv); 
+       printData(   indx, patch,1, desc.str(), "sp_vol_adv",   sp_vol_adv);
+       printData(   indx, patch,1, desc.str(), "int_eng_adv",  int_eng_adv);
       }
  
       delete varBasket;
@@ -5199,8 +5231,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);
       new_dw->allocateAndPut(mach,   lb->machLabel,     indx,patch);  
 
-      rho_CC.initialize(0.987654321);
-      temp_CC.initialize(0.987654321);
+      rho_CC.initialize(-d_EVIL_NUM);
+      temp_CC.initialize(-d_EVIL_NUM);
       vel_CC.initialize(Vector(0.0,0.0,0.0)); 
 
       //__________________________________
@@ -5208,9 +5240,10 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       // the conserved ones.
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
+        double inv_mass_adv = 1.0/mass_adv[c];
         rho_CC[c]    = mass_adv[c] * invvol;
-        vel_CC[c]    = mom_adv[c]/ mass_adv[c];
-        sp_vol_CC[c] = sp_vol_adv[c]/mass_adv[c];
+        vel_CC[c]    = mom_adv[c]    * inv_mass_adv;
+        sp_vol_CC[c] = sp_vol_adv[c] * inv_mass_adv;
       }
 
       //__________________________________

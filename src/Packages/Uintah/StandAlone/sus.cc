@@ -40,23 +40,25 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/FileUtils.h>
 
+#include <sci_defs/mpi_defs.h>
 #include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
 
 #ifdef USE_VAMPIR
-#include <Packages/Uintah/Core/Parallel/Vampir.h>
+#  include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
 
 #if HAVE_IEEEFP_H
-#include <ieeefp.h>
+#  include <ieeefp.h>
 #endif
 #if 0
-#include <fenv.h>
+#  include <fenv.h>
 #endif
 
 #ifdef _WIN32
-#include <process.h>
+#  include <process.h>
 #endif
 
 #include <iostream>
@@ -69,24 +71,23 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
+#undef SCISHARE
+#ifdef _WIN32
+#  define SCISHARE __declspec(dllimport)
+#else
+#  define SCISHARE
+#endif
+
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)
 // Mutex cerrLock( "cerr lock" );
 // DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 // DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
-#undef SCISHARE
-#ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
-#else
-#define SCISHARE
-#endif
-
 extern SCISHARE Mutex cerrLock;
 extern SCISHARE DebugStream mixedDebug;
 extern SCISHARE DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
-//#define HAVE_MPICH
 
 static
 void
@@ -157,6 +158,9 @@ usage( const std::string & message,
 int
 main( int argc, char** argv )
 {
+  // turn off Thread asking so sus can cleanly exit on abortive behavior.  
+  // Can override this behavior with the environment variable SCI_SIGNALMODE
+  Thread::setDefaultAbortMode("exit");
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
@@ -320,6 +324,16 @@ main( int argc, char** argv )
     // if not do normal
     udaDir = filename;
     filename = filename + "/input.xml";
+
+    // If restarting (etc), make sure that the uda specified is not a symbolic link to an Uda.
+    // This is because the sym link can (will) be updated to point to a new uda, thus creating
+    // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
+    if( isSymLink( udaDir.c_str() ) ) {
+      cout << "\n";
+      cout << "Error: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
+      cout << "\n";
+      exit( 1 );
+    }
   }
 
   if (!Uintah::Parallel::usingMPI()) {
@@ -433,34 +447,34 @@ main( int argc, char** argv )
 
     //__________________________________
     // Load balancer
-    LoadBalancer* bal;
-    UintahParallelComponent* lb; // to add scheduler as a port
     LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
-    lb = lbc;
-    lb->attachPort("sim", sim);
-    bal = lbc;
+    lbc->attachPort("sim", sim);
+    if(reg)
+      reg->attachPort("load balancer", lbc);
     
     //__________________________________
     // Output
     DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
     Output* output = dataarchiver;
-    ctl->attachPort("output", output);
-    dataarchiver->attachPort("load balancer", bal);
-    comp->attachPort("output", output);
+    ctl->attachPort("output", dataarchiver);
+    dataarchiver->attachPort("load balancer", lbc);
+    comp->attachPort("output", dataarchiver);
     dataarchiver->attachPort("sim", sim);
     
     //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
-    Scheduler* sch = sched;
-    sched->attachPort("load balancer", bal);
+    sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
-    lb->attachPort("scheduler", sched);
+    lbc->attachPort("scheduler", sched);
     comp->attachPort("scheduler", sched);
-    if (reg) reg->attachPort("scheduler", sched);
-    sch->addReference();
     
-    if (emit_graphs) sch->doEmitTaskGraphDocs();
+    if (reg) 
+      reg->attachPort("scheduler", sched);
+    sched->addReference();
+    
+    if (emit_graphs) 
+      sched->doEmitTaskGraphDocs();
     
     /*
      * Start the simulation controller
@@ -473,10 +487,11 @@ main( int argc, char** argv )
     delete ctl;
     
 
-    sch->removeReference();
-    delete sch;
-    if (reg) delete reg;
-    delete bal;
+    sched->removeReference();
+    delete sched;
+    if (reg) 
+      delete reg;
+    delete lbc;
     delete sim;
     delete solve;
     delete output;

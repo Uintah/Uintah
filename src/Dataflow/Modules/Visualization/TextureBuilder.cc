@@ -100,6 +100,9 @@ TextureBuilder::execute()
     error( "No scalar field handle or representation" );
     return;
   }
+  string lv;
+  vHandle->get_property("level", lv);
+
   string mesh_name = vHandle->get_type_description(Field::MESH_TD_E)->get_name();
   if( mesh_name.find("LatVolMesh", 0) == string::npos &&
       vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MultiLevelField" &&
@@ -304,7 +307,24 @@ TextureBuilder::execute()
     if( gfield_last_generation_ != -1 )
       update = true;
     gfield_last_generation_ = -1;
-  }
+  } 
+
+//   bool has_level_info = false;
+//   string level;
+//   has_level_info = vHandle->get_property("level", level);
+//   if( has_level_info ){
+//     string th_level;
+//     if( tHandle_.get_rep() && tHandle_->get_property( "level", th_level)){
+//       if( level != th_level){
+//         update = true;
+//       }
+//     } else {
+//       update = true;
+//     }
+//   }
+
+
+  
 
   if( update ) {
     const TypeDescription* vftd = vHandle->get_type_description();
@@ -343,6 +363,10 @@ TextureBuilder::execute()
       return;
     }
 
+//     if( has_level_info ){
+//       tHandle_->set_property("level", string(level.c_str()), false);
+//     }
+    tHandle_->copy_properties( vHandle.get_rep() );
     otexture_port->send(tHandle_);
   }
 }

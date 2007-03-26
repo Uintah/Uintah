@@ -147,6 +147,21 @@ ProblemSpec::importNode(ProblemSpecP src, bool deep)
 }
 
 void
+ProblemSpec::addComment(std::string comment)
+{
+  xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
+  xmlAddChild(d_node, commentNode);
+}
+
+ProblemSpecP
+ProblemSpec::makeComment(std::string comment)
+{
+  xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
+  return scinew ProblemSpec(commentNode, d_write);
+}
+
+
+void
 ProblemSpec::replaceChild(ProblemSpecP toreplace, 
                           ProblemSpecP replaced) 
 {

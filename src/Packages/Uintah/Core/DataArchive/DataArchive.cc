@@ -21,10 +21,10 @@
 #include <fcntl.h>
 
 #ifdef _WIN32
-#include <io.h>
+#  include <io.h>
 #else
-#include <sys/param.h>
-#include <unistd.h>
+#  include <sys/param.h>
+#  include <unistd.h>
 #endif
 
 using namespace std;
@@ -320,7 +320,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
           if(!n->get("periodic", periodicBoundaries))
             throw InternalError("DataArchive::queryGrid:Error parsing periodoc", __FILE__, __LINE__);
         } else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
-          cerr << "DataArchive::queryGrid:WARNING: Unknown level data: " << r->getNodeName() << '\n';
+          //cerr << "DataArchive::queryGrid:WARNING: Unknown level data: " << r->getNodeName() << '\n';
         }
       }
       ASSERTEQ(level->numPatches(), numPatches);
@@ -341,7 +341,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
        }
 
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
-      cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
+      //cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
     }
   }
   
@@ -445,11 +445,13 @@ DataArchive::query( Variable& var, const std::string& name,
   ProblemSpecP vnode = findVariable(name, patch->getRealPatch(), matlIndex, time, url);
   d_lock.unlock();
   if(vnode == 0){
-    cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
+    cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time " << time << "\nPlease make sure the correct material index is specified\n";
     throw InternalError("DataArchive::query:Variable not found",
                         __FILE__, __LINE__);
   }
+  const char* tag = AllocatorSetDefaultTag("QUERY");
   query(var, vnode, url, matlIndex, patch);
+  AllocatorSetDefaultTag(tag);
   dbg << "DataArchive::query() completed in "
       << Time::currentSeconds()-tstart << " seconds\n";
 }
@@ -779,9 +781,9 @@ DataArchive::initVariable(const Patch* patch,
 // cache size to one, so that this condition is held.
 void
 DataArchive::turnOffXMLCaching() {
-  d_lock.lock();
+  //  d_lock.lock();
   getTopLevelVarHashMaps()->updateCacheSize(1);
-  d_lock.unlock();
+  //  d_lock.unlock();
 }
 
 // Sets the number of timesteps to cache back to the default_cache_size
@@ -885,9 +887,18 @@ DataArchive::TimeHashMaps::findTimeData(double time)
       dbg << "timestep_cache_size = "<<timestep_cache_size<<", d_lastNtimesteps.size() = "<<d_lastNtimesteps.size()<<"\n";
       if (timestep_cache_size > 0 &&
           (int)(d_lastNtimesteps.size()) >= timestep_cache_size) {
-        dbg << "Making room.  Purging "<<(*(d_lastNtimesteps.back())).first<<"\n";
+        double cacheTime = (*(d_lastNtimesteps.back())).first;
+        dbg << "Making room.  Purging "<< cacheTime <<"\n";
         (*(d_lastNtimesteps.back())).second.purgeCache();
         d_lastNtimesteps.pop_back();
+        
+        // get rid of the timestep.xml cache too
+        int timestep;
+        for(timestep=0;timestep<(int)archive->d_tstimes.size();timestep++)
+          if(cacheTime == archive->d_tstimes[timestep])
+            break;
+        archive->d_tstop[timestep]->releaseDocument();
+        archive->d_tstop[timestep] = 0;
       }
     }
     // Finally insert our new candidate at the top of the list.
@@ -934,6 +945,19 @@ DataArchive::TimeHashMaps::updateCacheSize(int new_size)
   int kill_count = current_size - timestep_cache_size;
   dbg << "kill_count = "<<kill_count<<"\n";
   for(int i = 0; i < kill_count; i++) {
+    double cacheTime = (*(d_lastNtimesteps.back())).first;
+    dbg << "Making room.  Purging "<< cacheTime <<"\n";
+    (*(d_lastNtimesteps.back())).second.purgeCache();
+    d_lastNtimesteps.pop_back();
+    
+    // get rid of the timestep.xml cache too
+    int timestep;
+    for(timestep=0;timestep<(int)archive->d_tstimes.size();timestep++)
+      if(cacheTime == archive->d_tstimes[timestep])
+        break;
+    archive->d_tstop[timestep]->releaseDocument();
+    archive->d_tstop[timestep] = 0;
+
     dbg << "purging "<<(*(d_lastNtimesteps.back())).first<<"\n";
     (*(d_lastNtimesteps.back())).second.purgeCache();
     d_lastNtimesteps.pop_back();

@@ -31,6 +31,7 @@ LOG
 #include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
@@ -187,8 +188,10 @@ FieldExtractor::is_periodic_bcs(IntVector cellir, IntVector ir)
 {
   if( cellir.x() == ir.x() ||
       cellir.y() == ir.y() ||
-      cellir.z() == ir.z() )
+      cellir.z() == ir.z() ){
+//     cerr<<"periodic boundaries\n";
     return true;
+  }
   else
     return false;
 }
@@ -209,6 +212,8 @@ FieldExtractor::get_periodic_bcs_range(IntVector cellmax, IntVector datamax,
     newrange.z( range.z() + 1 );
   else
     newrange.z( range.z() );
+
+//   cerr<<"periodic boundary range is "<<newrange<<"\n";
 }
 
 void
@@ -259,7 +264,7 @@ FieldExtractor::execute()
     get_all_levels = true;
   }
 
-//   cerr<<"grid->numLevels() = "<<grid->numLevels()<<" and get_all_levels = "<<get_all_levels<<"\n";
+//     cerr<<"grid->numLevels() = "<<grid->numLevels()<<" and get_all_levels = "<<get_all_levels<<"\n";
     
   const TypeDescription* subtype = type->getSubType();
   LevelP level;
@@ -276,7 +281,7 @@ FieldExtractor::execute()
     level->findInteriorIndexRange(low, hi);
     level->getInteriorSpatialRange(box);
     // ***** This seems like a hack *****
-    range = hi - low;// + IntVector(1,1,1); 
+    range = hi - low + IntVector(1,1,1); 
     // **********************************
   } else {
     level->findIndexRange(low, hi);
@@ -285,7 +290,7 @@ FieldExtractor::execute()
   }
   
   IntVector cellHi, cellLo;
-  level->findCellIndexRange(cellLo, cellHi);
+  level->findNodeIndexRange(cellLo, cellHi);
   
 //   cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
 //      range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
@@ -301,7 +306,7 @@ FieldExtractor::execute()
 
   QueryInfo qinfo(archiveH->getDataArchive(),
                   generation, grid, level, var, mat, type,
-                  get_all_levels, time, timestep, dt);
+                 get_all_levels, time, timestep, dt);
 
   CompileInfoHandle ci = FieldExtractorAlgo::get_compile_info(type, subtype);
   SCIRun::Handle<FieldExtractorAlgo> algo;
@@ -481,6 +486,7 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
       }
       if( mesh_handle.get_rep() == 0 ){
         if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+//           cerr<<"is periodic?\n";
           IntVector newrange(0,0,0);
           get_periodic_bcs_range( cellHi, hi, range, newrange);
           mesh_handle = scinew LVMesh(newrange.x(),newrange.y() - 1,
@@ -601,15 +607,16 @@ FieldExtractorAlgo::set_field_properties( Field* field,
   BBox b;
   qinfo.grid->getInteriorSpatialRange( b );
 
-  field->set_property( "spatial_min", b.min(), true);
-  field->set_property( "spatial_max", b.max(), true);
-  field->set_property( "name",        string(qinfo.varname), true);
-  field->set_property( "generation",  qinfo.generation, true);
-  field->set_property( "timestep",    qinfo.timestep, true);
-  field->set_property( "offset",      IntVector(offset), true);
-  field->set_property( "delta_t",     qinfo.dt, true);
-  field->set_property( "time",        qinfo.time, true);
-  field->set_property( "vartype",     int(qinfo.type->getType()),true);
+  field->set_property( "spatial_min", b.min(), false);
+  field->set_property( "spatial_max", b.max(), false);
+  field->set_property( "name",        string(qinfo.varname), false);
+  field->set_property( "generation",  qinfo.generation, false);
+  field->set_property( "timestep",    qinfo.timestep, false);
+  field->set_property( "offset",      IntVector(offset), false);
+  field->set_property( "delta_t",     qinfo.dt, false);
+  field->set_property( "time",        qinfo.time, false);
+  field->set_property( "vartype",     int(qinfo.type->getType()),false);
+  field->set_property( "level", to_string( qinfo.level->getIndex()), false);
 }
 
 

@@ -16,6 +16,7 @@ SRCS     += \
 	$(SRCDIR)/Level.cc \
 	$(SRCDIR)/Material.cc \
 	$(SRCDIR)/PatchRangeTree.cc \
+	$(SRCDIR)/Region.cc \
 	$(SRCDIR)/Patch.cc \
 	$(SRCDIR)/Ghost.cc \
 	$(SRCDIR)/SimulationState.cc \
@@ -24,8 +25,9 @@ SRCS     += \
 	$(SRCDIR)/UnknownVariable.cc \
 	$(SRCDIR)/SimpleMaterial.cc  \
 	$(SRCDIR)/LinearInterpolator.cc \
-       $(SRCDIR)/AMR.cc \
-	$(SRCDIR)/Node27Interpolator.cc 
+	$(SRCDIR)/AMR.cc \
+	$(SRCDIR)/Node27Interpolator.cc \
+	$(SRCDIR)/BSplineInterpolator.cc 
 
 PSELIBS := \
 	Core/Geometry \

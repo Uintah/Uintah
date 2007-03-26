@@ -25,7 +25,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-
+#include <Core/Thread/Time.h>
 
 #include <fstream>
 #include <iostream>
@@ -201,6 +201,7 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
       track->getWithDefault("level", trackingLevel_, -1);
       track->getWithDefault("start_index", trackingStartIndex_, IntVector(-9,-9,-9));
       track->getWithDefault("end_index", trackingEndIndex_, IntVector(-9,-9,-9));
+      track->getWithDefault("patchid", trackingPatchID_, -1);
 
       for (ProblemSpecP var=track->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
         map<string,string> attributes;
@@ -291,6 +292,8 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     for (int p = 0; patches && p < patches->size(); p++) {
 
       const Patch* patch = patches->get(p);
+      if (trackingPatchID_ != -1 && trackingPatchID_ != patch->getID())
+	continue;
 
       // don't print ghost patches (dw->get will yell at you)
       if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment(0,patch,0) != d_myworld->myrank()) ||
@@ -812,6 +815,7 @@ SchedulerCommon::finalizeTimestep()
 void
 SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim)
 {  
+  double start = Time::currentSeconds();
   // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
   for (unsigned i = 0; i < label_matls_.size(); i++)
@@ -996,13 +1000,22 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     }
   }
 
+
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
-
+  //d_sharedState->setCopyDataTimestep(true);  -- do we still need this?  - BJW
 #ifndef _WIN32
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
 #endif
   this->compile(); 
+  d_sharedState->regriddingCompilationTime += Time::currentSeconds() - start;
+
+  // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
+  double executeTime = d_sharedState->taskExecTime;
+  double globalCommTime = d_sharedState->taskGlobalCommTime;
+  double localCommTime = d_sharedState->taskLocalCommTime;
+  
+  start = Time::currentSeconds();
   this->execute();
 #ifndef _WIN32
   AllocatorSetDefaultTag(tag);
@@ -1021,16 +1034,25 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
     const Level* oldLevel = currentReductionVar.domain_;
     const Level* newLevel = NULL;
-    if (oldLevel) {
+    if (oldLevel && oldLevel->getIndex() < grid->numLevels() ) {
       newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
     }
-    
-    ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
-    oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
-    newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
-    delete v; // copied on the put command
+   
+    //Either both levels need to be null or both need to exist (null levels mean global data)
+    if(!oldLevel || newLevel)
+    {
+      ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
+      oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
+      newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
+      delete v; // copied on the put command
+    }
   }
   newDataWarehouse->refinalize();
+  d_sharedState->regriddingCopyDataTime += Time::currentSeconds() - start;
+  d_sharedState->taskExecTime = executeTime;
+  d_sharedState->taskGlobalCommTime = globalCommTime;
+  d_sharedState->taskLocalCommTime = localCommTime;
+  
 }
 
 
@@ -1164,6 +1186,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             oldsub->addReference();
           }
 
+
           ParticleSubset* newsub = newsubsets[matl];
           // it might have been created in Refine
           if (!newsub) {
@@ -1181,19 +1204,20 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           newv->allocate(newsub);
           // don't get and copy if there were no old patches
           if (oldsub->getNeighbors().size() > 0) {
-            
+
             constParticleVariableBase* var = newv->cloneConstType();
             oldDataWarehouse->get(*var, label, oldsub);
-            
+
             // reset the bounds of the old var's data so copyData doesn't complain
             ParticleSet* pset = scinew ParticleSet(oldsub->numParticles());
-            ParticleSubset* tempset = scinew ParticleSubset(pset, true, matl, newPatch, newPatch->getLowIndex(), 
+            ParticleSubset* tempset = scinew ParticleSubset(pset, true, matl, newPatch, newPatch->getLowIndex(),
                                                             newPatch->getHighIndex(), 0);
             const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
             newv->copyData(&var->getBaseRep());
             delete var; //pset and tempset are deleted with it.
           }
           newDataWarehouse->put(*newv, label, true);
+          delete newv; // the container is copied
         }
       } // end matls
     } // end label_matls
@@ -1207,6 +1231,26 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
   dbg << "SchedulerCommon::copyDataToNewGrid() END" << endl;
 }
 
+void
+SchedulerCommon::scheduleParticleRelocation(const LevelP& level,
+					 const VarLabel* old_posLabel,
+					 const vector<vector<const VarLabel*> >& old_labels,
+					 const VarLabel* new_posLabel,
+					 const vector<vector<const VarLabel*> >& new_labels,
+					 const VarLabel* particleIDLabel,
+					 const MaterialSet* matls)
+{
+  if (reloc_new_posLabel_)
+    ASSERTEQ(reloc_new_posLabel_, new_posLabel);
+  reloc_new_posLabel_ = new_posLabel;
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  reloc_.scheduleParticleRelocation( this, d_myworld, lb, level,
+				     old_posLabel, old_labels,
+				     new_posLabel, new_labels,
+				     particleIDLabel, matls );
+  releasePort("load balancer");
+}
 
 void SchedulerCommon::overrideVariableBehavior(string var, bool treatAsOld, 
                                                bool copyData, bool noScrub)

@@ -313,12 +313,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
    if(!grid_ps)
       return;
 
-   d_lockstepAMRGrid = false;
-   ProblemSpecP amr_ps = params->findBlock("AMR");
-   if (amr_ps) {
-     amr_ps->get("lockstep", d_lockstepAMRGrid);
-   }
-   
    // anchor/highpoint on the grid
    Point anchor(DBL_MAX, DBL_MAX, DBL_MAX);
 

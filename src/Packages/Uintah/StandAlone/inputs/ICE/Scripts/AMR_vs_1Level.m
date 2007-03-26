@@ -14,27 +14,29 @@ clear function;
 
 %________________________________
 % USER INPUTS
-uda = 'shockTube_AMR.uda.000'
-singleLevelUdas = {'shockTube_50.uda.000','shockTube_100.uda.000','shockTube_200.uda.000'}
+uda = 'suspect.uda';
+singleLevelUdas = {'1Level.uda','1Level.uda','shockTube_200.uda.000'};
 
 
-desc = 'ShockTube: 2 Levels, Linear interpolation, Second Order Advection, Refluxing, Refinement ratio 2:1';
-legendText = {'Single level solution, coarse','L-0','Single level solution, fine','L-1', 'Single level solution, finest','L-2'}
+desc = 'set CFI BC experiment';
+legendText = {'Single level solution, coarse','L-0','Single level solution, fine','L-1', 'Single level solution, finest','L-2'};
 pDir = 1;                    
-symbol = {'+','*r','xg'}
-symbol2 = {'--b','r','-.g'}
+symbol = {'+','*r','xg'};
+symbol2 = {'--b','r','-.g'};
 mat    = 0;
 
 numPlotCols = 1;
 numPlotRows = 4;
+xLo = 0.3;
+xHi = 0.5;
 
-plotRho   = true;
-plotTemp  = true;           
+plotRho        = true;
+plotTemp       = true;           
 plotPress      = true;
 plotVel        = true; 
 plotRefineFlag = false;
 % lineExtract start and stop
-startEnd ={'-istart 0 0 0 -iend 100 0 0';'-istart 0 0 0 -iend 200 0 0' ;'-istart 0 0 0 -iend 1000 0 0'};
+startEnd ={'-istart 0 0 0 -iend 1000 0 0';'-istart 0 0 0 -iend 200 0 0' ;'-istart 0 0 0 -iend 1000 0 0'};
 
 %________________________________
 % do the Uintah utilities exist
@@ -52,8 +54,8 @@ c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
 [status0, result0]=unix(c0);
 physicalTime  = importdata('tmp');
 nDumps = length(physicalTime) - 1;
-  
-%set(0,'DefaultFigurePosition',[0,0,640,480]);
+
+set(0,'DefaultFigurePosition',[0,0,640,1024]);
 %_________________________________
 % Loop over all the timesteps
 for(ts = 1:nDumps )
@@ -78,7 +80,7 @@ for(ts = 1:nDumps )
     if (levelExists{L} == 0) 
      
       S_E = startEnd{L};
-      unix('/bin/rm -f press temp temp_a rho vel sp_vol');
+      unix('/bin/rm -f *.dat');
       plotNum = 1;
       level
 
@@ -87,17 +89,18 @@ for(ts = 1:nDumps )
       %  temperature   
       if plotTemp
         clear temp1;
-        c1  = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp   -m %i  -uda %s',level,ts,S_E,mat,uda);
-        c1a = sprintf('lineextract -v temp_CC -l 0 -cellCoords -timestep %i %s -o temp_a -m %i  -uda %s',ts,S_E,mat,singleLevelUdas{L});
+        c1  = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp.dat   -m %i  -uda %s',level,ts,S_E,mat,uda);
+        c1a = sprintf('lineextract -v temp_CC -l 0 -cellCoords -timestep %i %s -o temp_a.dat -m %i  -uda %s',ts,S_E,mat,singleLevelUdas{L});
         [s1, r1]   = unix(c1);
         [s1a, r1a] = unix(c1a);
-        temp1{1,L} = importdata('temp');
-        temp_a     = importdata('temp_a');
+        temp{1,L}  = importdata('temp.dat');
+        temp_1     = importdata('temp_a.dat'); 
         
-        x = temp1{1,L}(:,pDir)
-        subplot(numPlotRows,numPlotCols,plotNum), plot(temp_a(:,1),temp_a(:,4),symbol2{L},x,temp1{1,L}(:,4),symbol{L})
-        xlim([0.3 0.9])
-        ylim([200 450])
+        x{1,L}     = temp{1,L}(:,pDir);
+        x_1        = temp_1(:,1);
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x_1,temp_1(:,4),symbol2{L},x{1,L},temp{1,L}(:,4),symbol{L})
+        xlim([xLo xHi])
+%         ylim([200 450])
         legend(legendText);
         xlabel('x')
         ylabel('Temperature')
@@ -113,16 +116,18 @@ for(ts = 1:nDumps )
       %______________________________
       % pressure
       if plotPress
-        c2  = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press   -m 0 -uda %s',level,ts,S_E,uda);
-        c2a = sprintf('lineextract -v press_CC -l 0  -cellCoords -timestep %i %s -o press_a -m 0 -uda %s',ts,S_E,singleLevelUdas{L});
+        c2  = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press.dat   -m 0 -uda %s',level,ts,S_E,uda);
+        c2a = sprintf('lineextract -v press_CC -l 0  -cellCoords -timestep %i %s -o press_a.dat -m 0 -uda %s',ts,S_E,singleLevelUdas{L});
         [s2, r2]    = unix(c2);
         [s2a,r2a]   = unix(c2a);
-        press1{1,L} = importdata('press');
-        press_a     = importdata('press_a');
-       
-        subplot(numPlotRows,numPlotCols,plotNum),plot(press_a(:,1),press_a(:,4),symbol2{L},x,press1{1,L}(:,4),symbol{L})
-        xlim([0.3 0.9])
-        ylim([10132.5 101325])
+        press{1,L}  = importdata('press.dat');
+        press_1     = importdata('press_a.dat');
+        
+        x{1,L}      = press{1,L}(:,pDir);
+        x_1         = press_1(:,1);
+        subplot(numPlotRows,numPlotCols,plotNum),plot(x_1,press_1(:,4),symbol2{L},x{1,L},press{1,L}(:,4),symbol{L})
+        xlim([xLo xHi])
+%         ylim([10132.5 101325])
         xlabel('x')
         ylabel('Pressure')
         
@@ -137,17 +142,18 @@ for(ts = 1:nDumps )
       %_____________________________
       %  Density
       if plotRho
-        c3  = sprintf('lineextract -v rho_CC -l %i -cellCoords -timestep %i %s -o rho   -m %i  -uda %s',level,ts,S_E,mat,uda);
-        c3a = sprintf('lineextract -v rho_CC -l 0  -cellCoords -timestep %i %s -o rho_a -m %i  -uda %s',ts,S_E,mat,singleLevelUdas{L});
+        c3  = sprintf('lineextract -v rho_CC -l %i -cellCoords -timestep %i %s -o rho.dat   -m %i  -uda %s',level,ts,S_E,mat,uda);
+        c3a = sprintf('lineextract -v rho_CC -l 0  -cellCoords -timestep %i %s -o rho_a.dat -m %i  -uda %s',ts,S_E,mat,singleLevelUdas{L});
         [s3, r3]    = unix(c3);
         [s3a, r3a]  = unix(c3a);
-        rho1{1,L} = importdata('rho');
-        rho_a     = importdata('rho_a');
+        rho{1,L}    = importdata('rho.dat');
+        rho_1       = importdata('rho_a.dat');
         
-        
-        subplot(numPlotRows,numPlotCols,plotNum), plot(rho_a(:,1),rho_a(:,4),symbol2{L},x,rho1{1,L}(:,4),symbol{L})
-        xlim([0.3 0.9])
-        ylim([0 1.3])
+        x{1,L}      = rho{1,L}(:,pDir);
+        x_1         = rho_1(:,1);
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x_1,rho_1(:,4),symbol2{L},x{1,L},rho{1,L}(:,4),symbol{L})
+        xlim([xLo xHi])
+%         ylim([0 1.3])
         xlabel('x')
         ylabel('Density')
         grid on;
@@ -161,22 +167,23 @@ for(ts = 1:nDumps )
       %____________________________
       %  velocity
       if plotVel
-        c5  = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp    -m %i  -uda %s',level,ts,S_E,mat,uda);
-        c5a = sprintf('lineextract -v vel_CC -l 0  -cellCoords -timestep %i %s -o vel_tmp_a -m %i  -uda %s',ts,S_E,mat,singleLevelUdas{L});
+        c5  = sprintf('lineextract -v vel_CC -l %i -cellCoords -timestep %i %s -o vel_tmp.dat    -m %i  -uda %s',level,ts,S_E,mat,uda);
+        c5a = sprintf('lineextract -v vel_CC -l 0  -cellCoords -timestep %i %s -o vel_tmp_a.dat -m %i  -uda %s',ts,S_E,mat,singleLevelUdas{L});
         [s5, r5]  =unix(c5);
         [s5a, r5a]=unix(c5a);
         % rip out [ ] from velocity data
-        c6  = sprintf('sed ''s/\\[//g'' vel_tmp   | sed ''s/\\]//g'' >vel');
-        c6a = sprintf('sed ''s/\\[//g'' vel_tmp_a | sed ''s/\\]//g'' >vela');
+        c6  = sprintf('sed ''s/\\[//g'' vel_tmp.dat   | sed ''s/\\]//g'' >vel.dat');
+        c6a = sprintf('sed ''s/\\[//g'' vel_tmp_a.dat | sed ''s/\\]//g'' >vela.dat');
         [s6, r6]    = unix(c6);
         [s6a, r6a]  = unix(c6a);
-        vel1{1,L} = importdata('vel');
-        vel_a     = importdata('vela');
-        
-        subplot(numPlotRows,numPlotCols,plotNum), plot(vel_a(:,1),vel_a(:,4),symbol2{L},x, vel1{1,L}(:,4),symbol{L})
+        vel{1,L}    = importdata('vel.dat');
+        vel_1       = importdata('vela.dat');
+        x{1,L}      = vel{1,L}(:,pDir);
+        x_1         = vel_1(:,1);
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x_1,vel_1(:,4),symbol2{L},x{1,L}, vel{1,L}(:,4),symbol{L})
         %legend('y');
-        xlim([0.3 0.9])
-        ylim([0.0 350])
+         xlim([xLo xHi])
+%         ylim([0.0 350])
         ylabel('Velocity');
         grid on;
         if (L == maxLevel)
@@ -189,14 +196,14 @@ for(ts = 1:nDumps )
       %____________________________
       %   refineFlag
       if plotRefineFlag
-        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag -m %i  -uda %s',level,ts,S_E,mat,uda);
+        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag.dat -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s6, r6]=unix(c6);
-        rF{1,L} = importdata('refineFlag');
-        
+        rF{1,L} = importdata('refineFlag.dat');
+        x = rF{1,L}(:,pDir);
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(x,rF{1,L}(:,4),symbol{L})
-        xlim([0.3 0.9])
-        %axis([0 5 -10 10])
+%       xlim([0.3 0.9])
+%       ylim([]);
         ylabel('refineFlag');
         grid on;
         if (L == maxLevel)
@@ -208,11 +215,93 @@ for(ts = 1:nDumps )
       end
     end  % if level exists
   end  % level loop
-  %M(ts) = getframe(gcf);
+  
+  
+  %______________________________
+  % Error calculations
+  for(L = 1:maxLevel)
+    display('-------------------------------Error ')
+    level = L-1
+    if (levelExists{L} == 0)
+      %______________________________
+      % temperature
+      if plotTemp
+        display('Temperature');
+        clear d;
+        count = 0;
+        for( i = 1:length(x_1))
+          for( ii = 1:length(x{1,L}))
+            if(temp{1,L}(ii,pDir) == temp_1(i,pDir) )
+              count = count + 1;
+              d(count) = (temp{1,L}(ii,4) - temp_1(i,4));
+            end
+          end
+        end
+        Lnorm = sqrt( sum(d.^2)/length(d) )
+        LnormTemp{L}(ts) = Lnorm;
+      end
+      %______________________________
+      % pressure
+      if plotPress
+        display('Pressure');
+        clear d;
+        count = 0;
+        for( i = 1:length(x_1))
+          for( ii = 1:length(x{1,L}))
+            if(press{1,L}(ii,pDir) == press_1(i,pDir) )
+              count = count + 1;
+              d(count) = (press{1,L}(ii,4) - press_1(i,4));
+            end
+          end
+        end
+        Lnorm = sqrt( sum(d.^2)/length(d) )
+        LnormPress{L}(ts) = Lnorm;
+      end
+      %_____________________________
+      %  Density
+      if plotRho
+        display('Density');
+        clear d;
+        count = 0;
+        for( i = 1:length(x_1))
+          for( ii = 1:length(x{1,L}))
+            if(rho{1,L}(ii,pDir) == rho_1(i,pDir) )
+              count = count + 1;
+              d(count) = (rho{1,L}(ii,4) - rho_1(i,4));
+            end
+          end
+        end
+        Lnorm = sqrt( sum(d.^2)/length(d) )
+        LnormRho{L}(ts) = Lnorm;
+      end
+      %____________________________
+      %  velocity
+      if plotVel
+        display('velocity');
+        clear d;
+        count = 0;
+        for( i = 1:length(x_1))
+          for( ii = 1:length(x{1,L}))
+            if(vel{1,L}(ii,pDir) == vel_1(i,pDir) )
+              count = count + 1;
+              d(count) = (vel{1,L}(ii,4) - vel_1(i,4));
+            end
+          end
+        end
+        Lnorm = sqrt( sum(d.^2)/length(d) )
+        LnormVel{L}(ts) = Lnorm;
+
+      end
+    end
+  end
+  
+  
+  
+  M(ts) = getframe(gcf);
 end  % timestep loop
 %__________________________________
 % show the move and make an avi file
-hFig = figure;
+%hFig = figure;
 %movie(hFig,M,1,3)
-%movie2avi(M,'test.avi','fps',30,'quality',100);
+movie2avi(M,'stock.avi','fps',3,'quality',100);
 %clear all

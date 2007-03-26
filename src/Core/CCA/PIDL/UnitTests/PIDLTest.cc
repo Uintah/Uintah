@@ -35,7 +35,7 @@
 #include <Core/CCA/PIDL/Warehouse.h>
 
 #include <Core/Exceptions/InternalError.h>
-#include <Core/CCA/PIDL/CommError.h>
+#include <Core/CCA/Exceptions/CommError.h>
 
 #include <iostream>
 
@@ -85,9 +85,7 @@ void PIDLTest::testWarehouse()
   CPPUNIT_ASSERT(warehouse != 0);
 }
 
-// doesn't return because of DataTransmitter bug
 void PIDLTest::testFinalize()
 {
-  std::cout << "\ntestFinalize\n";
   SCIRun::PIDL::finalize();
 }

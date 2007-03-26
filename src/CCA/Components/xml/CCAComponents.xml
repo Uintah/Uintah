@@ -29,99 +29,96 @@
 -->
 
 <metacomponentmodel name="cca">
-  <library name="libCCA_Components_GUIBuilder.so">
+  <library name="CCA_Components_GUIBuilder">
     <!-- the SIDL GUI interface -->
     <component name="SCIRun.GUIBuilder" />
   </library>
-  <library name="libCCA_Components_Hello.so">
+  <library name="CCA_Components_Hello">
     <component name="SCIRun.Hello">
       <interface file="CCA/Components/Hello/StringPort.sidl" />
     </component>
   </library>
-  <library name="libCCA_Components_World.so">
+  <library name="CCA_Components_World">
     <component name="SCIRun.World">
       <interface file="CCA/Components/World/StringPort.sidl" />
     </component>
   </library>
-  <library name="libCCA_Components_FEM.so">
+  <library name="CCA_Components_FEM">
     <component name="SCIRun.FEM" />
   </library>
-  <library name="libCCA_Components_FileReader.so">
+  <library name="CCA_Components_FileReader">
     <component name="SCIRun.FileReader" />
   </library>
-  <library name="libCCA_Components_LinSolver.so">
+  <library name="CCA_Components_LinSolver">
     <component name="SCIRun.LinSolver" />
   </library>
-  <library name="libCCA_Components_ListPlotter.so">
+  <library name="CCA_Components_ListPlotter">
     <component name="SCIRun.ListPlotter" />
   </library>
-  <library name="libCCA_Components_PDEdriver.so">
+  <library name="CCA_Components_PDEdriver">
     <component name="SCIRun.PDEdriver" />
   </library>
-  <library name="libCCA_Components_PHello.so">
+  <library name="CCA_Components_PHello">
     <component name="SCIRun.PHello" />
   </library>
-  <library name="libCCA_Components_PLinSolver.so">
+  <library name="CCA_Components_PLinSolver">
     <component name="SCIRun.PLinSolver" />
   </library>
-  <library name="libCCA_Components_PWorld.so">
+  <library name="CCA_Components_PWorld">
     <component name="SCIRun.PWorld" />
   </library>
-  <library name="libCCA_Components_TableTennis.so">
+  <library name="CCA_Components_TableTennis">
     <component name="SCIRun.TableTennis" />
   </library>
-  <library name="libCCA_Components_Tri.so">
+  <library name="CCA_Components_Tri">
     <component name="SCIRun.Tri" />
   </library>
-  <library name="libCCA_Components_TTClient.so">
+  <library name="CCA_Components_TTClient">
     <component name="SCIRun.TTClient" />
   </library>
-  <library name="libCCA_Components_TxtBuilder.so">
+  <library name="CCA_Components_TxtBuilder">
     <component name="SCIRun.TxtBuilder" />
   </library>
-  <library name="libCCA_Components_Viewer.so">
+  <library name="CCA_Components_Viewer">
     <component name="SCIRun.Viewer" />
   </library>
-  <library name="libCCA_Components_ZList.so">
+  <library name="CCA_Components_ZList">
     <component name="SCIRun.ZList" />
   </library>
-  <library name="libCCA_Components_ZListWriter.so">
+  <library name="CCA_Components_ZListWriter">
     <component name="SCIRun.ZListWriter" />
   </library>
-  <library name="libCCA_Components_TestEchoEvent.so">
+  <library name="CCA_Components_TestEchoEvent">
     <component name="SCIRun.TestEchoEvent" />
   </library>
-  <library name="libCCA_Components_samplepe.so">
+  <library name="CCA_Components_samplepe">
     <component name="SCIRun.samplepe" />
   </library>
-  <library name="libCCA_Components_TestCreateTopic.so">
+  <library name="CCA_Components_TestCreateTopic">
     <component name="SCIRun.TestCreateTopic" />
   </library>
-  <library name="libCCA_Components_TestReleaseTopic.so">
+  <library name="CCA_Components_TestReleaseTopic">
     <component name="SCIRun.TestReleaseTopic" />
   </library>
-  <library name="libCCA_Components_TestGetTopic.so">
+  <library name="CCA_Components_TestGetTopic">
     <component name="SCIRun.TestGetTopic" />
   </library>
-  <library name="libCCA_Components_TestRegisterEventListener.so">
+  <library name="CCA_Components_TestRegisterEventListener">
     <component name="SCIRun.TestRegisterEventListener" />
   </library>
-  <library name="libCCA_Components_TestUnregisterEventListener.so">
+  <library name="CCA_Components_TestUnregisterEventListener">
     <component name="SCIRun.TestUnregisterEventListener" />
   </library>
-  <library name="libCCA_Components_TestSendEvent.so">
+  <library name="CCA_Components_TestSendEvent">
     <component name="SCIRun.TestSendEvent" />
   </library>
-  <library name="libCCA_Components_TestProcessEvents.so">
+  <library name="CCA_Components_TestProcessEvents">
     <component name="SCIRun.TestProcessEvents" />
   </library>
-  <library name="libCCA_Components_TestWildcardTopic.so">
-    <component name="SCIRun.TestWildcardTopic" />
+  <library name="CCA_Components_TestSubscription">
+    <component name="SCIRun.TestSubscription" />
   </library>
-  <library name="libCCA_Components_TestCreateWildcardTopic.so">
-    <component name="SCIRun.TestCreateWildcardTopic" />
-  </library>
-  <library name="libCCA_Components_samploecomponent.so">
+  <library name="CCA_Components_samploecomponent">
     <component name="SCIRun.samploecomponent" />
   </library>
 </metacomponentmodel>

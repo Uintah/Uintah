@@ -54,6 +54,9 @@ public:
   virtual void scheduleTimeAdvance(const LevelP& level, 
 				   SchedulerP&);
 
+  virtual void scheduleFinalizeTimestep(const LevelP& level, 
+                                        SchedulerP&);
+
   virtual void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
   virtual void scheduleRefineInterface(const LevelP& fineLevel, SchedulerP& scheduler,
@@ -137,6 +140,14 @@ protected:
 				     const MaterialSubset* matls,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  virtual void computeZoneOfInfluence(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -240,6 +251,9 @@ protected:
                             const MaterialSubset* matls,
                             DataWarehouse*,
                             DataWarehouse* new_dw);
+
+  virtual void scheduleComputeZoneOfInfluence(SchedulerP&, const PatchSet*,
+					      const MaterialSet*);
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);

@@ -59,16 +59,16 @@ WARNING
 
       // Locate and flag the material points to which this heatflux BC is
       // to be applied. 
-      bool flagMaterialPoint(const Point& p, const Vector& dxpp) const;
+       bool flagMaterialPoint(const Point& p, const Vector& dxpp) const;
       
       // Get the load curve number for this heatflux BC
-      inline int loadCurveID() const {return d_loadCurve->getID();}
+       inline int loadCurveID() const {return d_loadCurve->getID();}
 
       // Get the surface 
       inline GeometryPiece* getSurface() const {return d_surface;}
 
       // Get the surface type
-      inline std::string getSurfaceType() const {return d_surfaceType;}
+       inline std::string getSurfaceType() const {return d_surfaceType;}
 
       // Set the number of material points on the surface
       inline void numMaterialPoints(long num) {d_numMaterialPoints = num;}
@@ -89,9 +89,9 @@ WARNING
       double fluxPerParticle(double time) const;
 
       // Get the flux vector to be applied at a point 
-      double getFlux(const Point& px, double forcePerParticle) const;
+      virtual double getFlux(const Point& px, double forcePerParticle) const;
 
-   private:
+   protected:
 
       // Prevent empty constructor
       HeatFluxBC();

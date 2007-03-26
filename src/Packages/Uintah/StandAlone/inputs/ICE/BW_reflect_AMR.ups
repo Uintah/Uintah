@@ -202,12 +202,12 @@
         <max_levels>2</max_levels>
         <lattice_refinement_ratio> [[5,5,5]]  </lattice_refinement_ratio>
         <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
-        <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>   
+        <cell_stability_dilation>   [2,2,2]   </cell_stability_dilation>   
         <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
         <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
 
         <!--<type>BNR</type> -->
-        <min_patch_size>           [10,10,10] </min_patch_size>
+        <min_patch_size>           [[10,10,10]] </min_patch_size>
         <patch_split_tolerance>    1        </patch_split_tolerance>
         <patch_combine_tolerance>  1        </patch_combine_tolerance>
         <patches_per_level_per_proc> 8       </patches_per_level_per_proc>

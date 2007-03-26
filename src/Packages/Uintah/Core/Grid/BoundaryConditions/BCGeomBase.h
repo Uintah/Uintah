@@ -69,19 +69,19 @@ namespace Uintah {
     void setSFCZIterator(std::vector<IntVector>& i);
 
     /// Return the cell centered boundary iterators
-    void getBoundaryIterator(std::vector<IntVector>& b) const;
+    void getBoundaryIterator(std::vector<IntVector>*& b_ptr);
 
     /// Return the node centered boundary iterators
-    void getNBoundaryIterator(std::vector<IntVector>& b) const;
+    void getNBoundaryIterator(std::vector<IntVector>*& b_ptr);
 
     ///  Return the face centered iterators for the x component
-    void getSFCXIterator(std::vector<IntVector>& i) const;
+    void getSFCXIterator(std::vector<IntVector>*& i_ptr);
 
     ///  Return the face centered iterators for the y component
-    void getSFCYIterator(std::vector<IntVector>& i) const;
+    void getSFCYIterator(std::vector<IntVector>*& i_ptr);
 
     ///  Return the face centered iterators for the z component
-    void getSFCZIterator(std::vector<IntVector>& i) const;
+    void getSFCZIterator(std::vector<IntVector>*& i_ptr);
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.

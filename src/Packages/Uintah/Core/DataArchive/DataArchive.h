@@ -331,6 +331,9 @@ public:
 
   // This is added to allow simple geometric scaling of the entire domain
   void setCellScale( Vector& s ){ d_cell_scale = s; }
+  // This is added so that particles can see if the domain has been scaled
+  // and change the particle locations appropriately.
+  Vector getCellScale(){ return d_cell_scale; }
 
 protected:
   DataArchive();

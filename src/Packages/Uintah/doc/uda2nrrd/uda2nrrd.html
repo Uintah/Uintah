@@ -60,11 +60,17 @@ some examples later.
 user must specify the uda file and a variable name.  All other options
 have default values.</p>
 
+<h3>Uda Specifier Option</h3>
+
+<ul>
+<li>-uda &lt;archive&gt; Required argument to specify name of uda file</li>
+</ul>
+
 <h3>Field Specifier Options</h3>
 
 <ul>
 <li>-v,--variable &lt;variable name&gt;</li>
-<li>-m,--material &lt;material number&gt; [defaults to 0]</li>
+<li>-m,--material &lt;material number&gt; [defaults to first material found]</li>
 <li>-l,--level &lt;level index&gt; [defaults to 0]</li>
 <li>-mo &lt;operator&gt; type of operator to apply to matricies.
 Options are none, det, norm, and trace [defaults to none]</li>
@@ -107,6 +113,95 @@ uda2nrrd with only the archive argument.
 
 <h3>Examples of use</h3>
 
+<ul>
+<li>To see the list of variables supply only the archive name.<br />
+
+<block><pre>
+% uda2nrrd -uda  /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000/
+Parsing /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000//index.xml
+There are 105 timesteps:
+Variable "" was not found.
+If a variable name was not specified try -v [name].
+Possible variable names are:
+vars[0] = rho_CC
+vars[1] = temp_CC
+vars[2] = press_CC
+vars[3] = term2
+vars[4] = term3
+vars[5] = delP_Dilatate
+vars[6] = speedSound_CC
+vars[7] = press_equil_CC
+vars[8] = press_force
+vars[9] = vol_frac_CC
+vars[10] = int_eng_L_CC
+vars[11] = int_eng_L_ME_CC
+vars[12] = mom_L_ME_CC
+vars[13] = sp_vol_CC
+vars[14] = p.particleID
+vars[15] = p.x
+vars[16] = p.volume
+vars[17] = p.stress
+vars[18] = p.pressure
+vars[19] = p.velocity
+vars[20] = gradPAccNC
+vars[21] = g.velocity
+vars[22] = g.acceleration
+vars[23] = g.internalforce
+vars[24] = g.mass
+Aborting!!
+</pre></block>
+</li>
+
+<li>To pull out the temperature for the first timestep (<tt>-v temp_CC -thigh 0</tt>).  This results in a file named <tt>temp_CC_M00_0000.nrrd</tt>.<br />
+<block><pre>
+% /data/SCIRun/trunk/opt/Packages/Uintah/StandAlone/uda2nrrd -uda /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000 -v temp_CC -thigh 0
+Parsing /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000/index.xml
+There are 105 timesteps:
+Using variable name (temp_CC) as output file base name.
+Extracing data for temp_CC: CCVariable<double>
+outputting for times[0] = 1.3584e-06 to times[0] = 1.3584e-06
+WARNING: Data archive does not have level ID
+This is okay, as long as you aren't trying to do AMR
+Extracting data for material 0.
+Building Field from uda data
+Bounding box: min([-1.25 -1.25 -0.02]), max([1.25 1.25 0.04])
+Converting field to nrrd.
+Writing nrrd file
+Done writing nrrd file
+</pre></block>
+</li>
+
+<li>To see all the material numbers use <tt>-vv</tt> while printing<br />
+<block><pre>
+% /data/SCIRun/trunk/opt/Packages/Uintah/StandAlone/uda2nrrd -uda /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000 -v temp_CC -thigh 0 -vv
+Parsing /usr/sci/data/CSAFE/uda/annulus2f_newCode.uda.000/index.xml
+There are 105 timesteps:
+There are 25 variables:
+Using variable name (temp_CC) as output file base name.
+Extracing data for temp_CC: CCVariable<double>
+outputting for times[0] = 1.3584e-06 to times[0] = 1.3584e-06
+WARNING: Data archive does not have level ID
+This is okay, as long as you aren't trying to do AMR
+Valid materials for temp_CC at time[0](1.3584e-06) are
+        0, 1, 2,
+Extracting data for material 0.
+Building Field from uda data
+Bounding box: min([-1.25 -1.25 -0.02]), max([1.25 1.25 0.04])
+Creating worker...Running worker...Worker finished
+Creating worker...Running worker...Worker finished
+Creating worker...Running worker...Worker finished
+Creating worker...Running worker...Worker finished
+Converting field to nrrd.
+size[0] = 50
+size[1] = 50
+size[2] = 3
+Writing nrrd file
+Done writing nrrd file
+</pre></block>
+</li>
+
+</ul>
+  
 <h2>unu</h2>
 
 <p>The most useful thing that you can do with unu is make images to

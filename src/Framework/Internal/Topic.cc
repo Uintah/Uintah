@@ -27,7 +27,7 @@
 */
 
 #include <Framework/Internal/Topic.h>
-#include <Framework/Internal/WildcardTopic.h>
+#include <Framework/Internal/Subscription.h>
 #include <Framework/Internal/EventServiceException.h>
 
 namespace SCIRun {
@@ -39,21 +39,18 @@ Topic::~Topic()
   eventList.clear();
   eventListenerMap.clear();
 }
-void Topic::sendEvent(const sci::cca::Event::pointer& event)
+
+void Topic::sendEvent(const std::string& topicName, const sci::cca::TypeMap::pointer& theBody)
 {
   std::string fwkURL = framework->getURL().getString();
 //   std::string name = framework->getUniqueName(fwkURL);
 //   std::cout << "Unique name : " << name << std::endl;
 //   std::cout << "Fwk URL : " << fwkURL << std::endl;
-  sci::cca::TypeMap::pointer eventHeader = event->getHeader();
-  sci::cca::TypeMap::pointer eventBody = event->getBody();
-  if (event->getHeader().isNull()) {
-    throw EventServiceExceptionPtr(new EventServiceException("eventHeader pointer is null", sci::cca::Unexpected));
-  }
 
-  if (event->getBody().isNull()) {
-    throw EventServiceExceptionPtr(new EventServiceException("eventBody pointer is null", sci::cca::Unexpected));
-  }
+
+  sci::cca::TypeMap::pointer eventHeader = framework->createTypeMap();
+  sci::cca::Event::pointer event(new Event(eventHeader,theBody));
+
   SSIDL::array1<std::string> allKeys = eventHeader->getAllKeys(sci::cca::None);
   bool isURLPresent = false;
   for (unsigned int i = 0; i < allKeys.size(); i++){
@@ -67,37 +64,8 @@ void Topic::sendEvent(const sci::cca::Event::pointer& event)
     //std::cout << "Framework data not present in Event Header, so adding one\n";
     eventHeader->putString(std::string("FrameworkURL"),fwkURL);
   }
+
   eventList.push_back(event);
-}
-
-void Topic::registerEventListener(const std::string &listenerKey, const sci::cca::EventListener::pointer &theListener)
-{
-  if (listenerKey.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Listener Key is empty", sci::cca::Unexpected));
-  }
-
-  if (theListener.isNull()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Listener Pointer is null", sci::cca::Unexpected));
-  }
-
-  EventListenerMap::iterator iter = eventListenerMap.find(listenerKey);
-  if (iter != eventListenerMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Listener Key already present", sci::cca::Unexpected));
-  }
-  eventListenerMap[listenerKey] = theListener;
-}
-
-void Topic::unregisterEventListener(const std::string &listenerKey)
-{
-  if (listenerKey.empty()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Listener Key is empty", sci::cca::Unexpected));
-  }
-
-  EventListenerMap::iterator iter = eventListenerMap.find(listenerKey);
-  if (iter == eventListenerMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("Listener Key not found", sci::cca::Unexpected));
-  }
-  eventListenerMap.erase(iter);
 }
 
 void Topic::processEvents()
@@ -112,47 +80,46 @@ void Topic::processEvents()
     }
   }
 
-  // Call processEvents(..) for each WildcardTopic
-  for (WildcardTopicMap::iterator wildcardTopicIter = wildcardTopicMap.begin();
-       wildcardTopicIter != wildcardTopicMap.end(); wildcardTopicIter++) {
+  // Call processEvents(..) for each Subscription
+  for (SubscriptionMap::iterator subscriptionIter = subscriptionMap.begin();
+       subscriptionIter != subscriptionMap.end(); subscriptionIter++) {
 
-    WildcardTopic *wildcardTopicPtr = dynamic_cast<WildcardTopic*>((wildcardTopicIter->second).getPointer());
-    if (wildcardTopicPtr == 0) {
-        throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic pointer is null"));
+    Subscription *subscriptionPtr = dynamic_cast<Subscription*>((subscriptionIter->second).getPointer());
+    if (subscriptionPtr == 0) {
+        throw EventServiceExceptionPtr(new EventServiceException("Subscription pointer is null"));
     }
-    wildcardTopicPtr->processEvents(eventList);
+    subscriptionPtr->processEvents(eventList);
   }
   eventList.clear();
 }
 
-void Topic::addWildcardTopic(const std::string& topicName, const sci::cca::WildcardTopic::pointer &theWildcardTopic)
+void Topic::addSubscription(const std::string& topicName, const sci::cca::Subscription::pointer &theSubscription)
 {
   if (topicName.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
-  if (theWildcardTopic.isNull()) {
-    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic pointer is null", sci::cca::Unexpected));
+  if (theSubscription.isNull()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Subscription pointer is null", sci::cca::Unexpected));
   }
 
-  WildcardTopicMap::iterator iter =  wildcardTopicMap.find(topicName);
-  if (iter != wildcardTopicMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic already present", sci::cca::Unexpected));
-  }
-  wildcardTopicMap[topicName] = theWildcardTopic;
+  SubscriptionMap::iterator iter =  subscriptionMap.find(topicName);
+  if (iter != subscriptionMap.end()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Subscription already present", sci::cca::Unexpected));  }
+  subscriptionMap[topicName] = theSubscription;
 }
 
-void Topic::removeWildcardTopic(const std::string& topicName)
+void Topic::removeSubscription(const std::string& topicName)
 {
   if (topicName.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
-  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
-  if (iter == wildcardTopicMap.end()) {
-    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic not found", sci::cca::Unexpected));
+  SubscriptionMap::iterator iter = subscriptionMap.find(topicName);
+  if (iter == subscriptionMap.end()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Subscription not found", sci::cca::Unexpected));
   }
-  wildcardTopicMap.erase(iter);
+  subscriptionMap.erase(iter);
 }
 
 }

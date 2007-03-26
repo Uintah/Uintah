@@ -364,9 +364,9 @@ Point Level::positionToIndex(const Point& p) const
     int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
     int y = binary_search(p.y(), d_facePosition[1], d_facePosition[1].low(), d_facePosition[1].high());
     int z = binary_search(p.z(), d_facePosition[2], d_facePosition[2].low(), d_facePosition[2].high());
-    double xfrac = p.x() - d_facePosition[0][x] / (d_facePosition[0][x+1] - d_facePosition[0][x]);
-    double yfrac = p.y() - d_facePosition[1][y] / (d_facePosition[1][y+1] - d_facePosition[1][y]);
-    double zfrac = p.z() - d_facePosition[2][z] / (d_facePosition[2][z+1] - d_facePosition[2][z]);
+    double xfrac = (p.x() - d_facePosition[0][x]) / (d_facePosition[0][x+1] - d_facePosition[0][x]);
+    double yfrac = (p.y() - d_facePosition[1][y]) / (d_facePosition[1][y+1] - d_facePosition[1][y]);
+    double zfrac = (p.z() - d_facePosition[2][z]) / (d_facePosition[2][z+1] - d_facePosition[2][z]);
     return Point(x+xfrac, y+yfrac, z+zfrac);
   } else {
     return Point((p-d_anchor)/d_dcell);
@@ -660,6 +660,7 @@ void Level::setBCTypes()
 	  IntVector coarseHigh = mapCellToCoarser(fineHigh);
 	  const LevelP& coarseLevel = getCoarserLevel();
           
+#if 0
           // add 1 to the corresponding index on the plus edges 
           // because the upper corners are sort of one cell off (don't know why)
           if (d_extraCells.x() != 0 && face == Patch::xplus) {
@@ -674,6 +675,7 @@ void Level::setBCTypes()
             coarseLow[2] ++;
             coarseHigh[2]++;
           }
+#endif
 	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
 	  if(neighbors.size() == 0){
 	    patch->setBCType(face, Patch::None);
@@ -770,12 +772,6 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
   }
   return 0;
 }
-
-const Patch* Level::getPatchByID(int id) const
-{
-  return d_realPatches[id - d_realPatches[0]->getID()];
-}
-
 
 const LevelP& Level::getCoarserLevel() const
 {

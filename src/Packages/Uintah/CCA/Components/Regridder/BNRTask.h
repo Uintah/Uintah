@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
 #include <queue>
+#include <Packages/Uintah/Core/Grid/Region.h>
 
 namespace Uintah {
 
@@ -44,7 +45,7 @@ WARNING
     int count;
   };
 
-  inline bool operator<(FlagsCount f1, FlagsCount f2)
+  inline bool operator<(const FlagsCount &f1, const FlagsCount &f2)
   {
     return f1.count>f2.count;
   }
@@ -54,22 +55,7 @@ WARNING
     IntVector* locs;                                // flag location
     int size;                                       // number of flags
   };
-  struct PseudoPatch
-  {
-    IntVector low;                                  // low point of patch
-    IntVector high;                                 // high point of patch
-    int volume;                                     // volume of patch
-  };
-
-  inline bool operator<(PseudoPatch p1, PseudoPatch p2)
-  {
-    return p2.volume>p1.volume;
-  }
-  inline ostream& operator<<(ostream& out, PseudoPatch p1)
-  {
-      out << "{" << p1.low << " " << p1.high << " (" << p1.volume << ")}";
-      return out;
-  }
+  
   struct Split
   {
     int d;                                         //dimension of split
@@ -79,7 +65,7 @@ WARNING
   struct ChildTasks
   {
     Split split;                                   // location of split that created these tasks
-    PseudoPatch left, right;                       // child patches
+    Region left, right;                       // child patches
     int ltag, rtag;                                // communication tags for patches
   };
 
@@ -95,7 +81,7 @@ WARNING
     friend class BNRRegridder;
 
     private:
-      BNRTask(PseudoPatch patch,
+      BNRTask(Region patch,
               FlagsList flags,
               const vector<int> &p_group,
               int p_rank,
@@ -116,7 +102,7 @@ WARNING
 
     // Task information
     Task_Status status_;                // Status of current task
-    PseudoPatch patch_;                 // patch that is being worked on
+    Region patch_;                 // patch that is being worked on
     FlagsList flags_;                   // list of flags inside this task
     BNRTask *parent_;                   // pointer to parent task
     BNRTask *sibling_;                  // pointer to sibling task
@@ -147,7 +133,7 @@ WARNING
     // pointer to controlling algorithm
     static BNRRegridder *controller_;   // controlling algorithm;
 
-    vector<PseudoPatch> my_patches_;    // list of patches
+    vector<Region> my_patches_;    // list of patches
     unsigned int my_size_;              // number of patches on the parent
     unsigned int left_size_;            // number of patches in left child
     unsigned int right_size_;           // number of patches in right child

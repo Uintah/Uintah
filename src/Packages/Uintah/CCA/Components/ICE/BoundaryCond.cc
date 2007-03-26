@@ -24,6 +24,8 @@
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
 static DebugStream BC_doing("ICE_BC_DOING", false);
 
+//#define TEST
+#undef TEST
 using namespace Uintah;
 namespace Uintah {
 
@@ -59,11 +61,11 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind  = "NotSet";
-      vector<IntVector> bound;  
+      vector<IntVector> *bound_ptr;  
       
       bool foundIterator =       
         getIteratorBCValueBCKind<double>( patch, face, child, "Pressure", 
-                                         mat_id, bc_value, bound,bc_kind);
+                                         mat_id, bc_value, bound_ptr,bc_kind);
                                     
       // don't set BCs unless we've found the iterator                                   
       if (foundIterator) {
@@ -83,42 +85,42 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 
         switch (face) {
         case Patch::xplus:
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
             IntVector c(*iter - IntVector(1,0,0));
             A[c].p = A[c].p + one_or_zero * A[c].e;
             A[c].e = 0.0;
           }
           break;
         case Patch::xminus:
-          for (iter=bound.begin(); iter != bound.end(); iter++) { 
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
             IntVector c(*iter + IntVector(1,0,0));
             A[c].p = A[c].p + one_or_zero * A[c].w;
             A[c].w = 0.0;
           }
           break;
         case Patch::yplus:
-          for (iter=bound.begin(); iter != bound.end(); iter++) { 
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
             IntVector c(*iter - IntVector(0,1,0));
             A[c].p = A[c].p + one_or_zero * A[c].n;
             A[c].n = 0.0;
           }
           break;
         case Patch::yminus:
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
             IntVector c(*iter + IntVector(0,1,0)); 
             A[c].p = A[c].p + one_or_zero * A[c].s;
             A[c].s = 0.0;
           }
           break;
         case Patch::zplus:
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
             IntVector c(*iter - IntVector(0,0,1));
             A[c].p = A[c].p + one_or_zero * A[c].t;
             A[c].t = 0.0;
           }
           break;
         case Patch::zminus:
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
             IntVector c(*iter + IntVector(0,0,1));
             A[c].p = A[c].p + one_or_zero * A[c].b;
             A[c].b = 0.0;
@@ -132,7 +134,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         //__________________________________
         //  debugging
         #if 0
-        cout <<"Face: "<< face << " one_or_zero " << one_or_zero
+        cout <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
              <<"\t child " << child  <<" NumChildren "<<numChildren 
              <<"\t BC kind "<< bc_kind
              <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
@@ -141,6 +143,61 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       } // if (bc_kind !=notSet)
     } // child loop
   }  // face loop
+  
+ /*`==========TESTING==========*/
+#ifdef TEST
+  //__________________________________
+  // On the fine levels at the coarse fine interface 
+  // set A_(t,b,e,w,n,s) = c1 * A_(*)_org.
+  // We are assuming that the change in pressure impDelP is linearly interpolated
+  // between the coarse cell and the fine cell 
+  BC_dbg << *patch << " ";
+  patch->printPatchBCs(BC_dbg);
+
+  if(patch->hasCoarseFineInterfaceFace() ){  
+    cout << " Matrix BC at coarse/Fine interfaces " << endl;
+    //__________________________________
+    // Iterate over coarsefine interface faces
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+
+      const Level* fineLevel = patch->getLevel();
+      const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+      
+      IntVector cl, ch, fl, fh;
+      getCoarseFineFaceRange(patch, coarseLevel, face, 1, cl, ch, fl, fh);
+ 
+ 
+      IntVector refineRatio = fineLevel->getRefinementRatio();
+      Vector D = (refineRatio.asVector() + Vector(1))/Vector(2.0);
+      
+      //Vector C1 = Vector(1.0)/refineRatio.asVector();
+      
+      Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
+      Vector C2 = Vector(1.0) - C1;
+      
+      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      
+      IntVector offset = patch->faceDirection(face);
+      
+      
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        f_cell =  f_cell - offset;
+        A[f_cell].p += A[f_cell][face];
+        
+        A[f_cell][face] = C2[P_dir] * A[f_cell][face];
+        
+        A[f_cell].p -= A[f_cell][face];
+      }
+    }  // face loop 
+  }  // patch has coarse fine interface 
+#endif 
+/*===========TESTING==========`*/
+  
+  
 }
 
 
@@ -169,11 +226,11 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind  = "NotSet";
-      vector<IntVector> bound;  
+      vector<IntVector> *bound_ptr;  
       
       bool foundIterator =       
         getIteratorBCValueBCKind<double>( patch, face, child, "Pressure", 
-                                         mat_id, bc_value, bound,bc_kind);
+                                         mat_id, bc_value, bound_ptr,bc_kind);
                                     
       // don't set BCs unless we've found the iterator                                   
       if (foundIterator) {
@@ -190,7 +247,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  Set the BC  
         vector<IntVector>::const_iterator iter;
-        for (iter=bound.begin(); iter != bound.end(); iter++) {
+        for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
           IntVector c = *iter;
           IntVector adj = c - oneCell;
           imp_delP[c] = one_or_zero * imp_delP[adj];
@@ -198,10 +255,10 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face
+          BC_dbg <<"Face: "<< patch->getFaceName(face)
                <<"\t child " << child  <<" NumChildren "<<numChildren
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
 	        << endl;
         }
       } // if(foundIterator)
@@ -232,12 +289,36 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
 
       constCCVariable<double> imp_delP_coarse;
       new_dw->getRegion(imp_delP_coarse, label, 0, coarseLevel,cl, ch);
-      
+#ifndef TEST
+      // piece wise constant 
       for(CellIterator iter(fl,fh); !iter.done(); iter++){
         IntVector f_cell = *iter;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-        imp_delP[f_cell] =  imp_delP_coarse[c_cell];      
+        imp_delP[f_cell] =  imp_delP_coarse[c_cell];
       }
+#endif
+/*`==========TESTING==========*/
+#ifdef TEST
+      IntVector refineRatio = fineLevel->getRefinementRatio();
+      IntVector offset = patch->faceDirection(face);
+      
+      Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
+      Vector C2 = Vector(1.0) - C1;
+      
+      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      
+      cout << " using linear Interpolation for impDelP " << endl;;
+     
+      for(CellIterator iter(fl,fh); !iter.done(); iter++){
+        IntVector f_cell = *iter;
+        IntVector f_adj  = f_cell - offset;
+        IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+        imp_delP[f_cell] =  C2[P_dir] * imp_delP_coarse[c_cell] +
+                            C1[P_dir] * imp_delP[f_adj];
+      }
+      
+#endif 
+/*===========TESTING==========`*/
     }  // face loop 
   }  // patch has coarse fine interface 
 }
@@ -394,31 +475,31 @@ void setBC(CCVariable<double>& press_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> bound;
+      vector<IntVector> *bound_ptr;
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-					       bc_value, bound,bc_kind); 
+					       bc_value, bound_ptr,bc_kind); 
                                    
       if(foundIterator && bc_kind != "LODI") {
         // define what a symmetric  pressure BC means
         if( bc_kind == "symmetric"){
           bc_kind = "zeroNeumann";
         }
-        
-        IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound, 
+
+        IveSetBC = setNeumanDirichletBC<double>(patch, face, press_CC,bound_ptr, 
 						  bc_kind, bc_value, cell_dx,
 						  mat_id,child);
                                           
         //__________________________________
         //  method of manufactured solutions
         if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
-          set_MMS_press_BC(patch, face, press_CC, bound,  bc_kind,
+          set_MMS_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
                            sharedState, 
                            custom_BC_basket->mms_var_basket,
                            custom_BC_basket->mms_v);
         }                    
-                                            
+
         //__________________________________________________________
         // Tack on hydrostatic pressure correction after Dirichlet 
         // or Neumann BC have been applied.  Note, during the intializaton 
@@ -456,7 +537,7 @@ void setBC(CCVariable<double>& press_CC,
             IntVector oneCell = patch->faceDirection(face);
             vector<IntVector>::const_iterator iter;
 
-            for (iter=bound.begin();iter != bound.end(); iter++) { 
+            for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) { 
               IntVector L = *iter - oneCell;
               IntVector R = *iter;
               double rho_R = rho_micro[surroundingMatl_indx][R];
@@ -471,7 +552,7 @@ void setBC(CCVariable<double>& press_CC,
           if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
           
             vector<IntVector>::const_iterator iter;
-            for (iter=bound.begin();iter != bound.end(); iter++) {
+            for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) {
               IntVector R = *iter;
               Point here_R = level->getCellPosition(R);
               Vector dist_R = (here_R.asVector() - press_ref_pt);
@@ -488,10 +569,10 @@ void setBC(CCVariable<double>& press_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
 	        << endl;
         }
       }  // if bcKind != notSet
@@ -556,11 +637,11 @@ void setBC(CCVariable<double>& var_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> bound;
+      vector<IntVector> *bound_ptr;
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
-					       bc_value, bound,bc_kind); 
-      
+					       bc_value, bound_ptr,bc_kind); 
+                                                
       if (foundIterator && bc_kind != "LODI") {
         //__________________________________
         // LOGIC
@@ -575,17 +656,16 @@ void setBC(CCVariable<double>& var_CC,
         //__________________________________
         // Apply the boundary condition
         IveSetBC =  setNeumanDirichletBC<double>
-	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
+	  (patch, face, var_CC,bound_ptr, bc_kind, bc_value, cell_dx,mat_id,child);
         
         if ( desc == "Temperature" &&custom_BC_basket->setMicroSlipBcs) {
           set_MicroSlipTemperature_BC(patch,face,var_CC,
-                              desc, bound, bc_kind, bc_value,
+                              desc, bound_ptr, bc_kind, bc_value,
                               custom_BC_basket->sv);
         }
-
         if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
           set_MMS_Temperature_BC(patch, face, var_CC, 
-                              desc, bound, bc_kind, 
+                              desc, bound_ptr, bc_kind, 
                               custom_BC_basket->mms_var_basket,
                               custom_BC_basket->mms_v);
         }
@@ -601,16 +681,16 @@ void setBC(CCVariable<double>& var_CC,
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
              && topLevelTimestep >0) {
           ice_matl->getEOS()->
-              hydrostaticTempAdjustment(face, patch, bound, gravity,
+              hydrostaticTempAdjustment(face, patch, bound_ptr, gravity,
                                         gamma, cv, cell_dx, var_CC);
         }
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
 	        << endl;
         }
       }  // if bc_kind != notSet  
@@ -669,28 +749,28 @@ void setBC(CCVariable<Vector>& var_CC,
     for (int child = 0;  child < numChildren; child++) {
       Vector bc_value = Vector(-9,-9,-9);
       string bc_kind = "NotSet";
-      vector<IntVector> bound;
+      vector<IntVector> *bound_ptr;
       
       bool foundIterator = 
           getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
-				                bc_value, bound,bc_kind);
+				                bc_value, bound_ptr ,bc_kind);
      
       if (foundIterator && bc_kind != "LODI") {
  
-        IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC,bound, 
+        IveSetBC = setNeumanDirichletBC<Vector>(patch, face, var_CC, bound_ptr, 
 						bc_kind, bc_value, cell_dx,
 						mat_id,child);
         //__________________________________
         //  Custom Boundary Conditions
         if ( custom_BC_basket->setMicroSlipBcs) {
           set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
-                            bound, bc_kind, bc_value,
+                            bound_ptr, bc_kind, bc_value,
                             custom_BC_basket->sv);
         }
         
         if ( custom_BC_basket->set_MMS_BCs) {
           set_MMS_Velocity_BC(patch, face, var_CC, desc,
-                            bound, bc_kind, sharedState,
+                            bound_ptr, bc_kind, sharedState,
                             custom_BC_basket->mms_var_basket,
                             custom_BC_basket->mms_v);
         }
@@ -707,7 +787,7 @@ void setBC(CCVariable<Vector>& var_CC,
           sign[P_dir] = -1;
           vector<IntVector>::const_iterator iter;
 
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
             IntVector adjCell = *iter - oneCell;
             var_CC[*iter] = sign.asVector() * var_CC[adjCell];
           }
@@ -717,10 +797,10 @@ void setBC(CCVariable<Vector>& var_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
+               <<"\t bound limits = " <<*bound_ptr->begin()<<" "<< *(bound_ptr->end()-1)
 	        << endl;
         }
       }  // if (bcKind != "notSet") 
@@ -761,30 +841,31 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> bound;
+      vector<IntVector> *bound_ptr;
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
-					       bc_value, bound,bc_kind); 
+					       bc_value, bound_ptr,bc_kind); 
                                    
       if(foundIterator) {
         if( bc_kind == "symmetric"){
           bc_kind = "zeroNeumann";
         }
-        
-        IveSetBC = setNeumanDirichletBC<double>(patch, face, sp_vol_CC,bound, 
+       
+        IveSetBC = setNeumanDirichletBC<double>(patch, face, sp_vol_CC, bound_ptr, 
 						  bc_kind, bc_value, cell_dx,
 						  mat_id,child);
+
         if(bc_kind == "computeFromDensity"){
         
           vector<IntVector>::const_iterator iter;
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
             IntVector c = *iter;
             sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
           }
           
           if(isMassSp_vol){  // convert to mass * sp_vol
-            for (iter=bound.begin(); iter != bound.end(); iter++) { 
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
               IntVector c = *iter;
               sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
             }
@@ -795,10 +876,10 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
-          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+          BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
 	        << endl;
         }
       }  // if iterator found

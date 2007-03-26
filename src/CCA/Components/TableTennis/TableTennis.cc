@@ -72,8 +72,8 @@ void TableTennis::setServices(const sci::cca::Services::pointer& svc)
 int myTTPort::pingpong(int test)
 {
 #if HAVE_GUI
-  wxString msg("Test = ");
-  msg += wxString::Format("%d", test);
+  wxString msg(wxT("Test = "));
+  msg += wxString::Format(wxT("%d"), test);
   wxMessageBox(msg, wxT("TableTennis"), wxOK|wxICON_INFORMATION, 0);
 #else
   std::cout << "Test = " << test << std::endl;

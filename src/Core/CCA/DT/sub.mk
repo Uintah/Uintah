@@ -44,6 +44,11 @@ SRCS := \
 LIBS :=
 
 
-PSELIBS := Core/Exceptions Core/Util Core/Thread Core/Comm
+PSELIBS := Core/Exceptions Core/Util Core/Thread Core/CCA/Exceptions
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+ifeq ($(BUILD_UNIT_TESTS),yes)
+  SUBDIRS := $(SRCDIR)/UnitTests
+	include $(SCIRUN_SCRIPTS)/recurse.mk
+endif

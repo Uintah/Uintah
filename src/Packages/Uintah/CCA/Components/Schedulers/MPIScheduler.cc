@@ -630,7 +630,6 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
       break;
   }
   mpidbg << d_myworld->myrank() << " Done  waiting...\n";
-  
 
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
@@ -690,7 +689,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   // big.  We make it moderately large anyway - memory is cheap.
   void* old_mpibuffer;
   int old_mpibuffersize;
+#ifndef _WIN32
+  // windows mpich doesn't like this here, but everybody else's needs it...
   MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
+#endif
 #define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
   char* mpibuffer = scinew char[MPI_BUFSIZE];
   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
@@ -779,6 +781,12 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
              mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
   }
 
+  if (d_sharedState != 0) { // subschedulers don't have a sharedState
+    d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
+    d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
+    d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
+  }
+
   // Don't need to lock sends 'cause all threads are done at this point.
   sends_.waitall(d_myworld);
   ASSERT(sends_.numRequests() == 0);
@@ -799,8 +807,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   int junk;
   MPI_Buffer_detach(&mpibuffer, &junk);
   delete[] mpibuffer;
+#ifndef _WIN32
   if(old_mpibuffersize)
     MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
+#endif
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
@@ -913,25 +923,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     dbg << me << " MPIScheduler finished\n";
   }
   //pg_ = 0;
-}
-
-void
-MPIScheduler::scheduleParticleRelocation(const LevelP& level,
-					 const VarLabel* old_posLabel,
-					 const vector<vector<const VarLabel*> >& old_labels,
-					 const VarLabel* new_posLabel,
-					 const vector<vector<const VarLabel*> >& new_labels,
-					 const VarLabel* particleIDLabel,
-					 const MaterialSet* matls)
-{
-  reloc_new_posLabel_ = new_posLabel;
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  reloc_.scheduleParticleRelocation( this, d_myworld, lb, level,
-				     old_posLabel, old_labels,
-				     new_posLabel, new_labels,
-				     particleIDLabel, matls );
-  releasePort("load balancer");
 }
 
 void

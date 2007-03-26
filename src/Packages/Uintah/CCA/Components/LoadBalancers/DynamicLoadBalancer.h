@@ -86,6 +86,12 @@ namespace Uintah {
     /// threshold.
     virtual bool possiblyDynamicallyReallocate(const GridP& grid, int state);
 
+    //This function will create a load balance from the vectors in patches. The
+    //Patches in patches may be split up in order to improve performance and thus 
+    //the regridder should create the grid after calling this.  Using this option 
+    //negates the need to call "possiblyDynamicallyReallocate".
+    virtual void dynamicallyLoadBalanceAndSplit(const GridP&,SizeList,vector<vector<Region> >&, bool);
+
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
@@ -111,8 +117,12 @@ namespace Uintah {
     void collectParticles(const GridP& grid, std::vector<PatchInfo>& allParticles);
 
     // calls space-filling curve on level, and stores results in pre-allocated output
-    void useSFC(const LevelP& level, DistributedIndex* output);
+    void useSFC(const LevelP& level, int* output);
     bool thresholdExceeded(const std::vector<double>& patch_costs);
+
+    //Assign costs to a list of patches
+    void getCosts(const LevelP& level, const vector<Region> &patches, vector<double> &costs);
+    void sortPatches(vector<Region> &patches);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
@@ -140,6 +150,8 @@ namespace Uintah {
     bool d_doSpaceCurve;
     bool d_collectParticles;
     bool d_checkAfterRestart;
+
+    SFC <double> sfc;
   };
 } // End namespace Uintah
 

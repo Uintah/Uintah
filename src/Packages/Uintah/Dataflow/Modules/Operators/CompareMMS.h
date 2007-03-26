@@ -81,6 +81,7 @@ public:
                               const string& field_name,
                               const double  field_time,
                               const int output_choice,
+                              const IntVector includeExtraCells,
                               const double time) = 0;
 
   //! support the dynamically compiled algorithm concept
@@ -101,6 +102,7 @@ public:
                               const string& field_name,
                               const double  field_time,
                               const int output_choice,
+                              const IntVector includeExtraCells,
                               const double time);
 };
 
@@ -115,6 +117,7 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
                                 const string& field_name,
                                 const double  field_time,
                                 const int output_choice,
+                                const IntVector includeExtraCells,
                                 const double time)
 {
   // We know that the data is arranged as a LatVolMesh of some type.
@@ -162,9 +165,34 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
 
   // Indexing in SCIRun fields starts from 0, thus start
   // from zero and subtract 1 from high index
-  for( unsigned int i = 0; i < nCells[0]-1; i++ ) {
-    for( unsigned int j = 0; j < nCells[1]-1; j++ ) {
-      for( unsigned int k = 0; k < nCells[2]-1; k++ ) {
+  IntVector l(0,0,0);
+  IntVector h(nCells[0]-1, nCells[1]-1, nCells[2]-1);
+  
+
+  
+  // set the default value 
+  double defaultValue = 0.0;
+  for( unsigned int i = l.x(); i < h.x(); i++ ) {
+    for( unsigned int j = l.y(); j < h.y(); j++ ) {
+      for( unsigned int k = l.z(); k < h.z(); k++ ) {
+        typename LVMesh::Cell::index_type pos(outputMesh,i,j,k);
+        lvf->set_value( defaultValue, pos );
+      }
+    }
+  }
+   
+  // Include Extra cells
+  cout << "before " << l << "  " << h << " includeExtraCells " << includeExtraCells<< "\n";
+   
+  if( showDif){
+    l += IntVector(1,1,1) - includeExtraCells;
+    h -= IntVector(1,1,1) - includeExtraCells;
+  }
+  cout << "after " << l << "  " << h << "\n";
+  
+  for( unsigned int i = l.x(); i < h.x(); i++ ) {
+    for( unsigned int j = l.y(); j < h.y(); j++ ) {
+      for( unsigned int k = l.z(); k < h.z(); k++ ) {
         typename LVMesh::Cell::index_type pos(outputMesh,i,j,k);
         IntVector c(i,j,k);
         c = c + extraCells;  // shift (c) my the extra cells
@@ -181,7 +209,7 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
                 << " z_pos_CC " << z_pos_CC<< "\n";
         }
         
-        double calculatedValue;
+        double calculatedValue = 0.0;
         string msg;
 
         switch( field_type ) {
@@ -202,6 +230,11 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
           printf( "ERROR: CompareMMS.cc - Bad field_type %d\n", field_type );
           exit(1);
         }
+        
+        if(j == nCells[1]-1){
+          calculatedValue = 1.0;
+        }
+        
         if( showDif ) {
           double val;
           typename LVMesh::Cell::index_type inputMeshPos(mesh,i,j,k);

@@ -30,9 +30,10 @@
 
 SRCDIR := Core/CCA/PIDL/UnitTests
 
-PROGRAM := $(SRCDIR)/test
+PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
 SRCS := \
+        $(SRCDIR)/SmartPointerTest.cc \
         $(SRCDIR)/PIDLTest.cc \
         $(SRCDIR)/main.cc
 

@@ -104,6 +104,7 @@ public:
     }
   };
   
+#ifdef HAVE_HASH_MAP
   struct str_hasher
   {
     size_t operator()(const string s) const
@@ -112,6 +113,7 @@ public:
       return H(s.c_str());
     }
   };
+#endif /* HAVE_HASH_MAP */
 #endif
   virtual void render(FieldHandle f,
 		      bool nodes, bool edges, bool faces,

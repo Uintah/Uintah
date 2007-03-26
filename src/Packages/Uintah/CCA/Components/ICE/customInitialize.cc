@@ -44,6 +44,14 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
         }
       }
     }  // multiple vortices
+    
+    
+    ProblemSpecP linear_ps= c_init_ps->findBlock("hardWired");
+    if(linear_ps){
+      cib->which = "hardWired";
+    }
+    
+    
     //__________________________________
     //  method of manufactured solutions 1
     ProblemSpecP mms_ps= c_init_ps->findBlock("manufacturedSolution");
@@ -101,7 +109,18 @@ void customInitialization(const Patch* patch,
       } 
     }  // loop
   } // vortices
-  
+  //__________________________________
+  //  hardwired for debugging
+  if(cib->which == "hardWired"){
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      Point pt = patch->cellPosition(c);
+      double x = pt.x();
+      double coeff = 1000;
+       //temp_CC[c]  = 300 + coeff * x;
+       temp_CC[c]  = 300.0 + coeff * exp(-1.0/( x * ( 1.0 - x ) + 1e-100) );
+    }
+  } 
   //__________________________________
   // method of manufactured solution 1
   // See:  "A non-trival analytical solution to the 2d incompressible
@@ -156,6 +175,6 @@ void customInitialization(const Patch* patch,
       // back out temperature from the perfect gas law
       temp_CC[c]= press_CC[c]/ ( (gamma - 1.0) * cv * rho_CC[c] );
     }
-  } // mms_1
+  } // mms_2
 }
 } // end uintah namespace

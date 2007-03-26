@@ -66,14 +66,14 @@ FrameworkProxyDialog::FrameworkProxyDialog(wxWindow *parent,
                                            const wxSize& size,
                                            long style,
                                            const wxString& name,
-                                           const std::string& defaultProxy,
-                                           const std::string& defaultDomain,
-                                           const std::string& defaultLogin)
+                                           const wxString& defaultProxy,
+                                           const wxString& defaultDomain,
+                                           const wxString& defaultLogin)
   : wxDialog(parent, id, title, pos, size, style),
-    proxy(wxT(defaultProxy)),
-    domain(wxT(defaultDomain)),
-    login(wxT(defaultLogin)),
-    path(wxT(GUIBuilder::DEFAULT_OBJ_DIR))
+    proxy(defaultProxy),
+    domain(defaultDomain),
+    login(defaultLogin),
+    path(STLTowxString(GUIBuilder::DEFAULT_OBJ_DIR))
 {
   SetLayout();
 }
@@ -177,8 +177,8 @@ void FrameworkProxyDialog::SetLayout()
   topSizer->Add(copiesSpinCtrl, wxGBPosition(4, 2), wxDefaultSpan, leftFlags, BORDER);
 
   wxArrayString options;
-  options.Add("&CPU");
-  options.Add("&Node");
+  options.Add(wxT("&CPU"));
+  options.Add(wxT("&Node"));
   mpiWhereRadioBox = new wxRadioBox(this, wxID_ANY, wxT("Execute on"), wxDefaultPosition, wxDefaultSize, options, wxRA_SPECIFY_ROWS);
   mpiWhereRadioBox->SetToolTip(wxT("Execute on which MPI CPUs or nodes?"));
   topSizer->Add(mpiWhereRadioBox, wxGBPosition(5, 2), wxDefaultSpan, leftFlags, BORDER);

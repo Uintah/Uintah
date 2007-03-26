@@ -63,6 +63,10 @@ WARNING
          // input specification and builds the triangulated surface piece.
          TriGeometryPiece(ProblemSpecP &);
          //////////
+
+         TriGeometryPiece(const TriGeometryPiece&);
+
+         TriGeometryPiece& operator=(const TriGeometryPiece&);
          
          // Destructor
          virtual ~TriGeometryPiece();
@@ -80,6 +84,10 @@ WARNING
          //////////
          // Returns the bounding box surrounding the triangulated surface.
          virtual Box getBoundingBox() const;
+
+         void scale(const double factor);
+
+         double surfaceArea() const;
          
       private:
 

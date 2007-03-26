@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Malloc/Allocator.h>
@@ -29,6 +30,8 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   readTri(d_file);
   makePlanes();
   makeTriBoxes();
+  
+  cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
   list<Tri> tri_list;
   Tri tri;
@@ -38,6 +41,44 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   d_grid->buildUniformGrid(tri_list);
 			      
 
+}
+
+TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
+{
+  d_box = copy.d_box;
+  d_points = copy.d_points;
+  d_tri = copy.d_tri;
+  d_planes = copy.d_planes;
+  d_boxes = copy.d_boxes;
+
+  d_grid = scinew UniformGrid(*copy.d_grid);
+
+}
+
+TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  // Clean out lhs
+
+  d_points.clear();
+  d_tri.clear();
+  d_planes.clear();
+  d_boxes.clear();
+
+  delete d_grid;
+
+  // Copy the rhs stuff
+  d_box = rhs.d_box;
+  d_points = rhs.d_points;
+  d_tri = rhs.d_tri;
+  d_planes = rhs.d_planes;
+  d_boxes = rhs.d_boxes;
+
+  d_grid = scinew UniformGrid(*rhs.d_grid);
+
+  return *this;
 }
 
 TriGeometryPiece::~TriGeometryPiece()
@@ -171,8 +212,11 @@ TriGeometryPiece::readPoints(const string& file)
   string f = file + ".pts";
   ifstream source(f.c_str());
   if (!source) {
-    throw ProblemSetupException("ERROR: opening MPM Tri points file: \n The file must be in the same directory as sus",
-                                __FILE__, __LINE__);
+    ostringstream warn;
+    warn << "\n ERROR: opening geometry pts points file ("<< f 
+         << ").\n  The file must be in the same directory as sus \n"
+         << "  Do not enclose the filename in quotation marks\n";
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 
   double x,y,z;
@@ -202,15 +246,17 @@ TriGeometryPiece::readTri(const string& file)
   string f = file + ".tri";
   ifstream source(f.c_str());
   if (!source) {
-    throw ProblemSetupException("ERROR: opening MPM Tri file: \n The file must be in the same directory as sus",
-                                __FILE__, __LINE__);
+    ostringstream warn;
+    warn << "\n ERROR: opening geometry tri points file ("<< f 
+         << ").\n   The file must be in the same directory as sus"
+         << "   Do not enclose the filename in quotation marks\n";
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 
   int x,y,z;
   while (source >> x >> y >> z) {
     d_tri.push_back(IntVector(x,y,z));
   }
-
   source.close();
 }
 
@@ -275,10 +321,20 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
   double largest = plane_normal_abs.maxComponent();
   // WARNING: if dominant_coord is not 1-3, then this code breaks...
   int dominant_coord = -1;
-  if (largest == plane_normal_abs.x()) dominant_coord = 1;
-  else if (largest == plane_normal_abs.y()) dominant_coord = 2;
-  else if (largest == plane_normal_abs.z()) dominant_coord = 3;
+  if (largest == plane_normal_abs.x()){
+   dominant_coord = 1;
+  }
+  else if (largest == plane_normal_abs.y()){
+    dominant_coord = 2;
+  }
+  else if (largest == plane_normal_abs.z()){
+    dominant_coord = 3;
+  }
 
+  if (dominant_coord == -1){
+   cout << " dominant coordinate not found " << endl;
+   throw InternalError("Dominant coordinate not found", __FILE__, __LINE__);
+  }
   Point p[3];
   p[0] = d_points[d_tri[num].x()];
   p[1] = d_points[d_tri[num].y()];
@@ -399,6 +455,33 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
     SH = NSH;
   }
   
-  
-  
+}
+
+
+void TriGeometryPiece::scale(const double factor)
+{
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end(); 
+       itr++) {
+    *itr *= factor;
+  }
+}
+
+double TriGeometryPiece::surfaceArea() const
+{
+
+  double surfaceArea = 0.;
+  for (vector<IntVector>::const_iterator itr = d_tri.begin(); 
+       itr != d_tri.end(); itr++) {
+    Point pt[3];
+    pt[0] = d_points[itr->x()];
+    pt[1] = d_points[itr->y()];
+    pt[2] = d_points[itr->z()];
+    Vector v[2];
+    v[0] = pt[0].asVector() - pt[1].asVector();
+    v[1] = pt[2].asVector() - pt[1].asVector();
+
+    Vector area = Cross(v[0],v[1]);
+    surfaceArea += .5 * area.length();
+  }
+  return surfaceArea;
 }

@@ -860,6 +860,11 @@ ShowField::execute()
 		      approx_div_.get(),
 		      faces_usetexture_.get());
   }
+  
+  string level(""), lvl("");
+  if (fld_handle->get_property("level", lvl)){
+    level = string(" L-" + lvl);
+  }
 
   // Cleanup.
   if (do_nodes || color_map_changed) {
@@ -872,7 +877,7 @@ ShowField::execute()
 	scinew GeomMaterial(renderer_->node_switch_, def_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
-      node_id_ = ogeom_->addObj(geom, fname + name);
+      node_id_ = ogeom_->addObj(geom, fname + name + level);
     }
   }
   if (do_edges || color_map_changed) {
@@ -884,7 +889,7 @@ ShowField::execute()
 	scinew GeomMaterial(renderer_->edge_switch_, def_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
-      edge_id_ = ogeom_->addObj(geom, fname + name);
+      edge_id_ = ogeom_->addObj(geom, fname + name + level);
     }
   }
   if (do_faces || color_map_changed) {
@@ -903,7 +908,7 @@ ShowField::execute()
       } else {
 	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       }
-      face_id_ = ogeom_->addObj(geom, fname + name);
+      face_id_ = ogeom_->addObj(geom, fname + name + level);
     }
   }
   if (do_data || color_map_changed)
@@ -914,6 +919,12 @@ ShowField::execute()
 	data_vector_renderer_.get_rep() &&
 	vectors_on_.get())
     {
+
+      string vlevel("");
+      if( vfld_handle->get_property("level", lvl) ){
+        vlevel = string(" L-" + lvl);
+      }
+
       if (data_id_) ogeom_->delObj(data_id_);
       if (do_data)
       {
@@ -933,13 +944,19 @@ ShowField::execute()
 	scinew GeomMaterial(data_geometry_, def_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
-      data_id_ = ogeom_->addObj(geom, fname + vdname);
+      data_id_ = ogeom_->addObj(geom, fname + vdname + vlevel);
     }
     else if (vfld_handle.get_rep() &&
              vfld_handle->query_tensor_interface().get_rep() &&
 	     data_tensor_renderer_.get_rep() &&
 	     tensors_on_.get())
     {
+
+      string vlevel("");
+      if( vfld_handle->get_property("level", lvl) ){
+        vlevel = string(" L-" + lvl);
+      }
+
       if (data_id_) ogeom_->delObj(data_id_);
       GeomHandle data =
 	data_tensor_renderer_->render_data(vfld_handle,
@@ -950,13 +967,18 @@ ShowField::execute()
 					   tdt, tscale,
 					   data_resolution_,
 					   tensors_emphasis_.get());
-      data_id_ = ogeom_->addObj(data, fname + "Tensors");
+      data_id_ = ogeom_->addObj(data, fname + "Tensors" + vlevel);
     }
     else if (vfld_handle.get_rep() &&
              vfld_handle->query_scalar_interface().get_rep() &&
 	     data_scalar_renderer_.get_rep() &&
 	     scalars_on_.get())
     {
+      string vlevel("");
+      if( vfld_handle->get_property( "level", lvl )) {
+        vlevel = string(" L-" + lvl);
+      } 
+
       if (data_id_) ogeom_->delObj(data_id_);
       const bool transp = scalars_transparency_.get();
       if (do_data)
@@ -976,7 +998,9 @@ ShowField::execute()
 	scinew GeomMaterial(data_geometry_, def_material_);
       GeomHandle geom =
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
-      data_id_ = ogeom_->addObj(geom, fname + (transp?"Transparent Scalars":"Scalars"));
+      data_id_ = ogeom_->addObj(geom, fname + 
+                                (transp? ("Transparent Scalars" + vlevel) :
+                                 ("Scalars" + vlevel)));
     }
   }
   if (do_text || color_map_changed) {

@@ -39,7 +39,7 @@ DIR=dbg
 
 #Set up MPI 
 MPI=''
-MPI_RUN="yes"
+MPI_RUN="no"
 
 #Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
@@ -148,7 +148,8 @@ for arg in $*; do
 	    do_mpmice_amr=1;;
 	-im)
 	    echo; echo "Running the implicit mpm tests . . ."
-	    do_impm=1;;
+	    do_impm=1
+	    MPI_RUN="yes";;
 	-clean)
 	    echo; echo "Removing *.out *.compare and *.uda files . . ."
 	    do_remove=1;;
@@ -237,7 +238,8 @@ REMOVE () {
 }
 
 num_proc () {
-	numproc=`grep -m1 patches $input_file | sed -e :a -e 's/<[^>]*>//g;/</N;//ba' | sed -e 's/\[//g' | sed 's/\]//g' | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+	numproc=`grep -m1 patches $input_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+#       echo "number of patches" $numproc
 }
 
 
@@ -247,21 +249,31 @@ run_test () {
     input_file=../$n.ups.rt
 
     num_proc
-   
-    if test $MPI_RUN == "yes";
-        then 
-        if test $numproc -gt 1;
-            then
-            MPI="mpirun -np $numproc"
-        elif test -n "$MPI" ;
-            then
-            echo $MPI
-        else
-            MPI=""
-        fi
+  
+    if test $numproc -gt 1 ;
+    	then
+	MPI="mpirun -np $numproc"
+    elif test $MPI_RUN == "yes";
+        then
+	MPI="mpirun -np $numproc"
     else
-        MPI=""
+    	MPI=""
     fi
+
+#    if test $MPI_RUN == "yes";
+#        then 
+#        if test $numproc -gt 1;
+#            then
+#            MPI="mpirun -np $numproc"
+#        elif test -n "$MPI" ;
+#            then
+#            echo $MPI
+#        else
+#            MPI=""
+#        fi
+#    else
+#        MPI=""
+#    fi
 
     echo; echo "Running $MPI sus $opts $input_file"
     $MPI ../sus $opts $input_file &> $n.out

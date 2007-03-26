@@ -50,26 +50,30 @@ WARNING
     virtual ~BNRRegridder();
     void SetTolerance(float tola, float tolb) {tola_=tola;tolb_=tolb;};
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, 
-                         const ProblemSpecP& ups);
+    virtual Grid* regrid(Grid* oldGrid);
 		
     virtual void problemSetup(const ProblemSpecP& params,
 			      const GridP& grid,
 			      const SimulationStateP& state);
 
     /***** these should be private (public for testing)*******/
-    void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
-    void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
-  private:
-    //function for outputing grid in parsable format
-    void writeGrid(Grid* grid,vector<vector<IntVector> > flag_sets);
+    void RunBR(vector<IntVector> &flags, vector<Region> &patches);
+    void PostFixup(vector<Region> &patches);
+  protected:
     void problemSetup_BulletProofing(const int k);
-    void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
+    void AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags,
                         const vector<const Patch*>& coarse_patches, int level);
+    void CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets);
+    Grid* CreateGrid(Grid* oldGrid, vector< vector<Region> > &patch_sets );
+    
     bool getTags(int &tag1, int &tag2);
+    void OutputGridStats(vector< vector<Region> > &patch_sets);
+
+    bool d_loadBalance;             //should the regridder call the load balancer before creating the grid
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
+    double d_patchRatioToTarget;    //percentage of target volume used to subdivide patches
     unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
    
     //tag information
@@ -81,15 +85,13 @@ WARNING
     queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
     stack<int> tags_;							  //available tags
     PatchFixer patchfixer_;         //Fixup class
-    IntVector d_minPatchSize;       //minimum patch size in each dimension
+    SizeList d_minPatchSize;       //minimum patch size in each dimension
 
     //request handeling variables
     vector<MPI_Request> requests_;    //MPI requests
     vector<int> indicies_;            //return value from waitsome
     vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
     stack<int>  free_requests_;       //list of free requests
-
-    ofstream fout;                    //debug stream for outputing patches. should be moved into the debug stream.
   };
 
 } // End namespace Uintah

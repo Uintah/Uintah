@@ -77,13 +77,13 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 ifeq ($(HAVE_GLOBUS),yes)
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-             Core/GuiInterface Core/CCA/spec \
+             Core/Geom Core/GuiInterface Core/CCA/spec \
              Core/CCA/PIDL Core/CCA/SSIDL \
              Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
              Core/globus_threads
 else
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-             Core/GuiInterface Core/CCA/spec \
+             Core/Geom Core/GuiInterface Core/CCA/spec \
              Core/CCA/PIDL Core/CCA/SSIDL \
              Core/Exceptions Core/Thread \
              Core/TkExtensions Core/Init
@@ -93,7 +93,7 @@ LIBS := $(XML2_LIBRARY)
 
 ifeq ($(BUILD_DATAFLOW),yes)
  PSELIBS += Dataflow/Network Dataflow/TCLThread
- LIBS := $(TK_LIBRARY) $(TCL_LIBRARY) $(LIBS)
+ LIBS := $(TK_LIBRARY) $(TCL_LIBRARY) $(BLT_LIBRARY) $(ITK_LIBRARY) $(ITCL_LIBRARY) $(LIBS)
 endif
 
 ifeq ($(HAVE_RUBY),yes)
@@ -127,7 +127,9 @@ SUBDIRS := \
            $(SRCDIR)/StandAlone
 
 ifeq ($(BUILD_UNIT_TESTS),yes)
-  SUBDIRS += $(SRCDIR)/UnitTests
+  SUBDIRS += \
+             $(SRCDIR)/UnitTests \
+             $(SRCDIR)/Internal/UnitTests
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -121,6 +121,8 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       prevMatlSet = matls;
     }
 
+    allMS->sort();
+
     for (int l = 0; l < grid->numLevels(); l++) {
       t->computes(label, grid->getLevel(l)->allPatches()->getUnion(), matls->getUnion());
     }
@@ -230,7 +232,7 @@ GridP UdaReducer::getGrid()
 { 
   GridP newGrid = dataArchive_->queryGrid(times_[timeIndex_]);
   
-  if (newGrid != oldGrid_) {
+  if (oldGrid_ == 0 || !(*newGrid.get_rep() == *oldGrid_.get_rep())) {
     gridChanged = true;
     if (d_myworld->myrank() == 0) cout << "     NEW GRID!!!!\n";
     oldGrid_ = newGrid;

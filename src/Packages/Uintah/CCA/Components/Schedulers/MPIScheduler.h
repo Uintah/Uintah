@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
@@ -81,16 +80,6 @@ WARNING
 
     virtual SchedulerP createSubScheduler();
       
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleParticleRelocation(const LevelP& level,
-					    const VarLabel* old_posLabel,
-					    const vector<vector<const VarLabel*> >& old_labels,
-					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
-					    const VarLabel* particleIDLabel,
-					    const MaterialSet* matls);
-    
     void postMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
 		       list<DependencyBatch*>& externalRecvs,
 		       bool only_old_recvs, int abort_point, int iteration);
@@ -105,7 +94,6 @@ WARNING
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
     { return d_myworld; }
-    virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
@@ -130,7 +118,6 @@ WARNING
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     
-    MPIRelocate      reloc_;
     double           d_lasttime;
     vector<char*>    d_labels;
     vector<double>   d_times;

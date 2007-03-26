@@ -73,7 +73,7 @@ BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
     vector<BCGeomBase*>& vec = d_BCDataArray[mat_id];
     vector<BCGeomBase*>::const_iterator bcd_itr;
     for (bcd_itr = vec.begin(); bcd_itr != vec.end(); ++bcd_itr)
-	delete *bcd_itr;
+        delete *bcd_itr;
     vec.clear();
   }
   d_BCDataArray.clear();
@@ -97,7 +97,7 @@ BCDataArray* BCDataArray::clone()
 }
 
 void BCDataArray::determineIteratorLimits(Patch::FaceType face,
-					  const Patch* patch)
+                                          const Patch* patch)
 {
   IntVector lpts,hpts;
   patch->getFaceCells(face,-1,lpts,hpts);
@@ -113,22 +113,22 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
       pts[i] = patch->getLevel()->getNodePosition(nodes[i]);
     if (face == Patch::xminus)
       p = (pts[0].asVector()+pts[1].asVector()+pts[2].asVector()
-	   +pts[3].asVector())/4.;
+           +pts[3].asVector())/4.;
     if (face == Patch::xplus)
       p = (pts[4].asVector()+pts[5].asVector()+pts[6].asVector()
-	   +pts[7].asVector())/4.;
+           +pts[7].asVector())/4.;
     if (face == Patch::yminus)
       p = (pts[0].asVector()+pts[1].asVector()+pts[4].asVector()
-	   +pts[5].asVector())/4.;
+           +pts[5].asVector())/4.;
     if (face == Patch::yplus)
       p = (pts[2].asVector()+pts[3].asVector()+pts[6].asVector()
-	   +pts[7].asVector())/4.;
+           +pts[7].asVector())/4.;
     if (face == Patch::zminus)
       p = (pts[0].asVector()+pts[2].asVector()+pts[4].asVector()
-	   +pts[6].asVector())/4.;
+           +pts[6].asVector())/4.;
     if (face == Patch::zplus)
       p = (pts[1].asVector()+pts[3].asVector()+pts[5].asVector()
-	   +pts[7].asVector())/4.;
+           +pts[7].asVector())/4.;
 
     test_pts.push_back(Point(p.x(),p.y(),p.z()));
   }
@@ -138,7 +138,7 @@ void BCDataArray::determineIteratorLimits(Patch::FaceType face,
        mat_id_itr != d_BCDataArray.end(); ++mat_id_itr) {
     vector<BCGeomBase*>& bc_objects = mat_id_itr->second;
     for (vector<BCGeomBase*>::iterator obj = bc_objects.begin();
-	 obj != bc_objects.end(); ++obj) {
+         obj != bc_objects.end(); ++obj) {
       (*obj)->determineIteratorLimits(face,patch,test_pts);
 #if 0
       (*obj)->printLimits();
@@ -164,30 +164,30 @@ void BCDataArray::combineBCGeometryTypes(int mat_id)
   // the one that will actually be stored).
 
   if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-	       cmp_type<SideBCData>()) > 1) {
+               cmp_type<SideBCData>()) > 1) {
     cout << "Have duplicates Before . . ." << endl;
     for (vector<BCGeomBase*>::const_iterator v_itr = d_BCDataArray_vec.begin();
-	 v_itr != d_BCDataArray_vec.end(); ++v_itr) {
+         v_itr != d_BCDataArray_vec.end(); ++v_itr) {
       (*v_itr)->print();
     }
   }
 
   if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-	       cmp_type<SideBCData>()) > 1) {
+               cmp_type<SideBCData>()) > 1) {
     
     SideBCData* side_bc = scinew SideBCData();
     for (vector<BCGeomBase*>::const_iterator itr = d_BCDataArray_vec.begin();
-	 itr != d_BCDataArray_vec.end(); ++ itr) {
+         itr != d_BCDataArray_vec.end(); ++ itr) {
       if (typeid(*(*itr)) == typeid(SideBCData)) {
-	cout << "Found SideBCData" << endl;
-	BCData bcd,s_bcd;
-	(*itr)->getBCData(bcd);
-	side_bc->getBCData(s_bcd);
-	s_bcd.combine(bcd);
-	side_bc->addBCData(s_bcd);
-	side_bc->print();
+        cout << "Found SideBCData" << endl;
+        BCData bcd,s_bcd;
+        (*itr)->getBCData(bcd);
+        side_bc->getBCData(s_bcd);
+        s_bcd.combine(bcd);
+        side_bc->addBCData(s_bcd);
+        side_bc->print();
       } else {
-	new_bcdata_array.push_back((*itr)->clone());
+        new_bcdata_array.push_back((*itr)->clone());
       }
       
     }
@@ -198,11 +198,11 @@ void BCDataArray::combineBCGeometryTypes(int mat_id)
 
     cout << "Have duplicates After . . ." << endl;
     for (vector<BCGeomBase*>::const_iterator v_itr = new_bcdata_array.begin();
-	 v_itr != new_bcdata_array.end(); ++v_itr) {
+         v_itr != new_bcdata_array.end(); ++v_itr) {
       (*v_itr)->print();
     }
     for_each(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-	     delete_object<BCGeomBase>());
+             delete_object<BCGeomBase>());
     d_BCDataArray_vec.clear();
     d_BCDataArray_vec = new_bcdata_array;
   }
@@ -230,9 +230,9 @@ BCDataArray::getBoundCondData(int mat_id, string type, int i) const
       itr->second[i]->getBCData(new_bc_all);
       bool found_it = new_bc_all.find(type);
       if (found_it == true)
-	return new_bc_all.getBCValues(type);
+        return new_bc_all.getBCValues(type);
       else
-	return 0;
+        return 0;
     }
   }
   return 0;
@@ -299,70 +299,70 @@ void BCDataArray::setSFCZIterator(int mat_id,vector<IntVector>& i,int ii)
   }
 }
 
-void BCDataArray::getBoundaryIterator(int mat_id,vector<IntVector>& b,
-				      int i) const
+void BCDataArray::getBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr,
+                                      int i) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[i]->getBoundaryIterator(b);
+    itr->second[i]->getBoundaryIterator(b_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[i]->getBoundaryIterator(b);
+      itr->second[i]->getBoundaryIterator(b_ptr);
   }
 }
 
-void BCDataArray::getNBoundaryIterator(int mat_id,vector<IntVector>& b,
-				       int i) const
+void BCDataArray::getNBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr,
+                                       int i) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[i]->getNBoundaryIterator(b);
+    itr->second[i]->getNBoundaryIterator(b_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[i]->getNBoundaryIterator(b);
+      itr->second[i]->getNBoundaryIterator(b_ptr);
   }
 }
 
-void BCDataArray::getSFCXIterator(int mat_id,vector<IntVector>& i,int ii) const
+void BCDataArray::getSFCXIterator(int mat_id,vector<IntVector>*& i_ptr,int ii) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[ii]->getSFCXIterator(i);
+    itr->second[ii]->getSFCXIterator(i_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[ii]->getSFCXIterator(i);
+      itr->second[ii]->getSFCXIterator(i_ptr);
   }
 }
 
-void BCDataArray::getSFCYIterator(int mat_id,vector<IntVector>& i,int ii) const
+void BCDataArray::getSFCYIterator(int mat_id,vector<IntVector>*& i_ptr,int ii) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[ii]->getSFCYIterator(i);
+    itr->second[ii]->getSFCYIterator(i_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[ii]->getSFCYIterator(i);
+      itr->second[ii]->getSFCYIterator(i_ptr);
   }
 }
 
-void BCDataArray::getSFCZIterator(int mat_id,vector<IntVector>& i,int ii) const
+void BCDataArray::getSFCZIterator(int mat_id,vector<IntVector>*& i_ptr,int ii) const
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
   if (itr != d_BCDataArray.end()) {
-    itr->second[ii]->getSFCZIterator(i);
+    itr->second[ii]->getSFCZIterator(i_ptr);
   }
   else {
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
-      itr->second[ii]->getSFCZIterator(i);
+      itr->second[ii]->getSFCZIterator(i_ptr);
   }
 }
 
@@ -399,12 +399,12 @@ void BCDataArray::print()
        bcda_itr++) {
     BCDA_dbg << endl << "mat_id = " << bcda_itr->first << endl;
     for (vector<BCGeomBase*>::const_iterator i = bcda_itr->second.begin();
-	 i != bcda_itr->second.end(); ++i) {
+         i != bcda_itr->second.end(); ++i) {
       BCDA_dbg << "BCGeometry Type = " << typeid(*(*i)).name() <<  " "
-	   << *i << endl;
+           << *i << endl;
       (*i)->print();
     }
   }
-	
+        
   
 }

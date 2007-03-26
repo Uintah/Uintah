@@ -35,7 +35,7 @@ int main()
   
   int numNodes = 0;
   int numElements = 0;
-  string name,out_name, info, info1;
+  string name,out_name, info, info1, info2;
   cout << endl << "**********************************************" << endl;
   cout << "Input the name of the Gambit output file: ";
   cin >> name;
@@ -44,11 +44,6 @@ int main()
   cin >> out_name;
  
   instream.open(name.c_str());                       // opens files name
- 
-  string pts_name = out_name + ".pts";
-  string tri_name = out_name + ".tri";
-  pts_stream.open(pts_name.c_str());
-  tri_stream.open(tri_name.c_str());
  
   while (!instream.is_open())  {                     // tests for openness
     cout << "Invalid file name. Please re-enter the name of the file to use: ";
@@ -63,12 +58,23 @@ int main()
     instream >> info;
     counter ++;
   }
-  if (counter == 10 ) {
-    cout << " The file is not recognized as a gambit file " << endl;
+  
+  instream>> info1;
+  instream>> info2;
+  
+  if (counter == 10       || 
+       info  != "GAMBIT"  ||
+       info1 != "NEUTRAL" ||
+       info2 != "FILE"  ) {
+    cout << " The file is not recognized as a gambit neutral (neu) file " << endl;
     cout << " Now exiting " << endl;
     exit (1);
   }
   
+  string pts_name = out_name + ".pts";
+  string tri_name = out_name + ".tri";
+  pts_stream.open(pts_name.c_str());
+  tri_stream.open(tri_name.c_str());
   //__________________________________
   //  find number of points and number of elements
   while(info != "NDFVL") {

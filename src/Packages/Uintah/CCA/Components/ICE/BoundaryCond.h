@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
@@ -109,6 +110,11 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                         const Patch* patch,
                         const VarLabel* label,
                         DataWarehouse* new_dw);  
+  
+  
+  void set_CFI_BC( CCVariable<double>& q_CC, const Patch* patch);
+  
+  
 template<class T> 
   void setBC(T& variable, 
              const  string& kind,
@@ -120,12 +126,23 @@ template<class T>
  bool setNeumanDirichletBC( const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<T>& var,
-                            const vector<IntVector> bound,
+                            const vector<IntVector>* bound_ptr,
                             const string& bc_kind,
                             const T& value,
                             const Vector& cell_dx,
 			       const int mat_id,
 			       const int child);
+                            
+ template<class T>
+ bool setNeumanDirichletBC_FC( const Patch* patch,
+                               const Patch::FaceType face,
+                               T& vel_FC,
+                               const vector<IntVector>* bound_ptr,
+                               string& bc_kind,
+                               double& value,
+                               const Vector& cell_dx,
+                               const IntVector& P_dir,
+                               const string& whichVel);
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
  
@@ -140,21 +157,21 @@ bool getIteratorBCValueBCKind( const Patch* patch,
                                const string& desc,
                                const int mat_id,
                                T& bc_value,
-                               vector<IntVector>& bound,
+                               vector<IntVector>*& bound_ptr,
                                string& bc_kind)
 { 
-  bound.push_back(IntVector(-9,-9,-9));
   //__________________________________
   //  find the iterator, BC value and BC kind
-  vector<IntVector> nbound,sfx,sfy,sfz;
+  vector<IntVector> *nu;  // not used
   const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-						    desc, bound,nbound,
-						    sfx,sfy,sfz,child);
+						    desc, bound_ptr,
+                                              nu,nu,nu,nu,
+                                              child);
 
   const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-						       "Symmetric", bound, 
-							nbound,sfx,sfy,
-							sfz,child);
+						       "Symmetric", bound_ptr, 
+							nu,nu,nu,nu,
+                                                 child);
 
   const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);       
 
@@ -172,15 +189,13 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   }
   delete bc;
   delete sym_bc;
-  
+
   // Did I find an iterator
-  if( bc_kind == "NotSet" || *bound.begin() == IntVector(-9,-9,-9)){
+  if( bc_kind == "NotSet" || bound_ptr->size() == 0){
     return false;
   }else{
     return true;
-  }
-       
-       
+  }    
 }
 /* --------------------------------------------------------------------- 
  Function~  setNeumanDirichletBC--
@@ -190,7 +205,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  bool setNeumanDirichletBC( const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<T>& var,
-                            const vector<IntVector> bound,
+                            const vector<IntVector>* bound_ptr,
                             string& bc_kind,
                             T& value,
                             const Vector& cell_dx,
@@ -209,7 +224,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  }
  //__________________________________        
  if (bc_kind == "Dirichlet") {    //   D I R I C H L E T 
-   for (iter = bound.begin(); iter != bound.end(); iter++) {
+   for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
      var[*iter] = value;
    }
    IveSetBC = true;
@@ -217,10 +232,10 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  //__________________________________
  // Random variations for density
  if (bc_kind == "Dirichlet_perturbed") {
-   vector<IntVector> cbound,nbound,sfx,sfy,sfz;
+   vector<IntVector> *nu;  // not used
    const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-						     "Density", cbound,nbound,
-						     sfx,sfy,sfz,child);
+						     "Density", 
+                                               nu,nu,nu,nu,nu,child);
 
    const BoundCond<double> *new_bcs = 
      dynamic_cast<const BoundCond<double> *>(bc);
@@ -236,7 +251,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    time_t seconds = time(NULL);
    srand(seconds);
 
-   for (iter = bound.begin(); iter != bound.end(); iter++) {
+   for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
      var[*iter] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
    }
    IveSetBC = true;
@@ -244,14 +259,14 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  }
 
  if (bc_kind == "Neumann") {       //    N E U M A N N
-   for (iter=bound.begin(); iter != bound.end(); iter++) {
+   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
      IntVector adjCell = *iter - oneCell;
      var[*iter] = var[adjCell] - value * dx;
    }
    IveSetBC = true;
  }
  if (bc_kind == "zeroNeumann") {   //    Z E R O  N E U M A N N
-   for (iter=bound.begin(); iter != bound.end(); iter++) {
+   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
      IntVector adjCell = *iter - oneCell;
      var[*iter] = var[adjCell];
    }
@@ -259,6 +274,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    value = T(0.0);   // so the debugging output is accurate
  }
  return IveSetBC;
+
 }
 
 
@@ -271,7 +287,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  bool setNeumanDirichletBC_FC( const Patch* patch,
                                const Patch::FaceType face,
                                T& vel_FC,
-                               const vector<IntVector> bound,
+                               const vector<IntVector>* bound_ptr,
                                string& bc_kind,
                                double& value,
                                const Vector& cell_dx,
@@ -298,17 +314,27 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     }
     // on (x,y,z)minus faces move in one cell
     if( onMinusFace ) {
-      for (iter=bound.begin(); iter != bound.end(); iter++) {
+      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
         IntVector c = *iter - oneCell;
         vel_FC[c] = value;
       }
     }else {    // (xplus, yplus, zplus) faces
-      for (iter=bound.begin(); iter != bound.end(); iter++) {
-        vel_FC[*iter] = value;
+      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+        IntVector c = *iter;
+        vel_FC[c] = value;
+ 
       }
     }
     IveSetBC = true;
   }
+  
+  
+//______________________________________________________________________
+//  Theoretically, we don't need to set the transverse face centered velocities
+//  boundary conditions.  This is from the days of doing corner coupling.  Not
+//  positive that it won't create a problem. Leave this weed for while
+//  01/31/07  
+#if 0
   //__________________________________
   // Neumann
   // -- Only modify the velocities that are tangential to a face.
@@ -338,6 +364,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     IveSetBC = true; 
     value = 0.0;  // so the debugging output is accurate 
   } 
+#endif
   return IveSetBC; 
 }
 
@@ -372,10 +399,10 @@ void setBC(T& vel_FC,
 
       Vector bc_value(-9,-9,-9);;
       string bc_kind = "NotSet";
-      vector<IntVector> bound;
+      vector<IntVector>* bound_ptr;
       bool foundIterator = 
         getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
-					       bc_value, bound,bc_kind); 
+					       bc_value, bound_ptr,bc_kind); 
                                        
       if(bc_kind == "LODI") {
         BC_dbg << "Face: "<<face<< " LODI bcs specified: do Nothing"<< endl; 
@@ -415,12 +442,12 @@ void setBC(T& vel_FC,
           string kind = "zeroNeumann";
           value = 0.0;
           IveSetBC= setNeumanDirichletBC_FC<T>( patch, face, vel_FC,
-                               bound, kind, value, cell_dx, P_dir, whichVel);
+                               bound_ptr, kind, value, cell_dx, P_dir, whichVel);
 
           if(faceDir == P_dir ) {
             string kind = "Dirichlet";
             IveSetBC= setNeumanDirichletBC_FC<T>( patch, face, vel_FC,
-                                 bound, kind, value, cell_dx, P_dir, whichVel);
+                                 bound_ptr, kind, value, cell_dx, P_dir, whichVel);
           }
         }
 
@@ -428,12 +455,12 @@ void setBC(T& vel_FC,
         // Non Symmetric Boundary Conditions
         if (bc_kind != "symmetric") {  
           IveSetBC= setNeumanDirichletBC_FC<T>( patch, face, vel_FC,
-                              bound, bc_kind, value, cell_dx, P_dir, whichVel); 
+                              bound_ptr, bc_kind, value, cell_dx, P_dir, whichVel); 
         }
         //__________________________________
         // Custom BCs
         if(bc_kind == "MMS_1"){
-          IveSetBC= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound, bc_kind,
+          IveSetBC= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound_ptr, bc_kind,
                                       cell_dx, P_dir, whichVel, sharedState,
                                       custom_BC_basket->mms_var_basket,
                                       custom_BC_basket->mms_v);
@@ -445,13 +472,54 @@ void setBC(T& vel_FC,
           BC_dbg <<whichVel<< " Face: "<< face <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
-               <<"\t bound limits = " <<*bound.begin()<<" "<< *(bound.end()-1)
+               <<"\t bound limits = " <<*bound_ptr->begin()<<" "<< *(bound_ptr->end()-1)
 	        << endl;
         }              
       }  // Children loop
     }  // bcKind != notSet
   }  // face loop
 }
-  
+/* --------------------------------------------------------------------- 
+ Function~  set_CFI_BC--      
+ Purpose~  set the boundary condition at the coarse fine interface.  Use
+  A Taylor's series expansion using only fine level data
+ ---------------------------------------------------------------------  */
+template <class T>
+void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)        
+{ 
+  BC_doing << "set_CFI_BC "<< endl; 
+  //__________________________________
+  // On the fine levels at the coarse fine interface 
+  BC_dbg << *patch << " ";
+  patch->printPatchBCs(BC_dbg);
+
+  if(patch->hasCoarseFineInterfaceFace() ){  
+    BC_dbg << " BC at coarse/Fine interfaces " << endl;
+    //__________________________________
+    // Iterate over coarsefine interface faces
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      Patch::FaceType face = *iter;
+      
+      IntVector oneCell = patch->faceDirection(face);
+      int p_dir = patch->faceAxes(face)[0];  //principal dir.
+      Vector dx = patch->dCell();
+      
+      for(CellIterator itr = patch->getFaceCellIterator(face, "minusEdgeCells"); !itr.done(); itr++){
+        IntVector f_cell = *itr;
+        IntVector f_adj  = f_cell  - oneCell;
+        IntVector f_adj2 = f_cell  - IntVector(2,2,2)*oneCell;
+        
+        // backward differencing
+        T grad_q = (q_CC[f_adj] - q_CC[f_adj2])/dx[p_dir];
+        T q_new  =  q_CC[f_adj] + grad_q * dx[p_dir]; 
+            
+        T correction =  q_CC[f_cell] - q_new; 
+        q_CC[f_cell] = q_new;
+      }
+    }  // face loop
+  }  // patch has coarse fine interface 
+}
 } // End namespace Uintah
 #endif

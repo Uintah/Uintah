@@ -72,6 +72,8 @@ WARNING
  public:
    UniformGrid(Box& bound_box);
    ~UniformGrid();
+   UniformGrid& operator=(const UniformGrid&);
+   UniformGrid(const UniformGrid&);
    IntVector cellID(Point point);
    void buildUniformGrid(list<Tri>& polygons);
    void countIntersections(const Point& ray, int& crossings);

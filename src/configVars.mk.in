@@ -84,7 +84,7 @@ VPATH := $(SRCTOP)
 PACKAGE_DIRS := @PACKAGE_DIRS@
 LOAD_PACKAGE := @LOAD_PACKAGE@
 BUILD_DATAFLOW := @BUILD_DATAFLOW@
-BUILD_SCIRUN2 := @BUILD_SCIRUN2@
+BUILD_SCIJUMP := @BUILD_SCIJUMP@
 BUILD_PLUME := @BUILD_PLUME@
 
 #DEF_BUILD_DATAFLOW := @DEF_BUILD_DATAFLOW@
@@ -308,9 +308,17 @@ PTOLEMY_CLASSPATH := @PTOLEMY_CLASSPATH@
 
 HAVE_KEPLER := @HAVE_KEPLER@
 
-ifeq ($(BUILD_SCIRUN2),yes)
+ifeq ($(BUILD_SCIJUMP),yes)
   # make configurable:
-  FWK_EXE := sr
+  ifeq ($(IS_OSX),yes)
+    FWK_APP := scijump.app
+    FWK_EXE := scijump.app/Contents/MacOS/scijump
+  else
+    FWK_APP :=
+    FWK_EXE := scijump
+  endif
+  # see also Framework/StandAlone/scijump_version.h
+  FWK_VERSION := 0.1.1
   SUBDIRS := $(SUBDIRS) Framework CCA
 
   ## tests (experimental)
@@ -319,6 +327,7 @@ ifeq ($(BUILD_SCIRUN2),yes)
   CPPUNIT_LIBRARY := @CPPUNIT_LIB_FLAG@ @CPPUNIT_LIB_DIR_FLAG@
   ifeq ($(HAVE_CPPUNIT),yes)
     BUILD_UNIT_TESTS := yes
+    UNIT_TEST_EXE := unittest
   endif
 
   HAVE_RUBY := @HAVE_RUBY@
@@ -353,9 +362,12 @@ ifeq ($(BUILD_SCIRUN2),yes)
   ifeq ($(HAVE_WX), yes)
     HAVE_GUI := yes
   endif
-  WX_LIBRARY := @WX_LIB_FLAG@ @WX_LIB_DIR_FLAG@
+  ## using wx config flags mostly because of OS X dependencies
+  WX_LIBRARY := @WX_LIBS@
   ## using wx config flags because we need the -D flags for compilation
   WX_INCLUDE := @WX_CXXFLAGS@
+  WX_CONFIG := @WX_CONFIG@
+  WX_DIR := @WX_DIR@
 
   DEF_NCURSES := @DEF_NCURSES@
   NCURSES_INCLUDE := @INC_NCURSES_H@
@@ -460,10 +472,11 @@ ifeq ($(CC_DEPEND_MODE),normal)
 	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
 	pdbfile=`basename $< .cc`.pdb ; \
 	$(TAUINSTR) $$pdbfile $< -o $*.inst.cc -f $(SRCTOP)/tau/select.dat ; \
-        $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $*.inst.cc -o $@ ; \
-	if [ -f $@ ] ; then  \
-	echo "Instrumented $*.$(OBJEXT) successfully  " ; \
+        $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c -I`dirname $<` $*.inst.cc -o $@
+	@if [ -f $@ ] ; then  \
+	echo " *** Instrumented $*.$(OBJEXT) successfully  " ; \
 	else \
+	echo " *** Failed to instrumented $*.$(OBJEXT)  " ; \
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
 	ls -l $@; \
 	fi ; \

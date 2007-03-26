@@ -1133,7 +1133,7 @@ package SSIDL {
 
 //     }
 
-// Bugzilla bug #2833: SCIRun2 sidl compiler emits static SIDL functions as instance member functions
+// Bugzilla bug #2833: SCIJump (originally called SCIRun2) sidl compiler emits static SIDL functions as instance member functions
 //
 //     /**
 //      * This singleton class is implemented by Babel's runtime for RMI
@@ -1252,7 +1252,7 @@ package SSIDL {
 //       array<SSIDL.io.Serializable,1> getExceptions();
 //     }
 
-// Bugzilla bug #2833: SCIRun2 sidl compiler emits static SIDL functions as instance member functions
+// Bugzilla bug #2833: SCIJump (originally called SCIRun2) sidl compiler emits static SIDL functions as instance member functions
 //
 //     /**
 //      * This singleton class is simply a place to register a

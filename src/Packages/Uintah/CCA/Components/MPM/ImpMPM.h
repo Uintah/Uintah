@@ -13,7 +13,7 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Packages/Uintah/CCA/Components/MPM/ImpMPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h>
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
@@ -457,7 +457,7 @@ private:
 	 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
-  MPMFlags* flags;
+  ImpMPMFlags* flags;
 
   ImplicitHeatConduction* heatConductionModel;
   ThermalContact* thermalContactModel;
@@ -467,20 +467,28 @@ private:
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
+#if 0
   double           d_conv_crit_disp;
   double           d_conv_crit_energy;
+#endif
   double           d_initialDt;
-  double           d_forceIncrementFactor; // Increment in ForceBC applied force
+#if 0
+  double           d_forceIncrementFactor; //Increment in ForceBC applied force
+#endif
   int              d_numIterations;
+#if 0
   bool             d_projectHeatSource;
   bool             d_doMechanics;
+#endif
   Vector           d_contact_dirs; // For rigid body contact
   std::string      d_con_type;
+#if 0
   int              d_max_num_iterations;  // restart timestep
   int              d_num_iters_to_decrease_delT;
   int              d_num_iters_to_increase_delT;
   double           d_delT_decrease_factor;
   double           d_delT_increase_factor;
+#endif
   double           d_stop_time;     // for rigid contact
   Vector           d_vel_after_stop;     // for rigid contact
 
@@ -489,15 +497,19 @@ private:
   const PatchSet* d_perproc_patches;
 
   Solver* d_solver;
+#if 0
   string d_solver_type;
   bool d_temp_solve;
 
   bool d_dynamic;
+#endif
   bool d_rigid_body;
   bool d_single_velocity;
+#if 0
   bool d_useLoadCurves;
   
   IntegratorType d_integrator;
+#endif
 
   // stuff for not having to recompile the iterative scheduler every timstep
   SchedulerP d_subsched;

@@ -44,7 +44,8 @@ SRCS     += \
         $(SRCDIR)/NetworkIO.cc     \
         $(SRCDIR)/PackageDB.cc     \
         $(SRCDIR)/SkeletonFiles.cc \
-        $(SRCDIR)/Scheduler.cc
+        $(SRCDIR)/Scheduler.cc     \
+	$(SRCDIR)/SchedulerEventListener.cc
 
 SUBDIRS := $(SRCDIR)/Ports
 include $(SCIRUN_SCRIPTS)/recurse.mk

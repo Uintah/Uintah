@@ -227,7 +227,7 @@ TxtMenu::drawInactiveMenu(WINDOW* win_menu)
   }
 
   for (int i = 0; i < n_main_menu_choices; ++i) {
-    mvwprintw(win_menu,0, 1+i*(max_item_size+2), main_menu_choices[i].c_str());
+    mvwprintw(win_menu,0, 1+i*(max_item_size+2), const_cast<char *>(main_menu_choices[i].c_str()));
   }
   wrefresh(win_menu);
   // Update the stacking order
@@ -322,7 +322,7 @@ TxtMenu::exec(int main_menu_index, int sub_menu_index){
     case 7: //Quit GUI
       SCIRun::TxtBuilder::displayMessage("Quit GUI is not implemented!");
       break;
-    case 8: //Quit SCIRun2
+    case 8: //Quit SCIJump
       refresh();
       endwin();
       SCIRun::Thread::exitAll(0);

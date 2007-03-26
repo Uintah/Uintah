@@ -1,11 +1,11 @@
 /*
   For more information, please see: http://software.sci.utah.edu
-  
+
   The MIT License
-  
+
   Copyright (c) 2004 Scientific Computing and Imaging Institute,
   University of Utah.
-  
+
   License for the specific language governing rights and limitations under
   Permission is hereby granted, free of charge, to any person obtaining a
   copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
   the rights to use, copy, modify, merge, publish, distribute, sublicense,
   and/or sell copies of the Software, and to permit persons to whom the
   Software is furnished to do so, subject to the following conditions:
-  
+
   The above copyright notice and this permission notice shall be included
   in all copies or substantial portions of the Software.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -47,16 +47,21 @@ private:
   sci::cca::Services::pointer services;
 };
 
-
-class testgo : public sci::cca::ports::GoPort {
+class TestExecute : public sci::cca::ports::GoPort {
 public:
-  virtual ~testgo() {}
+  TestExecute() : testEmptyTopicName(""), com(0) {}
+  virtual ~TestExecute() {}
   void setParent(TestCreateTopic *com) { this->com = com; }
   virtual int go();
 
 private:
-  TestCreateTopic *com;
+  // functions for testing scenarios:
+  void topicEmptyName(const sci::cca::ports::EventService::pointer& eventServicePort);
+  void topicReturnsNullPointer(const sci::cca::ports::EventService::pointer& eventServicePort);
+  void topicReturnsExistingPointer(const sci::cca::ports::EventService::pointer& eventServicePort);
 
+  std::string testEmptyTopicName;
+  TestCreateTopic *com;
 };
 
 #endif

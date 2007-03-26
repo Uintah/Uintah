@@ -102,10 +102,10 @@ namespace Uintah {
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
+    ParticleVariable<double> pcolor,ptempPrevious;
     ParticleVariable<long64> pparticleID;
     ParticleVariable<Vector> pdisp;
-    ParticleVariable<Vector> pfiberdir;
-    ParticleVariable<double> ptempPrevious;  // for thermal stress 
+    ParticleVariable<Vector> pfiberdir; 
 
     ParticleVariable<int> pLoadCurveID;
 
@@ -123,6 +123,7 @@ namespace Uintah {
     typedef map<pair<const Patch*,GeometryObject*>,vector<double> > geomvols;
     geomvols d_object_vols;
     geomvols d_object_temps;
+    geomvols d_object_colors;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;

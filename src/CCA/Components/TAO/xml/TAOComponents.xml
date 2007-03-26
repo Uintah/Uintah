@@ -29,10 +29,10 @@
 -->
 
 <metacomponentmodel name = "tao">
-  <library name="libCCA_Components_TAO_FileReader.so">
+  <library name="CCA_Components_TAO_FileReader">
     <component name="Tao.FileReader" />
   </library>
-  <library name="libCCA_Components_TAO_FileReaderClient.so">
+  <library name="CCA_Components_TAO_FileReaderClient">
     <component name="Tao.FileReaderClient" />
   </library>
 </metacomponentmodel>

@@ -36,6 +36,7 @@ SRCDIR := Core/CCA
 SUBDIRS := \
            $(SRCDIR)/spec \
            $(SRCDIR)/tools \
+           $(SRCDIR)/Exceptions \
            $(SRCDIR)/DT \
            $(SRCDIR)/PIDL \
            $(SRCDIR)/SSIDL

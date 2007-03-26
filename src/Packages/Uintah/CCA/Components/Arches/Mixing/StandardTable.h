@@ -94,8 +94,11 @@ public:
 	return 0;
       }
       inline bool getSootPrecursors() const{
-	              return 0;
-		            }
+        return 0;
+      }
+      inline bool getTabulatedSoot() const{
+        return 0;
+      }
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
       }

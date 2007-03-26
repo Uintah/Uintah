@@ -10,12 +10,12 @@
 
 1;
 
-function [points, elems] = make_grid(bar_dim,spacing)
+function [points, elems] = make_grid(bar_dim,resolution)
   count = 1;
   j = 0;
   while (j <= bar_dim)
     points(count++) = j;
-    j += spacing;
+    j += bar_dim/resolution;
   endwhile
   if (points(length(points)) != bar_dim)
     points(count) = bar_dim;
@@ -41,8 +41,8 @@ function [K,F] = form_matrix(K,F,points,elems,materials,dt,theta,T)
     element(1) = elems(elem_num,1);
     element(2) = elems(elem_num,2);
     [KE,C] = element_linear(elem_num,element,points,materials);
-    KE
-    C
+#    KE
+#    C
     K = assemble(element,K,KE,C,dt,theta);
     F = source_term(element,F,KE,C,dt,theta,T);
   endfor
@@ -75,8 +75,8 @@ function [KE,Ca] = element_linear(i,element,points,materials)
 
   KE(1:2,1:2)=0;
 
-  Ka = Kalpha(2,shape,weight,kond); # 1 gauss point for integration
-  Ca = Capacitance(2,shape,weight,density,specific_heat); # 2 gauss pt integ
+  Ka = Kalpha(3,shape,weight,kond); # 1 gauss point for integration
+  Ca = Capacitance(3,shape,weight,density,specific_heat); # 2 gauss pt integ
 
   KE = Ka;
    
@@ -100,15 +100,15 @@ function [xi,weight] = gauss_quadrature
   xi(1,1) = 0;
   weight(1,1) = 2;
   
-  xi(2,1) = -1/2;
-  xi(2,2) = -xi(2,1);
-  weight(2,1) = 1;
-  weight(2,2) = weight(2,1);
-
-#  xi(2,1) = -1/sqrt(3);
+#  xi(2,1) = -1/2;
 #  xi(2,2) = -xi(2,1);
 #  weight(2,1) = 1;
 #  weight(2,2) = weight(2,1);
+
+  xi(2,1) = -1/sqrt(3);
+  xi(2,2) = -xi(2,1);
+  weight(2,1) = 1;
+  weight(2,2) = weight(2,1);
   
   
   xi(3,1) = -sqrt(3/5);
@@ -295,7 +295,7 @@ endfunction
 function main()
   
   bar = input("input size of bar ");
-  spacing = input("input grid spacing ");
+  resolution = input("input grid resolution ");
   bc.left.value = input("input left bc value ");
   bc.left.type = input("input left bc type (D)irchlet or (N)eumann ","s");
   bc.right.value = input("input right bc value ");
@@ -325,7 +325,7 @@ function main()
     density_max = max(mat.density);
     density_min = min(mat.density);
     
-    lamba_max = (pi/spacing)^2 * kond_max/(spec_heat_max*density_max)
+    lamba_max = (pi/(bar/resolution))^2 * kond_max/(spec_heat_max*density_max)
     dt_critical = 2/(1-2*theta) * 1/lamba_max
     
     if (dt > dt_critical)
@@ -335,7 +335,7 @@ function main()
     
   printf("Using dt = %f\n",dt);
 
-  [p,e] = make_grid(bar,spacing);
+  [p,e] = make_grid(bar,resolution);
   bcs = generate_bcs(bc,p);
   materials = create_materials_element(p,e,mat);
   T = set_intial_condition(initial_temp,length(p));
@@ -343,6 +343,9 @@ function main()
   mid_pt = ceil(length(p)/2)
 
   t = 0;
+  file_name = input("input name of data file ","s");
+  data_file = fopen(file_name,"w","native");
+
   while (t <= end_time)
     xlabel("Bar points");
     ylabel("Temperature");
@@ -353,22 +356,27 @@ function main()
     plot(p,T);
     hold on;
     Tex = exact_solution(p,t,30,bc,initial_temp,bar,mat);
-    plot(p,Tex,'x')
+#    plot(p,Tex,'x')
     printf("At %f, T = %f, Texact = %f\n",p(mid_pt),T(mid_pt),Tex(mid_pt));
-    T(mid_pt)
+#    T(mid_pt)
 #    pl=input('hit return');
     [K,F] = initialize_K_F(length(p));
     [Keff,Feff] = form_matrix(K,F,p,e,materials,dt,theta,T);
-    Feff
+#    Feff
     [Keff,Feff] = apply_bcs(Keff,Feff,bcs,materials);
 #    Keff
-    Feff
+#    Feff
     T = solve_system(Keff,Feff);
     t
     T
+    for (i=1:length(p))
+      fprintf(data_file,"%f, %f %f\n",p(i),T(i),Tex(i));
+    endfor
+    fprintf(data_file,"\n");
     
     
     t += dt;
   endwhile
+  fclose(data_file);
 endfunction
 

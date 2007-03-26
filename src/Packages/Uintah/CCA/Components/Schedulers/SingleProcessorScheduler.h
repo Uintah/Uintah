@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
 
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
  
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -56,19 +55,8 @@ WARNING
     virtual void execute(int tgnum = 0, int iteration = 0);
     
     virtual SchedulerP createSubScheduler();
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleParticleRelocation(const LevelP& level,
-					    const VarLabel* old_posLabel,
-					    const vector<vector<const VarLabel*> >& old_labels,
-					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
-					    const VarLabel* particleIDLabel,
-					    const MaterialSet* matls);
 
-    virtual const MaterialSet* getMaterialSet() const {return reloc_.getMaterialSet();}
   private:
-    SPRelocate reloc_;
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
     virtual void verifyChecksum();

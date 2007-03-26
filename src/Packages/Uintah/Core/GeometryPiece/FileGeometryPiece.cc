@@ -37,13 +37,15 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
   
   d_file_format = "text";
   d_presplit    = true;  // default expects input to have been been processed with pfs
-#if 0
+#if 1
   cerr << "reading: positions";
   for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
     if       (*vit=="p.volume") {
       cerr << " volume";
     } else if(*vit=="p.temperature") {
       cerr << " temperature";
+    } else if(*vit=="p.color"){
+      cerr << " color";
     } else if(*vit=="p.externalforce") {
       cerr << " externalforce";
     } else if(*vit=="p.fiberdir") {
@@ -171,14 +173,26 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
     d_points.push_back(Point(x1,x2,x3));
     
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
-      if       (*vit=="p.volume") {
-        if(is >> v1) d_volume.push_back(v1);
+      if (*vit=="p.volume") {
+        if(is >> v1) {
+          d_volume.push_back(v1);
+        }
       } else if(*vit=="p.temperature") {
-        if(is >> v1) d_temperature.push_back(v1);
+        if(is >> v1){
+          d_temperature.push_back(v1);
+        }
+      } else if(*vit=="p.color") {
+        if(is >> v1){
+          d_color.push_back(v1);
+        }
       } else if(*vit=="p.externalforce") {
-        if(is >> v1 >> v2 >> v3) d_forces.push_back(Vector(v1,v2,v3));
+        if(is >> v1 >> v2 >> v3){
+          d_forces.push_back(Vector(v1,v2,v3));
+        }
       } else if(*vit=="p.fiberdir") {
-        if(is >> v1 >> v2 >> v3) d_fiberdirs.push_back(Vector(v1,v2,v3));
+        if(is >> v1 >> v2 >> v3){
+          d_fiberdirs.push_back(Vector(v1,v2,v3));
+        }
       }
       if(!is)
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
@@ -206,12 +220,24 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
       if (*vit=="p.volume") {
         if(is.read((char*)&v[0], sizeof(double))) {
-          if(needflip) swapbytes(v[0]);
+          if(needflip){ 
+            swapbytes(v[0]);
+          }
           d_volume.push_back(v[0]);
+        }
       } else if(*vit=="p.temperature") {
         if(is.read((char*)&v[0], sizeof(double))) {
-          if(needflip) swapbytes(v[0]);
+          if(needflip){
+            swapbytes(v[0]);
+          }
           d_temperature.push_back(v[0]);
+        }
+      } else if(*vit=="p.color") {
+        if(is.read((char*)&v[0], sizeof(double))) {
+          if(needflip){
+            swapbytes(v[0]);
+          }
+          d_color.push_back(v[0]);
         }
       } else if(*vit=="p.externalforce") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
@@ -232,11 +258,10 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
         }
       }
-      if(!is)
+      if(!is){
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
       }
     }
-    
   } else if(d_file_format=="gzip") {
     throw ProblemSetupException("Sorry - gzip not implemented !", __FILE__, __LINE__);
   }

@@ -13,25 +13,22 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Util/DebugStream.h>
-
+#include <iomanip>
 #include <iostream>
-
-#undef TOTALS
-//#define TOTALS    
-
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
+
+
 //__________________________________   
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
 //  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
-const double Unsteady_Burn::INIT_TS = 300.0;    /* initial surface temperature          */
+const double Unsteady_Burn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
+const double Unsteady_Burn::INIT_TS   = 300.0;  /* initial surface temperature          */
 const double Unsteady_Burn::INIT_BETA = 1.0e12; /* initial surface temperature gradient */
-const double Unsteady_Burn::EPS = 1.e-5;        /* iteration stopping criterion */
-const double Unsteady_Burn::UNDEFINED = -10; 
 
 Unsteady_Burn::Unsteady_Burn(const ProcessorGroup* myworld, 
                              ProblemSpecP& params,
@@ -397,11 +394,6 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       old_dw->get(temp_CC[m],     MIlb->temp_CCLabel,    indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m], Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
     }
- 
-#ifdef TOTALS
-    double totalSurfArea=0.0, totalBurnedMass=0.0;
-    int totalNumBurningCells=0;
-#endif      
 
    /* initialize NEW cell-centered and particle values for unsteady burn */
     NewBurningCell.initialize(0.0);
@@ -435,8 +427,10 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       }
     }
     
-    /* Cell Iteration */
     Vector dx = patch->dCell(); 
+    MIN_MASS_IN_A_CELL = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
+
+    /* Cell Iteration */
     IntVector nodeIdx[8];
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -480,14 +474,16 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
 	      
 	      if(burning == 0 && pFlag[cell] <= BP){
 		for (int m = 0; m < numAllMatls; m++){
-		  if(vol_frac_CC[m][cell] > 0.3 && temp_CC[m][cell] > ignitionTemp)   
+		  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
 		    burning = 1;
+		    break;
+		  }
 		}
 	      }//endif
-
-	    }//end 1st for
+	      
+	    }//end 3rd for
 	  }//end 2nd for
-	}//end 3rd for
+	}//end 1st for
       }//endif
       
       if(burning == 1 && productPress >= ThresholdPressure){
@@ -535,12 +531,6 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
 	NewTs[c]   = Ts;
 
 	NewBurningCell[c] = OldBurningCell[c] + 1.0;	
-
-#ifdef TOTALS
-	totalSurfArea += surfArea;
-	totalBurnedMass += burnedMass;
-	totalNumBurningCells++;
-#endif
 	
 	/* conservation of mass, momentum and energy   */
 	 mass_src_0[c]  -= burnedMass;
@@ -576,13 +566,6 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
 	pTsNew[idx]   = INIT_TS;
       }
     }
-    
-#ifdef TOTALS    
-    if(0.0 != totalBurnedMass){
-      cout<<"  TotalSurfArea = "<<totalSurfArea <<"   TotalBurnedMass = " <<totalBurnedMass 
-	  <<"   TotalNumBurningCells = "<<totalNumBurningCells<<endl;
-    }
-#endif
 
     /*  set symetric BC  */
     setBC(mass_src_0, "set_if_sym_BC", patch, d_sharedState, m0, new_dw);
@@ -690,193 +673,180 @@ void Unsteady_Burn::setMPMLabel(MPMLabel* MLB){
 double Unsteady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, 
 					double solidMass, double& beta, double& Ts, Vector& dx){  
   UpdateConstants(To, P, Vc);
-
-  double   Ts_local = Tmin + (Tmax - Tmin) * BisectionSecant();
-  double    m_local = sqrt(C1*Ts_local*Ts_local/(Ts_local-C2)*exp(-Ec/(R*Ts_local)));
-  double beta_local = (Ts_local-To) * m_local * K1;
-  double m_unsteady = 0.0;
-
+  
+  double    Ts_local = BisectionNewton(Ts);
+  double     m_local = m_Ts(Ts_local);
+  double  beta_local = (Ts_local-To) * m_local * NUM1;
+  double m_nonsteady = 0.0;
+  
   if(beta<INIT_BETA && Ts>INIT_TS){
-    double b = K3*beta;
-    double c = K4*Ts*Ts*exp(-Ec/(R*Ts));
-    double para = b*b-4*c;
-    if(para < 0){
-      throw InvalidValue("Timestep is too large to correctly compute the unsteady burn rate", __FILE__, __LINE__);
-    }
-    m_unsteady = 2*c/(sqrt(para)+b);
- 
-    /* manually adjust the unsteady burn rate based on the local steady burn rate */
-    m_unsteady = m_local * pow(m_unsteady/m_local, Bm);
-
-    double n1 = (K2/(delT*m_unsteady*m_unsteady)) * Nc;
-    double n2 = n1 * Ng;
-    if(n1>1)
-      beta = (n1-1)/n1*beta + 1/n1*beta_local;
+    double n_coef = Nc * NUM2/(delT*m_local*m_local);
+    double m_coef = Ng * n_coef;
+    
+    if(n_coef>1)
+      beta = (n_coef-1)/n_coef*beta + 1/n_coef*beta_local;
     else 
       beta = beta_local;
     
-    if(n2>1)
-      Ts   = (n2-1)/n2*Ts   + 1/n2*Ts_local;
+    if(m_coef>1)
+      Ts   = (m_coef-1)/m_coef*Ts   + 1/m_coef*Ts_local;
     else 
       Ts = Ts_local;
+    
+    double b    = NUM3*beta;
+    double c    = NUM4*Ts*Ts*exp(-Ec/(R*Ts));
+    double para = b*b-4*c;
+    if(para < 0)
+      throw InvalidValue("Timestep is too large to correctly compute the unsteady burn rate", __FILE__, __LINE__);
 
-    //cout <<"  beta="<< beta <<" Ts="<< Ts <<" n1="<< n1<<endl;
-  
+    m_nonsteady = 2*c/(sqrt(para)+b);
+    
+    /* manually adjust the unsteady burn rate based on the local steady burn rate */  
+    if(Bm != 1.0)
+      m_nonsteady =  m_local * pow(m_nonsteady/m_local, Bm);
+    
   }else{
     beta = beta_local;
     Ts = Ts_local;
-    m_unsteady = m_local;
+    m_nonsteady = m_local;
   }
    
-  double burnedMass = delT * surfArea * m_unsteady;
-  double min_mass = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
-  if (burnedMass + min_mass > solidMass) 
-    burnedMass = solidMass - min_mass;  
+  double burnedMass = delT * surfArea * m_nonsteady;
+  if (burnedMass + MIN_MASS_IN_A_CELL > solidMass) 
+    burnedMass = solidMass - MIN_MASS_IN_A_CELL;
+  
   return burnedMass;
 }
 
-
+//______________________________________________________________________
 void Unsteady_Burn::UpdateConstants(double To, double P, double Vc){
-  /* define the constants as:   */
   /* CC1 = Ac*R*Kc/Ec/Cp        */
   /* CC2 = Qc/Cp/2              */
   /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
   /* CC4 = Qc/Cp                */
   /* CC5 = Qg/Cp                */
-  C1 = CC1 / Vc; 
   /* Vc = Condensed Phase Specific Volume */
+  
+  C1 = CC1 / Vc; 
   C2 = To + CC2; 
   C3 = CC3 * P*P;
   C4 = To + CC4; 
   C5 = CC5 * C3; 
 
-  K1 = Cp/Kc;                 
-  K2 = Kc/(Cp*Vc);            
-  K3 = 2*Kc/Qc;              
-  K4 = 2*Ac*R*Kc/(Ec*Qc*Vc);
-
-  L0 = 0; R0 = 1;
-  L1 = 0; R1 = 1;
-  L2 = 0; R2 = 1;
-  L3 = 0; R3 = 1;
+  NUM1 = Cp/Kc;                 
+  NUM2 = Kc/(Cp*Vc);            
+  NUM3 = 2*Kc/Qc;              
+  NUM4 = 2*Ac*R*Kc/(Ec*Qc*Vc);
   
-  T_ignition = C2;
-  Tmin = Ts_max();
-  Tmax = Fxn_Ts(Tmin);
+  Tmin = C4;
+  double Tsmax = Ts_max();
+  if (Tmin < Tsmax)
+    Tmax =  F_Ts(Tsmax);
+  else
+    Tmax = F_Ts(Tmin);
+  
+  IL = Tmin;
+  IR = Tmax;
 }
-
 
 /***   
- ***   Ts = f_Ts(Ts)						   
+ ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))						   
  ***   f_Ts(Ts) = C4 + C5/(sqrt(m^2+C3) + m)^2 
  ***
- ***   Solve for diff(f_Ts(Ts))=0 ***   Ts_max = C2 - Ec/2R + sqrt(4*R^2*C2^2+Ec^2)/2R
+ ***   Solve for diff(f_Ts(Ts))=0 
+ ***   Ts_max = C2 - Ec/2R + sqrt(4*R^2*C2^2+Ec^2)/2R
  ***   f_Ts_max = f_Ts(Ts_max)
  ***/
-double Unsteady_Burn::Fxn_Ts(double Ts){
-  double m2 = C1*Ts*Ts/(Ts-C2)*exp(-Ec/R/Ts);
-  double m = sqrt(m2);
-  //double result = C4 + C5/pow((sqrt(m2+C3)+m),2.0);
-  return C4 + C5/pow((sqrt(m2+C3)+m),2.0) ;
+double Unsteady_Burn::F_Ts(double Ts){
+  return Ts_m(m_Ts(Ts));
 }
 
-
-/* normalized function, 0 <= x <= 1 */
-double Unsteady_Burn::Fxn(double x){
-  double Ts = Tmin + (Tmax - Tmin)*x;
-  return Ts - Fxn_Ts(Ts);
+double Unsteady_Burn::m_Ts(double Ts){
+  return sqrt( C1*Ts*Ts/(Ts-C2)*exp(-Ec/R/Ts) );
 }
 
+double Unsteady_Burn::Ts_m(double m){
+  double deno = sqrt(m*m+C3)+m;
+  return C4 + C5/(deno*deno);
+}
 
-/* the Max value of f_Ts(Ts) */
+/* the function value for the zero finding problem */
+double Unsteady_Burn::Func(double Ts){
+  return Ts - F_Ts(Ts);
+}
+
+/* dFunc/dTs */
+double Unsteady_Burn::Deri(double Ts){
+  double m  = m_Ts(Ts);
+  double K1 = Ts-C2;
+  double K2 = sqrt(m*m+C3);
+  double K3 = (R*Ts*(K1-C2)+Ec*K1)*m*C5;
+  double K4 = (K2+m)*(K2+m)*K1*K2*R*Ts*Ts;
+  return 1.0 + K3/K4;
+}
+
+/* F_Ts(Ts_max) is the max of F_Ts function */
 double Unsteady_Burn::Ts_max(){
   return 0.5*(2.0*R*C2 - Ec + sqrt(4.0*R*R*C2*C2+Ec*Ec))/R;
 } 
 
-
-/* absolute stopping criterion */
-int Unsteady_Burn::Termination(){  
-  if(fabs(R0 - L0) <= EPS)
-    return 1;
-  else
-    return 0;
-}
-
-
-/* secant method */
-double Unsteady_Burn::Secant(double u, double w){  
-  double fu = Fxn(u);
-  double fw = Fxn(w);
-  if(fu != fw)
-    return u - fu * (u - w)/(fu - fw); 
-  else 
-    return UNDEFINED;  
-  /* indicates an undefined number in case of fu == fw */
-}
-
-
-void Unsteady_Burn::SetInterval(double x){  
-  /* Li = negative,  Ri = positive */
-  L3 = L2;
-  R3 = R2;
-  
-  L2 = L1;
-  R2 = R1;
-  
-  L1 = L0;
-  R1 = R0;
-  
-  double y = Fxn(x);
-  if(y > 0)       R0 = x;
-  else if(y < 0)  L0 = x;
-  if(y == 0)      L0 = R0 = x; 
-  
-  return;
-}
-
-
-double Unsteady_Burn::Bisection(double l, double r){   
-  return (l + r)/2;
-}
-
-
-/* Bisection - Secant Method */
-double Unsteady_Burn::BisectionSecant(){  
-  double a0 = Fxn(0);	  /* a0 < 0 */
-  double b0 = Fxn(1);	  /* b0 > 0 */
-  double x0 = a0 > -b0 ? 0 : 1;
-  double x1 = 0;
-  
-  while(Termination() == 0){
-    
-    /* two steps of Regula Falsi */
-    for(int j = 1; j <= 2; j++){      
-      x1 = x0;
-      x0 = Secant(L0, R0);      
-      SetInterval(x0);      
-      if (Termination() == 1){
-	return (L0 + R0)/2;
-      }
-    }
-    
-    /* Secant Step */
-    while((R0 - L0) <= (R3 - L3)/2){
-      double z = Secant(x0, x1); 			
-      if((z < L0)||(z > R0)||(UNDEFINED == z))
-	/* if z not in (Li, Ri) or z not defined */
-	break;      
-      x1 = x0;
-      x0 = z;      
-      SetInterval(x0);      
-      if (Termination() == 1)
-	return (L0 + R0)/2;
-    }
-    
-    /* Bisection Step */
-    x1 = x0;
-    x0 = Bisection(L0, R0);
-    SetInterval(x0);
+void Unsteady_Burn::SetInterval(double f, double Ts){  
+  /* IL <= 0,  IR >= 0 */
+  if(f < 0)  
+    IL = Ts;
+  else if(f > 0)
+    IR = Ts;
+  else if(f ==0){
+    IL = Ts;
+    IR = Ts; 
   }
+}
+
+/* Bisection - Newton Method */
+double Unsteady_Burn::BisectionNewton(double Ts){  
+  double y = 0;
+  double df_dTs = 0;
+  double delta_old = 0;
+  double delta_new = 0;
   
-  return x0;
+  int iter = 0;
+  if(Ts>Tmax || Ts<Tmin)
+    Ts = (Tmin+Tmax)/2;
+  
+  while(1){
+    iter++;
+    y = Func(Ts);
+    SetInterval(y, Ts);
+    
+    if(fabs(y)<EPSILON)
+      return Ts;
+    
+    delta_new = 1e100;
+    while(1){
+      if(iter>100){
+	cout<<"Not converging after 100 iterations in Unseady_Burn.cc."<<endl;
+	exit(1);
+      }
+
+      df_dTs = Deri(Ts);
+      if(df_dTs==0) 
+	break;
+
+      delta_old = delta_new;
+      delta_new = -y/df_dTs; //Newton Step
+      Ts += delta_new;
+      y = Func(Ts);
+
+      if(fabs(y)<EPSILON)
+	return Ts;
+      
+      if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
+	break;
+
+      iter++; 
+      SetInterval(y, Ts);  
+    }
+    
+    Ts = (IL+IR)/2.0; //Bisection Step
+  }
 }

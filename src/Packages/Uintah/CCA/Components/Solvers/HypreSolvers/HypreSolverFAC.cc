@@ -99,9 +99,14 @@ HypreSolverFAC::solve(void)
     HYPRE_SStructFACSetLogging(solver, params->logging);
     HYPRE_SStructFACSetup2(solver, facA, sstructDriver->getB(),
                            sstructDriver->getX());
+                           
+    string warn="ERROR:\n HypreSolverFAC.cc \n  Incompatiblity with hypre 2.0.";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
+#if 0
+    // This call isn't supported in hypre 2.0
     hypre_FacZeroCData(solver, facA, sstructDriver->getB(),
                        sstructDriver->getX());
-
+#endif
     // Call the FAC solver
     HYPRE_SStructFACSolve3(solver, facA, sstructDriver->getB(),
                            sstructDriver->getX());

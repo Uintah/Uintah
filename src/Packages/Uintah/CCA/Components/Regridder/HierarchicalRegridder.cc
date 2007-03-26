@@ -38,8 +38,6 @@ HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : Regridd
 HierarchicalRegridder::~HierarchicalRegridder()
 {
   rdbg << "HierarchicalRegridder::~HierarchicalRegridder() BGN" << endl;
-  VarLabel::destroy(d_dilatedCellsCreationLabel);
-  VarLabel::destroy(d_dilatedCellsDeletionLabel);
   VarLabel::destroy(d_activePatchesLabel);
 
   for (int k = 0; k < d_maxLevels; k++) {
@@ -195,25 +193,24 @@ void HierarchicalRegridder::problemSetup_BulletProofing(const int k)
 }
 
 
-Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const ProblemSpecP& ups)
+Grid* HierarchicalRegridder::regrid(Grid* oldGrid)
 {
   rdbg << "HierarchicalRegridder::regrid() BGN" << endl;
 
   if (d_maxLevels <= 1)
     return oldGrid;
 
-  ProblemSpecP grid_ps = ups->findBlock("Grid");
-  if (!grid_ps) {
+  if (!grid_ps_) {
     throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!", __FILE__, __LINE__);
   }
 
   // this is for dividing the entire regridding problem into patchwise domains
-  DataWarehouse* parent_dw = scheduler->getLastDW();
+  DataWarehouse* parent_dw = sched_->getLastDW();
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
                            parent_dw->setScrubbing(DataWarehouse::ScrubNone);
 
 
-  SchedulerP tempsched = scheduler->createSubScheduler();
+  SchedulerP tempsched = sched_->createSubScheduler();
 
   // it's normally unconventional to pass the new_dw in in the old_dw's spot,
   // but we don't even use the old_dw and on the first timestep it could be null 
@@ -237,13 +234,13 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels() && levelIndex < d_maxLevels-1; levelIndex++ ) {
   // copy dilation to the "old dw" so mpi copying will work correctly
-    const PatchSet* perproc = scheduler->getLoadBalancer()->getPerProcessorPatchSet(oldGrid->getLevel(levelIndex));
+    const PatchSet* perproc = sched_->getLoadBalancer()->getPerProcessorPatchSet(oldGrid->getLevel(levelIndex));
     perproc->addReference();
     const PatchSubset* psub = perproc->getSubset(d_myworld->myrank());
     MaterialSubset* msub = scinew MaterialSubset;
     msub->add(0);
     DataWarehouse* old_dw = tempsched->get_dw(2);
-    old_dw->transferFrom(parent_dw, d_dilatedCellsCreationLabel, psub, msub);
+    old_dw->transferFrom(parent_dw, d_dilatedCellsRegridLabel, psub, msub);
     delete msub;
 
     if (perproc->removeReference())
@@ -253,7 +250,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
     // level will be created).
     Task* mark_task = scinew Task("HierarchicalRegridder::MarkPatches2",
                                this, &HierarchicalRegridder::MarkPatches2);
-    mark_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None);
+    mark_task->requires(Task::OldDW, d_dilatedCellsRegridLabel, Ghost::None);
 #if 0
     if (d_cellCreationDilation != d_cellDeletionDilation)
       mark_task->requires(Task::OldDW, d_dilatedCellsDeletionLabel, Ghost::None);
@@ -268,7 +265,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   parent_dw->setScrubbing(ParentNewDW_scrubmode);
   GatherSubPatches(oldGrid, tempsched);
   
-  Grid* newGrid = CreateGrid2(oldGrid, ups);  
+  Grid* newGrid = CreateGrid2(oldGrid);  
   return newGrid;
 }
 
@@ -301,19 +298,19 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
     SubPatchFlag* subpatches = scinew SubPatchFlag(startidx, startidx+numSubPatches);
     PerPatch<SubPatchFlagP> activePatches(subpatches);
     
-    constCCVariable<int> dilatedCellsCreated;
+    constCCVariable<int> dilatedCellsRegrid;
     // FIX Deletion - CCVariable<int>* dilatedCellsDeleted;
     new_dw->put(activePatches, d_activePatchesLabel, 0, patch);
-    old_dw->get(dilatedCellsCreated, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+    old_dw->get(dilatedCellsRegrid, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
     
-    if (d_cellCreationDilation != d_cellDeletionDilation) {
+    if (d_cellRegridDilation != d_cellDeletionDilation) {
       //FIX Deletion
       //constCCVariable<int> dcd;
       //old_dw->get(dcd, d_dilatedCellsDeletionLabel, 0, patch, Ghost::None, 0);
       //dilatedCellsDeleted = dynamic_cast<CCVariable<int>*>(const_cast<CCVariableBase*>(dcd.clone()));
     }
     else {
-      // Fix Deletion - dilatedCellsDeleted = dilatedCellsCreated;
+      // Fix Deletion - dilatedCellsDeleted = dilatedCellsRegrid;
     }
 
     for (CellIterator iter(IntVector(0,0,0), numSubPatches); !iter.done(); iter++) {
@@ -332,7 +329,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
 //       rdbg << "MarkPatches() startCellSubPatch = " << startCellSubPatch << endl;
 //       rdbg << "MarkPatches() endCellSubPatch   = " << endCellSubPatch   << endl;
 
-      if (flaggedCellsExist(dilatedCellsCreated, startCellSubPatch, endCellSubPatch)) {
+      if (flaggedCellsExist(dilatedCellsRegrid, startCellSubPatch, endCellSubPatch)) {
         rdbg << "Marking Active [ " << levelIdx+1 << " ]: " << latticeStartIdx << endl;
         subpatches->set(latticeStartIdx);
 //       } else if (!flaggedCellsExist(*dilatedCellsDeleted, startCellSubPatch, endCellSubPatch)) {
@@ -566,12 +563,11 @@ public:
 
 
 
-Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups) 
+Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid) 
 {
   rdbg << "CreateGrid2 BGN\n";
 
   Grid* newGrid = scinew Grid();
-  ProblemSpecP grid_ps = ups->findBlock("Grid");
 
   for (int levelIdx=0; levelIdx < (int)d_patches.size(); levelIdx++) {
     if (
@@ -665,7 +661,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
         periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
       }
       addToLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-      addToLevel->assignBCS(grid_ps);
+      addToLevel->assignBCS(grid_ps_);
 #if 1
     }
 #endif
@@ -747,7 +743,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
         }
       }
       newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-      newLevel->assignBCS(grid_ps);
+      newLevel->assignBCS(grid_ps_);
       
     }
   

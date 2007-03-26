@@ -70,7 +70,11 @@ SCIRunFramework::SCIRunFramework()
 {
   models.push_back(internalServices = new InternalComponentModel(this));
   // get initial SIDL environment paths
-  getXMLPaths(this, xmlPaths_);
+  if (! getXMLPaths(this, xmlPaths_)) {
+#if FWK_DEBUG
+    std::cerr << "No SIDL paths found in the environment." << std::endl;
+#endif
+  }
   models.push_back(cca = new CCAComponentModel(this, xmlPaths_));
 
 #ifdef BUILD_DATAFLOW
@@ -98,6 +102,10 @@ SCIRunFramework::SCIRunFramework()
 
 SCIRunFramework::~SCIRunFramework()
 {
+  // cleanup component models
+  for (std::vector<ComponentModel*>::iterator iter = models.begin(); iter != models.end(); iter++) {
+    delete *iter;
+  }
 }
 
 sci::cca::Services::pointer
@@ -417,17 +425,27 @@ SCIRunFramework::releaseServices(const sci::cca::Services::pointer& svc)
   // and ConnectionIDs
 }
 
+// TODO: it would be a good idea for whatever UI to prompt user to save work
 void
 SCIRunFramework::shutdownFramework()
 {
   // throw CCAException if the framework has already been shutdown
 
-  // cleanup models
-  std::cerr << "SCIRunFramework::shutdownFramework not finished" << std::endl;
-  for (std::vector<ComponentModel*>::iterator iter = models.begin();
-       iter != models.end(); iter++) {
-    delete *iter;
+  // cleanup connection IDs...
+  connIDs.clear();
+  compIDs.clear();
+  xmlPaths_.clear();
+
+  SCIRun::Guard g1(&lock_activeInstances);
+
+  // cleanup active instances:
+  for (ComponentInstanceMap::iterator it = activeInstances.begin(); it != activeInstances.end(); it++) {
+    //ComponentInstance *ci = it->second;
+    // TODO: causes segv (bug?)
+    //delete ci;
+    activeInstances.erase(it);
   }
+
   // shutdown proxy frameworks
 }
 
@@ -444,6 +462,17 @@ SCIRunFramework::registerLoader(const ::std::string& loaderName, const SSIDL::ar
   resourceReference* rr = new resourceReference(loaderName, slaveURLs);
   rr->print();
   cca->addLoader(rr);
+
+#if 0
+  //sci::cca::ports::GUIService::pointer service = pidl_cast<sci::cca::ports::GUIService::pointer>(getFrameworkService("cca.GUIService", ""));
+  //if (service.isNull()) {
+    //std::cerr << "Error: could not find GUIService" << std::endl;
+  //} else {
+    //std::cerr << "SCIRunFramework::registerLoader(..) from thread " << Thread::self()->getThreadName() << std::endl;
+    //service->updateComponentModels();
+    //releaseFrameworkService("cca.GUIService", "");
+  //}
+#endif
 
   //d_slave_sema.up(); //now wake UP
   return 0;

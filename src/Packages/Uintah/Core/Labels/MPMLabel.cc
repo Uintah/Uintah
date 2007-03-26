@@ -273,6 +273,9 @@ MPMLabel::MPMLabel()
   gVolumeLabel     = VarLabel::create("g.volume",
 			NCVariable<double>::getTypeDescription());
 
+  gZOILabel     = VarLabel::create("g.zoi",
+			NCVariable<Stencil7>::getTypeDescription());
+
   cVolumeLabel  = VarLabel::create( "c.volume",
                      CCVariable<double>::getTypeDescription() );
 
@@ -665,6 +668,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gThermalContactTemperatureRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
   VarLabel::destroy(gVolumeLabel);
+  VarLabel::destroy(gZOILabel);
   VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(gradPAccNCLabel);
   VarLabel::destroy(dTdt_NCLabel);

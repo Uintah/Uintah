@@ -44,9 +44,13 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/Port.h>
+#include <Dataflow/Network/SchedulerEventListener.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
+
+#include <algorithm>
 #include <iostream>
 #include <queue>
 
@@ -333,21 +337,29 @@ Scheduler::do_scheduling_real(Module* exclude)
 
 
 void
-Scheduler::report_execution_finished(const MessageBase *msg)
+Scheduler::report_execution_finished(Module* module, const MessageBase *msg)
 {
   ASSERT(msg->type == MessageTypes::ExecuteModule ||
          msg->type == MessageTypes::SynchronizeModule);
   Scheduler_Module_Message *sm_msg = (Scheduler_Module_Message *)msg;
-  mailbox.send(scinew Module_Scheduler_Message(sm_msg->serial));
+  report_execution_finished(module, sm_msg->serial);
 }
-
 
 void
-Scheduler::report_execution_finished(unsigned int serial)
+Scheduler::report_execution_finished(Module* module, unsigned int serial)
 {
+  // Send events to things that have registered for callbacks that are
+  // triggered when modules complete their execution
+  callback_lock_.readLock();
+  for(vector<SchedulerEventListener*>::iterator iter = listeners_.begin();
+      iter != listeners_.end(); iter++){
+    (*iter)->moduleFinishedExecution(module);
+  }
+  callback_lock_.readUnlock();
+
+  // Report the completion to the scheduler
   mailbox.send(scinew Module_Scheduler_Message(serial));
 }
-
 
 void
 Scheduler::report_execution_finished_real(unsigned int serial)
@@ -381,7 +393,7 @@ Scheduler::report_execution_finished_real(unsigned int serial)
     // which callbacks are added to the queue.
     bool done = false;
     int priority = 0;
-    callback_lock_.lock();
+    callback_lock_.writeLock();
     for (unsigned int i = 0; i < callbacks_.size(); i++)
     {
       if (done && callbacks_[i].priority != priority)
@@ -395,7 +407,7 @@ Scheduler::report_execution_finished_real(unsigned int serial)
         done = true;
       }
     }
-    callback_lock_.unlock();
+    callback_lock_.writeUnlock();
   }
 }
 
@@ -410,7 +422,7 @@ Scheduler::add_callback(SchedulerCallback cb, void *data, int priority)
 
   // Insert the callback.  Preserve insertion order if priorities are
   // the same.
-  callback_lock_.lock();
+  callback_lock_.writeLock();
   callbacks_.push_back(sc);
   for (size_t i = callbacks_.size()-1; i > 0; i--)
   {
@@ -421,9 +433,25 @@ Scheduler::add_callback(SchedulerCallback cb, void *data, int priority)
       callbacks_[i] = tmp;
     }
   }
-  callback_lock_.unlock();
+  callback_lock_.writeUnlock();
 }
 
+
+void
+Scheduler::addEventListener(SchedulerEventListener* listener)
+{
+  callback_lock_.writeLock();
+  listeners_.push_back(listener);
+  callback_lock_.writeUnlock();
+}
+
+void
+Scheduler::removeEventListener(SchedulerEventListener* listener)
+{
+  callback_lock_.writeLock();
+  listeners_.erase(find(listeners_.begin(), listeners_.end(), listener));
+  callback_lock_.writeUnlock();
+}
 
 void
 Scheduler::remove_callback(SchedulerCallback cb, void *data)
@@ -431,10 +459,10 @@ Scheduler::remove_callback(SchedulerCallback cb, void *data)
   SCData sc;
   sc.callback = cb;
   sc.data = data;
-  callback_lock_.lock();
+  callback_lock_.writeLock();
   callbacks_.erase(std::remove_if(callbacks_.begin(), callbacks_.end(), sc),
 		   callbacks_.end());
-  callback_lock_.unlock();
+  callback_lock_.writeUnlock();
 }
 
 

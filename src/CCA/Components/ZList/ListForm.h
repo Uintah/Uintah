@@ -37,7 +37,7 @@ class ZList;
 class ListForm : public wxDialog
 {
 public:
-  ListForm(ZList *com, wxWindow* parent = 0, const wxString& name = wxString("ListForm"));
+  ListForm(ZList *com, wxWindow* parent = 0, const wxString& name = wxT("ListForm"));
   ~ListForm();
 
 //     QLineEdit* numLineEdit;

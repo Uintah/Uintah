@@ -75,24 +75,27 @@ public:
                     const wxPoint& pos = wxDefaultPosition,
                     const wxSize& size = wxDefaultSize,
                     long style = wxDEFAULT_DIALOG_STYLE,
-                    const wxString& name = "Code Preview Dialog Box");
+                    const wxString& name = wxT("Code Preview Dialog Box"));
 
   void OnViewSourceFileCode( wxCommandEvent &event );
   void OnViewHeaderFileCode( wxCommandEvent &event );
   void OnViewMakeFileCode( wxCommandEvent &event );
   void OnViewSidlFileCode( wxCommandEvent &event );
-  
+
 private:
+  void previewCode(const wxString& filename, const wxString& title);
+
   wxTextCtrl *codePreview;
   wxButton *viewSourceFileCode;
   wxButton *viewHeaderFileCode;
   wxButton *viewMakeFileCode;
 
-  std::string headerFile;
-  std::string sourceFile;
-  std::string submakeFile;
-  std::string sidlFile;
+  wxString headerFile;
+  wxString sourceFile;
+  wxString submakeFile;
+  wxString sidlFile;
   bool isWithSidl;
+
   DECLARE_EVENT_TABLE()
 };
 

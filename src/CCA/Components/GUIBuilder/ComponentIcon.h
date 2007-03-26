@@ -129,7 +129,7 @@ protected:
 
   bool hasUIPort;
   bool hasGoPort;
-  bool hasComponentIcon;
+  bool hasComponentIconUI;
   bool isMoving;
 
   sci::cca::ComponentID::pointer cid;

@@ -75,27 +75,26 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
-  ps->getWithDefault("sinusoidalInitialize", sinusoidalInitialize, false);
+  ps->getWithDefault("sinusoidalInitialize",   sinusoidalInitialize,  false);
+  ps->getWithDefault("linearInitialize",       linearInitialize,      false);
+  ps->getWithDefault("cubicInitialize",        cubicInitialize,       false);
+  ps->getWithDefault("quadraticInitialize",    quadraticInitialize,   false);
+  ps->getWithDefault("exponentialInitialize",  exponentialInitialize, false);
+  
   if(sinusoidalInitialize){
     ps->getWithDefault("freq",freq,IntVector(0,0,0));
   }
-  
-  ps->getWithDefault("linearInitialize", linearInitialize, false);
   if(linearInitialize){
     ps->getWithDefault("slope",slope,Vector(0,0,0));
   }
-  ps->getWithDefault("quadraticInitialize", quadraticInitialize, false);
-  if(quadraticInitialize){
+  if(quadraticInitialize || exponentialInitialize){
     ps->getWithDefault("coeff",coeff,Vector(0,0,0));
   }
   
   uniformInitialize = true;
-  if(sinusoidalInitialize || linearInitialize || quadraticInitialize){
+  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize || exponentialInitialize){
     uniformInitialize = false;
   }
-  
-  cout << " sinusoidalInitialize " << sinusoidalInitialize
-       << " uniformInitialize " << uniformInitialize << endl;
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
@@ -336,9 +335,9 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
         
         Vector coeff = region->coeff;
-        cout << " coeff " << coeff << endl;
-        if(region->quadraticInitialize && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
-          throw ProblemSetupException("PassiveScalar: you need to specify a <coeff> whenever you use quadraticInitialize", __FILE__, __LINE__);
+        if(region->quadraticInitialize || region->exponentialInitialize
+           && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
+          throw ProblemSetupException("PassiveScalar: you need to specify a <coeff> for this initialization", __FILE__, __LINE__);
         }
 
         Point lo = region->piece->getBoundingBox().lower();
@@ -360,10 +359,31 @@ void PassiveScalar::initialize(const ProcessorGroup*,
               f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
             }
             if(region->quadraticInitialize){
+              if(d.x() <= 0.5)
+                f[c] = pow(d.x(),2) - d.x();
+              else{
+                f[c] = pow( (1.0 - d.x()),2) - d.x();
+              } 
+            }
+            if(region->cubicInitialize){    
+              if(d.x() <= 0.5)
+                f[c] = -1.3333333*pow(d.x(),3)  + pow(d.x(),2);
+              else{
+                f[c] = -1.3333333*pow( (1.0 - d.x()),3) + pow( (1.0 - d.x()),2);
+              } 
+            }
+            if(region->exponentialInitialize){    
+               f[c] = coeff.x() * exp(-1.0/( d.x() * ( 1.0 - d.x() ) + 1e-100) )
+                    + coeff.y() * exp(-1.0/( d.y() * ( 1.0 - d.y() ) + 1e-100) )
+                    + coeff.z() * exp(-1.0/( d.z() * ( 1.0 - d.z() ) + 1e-100) );
+            }
+#if 0            
+            if(region->quadraticInitialize){
               f[c] = coeff.x() * d.x() * d.x() 
                    + coeff.y() * d.y() * d.y() 
                    + coeff.z() * d.z() * d.z();
             }
+#endif
           }
         }
       }  // sinusoidal Initialize  

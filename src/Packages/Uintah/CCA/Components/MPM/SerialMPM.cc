@@ -126,7 +126,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     restart_mat_ps = prob_spec;
   }
 
-  ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+  ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 
   if(mpm_soln_ps) {
 
@@ -167,16 +167,16 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==27){
+  } else if(flags->d_8or27==27 || flags->d_8or27==64){
     NGP=2;
     NGN=2;
   }
 
-  MPMPhysicalBCFactory::create(prob_spec);
+  MPMPhysicalBCFactory::create(restart_mat_ps);
 
-  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, prob_spec,sharedState,lb,flags);
+  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, restart_mat_ps,sharedState,lb,flags);
   thermalContactModel =
-    ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
+    ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 
@@ -329,7 +329,7 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   t->computes(lb->pVolumeLabel,            add_matl);
   t->computes(lb->pTemperatureLabel,       add_matl);
   t->computes(lb->pTempPreviousLabel,      add_matl); // for thermal stress 
-  t->computes(lb->pdTdtLabel,  add_matl);
+  t->computes(lb->pdTdtLabel,              add_matl);
   t->computes(lb->pVelocityLabel,          add_matl);
   t->computes(lb->pExternalForceLabel,     add_matl);
   t->computes(lb->pParticleIDLabel,        add_matl);
@@ -1432,12 +1432,14 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
 
+#if 0
       // scalar used for debugging
       if(flags->d_with_color) {
         ParticleVariable<double> pcolor;
         ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
         setParticleDefault(pcolor, lb->pColorLabel, pset, new_dw, 0.0);
       }
+#endif
 
     }
   }
@@ -2919,7 +2921,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
@@ -3056,8 +3057,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
 
         Vector vel(0.0,0.0,0.0);
         Vector acc(0.0,0.0,0.0);

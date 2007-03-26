@@ -26,46 +26,74 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/CCA/PIDL/PIDL.h>
 #include <Framework/UnitTests/AbstractFrameworkTest.h>
+#include <Framework/SCIRunFramework.h>
 
 // Registers the fixture into the 'registry'
 CPPUNIT_TEST_SUITE_REGISTRATION( AbstractFrameworkTest );
 
 AbstractFrameworkTest::AbstractFrameworkTest()
 {
-  //std::cout << "AbstractFrameworkTest::AbstractFrameworkTest()" << std::endl;
 }
 
 AbstractFrameworkTest::~AbstractFrameworkTest()
 {
-  //std::cout << "AbstractFrameworkTest::~AbstractFrameworkTest()" << std::endl;
 }
 
 void AbstractFrameworkTest::setUp()
 {
-  // tested in PIDLTest
-  SCIRun::PIDL::initialize();
-    //SCIRun::PIDL::isfrwk = true;
-//   //all threads in the framework share the same
-//   //invocation id
-   //SCIRun::PRMI::setInvID(SCIRun::ProxyID(1,0));
-//   fwk = new SCIRun::SCIRunFramework();
-//   CPPUNIT_ASSERT(fwk != 0);
+  SCIRun::SCIRunFramework *fwk = new SCIRun::SCIRunFramework();
+  CPPUNIT_ASSERT_MESSAGE("framework pointer is not null", fwk != 0);
+  abstractFramework = sci::cca::AbstractFramework::pointer(fwk);
+  CPPUNIT_ASSERT_MESSAGE("verify smart pointer", abstractFramework.getPointer() == fwk);
 }
 
 void AbstractFrameworkTest::tearDown()
 {
-  SCIRun::PIDL::finalize();
-//   delete fwk;
+  // Let smart pointer do the cleanup.
 }
 
 void AbstractFrameworkTest::testInstantiate()
 {
-  CPPUNIT_FAIL( "not implemented" );
+  // testing abstract framework instantiated in setUp
+  CPPUNIT_ASSERT_MESSAGE("AbstractFramework smart pointer is not null", ! abstractFramework.isNull());
+  CPPUNIT_ASSERT(abstractFramework.isUnique());
+}
+
+void AbstractFrameworkTest::testCreateTypeMap()
+{
+  sci::cca::TypeMap::pointer typeMap = abstractFramework->createTypeMap();
+  CPPUNIT_ASSERT_MESSAGE("TypeMap smart pointer is not null", ! typeMap.isNull());
+  CPPUNIT_ASSERT(typeMap.isUnique());
+  //sci::cca::TypeMap::pointer typeMap2 = typeMap;
+  //CPPUNIT_ASSERT(typeMap.isUnique());
+  //CPPUNIT_ASSERT(typeMap2.isUnique());
 }
 
 void AbstractFrameworkTest::testGetServices()
 {
-  CPPUNIT_FAIL( "not implemented" );
+  sci::cca::TypeMap::pointer typeMap = abstractFramework->createTypeMap();
+  sci::cca::Services::pointer services = abstractFramework->getServices("testAbstractFramework", "AbstractFramework", typeMap);
+  CPPUNIT_ASSERT_MESSAGE("Services smart pointer is not null", ! services.isNull());
+
+  // should Services object be unique??? - there's an addReference call in CCAComponentModel::createServices...
+  //CPPUNIT_ASSERT(services.isUnique());
+}
+
+void AbstractFrameworkTest::testReleaseServices()
+{
+  sci::cca::TypeMap::pointer typeMap = abstractFramework->createTypeMap();
+  sci::cca::Services::pointer services = abstractFramework->getServices("testAbstractFramework", "AbstractFramework", typeMap);
+  CPPUNIT_ASSERT_MESSAGE("Services smart pointer is not null", ! services.isNull());
+  abstractFramework->releaseServices(services);
+}
+
+// Really simple test, since few threads are running (DataTransmitter threads and main)
+// and no components have been created...
+// AbstractFramework doesn't have any kind of state monitoring...
+void AbstractFrameworkTest::testShutdownFramework()
+{
+  std::cout << "\nAbstractFrameworkTest::testShutdownFramework()" << std::endl;
+  abstractFramework->shutdownFramework();
+  std::cout << "\nAbstractFrameworkTest::testShutdownFramework() done" << std::endl;
 }

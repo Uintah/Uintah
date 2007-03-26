@@ -7,6 +7,7 @@
 #endif
 
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> 
+#include <Packages/Uintah/CCA/Components/MPM/ImpMPMFlags.h> 
 // put here to avoid template problems
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -15,6 +16,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
@@ -64,9 +66,9 @@
 #include <math.h>
 
 #ifdef _WIN32
-#include <process.h>
-#include <float.h>
-#define isnan _isnan
+#  include <process.h>
+#  include <float.h>
+#  define isnan _isnan
 #endif
 
 using namespace Uintah;
@@ -80,24 +82,16 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   MPMCommon(myworld), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
-  flags = scinew MPMFlags();
+  flags = scinew ImpMPMFlags();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
   d_numIterations=0;
-  d_conv_crit_disp   = 1.e-10;
-  d_conv_crit_energy = 4.e-10;
-  d_forceIncrementFactor = 1.0;
-  d_integrator = Implicit;
-  d_dynamic = true;
+
   heatConductionModel = 0;
   thermalContactModel = 0;
   d_perproc_patches = 0;
   d_switchCriteria = 0;
-  d_doMechanics = true;
-  d_projectHeatSource = false;
-
-  d_temp_solve = false;
 
   one_matl = scinew MaterialSubset();
   one_matl->add(0);
@@ -147,7 +141,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    else
      restart_mat_ps = prob_spec;
 
-   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
+   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 
    string integrator_type;
    if (mpm_soln_ps) {
@@ -157,25 +151,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
-
-     mpm_soln_ps->get("ProjectHeatSource", d_projectHeatSource);
-     mpm_soln_ps->get("DoMechanics", d_doMechanics);
-     mpm_soln_ps->get("ForceBC_force_increment_factor",
-                                    flags->d_forceIncrementFactor);
-     mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
-     mpm_soln_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
-     mpm_soln_ps->get("convergence_criteria_energy",d_conv_crit_energy);
-     mpm_soln_ps->get("dynamic",d_dynamic);
-     mpm_soln_ps->getWithDefault("iters_before_timestep_restart",
-                               d_max_num_iterations, 25);
-     mpm_soln_ps->getWithDefault("num_iters_to_decrease_delT",
-                               d_num_iters_to_decrease_delT, 12);
-     mpm_soln_ps->getWithDefault("num_iters_to_increase_delT",
-                               d_num_iters_to_increase_delT, 4);
-     mpm_soln_ps->getWithDefault("delT_decrease_factor",
-                               d_delT_decrease_factor, .6);
-     mpm_soln_ps->getWithDefault("delT_increase_factor",
-                               d_delT_increase_factor, 2);
 
      std::vector<std::string> bndy_face_txt_list;
      mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
@@ -199,11 +174,12 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    //Search for the MaterialProperties block and then get the MPM section
 
-   ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
+   ProblemSpecP mat_ps =  restart_mat_ps->findBlock("MaterialProperties");
 
    ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
 
    ProblemSpecP child = mpm_mat_ps->findBlock("contact");
+
    d_con_type = "null";
    child->get("type",d_con_type);
    d_rigid_body = false;
@@ -218,7 +194,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
                                                   Vector(0,0,0));
    }
 
-   MPMPhysicalBCFactory::create(prob_spec);
+   MPMPhysicalBCFactory::create(restart_mat_ps);
    if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
      if(flags->d_useLoadCurves){
        throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
@@ -226,17 +202,13 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    }
 
    materialProblemSetup(restart_mat_ps, d_sharedState,flags);
-
-   mpm_soln_ps->get("solver",d_solver_type);
    
-   if (d_solver_type == "petsc") {
+   if (flags->d_solver_type == "petsc") {
      d_solver = scinew MPMPetscSolver();
    } else {
      d_solver = scinew SimpleSolver();
    }
 
-   d_temp_solve = false;
-   mpm_soln_ps->get("temperature_solve",d_temp_solve);
 
    d_solver->initialize();
 
@@ -257,22 +229,22 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
-   heatConductionModel->problemSetup(d_solver_type);
+   heatConductionModel->problemSetup(flags->d_solver_type);
 
    thermalContactModel =
-     ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
+     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
    d_switchCriteria = dynamic_cast<SwitchingCriteria*>
      (getPort("switch_criteria"));
    
    if (d_switchCriteria) {
-     d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
+     d_switchCriteria->problemSetup(restart_mat_ps,materials_ps,d_sharedState);
    }
     
    
    // Pull out from Time section
    d_initialDt = 10000.0;
-   ProblemSpecP time_ps = prob_spec->findBlock("Time");
+   ProblemSpecP time_ps = restart_mat_ps->findBlock("Time");
    time_ps->get("delt_init",d_initialDt);
 }
 
@@ -283,8 +255,6 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
   ProblemSpecP flags_ps = root->appendChild("MPM");
   flags->outputProblemSpec(flags_ps);
-  flags_ps->appendElement("solver",d_solver_type);
-  flags_ps->appendElement("temperature_solve",d_temp_solve);
 
   ProblemSpecP mat_ps = 0;
   mat_ps = root->findBlock("MaterialProperties");
@@ -302,7 +272,7 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   contactModel->outputProblemSpec(mpm_ps);
 #endif
 
-  ProblemSpecP contact_ps = mat_ps->appendChild("contact");
+  ProblemSpecP contact_ps = mpm_ps->appendChild("contact");
   contact_ps->appendElement("type",d_con_type);
   contact_ps->appendElement("direction",d_contact_dirs);
   contact_ps->appendElement("stop_time",d_stop_time);
@@ -310,8 +280,7 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
 }
 
 
-void ImpMPM::scheduleInitialize(const LevelP& level,
-                                   SchedulerP& sched)
+void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
 
   sched->setPositionVar(lb->pXLabel);
@@ -374,17 +343,18 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
 
 
 void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset*,
-                                                DataWarehouse* ,
-                                                DataWarehouse* new_dw)
+                                             const PatchSubset* patches,
+                                             const MaterialSubset*,
+                                             DataWarehouse* ,
+                                             DataWarehouse* new_dw)
 {
   // Find the number of pressure BCs in the problem
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux") {
+    if (bcs_type == "HeatFlux" || "ArchesHeatFlux" ) {
       nofHeatFluxBCs++;
+      cout << "nofHeatFluxBCs = " << nofHeatFluxBCs << endl;
 
       // Loop through the patches and count
       for(int p=0;p<patches->size();p++){
@@ -406,7 +376,7 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
               ++numPts;
           }
         } // matl loop
-	//        cout << "numPts = " << numPts << endl;
+        cout << "numPts found = " << numPts << endl;
         new_dw->put(sumlong_vartype(numPts), 
                     lb->materialPointsPerLoadCurveLabel, 0, nofHeatFluxBCs-1);
       }  // patch loop
@@ -416,10 +386,10 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
 
 // Calculate the number of material points per load curve
 void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse* ,
-                                     DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse* ,
+                                  DataWarehouse* new_dw)
 {
   // Get the current time
   double time = 0.0;
@@ -428,20 +398,43 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux") {
+    if (bcs_type == "HeatFlux" || "ArchesHeatFlux" ) {
 
       // Get the material points per load curve
       sumlong_vartype numPart = 0;
       new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
                   0, nofHeatFluxBCs++);
 
+      double fluxPerPart = 0.;
       // Save the material points per load curve in the HeatFluxBC object
-      HeatFluxBC* pbc =
-        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      pbc->numMaterialPoints(numPart);
+      HeatFluxBC* phf;
+      if (bcs_type == "HeatFlux") {
+        phf 
+          = dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        cout << "numPart = " << numPart << endl;
+        phf->numMaterialPoints(numPart);
+      // Calculate the force per particle at t = 0.0
+        fluxPerPart = phf->fluxPerParticle(time);
+        cout << "fluxPerPart = " << fluxPerPart << endl;
+      }
+      
+      ArchesHeatFluxBC* pahf;
+      if (bcs_type == "ArchesHeatFlux") {
+        pahf = 
+          dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        cout << "numPart = " << numPart << endl;
+        pahf->numMaterialPoints(numPart);
+      // Calculate the force per particle at t = 0.0
+        fluxPerPart = pahf->fluxPerParticle(time);
+        cout << "fluxPerPart = " << fluxPerPart << endl;
+      }
 
+
+#if 0
       // Calculate the force per particle at t = 0.0
       double fluxPerPart = pbc->fluxPerParticle(time);
+      cout << "fluxPerPart = " << fluxPerPart << endl;
+#endif
 
       // Loop through the patches and calculate the force vector
       // at each particle
@@ -465,7 +458,13 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if (pLoadCurveID[idx] == nofHeatFluxBCs) {
-              pExternalHeatFlux[idx] = pbc->getFlux(px[idx], fluxPerPart);
+              if (bcs_type == "HeatFlux")
+                pExternalHeatFlux[idx] = phf->getFlux(px[idx], fluxPerPart);
+              if (bcs_type == "ArchesHeatFlux") {
+                pExternalHeatFlux[idx] = pahf->getFlux(px[idx], fluxPerPart);
+                cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx] 
+                     << endl;
+              }
             }
           }
         } // matl loop
@@ -529,7 +528,7 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
 
-void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
+void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev,SchedulerP& sched)
 {
   if (cout_doing.active())
     cout_doing << "ImpMPM::scheduleComputeStableTimestep " << endl;
@@ -557,7 +556,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
-  if (d_projectHeatSource) {
+  if (flags->d_projectHeatSource) {
     scheduleComputeCCVolume(           sched, d_perproc_patches,one_matl,matls);
     scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
   }
@@ -1173,7 +1172,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     // This task only zeros out the stiffness matrix it doesn't free any memory.
     scheduleDestroyMatrix(           d_subsched,level->eachPatch(),matls,true);
     
-    if (d_doMechanics) {
+    if (flags->d_doMechanics) {
       scheduleComputeStressTensor(   d_subsched,level->eachPatch(),matls,true);
       scheduleFormStiffnessMatrix(   d_subsched,level->eachPatch(),matls);
       scheduleComputeInternalForce(  d_subsched,level->eachPatch(),matls);
@@ -1262,18 +1261,15 @@ void ImpMPM::iterate(const ProcessorGroup*,
       cerr << "dispIncQNorm/dispIncQNorm0 = "
            << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
     }
-    if (dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)
+    if (dispIncNorm/(dispIncNormMax + 1e-100) <= flags->d_conv_crit_disp)
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= flags->d_conv_crit_energy)
       dispIncQ = true;
     // Check to see if the residual is likely a nan, if so, we'll restart.
     bool restart_nan=false;
     bool restart_neg_residual=false;
     bool restart_num_iters=false;
 
-#ifdef __APPLE__
-#  define isnan  __isnand
-#endif
     if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
       restart_nan=true;
@@ -1283,7 +1279,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       restart_neg_residual=true;
       cerr << "Restarting due to a negative residual" << endl;
     }
-    if (count > d_max_num_iterations){
+    if (count > flags->d_max_num_iterations){
       restart_num_iters=true;
       cerr << "Restarting due to exceeding max number of iterations" << endl;
     }
@@ -1314,7 +1310,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       constNCVariable<Vector> velocity, dispNew, internalForce;
       d_subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
       d_subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
-      if (d_doMechanics) {
+      if (flags->d_doMechanics) {
         d_subsched->get_dw(2)->get(internalForce,
                                     lb->gInternalForceLabel,matl,patch,gnone,0);
       }
@@ -1326,7 +1322,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
                             lb->gInternalForceLabel,              matl,patch);
       velocity_new.copyData(velocity);
       dispNew_new.copyData(dispNew);
-      if (d_doMechanics) {
+      if (flags->d_doMechanics) {
         internalForce_new.copyData(internalForce);
       }
     }
@@ -1352,6 +1348,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   std::vector<NormalForceBC*> nfbcP;
   std::vector<double> heatFluxMagPerPart;
   std::vector<HeatFluxBC*> hfbcP;
+  std::vector<ArchesHeatFluxBC*> ahfbcP;
   if (flags->d_useLoadCurves) {
     // Currently, only one load curve at a time is supported, but
     // I've left the infrastructure in place to go to multiple
@@ -1359,6 +1356,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
              ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
 
       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+      cout << "bcs_type = " << bcs_type << endl;
       if (bcs_type == "Pressure") {
         cerr << "Pressure BCs not supported in ImpMPM" << endl;
       }
@@ -1385,6 +1383,22 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         // Calculate the force per particle at current time
 
         heatFluxMagPerPart.push_back(hfbc->fluxPerParticle(time));
+      }
+      if (bcs_type == "ArchesHeatFlux"){
+        ArchesHeatFluxBC* ahfbc =
+         dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+#if 1
+        cout << *ahfbc << endl;
+        cout << "ahfbc type = " << ahfbc->getType() << endl;
+        cout << "surface area = " << ahfbc->getSurfaceArea() << endl;
+        cout << "heat flux = " << ahfbc->heatflux(time) << endl;
+        cout << "flux per particle = " << ahfbc->fluxPerParticle(time) << endl;
+#endif
+        ahfbcP.push_back(ahfbc);
+
+        // Calculate the force per particle at current time
+
+        heatFluxMagPerPart.push_back(ahfbc->fluxPerParticle(time));
       }
     }
   }
@@ -1453,15 +1467,17 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         }
         if (!heatFluxMagPerPart.empty()) {
           double mag = heatFluxMagPerPart[0];
-	  //          cout << "heat flux mag = " << mag << endl;
+	  cout << "heat flux mag = " << mag << endl;
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
+            //input the theta calculation here.
             particleIndex idx = *iter;
             int loadCurveID = pLoadCurveID[idx]-1;
             if (loadCurveID < 0) {
               pExternalHeatFlux_new[idx] = 0.;
             } else {
-              pExternalHeatFlux_new[idx] = mag;
+              //              pExternalHeatFlux_new[idx] = mag;
+              pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
             }
           }
         }
@@ -1750,7 +1766,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gvolumeglobal[ni[k]]     += pvolume[idx]        * S[k];
             gextforce[m][ni[k]]      += pexternalforce[idx] * S[k];
             gSpecificHeat[ni[k]]     += Cp                  * S[k];
-            if (d_temp_solve == false){
+            if (flags->d_temp_solve == false){
               gTemperature[ni[k]]   +=  pTemperature[idx]  * pmass[idx]* S[k];
             }
             gvel_old[m][ni[k]]       += pmom                * S[k];
@@ -1786,7 +1802,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
 
     // Single material temperature field
-    if (d_temp_solve == false) {
+    if (flags->d_temp_solve == false) {
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter;
         gTemperature[c] /= gmassglobal[c];
@@ -1794,7 +1810,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     }
 
 
-    if (d_temp_solve == true) {
+    if (flags->d_temp_solve == true) {
     // This actually solves for the grid temperatures assuming a linear
     // form of the temperature field.  Uses the particle temperatures
     // as known points within the cell.  For number of particles less
@@ -2030,17 +2046,19 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
           int numChildren = 
             patch->getBCDataArray(face)->getNumberChildren(matl);
           for (int child = 0; child < numChildren; child++) {
-            vector<IntVector> bound,nbound,sfx,sfy,sfz;
+            vector<IntVector> *nbound_ptr;
+            vector<IntVector> *nu;     // not used;
             vector<IntVector>::const_iterator boundary;
-            vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",bound,
-                                              nbound,sfx,sfy,sfz,child);
-            sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",bound,
-                                               nbound,sfx,sfy,sfz,child);
+            
+            vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",nu,
+                                              nbound_ptr,nu,nu,nu,child);
+            sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",nu,
+                                               nbound_ptr,nu,nu,nu,child);
             if (vel_bcs != 0) {
               const VelocityBoundCond* bc =
                 dynamic_cast<const VelocityBoundCond*>(vel_bcs);
               if (bc->getKind() == "Dirichlet") {
-                for (boundary=nbound.begin(); boundary != nbound.end();
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end();
                      boundary++) {
                   gvelocity_old[*boundary] = bc->getValue();
                   gacceleration[*boundary] = bc->getValue();
@@ -2064,7 +2082,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             }
             if (sym_bcs != 0) {
               if (face == Patch::xplus || face == Patch::xminus)
-                for (boundary=nbound.begin(); boundary != nbound.end(); 
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
                      boundary++) {
                   gvelocity_old[*boundary] = 
                     Vector(0.,gvelocity_old[*boundary].y(),
@@ -2074,7 +2092,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                            gacceleration[*boundary].z());
                 }
               if (face == Patch::yplus || face == Patch::yminus)
-                for (boundary=nbound.begin(); boundary != nbound.end(); 
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
                      boundary++) {
                   gvelocity_old[*boundary] = 
                     Vector(gvelocity_old[*boundary].x(),0.,
@@ -2084,7 +2102,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                            gacceleration[*boundary].z());
                 }
               if (face == Patch::zplus || face == Patch::zminus)
-                for (boundary=nbound.begin(); boundary != nbound.end(); 
+                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
                      boundary++) {
                   gvelocity_old[*boundary] = 
                     Vector(gvelocity_old[*boundary].x(),
@@ -2286,7 +2304,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
                                  DataWarehouse* /*old_dw*/,
                                  DataWarehouse* new_dw)
 {
-  if (!d_dynamic)
+  if (!flags->d_dynamic)
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2490,7 +2508,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         v[2] = extForce[n].z() + intForce[n].z();
 
         // temp2 = M*a^(k-1)(t+dt)
-        if (d_dynamic) {
+        if (flags->d_dynamic) {
           v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
                    accel[n].x())*mass[n];
           v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
@@ -2578,7 +2596,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
       dispInc.initialize(Vector(0.));
 
-      if (d_doMechanics) {
+      if (flags->d_doMechanics) {
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
           IntVector n = *iter;
           int dof[3];
@@ -2649,7 +2667,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       parent_new_dw->get(contact,      lb->gContactLabel,  dwi,patch,gnone,0);
 
       double oneifdyn = 0.;
-      if(d_dynamic){
+      if(flags->d_dynamic){
         oneifdyn = 1.;
       }
 
@@ -2825,7 +2843,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-  if (!d_dynamic)
+  if (!flags->d_dynamic)
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -3253,7 +3271,8 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux") loadCurveIndex->add(nofHeatFluxBCs++);
+    if (bcs_type == "HeatFlux" || "ArchesHeatFlux")
+      loadCurveIndex->add(nofHeatFluxBCs++);
   }
   if (nofHeatFluxBCs > 0) {
 
@@ -3322,11 +3341,11 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       double delT_new = .8*ParticleSpeed.minComponent();
 
       double old_dt=old_delT;
-      if(d_numIterations <= d_num_iters_to_increase_delT){
-        old_dt = d_delT_increase_factor*old_delT;
+      if(d_numIterations <= flags->d_num_iters_to_increase_delT){
+        old_dt = flags->d_delT_increase_factor*old_delT;
       }
-      if(d_numIterations >= d_num_iters_to_decrease_delT){
-        old_dt = d_delT_decrease_factor*old_delT;
+      if(d_numIterations >= flags->d_num_iters_to_decrease_delT){
+        old_dt = flags->d_delT_decrease_factor*old_delT;
       }
       delT_new = min(delT_new, old_dt);
 
@@ -3338,5 +3357,5 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 
 double ImpMPM::recomputeTimestep(double current_dt)
 {
-  return current_dt*d_delT_decrease_factor;
+  return current_dt*flags->d_delT_decrease_factor;
 }

@@ -18,7 +18,7 @@ int sign(int i)
 }
 BNRRegridder *BNRTask::controller_=0;
 
-BNRTask::BNRTask(PseudoPatch patch, FlagsList flags, const vector<int> &p_group, int p_rank, BNRTask *parent, unsigned int tag): status_(NEW), patch_(patch), flags_(flags), parent_(parent), sibling_(0), tag_(tag), remaining_requests_(0),p_group_(p_group), p_rank_(p_rank)
+BNRTask::BNRTask(Region patch, FlagsList flags, const vector<int> &p_group, int p_rank, BNRTask *parent, unsigned int tag): status_(NEW), patch_(patch), flags_(flags), parent_(parent), sibling_(0), tag_(tag), remaining_requests_(0),p_group_(p_group), p_rank_(p_rank)
 {
   //calculate hypercube dimensions
    unsigned int p=1;
@@ -111,7 +111,7 @@ void BNRTask::continueTask()
                   
   TASK_START:
   
-  offset_=-patch_.low;
+  offset_=-patch_.getLow();
   
   if(p_group_.size()>1)
   {
@@ -234,9 +234,9 @@ void BNRTask::continueTask()
 
   if(p_group_.size()>1)
   {
-    sum_[0].resize(patch_.high[0]-patch_.low[0]);
-    sum_[1].resize(patch_.high[1]-patch_.low[1]);
-    sum_[2].resize(patch_.high[2]-patch_.low[2]);
+    sum_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
+    sum_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
+    sum_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
     //sum_ signatures
     stage_=0;
     status_=COMMUNICATING_SIGNATURES;
@@ -334,7 +334,7 @@ void BNRTask::continueTask()
     {
       ctasks_.split=FindSplit();
       ctasks_.left=ctasks_.right=patch_;
-      ctasks_.left.high[ctasks_.split.d]=ctasks_.right.low[ctasks_.split.d]=ctasks_.split.index;
+      ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
     
       //signature is no longer needed so free memory
       count_[0].clear();
@@ -398,11 +398,11 @@ void BNRTask::continueTask()
       //recieve patch_sets from children on child tag
       if(left_size_>0)
       {
-        MPI_Irecv(&my_patches_[0],left_size_*sizeof(PseudoPatch),MPI_BYTE,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        MPI_Irecv(&my_patches_[0],left_size_*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());    
       }
       if(right_size_>0)
       {
-        MPI_Irecv(&my_patches_[0]+left_size_,right_size_*sizeof(PseudoPatch),MPI_BYTE,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        MPI_Irecv(&my_patches_[0]+left_size_,right_size_*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());    
       }    
       return;
       WAIT_FOR_PATCHES:
@@ -433,7 +433,7 @@ void BNRTask::continueTask()
     if(my_size_>0)
     {
       //send patch list to parent
-      MPI_Isend(&my_patches_[0],my_size_*sizeof(PseudoPatch),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
     }
   }
   
@@ -482,7 +482,7 @@ void BNRTask::continueTaskSerial()
                   
   TASK_START:
           
-  offset_=-patch_.low;
+  offset_=-patch_.getLow();
   
   //compute local signatures
   ComputeLocalSignature();
@@ -511,7 +511,7 @@ void BNRTask::continueTaskSerial()
     count_[2].clear();
 
     ctasks_.left=ctasks_.right=patch_;
-    ctasks_.left.high[ctasks_.split.d]=ctasks_.right.low[ctasks_.split.d]=ctasks_.split.index;
+    ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
     ctasks_.ltag=0;
     ctasks_.rtag=0;
     controller_->task_count_+=2;
@@ -561,7 +561,7 @@ void BNRTask::continueTaskSerial()
     if(my_size_>0)
     {
       //send patch list to parent
-      MPI_Isend(&my_patches_[0],my_size_*sizeof(PseudoPatch),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
     }
   }
   
@@ -580,9 +580,9 @@ void BNRTask::continueTaskSerial()
 void BNRTask::ComputeLocalSignature()
 {
   //resize signature count_
-  count_[0].resize(patch_.high[0]-patch_.low[0]);
-  count_[1].resize(patch_.high[1]-patch_.low[1]);
-  count_[2].resize(patch_.high[2]-patch_.low[2]);
+  count_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
+  count_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
+  count_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
 
   //initialize signature
   count_[0].assign(count_[0].size(),0);
@@ -602,7 +602,7 @@ void BNRTask::BoundSignatures()
 {
     IntVector low;
     IntVector high;
-    IntVector size=patch_.high-patch_.low;
+    IntVector size=patch_.getHigh()-patch_.getLow();
     //for each dimension
     for(int d=0;d<3;d++)
     {
@@ -613,25 +613,22 @@ void BNRTask::BoundSignatures()
         if(count_[d][i]!=0)
           break;
       }
-      low[d]=i+patch_.low[d];
+      low[d]=i+patch_.getLow()[d];
       //search for last non zero
       for(i=size[d]-1;i>=0;i--)
       {
         if(count_[d][i]!=0)
               break;  
       }
-      high[d]=i+1+patch_.low[d];
+      high[d]=i+1+patch_.getLow()[d];
     }
-    patch_.low=low;
-    patch_.high=high;
-    size=high-low;
-    patch_.volume=size[0]*size[1]*size[2];
+    patch_=Region(low,high);
 }
 
 void BNRTask::CheckTolA()
 {
-  IntVector size=patch_.high-patch_.low;
-  acceptable_= float(total_flags_)/patch_.volume>=controller_->tola_;
+  IntVector size=patch_.getHigh()-patch_.getLow();
+  acceptable_= float(total_flags_)/patch_.getVolume()>=controller_->tola_;
 }
 
 void BNRTask::CheckTolB()
@@ -640,10 +637,10 @@ void BNRTask::CheckTolB()
   int children_vol=0;
   for(unsigned int p=0;p<my_patches_.size();p++)
   {
-      children_vol+=my_patches_[p].volume;
+      children_vol+=my_patches_[p].getVolume();
   }
   //compare to patch volume of parent
-  if(float(children_vol)/patch_.volume>=controller_->tolb_)
+  if(float(children_vol)/patch_.getVolume()>=controller_->tolb_)
   {
     acceptable_=false;
   }
@@ -656,11 +653,11 @@ Split BNRTask::FindSplit()
 {
   Split split;
   split.d=-1;
-  IntVector size=patch_.high-patch_.low;
+  IntVector size=patch_.getHigh()-patch_.getLow();
   //search for zero split in each dimension
   for(int d=0;d<3;d++)
   {
-    int index=patch_.low[d]+offset_[d]+1;
+    int index=patch_.getLow()[d]+offset_[d]+1;
     for(int i=1;i<size[d]-1;i++,index++)
     {
       if(count_[d][index]==0)
@@ -673,7 +670,7 @@ Split BNRTask::FindSplit()
   }
   //no zero split found  
   //search for second derivitive split
-  IntVector mid=(patch_.low+patch_.high)/IntVector(2,2,2);
+  IntVector mid=(patch_.getLow()+patch_.getHigh())/IntVector(2,2,2);
   int max_change=-1,max_dist=INT_MAX;
     
   for(int d=0;d<3;d++)
@@ -683,7 +680,7 @@ Split BNRTask::FindSplit()
       int d2, last_d2;
       int s;
       
-      int index=patch_.low[d]+offset_[d];
+      int index=patch_.getLow()[d]+offset_[d];
       last_d2=count_[d][index+1]-count_[d][index];
       int last_s=sign(last_d2);
       index++;

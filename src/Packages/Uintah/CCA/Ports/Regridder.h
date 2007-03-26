@@ -56,25 +56,28 @@ WARNING
 			       const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
-    virtual bool needsToReGrid() = 0;
+    virtual bool needsToReGrid(const GridP&) = 0;
 
     //! Asks if we are going to do regridding
     virtual bool isAdaptive() = 0;
 
     //! Schedules task to initialize the error flags to 0
-    virtual void scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level) = 0;
+    virtual void scheduleInitializeErrorEstimate(const LevelP& level) = 0;
 
     //! Schedules task to dilate existing error flags
-    virtual void scheduleDilation(SchedulerP& sched, const LevelP& level) = 0;
+    virtual void scheduleDilation(const LevelP& level) = 0;
 
     //! Asks if we are going to do regridding
-    virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched) = 0;
+    virtual bool flaggedCellsOnFinestLevel(const GridP& grid) = 0;
 
     //! Returns the max number of levels this regridder will store
     virtual int maxLevels() = 0;
 
     //! Create a new Grid
-    virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups) = 0;
+    virtual Grid* regrid(Grid* oldGrid) = 0;
+
+    //! If the Regridder set up the load balance in the process of Regridding
+    virtual bool isLoadBalanced() { return false; }
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

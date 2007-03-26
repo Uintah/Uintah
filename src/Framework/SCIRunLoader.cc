@@ -38,6 +38,7 @@
  *
  */
 
+#include <sci_defs/framework_defs.h> // For MPIPP_H
 #include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <Framework/SCIRunLoader.h>
 #include <Framework/CCA/CCAComponentModel.h>
@@ -123,7 +124,7 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
   //TODO: assume type is always good?
   std::string lastname=componentType.substr(componentType.find('.')+1);
   std::string so_name("libCCA_Components_");
-  so_name = so_name + lastname + ".so";
+  so_name = so_name + lastname + "." + SO_OR_ARCHIVE_EXTENSION;
 
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
   if (!handle) {
@@ -160,12 +161,12 @@ int SCIRunLoader::createInstance(const std::string& componentName, const std::st
 
   //TODO: assume type is always good?
 
-  std::cerr<<"SCIRunLoader::getRefCount()="<<getRefCount()<<std::endl;
+  std::cerr << "SCIRunLoader::getReferenceCount()=" << getReferenceCount() << std::endl;
 
 
   std::string lastname=componentType.substr(componentType.find('.')+1);
   std::string so_name("lib/libCCA_Components_");
-  so_name = so_name + lastname + ".so";
+  so_name = so_name + lastname + "." + SO_OR_ARCHIVE_EXTENSION;
   std::cerr << "componentType=" << componentType << " soname=" << so_name << std::endl;
 
   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());

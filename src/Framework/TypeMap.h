@@ -43,7 +43,6 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Framework/CCA/TypeMismatchException.h>
 
-// #include <vector>
 #include <map>
 #include <string>
 

@@ -110,7 +110,7 @@ int ttGoPort::go()
     }
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
   }
   sci::cca::ComponentID::pointer cid = services->getComponentID();
 #endif
@@ -122,7 +122,7 @@ int ttGoPort::go()
   }
   catch (const sci::cca::CCAException::pointer &e) {
 #if HAVE_GUI
-    wxMessageBox(e->getNote(), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
 #else
     std::cout << e->getNote() << std::endl;
 #endif
@@ -145,7 +145,7 @@ int ttGoPort::go()
   stm << us << " us/rep" << std::endl;
 
 #if HAVE_GUI
-  wxMessageBox(wxT(stm.str().c_str()), wxT("TTClient"), wxOK|wxICON_INFORMATION, 0);
+  wxMessageBox(STLTowxString(stm.str()), wxT("TTClient"), wxOK|wxICON_INFORMATION, 0);
   guiService->updateProgress(cid, 100);
   services->releasePort("cca.GUIService");
 #else

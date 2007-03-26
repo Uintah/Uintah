@@ -220,6 +220,7 @@ private:
       bool d_pressure_correction;
       bool d_norm_pres;
       bool d_doMMS;
+      bool d_do_only_last_projection;
 }; // End class PressureSolver
 
 } // End namespace Uintah

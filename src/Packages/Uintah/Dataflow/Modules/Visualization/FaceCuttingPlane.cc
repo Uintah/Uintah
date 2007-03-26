@@ -415,7 +415,16 @@ void FaceCuttingPlane::execute(void)
   if (old_grid_id != 0) {
     ogeom_->delObj( old_grid_id );
   }
-  grid_id = ogeom_->addObj(faces,  "Face Cutting Plane");
+
+
+  string level("");
+  if( field->get_property("level", level) ){
+    grid_id = ogeom_->addObj(faces, "Face Cutting Plane L-" + level);
+  } else {
+    grid_id = ogeom_->addObj(faces,  "Face Cutting Plane");
+
+  }
+
   old_grid_id = grid_id;
 
 }  

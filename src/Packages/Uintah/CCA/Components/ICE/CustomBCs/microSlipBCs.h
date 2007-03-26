@@ -62,7 +62,7 @@ namespace Uintah {
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
                               const string& var_desc,
-                              const vector<IntVector> bound,
+                              const vector<IntVector>* bound_ptr,
                               const string& bc_kind,
                               const Vector wall_velocity,
                               Slip_vars* sv);
@@ -71,7 +71,7 @@ namespace Uintah {
                               const Patch::FaceType face,
                               CCVariable<double>& temp_CC,
                               const string& var_desc,
-                              const vector<IntVector> bound,
+                              const vector<IntVector>* bound_ptr,
                               const string& bc_kind,
                               const double wall_temperature,
                               Slip_vars* sv);                          

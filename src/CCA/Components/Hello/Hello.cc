@@ -84,9 +84,9 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
                             "sci.cca.ports.GoPort",
                             sci::cca::TypeMap::pointer(0));
 
-  services->addProvidesPort(sci::cca::ports::ComponentIcon::pointer(this),
+  services->addProvidesPort(sci::cca::ports::ComponentIconUI::pointer(this),
                             "icon",
-                            "sci.cca.ports.ComponentIcon",
+                            "sci.cca.ports.ComponentIconUI",
                             sci::cca::TypeMap::pointer(0));
 
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
@@ -116,12 +116,12 @@ int Hello::go()
   try {
     guiService = pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
     if (guiService.isNull()) {
-      wxMessageBox(wxT("GUIService is not available"), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+      wxMessageBox(wxT("GUIService is not available"), STLTowxString(getDisplayName()), wxOK|wxICON_ERROR, 0);
       return -2;
     }
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), STLTowxString(getDisplayName()), wxOK|wxICON_ERROR, 0);
   }
   sci::cca::ComponentID::pointer cid = services->getComponentID();
 #endif
@@ -138,7 +138,7 @@ int Hello::go()
   }
   catch (const sci::cca::CCAException::pointer &e) {
 #if HAVE_GUI
-    wxMessageBox(e->getNote(), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), STLTowxString(getDisplayName()), wxOK|wxICON_ERROR, 0);
 #else
     std::cerr << e->getNote() << std::endl;
 #endif
@@ -177,7 +177,7 @@ int Hello::go()
 int HelloUIPort::ui()
 {
 #if HAVE_GUI
-  wxMessageBox(com->getMessage(), wxT(com->getDisplayName()), wxOK|wxICON_INFORMATION, 0);
+  wxMessageBox(STLTowxString(com->getMessage()), STLTowxString(com->getDisplayName()), wxOK|wxICON_INFORMATION, 0);
 #endif
   return 0;
 }

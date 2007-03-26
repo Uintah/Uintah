@@ -41,7 +41,6 @@
  */
 
 #include <Core/CCA/PIDL/TypeInfo.h>
-#include <Core/CCA/PIDL/CommError.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/ProxyBase.h>

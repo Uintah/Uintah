@@ -57,7 +57,9 @@ private:
   GuiString gui_field_name_;
   GuiDouble gui_field_time_;
   GuiInt    gui_output_choice_;  // 0 == original, 1 == exact solution, 2 == difference
-
+  GuiInt    gui_includeExtraCells_x;
+  GuiInt    gui_includeExtraCells_y;  
+  GuiInt    gui_includeExtraCells_z;
 private:
 
 };
@@ -68,7 +70,11 @@ CompareMMS::CompareMMS(GuiContext* ctx) :
   Module("CompareMMS", ctx, Sink, "Operators", "Uintah"),
   gui_field_name_(ctx->subVar("field_name", false)),
   gui_field_time_(ctx->subVar("field_time", false)),
-  gui_output_choice_(ctx->subVar("output_choice", false))
+  gui_output_choice_(ctx->subVar("output_choice", false)),
+  
+  gui_includeExtraCells_x(ctx->subVar("extraCells_x", false)),
+  gui_includeExtraCells_y(ctx->subVar("extraCells_y", false)),
+  gui_includeExtraCells_z(ctx->subVar("extraCells_z", false))
 {
 }
 
@@ -106,9 +112,13 @@ CompareMMS::execute()
   bool found_properties;
   string field_name;
   double field_time;
+  IntVector includeExtraCells;
   Point spatial_min, spatial_max;
   IntVector field_offset;
   vector<unsigned int> nCells;
+  includeExtraCells.x(gui_includeExtraCells_x.get());
+  includeExtraCells.y(gui_includeExtraCells_y.get());
+  includeExtraCells.z(gui_includeExtraCells_z.get()); 
   
   found_properties = fh->get_property( "name",        field_name );
   found_properties = fh->get_property( "time",        field_time );
@@ -119,7 +129,9 @@ CompareMMS::execute()
   
   cout <<"--------------------------CompareMMS" << endl;
   cout << "Variable name: " << field_name << endl;
-  cout << "offset:        " << field_offset << endl;  
+  cout << "time           " << field_time << endl;
+  cout << "offset:        " << field_offset << endl;
+  cout << "includeExtraCells    " << includeExtraCells << endl;  
   cout << "field spatial range: " << spatial_min << " to " << spatial_max << endl;
   cout << "Cell index range: [0,0,0] to ["<<nCells[0] << ","<<nCells[1]<<","<<nCells[2] << "]" << endl;
   // bulletproofing  
@@ -168,18 +180,19 @@ CompareMMS::execute()
                                     field_type,
                                     field_name, field_time,
                                     gui_output_choice_.get(),
+                                    includeExtraCells,
                                     gui_field_time_.get());
       
-      
-    IntVector offset(0,0,0);        
-    string property_name = "offset";
-    fh->get_property( property_name, offset);
-    ofh->set_property(property_name.c_str(), IntVector(offset) , true);
+
+
+
+    ofh->copy_properties( fh.get_rep() );
     string prefix = "Exact_";
     if ( gui_output_choice_.get() == 2){
       prefix = "Diff_";
     }
-    ofh->set_property("varname", string(prefix+field_name.c_str()), true);
+    ofh->set_property("varname", string(prefix+field_name.c_str()), false);
+
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference(ofh);

@@ -37,27 +37,64 @@
 
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
-# include <wx/wx.h>
+#include <wx/wx.h>
 #endif
 
 // some useful headers
-#include <wx/chkconf.h>
 #include <wx/dialog.h>
 #include <wx/msgdlg.h>
 #include <wx/filedlg.h>
 #include <wx/dirdlg.h>
 #include <wx/textdlg.h>
+#include <wx/numdlg.h>
 #include <wx/utils.h>
+#include <wx/string.h>
+#include <wx/strconv.h>
 
-#if 0
-//#if ! defined(wxUSE_THREADS) || ! defined(wxUSE_STD_IOSTREAM) || ! defined(wxUSE_STD_STRING) || ! defined(wxUSE_LIBPNG) || ! defined(wxUSE_LIBJPEG) || ! defined(wxUSE_MENUS) || ! defined(wxUSE_STATUSBAR) || ! defined(wxUSE_STREAMS)
-#endif
+#include <string>
 
-// WX module checks
-#if ! defined(wxUSE_THREADS) || ! defined(wxUSE_STD_IOSTREAM) || ! defined(wxUSE_STD_STRING) || ! defined(wxUSE_MENUS) || ! defined(wxUSE_STATUSBAR) || ! defined(wxUSE_STREAMS)
-#  error("wxWidgets not configured correctly.  Please see build documentation for details.")
-#endif // WX module checks
+wxString STLTowxString(const std::string& s);
+std::string wxToSTLString(const wxString& wxs);
 
-#endif
+// Wrapping STL strings with Unicode support is problematic
+// at this time because the SIDL compiler does not have std::wstring
+// support.
+// TODO: Revisit this issue during Babel compiler changeover.
+
+#if wxUSE_STD_STRING && ! wxUSE_UNICODE
+inline wxString STLTowxString(const std::string& s)
+{
+  return wxString(s);
+}
+
+inline std::string wxToSTLString(const wxString& wxs)
+{
+  return (std::string) wxs;
+}
+#else
+# if wxUSE_UNICODE
+inline wxString STLTowxString(const std::string& s)
+{
+  return wxString(s.c_str(), *wxConvCurrent);
+}
+
+inline std::string wxToSTLString(const wxString& wxs)
+{
+  return std::string((const char*) wxs.mb_str(*wxConvCurrent));
+}
+# else // ANSI
+inline wxString STLTowxString(const std::string& s)
+{
+  return wxString(s.c_str());
+}
+
+inline std::string wxToSTLString(const wxString& wxs)
+{
+  return std::string(wxs.c_str());
+}
+# endif
+#endif // wxUSE_STD_STRING
+
+#endif // HAVE_WX
 
 #endif

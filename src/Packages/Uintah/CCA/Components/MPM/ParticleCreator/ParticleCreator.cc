@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -76,15 +77,21 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
-    vector<double>* volumes = 0;
-    vector<double>* temperatures = 0;
-    vector<Vector>* pforces = 0;
-    vector<Vector>* pfiberdirs = 0;
-    if (sgp) volumes = sgp->getVolume();
-    if (sgp) temperatures = sgp->getTemperature();
-    if (sgp) pforces = sgp->getForces();
-    if (sgp) pfiberdirs = sgp->getFiberDirs();
-
+    vector<double>* volumes       = 0;
+    vector<double>* temperatures  = 0;
+    vector<double>* colors        = 0;
+    vector<Vector>* pforces       = 0;
+    vector<Vector>* pfiberdirs    = 0;
+    if (sgp){
+      volumes      = sgp->getVolume();
+      temperatures = sgp->getTemperature();
+      pforces      = sgp->getForces();
+      pfiberdirs   = sgp->getFiberDirs();
+      if(d_with_color){
+        colors      = sgp->getColors();
+      }
+    }
+    
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
     geomvols::key_type volkey(patch,*obj);
@@ -111,6 +118,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     geomvecs::key_type pfiberkey(patch,*obj);
     if (pfiberdirs) {
       if (!pfiberdirs->empty()) fiberiter = d_object_fibers[pfiberkey].begin();
+    }
+    
+    // For getting particles colors (if they exist)
+    vector<double>::const_iterator coloriter;
+    geomvols::key_type colorkey(patch,*obj);
+    if (colors) {
+      if (!colors->empty()) coloriter = d_object_colors[colorkey].begin();
     }
 
     vector<Point>::const_iterator itr;
@@ -152,6 +166,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (!pfiberdirs->empty()) {
           pfiberdir[pidx] = *fiberiter;
           ++fiberiter;
+        }
+      }
+      
+      if (colors) {
+        if (!colors->empty()) {
+          pcolor[pidx] = *coloriter;
+          ++coloriter;
         }
       }
 
@@ -196,6 +217,13 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
         return hfbc->loadCurveID(); 
       }
     }
+    else if (bcs_type == "ArchesHeatFlux") {      
+      ArchesHeatFluxBC* hfbc = 
+        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (hfbc->flagMaterialPoint(pp, dxpp)) {
+        return hfbc->loadCurveID(); 
+      }
+    }
   }
   return 0;
 }
@@ -213,6 +241,11 @@ void ParticleCreator::printPhysicalBCs()
     if (bcs_type == "HeatFlux") {
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      cerr << *hfbc << endl;
+    }
+    if (bcs_type == "ArchesHeatFlux") {
+      ArchesHeatFluxBC* hfbc = 
+        dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *hfbc << endl;
     }
   }
@@ -266,11 +299,14 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(perosion,       d_lb->pErosionLabel,       subset); 
   // for thermal stress
   new_dw->allocateAndPut(ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
-  if (d_useLoadCurves) {
-    new_dw->allocateAndPut(pLoadCurveID,   d_lb->pLoadCurveIDLabel,   subset); 
-  }
   new_dw->allocateAndPut(pdisp,          d_lb->pDispLabel,          subset);
-
+  
+  if (d_useLoadCurves) {
+    new_dw->allocateAndPut(pLoadCurveID, d_lb->pLoadCurveIDLabel,   subset); 
+  }
+  if(d_with_color){
+     new_dw->allocateAndPut(pcolor,      d_lb->pColorLabel,         subset);
+  }
   return subset;
 }
 
@@ -278,24 +314,29 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
                                                    const MPMMaterial* ,
                                                    const PatchSet* ) const
 {
+  Ghost::GhostType  gn = Ghost::None;
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,d_lb->pDispLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pXLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pMassLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pParticleIDLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pTemperatureLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pVelocityLabel, Ghost::None);
-  task->requires(Task::NewDW,d_lb->pExtForceLabel_preReloc, Ghost::None);
-  //task->requires(Task::OldDW,d_lb->pExternalForceLabel, Ghost::None);
-  task->requires(Task::NewDW,d_lb->pVolumeDeformedLabel, Ghost::None);
-  //task->requires(Task::OldDW,d_lb->pVolumeLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pErosionLabel, Ghost::None);
-  task->requires(Task::OldDW,d_lb->pSizeLabel, Ghost::None);
+  task->requires(Task::OldDW,d_lb->pDispLabel,        gn);
+  task->requires(Task::OldDW,d_lb->pXLabel,           gn);
+  task->requires(Task::OldDW,d_lb->pMassLabel,        gn);
+  task->requires(Task::OldDW,d_lb->pParticleIDLabel,  gn);
+  task->requires(Task::OldDW,d_lb->pTemperatureLabel, gn);
+  task->requires(Task::OldDW,d_lb->pVelocityLabel,    gn);
+  task->requires(Task::NewDW,d_lb->pExtForceLabel_preReloc, gn);
+  //task->requires(Task::OldDW,d_lb->pExternalForceLabel,   gn);
+  task->requires(Task::NewDW,d_lb->pVolumeDeformedLabel,    gn);
+  //task->requires(Task::OldDW,d_lb->pVolumeLabel,    gn);
+  task->requires(Task::OldDW,d_lb->pErosionLabel,     gn);
+  task->requires(Task::OldDW,d_lb->pSizeLabel,        gn);
   // for thermal stress
-  task->requires(Task::OldDW,d_lb->pTempPreviousLabel, Ghost::None); 
+  task->requires(Task::OldDW,d_lb->pTempPreviousLabel, gn); 
 
-  if (d_useLoadCurves)
-    task->requires(Task::OldDW,d_lb->pLoadCurveIDLabel, Ghost::None);
+  if (d_useLoadCurves){
+    task->requires(Task::OldDW,d_lb->pLoadCurveIDLabel, gn);
+  }
+  if (d_with_color){
+    task->requires(Task::OldDW,d_lb->pColorLabel,     gn);
+  }
 
 }
 
@@ -309,7 +350,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   ParticleSubset::iterator n,o;
 
   constParticleVariable<Vector> o_disp;
-  constParticleVariable<Point> o_position;
+  constParticleVariable<Point>  o_position;
   constParticleVariable<Vector> o_velocity;
   constParticleVariable<Vector> o_external_force;
   constParticleVariable<double> o_mass;
@@ -318,74 +359,88 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   constParticleVariable<double> o_sp_vol;
   constParticleVariable<long64> o_particleID;
   constParticleVariable<Vector> o_size;
-  constParticleVariable<int> o_loadcurve;
+  constParticleVariable<int>    o_loadcurve;
   constParticleVariable<double> o_erosion;
-  // for thermal stress
-  constParticleVariable<double> o_tempPrevious; 
+  constParticleVariable<double> o_tempPrevious; // for thermal stress
+  constParticleVariable<double> o_color;
   
-  new_dw->allocateTemporary(pdisp,addset);
-  new_dw->allocateTemporary(position, addset);
-  new_dw->allocateTemporary(pvelocity,addset); 
-  new_dw->allocateTemporary(pexternalforce,addset);
-  new_dw->allocateTemporary(pmass,addset);
-  new_dw->allocateTemporary(pvolume,addset);
-  new_dw->allocateTemporary(ptemperature,addset);
-  new_dw->allocateTemporary(pparticleID,addset);
-  new_dw->allocateTemporary(psize,addset);
-  new_dw->allocateTemporary(pLoadCurveID,addset); 
-  new_dw->allocateTemporary(perosion,addset); 
-  // for thermal stress
-  new_dw->allocateTemporary(ptempPrevious,addset); 
+  new_dw->allocateTemporary(pdisp,          addset);
+  new_dw->allocateTemporary(position,       addset);
+  new_dw->allocateTemporary(pvelocity,      addset); 
+  new_dw->allocateTemporary(pexternalforce, addset);
+  new_dw->allocateTemporary(pmass,          addset);
+  new_dw->allocateTemporary(pvolume,        addset);
+  new_dw->allocateTemporary(ptemperature,   addset);
+  new_dw->allocateTemporary(pparticleID,    addset);
+  new_dw->allocateTemporary(psize,          addset);
+  new_dw->allocateTemporary(pLoadCurveID,   addset); 
+  new_dw->allocateTemporary(perosion,       addset); 
+  new_dw->allocateTemporary(ptempPrevious,  addset);
+  new_dw->allocateTemporary(pcolor,         addset); 
 
-  old_dw->get(o_disp,d_lb->pDispLabel,delset);
-  old_dw->get(o_position,d_lb->pXLabel,delset);
-  old_dw->get(o_mass,d_lb->pMassLabel,delset);
-  old_dw->get(o_particleID,d_lb->pParticleIDLabel,delset);
-  old_dw->get(o_temperature,d_lb->pTemperatureLabel,delset);
-  old_dw->get(o_velocity,d_lb->pVelocityLabel,delset);
-  new_dw->get(o_external_force,d_lb->pExtForceLabel_preReloc,delset);
-  //old_dw->get(o_external_force,d_lb->pExternalForceLabel,delset);
-  new_dw->get(o_volume,d_lb->pVolumeDeformedLabel,delset);
-  //old_dw->get(o_volume,d_lb->pVolumeLabel,delset);
-  new_dw->get(o_erosion,d_lb->pErosionLabel_preReloc,delset);
-  old_dw->get(o_size,d_lb->pSizeLabel,delset);
-  if (d_useLoadCurves) 
-    old_dw->get(o_loadcurve,d_lb->pLoadCurveIDLabel,delset);
-  //for thermal stress
-  old_dw->get(o_tempPrevious,d_lb->pTempPreviousLabel,delset);   
+  old_dw->get(o_disp,           d_lb->pDispLabel,             delset);
+  old_dw->get(o_position,       d_lb->pXLabel,                delset);
+  old_dw->get(o_mass,           d_lb->pMassLabel,             delset);
+  old_dw->get(o_particleID,     d_lb->pParticleIDLabel,       delset);
+  old_dw->get(o_temperature,    d_lb->pTemperatureLabel,      delset);
+  old_dw->get(o_velocity,       d_lb->pVelocityLabel,         delset);
+  new_dw->get(o_external_force, d_lb->pExtForceLabel_preReloc,delset);
+  //old_dw->get(o_external_force,d_lb->pExternalForceLabel,   delset);
+  new_dw->get(o_volume,         d_lb->pVolumeDeformedLabel,   delset);
+  //old_dw->get(o_volume,       d_lb->pVolumeLabel,           delset);
+  new_dw->get(o_erosion,        d_lb->pErosionLabel_preReloc, delset);
+  old_dw->get(o_size,           d_lb->pSizeLabel,             delset);
+  old_dw->get(o_tempPrevious,   d_lb->pTempPreviousLabel,     delset);
+  old_dw->get(o_color,          d_lb->pColorLabel,            delset);
+  
+  if (d_useLoadCurves){ 
+    old_dw->get(o_loadcurve,    d_lb->pLoadCurveIDLabel,      delset);
+  }
+  if(d_with_color){
+    old_dw->get(o_color,        d_lb->pColorLabel,            delset);
+  }
+   
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-    pdisp[*n]=o_disp[*o];
-    position[*n] = o_position[*o];
-    pvelocity[*n]=o_velocity[*o];
-    pexternalforce[*n]=o_external_force[*o];
-    pmass[*n] = o_mass[*o];
-    pvolume[*n] = o_volume[*o];
-    ptemperature[*n]=o_temperature[*o];
-    pparticleID[*n]=o_particleID[*o];
-    perosion[*n]=o_erosion[*o];
-    psize[*n]=o_size[*o];
-    if (d_useLoadCurves) 
-      pLoadCurveID[*n]=o_loadcurve[*o];
-    // for thermal stress
-    ptempPrevious[*n]=o_tempPrevious[*o];  
+    pdisp[*n]         = o_disp[*o];
+    position[*n]      = o_position[*o];
+    pvelocity[*n]     = o_velocity[*o];
+    pexternalforce[*n]= o_external_force[*o];
+    pmass[*n]         = o_mass[*o];
+    pvolume[*n]       = o_volume[*o];
+    ptemperature[*n]  = o_temperature[*o];
+    pparticleID[*n]   = o_particleID[*o];
+    perosion[*n]      = o_erosion[*o];
+    psize[*n]         = o_size[*o];
+    ptempPrevious[*n] = o_tempPrevious[*o];  // for thermal stress
+    if (d_useLoadCurves){ 
+      pLoadCurveID[*n]= o_loadcurve[*o];
+    }
+    if (d_with_color){
+      pcolor[*n]      = o_color[*o];
+    }
+
   }
   
-  (*newState)[d_lb->pDispLabel]=pdisp.clone();
-  (*newState)[d_lb->pXLabel] = position.clone();
-  (*newState)[d_lb->pVelocityLabel]=pvelocity.clone();
-  (*newState)[d_lb->pExternalForceLabel]=pexternalforce.clone();
-  (*newState)[d_lb->pMassLabel]=pmass.clone();
-  (*newState)[d_lb->pVolumeLabel]=pvolume.clone();
-  (*newState)[d_lb->pTemperatureLabel]=ptemperature.clone();
-  (*newState)[d_lb->pParticleIDLabel]=pparticleID.clone();
-  (*newState)[d_lb->pErosionLabel]=perosion.clone();
-  (*newState)[d_lb->pSizeLabel]=psize.clone();
-  if (d_useLoadCurves) 
+  (*newState)[d_lb->pDispLabel]           =pdisp.clone();
+  (*newState)[d_lb->pXLabel]              =position.clone();
+  (*newState)[d_lb->pVelocityLabel]       =pvelocity.clone();
+  (*newState)[d_lb->pExternalForceLabel]  =pexternalforce.clone();
+  (*newState)[d_lb->pMassLabel]           =pmass.clone();
+  (*newState)[d_lb->pVolumeLabel]         =pvolume.clone();
+  (*newState)[d_lb->pTemperatureLabel]    =ptemperature.clone();
+  (*newState)[d_lb->pParticleIDLabel]     =pparticleID.clone();
+  (*newState)[d_lb->pErosionLabel]        =perosion.clone();
+  (*newState)[d_lb->pSizeLabel]           =psize.clone();
+  (*newState)[d_lb->pTempPreviousLabel]   =ptempPrevious.clone(); // for thermal stress
+  
+  if (d_useLoadCurves){ 
     (*newState)[d_lb->pLoadCurveIDLabel]=pLoadCurveID.clone();
-  // for thermal stress
-  (*newState)[d_lb->pTempPreviousLabel]=ptempPrevious.clone();  
+  }
+  if(d_with_color){
+    (*newState)[d_lb->pColorLabel]      =pcolor.clone();
+  }
 }
 
 
@@ -409,6 +464,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
+    
     if(hasFiner){ // Don't create particles if a finer level exists here
       const Point CC = patch->cellPosition(c);
       const Patch* patchExists = fineLevel->getPatchFromPoint(CC);
@@ -416,19 +472,23 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
        continue;
       }
     }
+    
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
+        
           IntVector idx(ix, iy, iz);
           Point p = lower + dxpp*idx;
-          if (!b2.contains(p))
+          if (!b2.contains(p)){
             throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
-          if (piece->inside(p)) 
+          }
+          if (piece->inside(p)){ 
             d_object_points[key].push_back(p);
-        }
-      }
-    }
-  }
+          }
+        }  // z
+      }  // y
+    }  // x
+  }  // iterator
 
 }
 
@@ -448,29 +508,39 @@ ParticleCreator::initializeParticle(const Patch* patch,
               1./((double) ppc.y()),
               1./((double) ppc.z()));
   position[i] = p;
-  pvolume[i] = dxpp.x()*dxpp.y()*dxpp.z();
-  psize[i] = size;
+  pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+  psize[i]    = size;
 
-  pvelocity[i] = (*obj)->getInitialVelocity();
+  pvelocity[i]    = (*obj)->getInitialVelocity();
   ptemperature[i] = (*obj)->getInitialData("temperature");
-  pmass[i] = matl->getInitialDensity()*pvolume[i];
-  pdisp[i] = Vector(0.,0.,0.);
+  pmass[i]        = matl->getInitialDensity()*pvolume[i];
+  pdisp[i]        = Vector(0.,0.,0.);
+  
+  if(d_with_color){
+    pcolor[i] = (*obj)->getInitialData("color");
+  }
+  
   // for thermal stress
   //ptempPrevious[i] = d_ref_temp; // This is incorrect T_n ~= T_ref
                                    // T_n is the temperature at time t_n
   // Assume that the correct d_ref_temp is specified in the input file
-  ptempPrevious[i] = (d_ref_temp > 0.0) ? d_ref_temp : ptemperature[i];
+  ptempPrevious[i]  = (d_ref_temp > 0.0) ? d_ref_temp : ptemperature[i];
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pmass[i], pExtForce);
+  
   pexternalforce[i] = pExtForce;
-  pfiberdir[i] = matl->getConstitutiveModel()->getInitialFiberDir();
-  perosion[i] = 1.0;
+  pfiberdir[i]      = matl->getConstitutiveModel()->getInitialFiberDir();
+  perosion[i]       = 1.0;
 
-  ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
-         && cell_idx.z() <= 0xffff);
+  ASSERT(cell_idx.x() <= 0xffff && 
+         cell_idx.y() <= 0xffff && 
+         cell_idx.z() <= 0xffff);
+         
   long64 cellID = ((long64)cell_idx.x() << 16) | 
-    ((long64)cell_idx.y() << 32) | ((long64)cell_idx.z() << 48);
+                  ((long64)cell_idx.y() << 32) | 
+                  ((long64)cell_idx.z() << 48);
+                  
   short int& myCellNAPID = cellNAPID[cell_idx];
   pparticleID[i] = (cellID | (long64) myCellNAPID);
   ASSERT(myCellNAPID < 0x7fff);
@@ -483,8 +553,9 @@ ParticleCreator::countParticles(const Patch* patch,
 {
   particleIndex sum = 0;
   vector<GeometryObject*>::const_iterator geom;
-  for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom) 
+  for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom){ 
     sum += countAndCreateParticles(patch,*geom);
+  }
   
   return sum;
 }
@@ -495,9 +566,9 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
                                          GeometryObject* obj)
 {
   geompoints::key_type key(patch,obj);
-  geomvols::key_type volkey(patch,obj);
-  geomvecs::key_type forcekey(patch,obj);
-  geomvecs::key_type fiberkey(patch,obj);
+  geomvols::key_type   volkey(patch,obj);
+  geomvecs::key_type   forcekey(patch,obj);
+  geomvecs::key_type   fiberkey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getBox();
@@ -506,7 +577,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   
   // If the object is a SmoothGeomPiece (e.g. FileGeometryPiece or
   // SmoothCylGeomPiece) then use the particle creators in that 
-  // class to do the counting
+  // class to do the counting d
   SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
   if (sgp) {
     int numPts = 0;
@@ -516,22 +587,25 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       numPts = fgp->returnPointCount();
     } else {
       Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();    
-      double dx = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
+      double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
       numPts = sgp->createPoints();
     }
-    vector<Point>* points = sgp->getPoints();
-    vector<double>* vols = sgp->getVolume();
-    vector<double>* temps = sgp->getTemperature();
-    vector<Vector>* pforces = sgp->getForces();
+    vector<Point>* points      = sgp->getPoints();
+    vector<double>* vols       = sgp->getVolume();
+    vector<double>* temps      = sgp->getTemperature();
+    vector<double>* colors     = sgp->getColors();
+    vector<Vector>* pforces    = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
     Point p;
     IntVector cell_idx;
+    
     for (int ii = 0; ii < numPts; ++ii) {
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
         if (patch->containsPointInRealCells(p)) {
           d_object_points[key].push_back(p);
+          
           if (!vols->empty()) {
             double vol = vols->at(ii); 
             d_object_vols[volkey].push_back(vol);
@@ -548,8 +622,12 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
             Vector pfiber = pfiberdirs->at(ii); 
             d_object_fibers[fiberkey].push_back(pfiber);
           }
-        }
-      }
+          if (!colors->empty()) {
+            double color = colors->at(ii); 
+            d_object_colors[volkey].push_back(color);
+          }
+        } 
+      }  // patch contains cell
     }
     //sgp->deletePoints();
     //sgp->deleteVolume();

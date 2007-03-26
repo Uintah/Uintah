@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -24,33 +25,32 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
 
 
     for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
-        child = child->findNextBlock("force") )
-    {
+        child = child->findNextBlock("force") ) {
        mpmPhysicalBCs.push_back(scinew ForceBC(child));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("normal_force"); child != 0;
-        child = child->findNextBlock("normal_force") )
-    {
+        child = child->findNextBlock("normal_force") ) {
        mpmPhysicalBCs.push_back(scinew NormalForceBC(child));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
-        child = child->findNextBlock("pressure") )
-    {
+        child = child->findNextBlock("pressure") ) {
        mpmPhysicalBCs.push_back(scinew PressureBC(child));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
-        child = child->findNextBlock("crack") )
-    {
+        child = child->findNextBlock("crack") ) {
        mpmPhysicalBCs.push_back(scinew CrackBC(child));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != 0;
-        child = child->findNextBlock("heat_flux") )
-    {
+        child = child->findNextBlock("heat_flux") ) {
        mpmPhysicalBCs.push_back(scinew HeatFluxBC(child));
+    }
+    for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); 
+        child != 0; child = child->findNextBlock("arches_heat_flux") ) {
+       mpmPhysicalBCs.push_back(scinew ArchesHeatFluxBC(child));
     }
   }
 }

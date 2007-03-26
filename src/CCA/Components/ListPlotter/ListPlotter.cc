@@ -82,7 +82,7 @@ int ImUIPort::ui()
     lport = pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("ListPlotter"), wxOK|wxICON_ERROR, 0);
+    wxMessageBox(STLTowxString(e->getNote()), wxT("ListPlotter"), wxOK|wxICON_ERROR, 0);
     return -1;
   }
   SSIDL::array1<double> data = lport->getList();

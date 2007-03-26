@@ -59,7 +59,14 @@ private:
   MainWindow* mw;
 };
 
-// rename to 2D Viewer???
+// class ViewerUIPort : public sci::cca::UIPort {
+// public:
+//   ViewerUIPort() {}
+//   void setParent(Viewer* v) { parent = v; }
+
+// private:
+//   Viewer* parent;
+// };
 
 class Viewer : public sci::cca::Component {
 public:

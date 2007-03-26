@@ -450,6 +450,14 @@ void NodeHedgehog::execute()
     error("First field is not a LatVolMesh based field.");
     return;
   }
+
+  string level("");
+  if( vfield->get_property("level", level) ){
+    module_name= string("NodeHedgeHog L-") + level;
+  } else {
+    module_name = string("NodeHedgeHog");
+  }
+
   LVMesh *mesh;
   CVField* cfld = dynamic_cast<CVField *>(vfield.get_rep());
   LVField* lfld = 0;

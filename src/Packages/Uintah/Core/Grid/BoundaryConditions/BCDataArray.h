@@ -83,19 +83,19 @@ namespace Uintah {
      void setSFCZIterator(int mat_id,vector<IntVector>& i, int ii);
 
      /// Get the cell centered boundary iterator.
-     void getBoundaryIterator(int mat_id,vector<IntVector>& b, int i) const;
+     void getBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr, int i) const;
 
      /// Get the node centered boundary iterator.
-     void getNBoundaryIterator(int mat_id,vector<IntVector>& b, int i) const;
+     void getNBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr, int i) const;
 
      /// Get the face centered (X) boundary iterator.
-     void getSFCXIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     void getSFCXIterator(int mat_id,vector<IntVector>*& i_ptr, int ii) const;
 
      /// Get the face centered (Y) boundary iterator.
-     void getSFCYIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     void getSFCYIterator(int mat_id,vector<IntVector>*& i_ptr, int ii) const;
 
      /// Get the face centered (Z) boundary iterator.
-     void getSFCZIterator(int mat_id,vector<IntVector>& i, int ii) const;
+     void getSFCZIterator(int mat_id,vector<IntVector>*& i_ptr, int ii) const;
 
      /// Return the number of children in the vector<BCGeomBase*>.
      int getNumberChildren(int mat_id) const;

@@ -266,12 +266,12 @@ SynchronizeGeometry::process_event(MessageBase* msg)
     {
       flush_all_msgs();
     }
-    sched_->report_execution_finished(msg);
+    sched_->report_execution_finished(this, msg);
     break;
 
   case MessageTypes::SynchronizeModule:
     // We (mostly) ignore these messages.
-    sched_->report_execution_finished(msg);
+    sched_->report_execution_finished(this, msg);
     break;
 
   default:

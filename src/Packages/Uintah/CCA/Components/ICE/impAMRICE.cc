@@ -112,6 +112,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     // correct the rhs at the coarse fine interfaces not when using first order
     // compute maxRHS
     bool doRefluxing = true;
+    doRefluxing = false;
     if(d_OrderOfAdvection == 1){
       doRefluxing = false;
     }
@@ -559,9 +560,10 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                     lb->sum_imp_delPLabel,     patches,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,           // term2
                     lb->term2Label,            patches,  one_matl,     replace); 
+#if 0
   ParentNewDW->transferFrom(subNewDW,           // term2
                     lb->rhsLabel,              patches,  one_matl,     replace);
-                       
+#endif                       
   ParentNewDW->transferFrom(subNewDW,           // uvel_FC
                     lb->uvel_FCMELabel,        patches,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,           // vvel_FC
@@ -1010,9 +1012,6 @@ void ICE::schedule_matrixBC_CFI_coarsePatch(SchedulerP& sched,
                   this, &ICE::matrixBC_CFI_coarsePatch);
 
     Ghost::GhostType  gn  = Ghost::None;
-    //    task->requires(Task::NewDW, lb->matrix_CFI_weightsLabel,
-    //                0, Task::FineLevel, one_matl,Task::NormalDomain, gn, 0);
-
     task->requires(Task::NewDW, lb->matrixLabel, 0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
 
     task->modifies(lb->matrixLabel);
@@ -1069,7 +1068,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
         // A_CFI_weights_fine equals A for now. Higher order
         // ghost node interpolation can be developed at
         // a later stage.
-        constCCVariable<Stencil7>A_CFI_weights_fine;
+        constCCVariable<Stencil7>A_fine;
 
         IntVector cl, ch, fl, fh;
         getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
@@ -1077,7 +1076,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
           continue;
         }
 
-        new_dw->getRegion(A_CFI_weights_fine, lb->matrixLabel, 0,fineLevel,fl, fh);
+        new_dw->getRegion(A_fine, lb->matrixLabel, 0,fineLevel,fl, fh);
 
         //__________________________________
         // Iterate over coarsefine interface faces
@@ -1131,7 +1130,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
               IntVector fc = fineStart + *inside - offset;
               if ((fl.x() <= fc.x()) && (fl.y() <= fc.y()) && (fl.z() <= fc.z()) &&
                   (fc.x() <  fh.x()) && (fc.y() <  fh.y()) && (fc.z() <  fh.z())) {
-                sum_weights += A_CFI_weights_fine[fc][patchFace];
+                sum_weights += A_fine[fc][patchFace];
               }
             }
             

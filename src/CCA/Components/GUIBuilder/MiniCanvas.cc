@@ -41,16 +41,19 @@
 
 namespace GUIBuilder {
 
-//using namespace SCIRun;
-
 BEGIN_EVENT_TABLE(MiniCanvas, wxScrolledWindow)
   EVT_PAINT(MiniCanvas::OnPaint)
+  EVT_LEFT_DOWN(MiniCanvas::OnLeftDown)
+  EVT_LEFT_UP(MiniCanvas::OnLeftUp)
+  EVT_MOTION(MiniCanvas::OnMouseMove)
   EVT_ERASE_BACKGROUND(MiniCanvas::OnEraseBackground)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(MiniCanvas, wxScrolledWindow)
 
-  MiniCanvas::MiniCanvas(wxWindow* parent, NetworkCanvas* canvas, wxWindowID id, const wxPoint& pos, const wxSize& size) : canvas(canvas)
+MiniCanvas::MiniCanvas(wxWindow* parent, BuilderWindow* bw, NetworkCanvas* canvas,
+                       wxWindowID id, const wxPoint& pos, const wxSize& size)
+  : builderWindow(bw), canvas(canvas), insideViewport(false)
 {
   Init();
   Create(parent, id, pos, size);
@@ -71,12 +74,11 @@ bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, con
 
   SetBackgroundStyle(wxBG_STYLE_COLOUR);
   SetBackgroundColour(BuilderWindow::BACKGROUND_COLOUR);
-  //SetScrollRate(DEFAULT_SCROLLX, DEFAULT_SCROLLY);
 
-  vBoxColor = wxTheColourDatabase->Find("GOLDENROD");
+  vBoxColor = wxTheColourDatabase->Find(wxT("GOLDENROD"));
   goldenrodPen = new wxPen(vBoxColor, 1, wxSOLID);
 
-  iRectColor = wxTheColourDatabase->Find("LIGHT GREY");
+  iRectColor = wxTheColourDatabase->Find(wxT("LIGHT GREY"));
   lightGreyPen = new wxPen(iRectColor, 1, wxSOLID);
   lightGreyBrush = new wxBrush(iRectColor, wxSOLID);
 
@@ -86,26 +88,24 @@ bool MiniCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, con
 
 void MiniCanvas::OnDraw(wxDC& dc)
 {
-  wxSize cs = canvas->GetVirtualSize();
-  wxSize ms = GetSize();
-  double scaleH = double( cs.GetWidth() ) / ms.GetWidth();
-  double scaleV = double( cs.GetHeight() ) / ms.GetHeight();
+  double scaleH, scaleV;
+  getScale(scaleH, scaleV);
 
   iRects.clear();
   canvas->GetComponentRects(iRects);
-  wxRect canvasRect = canvas->GetClientRect();
+  viewportRect = canvas->GetClientRect();
 
   std::vector<Connection*> conns;
   canvas->GetConnections(conns);
 
-  scaleRect(canvasRect, scaleV, scaleH);
+  scaleRect(viewportRect, scaleH, scaleV);
   dc.SetPen(*goldenrodPen);
-  dc.DrawRectangle(canvasRect.x, canvasRect.y, canvasRect.width, canvasRect.height);
+  dc.DrawRectangle(viewportRect.x, viewportRect.y, viewportRect.width, viewportRect.height);
 
   dc.SetBrush(*lightGreyBrush);
   dc.SetPen(*wxBLACK_PEN);
   for (std::vector<wxRect>::iterator rectIter = iRects.begin(); rectIter != iRects.end(); rectIter++) {
-    scaleRect(*rectIter, scaleV, scaleH);
+    scaleRect(*rectIter, scaleH, scaleV);
     dc.DrawRectangle(rectIter->x, rectIter->y, rectIter->width, rectIter->height);
   }
 
@@ -116,10 +116,42 @@ void MiniCanvas::OnDraw(wxDC& dc)
   wxPoint *pointsArray = new wxPoint[NUM_POINTS];
   for (std::vector<Connection*>::iterator connIter = conns.begin(); connIter != conns.end(); connIter++) {
     (*connIter)->GetDrawingPoints(&pointsArray, NUM_POINTS);
-    scalePoints(&pointsArray, NUM_POINTS, scaleV, scaleH);
+    scalePoints(&pointsArray, NUM_POINTS, scaleH, scaleV);
     dc.DrawLines(NUM_POINTS, pointsArray, 0, 0);
   }
   delete [] pointsArray;
+}
+
+void MiniCanvas::OnLeftDown(wxMouseEvent& event)
+{
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  wxPoint ep = event.GetLogicalPosition(dc);
+  if (viewportRect.Inside(ep.x, ep.y)) {
+    insideViewport = true;
+  }
+}
+
+void MiniCanvas::OnLeftUp(wxMouseEvent& event)
+{
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  wxPoint ep = event.GetLogicalPosition(dc);
+  insideViewport = false;
+  scrollCanvas(ep);
+}
+
+void MiniCanvas::OnMouseMove(wxMouseEvent& event)
+{
+  wxClientDC dc(this);
+  DoPrepareDC(dc);
+  wxPoint ep = event.GetLogicalPosition(dc);
+#if FWK_DEBUG
+  builderWindow->DisplayMousePosition(wxT("MiniCanvas"), ep);
+#endif
+  if (insideViewport && event.Dragging()) {
+    scrollCanvas(ep);
+  }
 }
 
 void MiniCanvas::OnPaint(wxPaintEvent& event)
@@ -161,7 +193,29 @@ void MiniCanvas::Init()
 ///////////////////////////////////////////////////////////////////////////
 // private member functions
 
-void MiniCanvas::scaleRect(wxRect& rect, const double scaleV, const double scaleH)
+void MiniCanvas::getScale(double& scaleH, double& scaleV)
+{
+  wxSize cs = canvas->GetVirtualSize();
+  wxSize ms = GetSize();
+  scaleH = double( cs.GetWidth() ) / ms.GetWidth();
+  scaleV = double( cs.GetHeight() ) / ms.GetHeight();
+}
+
+void MiniCanvas::scrollCanvas(const wxPoint& point)
+{
+  double scaleH, scaleV;
+  getScale(scaleH, scaleV);
+  //SetTargetWindow(canvas);
+  int xu = 0, yu = 0;
+  canvas->GetScrollPixelsPerUnit(&xu, &yu);
+  canvas->Scroll((point.x * scaleH) / xu, (point.y * scaleV) / yu);
+  canvas->Update();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// utility functions
+
+void scaleRect(wxRect& rect, const double scaleH, const double scaleV)
 {
   rect.x = (int) ceil(rect.x / scaleH);
   rect.y = (int) ceil(rect.y / scaleV);
@@ -169,8 +223,7 @@ void MiniCanvas::scaleRect(wxRect& rect, const double scaleV, const double scale
   rect.height = (int) ceil(rect.height / scaleV);
 }
 
-void MiniCanvas::scalePoints(wxPoint **points, const int size,
-			     const double scaleV, const double scaleH)
+void scalePoints(wxPoint **points, const int size, const double scaleH, const double scaleV)
 {
   for (int i = 0; i < size; i++) {
     (*points)[i].x = (int) ceil((*points)[i].x / scaleH);

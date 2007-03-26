@@ -6,23 +6,18 @@ using namespace Uintah;
 
 using namespace std;
 
-void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
+void PatchFixer::BuildLattice(const vector<Region> &patches)
 {
 	//bound patches
 	bounds_=patches[0];
 	for(unsigned int p=1;p<patches.size();p++)
 	{
-		for(unsigned int d=0;d<3;d++)
-		{
-			if(patches[p].high[d]>bounds_.high[d])
-				bounds_.high[d]=patches[p].high[d];
-			if(patches[p].low[d]<bounds_.low[d])
-				bounds_.low[d]=patches[p].low[d];
-		}								
+    bounds_.high()=Max(patches[p].getHigh(),bounds_.getHigh());
+    bounds_.low()=Min(patches[p].getLow(),bounds_.getLow());
 	}
 
 	//allocate celltolattice mapping
-	csize_=bounds_.high-bounds_.low+IntVector(1,1,1);
+	csize_=bounds_.getHigh()-bounds_.getLow()+IntVector(1,1,1);
 	cellstolattice_[0].resize(csize_[0]);
 	cellstolattice_[1].resize(csize_[1]);
 	cellstolattice_[2].resize(csize_[2]);
@@ -41,8 +36,8 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 	{
 		for(int d=0;d<3;d++)
 		{
-			cellstolattice_[d][patches[p].low[d]-bounds_.low[d]]=1;
-			cellstolattice_[d][patches[p].high[d]-bounds_.low[d]]=1;
+			cellstolattice_[d][patches[p].getLow()[d]-bounds_.getLow()[d]]=1;
+			cellstolattice_[d][patches[p].getHigh()[d]-bounds_.getLow()[d]]=1;
 		}
 	}
 
@@ -55,7 +50,7 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 			if(cellstolattice_[d][i]==1)		//edge exists
 			{
 				l++;
-				latticetocells_[d].push_back(i+bounds_.low[d]);		//map lattice coordinate to cell coordinate
+				latticetocells_[d].push_back(i+bounds_.getLow()[d]);		//map lattice coordinate to cell coordinate
 			}
 			cellstolattice_[d][i]=l;
 		}	
@@ -74,11 +69,11 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 }
 
 //Fill the lattice in the volume of patch with the value id
-void PatchFixer::Fill(const PseudoPatch patch,const int id)
+void PatchFixer::Fill(const Region patch,const int id)
 {
 	int Y=lsize_[0],Z=Y*lsize_[1];
-	int b[3]={patch.low[0],patch.low[1],patch.low[2]};
-	int e[3]={patch.high[0],patch.high[1],patch.high[2]};
+	int b[3]={patch.getLow()[0],patch.getLow()[1],patch.getLow()[2]};
+	int e[3]={patch.getHigh()[0],patch.getHigh()[1],patch.getHigh()[2]};
 
 	CellToLattice(b);
 	CellToLattice(e);
@@ -98,7 +93,7 @@ void PatchFixer::Fill(const PseudoPatch patch,const int id)
 	}
 }
 
-void PatchFixer::FixUp(vector<PseudoPatch> &patches)
+void PatchFixer::FixUp(vector<Region> &patches)
 {
 	//search lattice
   int size=patches.size()/d_myworld->size();
@@ -139,13 +134,13 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 		patches.resize(mysize);
 	
     //make fixup search area
-		stack <PseudoPatch> search;
+		stack <Region> search;
 		for(int p=0;p<mysize;p++)
 		{
 			search.push(patches[p]);
 		}	
 
-		PseudoPatch current;
+		Region current;
     //search area and fix each face
 		while(!search.empty())
 		{
@@ -173,21 +168,21 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 
 	  int total_size=patch_sizes[0];
 	  displacements[0]=0;
-	  patch_sizes[0]*=sizeof(PseudoPatch);
+	  patch_sizes[0]*=sizeof(Region);
 	  for(int p=1;p<d_myworld->size();p++)
 	  {
-		  displacements[p]=total_size*sizeof(PseudoPatch);
+		  displacements[p]=total_size*sizeof(Region);
 		  total_size+=patch_sizes[p];
-	  	patch_sizes[p]*=sizeof(PseudoPatch);
+	  	patch_sizes[p]*=sizeof(Region);
 	  }
-	  vector<PseudoPatch> mypatches(patches);
+	  vector<Region> mypatches(patches);
 	  patches.resize(total_size);
 	  //allgatherv patchsets
-	  MPI_Allgatherv(&mypatches[0],my_patch_size*sizeof(PseudoPatch),MPI_BYTE,&patches[0],&patch_sizes[0],&displacements[0],MPI_BYTE,d_myworld->getComm());
+	  MPI_Allgatherv(&mypatches[0],my_patch_size*sizeof(Region),MPI_BYTE,&patches[0],&patch_sizes[0],&displacements[0],MPI_BYTE,d_myworld->getComm());
   }
 }
 
-void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side)
+void PatchFixer::FixFace(vector<Region> &patches,Region patch, int dim, int side)
 {
 	int Y=lsize_[0],Z=Y*lsize_[1];
 	int xdim=0,ydim=0,zdim=0,Xm=0,Ym=0,Zm=0;
@@ -217,11 +212,11 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 	}
 	if(side==-1)
 	{
-		x=CellToLattice(patch.low[xdim],xdim)-1;
+		x=CellToLattice(patch.getLow()[xdim],xdim)-1;
 	}
 	else if(side==1)
 	{
-		x=CellToLattice(patch.high[xdim],xdim);
+		x=CellToLattice(patch.getHigh()[xdim],xdim);
 	}
 	else
 	{
@@ -230,10 +225,10 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 	}
 	if(x>=0 && x<lsize_[xdim])	//only search if i'm not beyond the bounds_
 	{
-		by=CellToLattice(patch.low[ydim],ydim);
-		ey=CellToLattice(patch.high[ydim],ydim);
-		bz=CellToLattice(patch.low[zdim],zdim);
-		ez=CellToLattice(patch.high[zdim],zdim);
+		by=CellToLattice(patch.getLow()[ydim],ydim);
+		ey=CellToLattice(patch.getHigh()[ydim],ydim);
+		bz=CellToLattice(patch.getLow()[zdim],zdim);
+		ez=CellToLattice(patch.getHigh()[zdim],zdim);
     //search along face in one dimension
 		for(int y=by;y<ey;y++)
 		{
@@ -284,15 +279,10 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 	
 }
 
-void PatchFixer::SplitPatch(int index, vector<PseudoPatch> &patches, const Split &split)
+void PatchFixer::SplitPatch(int index, vector<Region> &patches, const Split &split)
 {
-	PseudoPatch right=patches[index];
-	patches[index].high[split.d]=right.low[split.d]=split.index;
-
-  //calculate new volumes
-  IntVector size=right.high-right.low;
-  right.volume=size[0]*size[1]*size[2];
-  patches[index].volume-=right.volume;
+	Region right=patches[index];
+	patches[index].high()[split.d]=right.low()[split.d]=split.index;
 
 	patches.push_back(right);
 

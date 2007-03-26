@@ -87,6 +87,8 @@ public:
   patchIterator patchesBegin();
   patchIterator patchesEnd();
 
+  const Patch* getPatch(int index) { return d_realPatches[index]; }
+
   // go through the virtual ones too
   const_patchIterator allPatchesBegin() const;
   const_patchIterator allPatchesEnd() const;
@@ -203,7 +205,6 @@ public:
   const PatchSet* allPatches() const;
   const Patch* selectPatchForCellIndex( const IntVector& idx) const;
   const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
-  const Patch* getPatchByID(int id) const;
   
   //getID() returns a unique identifier so if the grid is rebuilt the new 
   //levels will have different id numbers (like a  serial number).  

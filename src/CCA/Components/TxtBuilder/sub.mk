@@ -48,5 +48,9 @@ PSELIBS := Framework Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
 
 LIBS := $(NCURSES_LIBRARY)
 
+ifeq ($(HAVE_BABEL), yes)
+  LIBS += $(SIDL_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

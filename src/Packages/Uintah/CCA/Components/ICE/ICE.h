@@ -305,9 +305,8 @@ namespace Uintah {
                                                       const PatchSet* patches,
                                                       const MaterialSet*);
 
-      void setICELabel(ICELabel* Ilb) {
-       delete lb;
-       lb = Ilb;
+      void setMPMICELabel(MPMICELabel* mil) {
+       MIlb = mil;
       };
 
        void setWithMPM()

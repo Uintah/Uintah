@@ -68,7 +68,6 @@
 #include <Core/CCA/DT/DTThread.h>
 #include <Core/CCA/DT/DTPoint.h>
 #include <Core/CCA/DT/DTMessage.h>
-#include <Core/CCA/PIDL/CommError.h>
 #include <Core/CCA/PIDL/SocketMessage.h>
 #include <Core/CCA/PIDL/SocketEpChannel.h>
 #include <Core/CCA/PIDL/SocketSpChannel.h>

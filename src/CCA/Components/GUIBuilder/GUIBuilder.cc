@@ -55,10 +55,6 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/pidl_cast.h>
 
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
-
 namespace GUIBuilder {
 
 using namespace SCIRun;
@@ -75,8 +71,9 @@ const std::string GUIBuilder::DEFAULT_CCA_COMP_DIR(GUIBuilder::DEFAULT_SRC_DIR +
 const std::string GUIBuilder::GOPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "GoPort");
 const std::string GUIBuilder::UIPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "UIPort");
 const std::string GUIBuilder::PROGRESS_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "Progress");
-const std::string GUIBuilder::COMPONENTICON_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIcon");
+const std::string GUIBuilder::COMPONENTICONUI_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIconUI");
 const std::string GUIBuilder::APP_EXT_WILDCARD("*." + ApplicationLoader::APP_EXT);
+const std::string GUIBuilder::APP_EXT(ApplicationLoader::APP_EXT);
 
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;
@@ -112,7 +109,7 @@ wxGUIThread::run()
     wxSCIRunApp::SetTopBuilder(builder);
     int argc = 1;
     char *argv[1];
-    argv[0] = "SCIRun2";
+    argv[0] = "SCIJump";
     // add framework URL to args???
     // initialize single wxApp instance and run main loop (Unix-specific):
     wxEntry(argc, argv);  // never returns, do initialization from OnInit
@@ -126,14 +123,14 @@ DestroyInstancesThread::run()
 
 GUIBuilder::GUIBuilder()
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
 }
 
 GUIBuilder::~GUIBuilder()
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::~GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   try {
@@ -161,14 +158,13 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
   if (ptr.isNull()) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Warning: event service not available.");
+    bw->DisplayErrorMessage(wxT("Warning: event service not available."));
   }
-  sci::cca::WildcardTopic::pointer topicPtr = ptr->createWildcardTopic("scirun2.services.builderservice.component.*");
-  topicPtr->registerEventListener(std::string("GUIBuilder"),evptr);
+  sci::cca::Topic::pointer topicPtr = ptr->createTopic("scirun2.services.builderservice.component");
+  sci::cca::Subscription::pointer subPtr = ptr->subscribeToEvents("scirun2.services.builderservice.component.*");
+  subPtr->registerEventListener(std::string("GUIBuilder"),evptr);
 
-
-
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   builderLock.lock();
@@ -201,7 +197,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
@@ -212,7 +208,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     t->detach();
     wxSCIRunApp::semDown();
   } else {
-#if DEBUG
+#if FWK_DEBUG
     std::cerr << "GUIBuilder::setServices(..) try to add top window." << std::endl;
 #endif
     if (Thread::self()->getThreadName() == GUI_THREAD_NAME) {
@@ -257,7 +253,8 @@ GUIBuilder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClass
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get component descriptions from component repository; " + e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not get component descriptions from component repository; ") +
+                              STLTowxString(e->getNote()));
     }
   }
 }
@@ -300,7 +297,7 @@ GUIBuilder::createInstance(const sci::cca::ComponentClassDescription::pointer& c
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage(e->getNote());
+      bw->DisplayErrorMessage(STLTowxString(e->getNote()));
     }
   }
   return cid;
@@ -371,8 +368,10 @@ GUIBuilder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSID
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get uses ports for " +
-                              cid->getInstanceName() + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not get uses ports for "));
+      msg += STLTowxString(cid->getInstanceName()) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
@@ -392,8 +391,10 @@ GUIBuilder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get compatible port list for " +
-                              usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not get compatible port list for "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
@@ -414,8 +415,10 @@ GUIBuilder::getBridgeablePortList(const sci::cca::ComponentID::pointer &user,
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get compatible port list for " +
-                              usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not get compatible port list for "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }
@@ -441,7 +444,10 @@ GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
     if (instanceName.empty()) {
       BuilderWindow *bw = app->GetTopBuilderWindow();
       if (bw) {
-        bw->DisplayErrorMessage("BuilderService was unable to generate bridge for " + usesPortName + " and " + providesPortName + ".");
+        wxString msg(wxT("BuilderService was unable to generate bridge for "));
+        msg += STLTowxString(usesPortName) + wxT(" and ");
+        msg += STLTowxString(providesPortName) + wxT(".");
+        bw->DisplayErrorMessage(msg);
       }
     } else {
       std::string className = "bridge:Bridge." + instanceName;
@@ -451,13 +457,13 @@ GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
       // get all ports for newly created bridge component
       SSIDL::array1<std::string> usesPorts = bs->getUsedPortNames(bridgeCID);
       SSIDL::array1<std::string> providesPorts = bs->getProvidedPortNames(bridgeCID);
-#if DEBUG
+#if FWK_DEBUG
       std::cerr << "Bridge: connect " << user->getInstanceName() << "->"
                 << usesPortName << " to " << bridgeCID->getInstanceName() << "->"
                 << providesPorts[0] << std::endl;
 #endif
       connID1 = bs->connect(user, usesPortName, bridgeCID, providesPorts[0]);
-#if DEBUG
+#if FWK_DEBUG
       std::cerr << "Bridge: connect " << bridgeCID->getInstanceName() << "->"
                 << usesPorts[0] << " to " << provider->getInstanceName() << "->"
                 << providesPortName << std::endl;
@@ -469,7 +475,11 @@ GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not generate bridge for " + usesPortName + " and " + providesPortName + ";" +  e->getNote());
+      wxString msg(wxT("Error: Could not generate bridge for "));
+      msg += STLTowxString(usesPortName) + wxT(" and ");
+      msg += STLTowxString(providesPortName) + wxT("; ");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 #endif
@@ -491,10 +501,19 @@ GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::st
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not connect" + usesPortName + " to " +
-			      providesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not connect "));
+      msg += STLTowxString(usesPortName) + wxT(" to ");
+      msg += STLTowxString(providesPortName) + wxT("; ");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
+
+else {
+std::cerr << "e->getNote()" << std::endl;
+}
+
   }
+
   return connID;
 }
 
@@ -509,7 +528,7 @@ void GUIBuilder::disconnect(const sci::cca::ConnectionID::pointer &connID, float
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not disconnect; " +  e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not disconnect; ") + STLTowxString(e->getNote()));
     }
   }
 }
@@ -531,7 +550,7 @@ void GUIBuilder::addComponentFromXML(const std::string& filePath, const std::str
     fwkProperties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
   } catch (const sci::cca::CCAException::pointer &pe) {
-    bw->DisplayErrorMessage("Error: framework properties not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: framework properties not found; ") + STLTowxString(pe->getNote()));
     return;
   }
   sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
@@ -549,7 +568,7 @@ void GUIBuilder::addComponentFromXML(const std::string& filePath, const std::str
     reg->addComponentClass(componentModel);
   }
   catch(const sci::cca::CCAException::pointer &pe) {
-    bw->DisplayErrorMessage("Error: component repository not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: component repository not found; ") + STLTowxString(pe->getNote()));
     return;
   }
   services->releasePort("cca.ComponentRepository");
@@ -573,7 +592,7 @@ void GUIBuilder::addFrameworkProxy(const std::string &loaderName, const std::str
     services->releasePort("cca.FrameworkProxyService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: framework proxy service not found; ") + STLTowxString(pe->getNote()));
     return;
   }
 }
@@ -589,7 +608,7 @@ void GUIBuilder::removeFrameworkProxy(const std::string &loaderName)
     services->releasePort("cca.FrameworkProxyService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: framework proxy service not found; ") +  STLTowxString(pe->getNote()));
     return;
   }
 }
@@ -608,7 +627,7 @@ bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& p
                             const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "goPort";
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::connectGoPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
@@ -619,7 +638,7 @@ bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& p
 
 void GUIBuilder::disconnectGoPort(const std::string& goPortName)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::disconnectGoPort(..): go port name=" << goPortName << std::endl;
 #endif
   disconnectPort(goPortName);
@@ -636,7 +655,7 @@ int GUIBuilder::go(const std::string& goPortName)
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not access go port; " +  e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not access go port; ") + STLTowxString(e->getNote()));
     }
     return -1;
   }
@@ -653,7 +672,7 @@ int GUIBuilder::go(const std::string& goPortName)
 bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "uiPort";
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::connectUIPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
@@ -664,7 +683,7 @@ bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& p
 
 void GUIBuilder::disconnectUIPort(const std::string& uiPortName)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "GUIBuilder::disconnectUIPort(..): ui port name=" << uiPortName << std::endl;
 #endif
   disconnectPort(uiPortName);
@@ -681,7 +700,7 @@ int GUIBuilder::ui(const std::string& uiPortName)
   catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not access ui port; " +  e->getNote());
+      bw->DisplayErrorMessage(wxT("Error: Could not access ui port; ") +  STLTowxString(e->getNote()));
     }
     return -1;
   }
@@ -691,10 +710,16 @@ int GUIBuilder::ui(const std::string& uiPortName)
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// component progress
+// sci.cca.ports.GUIService
 
 void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
 {
+  if (Thread::self()->getThreadName() != GUI_THREAD_NAME) {
+    // TODO: This needs to be an exception!
+    std::cerr << "ERROR: do NOT call GUI functions from a non-gui thread!" << std::endl;
+    return;
+  }
+
   // get all builder windows
   // this should be done in a worker thread
   BuilderWindow *bw = app->GetTopBuilderWindow();
@@ -706,24 +731,39 @@ void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int p
   }
 }
 
-//////////////////////////////////////////////////////////////////////////
-// sci.cca.ports.ComponentIcon support
+void GUIBuilder::updateComponentModels()
+{
+  if (Thread::self()->getThreadName() != GUI_THREAD_NAME) {
+    // TODO: This needs to be an exception!
+    std::cerr << "ERROR: do NOT call GUI functions from a non-gui thread!" << std::endl;
+    return;
+  }
+  BuilderWindow *bw = app->GetTopBuilderWindow();
+  if (!bw) {
+    std::cerr << "ERROR: could not get top builder window from wxSCIRunApp." << std::endl;
+    return;
+  }
+  bw->BuildAllPackageMenus();
+}
 
-bool GUIBuilder::connectComponentIcon(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
+//////////////////////////////////////////////////////////////////////////
+// sci.cca.ports.ComponentIconUI support
+
+bool GUIBuilder::connectComponentIconUI(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "componenticon";
-#if DEBUG
-  std::cerr << "GUIBuilder::connectComponentIcon(..): uses port name=" << usesPortName
+#if FWK_DEBUG
+  std::cerr << "GUIBuilder::connectComponentIconUI(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
-  return connectPort(usesPortName, providesPortName, COMPONENTICON_PORT, cid);
+  return connectPort(usesPortName, providesPortName, COMPONENTICONUI_PORT, cid);
 }
 
-void GUIBuilder::disconnectComponentIcon(const std::string& ciPortName)
+void GUIBuilder::disconnectComponentIconUI(const std::string& ciPortName)
 {
-#if DEBUG
-  std::cerr << "GUIBuilder::disconnectComponentIcon(..): component icon port name=" << ciPortName << std::endl;
+#if FWK_DEBUG
+  std::cerr << "GUIBuilder::disconnectComponentIconUI(..): component icon port name=" << ciPortName << std::endl;
 #endif
   disconnectPort(ciPortName);
 }
@@ -735,7 +775,7 @@ void GUIBuilder::disconnectComponentIcon(const std::string& ciPortName)
 bool GUIBuilder::setPortColor(const std::string& portType, const std::string& colorName)
 {
   Guard g(&builderLock);
-  wxColor c = wxTheColourDatabase->Find(wxT(colorName));
+  wxColor c = wxTheColourDatabase->Find(STLTowxString(colorName));
   if (! c.Ok()) {
     // colorName can't be found in wxTheColourDatabase
     return false;
@@ -799,7 +839,7 @@ bool GUIBuilder::applicationFileExists()
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return false;
   }
   struct stat buf;
@@ -808,6 +848,21 @@ bool GUIBuilder::applicationFileExists()
   }
   return true;
 }
+
+void GUIBuilder::loadApplication(const std::string& filename, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList)
+{
+  try {
+    sci::cca::ports::ApplicationLoaderService::pointer appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    appLoader->loadFile(filename, cidList, connList);
+    services->releasePort("cca.ApplicationLoaderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
+    return;
+  }
+}
+
 
 void GUIBuilder::saveApplication()
 {
@@ -818,7 +873,7 @@ void GUIBuilder::saveApplication()
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
@@ -833,7 +888,7 @@ void GUIBuilder::saveApplication(const std::string& fileName)
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    bw->DisplayErrorMessage(wxT("Error: application loader service error; ") + STLTowxString(pe->getNote()));
     return;
   }
 
@@ -890,7 +945,10 @@ bool GUIBuilder::connectPort(const std::string& usesPortName, const std::string&
   } catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not register port " + usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not register port "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
     return false;
   }
@@ -900,7 +958,9 @@ bool GUIBuilder::connectPort(const std::string& usesPortName, const std::string&
   if (connID.isNull()) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not connect port " + usesPortName + ".");
+      wxString msg(wxT("Error: Could not connect port "));
+      msg += STLTowxString(usesPortName) + wxT(".");
+      bw->DisplayErrorMessage(msg);
     }
     return false;
   }
@@ -923,7 +983,10 @@ void GUIBuilder::disconnectPort(const std::string& usesPortName)
   } catch (const sci::cca::CCAException::pointer &e) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     if (bw) {
-      bw->DisplayErrorMessage("Error: Could not unregister port " + usesPortName + "; " +  e->getNote());
+      wxString msg(wxT("Error: Could not unregister port "));
+      msg += STLTowxString(usesPortName) + wxT(";");
+      msg += STLTowxString(e->getNote());
+      bw->DisplayErrorMessage(msg);
     }
   }
 }

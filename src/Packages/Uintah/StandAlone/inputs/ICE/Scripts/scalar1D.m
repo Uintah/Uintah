@@ -16,37 +16,40 @@ clear function;
 % USER INPUTS
 uda = 'impAdvectScalarAMR.uda'
 
-desc = '1D uniform advection of a passive scalar, R=4';
-desc2 = 'Linear CFI Interpolation, SecondOrder advection, Refluxing on';
+desc = '1D uniform advection of a passive scalar, 0:L:1, 1600 cells';
+desc2 = 'SecondOrder Advection';
 
 legendText = {'L-0','L-1', 'L-2', 'L-3', 'L-4'};
 pDir   = 1;                    
 symbol = {'+','*r','xg','squarem','diamondb'};
 mat    = 0;
 
-exactSolution = 'sinusoidal' %'sinusoidal'; %linear
+exactSolution = 'exponential' %'linear' %'sinusoidal'; %linear; %cubic; %quad
 velocity    = 1.23456;
-exactSolMin = 0.15;
-exactSolMax = 0.35;
+exactSolMin = 0.0;
+exactSolMax = 1.0;
 freq  = 1;
 slope = 1;
+coeff = 100;
 
 numPlotCols = 1;
-numPlotRows = 3;
+numPlotRows = 2;
 
 plotScalarF        = true;
+plotError          = true;
 plotRHS            = false;
-plotScalarFaceflux = true;
-plotScalarFaceCorr = true;
-plotSumScalarF     = true;
+plotScalarFaceflux = false;
+plotScalarFaceCorr = false;
+plotSumScalarF     = false;
+plotScalarLimiter  = false
 
 
 % lineExtract start and stop
-startEnd ={'-istart -1 0 0 -iend 100 0 0';
-           '-istart -1 0 0 -iend 400 0 0';
-           '-istart -1 0 0 -iend 400 0 0';
-           '-istart -1 0 0 -iend 400 0 0';
-           '-istart -1 0 0 -iend 400 0 0'};
+startEnd ={'-istart 0 0 0 -iend 10000 0 0';
+           '-istart 0 0 0 -iend 400 0 0';
+           '-istart 0 0 0 -iend 400 0 0';
+           '-istart 0 0 0 -iend 400 0 0';
+           '-istart 0 0 0 -iend 400 0 0'};
 %________________________________
 %  extract the physical time for each dump
 c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
@@ -54,7 +57,7 @@ c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
 physicalTime  = load('-ascii','tmp');
 nDumps = length(physicalTime)
 
-%set(0,'DefaultFigurePosition',[0,0,900,600]);
+set(0,'DefaultFigurePosition',[0,0,900,600]);
 %_________________________________
 % Loop over all the timesteps
 for(n = 1:nDumps )
@@ -93,6 +96,7 @@ for(n = 1:nDumps )
         [s6, r6]=unix(c6);
         scalarArray{1,L} = load('-ascii','scalar-f.dat');
         xx     = scalarArray{1,L}(:,pDir);
+        xindx  =-1:length(xx)-2;
         scalar = scalarArray{1,L}(:,4);
 
 
@@ -108,13 +112,32 @@ for(n = 1:nDumps )
         
         for( i = 1:length(xx))
           if(xx(i) >= xmin && xx(i) <= xmax)
+            d = (xx(i) - xmin )/dist;
             
             if( strcmp(exactSolution,'linear'))
-              exactSol(i) = exactSol(i) + slope .* (xx(i) - xmin )/dist;
+              exactSol(i) = exactSol(i) + slope .* d;
             end
 
             if(strcmp(exactSolution,'sinusoidal'))
-              exactSol(i) = exactSol(i) + sin( 2.0 * freq * pi .* (xx(i) - xmin )/dist);
+              exactSol(i) = exactSol(i) + sin( 2.0 * freq * pi .* d);
+            end
+            
+            if(strcmp(exactSolution,'cubic'))
+              if(d <= 0.5)
+                exactSol(i) = -1.3333333 *d^3        + d^2;
+              else
+                exactSol(i) = -1.3333333*(1.0 - d)^3 + (1.0 - d)^2;
+              end
+            end
+     	      if(strcmp(exactSolution,'quad'))
+              if(d <= 0.5)
+                exactSol(i) = d^2 -d;
+              else
+                exactSol(i) = (1.0 - d)^2 - (1.0 - d);
+              end
+            end
+            if(strcmp(exactSolution,'exponential'))
+                exactSol(i) = coeff * exp(-1.0/( d * ( 1.0 - d ) + 1e-100) );
             end
           end
         end
@@ -126,11 +149,10 @@ for(n = 1:nDumps )
         % plot the results
         subplot(numPlotRows,numPlotCols,plotNum), plot(xx,scalar,symbol{L})
         hold on;
-        plot(xx,exactSol);
+        plot(xx,exactSol,'-r');
         t = sprintf('%s Time: %s\n%s',desc, time,desc2);
         title(t);
-        %axis([0.175 0.225]);
-        %axis([2.75 5.75 0.5 1])
+        %xlim([200 600]);
         
         ylabel('scalar');
         grid on;
@@ -142,6 +164,21 @@ for(n = 1:nDumps )
         plotNum = plotNum+ 1;
       end
       %____________________________
+      %   error
+      if plotError
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,difference,symbol{L})
+        ylabel('error');
+        %xlim([200 600]);
+        grid on;
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
+        plotNum = plotNum+ 1;
+      end     
+      
+      %____________________________
       %   rhs
       if plotRHS
         c6 = sprintf('lineextract -v rhs -l %i -cellCoords -timestep %i %s -o rhs.dat -m %i  -uda %s',level,ts,S_E,mat,uda);
@@ -150,8 +187,6 @@ for(n = 1:nDumps )
         xx = rhs{1,L}(:,pDir);
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(xx,rhs{1,L}(:,4),symbol{L})
-        %axis([0.175 0.225]);
-        %axis([2.75 5.75 0.5 1])
         
         grid on;
         if (L == maxLevel)
@@ -204,6 +239,24 @@ for(n = 1:nDumps )
         end
       end
 
+      %____________________________
+      %   Scalar limiter
+      if plotScalarLimiter
+        f_name = sprintf('limiter/%i.dat',n);
+        limiter{1,L} = load('-ascii',f_name);
+        xx = limiter{1,L}(:,pDir);
+        
+        subplot(numPlotRows,numPlotCols,plotNum), plot(xx,limiter{1,L}(:,2),symbol{L})
+        %xlim([200 600]);
+        ylabel('gradientLimiter_{scalar}');
+        grid on;
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
+        plotNum = plotNum+ 1;
+      end
     end  % if level exists
   end  % level loop
   'sum scalar on coarse level ',sum(scalarArray{1,1}(:,4))
