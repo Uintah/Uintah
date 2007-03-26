@@ -78,10 +78,10 @@ namespace Uintah {
 
     MPMFlags();
 
-    ~MPMFlags();
+    virtual ~MPMFlags();
 
-    void readMPMFlags(ProblemSpecP& ps);
-    void outputProblemSpec(ProblemSpecP& ps);
+    virtual void readMPMFlags(ProblemSpecP& ps);
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 
   private:
 
