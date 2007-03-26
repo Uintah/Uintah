@@ -7,6 +7,7 @@
 #endif
 
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> 
+#include <Packages/Uintah/CCA/Components/MPM/ImpMPMFlags.h> 
 // put here to avoid template problems
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -81,24 +82,16 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   MPMCommon(myworld), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
-  flags = scinew MPMFlags();
+  flags = scinew ImpMPMFlags();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
   d_numIterations=0;
-  d_conv_crit_disp   = 1.e-10;
-  d_conv_crit_energy = 4.e-10;
-  d_forceIncrementFactor = 1.0;
-  d_integrator = Implicit;
-  d_dynamic = true;
+
   heatConductionModel = 0;
   thermalContactModel = 0;
   d_perproc_patches = 0;
   d_switchCriteria = 0;
-  d_doMechanics = true;
-  d_projectHeatSource = false;
-
-  d_temp_solve = false;
 
   one_matl = scinew MaterialSubset();
   one_matl->add(0);
@@ -159,25 +152,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
 
-     mpm_soln_ps->get("ProjectHeatSource", d_projectHeatSource);
-     mpm_soln_ps->get("DoMechanics", d_doMechanics);
-     mpm_soln_ps->get("ForceBC_force_increment_factor",
-                                    flags->d_forceIncrementFactor);
-     mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
-     mpm_soln_ps->get("convergence_criteria_disp",  d_conv_crit_disp);
-     mpm_soln_ps->get("convergence_criteria_energy",d_conv_crit_energy);
-     mpm_soln_ps->get("dynamic",d_dynamic);
-     mpm_soln_ps->getWithDefault("iters_before_timestep_restart",
-                               d_max_num_iterations, 25);
-     mpm_soln_ps->getWithDefault("num_iters_to_decrease_delT",
-                               d_num_iters_to_decrease_delT, 12);
-     mpm_soln_ps->getWithDefault("num_iters_to_increase_delT",
-                               d_num_iters_to_increase_delT, 4);
-     mpm_soln_ps->getWithDefault("delT_decrease_factor",
-                               d_delT_decrease_factor, .6);
-     mpm_soln_ps->getWithDefault("delT_increase_factor",
-                               d_delT_increase_factor, 2);
-
      std::vector<std::string> bndy_face_txt_list;
      mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
                                                                                 
@@ -202,7 +176,9 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    ProblemSpecP mat_ps =  restart_mat_ps->findBlock("MaterialProperties");
 
-   ProblemSpecP child = mat_ps->findBlock("contact");
+   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+
+   ProblemSpecP child = mpm_mat_ps->findBlock("contact");
 
    d_con_type = "null";
    child->get("type",d_con_type);
@@ -226,17 +202,13 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    }
 
    materialProblemSetup(restart_mat_ps, d_sharedState,flags);
-
-   mpm_soln_ps->get("solver",d_solver_type);
    
-   if (d_solver_type == "petsc") {
+   if (flags->d_solver_type == "petsc") {
      d_solver = scinew MPMPetscSolver();
    } else {
      d_solver = scinew SimpleSolver();
    }
 
-   d_temp_solve = false;
-   mpm_soln_ps->get("temperature_solve",d_temp_solve);
 
    d_solver->initialize();
 
@@ -257,7 +229,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
-   heatConductionModel->problemSetup(d_solver_type);
+   heatConductionModel->problemSetup(flags->d_solver_type);
 
    thermalContactModel =
      ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
@@ -283,8 +255,6 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
   ProblemSpecP flags_ps = root->appendChild("MPM");
   flags->outputProblemSpec(flags_ps);
-  flags_ps->appendElement("solver",d_solver_type);
-  flags_ps->appendElement("temperature_solve",d_temp_solve);
 
   ProblemSpecP mat_ps = 0;
   mat_ps = root->findBlock("MaterialProperties");
@@ -302,7 +272,7 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   contactModel->outputProblemSpec(mpm_ps);
 #endif
 
-  ProblemSpecP contact_ps = mat_ps->appendChild("contact");
+  ProblemSpecP contact_ps = mpm_ps->appendChild("contact");
   contact_ps->appendElement("type",d_con_type);
   contact_ps->appendElement("direction",d_contact_dirs);
   contact_ps->appendElement("stop_time",d_stop_time);
@@ -586,7 +556,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
   scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
-  if (d_projectHeatSource) {
+  if (flags->d_projectHeatSource) {
     scheduleComputeCCVolume(           sched, d_perproc_patches,one_matl,matls);
     scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
   }
@@ -1202,7 +1172,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     // This task only zeros out the stiffness matrix it doesn't free any memory.
     scheduleDestroyMatrix(           d_subsched,level->eachPatch(),matls,true);
     
-    if (d_doMechanics) {
+    if (flags->d_doMechanics) {
       scheduleComputeStressTensor(   d_subsched,level->eachPatch(),matls,true);
       scheduleFormStiffnessMatrix(   d_subsched,level->eachPatch(),matls);
       scheduleComputeInternalForce(  d_subsched,level->eachPatch(),matls);
@@ -1291,9 +1261,9 @@ void ImpMPM::iterate(const ProcessorGroup*,
       cerr << "dispIncQNorm/dispIncQNorm0 = "
            << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
     }
-    if (dispIncNorm/(dispIncNormMax + 1e-100) <= d_conv_crit_disp)
+    if (dispIncNorm/(dispIncNormMax + 1e-100) <= flags->d_conv_crit_disp)
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= d_conv_crit_energy)
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= flags->d_conv_crit_energy)
       dispIncQ = true;
     // Check to see if the residual is likely a nan, if so, we'll restart.
     bool restart_nan=false;
@@ -1309,7 +1279,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       restart_neg_residual=true;
       cerr << "Restarting due to a negative residual" << endl;
     }
-    if (count > d_max_num_iterations){
+    if (count > flags->d_max_num_iterations){
       restart_num_iters=true;
       cerr << "Restarting due to exceeding max number of iterations" << endl;
     }
@@ -1340,7 +1310,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       constNCVariable<Vector> velocity, dispNew, internalForce;
       d_subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
       d_subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
-      if (d_doMechanics) {
+      if (flags->d_doMechanics) {
         d_subsched->get_dw(2)->get(internalForce,
                                     lb->gInternalForceLabel,matl,patch,gnone,0);
       }
@@ -1352,7 +1322,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
                             lb->gInternalForceLabel,              matl,patch);
       velocity_new.copyData(velocity);
       dispNew_new.copyData(dispNew);
-      if (d_doMechanics) {
+      if (flags->d_doMechanics) {
         internalForce_new.copyData(internalForce);
       }
     }
@@ -1796,7 +1766,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gvolumeglobal[ni[k]]     += pvolume[idx]        * S[k];
             gextforce[m][ni[k]]      += pexternalforce[idx] * S[k];
             gSpecificHeat[ni[k]]     += Cp                  * S[k];
-            if (d_temp_solve == false){
+            if (flags->d_temp_solve == false){
               gTemperature[ni[k]]   +=  pTemperature[idx]  * pmass[idx]* S[k];
             }
             gvel_old[m][ni[k]]       += pmom                * S[k];
@@ -1832,7 +1802,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
 
     // Single material temperature field
-    if (d_temp_solve == false) {
+    if (flags->d_temp_solve == false) {
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter;
         gTemperature[c] /= gmassglobal[c];
@@ -1840,7 +1810,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     }
 
 
-    if (d_temp_solve == true) {
+    if (flags->d_temp_solve == true) {
     // This actually solves for the grid temperatures assuming a linear
     // form of the temperature field.  Uses the particle temperatures
     // as known points within the cell.  For number of particles less
@@ -2334,7 +2304,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
                                  DataWarehouse* /*old_dw*/,
                                  DataWarehouse* new_dw)
 {
-  if (!d_dynamic)
+  if (!flags->d_dynamic)
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2538,7 +2508,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         v[2] = extForce[n].z() + intForce[n].z();
 
         // temp2 = M*a^(k-1)(t+dt)
-        if (d_dynamic) {
+        if (flags->d_dynamic) {
           v[0] -= (dispNew[n].x()*fodts - velocity[n].x()*fodt -
                    accel[n].x())*mass[n];
           v[1] -= (dispNew[n].y()*fodts - velocity[n].y()*fodt -
@@ -2626,7 +2596,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
       dispInc.initialize(Vector(0.));
 
-      if (d_doMechanics) {
+      if (flags->d_doMechanics) {
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
           IntVector n = *iter;
           int dof[3];
@@ -2697,7 +2667,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       parent_new_dw->get(contact,      lb->gContactLabel,  dwi,patch,gnone,0);
 
       double oneifdyn = 0.;
-      if(d_dynamic){
+      if(flags->d_dynamic){
         oneifdyn = 1.;
       }
 
@@ -2873,7 +2843,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw)
 {
-  if (!d_dynamic)
+  if (!flags->d_dynamic)
     return;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -3371,11 +3341,11 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       double delT_new = .8*ParticleSpeed.minComponent();
 
       double old_dt=old_delT;
-      if(d_numIterations <= d_num_iters_to_increase_delT){
-        old_dt = d_delT_increase_factor*old_delT;
+      if(d_numIterations <= flags->d_num_iters_to_increase_delT){
+        old_dt = flags->d_delT_increase_factor*old_delT;
       }
-      if(d_numIterations >= d_num_iters_to_decrease_delT){
-        old_dt = d_delT_decrease_factor*old_delT;
+      if(d_numIterations >= flags->d_num_iters_to_decrease_delT){
+        old_dt = flags->d_delT_decrease_factor*old_delT;
       }
       delT_new = min(delT_new, old_dt);
 
@@ -3387,5 +3357,5 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 
 double ImpMPM::recomputeTimestep(double current_dt)
 {
-  return current_dt*d_delT_decrease_factor;
+  return current_dt*flags->d_delT_decrease_factor;
 }
