@@ -20,7 +20,8 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/Solver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
-	$(SRCDIR)/MPMFlags.cc
+	$(SRCDIR)/MPMFlags.cc	\
+	$(SRCDIR)/ImpMPMFlags.cc
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc 
