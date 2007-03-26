@@ -149,7 +149,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
                          const Patch::FaceType face,
                          CCVariable<Vector>& vel_CC,
                          const string& var_desc,
-                         const vector<IntVector> bound,
+                         const vector<IntVector>* bound_ptr,
                          const string& bc_kind,
                          SimulationStateP& sharedState,
                          mms_variable_basket* mms_var_basket,
@@ -170,7 +170,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
       t += mms_v->delT;
       
       vector<IntVector>::const_iterator iter;
-      for (iter=bound.begin(); iter != bound.end(); iter++) {
+      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
         IntVector c = *iter;
         Point pt = patch->cellPosition(c);
         double x = pt.x(); 
@@ -193,7 +193,7 @@ void set_MMS_Temperature_BC(const Patch* /*patch*/,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
                             const string& var_desc,
-                            const vector<IntVector> bound,
+                            const vector<IntVector>* bound_ptr,
                             const string& bc_kind,
                             mms_variable_basket* mms_var_basket,
                             mms_vars* mms_v)  
@@ -213,7 +213,7 @@ void set_MMS_Temperature_BC(const Patch* /*patch*/,
       constCCVariable<double> rho_CC   = mms_v->rho_CC;
         
       vector<IntVector>::const_iterator iter;
-      for (iter=bound.begin(); iter != bound.end(); iter++) {
+      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
         IntVector c = *iter;
         temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
       }
@@ -229,7 +229,7 @@ ___________________________________________________________________*/
 void set_MMS_press_BC(const Patch* patch,
                       const Patch::FaceType face,
                       CCVariable<double>& press_CC,
-                      const vector<IntVector> bound,
+                      const vector<IntVector>* bound_ptr,
                       const string& bc_kind,
                       SimulationStateP& sharedState,
                       mms_variable_basket* mms_var_basket,
@@ -250,7 +250,7 @@ void set_MMS_press_BC(const Patch* patch,
     t += mms_v->delT;
 
     vector<IntVector>::const_iterator iter;
-    for (iter=bound.begin(); iter != bound.end(); iter++) {
+    for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
       double x = pt.x(); 

@@ -78,7 +78,7 @@ double IdealGas::getAlpha(double Temp, double , double , double )
 // call this after set Dirchlet and Neuman BC
 void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face, 
                                          const Patch* patch,
-                                         const vector<IntVector>& bound,
+                                         const vector<IntVector>* bound_ptr,
                                          Vector& gravity,
                                          const CCVariable<double>& gamma,
                                          const CCVariable<double>& cv,
@@ -93,7 +93,7 @@ void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face,
   double dx_grav = gravity[P_dir] * cell_dx[P_dir];
   
    vector<IntVector>::const_iterator iter;  
-   for (iter=bound.begin(); iter != bound.end(); iter++) {
+   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
      IntVector c = *iter;
      Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 
   }

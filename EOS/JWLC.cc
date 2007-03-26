@@ -190,7 +190,7 @@ void JWLC::computePressEOS(double rhoM, double, double, double,
 // call this after set Dirchlet and Neuman BC
 void JWLC::hydrostaticTempAdjustment(Patch::FaceType, 
                                     const Patch*,
-                                    const vector<IntVector>&,
+                                    const vector<IntVector>*,
                                     Vector&,
                                     const CCVariable<double>&,
                                     const CCVariable<double>&,

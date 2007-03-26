@@ -65,7 +65,7 @@ WARNING
          
         virtual void hydrostaticTempAdjustment(Patch::FaceType, 
                                                const Patch*,
-                                               const vector<IntVector>&,
+                                               const vector<IntVector>*,
                                                Vector&,
                                                const CCVariable<double>&,
                                                const CCVariable<double>&,
