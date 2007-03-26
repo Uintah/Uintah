@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="BuildMembraneTable" category="Model" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen</author>
+    </authors>
+    <summary>
+      Test module.
+
+    </summary>
+    <description>
+      <p>        Test module.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>ElementType</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>MembraneModel</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>CompToGeom</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>NodeLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>ElemLink</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>MembraneTable</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>MappingMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>      
+      </port>
+    </outputs>
+  </io>
+</component>

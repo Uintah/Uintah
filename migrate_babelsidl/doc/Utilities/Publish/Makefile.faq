@@ -1,0 +1,75 @@
+# -*- makefile -*-
+
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+# Build html and print versions of an faq.
+
+stylesheet_html := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+params_print := -V %footnote-ulinks% -V %section-autolabel% \
+  -V "(define %default-quadding% 'justify)"
+# Relative to FAQ directories
+treetop := ../../..
+# SR version info
+edition:=${treetop}/src/main/sci_version.h
+
+.PHONY: html print clean veryclean
+
+.DELETE_ON_ERROR:
+
+all: html print
+
+# Implicit rule to generate sources for html output
+%.hxml : %.rxml
+	TREETOP=${treetop} OUTPUT_MODE=html eruby --delimiters xml $< > $@
+
+# Implicit rule to generate sources for print output
+%.pxml : %.rxml
+	TREETOP=${treetop} OUTPUT_MODE=print eruby --delimiters xml $< > $@
+
+# Rules for HTML output.
+html: faq.html
+faq.html: faq.hxml ${edition}
+	java com.icl.saxon.StyleSheet -w2 \
+	  faq.hxml ${stylesheet_html} treetop=${treetop} >$@
+
+# Rules for print output.
+print: faq.pdf
+faq.pdf: faq.pxml ${edition}
+	openjade -t tex -V tex-backend -c ${CATALOG} -o faq.tex \
+          -d ${stylesheet_print} ${params_print} ${XML_DCL} faq.pxml 
+	for i in 1 2 ; do jadetex faq.tex ; done
+	dvipdfm -p letter faq.dvi
+
+clean:
+	-rm -f faq.[ph]xml faq.tex faq.dvi faq.aux faq.log faq.out *~
+
+veryclean: clean 
+	-rm faq.html faq.pdf 
+

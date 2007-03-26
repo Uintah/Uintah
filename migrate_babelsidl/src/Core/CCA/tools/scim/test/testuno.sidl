@@ -1,0 +1,22 @@
+
+
+package NewPort {
+
+  class GoPort {
+        void setService(in int svc);
+  };
+
+  interface iStringPort
+  {
+        string getString();
+  };
+
+  class StringPort
+  { };
+
+  class Com{
+
+  };
+
+};
+

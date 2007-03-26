@@ -1,0 +1,485 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<!--
+  Note to authors: Last time I checked, this file consisted of valid
+  xhtml.  Please continue to write valid xhtml code only!  Use the
+  validator at http://validator.w3.org/.
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+      name="generator" />
+    <meta http-equiv="content-type"
+      content="text/html;charset=iso-8859-1" />
+    <meta name="generator" content="Adobe GoLive 4" />
+    <title>
+      PowerApp Creation     
+    </title>
+  </head>
+  <body  bgcolor="#A9A9A9">
+    <table align="center" border="0" cellpadding="0" cellspacing="0"
+      width="600">
+      <tr>
+        <td><center>
+          <img height="101" width="600"
+	    src="images/powerapps101.gif" border="0"
+	    usemap="#biot-banner-sub1a87b5e6" alt="BioTensor Banner Sub"/>
+	  <map name="biot-banner-sub1a87b5e6"
+	    id="biot-banner-sub1a87b5e6">
+            <area href="http://software.sci.utah.edu/"
+	      coords="501,32,592,46" shape="rect" alt="http://software.sci.utah.edu/" />
+            <area href="http://www.sci.utah.edu" coords="505,11,592,29"
+	      shape="rect" alt="http://www.sci.utah.edu"/>
+          </map></center>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table border="0" cellpadding="10" cellspacing="0"
+	    width="600">
+            <tr>
+              <td bgcolor="#DCDCDC">
+                <div align="right">
+                  <a href="index.html">1</a>
+                  <a href="chapter_2.html">2</a>
+                  <a href="chapter_3.html">3</a>
+                  <a href="chapter_4.html">4</a>
+                </div>
+                <center>
+                  <p>
+                    <font color="maroon" size="4"><b>Chapter 3: PowerAppBase.tcl</b></font>
+                  </p>
+                </center>
+                <div align="left">
+                <div align="left">
+                  <h4>
+                    <b><a href="#Variables">PowerAppBase Variables</a></b>
+                  </h4>
+
+                  <h4>
+                    <b><a href="#Methods">PowerAppBase Methods</a></b>
+                  </h4>
+
+                <h4>
+                  <b>Overview</b>
+                </h4>
+<p>The PowerAppBase class should control the general look and feel of
+the apps and provide the basic methods needed to build a PowerApp. The
+variables and method are described below.</p>
+
+                <h4>
+                  <b><a name="Variables" id="Variables">PowerAppBase Variables</a></b>
+                </h4>
+<p>Variables contained in PowerAppBase class handle 
+the app size, colors, and progress indicator. There are also variables
+for making color map swatches.  Below are the PowerAppBase
+variables and their descriptions.</p>
+<pre>
+###############################
+### Class Variables
+###############################
+
+# Embedded Viewer
+variable eviewer
+
+# Standalone
+variable win
+    
+# The width and height of the left frame, or the
+# processing frame. This will be used when attaching
+# or detaching the frame.
+variable process_width
+variable process_height
+
+# The width and height of the Viewer window. This
+# is used when configuring the window size when
+# frames are attached or detached.
+variable viewer_width
+variable viewer_height
+
+# The width and height of the right frame, or the
+# visualization frame. This will be used when 
+# attaching or detaching the frame.
+variable vis_width
+variable vis_height
+
+# The width and height of the current screen, so 
+# the app comes up in the center.
+variable screen_width
+variable screen_height
+
+# Indicates whether the processing frame is attached
+# or detached. Applications should be initialized
+# as attached.
+variable IsPAttached
+
+# Pointers to the attached and detached frames
+variable detachedPFr
+variable attachedPFr
+
+# Indicates whether the visualization frame is attached
+#  or detached. Applications should be initialized as
+# attached.
+variable IsVAttached
+
+# Pointers to the attached and detached frames
+variable detachedVFr
+variable attachedVFr
+
+# Flag to indicate if entire gui has been built.
+# This is usefull in functions called by scale widgets
+# because they are called during initialization.
+variable initialized
+
+# Flag to indicate when app is loading and executing a
+# saved session.
+variable loading
+
+# The id for the call to change_indicator that controls
+#  the progress bar.
+variable indicatorID
+    
+# These point to the indicator canvas and are used to
+# raise different canvases. One points to the attached
+# frame and the other to the detached.
+variable indicator1
+variable indicator2
+
+# These point to the progress indicator labels of the 
+# attached and detached frames
+variable indicatorL1
+variable indicatorL2
+
+# Represents the state of the progress graph
+# 0 = Reset the indicator
+# 1 = Start executing spinner
+# 2 = Stop executing spinner and indicate "Complete"
+# 3 = Error state
+variable indicate
+
+# The progress spinner is an image shifting upon
+# each execution. The cyle variable keeps track of how
+# many shifts the image has made.
+variable cycle
+
+# A counter of currently executing modules.  If this is
+# positive, the progress indicator should be spinning.
+# Only when all modules are complete (and this variable
+# is equal to 0) will the "Complete" state be reached.
+variable executing_modules
+
+# Width and height of the indicator
+variable i_width
+variable i_height
+    
+# Number of stripes on the spinner mode of the indicator
+variable stripes
+
+# Variables for positions when moving spinner image
+variable i_move
+variable i_back
+
+# Stores name of first module to get an error. The
+# indicator will not clear from the error state until
+# the module clears it.
+variable error_module
+
+# Colors for execute and next buttons
+variable next_color
+variable execute_color
+
+# Width, height, and resolution of colormap canvases if
+# needed.
+variable colormap_width
+variable colormap_height
+variable colormap_res    
+</pre>
+
+                <h4>
+                  <b><a name="Methods" id="Methods">PowerAppBase Methods</a></b>
+                </h4>
+
+<p>The PowerAppBase class provides methods for building a standard
+App, which includes the Menu, Viewer Options tab, Progress Indicator,
+and colormap canvases. It also provides some helper methods for
+loading and saving, and activating and disabling widgets. Below are
+methods and their descriptions.</p>
+<pre>
+############################
+### constructor
+############################
+# The PowerAppBase constructor is called before the 
+# child's constructor. It initializes variables regarding 
+# size, state, the progress indicator, tooltips, etc. The 
+# constructor also configures the scheme (color, fonts, etc)
+# constructor {} 
+
+
+############################
+### destructor
+#############################
+destructor 
+
+
+#############################
+### configure_scheme
+#############################
+# Configure the look and color scheme the same.
+# This includes colors for the next and execute buttons.
+method configure_scheme {} 
+
+
+###############################
+### build_menu
+###############################
+# Build the standard menu in the specified frame.
+# The menu contains the File->Load Session, File->Save 
+# Session, etc..
+method build_menu { m } 
+
+
+#########################
+### reset_app
+#########################
+# Method that should be called when loading a session.  
+# This enables disabled modules, so the
+# loaded session can disable a fresh set of modules.
+method reset_app {} 
+   
+
+##########################
+### save_module_variables
+##########################
+# Saves out variables of all 
+# modules to the specified file. Currently, this method 
+# saves out variables only for modules the
+# application has included in the global mods array.
+method save_module_variables { fileid } 
+
+
+##########################
+### get_module_variable_name
+##########################
+# Strips away the module name information, and acquires 
+# just the variable name (i.e. port-index from 
+# SCIRun_FieldsOther_ChooseField_0-port-index
+method get_module_variable_name { var } 
+
+
+#########################
+### save_disabled_modules
+#########################
+# Save out the call to disable all modules 
+# currently disabled
+method save_disabled_modules { fileid } 
+    
+
+#########################
+### save_class_variables
+#########################
+# Save out all class variables 
+method save_class_variables { fileid } 
+
+    
+#######################
+### get_class_variable_name
+#######################
+# Remove the :: from the variable
+method get_class_variable_name { var } 
+
+
+#############################
+### exit_app
+#############################
+# Exit by a NiceQuit
+method exit_app {} 
+
+
+#############################
+### create_viewer_tab
+#############################
+# Build the Viewer tab labeled
+# "Viewer Options".
+method create_viewer_tab { vis } 
+
+
+########################
+### display_module_error
+########################
+# If a module has received an error, click the red progress bar to 
+# display the module's log.
+method display_module_error {} 
+
+
+###########################
+### activate_widget
+###########################
+# Activates a widget and changes the foreground 
+# color black. If it is a Next or Execute button, this method  
+# changes the foreground color to the appropriate color
+method activate_widget {w} 
+
+    
+##############################
+### disable_widget
+##############################
+# Disables a widget and sets the foreground to 
+# grey64.
+method disable_widget {w} 
+
+
+############################
+### construct_indicator
+############################
+# Intializes the canvases for the different
+# indicate states (reset, error, executing, complete)
+method construct_indicator { canvas } 
+
+    
+#######################
+### change_indicator
+#######################
+# Change the indicator bar.  If indicate equals 0,
+# reset. 1 equals start swirl, 2 equals complete,
+# 3 equals error state. Each time this method executes with
+# indicate=1, the swirl canvas shifts.  After 3 cyles
+# it starts over. This function calls itself again, only when indicate is 1.
+method change_indicator {} 
+
+
+###########################
+### block_connection
+###########################
+# Blocks a module connection
+method block_connection { modA portA modB portB } 
+
+
+###########################
+### unblock_connection
+###########################
+# Unblocks a module connection
+method unblock_connection { modA portA modB portB } 
+
+    
+#############################
+### draw_colormap
+#############################
+# This method draws a small colormap.
+method draw_colormap { which canvas } 
+
+    
+######################
+### set_color_map
+######################
+method set_color_map { map } 
+    
+
+#######################
+### make_new_map
+#######################
+method make_new_map { currentMap } 
+    
+
+#####################
+### modify
+#####################
+method modify { i range } 
+
+
+#######################
+### addColorSelection
+#######################
+# Creates a button and color swatch, so 
+# a specific color can be set.
+method addColorSelection {frame text color mod} 
+    
+    
+#######################
+### raiseColor
+#######################
+# Raises the color swatch and allows the user to pick
+method raiseColor {col color mod} 
+
+	
+#########################
+### setColor
+#########################
+# Set the appropriate color.  This should be
+# re-written by the child class to change the color
+# for a specific ShowField.
+method setColor {col color mode} 
+</pre>
+
+                <h4>
+                  <b>Summary</b>
+                </h4>
+<p>Chapter 3 showed the variables and methods within the PowerAppBase
+class.  Chapter 4 discusses what the PowerApp class should contain.</p>
+
+
+                <div align="right">
+                  <p>
+                    <a href="index.html">1</a>
+                    <a href="chapter_2.html">2</a>
+                    <a href="chapter_3.html">3</a>
+                    <a href="chapter_4.html">4</a>
+                  </p>
+                </div>
+                </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <img height="13" width="600" src="images/footer.gif"
+	    alt="Footer Images" />
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/xhtml1-transitional.ced"
+sgml-indent-data: t
+sgml-indent-step: 2
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

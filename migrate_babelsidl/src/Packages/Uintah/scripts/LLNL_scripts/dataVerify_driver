@@ -1,0 +1,32 @@
+#_____________________________________________________________________.
+#      dataVerify_driver
+#   08/17/06
+# This is a gmake file that verifys the data transferred by pscp data.  It pushes
+# from the machine you're currently on to the REMOTEDIR on LOGIN.
+# usage
+#_____________________________________________________________________.
+
+FILES      := $(shell cat pscp_files)
+TAR_FILES  := $(wildcard *.tar)
+
+          
+SRCS =   $(shell for i in $(FILES) ; do \
+              if \
+                test -d $$i ;\
+              then \
+                echo "$$i/" ;\
+              else \
+                echo $$i ;\
+              fi \
+          done) 
+          
+DESTS := $(patsubst %,../stamp/%,$(SRCS))
+
+all: $(DESTS)
+
+../stamp:
+	mkdir $@
+
+../stamp/%: % ../stamp
+	@echo "verifying $<"
+	@rsync -rl --size-only --log-format="missing file %f bytes transferred %b" --rsh=/usr/bin/ssh $< $(LOGIN):$(REMOTEDIR)/

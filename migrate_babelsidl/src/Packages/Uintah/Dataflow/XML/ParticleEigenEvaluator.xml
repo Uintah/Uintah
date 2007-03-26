@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="ParticleEigenEvaluator" category="Operators">
+  <overview>
+    <authors>
+      <author>Wayne Witzel</author>
+    </authors>
+    <summary>Create eigenvalue and eigenvector particle fields from a
+    tensor particle field.</summary>
+    <description>
+      <p>Version Date: October 2000</p><p>Version: 1.0</p>
+      <p>Compute a particle field of eigenvalues and a particle field
+      of eigenvectors from a particle field of tensor values.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Tensor Particles</name>
+        <datatype>Uintah::TensorParticles</datatype>
+      </port>
+     </inputs>
+    <outputs>
+      <port>
+	<name>Eigenvalue Particles</name>
+	<datatype>Uintah::ScalarParticles</datatype>
+      </port>
+      <port>
+	<name>Eigenvector Particles</name>
+	<datatype>Uintah::VectorParticles</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

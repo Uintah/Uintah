@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="FieldToNrrd" category="Converters">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Take the data from a field or fields and wrap it with a
+nrrd and pass it out.
+    </summary>
+    <description>
+      <p>Inputs: a field or multiple fields that share the *same*
+mesh. Output: a NrrdData.
+      </p>
+      <p>
+         This module converts data from a given field, into NrrdData.
+NrrdData is the SCIRun object that is mostly a wrapper around a Nrrd*.
+There are many operations that can be applied to the data as a nrrd,
+<slink path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink>
+many of which are supported in this Teem package. </p>
+    </description>
+    <examplesr>Teem/nets/test/to_and_from_lvd.fld.net</examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Points</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Connections</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Data</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p></p>
+      </description>
+      <step>
+	<p>Run the test network (see examplesr tag), and verify that
+geometry and data values are identical.  This can be done with visual
+inspection. Just turn off and on display of nodes to compare
+colors.</p>
+      </step>
+    </plan>
+  </testing>
+</component>

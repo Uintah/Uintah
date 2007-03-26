@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE metacomponentmodel SYSTEM "../../../Framework/XML/metacomponentmodel.dtd">
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<metacomponentmodel name="cca">
+  <library name="CCA_Components_GUIBuilder">
+    <!-- the SIDL GUI interface -->
+    <component name="SCIRun.GUIBuilder" />
+  </library>
+  <library name="CCA_Components_Hello">
+    <component name="SCIRun.Hello">
+      <interface file="CCA/Components/Hello/StringPort.sidl" />
+    </component>
+  </library>
+  <library name="CCA_Components_World">
+    <component name="SCIRun.World">
+      <interface file="CCA/Components/World/StringPort.sidl" />
+    </component>
+  </library>
+  <library name="CCA_Components_FEM">
+    <component name="SCIRun.FEM" />
+  </library>
+  <library name="CCA_Components_FileReader">
+    <component name="SCIRun.FileReader" />
+  </library>
+  <library name="CCA_Components_LinSolver">
+    <component name="SCIRun.LinSolver" />
+  </library>
+  <library name="CCA_Components_ListPlotter">
+    <component name="SCIRun.ListPlotter" />
+  </library>
+  <library name="CCA_Components_PDEdriver">
+    <component name="SCIRun.PDEdriver" />
+  </library>
+  <library name="CCA_Components_PHello">
+    <component name="SCIRun.PHello" />
+  </library>
+  <library name="CCA_Components_PLinSolver">
+    <component name="SCIRun.PLinSolver" />
+  </library>
+  <library name="CCA_Components_PWorld">
+    <component name="SCIRun.PWorld" />
+  </library>
+  <library name="CCA_Components_TableTennis">
+    <component name="SCIRun.TableTennis" />
+  </library>
+  <library name="CCA_Components_Tri">
+    <component name="SCIRun.Tri" />
+  </library>
+  <library name="CCA_Components_TTClient">
+    <component name="SCIRun.TTClient" />
+  </library>
+  <library name="CCA_Components_TxtBuilder">
+    <component name="SCIRun.TxtBuilder" />
+  </library>
+  <library name="CCA_Components_Viewer">
+    <component name="SCIRun.Viewer" />
+  </library>
+  <library name="CCA_Components_ZList">
+    <component name="SCIRun.ZList" />
+  </library>
+  <library name="CCA_Components_ZListWriter">
+    <component name="SCIRun.ZListWriter" />
+  </library>
+  <library name="CCA_Components_TestEchoEvent">
+    <component name="SCIRun.TestEchoEvent" />
+  </library>
+  <library name="CCA_Components_samplepe">
+    <component name="SCIRun.samplepe" />
+  </library>
+  <library name="CCA_Components_TestCreateTopic">
+    <component name="SCIRun.TestCreateTopic" />
+  </library>
+  <library name="CCA_Components_TestReleaseTopic">
+    <component name="SCIRun.TestReleaseTopic" />
+  </library>
+  <library name="CCA_Components_TestGetTopic">
+    <component name="SCIRun.TestGetTopic" />
+  </library>
+  <library name="CCA_Components_TestRegisterEventListener">
+    <component name="SCIRun.TestRegisterEventListener" />
+  </library>
+  <library name="CCA_Components_TestUnregisterEventListener">
+    <component name="SCIRun.TestUnregisterEventListener" />
+  </library>
+  <library name="CCA_Components_TestSendEvent">
+    <component name="SCIRun.TestSendEvent" />
+  </library>
+  <library name="CCA_Components_TestProcessEvents">
+    <component name="SCIRun.TestProcessEvents" />
+  </library>
+  <library name="CCA_Components_TestSubscription">
+    <component name="SCIRun.TestSubscription" />
+  </library>
+  <library name="CCA_Components_samploecomponent">
+    <component name="SCIRun.samploecomponent" />
+  </library>
+</metacomponentmodel>

@@ -1,0 +1,137 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.20.2 Release Notes</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes - SCIRun Version 1.20.2 - Feb 5, 2004
+    </h1>
+    <h1>
+      Documentation
+    </h1>
+    <ul>
+      <li>
+	PowerApp Tutorial: improved images
+      </li>
+      <li>
+	SCIRun Tutorial: updated
+      </li>
+    </ul>
+    <h1>
+      PowerApps
+    </h1>
+    <ul>
+      <li>
+	All: added support for specifying a PowerApp session on the
+	command line
+      </li>
+      <li>
+	BioTensor: added ability to change widget values before
+	widget is turned on (e.g. you can now change the isovalue
+	<em>before</em> turning on the isosurface)
+      </li>
+    </ul>
+    <h1>
+      Packages
+    </h1>
+    <ul>
+      <li>
+	Insight: more efficient Insight filter generation
+      </li>
+      <li>
+	Insight: added many Insight filters
+      </li>
+      <li>
+	BioPSE: add explicit control for whether ModifyConductivities
+	should load new conductivities or previously-saved UI
+	conductivities
+      </li>
+    </ul>
+    <h1>
+      Modules
+    </h1>
+    <ul>
+      <li>
+	Isosurface: fixed memory leak
+      </li>
+      <li>
+	ShowColorMap: improved layout; multiple colormaps can now be
+	displayed simultaneously
+      </li>
+      <li>
+	SynchronizeGeometry: improved robustness
+      </li>
+      <li>
+	Viewer: use PWD for default location of saved images
+      </li>
+    </ul>
+    <h1>
+      NetworkEditor
+    </h1>
+    <ul>
+      <li>
+	Reset port color when tracing connection
+      </li>
+      <li>
+	Remove annotations when module is destroyed
+      </li>
+    </ul>
+    <h1>
+      Infrastructure
+    </h1>
+    <ul>
+      <li>
+	Added fix for ATI driver bug; uncomment line 118 of
+	Core/Geom/GeomOpenGL.cc to use (then recompile)
+      </li>
+      <li>
+	OSX fix to allow SCIRun and converters to be run from
+	anywhere Fixed EOL problem with dynamically compiled
+      functions </li>
+    </ul>
+    <h1>
+      Data Sets
+    </h1>
+    <ul>
+      <li>
+	Updated command line arguments for converter examples in
+	README file
+      </li>
+    </ul>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+</html>

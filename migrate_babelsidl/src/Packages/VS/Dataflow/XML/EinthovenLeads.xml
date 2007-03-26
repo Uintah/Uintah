@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="EinthovenLeads" category="Render">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+        Given input potential field and user input of 3 nodes, package
+up the potentials into a Nrrd displayable by ICUMonitor.
+    </summary>
+    <description>
+	<p> Given input potential field and user input of 3 nodes,
+package up the potentials into a Nrrd displayable by ICUMonitor. The
+user can use ShowField (Text Tab) to display the node values, and
+select the 3 locations most appropriate for the EinthovenLead I, II,
+III locations.  Connect the output to the ICUMonitor to see the
+expected lead visualization.
+        </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Torso</name>
+	<description>
+	  <p>
+            Typically a Torso Field with scalars calculated via
+            forward FEM solution.
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Values</name>
+	<description>
+	  <p>Output Nrrd typically connected to ICUMonitor</p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+	<name>Electrodes</name>
+	<description>
+	  <p>Connect to Viewer to show electrode location</p>
+	</description>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+    </description>
+    <parameter>
+      <widget></widget>
+      <datatype></datatype>
+      <label></label>
+      <description>
+      </description>
+    </parameter>
+  </gui>
+  <nets>
+  </nets>
+</component>

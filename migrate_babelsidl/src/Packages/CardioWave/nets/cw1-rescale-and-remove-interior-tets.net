@@ -1,0 +1,233 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+if {[llength [array get env CWDATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the CWDATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv CWDATA /scratch/data/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set CWDATA $env(CWDATA)
+puts "*** Using CWDATA $CWDATA"
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Fri  Aug 24 2001"
+
+global runTime
+set runTime " 17:7:30"
+
+set bbox {11.0 12.0 514 530}
+
+set m0 [addModuleAtPosition "CardioWave" "CreateModel" "RemoveInteriorTets" 83 284]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 11 12]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 175 393]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 352 486]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 370 286]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 238 192]
+set m6 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 310 100]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 15 391]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "TransformField" 109 103]
+set m9 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 171 12]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "EditField" 14 195]
+
+addConnection $m0 0 $m2 0
+addConnection $m2 0 $m3 0
+addConnection $m4 0 $m3 1
+addConnection $m5 0 $m4 0
+addConnection $m5 0 $m0 0
+addConnection $m6 0 $m5 1
+addConnection $m0 0 $m7 0
+addConnection $m1 0 $m8 0
+addConnection $m9 0 $m8 1
+addConnection $m8 0 $m5 0
+addConnection $m8 0 $m10 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-threshold {0.170806}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $CWDATA/sr-data/0.1.tvv.fld
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-nodes-on {0}
+set $m2-edges-on {0}
+set $m2-faces-on {1}
+set $m2-vectors-on {0}
+set $m2-normalize-vectors {-2147483647}
+set $m2-has_vec_data {1}
+set $m2-def-color-r {0.99}
+set $m2-def-color-g {0.05}
+set $m2-def-color-b {0.05}
+set $m2-node_display_type {Points}
+set $m2-edge_display_type {Lines}
+set $m2-active_tab {Faces}
+set $m2-node_scale {0.03}
+set $m2-edge_scale {0.03}
+set $m2-vectors_scale {0.03}
+set $m2-show_progress {-2147483647}
+set $m2-resolution {4}
+set $m3-notes {}
+set $m3-show_status {1}
+$m3 ui
+set $m3-ViewWindow_0-pos {}
+set $m3-ViewWindow_0-caxes {1}
+set $m3-ViewWindow_0-iaxes {-2147483647}
+set $m3-ViewWindow_0-view-eyep-x {-3.64833}
+set $m3-ViewWindow_0-view-eyep-y {-6.64867}
+set $m3-ViewWindow_0-view-eyep-z {8.83957}
+set $m3-ViewWindow_0-view-lookat-x {0.148908}
+set $m3-ViewWindow_0-view-lookat-y {0.181593}
+set $m3-ViewWindow_0-view-lookat-z {0.014624}
+set $m3-ViewWindow_0-view-up-x {-0.946676}
+set $m3-ViewWindow_0-view-up-y {0.192279}
+set $m3-ViewWindow_0-view-up-z {-0.258521}
+set $m3-ViewWindow_0-view-fov {15.5429}
+set $m3-ViewWindow_0-view-eyep-x {-3.64833}
+set $m3-ViewWindow_0-view-eyep-y {-6.64867}
+set $m3-ViewWindow_0-view-eyep-z {8.83957}
+set $m3-ViewWindow_0-view-eyep-x {-3.64833}
+set $m3-ViewWindow_0-view-eyep-y {-6.64867}
+set $m3-ViewWindow_0-view-eyep-z {8.83957}
+set $m3-ViewWindow_0-view-lookat-x {0.148908}
+set $m3-ViewWindow_0-view-lookat-y {0.181593}
+set $m3-ViewWindow_0-view-lookat-z {0.014624}
+set $m3-ViewWindow_0-view-lookat-x {0.148908}
+set $m3-ViewWindow_0-view-lookat-y {0.181593}
+set $m3-ViewWindow_0-view-lookat-z {0.014624}
+set $m3-ViewWindow_0-view-up-x {-0.946676}
+set $m3-ViewWindow_0-view-up-y {0.192279}
+set $m3-ViewWindow_0-view-up-z {-0.258521}
+set $m3-ViewWindow_0-view-up-x {-0.946676}
+set $m3-ViewWindow_0-view-up-y {0.192279}
+set $m3-ViewWindow_0-view-up-z {-0.258521}
+set $m3-ViewWindow_0-view-fov {15.5429}
+set $m3-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m3-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-bgcolor-r {0}
+set $m3-ViewWindow_0-bgcolor-g {0}
+set $m3-ViewWindow_0-bgcolor-b {0}
+set $m3-ViewWindow_0-shading {}
+set $m3-ViewWindow_0-do_stereo {0}
+set $m3-ViewWindow_0-ambient-scale {1}
+set $m3-ViewWindow_0-diffuse-scale {1}
+set $m3-ViewWindow_0-specular-scale {1}
+set $m3-ViewWindow_0-emission-scale {1}
+set $m3-ViewWindow_0-shininess-scale {1}
+set $m3-ViewWindow_0-sbase {1}
+set $m3-ViewWindow_0-sr {1}
+set $m3-ViewWindow_0-do_bawgl {0}
+set $m3-ViewWindow_0-drawimg {-2147483647}
+set $m3-ViewWindow_0-saveprefix {}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {1}
+set $m3-ViewWindow_0-unused {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-nodes-on {0}
+set $m4-edges-on {1}
+set $m4-faces-on {0}
+set $m4-vectors-on {1}
+set $m4-normalize-vectors {0}
+set $m4-has_vec_data {1}
+set $m4-def-color-r {0.5}
+set $m4-def-color-g {0.5}
+set $m4-def-color-b {0.5}
+set $m4-node_display_type {Points}
+set $m4-edge_display_type {Lines}
+set $m4-active_tab {Vectors}
+set $m4-node_scale {2}
+set $m4-edge_scale {1}
+set $m4-vectors_scale {0.2}
+set $m4-show_progress {-2147483647}
+set $m4-resolution {4}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-filename $CWDATA/sr-data/0.1.f1.mat
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-filename $CWDATA/sr-data/2cm/0.1.resized-no-interior.tvv.fld
+set $m7-filetype {Binary}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-rotate_x {0}
+set $m9-rotate_y {0}
+set $m9-rotate_z {1}
+set $m9-rotate_theta {0}
+set $m9-translate_x {0}
+set $m9-translate_y {0}
+set $m9-translate_z {0}
+set $m9-scale_uniform {-1.617}
+set $m9-scale_x {0}
+set $m9-scale_y {0}
+set $m9-scale_z {0}
+set $m9-shear_plane_a {0}
+set $m9-shear_plane_b {0}
+set $m9-shear_plane_c {1}
+set $m9-shear_plane_d {1}
+set $m9-widget_resizable {1}
+set $m9-permute_x {1}
+set $m9-permute_y {2}
+set $m9-permute_z {3}
+set $m9-pre_transform {1}
+set $m9-which_transform {scale}
+set $m9-widget_scale {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-numnodes2 {}
+set $m10-fldname2 {}
+set $m10-typename2 {TetVol<Vector> }
+set $m10-datamin2 {4.58563e-311}
+set $m10-datamax2 {1.76762e-311}
+set $m10-dataat2 {Nodes}
+set $m10-cx2 {0.248744}
+set $m10-cy2 {0.151605}
+set $m10-cz2 {-0.13144}
+set $m10-sizex2 {2.10262}
+set $m10-sizey2 {2.0459}
+set $m10-sizez2 {1.91461}
+set $m10-cfldname {0}
+set $m10-ctypename {0}
+set $m10-cdataat {0}
+set $m10-cdataminmax {0}
+set $m10-cgeom {0}
+$m0 initialize_ui
+$m9 initialize_ui
+$m10 initialize_ui
+
+::netedit scheduleok

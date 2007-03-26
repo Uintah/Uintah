@@ -1,0 +1,145 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+  <chapter id="dev.interfacetcl">
+    <title>The SCIRun Interface to Tcl</title>
+    
+    
+      <para>
+      This chapter describes how to easily communicate between the GUI
+      (Tcl/Tk) and the C++ elements of SCIRun modules.
+    </para>
+    
+
+    <section>
+      <title>Introduction</title>
+
+      <para>
+      SCIRun uses TCL/TK as its GUI font end. However, the TCL/TK
+      was not designed with a clean interface between TCL code
+      and C/C++. The purpose of this directory is to provide an abstraction
+      layer between the two and make the task of moving data between the 
+      TCL and the C++ portions of SCIRun transparent to the user.
+    </para>
+
+      <para>
+      Most of the code in the Dataflow/GuiInterface directory is used
+      internally in SCIRun.  
+      The only exception are the GuiVars which can be access from both
+      the tcl and the C++ codes. These variables provide a transparent
+      mechanism in C++ to set or get the tcl variables they represent.
+      Each such tcl variable is associated with a Module and thus contains
+      information about the module tcl id and a pointer to the module. 
+    </para>
+    </section>
+
+    <section>
+      <title>Programming with the SCIRun GuiInterface</title>
+
+      <para>
+      On the TCL side, the code should access the variables as regular
+      tcl variables. On the C++ side, the code needs to declare these
+      variables inside a Module and access them via the get() and
+      set() functions.  
+    </para>
+
+      <section>
+	<title>GuiVar</title>
+	<para>
+      GuiVars are variables that encapsulate the interaction between
+      the C++ code 
+      and the GUI (Graphical User Interface) code. The variable does not
+      hold the actual value, rather it holds information which is used
+      to access the corresponding variable on the GUI side. From the C++
+      side the user may set the variable value via a set() function and
+      retrieve the value via a get() function.
+    </para>
+
+	<para>
+      There are several specialization of GuiVar for particular variable types
+      such as GuiInt, GuiString and GuiPoint.
+    </para>
+
+	<para>
+      In a tcl code, i.e. in a tcl module:
+    </para>
+
+	<programlisting>
+      itcl_class foo {
+         ...
+        method set_defaults {} {
+	  global $this-min
+	  global $this-max
+
+	  set $this-min 0                 # set to 0
+	  set $this-max [set $this-min]   # '[set $this-var]' returns its value
+         }
+
+         ...
+       }
+    </programlisting>
+	<para>
+       In the C++ side, i.e. in a module:
+     </para>
+	<programlisting>
+       class Demo : public Module {
+         ...
+         GuiInt gui_min, gui_max;         // define GUI variables
+
+	 Demo( const clString&amp; id );
+	 void init();
+       };
+
+       Demo::Demo( const clString &amp;id ) 
+         : Module(...), 
+	   gui_min("min",id, this),       // initialize a variable with
+	   gui_max("max",id,this)         // its name on the tcl side.
+       {
+	...
+       }
+
+       void Demo::init() 
+       {
+	  gui_min.set(7);               // set a tcl variable
+	  int i = gui_max.get();        // get a value from the tcl side
+       }
+    </programlisting>     
+      </section>
+    </section>
+  </chapter>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->
