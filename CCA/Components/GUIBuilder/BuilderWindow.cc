@@ -52,15 +52,12 @@
 #include <map>
 #include <iostream>
 
+#include <sci_metacomponents.h>
+
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 
 #include <Core/Thread/Thread.h>
-
-# include <Framework/TypeMap.h>
-#if GUI_TEST
-# include <Framework/CCA/CCAException.h>
-#endif
-
+#include <Framework/TypeMap.h>
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <CCA/Components/GUIBuilder/MiniCanvas.h>
 #include <CCA/Components/GUIBuilder/NetworkCanvas.h>
@@ -68,10 +65,6 @@
 #include <CCA/Components/GUIBuilder/ComponentWizardDialog.h>
 #include <CCA/Components/GUIBuilder/XMLPathDialog.h>
 #include <CCA/Components/GUIBuilder/FrameworkProxyDialog.h>
-
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
 
 namespace GUIBuilder {
 
@@ -117,6 +110,9 @@ void MenuTree::add(const std::vector<wxString>& name, int nameindex,
                    const sci::cca::ComponentClassDescription::pointer& desc,
                    const wxString& fullname)
 {
+  if (desc->getComponentClassName() == "SCIRun.GUIBuilder"
+      || desc->getComponentClassName() == "SCIRun.TxtBuilder") return;
+
   if (nameindex == (int) name.size()) {
     if ( !cd.isNull() ) {
       // warning - should be displayed?
@@ -200,9 +196,6 @@ const wxColor BuilderWindow::BACKGROUND_COLOUR(0, 51, 102);
 BEGIN_EVENT_TABLE(BuilderWindow, wxFrame)
   EVT_MENU(wxID_ABOUT, BuilderWindow::OnAbout)
   EVT_MENU(wxID_EXIT, BuilderWindow::OnQuit)
-#if GUI_TEST
-  EVT_MENU(ID_MENU_TEST, BuilderWindow::OnTest)  // test GUI, components etc.
-#endif
   EVT_MENU(ID_MENU_LOAD, BuilderWindow::OnLoad)
   EVT_MENU(wxID_SAVE, BuilderWindow::OnSave)
   EVT_MENU(wxID_SAVEAS, BuilderWindow::OnSaveAs)
@@ -219,9 +212,10 @@ IMPLEMENT_DYNAMIC_CLASS(BuilderWindow, wxFrame)
 
 int BuilderWindow::IdCounter = BuilderWindow::ID_BUILDERWINDOW_HIGHEST;
 
-BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent) : builder(bc)
+BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent)
+  : builder(bc), pointerLocationX(wxT("0")), pointerLocationY(wxT("0"))
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::BuilderWindow(..): from thread " << Thread::self()->getThreadName() << " in framework " << builder->getFrameworkURL() << std::endl;
 #endif
 
@@ -241,10 +235,18 @@ bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& titl
   setDefaultText();
 
   //SetFont(wxFont(11, wxDEFAULT, wxNORMAL, wxNORMAL, 0, wxT("Sans")));
-  statusBar = CreateStatusBar(2, wxST_SIZEGRIP);
-  int statusBarWidths[] = { 350, -1 };
-  statusBar->SetStatusWidths(2, statusBarWidths);
-  statusBar->SetStatusText(wxT("SCIRun2 started"), 0);
+  statusBar = CreateStatusBar(3, wxST_SIZEGRIP);
+  int statusBarWidths[] = { 350, 150, -1 };
+  statusBar->SetStatusWidths(3, statusBarWidths);
+  statusBar->SetStatusText(wxT("SCIJump started"), 0);
+
+#ifdef __WXMAC__
+  // temporary fix for a layout bug in sash windows
+  bottomWindow->SetDefaultSize(wxSize(MIN, BOTTOM_HEIGHT + 1));
+  wxLayoutAlgorithm layout;
+  layout.LayoutFrame(this);
+  Refresh();
+#endif
 
   return true;
 }
@@ -269,7 +271,7 @@ void BuilderWindow::BuildAllPackageMenus() {
 
 BuilderWindow::~BuilderWindow()
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::~BuilderWindow()" << std::endl;
 #endif
   // framework shutdown instead!!!
@@ -291,24 +293,18 @@ ComponentIcon* BuilderWindow::GetComponentIcon(const std::string& instanceName)
 
 void BuilderWindow::DisplayMessage(const wxString& line)
 {
-  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  wxStreamToTextRedirector redirect(textCtrl);
   *textCtrl << line << wxT("\n");
 }
 
 void BuilderWindow::DisplayErrorMessage(const wxString& line)
 {
   textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
-  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  wxStreamToTextRedirector redirect(textCtrl);
   *textCtrl << line << wxT("\n");
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
 void BuilderWindow::DisplayMessages(const std::vector<wxString>& lines)
 {
-  wxStreamToTextRedirector redirect(textCtrl);
-
   for (std::vector<wxString>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
     *textCtrl << *iter << wxT("\n");
   }
@@ -322,21 +318,30 @@ void BuilderWindow::DisplayErrorMessages(const std::vector<wxString>& lines)
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
+void BuilderWindow::DisplayMousePosition(const wxString& widgetName, const wxPoint& p)
+{
+#if FWK_DEBUG
+  pointerLocationX.Printf("%d", p.x);
+  pointerLocationY.Printf("%d", p.y);
+  statusBar->SetStatusText(widgetName + ": " + pointerLocationX + ", " + pointerLocationY, 1);
+#endif
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // event handlers
 
 void BuilderWindow::OnAbout(wxCommandEvent &event)
 {
   wxString msg;
-  msg.Printf(wxT("Hello and welcome to %s"), wxVERSION_STRING);
+  msg.Printf(wxT("Copyright (c) 2006 Scientific Computing and Imaging Institute, University of Utah.\n\nSCIJump information is available at\nhttps://code.sci.utah.edu/SCIJump/index.php/Main_Page."));
 
-  // show license
-  wxMessageBox(msg, wxT("About SCIRun2"), wxOK|wxICON_INFORMATION, this);
+  // TODO: show or direct to license
+  wxMessageBox(msg, wxT("About SCIJump"), wxOK|wxICON_INFORMATION, this);
 }
 
 void BuilderWindow::OnQuit(wxCommandEvent &event)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::OnQuit(..)" << std::endl;
 #endif
   // Destroy the frame
@@ -345,7 +350,7 @@ void BuilderWindow::OnQuit(wxCommandEvent &event)
 
 void BuilderWindow::OnSashDrag(wxSashEvent& event)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BuilderWindow::OnSashDrag(..): event drag status="  << event.GetDragStatus() << std::endl;
 #endif
   if (event.GetDragStatus() == wxSASH_STATUS_OUT_OF_RANGE) {
@@ -379,71 +384,71 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
   Refresh();
 }
 
-#if GUI_TEST
-void BuilderWindow::OnTest(wxCommandEvent&/* event */)
-{
-  wxBusyCursor wait;
-  statusBar->SetStatusText("Build components", 0);
-  try {
-    sci::cca::ComponentID::pointer helloCid = builder->createInstance("SCIRun.Hello", sci::cca::TypeMap::pointer(0));
-    if (! helloCid.isNull()) {
-#if DEBUG
-      std::cerr << "wx: Got hello: " << helloCid->getInstanceName() << std::endl;
-#endif
-      networkCanvas->AddIcon(helloCid);
-    }
-
-    sci::cca::ComponentID::pointer worldCid = builder->createInstance("SCIRun.World", sci::cca::TypeMap::pointer(0));
-    if (! worldCid.isNull()) {
-#if DEBUG
-      std::cerr << "wx: Got world: " << worldCid->getInstanceName() << std::endl;
-#endif
-      networkCanvas->AddIcon(worldCid);
-    }
-
-    sci::cca::ComponentID::pointer pdeDriverCid = builder->createInstance("SCIRun.PDEdriver", sci::cca::TypeMap::pointer(0));
-    if (! pdeDriverCid.isNull()) {
-#if DEBUG
-      std::cerr << "wx: Got pdeDriver: " << pdeDriverCid->getInstanceName() << std::endl;
-#endif
-      networkCanvas->AddIcon(pdeDriverCid);
-    }
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    DisplayErrorMessage(e->getNote());
-  }
-  statusBar->SetStatusText(wxT("Components built"), 0);
-}
-#endif
-
-// network file handling will have to be moved outside of GUI classes
 void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
+  // need to save current app if user agrees and clear
+  wxBusyCursor wait;
+  wxString wildcard = STLTowxString(GUIBuilder::APP_EXT_WILDCARD);
+  wxFileDialog fDialog(this,
+                       wxT("Open application file"),
+                       STLTowxString(GUIBuilder::DEFAULT_OBJ_DIR),
+                       wxEmptyString,
+                       wildcard,
+                       wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
+  statusBar->SetStatusText(wxT("Loading application file"), 0);
+
+  if (fDialog.ShowModal() == wxID_OK) {
+    wxString path = fDialog.GetPath();
+    SSIDL::array1<sci::cca::ComponentID::pointer> cidList;
+    SSIDL::array1<sci::cca::ConnectionID::pointer> connList;
+
+    //Read XML and loads components and connections using BuilderService:
+    builder->loadApplication(wxToSTLString(path), cidList, connList);
+
+    //Graphical parts of loading:
+    for (SSIDL::array1<sci::cca::ComponentID::pointer>::iterator cidIter = cidList.begin();
+         cidIter != cidList.end(); cidIter++) {
+
+      if (! (*cidIter).isNull()) {
+        networkCanvas->AddIcon(*cidIter);
+      }
+    }
+
+    for (SSIDL::array1<sci::cca::ConnectionID::pointer>::iterator connIDIter = connList.begin();
+         connIDIter != connList.end(); connIDIter++) {
+
+      if (! (*connIDIter).isNull()) {
+        networkCanvas->Connect(*connIDIter);
+      }
+
+    }
+
+    statusBar->SetStatusText(wxT("Application file loaded"), 0);
+  } else {
+    statusBar->SetStatusText(wxEmptyString, 0);
+  }
 }
 
 void BuilderWindow::OnSave(wxCommandEvent& event)
 {
   wxBusyCursor wait;
-  bool exists = builder->applicationFileExists();
-  if (exists) {
-    // get file name?
-    int answer = wxMessageBox(wxT("Overwrite current application file?"), wxT("Confirm"), wxYES_NO|wxICON_QUESTION, this);
-    if (answer == wxYES) {
-      builder->saveApplication();
-    }
-  }
+   bool exists = builder->applicationFileExists();
+   if (exists) {
+     // get file name?
+    int answer = wxMessageBox(wxT("Overwrite current application file?"), wxT("Confirm"),
+                              wxYES_NO|wxICON_QUESTION, this);
+     if (answer == wxYES) {
+       builder->saveApplication();
+     }
+  } else {
+    doSaveAs();
+   }
 }
 
 void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 {
   wxBusyCursor wait;
-  wxString path = wxFileSelector(wxEmptyString,
-                                 wxEmptyString,
-                                 wxEmptyString,
-                                 wxEmptyString,
-                                 wxEmptyString,
-                                 0,
-                                 this);
+  doSaveAs();
 }
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
@@ -505,7 +510,7 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
   // Assumes that the GUI builder component class will be named "SCIRun.GUIBuilder".
   // Is there a better way to check if this is a GUI builder?
   if (! cid.isNull() && cd->getComponentClassName() != "SCIRun.GUIBuilder") {
-#if DEBUG
+#if FWK_DEBUG
     std::cerr << "wx: Got " << cid->getInstanceName() << std::endl;
 #endif
     networkCanvas->AddIcon(cid);
@@ -541,10 +546,6 @@ void BuilderWindow::SetMenus()
   compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
 
   wxMenu* fileMenu = new wxMenu();
-#if GUI_TEST
-  fileMenu->Append(ID_MENU_TEST, wxT("&Test\tAlt-T"), wxT("Test component build"));
-  fileMenu->AppendSeparator();
-#endif
   fileMenu->Append(ID_MENU_LOAD, wxT("&Load\tAlt-L"), wxT("Load saved application from file"));
   //fileMenu->Append(ID_MENU_INSERT, wxT("&Insert\tAlt-L"), wxT("Insert components from file"));
   fileMenu->Append(wxID_SAVE, wxT("&Save\tAlt-S"), wxT("Save application to file"));
@@ -568,11 +569,15 @@ void BuilderWindow::SetMenus()
 
   wxMenu* proxyFwkMenu = new wxMenu();
   proxyFwkMenu->Append(ID_MENU_ADD_PROXY, wxT("Add Proxy Framework"), wxT("Instantiate a new proxy framework to the master framework"));
+#if 0
   //proxyFwkMenu->Append(ID_MENU_REMOVE_PROXY, wxT("Remove Proxy Framework"), wxT("Remove a new proxy framework from the master framework"));
+#endif
 
   menuBar = new wxMenuBar();
   menuBar->Append(fileMenu, wxT("&File"));
-  menuBar->Append(proxyFwkMenu, wxT("&Proxy Frameworks"));
+#if 0
+  //menuBar->Append(proxyFwkMenu, wxT("&Proxy Frameworks"));
+#endif
 
   BuildAllPackageMenus();
 
@@ -603,7 +608,7 @@ void BuilderWindow::SetLayout()
   leftWindow->SetSashVisible(wxSASH_RIGHT, true);
 
   // add mini-canvas (scrolled window) to leftWindow
-  miniCanvas = new MiniCanvas(leftWindow, networkCanvas, ID_MINI_WINDOW, wxPoint(0, 0),
+  miniCanvas = new MiniCanvas(leftWindow, this, networkCanvas, ID_MINI_WINDOW, wxPoint(0, 0),
                               wxSize(MINI_WIDTH, TOP_HEIGHT));
 
   // A window to the left of the client window
@@ -617,6 +622,7 @@ void BuilderWindow::SetLayout()
   textCtrl = new wxTextCtrl(rightWindow, ID_TEXT_WINDOW, wxEmptyString, wxPoint(MINI_WIDTH, 0),
                             wxSize(TEXT_WIDTH, TOP_HEIGHT),
                             wxSUNKEN_BORDER|wxTE_MULTILINE|wxTE_READONLY|wxTE_AUTO_URL|wxTE_CHARWRAP);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -726,7 +732,7 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
 void BuilderWindow::setDefaultText()
 {
   std::vector<wxString> v;
-  wxString ver = wxT("SCIRun2 v ") + STLTowxString(SR2_VERSION);
+  wxString ver = wxT("SCIJump v ") + STLTowxString(SCIJUMP_VERSION);
   wxString u = wxT("Framework URL: ") + STLTowxString(url.c_str());
   v.push_back(ver);
   v.push_back(u);
@@ -734,5 +740,31 @@ void BuilderWindow::setDefaultText()
   DisplayMessages(v);
 }
 
+void BuilderWindow::doSaveAs()
+{
+  wxBusyCursor wait;
+  wxString wildcard = STLTowxString(GUIBuilder::APP_EXT_WILDCARD);
+  wxString extension = STLTowxString(GUIBuilder::APP_EXT);
+  wxFileDialog fDialog(this,
+                       wxT("Save application file"),
+                       STLTowxString(GUIBuilder::DEFAULT_OBJ_DIR),
+                       wxEmptyString,
+                       wildcard,
+                       wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
+
+  statusBar->SetStatusText(wxT("Saving application file"), 0);
+  if (fDialog.ShowModal() == wxID_OK) {
+    wxString path = fDialog.GetPath();
+    wxString name = fDialog.GetFilename();
+    if (name.Find('.') == -1) {
+      path.Append('.');
+      path.Append(extension);
+    }
+    builder->saveApplication(wxToSTLString(path));
+    statusBar->SetStatusText(wxT("Application file saved"), 0);
+  } else {
+    statusBar->SetStatusText(wxEmptyString, 0);
+  }
+}
 
 }

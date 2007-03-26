@@ -49,6 +49,8 @@ namespace Tri {
 
 using namespace SCIRun;
 
+const double Delaunay::INF = 1.0e300;
+
 Delaunay::Delaunay() : next(0)
 {
   //add four vertices as the bounding box vertices
@@ -75,10 +77,10 @@ Delaunay::Delaunay(const SSIDL::array1<double> &nodes1d,
     }
   }
 
-  xmin = INF;
-  xmax = -INF;
-  ymin = INF;
-  ymax = -INF;
+  xmin = Delaunay::INF;
+  xmax = -Delaunay::INF;
+  ymin = Delaunay::INF;
+  ymax = -Delaunay::INF;
 
   //reserve the first 4 nodes for bounding box vertices
   nodes.push_back(vector2d(0,0));
@@ -108,10 +110,10 @@ Delaunay::Delaunay(const SSIDL::array1<double> &nodes1d,
 //add one node
 void Delaunay::readNodes(std::istream &is)
 {
-  xmin = INF;
-  xmax = -INF;
-  ymin = INF;
-  ymax = -INF;
+  xmin = Delaunay::INF;
+  xmax = -Delaunay::INF;
+  ymin = Delaunay::INF;
+  ymax = -Delaunay::INF;
 
   //reserve the first 4 nodes for bounding box vertices
   nodes.push_back(vector2d(0,0));

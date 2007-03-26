@@ -200,7 +200,7 @@ public:
   virtual ~Module();
   void kill_helper();
 
-  //! Used by SCIRun2
+  //! Used by SCIJump
   Network* get_network() {
     return network_;
   }

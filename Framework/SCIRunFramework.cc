@@ -463,6 +463,17 @@ SCIRunFramework::registerLoader(const ::std::string& loaderName, const SSIDL::ar
   rr->print();
   cca->addLoader(rr);
 
+#if 0
+  //sci::cca::ports::GUIService::pointer service = pidl_cast<sci::cca::ports::GUIService::pointer>(getFrameworkService("cca.GUIService", ""));
+  //if (service.isNull()) {
+    //std::cerr << "Error: could not find GUIService" << std::endl;
+  //} else {
+    //std::cerr << "SCIRunFramework::registerLoader(..) from thread " << Thread::self()->getThreadName() << std::endl;
+    //service->updateComponentModels();
+    //releaseFrameworkService("cca.GUIService", "");
+  //}
+#endif
+
   //d_slave_sema.up(); //now wake UP
   return 0;
 }

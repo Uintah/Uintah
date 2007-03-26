@@ -103,8 +103,6 @@ public:
   // Handle background paint in paint event handler (on GTK+ might also
   // want to use background style wxBG_STYLE_CUSTOM).
   void OnEraseBackground(wxEraseEvent& event) {}
-  void OnLeftDown(wxMouseEvent& event);
-  void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
   void OnMiddleClick(wxMouseEvent& event);
@@ -113,6 +111,7 @@ public:
   void OnDisconnect(wxCommandEvent& event);
 
   void Connect(PortIcon* pUsed);
+  void Connect(sci::cca::ConnectionID::pointer connid);
   bool ShowPossibleConnections(PortIcon* usesPort);
   void HighlightConnection(const wxPoint& point);
 
@@ -127,8 +126,9 @@ public:
   void DeleteIcon(const std::string& instanceName);
 
   void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
+  void GetUnscrolledMousePosition(const wxMouseEvent& event, wxPoint& position);
   void GetUnscrolledMousePosition(wxPoint& position);
-  void GetScrolledPosition(const wxPoint& p, wxPoint& position);
+  void GetScrolledPosition(const wxPoint& p, wxPoint& position, bool doScroll=false);
 
   ComponentIcon* FindIconAtPointer(wxPoint& position);
   PortIcon* FindPortIconAtPointer(wxPoint& position);

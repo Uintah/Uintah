@@ -39,6 +39,7 @@
  */
 
 #include <CCA/Components/FileReader/FileReader.h>
+#include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <sci_wx.h>
 
 #include <iostream>
@@ -75,7 +76,7 @@ FRPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes,
                                         ::SSIDL::array1<int> &dirichletNodes,
                                         ::SSIDL::array1<double> &dirichletValues)
 {
-  wxString fn = wxFileSelector(wxT("Open mesh file"), wxT(""), wxT(""), wxT(""), wxT("PDE Description Files(*.pde)"), wxOPEN|wxFILE_MUST_EXIST);
+  wxString fn = wxFileSelector(wxT("Open mesh file"), STLTowxString(GUIBuilder::GUIBuilder::DEFAULT_SRC_DIR) + wxT("/CCA/Components/FileReader"), wxEmptyString, wxT("pde"), wxT("*.pde"), wxOPEN|wxFILE_MUST_EXIST);
   if (fn.IsEmpty()) {
     return 1;
   }

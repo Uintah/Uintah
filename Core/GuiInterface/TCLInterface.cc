@@ -122,7 +122,7 @@ TCLInterface::TCLInterface() :
   const std::string src(srcdir);
   const std::string itcl(itcl_dir);
 
-  eval("set scirun2 0");
+  eval("set scijump 0");
   eval("lappend auto_path {" + src + "/Core/GUI} {" + src + "/Dataflow/GUI} {" + itcl + "}");
 }
 

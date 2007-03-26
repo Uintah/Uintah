@@ -56,9 +56,9 @@ public:
                      SSIDL::array1<double> &x);
 };
 
-class LSComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+class LSComponentIconUI : public virtual sci::cca::ports::ComponentIconUI {
 public:
-  virtual ~LSComponentIcon() {}
+  virtual ~LSComponentIconUI() {}
   virtual std::string getDisplayName();
   virtual std::string getDescription();
 };

@@ -1146,7 +1146,7 @@ case $1 in
     sci_required_mdsplus=yes
     sci_required_hdf5=yes
   ;;
-  SCIRun2)
+  SCIJump)
     sci_required_babel=yes
     sci_required_ncurses=yes
   ;;
@@ -1155,9 +1155,9 @@ case $1 in
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_tena=yes  
+      sci_required_tena=yes
       #sci_required_qt=no
-      enable_scirun2=yes
+      enable_scijump=yes
 
       if test "$package" != "all"; then
         package="$package Plume"

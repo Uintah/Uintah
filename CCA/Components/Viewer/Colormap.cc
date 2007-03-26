@@ -43,6 +43,13 @@
 #include <CCA/Components/Viewer/Colormap.h>
 #include <Core/CCA/datawrapper/vector2d.h>
 
+#include <wx/wx.h>
+#include <wx/panel.h>
+#include <wx/gdicmn.h>
+#include <wx/dc.h>
+#include <wx/event.h>
+
+
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
@@ -55,13 +62,11 @@ BEGIN_EVENT_TABLE(Colormap, wxPanel)
 END_EVENT_TABLE()
 
 Colormap::Colormap(wxWindow *parent, const wxString &type, double min, double max)
-  : wxPanel(parent, wxID_ANY), type(type), minVal(min), maxVal(max), borderY(12)
+  : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(50, 200), wxSUNKEN_BORDER|wxDOUBLE_BORDER),
+    type(type), minVal(min), maxVal(max), borderX(12), borderY(12)
 {
-//   setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding, 30,100));
 //   setType(type);
 //   setValues(min,max);
-
-//   setFrameStyle(Panel|Sunken);
 //   setLineWidth(2);
 }
 
@@ -77,11 +82,20 @@ void Colormap::setValues(double min, double max)
   maxVal = max;
 }
 
+int Colormap::width()
+{
+  int w, h;
+  GetSize(&w, &h);
+  //return w - borderX * 2;
+  return w;
+}
+
 int Colormap::height()
 {
   int w, h;
   GetSize(&w, &h);
-  return h - borderY * 2;
+  //return h - borderY * 2;
+  return h;
 }
 
 wxColor Colormap::getColor(double value)
@@ -117,37 +131,39 @@ wxColor Colormap::getColor(double value)
 
 void Colormap::OnPaint(wxPaintEvent& event)
 {
-//   QPainter p(this);
-//   for(int y=0; y<=height(); y++){
-//     double val=double(height()-y)/height();
-//     p.setPen(getColor(minVal+(maxVal-minVal)*val));
-//     p.drawLine(0,borderY+y,width(),borderY+y);
-//   }
+  wxPaintDC dc(this);
 
-//   //display values
+  for (int y = 0; y <= height(); y++) {
+    double val = double(height() - y) / height();
+    dc.SetPen(getColor(minVal + (maxVal - minVal) * val));
+    //dc.DrawLine(0, borderY + y, width(), borderY + y);
+    dc.DrawLine(0, y, width(), y);
+  }
 
-//   int ny=5;
+  //display values
 
-//   p.setPen(QColor(255,0,255));
-//   //  p.setBrush(white);
-//   for(int iy=0; iy<=ny; iy++){
-//     double value=minVal+iy*(maxVal-minVal)/ny;
-//     int y=borderY+(ny-iy)*height()/ny;
-//     char s[10];
-//     if( fabs(value)>0.01 && fabs(value)<100){
-//   sprintf(s,"%6.4lf",value);
-//     }
-//     else{
-//       sprintf(s,"%7.2lf",value);
-//     }
-//     sprintf(s,"%7.2lf",value);
+  int ny = 5;
 
-//     int w=12*6;
-//     int h=14;
-//     QRect r(width()/2-w/2,y-h/2, w, h);
+  dc.SetPen(wxTheColourDatabase->Find(wxT("MAGENTA")));
+  //  p.setBrush(white);
+  for (int iy = 0; iy <= ny; iy++) {
+    double value = minVal + iy * (maxVal - minVal) / ny;
+    //int y = borderY + (ny - iy) * height() / ny;
+    int y = (ny - iy) * height() / ny;
+    char s[10];
+    if (fabs(value) > 0.01 && fabs(value) < 100) {
+      sprintf(s, "%6.4lf", value);
+    } else {
+      sprintf(s, "%7.2lf", value);
+    }
+    sprintf(s, "%7.2lf", value);
 
-//     p.drawText(r,Qt::AlignCenter, s);
-//   }
+    int w = 12 * 6;
+    int h = 14;
+    wxRect r(width()/2 - w/2, y - h/2, w, h);
+
+    dc.DrawLabel(STLTowxString(s), r, wxALIGN_CENTER);
+  }
 }
 
 }

@@ -107,6 +107,7 @@ interface Builder extends sci.cca.Component {
   int go(in string goPortName);
 
   bool applicationFileExists();
+  void loadApplication(in string fileName, out array<sci.cca.ComponentID> cidList, out array<sci.cca.ConnectionID> connList);
   void saveApplication();
   void saveApplication[As](in string fileName);
 }
@@ -120,14 +121,15 @@ class GUIBuilder implements-all sci.cca.Builder, sci.cca.EventListener {
   int ui(in string uiPortName);
 
   void updateProgress(in cca.ComponentID cid, in int progressPercent);
+  void updateComponentModels();
 
   //   // manage Progress ports for the GUI
   //   bool connectProgress(in string providesName, in string usesPortName, in cca.ComponentID cid, out string providesPortName);
   //   void disconnectProgress(in string progressPortName);
 
   // manage ComponentIcon ports for the GUI
-  bool connectComponentIcon(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
-  void disconnectComponentIcon(in string ciPortName);
+  bool connectComponentIconUI(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
+  void disconnectComponentIconUI(in string ciPortName);
 
   bool setPortColor(in string portName, in string colorName);
   // see Bugzilla bug #2834:

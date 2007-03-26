@@ -36,12 +36,15 @@ SRCDIR   := CCA/Components/Viewer
 SRCS     += \
             $(SRCDIR)/Viewer.cc \
             $(SRCDIR)/ViewerWindow.cc \
-            $(SRCDIR)/MainWindow.cc \
+            $(SRCDIR)/ViewerDialog.cc \
             $(SRCDIR)/Colormap.cc
+
+#$(SRCDIR)/ViewerWindow.cc
+#$(SRCDIR)/MainWindow.cc
 
 
 PSELIBS := \
-           Framework Core/CCA/PIDL Core/CCA/spec \
+           Framework Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
            Core/Thread Core/Containers Core/Exceptions
 
 LIBS := $(WX_LIBRARY) $(M_LIBRARY)
@@ -49,6 +52,3 @@ LIBS := $(WX_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/Viewer.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/ViewerWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/MainWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Colormap.o: Core/CCA/spec/cca_sidl.h

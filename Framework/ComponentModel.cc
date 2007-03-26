@@ -293,7 +293,6 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
        dirIter != sArray.end(); dirIter++) {
     StringVector files;
     Dir d(*dirIter);
-std::cerr << "getXMLPaths: dir=" << d.getName() << std::endl;
     d.getFilenamesBySuffix(".xml", files);
 
     // Dir::getFilenamesBySuffix returns file names only

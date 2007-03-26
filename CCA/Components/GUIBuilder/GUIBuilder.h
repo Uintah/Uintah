@@ -32,7 +32,7 @@
 #include <CCA/Components/GUIBuilder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
-#include <Framework/StandAlone/sr2_version.h>
+#include <Framework/StandAlone/scijump_version.h>
 
 #include <wx/gdicmn.h>
 
@@ -107,10 +107,11 @@ public:
 
   // progress
   virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
+  virtual void updateComponentModels();
 
-  virtual bool connectComponentIcon(const std::string& usesName, const std::string& providesPortName,
+  virtual bool connectComponentIconUI(const std::string& usesName, const std::string& providesPortName,
                                     const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
-  virtual void disconnectComponentIcon(const std::string& ciPortName);
+  virtual void disconnectComponentIconUI(const std::string& ciPortName);
 
 
   // events
@@ -135,6 +136,7 @@ public:
 
   // test ApplicationLoader
   virtual bool applicationFileExists();
+  virtual void loadApplication(const std::string& fileName, SSIDL::array1<sci::cca::ComponentID::pointer>& cidList, SSIDL::array1<sci::cca::ConnectionID::pointer>& connList);
   virtual void saveApplication();
   virtual void saveApplication(const std::string& fileName);
 
@@ -146,8 +148,9 @@ public:
   static const std::string GOPORT;
   static const std::string UIPORT;
   static const std::string PROGRESS_PORT;
-  static const std::string COMPONENTICON_PORT;
+  static const std::string COMPONENTICONUI_PORT;
   static const std::string APP_EXT_WILDCARD;
+  static const std::string APP_EXT;
 
 private:
   GUIBuilder(const GUIBuilder &);
@@ -169,7 +172,7 @@ private:
   // Uses port names will be unique since they are generated from unique component instance names.
   ConnectionMap connectionMap;
 
-  // Set of port colours: the GUIBuilder will set up standard SCIRun2 ports (see SCIRun2Ports.sidl),
+  // Set of port colours: the GUIBuilder will set up standard SCIJump ports (see SCIRun2Ports.sidl),
   // or component authors can add their own.
   // Note: make this map static when support for static functions is available
   // Note: implement using wxColorDatabase instead?

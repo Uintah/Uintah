@@ -58,7 +58,7 @@ class FileTransferClient : public ServiceClient
     // To identify the homedirectories, SCIRun will write a file with a hopefully unique key
     // that identifies that directory uniquely. Currently this is only done by the local clock
     // and a randomnumber generator. This needs to be replaced with the UUID code, which is
-    // being included into SCIRun2, but does not have OSX support and still does not function
+    // being included into SCIJump, but does not have OSX support and still does not function
     // all the way. Currently id's are strings that can be replaced with any other object that
     // can be written to a string such as UUIDs 
     bool get_local_homedirid(std::string& homeid);

@@ -45,20 +45,6 @@ namespace SCIRun {
 
 class SCIRunFramework;
 
-class ComponentInfo {
-};
-
-class ConnectionInfo {
-};
-
-// fill in with relevant info
-class ApplicationInfo {
-public:
-
-private:
-
-};
-
 // TODO: Eventually the following functions should be moved to a service.
 // TODO: Need to be able to load SCIRun files too.
 
@@ -92,8 +78,11 @@ public:
   virtual std::string getFileName() { return fileName; }
   virtual void setFileName(const std::string& fn);
 
-  virtual void loadFile();
-  virtual void loadFile(const std::string& filename);
+  virtual void loadFile(SSIDL::array1<sci::cca::ComponentID::pointer>& cids,
+                        SSIDL::array1<sci::cca::ConnectionID::pointer>& connids);
+  virtual void loadFile(const std::string& fn, 
+                        SSIDL::array1<sci::cca::ComponentID::pointer>& cids,
+                        SSIDL::array1<sci::cca::ConnectionID::pointer>& connids);
 
   virtual void saveFile();
   virtual void saveFile(const std::string& filename);
@@ -103,12 +92,14 @@ public:
 private:
   ApplicationLoader(SCIRunFramework* fwk);
 
-  xmlNode* writeComponentNode(const sci::cca::ComponentID::pointer& cid,
+  void writeComponentNode(const sci::cca::ComponentID::pointer& cid,
                               const sci::cca::TypeMap::pointer& properties,
                               xmlNode** rootNode);
-  xmlNode* writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode);
-  void readComponentNode();
-  void readConnectionNode();
+  void writeConnectionNode(const sci::cca::ConnectionID::pointer& cid, xmlNode** rootNode);
+  void readComponentNode(const sci::cca::ports::BuilderService::pointer& bs, xmlNode** node,
+                         SSIDL::array1<sci::cca::ComponentID::pointer>& cids);
+  void readConnectionNode(const sci::cca::ports::BuilderService::pointer& bs, xmlNode** node,
+                          SSIDL::array1<sci::cca::ConnectionID::pointer>& connids);
 
   std::string fileName;
   std::stack<xmlNodePtr> nodeStack;

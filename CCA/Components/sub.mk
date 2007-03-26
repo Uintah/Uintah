@@ -55,10 +55,7 @@ ifeq ($(HAVE_WX),yes)
              $(SRCDIR)/PDEdriver   \
              $(SRCDIR)/FileReader  \
              $(SRCDIR)/Tri         \
-             $(SRCDIR)/Viewer      \
-             $(SRCDIR)/ListPlotter \
-             $(SRCDIR)/ZList       \
-             $(SRCDIR)/ZListWriter
+             $(SRCDIR)/Viewer
 endif
 
 ifeq ($(HAVE_TAO),yes)

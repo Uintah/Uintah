@@ -32,7 +32,7 @@
 SRCDIR := testprograms
 
 SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread
-ifeq ($(BUILD_SCIRUN2),yes)
+ifeq ($(BUILD_SCIJUMP),yes)
   SUBDIRS := $(SUBDIRS) $(SRCDIR)/Component
 endif
 

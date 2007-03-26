@@ -32,7 +32,7 @@ SRCDIR := Framework/StandAlone
 
 ########################################################################
 #
-# SCIRun2 Stuff:
+# SCIJump Stuff:
 #
 
 
@@ -54,6 +54,10 @@ endif
 
 LIBS := $(GLOBUS_LIBRARY)
 
+ifeq ($(HAVE_BABEL), yes)
+  LIBS += $(SIDL_LIBRARY)
+endif
+
 ifeq ($(HAVE_MPI),yes)
   LIBS += $(MPI_LIBRARY)
 endif
@@ -63,7 +67,21 @@ ifeq ($(HAVE_WX),yes)
 endif
 
 PROGRAM := $(FWK_EXE)
+bundle_prologue: $(SRCTOP)/scripts/scijump/Info.plist.in
+	mkdir -p $(FWK_APP)/Contents
+	echo -n "APPL????" >$(FWK_APP)/Contents/PkgInfo
+	mkdir -p $(FWK_APP)/Contents/MacOS
+	mkdir -p $(FWK_APP)/Contents/Resources
+	sed -e "s%KEYS%$(WX_DIR)/lib:$(OBJTOP_ABS)/lib%" \
+          $(SRCTOP)/scripts/scijump/Info.plist.in > $(FWK_APP)/Contents/Info.plist
+	cp -f $(SRCTOP)/scripts/scijump/scijump $(OBJTOP)/scijump
+
 SRCS := $(SRCDIR)/main.cc
+ifeq ($(OS_NAME),Darwin)
+  PROGRAM_LDFLAGS := -bind_at_load
+  #ALLTARGETS := bundle_prologue $(ALLTARGETS) bundle_epilogue
+  ALLTARGETS := bundle_prologue $(ALLTARGETS)
+endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ########################################################################
@@ -71,7 +89,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # ploader
 #
 
-# build the SCIRun2 CCA Component Loader here
+# build the SCIJump CCA Component Loader here
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
@@ -83,11 +101,20 @@ else
   endif
 endif
 
+ifeq ($(HAVE_BABEL), yes)
+  LIBS += $(SIDL_LIBRARY)
+endif
+
 ifeq ($(HAVE_MPI),yes)
   LIBS := $(MPI_LIBRARY)
 endif
 
 PROGRAM := ploader
+ifeq ($(OS_NAME),Darwin)
+  PROGRAM_LDFLAGS := -bind_at_load
+endif
+
+
 SRCS := $(SRCDIR)/ploader.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
