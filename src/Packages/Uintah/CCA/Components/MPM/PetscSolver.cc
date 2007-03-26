@@ -40,7 +40,6 @@ MPMPetscSolver::MPMPetscSolver()
 
 MPMPetscSolver::~MPMPetscSolver()
 {
-    PetscFinalize();
 }
 
 
@@ -81,14 +80,16 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-mat_spooles_ordering","BestOfNDandMS");
   PetscOptionsSetValue("-mat_spooles_symmetryflag","0");
 #endif
-//  PetscOptionsSetValue("-options_table", PETSC_NULL);
-//  PetscOptionsSetValue("-mat_superlu_dist_iterrefine", "TRUE");
-//  PetscOptionsSetValue("-mat_superlu_dist_statprint", PETSC_NULL);
-//  PetscOptionsSetValue("-log_summary", PETSC_NULL);
-//  PetscOptionsSetValue("-log_info", PETSC_NULL);
-//  PetscOptionsSetValue("-trmalloc", PETSC_NULL);
-//  PetscOptionsSetValue("-trmalloc_log", PETSC_NULL);
-//  PetscOptionsSetValue("-trdump", PETSC_NULL);
+#if 0
+  PetscOptionsSetValue("-options_table", PETSC_NULL);
+  PetscOptionsSetValue("-mat_superlu_dist_iterrefine", "TRUE");
+  PetscOptionsSetValue("-mat_superlu_dist_statprint", PETSC_NULL);
+  PetscOptionsSetValue("-log_summary", PETSC_NULL);
+  PetscOptionsSetValue("-log_info", PETSC_NULL);
+  PetscOptionsSetValue("-trmalloc", PETSC_NULL);
+  PetscOptionsSetValue("-trmalloc_log", PETSC_NULL);
+  PetscOptionsSetValue("-trdump", PETSC_NULL);
+#endif
 }
 
 void 
