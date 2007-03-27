@@ -938,16 +938,6 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 				      Task::Dependency* req, CompTable& ct,
 				      bool modifies)
 {
-  TAU_PROFILE_TIMER(patchtimer, "CDD - determine domain patches" , "", TAU_USER);
-  TAU_PROFILE_TIMER(selecttimer, "CDD - selectPatches" , "", TAU_USER);
-  TAU_PROFILE_TIMER(pcdtimer, "CDD - possiblyCreateDependencies" , "", TAU_USER);
-  TAU_PROFILE_TIMER(patchloop, "CDD - patch loop" , "", TAU_USER);
-  TAU_PROFILE_TIMER(neighborloop, "CDD - neighbor loop" , "", TAU_USER);
-  TAU_PROFILE_TIMER(neighbor2loop, "CDD - neighbor2 loop" , "", TAU_USER);
-  TAU_PROFILE_TIMER(matlloop, "CDD - matl loop" , "", TAU_USER);
-  TAU_PROFILE_TIMER(findtimer, "CDD - findcomp" , "", TAU_USER);
-  TAU_PROFILE_TIMER(fvltimer, "CDD - findVariableLocation" , "", TAU_USER);
-  TAU_PROFILE_TIMER(modifysection, "CDD - modifies portion" , "", TAU_USER);
   int me = d_myworld->myrank();
 
   for( ; req != 0; req = req->next){
@@ -957,8 +947,6 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
     if(sc->isOldDW(req->mapDataWarehouse()) && !sc->isNewDW(req->mapDataWarehouse()+1))
       continue;
 
-    TAU_PROFILE_START(patchtimer);
-    
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
     if (req->var->typeDescription()->isReductionVariable() &&
@@ -1009,12 +997,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
       }
     }
 
-    TAU_PROFILE_STOP(patchtimer);
-  
-
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
-        TAU_PROFILE_START(patchloop);
 	const Patch* patch = patches->get(i);
 	Patch::selectType neighbors;
 	IntVector low, high;
@@ -1040,7 +1024,6 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           high = Min(high, otherLevelHigh);
 
           if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z()) {
-            TAU_PROFILE_STOP(patchloop);
             continue;
           }              
 
@@ -1049,13 +1032,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           neighbors.push_back(patch);
         }
         else {
-          TAU_PROFILE_START(selecttimer);
           origPatch = patch;
           if (req->numGhostCells > 0)
             patch->getLevel()->selectPatches(low, high, neighbors);
           else
             neighbors.push_back(patch);
-          TAU_PROFILE_STOP(selecttimer);
         }
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
 			 Patch::Compare()));
@@ -1064,10 +1045,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	  dbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
 	}
 
-        TAU_PROFILE_STOP(patchloop);
 
 	for(int i=0;i<neighbors.size();i++){
-          TAU_PROFILE_START(neighborloop);
 	  const Patch* neighbor=neighbors[i];
           Patch::selectType fromNeighbors;
 	  IntVector l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
@@ -1082,22 +1061,18 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             // the grid assigned to the old dw should be the old grid.
             // This should really only impact things required from the OldDW.
             LevelP fromLevel = sc->get_dw(0)->getGrid()->getLevel(patch->getLevel()->getIndex());
-            TAU_PROFILE_START(selecttimer);
             fromLevel->selectPatches(Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l),
                                      Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h),
                                      fromNeighbors);
-            TAU_PROFILE_STOP(selecttimer);
           }
           else
             fromNeighbors.push_back(neighbor);
 
-          TAU_PROFILE_STOP(neighborloop);
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
 	    if(!(lb->inNeighborhood(neighbor) || (neighbor != fromNeighbor && lb->inNeighborhood(fromNeighbor))))
               continue;
-            TAU_PROFILE_START(neighbor2loop);
             IntVector from_l;
             IntVector from_h;
 
@@ -1114,14 +1089,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
               // cull annoying overlapping AMR patch dependencies
               patch->cullIntersection(basis, req->var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
               if (from_l == from_h) {
-                TAU_PROFILE_STOP(neighbor2loop);
                 continue;
               }
             }
 
-            TAU_PROFILE_STOP(neighbor2loop);
 	    for(int m=0;m<matls->size();m++){
-              TAU_PROFILE_START(matlloop);
 	      int matl = matls->get(m);
 
 	      // creator is the task that performs the original compute.
@@ -1132,14 +1104,12 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
               // look in old dw or in old TG.  Legal to modify across TG boundaries
               int proc = -1;
-              TAU_PROFILE_START(fvltimer);
 	      if(sc->isOldDW(req->mapDataWarehouse())) {
 	        ASSERT(!modifies);
 	        proc = findVariableLocation(req, fromNeighbor, matl, 0);
 	        creator = dts_->getOldDWSendTask(proc);
 	        comp=0;
 	      } else {
-                TAU_PROFILE_START(findtimer);
 	        if (!ct.findcomp(req, neighbor, matl, creator, comp, d_myworld)){
                   if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG) {
                     // same stuff as above - but do the check for findcomp first, as this is a "if you don't find it here, assign it
@@ -1158,9 +1128,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
 	        }
-                TAU_PROFILE_STOP(findtimer);
 	      }
-              TAU_PROFILE_STOP(fvltimer);
 	      if (modifies && comp) { // comp means NOT send-old-data tasks
 
 	        // find the tasks that up to this point require the variable
@@ -1170,7 +1138,6 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                 // i.e., the task that requires data computed by a task on this processor
                 // needs to finish its task before this task, which modifies the data
                 // computed by the same task
-                TAU_PROFILE_START(modifysection);
 	        list<DetailedTask*> requireBeforeModifiedTasks;
 	        creator->findRequiringTasks(req->var,
 					    requireBeforeModifiedTasks);
@@ -1227,17 +1194,12 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                           continue;
                       }
                     }
-                    TAU_PROFILE_START(pcdtimer);
 		    dts_->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
 					        matl, from_l, from_h, DetailedDep::Always);
-                    TAU_PROFILE_STOP(pcdtimer);
 		  }
 	        }
-                TAU_PROFILE_STOP(modifysection);
 	      }
 
-              TAU_PROFILE_START(pcdtimer);
-              
               DetailedDep::CommCondition cond = DetailedDep::Always;
               if (proc != -1 && req->patches_dom != Task::OtherGridDomain ) {
                 // for OldDW tasks - see comment in class DetailedDep by CommCondition
@@ -1254,8 +1216,6 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	      dts_->possiblyCreateDependency(creator, comp, fromNeighbor,
 					  task, req, fromNeighbor,
 					  matl, from_l, from_h, cond);
-              TAU_PROFILE_STOP(pcdtimer);
-              TAU_PROFILE_STOP(matlloop);
 	    }
 	  }
         }
