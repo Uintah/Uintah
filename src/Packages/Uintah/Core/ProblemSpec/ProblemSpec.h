@@ -102,6 +102,7 @@ WARNING
       // finds the first non-text child node
       ProblemSpecP findBlock() const;
 
+
       //////////
       // finds the next sibling node with given node name
       ProblemSpecP findNextBlock(const std::string& name) const;
@@ -216,6 +217,8 @@ WARNING
       ProblemSpecP appendElement(const char* name, double value);
       ProblemSpecP appendElement(const char* name, const vector<double>& va);
       ProblemSpecP appendElement(const char* name, const vector<int>& val);
+      ProblemSpecP appendElement(const char* name, 
+                                 const vector<string>& val);
       ProblemSpecP appendElement(const char* name, bool value);
 
       //////////

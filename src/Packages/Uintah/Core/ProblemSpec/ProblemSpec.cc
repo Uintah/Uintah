@@ -914,6 +914,23 @@ ProblemSpec::appendElement(const char* name, const vector<int>& value)
 }
 
 ProblemSpecP
+ProblemSpec::appendElement(const char* name, const vector<string >& value)
+{
+   ostringstream val;
+   val << '[';
+   for (unsigned int i = 0; i < value.size(); i++) {
+     val <<  value[i];
+     if (i !=  value.size()-1)
+       val << ',';
+     
+   }
+   val << ']';
+   return appendElement(name, val.str());
+}
+
+
+
+ProblemSpecP
 ProblemSpec::appendElement( const char* name, bool value )
 {
   if (value)
