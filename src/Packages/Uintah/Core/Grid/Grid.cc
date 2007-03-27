@@ -463,7 +463,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           stretch_count++;
           spacing[axis] = getNan();
         }
-        for(int i=0;i<stretch[axis].size();i++){
+        for(int i=0;i<(int)stretch[axis].size();i++){
           StretchSpec& spec = stretch[axis][i];
           if(spec.from == DBL_MAX){
             if(i > 0 && stretch[axis][i-1].to != DBL_MAX){
@@ -477,9 +477,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             }
           }
           if(spec.to == DBL_MAX){
-            if(i < stretch[axis].size()-1 && stretch[axis][i+1].from != DBL_MAX){
+            if(i < (int)stretch[axis].size()-1 && stretch[axis][i+1].from != DBL_MAX){
               spec.to = stretch[axis][i+1].from;
-            } else if(i == stretch[axis].size()-1){
+            } else if(i == (int)stretch[axis].size()-1){
               spec.to = levelHighPoint(axis);
             } else {
               ostringstream msg;
@@ -504,7 +504,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               }
             }
             if(spec.toSpacing == DBL_MAX){
-              if(i < stretch[axis].size()-1 && stretch[axis][i+1].fromSpacing != DBL_MAX){
+              if(i < (int)stretch[axis].size()-1 && stretch[axis][i+1].fromSpacing != DBL_MAX){
                 spec.toSpacing = stretch[axis][i+1].toSpacing;
               } else {
                 ostringstream msg;
@@ -579,7 +579,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           else
             cerr << "z";
           cerr << " axis\n";
-          for(int i=0;i<stretch[axis].size();i++){
+          for(int i=0;i<(int)stretch[axis].size();i++){
             StretchSpec& spec = stretch[axis][i];
             cerr << spec.shape << ": from " << spec.from << "(" << spec.fromSpacing << ") to " << spec.to << "(" << spec.toSpacing << "), " << spec.countCells() << " cells\n";
           }
@@ -615,7 +615,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               faces[i] = start + faces[i] * dx;
           } else {
             int count = 0;
-            for(int i=0;i<stretch[axis].size();i++){
+            for(int i=0;i<(int)stretch[axis].size();i++){
               StretchSpec& spec = stretch[axis][i];
               count += spec.countCells();
             }
@@ -623,10 +623,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             int l = -extraCells[axis];
             faces.resize(l, count);
             int start = 0;
-            for(int i=0;i<stretch[axis].size();i++){
+            for(int i=0;i<(int)stretch[axis].size();i++){
               StretchSpec& spec = stretch[axis][i];
               int lowExtra = (i == 0)? extraCells[axis] : 0;
-              int highExtra = (i == stretch[axis].size() -1)? extraCells[axis]+1 : 0;
+              int highExtra = (i == (int)stretch[axis].size() -1)? extraCells[axis]+1 : 0;
               spec.fillCells(start, lowExtra, highExtra, faces);
             }
           }
