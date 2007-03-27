@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/share.h>
@@ -73,6 +74,8 @@ namespace Uintah {
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
 
     bool        d_with_ice;
+
+    std::vector<std::string> d_bndy_face_txt_list; 
 
     ParticleInterpolator* d_interpolator;
 
