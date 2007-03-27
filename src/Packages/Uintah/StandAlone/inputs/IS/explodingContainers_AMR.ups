@@ -138,6 +138,7 @@
         <cell_regrid_dilation>   [1,1,1]   </cell_regrid_dilation>
         <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
         <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+        <max_timestep_interval>    1 </max_timestep_interval>
       </Regridder>
       <useLockStep>true </useLockStep>
     </AMR>                                                                                                                       
