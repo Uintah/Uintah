@@ -137,12 +137,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                                    __FILE__, __LINE__);
     }
 
-    std::vector<std::string> bndy_face_txt_list;
-    mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
-    
     // convert text representation of face into FaceType
-    for(std::vector<std::string>::const_iterator ftit(bndy_face_txt_list.begin());
-        ftit!=bndy_face_txt_list.end();ftit++) {
+    for(std::vector<std::string>::const_iterator ftit(flags->d_bndy_face_txt_list.begin());
+        ftit!=flags->d_bndy_face_txt_list.end();ftit++) {
         Patch::FaceType face = Patch::invalidFace;
         for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
             ft=Patch::nextFace(ft)) {
