@@ -71,7 +71,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>explodingContainers_AMR.uda</filebase>
+      <filebase>AMRguni3d.2C.uda</filebase>
       <outputInterval> .000002 </outputInterval>
       <save label="press_CC"/>
       <save label="temp_CC"/>
@@ -130,17 +130,14 @@
       </MPM>
       <Regridder>
         <type> BNR </type>
-        <min_patch_size> [8,8,8] </min_patch_size>
-        <patch_split_tolerance> .95 </patch_split_tolerance>
-        <patch_combine_tolerance> .95 </patch_combine_tolerance>
+        <min_patch_size> [[8,8,8]] </min_patch_size>
         <patch_ratio_to_target>.25</patch_ratio_to_target>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[2,2,2][4,4,4]]  </lattice_refinement_ratio>
-        <cell_creation_dilation>   [1,1,1]   </cell_creation_dilation>
+        <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
+        <cell_regrid_dilation>   [1,1,1]   </cell_regrid_dilation>
         <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
         <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
-        <patches_per_level_per_proc> 6       </patches_per_level_per_proc>
       </Regridder>
       <useLockStep>true </useLockStep>
     </AMR>                                                                                                                       
@@ -269,8 +266,8 @@
             <velocity>            [0.0,0.0,0.0]   </velocity>           
             <temperature>         600             </temperature>        
            </geom_object>                                               
-
          </material>
+
          <material name="reactant">
                 <density>   1840.0   </density>
                 <constitutive_model type="visco_scram">
@@ -300,20 +297,51 @@
                 <thermal_conductivity>  .452            </thermal_conductivity>
                 <specific_heat>        996.0            </specific_heat>
                 <geom_object>
-                  <cylinder label="inner steel cylinder 1"> </cylinder>
+                  <difference>
+                   <cylinder label="inner steel cylinder 1"> </cylinder>
+                   <box label="hot chunk 1">
+                     <min>           [-.15795, 0.04,-0.02]    </min>
+                     <max>           [-.05635, 0.06, 0.02]    </max>
+                   </box>
+                  </difference>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         300.0           </temperature>
+                </geom_object>
+                <geom_object>
+                  <intersection>
+                   <box label="hot chunk 1"> </box>
+                   <cylinder label="inner steel cylinder 1"> </cylinder>
+                  </intersection>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
                 </geom_object>
+
                 <geom_object>
                   <difference>
-                          <cylinder label="inner steel cylinder 2"> </cylinder>
-                          <cylinder label="bore">
-                                  <bottom>   [0.05635,0, 0]   </bottom>
-                                  <top>      [0.15795,0, 0]   </top>  
-                              <radius>           0.01524          </radius>
-                          </cylinder>  
-                   </difference>
+                    <cylinder label="inner steel cylinder 2"> </cylinder>
+                     <union>
+                      <cylinder label="bore">
+                        <bottom>   [0.05635,0, 0]   </bottom>
+                        <top>      [0.15795,0, 0]   </top>  
+                        <radius>           0.01524  </radius>
+                      </cylinder>  
+                      <box label="hot chunk 2">
+                       <min>           [.05635, 0.04,-0.02]    </min>
+                       <max>           [.15795, 0.06, 0.02]    </max>
+                      </box>
+                     </union>
+                  </difference>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         300.0           </temperature>
+                </geom_object>
+                <geom_object>
+                  <intersection>
+                    <cylinder label="inner steel cylinder 2"> </cylinder>
+                    <box label="hot chunk 2"> </box>
+                  </intersection>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
