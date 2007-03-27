@@ -134,6 +134,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     mpm_amr_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   }
 
+  mpm_flag_ps->get("boundary_traction_faces", d_bndy_face_txt_list);
+
   if (dbg.active()) {
     dbg << "---------------------------------------------------------\n";
     dbg << "MPM Flags " << endl;
@@ -195,6 +197,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
 
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
+
+  ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
 }
 
 
