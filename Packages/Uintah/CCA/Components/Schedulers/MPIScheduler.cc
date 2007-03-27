@@ -123,6 +123,8 @@ MPIScheduler::createSubScheduler()
 void
 MPIScheduler::verifyChecksum()
 {
+  TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER); 
+
   // Compute a simple checksum to make sure that all processes
   // are trying to execute the same graph.  We should do two
   // things in the future:
@@ -167,6 +169,64 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   long long start_total_comm_flops = mpi_info_.totalcommflops;
   long long start_total_exec_flops = mpi_info_.totalexecflops;
 
+#ifdef USE_TAU_PROFILING
+  int id;
+  const PatchSubset* patches = task->getPatches();
+  id = create_tau_mapping( task->getTask()->getName(), patches );
+  
+  string phase_name = "no patches";
+  if (patches && patches->size() > 0) {
+    phase_name = "level";
+    for(int i=0;i<patches->size();i++) {
+      
+      ostringstream patch_num;
+      patch_num << patches->get(i)->getLevel()->getIndex();
+      
+      if (i == 0) {
+        phase_name = phase_name + " " + patch_num.str();
+      } else {
+        phase_name = phase_name + ", " + patch_num.str();
+      }
+    }
+  }
+
+  static map<string,int> phase_map;
+  static int unique_id = 99999;
+  int phase_id;
+  map<string,int>::iterator iter = phase_map.find( phase_name );
+  if( iter != phase_map.end() ) {
+    phase_id = (*iter).second;
+  } else {
+    TAU_MAPPING_CREATE( phase_name, "",
+			(TauGroup_t) unique_id, "TAU_USER", 0 );
+    phase_map[ phase_name ] = unique_id;
+    phase_id = unique_id++;
+  }
+
+  
+
+#endif
+
+
+
+  TAU_PROFILE_TIMER(doittimer, "Task execution", 
+		    "[MPIScheduler::initiateTask()] ", TAU_USER); 
+  TAU_PROFILE_START(doittimer);
+
+
+  // Task name
+  TAU_MAPPING_OBJECT(tautimer)
+  TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
+  TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
+  TAU_MAPPING_PROFILE_START(doitprofiler,0);
+
+//   // Patch levels
+//   TAU_MAPPING_OBJECT(phasetimer)
+//   TAU_MAPPING_LINK(phasetimer, (TauGroup_t)phase_id);  // EXTERNAL ASSOCIATION
+//   TAU_MAPPING_PROFILE_TIMER(phaseprofiler, phasetimer, 0)
+//   TAU_MAPPING_PROFILE_START(phaseprofiler,0);
+
+
   double recvstart = Time::currentSeconds();
 #ifdef USE_PERFEX_COUNTERS
   long long dummy, recv_flops;
@@ -196,6 +256,13 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   emitNode(task, Time::currentSeconds(), dsend+dtask+drecv, dtask,
 	   mpi_info_.totalexecflops - start_total_exec_flops,
 	   mpi_info_.totalcommflops - start_total_comm_flops);
+
+
+//   TAU_MAPPING_PROFILE_STOP(0);
+  TAU_MAPPING_PROFILE_STOP(0);
+
+  TAU_PROFILE_STOP(doittimer);
+
 } // end initiateTask()
 
 void
@@ -224,23 +291,11 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 void
 MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
+  TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER); 
+
 #ifdef USE_PERFEX_COUNTERS
   long long dummy, exec_flops, send_flops;
 #endif
-#ifdef USE_TAU_PROFILING
-  int id;
-  const PatchSubset* patches = task->getPatches();
-  id = create_tau_mapping( task->getTask()->getName(), patches );
-#endif
-  // Should this be here?
-  TAU_PROFILE_TIMER(doittimer, "Task execution", 
-		    "[MPIScheduler::initiateTask()] ", TAU_USER); 
-
-  TAU_MAPPING_OBJECT(tautimer)
-  TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
-  TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-  TAU_PROFILE_START(doittimer);
-  TAU_MAPPING_PROFILE_START(doitprofiler,0);
 
   double taskstart = Time::currentSeconds();
   
@@ -267,8 +322,6 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   start_counters(0, 19);
 #endif
   
-  TAU_MAPPING_PROFILE_STOP(0);
-  TAU_PROFILE_STOP(doittimer);
 
   double sendstart = Time::currentSeconds();
   postMPISends( task, iteration );
