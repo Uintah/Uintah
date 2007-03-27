@@ -141,6 +141,7 @@
         <max_timestep_interval>    1 </max_timestep_interval>
       </Regridder>
       <useLockStep>true </useLockStep>
+      <doMultiTaskgraphing>true</doMultiTaskgraphing>
     </AMR>                                                                                                                       
 
     <!--____________________________________________________________________-->
