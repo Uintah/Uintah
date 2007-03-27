@@ -54,9 +54,23 @@ void PolynomialData::loadData()
     double data;
     list<double> dataList;
    
+    // Need to ignore the first 3 lines of data.
+    
+    // Line 1: axial location
+    // Line 2: start theta (you can ignore)
+    // Line 3: end theta (again ignore)
+    // Line 4: A
+    // Line 5: B
+    // Line 6: C
+
+    // Heat Flux = A + B*sin(theta) + C*cos(theta) + D*sin(2*theta) +
+    //             E*cos(2*theta)
+
+    polyFile >> data >> data >> data;
+
     while (polyFile >> data) {
       cout << "data = " << data << endl;
-      dataList.push_front(data);
+      dataList.push_back(data);
     }
     d_polyData.push_back(dataList);
     polyFile.close();

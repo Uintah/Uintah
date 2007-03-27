@@ -151,13 +151,9 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
-
-     std::vector<std::string> bndy_face_txt_list;
-     mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
-                                                                                
      // convert text representation of face into FaceType
      std::vector<std::string>::const_iterator ftit;
-     for(ftit=bndy_face_txt_list.begin();ftit!=bndy_face_txt_list.end();ftit++){
+     for(ftit=flags->d_bndy_face_txt_list.begin();ftit!=flags->d_bndy_face_txt_list.end();ftit++){
         Patch::FaceType face = Patch::invalidFace;
         for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
                                                 ft=Patch::nextFace(ft)) {
