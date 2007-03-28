@@ -3,7 +3,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
-
+#include <sstream>
 #ifndef DMIN
 #  define DMIN(a,b) (a < b ? a : b)
 #endif
@@ -29,7 +29,9 @@ BoxGeometryPiece::BoxGeometryPiece( ProblemSpecP & ps )
   if ( xdiff < near_zero   ||
        ydiff < near_zero   ||
        zdiff < near_zero ) {
-    SCI_THROW(ProblemSetupException("Input File Error: box max <= min coordinates", __FILE__, __LINE__));
+    std::ostringstream warn;
+    warn << "Input File Error: box max " << max << " <= min " << min << " coordinates" ;
+    SCI_THROW(ProblemSetupException(warn.str(), __FILE__, __LINE__));
   }
 
   d_box=Box(min,max);
