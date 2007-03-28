@@ -2,10 +2,10 @@
 <!-- @version: -->
 <Uintah_specification>
    <Meta>
-       <title>Pressurization of a container via burning w/o fracture</title>
+       <title></title>
    </Meta>
    <SimulationComponent>
-        <type> mpmice </type>
+     <type> mpmice </type>
    </SimulationComponent>
    <doAMR>true</doAMR>
    
@@ -284,62 +284,74 @@
                   <CrackFriction>     0.35    </CrackFriction>                      
                   <InitialCrackRadius>3.e-5   </InitialCrackRadius>           
                   <CrackGrowthRate>   12.     </CrackGrowthRate>                   
-                  <G1>3.5e8</G1>                                           
+                  <G1>3.5e8  </G1>                                           
                   <G2>1.739e8</G2>                                         
                   <G3>5.212e8</G3>                                         
                   <G4>9.085e8</G4>                                         
                   <G5>6.875e8</G5>                                         
-                  <RTau1>0.0</RTau1>                                       
+                  <RTau1>0.0   </RTau1>                                       
                   <RTau2>7.32e3</RTau2>                                    
                   <RTau3>7.32e4</RTau3>                                    
                   <RTau4>7.32e5</RTau4>                                    
-                  <RTau5>2.e6</RTau5>                                      
-                  <Beta>1.5e-4</Beta>                                      
-                  <Gamma>1.0</Gamma>                                       
+                  <RTau5>2.e6  </RTau5>                                      
+                  <Beta>1.5e-4 </Beta>                                      
+                  <Gamma>1.0   </Gamma>                                       
                   <DCp_DTemperature>3.30773</DCp_DTemperature>             
                 </constitutive_model>     
                 <thermal_conductivity>  .452            </thermal_conductivity>
                 <specific_heat>        996.0            </specific_heat>
                 <geom_object>
-                  <cylinder label="inner steel cylinder 1"> </cylinder>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         300.0           </temperature>
-                </geom_object>
-<!--
-                <geom_object>
-                   <box label="hot chunk 1">
-                     <min>           [-.15795, 0.04,-0.02]    </min>
-                     <max>           [-.05635, 0.06, 0.02]    </max>
-                   </box>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         600.0           </temperature>
-                </geom_object>-->
-
-                <geom_object>
-                  <difference>  <!-- 1.25" dia bore -->
-                    <cylinder label="inner steel cylinder 2"> </cylinder>
-                    <cylinder label="bore">
-                        <bottom>   [0.1, 0, -0.0381]    </bottom>
-                        <top>      [0.1, 0, 0.0381]     </top>  
-                        <radius>       0.0381           </radius>
-                    </cylinder>
+                  <difference>
+                    <cylinder label="inner steel cylinder 1"> </cylinder>
+                    <box label="hot chunk 1">
+                      <min>     [-0.11,  0.05,  -0.1]   </min>
+                      <max>     [-0.09,  0.0508, 0.1]   </max>
+                    </box>
                   </difference>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300.0           </temperature>
                 </geom_object>
-<!--
-                <geom_object>
-                  <box label="hot chunk 2">
-                    <min>           [.05635, 0.04,-0.02]    </min>
-                    <max>           [.15795, 0.06, 0.02]    </max>
-                  </box>
+
+                <geom_object>  <!-- hot HMX particles #1 -->
+                  <intersection>
+                    <cylinder label="inner steel cylinder 1"> </cylinder>
+                    <box label="hot chunk 1">                 </box>
+                  </intersection>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
-                </geom_object>-->               
+                </geom_object>
+                
+                <geom_object>
+                  <difference>  <!-- 1.25" dia bore -->
+                    <cylinder label="inner steel cylinder 2"> </cylinder>
+                    <union>
+                      <cylinder label="bore">
+                        <bottom>   [0.1, 0, -0.0381]    </bottom>
+                        <top>      [0.1, 0, 0.0381]     </top>  
+                        <radius>       0.0381           </radius>
+                      </cylinder>
+                      <box label="hot chunk 2">
+                        <min>      [0.09,  0.05,  -0.1]   </min>
+                        <max>      [0.11,  0.0508, 0.1]   </max>
+                      </box>
+                    </union>
+                  </difference>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         300.0           </temperature>
+                </geom_object> 
+                
+                <geom_object> <!-- hot HMX particles #2-->
+                  <intersection>
+                    <cylinder label="inner steel cylinder 2"> </cylinder>
+                    <box label="hot chunk 2"> </box>
+                  </intersection>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         600.0           </temperature>
+                </geom_object>       
          </material>
 
          <contact>                                               
