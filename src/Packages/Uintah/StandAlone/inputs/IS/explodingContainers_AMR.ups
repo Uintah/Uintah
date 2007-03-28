@@ -304,7 +304,7 @@
                   <difference>
                     <cylinder label="inner steel cylinder 1"> </cylinder>
                     <box label="hot chunk 1">
-                      <min>     [-0.11,  0.05,  -0.1]   </min>
+                      <min>     [-0.11,  0.049,  -0.1]   </min>
                       <max>     [-0.09,  0.0508, 0.1]   </max>
                     </box>
                   </difference>
@@ -333,7 +333,7 @@
                         <radius>       0.0381           </radius>
                       </cylinder>
                       <box label="hot chunk 2">
-                        <min>      [0.09,  0.05,  -0.1]   </min>
+                        <min>      [0.09,  0.049,  -0.1]   </min>
                         <max>      [0.11,  0.0508, 0.1]   </max>
                       </box>
                     </union>
@@ -362,6 +362,7 @@
       </MPM>
       <!--__________________________________-->
        <ICE>
+       <!-- 
          <material name="product">
            <EOS type="ideal_gas">
            </EOS>
@@ -381,11 +382,10 @@
              <density>    1.1792946927374306000e+00     </density>
              <pressure>           101325.0              </pressure>
            </geom_object>
-         </material>
-
-         <material>
-           <EOS type="ideal_gas">
-           </EOS>
+         </material> 
+-->
+         <material name= "product">
+           <EOS type="ideal_gas"> </EOS>
            <dynamic_viscosity>          0.0            </dynamic_viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>
@@ -416,8 +416,8 @@
 
       <exchange_properties>  
          <exchange_coefficients>
-           <momentum>  [0, 1e15, 1e15, 1e15, 1e15, 1e15]     </momentum>
-           <heat>      [0, 1e10, 1e10, 1e10, 1e10, 1e10]     </heat>   
+           <momentum>  [0, 1e15, 1e15 ]     </momentum>
+           <heat>      [0, 1e10, 1e10 ]     </heat>   
         </exchange_coefficients>
       </exchange_properties> 
     </MaterialProperties>
