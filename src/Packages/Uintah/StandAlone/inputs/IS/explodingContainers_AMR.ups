@@ -7,17 +7,19 @@
    <SimulationComponent>
         <type> mpmice </type>
    </SimulationComponent>
-
+   <doAMR>true</doAMR>
+   
    <LoadBalancer>
         <type>PLB</type>
-        <timestepInterval>1000</timestepInterval>
-        <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
-        <cellFactor>1.25</cellFactor>
-        <gainThreshold>0.0</gainThreshold>
-        <levelIndependent>true</levelIndependent>
-        <doSpaceCurve>true</doSpaceCurve>
-        <outputNthProc>8</outputNthProc>
-   <timeRefinementWeight>false</timeRefinementWeight></LoadBalancer>
+        <timestepInterval>      1000  </timestepInterval>
+        <dynamicAlgorithm>      patchFactorParticles</dynamicAlgorithm>
+        <cellFactor>            1.25  </cellFactor>
+        <gainThreshold>         0.0   </gainThreshold>
+        <levelIndependent>      true  </levelIndependent>
+        <doSpaceCurve>          true  </doSpaceCurve>
+        <outputNthProc>         8     </outputNthProc>
+        <timeRefinementWeight> false </timeRefinementWeight>
+   </LoadBalancer>
 
 
     <!--____________________________________________________________________-->
@@ -58,11 +60,11 @@
     </BoundaryConditions>
        <Level>
            <Box label="Level 0">
-              <lower>        [ -.5, -.5, -.5 ]    </lower>
-              <upper>        [ .5, .5, .5]    </upper>
+              <lower>        [ -.5, -.5, -.005 ]    </lower>
+              <upper>        [ .5, .5,    .005]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [8,8,8]    </patches>
-              <resolution>   [32,32,32] </resolution>
+              <patches>      [8,8,1]    </patches>
+              <resolution>   [32,32,1]  </resolution>
            </Box>
        </Level>
     </Grid>
@@ -73,21 +75,21 @@
    <DataArchiver>
       <filebase>AMRguni3d.2C.uda</filebase>
       <outputInterval> .000002 </outputInterval>
+      <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label="press_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
-      <save label="g.mass" material="0,1"/> 
-      <save label="p.x" levels="-1"/>
+
+      <save label="p.x"           levels="-1"/>
       <save label="p.temperature" levels="-1"/>
-      <save label="p.particleID" levels="-1"/>
-      <save label="p.stress" levels="-1"/>
-      <save label="p.volume" levels="-1"/>
-      <save label="p.velocity" levels="-1"/>
-      <save label="p.mass" levels="-1"/>
-      <outputDoubleAsFloat/>
+      <save label="p.particleID"  levels="-1"/>
+      <save label="p.stress"      levels="-1"/>
+      <save label="p.volume"      levels="-1"/>
+      <save label="p.velocity"    levels="-1"/>
+      <save label="p.mass"        levels="-1"/>
 <!--
 -->
       <checkpoint walltimeStart="600" walltimeInterval="1200" cycle="1"/>
@@ -97,9 +99,9 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.5</cfl>
+      <cfl>0.2</cfl>
       <ICE>
-        <advection type="FirstOrder"/>
+        <advection type="SecondOrder"/>
         <ClampSpecificVolume>true</ClampSpecificVolume>
       </ICE>        
     </CFD>
@@ -120,28 +122,28 @@
           <Variable name = "rho_CC"       value = "1e3" matl = "all" />
           -->
         </Refinement_Criteria_Thresholds>
-        <regridderTest>false</regridderTest>
-        <useLockStep>false</useLockStep>
         <orderOf_CFI_Interpolation>1</orderOf_CFI_Interpolation>
       </ICE>
       <MPM>
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
+
       <Regridder>
         <type> BNR </type>
-        <min_patch_size> [[8,8,8]] </min_patch_size>
+        <min_patch_size> [[8,8,1]] </min_patch_size>
         <patch_ratio_to_target>.25</patch_ratio_to_target>
         <max_levels>                  3       </max_levels>
-        <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
-        <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
-        <cell_regrid_dilation>   [1,1,1]   </cell_regrid_dilation>
-        <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
-        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+        <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
+        <cell_stability_dilation>   [1,1,0]   </cell_stability_dilation>
+        <cell_regrid_dilation>      [1,1,0]   </cell_regrid_dilation>
+        <cell_deletion_dilation>    [1,1,0]   </cell_deletion_dilation>
+        <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
         <max_timestep_interval>    1 </max_timestep_interval>
       </Regridder>
-      <useLockStep>true </useLockStep>
-      <doMultiTaskgraphing>true</doMultiTaskgraphing>
+
+      <useLockStep>       true </useLockStep>
+      <!--<doMultiTaskgraphing>true</doMultiTaskgraphing> -->
     </AMR>                                                                                                                       
 
     <!--____________________________________________________________________-->
@@ -164,7 +166,7 @@
         <use_load_curves>                false      </use_load_curves>
         <erosion algorithm="none"/>
         <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
-        <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
+        <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -174,11 +176,11 @@
        <MPM>
          <material name="Steel Ring">        
        
-           <density>7830.0</density>
-           <thermal_conductivity>38</thermal_conductivity>
-           <specific_heat>477</specific_heat>
-           <room_temp>294.0</room_temp>
-           <melt_temp>1793.0</melt_temp>
+           <density>              7830.0  </density>
+           <thermal_conductivity> 38      </thermal_conductivity>
+           <specific_heat>        477     </specific_heat>
+           <room_temp>            294.0   </room_temp>
+           <melt_temp>            1793.0  </melt_temp>
 
            <constitutive_model type="hypoelastic_plastic">
              <useModifiedEOS> true </useModifiedEOS>
@@ -210,8 +212,7 @@
              </yield_condition>
 
                   
-             <stability_check type="drucker_becker">
-             </stability_check>
+             <stability_check type="drucker_becker"></stability_check>
                   
              <damage_model type="johnson_cook">
                <D1>0.05</D1>
@@ -237,14 +238,14 @@
            <geom_object>                                                
               <difference>                                              
                <cylinder label="outer steel cylinder 1">                    
-                <bottom>           [-.1643,0,0]   </bottom>        
-                <top>              [-.05,0, 0]   </top>           
-                <radius>           0.05715            </radius>         
+                <bottom>           [-0.1,0.0,-0.06985]  </bottom>        
+                <top>              [-0.1,0.0, 0.06985]  </top>           
+                <radius>           0.05715              </radius>         
               </cylinder>                                               
               <cylinder label="inner steel cylinder 1">                     
-                <bottom>           [-.15795,0, 0]   </bottom>            
-                <top>              [-.05635,0, 0]   </top>         
-                <radius>           0.0508             </radius>         
+                <bottom>           [-0.1,0.0,-.0508]    </bottom>            
+                <top>              [-0.1,0.0, .0508]    </top>         
+                <radius>           0.0508               </radius>         
               </cylinder>                                               
               </difference>                                             
             <res>                 [2,2,2]         </res>                
@@ -253,15 +254,15 @@
            </geom_object>                                               
            <geom_object>                                                
               <difference>                                              
-               <cylinder label="outer steel cylinder 2">                    
-                <bottom>           [.05,0,0]   </bottom>        
-                <top>              [.1643,0, 0]   </top>           
-                <radius>           0.05715            </radius>         
+               <cylinder label="outer steel cylinder 2">  
+                <bottom>           [0.1,0.0,-0.06985]  </bottom>        
+                <top>              [0.1,0.0, 0.06985]  </top>           
+                <radius>           0.05715             </radius>        
               </cylinder>                                               
-              <cylinder label="inner steel cylinder 2">                     
-                <bottom>           [0.05635,0, 0]   </bottom>         
-                <top>              [0.15795,0, 0]   </top>            
-                <radius>           0.0508             </radius>         
+              <cylinder label="inner steel cylinder 2">
+                <bottom>           [0.1,0.0,-.0508]    </bottom>            
+                <top>              [0.1,0.0, .0508]    </top>         
+                <radius>           0.0508              </radius>         
               </cylinder>                                               
               </difference>                                             
             <res>                 [2,2,2]         </res>                
@@ -270,18 +271,19 @@
            </geom_object>                                               
          </material>
 
+         <!--__________________________________-->
          <material name="reactant">
                 <density>   1840.0   </density>
                 <constitutive_model type="visco_scram">
-                  <useModifiedEOS>     true             </useModifiedEOS>  
+                  <useModifiedEOS>     true   </useModifiedEOS>  
                   <PR>0.3</PR>                                             
-                  <CrackParameterA>1.e-3</CrackParameterA>                 
-                  <CrackPowerValue>10.0</CrackPowerValue>                  
-                  <CrackMaxGrowthRate>300.0</CrackMaxGrowthRate>           
-                  <StressIntensityF>500.0</StressIntensityF>               
-                  <CrackFriction>0.35</CrackFriction>                      
-                  <InitialCrackRadius>3.e-5</InitialCrackRadius>           
-                  <CrackGrowthRate>12.</CrackGrowthRate>                   
+                  <CrackParameterA>   1.e-3   </CrackParameterA>                 
+                  <CrackPowerValue>   10.0    </CrackPowerValue>                  
+                  <CrackMaxGrowthRate>300.0   </CrackMaxGrowthRate>           
+                  <StressIntensityF>  500.0   </StressIntensityF>               
+                  <CrackFriction>     0.35    </CrackFriction>                      
+                  <InitialCrackRadius>3.e-5   </InitialCrackRadius>           
+                  <CrackGrowthRate>   12.     </CrackGrowthRate>                   
                   <G1>3.5e8</G1>                                           
                   <G2>1.739e8</G2>                                         
                   <G3>5.212e8</G3>                                         
@@ -299,55 +301,45 @@
                 <thermal_conductivity>  .452            </thermal_conductivity>
                 <specific_heat>        996.0            </specific_heat>
                 <geom_object>
-                  <difference>
-                   <cylinder label="inner steel cylinder 1"> </cylinder>
+                  <cylinder label="inner steel cylinder 1"> </cylinder>
+                  <res>                 [2,2,2]         </res>
+                  <velocity>            [0.0,0.0,0.0]   </velocity>
+                  <temperature>         300.0           </temperature>
+                </geom_object>
+<!--
+                <geom_object>
                    <box label="hot chunk 1">
                      <min>           [-.15795, 0.04,-0.02]    </min>
                      <max>           [-.05635, 0.06, 0.02]    </max>
                    </box>
-                  </difference>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         300.0           </temperature>
-                </geom_object>
-                <geom_object>
-                  <intersection>
-                   <box label="hot chunk 1"> </box>
-                   <cylinder label="inner steel cylinder 1"> </cylinder>
-                  </intersection>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
-                </geom_object>
+                </geom_object>-->
 
                 <geom_object>
-                  <difference>
+                  <difference>  <!-- 1.25" dia bore -->
                     <cylinder label="inner steel cylinder 2"> </cylinder>
-                     <union>
-                      <cylinder label="bore">
-                        <bottom>   [0.05635,0, 0]   </bottom>
-                        <top>      [0.15795,0, 0]   </top>  
-                        <radius>           0.01524  </radius>
-                      </cylinder>  
-                      <box label="hot chunk 2">
-                       <min>           [.05635, 0.04,-0.02]    </min>
-                       <max>           [.15795, 0.06, 0.02]    </max>
-                      </box>
-                     </union>
+                    <cylinder label="bore">
+                        <bottom>   [0.1, 0, -0.0381]    </bottom>
+                        <top>      [0.1, 0, 0.0381]     </top>  
+                        <radius>       0.0381           </radius>
+                    </cylinder>
                   </difference>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         300.0           </temperature>
                 </geom_object>
+<!--
                 <geom_object>
-                  <intersection>
-                    <cylinder label="inner steel cylinder 2"> </cylinder>
-                    <box label="hot chunk 2"> </box>
-                  </intersection>
+                  <box label="hot chunk 2">
+                    <min>           [.05635, 0.04,-0.02]    </min>
+                    <max>           [.15795, 0.06, 0.02]    </max>
+                  </box>
                   <res>                 [2,2,2]         </res>
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
-                </geom_object>
+                </geom_object>-->               
          </material>
 
          <contact>                                               
@@ -356,7 +348,7 @@
            <mu> 0.0 </mu>                                        
          </contact>                                              
       </MPM>
-
+      <!--__________________________________-->
        <ICE>
          <material name="product">
            <EOS type="ideal_gas">
