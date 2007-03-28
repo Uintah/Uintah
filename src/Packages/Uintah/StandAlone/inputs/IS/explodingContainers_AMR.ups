@@ -26,7 +26,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            6.00e-4     </maxTime>
+       <maxTime>            6.00e-3     </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           1.0e-12     </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -82,14 +82,16 @@
       <save label="vel_CC"/>
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
-
+      
       <save label="p.x"           levels="-1"/>
       <save label="p.temperature" levels="-1"/>
       <save label="p.particleID"  levels="-1"/>
       <save label="p.mass"        levels="-1"/>
       <!--<save label="p.stress"      levels="-1"/>
       <save label="p.volume"      levels="-1"/>
-      <save label="p.velocity"    levels="-1"/> -->
+      <save label="p.velocity"    levels="-1"/> 
+      <save label="g.mass" levels="-1" />
+      <save label="refineFlag" /> -->
 
 <!--
 -->
@@ -116,8 +118,8 @@
         <orderOfInterpolation>1        </orderOfInterpolation>
         
         <Refinement_Criteria_Thresholds>         
-          <Variable name="press_CC" value="1e5" matl="0"/>
           <!--  
+          <Variable name="press_CC" value="1e5" matl="0"/>
             examples
           <Variable name = "vol_frac_CC"  value = "10"  matl = "1" />
           <Variable name = "rho_CC"       value = "1e3" matl = "all" />
