@@ -74,7 +74,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>AMRguni3d.2C.uda</filebase>
-      <outputInterval> .000002 </outputInterval>
+      <outputInterval> .00002 </outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label="press_CC"/>
       <save label="temp_CC"/>
@@ -86,10 +86,11 @@
       <save label="p.x"           levels="-1"/>
       <save label="p.temperature" levels="-1"/>
       <save label="p.particleID"  levels="-1"/>
-      <save label="p.stress"      levels="-1"/>
-      <save label="p.volume"      levels="-1"/>
-      <save label="p.velocity"    levels="-1"/>
       <save label="p.mass"        levels="-1"/>
+      <!--<save label="p.stress"      levels="-1"/>
+      <save label="p.volume"      levels="-1"/>
+      <save label="p.velocity"    levels="-1"/> -->
+
 <!--
 -->
       <checkpoint walltimeStart="600" walltimeInterval="1200" cycle="1"/>
