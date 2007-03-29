@@ -60,8 +60,8 @@
     </BoundaryConditions>
        <Level>
            <Box label="Level 0">
-              <lower>        [ -.5, -.5, -.005 ]    </lower>
-              <upper>        [ .5, .5,    .005]    </upper>
+              <lower>        [ -.35, -.2, -.005 ]  </lower>
+              <upper>        [ .35,   .5,  .005]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [8,8,1]    </patches>
               <resolution>   [32,32,1]  </resolution>
@@ -74,7 +74,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>AMRguni3d.2C.uda</filebase>
-      <outputInterval> .00002 </outputInterval>
+      <outputInterval> .00001 </outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label="press_CC"/>
       <save label="temp_CC"/>
@@ -82,16 +82,17 @@
       <save label="vel_CC"/>
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
+      <save label="refineFlag" />
       
+      <save label="g.mass"        levels="-1"/>
       <save label="p.x"           levels="-1"/>
       <save label="p.temperature" levels="-1"/>
       <save label="p.particleID"  levels="-1"/>
       <save label="p.mass"        levels="-1"/>
-      <!--<save label="p.stress"      levels="-1"/>
+      <save label="p.velocity"    levels="-1"/>
+  <!--<save label="p.stress"      levels="-1"/>
       <save label="p.volume"      levels="-1"/>
-      <save label="p.velocity"    levels="-1"/> 
-      <save label="g.mass" levels="-1" />
-      <save label="refineFlag" /> -->
+       -->
 
 <!--
 -->
@@ -134,7 +135,7 @@
 
       <Regridder>
         <type> BNR </type>
-        <min_patch_size> [[8,8,1]] </min_patch_size>
+        <min_patch_size> [[16,16,1][16,16,1]] </min_patch_size>
         <patch_ratio_to_target>.25</patch_ratio_to_target>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
@@ -160,7 +161,7 @@
     <MPM>
         <time_integrator>explicit</time_integrator>
         <artificial_viscosity>true</artificial_viscosity>
-        <nodes8or27>8</nodes8or27>
+        <nodes8or27>27</nodes8or27>
         <minimum_particle_mass>          3.e-15     </minimum_particle_mass>
         <maximum_particle_velocity>      3.e4       </maximum_particle_velocity>
         <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
