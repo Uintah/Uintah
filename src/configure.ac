@@ -3812,7 +3812,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
     SCI_TRY_LINK(PETSC,
-                 petsc libraries and headers,
+                 petsc libraries and headers (petsc_arch = $petsc_arch),
                  petsc.h,
                  $_sci_inc /usr/include/petsc,
                  petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
@@ -3827,7 +3827,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       # Give it a shot on the old petsc version if we're not doing Uintah
       if test "$pkg_Uintah" != "yes"; then
         SCI_TRY_LINK(PETSC,
-                     petsc libraries and headers (old),
+                     petsc libraries and headers (petsc_arch = $petsc_arch) - old,
                      petsc.h,
                      $_sci_inc /usr/include/petsc,
                      petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
@@ -3878,7 +3878,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     else
     # Give it a shot on the old petsc-uni version
       SCI_TRY_LINK(PETSC_UNI,
-                   petsc libraries and headers (old),
+                   petsc libraries and headers - old2,
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
                    petsc petscvec petscmat petscdm petscsnes petscts,
@@ -5293,12 +5293,20 @@ elif test "$with_hypre"; then
   _sci_optional=specific
 fi
 
-# We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-# so we aren't going to check for it in any version.  If the other 3
-# libs exist, we will assume that HYPRE_blas is there if it is needed.
+# # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+# # so we aren't going to check for it in any version.  If the other 3
+# # libs exist, we will assume that HYPRE_blas is there if it is needed.
+# SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+#                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+#                          $_sci_lib,-lm,,$_sci_optional)
+
+# We should just be able to link vs. libHYPRE.so...
+#   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+AC_LANG([C++])
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
-                         $_sci_lib,,,$_sci_optional)
+                         HYPRE,
+                         $_sci_lib,$MPI_LIB_DIR_FLAG $MPI_LIB_FLAG -lm,,$_sci_optional)
+AC_LANG([C])
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
