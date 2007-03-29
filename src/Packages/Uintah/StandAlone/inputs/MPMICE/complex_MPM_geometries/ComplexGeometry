@@ -74,9 +74,23 @@ _____________________________________________________________________________
 
 
 
+HOW TO VISUALIZE THE TRIANGULATED SURFACE WITH SCIRUN
+---------------------------------------------------------------------------------
+1) Convert the tri/pts file into a "field"
+
+<Vis build>/StandAlone/convert/TextToTriSurfField example.pts example.tri example.fld -noPtsCount -noElementsCount
+
+2) scirun inputs/MPMICE/complex_MPM_geometries triSurface.srn
+    - To see the individual node coordinates select:
+          showField->text->render Indices As locations
+
 _____________________________________________________________________________
+
+
+
+
 GENERATING A TRIANGULATED SURFACE IN GAMBIT, STARTING WITH A SERIES OF X, Y, Z LOCATIONS.
--------------------------------------------------------
+--------------------------------------------------------------------------------
 
 1) Starting with a space-delimited file of x, y, z locations of the surface you'd 
 like to triangulate, at the top of the file add 
