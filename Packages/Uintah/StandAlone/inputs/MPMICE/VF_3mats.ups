@@ -19,7 +19,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-       <filebase>VF3matleft-1matright.uda</filebase>
+       <filebase>VF3mat.uda</filebase>
        <outputInterval>.0001</outputInterval>
        <compression>gzip</compression> 
        <!--<outputDoubleAsFloat/>  scirun doesn't like this for some reason.-->
@@ -92,7 +92,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <MPM>
-           <material name="leftmat1">
+           <material name="mat1">
               <density>1.e3</density>
                 <constitutive_model type="comp_neo_hook">
                     <bulk_modulus>  15000.0 </bulk_modulus>
@@ -100,10 +100,15 @@
                 </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
-              <geom_object>             
-                <tri label="leftmaterial1.0">
-                   <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat1.0</name>   
-                </tri> 
+              <geom_object>     
+                <union>       
+                  <tri label="leftmaterial1.0">
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat1.0</name>   
+                  </tri>
+                  <tri label="rightmaterial1.0">
+                     <name>inputs/MPMICE/complex_MPM_geometries/VF_R_mat1.0</name>   
+                  </tri>
+                </union>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature>  300.       </temperature>
@@ -112,7 +117,7 @@
               
            </material>
            <!--__________________________________-->
-           <material name="leftmat2">
+           <material name="mat2">
               <density>1.e3</density>
                 <constitutive_model type="comp_neo_hook">
                     <bulk_modulus>  15000.0 </bulk_modulus>
@@ -121,9 +126,14 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                <tri label="leftmaterial2.0">
-                  <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat2.0</name>
-                </tri>
+                <union>
+                  <tri label="leftmaterial2.0">
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat2.0</name>
+                  </tri>
+                  <tri label="rightmaterial2.0">
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_R_mat2.0</name>   
+                  </tri>
+                </union>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature>  300.       </temperature>
@@ -132,7 +142,7 @@
               
            </material>
           <!--__________________________________-->
-           <material name="leftmat3">
+           <material name="mat3">
               <density>1.e3</density>
                 <constitutive_model type="comp_neo_hook">
                     <bulk_modulus>  15000.0 </bulk_modulus>
@@ -140,39 +150,25 @@
                 </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
-              <geom_object>              
-                <tri label="leftmaterial3.0" >
-                  <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat3.0</name>
-                </tri>                              
+              <geom_object> 
+                <union>          
+                  <tri label="leftmaterial3.0" >
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat3.0</name>
+                  </tri>
+                  <tri label="rightmaterial3.0">
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_R_mat3.0</name>   
+                  </tri>
+                </union>
                 <res>         [2,2,1]     </res>
                 <velocity>    [0.0,0.0,0] </velocity>
                 <temperature>  300.       </temperature>
                 <color>        30         </color>
               </geom_object>
            </material>
-          <!--__________________________________-->
-           <material>
-              <density>1.e3</density>
-                <constitutive_model type="comp_neo_hook">
-                    <bulk_modulus>  15000.0 </bulk_modulus>
-                    <shear_modulus> 1500.0  </shear_modulus>
-                </constitutive_model>
-              <thermal_conductivity>1.0</thermal_conductivity>
-              <specific_heat>5</specific_heat>
-              <geom_object>               
-                 <tri label = "vocalFold_R"> 
-                   <name>inputs/MPMICE/complex_MPM_geometries/VF_R.0</name>
-                 </tri>               
-                <res>         [2,2,1]     </res>
-                <velocity>    [0.0,0.0,0] </velocity>
-                <temperature> 300.        </temperature>
-                <color>        1          </color>
-              </geom_object>             
-           </material>
+
            <contact>
-             <type>approach</type>  
-             <materials>[0,1]</materials>
-             <mu> .0 </mu>
+             <type>single_velocity</type>  
+             <materials>[0,3]</materials>
            </contact>
        </MPM>
       <!--__________________________________-->
@@ -193,8 +189,9 @@
                 <tri label="leftmaterial1.0" > </tri>
                 <tri label="leftmaterial2.0" > </tri>
                 <tri label="leftmaterial3.0" > </tri>
-                <tri label="vocalFold_R" >     </tri>
-               
+                <tri label="rightmaterial1.0" > </tri>
+                <tri label="rightmaterial2.0" > </tri>
+                <tri label="rightmaterial3.0" > </tri>
                </union>
               </difference>
              <res>                [2,2,1]              </res>
@@ -207,8 +204,8 @@
        </ICE>
        <exchange_properties>
           <exchange_coefficients>
-             <momentum>           [1e15,0,0,1e15,1e15,0,1e15,0,0,1e15]    </momentum>
-             <heat>               [1e15,0,0,1e15,1e15,0,1e15,0,0,1e15]    </heat>
+             <momentum>           [1e15,1e15,1e15,1e15,1e15,1e15]    </momentum>
+             <heat>               [1e15,1e15,1e15,1e15,1e15,1e15]    </heat>
           </exchange_coefficients>
         </exchange_properties>
     </MaterialProperties>
@@ -299,7 +296,7 @@
        <Level>
            <Box label = "throat">
               <lower>       [0.0,  0.0, 0.0]      </lower>
-              <upper>       [0.02,0.06,0.00025]  </upper>
+              <upper>       [0.0205,0.06,0.00025]  </upper>
               <extraCells>  [1,1,1]               </extraCells>
               <patches>     [1,2,1]               </patches>
            </Box>
