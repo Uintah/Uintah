@@ -48698,7 +48698,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 
 
 ##
-## SCI_TRY_LINK (PETSC):  petsc libraries and headers
+## SCI_TRY_LINK (PETSC):  petsc libraries and headers (petsc_arch = $petsc_arch)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -48730,7 +48730,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : PETSC
-## arg 2 : petsc libraries and headers
+## arg 2 : petsc libraries and headers (petsc_arch = $petsc_arch)
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
@@ -48750,14 +48750,14 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ##      HAVE_PETSC_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-echo "$as_me:$LINENO: checking for petsc libraries and headers (optional)" >&5
-echo $ECHO_N "checking for petsc libraries and headers (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for petsc libraries and headers (petsc_arch = $petsc_arch) (optional)" >&5
+echo $ECHO_N "checking for petsc libraries and headers (petsc_arch = $petsc_arch) (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -48767,8 +48767,8 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -49188,7 +49188,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (PETSC):  petsc libraries and headers
+## END of SCI_TRY_LINK (PETSC):  petsc libraries and headers (petsc_arch = $petsc_arch)
 ##
 
 
@@ -49200,7 +49200,7 @@ _sci_includes=''
       if test "$pkg_Uintah" != "yes"; then
 
 ##
-## SCI_TRY_LINK (PETSC):  petsc libraries and headers (old)
+## SCI_TRY_LINK (PETSC):  petsc libraries and headers (petsc_arch = $petsc_arch) - old
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -49232,7 +49232,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : PETSC
-## arg 2 : petsc libraries and headers (old)
+## arg 2 : petsc libraries and headers (petsc_arch = $petsc_arch) - old
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
@@ -49252,14 +49252,14 @@ _sci_includes=''
 ##      HAVE_PETSC_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (old).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (old).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch) - old.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch) - old.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-echo "$as_me:$LINENO: checking for petsc libraries and headers (old) (optional)" >&5
-echo $ECHO_N "checking for petsc libraries and headers (old) (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for petsc libraries and headers (petsc_arch = $petsc_arch) - old (optional)" >&5
+echo $ECHO_N "checking for petsc libraries and headers (petsc_arch = $petsc_arch) - old (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -49269,8 +49269,8 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (old) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (old) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch) - old must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (petsc_arch = $petsc_arch) - old must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -49690,7 +49690,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (PETSC):  petsc libraries and headers (old)
+## END of SCI_TRY_LINK (PETSC):  petsc libraries and headers (petsc_arch = $petsc_arch) - old
 ##
 
 
@@ -50227,7 +50227,7 @@ _sci_includes=''
     # Give it a shot on the old petsc-uni version
 
 ##
-## SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers (old)
+## SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers - old2
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -50259,7 +50259,7 @@ _sci_includes=''
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : PETSC_UNI
-## arg 2 : petsc libraries and headers (old)
+## arg 2 : petsc libraries and headers - old2
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
 ## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts
@@ -50279,14 +50279,14 @@ _sci_includes=''
 ##      HAVE_PETSC_UNI_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (old).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (old).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers - old2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers - old2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-echo "$as_me:$LINENO: checking for petsc libraries and headers (old) (optional)" >&5
-echo $ECHO_N "checking for petsc libraries and headers (old) (optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for petsc libraries and headers - old2 (optional)" >&5
+echo $ECHO_N "checking for petsc libraries and headers - old2 (optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -50296,8 +50296,8 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (old) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers (old) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers - old2 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for petsc libraries and headers - old2 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -50717,7 +50717,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers (old)
+## END of SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers - old2
 ##
 
 
@@ -64073,9 +64073,21 @@ elif test "$with_hypre"; then
   _sci_optional=specific
 fi
 
-# We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-# so we aren't going to check for it in any version.  If the other 3
-# libs exist, we will assume that HYPRE_blas is there if it is needed.
+# # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+# # so we aren't going to check for it in any version.  If the other 3
+# # libs exist, we will assume that HYPRE_blas is there if it is needed.
+# SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+#                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+#                          $_sci_lib,-lm,,$_sci_optional)
+
+# We should just be able to link vs. libHYPRE.so...
+#   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 
 ##
 ## SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
@@ -64113,9 +64125,9 @@ fi
 ## arg 2 : HYPRE libraries and headers
 ## arg 3 : HYPRE.h
 ## arg 4 : $_sci_inc
-## arg 5 : HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities
+## arg 5 : HYPRE
 ## arg 6 : $_sci_lib
-## arg 7 :
+## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG -lm
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -64196,10 +64208,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities"; then
+if test -n "HYPRE"; then
 
    found_framework=no
-   for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities; do
+   for lib in "" HYPRE; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -64353,7 +64365,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs  $LIBS"
+LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG -lm $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -64403,7 +64415,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -64541,7 +64553,7 @@ echo "$as_me: error: Specifically requested HYPRE include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities; do
+  for i in "" HYPRE; do
     if test -z "$i"; then
        continue
     fi
@@ -64571,6 +64583,12 @@ _sci_includes=''
 ## END of SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
 ##
 
+
+ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 if test "$HAVE_HYPRE" = "yes" ; then
