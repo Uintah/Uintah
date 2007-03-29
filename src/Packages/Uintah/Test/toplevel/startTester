@@ -34,7 +34,7 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 elif [ "$OS" == "Linux" ]; then
     CC=gcc
     CXX=c++
-    F77=g77
+    F77=gfortran
 elif [ "$OS" == "Darwin" ]; then
     CC=gcc
     CXX=c++
@@ -282,18 +282,19 @@ else
     cd "$BUILDROOT"
 
 
-#    This block is a workaround for svn not working on raid1 or raid2
-    if [ "$OS" == "Linux" ]; then
-        cd /usr/sci/projects/Uintah/tester/temp_checkouts/
-        svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src "SCIRun.${ID}/src"  > "$BUILDROOT"/svn_co.log 2>&1
-        retval=$?
-        mv "SCIRun.${ID}/src" "$BUILDROOT"/
-        rm -rf "SCIRun.${ID}"
-    else
-      echo $PATH
-      svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
-      retval=$?
-    fi
+
+    #    This block is a workaround for svn not working on raid1 or raid2
+    #if [ "$OS" == "Linux" ]; then
+    #    cd /usr/sci/projects/Uintah/tester/temp_checkouts/
+    #    svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src "SCIRun.${ID}/src"  > "$BUILDROOT"/svn_co.log 2>&1
+    #    retval=$?
+    #    mv "SCIRun.${ID}/src" "$BUILDROOT"/
+    #    rm -rf "SCIRun.${ID}"
+    #else
+    echo $PATH
+    svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+    retval=$?
+    #fi
 
 # 
 #    This block is used instead of the above commented out code since we are now running on /home/csafe
@@ -353,18 +354,26 @@ else
     HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/Weekly/SCIRun.${ID}
     WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/Weekly/SCIRun.${ID}
 fi
+
+# I got tired of duplicating arguments to configure, so here are the common to all platforms, and then under each OS type, the
+# common parameters are stored, and then {OPT,DBG}_CONFIGURE are set again.
+DBG_CONFIGURE="--enable-debug --enable-sci-malloc --enable-scinew-line-numbers"
+OPT_CONFIGURE="--enable-assertion-level=0"
 # set configure command options based on architecture
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
-	DBG_CONFIGURE="'--enable-package=Uintah' --enable-debug '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o' --enable-sci-malloc --enable-scinew-line-numbers"
-#	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o'"
-        OPT_CONFIGURE="--enable-package=Uintah --enable-64bit --enable-optimize='-O3 -G0 -OPT:div_split=OFF:Olimit=0:roundoff=3:alias=typed' --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o"
+        COMMON='--enable-package=Uintah' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.9.0b-o'
+	DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
+#	OPT_CONFIGURE="'--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' $OPT_CONFIGURE $COMMON"
+        OPT_CONFIGURE="--enable-optimize='-O3 -G0 -OPT:div_split=OFF:Olimit=0:roundoff=3:alias=typed' $OPT_CONFIGURE $COMMON"
 elif [ "$OS" == "Linux" ]; then
-	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.9.0b-o --with-mpi=/usr/local/lam-mpi --enable-sci-malloc --enable-scinew-line-numbers"
-	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.9.0b-o --with-mpi=/usr/local/lam-mpi"
+        COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/petsc-install/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/hypre-2.0.0-install --with-mpi=/usr/local/lam-mpi --with-atlas=/usr/local/atlas --with-lapack=/usr/local/atlas"
+	DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
+	OPT_CONFIGURE="$COMMON '--enable-optimize=-march=pentium4 -msse -msse2 -O3' $OPT_CONFIGURE"
 else
 # Darwin
-	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/hypre-1.9.0b/ --with-mpi=/usr/local/lam-7.1.1 --enable-sci-malloc --enable-scinew-line-numbers"
-	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/hypre-1.9.0b/ --with-mpi=/usr/local/lam-7.1.1"
+        COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/hypre-1.9.0b --with-mpi=/usr/local/lam-7.1.1"
+	DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
+	OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
 fi
 
 rm -f $HTMLLOG
