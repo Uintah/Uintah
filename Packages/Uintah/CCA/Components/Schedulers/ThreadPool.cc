@@ -66,6 +66,15 @@ create_tau_mapping( const string & taskname, const PatchSubset * patches )
       full_name = full_name + "-" + patch_num.str();
     }
   }
+#else  //TAU_SEPARATE_PATCHES
+  int levelnum = 0;
+  if( patches && patches->size() > 0) {
+    levelnum = patches->get(0)->getLevel()->getIndex();
+  }
+  ostringstream level;
+  level << "Level " << levelnum;
+
+  full_name = full_name + "-" + level.str();
 #endif //TAU_SEPARATE_PATCHES
 
   map<string,int>::iterator iter = taskname_to_id_map.find( full_name );
