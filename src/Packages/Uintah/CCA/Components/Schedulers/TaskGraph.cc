@@ -900,14 +900,23 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
 void
 TaskGraph::remapTaskDWs(int dwmap[])
 {
+  // the point of this function is for using the multiple taskgraphs.
+  // When you execute a taskgraph a subsequent time, you must rearrange the DWs
+  // to point to the next point-in-time's DWs.  
   int levelmin = 999;
   for (unsigned i = 0; i < d_tasks.size(); i++) {
     d_tasks[i]->setMapping(dwmap);
 
     // for the Int timesteps, we have tasks on multiple levels.  
     // we need to adjust based on which level they are on, but first 
-    // we need to find the coarsest level
+    // we need to find the coarsest level.  The NewDW is relative to the coarsest
+    // level executing in this taskgraph.
     if (type_ == Scheduler::IntermediateTaskGraph) {
+      if (d_tasks[i]->getType() == Task::OncePerProc) {
+        levelmin = 0;
+        continue;
+      }
+      
       const PatchSet* ps = d_tasks[i]->getPatchSet();
       if (!ps) continue;
       const Level* l = getLevel(ps);
@@ -923,7 +932,7 @@ TaskGraph::remapTaskDWs(int dwmap[])
     for (unsigned i = 0; i < d_tasks.size(); i++) {
       const PatchSet* ps = d_tasks[i]->getPatchSet();
       if (!ps) continue;
-      if (getLevel(ps)->getIndex() > levelmin) {
+      if (levelmin == 0 || getLevel(ps)->getIndex() > levelmin) {
         d_tasks[i]->setMapping(dwmap);
         //cout << d_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")" << endl;
       }
