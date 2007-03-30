@@ -242,13 +242,13 @@
            <geom_object>                                                
               <difference>                                              
                <cylinder label="outer steel cylinder 1">                    
-                <bottom>           [-0.1,0.0,-0.06985]  </bottom>        
-                <top>              [-0.1,0.0, 0.06985]  </top>           
+                <bottom>           [-0.12,0.0,-0.06985]  </bottom>        
+                <top>              [-0.12,0.0, 0.06985]  </top>           
                 <radius>           0.05715              </radius>         
               </cylinder>                                               
               <cylinder label="inner steel cylinder 1">                     
-                <bottom>           [-0.1,0.0,-.0508]    </bottom>            
-                <top>              [-0.1,0.0, .0508]    </top>         
+                <bottom>           [-0.12,0.0,-.0508]    </bottom>            
+                <top>              [-0.12,0.0, .0508]    </top>         
                 <radius>           0.0508               </radius>         
               </cylinder>                                               
               </difference>                                             
@@ -259,13 +259,13 @@
            <geom_object>                                                
               <difference>                                              
                <cylinder label="outer steel cylinder 2">  
-                <bottom>           [0.1,0.0,-0.06985]  </bottom>        
-                <top>              [0.1,0.0, 0.06985]  </top>           
+                <bottom>           [0.12,0.0,-0.06985]  </bottom>        
+                <top>              [0.12,0.0, 0.06985]  </top>           
                 <radius>           0.05715             </radius>        
               </cylinder>                                               
               <cylinder label="inner steel cylinder 2">
-                <bottom>           [0.1,0.0,-.0508]    </bottom>            
-                <top>              [0.1,0.0, .0508]    </top>         
+                <bottom>           [0.12,0.0,-.0508]    </bottom>            
+                <top>              [0.12,0.0, .0508]    </top>         
                 <radius>           0.0508              </radius>         
               </cylinder>                                               
               </difference>                                             
@@ -308,8 +308,8 @@
                   <difference>
                     <cylinder label="inner steel cylinder 1"> </cylinder>
                     <box label="hot chunk 1">
-                      <min>     [-0.11,  0.049,  -0.1]   </min>
-                      <max>     [-0.09,  0.0508, 0.1]   </max>
+                      <min>     [-0.13,  0.049,  -0.1]   </min>
+                      <max>     [-0.11,  0.0508, 0.1]   </max>
                     </box>
                   </difference>
                   <res>                 [2,2,2]         </res>
@@ -332,13 +332,13 @@
                     <cylinder label="inner steel cylinder 2"> </cylinder>
                     <union>
                       <cylinder label="bore">
-                        <bottom>   [0.1, 0, -0.0381]    </bottom>
-                        <top>      [0.1, 0, 0.0381]     </top>  
+                        <bottom>   [0.12, 0, -0.0381]    </bottom>
+                        <top>      [0.12, 0, 0.0381]     </top>  
                         <radius>       0.0381           </radius>
                       </cylinder>
                       <box label="hot chunk 2">
-                        <min>      [0.09,  0.049,  -0.1]   </min>
-                        <max>      [0.11,  0.0508, 0.1]   </max>
+                        <min>      [0.11,  0.049,  -0.1]   </min>
+                        <max>      [0.13,  0.0508, 0.1]   </max>
                       </box>
                     </union>
                   </difference>
