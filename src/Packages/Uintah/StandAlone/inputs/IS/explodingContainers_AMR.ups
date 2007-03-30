@@ -96,7 +96,7 @@
 
 <!--
 -->
-      <checkpoint walltimeStart="600" walltimeInterval="1200" cycle="1"/>
+      <checkpoint walltimeStart="600" walltimeInterval="1200" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -143,7 +143,7 @@
         <cell_regrid_dilation>      [1,1,0]   </cell_regrid_dilation>
         <cell_deletion_dilation>    [1,1,0]   </cell_deletion_dilation>
         <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
-        <max_timestep_interval>    1 </max_timestep_interval>
+        <max_timestep_interval>    10 </max_timestep_interval>
       </Regridder>
 
       <useLockStep>       true </useLockStep>
