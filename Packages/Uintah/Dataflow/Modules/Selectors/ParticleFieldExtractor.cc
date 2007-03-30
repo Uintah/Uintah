@@ -75,7 +75,7 @@ ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx) :
   Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
   tcl_status(get_ctx()->subVar("tcl_status")),
   generation(-1),  timestep(-1), material(-1), levelnum(0),
-  level_(get_ctx()->subVar("level")),
+  level_(get_ctx()->subVar("level"), 0),
   psVar(get_ctx()->subVar("psVar")),
   pvVar(get_ctx()->subVar("pvVar")),
   ptVar(get_ctx()->subVar("ptVar")),
@@ -99,7 +99,7 @@ ParticleFieldExtractor::add_type(string &type_list,
   case TypeDescription::double_type:
   case TypeDescription::float_type:
   case TypeDescription::int_type:
-    type_list += " scaler";
+    type_list += " scalar";
     break;
   case TypeDescription::Vector:
     type_list += " vector";
@@ -131,7 +131,6 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
   int guilevel = level_.get();
   LevelP level = grid->getLevel( (guilevel == levels ? levels-1 : guilevel) );
   if( guilevel == levels )  level_.set( levels - 1 );
-  Patch* r = *(level->patchesBegin());
   
   // get the number of materials for the particle Variables
   ConsecutiveRangeSet matls;
@@ -145,7 +144,6 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 //         cerr<<"name: "<<names[i]<<", patch: "<<&(*iter)<<", matl_size: "<<matls.size()<<"\n";
         nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
       }
-//       cerr<<"\n";
     }
   }
   ostringstream level_os;
@@ -176,6 +174,7 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
                   found_particles = true; //we have found particles
                 }
                 break;                  // break out while
+              } else {
               }
               ++it;
             }
@@ -190,6 +189,7 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
       }
     }
 
+    Patch* r = *(level->patchesBegin());
 
 
     //string type_list("");
@@ -294,9 +294,9 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 
     // get the number of materials for the NC & particle Variables
     num_materials = nm;
-//   cerr << "Number of Materials " << num_materials << endl;
+//     cerr << "Number of Materials " << num_materials << endl;
 
-//   cerr<<"selected variables in setVar() are "<<
+//     cerr<<"selected variables in setVar() are "<<
 //     psVar.get()<<" (index "<<psIndex<<"), "<<
 //     pvVar.get()<<" (index "<<pvIndex<<"), "<<
 //     ptVar.get()<<" (index "<<ptIndex<<")\n";
