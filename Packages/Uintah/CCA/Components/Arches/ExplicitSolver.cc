@@ -33,6 +33,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Math/MiscMath.h>
 #ifdef PetscFilter
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
@@ -109,8 +110,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
-  
-  
+
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
 					  d_turbModel, d_boundaryCondition,
 					  d_physicalConsts, d_myworld);
@@ -209,6 +209,50 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   if (d_enthalpySolve) {
     d_H_air = d_props->getAdiabaticAirEnthalpy();
     d_enthalpySolver->setAdiabaticAirEnthalpy(d_H_air);
+  }
+
+  if (d_doMMS) {
+
+    ProblemSpecP params_non_constant = params;
+    const ProblemSpecP params_root = params_non_constant->getRootNode();
+    ProblemSpecP db_mmsblock=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
+    
+    db_mmsblock->getWithDefault("whichMMS",d_mms,"constantMMS");
+
+    db_mmsblock->getWithDefault("mmsErrorType",d_mmsErrorType,"L2");
+
+    if (d_mms == "constantMMS") {
+      ProblemSpecP db_whichmms = db_mmsblock->findBlock("constantMMS");
+      db_whichmms->getWithDefault("cu",cu,1.0);
+      db_whichmms->getWithDefault("cv",cv,1.0);
+      db_whichmms->getWithDefault("cw",cw,1.0);
+      db_whichmms->getWithDefault("cp",cp,1.0);
+      db_whichmms->getWithDefault("phi0",phi0,0.5);
+    }
+    else if (d_mms == "gao1MMS") {
+      ProblemSpecP db_whichmms = db_mmsblock->findBlock("gao1MMS");
+      db_whichmms->require("rhoair", d_airDensity);
+      db_whichmms->require("rhohe", d_heDensity);
+      db_whichmms->require("gravity", d_gravity);//Vector
+      db_whichmms->require("viscosity",d_viscosity); 
+      db_whichmms->getWithDefault("cu",cu,1.0);
+      db_whichmms->getWithDefault("cv",cv,1.0);
+      db_whichmms->getWithDefault("cw",cw,1.0);
+      db_whichmms->getWithDefault("cp",cp,1.0);
+      db_whichmms->getWithDefault("phi0",phi0,0.5);
+    }
+    else if (d_mms == "thornock1MMS") {
+      ProblemSpecP db_whichmms = db_mmsblock->findBlock("thornock1MMS");
+      db_whichmms->require("cu",cu);
+    }
+    else if (d_mms == "almgrenMMS") {
+      ProblemSpecP db_whichmms = db_mmsblock->findBlock("almgrenMMS");
+      db_whichmms->getWithDefault("amplitude",amp,0.0);
+      db_whichmms->require("viscosity",d_viscosity);
+    }
+    else
+      throw InvalidValue("current MMS "
+			 "not supported: " + d_mms, __FILE__, __LINE__);
   }
 }
 
@@ -366,6 +410,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls,
 				d_timeIntegratorLabels[curr_level]);
+    // Compute mms error
+    if (d_doMMS)
+      sched_computeMMSError(sched, patches, matls,
+			    d_timeIntegratorLabels[curr_level]);
     
     if (d_mixedModel) {
         d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
@@ -561,6 +609,15 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }  
   if (d_MAlab)
     tsk->computes(d_lab->d_densityMicroINLabel);
+
+  if (d_doMMS) {
+    
+    tsk->computes(d_lab->d_uFmmsLabel);
+    tsk->computes(d_lab->d_vFmmsLabel);
+    tsk->computes(d_lab->d_wFmmsLabel);
+    
+  }
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -1754,6 +1811,26 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
         reactscalardiff_new.copyData(reactscalardiff); // copy old into new
       }
     }
+
+    if (d_doMMS) { 
+      SFCXVariable<double> uFmms;
+      SFCYVariable<double> vFmms;
+      SFCZVariable<double> wFmms;
+
+      SFCXVariable<double> ummsLnError;
+      SFCYVariable<double> vmmsLnError;
+      SFCZVariable<double> wmmsLnError;
+      
+      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, matlIndex, patch);
+      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, matlIndex, patch);
+      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, matlIndex, patch);
+      
+      uFmms.initialize(0.0);
+      vFmms.initialize(0.0);
+      wFmms.initialize(0.0);
+      
+    }
+
   }
 }
 
@@ -2617,4 +2694,464 @@ ExplicitSolver::saveFECopies(const ProcessorGroup*,
 		     matlIndex, patch);
     }
   }
+}
+//****************************************************************************
+// Schedule computing mms error
+//****************************************************************************
+void 
+ExplicitSolver::sched_computeMMSError(SchedulerP& sched, 
+				      const PatchSet* patches,
+				      const MaterialSet* matls,
+				      const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "ExplicitSolver::computeMMSError" +
+		     timelabels->integrator_step_name;
+
+  Task* tsk = scinew Task(taskname, this,
+			  &ExplicitSolver::computeMMSError,
+			  timelabels);
+
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->requires(Task::NewDW, d_lab->d_uFmmsLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vFmmsLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wFmmsLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  tsk->requires(Task::NewDW, d_lab->d_uFmmsLabel,
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vFmmsLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wFmmsLabel,
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+
+  
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      tsk->computes(d_lab->d_ummsLnErrorLabel);
+      tsk->computes(d_lab->d_vmmsLnErrorLabel);
+      tsk->computes(d_lab->d_wmmsLnErrorLabel);
+      tsk->computes(d_lab->d_smmsLnErrorLabel);
+      tsk->computes(d_lab->d_gradpmmsLnErrorLabel);
+  }
+  else{
+      tsk->modifies(d_lab->d_ummsLnErrorLabel);
+      tsk->modifies(d_lab->d_vmmsLnErrorLabel);
+      tsk->modifies(d_lab->d_wmmsLnErrorLabel);
+      tsk->modifies(d_lab->d_smmsLnErrorLabel);
+      tsk->modifies(d_lab->d_gradpmmsLnErrorLabel);
+  }
+
+  tsk->computes(timelabels->ummsLnError);
+  tsk->computes(timelabels->vmmsLnError);
+  tsk->computes(timelabels->wmmsLnError);
+  tsk->computes(timelabels->smmsLnError);
+  tsk->computes(timelabels->gradpmmsLnError);
+  tsk->computes(timelabels->ummsExactSol);
+  tsk->computes(timelabels->vmmsExactSol);
+  tsk->computes(timelabels->wmmsExactSol);
+  tsk->computes(timelabels->smmsExactSol);
+  tsk->computes(timelabels->gradpmmsExactSol);
+
+  sched->addTask(tsk, patches, matls);
+
+}
+//****************************************************************************
+// Actually compute mms error
+//****************************************************************************
+void 
+ExplicitSolver::computeMMSError(const ProcessorGroup*,
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw,
+				const TimeIntegratorLabel* timelabels)
+{
+
+  cout << "***START of MMS ERROR CALC***" << endl;
+  cout << "  Using Error norm = "  << d_mmsErrorType << endl;
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    DataWarehouse* parent_old_dw;
+    if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+    else parent_old_dw = old_dw;
+    
+    delt_vartype delT;
+    parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constSFCXVariable<double> uVelocity;
+    constSFCYVariable<double> vVelocity;
+    constSFCZVariable<double> wVelocity;
+
+    constSFCXVariable<double> uFmms;
+    constSFCYVariable<double> vFmms;
+    constSFCZVariable<double> wFmms;
+    
+    constCCVariable<double> scalar;
+    constCCVariable<double> pressure;
+
+    SFCXVariable<double> ummsLnError;
+    SFCYVariable<double> vmmsLnError;
+    SFCZVariable<double> wmmsLnError;
+
+    CCVariable<double>   smmsLnError;
+    CCVariable<double>   gradpmmsLnError;
+
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      new_dw->allocateAndPut(ummsLnError, d_lab->d_ummsLnErrorLabel, matlIndex, patch);
+      new_dw->allocateAndPut(vmmsLnError, d_lab->d_vmmsLnErrorLabel, matlIndex, patch);
+      new_dw->allocateAndPut(wmmsLnError, d_lab->d_wmmsLnErrorLabel, matlIndex, patch);
+      new_dw->allocateAndPut(smmsLnError, d_lab->d_smmsLnErrorLabel, matlIndex, patch);
+      new_dw->allocateAndPut(gradpmmsLnError, d_lab->d_gradpmmsLnErrorLabel, matlIndex, patch);
+      ummsLnError.initialize(0.0);
+      vmmsLnError.initialize(0.0);
+      wmmsLnError.initialize(0.0);
+      smmsLnError.initialize(0.0);
+      gradpmmsLnError.initialize(0.0);
+    }
+    else {
+      new_dw->getModifiable(ummsLnError, d_lab->d_ummsLnErrorLabel,
+			    matlIndex, patch);
+      new_dw->getModifiable(vmmsLnError, d_lab->d_vmmsLnErrorLabel,
+			    matlIndex, patch);
+      new_dw->getModifiable(wmmsLnError, d_lab->d_wmmsLnErrorLabel,
+			    matlIndex, patch);
+      new_dw->getModifiable(smmsLnError, d_lab->d_smmsLnErrorLabel,
+			    matlIndex, patch);
+      new_dw->getModifiable(smmsLnError, d_lab->d_gradpmmsLnErrorLabel,
+			    matlIndex, patch);
+      ummsLnError.initialize(0.0);
+      vmmsLnError.initialize(0.0);
+      wmmsLnError.initialize(0.0);
+      smmsLnError.initialize(0.0);
+      gradpmmsLnError.initialize(0.0);
+      
+    }
+
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(uFmms, d_lab->d_uFmmsLabel, matlIndex, patch, 
+    		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(vFmms, d_lab->d_vFmmsLabel, matlIndex, patch, 
+    		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(wFmms, d_lab->d_wFmmsLabel, matlIndex, patch, 
+    		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    else {
+
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    //getting current time
+    // this might require the time shift??
+    // what about currenttime = t + dt?
+    double time=d_lab->d_sharedState->getElapsedTime();
+    time = time + delT;
+
+    cout << "THE CURRENT TIME IN ERROR CALC IS: " << time << endl;
+
+    double pi = acos(-1.0);
+
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+
+    // Cell Centered Error Calculation
+    double snumeratordiff = 0.0;
+    double sdenomexact = 0.0;
+
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+	  IntVector currCell(colX, colY, colZ);
+
+	  double mmsvalue = 0.0;
+	  double testvalue = 0.0;
+
+	  if (d_mms == "constantMMS"){
+
+	    mmsvalue = phi0;
+
+	    if (d_mmsErrorType == "L2"){
+	      snumeratordiff += ( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue );
+	    }
+
+	    sdenomexact += mmsvalue*mmsvalue;
+
+	    smmsLnError[currCell] = pow(( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue )/
+					(mmsvalue*mmsvalue),1.0/2.0);
+	  }
+	  else if (d_mms == "gao1MMS"){
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+	  }
+
+	  if (d_mmsErrorType == "L2"){
+	    snumeratordiff += ( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue );
+	    
+	    sdenomexact += mmsvalue*mmsvalue;
+	    
+	    smmsLnError[currCell] = pow(( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue )/
+					(mmsvalue*mmsvalue),1.0/2.0);
+	  }
+	  else if (d_mmsErrorType == "Linf"){
+	    
+	    testvalue = Abs(scalar[currCell] - mmsvalue);
+	    
+	    if (testvalue > snumeratordiff)
+	      snumeratordiff = testvalue;
+	    
+	    sdenomexact = 1.0;
+	    
+	    smmsLnError[currCell] = testvalue;
+	  }
+	}
+      }
+    }
+
+    if (d_mmsErrorType == "L2"){
+      new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
+      new_dw->put(sum_vartype(sdenomexact), timelabels->smmsExactSol);
+    }
+    else if (d_mmsErrorType == "Linf"){
+      new_dw->put(max_vartype(snumeratordiff), timelabels->smmsLnError); 
+      new_dw->put(max_vartype(sdenomexact), timelabels->smmsExactSol);
+    } 
+
+    // X-face Error Calculation
+    double unumeratordiff = 0.0;
+    double udenomexact = 0.0;
+
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  
+	  IntVector currCell(colX, colY, colZ);
+	  double mmsvalue = 0.0;
+	  double mmsconvvalue = 0.0;
+	  double testvalue = 0.0;
+
+	  if (d_mms == "constantMMS"){
+
+	    mmsvalue = cu;
+
+	  }
+	  else if (d_mms == "gao1MMS"){
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+
+	    mmsvalue = 1 - amp * cos(2.0*pi*(cellinfo->xu[colX] - time))
+	      * sin(2.0*pi*(cellinfo->yy[colY] - time))*exp(-2.0*d_viscosity*time);
+
+	    mmsconvvalue = 2*(1-amp*cos(2*pi*(cellinfo->xu[colX]-time))*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time))*amp*sin(2*pi*(cellinfo->xu[colX]-time))*pi*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time)-2*amp*cos(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*pi*exp(-2*d_viscosity*time)*(1+amp*sin(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time));
+
+	  }
+
+	  if (d_mmsErrorType == "L2"){
+	    unumeratordiff += ( uVelocity[currCell] - mmsvalue )*( uVelocity[currCell] - mmsvalue );
+	    //unumeratordiff += ( uFmms[currCell] - mmsconvvalue )*( uFmms[currCell] - mmsconvvalue );
+	    
+	    udenomexact += mmsvalue*mmsvalue;
+	    //udenomexact += mmsconvvalue*mmsconvvalue;
+	    
+	    ummsLnError[currCell] = pow(( uVelocity[currCell] - mmsvalue )*( uVelocity[currCell] - mmsvalue )/
+	    				(mmsvalue*mmsvalue),1.0/2.0);
+	    //ummsLnError[currCell] = pow(( uFmms[currCell] - mmsconvvalue )*( uFmms[currCell] - mmsconvvalue )/
+	    // 					(mmsconvvalue*mmsconvvalue),1.0/2.0);
+
+	    //cout << " mmsvalue = " << mmsvalue << " computed = " << uVelocity[currCell] << endl;
+
+	  }
+	  else if (d_mmsErrorType == "Linf"){
+	    
+	    testvalue = Abs(uVelocity[currCell] - mmsvalue);
+	    
+	    if (testvalue > unumeratordiff)
+	      unumeratordiff = testvalue;
+	    
+	    udenomexact = 1.0;
+
+	    ummsLnError[currCell] = testvalue;
+	  }
+	}
+      }
+    }
+
+    if (d_mmsErrorType == "L2"){
+      new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError); 
+      new_dw->put(sum_vartype(udenomexact), timelabels->ummsExactSol);
+    }
+    else if (d_mmsErrorType == "Linf"){
+      new_dw->put(max_vartype(unumeratordiff), timelabels->ummsLnError); 
+      new_dw->put(max_vartype(udenomexact), timelabels->ummsExactSol);
+    } 
+
+    // Y-face Error Calculation
+    double vnumeratordiff = 0.0;
+    double vdenomexact = 0.0;
+
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+	  IntVector currCell(colX, colY, colZ);
+	  double mmsvalue = 0.0;
+	  double testvalue = 0.0;
+
+	  if (d_mms == "constantMMS"){
+
+	    mmsvalue = cv;
+
+	  }
+	  else if (d_mms == "gao1MMS"){
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+
+	    mmsvalue = 1 + amp * sin(2.0*pi*cellinfo->xx[colX] - time)
+	      * cos(2.0*pi*cellinfo->yv[colY] - time) * exp(-2.0*d_viscosity*time);
+
+	  }
+
+	  if (d_mmsErrorType == "L2"){
+	    //	    vnumeratordiff += ( vVelocity[currCell] - mmsvalue )*( vVelocity[currCell] - mmsvalue );
+	    
+	    // vdenomexact += mmsvalue*mmsvalue;
+	    
+	    //vmmsLnError[currCell] = pow(( vVelocity[currCell] - mmsvalue )*( vVelocity[currCell] - mmsvalue )/
+	    //					(mmsvalue*mmsvalue),1.0/2.0);
+	  }
+	  else if (d_mmsErrorType == "Linf"){
+	    testvalue = Abs(vVelocity[currCell] - mmsvalue);
+	    
+	    if (testvalue > vnumeratordiff)
+	      vnumeratordiff = testvalue;
+	    
+	    vdenomexact = 1.0;
+	    
+	    vmmsLnError[currCell] = testvalue;
+	  }
+	}
+      }
+    }
+
+    if (d_mmsErrorType == "L2") {
+      new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError); 
+      new_dw->put(sum_vartype(vdenomexact), timelabels->vmmsExactSol);
+    }
+    else if (d_mmsErrorType == "Linf"){
+      new_dw->put(max_vartype(vnumeratordiff), timelabels->vmmsLnError); 
+      new_dw->put(max_vartype(vdenomexact), timelabels->vmmsExactSol);
+    }
+
+    // Z-face Error Calculation
+    double wnumeratordiff = 0.0;
+    double wdenomexact = 0.0;
+
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+	  IntVector currCell(colX, colY, colZ);
+	  double mmsvalue = 0.0;
+	  double testvalue = 0.0;
+
+	  if (d_mms == "constantMMS"){
+
+	    mmsvalue = cw;
+
+	  }
+	  else if (d_mms == "gao1MMS"){
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+
+	    //nothing for now since sine-cos is in x-y plane
+
+	  }
+	  if (d_mmsErrorType == "L2"){
+	    wnumeratordiff += ( wVelocity[currCell] - mmsvalue )*( wVelocity[currCell] - mmsvalue );
+	    
+	    wdenomexact += mmsvalue*mmsvalue;
+	    
+	    wmmsLnError[currCell] = pow(( wVelocity[currCell] - mmsvalue )*( wVelocity[currCell] - mmsvalue )/
+					(mmsvalue*mmsvalue),1.0/2.0);
+	    
+	  }
+	  else if (d_mmsErrorType == "Linf"){
+	    
+	    testvalue = Abs(wVelocity[currCell] - mmsvalue);
+	    
+	    if (testvalue > wnumeratordiff)
+	      wnumeratordiff = testvalue;
+	    
+	    wdenomexact = 1.0;
+	    
+	    wmmsLnError[currCell] = testvalue;
+	  }
+	}
+      }
+    }
+    
+    if (d_mmsErrorType == "L2"){
+      new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError); 
+      new_dw->put(sum_vartype(wdenomexact), timelabels->wmmsExactSol);
+    }
+    else if (d_mmsErrorType == "Linf"){
+      new_dw->put(max_vartype(wnumeratordiff), timelabels->wmmsLnError); 
+      new_dw->put(max_vartype(wdenomexact), timelabels->wmmsExactSol);
+    }
+
+    
+  }
+
 }

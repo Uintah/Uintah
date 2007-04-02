@@ -366,7 +366,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_doMMS)
-    d_source->calculateScalarMMSource(pc, patch,
+    d_source->calculateScalarMMSSource(pc, patch,
 				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_conv_scheme > 0) {

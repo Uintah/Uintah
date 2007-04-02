@@ -171,6 +171,12 @@ public:
 	d_turbPrNo = turbPrNo;
       }
 
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
+      inline bool getMMS() const {
+        return d_doMMS;
+      }
 protected:
 
 private:
@@ -188,6 +194,7 @@ private:
       Filter* d_filter;
 #endif
       double d_turbPrNo;
+      bool d_doMMS;
 }; // end class Discretization
 
 } // End namespace Uintah

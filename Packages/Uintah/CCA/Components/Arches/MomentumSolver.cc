@@ -77,6 +77,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"upwind");
+    d_discretize->setMMS(d_doMMS);
     if (conv_scheme == "upwind") d_central = false;
       else if (conv_scheme == "central") d_central = true;
 	else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
@@ -88,6 +89,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 	  d_source->problemSetup(db);
 
   d_rhsSolver = scinew RHSSolver();
+  d_rhsSolver->setMMS(d_doMMS);
 
   d_mixedModel=d_turbModel->getMixedModel();
 }
@@ -476,6 +478,15 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->modifies(d_lab->d_divConstraintLabel);
 //#endif
 
+  if (d_doMMS) {
+
+    tsk->modifies(d_lab->d_uFmmsLabel);
+    tsk->modifies(d_lab->d_vFmmsLabel);
+    tsk->modifies(d_lab->d_wFmmsLabel);
+
+  }
+
+  
   sched->addTask(tsk, patches, matls);
 }
 
@@ -591,7 +602,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->getModifiable(velocityVars.divergence,
 			    d_lab->d_divConstraintLabel, matlIndex, patch);
     velocityVars.divergence.initialize(0.0);
-//#endif
+    //#endif    
+
 
   TAU_PROFILE_STOP(input);
   TAU_PROFILE_START(inputcell);
@@ -697,6 +709,15 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
 				     velocityVars.uVelRhoHat.getLowIndex(),
 				     velocityVars.uVelRhoHat.getHighIndex());
+	
+	if (d_doMMS){
+	  new_dw->getModifiable(velocityVars.uFmms, 
+				d_lab->d_uFmmsLabel, matlIndex, patch);
+
+	  velocityVars.uFmms.initialize(0.0);
+	  
+	}
+
 
 	break;
 
@@ -710,6 +731,14 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 				     velocityVars.vVelRhoHat.getLowIndex(),
 				     velocityVars.vVelRhoHat.getHighIndex());
 
+	if (d_doMMS){
+	  new_dw->getModifiable(velocityVars.vFmms, 
+				d_lab->d_vFmmsLabel, matlIndex, patch);
+
+	  velocityVars.vFmms.initialize(0.0);
+	  
+	}
+
 	break;
 
       case Arches::ZDIR:
@@ -721,6 +750,14 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
 				     velocityVars.wVelRhoHat.getLowIndex(),
 				     velocityVars.wVelRhoHat.getHighIndex());
+
+	if (d_doMMS){
+	  new_dw->getModifiable(velocityVars.wFmms, 
+				d_lab->d_wFmmsLabel, matlIndex, patch);
+
+	  velocityVars.wFmms.initialize(0.0);
+	  
+	}
 
 	break;
 
@@ -734,7 +771,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 					cellinfo, &velocityVars,
 					&constVelocityVars);
       if (d_doMMS)
-          d_source->calculateVelMMSource(pc, patch, 
+          d_source->calculateVelMMSSource(pc, patch, 
 					delta_t, time, index,
 					cellinfo, &velocityVars,
 					&constVelocityVars);
@@ -899,10 +936,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       //           [u,v,w]VelNonLinSrcPBLM
       
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
-        d_boundaryCondition->velocityBC(pc, patch, 
+
+        if (!d_doMMS) {
+	  d_boundaryCondition->velocityBC(pc, patch, 
 				        index,
 				        cellinfo, &velocityVars,
 				        &constVelocityVars);
+	}
 
         if (d_boundaryCondition->getIntrusionBC()) {
 	  // if 0'ing stuff below for zero friction drag
@@ -949,6 +989,20 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 					 cellinfo, &velocityVars,
 					 &constVelocityVars);
       }
+
+      //MMS boundary conditions ~Setting the uncorrected velocities~
+      if (d_doMMS) { 
+
+	double time_shiftmms = 0.0;
+	time_shiftmms = delta_t * timelabels->time_position_multiplier_before_average;
+
+
+	d_boundaryCondition->mmsvelocityBC(pc, patch, index, cellinfo, 
+					   &velocityVars, &constVelocityVars, 
+					   time_shiftmms, 
+					   delta_t);
+      }
+
 
   if (d_pressure_correction) {
   int ioff, joff, koff;

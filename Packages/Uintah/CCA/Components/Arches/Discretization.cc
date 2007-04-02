@@ -590,7 +590,8 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 	  x_flux[currCell] = c * (Zup + 0.5 * psi * (Zdwn - Zup));
 
         if ((constscal_vars->cellType[xminusCell] == wall_celltypeval)
-	    && (!(constscal_vars->cellType[currCell] == wall_celltypeval))) {
+	    && (!(constscal_vars->cellType[currCell] == wall_celltypeval))
+	    && (!d_doMMS)) {
                      x_flux[currCell] = 0.0;
         }
       }
