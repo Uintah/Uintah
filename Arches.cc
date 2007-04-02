@@ -145,22 +145,30 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("doMMS", d_doMMS, false);
   if(d_doMMS) {
 	  ProblemSpecP db_mms = db->findBlock("MMS");
-	  db_mms->getWithDefault("whichMMS", d_mms, "linearMMS");
-	  if (d_mms == "linearMMS") {
-	    ProblemSpecP db_mms1 = db_mms->findBlock("linearMMS");
+	  db_mms->getWithDefault("whichMMS", d_mms, "constantMMS");
+	  if (d_mms == "constantMMS") {
+	    ProblemSpecP db_mms0 = db_mms->findBlock("constantMMS");
+	    db_mms0->getWithDefault("cu",cu,0.0);
+	    db_mms0->getWithDefault("cv",cv,0.0);
+	    db_mms0->getWithDefault("cw",cw,0.0);
+	    db_mms0->getWithDefault("cp",cp,0.0);
+	    db_mms0->getWithDefault("phi0",phi0,0.0);
+	  }
+	  else if (d_mms == "gao1MMS") {
+	    ProblemSpecP db_mms1 = db_mms->findBlock("gao1MMS");
 	    db_mms1->getWithDefault("cu",cu,1.0);
 	    db_mms1->getWithDefault("cv",cv,1.0);
 	    db_mms1->getWithDefault("cw",cw,1.0);
 	    db_mms1->getWithDefault("cp",cp,1.0);
 	    db_mms1->getWithDefault("phi0",phi0,0.5);
 	  }
-	  else if (d_mms == "expMMS") {
-		  ProblemSpecP db_mms2 = db_mms->findBlock("expMMS");
+	  else if (d_mms == "thornock1MMS") {
+		  ProblemSpecP db_mms2 = db_mms->findBlock("thornock1MMS");
 		  db_mms2->require("cu",cu);
 	  }
-	  else if (d_mms == "sineMMS") {
-		  ProblemSpecP db_mms3 = db_mms->findBlock("sineMMS");
-		  db_mms3->require("cu",cu);
+	  else if (d_mms == "almgrenMMS") {
+		  ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
+		  db_mms3->require("amplitude",amp);
 	  }
 	  else
 		  throw InvalidValue("current MMS "
@@ -192,7 +200,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 						 d_props, d_calcReactingScalar,
 						 d_calcEnthalpy, d_calcVariance);
   // send params, boundary type defined at the level of Grid
+  d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->problemSetup(db);
+
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
@@ -288,6 +298,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_analysisModule) {
     d_analysisModule->problemSetup(params, grid, sharedState);
   }
+
 }
 
 // ****************************************************************************
@@ -309,6 +320,8 @@ Arches::scheduleInitialize(const LevelP& level,
     sched_readCCInitialCondition(level, sched);
     sched_interpInitialConditionToStaggeredGrid(level, sched);
   }
+
+  //mms initial condition
   if (d_doMMS) {
 	  sched_mmsInitialCondition(level, sched);
   }
@@ -347,6 +360,7 @@ Arches::scheduleInitialize(const LevelP& level,
   init_timelabel = scinew TimeIntegratorLabel(d_lab,
 		  			      TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
+
   d_props->sched_reComputeProps(sched, patches, matls,
 				init_timelabel, true, true);
 
@@ -451,6 +465,14 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_mmgasVolFracLabel);
     }
 
+    if (d_doMMS) {
+
+      tsk->computes(d_lab->d_uFmmsLabel);
+      tsk->computes(d_lab->d_vFmmsLabel);
+      tsk->computes(d_lab->d_wFmmsLabel);
+
+    }
+
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -497,6 +519,26 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
+
+    // Variables for mms analysis
+    if (d_doMMS){
+
+      //Force terms of convection + diffusion
+      // These will be used in the MMS scirun module
+      //  to get error convergence
+      SFCXVariable<double> uFmms;
+      SFCYVariable<double> vFmms;
+      SFCZVariable<double> wFmms;
+
+      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, matlIndex, patch);
+      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, matlIndex, patch);
+      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, matlIndex, patch);
+
+      uFmms.initialize(0.0);
+      vFmms.initialize(0.0);
+      wFmms.initialize(0.0);
+    }
+  
     std::cerr << "Material Index: " << matlIndex << endl;
     new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
@@ -620,6 +662,7 @@ Arches::paramInit(const ProcessorGroup* ,
         reactScalarDiffusivity.initialize(visVal/0.4);
     }
     scalar.initialize(0.0);
+
   }
 }
 
@@ -984,6 +1027,7 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
     tsk->modifies(d_lab->d_wVelocitySPBCLabel);
     tsk->modifies(d_lab->d_pressurePSLabel);
     tsk->modifies(d_lab->d_scalarSPLabel);
+
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -998,6 +1042,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
 	 		       DataWarehouse* ,
 			       DataWarehouse* new_dw)
 {
+
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -1030,19 +1075,326 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
 
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
+    double pi = acos(-1.0);
+
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
 	  IntVector currCell(colX, colY, colZ);
-	  if (d_mms == "linearMMS") {
-	    uVelocity[currCell] = cu*cellinfo->xu[colX];
-	    vVelocity[currCell] = cv*cellinfo->yv[colY];
-	    wVelocity[currCell] = cw*cellinfo->zw[colZ];
+	  if (d_mms == "constantMMS") {
+	    pressure[currCell] = cp;
+	    scalar[currCell]   = phi0;
+	  }
+	  else if (d_mms == "gao1MMS") {
 	    pressure[currCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
 	    scalar[currCell] = phi0;
 	  }
+	  else if (d_mms == "thornock1MMS") {
+	  }
+	  else if (d_mms == "almgrenMMS") {
+	    // for mms in x-y plane
+	    pressure[currCell]  = -amp*amp/4 * (cos(4.0*pi*cellinfo->xx[colX])
+	    	     +  cos(4.0*pi*cellinfo->yy[colY]));
+	    scalar[currCell]    = 0.0;
+	  }
 	}
       }
+    }
+
+    //X-FACE centered variables 
+    idxLo = patch->getSFCXFORTLowIndex();
+    idxHi = patch->getSFCXFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+
+	  IntVector currCell(colX, colY, colZ);
+	  if (d_mms == "constantMMS") {
+	    uVelocity[currCell] = cu;
+	  }
+	  else if (d_mms == "gao1MMS") {
+	    uVelocity[currCell] = cu*cellinfo->xu[colX];
+	  }
+	  else if (d_mms == "thornock1MMS") {
+	  }
+	  else if (d_mms == "almgrenMMS") {
+	    // for mms in x-y plane
+
+	    uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+	      * sin(2.0*pi*cellinfo->yy[colY]);
+
+	  }
+	}
+      }
+    }
+
+    //Y-FACE centered variables 
+    idxLo = patch->getSFCYFORTLowIndex();
+    idxHi = patch->getSFCYFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+	  IntVector currCell(colX, colY, colZ);
+
+	  if (d_mms == "constantMMS") {
+	    vVelocity[currCell] = cv;
+	  }
+	  else if (d_mms == "gao1MMS") {
+	    vVelocity[currCell] = cv*cellinfo->yv[colY];
+	  }
+	  else if (d_mms == "thornock1MMS") {
+	  }
+	  else if (d_mms == "almgrenMMS") {
+	    // for mms in x-y plane
+
+	    vVelocity[currCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+	      * cos(2.0*pi*cellinfo->yv[colY]);
+
+	  }
+	}
+      }
+    }
+    //Z-FACE centered variables 
+    idxLo = patch->getSFCZFORTLowIndex();
+    idxHi = patch->getSFCZFORTHighIndex();
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+
+	  IntVector currCell(colX, colY, colZ);
+
+	  if (d_mms == "constantMMS") {
+	    wVelocity[currCell] = cw;
+	  }
+	  else if (d_mms == "gao1MMS") {
+	    wVelocity[currCell] = cw*cellinfo->zw[colZ];
+	  }
+	  else if (d_mms == "thornock1MMS") {
+	  }
+	  else if (d_mms == "almgrenMMS") {
+	    // for mms in x-y plane
+	    //double pi = acos(-1.0);
+
+	    wVelocity[currCell] = 0.0;
+	  }
+	}
+      }
+    }
+
+
+    bool doit=false;
+
+    if (doit){
+
+      //debugging for now...find a better way plz
+
+
+    //ALSO need to fill the boundaries
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    //WARNING!!!
+    //For now we will assume if xminus, xplus, ..., are true, then 
+    // we need to set mms boundary condition
+    //int wall_celltypeval = wallCellType();      
+
+    if (xminus) {
+
+      int colX = idxLo.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector xminusCell(colX-1, colY, colZ);
+
+	  //if (cellType[xminusCell] == wall_celltypeval){
+
+	  if (d_mms == "gao1MMS"){
+	   
+	    scalar[xminusCell]    = phi0;
+	    uVelocity[currCell]   = cu*cellinfo->xu[colX];
+	    uVelocity[xminusCell] = cu*cellinfo->xu[colX-1];
+	    vVelocity[xminusCell] = cv*cellinfo->yv[colY];
+	    wVelocity[xminusCell] = cw*cellinfo->zw[colZ];
+	    pressure[xminusCell]  = cp*(cellinfo->xx[colX-1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
+	    
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+	    double pi = acos(-1.0);
+	    uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+	                                  * sin(2.0*pi*cellinfo->yy[colY]);
+	    uVelocity[xminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX-1])
+	                                    * sin(2.0*pi*cellinfo->yy[colY]);
+	    vVelocity[xminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX-1])
+	                                    * cos(2.0*pi*cellinfo->yv[colY]);
+	    wVelocity[xminusCell] = 0.0;
+	  }
+	}
+      }
+    }   
+
+    if (xplus) {
+      int colX = idxHi.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector xplusCell(colX+1, colY, colZ);
+	  
+	  if (d_mms == "gao1MMS"){
+	    scalar[xplusCell]    = phi0;
+	    uVelocity[xplusCell] = cu*cellinfo->xu[colX+1];
+	    vVelocity[xplusCell] = cv*cellinfo->yv[colY];
+	    wVelocity[xplusCell] = cw*cellinfo->zw[colZ];
+	    pressure[xplusCell]  = cp*(cellinfo->xx[colX+1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+	    double pi = acos(-1.0);
+	    uVelocity[xplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX+1])
+	                                   * sin(2.0*pi*cellinfo->yy[colY]);
+	    vVelocity[xplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX+1])
+	                                   * cos(2.0*pi*cellinfo->yv[colY]);
+	    wVelocity[xplusCell] = 0.0;
+	  }
+	}
+      }
+    }    
+
+    if (yminus) {
+      int colY = idxLo.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector yminusCell(colX, colY-1, colZ);
+	  
+	  if (d_mms == "gao1MMS"){
+	    scalar[yminusCell]    = phi0;
+	    uVelocity[yminusCell] = cu*cellinfo->xu[colX];
+	    vVelocity[currCell]   = cv*cellinfo->yv[colY];
+	    vVelocity[yminusCell] = cv*cellinfo->yv[colY-1];
+	    wVelocity[yminusCell] = cw*cellinfo->zw[colZ];
+	    pressure[yminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY-1]+cellinfo->zz[colZ]);
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+	    double pi = acos(-1.0);
+	    uVelocity[yminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+	                                    * sin(2.0*pi*cellinfo->yy[colY-1]);
+	    vVelocity[yminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+	                                    * cos(2.0*pi*cellinfo->yv[colY-1]);
+	    vVelocity[currCell]   = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+	                                    * cos(2.0*pi*cellinfo->yv[colY]);
+	    wVelocity[yminusCell] = 0.0;
+
+	  }
+	  
+	}
+      }
+    }    
+
+    if (yplus) {
+      int colY = idxHi.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector yplusCell(colX, colY+1, colZ);
+	  
+	  //if (cellType[yplusCell] == wall_celltypeval){
+	  
+	  if (d_mms == "gao1MMS"){
+	    scalar[yplusCell]    = phi0;
+	    uVelocity[yplusCell] = cu*cellinfo->xu[colX];
+	    vVelocity[yplusCell] = cv*cellinfo->yv[colY+1];
+	    wVelocity[yplusCell] = cw*cellinfo->zw[colZ];
+	    pressure[yplusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY+1]+cellinfo->zz[colZ]);
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+	    double pi = acos(-1.0);
+	    uVelocity[yplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+	                                   * sin(2.0*pi*cellinfo->yy[colY+1]);
+	    vVelocity[yplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+	                                   * cos(2.0*pi*cellinfo->yv[colY+1]);
+	    wVelocity[yplusCell] = 0.0;
+	  }
+	}
+      }
+    }    
+
+    if (zminus) {
+      int colZ = idxLo.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector zminusCell(colX, colY, colZ-1);
+	  
+	  if (d_mms == "gao1MMS"){
+	    scalar[zminusCell]    = phi0;
+	    uVelocity[zminusCell] = cu*cellinfo->xu[colX];
+	    vVelocity[zminusCell] = cv*cellinfo->yv[colY];
+	    wVelocity[currCell]   = cw*cellinfo->zw[colZ];
+	    wVelocity[zminusCell] = cw*cellinfo->zw[colZ-1];
+	    pressure[zminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ-1]);
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	  }
+	  else if (d_mms == "almgrenMMS"){
+	    double pi = acos(-1.0);
+	    uVelocity[zminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+	                                    * sin(2.0*pi*cellinfo->yy[colY]);
+	    vVelocity[zminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+	                                    * cos(2.0*pi*cellinfo->yv[colY]);
+	    wVelocity[currCell] = 0.0;
+	    wVelocity[zminusCell] = 0.0;
+	  }	    
+	}
+      }
+    }    
+
+    if (zplus) {
+      int colZ = idxHi.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  
+	  IntVector currCell(colX, colY, colZ);
+	  IntVector zplusCell(colX, colY, colZ+1);
+	  
+	  if (d_mms == "gao1MMS"){
+	    scalar[zplusCell] = phi0;
+	    uVelocity[zplusCell] = cu*cellinfo->xu[colX];
+	    vVelocity[zplusCell] = cv*cellinfo->yv[colY];
+	    wVelocity[zplusCell] = cw*cellinfo->zw[colZ+1];
+	    pressure[zplusCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ+1]);
+	  }
+	  else if (d_mms == "thornock1MMS"){
+	    }
+	  else if (d_mms == "almgrenMMS"){
+	    double pi = acos(-1.0);
+	    uVelocity[zplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+	                                   * sin(2.0*pi*cellinfo->yy[colY]);
+	    vVelocity[zplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+	                                   * cos(2.0*pi*cellinfo->yv[colY]);
+	    wVelocity[zplusCell] = 0.0;
+	  }	    
+	}
+      }
+    }
     }
   }
 }

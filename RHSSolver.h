@@ -97,9 +97,19 @@ public:
 			 ArchesConstVariables* constvars,
 			 CellInformation* cellinfo);
 
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
+      inline bool getMMS() const {
+        return d_doMMS;
+      }
+
 protected:
 
 private:
+
+      //mms variables
+      bool d_doMMS;
 
 
 }; // End class RHSSolver.h

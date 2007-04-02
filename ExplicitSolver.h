@@ -165,6 +165,9 @@ public:
       void sched_saveVelocityCopies(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
+      void sched_computeMMSError(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
 
       inline double recomputeTimestep(double current_dt) {
         return current_dt/2;
@@ -302,6 +305,12 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels);
+     void computeMMSError(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
 
 private:
       // const VarLabel*
@@ -350,9 +359,20 @@ private:
     double d_H_air;
     bool d_doMMS;
     bool d_restart_on_negative_density_guess;
+    string d_mms;
+    string d_mmsErrorType;
+    double d_airDensity, d_heDensity;
+    Vector d_gravity;
+    double d_viscosity;
+
     bool d_extraProjection;
     bool d_KE_fromFC;
     
+    //linear mms
+    double cu, cv, cw, cp, phi0;
+    // sine mms
+    double amp;
+
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

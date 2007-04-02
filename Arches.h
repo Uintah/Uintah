@@ -292,7 +292,10 @@ private:
     bool d_dynScalarModel;
     bool d_underflow;
     string d_mms;
+    //linear mms
     double cu,cv,cw,cp,phi0;
+    //sine mms
+    double amp;
 
 }; // end class Arches
 

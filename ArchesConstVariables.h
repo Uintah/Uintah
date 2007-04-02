@@ -98,6 +98,10 @@ namespace Uintah {
       constSFCZVariable<double> mmwVelSu;
       constSFCZVariable<double> mmwVelSp;
 
+      constSFCXVariable<double> uFmms;
+      constSFCXVariable<double> vFmms;
+      constSFCXVariable<double> wFmms;
+
     }; // End class ArchesConstVariables
 } // End namespace Uintah
 

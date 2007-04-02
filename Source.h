@@ -171,7 +171,7 @@ public:
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
   
-      void calculateVelMMSource(const ProcessorGroup* pc,
+      void calculateVelMMSSource(const ProcessorGroup* pc,
 				   const Patch* patch,
 				   double delta_t, double time,
 				   int index,
@@ -179,14 +179,14 @@ public:
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars);
 
-      void calculateScalarMMSource(const ProcessorGroup* pc,
+      void calculateScalarMMSSource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 double delta_t, 
 				 CellInformation* cellinfo,
 				 ArchesVariables* vars,
 				 ArchesConstVariables* constvars);
 
-      void calculatePressMMSourcePred(const ProcessorGroup* pc,
+      void calculatePressMMSSourcePred(const ProcessorGroup* pc,
 				       const Patch* patch,
 				       double delta_t,
 				       CellInformation* cellinfo,
@@ -201,8 +201,13 @@ private:
       double d_airDensity, d_heDensity;
       Vector d_gravity;
       double d_viscosity;
-      double cu, cv, cw, cp, phi0;
       double d_turbPrNo;
+
+      // linear mms
+      double cu, cv, cw, cp, phi0;
+      // sine mms
+      double amp;
+
 
 }; // end Class Source
 
