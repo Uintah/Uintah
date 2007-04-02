@@ -269,6 +269,25 @@ public:
 		      ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
+      // Actually compute mms velocity BC terms
+      void mmsvelocityBC(const ProcessorGroup* pc,
+		      const Patch* patch,
+		      int index,
+		      CellInformation* cellinfo,
+		      ArchesVariables* vars,
+		      ArchesConstVariables* constvars, 
+		      double time_shift, 
+		      double dt);      
+
+      void mmsscalarBC(const ProcessorGroup*,
+		       const Patch* patch,
+		       CellInformation* cellinfo,
+		       ArchesVariables* vars,
+		       ArchesConstVariables* constvars,
+		       double time_shift,
+		       double dt);
+
+      ///////////////////////////////////////////////////////////////////////
       // Actually compute pressure BC terms
       void pressureBC(const ProcessorGroup*,
 		      const Patch* patch,
@@ -469,6 +488,47 @@ public:
       void sched_setInletFlowRates(SchedulerP& sched,
 				   const PatchSet* patches,
 				   const MaterialSet* matls);
+
+	void mmsuVelocityBC(const Patch* patch,
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars, 
+				  double time_shift,
+				  double dt);
+
+	void mmsvVelocityBC(const Patch* patch,
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars,
+				  double time_shift, 
+				  double dt);
+				  
+	void mmswVelocityBC(const Patch* patch,
+				  CellInformation* cellinfo,
+				  ArchesVariables* vars,
+				  ArchesConstVariables* constvars,
+				  double time_shift, 
+				  double dt);
+				  
+	void mmspressureBC(const ProcessorGroup*,
+			      const Patch* patch,
+			      DataWarehouse* /*old_dw*/,
+			      DataWarehouse* /*new_dw*/,
+			      CellInformation* /*cellinfo*/,
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars);
+
+      inline void setMMS(bool doMMS) {
+        d_doMMS=doMMS;
+      }
+      inline bool getMMS() const {
+        return d_doMMS;
+      }
+
+
+ 
+
+	
 
 private:
 
@@ -740,6 +800,21 @@ private:
       IntrusionBdry* d_intrusionBC;
 
       bool d_carbon_balance;
+
+      string d_mms;
+      double d_airDensity, d_heDensity;
+      Vector d_gravity;
+      double d_viscosity;
+      
+      //linear mms
+      double cu, cv, cw, cp, phi0;
+      // sine mms
+      double amp;
+
+      double d_turbPrNo;
+      bool d_doMMS;
+
+
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

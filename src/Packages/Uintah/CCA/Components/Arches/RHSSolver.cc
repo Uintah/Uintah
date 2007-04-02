@@ -62,6 +62,7 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
   // for explicit solver
   int ioff, joff, koff;
 
+
   switch (index) {
   case Arches::XDIR:
     idxLo = patch->getSFCXFORTLowIndex();
@@ -82,6 +83,44 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
 		      constvars->new_density,
 		      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
 		      delta_t, ioff, joff, koff);
+
+
+    //MMS conv and diff force term collection
+    // Since the collection (along with velFmms allocation) 
+    // is conditional on d_doMMS, 
+    // I put the force term calculation in the fortran 
+    // and hence the "verification" doesn't completely 
+    // check the explicit update!
+    if (d_doMMS) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector eastCell(colX+1, colY, colZ);
+	    IntVector westCell(colX-1, colY, colZ);
+	    IntVector northCell(colX, colY+1, colZ);
+	    IntVector southCell(colX, colY-1, colZ);
+	    IntVector topCell(colX, colY, colZ+1);
+	    IntVector bottomCell(colX, colY, colZ-1);
+
+	    vars->uFmms[currCell] = vars->uVelocityCoeff[Arches::AE][currCell]*constvars->uVelocity[eastCell] +
+	      vars->uVelocityCoeff[Arches::AW][currCell]*constvars->uVelocity[westCell] +
+	      vars->uVelocityCoeff[Arches::AN][currCell]*constvars->uVelocity[northCell] +
+	      vars->uVelocityCoeff[Arches::AS][currCell]*constvars->uVelocity[southCell] +
+	      vars->uVelocityCoeff[Arches::AT][currCell]*constvars->uVelocity[topCell] +
+	      vars->uVelocityCoeff[Arches::AB][currCell]*constvars->uVelocity[bottomCell] - 
+	      vars->uVelocityCoeff[Arches::AP][currCell]*constvars->uVelocity[currCell] +
+	      vars->uVelNonlinearSrc[currCell] - 
+	      0.5*(constvars->new_density[currCell] + constvars->new_density[westCell])*constvars->uVelocity[currCell];
+
+	    vars->uFmms[currCell] = vars->uFmms[currCell]/cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+
+	  }
+	}
+      }
+    }
+	    
     break;
   case Arches::YDIR:
     idxLo = patch->getSFCYFORTLowIndex();
@@ -103,6 +142,41 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
 		      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
 		      delta_t, ioff, joff, koff);
 
+    //MMS conv and diff force term collection
+    // Since the collection (along with velFmms allocation) 
+    // is conditional on d_doMMS, 
+    // I put the force term caluculation in the fortran 
+    // and hence the "verification" doesn't completely 
+    // check the explicit update!
+    if (d_doMMS) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector eastCell(colX+1, colY, colZ);
+	    IntVector westCell(colX-1, colY, colZ);
+	    IntVector northCell(colX, colY+1, colZ);
+	    IntVector southCell(colX, colY-1, colZ);
+	    IntVector topCell(colX, colY, colZ+1);
+	    IntVector bottomCell(colX, colY, colZ-1);
+
+	    vars->vFmms[currCell] = vars->vVelocityCoeff[Arches::AE][currCell]*constvars->vVelocity[eastCell] +
+	      vars->vVelocityCoeff[Arches::AW][currCell]*constvars->vVelocity[westCell] +
+	      vars->vVelocityCoeff[Arches::AN][currCell]*constvars->vVelocity[northCell] +
+	      vars->vVelocityCoeff[Arches::AS][currCell]*constvars->vVelocity[southCell] +
+	      vars->vVelocityCoeff[Arches::AT][currCell]*constvars->vVelocity[topCell] +
+	      vars->vVelocityCoeff[Arches::AB][currCell]*constvars->vVelocity[bottomCell] - 
+	      vars->vVelocityCoeff[Arches::AP][currCell]*constvars->vVelocity[currCell] +
+	      vars->vVelNonlinearSrc[currCell] - 
+	      0.5*(constvars->new_density[currCell] + constvars->new_density[southCell])*constvars->vVelocity[currCell]/delta_t;
+
+
+	  }
+	}
+      }
+    }
+
     break;
   case Arches::ZDIR:
     idxLo = patch->getSFCZFORTLowIndex();
@@ -123,6 +197,41 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
 		      constvars->new_density,
 		      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
 		      delta_t, ioff, joff, koff);
+
+    //MMS conv and diff force term collection
+    // Since the collection (along with velFmms allocation) 
+    // is conditional on d_doMMS, 
+    // I put the force term caluculation in the fortran 
+    // and hence the "verification" doesn't completely 
+    // check the explicit update!
+    if (d_doMMS) {
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector eastCell(colX+1, colY, colZ);
+	    IntVector westCell(colX-1, colY, colZ);
+	    IntVector northCell(colX, colY+1, colZ);
+	    IntVector southCell(colX, colY-1, colZ);
+	    IntVector topCell(colX, colY, colZ+1);
+	    IntVector bottomCell(colX, colY, colZ-1);
+
+	    vars->wFmms[currCell] = vars->wVelocityCoeff[Arches::AE][currCell]*constvars->wVelocity[eastCell] +
+	      vars->wVelocityCoeff[Arches::AW][currCell]*constvars->wVelocity[westCell] +
+	      vars->wVelocityCoeff[Arches::AN][currCell]*constvars->wVelocity[northCell] +
+	      vars->wVelocityCoeff[Arches::AS][currCell]*constvars->wVelocity[southCell] +
+	      vars->wVelocityCoeff[Arches::AT][currCell]*constvars->wVelocity[topCell] +
+	      vars->wVelocityCoeff[Arches::AB][currCell]*constvars->wVelocity[bottomCell] - 
+	      vars->wVelocityCoeff[Arches::AP][currCell]*constvars->wVelocity[currCell] +
+	      vars->wVelNonlinearSrc[currCell] - 
+	      0.5*(constvars->new_density[currCell] + constvars->new_density[bottomCell])*constvars->wVelocity[currCell]/delta_t;
+
+
+	  }
+	}
+      }
+    }
 
 
     break;

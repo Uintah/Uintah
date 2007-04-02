@@ -62,10 +62,18 @@ Source::problemSetup(const ProblemSpecP& params)
   ProblemSpecP params_non_constant = params;
   const ProblemSpecP params_root = params_non_constant->getRootNode();
   ProblemSpecP db=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
-  
-  db->getWithDefault("whichMMS", d_mms, "linearMMS");
-  if (d_mms == "linearMMS") {
-    ProblemSpecP db_mms = db->findBlock("linearMMS");
+ 
+  db->getWithDefault("whichMMS", d_mms, "constantMMS");
+  if (d_mms == "constantMMS"){
+    ProblemSpecP db_mms = db->findBlock("constantMMS");
+    db_mms->getWithDefault("cu",cu,1.0);
+    db_mms->getWithDefault("cv",cv,1.0);
+    db_mms->getWithDefault("cw",cw,1.0);
+    db_mms->getWithDefault("cp",cp,1.0);
+    db_mms->getWithDefault("phi0",phi0,0.5);
+  }
+  else if (d_mms == "gao1MMS") {
+    ProblemSpecP db_mms = db->findBlock("gao1MMS");
     db_mms->require("rhoair", d_airDensity);
     db_mms->require("rhohe", d_heDensity);
     db_mms->require("gravity", d_gravity);//Vector
@@ -77,18 +85,19 @@ Source::problemSetup(const ProblemSpecP& params)
     db_mms->getWithDefault("cp",cp,1.0);
     db_mms->getWithDefault("phi0",phi0,0.5);
   }
-  else if (d_mms == "expMMS") {
-	  ProblemSpecP db_mms = db->findBlock("expMMS");
+  else if (d_mms == "thornock1MMS") {
+	  ProblemSpecP db_mms = db->findBlock("thornock1MMS");
 	  db_mms->require("cu",cu);
   }
-  else if (d_mms == "sineMMS") {
-	  ProblemSpecP db_mms = db->findBlock("sineMMS");
-	  db_mms->require("cu",cu);
+  else if (d_mms == "almgrenMMS") {
+	  ProblemSpecP db_mms = db->findBlock("almgrenMMS");
+	  db_mms->require("amplitude",amp);
   }
   else
 	  throw InvalidValue("current MMS "
 		       "not supported: " + d_mms, __FILE__, __LINE__);
 }
+ 
 
 //****************************************************************************
 // Velocity source calculation
@@ -541,7 +550,7 @@ Source::addMMEnthalpySource(const ProcessorGroup* ,
 // Velocity source calculation for MMS
 //****************************************************************************
 void 
-Source::calculateVelMMSource(const ProcessorGroup* ,
+Source::calculateVelMMSSource(const ProcessorGroup* ,
 				const Patch* patch,
 				double delta_t, double time,
 				int index,
@@ -558,7 +567,7 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
 
-  double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
+  double rho0=0.0;
   switch(index) {
   case Arches::XDIR:
 
@@ -566,8 +575,12 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
     for (int colY = idxLoU.y(); colY <= idxHiU.y(); colY ++) {
       for (int colX = idxLoU.x(); colX <= idxHiU.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
+
+	//Make sure that this is the density you want
+	rho0 = constvars->new_density[currCell];
+
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	if (d_mms == "linearMMS") {
+	if (d_mms == "gao1MMS") {
 		vars->uVelNonlinearSrc[currCell] += rho0*(2.0*cu*cu+cu*cv+cu*cw)*cellinfo->xu[colX]
 			+rho0*(2.0*cu+cv+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.x();
 	}
@@ -583,8 +596,12 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
     for (int colY = idxLoV.y(); colY <= idxHiV.y(); colY ++) {
       for (int colX = idxLoV.x(); colX <= idxHiV.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
+
+	//This density should change depending on what you are verifying...
+	rho0 = constvars->new_density[currCell];
+
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	if (d_mms == "linearMMS") {
+	if (d_mms == "gao1MMS") {
 		vars->vVelNonlinearSrc[currCell] +=  rho0*(2.0*cv*cv+cu*cv+cv*cw)*cellinfo->yv[colY]
                 	+rho0*(2.0*cv+cu+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.y();
 	}
@@ -600,8 +617,10 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
     for (int colY = idxLoW.y(); colY <= idxHiW.y(); colY ++) {
       for (int colX = idxLoW.x(); colX <= idxHiW.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
+	//This density should change depending on what you are verifying...
+	rho0 = constvars->new_density[currCell];
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	if (d_mms == "linearMMS") {
+	if (d_mms == "gao1MMS") {
 		vars->wVelNonlinearSrc[currCell] +=  rho0*(2.0*cw*cw+cu*cw+cv*cw)*cellinfo->zw[colX]
                 	+rho0*(2.0*cw+cu+cv)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.z();
 	}
@@ -620,7 +639,7 @@ Source::calculateVelMMSource(const ProcessorGroup* ,
 // Scalar source calculation for MMS
 //****************************************************************************
 void 
-Source::calculateScalarMMSource(const ProcessorGroup*,
+Source::calculateScalarMMSSource(const ProcessorGroup*,
 			      const Patch* patch,
 			      double delta_t,
 			      CellInformation* cellinfo,
@@ -629,16 +648,19 @@ Source::calculateScalarMMSource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+  double rho0=0.0;
+  
+ for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	if (d_mms == "linearMMS") {
-		vars->scalarNonlinearSrc[currCell] += rho0*phi0*(cu+cv+cw);
+	if (d_mms == "gao1MMS") {
+	  rho0 = constvars->density[currCell];
+	  vars->scalarNonlinearSrc[currCell] += rho0
+                                                *phi0*(cu+cv+cw);
 	}
       }
     }
@@ -649,7 +671,7 @@ Source::calculateScalarMMSource(const ProcessorGroup*,
 // Pressure source calculation for MMS
 //****************************************************************************
 void 
-Source::calculatePressMMSourcePred(const ProcessorGroup* ,
+Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
 				    const Patch* patch,
 				    double delta_t,
 				    CellInformation* cellinfo,
@@ -658,7 +680,7 @@ Source::calculatePressMMSourcePred(const ProcessorGroup* ,
 {
 
   // Get the patch and variable indices
-  double rho0=d_airDensity*d_heDensity/(phi0*d_airDensity+(1-phi0)*d_heDensity);
+  double rho0 = 0.0;
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   
@@ -666,8 +688,9 @@ Source::calculatePressMMSourcePred(const ProcessorGroup* ,
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell(colX, colY, colZ);
+	rho0 = constvars->density[currCell];
 	double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-	if (d_mms == "linearMMS") {
+	if (d_mms == "gao1MMS") {
 		vars->pressNonlinearSrc[currCell] += rho0*(cu+cv+cw);
 	}
       }

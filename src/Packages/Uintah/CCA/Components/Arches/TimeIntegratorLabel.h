@@ -79,6 +79,16 @@ namespace Uintah {
     const VarLabel* floutbc;
     const VarLabel* areaOUT;
     const VarLabel* negativeDensityGuess;
+    const VarLabel* ummsLnError;
+    const VarLabel* vmmsLnError;
+    const VarLabel* wmmsLnError;
+    const VarLabel* smmsLnError;
+    const VarLabel* gradpmmsLnError;
+    const VarLabel* ummsExactSol;
+    const VarLabel* vmmsExactSol;
+    const VarLabel* wmmsExactSol;
+    const VarLabel* smmsExactSol;
+    const VarLabel* gradpmmsExactSol;
 
 
     TimeIntegratorLabel(const ArchesLabel* lab, 
@@ -109,6 +119,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    ummsLnError = lab->d_totalummsLnErrorLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorLabel;
+	    ummsExactSol = lab->d_totalummsExactSolLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolLabel;
 	  break;
 
 	  case TimeIntegratorStepType::FE:
@@ -134,6 +154,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    ummsLnError = lab->d_totalummsLnErrorLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorLabel;
+	    ummsExactSol = lab->d_totalummsExactSolLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolLabel;
 	  break;
 
 	  case TimeIntegratorStepType::Predictor:
@@ -159,6 +189,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
+	    ummsLnError = lab->d_totalummsLnErrorPredLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorPredLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorPredLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorPredLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorPredLabel;
+	    ummsExactSol = lab->d_totalummsExactSolPredLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolPredLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolPredLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolPredLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolPredLabel;
 	  break;
 
 	  case TimeIntegratorStepType::OldPredictor:
@@ -184,6 +224,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
+	    ummsLnError = lab->d_totalummsLnErrorPredLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorPredLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorPredLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorPredLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorPredLabel;
+	    ummsExactSol = lab->d_totalummsExactSolPredLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolPredLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolPredLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolPredLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolPredLabel;
 	  break;
 
 	  case TimeIntegratorStepType::Corrector:
@@ -209,6 +259,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    ummsLnError = lab->d_totalummsLnErrorLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorLabel;
+	    ummsExactSol = lab->d_totalummsExactSolLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolLabel;
 	  break;
 
 	  case TimeIntegratorStepType::OldCorrector:
@@ -234,6 +294,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    ummsLnError = lab->d_totalummsLnErrorLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorLabel;
+	    ummsExactSol = lab->d_totalummsExactSolLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolLabel;
 	  break;
 
 	  case TimeIntegratorStepType::CorrectorRK3:
@@ -259,6 +329,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    ummsLnError = lab->d_totalummsLnErrorLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorLabel;
+	    ummsExactSol = lab->d_totalummsExactSolLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolLabel;
 	  break;
 
 	  case TimeIntegratorStepType::Intermediate:
@@ -284,6 +364,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessInterm_label;
+	    ummsLnError = lab->d_totalummsLnErrorIntermLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorIntermLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorIntermLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorIntermLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorIntermLabel;
+	    ummsExactSol = lab->d_totalummsExactSolIntermLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolIntermLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolIntermLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolIntermLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolIntermLabel;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation1:
@@ -309,6 +399,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
+	    ummsLnError = lab->d_totalummsLnErrorPredLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorPredLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorPredLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorPredLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorPredLabel;
+	    ummsExactSol = lab->d_totalummsExactSolPredLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolPredLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolPredLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolPredLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolPredLabel;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation2:
@@ -334,6 +434,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessInterm_label;
+	    ummsLnError = lab->d_totalummsLnErrorIntermLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorIntermLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorIntermLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorIntermLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorIntermLabel;
+	    ummsExactSol = lab->d_totalummsExactSolIntermLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolIntermLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolIntermLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolIntermLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolIntermLabel;
 	  break;
 
 	  case TimeIntegratorStepType::BEEmulation3:
@@ -359,6 +469,16 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    ummsLnError = lab->d_totalummsLnErrorLabel;
+	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
+	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
+	    smmsLnError = lab->d_totalsmmsLnErrorLabel;
+	    gradpmmsLnError = lab->d_totalgradpmmsLnErrorLabel;
+	    ummsExactSol = lab->d_totalummsExactSolLabel;
+	    vmmsExactSol = lab->d_totalvmmsExactSolLabel;
+	    wmmsExactSol = lab->d_totalwmmsExactSolLabel;
+	    smmsExactSol = lab->d_totalsmmsExactSolLabel;
+	    gradpmmsExactSol = lab->d_totalgradpmmsExactSolLabel;
 	  break;
 
 	  default: 

@@ -317,7 +317,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 					  &constPressureVars);
 
     if (d_doMMS)
-        d_source->calculatePressMMSourcePred(pc, patch, delta_t,
+        d_source->calculatePressMMSSourcePred(pc, patch, delta_t,
     					  cellinfo, &pressureVars,
 					  &constPressureVars);
 
@@ -348,6 +348,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
 				      cellinfo, &pressureVars,&constPressureVars);
   }
+
 }
 
 // ****************************************************************************

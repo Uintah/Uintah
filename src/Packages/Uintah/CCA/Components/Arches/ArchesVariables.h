@@ -134,6 +134,11 @@ namespace Uintah {
       CCVariable<double> mmEnthSp;
       CCVariable<double> denRefArray;
 
+    //MMS variables
+    SFCXVariable<double> uFmms;
+    SFCYVariable<double> vFmms;
+    SFCZVariable<double> wFmms;
+
     }; // End class ArchesVariables
    
 } // End namespace Uintah

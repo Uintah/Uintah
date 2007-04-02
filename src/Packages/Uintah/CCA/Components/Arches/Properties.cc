@@ -115,7 +115,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_tabulated_soot = d_mixingModel->getTabulatedSoot();
 
   cout << "d_co_output "<< d_co_output << endl;
-
+  
+  d_radiationCalc = false;
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
     const ProblemSpecP params_root = params_non_constant->getRootNode();

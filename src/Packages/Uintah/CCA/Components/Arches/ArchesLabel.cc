@@ -454,6 +454,114 @@ ArchesLabel::ArchesLabel()
 				       sum_vartype::getTypeDescription() );
   d_totalKineticEnergyIntermLabel = VarLabel::create("totalKineticEnergyInterm",
 				       sum_vartype::getTypeDescription() );
+// scalar mms and gradP Ln error
+// ** warning...the L2 error here is not complete
+//              the values are (exact-comput.)^2
+//              You must post process the squareroot
+//              because of the summation. 
+//              Alternatively, one could add an 
+//              additional reduction var. and do this inline
+//              with the code.
+  d_smmsLnErrorLabel = VarLabel::create("smmsLnError",
+					CCVariable<double>::getTypeDescription() );
+  d_totalsmmsLnErrorLabel = VarLabel::create("totalsmmsLnError",
+				       sum_vartype::getTypeDescription() );
+  d_totalsmmsLnErrorPredLabel = VarLabel::create("totalsmmsLnErrorPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalsmmsLnErrorIntermLabel = VarLabel::create("totalsmmsLnErrorInterm",
+				       sum_vartype::getTypeDescription() );
+  d_totalsmmsExactSolLabel = VarLabel::create("totalsmmsExactSol",
+				       sum_vartype::getTypeDescription() );
+  d_totalsmmsExactSolPredLabel = VarLabel::create("totalsmmsExactSolPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalsmmsExactSolIntermLabel = VarLabel::create("totalsmmsExactSolInterm",
+				       sum_vartype::getTypeDescription() );
+
+  d_gradpmmsLnErrorLabel = VarLabel::create("gradpmmsLnError",
+					CCVariable<double>::getTypeDescription() );
+  d_totalgradpmmsLnErrorLabel = VarLabel::create("totalgradpmmsLnError",
+				       sum_vartype::getTypeDescription() );
+  d_totalgradpmmsLnErrorPredLabel = VarLabel::create("totalgradpmmsLnErrorPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalgradpmmsLnErrorIntermLabel = VarLabel::create("totalgradpmmsLnErrorInterm",
+				       sum_vartype::getTypeDescription() );
+  d_totalgradpmmsExactSolLabel = VarLabel::create("totalgradpmmsExactSol",
+				       sum_vartype::getTypeDescription() );
+  d_totalgradpmmsExactSolPredLabel = VarLabel::create("totalgradpmmsExactSolPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalgradpmmsExactSolIntermLabel = VarLabel::create("totalgradpmmsExactSolInterm",
+				       sum_vartype::getTypeDescription() );
+
+
+// u mms L2 error
+// ** warning...the L2 error here is not complete
+//              the values are (exact-comput.)^2
+//              You must post process the squareroot
+//              because of the summation. 
+//              Alternatively, one could add an 
+//              additional reduction var. and do this inline
+//              with the code.
+  d_ummsLnErrorLabel = VarLabel::create("ummsLnError", 
+				   SFCXVariable<double>::getTypeDescription() );
+  d_totalummsLnErrorLabel = VarLabel::create("totalummsLnError",
+				       sum_vartype::getTypeDescription() );
+  d_totalummsLnErrorPredLabel = VarLabel::create("totalummsLnErrorPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalummsLnErrorIntermLabel = VarLabel::create("totalummsLnErrorInterm",
+				       sum_vartype::getTypeDescription() );
+  d_totalummsExactSolLabel = VarLabel::create("totalummsExactSol",
+				       sum_vartype::getTypeDescription() );
+  d_totalummsExactSolPredLabel = VarLabel::create("totalummsExactSolPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalummsExactSolIntermLabel = VarLabel::create("totalummsExactSolInterm",
+				       sum_vartype::getTypeDescription() );
+
+// v mms Ln error
+// ** warning...the Ln error here is not complete
+//              the values are (exact-comput.)^2
+//              You must post process the squareroot
+//              because of the summation. 
+//              Alternatively, one could add an 
+//              additional reduction var. and do this inline
+//              with the code.
+  d_vmmsLnErrorLabel = VarLabel::create("vmmsLnError", 
+				   SFCYVariable<double>::getTypeDescription() );
+  d_totalvmmsLnErrorLabel = VarLabel::create("totalvmmsLnError",
+				       sum_vartype::getTypeDescription() );
+  d_totalvmmsLnErrorPredLabel = VarLabel::create("totalvmmsLnErrorPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalvmmsLnErrorIntermLabel = VarLabel::create("totalvmmsLnErrorInterm",
+				       sum_vartype::getTypeDescription() );
+  d_totalvmmsExactSolLabel = VarLabel::create("totalvmmsExactSol",
+				       sum_vartype::getTypeDescription() );
+  d_totalvmmsExactSolPredLabel = VarLabel::create("totalvmmsExactSolPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalvmmsExactSolIntermLabel = VarLabel::create("totalvmmsExactSolInterm",
+				       sum_vartype::getTypeDescription() );
+
+// w mms Ln error
+// ** warning...the Ln error here is not complete
+//              the values are (exact-comput.)^2
+//              You must post process the squareroot
+//              because of the summation. 
+//              Alternatively, one could add an 
+//              additional reduction var. and do this inline
+//              with the code.
+  d_wmmsLnErrorLabel = VarLabel::create("wmmsLnError", 
+				   SFCZVariable<double>::getTypeDescription() );
+  d_totalwmmsLnErrorLabel = VarLabel::create("totalwmmsLnError",
+				       sum_vartype::getTypeDescription() );
+  d_totalwmmsLnErrorPredLabel = VarLabel::create("totalwmmsLnErrorPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalwmmsLnErrorIntermLabel = VarLabel::create("totalwmmsLnErrorInterm",
+				       sum_vartype::getTypeDescription() );
+  d_totalwmmsExactSolLabel = VarLabel::create("totalwmmsExactSol",
+				       sum_vartype::getTypeDescription() );
+  d_totalwmmsExactSolPredLabel = VarLabel::create("totalwmmsExactSolPred",
+				       sum_vartype::getTypeDescription() );
+  d_totalwmmsExactSolIntermLabel = VarLabel::create("totalwmmsExactSolInterm",
+				       sum_vartype::getTypeDescription() );
+
 // mass balance labels for RK
   d_totalflowINPredLabel = VarLabel::create("totalflowINPred",
     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
@@ -544,6 +652,16 @@ ArchesLabel::ArchesLabel()
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_normTotalRadSrcLabel = VarLabel::create("normTotalRadSrc",
 	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
+
+  //MMS labels
+  d_uFmmsLabel = VarLabel::create("uFmms",
+				   SFCXVariable<double>::getTypeDescription());
+  d_vFmmsLabel = VarLabel::create("vFmms",
+				   SFCYVariable<double>::getTypeDescription());
+  d_wFmmsLabel = VarLabel::create("wFmms",
+				   SFCZVariable<double>::getTypeDescription());
+
+
 }
 
 //****************************************************************************
@@ -763,6 +881,52 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthalpyEfficiencyLabel);
   VarLabel::destroy(d_totalRadSrcLabel);
   VarLabel::destroy(d_normTotalRadSrcLabel);
+
+  //mms variabels
+  VarLabel::destroy(d_uFmmsLabel);
+  VarLabel::destroy(d_vFmmsLabel);
+  VarLabel::destroy(d_wFmmsLabel);
+
+  VarLabel::destroy(d_ummsLnErrorLabel);
+  VarLabel::destroy(d_totalummsLnErrorLabel);
+  VarLabel::destroy(d_totalummsLnErrorPredLabel);
+  VarLabel::destroy(d_totalummsLnErrorIntermLabel);
+  VarLabel::destroy(d_totalummsExactSolLabel);
+  VarLabel::destroy(d_totalummsExactSolPredLabel);
+  VarLabel::destroy(d_totalummsExactSolIntermLabel);
+
+  VarLabel::destroy(d_vmmsLnErrorLabel);
+  VarLabel::destroy(d_totalvmmsLnErrorLabel);
+  VarLabel::destroy(d_totalvmmsLnErrorPredLabel);
+  VarLabel::destroy(d_totalvmmsLnErrorIntermLabel);
+  VarLabel::destroy(d_totalvmmsExactSolLabel);
+  VarLabel::destroy(d_totalvmmsExactSolPredLabel);
+  VarLabel::destroy(d_totalvmmsExactSolIntermLabel);
+
+  VarLabel::destroy(d_wmmsLnErrorLabel);
+  VarLabel::destroy(d_totalwmmsLnErrorLabel);
+  VarLabel::destroy(d_totalwmmsLnErrorPredLabel);
+  VarLabel::destroy(d_totalwmmsLnErrorIntermLabel);
+  VarLabel::destroy(d_totalwmmsExactSolLabel);
+  VarLabel::destroy(d_totalwmmsExactSolPredLabel);
+  VarLabel::destroy(d_totalwmmsExactSolIntermLabel);
+
+  VarLabel::destroy(d_smmsLnErrorLabel);
+  VarLabel::destroy(d_totalsmmsLnErrorLabel);
+  VarLabel::destroy(d_totalsmmsLnErrorPredLabel);
+  VarLabel::destroy(d_totalsmmsLnErrorIntermLabel);
+  VarLabel::destroy(d_totalsmmsExactSolLabel);
+  VarLabel::destroy(d_totalsmmsExactSolPredLabel);
+  VarLabel::destroy(d_totalsmmsExactSolIntermLabel);
+
+  VarLabel::destroy(d_gradpmmsLnErrorLabel);
+  VarLabel::destroy(d_totalgradpmmsLnErrorLabel);
+  VarLabel::destroy(d_totalgradpmmsLnErrorPredLabel);
+  VarLabel::destroy(d_totalgradpmmsLnErrorIntermLabel);
+  VarLabel::destroy(d_totalgradpmmsExactSolLabel);
+  VarLabel::destroy(d_totalgradpmmsExactSolPredLabel);
+  VarLabel::destroy(d_totalgradpmmsExactSolIntermLabel);
+  
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)
