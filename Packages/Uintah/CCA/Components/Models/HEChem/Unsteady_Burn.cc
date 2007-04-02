@@ -668,7 +668,7 @@ void Unsteady_Burn::setMPMLabel(MPMLabel* MLB){
 
 
 /****************************************************************************/
-/******************* Bisection Secant Solver ********************************/
+/******************* Bisection Newton Solver ********************************/
 /****************************************************************************/
 double Unsteady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, 
 					double solidMass, double& beta, double& Ts, Vector& dx){  
