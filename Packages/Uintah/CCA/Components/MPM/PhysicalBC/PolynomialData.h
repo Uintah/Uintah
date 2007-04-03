@@ -4,7 +4,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Geometry/Point.h>
 #include <vector>
-#include <list>
 #include <string>
 
 namespace Uintah {
@@ -44,7 +43,7 @@ GENERAL INFORMATION
    
 
    std::vector<std::string> d_fileNames;
-   std::vector<std::list<double> > d_polyData;
+   std::vector<std::vector<double> > d_polyData;
    std::vector<double> d_polyRange;
 
    double d_length;
