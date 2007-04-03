@@ -144,13 +144,44 @@ inline T Interpolate(T d1, T d2, float weight)
 
 
 // Integer/double conversions
+
+
+// The mantissa of a double is 52 bits, so in order to subtract out
+// the whole component of the floating point number you need a 64 bit
+// integer.  You can, of course, represent numbers larger than 2^64
+// with a double, but numbers larger than 2^52 (or so) will not have
+// the precision to contain a fractional component.  For such numbers
+// the behavior of this function is undefined.
+
+// This should compute (d - Floor(d)).  Examples of input/output:
+//   0   ->   0
+//   0.5 ->   0.5
+//   0.3 ->   0.3
+//   1   ->   0
+//   1.6 ->   1.6
+//   2   ->   0
+//
+//  -0.5 ->   0.5
+//  -0.3 ->   0.7
+//  -1   ->   0
+//  -1.6 ->   0.4
+//  -2   ->   0
 inline double Fraction(double d)
 {
-  if(d>0){
-    return d-(int)d;
-  } else {
-    return d-(int)d+1;
-  }
+  double frac = d-(long long)d;
+  if (frac >= 0)
+    return frac;
+  else
+    return frac+1;
+}
+
+inline float Fraction(float d)
+{
+  float frac = d-(int)d;
+  if (frac >= 0)
+    return frac;
+  else
+    return frac+1;
 }
 
 inline int RoundDown(double d)
