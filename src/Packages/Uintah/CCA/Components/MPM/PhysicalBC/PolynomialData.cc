@@ -52,7 +52,7 @@ void PolynomialData::loadData()
     }
 
     double data;
-    list<double> dataList;
+    vector<double> dataList;
    
     // Need to ignore the first 3 lines of data.
     
@@ -91,12 +91,21 @@ double PolynomialData::interpolateRadial(const int polyNum, const double theta)
 
   double value = 0.;
   int order = 0;
-  for (list<double>::iterator iter = d_polyData[polyNum].begin(); 
+  value += d_polyData[polyNum][0];
+  value += d_polyData[polyNum][1]* cos(theta);
+  value += d_polyData[polyNum][2]* sin(theta);
+  value += d_polyData[polyNum][3]* cos(2.*theta);
+  value += d_polyData[polyNum][4]* sin(2.*theta);
+
+#if 0
+  for (vector<double>::iterator iter = d_polyData[polyNum].begin(); 
        iter != d_polyData[polyNum].end(); iter++) {
-    value += *iter * pow(theta,order);
+    //value += *iter * pow(theta,order);
+    value += *iter * cos(order*theta)
     cout << "theta = " << theta << " polynomial = " << *iter << " value = " << value << endl;
     order++;
   }
+#endif
 
   return value;
 }
@@ -158,12 +167,23 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   double maxValue = interpolateRadial(max,theta);
 
   cout << "minValue = " << minValue << " maxValue = " << maxValue << endl;
+  if (minValue < 0. || maxValue < 0.)
+    cout << "WARNING values less than 0" << endl;
 
 
   // y = m*x + b for doing linear interpolation between two polynomial curves.
   double m = (maxValue - minValue)/(d_polyRange[max] - d_polyRange[min]);
+
+  double b = minValue - m*d_polyRange[min];
   
-  double value = m * scaledVecLength + minValue;
+  double value = m * scaledVecLength + b;
+
+  if (value > minValue && value > maxValue)
+    cout << "WARNING values computed incorrectly" << endl;
+
+  if (value < minValue && value < maxValue)
+    cout << "WARNING values computed incorrectly" << endl;
+    
 
   return value;
   

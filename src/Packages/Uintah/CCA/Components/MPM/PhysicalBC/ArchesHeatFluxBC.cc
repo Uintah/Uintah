@@ -183,7 +183,7 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
 
     double new_flux = d_polyData->interpolateValue(px);
     cout << "interpolated new_flux = " << new_flux << endl;
-
+#if 0
     cout << "FLUX PER PARTICLE = " << fluxPerParticle << endl;
 
     Vector normal = gp->radialDirection(px);
@@ -198,6 +198,7 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
          << flux_variation <<  endl;
 
     //    flux = fluxPerParticle;
+#endif
     flux = new_flux;
     cout << "flux = " << flux << endl;
   } else if (d_surfaceType == "sphere") {
