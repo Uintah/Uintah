@@ -105,6 +105,9 @@ public:
       inline double getTurbulentPrandtlNumber() const {
 	return d_turbPrNo;
       }
+      inline void setTurbulentPrandtlNumber(double turbPrNo) {
+	d_turbPrNo = turbPrNo;
+      }
       inline bool getDynScalarModel() const {
 	return false;
       }

@@ -93,7 +93,9 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
     }
   }
   // actually, Shmidt number, not Prandtl number
-  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+  d_turbPrNo = 0.0;
+  if (db->findBlock("turbulentPrandtlNumber"))
+    db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   db->getWithDefault("dynamicScalarModel",d_dynScalarModel,false);
   if (d_dynScalarModel)
    d_turbPrNo = 1.0; 
