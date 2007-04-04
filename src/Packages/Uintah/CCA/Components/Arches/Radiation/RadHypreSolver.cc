@@ -414,6 +414,7 @@ RadHypreSolver::radLinearSolve()
   iprod = hypre_StructInnerProd(d_b,d_b);
   sum_b = sqrt(iprod);
   d_residual = d_stored_residual / sum_b;
+  double zero_residual = 0.0;
 
   
   n_pre = 1;
@@ -513,7 +514,7 @@ RadHypreSolver::radLinearSolve()
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
-      HYPRE_StructJacobiSetTol(precond, d_residual);
+      HYPRE_StructJacobiSetTol(precond, zero_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_GMRESSetPrecond( (HYPRE_Solver) solver,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
@@ -594,7 +595,7 @@ RadHypreSolver::radLinearSolve()
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
-      HYPRE_StructJacobiSetTol(precond, d_residual);
+      HYPRE_StructJacobiSetTol(precond, zero_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
