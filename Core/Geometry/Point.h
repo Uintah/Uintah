@@ -122,10 +122,10 @@ public:
 
   // is one point within a small interval of another?
 
-  int Overlap( double a, double b, double e );
-  int InInterval( Point a, double epsilon );
+  SCISHARE int Overlap( double a, double b, double e );
+  SCISHARE int InInterval( Point a, double epsilon );
     
-  static void test_rigorous(RigorousTest* __test);
+  SCISHARE static void test_rigorous(RigorousTest* __test);
 
   SCISHARE friend std::ostream& operator<<(std::ostream& os, const Point& p);
   SCISHARE friend std::istream& operator>>(std::istream& os, Point& p);
