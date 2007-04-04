@@ -78,7 +78,11 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
     cout << "WARNING! Scalar filtering for variance limit is not supported" << endl;
     cout << "by this model. Possibly high variance values would be generated" << endl;
   }
-  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+
+  // actually, Shmidt number, not Prandtl number
+  d_turbPrNo = 0.0;
+  if (db->findBlock("turbulentPrandtlNumber"))
+    db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
 }
 

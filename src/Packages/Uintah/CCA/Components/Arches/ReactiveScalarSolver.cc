@@ -115,9 +115,23 @@ ReactiveScalarSolver::problemSetup(const ProblemSpecP& params)
   
   d_rhsSolver = scinew RHSSolver();
 
-  d_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
-  d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
+  double model_turbPrNo;
+  model_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
+
+  // see if Prandtl number gets overridden here
+  d_turbPrNo = 0.0;
+  if (!(d_dynScalarModel)) {
+    if (db->findBlock("turbulentPrandtlNumber"))
+      db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+    if ((d_turbPrNo == 0.0)&&(model_turbPrNo == 0.0))
+	  throw InvalidValue("Turbulent Prandtl number is not specified for"
+		             "reacting scalar ", __FILE__, __LINE__);
+    if (model_turbPrNo == 0.0)
+      d_turbModel->setTurbulentPrandtlNumber(d_turbPrNo);
+  }
+
+  d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 }
 
 //****************************************************************************
@@ -545,6 +559,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 				  cellinfo);
 
   double reactscalar_clipped = 0.0;
+  double epsilon = 1.0e-15;
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
@@ -553,14 +568,19 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	IntVector currCell(ii,jj,kk);
 	if (reactscalarVars.scalar[currCell] > 1.0) {
+          if (reactscalarVars.scalar[currCell] > 1.0 + epsilon) {
+	    reactscalar_clipped = 1.0;
+	    cout << "reactscalar got clipped to 1 at " << currCell << " , reactscalar value was " << reactscalarVars.scalar[currCell] << " , density guess was " << constReactscalarVars.density_guess[currCell] << endl;
+          }
 	  reactscalarVars.scalar[currCell] = 1.0;
-	  reactscalar_clipped = 1.0;
-	  cout << "reactscalar got clipped to 1 at " << currCell << endl;
 	}  
 	else if (reactscalarVars.scalar[currCell] < 0.0) {
+          if (reactscalarVars.scalar[currCell] < - epsilon) {
+	    reactscalar_clipped = 1.0;
+	    cout << "reactscalar got clipped to 0 at " << currCell << " , reactscalar value was " << reactscalarVars.scalar[currCell] << " , density guess was " << constReactscalarVars.density_guess[currCell] << endl;
+	    cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> in the <ARCHES> section of the input file, but it would only help for first time substep if RKSSP is used" << endl;
+          }
 	  reactscalarVars.scalar[currCell] = 0.0;
-	  reactscalar_clipped = 1.0;
-	  cout << "reactscalar got clipped to 0 at " << currCell << endl;
 	}
       }
     }
