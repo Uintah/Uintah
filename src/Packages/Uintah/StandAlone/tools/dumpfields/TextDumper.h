@@ -33,7 +33,7 @@ namespace Uintah {
   
     class Step : public FieldDumper::Step {
     public:
-      Step(DataArchive * da, string basedir, int index, double time, 
+      Step(DataArchive * da, string basedir, int timestep, double time, int index, 
            const TextOpts & opts, const FieldSelection & flds);
       
       string infostr() const { return tsdir_; }
@@ -48,7 +48,7 @@ namespace Uintah {
     };
   
     //
-    Step * addStep(int index, double time, int iset);
+    Step * addStep(int timestep, double time, int index);
     void   finishStep(FieldDumper::Step * s);
     
   private:

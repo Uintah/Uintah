@@ -579,7 +579,7 @@ string replaceChar(string s, char old, char newch) {
 void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 		     DataArchive* da, vector<string> vars,
 		     vector<const Uintah::TypeDescription*> types,
-		     LevelP level, double time)
+		     LevelP level, int timestep)
 {
   Level::const_patchIterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
@@ -589,7 +589,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
       const Uintah::TypeDescription* td = types[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
       if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
-	ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	ConsecutiveRangeSet matls = da->queryMaterials(var, patch, timestep);
 	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
 	     matlIter != matls.end(); matlIter++){
 	  int matl = *matlIter;
@@ -624,7 +624,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 		 << subtype->getName() << '\n';
 	    Thread::exitAll(-1);
 	  }
-	  da->query(*pvb, var, matl, patch, time);
+	  da->query(*pvb, var, matl, patch, timestep);
 	  data[var].add(pvb, patch); // will add one for each patch
 	}
       }
@@ -639,13 +639,13 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 template <class T>
 void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
 		      int matl, const Patch* patch1, const Patch* patch2,
-		      double time, double time2, double abs_tolerance,
+		      double time, int timestep, double abs_tolerance,
 		      double rel_tolerance)
 {
   ParticleVariable<T> value1;
   ParticleVariable<T> value2;
-  da1->query(value1, var, matl, patch1, time);
-  da2->query(value2, var, matl, patch2, time2);
+  da1->query(value1, var, matl, patch1, timestep);
+  da2->query(value2, var, matl, patch2, timestep);
 
   ParticleSubset* pset1 = value1.getParticleSubset();
   ParticleSubset* pset2 = value2.getParticleSubset();
@@ -731,7 +731,7 @@ public:
   compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 		ConsecutiveRangeSet matls, const Patch* patch,
 		const Array3<const Patch*>& patch2Map,
-		double time, double time2, double abs_tolerance,
+		double time, int timestep, double abs_tolerance,
 		double rel_tolerance) = 0;
 
   static FieldComparator*
@@ -752,7 +752,7 @@ public:
   compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 		ConsecutiveRangeSet matls, const Patch* patch,
 		const Array3<const Patch*>& patch2Map,
-		double time, double time2, double abs_tolerance,
+		double time, int timestep, double abs_tolerance,
 		double rel_tolerance);
 private:
   Iterator begin_;
@@ -908,7 +908,7 @@ void SpecificFieldComparator<Field, Iterator>::
 compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 	      ConsecutiveRangeSet matls, const Patch* patch,
 	      const Array3<const Patch*>& patch2Map,
-	      double time1, double time2, double abs_tolerance,
+	      double time1, int timestep, double abs_tolerance,
 	      double rel_tolerance)
 {
   Field* pField2;
@@ -918,7 +918,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 		matlIter != matls.end(); matlIter++){
     int matl = *matlIter;
     Field field;
-    da1->query(field, var, matl, patch, time1);
+    da1->query(field, var, matl, patch, timestep);
 
     map<const Patch*, Field*> patch2FieldMap;
     typename map<const Patch*, Field*>::iterator findIter;
@@ -927,12 +927,12 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
       findIter = patch2FieldMap.find(patch2);
       if (findIter == patch2FieldMap.end()) {
 	if (firstMatl) { // check only needs to be made the first round
-	  ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, time2);
+	  ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
 	  ASSERT(matls == matls2); // check should have been made previously
 	}
 	pField2 = scinew Field();
 	patch2FieldMap[patch2] = pField2;
-	da2->query(*pField2, var, matl, patch2, time2);
+	da2->query(*pField2, var, matl, patch2, timestep);
       }
       else {
 	pField2 = (*findIter).second;
@@ -1195,8 +1195,8 @@ main(int argc, char** argv)
       double time1 = times[t];
       double time2 = times2[t];
       cerr << "time = " << time1 << "\n";
-      GridP grid = da1->queryGrid(time1);
-      GridP grid2 = da2->queryGrid(times2[t]);
+      GridP grid = da1->queryGrid(t);
+      GridP grid2 = da2->queryGrid(t);
 
       if (grid->numLevels() != grid2->numLevels()) {
 	cerr << "Grid at time " << time1 << " in " << filebase1
@@ -1226,14 +1226,14 @@ main(int argc, char** argv)
 	      iter != level->patchesEnd(); iter++) {
 	    const Patch* patch = *iter;
 	    if (first) {
-	      matls = da1->queryMaterials(var, patch, time1);
+	      matls = da1->queryMaterials(var, patch, t);
 	    }
-	    else if (matls != da1->queryMaterials(var, patch, time1)) {
+	    else if (matls != da1->queryMaterials(var, patch, t)) {
 	      cerr << "The material set is not consistent for variable "
 		   << var << " across patches at time " << time1 << endl;
 	      cerr << "Previously was: " << matls << endl;
 	      cerr << "But on patch " << patch->getID() << ": " <<
-		da1->queryMaterials(var, patch, time1) << endl;
+		da1->queryMaterials(var, patch, t) << endl;
 	      abort_uncomparable();
 	    }
 	    first = false;
@@ -1243,13 +1243,13 @@ main(int argc, char** argv)
 	  for(iter = level2->patchesBegin();
 	      iter != level2->patchesEnd(); iter++) {
 	    const Patch* patch = *iter;
-	    if (matls != da2->queryMaterials(var, patch, time2)) {
+	    if (matls != da2->queryMaterials(var, patch, t)) {
 	      cerr << "Inconsistent material sets for variable "
 		   << var << " on patch2 = " << patch->getID()
 		   << ", time " << time1 << endl;
 	      cerr << filebase1 << " (1) has material set: " << matls << ".\n";
 	      cerr << filebase2 << " (2) has material set: "
-		   << da2->queryMaterials(var, patch, time2) << ".\n";
+		   << da2->queryMaterials(var, patch, t) << ".\n";
 	      abort_uncomparable();  
 	    }
 	  }
@@ -1326,10 +1326,8 @@ main(int argc, char** argv)
 		abort_uncomparable();  
 	      }
 
-	      ConsecutiveRangeSet matls = da1->queryMaterials(var, patch,
-							      time1);
-	      ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2,
-							       time2);
+	      ConsecutiveRangeSet matls = da1->queryMaterials(var, patch,t);
+	      ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2,t);
 	      ASSERT(matls == matls2); // should have already been checked
 	      // loop over materials
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -1340,27 +1338,27 @@ main(int argc, char** argv)
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
 		    compareParticles<double>(da1, da2, var, matl, patch, patch2,
-					     time1, time2, abs_tolerance, rel_tolerance);
+					     time1, t, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::float_type:
 		    compareParticles<float>(da1, da2, var, matl, patch, patch2,
-					     time1, time2, abs_tolerance, rel_tolerance);
+					     time1, t, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::int_type:
 		    compareParticles<int>(da1, da2, var, matl, patch, patch2,
-                                          time1, time2, abs_tolerance, rel_tolerance);
+                                          time1, t, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::Point:
 		    compareParticles<Point>(da1, da2, var, matl, patch, patch2,
-					    time1, time2, abs_tolerance, rel_tolerance);
+					    time1, t, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::Vector:
 		    compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
-					     time1, time2, abs_tolerance, rel_tolerance);
+					     time1, t, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::Matrix3:
 		    compareParticles<Matrix3>(da1, da2, var, matl, patch, patch2,
-					      time1, time2, abs_tolerance, rel_tolerance);
+					      time1, t, abs_tolerance, rel_tolerance);
 		    break;
 		  default:
 		    cerr << "main: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
@@ -1382,9 +1380,9 @@ main(int argc, char** argv)
 	  MaterialParticleDataMap matlParticleDataMap1;
 	  MaterialParticleDataMap matlParticleDataMap2;
 	  addParticleData(matlParticleDataMap1, da1, vars, types, level,
-			  time1);
+			  t);
 	  addParticleData(matlParticleDataMap2, da2, vars2, types2, level2,
-			  time2);
+			  t);
 	  MaterialParticleDataMap::iterator matlIter;
 	  MaterialParticleDataMap::iterator matlIter2;
 	  

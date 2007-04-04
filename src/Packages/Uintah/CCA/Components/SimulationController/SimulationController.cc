@@ -104,6 +104,14 @@ namespace Uintah {
     
     d_output = dynamic_cast<Output*>(getPort("output"));
     
+    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+    sched->problemSetup(d_ups, d_sharedState);
+    d_scheduler = sched;
+    
+    d_lb = sched->getLoadBalancer();
+    d_lb->problemSetup(d_ups, d_sharedState);
+    
+
     if( !d_output ){
       cout << "dynamic_cast of 'd_output' failed!\n";
       throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
@@ -155,41 +163,40 @@ namespace Uintah {
       vector<double> times;
       d_archive->queryTimesteps(indices, times);
 
-      unsigned i;
       // find the right time to query the grid
       if (d_restartTimestep == 0) {
-        i = 0; // timestep == 0 means use the first timestep
+        d_restartIndex = 0; // timestep == 0 means use the first timestep
+        // reset d_restartTimestep to what it really is
+        d_restartTimestep = indices[0];
       }
       else if (d_restartTimestep == -1 && indices.size() > 0) {
-        i = (unsigned int)(indices.size() - 1); 
+        d_restartIndex = (unsigned int)(indices.size() - 1); 
+        // reset d_restartTimestep to what it really is
+        d_restartTimestep = indices[indices.size() - 1];
       }
       else {
-        for (i = 0; i < indices.size(); i++)
-          if (indices[i] == d_restartTimestep)
+        for (int index = 0; index < indices.size(); index++)
+          if (indices[index] == d_restartTimestep) {
+            d_restartIndex = index;
             break;
+          }
       }
       
-      if (i == indices.size()) {
+      if (d_restartIndex == indices.size()) {
         // timestep not found
         ostringstream message;
         message << "Timestep " << d_restartTimestep << " not found";
         throw InternalError(message.str(), __FILE__, __LINE__);
       }
-      
-      d_restartTime = times[i];
     }
 
-    if (!d_doAMR || !d_restarting) {
+    if (!d_restarting) {
       grid = scinew Grid;
       grid->problemSetup(d_ups, d_myworld, d_doAMR);
       grid->performConsistencyCheck();
     }
     else {
-      // maybe someday enforce to always load the grid from the DataArchive, but for
-      // now only do that with AMR.
-
-      grid = d_archive->queryGrid(d_restartTime, d_ups.get_rep());
-      
+      grid = d_archive->queryGrid(d_restartIndex, d_ups.get_rep());
     }
     if(grid->numLevels() == 0){
       throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
@@ -211,7 +218,7 @@ namespace Uintah {
     return grid;
   }
 
-  void SimulationController::postGridSetup( GridP& grid)
+  void SimulationController::postGridSetup( GridP& grid, double& t)
   {
     // Initialize the CFD and/or MPM components
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
@@ -221,8 +228,11 @@ namespace Uintah {
     ProblemSpecP materials_ps = 0;
 
     if (d_restarting) {
-      // do these before calling sim->problemSetup
-      const ProblemSpecP spec = d_archive->getTimestep(d_restartTime);
+      // do these before calling sim->problemSetup, to get the timestep.xml...
+      simdbg << "Restarting... loading data\n";    
+      d_archive->restartInitialize(d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t);
+      
+      const ProblemSpecP spec = d_archive->getRestartTimestepDoc();
       d_sim->readFromTimestepXML(spec);
 
       materials_ps = spec;
@@ -238,7 +248,34 @@ namespace Uintah {
           timeSpec->get("delt", d_sharedState->d_prev_delt);
       }
 
-      // eventually we will also probably query the material properties here.
+      d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
+      // Tell the scheduler the generation of the re-started simulation.
+      // (Add +1 because the scheduler will be starting on the next
+      // timestep.)
+      d_scheduler->setGeneration( d_restartTimestep+1 );
+      
+      // just in case you want to change the delt on a restart....
+      if (d_timeinfo->override_restart_delt != 0) {
+        double newdelt = d_timeinfo->override_restart_delt;
+        if (d_myworld->myrank() == 0)
+          cout << "Overriding restart delt with " << newdelt << endl;
+        d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
+                                        d_sharedState->get_delt_label());
+        double delt_fine = newdelt;
+        for(int i=0;i<grid->numLevels();i++){
+          const Level* level = grid->getLevel(i).get_rep();
+          if(i != 0 && !d_sharedState->isLockstepAMR()) {
+            delt_fine /= level->getRefinementRatioMaxDim();
+          }
+          d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
+                                          level);
+        }
+      }
+      d_scheduler->get_dw(1)->finalize();
+      ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
+      
+      // don't need it anymore...
+      delete d_archive;
     }
 
     // Pass the materials_ps to the problemSetup.  For restarting, 
@@ -250,68 +287,22 @@ namespace Uintah {
     // Finalize the shared state/materials
     d_sharedState->finalizeMaterials();
     
-    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-    sched->problemSetup(d_ups, d_sharedState);
-    d_scheduler = sched;
-    
-    d_lb = sched->getLoadBalancer();
-    d_lb->problemSetup(d_ups, d_sharedState);
-    
     // done after the sim->problemSetup to get defaults into the
     // input.xml, which it writes along with index.xml
     d_output->initializeOutput(d_ups);
-    
+
+    if (d_restarting) {
+      Dir dir(d_fromDir);
+      d_output->restartSetup(dir, 0, d_restartTimestep, t,
+                             d_restartFromScratch, d_restartRemoveOldDir);
+    }
+
     // set up regridder with initial infor about grid
     d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
     if (d_regridder) {
       d_regridder->problemSetup(d_ups, grid, d_sharedState);
     }
 
-  }
-
-  void SimulationController::restartSetup( GridP& grid, double& t )
-  {
-    simdbg << "Restarting... loading data\n";
-    
-    // create a temporary DataArchive for reading in the checkpoints
-    // archive for restarting.
-    Dir restartFromDir(d_fromDir);
-    Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
-    
-    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, &t);
-    
-    d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
-    // Tell the scheduler the generation of the re-started simulation.
-    // (Add +1 because the scheduler will be starting on the next
-    // timestep.)
-    d_scheduler->setGeneration( d_restartTimestep+1 );
-    
-    // just in case you want to change the delt on a restart....
-    if (d_timeinfo->override_restart_delt != 0) {
-      double newdelt = d_timeinfo->override_restart_delt;
-      if (d_myworld->myrank() == 0)
-        cout << "Overriding restart delt with " << newdelt << endl;
-      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
-                                       d_sharedState->get_delt_label());
-      double delt_fine = newdelt;
-      for(int i=0;i<grid->numLevels();i++){
-        const Level* level = grid->getLevel(i).get_rep();
-        if(i != 0 && !d_sharedState->isLockstepAMR()) {
-          delt_fine /= level->getRefinementRatioMaxDim();
-        }
-        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
-                                         level);
-      }
-    }
-    d_scheduler->get_dw(1)->finalize();
-    ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
-    //d_lb->restartInitialize(pspec, url);
-    
-    d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
-                           d_restartFromScratch, d_restartRemoveOldDir);
-
-    // don't need it anymore...
-    delete d_archive;
   }
   
   void SimulationController::adjustDelT(double& delt, double prev_delt, int iterations, double t) 

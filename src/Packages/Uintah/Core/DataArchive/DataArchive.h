@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarnameMatlPatch.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
@@ -42,16 +43,32 @@ class VarLabel;
 class DataWarehouse;
 class LoadBalancer;
 
-   struct eqstr { // comparison class used in hash_map to compare keys
-     bool operator()(const char* s1, const char* s2) const {
-       return strcmp(s1, s2) == 0;
-     }
+   // what we need to store on a per-variable basis
+   // everything else can be retrieved from a higher level
+   struct DataFileInfo {
+     DataFileInfo(long s, long e, long np) : start(s), end(e), numParticles(np) {}
+     DataFileInfo() {}
+     long start;
+     long end;
+     int numParticles;
    };
 
-   typedef HashTable<string, pair<ProblemSpecP, string> > VarHashMap;
+   // store these in separate arrays so we don't have to store nearly as many of them
+   struct VarInfo {
+     string type;
+     string compression;
+     IntVector boundaryLayer;
+   };
 
-   typedef HashTableIter<string, pair<ProblemSpecP, string> >
-   VarHashMapIterator;
+   struct PatchInfo {
+     PatchInfo() : parsed(false), proc(-1) {}
+     bool parsed;
+     int proc;
+     string datafilename;
+   };
+
+   typedef HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+   typedef HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
    /**************************************
      
@@ -86,118 +103,63 @@ class LoadBalancer;
 class SCISHARE DataArchive {
 private:
 
-  /* Helper classes for storing hash maps of variable data. */
-  class PatchHashMaps;
-  class MaterialHashMaps;
-  class TimeHashMaps;
-  friend class PatchHashMaps;
-  friend class MaterialHashMaps;
-  friend class TimeHashMaps;
-  
   //! Top of DataArchive structure for storing hash maps of variable data
   //! - containing data for each time step.
-  class TimeHashMaps {
-  public:
-    TimeHashMaps(DataArchive* archive, const vector<double>& tsTimes,
-		 const vector<string>& tsUrls,
-		 const vector<ProblemSpecP>& tsTopNodes,
-		 int processor, int numProcessors);
-    
-    ProblemSpecP findVariable(const string& name, const Patch* patch,
-                              int matl, double time, string& foundUrl);
-    
-    PatchHashMaps* findTimeData(double time);
-    
-    MaterialHashMaps* findPatchData(double time, const Patch* patch);
+  class TimeData {
+  public:    
+    TimeData(DataArchive* da, ProblemSpecP timestepDoc, string timestepURL);
+    ~TimeData();
+    VarInfo& findVariableInfo(const string& name, const Patch* patch, int matl);
 
-    // This will purge the cache to the point where
-    // d_lastNtimesteps.size() <= new_size.  If new_size < 1 nothing
-    // will be done.
-    void updateCacheSize(int new_size);
-
-    // Sets the cache size back to the default.
-    void useDefaultCacheSize() { updateCacheSize(default_cache_size); }
-
-  private:
-    // Pointer back to the parent DataArchive.
-    DataArchive *archive;
-
-    // Patch data for each timestep.
-    map<double, PatchHashMaps> d_patchHashMaps;
-    map<double, PatchHashMaps>::iterator d_lastFoundIt;
-
-    // This is a list of the last n timesteps accessed.  Data from
-    // only the last timestep_cache_size timesteps is stored, unless
-    // timestep_cache_size is less than or equal to zero then the size
-    // is unbounded.
-    list<map<double, PatchHashMaps>::iterator> d_lastNtimesteps;
-
-    // Tells you the number of timesteps to cache. Less than or equal to
-    // zero means to cache all of them.
-    int timestep_cache_size;
-
-    // This will be the default number of timesteps cached, determined
-    // by the number of processors.
-    int default_cache_size;
-  };
-  
-  //! Second layer of DataArchive structure for storing hash maps of variable data
-  //! - containing data for each patch at a certain time step.
-  class PatchHashMaps {
-    friend class TimeHashMaps;
-  public:
-    PatchHashMaps();
-    ~PatchHashMaps();  // to free the saved XML Data
-    void init(string tsUrl, ProblemSpecP tsTopNode);
+    // reads timestep.xml and prepares the data xml files to be read
+    void init();
     void purgeCache(); // purge the cached data
-    inline ProblemSpecP findVariable(const string& name, const Patch* patch,
-				 int matl, string& foundUrl);
-    MaterialHashMaps* findPatchData(const Patch* patch);
 
-    void setTime(double t) { time = t; }
-    bool isInitialized(void) { return d_initialized; }
+    // makes sure that (if the patch data exists) then it is parsed.  Try logic to pick
+    // the right file first, and if you can't, parse everything
+    void parsePatch(const Patch* patch);
 
-    // This returns the number of simulation processors that stored
-    // data in this timestep.  This is only valid after you call init.
-    size_t numSimProcessors() { return d_xmlUrls.size(); }
-  private:
-    double time;
-    void parseProc(int proc);
-    void parse();    
-    void add(const string& name, int patchid, int matl,
-	     ProblemSpecP varNode, string url)
-    { d_matHashMaps[patchid].add(name, matl, varNode, url); }
+    // parse an individual data file and load appropriate storage
+    void parseFile(string file, int levelNum, int basePatch);
 
-    // The index into this map is the patchid
-    map<int, MaterialHashMaps> d_matHashMaps;
-    map<int, MaterialHashMaps>::iterator d_lastFoundIt;
-    vector<string> d_xmlUrls;
+    // This would be private data, except we want DataArchive to have access,
+    // so we would mark DataArchive as 'friend', but we're already a private
+    // nested class of DataArchive...
+
+    // info in the data file about the patch-matl-var
+    VarHashMap d_datafileInfo;
+
+    // Patch info (separate by levels) - proc, whether parsed, datafile, etc.
+    // Gets expanded and proc is set during queryGrid.  Other fields are set
+    // when parsed
+    // Organized in a contiguous array, by patch-level-index
+    vector<vector<PatchInfo> > d_patchInfo; 
+
+    // Wheter a material is active per level
+    vector<vector<bool> > d_matlInfo;
+
+    // var info - type, compression, and boundary layer
+    map<string, VarInfo> d_varInfo; 
+
+    // xml urls referred to in timestep.xml
+    vector<vector<string> > d_xmlUrls;
+    vector<vector<bool> > d_xmlParsed;
+
+    string d_globaldata;
+
+    ConsecutiveRangeSet matls;  // materials available this timestep
+
     bool d_allParsed;           // True if all patches have been parsed
-    vector<bool> d_xmlParsed;   // Same size as d_xmlUrls, indicates
-                                // if that xml has been parsed
-    vector<ProblemSpecP> docs;  // kept around for memory cleanup purposes
+    GridP d_grid;               // store the grid...
     bool d_initialized;         // Flagged once this patch's init is called
+    ProblemSpecP d_tstop;       // ProblemSpecP of timestep.xml
+    std::string d_tsurl;        // path to timestep.xml
+    std::string d_tsurldir;     // dir that contains timestep.xml
+    bool d_swapBytes;
+    int d_nBytes;
+    DataArchive* da;            // pointer for parent DA.  Need for backward-compatibility with endianness, etc.
   };
-  
-  //! Third layer of DataArchive structure for storing hash maps of variable data
-  //! - containing data for each material at a certain patch and time step.
-  class MaterialHashMaps {
-    friend class PatchHashMaps;
-  public:
-    MaterialHashMaps() {}
     
-    ProblemSpecP findVariable(const string& name, int matl,
-			  string& foundUrl);
-    
-    // note that vector is offset by one to allow for matl=-1 at element 0
-    const vector<VarHashMap>& getVarHashMaps() const
-    { return d_varHashMaps; }
-  private:
-    void add(const string& name, int matl, ProblemSpecP varNode, string url);
-    
-    vector<VarHashMap> d_varHashMaps;
-  };
-  
 public:
   DataArchive(const string& filebase,
 	      int processor = 0 /* use if you want to different processors
@@ -210,14 +172,19 @@ public:
   // Destructor
   virtual ~DataArchive();
 
+  TimeData& getTimeData(int index);
+
   std::string name(){ return d_filebase;}
   
   //! Set up data arachive for restarting a Uintah simulation   
-  void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
+  void restartInitialize(int timestep, const GridP& grid, DataWarehouse* dw,
                          LoadBalancer* lb, double* pTime /* passed back */);
 
   inline ProblemSpecP getRestartTimestepDoc() { return d_restartTimestepDoc; }
   inline string getRestartTimestepURL() { return d_restartTimestepURL; }
+
+  static void queryEndiannessAndBits(ProblemSpecP, std::string& endianness, int& numBits);  
+
   // GROUP:  Information Access
   //////////
   // However, we need a means of determining the names of existing
@@ -234,7 +201,7 @@ public:
   //! the ups is for the assignBCS that needs to happen
   //! if we are reading the simulation grid from the uda,
   //! and thus is only necessary on a true restart.
-  GridP queryGrid( double time, const ProblemSpec* ups = 0);
+  GridP queryGrid(int index, const ProblemSpec* ups = 0);
 
 #if 0
   //////////
@@ -252,13 +219,16 @@ public:
   // how long does a patch live?  Not variable specific
   void queryLifetime( double& min, double& max, const Patch* patch);
   
-  ConsecutiveRangeSet queryMaterials(const string& name,
-				     const Patch* patch, double time);
+  ConsecutiveRangeSet queryMaterials(const string& varname,
+				     const Patch* patch, int index);
   
-  int queryNumMaterials(const Patch* patch, double time);
+  int queryNumMaterials(const Patch* patch, int index);
   
-  void query( Variable& var, const string& name,
-	      int matlIndex, const Patch* patch, double tine );
+  // Queries a variable for a material, patch, and index in time.
+  // Optionally pass in DataFileInfo if you're iterating over
+  // entries in the hash table (like restartInitialize does)
+  void query( Variable& var, const string& name, int matlIndex, 
+              const Patch* patch, int timeIndex, DataFileInfo* dfi = 0);
   
   //////////
   // query the variable value for a particular particle  overtime;
@@ -327,70 +297,54 @@ public:
   int ref_cnt;
   Mutex lock;
 
-  const ProblemSpecP getTimestep(double time);
-
+  
   // This is added to allow simple geometric scaling of the entire domain
   void setCellScale( Vector& s ){ d_cell_scale = s; }
   // This is added so that particles can see if the domain has been scaled
   // and change the particle locations appropriately.
   Vector getCellScale(){ return d_cell_scale; }
 
+  // This is a list of the last n timesteps accessed.  Data from
+  // only the last timestep_cache_size timesteps is stored, unless
+  // timestep_cache_size is less than or equal to zero then the size
+  // is unbounded.
+  list<int> d_lastNtimesteps;
+
+  // Tells you the number of timesteps to cache. Less than or equal to
+  // zero means to cache all of them.
+  int timestep_cache_size;
+
+  // This will be the default number of timesteps cached, determined
+  // by the number of processors.
+  int default_cache_size;
+
 protected:
   DataArchive();
   
 private:
+  friend class DataArchive::TimeData;
   DataArchive(const DataArchive&);
   DataArchive& operator=(const DataArchive&);
   
-  string queryEndianness();  
-  int queryNBits();  
-
-  void query( Variable& var, ProblemSpecP vnode, string url,
-	      int matlIndex, const Patch* patch);
-
   void queryVariables( const ProblemSpecP vars, vector<string>& names,
 		       vector<const TypeDescription*>& types);
 
-  // Accesses the d_tstop array, loading the timestep.xml as needed
-  // WARNING: Do not access d_tstop directly
-  ProblemSpecP getTimestepCache(int i);
-
-  TimeHashMaps* getTopLevelVarHashMaps()
-  {
-    if (d_varHashMaps == NULL) {
-      vector<int> indices;
-      vector<double> times;
-      queryTimesteps(indices, times);
-      d_varHashMaps = scinew TimeHashMaps(this, times, d_tsurl, d_tstop,
-					  d_processor, d_numProcessors);
-    }
-    return d_varHashMaps;
-  }
-  
-  // for restartInitialize
-  void initVariable(const Patch* patch,
-		    DataWarehouse* new_dw,
-		    VarLabel* label, int matl,
-		    pair<ProblemSpecP, string> dataRef);   
-  
   std::string d_filebase;  
   ProblemSpecP d_indexDoc;
   ProblemSpecP d_restartTimestepDoc;
   string d_restartTimestepURL;
 
   bool d_simRestart;
-  bool d_swapBytes;
-  int d_nBytes;
-
   Vector d_cell_scale; //used for scaling the physical data size
   
-  bool have_timesteps;
+  vector<TimeData> d_timeData;
   std::vector<int> d_tsindex;
   std::vector<double> d_tstimes;
-  std::vector<ProblemSpecP> d_tstop;
-  std::vector<std::string> d_tsurl;
-  TimeHashMaps* d_varHashMaps;
-  
+
+  // global bits and endianness - read from index.xml ONLY if not in timestep.xml
+  string d_globalEndianness;
+  int d_globalNumBits;
+
   typedef map<pair<int, const Patch*>, Handle<ParticleSubset> > psetDBType;
   psetDBType d_psetDB;
  
@@ -400,11 +354,9 @@ private:
   
   Mutex d_lock;
 
-  ProblemSpecP findVariable(const string& name, const Patch* patch,
-			int matl, double time, string& url);
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 			 long64 particleID, int matIndex,
-			 double time);
+			 int index);
 
   static DebugStream dbg;
 };
@@ -441,13 +393,11 @@ private:
 			  double startTime, double endTime)
   {
     double call_start = SCIRun::Time::currentSeconds();
-    
-    if (!have_timesteps) {
-      vector<int> index;
-      vector<double> times;
-      queryTimesteps(index, times);
-      // will build d_ts* as a side effect
-    }
+
+    vector<int> index;
+    vector<double> times;
+    queryTimesteps(index, times); // build timesteps if not already done
+
     // figure out what kind of variable we're looking for
     vector<string> type_names;
     vector<const TypeDescription*> type_descriptions;
@@ -468,24 +418,23 @@ private:
     int ts = 0;
     while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
       ts++;
-    GridP grid = queryGrid( d_tstimes[ts] );
+    GridP grid = queryGrid( ts);
     Patch* patch = NULL;
     // idx needs to be initialized before it is used in findPatchAndIndex.
     particleIndex idx = 0;
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
-      double t = d_tstimes[ts];
       // figure out what patch contains the cell. As far as I can tell,
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
-      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, t);
+      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, ts);
       //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
       if (patch == NULL)
 	throw VariableNotFoundInGrid(name,particleID,matlIndex,
 				     "DataArchive::query", __FILE__, __LINE__);
       
       ParticleVariable<T> var;
-      query(var, name, matlIndex, patch, t);
+      query(var, name, matlIndex, patch, ts);
       //now find the index that corresponds to the particleID
       //cerr <<" time = "<<t<<",  value = "<<var[idx]<<endl;
       values.push_back(var[idx]);
@@ -503,12 +452,9 @@ private:
   {
     double call_start = SCIRun::Time::currentSeconds();
     
-    if (!have_timesteps) {
-      vector<int> index;
-      vector<double> times;
-      queryTimesteps(index, times);
-      // will build d_ts* as a side effect
-    }
+    vector<int> index;
+    vector<double> times;
+    queryTimesteps(index, times); // build timesteps if not already done
     
     // figure out what kind of variable we're looking for
     vector<string> type_names;
@@ -531,14 +477,12 @@ private:
       ts++;
                         
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
-      double t = d_tstimes[ts];
-      
       // figure out what patch contains the cell. As far as I can tell,
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
       Patch* patch = NULL;
-      GridP grid = queryGrid(t);
+      GridP grid = queryGrid(ts);
 
       // which levels to query between.
       int startLevel, endLevel;
@@ -616,31 +560,31 @@ private:
       switch (type->getType()) {
       case TypeDescription::CCVariable: {
 	CCVariable<T> var;
-	query(var, name, matlIndex, patch, t);
+	query(var, name, matlIndex, patch, ts);
 	values.push_back(var[loc]);
       } break;
       
       case TypeDescription::NCVariable: {
 	NCVariable<T> var;
-	query(var, name, matlIndex, patch, t);
+	query(var, name, matlIndex, patch, ts);
 	values.push_back(var[loc]);
       } break;
 
       case TypeDescription::SFCXVariable: {
 	SFCXVariable<T> var;
-	query(var, name, matlIndex, patch, t);
+	query(var, name, matlIndex, patch, ts);
 	values.push_back(var[loc]);
       } break;
       
       case TypeDescription::SFCYVariable: {
 	SFCYVariable<T> var;
-	query(var, name, matlIndex, patch, t);
+	query(var, name, matlIndex, patch, ts);
 	values.push_back(var[loc]);
       } break;
       
       case TypeDescription::SFCZVariable: {
 	SFCZVariable<T> var;
-	query(var, name, matlIndex, patch, t);
+	query(var, name, matlIndex, patch, ts);
 	values.push_back(var[loc]);
       } break;
       

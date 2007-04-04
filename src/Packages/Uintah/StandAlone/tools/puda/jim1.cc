@@ -45,7 +45,7 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
     double time = times[t];
     cout << "time = " << time << endl;
-    GridP grid = da->queryGrid(time);
+    GridP grid = da->queryGrid(t);
     ostringstream fnum;
     string filename;
     fnum << setw(4) << setfill('0') << t/clf.time_step_inc;
@@ -66,10 +66,10 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
         ParticleVariable<Point> value_pos;
         ParticleVariable<Vector> value_vel;
         ParticleVariable<Matrix3> value_strs;
-        da->query(value_pID, "p.particleID", matl, patch, time);
-        da->query(value_pos, "p.x",          matl, patch, time);
-        da->query(value_vel, "p.velocity",matl, patch, time);
-        da->query(value_strs,"p.stress",     matl, patch, time);
+        da->query(value_pID, "p.particleID", matl, patch, t);
+        da->query(value_pos, "p.x",          matl, patch, t);
+        da->query(value_vel, "p.velocity",matl, patch, t);
+        da->query(value_strs,"p.stress",     matl, patch, t);
         ParticleSubset* pset = value_pos.getParticleSubset();
         if(pset->numParticles() > 0){
           ParticleSubset::iterator iter = pset->begin();

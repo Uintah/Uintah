@@ -81,8 +81,6 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   //cout << d_myworld->myrank() << "  Calling DA::QuearyMaterials a bunch of times " << endl;
 
-  double time = times_[timeIndex_];
-
   // so we can tell the task which matls to use (sharedState doesn't have
   // any matls defined, so we can't use that).
   MaterialSetP allMatls = scinew MaterialSet();
@@ -100,7 +98,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       const Patch* patch = perProcPatches->getSubset(d_myworld->myrank())->get(i);
       matlsRangeSet = matlsRangeSet.
         unioned(dataArchive_->queryMaterials(label->getName(), 
-					       patch, time));
+					       patch, timeIndex_));
     }
     MaterialSet* matls;
     if (prevMatlSet != 0 && prevRangeSet == matlsRangeSet) {
@@ -175,16 +173,12 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
          << "that you may have to remove manually\n\n";
   }
   
-  timeIndex_++;
-
   if (d_myworld->myrank() == 0)
     cout << "   Incrementing time " << timeIndex_ << " and time " << time << endl;
 
-  //cerr << "deleted and recreated dw\n";
-  //cout << d_myworld->myrank() << "  Calling DA::restartInitialize " << endl;
-  dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time);
-  //cout << d_myworld->myrank() << "  Done Calling DA::restartInitialize " << endl;
-  //cerr << "restartInitialize done\n";
+
+  dataArchive_->restartInitialize(timeIndex_, oldGrid_, new_dw, lb, &time);
+  timeIndex_++;
 }
 
 void UdaReducer::readAndSetDelT(const ProcessorGroup*,
@@ -219,7 +213,7 @@ bool UdaReducer::needRecompile(double time, double dt,
 
   vector<int> newNumMatls(oldGrid_->numLevels());
   for (int i = 0; i < oldGrid_->numLevels(); i++) {
-    newNumMatls[i] = dataArchive_->queryNumMaterials(*oldGrid_->getLevel(i)->patchesBegin(), times_[timeIndex_]);
+    newNumMatls[i] = dataArchive_->queryNumMaterials(*oldGrid_->getLevel(i)->patchesBegin(), timeIndex_);
     if (i >=(int) numMaterials_.size() || numMaterials_[i] != newNumMatls[i])
       recompile = true;
   }
@@ -230,7 +224,7 @@ bool UdaReducer::needRecompile(double time, double dt,
 // called by the SimController once per timestep
 GridP UdaReducer::getGrid() 
 { 
-  GridP newGrid = dataArchive_->queryGrid(times_[timeIndex_]);
+  GridP newGrid = dataArchive_->queryGrid(timeIndex_);
   
   if (oldGrid_ == 0 || !(*newGrid.get_rep() == *oldGrid_.get_rep())) {
     gridChanged = true;

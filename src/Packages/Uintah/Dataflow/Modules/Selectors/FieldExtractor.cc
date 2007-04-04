@@ -126,7 +126,7 @@ FieldExtractor::field_update()
   if (timestep != new_timestep) {
     time = times[new_timestep];
     grid = 0;
-    grid = archive->queryGrid(time);
+    grid = archive->queryGrid(new_timestep);
     //      BBox gbox; grid->getSpatialRange(gbox);
     //     cerr<<"box: min("<<gbox.min()<<"), max("<<gbox.max()<<")\n";
     timestep = new_timestep;
@@ -162,7 +162,7 @@ FieldExtractor::update_GUI(const string& var,
 
   Patch* r = *(level->patchesBegin());
   ConsecutiveRangeSet matls = 
-    archive->queryMaterials(var, r, times[timestep]);
+    archive->queryMaterials(var, r, timestep);
 
   ostringstream os;
   os << levels;

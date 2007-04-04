@@ -95,9 +95,9 @@ namespace Uintah {
   }
   
   EnsightDumper::Step * 
-  EnsightDumper::addStep(int index, double time, int iset)
+  EnsightDumper::addStep(int timestep, double time, int index)
   {
-    Step * res = scinew Step(&data_, this->dirName(time, iset), index, time, nsteps_);
+    Step * res = scinew Step(&data_, this->dirName(time, index), timestep, time, index, nsteps_);
     nsteps_++;
     return res;
   }
@@ -112,9 +112,9 @@ namespace Uintah {
     }
   }
 
-  EnsightDumper::Step::Step(Data * data, string tsdir, int index, double time, int fileindex)
+  EnsightDumper::Step::Step(Data * data, string tsdir, int timestep, double time, int index, int fileindex)
     :
-    FieldDumper::Step(tsdir, index, time, true),
+    FieldDumper::Step(tsdir, timestep, time, index, true),
     fileindex_(fileindex),
     data_(data),
     needmesh_(!data->onemesh_||(fileindex==0))
@@ -124,7 +124,7 @@ namespace Uintah {
   void
   EnsightDumper::Step::storeGrid()
   {
-    GridP grid = data_->da_->queryGrid(time_);
+    GridP grid = data_->da_->queryGrid(index_);
     FldDumper * fd = data_->dumper_;
     
     // only support level 0 for now
@@ -205,7 +205,7 @@ namespace Uintah {
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
     
-        ConsecutiveRangeSet matls = data_->da_->queryMaterials("p.x", patch, time_);
+        ConsecutiveRangeSet matls = data_->da_->queryMaterials("p.x", patch, index_);
     
         // loop over materials
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -215,7 +215,7 @@ namespace Uintah {
           
           ParticleVariable<Matrix3> value;
           ParticleVariable<Point> partposns;
-          data_->da_->query(partposns, "p.x", matl, patch, time_);
+          data_->da_->query(partposns, "p.x", matl, patch, index_);
       
           ParticleSubset* pset = partposns.getParticleSubset();
           for(ParticleSubset::iterator iter = pset->begin();
@@ -257,7 +257,7 @@ namespace Uintah {
   void
   EnsightDumper::Step::storeGridField(string fieldname, const Uintah::TypeDescription * td)
   {
-    GridP grid = data_->da_->queryGrid(time_);
+    GridP grid = data_->da_->queryGrid(index_);
     FldDumper * fd = data_->dumper_;
     
     list<ScalarDiag const *> scalardiaggens = createScalarDiags(td, data_->fselect_);
@@ -309,7 +309,7 @@ namespace Uintah {
           patch->computeVariableExtents(td->getSubType()->getType(), IntVector(0,0,0), Ghost::None, 0, ilow, ihigh);
           
           // loop over requested materials
-          ConsecutiveRangeSet matls = data_->da_->queryMaterials(fieldname, patch, time_);
+          ConsecutiveRangeSet matls = data_->da_->queryMaterials(fieldname, patch, index_);
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
             int i,j,k;
             const int matl = *matlIter;
@@ -317,7 +317,7 @@ namespace Uintah {
             
             // FIXME: all materials get lumped into a single field in ensight 
             NCVariable<double> matvals;
-            (*diaggen)(data_->da_, patch, fieldname, matl, time_, matvals);
+            (*diaggen)(data_->da_, patch, fieldname, matl, index_, matvals);
             for(k=ilow[2];k<ihigh[2];k++) for(j=ilow[1];j<ihigh[1];j++) for(i=ilow[0];i<ihigh[0];i++) {
               IntVector ijk(i,j,k);
               vals[ijk-minind_] += matvals[ijk];

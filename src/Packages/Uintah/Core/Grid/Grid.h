@@ -22,7 +22,7 @@ namespace SCIRun {
 namespace Uintah {
 
   class ProcessorGroup;
-
+  class Patch;
 /**************************************
 
 CLASS
@@ -77,6 +77,8 @@ WARNING
     //////////
     // Computes the physical boundaries for the grid (including extra cells)
     void getSpatialRange(SCIRun::BBox& b) const;
+
+    const Patch* getPatchByID(int id, int startLevel) const;
 
     ////////// 
     // Returns the boundary of the grid exactly (without

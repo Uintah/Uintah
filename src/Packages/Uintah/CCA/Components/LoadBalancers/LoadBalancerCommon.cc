@@ -58,7 +58,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       ASSERTRANGE(idx, 0, d_myworld->size());
 
       if (task->getTask()->getType() == Task::Output) {
-        task->assignResource((idx/d_outputNthProc)*d_outputNthProc);
+        task->assignResource(getOutputProc(patch));
       }
       else {
         task->assignResource(idx);

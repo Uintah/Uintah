@@ -147,8 +147,7 @@ bool PatchDataVisualizer::getGrid()
     old_timestep = -1;
   }
   if (timestep != old_timestep) {
-    double time = times[timestep];
-    grid = archive->queryGrid(time);
+    grid = archive->queryGrid(timestep);
     old_timestep = timestep;
     return true;
   }

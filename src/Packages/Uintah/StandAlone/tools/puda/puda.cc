@@ -136,7 +136,7 @@ gridstats( DataArchive* da,
     double time = times[t];
     cout << "__________________________________"<<endl;
     cout << "Timestep " << t << ": " << time << endl;
-    GridP grid = da->queryGrid(time);
+    GridP grid = da->queryGrid(t);
     grid->performConsistencyCheck();
     grid->printStatistics();
 
@@ -412,7 +412,7 @@ main(int argc, char** argv)
 	
 	double time = times[t];
 	cout << "time = " << time << endl;
-	GridP grid = da->queryGrid(time);
+	GridP grid = da->queryGrid(t);
 	for(int v=0;v<(int)vars.size();v++){
 	  std::string var = vars[v];
 	  
@@ -428,7 +428,7 @@ main(int argc, char** argv)
 		const Patch* patch = *iter;
 		cout << "\t\tPatch: " << patch->getID() << endl;
                 ConsecutiveRangeSet matls =
-		  da->queryMaterials(var, patch, time);
+		  da->queryMaterials(var, patch, t);
 	        // loop over materials
 	        for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		    matlIter != matls.end(); matlIter++){
@@ -454,7 +454,7 @@ main(int argc, char** argv)
 		    switch(subtype->getType()){
 		    case Uintah::TypeDescription::Matrix3:{
 		      NCVariable<Matrix3> value;
-		      da->query(value, var, matl, patch, time);
+		      da->query(value, var, matl, patch, t);
 		      cout << "\t\t\t\t" << td->getName() << " over " << value.getLowIndex()
 			   << " to " << value.getHighIndex() << endl;
 		      IntVector dx(value.getHighIndex()-value.getLowIndex());
@@ -543,7 +543,7 @@ printParticleVariable( DataArchive* da,
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
     double time = times[t];
     //cout << "Time = " << time << endl;
-    GridP grid = da->queryGrid(time);
+    GridP grid = da->queryGrid(t);
 
     // Loop thru all the levels
     for(int l=0;l<grid->numLevels();l++){
@@ -566,7 +566,7 @@ printParticleVariable( DataArchive* da,
 	  if(td->getType() == Uintah::TypeDescription::ParticleVariable) { 
 
 	    // loop thru all the materials
-	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	    ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
 	    ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
 	    for(; matlIter != matls.end(); matlIter++){
 	      int matl = *matlIter;
@@ -578,9 +578,9 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::double_type:
 		  {
 		    ParticleVariable<double> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleVariable<long64> pid;
-		    da->query(pid, "p.particleID", matl, patch, time);
+		    da->query(pid, "p.particleID", matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
@@ -595,9 +595,9 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::float_type:
 		  {
 		    ParticleVariable<float> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleVariable<long64> pid;
-		    da->query(pid, "p.particleID", matl, patch, time);
+		    da->query(pid, "p.particleID", matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
@@ -612,10 +612,10 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::int_type:
 		  {
 		    ParticleVariable<int> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    ParticleVariable<long64> pid;
-		    da->query(pid, "p.particleID", matl, patch, time);
+		    da->query(pid, "p.particleID", matl, patch, t);
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
@@ -629,10 +629,10 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::Point:
 		  {
 		    ParticleVariable<Point> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    ParticleVariable<long64> pid;
-		    da->query(pid, "p.particleID", matl, patch, time);
+		    da->query(pid, "p.particleID", matl, patch, t);
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
 		      for(;iter != pset->end(); iter++){
@@ -648,9 +648,9 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::Vector:
 		  {
 		    ParticleVariable<Vector> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleVariable<long64> pid;
-		    da->query(pid, "p.particleID", matl, patch, time);
+		    da->query(pid, "p.particleID", matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
@@ -667,9 +667,9 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::Matrix3:
 		  {
 		    ParticleVariable<Matrix3> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleVariable<long64> pid;
-		    da->query(pid, "p.particleID", matl, patch, time);
+		    da->query(pid, "p.particleID", matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();
@@ -689,7 +689,7 @@ printParticleVariable( DataArchive* da,
 		case Uintah::TypeDescription::long64_type:
 		  {
 		    ParticleVariable<long64> value;
-		    da->query(value, var, matl, patch, time);
+		    da->query(value, var, matl, patch, t);
 		    ParticleSubset* pset = value.getParticleSubset();
 		    if(pset->numParticles() > 0){
 		      ParticleSubset::iterator iter = pset->begin();

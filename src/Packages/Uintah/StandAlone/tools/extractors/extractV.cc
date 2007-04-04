@@ -190,7 +190,7 @@ void printVelocity(DataArchive* da,
         double time = times[t];
         cerr << "t = " << time ;
         clock_t start = clock();
-        GridP grid = da->queryGrid(time);
+        GridP grid = da->queryGrid(t);
 
 	unsigned int numFound = 0;
 
@@ -210,7 +210,7 @@ void printVelocity(DataArchive* da,
             ++patchIndex; 
             if (patchIndex < startPatch) continue;
 
-            ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+            ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
             ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
 
             // loop thru all the materials
@@ -220,11 +220,11 @@ void printVelocity(DataArchive* da,
               int matl = *matlIter;
               if (matl == matID || matl == matID+1) {
 		ParticleVariable<Vector> value;
-		da->query(value, var, matl, patch, time);
+		da->query(value, var, matl, patch, t);
 		ParticleSubset* pset = value.getParticleSubset();
 		if(pset->numParticles() > 0){
 		  ParticleVariable<long64> pid;
-		  da->query(pid, "p.particleID", matl, patch, time);
+		  da->query(pid, "p.particleID", matl, patch, t);
 		  vector<bool> found;
 		  for (unsigned int ii = 0; ii < partID.size()-1 ; ++ii) {
 		    found.push_back(false);

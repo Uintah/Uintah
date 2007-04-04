@@ -67,7 +67,7 @@ Uintah::asci( DataArchive *   da,
       // Code to print out a list of Variables
       partfile << "VARIABLES = ";
 	
-      GridP grid = da->queryGrid(time);
+      GridP grid = da->queryGrid(t);
       int l=0;
       LevelP level = grid->getLevel(l);
       Level::const_patchIterator iter = level->patchesBegin();
@@ -78,7 +78,7 @@ Uintah::asci( DataArchive *   da,
       for(unsigned int v=0;v<vars.size();v++){
         std::string var = vars[v];
 	       
-        ConsecutiveRangeSet matls= da->queryMaterials(var, patch, time);
+        ConsecutiveRangeSet matls= da->queryMaterials(var, patch, t);
         // loop over materials
         for( ConsecutiveRangeSet::iterator matlIter = matls.begin(); matlIter != matls.end(); matlIter++ ) {
           int matl = *matlIter;
@@ -92,7 +92,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::double_type:
               {
                 ParticleVariable<double> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
 		      
                 if(pset->numParticles() > 0){
@@ -110,7 +110,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::float_type:
               {
                 ParticleVariable<float> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
 		      
                 if(pset->numParticles() > 0){
@@ -128,7 +128,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::Point:
               {
                 ParticleVariable<Point> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
 		      
                 if(pset->numParticles() > 0 && (matl == 0)){
@@ -140,7 +140,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::Vector:
               {
                 ParticleVariable<Vector> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 //cout << td->getName() << " over " << pset->numParticles() << " particles\n";
                 if(pset->numParticles() > 0 && (matl == 0)){
@@ -152,7 +152,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::Matrix3:
               {
                 ParticleVariable<Matrix3> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 //cout << td->getName() << " over " << pset->numParticles() << " particles\n";
                 if(pset->numParticles() > 0 && (matl == 0)){
@@ -186,7 +186,7 @@ Uintah::asci( DataArchive *   da,
       // Because header has already been printed
 		
       //variable initialization
-      grid = da->queryGrid(time);
+      grid = da->queryGrid(t);
       level = grid->getLevel(l);
       iter = level->patchesBegin();
       patch = *iter;
@@ -195,7 +195,7 @@ Uintah::asci( DataArchive *   da,
       for(unsigned int v=0;v<vars.size();v++){
         std::string var = vars[v];
 		
-        ConsecutiveRangeSet matls=da->queryMaterials(var, patch, time);
+        ConsecutiveRangeSet matls=da->queryMaterials(var, patch, t);
         // loop over materials
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
             matlIter != matls.end(); matlIter++){
@@ -210,7 +210,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::double_type:
               {
                 ParticleVariable<double> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
@@ -224,7 +224,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::float_type:
               {
                 ParticleVariable<float> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
@@ -238,7 +238,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::Point:
               {
                 ParticleVariable<Point> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
@@ -262,7 +262,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::Vector:
               {
                 ParticleVariable<Vector> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
@@ -286,7 +286,7 @@ Uintah::asci( DataArchive *   da,
             case Uintah::TypeDescription::Matrix3:
               {
                 ParticleVariable<Matrix3> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();

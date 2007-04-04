@@ -357,7 +357,7 @@ main( int argc, char *argv[] )
     for( unsigned int timeIndex = loopLowerBound; timeIndex < index.size(); timeIndex++ ) {
       printf( "Time Step: %d Phy Time: %lf\n", index[timeIndex], times[timeIndex] );
 
-      GridP grid = da1->queryGrid( times[timeIndex] );
+      GridP grid = da1->queryGrid( timeIndex );
 
       ////////////////////////////
       // Iterate over the levels
@@ -394,14 +394,14 @@ main( int argc, char *argv[] )
 
 
             if ( first ) {
-                matls = da1->queryMaterials( vars[varIndex], patch, times[timeIndex] );
+                matls = da1->queryMaterials( vars[varIndex], patch, timeIndex );
             }
-            else if (matls != da1->queryMaterials(vars[varIndex], patch, times[timeIndex])) {
+            else if (matls != da1->queryMaterials(vars[varIndex], patch, timeIndex)) {
                 cerr << "The material set is not consistent for variable "
                      << vars[varIndex] << " across patches at time " << times[timeIndex] << endl;
                 cerr << "Previously was: " << matls << endl;
                 cerr << "But on patch " << patch->getID() << ": " 
-                     << da1->queryMaterials(vars[varIndex], patch, times[timeIndex]) << "\n";
+                     << da1->queryMaterials(vars[varIndex], patch, timeIndex) << "\n";
                 exit( 1 );
             }
             first = false;
@@ -417,10 +417,10 @@ main( int argc, char *argv[] )
               CCVariable<double> scalarVar;
               CCVariable<Vector> vectorVar;
               if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
-                da1->query(scalarVar, vars[varIndex], matl, patch, times[timeIndex]);
+                da1->query(scalarVar, vars[varIndex], matl, patch, timeIndex);
               }
               if (varName=="vel_CC"||varName=="newCCVelocity") {
-                da1->query(vectorVar, vars[varIndex], matl, patch, times[timeIndex]);
+                da1->query(vectorVar, vars[varIndex], matl, patch, timeIndex);
               }
 
               IntVector low, high, size;

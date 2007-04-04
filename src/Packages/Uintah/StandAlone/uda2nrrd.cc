@@ -83,9 +83,9 @@ public:
             LevelP level,
             string varname,
             int mat,
-            double time,
+            int timestep,
             const Uintah::TypeDescription *type):
-    archive(archive), level(level), varname(varname), mat(mat), time(time),
+    archive(archive), level(level), varname(varname), mat(mat), timestep(timestep),
     type(type)
   {}
   
@@ -93,7 +93,7 @@ public:
   LevelP level;
   string varname;
   int mat;
-  double time;
+  int timestep;
   const Uintah::TypeDescription *type;
 };
 
@@ -231,7 +231,7 @@ void build_field(QueryInfo &qinfo,
     const Patch* patch = *patch_it;
     // This gets the data
     qinfo.archive->query( patch_data, qinfo.varname, qinfo.mat, patch,
-                          qinfo.time);
+                          qinfo.timestep);
     if ( remove_boundary ) {
       if(sfield->basis_order() == 0){
         patch_low = patch->getInteriorCellLowIndex();
@@ -788,7 +788,7 @@ int main(int argc, char** argv)
 
       // Check the level index
       double current_time = times[time];
-      GridP grid = archive->queryGrid(current_time);
+      GridP grid = archive->queryGrid(time);
       if (level_index >= grid->numLevels() || level_index < 0) {
         cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
         cerr << "Trying next timestep.\n";
@@ -801,7 +801,7 @@ int main(int argc, char** argv)
       LevelP level = grid->getLevel(level_index);
       const Patch* patch = *(level->patchesBegin());
       ConsecutiveRangeSet matls =
-        archive->queryMaterials(variable_name, patch, current_time);
+        archive->queryMaterials(variable_name, patch, time);
 
       if (verbose) {
         // Print out all the material indicies valid for this timestep
@@ -841,7 +841,7 @@ int main(int argc, char** argv)
       const Uintah::TypeDescription* td = types[var_index];
       const Uintah::TypeDescription* subtype = td->getSubType();
     
-      QueryInfo qinfo(archive, level, variable_name, mat_num, current_time,
+      QueryInfo qinfo(archive, level, variable_name, mat_num, time,
                       td);
 
       IntVector hi, low, range;

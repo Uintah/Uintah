@@ -32,7 +32,7 @@ namespace Uintah {
   
     class Step : public FieldDumper::Step {
     public:
-      Step(DataArchive * da, string tsdir, int index, double time, 
+      Step(DataArchive * da, string tsdir, int timestep, double time, int index, 
            const InfoOpts & opts, const FieldSelection & fselect);
       
       void storeGrid () {}
@@ -48,7 +48,7 @@ namespace Uintah {
     };
     
     //
-    Step * addStep(int index, double time, int iset);
+    Step * addStep(int timestep, double time, int index);
     void   finishStep(FieldDumper::Step * s);
   
   private:

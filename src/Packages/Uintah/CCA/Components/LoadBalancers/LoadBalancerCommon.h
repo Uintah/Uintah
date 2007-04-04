@@ -75,6 +75,11 @@ namespace Uintah {
      //! Returns n - data gets output every n procs.
      virtual int getNthProc() { return d_outputNthProc; }
 
+     //! Returns the processor the patch will be output on (not patchwiseProcessor
+     //! if outputNthProc is set)
+     virtual int getOutputProc(const Patch* patch) { 
+       return (getPatchwiseProcessorAssignment(patch)/d_outputNthProc)*d_outputNthProc; }
+
     //! Returns the patchset of all patches that have work done on this processor.
     virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { return levelPerProcPatchSets[level->getIndex()].get_rep(); }
     virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { return gridPerProcPatchSet.get_rep(); }

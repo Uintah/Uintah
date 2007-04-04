@@ -115,7 +115,7 @@ WARNING
       Stolen from Box.h
     ******************/
 
-    SCISHARE bool overlaps(const Region&) const;
+    bool overlaps(const Region&) const;
     inline Region intersect(const Region& b) const {
       return Region(Max(d_lowIndex, b.d_lowIndex),
                Min(d_highIndex, b.d_highIndex));
@@ -125,8 +125,8 @@ WARNING
       return d_lowIndex.x() >= d_highIndex.x() || d_lowIndex.y() >= d_highIndex.y() || d_lowIndex.z() >= d_highIndex.z();
     }
 
-    SCISHARE static deque<Region> difference(const Region& b1, const Region& b2);
-    SCISHARE static deque<Region> difference(deque<Region>& region1, deque<Region>& region22);
+    static deque<Region> difference(const Region& b1, const Region& b2);
+    static deque<Region> difference(deque<Region>& region1, deque<Region>& region22);
    
     class VolumeCompare {
       public:

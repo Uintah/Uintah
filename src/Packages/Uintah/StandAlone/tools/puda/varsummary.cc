@@ -130,7 +130,7 @@ findMinMax( DataArchive *         da,
             const string &        var,
             int                   matl,
             const Patch *         patch,
-            double                time,
+            int                   timestep,
             bool                  use_extra_cells )
 {
   Tvar value;
@@ -141,7 +141,7 @@ findMinMax( DataArchive *         da,
 
   if( !iter.done() ) {
 
-    da->query(value, var, matl, patch, time);
+    da->query(value, var, matl, patch, timestep);
 
     cout << "\t\t\t\t" << td->getName() << " over " << iter.begin() << " (inclusive) to " << iter.end() << " (excluive)\n";
 
@@ -199,13 +199,13 @@ findMinMaxPV( DataArchive*          da,
               const string &        var,
               int                   matl,
               const Patch *         patch,
-              double                time )
+              int                   timestep )
 {
   Tvar value;
 
   const Uintah::TypeDescription * td = value.getTypeDescription();
 
-  da->query(value, var, matl, patch, time);
+  da->query(value, var, matl, patch, timestep);
   ParticleSubset* pset = value.getParticleSubset();
   cout << "\t\t\t\t" << td->getName() << " over " << pset->numParticles() << " particles\n";
   if( pset->numParticles() > 0 ) {
@@ -254,7 +254,7 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
   for( unsigned long t = clf.time_step_lower; t <= clf.time_step_upper; t++ ) {
     double time = times[t];
     cout << "time = " << time << endl;
-    GridP grid = da->queryGrid(time);
+    GridP grid = da->queryGrid(t);
     for(int v=0;v<(int)vars.size();v++) {
       string var = vars[v];
       const Uintah::TypeDescription* td = types[v];
@@ -267,7 +267,7 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
             iter != level->patchesEnd(); iter++){
           const Patch* patch = *iter;
           cout << "\t\tPatch: " << patch->getID() << endl;
-          ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+          ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
           // loop over materials
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
               matlIter != matls.end(); matlIter++){
@@ -280,37 +280,37 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               switch(subtype->getType()){
               case Uintah::TypeDescription::double_type:
                 {
-                  findMinMaxPV<ParticleVariable<double>,double>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<double>,double>( da, var, matl, patch, t );
                   break;
                 }
               case Uintah::TypeDescription::float_type:
                 {
-                  findMinMaxPV<ParticleVariable<float>,float>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<float>,float>( da, var, matl, patch, t );
                   break;
                 }
               case Uintah::TypeDescription::int_type:
                 {
-                  findMinMaxPV<ParticleVariable<int>,int>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<int>,int>( da, var, matl, patch, t );
                   break;
                 }
               case Uintah::TypeDescription::Point:
                 {
-                  findMinMaxPV<ParticleVariable<Point>,Point>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<Point>,Point>( da, var, matl, patch, t );
                   break;
                 }
               case Uintah::TypeDescription::Vector:
                 {
-                  findMinMaxPV<ParticleVariable<Vector>,Vector>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<Vector>,Vector>( da, var, matl, patch, t );
                   break;
                 }
               case Uintah::TypeDescription::Matrix3:
                 {
-                  findMinMaxPV<ParticleVariable<Matrix3>,Matrix3>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<Matrix3>,Matrix3>( da, var, matl, patch, t );
                   break;
                 }
               case Uintah::TypeDescription::long64_type:
                 {
-                  findMinMaxPV<ParticleVariable<long64>,long64>( da, var, matl, patch, time );
+                  findMinMaxPV<ParticleVariable<long64>,long64>( da, var, matl, patch, t );
                   break;
                 }
               default:
@@ -324,12 +324,12 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               switch(subtype->getType()){
               case Uintah::TypeDescription::double_type:
                 {
-                  findMinMax<NCVariable<double>,double>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<NCVariable<double>,double>( da, var, matl, patch, t, clf.use_extra_cells );
                 }
               break;
               case Uintah::TypeDescription::float_type:
                 {
-                  findMinMax<NCVariable<float>,float>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<NCVariable<float>,float>( da, var, matl, patch, t, clf.use_extra_cells );
                 }
               break;
               case Uintah::TypeDescription::Point:
@@ -343,12 +343,12 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               break;
               case Uintah::TypeDescription::Vector:
                 {
-                  findMinMax<NCVariable<Vector>,Vector>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<NCVariable<Vector>,Vector>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::Matrix3:
                 {
-                  findMinMax<NCVariable<Matrix3>,Matrix3>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<NCVariable<Matrix3>,Matrix3>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               default:
@@ -362,17 +362,17 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               switch(subtype->getType()){
               case Uintah::TypeDescription::int_type:
                 {
-                  findMinMax<CCVariable<int>,int>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<CCVariable<int>,int>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::double_type:
                 {
-                  findMinMax<CCVariable<double>,double>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<CCVariable<double>,double>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::float_type:
                 {
-                  findMinMax<CCVariable<float>,float>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<CCVariable<float>,float>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::Point:
@@ -381,17 +381,17 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
                   cout << "puda was handling them correctly if they do... If we need them, we will need to\n";
                   cout << "figure out how to deal with them properly\n";
                   exit( 1 );
-                  //findMinMax<NCVariable<Point>,Point>( da, var, matl, patch, time, clf.use_extra_cells );
+                  //findMinMax<NCVariable<Point>,Point>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::Vector:
                 {
-                  findMinMax<CCVariable<Vector>,Vector>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<CCVariable<Vector>,Vector>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::Matrix3:
                 {
-                  findMinMax<CCVariable<Matrix3>,Matrix3>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<CCVariable<Matrix3>,Matrix3>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               break;
@@ -406,12 +406,12 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               switch(subtype->getType()){
               case Uintah::TypeDescription::double_type:
                 {
-                  findMinMax<SFCXVariable<double>,double>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<SFCXVariable<double>,double>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::float_type:
                 {
-                  findMinMax<SFCXVariable<float>,float>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<SFCXVariable<float>,float>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               default:
@@ -425,12 +425,12 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               switch(subtype->getType()){
               case Uintah::TypeDescription::double_type:
                 {
-                  findMinMax<SFCYVariable<double>,double>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<SFCYVariable<double>,double>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::float_type:
                 {
-                  findMinMax<SFCYVariable<float>,float>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<SFCYVariable<float>,float>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               default:
@@ -444,12 +444,12 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
               switch(subtype->getType()){
               case Uintah::TypeDescription::double_type:
                 {
-                  findMinMax<SFCZVariable<double>,double>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<SFCZVariable<double>,double>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               case Uintah::TypeDescription::float_type:
                 {
-                  findMinMax<SFCZVariable<float>,float>( da, var, matl, patch, time, clf.use_extra_cells );
+                  findMinMax<SFCZVariable<float>,float>( da, var, matl, patch, t, clf.use_extra_cells );
                   break;
                 }
               default:

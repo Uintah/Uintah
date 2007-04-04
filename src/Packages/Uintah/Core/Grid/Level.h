@@ -87,7 +87,7 @@ public:
   patchIterator patchesBegin();
   patchIterator patchesEnd();
 
-  const Patch* getPatch(int index) { return d_realPatches[index]; }
+  const Patch* getPatch(int index) const { return d_realPatches[index]; }
 
   // go through the virtual ones too
   const_patchIterator allPatchesBegin() const;

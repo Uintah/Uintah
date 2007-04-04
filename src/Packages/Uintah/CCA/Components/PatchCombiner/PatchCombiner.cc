@@ -45,7 +45,7 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/,
   timesteps_.push_back(999999999);
 
   GridP newGrid = scinew Grid();
-  GridP oldGrid = dataArchive_->queryGrid(times_[0]);
+  GridP oldGrid = dataArchive_->queryGrid(0);
 
 
   // use a subscheduler cuz the DW we will read data from will have a different
@@ -124,7 +124,6 @@ void
 PatchCombiner::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   
-  double time = times_[timeIndex_];
   const PatchSet* eachPatch = level->eachPatch();
     
   MaterialSetP prevMatlSet = 0;
@@ -147,7 +146,7 @@ PatchCombiner::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 	const Patch* oldPatch = *iter;
 	matlsRangeSet = matlsRangeSet.
 	  unioned(dataArchive_->queryMaterials(label->getName(), 
-					       oldPatch, time));
+					       oldPatch, timeIndex_));
       }
     }
     MaterialSet* matls;
@@ -208,7 +207,6 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
   timeIndex_ = generation - 1;  
   double time = times_[timeIndex_];
   //cerr << "The time is now: " << time << endl;
-  int timestep = timesteps_[timeIndex_];
 
   if (timeIndex_ >= (int) (times_.size()-1)) {
     // error situation - we have run out of timesteps in the uda, but 
@@ -226,7 +224,7 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
   d_subsched->advanceDataWarehouse(oldGrid_);
   //cerr << "deleted and recreated dw\n";
   double delt;
-  dataArchive_->restartInitialize(timestep, oldGrid_, d_subsched->get_dw(1), NULL, &time);
+  dataArchive_->restartInitialize(timeIndex_, oldGrid_, d_subsched->get_dw(1), NULL, &time);
   //cerr << "restartInitialize done\n";
   
   delt = times_[timeIndex_ + 1] - time;

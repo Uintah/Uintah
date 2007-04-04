@@ -81,8 +81,8 @@ namespace Uintah {
 
   FieldDumper::~FieldDumper() {}
 
-  FieldDumper::Step::Step(string tsdir, int index, double time, bool nocreate)
-    : tsdir_(tsdir), index_(index), time_(time) 
+  FieldDumper::Step::Step(string tsdir, int timestep, double time, int index, bool nocreate)
+    : tsdir_(tsdir), timestep_(timestep), time_(time), index_(index)
   {
     // create directory to store output files 
     if(!nocreate) {

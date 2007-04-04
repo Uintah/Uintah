@@ -29,7 +29,7 @@ namespace Uintah {
     // dump a single step
     class Step {
     protected:
-      Step(string tsdir, int index, double time, bool nocreate=false);
+      Step(string tsdir, int timestep, double time, int index, bool nocreate=false);
       
       string fileName(string variable_name, string extension="") const;
       string fileName(string variable_name, int materialNum, string extension="") const;
@@ -43,10 +43,11 @@ namespace Uintah {
       
     public: // FIXME: 
       string tsdir_;
-      int    index_;
+      int    timestep_;
       double time_;
+      int index_;
     };
-    virtual Step * addStep(int index, double time, int iset) = 0;
+    virtual Step * addStep(int timestep, double time, int index) = 0;
     virtual void finishStep(Step * step) = 0;
     
     DataArchive * archive() const { return this->da_; }

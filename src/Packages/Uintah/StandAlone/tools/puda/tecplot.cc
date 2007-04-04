@@ -166,7 +166,7 @@ tecplot( DataArchive *   da,
             // find index ranges for current grid level
             ////////////////////////////////////////////////////////////////
 
-            GridP grid = da->queryGrid(times[t]);
+            GridP grid = da->queryGrid(t);
             for(int l=0;l<grid->numLevels();l++){  //level loop: 7
               LevelP level = grid->getLevel(l);
               cout << "\t    Level: " << level->getIndex() << ", id " << level->getID() << endl;
@@ -193,7 +193,7 @@ tecplot( DataArchive *   da,
                 lo = patch->getLowIndex();
                 hi = patch->getHighIndex();
                 cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
-                int matlNum = da->queryNumMaterials(patch, time);
+                int matlNum = da->queryNumMaterials(patch, t);
                 if(numMatl < matlNum) numMatl = matlNum;
                 if(Imax < hi.x()) Imax = hi.x();
                 if(Jmax < hi.y()) Jmax = hi.y();
@@ -243,7 +243,7 @@ tecplot( DataArchive *   da,
                     IntVector lo = patch->getLowIndex();
                     IntVector hi = patch->getHighIndex();
                     cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
-                    ConsecutiveRangeSet matls = da->queryMaterials(ccVariable, patch, time);
+                    ConsecutiveRangeSet matls = da->queryMaterials(ccVariable, patch, t);
                     for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
                         matlIter != matls.end(); matlIter++){ //material loop: 10
                       int matl = *matlIter;
@@ -252,7 +252,7 @@ tecplot( DataArchive *   da,
                         case Uintah::TypeDescription::double_type:
                           {
                             CCVariable<double> value;
-                            da->query(value, ccVariable, matl, patch, time);
+                            da->query(value, ccVariable, matl, patch, t);
                             if(i_xd == "i_3d") {
                               for(indexK = lo.z(); indexK < hi.z(); ++indexK){
                                 for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
@@ -296,7 +296,7 @@ tecplot( DataArchive *   da,
                         case Uintah::TypeDescription::float_type:
                           {
                             CCVariable<float> value;
-                            da->query(value, ccVariable, matl, patch, time);
+                            da->query(value, ccVariable, matl, patch, t);
                             if(i_xd == "i_3d") {
                               for(indexK = lo.z(); indexK < hi.z(); ++indexK){
                                 for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
@@ -340,7 +340,7 @@ tecplot( DataArchive *   da,
                         case Uintah::TypeDescription::Vector:
                           {
                             CCVariable<Vector> value;
-                            da->query(value, ccVariable, matl, patch, time);
+                            da->query(value, ccVariable, matl, patch, t);
                             if(i_xd == "i_3d") {
                               for(indexK = lo.z(); indexK < hi.z(); ++indexK){
                                 for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
@@ -384,7 +384,7 @@ tecplot( DataArchive *   da,
                         case Uintah::TypeDescription::Point:
                           {
                             CCVariable<Point> value;
-                            da->query(value, ccVariable, matl, patch, time);
+                            da->query(value, ccVariable, matl, patch, t);
                             if(i_xd == "i_3d") {
                               for(indexK = lo.z(); indexK < hi.z(); ++indexK){
                                 for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
@@ -430,7 +430,7 @@ tecplot( DataArchive *   da,
                         case Uintah::TypeDescription::Matrix3:
                           {
                             CCVariable<Matrix3> value;
-                            da->query(value, ccVariable, matl, patch, time);
+                            da->query(value, ccVariable, matl, patch, t);
                             if(i_xd == "i_3d") {
                               for(indexK = lo.z(); indexK < hi.z(); ++indexK){
                                 for(indexJ = lo.y(); indexJ < hi.y(); ++indexJ){
