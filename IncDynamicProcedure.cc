@@ -90,7 +90,11 @@ IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
       cout << "possibly causing high variance values" << endl;
     }
   }
-  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+
+  // actually, Shmidt number, not Prandtl number
+  d_turbPrNo = 0.0;
+  if (db->findBlock("turbulentPrandtlNumber"))
+    db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
 }

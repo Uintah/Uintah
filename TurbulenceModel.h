@@ -90,6 +90,7 @@ public:
 #endif
       virtual void set3dPeriodic(bool periodic) = 0;
       virtual double getTurbulentPrandtlNumber() const = 0;
+      virtual void setTurbulentPrandtlNumber(double turbPrNo) = 0;
       virtual bool getDynScalarModel() const = 0;
 
       inline void setCombustionSpecifics(bool calcScalar,

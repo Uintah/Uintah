@@ -97,12 +97,18 @@ CompLocalDynamicProcedure::problemSetup(const ProblemSpecP& params)
   db->require("filterl", d_filterl);
   if (d_calcVariance)
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
+
   // actually, Shmidt number, not Prandtl number
-  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
-  d_lower_limit = d_turbPrNo;
+  d_turbPrNo = 0.0;
+  if (db->findBlock("turbulentPrandtlNumber"))
+    db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   db->getWithDefault("dynamicScalarModel",d_dynScalarModel,false);
-  if (d_dynScalarModel)
+  if (d_dynScalarModel) {
+    throw InvalidValue("Dynamic scalar model is out of date here and "
+		       "not supported: ", __FILE__, __LINE__);
+   d_lower_limit = d_turbPrNo;
    d_turbPrNo = 1.0; 
+  }
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 #ifndef PetscFilter
   cout << "Filtering without Petsc is not supported in variable" << endl;
