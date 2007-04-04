@@ -25,24 +25,24 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     NCVariable<Vector> & res) const {
-      da->query(res, fieldname, imat, patch, time);
+      da->query(res, fieldname, imat, patch, index);
     }
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     CCVariable<Vector> & res) const {
-      da->query(res, fieldname, imat, patch, time);
+      da->query(res, fieldname, imat, patch, index);
     }
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     ParticleSubset * parts,
                     ParticleVariable<Vector> & res) const {
-      da->query(res, fieldname, imat, patch, time);
+      da->query(res, fieldname, imat, patch, index);
     }
   };
   
@@ -56,10 +56,10 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     NCVariable<Vector> & res) const {
       NCVariable<Matrix3> value;
-      da->query(value, fieldname, imat, patch, time);
+      da->query(value, fieldname, imat, patch, index);
       res.allocate(value.getLowIndex(), value.getHighIndex());
       for(NCVariable<Matrix3>::iterator it=value.begin();it!=value.end();it++)
         res[it.getIndex()] = reduce(*it);
@@ -67,10 +67,10 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     CCVariable<Vector> & res) const {
       CCVariable<Matrix3> value;
-      da->query(value, fieldname, imat, patch, time);
+      da->query(value, fieldname, imat, patch, index);
       res.allocate(value.getLowIndex(), value.getHighIndex());
       for(CCVariable<Matrix3>::iterator it=value.begin();it!=value.end();it++)
         res[it.getIndex()] = reduce(*it);
@@ -78,11 +78,11 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     ParticleSubset * parts,
                     ParticleVariable<Vector> & res) const {
       ParticleVariable<Matrix3> value;
-      da->query(value, fieldname, imat, patch, time);
+      da->query(value, fieldname, imat, patch, index);
       res.allocate(parts);
       for(ParticleSubset::iterator pit(parts->begin());pit!=parts->end();pit++)
         res[*pit] = reduce(value[*pit]);
@@ -150,10 +150,10 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     NCVariable<Vector>  & res) const {
       NCVariable<Matrix3> fullvals;
-      (*preop)(da, patch, fieldname, imat, time, fullvals);
+      (*preop)(da, patch, fieldname, imat, index, fullvals);
       res.allocate(fullvals.getLowIndex(), fullvals.getHighIndex());
       for(NCVariable<Matrix3>::iterator it=fullvals.begin();it!=fullvals.end();it++)
         res[it.getIndex()] = realdiag->reduce(*it);
@@ -161,10 +161,10 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time, 
+                    int imat, int index, 
                     CCVariable<Vector>  & res) const {
       NCVariable<Matrix3> fullvalues;
-      (*preop)(da, patch, fieldname, imat, time, fullvalues);
+      (*preop)(da, patch, fieldname, imat, index, fullvalues);
       res.allocate(fullvalues.getLowIndex(), fullvalues.getHighIndex());
       for(CCVariable<Matrix3>::iterator it=fullvalues.begin();it!=fullvalues.end();it++)
         res[it.getIndex()] = realdiag->reduce(*it);
@@ -172,12 +172,12 @@ namespace Uintah {
     
     void operator()(DataArchive * da, const Patch * patch, 
                     const std::string & fieldname,
-                    int imat, double time,
+                    int imat, int index,
                     ParticleSubset * pset,
                     ParticleVariable<Vector> & res) const {
       ParticleVariable<Matrix3> fullvalues;
       fullvalues.allocate(pset);
-      (*preop)(da, patch, fieldname, imat, time, pset, fullvalues);
+      (*preop)(da, patch, fieldname, imat, index, pset, fullvalues);
       res.allocate(pset);
       for(ParticleSubset::iterator pit(pset->begin());pit!=pset->end();pit++)
         res[*pit] = realdiag->reduce( fullvalues[*pit] );

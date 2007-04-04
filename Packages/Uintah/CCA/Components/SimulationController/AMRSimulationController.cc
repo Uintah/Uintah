@@ -69,28 +69,23 @@ void AMRSimulationController::run()
    }
 #endif
 
-   // sets up sharedState, timeinfo, output
+   // sets up sharedState, timeinfo, output, scheduler, lb
    preGridSetup();
-
-   d_sharedState->d_simTime = d_timeinfo;
 
    // create grid
    GridP currentGrid = gridSetup();
-
-   // set up scheduler, lb, sim, regridder, and finalize sharedState
-   postGridSetup(currentGrid);
-
-   calcStartTime();
 
    d_scheduler->initialize(1, 1);
    d_scheduler->advanceDataWarehouse(currentGrid);
     
    double t;
 
-    
-   if (d_restarting){
-     restartSetup(currentGrid, t);
-   }
+   // set up sim, regridder, and finalize sharedState
+   // also reload from the DataArchive on restart
+   postGridSetup(currentGrid, t);
+
+   calcStartTime();
+
    if (d_combinePatches) {
      // combine patches and reduce uda need the same things here
      Dir combineFromDir(d_fromDir);

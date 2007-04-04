@@ -27,17 +27,17 @@ namespace Uintah {
     
     virtual void operator()(DataArchive * da, const Patch * patch, 
                             const std::string & fieldname,
-                            int imat, double time, 
+                            int imat, int index, 
                             NCVariable<Matrix3>  & values) const = 0;
     
     virtual void operator()(DataArchive * da, const Patch * patch, 
                             const std::string & fieldname,
-                            int imat, double time, 
+                            int imat, int index, 
                             CCVariable<Matrix3>  & values) const = 0;
     
     virtual void operator()(DataArchive * da, const Patch * patch, 
                             const std::string & fieldname,
-                            int imat, double time, 
+                            int imat, int index, 
                             ParticleSubset * parts,
                             ParticleVariable<Matrix3> & values) const = 0;
   };
@@ -50,9 +50,9 @@ namespace Uintah {
   void describeTensorDiags(ostream & os);
   
   // list of requested tensor diagnostics
-  list<TensorDiag const *> createTensorDiags(const Uintah::TypeDescription * fldtype, 
+  list<const Uintah::TensorDiag*> createTensorDiags(const Uintah::TypeDescription * fldtype, 
                                              const FieldSelection & fldselection,
-                                             const TensorDiag * preop=0);
+                                             const Uintah::TensorDiag * preop=0);
   
   // create single tensor op, or null if none requested
   const TensorDiag * createTensorOp(const FieldSelection & fldselection);

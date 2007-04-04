@@ -267,7 +267,7 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 
   try {
     qinfo.archive->query(patch_data, qinfo.varname, qinfo.mat, patch,
-                         qinfo.time);
+                         qinfo.timestep);
   } catch (Exception& e) {
 //     error("query caused an exception: " + string(e.message()));
     cerr << "getPatchData::error in query function\n";

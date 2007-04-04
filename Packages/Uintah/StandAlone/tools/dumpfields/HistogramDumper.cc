@@ -45,21 +45,21 @@ namespace Uintah {
   }
 
   HistogramDumper::Step * 
-  HistogramDumper::addStep(int index, double time, int iset)
+  HistogramDumper::addStep(int timestep, double time, int index)
   {
-    return scinew Step(this->archive(), this->dirName(time, iset), index, time, opts_, fselect_);
+    return scinew Step(this->archive(), this->dirName(time, index), timestep, time, index, opts_, fselect_);
   }
 
   void
   HistogramDumper::finishStep(FieldDumper::Step * s)
   {
-    fprintf(filelist_, "%10d %16.8g  %20s\n", s->index_, s->time_, s->infostr().c_str());
+    fprintf(filelist_, "%10d %16.8g  %20s\n", s->timestep_, s->time_, s->infostr().c_str());
   }
 
-  HistogramDumper::Step::Step(DataArchive * da, string tsdir, int index, double time,  
+  HistogramDumper::Step::Step(DataArchive * da, string tsdir, int timestep, double time, int index,  
                               const HistogramOpts & opts, const FieldSelection & fselect)
     : 
-    FieldDumper::Step(tsdir, index, time), da_(da), 
+    FieldDumper::Step(tsdir, timestep, time, index), da_(da), 
     opts_(opts), fselect_(fselect)
   {
   }
@@ -80,7 +80,7 @@ namespace Uintah {
   {
     if(!fselect_.wantField(fieldname)) return;
     
-    GridP grid = da_->queryGrid(time_);
+    GridP grid = da_->queryGrid(index_);
     
     // need to count materials before we start, since we want material loop outside
     // of patch loop
@@ -89,7 +89,7 @@ namespace Uintah {
       LevelP level = grid->getLevel(l);
       for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
         const Patch* patch = *iter;
-        ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, time_);
+        ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, index_);
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
           int matl = *matlIter;
           if(fselect_.wantMaterial(matl) && !count(mats.begin(), mats.end(), matl)) 
@@ -146,7 +146,7 @@ namespace Uintah {
               if(td->getType()==Uintah::TypeDescription::CCVariable) {
                 
                 CCVariable<double> svals;
-                (**diagit)(da_, patch, fieldname, matl, time_, svals);
+                (**diagit)(da_, patch, fieldname, matl, index_, svals);
                 
                 for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
                   double val = svals[*iter];
@@ -160,7 +160,7 @@ namespace Uintah {
               } else if(td->getType()==Uintah::TypeDescription::NCVariable) {
 
                 NCVariable<double> svals;
-                (**diagit)(da_, patch, fieldname, matl, time_, svals);
+                (**diagit)(da_, patch, fieldname, matl, index_, svals);
                 
                 for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
                   double val = svals[*iter];
@@ -174,11 +174,11 @@ namespace Uintah {
                 }
               } else if (td->getType()==Uintah::TypeDescription::ParticleVariable) {
                 ParticleVariable<Point> posns;
-                da_->query(posns, "p.x", matl, patch, time_);
+                da_->query(posns, "p.x", matl, patch, index_);
                 ParticleSubset* pset = posns.getParticleSubset();
                 
                 ParticleVariable<double> svals;
-                (**diagit)(da_, patch, fieldname, matl, time_, pset, svals);
+                (**diagit)(da_, patch, fieldname, matl, index_, pset, svals);
                 
                 for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++) {
                   double val = svals[*iter];

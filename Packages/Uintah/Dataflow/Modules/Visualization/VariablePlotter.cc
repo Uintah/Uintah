@@ -116,7 +116,7 @@ VariablePlotter::getGrid()
   }
   if (timestep != old_timestep_) {
     time_ = times_[timestep];
-    grid_ = archive_->queryGrid(time_);
+    grid_ = archive_->queryGrid(timestep);
     old_timestep_ = timestep;
     return true;
   }
@@ -180,7 +180,7 @@ VariablePlotter::setVars(GridP grid)
           varNames += " ";
           varNames += names_[i];
           cerr << "Calling appendMat_list for "<<names_[i]<<"\n";
-          get_gui()->execute(get_id() + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
+          get_gui()->execute(get_id() + " appendMat_list " + archive_->queryMaterials(names_[i], patch, old_timestep_).expandedString().c_str());
         } else {
           error("Variable " +  names_[i] + " was not added, because its subtype is not supported.");
         }
@@ -194,7 +194,7 @@ VariablePlotter::setVars(GridP grid)
           varNames += " ";
           varNames += names_[i];
           cerr << "Calling appendMat_list for "<<names_[i]<<"\n";
-          get_gui()->execute(get_id() + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
+          get_gui()->execute(get_id() + " appendMat_list " + archive_->queryMaterials(names_[i], patch, old_timestep_).expandedString().c_str());
         } else {
           error("Variable " +  names_[i] + " was not added, because its subtype is not supported.");
         }

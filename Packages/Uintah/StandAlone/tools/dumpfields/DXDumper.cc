@@ -34,9 +34,9 @@ DXDumper::addField(string fieldname, const Uintah::TypeDescription * /*td*/)
 }
 
 DXDumper::Step * 
-DXDumper::addStep(int index, double time, int iset)
+DXDumper::addStep(int timestep, double time, int index)
 {
-  DXDumper::Step * r = scinew Step(archive(), dirname_, index, time, nsteps_++, fldwriters_, bin_, onedim_);
+  DXDumper::Step * r = scinew Step(archive(), dirname_, timestep, time, index, nsteps_++, fldwriters_, bin_, onedim_);
   return r;
 }
   
@@ -74,10 +74,10 @@ DXDumper::FldWriter::~FldWriter()
   strm_ << "end" << endl;
 }
 
-DXDumper::Step::Step(DataArchive * da, string tsdir, int index, double time, int fileindex, 
+DXDumper::Step::Step(DataArchive * da, string tsdir, int timestep, double time, int index, int fileindex, 
 		     const map<string,DXDumper::FldWriter*> & fldwriters, bool bin, bool onedim)
   :
-  Dumper::Step(tsdir, index, time),
+  Dumper::Step(tsdir, timestep, time, index),
   da_(da), 
   fileindex_(fileindex),
   fldwriters_(fldwriters),
@@ -108,7 +108,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
   FldWriter * fldwriter = fldwriters_.find(fieldname)->second;
   ostream & os = fldwriter->strm_;
   
-  GridP grid = da_->queryGrid(time_);
+  GridP grid = da_->queryGrid(index_);
   
   const Uintah::TypeDescription* subtype = td->getSubType();
   
@@ -143,7 +143,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
     minind  = indlow;
     midind  = IntVector(ncells[0]/2, ncells[1]/2, ncells[2]/2);
     
-    os << "# step " << index_ << " positions" << endl;
+    os << "# step " << timestep_ << " positions" << endl;
     if(onedim_)
       {
 	os << "object " << ++fldwriter->dxobj_ << " class array type float items " 
@@ -165,7 +165,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
       }
     posnobj = fldwriter->dxobj_;
     
-    os << "# step " << index_ << " connections" << endl;
+    os << "# step " << timestep_ << " connections" << endl;
     if(onedim_)
       {
 	os << "object " << ++fldwriter->dxobj_ << " class gridconnections counts " 
@@ -192,34 +192,34 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
-      ConsecutiveRangeSet matls = da_->queryMaterials("p.x", patch, time_);
+      ConsecutiveRangeSet matls = da_->queryMaterials("p.x", patch, index_);
       
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
 	const int matl = *matlIter;
 	
 	ParticleVariable<Point> partposns;
-	da_->query(partposns, "p.x", matl, patch, time_);
+	da_->query(partposns, "p.x", matl, patch, index_);
 	ParticleSubset* pset = partposns.getParticleSubset();
 	nparts += pset->numParticles();
       }
     }
     
-    os << "# step " << index_ << " positions" << endl;
+    os << "# step " << timestep_ << " positions" << endl;
     os << "object " << ++fldwriter->dxobj_ << " class array rank 1 shape 3 items " << nparts;
     os << dmode << " data follows " << endl;;
     
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
-      ConsecutiveRangeSet matls = da_->queryMaterials("p.x", patch, time_);
+      ConsecutiveRangeSet matls = da_->queryMaterials("p.x", patch, index_);
       
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
 	const int matl = *matlIter;
 	
 	ParticleVariable<Point> partposns;
-	da_->query(partposns, "p.x", matl, patch, time_);
+	da_->query(partposns, "p.x", matl, patch, index_);
 	ParticleSubset* pset = partposns.getParticleSubset();
 	for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 	  Point xpt = partposns[*iter];
@@ -296,7 +296,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
     for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
       
-      ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, time_);
+      ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, index_);
       
       // loop over materials
       for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -308,7 +308,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<float> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		float val = REMOVE_SMALL(value[*iter]);
@@ -318,7 +318,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<float> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -330,7 +330,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<float> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -346,7 +346,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<double> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		float val = REMOVE_SMALL(value[*iter]);
@@ -356,7 +356,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<double> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 		IntVector ind(*iter-minind);
 		cout << "index: " << ind << endl;
@@ -372,7 +372,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<double> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -388,7 +388,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<Point> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		for(int ic=0;ic<3;ic++) {
@@ -400,7 +400,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<Point> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -414,7 +414,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<Point> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -432,7 +432,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<Vector> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		for(int ic=0;ic<3;ic++) {
@@ -444,7 +444,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<Vector> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -458,7 +458,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<Vector> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -476,7 +476,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	  {
 	    if(td->getType()==Uintah::TypeDescription::ParticleVariable) {
 	      ParticleVariable<Matrix3> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      ParticleSubset* pset = value.getParticleSubset();
 	      for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++) {
 		for(int jc=0;jc<3;jc++)
@@ -489,7 +489,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else if(td->getType()==Uintah::TypeDescription::CCVariable) {
 	      CCVariable<Matrix3> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -504,7 +504,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
 	      }
 	    } else {
 	      NCVariable<Matrix3> value;
-	      da_->query(value, fieldname, matl, patch, time_);
+	      da_->query(value, fieldname, matl, patch, index_);
 	      for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
 		if(onedim_ && ((*iter)[1]!=midind[1] ||(*iter)[2]!=midind[2])) continue;
 		IntVector ind(*iter-minind);
@@ -528,7 +528,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
       } // materials
     } // patches
     
-    os << "# step " << index_ << " values" << endl;
+    os << "# step " << timestep_ << " values" << endl;
     os << "object " << ++fldwriter->dxobj_ << " class array rank " << rank << " " << shp << " items " << nparts;
     os << dmode << " data follows " << endl;;
     int ioff = 0;
@@ -554,7 +554,7 @@ DXDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
   }
   
   // build field object
-  os << "# step " << index_ << " " << fieldname << " field" << endl;
+  os << "# step " << timestep_ << " " << fieldname << " field" << endl;
   os << "object " << ++fldwriter->dxobj_ << " class field" << endl;
   if(posnobj!=-1) os << "  component \"positions\" value " << posnobj << endl;
   if(connobj!=-1) os << "  component \"connections\" value " << connobj << endl;

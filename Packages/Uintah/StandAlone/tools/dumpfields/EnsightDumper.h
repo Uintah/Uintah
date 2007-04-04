@@ -125,7 +125,7 @@ namespace Uintah {
     class Step : public FieldDumper::Step {
       friend class EnsightDumper;
     private:
-      Step(Data * data, string tsdir, int index, double time, int fileindex);
+      Step(Data * data, string tsdir, int timestep, double time, int index, int fileindex);
       
     public:
       string infostr() const { return stepdesc_; }
@@ -149,7 +149,7 @@ namespace Uintah {
     friend class Step;
   
     //
-    Step * addStep(int index, double time, int iset);
+    Step * addStep(int timestep, double time, int index);
     void finishStep(FieldDumper::Step * step);
     
   private:

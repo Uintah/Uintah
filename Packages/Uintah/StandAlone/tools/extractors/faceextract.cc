@@ -115,7 +115,7 @@ void printData(DataArchive* archive, string& variable_name,
     //__________________________________
     //  does the requested level exist
     bool levelExists = false;
-    GridP grid = archive->queryGrid(times[timestep]); 
+    GridP grid = archive->queryGrid(timestep); 
     int numLevels = grid->numLevels();
    
     for (int L = 0;L < numLevels; L++) {
@@ -164,27 +164,27 @@ void printData(DataArchive* archive, string& variable_name,
           case Uintah::TypeDescription::CCVariable:
             vars[p] = scinew CCVariable<T>;
             archive->query( *(CCVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], times[timestep]);
+                            material, patches[p], timestep);
             break;
           case Uintah::TypeDescription::NCVariable:
             vars[p] = scinew NCVariable<T>;
             archive->query( *(NCVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], times[timestep]);
+                            material, patches[p], timestep);
             break;
           case Uintah::TypeDescription::SFCXVariable:
             vars[p] = scinew SFCXVariable<T>;
             archive->query( *(SFCXVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], times[timestep]);
+                            material, patches[p], timestep);
             break;
           case Uintah::TypeDescription::SFCYVariable:
             vars[p] = scinew SFCYVariable<T>;
             archive->query( *(SFCYVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], times[timestep]);
+                            material, patches[p], timestep);
             break;
           case Uintah::TypeDescription::SFCZVariable:
             vars[p] = scinew SFCZVariable<T>;
             archive->query( *(SFCZVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], times[timestep]);
+                            material, patches[p], timestep);
             break;
           default:
             cerr << "Unknown variable type: " << variable_type->getName() << endl;

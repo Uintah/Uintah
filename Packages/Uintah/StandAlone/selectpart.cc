@@ -129,14 +129,15 @@ void printParticleID(DataArchive* da, const Box& box)
 
   // Now that the variable has been found, get the data for the
   // first timestep from the archive
-  vector<int> index;
+  vector<int> timesteps;
   vector<double> times;
-  da->queryTimesteps(index, times);
-  ASSERTEQ(index.size(), times.size());
+  da->queryTimesteps(timesteps, times);
+  ASSERTEQ(timesteps.size(), times.size());
       
   // Get the data for the first timestep
-  double time = times[0];
-  GridP grid = da->queryGrid(time);
+  int index = 0;
+  double time = times[index];
+  GridP grid = da->queryGrid(0);
 
   // Loop thru all the levels
   for(int l=0;l<grid->numLevels();l++){
@@ -153,16 +154,16 @@ void printParticleID(DataArchive* da, const Box& box)
       std::string var = "p.x";
 
       // loop thru all the materials
-      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, index);
       ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
       for(; matlIter != matls.end(); matlIter++){
         int matl = *matlIter;
 
         ParticleVariable<Point> point;
-        da->query(point, var, matl, patch, time);
+        da->query(point, var, matl, patch, index);
         ParticleSubset* pset = point.getParticleSubset();
         ParticleVariable<long64> pid;
-        da->query(pid, "p.particleID", matl, patch, time);
+        da->query(pid, "p.particleID", matl, patch, index);
         if(pset->numParticles() > 0){
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){

@@ -38,10 +38,10 @@ namespace Uintah {
   }
   
   TextDumper::Step * 
-  TextDumper::addStep(int index, double time, int iset)
+  TextDumper::addStep(int timestep, double time, int index)
   {
-    return scinew Step(this->archive(), this->dirName(time, iset), 
-                       index, time, opts_, flds_);
+    return scinew Step(this->archive(), this->dirName(time, index), 
+                       timestep, time, index, opts_, flds_);
   }  
 
   void
@@ -52,14 +52,14 @@ namespace Uintah {
   void
   TextDumper::finishStep(FieldDumper::Step * s)
   {
-    fprintf(filelist_, "%10d %16.8g  %20s\n", s->index_, s->time_, s->infostr().c_str());
+    fprintf(filelist_, "%10d %16.8g  %20s\n", s->timestep_, s->time_, s->infostr().c_str());
   }
 
   TextDumper::Step::Step(DataArchive * da, string tsdir,
-                         int index, double time,  
+                         int timestep, double time, int index,  
                          const TextOpts & opts, const FieldSelection & flds)
     : 
-    FieldDumper::Step(tsdir, index, time),
+    FieldDumper::Step(tsdir, timestep, time, index),
     da_(da), opts_(opts), flds_(flds)
   {
     GridP grid = da_->queryGrid(time);
@@ -77,7 +77,7 @@ namespace Uintah {
   void
   TextDumper::Step::storeField(string fieldname, const Uintah::TypeDescription * td)
   {
-    GridP grid = da_->queryGrid(time_);
+    GridP grid = da_->queryGrid(index_);
   
     cout << "   " << fieldname << endl;
     const Uintah::TypeDescription* subtype = td->getSubType();
@@ -88,7 +88,7 @@ namespace Uintah {
       LevelP level = grid->getLevel(l);
       for(Level::const_patchIterator iter = level->patchesBegin();iter != level->patchesEnd(); iter++) {
         const Patch* patch = *iter;
-        ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, time_);
+        ConsecutiveRangeSet matls= da_->queryMaterials(fieldname, patch, index_);
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++) {
           int matl = *matlIter;
           if(matl>=nmats) nmats = matl+1;
@@ -120,7 +120,7 @@ namespace Uintah {
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
       
-        ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, time_);
+        ConsecutiveRangeSet matls = da_->queryMaterials(fieldname, patch, index_);
       
         // loop over materials
         for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -160,7 +160,7 @@ namespace Uintah {
               string fname = fileName(outfieldname, matl, "txt");
               
               outfiles[*dit];
-              if(opts_.tseries || index_==1) {
+              if(opts_.tseries || timestep_==1) {
                 outfiles[*dit] = new ofstream( fname.c_str() );
                 *outfiles[*dit] 
                   << "# time = " << time_ << ", field = " << fieldname << ", mat " << matl << " of " << nmats << endl;
@@ -181,7 +181,7 @@ namespace Uintah {
               case Uintah::TypeDescription::CCVariable:
                 {
                   CCVariable<double> svals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, svals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, svals);
                   
                   for(NodeIterator iter = patch->getNodeIterator();
                       !iter.done(); iter++){
@@ -198,7 +198,7 @@ namespace Uintah {
               case Uintah::TypeDescription::NCVariable:
                 {
                   NCVariable<double> svals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, svals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, svals);
                   
                   for(NodeIterator iter = patch->getNodeIterator();
                       !iter.done(); iter++){
@@ -215,12 +215,12 @@ namespace Uintah {
               case Uintah::TypeDescription::ParticleVariable:
                 {
                   ParticleVariable<Point> posns;
-                  da_->query(posns, "p.x", matl, patch, time_);
+                  da_->query(posns, "p.x", matl, patch, index_);
                   
                   ParticleSubset* pset = posns.getParticleSubset();
                   
                   ParticleVariable<double> svals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, pset, svals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, pset, svals);
                   
                   for(ParticleSubset::iterator iter = pset->begin();
                       iter != pset->end(); iter++) {
@@ -248,7 +248,7 @@ namespace Uintah {
               case Uintah::TypeDescription::CCVariable:
                 {
                   CCVariable<Vector> vvals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, vvals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, vvals);
                   
                   for(NodeIterator iter = patch->getNodeIterator();
                       !iter.done(); iter++){
@@ -267,7 +267,7 @@ namespace Uintah {
               case Uintah::TypeDescription::NCVariable:
                 {
                   NCVariable<Vector> vvals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, vvals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, vvals);
                   
                   for(NodeIterator iter = patch->getNodeIterator();
                       !iter.done(); iter++){
@@ -286,12 +286,12 @@ namespace Uintah {
               case Uintah::TypeDescription::ParticleVariable:
                 {
                   ParticleVariable<Point> posns;
-                  da_->query(posns, "p.x", matl, patch, time_);
+                  da_->query(posns, "p.x", matl, patch, index_);
                   
                   ParticleSubset* pset = posns.getParticleSubset();
                   
                   ParticleVariable<Vector> vvals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, pset, vvals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, pset, vvals);
                   
                   for(ParticleSubset::iterator iter = pset->begin();
                       iter != pset->end(); iter++) {
@@ -321,7 +321,7 @@ namespace Uintah {
               case Uintah::TypeDescription::CCVariable:
                 {
                   CCVariable<Matrix3> tvals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, tvals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, tvals);
                   
                   for(NodeIterator iter = patch->getNodeIterator();
                       !iter.done(); iter++){
@@ -346,7 +346,7 @@ namespace Uintah {
               case Uintah::TypeDescription::NCVariable:
                 {
                   NCVariable<Matrix3> tvals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, tvals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, tvals);
                   
                   for(NodeIterator iter = patch->getNodeIterator();
                       !iter.done(); iter++){
@@ -371,12 +371,12 @@ namespace Uintah {
               case Uintah::TypeDescription::ParticleVariable:
                 {
                   ParticleVariable<Point> posns;
-                  da_->query(posns, "p.x", matl, patch, time_);
+                  da_->query(posns, "p.x", matl, patch, index_);
                   
                   ParticleSubset* pset = posns.getParticleSubset();
                   
                   ParticleVariable<Matrix3> tvals;
-                  (**diagit)(da_, patch, fieldname, matl, time_, pset, tvals);
+                  (**diagit)(da_, patch, fieldname, matl, index_, pset, tvals);
                   
                   for(ParticleSubset::iterator iter = pset->begin();
                       iter != pset->end(); iter++) {

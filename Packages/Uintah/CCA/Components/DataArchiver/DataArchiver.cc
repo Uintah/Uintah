@@ -1239,14 +1239,13 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
         for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
           const Patch* patch=*iter;
-
-          // mark the nth proc 
-          int n = lb->getNthProc();
-          procOnLevel[l][(lb->getPatchwiseProcessorAssignment(patch)/n)*n] = 1;
+          int proc = lb->getOutputProc(patch);
+          procOnLevel[l][proc] = 1;
 
           Box box = patch->getBox();
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
           patchElem->appendElement("id", patch->getID());
+          patchElem->appendElement("proc", proc);
           patchElem->appendElement("lowIndex", patch->getCellLowIndex());
           patchElem->appendElement("highIndex", patch->getCellHighIndex());
           if (patch->getCellLowIndex() != patch->getInteriorCellLowIndex())

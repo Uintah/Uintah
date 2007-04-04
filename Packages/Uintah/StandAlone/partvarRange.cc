@@ -113,7 +113,7 @@ int main(int argc, char** argv)
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
               double time = times[t];
-              GridP grid = da->queryGrid(time);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
-                    da->queryMaterials(var, patch, time);
+                    da->queryMaterials(var, patch, t);
 
                   // Material loop
                   ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
                     if (matl != mat) continue;
 
                     ParticleVariable<double> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
                       ParticleSubset::iterator iter = pset->begin();
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
               double time = times[t];
-              GridP grid = da->queryGrid(time);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
-                    da->queryMaterials(var, patch, time);
+                    da->queryMaterials(var, patch, t);
 
                   // Material loop
                   ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
                     if (matl != mat) continue;
 
                     ParticleVariable<float> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
                       ParticleSubset::iterator iter = pset->begin();
@@ -213,7 +213,7 @@ int main(int argc, char** argv)
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
               double time = times[t];
-              GridP grid = da->queryGrid(time);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
@@ -224,7 +224,7 @@ int main(int argc, char** argv)
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
-                    da->queryMaterials(var, patch, time);
+                    da->queryMaterials(var, patch, t);
 
                   // Material loop
                   ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
                     if (matl != mat) continue;
 
                     ParticleVariable<int> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
                       ParticleSubset::iterator iter = pset->begin();
@@ -263,7 +263,7 @@ int main(int argc, char** argv)
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
               double time = times[t];
-              GridP grid = da->queryGrid(time);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
@@ -274,7 +274,7 @@ int main(int argc, char** argv)
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
-                    da->queryMaterials(var, patch, time);
+                    da->queryMaterials(var, patch, t);
 
                   // Material loop
                   ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -284,7 +284,7 @@ int main(int argc, char** argv)
                     if (matl != mat) continue;
 
                     ParticleVariable<Vector> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
                       ParticleSubset::iterator iter = pset->begin();
@@ -314,7 +314,7 @@ int main(int argc, char** argv)
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
               double time = times[t];
-              GridP grid = da->queryGrid(time);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
@@ -325,7 +325,7 @@ int main(int argc, char** argv)
                 for(; pIter != level->patchesEnd(); pIter++){
                   const Patch* patch = *pIter;
                   ConsecutiveRangeSet matls = 
-                    da->queryMaterials(var, patch, time);
+                    da->queryMaterials(var, patch, t);
 
                   // Material loop
                   ConsecutiveRangeSet::iterator matlIter = matls.begin();
@@ -335,7 +335,7 @@ int main(int argc, char** argv)
                     if (matl != mat) continue;
 
                     ParticleVariable<Matrix3> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
                       ParticleSubset::iterator iter = pset->begin();

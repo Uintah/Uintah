@@ -86,8 +86,7 @@ class DataArchive;
 
       void preGridSetup();
       GridP gridSetup();
-      void restartSetup( GridP& grid, double& t);
-      void postGridSetup( GridP& grid);
+      void postGridSetup( GridP& grid, double& t);
 
       //! adjust delt based on timeinfo and other parameters
       void adjustDelT(double& delt, double prev_delt, int iterations, double t);
@@ -111,7 +110,7 @@ class DataArchive;
       bool           d_restarting;
       std::string d_fromDir;
       int d_restartTimestep;
-      double d_restartTime;
+      int d_restartIndex;
 
       int d_lastRecompileTimestep;
 

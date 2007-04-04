@@ -1169,7 +1169,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               }
               break;
             default:
-              SCI_THROW(InternalError("Unknown variable type in transferFrom: "+label->getName(), __FILE__, __LINE__));
+              SCI_THROW(InternalError("Unknown variable type in copyData: "+label->getName(), __FILE__, __LINE__));
             } // end switch
           } // end oldPatches
         }

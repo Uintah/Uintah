@@ -146,7 +146,7 @@ private:
   std::string getVarsForMaterials(std::list<VarInfo>& vars,
 				  const ConsecutiveRangeSet& matls,
 				  bool& needToUpdate);
-  void buildData(DataArchiveHandle& archive, double time,
+  void buildData(DataArchiveHandle& archive, int index,
 		 ScalarParticles*& sp,
 		 VectorParticles*& vp,
 		 TensorParticles*& tp);

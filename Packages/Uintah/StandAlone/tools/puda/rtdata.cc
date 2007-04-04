@@ -97,7 +97,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
     ostringstream tempstr_time;
     tempstr_time << setprecision(17) << time;
     time_file = replaceChar(string(tempstr_time.str()),'.','_');
-    GridP grid = da->queryGrid(time);
+    GridP grid = da->queryGrid(t);
     fprintf(filelist,"<TIMESTEP>\n");
     if(clf.do_verbose) {
       cout << "time = " << time << endl;
@@ -135,7 +135,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
           const Uintah::TypeDescription* td = types[v];
           const Uintah::TypeDescription* subtype = td->getSubType();
 
-          ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+          ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
           // loop over materials
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
               matlIter != matls.end(); matlIter++){
@@ -156,21 +156,21 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                 case Uintah::TypeDescription::double_type:
                   {
                     ParticleVariable<double> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     material_data.pv_double_list.push_back(value);
                   }
                 break;
                 case Uintah::TypeDescription::float_type:
                   {
                     ParticleVariable<float> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     material_data.pv_float_list.push_back(value);
                   }
                 break;
                 case Uintah::TypeDescription::Point:
                   {
                     ParticleVariable<Point> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
 
                     //cout << __LINE__ << ":var = ("<<var<<") for material index "<<matl<<"\n";
                     if (var == "p.x") {
@@ -184,14 +184,14 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                 case Uintah::TypeDescription::Vector:
                   {
                     ParticleVariable<Vector> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     material_data.pv_vector_list.push_back(value);
                   }
                 break;
                 case Uintah::TypeDescription::Matrix3:
                   {
                     ParticleVariable<Matrix3> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     material_data.pv_matrix3_list.push_back(value);
                   }
                 break;
@@ -218,7 +218,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     // get the data and write it out
                     double min = 0.0, max = 0.0;
                     NCVariable<double> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
                       NodeIterator iter = patch->getNodeIterator();
@@ -260,7 +260,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     // get the data and write it out
                     float min = 0.0, max = 0.0;
                     NCVariable<float> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
                       NodeIterator iter = patch->getNodeIterator();
@@ -330,7 +330,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     // get the data and write it out
                     double min = 0.0, max = 0.0;
                     CCVariable<double> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
                       NodeIterator iter = patch->getNodeIterator();
@@ -372,7 +372,7 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                     // get the data and write it out
                     float min = 0.0, max = 0.0;
                     CCVariable<float> value;
-                    da->query(value, var, matl, patch, time);
+                    da->query(value, var, matl, patch, t);
                     IntVector dim(value.getHighIndex()-value.getLowIndex());
                     if(dim.x() && dim.y() && dim.z()){
                       NodeIterator iter = patch->getNodeIterator();

@@ -25,7 +25,7 @@ namespace Uintah {
   
     class Step : public Dumper::Step {
     public:
-      Step(DataArchive * da, string outdir, int index, double time, int fileindex, 
+      Step(DataArchive * da, string outdir, int timestep, double time, int index, int fileindex, 
            const map<string,FldWriter*> & fldwriters, bool bin, bool onedim);
     
       void storeGrid ();
@@ -44,7 +44,7 @@ namespace Uintah {
     friend class Step;
   
     //
-    Step * addStep(int index, double time, int iset);
+    Step * addStep(int timestep, double time, int index);
     void finishStep(Dumper::Step * step);
   
   private:  

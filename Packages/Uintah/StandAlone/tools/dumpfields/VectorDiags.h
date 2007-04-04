@@ -24,17 +24,17 @@ namespace Uintah {
     
     virtual void operator()(DataArchive * da, const Patch * patch, 
                             const std::string & fieldname,
-                            int imat, double time, 
+                            int imat, int index, 
                             NCVariable<Vector>  & values) const = 0;
     
     virtual void operator()(DataArchive * da, const Patch * patch, 
                             const std::string & fieldname,
-                            int imat, double time, 
+                            int imat, int index, 
                             CCVariable<Vector>  & values) const = 0;
     
     virtual void operator()(DataArchive * da, const Patch * patch, 
                             const std::string & fieldname,
-                            int imat, double time, 
+                            int imat, int index, 
                             ParticleSubset * parts,
                             ParticleVariable<Vector> & values) const = 0;
   };

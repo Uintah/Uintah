@@ -505,15 +505,8 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
 		 pg->getComm());
 
       // find the patch from the id
-      const Patch* toPatch = 0;
-      for (int i = coarsestLevel->getIndex(); i < grid->numLevels(); i++) {
-        LevelP checkLevel = grid->getLevel(i);
-        int levelBaseID = checkLevel->getPatch(0)->getID();
-        if (patchid >= levelBaseID && patchid < levelBaseID+checkLevel->numPatches()) {
-          toPatch = checkLevel->getPatch(patchid-levelBaseID);
-          break;
-        }
-      }
+      const Patch* toPatch = grid->getPatchByID(patchid, coarsestLevel->getIndex());;
+
       ASSERT(toPatch != 0 && toPatch->getID() == patchid);
       int matl;
       MPI_Unpack(buf, size, &position, &matl, 1, MPI_INT,

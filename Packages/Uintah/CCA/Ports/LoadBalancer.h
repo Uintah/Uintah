@@ -116,6 +116,10 @@ WARNING
     //! Returns the value of n (every n procs it performs output tasks).
     virtual int getNthProc() { return 1; }
 
+    //! Returns the processor the patch will be output on (not patchwiseProcessor
+    //! if outputNthProc is set)
+    virtual int getOutputProc(const Patch* patch) = 0;
+
     //! Tells the load balancer on which procs data was output.
     virtual void restartInitialize(ProblemSpecP&, std::string file /*tsurl*/, const GridP&) {}
     

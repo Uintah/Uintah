@@ -20,7 +20,7 @@ namespace Uintah {
     
     virtual bool has_mass(DataArchive * da, const Patch * patch, 
                           Uintah::TypeDescription::Type fieldtype,
-                          int imat, double time, const IntVector & pt) const;
+                          int imat, int index, const IntVector & pt) const;
   };
 }
 
