@@ -86,8 +86,10 @@ cd $localDir
 # make a sorted list of potential files to copy
 # let the user edit that file with vi
 /bin/rm -f pscp_files
-find . -maxdepth 1 -name "*.xml" -exec basename {} \; > pscp_files
-find . -maxdepth 1 -name "t*" -exec basename {} \; | sort -r >>pscp_files
+echo "input.xml.orig" > pscp_files
+find . -maxdepth 1 -name "*.xml"       -exec basename {} \; >> pscp_files
+find . -maxdepth 1 -name "*.dat"       -exec basename {} \; >> pscp_files
+find . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>pscp_files
 find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> pscp_files
 
 echo "Now starting vi in a separate xterm:  Remove the files you don't want transfered"
