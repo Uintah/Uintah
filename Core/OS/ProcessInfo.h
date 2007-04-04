@@ -43,11 +43,11 @@
 #ifndef Core_OS_ProcessInfo_h
 #define Core_OS_ProcessInfo_h 1
 
-
+#include <Core/OS/share.h>
 namespace SCIRun {
 
 
-  class ProcessInfo {
+  class SCISHARE ProcessInfo {
 
   public:
 
