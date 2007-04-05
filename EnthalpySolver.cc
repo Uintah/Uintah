@@ -164,11 +164,14 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (!(d_dynScalarModel)) {
     if (db->findBlock("turbulentPrandtlNumber"))
       db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+
+    // if it is not set in both places
     if ((d_turbPrNo == 0.0)&&(model_turbPrNo == 0.0))
 	  throw InvalidValue("Turbulent Prandtl number is not specified for"
-		             "enthalpy ", __FILE__, __LINE__);
-    if (model_turbPrNo == 0.0)
-      d_turbModel->setTurbulentPrandtlNumber(d_turbPrNo);
+		             "mixture fraction ", __FILE__, __LINE__);
+    // if it is set in turbulence model
+    else if (d_turbPrNo == 0.0)
+      d_turbPrNo = model_turbPrNo;
   }
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
