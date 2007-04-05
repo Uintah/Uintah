@@ -1,3 +1,4 @@
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -287,6 +288,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
 
   //create SFC
+  sfc.SetNumDimensions(dim); //temporarily set the number of dimensions every timestep until the call to get numDims is fixed per bryans changes in r37229
   sfc.SetLocalSize(positions.size()/dim);
   sfc.SetDimensions(r);
   sfc.SetCenter(c);
@@ -1032,6 +1034,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
 
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
+  TAU_PROFILE("DynamicLoadBalancer::possiblyDynamicallyReallocate()", " ", TAU_USER);
 
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;

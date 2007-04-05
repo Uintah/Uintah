@@ -1,3 +1,4 @@
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -21,7 +22,7 @@ using namespace Uintah;
 
 DebugStream rdbg("Regridder", false);
 DebugStream dilate_dbg("Regridder_dilate", false);
-
+extern DebugStream dbg_barrier;
 
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
@@ -72,6 +73,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
 
 bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
+  TAU_PROFILE("RegridderCommon::needsToReGrid()", " ", TAU_USER);
   rdbg << "RegridderCommon::needsToReGrid() BGN" << endl;
 
   int timeStepsSinceRegrid=d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
@@ -162,6 +164,11 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   }
 
+  if(dbg_barrier.active())
+  {
+    MPI_Barrier(d_myworld->getComm());
+  }
+    
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
   return retval;
 }

@@ -44,6 +44,7 @@
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
+extern DebugStream dbg_barrier;
 
 #ifdef _WIN32
 #define SCISHARE __declspec(dllimport)
@@ -739,12 +740,12 @@ void SchedulerCommon::doEmitTaskGraphDocs()
 
 void SchedulerCommon::compile()
 {
+  TAU_PROFILE("SchedulerCommon::compile()", " ", TAU_USER); 
   GridP grid = const_cast<Grid*>(getLastDW()->getGrid());
   GridP oldGrid;
   if (dws[0])
     oldGrid = const_cast<Grid*>(get_dw(0)->getGrid());
   if(numTasks_ > 0){
-    TAU_PROFILE("SchedulerCommon::compile()", " ", TAU_USER); 
 
     dbg << d_myworld->myrank() << " SchedulerCommon starting compile\n";
     
@@ -790,6 +791,11 @@ void SchedulerCommon::compile()
   }
 #endif
   m_locallyComputedPatchVarMap->makeGroups();
+
+  if(dbg_barrier.active())
+  {
+    MPI_Barrier(d_myworld->getComm());
+  }
 }
 
 bool SchedulerCommon::isOldDW(int idx) const
