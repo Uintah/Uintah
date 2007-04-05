@@ -45,6 +45,7 @@ using namespace Uintah;
 
 DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
+extern DebugStream dbg_barrier;
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
@@ -535,6 +536,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 //______________________________________________________________________
 bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimestep)
 {
+  TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep());
@@ -586,7 +588,15 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
         cout << ", scheduling and copying took " << scheduleTime << ")";
       cout << endl;
     }
+    if(dbg_barrier.active())
+    {
+      MPI_Barrier(d_myworld->getComm());
+    }
     return true;
+  }
+  if(dbg_barrier.active())
+  {
+    MPI_Barrier(d_myworld->getComm());
   }
   return false;
 }
@@ -674,6 +684,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
 //______________________________________________________________________
 void AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
+  TAU_PROFILE("AMRSimulationController::executeTimestep()"," ", TAU_USER);
   // If the timestep needs to be
   // restarted, this loop will execute multiple times.
   bool success = true;
@@ -741,6 +752,10 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
     }
   } while(!success);
 
+  if(dbg_barrier.active())
+  {
+    MPI_Barrier(d_myworld->getComm());
+  }
 }
 
 void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,
