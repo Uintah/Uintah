@@ -54,14 +54,14 @@ class LoadBalancer;
    };
 
    // store these in separate arrays so we don't have to store nearly as many of them
-   struct VarInfo {
+   struct VarData {
      string type;
      string compression;
      IntVector boundaryLayer;
    };
 
-   struct PatchInfo {
-     PatchInfo() : parsed(false), proc(-1) {}
+   struct PatchData {
+     PatchData() : parsed(false), proc(-1) {}
      bool parsed;
      int proc;
      string datafilename;
@@ -109,7 +109,7 @@ private:
   public:    
     TimeData(DataArchive* da, ProblemSpecP timestepDoc, string timestepURL);
     ~TimeData();
-    VarInfo& findVariableInfo(const string& name, const Patch* patch, int matl);
+    VarData& findVariableInfo(const string& name, const Patch* patch, int matl);
 
     // reads timestep.xml and prepares the data xml files to be read
     void init();
@@ -133,13 +133,13 @@ private:
     // Gets expanded and proc is set during queryGrid.  Other fields are set
     // when parsed
     // Organized in a contiguous array, by patch-level-index
-    vector<vector<PatchInfo> > d_patchInfo; 
+    vector<vector<PatchData> > d_patchInfo; 
 
     // Wheter a material is active per level
     vector<vector<bool> > d_matlInfo;
 
     // var info - type, compression, and boundary layer
-    map<string, VarInfo> d_varInfo; 
+    map<string, VarData> d_varInfo; 
 
     // xml urls referred to in timestep.xml
     vector<vector<string> > d_xmlUrls;

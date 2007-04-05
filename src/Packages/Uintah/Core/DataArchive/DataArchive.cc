@@ -250,7 +250,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
       LevelP level = grid->addLevel(anchor, dcell, id);
       level->setExtraCells(extraCells);
       levelIndex++;
-      timedata.d_patchInfo.push_back(vector<PatchInfo>());
+      timedata.d_patchInfo.push_back(vector<PatchData>());
       timedata.d_matlInfo.push_back(vector<bool>());
 
       int numPatches = -1234;
@@ -291,7 +291,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
                                 __FILE__, __LINE__);
           Patch* patch = level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
           ASSERTEQ(patch->totalCells(), totalCells);
-          PatchInfo pi;
+          PatchData pi;
           r->get("proc", pi.proc); // defaults to -1 if not available
           timedata.d_patchInfo[levelIndex].push_back(pi);
         } else if(r->getNodeName() == "anchor"
@@ -435,11 +435,11 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   timedata.parsePatch(patch);
   d_lock.unlock();  
 
-  VarInfo& varinfo = timedata.d_varInfo[name];
+  VarData& varinfo = timedata.d_varInfo[name];
   string dataurl;
   int patchid;
   if (patch) {
-    PatchInfo& patchinfo = timedata.d_patchInfo[patch->getLevel()->getIndex()][patch->getLevelIndex()];
+    PatchData& patchinfo = timedata.d_patchInfo[patch->getLevel()->getIndex()][patch->getLevelIndex()];
     ASSERT(patchinfo.parsed);
     patchid = patch->getRealPatch()->getID();
 
@@ -624,7 +624,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
     }
   }
 
-  // iterate through all entries in the VarInfo hash table, and loading the 
+  // iterate through all entries in the VarData hash table, and loading the 
   // variables if that data belongs on this processor
   VarHashMapIterator iter(&timedata.d_datafileInfo);
   iter.first();
@@ -914,7 +914,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       vnode->get("numParticles", numParticles);
 
       if (d_varInfo.find(varname) == d_varInfo.end()) {
-        VarInfo& varinfo = d_varInfo[varname];
+        VarData& varinfo = d_varInfo[varname];
         varinfo.type = type;
         varinfo.compression = compressionMode;
         varinfo.boundaryLayer = boundary;
@@ -925,7 +925,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       }
       else {
         ASSERTRANGE(patchid-basePatch, 0, d_patchInfo[levelNum].size());
-        PatchInfo& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
+        PatchData& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
         if (!patchinfo.parsed) {
           patchinfo.parsed = true;
           patchinfo.datafilename = filename;
@@ -961,7 +961,7 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
   int levelBasePatchID = patch->getLevel()->getPatch(0)->getID();
   int patchIndex = patch->getLevelIndex();
 
-  PatchInfo& patchinfo = d_patchInfo[levelIndex][patchIndex];
+  PatchData& patchinfo = d_patchInfo[levelIndex][patchIndex];
   if (d_allParsed || patchinfo.parsed)
     return;
 
