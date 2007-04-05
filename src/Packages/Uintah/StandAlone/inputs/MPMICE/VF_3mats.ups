@@ -11,7 +11,7 @@
         <delt_min>    1.e-9   </delt_min>
         <delt_max>    1.e-1   </delt_max>
         <delt_init>   1.e-8   </delt_init>
-        <max_iterations> 1    </max_iterations>
+<!--        <max_iterations> 1    </max_iterations> -->
         <max_delt_increase>  1.0 </max_delt_increase>
         <timestep_multiplier>0.5 </timestep_multiplier>
    </Time>
@@ -183,7 +183,7 @@
               <difference>
                <box label = "surrounding">
                     <min>           [-0.01,-.01,-.01]    </min>
-                    <max>           [ .03, .03, .01]    </max>
+                    <max>           [ .03, .06, .01]    </max>
                </box>
                <union>
                 <tri label="leftmaterial1.0" > </tri>
@@ -228,7 +228,10 @@
           <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
           </BCType>
-        </Face>
+          <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+	                      <value> 0.0  </value>
+          </BCType>
+	</Face>
         <Face side = "x+">
           <BCType id = "0" var = "Neumann" label = "Pressure">
                               <value> 0.0   </value>
@@ -242,33 +245,25 @@
           <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
           </BCType>
-        </Face>
-        <Face circle = "y-" origin = "0.01 0.0 0.0" radius = ".01">
-          <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 102125.0   </value> <!-- setting p=Pressure_atm(Pa) + 800Pa at Inlet -->
-          </BCType>
-          <BCType id = "2" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-          </BCType>
-          <BCType id = "2" label = "Temperature"  var = "Dirichlet">
-                              <value> 300.0  </value>
-          </BCType>
-          <BCType id = "2" label = "Density"      var = "Dirichlet">
-                              <value>  1.1792946927374306  </value>
+          <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
           </BCType>
         </Face>
         <Face side = "y-">
-          <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value> <!-- setting p=Pressure_atm(Pa) + 800Pa at Inlet -->
+          <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 102125.0   </value> <!-- setting p=Pressure_atm(Pa) + 800Pa at Inlet -->
           </BCType>
-          <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+          <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
           </BCType>
-          <BCType id = "all" label = "Temperature"  var = "Dirichlet">
-                              <value> 300.0  </value>
+          <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
           </BCType>
           <BCType id = "all" label = "Density"      var = "Neumann">
                               <value>  0.0  </value>
+          </BCType>
+          <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                               <value> 0.0  </value>
           </BCType>
         </Face>
         <Face side = "y+">
@@ -282,6 +277,9 @@
                               <value> 0.0  </value>
           </BCType>
           <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+          </BCType>
+          <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
           </BCType>
         </Face>
