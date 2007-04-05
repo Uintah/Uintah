@@ -127,14 +127,19 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   if (!(d_dynScalarModel)) {
     if (db->findBlock("turbulentPrandtlNumber"))
       db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
+
+    // if it is not set in both places
     if ((d_turbPrNo == 0.0)&&(model_turbPrNo == 0.0))
 	  throw InvalidValue("Turbulent Prandtl number is not specified for"
 		             "mixture fraction ", __FILE__, __LINE__);
-    if (model_turbPrNo == 0.0)
-      d_turbModel->setTurbulentPrandtlNumber(d_turbPrNo);
-    // the following reset is only needed for mixture fraction
-    else if ((!(model_turbPrNo == d_turbPrNo))&&(!(d_turbPrNo == 0.0))) {
-      cout << "overriding turbulent Prandtl number for mixture fraction with "
+    // if it is set in turbulence model
+    else if (d_turbPrNo == 0.0)
+      d_turbPrNo = model_turbPrNo;
+
+    // if it is set here or set in both places, 
+    // we only need to set mixture fraction Pr number in turbulence model
+    if (!(model_turbPrNo == d_turbPrNo)) {
+      cout << "Turbulent Prandtl number for mixture fraction is set to "
       << d_turbPrNo << endl;
       d_turbModel->setTurbulentPrandtlNumber(d_turbPrNo);
     }
