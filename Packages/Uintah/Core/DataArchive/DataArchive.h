@@ -43,33 +43,6 @@ class VarLabel;
 class DataWarehouse;
 class LoadBalancer;
 
-   // what we need to store on a per-variable basis
-   // everything else can be retrieved from a higher level
-   struct DataFileInfo {
-     DataFileInfo(long s, long e, long np) : start(s), end(e), numParticles(np) {}
-     DataFileInfo() {}
-     long start;
-     long end;
-     int numParticles;
-   };
-
-   // store these in separate arrays so we don't have to store nearly as many of them
-   struct VarData {
-     string type;
-     string compression;
-     IntVector boundaryLayer;
-   };
-
-   struct PatchData {
-     PatchData() : parsed(false), proc(-1) {}
-     bool parsed;
-     int proc;
-     string datafilename;
-   };
-
-   typedef HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
-   typedef HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
-
    /**************************************
      
      CLASS
@@ -102,6 +75,33 @@ class LoadBalancer;
 //! Container to hold UCF data when read in from disk.
 class SCISHARE DataArchive {
 private:
+
+   // what we need to store on a per-variable basis
+   // everything else can be retrieved from a higher level
+   struct DataFileInfo {
+     DataFileInfo(long s, long e, long np) : start(s), end(e), numParticles(np) {}
+     DataFileInfo() {}
+     long start;
+     long end;
+     int numParticles;
+   };
+
+   // store these in separate arrays so we don't have to store nearly as many of them
+   struct VarData {
+     string type;
+     string compression;
+     IntVector boundaryLayer;
+   };
+
+   struct PatchData {
+     PatchData() : parsed(false), proc(-1) {}
+     bool parsed;
+     int proc;
+     string datafilename;
+   };
+
+   typedef HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+   typedef HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
   //! Top of DataArchive structure for storing hash maps of variable data
   //! - containing data for each time step.
