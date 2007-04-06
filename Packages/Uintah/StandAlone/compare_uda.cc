@@ -1479,13 +1479,13 @@ main(int argc, char** argv)
 	      iter != level->patchesEnd(); iter++) {
 	    const Patch* patch = *iter;
  
-	    ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, time1);
+	    ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, t);
 
 	    FieldComparator* comparator =
 	      FieldComparator::makeFieldComparator(td, subtype, patch);
 	    if (comparator != 0) {
 	      comparator->compareFields(da1, da2, var, matls, patch,
-					patch2Map, time1, time2,
+					patch2Map, time1, t,
 					abs_tolerance, rel_tolerance);
 	      delete comparator;
 	    }

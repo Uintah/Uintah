@@ -149,7 +149,6 @@ private:
 
     ConsecutiveRangeSet matls;  // materials available this timestep
 
-    bool d_allParsed;           // True if all patches have been parsed
     GridP d_grid;               // store the grid...
     bool d_initialized;         // Flagged once this patch's init is called
     ProblemSpecP d_tstop;       // ProblemSpecP of timestep.xml
