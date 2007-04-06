@@ -288,7 +288,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
 
   //create SFC
-  sfc.SetNumDimensions(dim); //temporarily set the number of dimensions every timestep until the call to get numDims is fixed per bryans changes in r37229
   sfc.SetLocalSize(positions.size()/dim);
   sfc.SetDimensions(r);
   sfc.SetCenter(c);
