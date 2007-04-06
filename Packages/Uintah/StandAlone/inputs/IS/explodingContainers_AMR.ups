@@ -83,8 +83,10 @@
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
       <save label="refineFlag" />
-      
-      <save label="g.mass"        levels="-1"/>
+
+      <save label="totalMassBurned"/>
+      <save label="totalHeatReleased"/>
+
       <save label="p.x"           levels="-1"/>
       <save label="p.temperature" levels="-1"/>
       <save label="p.particleID"  levels="-1"/>
