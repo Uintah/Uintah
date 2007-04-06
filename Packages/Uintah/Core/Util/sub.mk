@@ -10,7 +10,8 @@ SRCS     += \
 
 PSELIBS := \
 	Core/Thread \
-	Core/Exceptions
+	Core/Util \
+	Core/Exceptions 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
