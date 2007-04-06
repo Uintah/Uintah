@@ -458,8 +458,7 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
                 pExternalHeatFlux[idx] = phf->getFlux(px[idx], fluxPerPart);
               if (bcs_type == "ArchesHeatFlux") {
                 pExternalHeatFlux[idx] = pahf->getFlux(px[idx], fluxPerPart);
-                cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx] 
-                     << endl;
+                //   cout << "pExternalHeatFlux[idx] = " << pExternalHeatFlux[idx]         << endl;
               }
             }
           }

@@ -159,7 +159,8 @@ ArchesHeatFluxBC::fluxPerParticle(double time) const
 
   // Get the initial heatflux that is applied ( t = 0.0 )
   double heatflx = heatflux(time);
-  //  cout << "heatflx = " << heatflx << endl;
+  cout << "heatflx = " << heatflx << endl;
+  cout << "area = " << area << endl;
 
   // Calculate the heatflux per particle
   return (heatflx*area)/static_cast<double>(d_numMaterialPoints);
@@ -179,10 +180,10 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     double length = gp->height();
-    cout << "length = " << length << endl;
+    //cout << "length = " << length << endl;
 
-    double new_flux = d_polyData->interpolateValue(px);
-    cout << "interpolated new_flux = " << new_flux << endl;
+    double new_flux = d_polyData->interpolateValue(px) * getSurfaceArea()/static_cast<double>(d_numMaterialPoints);
+    // cout << "interpolated new_flux = " << new_flux << endl;
 #if 0
     cout << "FLUX PER PARTICLE = " << fluxPerParticle << endl;
 
@@ -200,7 +201,7 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     //    flux = fluxPerParticle;
 #endif
     flux = new_flux;
-    cout << "flux = " << flux << endl;
+    //    cout << "flux = " << flux << endl;
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
