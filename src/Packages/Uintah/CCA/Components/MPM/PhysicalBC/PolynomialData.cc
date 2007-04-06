@@ -29,7 +29,7 @@ PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom,
   d_bottom = bottom;
   d_top = top;
               
-  cout << "number of files read " << d_fileNames.size() << endl;
+  //cout << "number of files read " << d_fileNames.size() << endl;
   loadData();
 
 }
@@ -43,7 +43,7 @@ void PolynomialData::loadData()
 {
 
   for (unsigned int i = 0; i < d_fileNames.size(); i++) {
-    cout << "opening file: " << d_fileNames[i] << endl;
+    // cout << "opening file: " << d_fileNames[i] << endl;
 
     ifstream polyFile(d_fileNames[i].c_str());
     if (!polyFile) {
@@ -69,7 +69,7 @@ void PolynomialData::loadData()
     polyFile >> data >> data >> data;
 
     while (polyFile >> data) {
-      cout << "data = " << data << endl;
+      //cout << "data = " << data << endl;
       dataList.push_back(data);
     }
     d_polyData.push_back(dataList);
@@ -166,7 +166,7 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   double minValue = interpolateRadial(min,theta);
   double maxValue = interpolateRadial(max,theta);
 
-  cout << "minValue = " << minValue << " maxValue = " << maxValue << endl;
+  //  cout << "minValue = " << minValue << " maxValue = " << maxValue << endl;
   if (minValue < 0. || maxValue < 0.)
     cout << "WARNING values less than 0" << endl;
 

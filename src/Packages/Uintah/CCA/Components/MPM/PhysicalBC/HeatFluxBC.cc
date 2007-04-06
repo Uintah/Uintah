@@ -169,7 +169,6 @@ HeatFluxBC::fluxPerParticle(double time) const
 
   // Get the initial heatflux that is applied ( t = 0.0 )
   double heatflx = heatflux(time);
-  //  cout << "heatflx = " << heatflx << endl;
 
   // Calculate the heatflux per particle
   return (heatflx*area)/static_cast<double>(d_numMaterialPoints);
@@ -195,9 +194,11 @@ HeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     double flux_variation_mag = fluxPerParticle*max_min/2.;
     double offset = fluxPerParticle - flux_variation_mag;
     double flux_variation = flux_variation_mag*cos(theta) + offset;
+#if 0
     cout << "theta = " << theta << " theta_n = " << theta_n << endl;
     cout << "flux = " << fluxPerParticle  << " flux_variation = " 
          << flux_variation <<  endl;
+#endif
 
     flux = fluxPerParticle;
   } else if (d_surfaceType == "sphere") {
