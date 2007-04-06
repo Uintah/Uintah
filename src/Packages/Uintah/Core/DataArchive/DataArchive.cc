@@ -730,7 +730,7 @@ DataArchive::setTimestepCacheSize(int new_size) {
 }
 
 DataArchive::TimeData::TimeData(DataArchive* da, ProblemSpecP timestepDoc, string timestepURL) :
-  da(da), d_tstop(timestepDoc), d_tsurl(timestepURL), d_allParsed(false), d_initialized(false)
+  da(da), d_tstop(timestepDoc), d_tsurl(timestepURL), d_initialized(false)
 {
   d_tsurldir = timestepURL.substr(0, timestepURL.find_last_of('/')+1);
 }
@@ -745,7 +745,6 @@ DataArchive::TimeData::init()
 {
   d_initialized=true;
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
-  d_allParsed = false;
   // grab the data xml files from the timestep xml file
   if (d_tstop == 0) {
     ProblemSpecReader psr(d_tsurl.c_str());
@@ -850,7 +849,6 @@ DataArchive::TimeData::purgeCache()
   d_xmlUrls.clear();
   d_xmlParsed.clear();
   d_initialized = false;
-  d_allParsed = false;
 }
 
 // This is the function that parses the p*****.xml file for a single processor.
@@ -962,7 +960,7 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
   int patchIndex = patch->getLevelIndex();
 
   PatchData& patchinfo = d_patchInfo[levelIndex][patchIndex];
-  if (d_allParsed || patchinfo.parsed)
+  if (patchinfo.parsed)
     return;
 
   //If this is a newer uda, the patch info in the grid will store the processor where the data is
@@ -981,16 +979,14 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
     d_xmlParsed[levelIndex][patchIndex] = true;
   }
 
+  // failed the guess - parse the entire dataset for this level
   if (!patchinfo.parsed) {
-    // failed the guess - parse the entire dataset
-    for (unsigned level = 0; level < d_xmlUrls.size(); level++) {
-      for (unsigned proc = 0; proc < d_xmlUrls[level].size(); proc++) {
-        parseFile(d_xmlUrls[level][proc], levelIndex, levelBasePatchID);
-        d_xmlParsed[level][proc] = true;
-      }
+    for (unsigned proc = 0; proc < d_xmlUrls[levelIndex].size(); proc++) {
+      parseFile(d_xmlUrls[levelIndex][proc], levelIndex, levelBasePatchID);
+      d_xmlParsed[levelIndex][proc] = true;
     }
-    d_allParsed = true;
   }
+
 }
 
 

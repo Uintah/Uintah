@@ -108,10 +108,6 @@ namespace Uintah {
     sched->problemSetup(d_ups, d_sharedState);
     d_scheduler = sched;
     
-    d_lb = sched->getLoadBalancer();
-    d_lb->problemSetup(d_ups, d_sharedState);
-    
-
     if( !d_output ){
       cout << "dynamic_cast of 'd_output' failed!\n";
       throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
@@ -220,6 +216,12 @@ namespace Uintah {
 
   void SimulationController::postGridSetup( GridP& grid, double& t)
   {
+    // initialize load balancer.  Do here since we have the dimensionality in the shared state,
+    // and we want that at initialization time.
+    d_lb = d_scheduler->getLoadBalancer();
+    d_lb->problemSetup(d_ups, d_sharedState);
+    
+
     // Initialize the CFD and/or MPM components
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if(!d_sim)
