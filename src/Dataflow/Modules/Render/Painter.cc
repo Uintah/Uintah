@@ -196,14 +196,15 @@ Painter::for_each(WindowLayout &layout, NrrdSliceFunc func) {
 int
 Painter::for_each(WindowLayout &layout, SliceWindowFunc func)
 {
-  int value = 0;
-  for (unsigned int window = 0; 
-       window < layout.windows_.size(); ++window)
-    {
-      ASSERT(layout.windows_[window]);
-      value += (this->*func)(*layout.windows_[window]);
-    }
-  return value;
+   int value = 0;
+   for (unsigned int window = 0; window < layout.windows_.size(); ++window)
+     {
+       ASSERT(layout.windows_[window]);
+       SliceWindow sw = *layout.windows_[window];
+       int val = (this->*func)(sw);
+       value += val;
+     }
+   return value;
 }
 
 template <class T>
@@ -2425,8 +2426,9 @@ Painter::tcl_command(GuiArgs& args, void* userdata) {
   } else if(args[1] == "resize") {
     //    ASSERT(layouts_.find(args[2]) != layouts_.end());
     //    for_each(*layouts_[args[2]], &Painter::autoview);
-  } else
+  } else {
     Module::tcl_command(args, userdata);
+  }
 }
 
 
