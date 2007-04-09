@@ -60,6 +60,10 @@ private:
   GuiInt    gui_includeExtraCells_x;
   GuiInt    gui_includeExtraCells_y;  
   GuiInt    gui_includeExtraCells_z;
+
+  GuiDouble gui_A_;
+  GuiDouble gui_viscosity_;
+  GuiDouble gui_p_ref_;
 private:
 
 };
@@ -74,7 +78,11 @@ CompareMMS::CompareMMS(GuiContext* ctx) :
   
   gui_includeExtraCells_x(ctx->subVar("extraCells_x", false)),
   gui_includeExtraCells_y(ctx->subVar("extraCells_y", false)),
-  gui_includeExtraCells_z(ctx->subVar("extraCells_z", false))
+  gui_includeExtraCells_z(ctx->subVar("extraCells_z", false)),
+
+  gui_A_(ctx->subVar("amplitude", false)),
+  gui_viscosity_(ctx->subVar("viscosity", false)),
+  gui_p_ref_(ctx->subVar("p_ref", false ))
 {
 }
 
@@ -181,7 +189,10 @@ CompareMMS::execute()
                                     field_name, field_time,
                                     gui_output_choice_.get(),
                                     includeExtraCells,
-                                    gui_field_time_.get());
+                                    gui_field_time_.get(),
+                                    gui_A_.get(),
+                                    gui_viscosity_.get(),
+                                    gui_p_ref_.get());
       
 
 

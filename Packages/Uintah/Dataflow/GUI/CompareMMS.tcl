@@ -14,13 +14,19 @@ itcl_class Uintah_Operators_CompareMMS {
         global $this-extraCells_x
         global $this-extraCells_y
         global $this-extraCells_z
-        
+        global $this-amplitude
+        global $this-viscosity
+        global $this-p_ref
+
         set $this-field_name "---"
         set $this-field_time "---"
         set $this-output_choice 2
         set $this-extraCells_x 0
         set $this-extraCells_y 0
         set $this-extraCells_z 0
+        set $this-amplitude 1.0
+        set $this-viscosity 2.0e-5
+        set $this-p_ref 101325.0
     }
 
     method ui {} {
@@ -61,6 +67,26 @@ itcl_class Uintah_Operators_CompareMMS {
 
         pack $w.f1.field_name $w.f1.field_time -padx 10
         pack $w.output_choice -padx 10
+
+        frame $w.v -borderwidth 2 -relief groove
+        frame $w.v.e1 -borderwidth 2 -relief flat
+        frame $w.v.e2 -borderwidth 2 -relief flat
+        frame $w.v.e3 -borderwidth 2 -relief flat
+        pack $w.v.e1 $w.v.e2 $w.v.e3 -side top
+
+        label $w.v.e1.l -text "Amplitude:  "
+        entry $w.v.e1.e -textvariable $this-amplitude
+        pack $w.v.e1.l $w.v.e1.e -side left
+
+        label $w.v.e2.l -text "Viscosity:  "
+        entry $w.v.e2.e -textvariable $this-viscosity
+        pack $w.v.e2.l $w.v.e2.e -side left
+
+        label $w.v.e3.l -text "Pressure Reference:  "
+        entry $w.v.e3.e -textvariable $this-p_ref
+        pack $w.v.e3.l $w.v.e3.e -side left
+
+        pack $w.v -side top
 
         # add frame for SCI Button Panel
         frame $w.control -relief flat
