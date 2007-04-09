@@ -127,7 +127,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_inletBoundary = true;
     for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
          inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
-      d_flowInlets.push_back(scinew FlowInlet(total_cellTypes));
+      d_flowInlets.push_back(scinew FlowInlet(total_cellTypes, d_calcVariance,
+                                              d_reactingScalarSolve));
       d_flowInlets[d_numInlets]->problemSetup(inlet_db);
       // compute density and other dependent properties
       d_flowInlets[d_numInlets]->streamMixturefraction.d_initEnthalpy=true;
@@ -157,7 +158,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   
   if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
     d_pressureBoundary = true;
-    d_pressureBC = scinew PressureInlet(total_cellTypes);
+    d_pressureBC = scinew PressureInlet(total_cellTypes, d_calcVariance,
+                                        d_reactingScalarSolve);
     d_pressureBC->problemSetup(press_db);
     // compute density and other dependent properties
     d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
@@ -174,7 +176,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   
   if (ProblemSpecP outlet_db = db->findBlock("OutletBC")) {
     d_outletBoundary = true;
-    d_outletBC = scinew FlowOutlet(total_cellTypes);
+    d_outletBC = scinew FlowOutlet(total_cellTypes, d_calcVariance,
+                                   d_reactingScalarSolve);
     d_outletBC->problemSetup(outlet_db);
     // compute density and other dependent properties
     d_outletBC->streamMixturefraction.d_initEnthalpy=true;
@@ -980,6 +983,11 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 	  fort_profscalar(idxLo, idxHi, scalar, cellType,
 			  scalarValue, d_flowInlets[ii]->d_cellTypeID,
 			  xminus, xplus, yminus, yplus, zminus, zplus);
+	  double reactScalarValue = 
+		 d_flowInlets[ii]->streamMixturefraction.d_rxnVars[0];
+	  fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+			  reactScalarValue, d_flowInlets[ii]->d_cellTypeID,
+			  xminus, xplus, yminus, yplus, zminus, zplus);
 	}
       }
       if (d_pressureBoundary) {
@@ -988,12 +996,22 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 	fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
 			d_pressureBC->d_cellTypeID,
 			xminus, xplus, yminus, yplus, zminus, zplus);
+	double reactScalarValue = 
+	       d_pressureBC->streamMixturefraction.d_rxnVars[0];
+	fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+			reactScalarValue, d_pressureBC->d_cellTypeID,
+			xminus, xplus, yminus, yplus, zminus, zplus);
       }
       if (d_outletBoundary) {
 	double scalarValue = 
 	       d_outletBC->streamMixturefraction.d_mixVars[0];
 	fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
 			d_outletBC->d_cellTypeID,
+			xminus, xplus, yminus, yplus, zminus, zplus);
+	double reactScalarValue = 
+	       d_outletBC->streamMixturefraction.d_rxnVars[0];
+	fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+			reactScalarValue, d_outletBC->d_cellTypeID,
 			xminus, xplus, yminus, yplus, zminus, zplus);
     }
     uVelRhoHat.copyData(uVelocity); 
@@ -1898,8 +1916,10 @@ BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
 //****************************************************************************
 // constructor for BoundaryCondition::FlowInlet
 //****************************************************************************
-BoundaryCondition::FlowInlet::FlowInlet(int cellID):
-  d_cellTypeID(cellID)
+BoundaryCondition::FlowInlet::FlowInlet(int cellID, bool calcVariance,
+                                        bool reactingScalarSolve):
+  d_cellTypeID(cellID), d_calcVariance(calcVariance), 
+  d_reactingScalarSolve(reactingScalarSolve)
 {
   flowRate = 0.0;
   inletVel = 0.0;
@@ -1913,7 +1933,8 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID):
 }
 
 BoundaryCondition::FlowInlet::FlowInlet():
-  d_cellTypeID(0), d_area_label(0), d_flowRate_label(0)
+  d_cellTypeID(0), d_calcVariance(0), d_reactingScalarSolve(0),
+  d_area_label(0), d_flowRate_label(0)
 {
   flowRate = 0.0;
   inletVel = 0.0;
@@ -1923,6 +1944,8 @@ BoundaryCondition::FlowInlet::FlowInlet():
 
 BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   d_cellTypeID (copy.d_cellTypeID),
+  d_calcVariance (copy.d_calcVariance),
+  d_reactingScalarSolve (copy.d_reactingScalarSolve),
   flowRate(copy.flowRate),
   inletVel(copy.inletVel),
   fcr(copy.fcr),
@@ -1951,6 +1974,8 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   d_flowRate_label->addReference();
 
   d_cellTypeID = copy.d_cellTypeID;
+  d_calcVariance = copy.d_calcVariance;
+  d_reactingScalarSolve = copy.d_reactingScalarSolve;
   flowRate = copy.flowRate;
   inletVel = copy.inletVel;
   fcr = copy.fcr;
@@ -2005,7 +2030,13 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   double mixfrac;
   params->require("mixture_fraction", mixfrac);
   streamMixturefraction.d_mixVars.push_back(mixfrac);
-  streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  if (d_calcVariance)
+    streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  double reactscalar;
+  if (d_reactingScalarSolve) {
+    params->require("reacting_scalar", reactscalar);
+    streamMixturefraction.d_rxnVars.push_back(reactscalar);
+  }
  
 }
 
@@ -2013,8 +2044,10 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 //****************************************************************************
 // constructor for BoundaryCondition::PressureInlet
 //****************************************************************************
-BoundaryCondition::PressureInlet::PressureInlet(int cellID):
-  d_cellTypeID(cellID)
+BoundaryCondition::PressureInlet::PressureInlet(int cellID, bool calcVariance,
+                                                bool reactingScalarSolve):
+  d_cellTypeID(cellID), d_calcVariance(calcVariance),
+  d_reactingScalarSolve(reactingScalarSolve)
 {
 }
 
@@ -2043,14 +2076,22 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
   double mixfrac;
   params->require("mixture_fraction", mixfrac);
   streamMixturefraction.d_mixVars.push_back(mixfrac);
-  streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  if (d_calcVariance)
+    streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  double reactscalar;
+  if (d_reactingScalarSolve) {
+    params->require("reacting_scalar", reactscalar);
+    streamMixturefraction.d_rxnVars.push_back(reactscalar);
+  }
 }
 
 //****************************************************************************
 // constructor for BoundaryCondition::FlowOutlet
 //****************************************************************************
-BoundaryCondition::FlowOutlet::FlowOutlet(int cellID):
-  d_cellTypeID(cellID)
+BoundaryCondition::FlowOutlet::FlowOutlet(int cellID, bool calcVariance,
+                                          bool reactingScalarSolve):
+  d_cellTypeID(cellID), d_calcVariance(calcVariance),
+  d_reactingScalarSolve(reactingScalarSolve)
 {
 }
 
@@ -2079,7 +2120,13 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
   double mixfrac;
   params->require("mixture_fraction", mixfrac);
   streamMixturefraction.d_mixVars.push_back(mixfrac);
-  streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  if (d_calcVariance)
+    streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  double reactscalar;
+  if (d_reactingScalarSolve) {
+    params->require("reacting_scalar", reactscalar);
+    streamMixturefraction.d_rxnVars.push_back(reactscalar);
+  }
 }
 
 void

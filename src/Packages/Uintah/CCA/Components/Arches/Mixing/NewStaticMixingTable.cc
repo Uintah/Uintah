@@ -46,9 +46,9 @@ NewStaticMixingTable::~NewStaticMixingTable()
 void 
 NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
 {
-  if (d_calcReactingScalar) 
+  /*if (d_calcReactingScalar) 
     throw InvalidValue("Reacting scalar is unsupported parameter",
-                         __FILE__, __LINE__);
+                         __FILE__, __LINE__);*/
   std::string d_inputfile;
   ProblemSpecP db = params->findBlock("NewStaticMixingTable");
 

@@ -16,6 +16,7 @@ Stream::Stream()
   d_CO2index = 0;
   d_H2Oindex = 0;
   d_speciesConcn = vector<double>(0); // initialize with 0
+  d_rxnVarRates = vector<double>(1, 0.0); // initialize with 0
   d_pressure = 0.0;
   d_density = 0.0;
   d_temperature = 0.0;
