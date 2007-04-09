@@ -665,8 +665,8 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
       //convert to coarsened coordinates
         //multiply by refinement ratio to convert back to fine levels cell coordinates
         //divide by minimum patch size to coarsen
-      int_low=int_low*d_cellRefinementRatio[l]/d_minPatchSize[l+1];
-      int_high=Ceil(int_high*d_cellRefinementRatio[l].asVector()/d_minPatchSize[l+1].asVector());
+      int_low=int_low*d_cellRefinementRatio[l-1]/d_minPatchSize[l];
+      int_high=Ceil(int_high*d_cellRefinementRatio[l-1].asVector()/d_minPatchSize[l].asVector());
       //for overlapping cells
       for (CellIterator iter(int_low, int_high); !iter.done(); iter++)
       {
