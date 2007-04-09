@@ -179,8 +179,7 @@ public:
   void restartInitialize(int timestep, const GridP& grid, DataWarehouse* dw,
                          LoadBalancer* lb, double* pTime /* passed back */);
 
-  inline ProblemSpecP getRestartTimestepDoc() { return d_restartTimestepDoc; }
-  inline string getRestartTimestepURL() { return d_restartTimestepURL; }
+  inline ProblemSpecP getTimestepDoc(int index) { return getTimeData(index).d_tstop; }
 
   static void queryEndiannessAndBits(ProblemSpecP, std::string& endianness, int& numBits);  
 
