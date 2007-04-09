@@ -682,10 +682,12 @@ private:
       public:
 	FlowInlet();
 	FlowInlet(const FlowInlet& copy);
-	FlowInlet(int cellID);
+	FlowInlet(int cellID, bool calcVariance, bool reactingScalarSolve);
 	~FlowInlet();
 	FlowInlet& operator=(const FlowInlet& copy);
 	int d_cellTypeID;          // define enum for cell type
+        bool d_calcVariance;
+        bool d_reactingScalarSolve;
 	// inputs
 	double flowRate;           
 	double inletVel;           
@@ -706,12 +708,14 @@ private:
       // PressureInlet
       struct PressureInlet {
 	int d_cellTypeID;
+        bool d_calcVariance;
+        bool d_reactingScalarSolve;
 	InletStream streamMixturefraction;
 	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPieceP> d_geomPiece;
-	PressureInlet(int cellID);
+	PressureInlet(int cellID, bool calcVariance, bool reactingScalarSolve);
 	~PressureInlet() {}
 	void problemSetup(ProblemSpecP& params);
       };
@@ -720,12 +724,14 @@ private:
       // FlowOutlet
       struct FlowOutlet {
 	int d_cellTypeID;
+        bool d_calcVariance;
+        bool d_reactingScalarSolve;
 	InletStream streamMixturefraction;
 	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPieceP> d_geomPiece;
-	FlowOutlet(int cellID);
+	FlowOutlet(int cellID, bool calcVariance, bool reactingScalarSolve);
 	~FlowOutlet() {}
 	void problemSetup(ProblemSpecP& params);
       };
