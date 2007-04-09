@@ -230,19 +230,27 @@ namespace Uintah {
     ProblemSpecP materials_ps = 0;
 
     if (d_restarting) {
-      // do these before calling sim->problemSetup, to get the timestep.xml...
+      // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
+      materials_ps = d_archive->getTimestepDoc(d_restartIndex);
+    }
+
+    // Pass the materials_ps to the problemSetup.  For restarting, 
+    // pull the <MaterialProperties> from the material_ps.  If it is not
+    // available, then we will pull the properties from the d_ups instead.
+    // Needs to be done before DataArchive::restartInitialize
+    d_sim->problemSetup(d_ups, materials_ps, grid, d_sharedState);
+    
+
+    if (d_restarting) {
+      d_sim->readFromTimestepXML(materials_ps);
       simdbg << "Restarting... loading data\n";    
       d_archive->restartInitialize(d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t);
       
-      const ProblemSpecP spec = d_archive->getRestartTimestepDoc();
-      d_sim->readFromTimestepXML(spec);
-
-      materials_ps = spec;
 
       // set prevDelt to what it was in the last simulation.  If in the last 
       // sim we were clamping delt based on the values of prevDelt, then
       // delt will be off if it doesn't match.
-      ProblemSpecP timeSpec = spec->findBlock("Time");
+      ProblemSpecP timeSpec = materials_ps->findBlock("Time");
       if (timeSpec) {
         d_sharedState->d_prev_delt = 0.0;
         if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
@@ -274,18 +282,11 @@ namespace Uintah {
         }
       }
       d_scheduler->get_dw(1)->finalize();
-      ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
       
       // don't need it anymore...
       delete d_archive;
     }
 
-    // Pass the materials_ps to the problemSetup.  For restarting, 
-    // pull the <MaterialProperties> from the material_ps.  If it is not
-    // available, then we will pull the properties from the d_ups instead.
-
-    d_sim->problemSetup(d_ups, materials_ps, grid, d_sharedState);
-    
     // Finalize the shared state/materials
     d_sharedState->finalizeMaterials();
     
