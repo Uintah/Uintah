@@ -627,8 +627,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 // Uncomment the next line to check enthalpy transport in adiabatic case
 	    if (d_calcEnthalpy)
 	      enthalpyRXN[currCell] -= enthalpy[currCell];
-	    if (d_calcReactingScalar)
+	    if (d_calcReactingScalar) {
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
+	      enthalpyRXN[currCell] = scalar[currCell] - reactScalar[currCell];
+            }
 	  }
 	  
 
