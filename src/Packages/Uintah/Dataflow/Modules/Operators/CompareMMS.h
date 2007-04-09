@@ -82,7 +82,10 @@ public:
                               const double  field_time,
                               const int output_choice,
                               const IntVector includeExtraCells,
-                              const double time) = 0;
+                              const double time,
+                              const double amplitude,
+                              const double viscosity,
+                              const double p_ref) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const SCIRun::TypeDescription *td);
@@ -103,7 +106,10 @@ public:
                               const double  field_time,
                               const int output_choice,
                               const IntVector includeExtraCells,
-                              const double time);
+                              const double time,
+                              const double amplitude,
+                              const double viscosity,
+                              const double p_ref);
 };
 
 template <class FIELD>
@@ -118,7 +124,10 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
                                 const double  field_time,
                                 const int output_choice,
                                 const IntVector includeExtraCells,
-                                const double time)
+                                const double time,
+                                const double amplitude,
+                                const double viscosity,
+                                const double p_ref)
 {
   // We know that the data is arranged as a LatVolMesh of some type.
   typedef typename FIELD::mesh_type LVMesh;
@@ -152,6 +161,9 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
   lvf->set_property( "varname", string(field_info), true );
 
   MMS * mms = new MMS1();
+  mms->setAmplitude( amplitude );
+  mms->setViscosity( viscosity );
+  mms->setPressureRef( p_ref );
 
   bool showDif = (output_choice == 2);
 
