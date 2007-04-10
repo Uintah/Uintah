@@ -42,10 +42,10 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld,
   TsLabel           = VarLabel::create("UnsteadyBurn.SurfTemp",  CCVariable<double>::getTypeDescription());
   
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
-					    sum_vartype::getTypeDescription() );
+                                            sum_vartype::getTypeDescription() );
   
   totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
-					    sum_vartype::getTypeDescription() );
+                                            sum_vartype::getTypeDescription() );
 }
 
 
@@ -160,10 +160,10 @@ void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, con
 
 //______________________________________________________________________
 void Steady_Burn::initialize(const ProcessorGroup*, 
-			     const PatchSubset* patches, 
-			     const MaterialSubset* /*matls*/, 
-			     DataWarehouse*, 
-			     DataWarehouse* new_dw){
+                             const PatchSubset* patches, 
+                             const MaterialSubset* /*matls*/, 
+                             DataWarehouse*, 
+                             DataWarehouse* new_dw){
   int m0 = matl0->getDWIndex();
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
@@ -261,11 +261,11 @@ void Steady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataWar
  ***************** Private Member Functions:******************************
  */
 void Steady_Burn::computeModelSources(const ProcessorGroup*, 
-				      const PatchSubset* patches,
-				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw,
-				      const ModelInfo* mi){
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* /*matls*/,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const ModelInfo* mi){
   
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
@@ -363,8 +363,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       double MaxMass = d_SMALL_NUM;
       double MinMass = 1.0/d_SMALL_NUM; 
       for (int nN=0; nN<8; nN++){
-	MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]);
-	MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]); 
+        MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]);
+        MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]); 
       }
 
       bool   burning = 0;
@@ -376,58 +376,59 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       
       /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
       if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){ 
-	/* near interface and containing particles */
-	for(int i = -1; i<=1; i++){
-	  for(int j = -1; j<=1; j++){
-	    for(int k = -1; k<=1; k++){
-	      IntVector cell = c + IntVector(i,j,k);
+        /* near interface and containing particles */
+        for(int i = -1; i<=1; i++){
+          for(int j = -1; j<=1; j++){
+            for(int k = -1; k<=1; k++){
+              IntVector cell = c + IntVector(i,j,k);
 
-	      /* Search for Tzero from max_vol_frac reactant cell */
-	      temp_vf = vol_frac_CC[m0][cell]; 
-	      if( temp_vf > maxReactantVolFrac ){
-		maxReactantVolFrac = temp_vf;
-		Tzero = solidTemp[cell];
-	      }//endif
+              /* Search for Tzero from max_vol_frac reactant cell */
+              temp_vf = vol_frac_CC[m0][cell]; 
+              if( temp_vf > maxReactantVolFrac ){
+                maxReactantVolFrac = temp_vf;
+                Tzero = solidTemp[cell];
+              }//endif
 
-	      /* Search for pressure from max_vol_frac product cell */
-	      temp_vf = vol_frac_CC[m1][cell]; 
-	      if( temp_vf > maxProductVolFrac ){
-		maxProductVolFrac = temp_vf;
-		productPress = press_CC[cell];
-	      }//endif
-	      
-	      if(burning == 0 && pFlag[cell] <= BP){
-		for (int m = 0; m < numAllMatls; m++){
-		  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
-		    burning = 1;
-		    break;
-		  }
-		}
-	      }//endif
+              /* Search for pressure from max_vol_frac product cell */
+              temp_vf = vol_frac_CC[m1][cell]; 
+              if( temp_vf > maxProductVolFrac ){
+                maxProductVolFrac = temp_vf;
+                productPress = press_CC[cell];
+              }//endif
+              
+              if(burning == 0 && pFlag[cell] <= BP){
+                for (int m = 0; m < numAllMatls; m++){
+                  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
+                    burning = 1;
+                    break;
+                  }
+                }
+              }//endif
 
-	    }//end 3rd for
-	  }//end 2nd for
-	}//end 1st for
+            }//end 3rd for
+          }//end 2nd for
+        }//end 1st for
       }//endif
       if(burning == 1 && productPress >= ThresholdPressure){
-	BurningCell[c]=1.0;
-	
-	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
-       	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
-	double Tsurf = OldTs[c];
-	double burnedMass = computeBurnedMass(Tzero, Tsurf,  productPress, solidSp_vol[c], 
-					      surfArea, delT, solidMass[c]);
-	NewTs[c] = Tsurf;
-	
-	/* conservation of mass, momentum and energy   */
-	 mass_src_0[c]   -= burnedMass;
-	 mass_src_1[c]   += burnedMass;
-	 totalBurnedMass += burnedMass;
+        BurningCell[c]=1.0;
+        
+        Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
+       
+       double surfArea = computeSurfaceArea(rhoGradVector, dx); 
+        double Tsurf = OldTs[c];
+        double burnedMass = computeBurnedMass(Tzero, Tsurf,  productPress, solidSp_vol[c], 
+                                              surfArea, delT, solidMass[c]);
+        NewTs[c] = Tsurf;
+        
+        /* conservation of mass, momentum and energy   */
+         mass_src_0[c]   -= burnedMass;
+         mass_src_1[c]   += burnedMass;
+         totalBurnedMass += burnedMass;
        
         Vector momX = vel_CC[c] * burnedMass;
         momentum_src_0[c]  -= momX;
         momentum_src_1[c]    += momX;
-	
+        
         double energyX   = Cp*solidTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * (Qc + Qg);
         energy_src_0[c]   -= energyX;
@@ -480,44 +481,44 @@ double Steady_Burn::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
 //______________________________________________________________________
 //
 Vector Steady_Burn::computeDensityGradientVector(IntVector *nodeIdx, 
-						 constNCVariable<double> &NCsolidMass, 
-						 constNCVariable<double> &NC_CCweight, 
-						 Vector &dx){
+                                                 constNCVariable<double> &NCsolidMass, 
+                                                 constNCVariable<double> &NC_CCweight, 
+                                                 Vector &dx){
   double gradRhoX = 0.25 * (
-			    (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-			     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-			     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-			     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-			    -
-			    (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-			     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-			     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-			     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-			    )/dx.x();
+                            (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                             NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                             NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                             NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                            -
+                            (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                             NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                             NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                             NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                            )/dx.x();
 
   double gradRhoY = 0.25 * (
-			    (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-			     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-			     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-			     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-			    -
-			    (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-			     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-			     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-			     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-			    )/dx.y();
+                            (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                             NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                             NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                             NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                            -
+                            (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                             NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                             NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                             NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                            )/dx.y();
 
   double gradRhoZ = 0.25 * (
-			    (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-			     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-			     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-			     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-			    -
-			    (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-			     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-			     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-			     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
-			    )/dx.z();
+                            (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                             NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                             NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                             NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                            -
+                            (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                             NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                             NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                             NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
+                            )/dx.z();
 
   double absGradRho = sqrt(gradRhoX*gradRhoX + gradRhoY*gradRhoY + gradRhoZ*gradRhoZ );
 
@@ -542,7 +543,7 @@ void Steady_Burn::setMPMLabel(MPMLabel* MLB){
 /******************* Bisection Newton Solver ********************************/
 /****************************************************************************/
 double Steady_Burn::computeBurnedMass(double To, double& Ts, double P, double Vc, double surfArea, 
-				      double delT, double solidMass){  
+                                      double delT, double solidMass){  
   UpdateConstants(To, P, Vc);
   Ts = BisectionNewton(Ts);
   double m =  m_Ts(Ts);
@@ -580,7 +581,7 @@ void Steady_Burn::UpdateConstants(double To, double P, double Vc){
 
 
 /***   
- ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))						   
+ ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))                                              
  ***   f_Ts(Ts) = C4 + C5/(sqrt(m^2+C3) + m)^2 
  ***
  ***   Solve for diff(f_Ts(Ts))=0 
@@ -654,13 +655,13 @@ double Steady_Burn::BisectionNewton(double Ts){
     delta_new = 1e100;
     while(1){
       if(iter>100){
-	cout<<"Not converging after 100 iterations in Steady_Burn.cc."<<endl;
-	exit(1);
+        cout<<"Not converging after 100 iterations in Steady_Burn.cc."<<endl;
+        exit(1);
       }
 
       df_dTs = Deri(Ts);
       if(df_dTs==0) 
-	break;
+        break;
 
       delta_old = delta_new;
       delta_new = -y/df_dTs; //Newton Step
@@ -668,10 +669,10 @@ double Steady_Burn::BisectionNewton(double Ts){
       y = Func(Ts);
 
       if(fabs(y)<EPSILON)
-	return Ts;
+        return Ts;
       
       if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
-	break;
+        break;
 
       iter++; 
       SetInterval(y, Ts);  
@@ -683,22 +684,22 @@ double Steady_Burn::BisectionNewton(double Ts){
 
 //______________________________________________________________________
 void Steady_Burn::printSchedule(const LevelP& level,
-				const string& where){
+                                const string& where){
   if (cout_doing.active()){
     cout_doing << d_myworld->myrank() << " " 
-	       << where << "L-"
-	       << level->getIndex()<< endl;
+               << where << "L-"
+               << level->getIndex()<< endl;
   }  
 }
 //______________________________________________________________________
 void Steady_Burn::printTask(const PatchSubset* patches,
-			    const Patch* patch,
-			    const string& where){
+                            const Patch* patch,
+                            const string& where){
   if (cout_doing.active()){
     cout_doing << d_myworld->myrank() << " " 
-	       << where << " STEADY_BURN L-"
-	       << getLevel(patches)->getIndex()
-	       << " patch " << patch->getGridIndex()<< endl;
+               << where << " STEADY_BURN L-"
+               << getLevel(patches)->getIndex()
+               << " patch " << patch->getGridIndex()<< endl;
   }  
 }
 //______________________________________________________________________

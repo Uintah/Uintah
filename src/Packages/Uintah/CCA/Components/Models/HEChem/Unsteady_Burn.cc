@@ -180,10 +180,10 @@ void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, c
 
 
 void Unsteady_Burn::initialize(const ProcessorGroup*, 
-			     const PatchSubset* patches, 
-			     const MaterialSubset* /*matls*/, 
-			     DataWarehouse*, 
-			     DataWarehouse* new_dw){
+                             const PatchSubset* patches, 
+                             const MaterialSubset* /*matls*/, 
+                             DataWarehouse*, 
+                             DataWarehouse* new_dw){
   int m0 = matl0->getDWIndex();
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
@@ -297,11 +297,11 @@ void Unsteady_Burn::computeSpecificHeat(CCVariable<double>&, const Patch*, DataW
  ***************** Private Member Functions:******************************
  */
 void Unsteady_Burn::computeModelSources(const ProcessorGroup*, 
-				      const PatchSubset* patches,
-				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw,
-				      const ModelInfo* mi){
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* /*matls*/,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const ModelInfo* mi){
   
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
@@ -383,7 +383,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
     old_dw->get           (pTsOld,   PartTsLabel,   pset_gn);
     new_dw->allocateAndPut(pBetaNew, PartBetaLabel, pset_gn);
     new_dw->allocateAndPut(pTsNew,   PartTsLabel,   pset_gn);
-		
+                
     /* All Material Data */
     int numAllMatls = d_sharedState->getNumMatls();
     StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
@@ -422,8 +422,8 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       IntVector c;
       patch->findCell(px_gn[idx],c);
       if(pBetaOld[idx]<INIT_BETA && pBetaOld[idx]>NewBeta[c]){
-	NewBeta[c] = pBetaOld[idx];  
-	NewTs[c]   = pTsOld[idx];
+        NewBeta[c] = pBetaOld[idx];  
+        NewTs[c]   = pTsOld[idx];
       }
     }
     
@@ -439,8 +439,8 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       double MaxMass = d_SMALL_NUM;
       double MinMass = 1.0/d_SMALL_NUM; 
       for (int nN=0; nN<8; nN++){
-	MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]);
-	MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]); 
+        MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]);
+        MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]); 
       }
 
       /* test whether the current cell satisfies burning criteria */
@@ -452,95 +452,95 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       double temp_vf = 0.0;
       /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
       if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){ 
-	/* near interface and containing particles */
-	for(int i = -1; i<=1; i++){
-	  for(int j = -1; j<=1; j++){
-	    for(int k = -1; k<=1; k++){
-	      IntVector cell = c + IntVector(i,j,k);
+        /* near interface and containing particles */
+        for(int i = -1; i<=1; i++){
+          for(int j = -1; j<=1; j++){
+            for(int k = -1; k<=1; k++){
+              IntVector cell = c + IntVector(i,j,k);
 
-	      /* Search for Tzero from max_vol_frac reactant cell */
-	      temp_vf = vol_frac_CC[m0][cell]; 
-	      if( temp_vf > maxReactantVolFrac ){
-		maxReactantVolFrac = temp_vf;
-		Tzero = solidTemp[cell];
-	      }//endif
+              /* Search for Tzero from max_vol_frac reactant cell */
+              temp_vf = vol_frac_CC[m0][cell]; 
+              if( temp_vf > maxReactantVolFrac ){
+                maxReactantVolFrac = temp_vf;
+                Tzero = solidTemp[cell];
+              }//endif
 
-	      /* Search for pressure from max_vol_frac product cell */
-	      temp_vf = vol_frac_CC[m1][cell]; 
-	      if( temp_vf > maxProductVolFrac ){
-		maxProductVolFrac = temp_vf;
-		productPress = press_CC[cell];
-	      }//endif
-	      
-	      if(burning == 0 && pFlag[cell] <= BP){
-		for (int m = 0; m < numAllMatls; m++){
-		  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
-		    burning = 1;
-		    break;
-		  }
-		}
-	      }//endif
-	      
-	    }//end 3rd for
-	  }//end 2nd for
-	}//end 1st for
+              /* Search for pressure from max_vol_frac product cell */
+              temp_vf = vol_frac_CC[m1][cell]; 
+              if( temp_vf > maxProductVolFrac ){
+                maxProductVolFrac = temp_vf;
+                productPress = press_CC[cell];
+              }//endif
+              
+              if(burning == 0 && pFlag[cell] <= BP){
+                for (int m = 0; m < numAllMatls; m++){
+                  if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
+                    burning = 1;
+                    break;
+                  }
+                }
+              }//endif
+              
+            }//end 3rd for
+          }//end 2nd for
+        }//end 1st for
       }//endif
       
       if(burning == 1 && productPress >= ThresholdPressure){
-	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
-       	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
-	
-	/* If particles in a cell are newly ignited, their initial values 
-	   (Ts and Beta) are copied from a neighboring cell that has been 
-	   burning the longest time. Or, if no such cell, then they take the 
-	   INIT values	 */ 
-	IntVector mostBurntCell;
-	double maxBurning = 0.0;
-	/* if the cell did not burn in the last timestep */
-	if(NewBeta[c] == 0.0 || NewTs[c] == 0.0){
-	  /* find cell has been burnt the longest */ 
-	  for(int i = -1; i<=1; i++){
-	    for(int j = -1; j<=1; j++){
-	      for(int k = -1; k<=1; k++){
-		// loop through all neighboring cells 
-		IntVector cell = c + IntVector(i,j,k);
-		if(OldBurningCell[cell]>maxBurning){
-		  maxBurning = OldBurningCell[cell];
-		  mostBurntCell = cell;
-		}		
-	      }//end 3rd for
-	    }//end 2nd for
-	  }//end 1st for
-	  
-	  if(maxBurning > 0.0){
-	    NewBeta[c] = OldBeta[mostBurntCell];
-	    NewTs[c]   =   OldTs[mostBurntCell];    
-	  }else{
-	    NewBeta[c] = INIT_BETA;
-	    NewTs[c]   = INIT_TS;
-	  }
-	}
+        Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
+        double surfArea = computeSurfaceArea(rhoGradVector, dx); 
+        
+        /* If particles in a cell are newly ignited, their initial values 
+           (Ts and Beta) are copied from a neighboring cell that has been 
+           burning the longest time. Or, if no such cell, then they take the 
+           INIT values   */ 
+        IntVector mostBurntCell;
+        double maxBurning = 0.0;
+        /* if the cell did not burn in the last timestep */
+        if(NewBeta[c] == 0.0 || NewTs[c] == 0.0){
+          /* find cell has been burnt the longest */ 
+          for(int i = -1; i<=1; i++){
+            for(int j = -1; j<=1; j++){
+              for(int k = -1; k<=1; k++){
+                // loop through all neighboring cells 
+                IntVector cell = c + IntVector(i,j,k);
+                if(OldBurningCell[cell]>maxBurning){
+                  maxBurning = OldBurningCell[cell];
+                  mostBurntCell = cell;
+                }               
+              }//end 3rd for
+            }//end 2nd for
+          }//end 1st for
+          
+          if(maxBurning > 0.0){
+            NewBeta[c] = OldBeta[mostBurntCell];
+            NewTs[c]   =   OldTs[mostBurntCell];    
+          }else{
+            NewBeta[c] = INIT_BETA;
+            NewTs[c]   = INIT_TS;
+          }
+        }
 
-	double beta = NewBeta[c];
-	double Ts   = NewTs[c]; 
+        double beta = NewBeta[c];
+        double Ts   = NewTs[c]; 
 
-	double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], surfArea,
-					      delT, solidMass[c], beta, Ts, dx);
-	
-	NewBeta[c] = beta;
-	NewTs[c]   = Ts;
+        double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], surfArea,
+                                              delT, solidMass[c], beta, Ts, dx);
+        
+        NewBeta[c] = beta;
+        NewTs[c]   = Ts;
 
-	NewBurningCell[c] = OldBurningCell[c] + 1.0;	
-	
-	/* conservation of mass, momentum and energy   */
-	 mass_src_0[c]  -= burnedMass;
-	 mass_src_1[c]    += burnedMass;
+        NewBurningCell[c] = OldBurningCell[c] + 1.0;    
+        
+        /* conservation of mass, momentum and energy   */
+         mass_src_0[c]  -= burnedMass;
+         mass_src_1[c]    += burnedMass;
         totalBurnedMass += burnedMass;
-	
+        
         Vector momX = vel_CC[c] * burnedMass;
         momentum_src_0[c]  -= momX;
         momentum_src_1[c]    += momX;
-	
+        
         double energyX   = Cp*solidTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * (Qc + Qg);
         energy_src_0[c]  -= energyX;
@@ -559,11 +559,11 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       IntVector c;
       patch->findCell(px_gn[idx],c);
       if(NewBurningCell[c]>0.0){
-	pBetaNew[idx] = NewBeta[c];
-	pTsNew[idx]   = NewTs[c];
+        pBetaNew[idx] = NewBeta[c];
+        pTsNew[idx]   = NewTs[c];
       }else{
-	pBetaNew[idx] = INIT_BETA;
-	pTsNew[idx]   = INIT_TS;
+        pBetaNew[idx] = INIT_BETA;
+        pTsNew[idx]   = INIT_TS;
       }
     }
 
@@ -610,44 +610,44 @@ double Unsteady_Burn::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
 
 
 Vector Unsteady_Burn::computeDensityGradientVector(IntVector *nodeIdx, 
-						 constNCVariable<double> &NCsolidMass, 
-						 constNCVariable<double> &NC_CCweight, 
-						 Vector &dx){
+                                                 constNCVariable<double> &NCsolidMass, 
+                                                 constNCVariable<double> &NC_CCweight, 
+                                                 Vector &dx){
   double gradRhoX = 0.25 * (
-			    (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-			     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-			     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-			     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-			    -
-			    (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-			     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-			     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-			     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-			    )/dx.x();
+                            (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                             NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                             NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                             NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
+                            -
+                            (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                             NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                             NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                             NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                            )/dx.x();
 
   double gradRhoY = 0.25 * (
-			    (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-			     NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-			     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-			     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-			    -
-			    (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-			     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-			     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
-			     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-			    )/dx.y();
+                            (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                             NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                             NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                             NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
+                            -
+                            (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                             NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                             NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
+                             NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                            )/dx.y();
 
   double gradRhoZ = 0.25 * (
-			    (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-			     NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-			     NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-			     NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-			    -
-			    (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
-			     NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
-			     NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
-			     NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
-			    )/dx.z();
+                            (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                             NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                             NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                             NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
+                            -
+                            (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
+                             NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
+                             NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
+                             NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
+                            )/dx.z();
 
   double absGradRho = sqrt(gradRhoX*gradRhoX + gradRhoY*gradRhoY + gradRhoZ*gradRhoZ );
 
@@ -671,7 +671,7 @@ void Unsteady_Burn::setMPMLabel(MPMLabel* MLB){
 /******************* Bisection Newton Solver ********************************/
 /****************************************************************************/
 double Unsteady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, 
-					double solidMass, double& beta, double& Ts, Vector& dx){  
+                                        double solidMass, double& beta, double& Ts, Vector& dx){  
   UpdateConstants(To, P, Vc);
   
   double    Ts_local = BisectionNewton(Ts);
@@ -750,7 +750,7 @@ void Unsteady_Burn::UpdateConstants(double To, double P, double Vc){
 }
 
 /***   
- ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))						   
+ ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))                                              
  ***   f_Ts(Ts) = C4 + C5/(sqrt(m^2+C3) + m)^2 
  ***
  ***   Solve for diff(f_Ts(Ts))=0 
@@ -824,13 +824,13 @@ double Unsteady_Burn::BisectionNewton(double Ts){
     delta_new = 1e100;
     while(1){
       if(iter>100){
-	cout<<"Not converging after 100 iterations in Unseady_Burn.cc."<<endl;
-	exit(1);
+        cout<<"Not converging after 100 iterations in Unseady_Burn.cc."<<endl;
+        exit(1);
       }
 
       df_dTs = Deri(Ts);
       if(df_dTs==0) 
-	break;
+        break;
 
       delta_old = delta_new;
       delta_new = -y/df_dTs; //Newton Step
@@ -838,10 +838,10 @@ double Unsteady_Burn::BisectionNewton(double Ts){
       y = Func(Ts);
 
       if(fabs(y)<EPSILON)
-	return Ts;
+        return Ts;
       
       if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
-	break;
+        break;
 
       iter++; 
       SetInterval(y, Ts);  

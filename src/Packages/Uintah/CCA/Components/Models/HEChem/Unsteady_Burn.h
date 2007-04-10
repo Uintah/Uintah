@@ -51,11 +51,11 @@ WARNING
     virtual void outputProblemSpec(ProblemSpecP& ps);
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
-			      ModelSetup* setup);
+                              ModelSetup* setup);
     
     virtual void scheduleInitialize(SchedulerP&,
-				    const LevelP& level,
-				    const ModelInfo*);
+                                    const LevelP& level,
+                                    const ModelInfo*);
     
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
@@ -66,35 +66,35 @@ WARNING
     virtual void restartInitialize() {}
     
     virtual void scheduleComputeStableTimestep(SchedulerP&,
-					       const LevelP& level,
-					       const ModelInfo*);
+                                               const LevelP& level,
+                                               const ModelInfo*);
     
     virtual void scheduleComputeModelSources(SchedulerP&,
-					     const LevelP& level,
-					     const ModelInfo*);
+                                             const LevelP& level,
+                                             const ModelInfo*);
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-							 const LevelP&,
-							 const MaterialSet*);
+                                                         const LevelP&,
+                                                         const MaterialSet*);
     
     virtual void computeSpecificHeat(CCVariable<double>&,
-				     const Patch*,
-				     DataWarehouse*,
-				     const int);
+                                     const Patch*,
+                                     DataWarehouse*,
+                                     const int);
     
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-				       SchedulerP& sched);
+                                       SchedulerP& sched);
     
     virtual void scheduleTestConservation(SchedulerP&,
-					  const PatchSet* patches,
-					  const ModelInfo* mi);
+                                          const PatchSet* patches,
+                                          const ModelInfo* mi);
 
     virtual void setMPMLabel(MPMLabel* MLB);    
     
     
   private:    
     void computeModelSources(const ProcessorGroup*, const PatchSubset*,
-			     const MaterialSubset*, DataWarehouse*, 
-			     DataWarehouse*, const ModelInfo*);
+                             const MaterialSubset*, DataWarehouse*, 
+                             DataWarehouse*, const ModelInfo*);
     
     double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
     
@@ -104,7 +104,7 @@ WARNING
                                         Vector &dx);
     
     double computeBurnedMass(double To, double P, double Vc, double surfArea, double delT,
-			     double solidMass, double& beta, double& Ts, Vector& dx);
+                             double solidMass, double& beta, double& Ts, Vector& dx);
     
     Unsteady_Burn(const Unsteady_Burn&);
     Unsteady_Burn& operator=(const Unsteady_Burn&);
