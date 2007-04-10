@@ -79,17 +79,17 @@ using namespace SCIRun;
 // Constructor for BoundaryCondition
 //****************************************************************************
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
-				     const MPMArchesLabel* MAlb,
-				     PhysicalConstants* phys_const,
-				     Properties* props,
-				     bool calcReactScalar,
-				     bool calcEnthalpy,
+                                     const MPMArchesLabel* MAlb,
+                                     PhysicalConstants* phys_const,
+                                     Properties* props,
+                                     bool calcReactScalar,
+                                     bool calcEnthalpy,
                                      bool calcVariance):
                                      d_lab(label), d_MAlab(MAlb),
-				     d_physicalConsts(phys_const), 
-				     d_props(props),
-				     d_reactingScalarSolve(calcReactScalar),
-				     d_enthalpySolve(calcEnthalpy),
+                                     d_physicalConsts(phys_const), 
+                                     d_props(props),
+                                     d_reactingScalarSolve(calcReactScalar),
+                                     d_enthalpySolve(calcEnthalpy),
                                      d_calcVariance(calcVariance)
 {
   MM_CUTOFF_VOID_FRAC = 0.5;
@@ -135,7 +135,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_flowInlets[d_numInlets]->streamMixturefraction.d_scalarDisp=0.0;
       d_props->computeInletProperties(
                         d_flowInlets[d_numInlets]->streamMixturefraction,
-		        d_flowInlets[d_numInlets]->calcStream);
+                        d_flowInlets[d_numInlets]->calcStream);
       ++total_cellTypes;
       ++d_numInlets;
     }
@@ -164,9 +164,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     // compute density and other dependent properties
     d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
     d_pressureBC->streamMixturefraction.d_scalarDisp=0.0;
-    d_props->computeInletProperties(
-                		 d_pressureBC->streamMixturefraction, 
-		        	 d_pressureBC->calcStream);
+    d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
+                                    d_pressureBC->calcStream);
     ++total_cellTypes;
   }
   else {
@@ -182,9 +181,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     // compute density and other dependent properties
     d_outletBC->streamMixturefraction.d_initEnthalpy=true;
     d_outletBC->streamMixturefraction.d_scalarDisp=0.0;
-    d_props->computeInletProperties(
-			       d_outletBC->streamMixturefraction, 
-			       d_outletBC->calcStream);
+    d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
+                                    d_outletBC->calcStream);
     ++total_cellTypes;
   }
   else {
@@ -249,7 +247,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     }
     else
       throw InvalidValue("current MMS "
-			 "not supported: " + d_mms, __FILE__, __LINE__);
+                         "not supported: " + d_mms, __FILE__, __LINE__);
   }
 
 }
@@ -258,13 +256,13 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 // schedule the initialization of cell types
 //****************************************************************************
 void 
-BoundaryCondition::sched_cellTypeInit(SchedulerP& sched, const PatchSet* patches,
-				      const MaterialSet* matls)
+BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls)
 {
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
-			  this,
-			  &BoundaryCondition::cellTypeInit);
+                          this, &BoundaryCondition::cellTypeInit);
   tsk->computes(d_lab->d_cellTypeLabel);
   sched->addTask(tsk, patches, matls);
 
@@ -275,10 +273,10 @@ BoundaryCondition::sched_cellTypeInit(SchedulerP& sched, const PatchSet* patches
 //****************************************************************************
 void 
 BoundaryCondition::cellTypeInit(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset*,
-				DataWarehouse*,
-				DataWarehouse* new_dw)
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -299,117 +297,104 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     // Find the geometry of the patch
     Box patchBox = patch->getBox();
 
-    // wall boundary type
     int celltypeval;
     // initialization for pressure boundary
-    {
-      if (d_pressureBoundary) {
-	int nofGeomPieces = (int)d_pressureBC->d_geomPiece.size();
-	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPieceP  piece = d_pressureBC->d_geomPiece[ii];
-	  Box geomBox = piece->getBoundingBox();
-	  Box b = geomBox.intersect(patchBox);
-	  // check for another geometry
-	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellCenterIterator(b);
-	    IntVector idxLo = iter.begin();
-	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_pressureBC->d_cellTypeID;
-	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
-	  }
-	}
-      }
-    }
-    {
-      if (d_wallBoundary) {
-        int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
-        for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPieceP  piece = d_wallBdry->d_geomPiece[ii];
-	  Box geomBox = piece->getBoundingBox();
-	  Box b = geomBox.intersect(patchBox);
-	  // check for another geometry
-	  if (!(b.degenerate())) {
-/*	    CellIterator iter = patch->getCellCenterIterator(b);
-	    IntVector idxLo = iter.begin();
-	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_wallBdry->d_cellTypeID;
-	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);*/
-	    for (CellIterator iter = patch->getCellCenterIterator(b);
-	         !iter.done(); iter++) {
-	      Point p = patch->cellPosition(*iter);
-	      if (piece->inside(p)) 
-	        cellType[*iter] = d_wallBdry->d_cellTypeID;
-	    }
-	  }
+    if (d_pressureBoundary) {
+      int nofGeomPieces = (int)d_pressureBC->d_geomPiece.size();
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+        GeometryPieceP  piece = d_pressureBC->d_geomPiece[ii];
+        Box geomBox = piece->getBoundingBox();
+        Box b = geomBox.intersect(patchBox);
+        // check for another geometry
+        if (!(b.degenerate())) {
+          CellIterator iter = patch->getCellCenterIterator(b);
+          IntVector idxLo = iter.begin();
+          IntVector idxHi = iter.end() - IntVector(1,1,1);
+          celltypeval = d_pressureBC->d_cellTypeID;
+          fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
         }
       }
     }
-    // initialization for outlet boundary
-    {
-      if (d_outletBoundary) {
-	int nofGeomPieces = (int)d_outletBC->d_geomPiece.size();
-	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPieceP  piece = d_outletBC->d_geomPiece[ii];
-	  Box geomBox = piece->getBoundingBox();
-	  Box b = geomBox.intersect(patchBox);
-	  // check for another geometry
-	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellCenterIterator(b);
-	    IntVector idxLo = iter.begin();
-	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_outletBC->d_cellTypeID;
-	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
-	  }
-	}
-      }
-    }
-    // set boundary type for inlet flow field
-    {
-      if (d_inletBoundary) {
-        for (int ii = 0; ii < d_numInlets; ii++) {
-          int nofGeomPieces = (int)d_flowInlets[ii]->d_geomPiece.size();
-          for (int jj = 0; jj < nofGeomPieces; jj++) {
-	    GeometryPieceP  piece = d_flowInlets[ii]->d_geomPiece[jj];
-	    Box geomBox = piece->getBoundingBox();
-	    Box b = geomBox.intersect(patchBox);
-	    // check for another geometry
-	    if (b.degenerate())
-	    continue; // continue the loop for other inlets
-	    // iterates thru box b, converts from geometry space to index space
-	    // make sure this works
-#if 0
-	    CellIterator iter = patch->getCellCenterIterator(b);
-	    IntVector idxLo = iter.begin();
-	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_flowInlets[ii].d_cellTypeID;
-	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
-#endif
-	    for (CellIterator iter = patch->getCellCenterIterator(b);
-	         !iter.done(); iter++) {
-	      Point p = patch->cellPosition(*iter);
-	      if (piece->inside(p)) 
-	        cellType[*iter] = d_flowInlets[ii]->d_cellTypeID;
-	    }
+    // wall boundary type
+    if (d_wallBoundary) {
+      int nofGeomPieces = (int)d_wallBdry->d_geomPiece.size();
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+        GeometryPieceP  piece = d_wallBdry->d_geomPiece[ii];
+        Box geomBox = piece->getBoundingBox();
+        Box b = geomBox.intersect(patchBox);
+        // check for another geometry
+        if (!(b.degenerate())) {
+          /*CellIterator iter = patch->getCellCenterIterator(b);
+          IntVector idxLo = iter.begin();
+          IntVector idxHi = iter.end() - IntVector(1,1,1);
+          celltypeval = d_wallBdry->d_cellTypeID;
+          fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);*/
+          for (CellIterator iter = patch->getCellCenterIterator(b);
+               !iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if (piece->inside(p)) 
+            cellType[*iter] = d_wallBdry->d_cellTypeID;
           }
         }
       }
     }
-    
-    {
-      if (d_intrusionBoundary) {
-	int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
-	for (int ii = 0; ii < nofGeomPieces; ii++) {
-	  GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
-	  Box geomBox = piece->getBoundingBox();
-	  Box b = geomBox.intersect(patchBox);
-	  if (!(b.degenerate())) {
-	    CellIterator iter = patch->getCellCenterIterator(b);
-	    IntVector idxLo = iter.begin();
-	    IntVector idxHi = iter.end() - IntVector(1,1,1);
-	    celltypeval = d_intrusionBC->d_cellTypeID;
-	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
-	  }
-	}
+    // initialization for outlet boundary
+    if (d_outletBoundary) {
+      int nofGeomPieces = (int)d_outletBC->d_geomPiece.size();
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+        GeometryPieceP  piece = d_outletBC->d_geomPiece[ii];
+        Box geomBox = piece->getBoundingBox();
+        Box b = geomBox.intersect(patchBox);
+        // check for another geometry
+        if (!(b.degenerate())) {
+          CellIterator iter = patch->getCellCenterIterator(b);
+          IntVector idxLo = iter.begin();
+          IntVector idxHi = iter.end() - IntVector(1,1,1);
+          celltypeval = d_outletBC->d_cellTypeID;
+          fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
+        }
+      }
+    }
+    // set boundary type for inlet flow field
+    if (d_inletBoundary) {
+      for (int ii = 0; ii < d_numInlets; ii++) {
+        int nofGeomPieces = (int)d_flowInlets[ii]->d_geomPiece.size();
+        for (int jj = 0; jj < nofGeomPieces; jj++) {
+          GeometryPieceP  piece = d_flowInlets[ii]->d_geomPiece[jj];
+          Box geomBox = piece->getBoundingBox();
+          Box b = geomBox.intersect(patchBox);
+          // check for another geometry
+          if (b.degenerate())
+            continue; // continue the loop for other inlets
+            // iterates thru box b, converts from geometry space to index space
+            // make sure this works
+          /*CellIterator iter = patch->getCellCenterIterator(b);
+          IntVector idxLo = iter.begin();
+          IntVector idxHi = iter.end() - IntVector(1,1,1);
+          celltypeval = d_flowInlets[ii].d_cellTypeID;
+          fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);*/
+          for (CellIterator iter = patch->getCellCenterIterator(b);
+               !iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if (piece->inside(p)) 
+              cellType[*iter] = d_flowInlets[ii]->d_cellTypeID;
+          }
+        }
+      }
+    }
+    if (d_intrusionBoundary) {
+      int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+        GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
+        Box geomBox = piece->getBoundingBox();
+        Box b = geomBox.intersect(patchBox);
+        if (!(b.degenerate())) {
+          CellIterator iter = patch->getCellCenterIterator(b);
+          IntVector idxLo = iter.begin();
+          IntVector idxHi = iter.end() - IntVector(1,1,1);
+          celltypeval = d_intrusionBC->d_cellTypeID;
+          fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
+        }
       }
     }
   }
@@ -420,14 +405,16 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 // schedule the initialization of mm wall cell types
 //****************************************************************************
 void 
-BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* patches,
-					    const MaterialSet* matls, bool fixCellType)
+BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls,
+                                            bool fixCellType)
 {
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::mmWallCellTypeInit",
-			  this,
-			  &BoundaryCondition::mmWallCellTypeInit,
-			  fixCellType);
+                          this,
+                          &BoundaryCondition::mmWallCellTypeInit,
+                          fixCellType);
   
   int numGhostcells = 0;
 
@@ -443,21 +430,21 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
   //  cout << "recalculateCellType =" << recalculateCellType << endl;
 
   tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,
-		Ghost::None, numGhostcells);
+                Ghost::None, numGhostcells);
   tsk->requires(Task::OldDW, d_lab->d_mmcellTypeLabel, 
-		Ghost::None, numGhostcells);
+                Ghost::None, numGhostcells);
   tsk->requires(Task::OldDW, d_MAlab->mmCellType_MPMLabel, 
-		Ghost::None, numGhostcells);
+                Ghost::None, numGhostcells);
   if (d_cutCells)
     tsk->requires(Task::OldDW, d_MAlab->mmCellType_CutCellLabel,
-		  Ghost::None, numGhostcells);
+                  Ghost::None, numGhostcells);
 
   if (recalculateCellType) {
 
     tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
-		  Ghost::None, numGhostcells);
+                  Ghost::None, numGhostcells);
     tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-		  Ghost::None, numGhostcells);
+                  Ghost::None, numGhostcells);
 
     tsk->computes(d_lab->d_mmgasVolFracLabel);
     tsk->computes(d_lab->d_mmcellTypeLabel);
@@ -472,7 +459,7 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
   else {
 
     tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-		  Ghost::None, numGhostcells);
+                  Ghost::None, numGhostcells);
     tsk->computes(d_lab->d_mmgasVolFracLabel);
     tsk->computes(d_lab->d_mmcellTypeLabel);
     tsk->computes(d_MAlab->mmCellType_MPMLabel);
@@ -489,11 +476,11 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
 //****************************************************************************
 void 
 BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
-				      const PatchSubset* patches,
-				      const MaterialSubset*,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw,
-				      bool fixCellType)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      bool fixCellType)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -951,6 +938,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 
       }
     }
+
     if (d_pressureBoundary) {
       // set density
       fort_profscalar(idxLo, idxHi, density, cellType,
@@ -963,6 +951,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 			d_pressureBC->d_cellTypeID,
 			xminus, xplus, yminus, yplus, zminus, zplus);
     }
+
     if (d_outletBoundary) {
       // set density
       fort_profscalar(idxLo, idxHi, density, cellType,
@@ -976,43 +965,54 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 			xminus, xplus, yminus, yplus, zminus, zplus);
     }
 
-      if (d_inletBoundary) {
-        for (int ii = 0; ii < d_numInlets; ii++) {
-	  double scalarValue = 
-		 d_flowInlets[ii]->streamMixturefraction.d_mixVars[0];
-	  fort_profscalar(idxLo, idxHi, scalar, cellType,
-			  scalarValue, d_flowInlets[ii]->d_cellTypeID,
-			  xminus, xplus, yminus, yplus, zminus, zplus);
-	  double reactScalarValue = 
-		 d_flowInlets[ii]->streamMixturefraction.d_rxnVars[0];
-	  fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-			  reactScalarValue, d_flowInlets[ii]->d_cellTypeID,
-			  xminus, xplus, yminus, yplus, zminus, zplus);
-	}
+    if (d_inletBoundary) {
+      for (int ii = 0; ii < d_numInlets; ii++) {
+        double scalarValue = 
+      	 d_flowInlets[ii]->streamMixturefraction.d_mixVars[0];
+        fort_profscalar(idxLo, idxHi, scalar, cellType,
+      		  scalarValue, d_flowInlets[ii]->d_cellTypeID,
+      		  xminus, xplus, yminus, yplus, zminus, zplus);
+        double reactScalarValue;
+        if (d_reactingScalarSolve) {
+          reactScalarValue = 
+      	 d_flowInlets[ii]->streamMixturefraction.d_rxnVars[0];
+          fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+      		    reactScalarValue, d_flowInlets[ii]->d_cellTypeID,
+      		    xminus, xplus, yminus, yplus, zminus, zplus);
+        }
       }
-      if (d_pressureBoundary) {
-	double scalarValue = 
-	       d_pressureBC->streamMixturefraction.d_mixVars[0];
-	fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
-			d_pressureBC->d_cellTypeID,
-			xminus, xplus, yminus, yplus, zminus, zplus);
-	double reactScalarValue = 
-	       d_pressureBC->streamMixturefraction.d_rxnVars[0];
-	fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-			reactScalarValue, d_pressureBC->d_cellTypeID,
-			xminus, xplus, yminus, yplus, zminus, zplus);
+    }
+
+    if (d_pressureBoundary) {
+      double scalarValue = 
+             d_pressureBC->streamMixturefraction.d_mixVars[0];
+      fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
+      		d_pressureBC->d_cellTypeID,
+      		xminus, xplus, yminus, yplus, zminus, zplus);
+      double reactScalarValue;
+      if (d_reactingScalarSolve) {
+        reactScalarValue = 
+             d_pressureBC->streamMixturefraction.d_rxnVars[0];
+        fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+      		  reactScalarValue, d_pressureBC->d_cellTypeID,
+      		  xminus, xplus, yminus, yplus, zminus, zplus);
       }
-      if (d_outletBoundary) {
-	double scalarValue = 
-	       d_outletBC->streamMixturefraction.d_mixVars[0];
-	fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
-			d_outletBC->d_cellTypeID,
-			xminus, xplus, yminus, yplus, zminus, zplus);
-	double reactScalarValue = 
-	       d_outletBC->streamMixturefraction.d_rxnVars[0];
-	fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-			reactScalarValue, d_outletBC->d_cellTypeID,
-			xminus, xplus, yminus, yplus, zminus, zplus);
+    }
+
+    if (d_outletBoundary) {
+      double scalarValue = 
+             d_outletBC->streamMixturefraction.d_mixVars[0];
+      fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
+      		d_outletBC->d_cellTypeID,
+      		xminus, xplus, yminus, yplus, zminus, zplus);
+      double reactScalarValue;
+      if (d_reactingScalarSolve) {
+        reactScalarValue = 
+             d_outletBC->streamMixturefraction.d_rxnVars[0];
+        fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+      		  reactScalarValue, d_outletBC->d_cellTypeID,
+      		  xminus, xplus, yminus, yplus, zminus, zplus);
+      }
     }
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
