@@ -185,7 +185,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   Task* t = scinew Task("MPM::actuallyInitialize",
                         this, &AMRMPM::actuallyInitialize);
 
-  sched->setPositionVar(lb->pXLabel);
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();

@@ -35,6 +35,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
                                  GridP& /*grid*/,SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
+  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb_->pXLabel);
   ProblemSpecP pt1 = params->findBlock("ParticleTest1");
   pt1->getWithDefault("doOutput", doOutput_, 0);
   pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
@@ -49,7 +50,6 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
 			   this, &ParticleTest1::initialize);
-  sched->setPositionVar(lb_->pXLabel);
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
   task->computes(lb_->pParticleIDLabel);
