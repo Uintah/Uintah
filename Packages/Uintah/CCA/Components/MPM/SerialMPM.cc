@@ -117,6 +117,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                              SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
+  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   ProblemSpecP restart_mat_ps = 0;
   if (materials_ps){
@@ -229,7 +230,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MPM::actuallyInitialize",
                         this, &SerialMPM::actuallyInitialize);
 
-  sched->setPositionVar(lb->pXLabel);
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();
