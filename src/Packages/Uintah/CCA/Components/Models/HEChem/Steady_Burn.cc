@@ -39,7 +39,7 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld,
   //__________________________________
   //  diagnostic labels
   BurningCellLabel = VarLabel::create("SteadyBurn.BurningCell", CCVariable<double>::getTypeDescription());
-  TsLabel           = VarLabel::create("UnsteadyBurn.SurfTemp",  CCVariable<double>::getTypeDescription());
+  TsLabel          = VarLabel::create("SteadyBurn.SurfTemp",  CCVariable<double>::getTypeDescription());
   
   totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
                                             sum_vartype::getTypeDescription() );
@@ -218,7 +218,6 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
   t->requires(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
   t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gac,1);
-  t->requires(Task::OldDW, TsLabel,                react_matl, gn);  
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
   t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
@@ -228,9 +227,9 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->modifies(mi->energy_source_CCLabel);
   t->modifies(mi->sp_vol_source_CCLabel); 
   
-  t->computes(BurningCellLabel, react_matl);  
+  t->computes(BurningCellLabel, react_matl);
   t->computes(TsLabel,          react_matl);
-   
+     
   if(d_saveConservedVars->mass ){
     t->computes(Steady_Burn::totalMassBurnedLabel);
   }
@@ -296,7 +295,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(energy_src_1,   mi->energy_source_CCLabel,   m1, patch);   
     new_dw->getModifiable(sp_vol_src_1,   mi->sp_vol_source_CCLabel,   m1, patch);
     
-    constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol, OldTs;
+    constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
     constNCVariable<double>   NC_CCweight, NCsolidMass;
     constCCVariable<Vector>   vel_CC;
 
@@ -304,7 +303,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
     /* Reactant data */
     old_dw->get(solidTemp,       MIlb->temp_CCLabel,    m0, patch, gac, 1);
-    old_dw->get(OldTs,             TsLabel, m0, patch, gn, 0);
     new_dw->get(solidMass,       MIlb->cMassLabel,      m0, patch, gn,  0);
     new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,   m0, patch, gn,  0);   
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,     m0, patch, gn,  0);
@@ -320,11 +318,11 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gac, 1);
     old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);
 
-    CCVariable<double> BurningCell, NewTs;
+    CCVariable<double> BurningCell, surfTemp;
     new_dw->allocateAndPut(BurningCell, BurningCellLabel, m0, patch, gn, 0);
-    new_dw->allocateAndPut(NewTs,       TsLabel,          m0, patch, gn, 0);
+    new_dw->allocateAndPut(surfTemp,    TsLabel,          m0, patch, gn, 0);
     BurningCell.initialize(0.0);
-    NewTs.initialize(0.0);
+    surfTemp.initialize(0.0);
 
     /* Indicating cells containing how many particles */
     CCVariable<double> pFlag;
@@ -414,11 +412,13 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         
         Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
        
-       double surfArea = computeSurfaceArea(rhoGradVector, dx); 
-        double Tsurf = OldTs[c];
+        double surfArea = computeSurfaceArea(rhoGradVector, dx); 
+        double Tsurf = 800.0;  // initial guess for the surface temperature.
+        
         double burnedMass = computeBurnedMass(Tzero, Tsurf,  productPress, solidSp_vol[c], 
                                               surfArea, delT, solidMass[c]);
-        NewTs[c] = Tsurf;
+                                              
+        surfTemp[c] = Tsurf;
         
         /* conservation of mass, momentum and energy   */
          mass_src_0[c]   -= burnedMass;
