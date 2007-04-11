@@ -60,10 +60,10 @@
     </BoundaryConditions>
        <Level>
            <Box label="Level 0">
-              <lower>        [ -.35, -.2, -.005 ]  </lower>
-              <upper>        [ .35,   .5,  .005]    </upper>
+              <lower>        [-.175, -.175, -.005 ]  </lower>
+              <upper>        [ .175,  .175,  .005]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [8,8,1]    </patches>
+              <patches>      [4,4,1]    </patches>
               <resolution>   [32,32,1]  </resolution>
            </Box>
        </Level>
@@ -73,7 +73,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>AMRguni3d.2C.uda</filebase>
+      <filebase>solid_amr.uda</filebase>
       <outputInterval> .00001 </outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label="press_CC"/>
@@ -83,10 +83,10 @@
       <save label="vol_frac_CC"/>
       <save label="sp_vol_CC"/>
       <save label="refineFlag" />
-
+      
       <save label="totalMassBurned"/>
       <save label="totalHeatReleased"/>
-
+      
       <save label="p.x"           levels="-1"/>
       <save label="p.temperature" levels="-1"/>
       <save label="p.particleID"  levels="-1"/>
@@ -111,24 +111,7 @@
         <ClampSpecificVolume>true</ClampSpecificVolume>
       </ICE>        
     </CFD>
-    <MPM>
-      <time_integrator>                explicit   </time_integrator>
-      <nodes8or27>                     27         </nodes8or27>
-      <minimum_particle_mass>          3.e-12     </minimum_particle_mass>
-      <maximum_particle_velocity>      1.e3       </maximum_particle_velocity>
-      <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
-      <artificial_viscosity>           true       </artificial_viscosity>
-      <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
-      <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
-      <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
-      <accumulate_strain_energy>       false      </accumulate_strain_energy>
-      <use_load_curves>                false      </use_load_curves>
-      <create_new_particles>           false      </create_new_particles>
-      <manual_new_material>            false      </manual_new_material>
-      <DoThermalExpansion>             false      </DoThermalExpansion>
-      <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
-      <erosion algorithm = "ZeroStress"/>
-    </MPM>
+
     <!--____________________________________________________________________-->
     <!--    A M R   G R I D                                                 -->
     <!--____________________________________________________________________-->
@@ -154,7 +137,7 @@
 
       <Regridder>
         <type> BNR </type>
-        <min_patch_size> [[16,16,1][16,16,1]] </min_patch_size>
+        <min_patch_size> [[8,8,1][16,16,1]] </min_patch_size>
         <patch_ratio_to_target>.25</patch_ratio_to_target>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
@@ -176,6 +159,25 @@
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
+
+    <MPM>
+      <time_integrator>                explicit   </time_integrator>
+      <nodes8or27>                     27         </nodes8or27>
+      <minimum_particle_mass>          3.e-12     </minimum_particle_mass>
+      <maximum_particle_velocity>      1.e3       </maximum_particle_velocity>
+      <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
+      <artificial_viscosity>           true       </artificial_viscosity>
+      <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
+      <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
+      <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
+      <accumulate_strain_energy>       false      </accumulate_strain_energy>
+      <use_load_curves>                false      </use_load_curves>
+      <create_new_particles>           false      </create_new_particles>
+      <manual_new_material>            false      </manual_new_material>
+      <DoThermalExpansion>             false      </DoThermalExpansion>
+      <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
+      <erosion algorithm = "ZeroStress"/>
+    </MPM>
 
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
@@ -227,42 +229,25 @@
            <geom_object>                                                
               <difference>                                              
                <cylinder label="outer steel cylinder 1">                    
-                <bottom>           [-0.12,0.0,-0.06985]  </bottom>        
-                <top>              [-0.12,0.0, 0.06985]  </top>           
+                <bottom>           [0.0,0.0,-0.06985]  </bottom>        
+                <top>              [0.0,0.0, 0.06985]  </top>           
                 <radius>           0.05715              </radius>         
               </cylinder>                                               
               <cylinder label="inner steel cylinder 1">                     
-                <bottom>           [-0.12,0.0,-.0508]    </bottom>            
-                <top>              [-0.12,0.0, .0508]    </top>         
+                <bottom>           [0.0,0.0,-.0508]    </bottom>            
+                <top>              [0.0,0.0, .0508]    </top>         
                 <radius>           0.0508               </radius>         
               </cylinder>                                               
               </difference>                                             
             <res>                 [2,2,2]         </res>                
             <velocity>            [0.0,0.0,0.0]   </velocity>           
             <temperature>         600             </temperature>        
-           </geom_object>                                               
-           <geom_object>                                                
-              <difference>                                              
-               <cylinder label="outer steel cylinder 2">  
-                <bottom>           [0.12,0.0,-0.06985]  </bottom>        
-                <top>              [0.12,0.0, 0.06985]  </top>           
-                <radius>           0.05715             </radius>        
-              </cylinder>                                               
-              <cylinder label="inner steel cylinder 2">
-                <bottom>           [0.12,0.0,-.0508]    </bottom>            
-                <top>              [0.12,0.0, .0508]    </top>         
-                <radius>           0.0508              </radius>         
-              </cylinder>                                               
-              </difference>                                             
-            <res>                 [2,2,2]         </res>                
-            <velocity>            [0.0,0.0,0.0]   </velocity>           
-            <temperature>         600             </temperature>        
-           </geom_object>                                               
+           </geom_object>                                
          </material>
 
          <!--__________________________________-->
          <material name="reactant">
-             <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
+            <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
              <constitutive_model type = "visco_scram">
                <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
                <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
@@ -275,8 +260,8 @@
                   <difference>
                     <cylinder label="inner steel cylinder 1"> </cylinder>
                     <box label="hot chunk 1">
-                      <min>     [-0.13,  0.049,  -0.1]   </min>
-                      <max>     [-0.11,  0.0508, 0.1]   </max>
+                      <min>     [-0.01,  0.049,  -0.1]   </min>
+                      <max>     [0.01,  0.0508, 0.1]   </max>
                     </box>
                   </difference>
                   <res>                 [2,2,2]         </res>
@@ -293,36 +278,7 @@
                   <velocity>            [0.0,0.0,0.0]   </velocity>
                   <temperature>         600.0           </temperature>
                 </geom_object>
-                
-                <geom_object>
-                  <difference>  <!-- 1.25" dia bore -->
-                    <cylinder label="inner steel cylinder 2"> </cylinder>
-                    <union>
-                      <cylinder label="bore">
-                        <bottom>   [0.12, 0, -0.0381]    </bottom>
-                        <top>      [0.12, 0, 0.0381]     </top>  
-                        <radius>       0.0381           </radius>
-                      </cylinder>
-                      <box label="hot chunk 2">
-                        <min>      [0.11,  0.049,  -0.1]   </min>
-                        <max>      [0.13,  0.0508, 0.1]   </max>
-                      </box>
-                    </union>
-                  </difference>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         300.0           </temperature>
-                </geom_object> 
-                
-                <geom_object> <!-- hot HMX particles #2-->
-                  <intersection>
-                    <cylinder label="inner steel cylinder 2"> </cylinder>
-                    <box label="hot chunk 2"> </box>
-                  </intersection>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         600.0           </temperature>
-                </geom_object>       
+                      
          </material>
 
          <contact>                                               
@@ -367,14 +323,8 @@
                <box>                                                       
                  <min>       [-2.54,-2.54,-2.54]   </min>               
                  <max>       [ 2.54, 2.54, 2.54]   </max>               
-               </box>                                                      
-               <union>                                                     
-                <cylinder label="outer steel cylinder 1">  </cylinder>   
-                <difference>
-                  <cylinder label="outer steel cylinder 2">  </cylinder>
-                  <cylinder label="bore"> </cylinder>
-                </difference>
-               </union>                                                    
+               </box>                                                                                                      
+                <cylinder label="outer steel cylinder 1">  </cylinder>                                                    
              </difference>                                                 
              <res>                      [2,2,2]         </res>
              <velocity>           [0.0,0.0,0.0]         </velocity>
