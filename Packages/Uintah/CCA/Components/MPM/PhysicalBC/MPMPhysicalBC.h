@@ -4,6 +4,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 /**************************************
@@ -38,7 +39,8 @@ WARNING
       MPMPhysicalBC() {};
       virtual ~MPMPhysicalBC() {};
       virtual std::string getType() const = 0;
-         
+      virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+        
    private:
       MPMPhysicalBC(const MPMPhysicalBC&);
       MPMPhysicalBC& operator=(const MPMPhysicalBC&);

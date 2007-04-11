@@ -31,6 +31,7 @@ GENERAL INFORMATION
 
    PolynomialData(ProblemSpecP& ps,const Point& bottom, const Point& top);
    ~PolynomialData();
+   void outputProblemSpec(ProblemSpecP& ps);
    void loadData();
    double interpolateRadial(const int polyNum, const double theta);
    double interpolateValue(const Point& test_pt);

@@ -17,6 +17,12 @@ NormalForceBC::~NormalForceBC()
   delete d_loadCurve;
 }
 
+
+void NormalForceBC::outputProblemSpec(ProblemSpecP& ps)
+{
+
+}
+
 // Get the type of this object for BC application
 std::string NormalForceBC::getType() const
 {

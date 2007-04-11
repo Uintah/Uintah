@@ -36,6 +36,15 @@ PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom,
 
 PolynomialData::~PolynomialData()
 {
+}
+
+void PolynomialData::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP pd_ps = ps->appendChild("polynomial_data");
+  for (vector<std::string>::const_iterator itr = d_fileNames.begin(); 
+       itr != d_fileNames.end(); itr++) {
+    pd_ps->appendElement("file",*itr);
+  }
 
 }
 

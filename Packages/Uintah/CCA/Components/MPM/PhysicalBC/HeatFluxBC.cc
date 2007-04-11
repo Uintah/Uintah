@@ -57,6 +57,16 @@ HeatFluxBC::~HeatFluxBC()
   delete d_loadCurve;
 }
 
+void HeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP ahf_ps = ps->appendChild("heat_flux");
+  ProblemSpecP geom_ps = ahf_ps->appendChild("geom_object");
+  d_surface->outputProblemSpec(geom_ps);
+  d_loadCurve->outputProblemSpec(ahf_ps);
+
+}
+
 // Get the type of this object for BC application
 std::string 
 HeatFluxBC::getType() const

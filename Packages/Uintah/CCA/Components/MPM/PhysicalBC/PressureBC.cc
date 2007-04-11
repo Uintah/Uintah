@@ -53,6 +53,12 @@ PressureBC::~PressureBC()
   delete d_loadCurve;
 }
 
+void PressureBC::outputProblemSpec(ProblemSpecP& ps)
+{
+
+
+}
+
 // Get the type of this object for BC application
 std::string 
 PressureBC::getType() const

@@ -44,6 +44,7 @@ WARNING
       NormalForceBC(ProblemSpecP& ps);
       ~NormalForceBC();
       virtual std::string getType() const;
+      virtual void outputProblemSpec(ProblemSpecP& ps);
 
       // Get the load curve
       inline LoadCurve<double>* getLoadCurve() const {return d_loadCurve;}

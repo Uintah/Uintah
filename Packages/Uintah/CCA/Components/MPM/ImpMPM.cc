@@ -274,6 +274,13 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   contact_ps->appendElement("direction",d_contact_dirs);
   contact_ps->appendElement("stop_time",d_stop_time);
   contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
+
+  ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
+  ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
+  }
+  
 }
 
 

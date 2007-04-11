@@ -11,6 +11,11 @@ ForceBC::ForceBC(ProblemSpecP& ps)
   ps->require("force_density",d_forceDensity);
 }
 
+void ForceBC::outputProblemSpec(ProblemSpecP& ps)
+{
+
+}
+
 const Vector& ForceBC::getForceDensity() const
 {
   return d_forceDensity;
