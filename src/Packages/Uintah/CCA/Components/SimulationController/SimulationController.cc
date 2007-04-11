@@ -121,6 +121,7 @@ namespace Uintah {
     
     // Parse time struct
     d_timeinfo = scinew SimulationTime(d_ups);
+    d_sharedState->d_simTime = d_timeinfo;
     
     if (d_reduceUda && d_timeinfo->max_delt_increase < 1e99) {
       d_timeinfo->max_delt_increase = 1e99;
