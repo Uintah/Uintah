@@ -43,7 +43,8 @@ WARNING
    public:
       CrackBC(ProblemSpecP& ps);
       virtual std::string getType() const;
-
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+      
       double   x1() const;
       double   y1() const;
       double   x2() const;

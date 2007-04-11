@@ -52,6 +52,11 @@ CrackBC::CrackBC(ProblemSpecP& ps)
   d_y4 = Dot(d,d_e2);
 }
 
+void CrackBC::outputProblemSpec(ProblemSpecP& ps)
+{
+
+}
+
 double CrackBC::x1() const
 {
   return d_x1;

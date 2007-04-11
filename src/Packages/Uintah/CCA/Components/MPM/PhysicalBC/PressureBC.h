@@ -57,6 +57,8 @@ WARNING
       ~PressureBC();
       virtual std::string getType() const;
 
+      virtual void outputProblemSpec(ProblemSpecP& ps);
+
       // Locate and flag the material points to which this pressure BC is
       // to be applied. 
       bool flagMaterialPoint(const Point& p, const Vector& dxpp) const;

@@ -42,6 +42,7 @@ WARNING
    public:
       ForceBC(ProblemSpecP& ps);
       virtual std::string getType() const;
+      virtual void outputProblemSpec(ProblemSpecP& ps);
 
       const Vector&  getForceDensity() const;
       const Point&   getLowerRange() const;

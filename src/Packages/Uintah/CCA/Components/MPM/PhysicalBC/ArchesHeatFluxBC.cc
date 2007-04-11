@@ -71,6 +71,16 @@ ArchesHeatFluxBC::getType() const
   return "ArchesHeatFlux";
 }
 
+void ArchesHeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP ahf_ps = ps->appendChild("arches_heat_flux");
+  ProblemSpecP geom_ps = ahf_ps->appendChild("geom_object");
+  d_surface->outputProblemSpec(geom_ps);
+  d_polyData->outputProblemSpec(ahf_ps);
+  d_loadCurve->outputProblemSpec(ahf_ps);
+
+}
+
 // Locate and flag the material points to which this heatflux BC is
 // to be applied. Assumes that the "checkForSurface" function in ParticleCreator.cc
 // has been used to identify this material point as being on the surface of the body.

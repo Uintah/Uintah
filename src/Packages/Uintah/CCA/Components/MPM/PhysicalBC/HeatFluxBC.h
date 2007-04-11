@@ -56,6 +56,7 @@ WARNING
       HeatFluxBC(ProblemSpecP& ps);
       ~HeatFluxBC();
       virtual std::string getType() const;
+      virtual void outputProblemSpec(ProblemSpecP& ps);
 
       // Locate and flag the material points to which this heatflux BC is
       // to be applied. 

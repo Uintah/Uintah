@@ -52,6 +52,7 @@ WARNING
       // Constructor and Destructor
       LoadCurve(ProblemSpecP& ps);
       inline ~LoadCurve() { };
+      void outputProblemSpec(ProblemSpecP& ps);
 
       // Get the number of points on the load curve
       inline int numberOfPointsOnLoadCurve() { 
@@ -122,6 +123,20 @@ WARNING
          d_load.push_back(load);
       }
    }
+
+   template<class T>
+     void LoadCurve<T>::outputProblemSpec(ProblemSpecP& ps) 
+     {
+       ProblemSpecP lc_ps = ps->appendChild("load_curve");
+       lc_ps->appendElement("id",d_id);
+       for (int i = 0; i<(int)d_time.size();i++) {
+         ProblemSpecP time_ps = lc_ps->appendChild("time_point");
+         time_ps->appendElement("time",d_time[i]);
+         time_ps->appendElement("load",d_load[i]);
+       }
+
+     }
+   
 
 } // End namespace Uintah
 
