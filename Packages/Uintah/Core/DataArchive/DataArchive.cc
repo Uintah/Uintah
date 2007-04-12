@@ -9,12 +9,13 @@
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Math/MiscMath.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
-
+#include <Core/Containers/OffsetArray1.h>
 
 #include <iostream>
 #include <iomanip>
@@ -230,10 +231,56 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
         throw InternalError("DataArchive::queryGrid:DataArchive::queryGrid:Error parsing level anchor point",
                             __FILE__, __LINE__);
       Vector dcell;
-      if(!n->get("cellspacing", dcell))
-        throw InternalError("DataArchive::queryGrid:Error parsing level cellspacing",
+      OffsetArray1<double> faces[3];
+      bool have_stretch = false;
+      if(!n->get("cellspacing", dcell)) {
+        // stretched grids
+        bool have_axis[3] = {false, false, false};
+        for (ProblemSpecP stretch = n->findBlock("StretchPositions"); stretch != 0; stretch = stretch->findNextBlock("StretchPositions")) {
+          map<string,string> attributes;
+          stretch->getAttributes(attributes);
+          string mapstring;
+          int axis, low, high;
+
+          mapstring = attributes["axis"];
+          if (mapstring == "") 
+            throw InternalError("DataArchive::queryGrid:DataArchive::queryGrid:Error parsing StretchPositions axis",
                             __FILE__, __LINE__);
-      dcell *= d_cell_scale;
+          axis = atoi(mapstring.c_str());
+          mapstring = attributes["low"];
+          if (mapstring == "") 
+            throw InternalError("DataArchive::queryGrid:DataArchive::queryGrid:Error parsing StretchPositions low index",
+                            __FILE__, __LINE__);
+          low = atoi(mapstring.c_str());
+          mapstring = attributes["high"];
+          if (mapstring == "") 
+            throw InternalError("DataArchive::queryGrid:DataArchive::queryGrid:Error parsing StretchPositions high index",
+                            __FILE__, __LINE__);
+          high = atoi(mapstring.c_str());
+
+          if (have_axis[axis])
+            throw InternalError("DataArchive::queryGrid:DataArchive::queryGrid:StretchPositions already defined for axis",
+                            __FILE__, __LINE__);
+          have_axis[axis] = true;
+
+          faces[axis].resize(low, high);
+          int index = low;
+          for (ProblemSpecP pos = stretch->findBlock("pos"); pos != 0; pos = pos->findNextBlock("pos")) {
+            pos->get(faces[axis][index]);
+            index++;
+          }
+          ASSERTEQ(index, high);
+        }
+        if (have_axis[0] == false && have_axis[1] == false && have_axis[2] == false)
+          throw InternalError("DataArchive::queryGrid:Error parsing level cellspacing",
+                              __FILE__, __LINE__);
+        else if (have_axis[0] == false || have_axis[1] == false || have_axis[2] == false)
+          throw InternalError("DataArchive::queryGrid:Error parsing stretch grid axes",
+                              __FILE__, __LINE__);
+        have_stretch = true;
+      }
+      if (!have_stretch)
+        dcell *= d_cell_scale;
       IntVector extraCells(0,0,0);
       n->get("extraCells", extraCells);
       
@@ -249,6 +296,11 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
       }
       LevelP level = grid->addLevel(anchor, dcell, id);
       level->setExtraCells(extraCells);
+      if (have_stretch) {
+        level->setStretched((Grid::Axis)0, faces[0]);
+        level->setStretched((Grid::Axis)1, faces[1]);
+        level->setStretched((Grid::Axis)2, faces[2]);
+      }
       levelIndex++;
       timedata.d_patchInfo.push_back(vector<PatchData>());
       timedata.d_matlInfo.push_back(vector<bool>());
