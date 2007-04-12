@@ -95,18 +95,21 @@ public:
       // Schedule Solve of linearized pressure equation
       void solve(const LevelP& level, SchedulerP&,
 		 const TimeIntegratorLabel* timelabels,
-		 bool extraProjection);
+		 bool extraProjection,
+                 bool doing_EKT_now);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
 		 		   const TimeIntegratorLabel* timelabels,
-				   bool extraProjection);
+				   bool extraProjection,
+                                   bool doing_EKT_now);
  
       void sched_pressureLinearSolve(const LevelP& level, SchedulerP& sched,
 		 		     const TimeIntegratorLabel* timelabels,
-				     bool ExtraProjection);
+				     bool extraProjection,
+                                     bool doing_EKT_now);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the addition of the hydrostatic term to the relative pressure
@@ -142,7 +145,8 @@ private:
 			     DataWarehouse* new_dw,
 			     DataWarehouse* matrix_dw,
 		 	     const TimeIntegratorLabel* timelabels,
-			     bool extraProjection);
+			     bool extraProjection,
+                             bool doing_EKT_now);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
 				   const PatchSubset* patches,
@@ -150,7 +154,8 @@ private:
 				   DataWarehouse* new_dw,
 				   DataWarehouse* matrix_dw,
 		 		   const TimeIntegratorLabel* timelabels,
-				   bool extraProjection);
+				   bool extraProjection,
+                                   bool doing_EKT_now);
 
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
@@ -159,7 +164,8 @@ private:
 			       DataWarehouse* matrix_dw,
 			       ArchesVariables& pressureVars,
 		 	       const TimeIntegratorLabel* timelabels,
-			       bool extraProjection);
+			       bool extraProjection,
+                               bool doing_EKT_now);
 
       ////////////////////////////////////////////////////////////////
       // addition of hydrostatic term to relative pressure

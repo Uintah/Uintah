@@ -1639,20 +1639,33 @@ void
 MomentumSolver::sched_prepareExtraProjection(SchedulerP& sched,
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-					  const TimeIntegratorLabel* timelabels)
+					  const TimeIntegratorLabel* timelabels,
+                                              bool set_BC)
 {
   string taskname =  "MomentumSolver::prepareExtraProjection" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, 
 			  this, &MomentumSolver::prepareExtraProjection,
-			  timelabels);
+			  timelabels, set_BC);
 
+  Task::WhichDW parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
+  else parent_old_dw = Task::OldDW;
+
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+    
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (set_BC) {
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
 
 
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
@@ -1673,35 +1686,67 @@ void
 MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
 					const PatchSubset* patches,
 					const MaterialSubset* /*matls*/,
-					DataWarehouse* ,
+					DataWarehouse* old_dw,
 					DataWarehouse* new_dw,
-					const TimeIntegratorLabel* timelabels)
+					const TimeIntegratorLabel* timelabels,
+                                        bool set_BC)
 {
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
+  delt_vartype delT;
+  parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  delta_t *= timelabels->time_multiplier;
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    SFCXVariable<double> uVelRhoHat;
-    SFCYVariable<double> vVelRhoHat;
-    SFCZVariable<double> wVelRhoHat;
+    ArchesVariables velocityVars;
+    ArchesConstVariables constVelocityVars;
 
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel,
+    new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,
 			  matlIndex, patch);
-    new_dw->copyOut(uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
+    new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
 		          matlIndex, patch);
 
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel,
+    new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,
 			  matlIndex, patch);
-    new_dw->copyOut(vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
+    new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
 		          matlIndex, patch);
 
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel,
+    new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,
 			  matlIndex, patch);
-    new_dw->copyOut(wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
+    new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
 		          matlIndex, patch);
-
+    
+    if (set_BC) {
+      new_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel, 
+		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      double time_shift = 0.0;
+      if (d_boundaryCondition->getInletBC()) {
+        time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+        d_boundaryCondition->velRhoHatInletBC(pc, patch,
+					      &velocityVars, &constVelocityVars,
+					      time_shift);
+      }
+      if ((d_boundaryCondition->getOutletBC())||
+          (d_boundaryCondition->getPressureBC()))
+        d_boundaryCondition->velRhoHatOutletPressureBC(pc, patch,
+					   &velocityVars, &constVelocityVars);
+    }
   }
 }
 

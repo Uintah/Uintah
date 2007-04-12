@@ -183,6 +183,9 @@ public:
       inline void setExtraProjection(bool extraProjection) {
         d_extraProjection=extraProjection;
       }
+      inline void setEKTCorrection(bool EKTCorrection) {
+        d_EKTCorrection=EKTCorrection;
+      }
 
 protected :
 
@@ -348,6 +351,7 @@ private:
       double d_H_air;
       bool d_doMMS;
       bool d_extraProjection;
+      bool d_EKTCorrection;
       bool d_KE_fromFC;
 
 }; // End class PicardNonlinearSolver

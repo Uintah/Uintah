@@ -321,25 +321,32 @@ void
 SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels)
+			    		 const TimeIntegratorLabel* timelabels,
+                                              bool d_EKTCorrection,
+                                              bool doing_EKT_now)
 {
   string taskname =  "SmagorinskyModel::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::computeScalarVariance,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (doing_EKT_now)
+    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
      tsk->computes(d_lab->d_scalarVarSPLabel);
      tsk->computes(d_lab->d_normalizedScalarVarLabel);
   }
@@ -358,7 +365,9 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels)
+			    		const TimeIntegratorLabel* timelabels,
+                                        bool d_EKTCorrection,
+                                        bool doing_EKT_now)
 {
 //  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
@@ -370,10 +379,15 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     CCVariable<double> scalarVar;
     CCVariable<double> normalizedScalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    if (doing_EKT_now)
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
     	new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
@@ -548,20 +562,26 @@ void
 SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels)
+			    		 const TimeIntegratorLabel* timelabels,
+                                                 bool d_EKTCorrection,
+                                                 bool doing_EKT_now)
 {
   string taskname =  "SmagorinskyModel::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::computeScalarDissipation,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  if (doing_EKT_now)
+    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -569,7 +589,8 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
      tsk->computes(d_lab->d_scalarDissSPLabel);
   else
      tsk->modifies(d_lab->d_scalarDissSPLabel);
@@ -584,7 +605,9 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels)
+			    		const TimeIntegratorLabel* timelabels,
+                                        bool d_EKTCorrection,
+                                        bool doing_EKT_now)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -595,12 +618,17 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
 
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    if (doing_EKT_now)
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
        new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
 			      matlIndex, patch);
     else
