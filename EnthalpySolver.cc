@@ -187,16 +187,20 @@ EnthalpySolver::solve(const LevelP& level,
 		      SchedulerP& sched,
 		      const PatchSet* patches,
 		      const MaterialSet* matls,
-		      const TimeIntegratorLabel* timelabels)
+		      const TimeIntegratorLabel* timelabels,
+                      bool d_EKTCorrection,
+                      bool doing_EKT_now)
 {
   //computes stencil coefficients and source terms
   // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrix(level, sched, patches, matls, timelabels);
+  sched_buildLinearMatrix(level, sched, patches, matls, timelabels, 
+                          d_EKTCorrection, doing_EKT_now);
   
   // Schedule the enthalpy solve
   // require : enthalpyIN, scalCoefSBLM, scalNonLinSrcSBLM
-  sched_enthalpyLinearSolve(sched, patches, matls, timelabels);
+  sched_enthalpyLinearSolve(sched, patches, matls, timelabels, d_EKTCorrection,
+                            doing_EKT_now);
 }
 
 //****************************************************************************
@@ -207,7 +211,9 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 					SchedulerP& sched,
 					const PatchSet*,
 					const MaterialSet* matls,
-		    			const TimeIntegratorLabel* timelabels)
+		    			const TimeIntegratorLabel* timelabels,
+                                        bool d_EKTCorrection,
+                                        bool doing_EKT_now)
 {
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
@@ -222,7 +228,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &EnthalpySolver::buildLinearMatrix,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
 
   Task::WhichDW parent_old_dw;
@@ -264,7 +270,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::OldDW, d_lab->d_cpINLabel,
@@ -331,7 +338,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
 
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     tsk->computes(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
     tsk->computes(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl,
@@ -346,10 +354,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     tsk->modifies(d_lab->d_enthNonLinSrcSBLMLabel);
   }
 
-  if (timelabels->integrator_last_step)
+  if ((timelabels->integrator_last_step)&&(!(doing_EKT_now)))
     tsk->computes(d_lab->d_totalRadSrcLabel);
 
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
    if (d_radiationCalc) 
     if (d_DORadiationCalc) {
       tsk->computes(d_lab->d_abskgINLabel);
@@ -397,7 +406,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 				       const MaterialSubset*,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw,
-				       const TimeIntegratorLabel* timelabels)
+				       const TimeIntegratorLabel* timelabels,
+                                       bool d_EKTCorrection,
+                                       bool doing_EKT_now)
 {
 
   DataWarehouse* parent_old_dw;
@@ -486,7 +497,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(constEnthalpyVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
     {
     old_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -501,7 +513,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     // allocate matrix coeffs
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateAndPut(enthalpyVars.scalarCoeff[ii],
 			     d_lab->d_enthCoefSBLMLabel, ii, patch);
@@ -537,7 +550,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_radiationCalc) {
       if (!d_DORadiationCalc) {
-        if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
           old_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       else
@@ -545,8 +558,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       }
       if (d_DORadiationCalc) {
-        if (timelabels->integrator_step_number ==
-			TimeIntegratorStepNumber::First)
+        if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
         {
         old_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -748,10 +760,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       bool first_step = 
 	(timelabels->integrator_step_number == TimeIntegratorStepNumber::First);
       if (d_radCounter%d_radCalcFreq == 0)
-        if ((first_step&&(!(timelabels->recursion)))
-	    ||(!first_step && d_radRKsteps)
-	    ||((timelabels->recursion)&&((d_iteration_number == 0)||
-	       (!(d_iteration_number == 0) && d_radImpsteps))))	{
+        if (((first_step&&(!(timelabels->recursion)))
+	     ||(!first_step && d_radRKsteps)
+	     ||((timelabels->recursion)&&((d_iteration_number == 0)||
+	        (!(d_iteration_number == 0) && d_radImpsteps))))
+            &&(!(doing_EKT_now))) {
 	enthalpyVars.src.initialize(0.0);
 	enthalpyVars.qfluxe.initialize(0.0);
 	enthalpyVars.qfluxw.initialize(0.0);
@@ -799,7 +812,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 					    &enthalpyVars, &constEnthalpyVars);
     }
 
-    if (timelabels->integrator_last_step)
+    if ((timelabels->integrator_last_step)&&(!(doing_EKT_now)))
       new_dw->put(sum_vartype(new_total_src), d_lab->d_totalRadSrcLabel);
 
     // Calculate the enthalpy boundary conditions
@@ -845,13 +858,14 @@ void
 EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
-				          const TimeIntegratorLabel* timelabels)
+				          const TimeIntegratorLabel* timelabels,                                          bool d_EKTCorrection,
+                                          bool doing_EKT_now)
 {
   string taskname =  "EnthalpySolver::enthalpyLinearSolve" + 
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &EnthalpySolver::enthalpyLinearSolve,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
   
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
@@ -901,7 +915,13 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   } 
 
-  tsk->modifies(d_lab->d_enthalpySPLabel);
+  if (doing_EKT_now)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      tsk->computes(d_lab->d_enthalpyEKTLabel);
+    else
+      tsk->modifies(d_lab->d_enthalpyEKTLabel);
+  else 
+    tsk->modifies(d_lab->d_enthalpySPLabel);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -914,7 +934,9 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 				    const MaterialSubset*,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw,
-				    const TimeIntegratorLabel* timelabels)
+				    const TimeIntegratorLabel* timelabels,
+                                    bool d_EKTCorrection,
+                                    bool doing_EKT_now)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -973,11 +995,27 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // for explicit calculation
-    new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
-                matlIndex, patch);
-    new_dw->getModifiable(enthalpyVars.scalar, d_lab->d_enthalpySPLabel, 
-                matlIndex, patch);
-    
+    if (doing_EKT_now)
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      {
+        new_dw->allocateAndPut(enthalpyVars.enthalpy, d_lab->d_enthalpyEKTLabel, 
+                  matlIndex, patch);
+        new_dw->allocateAndPut(enthalpyVars.scalar, d_lab->d_enthalpyEKTLabel, 
+                  matlIndex, patch);
+      }
+      else {
+        new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpyEKTLabel, 
+                  matlIndex, patch);
+        new_dw->getModifiable(enthalpyVars.scalar, d_lab->d_enthalpyEKTLabel, 
+                  matlIndex, patch);
+      }
+    else {
+      new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+                  matlIndex, patch);
+      new_dw->getModifiable(enthalpyVars.scalar, d_lab->d_enthalpySPLabel, 
+                  matlIndex, patch);
+    }
+
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
       new_dw->get(constEnthalpyVars.scalarCoeff[ii],
 		  d_lab->d_enthCoefSBLMLabel, 

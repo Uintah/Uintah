@@ -68,6 +68,8 @@ ArchesLabel::ArchesLabel()
   // Density Labels
   d_densityCPLabel = VarLabel::create("densityCP", 
 				  CCVariable<double>::getTypeDescription() );
+  d_densityEKTLabel = VarLabel::create("densityEKT", 
+				  CCVariable<double>::getTypeDescription() );
   d_densityGuessLabel = VarLabel::create("densityGuess", 
 				  CCVariable<double>::getTypeDescription() );
   d_densityTempLabel = VarLabel::create("densityTemp", 
@@ -120,6 +122,9 @@ ArchesLabel::ArchesLabel()
   d_scalarSPLabel = VarLabel::create("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
 
+  d_scalarEKTLabel = VarLabel::create("scalarEKT",
+				   CCVariable<double>::getTypeDescription() );
+
   d_scalarTempLabel = VarLabel::create("scalarTemp",
 				   CCVariable<double>::getTypeDescription() );
 
@@ -145,6 +150,9 @@ ArchesLabel::ArchesLabel()
   // reactive scalar
 
   d_reactscalarSPLabel = VarLabel::create("reactscalarSP",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_reactscalarEKTLabel = VarLabel::create("reactscalarEKT",
 				   CCVariable<double>::getTypeDescription() );
 
   d_reactscalarTempLabel = VarLabel::create("reactscalarTemp",
@@ -290,6 +298,9 @@ ArchesLabel::ArchesLabel()
   // enthalpy labels
   // Enthalpy 
   d_enthalpySPLabel = VarLabel::create("enthalpySP",
+				   CCVariable<double>::getTypeDescription() );
+
+  d_enthalpyEKTLabel = VarLabel::create("enthalpyEKT",
 				   CCVariable<double>::getTypeDescription() );
 
   d_enthalpyTempLabel = VarLabel::create("enthalpyTemp",
@@ -444,6 +455,12 @@ ArchesLabel::ArchesLabel()
   d_negativeDensityGuessPred_label = VarLabel::create("negativeDensityGuessPred",
 				       sum_vartype::getTypeDescription() );
   d_negativeDensityGuessInterm_label = VarLabel::create("negativeDensityGuessInterm",
+				       sum_vartype::getTypeDescription() );
+  d_negativeEKTDensityGuess_label = VarLabel::create("negativeEKTDensityGuess",
+				       sum_vartype::getTypeDescription() );
+  d_negativeEKTDensityGuessPred_label = VarLabel::create("negativeEKTDensityGuessPred",
+				       sum_vartype::getTypeDescription() );
+  d_negativeEKTDensityGuessInterm_label = VarLabel::create("negativeEKTDensityGuessInterm",
 				       sum_vartype::getTypeDescription() );
 // kinetic energy
   d_kineticEnergyLabel = VarLabel::create("kineticEnergy", 
@@ -697,6 +714,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalAreaOUTLabel);
   VarLabel::destroy(d_denAccumLabel);
   VarLabel::destroy(d_densityCPLabel);
+  VarLabel::destroy(d_densityEKTLabel);
   VarLabel::destroy(d_densityGuessLabel);
   VarLabel::destroy(d_densityTempLabel);
   VarLabel::destroy(d_densityOldOldLabel);
@@ -714,6 +732,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
   VarLabel::destroy(d_scalarSPLabel);
+  VarLabel::destroy(d_scalarEKTLabel);
   VarLabel::destroy(d_scalarTempLabel);
   VarLabel::destroy(d_scalarFELabel);
   VarLabel::destroy(d_scalarVarSPLabel);
@@ -721,6 +740,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalCoefSBLMLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalarSPLabel);
+  VarLabel::destroy(d_reactscalarEKTLabel);
   VarLabel::destroy(d_reactscalarTempLabel);
   VarLabel::destroy(d_reactscalarFELabel);
   VarLabel::destroy(d_reactscalarVarSPLabel);
@@ -767,6 +787,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_divConstraintLabel); 
   VarLabel::destroy(d_pressurePredLabel);
   VarLabel::destroy(d_enthalpySPLabel);
+  VarLabel::destroy(d_enthalpyEKTLabel);
   VarLabel::destroy(d_enthalpyTempLabel);
   VarLabel::destroy(d_enthalpyFELabel);
   VarLabel::destroy(d_enthalpyRXNLabel);
@@ -830,6 +851,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_negativeDensityGuess_label);
   VarLabel::destroy(d_negativeDensityGuessPred_label);
   VarLabel::destroy(d_negativeDensityGuessInterm_label);
+  VarLabel::destroy(d_negativeEKTDensityGuess_label);
+  VarLabel::destroy(d_negativeEKTDensityGuessPred_label);
+  VarLabel::destroy(d_negativeEKTDensityGuessInterm_label);
 // kinetic energy
   VarLabel::destroy(d_kineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyLabel); 

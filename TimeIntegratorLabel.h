@@ -79,6 +79,7 @@ namespace Uintah {
     const VarLabel* floutbc;
     const VarLabel* areaOUT;
     const VarLabel* negativeDensityGuess;
+    const VarLabel* negativeEKTDensityGuess;
     const VarLabel* ummsLnError;
     const VarLabel* vmmsLnError;
     const VarLabel* wmmsLnError;
@@ -119,6 +120,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuess_label;
 	    ummsLnError = lab->d_totalummsLnErrorLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
@@ -154,6 +156,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuess_label;
 	    ummsLnError = lab->d_totalummsLnErrorLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
@@ -189,6 +192,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuessPred_label;
 	    ummsLnError = lab->d_totalummsLnErrorPredLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorPredLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorPredLabel;
@@ -223,7 +227,7 @@ namespace Uintah {
 	    denAccum = lab->d_denAccumPredLabel;
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
-	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuessPred_label;
 	    ummsLnError = lab->d_totalummsLnErrorPredLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorPredLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorPredLabel;
@@ -259,6 +263,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuess_label;
 	    ummsLnError = lab->d_totalummsLnErrorLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
@@ -294,6 +299,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuess_label;
 	    ummsLnError = lab->d_totalummsLnErrorLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
@@ -329,6 +335,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuess_label;
 	    ummsLnError = lab->d_totalummsLnErrorLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;
@@ -364,6 +371,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessInterm_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuessInterm_label;
 	    ummsLnError = lab->d_totalummsLnErrorIntermLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorIntermLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorIntermLabel;
@@ -399,6 +407,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCPredLabel;
 	    areaOUT = lab->d_totalAreaOUTPredLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessPred_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuessPred_label;
 	    ummsLnError = lab->d_totalummsLnErrorPredLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorPredLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorPredLabel;
@@ -434,6 +443,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCIntermLabel;
 	    areaOUT = lab->d_totalAreaOUTIntermLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuessInterm_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuessInterm_label;
 	    ummsLnError = lab->d_totalummsLnErrorIntermLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorIntermLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorIntermLabel;
@@ -469,6 +479,7 @@ namespace Uintah {
 	    floutbc = lab->d_netflowOUTBCLabel;
 	    areaOUT = lab->d_totalAreaOUTLabel;
 	    negativeDensityGuess = lab->d_negativeDensityGuess_label;
+	    negativeEKTDensityGuess = lab->d_negativeEKTDensityGuess_label;
 	    ummsLnError = lab->d_totalummsLnErrorLabel;
 	    vmmsLnError = lab->d_totalvmmsLnErrorLabel;
 	    wmmsLnError = lab->d_totalwmmsLnErrorLabel;

@@ -121,7 +121,8 @@ public:
 
       void sched_prepareExtraProjection(SchedulerP& sched, const PatchSet* patches,
 				   const MaterialSet* matls,
-		 		   const TimeIntegratorLabel* timelabels);
+		 		   const TimeIntegratorLabel* timelabels,
+                                   bool set_BC);
  
 #ifdef PetscFilter
       inline void setDiscretizationFilter(Filter* filter) {
@@ -176,7 +177,8 @@ private:
 				   const MaterialSubset* matls,
 				   DataWarehouse*,
 				   DataWarehouse*,
-				   const TimeIntegratorLabel* timelabels);
+				   const TimeIntegratorLabel* timelabels,
+                                   bool set_BC);
 
    
 private:

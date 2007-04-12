@@ -110,20 +110,26 @@ public:
 		 SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 const TimeIntegratorLabel* timelabels);
+		 const TimeIntegratorLabel* timelabels,
+                 bool d_EKTCorrection,
+                 bool doing_EKT_now);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrix(const LevelP& level,
 				   SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-		 		   const TimeIntegratorLabel* timelabels);
+		 		   const TimeIntegratorLabel* timelabels,
+                                   bool d_EKTCorrection,
+                                   bool doing_EKT_now);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Enthalpy[index]
       void sched_enthalpyLinearSolve(SchedulerP&, const PatchSet* patches,
 				     const MaterialSet* matls,
-		 		     const TimeIntegratorLabel* timelabels);
+		 		     const TimeIntegratorLabel* timelabels,
+                                     bool d_EKTCorrection,
+                                     bool doing_EKT_now);
 
       inline void setMMS(bool doMMS) {
         d_doMMS=doMMS;
@@ -148,7 +154,9 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-		 	     const TimeIntegratorLabel* timelabels);
+		 	     const TimeIntegratorLabel* timelabels,
+                             bool d_EKTCorrection,
+                             bool doing_EKT_now);
   
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Enthalpy[index]
@@ -159,7 +167,9 @@ private:
 			       const MaterialSubset* /*matls*/,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw,
-		 	       const TimeIntegratorLabel* timelabels);
+		 	       const TimeIntegratorLabel* timelabels,
+                               bool d_EKTCorrection,
+                               bool doing_EKT_now);
   
 private:
       // const VarLabel* (required)

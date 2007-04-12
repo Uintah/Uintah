@@ -91,19 +91,25 @@ public:
       void solve(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 const TimeIntegratorLabel* timelabels);
+		 const TimeIntegratorLabel* timelabels,
+                 bool d_EKTCorrection,
+                 bool doing_EKT_now);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels);
+				   const TimeIntegratorLabel* timelabels,
+                                   bool d_EKTCorrection,
+                                   bool doing_EKT_now);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Scalar
       void sched_scalarLinearSolve(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels);
+				   const TimeIntegratorLabel* timelabels,
+                                   bool d_EKTCorrection,
+                                   bool doing_EKT_now);
 
       inline void setMMS(bool doMMS) {
         d_doMMS=doMMS;
@@ -127,7 +133,9 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels);
+			     const TimeIntegratorLabel* timelabels,
+                             bool d_EKTCorrection,
+                             bool doing_EKT_now);
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Scalar
@@ -138,7 +146,9 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels);
+			     const TimeIntegratorLabel* timelabels,
+                             bool d_EKTCorrection,
+                             bool doing_EKT_now);
 
 
 private:
