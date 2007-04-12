@@ -477,6 +477,11 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
   return retval;
 }
 
+void Switcher::outputProblemSpec(ProblemSpecP& ps)
+{
+  d_sim->outputProblemSpec(ps);
+}
+
 void Switcher::addToTimestepXML(ProblemSpecP& spec)
 {
   spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );
