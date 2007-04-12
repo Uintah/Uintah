@@ -55,7 +55,7 @@
                      <max>[0.01,0.01,0.02]</max>
                   </box>
                   <res>[1,1,1]</res>
-                  <velocity>[0.0,0.0,5.e-4]</velocity>
+                  <velocity>[0.0,0.0,5.e-5]</velocity>
                   <temperature>12</temperature>
                </geom_object>
            </material>
