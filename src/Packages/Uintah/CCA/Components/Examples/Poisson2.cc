@@ -121,11 +121,11 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   // Compile the scheduler
+  subsched->advanceDataWarehouse(grid);
   subsched->compile();
 
   int count = 0;
   double residual;
-  subsched->advanceDataWarehouse(grid);
   subsched->get_dw(1)->transferFrom(old_dw, lb_->phi, patches, matls);
   // Iterate
   do {
@@ -159,7 +159,7 @@ void Poisson2::iterate(const ProcessorGroup*,
       old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
       new_dw->allocateAndPut(newphi, lb_->phi, matl, patch);
-      newphi.copyData(phi);
+      newphi.copyPatch(phi, newphi.getLow(), newphi.getHigh());
       double residual=0;
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex(); 

@@ -1228,9 +1228,31 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         levelElem->appendElement("totalCells", level->totalCells());
         if (level->getExtraCells() != IntVector(0,0,0))
           levelElem->appendElement("extraCells", level->getExtraCells());
-        levelElem->appendElement("cellspacing", level->dCell());
         levelElem->appendElement("anchor", level->getAnchor());
         levelElem->appendElement("id", level->getID());
+        if (!level->isStretched()) {
+          levelElem->appendElement("cellspacing", level->dCell());
+        }
+        else {
+          for (int axis = 0; axis < 3; axis++) {
+            ostringstream axisstr, lowstr, highstr;
+            axisstr << axis;
+            ProblemSpecP stretch = levelElem->appendChild("StretchPositions");
+            stretch->setAttribute("axis", axisstr.str());
+
+            OffsetArray1<double> faces;
+            level->getFacePositions((Grid::Axis)axis, faces);
+            int low = faces.low();
+            int high = faces.high();
+            lowstr << low;
+            stretch->setAttribute("low", lowstr.str());
+            highstr << high;
+            stretch->setAttribute("high", highstr.str());
+          
+            for (int i = low; i < high; i++)
+              stretch->appendElement("pos", faces[i]);
+          }
+        }
 
 
         Level::const_patchIterator iter;
