@@ -866,13 +866,15 @@ void
 ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels)
+			    		 const TimeIntegratorLabel* timelabels,
+                                              bool d_EKTCorrection,
+                                              bool doing_EKT_now)
 {
   string taskname =  "ScaleSimilarityModel::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ScaleSimilarityModel::computeScalarVariance,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -899,7 +901,8 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels)
+			    		const TimeIntegratorLabel* timelabels,
+                                        bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1079,13 +1082,15 @@ void
 ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels)
+			    		 const TimeIntegratorLabel* timelabels,
+                                                 bool d_EKTCorrection,
+                                                 bool doing_EKT_now)
 {
   string taskname =  "ScaleSimilarityModel::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ScaleSimilarityModel::computeScalarDissipation,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -1126,7 +1131,8 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse* old_dw,
 					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels)
+			    		const TimeIntegratorLabel* timelabels,
+                                        bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

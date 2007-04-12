@@ -141,6 +141,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("recompileTaskgraph",d_recompile,false);
   db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
   db->getWithDefault("extraProjection",d_extraProjection,false);  
+  db->getWithDefault("EKTCorrection",d_EKTCorrection,false);  
 
   db->getWithDefault("doMMS", d_doMMS, false);
   if(d_doMMS) {
@@ -274,6 +275,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
 
   d_nlSolver->setExtraProjection(d_extraProjection);
+  d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
@@ -362,7 +364,7 @@ Arches::scheduleInitialize(const LevelP& level,
   init_timelabel_allocated = true;
 
   d_props->sched_reComputeProps(sched, patches, matls,
-				init_timelabel, true, true);
+				init_timelabel, true, true, false,false);
 
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
 
@@ -420,7 +422,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
-    if (d_extraProjection)
+    if ((d_extraProjection)||(d_EKTCorrection))
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE")))
       tsk->computes(d_lab->d_pressurePredLabel);
@@ -556,7 +558,7 @@ Arches::paramInit(const ProcessorGroup* ,
     vVelRhoHat.initialize(0.0);
     wVelRhoHat.initialize(0.0);
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
-    if (d_extraProjection) {
+    if ((d_extraProjection)||(d_EKTCorrection)) {
       new_dw->allocateAndPut(pressureExtraProjection, d_lab->d_pressureExtraProjectionLabel, matlIndex, patch);
       pressureExtraProjection.initialize(0.0);
     }

@@ -94,12 +94,14 @@ public:
       virtual void sched_computeScalarVariance(SchedulerP&,
 					       const PatchSet* patches,
 					       const MaterialSet* matls,
-			                 const TimeIntegratorLabel* timelabels);
+			                 const TimeIntegratorLabel* timelabels,
+                                               bool d_EKTCorrection);
 
       virtual void sched_computeScalarDissipation(SchedulerP&,
 						  const PatchSet* patches,
 						  const MaterialSet* matls,
-			                 const TimeIntegratorLabel* timelabels);
+			                 const TimeIntegratorLabel* timelabels,
+                                                  bool d_EKTCorrection);
 
 protected:
       int d_odtPoints; // number of odt Points at each LES cell
@@ -145,14 +147,16 @@ private:
 				 const MaterialSubset* matls,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw,
-			         const TimeIntegratorLabel* timelabels);
+			         const TimeIntegratorLabel* timelabels,
+                                 bool d_EKTCorrection);
 
       void computeScalarDissipation(const ProcessorGroup*,
 				    const PatchSubset* patches,
 				    const MaterialSubset* matls,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw,
-			            const TimeIntegratorLabel* timelabels);
+			            const TimeIntegratorLabel* timelabels,
+                                    bool d_EKTCorrection);
 
 private:
       double d_CF; //model constant

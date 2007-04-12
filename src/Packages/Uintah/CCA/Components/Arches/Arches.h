@@ -254,6 +254,7 @@ private:
       bool d_mixedModel;
       bool d_doMMS;
       bool d_extraProjection;
+      bool d_EKTCorrection;
       string turbModel;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;

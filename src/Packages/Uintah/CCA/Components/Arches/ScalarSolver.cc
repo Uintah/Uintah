@@ -155,16 +155,20 @@ void
 ScalarSolver::solve(SchedulerP& sched,
 		    const PatchSet* patches,
 		    const MaterialSet* matls,
-		    const TimeIntegratorLabel* timelabels)
+		    const TimeIntegratorLabel* timelabels,
+                    bool d_EKTCorrection,
+                    bool doing_EKT_now)
 {
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrix(sched, patches, matls, timelabels);
+  sched_buildLinearMatrix(sched, patches, matls, timelabels, d_EKTCorrection,
+                          doing_EKT_now);
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
-  sched_scalarLinearSolve(sched, patches, matls, timelabels);
+  sched_scalarLinearSolve(sched, patches, matls, timelabels, d_EKTCorrection,
+                          doing_EKT_now);
 }
 
 //****************************************************************************
@@ -174,13 +178,15 @@ void
 ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 				      const PatchSet* patches,
 				      const MaterialSet* matls,
-				      const TimeIntegratorLabel* timelabels)
+				      const TimeIntegratorLabel* timelabels,
+                                      bool d_EKTCorrection,
+                                      bool doing_EKT_now)
 {
   string taskname =  "ScalarSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ScalarSolver::buildLinearMatrix,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
 
   Task::WhichDW parent_old_dw;
@@ -235,7 +241,8 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
 
       // added one more argument of index to specify scalar component
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
     tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl,
@@ -268,7 +275,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const MaterialSubset*,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw,
-				     const TimeIntegratorLabel* timelabels)
+				     const TimeIntegratorLabel* timelabels,
+                                     bool d_EKTCorrection,
+                                     bool doing_EKT_now)
 {
 
   DataWarehouse* parent_old_dw;
@@ -333,7 +342,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
   // allocate matrix coeffs
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateAndPut(scalarVars.scalarCoeff[ii],
 			     d_lab->d_scalCoefSBLMLabel, ii, patch);
@@ -502,13 +512,15 @@ void
 ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 				      const PatchSet* patches,
 				      const MaterialSet* matls,
-				      const TimeIntegratorLabel* timelabels)
+				      const TimeIntegratorLabel* timelabels,
+                                      bool d_EKTCorrection,
+                                      bool doing_EKT_now)
 {
   string taskname =  "ScalarSolver::ScalarLinearSolve" + 
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ScalarSolver::scalarLinearSolve,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
   
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
@@ -557,7 +569,13 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }    
 
-  tsk->modifies(d_lab->d_scalarSPLabel);
+  if (doing_EKT_now)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      tsk->computes(d_lab->d_scalarEKTLabel);
+    else
+      tsk->modifies(d_lab->d_scalarEKTLabel);
+  else 
+    tsk->modifies(d_lab->d_scalarSPLabel);
   if (timelabels->recursion)
     tsk->computes(d_lab->d_ScalarClippedLabel);
   
@@ -573,7 +591,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				const MaterialSubset*,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw,
-				const TimeIntegratorLabel* timelabels)
+				const TimeIntegratorLabel* timelabels,
+                                bool d_EKTCorrection,
+                                bool doing_EKT_now)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -624,8 +644,16 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     // for explicit calculation
-    new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 
-                matlIndex, patch);
+    if (doing_EKT_now)
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
+                  matlIndex, patch);
+      else
+        new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
+                  matlIndex, patch);
+    else
+      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 
+                  matlIndex, patch);
 
     new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);

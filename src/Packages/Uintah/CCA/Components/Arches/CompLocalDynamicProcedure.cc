@@ -3003,13 +3003,15 @@ void
 CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels)
+			    		 const TimeIntegratorLabel* timelabels,
+                                              bool d_EKTCorrection,
+                                              bool doing_EKT_now)
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &CompLocalDynamicProcedure::computeScalarVariance,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -3036,7 +3038,8 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels)
+			    		const TimeIntegratorLabel* timelabels,
+                                        bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -3194,13 +3197,15 @@ void
 CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
 						 const PatchSet* patches,
 						 const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels)
+			    		 const TimeIntegratorLabel* timelabels,
+                                                 bool d_EKTCorrection,
+                                                 bool doing_EKT_now)
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &CompLocalDynamicProcedure::computeScalarDissipation,
-			  timelabels);
+			  timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -3234,7 +3239,8 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
 					const MaterialSubset*,
 					DataWarehouse*,
 					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels)
+			    		const TimeIntegratorLabel* timelabels,
+                                        bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

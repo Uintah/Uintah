@@ -148,11 +148,13 @@ public:
 
       void sched_getDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
+			        const TimeIntegratorLabel* timelabels,
+                                bool EKTCorrection, bool doing_EKT_now);
 
       void sched_checkDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
+			        const TimeIntegratorLabel* timelabels,
+                                bool EKTCorrection, bool doing_EKT_now);
 
       void sched_updateDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
@@ -188,6 +190,9 @@ public:
       }
       inline void setExtraProjection(bool extraProjection) {
         d_extraProjection=extraProjection;
+      }
+      inline void setEKTCorrection(bool EKTCorrection) {
+        d_EKTCorrection=EKTCorrection;
       }
 
 protected :
@@ -276,14 +281,18 @@ private:
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
+			  const TimeIntegratorLabel* timelabels,
+                          bool EKTCorrection,
+                          bool doing_EKT_now);
 
       void checkDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
+			  const TimeIntegratorLabel* timelabels,
+                          bool EKTCorrection,
+                          bool doing_EKT_now);
 
       void updateDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,
@@ -366,6 +375,7 @@ private:
     double d_viscosity;
 
     bool d_extraProjection;
+    bool d_EKTCorrection;
     bool d_KE_fromFC;
     
     //linear mms

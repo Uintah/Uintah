@@ -458,27 +458,30 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
   
   d_scalarSolver->solve(subsched, local_patches, local_matls, 
-			d_timeIntegratorLabels[curr_level]);
+			d_timeIntegratorLabels[curr_level],
+                        false, false);
 
     if (d_reactingScalarSolve) {
       d_reactingScalarSolver->solve(subsched, local_patches, local_matls,
-				    d_timeIntegratorLabels[curr_level]);
+				    d_timeIntegratorLabels[curr_level],
+                                    false, false);
     }
 
     if (d_enthalpySolve)
       d_enthalpySolver->solve(level, subsched, local_patches, local_matls,
-			      d_timeIntegratorLabels[curr_level]);
+			      d_timeIntegratorLabels[curr_level],
+                              false, false);
 
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
-						 d_timeIntegratorLabels[curr_level]);
+						 d_timeIntegratorLabels[curr_level], false, false);
     d_turbModel->sched_computeScalarDissipation(subsched, local_patches, local_matls,
-						d_timeIntegratorLabels[curr_level]);
+						d_timeIntegratorLabels[curr_level], false, false);
     }
 
     d_props->sched_reComputeProps(subsched, local_patches, local_matls,
 				  d_timeIntegratorLabels[curr_level],
-				  true, false);
+				  true, false, false, false);
     d_props->sched_computeDenRefArray(subsched, local_patches, local_matls,
 				      d_timeIntegratorLabels[curr_level]);
     //sched_syncRhoF(subsched, local_patches, local_matls,
@@ -499,13 +502,15 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 			   	     d_timeIntegratorLabels[curr_level]);
       if (d_calcVariance) {
         d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
-					    d_timeIntegratorLabels[curr_level]);
+					    d_timeIntegratorLabels[curr_level],
+                                            false, false);
         d_turbModel->sched_computeScalarDissipation(subsched, local_patches, local_matls,
-					    d_timeIntegratorLabels[curr_level]);
+					    d_timeIntegratorLabels[curr_level],
+                                            false, false);
       }
       d_props->sched_reComputeProps(subsched, local_patches, local_matls,
 				    d_timeIntegratorLabels[curr_level],
-				    false, false);
+				    false, false, false, false);
 
       d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
 					    d_timeIntegratorLabels[curr_level]);
@@ -513,10 +518,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     } 
 
     d_props->sched_computeDrhodt(subsched, local_patches, local_matls,
-				 d_timeIntegratorLabels[curr_level]);
+				 d_timeIntegratorLabels[curr_level],
+                                 false, false);
 
     d_pressSolver->solve(level, subsched, d_timeIntegratorLabels[curr_level],
-		         false);
+		         false, false);
   
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
@@ -829,15 +835,16 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
 
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-					    nosolve_timelabels);
+					    nosolve_timelabels, false, false);
     d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-					    nosolve_timelabels);
+					    nosolve_timelabels, false, false);
   }
 
   d_props->sched_computePropsFirst_mm(sched, patches, matls);
 
   d_props->sched_computeDrhodt(sched, patches, matls,
-				 nosolve_timelabels);
+				 nosolve_timelabels,
+                                 false, false);
 
   d_boundaryCondition->sched_setInletFlowRates(sched, patches, matls);
 
