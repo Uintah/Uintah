@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-       <maxTime>20.0</maxTime>
+       <maxTime>15.0</maxTime>
        <initTime>0.0</initTime>
        <delt_min>2.e-5</delt_min>
        <delt_max>2.e-3</delt_max>
@@ -16,10 +16,8 @@
    </Time>
    <DataArchiver>
         <filebase>const_test_tih.uda</filebase>
-       <outputInterval>0.01</outputInterval>
-<!--
-        <save label = "NTractionZMinus"/>
--->
+       <outputInterval>0.1</outputInterval>
+       <save label = "BndyForce_zminus"/>
        <save label = "StrainEnergy"/>
        <save label = "p.x"/>
        <save label = "p.velocity"/>
@@ -34,6 +32,7 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
+        <boundary_traction_faces>[zminus]</boundary_traction_faces>
     </MPM>
 
     <PhysicalConstants>
@@ -56,7 +55,7 @@
                      <max>[0.01,0.01,0.02]</max>
                   </box>
                   <res>[1,1,1]</res>
-                  <velocity>[0.0,0.0,5.e-5]</velocity>
+                  <velocity>[0.0,0.0,5.e-4]</velocity>
                   <temperature>12</temperature>
                </geom_object>
            </material>
@@ -64,10 +63,10 @@
            <material>
               <density>1.e3</density>
                 <constitutive_model type="trans_iso_hyper">
-                    <direction_of_symm>[0,0,1]</direction_of_symm>
-                    <bulk_modulus>46700</bulk_modulus>
+                  <direction_of_symm>[0,0,1]</direction_of_symm>
+                  <bulk_modulus>467</bulk_modulus>
                   <c1>1.44</c1>
-                  <c2>0</c2>
+                  <c2>1.00</c2>
                   <c3>0.57</c3>
                   <c4>48</c4>
                   <c5>467</c5>
@@ -92,7 +91,7 @@
            <contact>
              <type>rigid</type>
              <materials>[0,1]</materials>
-              <stop_time>10.0</stop_time>
+              <stop_time>14.0</stop_time>
               <direction>[0,0,1]</direction>
            </contact>
        </MPM>
@@ -100,43 +99,35 @@
     </MaterialProperties>
 
      <Grid>
-<BoundaryConditions>
+       <BoundaryConditions>
           <Face side = "x-">
-            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
-
-<!-- -->
-          <Face side = "x+">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                <value> [0.0,0.0,0.0] </value>
-                 </BCType>
+           <Face side = "x+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
-<!-- -->
            <Face side = "y-">
-            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
-
-<!-- -->
-          <Face side = "y+">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+           <Face side = "y+">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
                     <value> [0.0,0.0,0.0] </value>
-            </BCType>
+             </BCType>
            </Face>
-<!-- -->
            <Face side = "z-">
-            <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
-          <Face side = "z+">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+           <Face side = "z+">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
                       <value> [0.0,0.0,0.0] </value>
-           </BCType>
+             </BCType>
            </Face>
        </BoundaryConditions>
        <Level>
            <Box label = "1">
               <lower>[0.0,0.0,0.0]</lower>
-              <upper>[0.02,0.02,0.03]</upper>
-               <resolution>[2,2,3]</resolution>
+              <upper>[0.01,0.02,0.03]</upper>
+              <resolution>[1,2,3]</resolution>
               <patches>[1,1,1]</patches>
            </Box>
        </Level>
