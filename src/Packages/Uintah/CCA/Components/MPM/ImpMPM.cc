@@ -3361,3 +3361,18 @@ double ImpMPM::recomputeTimestep(double current_dt)
 {
   return current_dt*flags->d_delT_decrease_factor;
 }
+
+// note - currently this task is not compiled into the taskgraph.
+//   the functions called must be in order and must not have MPI communication
+//   between them (i.e., no ghost cells)
+void ImpMPM::switchInitialize(const ProcessorGroup* group, const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+  // note 'matls' is ALL matls.
+  if (flags->d_useLoadCurves) {
+    countMaterialPointsPerLoadCurve(group, patches, matls, old_dw, new_dw);
+    initializeHeatFluxBC(group, patches, matls, old_dw, new_dw);
+  }
+}
+

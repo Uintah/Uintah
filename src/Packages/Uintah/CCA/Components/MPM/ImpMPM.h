@@ -131,6 +131,11 @@ private:
     };
 
 
+  /// called from Switcher::initNewVars when switching TO this component
+  virtual void switchInitialize(const ProcessorGroup*, const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw, DataWarehouse* new_dw);
+  
   void actuallyInitialize(             const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
