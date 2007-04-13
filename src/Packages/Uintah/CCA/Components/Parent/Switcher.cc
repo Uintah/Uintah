@@ -396,6 +396,15 @@ void Switcher::initNewVars(const ProcessorGroup*,
           {
           ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
           switch(l->typeDescription()->getSubType()->getType()) {
+          case TypeDescription::int_type:
+            {
+            ParticleVariable<int> q;
+            constParticleVariable<int> qcopy;
+            new_dw->allocateAndPut(q, l, pset);
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+              q[*iter] = 0;
+            break;
+            }
           case TypeDescription::double_type:
             {
             ParticleVariable<double> q;
