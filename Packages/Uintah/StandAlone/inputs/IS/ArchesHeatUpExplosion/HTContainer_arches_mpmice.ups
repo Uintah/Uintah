@@ -174,7 +174,7 @@
            <Box label="3D">
               <lower>        [-0.075,-0.075,-0.075]   </lower>
               <upper>        [ 0.075, 0.075, 0.075]   </upper>
-              <extraCells>   [0,0,0]            </extraCells>
+              <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
               <resolution>   [10,10,10]      </resolution>
            </Box>
