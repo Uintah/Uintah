@@ -230,6 +230,13 @@ void
 Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 {
   d_sim->scheduleTimeAdvance(level,sched);
+}
+
+void
+Switcher::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+{
+  d_sim->scheduleFinalizeTimestep(level, sched);
+
   scheduleSwitchTest(level,sched);
 
   // compute vars for the next component that may not have been computed by the current
@@ -238,6 +245,7 @@ Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
   // carry over vars that will be needed by a future component
   scheduleCarryOverVars(level,sched);
 }
+
 
 void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
