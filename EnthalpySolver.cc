@@ -391,7 +391,10 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 	tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
 		      Ghost::None, Arches::ZEROGHOSTCELLS);
   }
-  tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
+  if (doing_EKT_now)
+    tsk->requires(Task::NewDW, timelabels->negativeEKTDensityGuess);
+  else
+    tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
 
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
@@ -431,7 +434,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
   double new_total_src = 0.0;
   double negativeDensityGuess = 0.0;
   sum_vartype nDG;
-  new_dw->get(nDG, timelabels->negativeDensityGuess);
+  if (doing_EKT_now)
+    new_dw->get(nDG, timelabels->negativeEKTDensityGuess);
+  else
+    new_dw->get(nDG, timelabels->negativeDensityGuess);
   negativeDensityGuess = nDG;
 
     if (d_radiationCalc)
@@ -858,7 +864,8 @@ void
 EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls,
-				          const TimeIntegratorLabel* timelabels,                                          bool d_EKTCorrection,
+				          const TimeIntegratorLabel* timelabels,
+                                          bool d_EKTCorrection,
                                           bool doing_EKT_now)
 {
   string taskname =  "EnthalpySolver::enthalpyLinearSolve" + 
