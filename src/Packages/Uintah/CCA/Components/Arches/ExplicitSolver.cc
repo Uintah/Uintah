@@ -297,7 +297,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			   	      d_timeIntegratorLabels[curr_level]);
     
     bool doing_EKT_now = false;
-    bool extra_projection = d_EKTCorrection;
     if (d_EKTCorrection) {
       doing_EKT_now = true;
       sched_getDensityGuess(sched, patches, matls,
@@ -344,11 +343,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 		                      d_timeIntegratorLabels[curr_level],
                                       set_BC);
       d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
-		                      extra_projection, doing_EKT_now);
+		           false, d_EKTCorrection, doing_EKT_now);
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index,
-			 extra_projection);
+			 doing_EKT_now);
       }
       doing_EKT_now = false;
     }
@@ -397,9 +396,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 //    sched_updateDensityGuess(sched, patches, matls,
 //			   	      d_timeIntegratorLabels[curr_level]);
+    bool modify_ref_density = true;
+    if (d_EKTCorrection) modify_ref_density = false;
     d_props->sched_reComputeProps(sched, patches, matls,
 				  d_timeIntegratorLabels[curr_level],
-				  true, false, d_EKTCorrection, doing_EKT_now);
+				  modify_ref_density, false,
+				  d_EKTCorrection, doing_EKT_now);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level]);
@@ -438,7 +440,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                  d_EKTCorrection, doing_EKT_now);
 
     d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
-		         extra_projection, doing_EKT_now);
+		         false, d_EKTCorrection, doing_EKT_now);
   
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
@@ -451,7 +453,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 		                          d_timeIntegratorLabels[curr_level],
                                           false);
       d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
-		           d_extraProjection, true);
+		           d_extraProjection, false, false);
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index,
@@ -2225,6 +2227,7 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* patches,
 {
   string taskname =  "ExplicitSolver::getDensityGuess" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &ExplicitSolver::getDensityGuess,
 			  timelabels, EKTCorrection, doing_EKT_now);
@@ -2492,6 +2495,7 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,const PatchSet* patche
 {
   string taskname =  "ExplicitSolver::checkDensityGuess" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &ExplicitSolver::checkDensityGuess,
 			  timelabels, EKTCorrection, doing_EKT_now);

@@ -2068,6 +2068,7 @@ IncDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 {
   string taskname =  "IncDynamicProcedure::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &IncDynamicProcedure::computeScalarVariance,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
@@ -2354,6 +2355,7 @@ IncDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
 {
   string taskname =  "IncDynamicProcedure::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &IncDynamicProcedure::computeScalarDissipation,
 			  timelabels, d_EKTCorrection, doing_EKT_now);

@@ -190,6 +190,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (!(modify_ref_density)) md += "RKSSP";
   string taskname =  "Properties::ReComputeProps" +
 		     timelabels->integrator_step_name + md;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &Properties::reComputeProps,
 			  timelabels, modify_ref_density, initialize,
@@ -1562,6 +1563,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
 {
   string taskname =  "Properties::computeDrhodt" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &Properties::computeDrhodt,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
