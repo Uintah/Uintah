@@ -327,6 +327,7 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
 {
   string taskname =  "SmagorinskyModel::computeScalarVaraince" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::computeScalarVariance,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
@@ -568,6 +569,7 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
 {
   string taskname =  "SmagorinskyModel::computeScalarDissipation" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &SmagorinskyModel::computeScalarDissipation,
 			  timelabels, d_EKTCorrection, doing_EKT_now);

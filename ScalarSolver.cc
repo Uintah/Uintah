@@ -184,6 +184,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 {
   string taskname =  "ScalarSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &ScalarSolver::buildLinearMatrix,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
@@ -518,6 +519,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 {
   string taskname =  "ScalarSolver::ScalarLinearSolve" + 
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &ScalarSolver::scalarLinearSolve,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
@@ -700,15 +702,23 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 	if (scalarVars.scalar[currCell] > 1.0) {
           if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
 	    scalar_clipped = 1.0;
-	    cout << "scalar got clipped to 1 at " << currCell << " , scalar value was " << scalarVars.scalar[currCell] << " , density guess was " << constScalarVars.density_guess[currCell] << endl;
+	    cout << "scalar got clipped to 1 at " << currCell
+            << " , scalar value was " << scalarVars.scalar[currCell] 
+	    << " , density guess was " 
+	    << constScalarVars.density_guess[currCell] << endl;
           }
 	  scalarVars.scalar[currCell] = 1.0;
 	}  
 	else if (scalarVars.scalar[currCell] < 0.0) {
           if (scalarVars.scalar[currCell] < - epsilon) {
 	    scalar_clipped = 1.0;
-	    cout << "scalar got clipped to 0 at " << currCell << " , scalar value was " << scalarVars.scalar[currCell] << " , density guess was " << constScalarVars.density_guess[currCell] << endl;
-	    cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> in the <ARCHES> section of the input file, but it would only help for first time substep if RKSSP is used" << endl;
+	    cout << "scalar got clipped to 0 at " << currCell
+            << " , scalar value was " << scalarVars.scalar[currCell]
+	    << " , density guess was " 
+	    << constScalarVars.density_guess[currCell] << endl;
+	    cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
+	    << "in the <ARCHES> section of the input file, "
+	    <<"but it would only help for first time substep if RKSSP is used" << endl;
           }
 	  scalarVars.scalar[currCell] = 0.0;
 	}

@@ -128,6 +128,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 {
   string taskname =  "MomentumSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
+  if (extraProjection) taskname += "extraProjection";
   Task* tsk = scinew Task(taskname,
 			  this, &MomentumSolver::buildLinearMatrix,
 			  timelabels, index, extraProjection);

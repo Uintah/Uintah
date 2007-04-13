@@ -114,16 +114,17 @@ void PressureSolver::solve(const LevelP& level,
 			   SchedulerP& sched,
 		 	   const TimeIntegratorLabel* timelabels,
 			   bool extraProjection,
+		           bool d_EKTCorrection,
                            bool doing_EKT_now)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   sched_buildLinearMatrix(sched, patches, matls, timelabels, extraProjection,
-                         doing_EKT_now);
+                         d_EKTCorrection, doing_EKT_now);
 
   sched_pressureLinearSolve(level, sched, timelabels, extraProjection,
-                            doing_EKT_now);
+                            d_EKTCorrection, doing_EKT_now);
 
   if ((d_MAlab)&&(!(extraProjection))) {
       sched_addHydrostaticTermtoPressure(sched, patches, matls,
@@ -141,15 +142,18 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
 					const MaterialSet* matls,
 		 	                const TimeIntegratorLabel* timelabels,
 					bool extraProjection,
+		                        bool d_EKTCorrection,
                                         bool doing_EKT_now)
 {
 
   //  build pressure equation coefficients and source
   string taskname =  "PressureSolver::buildLinearMatrix" +
 		     timelabels->integrator_step_name;
+  if (extraProjection) taskname += "extraProjection";
   Task* tsk = scinew Task(taskname, this,
 			  &PressureSolver::buildLinearMatrix,
-			  timelabels, extraProjection, doing_EKT_now);
+			  timelabels, extraProjection,
+			  d_EKTCorrection, doing_EKT_now);
     
 
   Task::WhichDW parent_old_dw;
@@ -189,7 +193,8 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(extraProjection))||((extraProjection)&&(doing_EKT_now)))) {
+      &&((!(extraProjection))||
+         (!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
@@ -215,6 +220,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  DataWarehouse* new_dw,
 		 	          const TimeIntegratorLabel* timelabels,
 				  bool extraProjection,
+		                  bool d_EKTCorrection,
                                   bool doing_EKT_now)
 {
   DataWarehouse* parent_old_dw;
@@ -274,7 +280,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   
     // Calculate Pressure Coeffs
     for (int ii = 0; ii < nofStencils; ii++) {
-      if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&((!(extraProjection))||((extraProjection)&&(doing_EKT_now))))
+      if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+          &&((!(extraProjection))||
+             (!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
         new_dw->allocateAndPut(pressureVars.pressCoeff[ii],
 			       d_lab->d_presCoefPBLMLabel, ii, patch);
       else
@@ -308,8 +316,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
     pressureVars.pressLinearSrc.initialize(0.0);
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&((!(extraProjection))||((extraProjection)&&(doing_EKT_now))))
-	    
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        &&((!(extraProjection))||
+           (!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
       new_dw->allocateAndPut(pressureVars.pressNonlinearSrc,
 			     d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
     else
@@ -364,6 +373,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 					  SchedulerP& sched,
 		 	          	  const TimeIntegratorLabel* timelabels,
 					  bool extraProjection,
+		                          bool d_EKTCorrection,
                                           bool doing_EKT_now)
 {
   if(d_perproc_patches && d_perproc_patches->removeReference())
@@ -376,14 +386,17 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 
   string taskname =  "PressureSolver::PressLinearSolve_all" + 
 		     timelabels->integrator_step_name;
+  if (extraProjection) taskname += "extraProjection";
   Task* tsk = scinew Task(taskname, this,
 			  &PressureSolver::pressureLinearSolve_all,
-			  timelabels, extraProjection, doing_EKT_now);
+			  timelabels, extraProjection,
+			  d_EKTCorrection, doing_EKT_now);
 
   // Requires
   // coefficient for the variable for which solve is invoked
 
-  if (!((d_pressure_correction)||(extraProjection)))
+  if (!((d_pressure_correction)||(extraProjection)
+	||((d_EKTCorrection)&&(doing_EKT_now))))
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     tsk->requires(Task::OldDW, timelabels->pressure_guess, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -397,7 +410,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
 
-  if (doing_EKT_now) 
+  if ((extraProjection)||(doing_EKT_now))
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     else
@@ -435,6 +448,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
 					DataWarehouse* new_dw,
 		 	          	const TimeIntegratorLabel* timelabels,
 					bool extraProjection,
+		                        bool d_EKTCorrection,
                                         bool doing_EKT_now)
 {
   int archIndex = 0; // only one arches material
@@ -447,7 +461,8 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     const Patch *patch = patches->get(p);
     // This calls fillRows on linear(petsc) solver
     pressureLinearSolve(pg, patch, matlIndex, old_dw, new_dw, pressureVars,
-			timelabels, extraProjection, doing_EKT_now);
+			timelabels, extraProjection,
+			d_EKTCorrection, doing_EKT_now);
   }
   bool converged =  d_linearSolver->pressLinearSolve();
   if (converged) {
@@ -506,11 +521,12 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
 				    ArchesVariables& pressureVars,
 		 	            const TimeIntegratorLabel* timelabels,
 				    bool extraProjection,
+		                    bool d_EKTCorrection,
                                     bool doing_EKT_now)
 {
   ArchesConstVariables constPressureVars;
   // Get the required data
-  if (doing_EKT_now)
+  if ((extraProjection)||(doing_EKT_now))
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       new_dw->allocateAndPut(pressureVars.pressure, d_lab->d_pressureExtraProjectionLabel,
 			 matlIndex, patch);
@@ -521,7 +537,8 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
     new_dw->allocateAndPut(pressureVars.pressure, timelabels->pressure_out,
 			 matlIndex, patch);
 
-  if (!((d_pressure_correction)||(extraProjection)))
+  if (!((d_pressure_correction)||(extraProjection)
+	||((d_EKTCorrection)&&(doing_EKT_now))))
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     old_dw->copyOut(pressureVars.pressure, timelabels->pressure_guess, 
 	            matlIndex, patch);
