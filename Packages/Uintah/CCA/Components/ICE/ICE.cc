@@ -288,7 +288,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     if(tol>= d_outer_iter_tolerance){
       ostringstream msg;
       msg << "\n ERROR: implicit pressure: The <outer_iteration_tolerance>"
-          << " must be less than the solver tolerance <tolerance> \n";
+          << " must be greater than the solver tolerance <tolerance> \n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     } 
     
