@@ -150,6 +150,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   string taskname =  "PressureSolver::buildLinearMatrix" +
 		     timelabels->integrator_step_name;
   if (extraProjection) taskname += "extraProjection";
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &PressureSolver::buildLinearMatrix,
 			  timelabels, extraProjection,
@@ -387,6 +388,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   string taskname =  "PressureSolver::PressLinearSolve_all" + 
 		     timelabels->integrator_step_name;
   if (extraProjection) taskname += "extraProjection";
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &PressureSolver::pressureLinearSolve_all,
 			  timelabels, extraProjection,
