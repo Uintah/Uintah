@@ -31,6 +31,7 @@ namespace Uintah {
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
     virtual void scheduleInitNewVars(const LevelP& level, SchedulerP& sched);
     virtual void scheduleCarryOverVars(const LevelP& level, SchedulerP& sched);
+    virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
     virtual void restartInitialize();
