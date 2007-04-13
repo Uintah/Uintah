@@ -43,6 +43,7 @@ WARNING
 ****************************************/
 
   class DataWarehouse;
+  class ProcessorGroup;
    class SCISHARE SimulationInterface : public UintahParallelPort {
    public:
      SimulationInterface();
@@ -101,6 +102,11 @@ WARNING
 
      // use this to get the progress ratio of an AMR subcycle
      double getSubCycleProgress(DataWarehouse* fineNewDW);
+
+     /// called from Switcher::initNewVars when switching TO this component
+     virtual void switchInitialize(const ProcessorGroup*, const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw, DataWarehouse* new_dw) {}
 
      //////////
      // ask the component if it needs to be recompiled

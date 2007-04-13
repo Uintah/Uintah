@@ -343,7 +343,7 @@ void Switcher::switchTest(const ProcessorGroup*,
   }
 }
 
-void Switcher::initNewVars(const ProcessorGroup*,
+void Switcher::initNewVars(const ProcessorGroup* group,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
@@ -353,6 +353,9 @@ void Switcher::initNewVars(const ProcessorGroup*,
 
   if (!switch_condition)
     return;
+
+  SimulationInterface* next_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex+1));
+  next_sim->switchInitialize(group, patches, matls, old_dw, new_dw);
 
   for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
     VarLabel* l = d_initVarLabels[d_componentIndex+1][i];
