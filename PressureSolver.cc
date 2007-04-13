@@ -194,8 +194,8 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(extraProjection))||
-         (!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+      &&(((!(extraProjection))&&(!(d_EKTCorrection)))
+	 ||((d_EKTCorrection)&&(doing_EKT_now)))) {
     tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
@@ -282,8 +282,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Coeffs
     for (int ii = 0; ii < nofStencils; ii++) {
       if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-          &&((!(extraProjection))||
-             (!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+          &&(((!(extraProjection))&&(!(d_EKTCorrection)))
+	     ||((d_EKTCorrection)&&(doing_EKT_now))))
         new_dw->allocateAndPut(pressureVars.pressCoeff[ii],
 			       d_lab->d_presCoefPBLMLabel, ii, patch);
       else
@@ -318,8 +318,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
     pressureVars.pressLinearSrc.initialize(0.0);
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        &&((!(extraProjection))||
-           (!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+        &&(((!(extraProjection))&&(!(d_EKTCorrection)))
+           ||((d_EKTCorrection)&&(doing_EKT_now))))
       new_dw->allocateAndPut(pressureVars.pressNonlinearSrc,
 			     d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
     else
