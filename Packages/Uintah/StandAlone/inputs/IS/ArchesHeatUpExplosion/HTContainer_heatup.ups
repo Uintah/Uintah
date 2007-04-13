@@ -289,7 +289,7 @@
           
         </constitutive_model>
         <geom_object>
-          <cylinder label = "reactant inner cylinder">
+          <cylinder label = "inner cylinder">
             <bottom>           [0.0,0.0,-.0508]   </bottom>
             <top>              [0.0,0.0, .0508]   </top>
             <radius>           0.0508             </radius>
