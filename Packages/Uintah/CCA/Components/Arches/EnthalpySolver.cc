@@ -226,6 +226,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   string taskname =  "EnthalpySolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &EnthalpySolver::buildLinearMatrix,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
@@ -556,7 +557,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_radiationCalc) {
       if (!d_DORadiationCalc) {
-        if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+        if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+            &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
           old_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       else
@@ -564,7 +566,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       }
       if (d_DORadiationCalc) {
-        if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+        if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+            &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
         {
         old_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
 		    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -870,6 +873,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
 {
   string taskname =  "EnthalpySolver::enthalpyLinearSolve" + 
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &EnthalpySolver::enthalpyLinearSolve,
 			  timelabels, d_EKTCorrection, doing_EKT_now);

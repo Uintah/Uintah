@@ -173,6 +173,7 @@ ReactiveScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 {
   string taskname =  "ReactiveScalarSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &ReactiveScalarSolver::buildLinearMatrix,
 			  timelabels, d_EKTCorrection, doing_EKT_now);
@@ -439,6 +440,7 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
 {
   string taskname =  "ReactiveScalarSolver::ScalarLinearSolve" + 
 		     timelabels->integrator_step_name;
+  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
 			  &ReactiveScalarSolver::reactscalarLinearSolve,
 			  timelabels, d_EKTCorrection, doing_EKT_now);

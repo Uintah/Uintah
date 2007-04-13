@@ -96,6 +96,7 @@ public:
       void solve(const LevelP& level, SchedulerP&,
 		 const TimeIntegratorLabel* timelabels,
 		 bool extraProjection,
+		 bool d_EKTCorrection,
                  bool doing_EKT_now);
    
       ///////////////////////////////////////////////////////////////////////
@@ -104,11 +105,13 @@ public:
 				   const MaterialSet* matls,
 		 		   const TimeIntegratorLabel* timelabels,
 				   bool extraProjection,
+		                   bool d_EKTCorrection,
                                    bool doing_EKT_now);
  
       void sched_pressureLinearSolve(const LevelP& level, SchedulerP& sched,
 		 		     const TimeIntegratorLabel* timelabels,
 				     bool extraProjection,
+		                     bool d_EKTCorrection,
                                      bool doing_EKT_now);
 
       ///////////////////////////////////////////////////////////////////////
@@ -146,6 +149,7 @@ private:
 			     DataWarehouse* matrix_dw,
 		 	     const TimeIntegratorLabel* timelabels,
 			     bool extraProjection,
+		             bool d_EKTCorrection,
                              bool doing_EKT_now);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
@@ -155,6 +159,7 @@ private:
 				   DataWarehouse* matrix_dw,
 		 		   const TimeIntegratorLabel* timelabels,
 				   bool extraProjection,
+		                   bool d_EKTCorrection,
                                    bool doing_EKT_now);
 
       void pressureLinearSolve(const ProcessorGroup* pc,
@@ -165,6 +170,7 @@ private:
 			       ArchesVariables& pressureVars,
 		 	       const TimeIntegratorLabel* timelabels,
 			       bool extraProjection,
+		               bool d_EKTCorrection,
                                bool doing_EKT_now);
 
       ////////////////////////////////////////////////////////////////
