@@ -233,6 +233,7 @@ namespace Uintah {
     if (d_restarting) {
       // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
       materials_ps = d_archive->getTimestepDoc(d_restartIndex);
+      d_sim->readFromTimestepXML(materials_ps);
     }
 
     // Pass the materials_ps to the problemSetup.  For restarting, 
@@ -243,7 +244,6 @@ namespace Uintah {
     
 
     if (d_restarting) {
-      d_sim->readFromTimestepXML(materials_ps);
       simdbg << "Restarting... loading data\n";    
       d_archive->restartInitialize(d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t);
       
