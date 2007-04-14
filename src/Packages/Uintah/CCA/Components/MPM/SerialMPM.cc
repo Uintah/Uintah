@@ -2445,7 +2445,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         new_dw->allocateAndPut(pLoadCurveID_new, 
                                lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
-       }
+        }
        else if(do_NormalForceBCs){  // Scale the normal vector by a magnitude
         // Get the external force data and allocate new space for
         // external force
@@ -2476,8 +2476,27 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         new_dw->allocateAndPut(pLoadCurveID_new, 
                                lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
+       } else {
+         constParticleVariable<Vector> pExternalForce;
+         ParticleVariable<Vector> pExternalForce_new;
+         old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+         new_dw->allocateAndPut(pExternalForce_new, 
+                                lb->pExtForceLabel_preReloc,  pset);
+         
+         for(ParticleSubset::iterator iter = pset->begin();
+             iter != pset->end(); iter++){
+           pExternalForce_new[*iter] = 0.;
+         }
+
+         ParticleVariable<int> pLoadCurveID_new;
+         constParticleVariable<int> pLoadCurveID;
+         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+         new_dw->allocateAndPut(pLoadCurveID_new, 
+                                lb->pLoadCurveIDLabel_preReloc, pset);
+         pLoadCurveID_new.copyData(pLoadCurveID);
+         
        }
-      } else {  // Carry forward the old pEF, scale by d_forceIncrementFactor
+      } else {  
         // Get the external force data and allocate new space for
         // external force and copy the data
         constParticleVariable<Vector> pExternalForce;
@@ -2485,10 +2504,10 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pExternalForce_new, 
                                lb->pExtForceLabel_preReloc,  pset);
-
-        // Iterate over the particles
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
+        
+        
+        for(ParticleSubset::iterator iter = pset->begin();
+            iter != pset->end(); iter++){
           particleIndex idx = *iter;
           pExternalForce_new[idx] = 
                   pExternalForce[idx]*flags->d_forceIncrementFactor;
