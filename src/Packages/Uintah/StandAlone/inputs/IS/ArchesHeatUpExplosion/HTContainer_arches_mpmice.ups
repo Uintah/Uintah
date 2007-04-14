@@ -28,7 +28,7 @@
             </SwitchCriteria>
 	    <init var = "p.acceleration" matls = "mpm_matls" />
 	    <init var = "p.externalHeatFlux" matls = "mpm_matls" />
-	    <init var = "p.loadCurveID" matls = "mpm_matls" />
+<!--	    <init var = "p.loadCurveID" matls = "mpm_matls" />  -->
         </subcomponent>
         <subcomponent>
 	    <SimulationComponent>
