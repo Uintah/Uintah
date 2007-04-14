@@ -251,7 +251,7 @@
     <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
     <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
     <accumulate_strain_energy>       false      </accumulate_strain_energy>
-    <use_load_curves>                false      </use_load_curves>
+    <use_load_curves>                true       </use_load_curves>
     <create_new_particles>           false      </create_new_particles>
     <manual_new_material>            false      </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
@@ -447,5 +447,43 @@
         <refPressure>      101325.0 </refPressure>
       </Model>
   </Models>            
+
+    <PhysicalBC>
+	<MPM>
+        <arches_heat_flux> 
+       <!-- <heat_flux> -->
+		<geom_object>
+		    <cylinder>
+			<bottom>           [0.0,0.0,-.06985]   </bottom>
+			<top>              [0.0,0.0, .06985]   </top>
+			<radius>           0.05715   </radius>
+		    </cylinder>
+                </geom_object>
+		<polynomial_data>
+		  <file> 11_43_51/polynomial_96.dat</file> 
+		  <file> 11_43_51/polynomial_97.dat</file> 
+		  <file> 11_43_51/polynomial_98.dat</file> 
+		  <file> 11_43_51/polynomial_99.dat</file> 
+		  <file> 11_43_51/polynomial_100.dat</file> 
+		  <file> 11_43_51/polynomial_101.dat</file> 
+		  <file> 11_43_51/polynomial_102.dat</file> 
+		  <file> 11_43_51/polynomial_103.dat</file> 
+		</polynomial_data>
+                <load_curve>
+                  <id>1</id>
+                  <time_point>
+                    <time> 0 </time>
+                    <load> 76000</load>
+                  </time_point>
+                  <time_point>
+                    <time> 1 </time>
+                    <load> 76000 </load>
+                  </time_point>
+                 </load_curve>
+        </arches_heat_flux> 
+        <!-- </heat_flux> -->
+	</MPM>
+    </PhysicalBC>
+
 
 </Uintah_specification>
