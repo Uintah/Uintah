@@ -42,6 +42,7 @@
 	<carry_over var="sp_vol_CC" />
 	<carry_over var="vel_CC" />
 	<carry_over var="NC_CCweight" />
+        <carry_over var="heatRate_CC" />
 	<!--
 	<carry_over var="vol_frac_CC" />
 	<carry_over var="delP_Dilatate" />
