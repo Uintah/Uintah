@@ -435,7 +435,7 @@
   <!--____________________________________________________________________-->
   <!--      M O D E L S                                                   -->
   <!--____________________________________________________________________-->
-  <Models>
+<!--  <Models>
       <Model type="Simple_Burn">
         <Active>       true         </Active>
         <fromMaterial> reactant     </fromMaterial>
@@ -447,7 +447,7 @@
         <refPressure>      101325.0 </refPressure>
       </Model>
   </Models>            
-
+-->
     <PhysicalBC>
 	<MPM>
         <arches_heat_flux> 
