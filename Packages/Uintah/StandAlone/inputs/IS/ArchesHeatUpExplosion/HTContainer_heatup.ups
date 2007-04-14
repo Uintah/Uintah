@@ -275,18 +275,14 @@
       </material>
 
       <material  name = "reactant">    <!-- MATL 1 -->
-        
-  	<density>              1840.0 </density>
-  	<thermal_conductivity> 0.452  </thermal_conductivity>
-  	<specific_heat>        996.0  </specific_heat>
-  	<C_p>                  996.0  </C_p>
-  	<room_temp>            294.0  </room_temp>
-  	<melt_temp>            688.0  </melt_temp>
-
-  	<constitutive_model type="comp_neo_hook">
-  	  <shear_modulus>80.0e9</shear_modulus>
-  	  <bulk_modulus>173.33e9</bulk_modulus>
-          
+         <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
+         <constitutive_model type = "visco_scram">
+          <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
+          <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
+          <randomize_parameters>          false </randomize_parameters>
+          <use_time_temperature_equation> false </use_time_temperature_equation>
+          <useObjectiveRate>              false </useObjectiveRate>
+          <useModifiedEOS>                true  </useModifiedEOS>        
         </constitutive_model>
         <geom_object>
           <cylinder label = "inner cylinder">
