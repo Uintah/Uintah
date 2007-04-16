@@ -242,6 +242,11 @@ ReactiveScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Task::OutOfDomain);
     tsk->modifies(d_lab->d_reactscalNonLinSrcSBLMLabel);
   }
+  if (doing_EKT_now)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      tsk->computes(d_lab->d_reactscalarEKTLabel);
+    else
+      tsk->modifies(d_lab->d_reactscalarEKTLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -423,6 +428,19 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, &reactscalarVars);
 
+    CCVariable<double> reactscalar;
+    if (doing_EKT_now) {
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarEKTLabel, 
+                  matlIndex, patch);
+      else
+        new_dw->getModifiable(reactscalar, d_lab->d_reactscalarEKTLabel, 
+                  matlIndex, patch);
+
+        new_dw->copyOut(reactscalar, d_lab->d_reactscalarSPLabel,
+		  matlIndex, patch);
+    }
+
   }
 }
 
@@ -488,10 +506,7 @@ ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
 
 
   if (doing_EKT_now)
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      tsk->computes(d_lab->d_reactscalarEKTLabel);
-    else
-      tsk->modifies(d_lab->d_reactscalarEKTLabel);
+    tsk->modifies(d_lab->d_reactscalarEKTLabel);
   else 
     tsk->modifies(d_lab->d_reactscalarSPLabel);
   if (timelabels->recursion)
@@ -560,11 +575,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 
     // for explicit calculation
     if (doing_EKT_now)
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        new_dw->allocateAndPut(reactscalarVars.scalar, d_lab->d_reactscalarEKTLabel, 
-                  matlIndex, patch);
-      else
-        new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarEKTLabel, 
+      new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarEKTLabel, 
                   matlIndex, patch);
     else
       new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 

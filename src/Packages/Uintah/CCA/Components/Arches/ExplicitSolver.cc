@@ -332,13 +332,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       d_props->sched_reComputeProps(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level],
-				      true, false,
+				      false, false,
                                       d_EKTCorrection, doing_EKT_now);
       d_props->sched_computeDrhodt(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
 
-      bool set_BC = true;
+      bool set_BC = false;
       d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
 		                      d_timeIntegratorLabels[curr_level],
                                       set_BC);
@@ -396,11 +396,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 //    sched_updateDensityGuess(sched, patches, matls,
 //			   	      d_timeIntegratorLabels[curr_level]);
-    bool modify_ref_density = true;
-    if (d_EKTCorrection) modify_ref_density = false;
     d_props->sched_reComputeProps(sched, patches, matls,
 				  d_timeIntegratorLabels[curr_level],
-				  modify_ref_density, false,
+				  true, false,
 				  d_EKTCorrection, doing_EKT_now);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
@@ -2258,6 +2256,9 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
+  if ((EKTCorrection)&&(!(doing_EKT_now)))
+    tsk->requires(Task::NewDW, d_lab->d_densityEKTLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&
       ((!(EKTCorrection))||((EKTCorrection)&&(doing_EKT_now))))
@@ -2380,6 +2381,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
           }
         }
       } 
+
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
         bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -2475,6 +2477,28 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         }
       }
    // }
+      constCCVariable<double> densityEKT;
+      if ((EKTCorrection)&&(!(doing_EKT_now))) {
+      new_dw->get(densityEKT, d_lab->d_densityEKTLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+        idxLo = patch->getCellLowIndex();
+        idxHi = patch->getCellHighIndex();
+        for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
+          for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
+            for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
+	      IntVector currCell(colX, colY, colZ);
+
+	      if (Abs(densityGuess[currCell]-densityEKT[currCell])>1.0e-10) {
+                cout << "EKT denisty is wrong at " << currCell << endl;
+                cout << "Values are " << densityGuess[currCell] << " " <<
+                     densityEKT[currCell] << endl;
+                exit(0);
+              }
+            }
+          }
+        }
+      }
+
       if (doing_EKT_now)
         new_dw->put(sum_vartype(negativeDensityGuess),
                     timelabels->negativeEKTDensityGuess);

@@ -263,6 +263,11 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->modifies(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
   }
+  if (doing_EKT_now)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      tsk->computes(d_lab->d_scalarEKTLabel);
+    else
+      tsk->modifies(d_lab->d_scalarEKTLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -501,6 +506,18 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     d_discretize->calculateScalarDiagonal(pc, patch, &scalarVars);
 
+    CCVariable<double> scalar;
+    if (doing_EKT_now) {
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        new_dw->allocateAndPut(scalar, d_lab->d_scalarEKTLabel, 
+                  matlIndex, patch);
+      else
+        new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, 
+                  matlIndex, patch);
+
+        new_dw->copyOut(scalar, d_lab->d_scalarSPLabel,
+		  matlIndex, patch);
+    }
 
   }
 }
@@ -572,10 +589,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   }    
 
   if (doing_EKT_now)
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      tsk->computes(d_lab->d_scalarEKTLabel);
-    else
-      tsk->modifies(d_lab->d_scalarEKTLabel);
+    tsk->modifies(d_lab->d_scalarEKTLabel);
   else 
     tsk->modifies(d_lab->d_scalarSPLabel);
   if (timelabels->recursion)
@@ -647,11 +661,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
     // for explicit calculation
     if (doing_EKT_now)
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        new_dw->allocateAndPut(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
-                  matlIndex, patch);
-      else
-        new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
+      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
                   matlIndex, patch);
     else
       new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 

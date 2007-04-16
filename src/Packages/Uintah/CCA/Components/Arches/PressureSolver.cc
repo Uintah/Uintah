@@ -329,7 +329,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
     					  cellinfo, &pressureVars,
-					  &constPressureVars);
+					  &constPressureVars,
+                                          doing_EKT_now);
 
     if (d_doMMS)
         d_source->calculatePressMMSSourcePred(pc, patch, delta_t,
