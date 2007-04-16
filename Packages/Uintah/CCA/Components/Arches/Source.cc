@@ -197,12 +197,14 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 				    double delta_t,
 				    CellInformation* cellinfo,
 				    ArchesVariables* vars,
-				    ArchesConstVariables* constvars)
+				    ArchesConstVariables* constvars,
+                                    bool doing_EKT_now)
 {
 
   // Get the patch and variable indices
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  if (!(doing_EKT_now)) {
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc,
 		       constvars->divergence, constvars->uVelRhoHat,
@@ -213,6 +215,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 		   constvars->density, constvars->uVelRhoHat,
                    constvars->vVelRhoHat, constvars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+#endif
+  }
   for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
@@ -221,7 +225,6 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
       }
     }
   }
-#endif
 }
 
 
