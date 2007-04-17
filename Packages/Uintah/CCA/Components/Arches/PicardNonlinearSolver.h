@@ -159,10 +159,6 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
-      void sched_saveVelocityCopies(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
-
       inline double recomputeTimestep(double current_dt) {
         return current_dt/2;
       }
@@ -290,13 +286,6 @@ private:
 			  const TimeIntegratorLabel* timelabels);
 
       void syncRhoF(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
-
-      void saveVelocityCopies(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
