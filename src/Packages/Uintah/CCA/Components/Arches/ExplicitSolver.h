@@ -146,6 +146,10 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
+      void sched_computeDensityLag(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
       void sched_getDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels,
@@ -164,9 +168,6 @@ public:
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
 
-      void sched_saveVelocityCopies(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
       void sched_computeMMSError(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
@@ -276,6 +277,13 @@ private:
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels);
 
+      void computeDensityLag(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
       void getDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
@@ -308,12 +316,6 @@ private:
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels);
 
-      void saveVelocityCopies(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
      void computeMMSError(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,

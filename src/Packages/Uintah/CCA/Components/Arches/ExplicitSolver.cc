@@ -400,6 +400,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 				  d_timeIntegratorLabels[curr_level],
 				  true, false,
 				  d_EKTCorrection, doing_EKT_now);
+    sched_computeDensityLag(sched, patches, matls,
+			   d_timeIntegratorLabels[curr_level]);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level]);
@@ -3279,4 +3281,68 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     
   }
 
+}
+//****************************************************************************
+// Schedule computing density lag
+//****************************************************************************
+void 
+ExplicitSolver::sched_computeDensityLag(SchedulerP& sched, const PatchSet* patches,
+				  const MaterialSet* matls,
+			   	  const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "ExplicitSolver::computeDensityLag" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+			  &ExplicitSolver::computeDensityLag,
+			  timelabels);
+
+  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
+		Arches::ZEROGHOSTCELLS);
+ 
+  tsk->computes(timelabels->densityLag);
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually compute deensity lag
+//****************************************************************************
+void 
+ExplicitSolver::computeDensityLag(const ProcessorGroup*,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse*,
+			   DataWarehouse* new_dw,
+			   const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> densityGuess;
+    constCCVariable<double> density;
+
+    new_dw->get(densityGuess, d_lab->d_densityGuessLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    double densityLag = 0.0;
+    IntVector idxLo = patch->getCellLowIndex();
+    IntVector idxHi = patch->getCellHighIndex();
+    for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+
+        densityLag += Abs(density[currCell] - densityGuess[currCell]);
+        }
+      }
+    }
+    new_dw->put(sum_vartype(densityLag), timelabels->densityLag); 
+  }
 }

@@ -339,6 +339,9 @@ namespace Uintah {
       const VarLabel* d_negativeEKTDensityGuess_label;
       const VarLabel* d_negativeEKTDensityGuessPred_label;
       const VarLabel* d_negativeEKTDensityGuessInterm_label;
+      const VarLabel* d_densityLag_label;
+      const VarLabel* d_densityLagPred_label;
+      const VarLabel* d_densityLagInterm_label;
 // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
