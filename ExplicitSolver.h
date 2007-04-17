@@ -160,6 +160,10 @@ public:
 			        const TimeIntegratorLabel* timelabels,
                                 bool EKTCorrection, bool doing_EKT_now);
 
+      void sched_checkDensityLag(SchedulerP&, const PatchSet* patches,
+				const MaterialSet* matls,
+			        const TimeIntegratorLabel* timelabels);
+
       void sched_updateDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
 			        const TimeIntegratorLabel* timelabels);
@@ -302,6 +306,13 @@ private:
                           bool EKTCorrection,
                           bool doing_EKT_now);
 
+      void checkDensityLag(const ProcessorGroup*,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw,
+			  const TimeIntegratorLabel* timelabels);
+
       void updateDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
@@ -379,6 +390,7 @@ private:
     bool d_extraProjection;
     bool d_EKTCorrection;
     bool d_KE_fromFC;
+    double d_maxDensityLag;
     
     //linear mms
     double cu, cv, cw, cp, phi0;

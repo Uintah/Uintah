@@ -197,6 +197,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("restartOnNegativeDensityGuess",
 		     d_restart_on_negative_density_guess,false);
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
+  db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
 #ifdef PetscFilter
     d_props->setFilter(d_turbModel->getFilter());
@@ -402,6 +403,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 				  d_EKTCorrection, doing_EKT_now);
     sched_computeDensityLag(sched, patches, matls,
 			   d_timeIntegratorLabels[curr_level]);
+    if (d_maxDensityLag > 0.0)
+      sched_checkDensityLag(sched, patches, matls,
+			    d_timeIntegratorLabels[curr_level]);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level]);
@@ -3344,5 +3348,56 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
       }
     }
     new_dw->put(sum_vartype(densityLag), timelabels->densityLag); 
+  }
+}
+//****************************************************************************
+// Schedule check for density lag
+//****************************************************************************
+void 
+ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,const PatchSet* patches,
+				  const MaterialSet* matls,
+			   	  const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "ExplicitSolver::checkDensityLag" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, this,
+			  &ExplicitSolver::checkDensityLag,
+			  timelabels);
+
+  tsk->requires(Task::NewDW, timelabels->densityLag);
+
+
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actually check for density lag
+//****************************************************************************
+void 
+ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
+			   const PatchSubset* patches,
+			   const MaterialSubset*,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw,
+			   const TimeIntegratorLabel* timelabels)
+{
+  DataWarehouse* parent_old_dw;
+  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  else parent_old_dw = old_dw;
+
+  double densityLag = 0.0;
+  sum_vartype denLag;
+  new_dw->get(denLag, timelabels->densityLag);
+  densityLag = denLag;
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    if (densityLag > d_maxDensityLag) {
+        if (pc->myrank() == 0)
+          cout << "WARNING: density lag " << densityLag 
+               << " exeeding maximium "<< d_maxDensityLag
+               << " specified. Restarting timestep." << endl;
+        new_dw->abortTimestep();
+        new_dw->restartTimestep();
+    }   
   }
 }
