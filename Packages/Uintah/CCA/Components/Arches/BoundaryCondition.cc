@@ -3975,6 +3975,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     double totalRadSrc = 0.0;
     double normTotalRadSrc = 0.0;
 
+    int me = pc->myrank();
     new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
     scalarFlowRate = sum_scalarFlowRate;
     if (d_carbon_balance) {
@@ -4004,7 +4005,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     if (totalFlowRate > 0.0)
       scalarEfficiency = scalarFlowRate / totalFlowRate;
     else 
-      cout << "WARNING! No mixture fraction in the domain." << endl;
+      if (me == 0)
+        cout << "WARNING! No mixture fraction in the domain." << endl;
     new_dw->put(delt_vartype(scalarEfficiency), d_lab->d_scalarEfficiencyLabel);
 
     if (d_carbon_balance) {
@@ -4022,7 +4024,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       }
       else 
 	//throw InvalidValue("No enthalpy in the domain", __FILE__, __LINE__);
-	cout << "No enthalpy in the domain"<<endl;
+        if (me == 0)
+	  cout << "No enthalpy in the domain"<<endl;
       new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
       new_dw->put(delt_vartype(normTotalRadSrc), d_lab->d_normTotalRadSrcLabel);
     }
