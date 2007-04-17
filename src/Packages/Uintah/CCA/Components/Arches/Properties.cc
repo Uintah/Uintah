@@ -1628,8 +1628,9 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
     new_dw->put(delT, d_lab->d_oldDeltaTLabel);
   double delta_t = delT;
-  delta_t *= timelabels->time_multiplier *
-	     timelabels->time_position_multiplier_after_average;
+  delta_t *= timelabels->time_multiplier;
+  if (!(doing_EKT_now))
+    delta_t *= timelabels->time_position_multiplier_after_average;
   parent_old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
   double  old_delta_t = old_delT;
 
