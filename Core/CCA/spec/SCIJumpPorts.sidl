@@ -284,3 +284,85 @@ interface EventService extends cca.Port {
   void processEvents();
 
 }
+
+//***********************************************************************************
+
+  //From Ben Allan (CCAFFEINE) -- a draft of MPIService
+
+    /** "ccafe.ports.MPIBorrow" :
+     * UNADOPTED-standard service for getting a shared communicator.
+     *
+     * As MPI Forum explicitly DOES NOT define an interlanguage
+     * form for object (comm, group, etc) handles, we use the
+     * FORTRAN form which, being an integer of some size <= long
+     * in sidl, we will express in SIDL as a long.
+     * Implementations in C/C++/Python will have to use appropriate
+     * conversion operators, MPI_Comm_c2f/MPI_Comm_f2c, when
+     * passing/receiving object handles in long form.
+     */
+    interface MPIBorrow extends cca.Port
+    {
+
+      /** Get a communicator of the port provider (in FORTRAN form).
+       This communicator will be the same instance as the comm of the
+       port provider, with all the message collision potential that implies.
+       Instances which have a comm covering only a subset of themselves
+       will return FORTRAN MPI_COMM_NULL on their "un-covered" processes.
+
+       @param tagCount: The number of tags the borrower wishes to use
+                    all to itself.
+       @param tagList: Array to be filled with tags available. The
+                   array given as input is at least tagCount long and
+                   indexes from 0.
+       @param key: key to be returned when the tags and comm are done with.
+       @return The comm being borrowed, in FORTRAN form. C callers use comm_f2c
+           method defined by their mpi implementation, usually MPI_Comm_f2c,
+           to convert result to MPI_Comm.
+       @throw CCAException if the service cannot be implemented because MPI is
+          not present.
+      */
+      long borrowComm(in int tagsRequested, inout array<int> tagList, inout int key) throws cca.CCAException;
+
+      /** Return a previously borrowed communicator and tag list.
+       *  @param tagCount: The length of tagList.
+       *  @param tagList: The tags being returned, at least tagCount long.
+       *  @param key: The key obtained with borrowComm. It is
+       *         an error to attempt to return tags that you didn't receive.
+       *  @throw CCAException if an error is detected.
+       */
+      void returnComm(in long comm, in int tagsRequested, inout array<int> tagList, in int key) throws cca.CCAException;
+    };
+
+
+    /**
+     * "ccafe.ports.MPIService":
+     * UNADOPTED-standard service for getting a private mpi comm.
+     *
+     * As MPI Forum explicitly DOES NOT define an interlanguage
+     * form for object (comm, group, etc) handles, we use the
+     * FORTRAN form which, being an integer of some size <= long
+     * in SIDL, we will express in SIDL as a long.
+     * Implementations in C/C++/Python will have to use appropriate
+     * conversion operators, MPI_Comm_c2f/MPI_Comm_f2c etc, when
+     * passing/receiving object handles in long form.
+     */
+    interface MPIService extends cca.Port {
+
+      /** Get an mpi communicator with the same scope as the component instance.
+       Won't be mpi_comm_null. The communicator returned will be
+       private to the recipient, which implies an mpicommdup.
+       @return The comm produced, in FORTRAN form. C callers use comm_f2c
+           method defined by their mpi implementation, usually MPI_Comm_f2c,
+           to convert result to MPI_Comm.
+       @throw CCAException if the service cannot be implemented because MPI is
+          not present.
+       */
+      long getComm() throws cca.CCAException;
+
+      /** Let go the communicator. previously fetched with getComm.
+       *  @throw CCAException if an error is detected.
+       */
+      void releaseComm(in long comm) throws cca.CCAException;
+
+    }
+
