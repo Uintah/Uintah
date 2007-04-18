@@ -26,7 +26,7 @@ foreach $e (@{$data->{Test}})
      $base_filename[$i] = $tmp[$#tmp];    # The array built from previous line using the split command has the file name as its last entry (so we are grabbing that)
      $base_filename[$i]=~ s/.ups//;       # Removing the extension .ups so that we can use this to build our uda file names
      $test_pbsF[$i]=$e->{Meta}->[0]->{pbsFile}->[0];        # Reading the pbs file name for the queue
-     $int_command[$i]=$e->{Meta}->[0]->{interactive}->[0];  # Reading the interactive command
+     $int_command[$i]=$e->{Meta}->[0]->{Interactive}->[0];  # Reading the interactive command
 
 
      $study[$i]=$e->{Meta}->[0]->{Study}->[0];
@@ -229,7 +229,7 @@ for ($i=0;$i<$num_of_tests;$i++)
 	$tmp=`$int $test_ups`;
 	if($compCommand[$i])
 	{
-	    $tmp=`batch_compare $compFilename`;
+	    $tmp=`analyze_results.pl $compFilename`;
 	}
 	$fin = time()-$now;
 	print  statsFile "Running Time : ".$fin."\n";
