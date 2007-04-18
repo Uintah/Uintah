@@ -72,20 +72,6 @@ public:
    */
   static InternalFrameworkServiceInstance *create(SCIRunFramework* framework);
 
-  /**
-   * Creates an instance of the component of type \em className.  The
-   * parameter \em instanceName is the unique name of the newly created
-   * instance.
-   * Leave \em instanceName empty to have a unique name generated
-   * by the framework.
-   * This method is implemented through a \em createComponentInstance
-   * call to the SCIRunFramework.
-   */
-  virtual sci::cca::ComponentID::pointer
-  createInstance(const std::string& instanceName,
-                 const std::string& className,
-                 const sci::cca::TypeMap::pointer& properties);
-
   virtual sci::cca::Port::pointer getService(const std::string &) { return sci::cca::Port::pointer(this); }
 
   /**
