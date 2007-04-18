@@ -342,6 +342,8 @@ namespace Uintah {
       const VarLabel* d_densityLag_label;
       const VarLabel* d_densityLagPred_label;
       const VarLabel* d_densityLagInterm_label;
+      const VarLabel* d_densityLagAfterAverage_label;
+      const VarLabel* d_densityLagAfterIntermAverage_label;
 // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
