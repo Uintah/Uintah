@@ -1494,7 +1494,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 	    else
 	    new_enthalpy[currCell] = fe_enthalpy[currCell];
 
-	  //density_guess[currCell] = predicted_density;
+	  density_guess[currCell] = predicted_density;
 
 	}
       }

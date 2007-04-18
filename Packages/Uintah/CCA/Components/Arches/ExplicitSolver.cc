@@ -402,7 +402,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 				  true, false,
 				  d_EKTCorrection, doing_EKT_now);
     sched_computeDensityLag(sched, patches, matls,
-			   d_timeIntegratorLabels[curr_level]);
+			   d_timeIntegratorLabels[curr_level],
+                           false);
     if (d_maxDensityLag > 0.0)
       sched_checkDensityLag(sched, patches, matls,
 			    d_timeIntegratorLabels[curr_level]);
@@ -434,6 +435,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 				    d_timeIntegratorLabels[curr_level],
 				    false, false,
                                     d_EKTCorrection, doing_EKT_now);
+      sched_computeDensityLag(sched, patches, matls,
+			      d_timeIntegratorLabels[curr_level],
+                              true);
+      if (d_maxDensityLag > 0.0)
+        sched_checkDensityLag(sched, patches, matls,
+			      d_timeIntegratorLabels[curr_level]);
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
@@ -3292,20 +3299,28 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 void 
 ExplicitSolver::sched_computeDensityLag(SchedulerP& sched, const PatchSet* patches,
 				  const MaterialSet* matls,
-			   	  const TimeIntegratorLabel* timelabels)
+			   	  const TimeIntegratorLabel* timelabels,
+                                  bool after_average)
 {
   string taskname =  "ExplicitSolver::computeDensityLag" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ExplicitSolver::computeDensityLag,
-			  timelabels);
+			  timelabels, after_average);
 
   tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
 		Arches::ZEROGHOSTCELLS);
  
-  tsk->computes(timelabels->densityLag);
+  if (after_average)
+    if ((timelabels->integrator_step_name == "Corrector")||
+        (timelabels->integrator_step_name == "CorrectorRK3"))
+      tsk->computes(d_lab->d_densityLagAfterAverage_label);
+    else
+      tsk->computes(d_lab->d_densityLagAfterIntermAverage_label);
+  else
+    tsk->computes(timelabels->densityLag);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -3318,7 +3333,8 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
 			   const MaterialSubset*,
 			   DataWarehouse*,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel* timelabels,
+                           bool after_average)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -3347,7 +3363,16 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
         }
       }
     }
-    new_dw->put(sum_vartype(densityLag), timelabels->densityLag); 
+    if (after_average)
+      if ((timelabels->integrator_step_name == "Corrector")||
+        (timelabels->integrator_step_name == "CorrectorRK3"))
+        new_dw->put(sum_vartype(densityLag),
+                    d_lab->d_densityLagAfterAverage_label); 
+      else
+        new_dw->put(sum_vartype(densityLag),
+                    d_lab->d_densityLagAfterIntermAverage_label); 
+    else
+      new_dw->put(sum_vartype(densityLag), timelabels->densityLag); 
   }
 }
 //****************************************************************************
