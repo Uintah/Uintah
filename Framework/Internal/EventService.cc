@@ -46,20 +46,6 @@ EventService::~EventService()
   subscriptionMap.clear();
 }
 
-sci::cca::ComponentID::pointer
-EventService::createInstance(const std::string& instanceName,
-                             const std::string& className,
-                             const sci::cca::TypeMap::pointer& properties)
-{
-  if (instanceName.size()) {
-    if (framework->lookupComponent(instanceName) != 0) {
-      throw CCAExceptionPtr(new CCAException("Component instance name " + instanceName + " is not unique"));
-    }
-    return framework->createComponentInstance(instanceName, className, properties);
-  }
-  return framework->createComponentInstance(framework->getUniqueName(className), className, properties);
-}
-
 InternalFrameworkServiceInstance*
 EventService::create(SCIRunFramework* framework)
 {

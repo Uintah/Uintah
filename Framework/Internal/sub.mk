@@ -53,6 +53,11 @@ SRCS     += \
              $(SRCDIR)/Topic.cc \
              $(SRCDIR)/Subscription.cc
 
+ifeq ($(HAVE_MPI),yes)
+ SRCS += \
+	 $(SRCDIR)/MPIService.cc
+endif
+
 ifeq ($(HAVE_WX),yes)
  SRCS += \
          $(SRCDIR)/GUIService.cc
