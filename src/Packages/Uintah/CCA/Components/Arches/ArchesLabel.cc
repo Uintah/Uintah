@@ -468,6 +468,10 @@ ArchesLabel::ArchesLabel()
 				       sum_vartype::getTypeDescription() );
   d_densityLagInterm_label = VarLabel::create("densityLagInterm",
 				       sum_vartype::getTypeDescription() );
+  d_densityLagAfterAverage_label = VarLabel::create("densityLagAfterAverage",
+				       sum_vartype::getTypeDescription() );
+  d_densityLagAfterIntermAverage_label = VarLabel::create("densityLagAfterIntermAverage",
+				       sum_vartype::getTypeDescription() );
 // kinetic energy
   d_kineticEnergyLabel = VarLabel::create("kineticEnergy", 
 				   CCVariable<double>::getTypeDescription() );
@@ -863,6 +867,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_densityLag_label);
   VarLabel::destroy(d_densityLagPred_label);
   VarLabel::destroy(d_densityLagInterm_label);
+  VarLabel::destroy(d_densityLagAfterAverage_label);
+  VarLabel::destroy(d_densityLagAfterIntermAverage_label);
 // kinetic energy
   VarLabel::destroy(d_kineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyLabel); 
