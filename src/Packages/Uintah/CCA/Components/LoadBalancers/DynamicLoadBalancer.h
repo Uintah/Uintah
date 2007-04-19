@@ -39,12 +39,11 @@ namespace Uintah {
      ****************************************/
     
   struct PatchInfo {
-    PatchInfo(int i, int n, int a) {id = i; numParticles = n; assigned = a;}
-    PatchInfo() {assigned = 0;}
+    PatchInfo(int i, int n) {id = i; numParticles = n;}
+    PatchInfo() {}
     
     int id;
     int numParticles;
-    int assigned;
   };
 
   class ParticleCompare {
@@ -114,14 +113,16 @@ namespace Uintah {
     bool assignPatchesCyclic(const GridP& grid, bool force);
 
     /// Helper for assignPatchesFactor.  Collects each patch's particles
-    void collectParticles(const GridP& grid, std::vector<PatchInfo>& allParticles);
+    void collectParticles(const GridP& grid, vector<vector<double> >& costs);
+    // same, but can be called from both LB as a pre-existing grid, or from the Regridder as potential regions
+    void collectParticlesForRegrid(const GridP& oldGrid, const vector<vector<Region> >& newGridRegions, vector<vector<double> >& costs);
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, int* output);
-    bool thresholdExceeded(const std::vector<double>& patch_costs);
+    bool thresholdExceeded(const std::vector<vector<double> >& patch_costs);
 
     //Assign costs to a list of patches
-    void getCosts(const LevelP& level, const vector<Region> &patches, vector<double> &costs);
+    void getCosts(const GridP& grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs, bool during_regrid);
     void sortPatches(vector<Region> &patches);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
@@ -145,8 +146,6 @@ namespace Uintah {
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
-    bool d_levelIndependent;
-    bool d_timeRefineWeight;
     bool d_doSpaceCurve;
     bool d_collectParticles;
     bool d_checkAfterRestart;
