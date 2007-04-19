@@ -139,7 +139,7 @@ else
 fi
 #__________________________________
 # replace performance stats
-if [ ! -f $gold_standard_dir/$testname/timestamp ]; then
+if [ ! -f $replacement_dir/$testname/timestamp ]; then
   echo "No performance stats to replace"
 else
 
@@ -152,7 +152,7 @@ else
   if [ $yesno = "y" -o $yesno = "yes" ]; then
     do_perf="true"
     echo "Replacing $testname performance results"
-    rm "$gold_standard_dir/$testname/*timestamp" > /dev/null 2>&1
+    rm $gold_standard_dir/$testname/*timestamp > /dev/null 2>&1
     cp $replacement_dir/$testname/timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
     if [ $? != "0" ]; then
       echo "Performance results not replaced"
