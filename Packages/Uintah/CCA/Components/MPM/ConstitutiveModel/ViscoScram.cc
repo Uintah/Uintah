@@ -571,7 +571,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S,pSize[idx]);
       
-
       Matrix3 pVelGrad(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
         Vector gvel;
@@ -611,7 +610,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       Matrix3 D = (pVelGrad + pVelGrad.Transpose())*0.5;
 
       // Get stress at time t_n
-      Matrix3 sig_old = pStress[idx];
+      double sigm_old = onethird*(pStress[idx].Trace());
+      Matrix3 sigdev_old = pStress[idx] - One*sigm_old;
 
       // For objective rates (rotation neutralized)
       Matrix3 RR(0.0), UU(0.0), RT(0.0);
@@ -623,10 +623,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
         // If we want objective rates, rotate stress and rate of
         // deformation to material coordinates using R where F = RU
-        sig_old = RT*(sig_old*RR);
+        sigdev_old = zero;
         for (int ii = 0; ii < 5; ++ii) {
           pStatedata[idx].DevStress[ii] = 
             RT*(pStatedata[idx].DevStress[ii]*RR); 
+          sigdev_old += pStatedata[idx].DevStress[ii];
         }
         D = RT*(D*RR);
       }
@@ -651,25 +652,18 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       double EDeff = sqrtopf*DPrime.Norm();
 
-      // Sum of old deviatoric stresses
-      Matrix3 DevStress = pStatedata[idx].DevStress[0] +
-                          pStatedata[idx].DevStress[1] +
-                          pStatedata[idx].DevStress[2] +
-                          pStatedata[idx].DevStress[3] +
-                          pStatedata[idx].DevStress[4];
-
       // old total stress norm
-      double EffStress = sqrtopf*sig_old.Norm();
+      double EffStress = sqrtopf*pStress[idx].Norm();
 
       //if (dbg.active()) {
       //  dbg << "D.Norm() = " << D.Norm()
       //      << " Ddev.Norm() = " << DPrime.Norm()
       //      << " Sig.Norm() = " << pStress[idx].Norm()
-      //      << " SigDev.Norm() = " << DevStress.Norm() << endl;
+      //      << " SigDev.Norm() = " << sigdev_old.Norm() << endl;
       //}
 
       //old deviatoric stress norm
-      double DevStressNormSq = DevStress.NormSquared();
+      double DevStressNormSq = sigdev_old.NormSquared();
       double DevStressNorm = sqrt(DevStressNormSq);
 
       // old effective deviatoric stress
@@ -687,15 +681,12 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         vres = exp(vres_a*log(EDeff) + vres_b);
       }
 
-      double sig_kk = sig_old.Trace();
-      double sig_m = -onethird*sig_kk;
-
       int compflag = 0;
-      if (sig_m < 0.0) compflag = -1;
+      if (sigm_old > 0.0) compflag = -1;
 
       EffStress    = (1+compflag)*EffDevStress - compflag*EffStress;
       vres        *= ((1 + compflag) - cdot0*compflag);
-      double sigmae = sqrt(DevStressNormSq - compflag*(3*sig_m*sig_m));
+      double sigmae = sqrt(DevStressNormSq - compflag*(3*sigm_old*sigm_old));
 
       // Stress intensity factor
       double crad   = pCrackRadius[idx];
@@ -705,7 +696,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Modification to include friction on crack faces
       double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf;
-      double a      = xmup*sig_m*sqrtc;
+      double a      = -xmup*sigm_old*sqrtc;
       double b      = 1. + a/K_I;
       double termm  = 1. + M_PI*a*b/K_I;
       double rko    = K_I*sqrt(termm);
@@ -752,7 +743,16 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       //}
 
       // Deviatoric stress integration
+      double delTinv = 1.0/delT;
       for(int imw=0;imw<5;imw++){
+
+	// If the relaxation time is smaller than delT, assume that
+	// the deviatoric stress in the Maxwell element is zero
+	if (RTau[imw] > 0.1*delTinv) {
+          pStatedata[idx].DevStress[imw] = zero;
+	  continue;
+	}
+
         // First Runga-Kutta Term
         double crad_rk = crad;
         double con1 = (3.0*crad_rk*crad_rk*cdot)/arad3;
@@ -852,29 +852,40 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       //         << D(1,2) << " " << D(2,0) << " " << D(0,1) << "]" << endl;
       //}
 
-      double ekkdot = D.Trace();
 
       //if (dbgSig.active()) {
       //  dbgSig << "  K = " << bulk << " ekkdot = " << ekkdot 
       //         << " delT = " << delT << endl;
-      //  dbgSig << "  pold = " << sig_m ;
+      //  dbgSig << "  pold = " << sigm_old ;
       //}
 
-      sig_m = -sig_m; // revert back to standard form
-      sig_m += ekkdot*bulk*delT;
-      DevStress = pStatedata[idx].DevStress[0]+pStatedata[idx].DevStress[1]+ 
-                  pStatedata[idx].DevStress[2]+pStatedata[idx].DevStress[3]+ 
-                  pStatedata[idx].DevStress[4];
-      pStress_new[idx] = DevStress + Identity*sig_m;
+      if (d_useObjectiveRate) {
+
+        // Rotate everything back 
+        for (int ii = 0; ii < 5; ++ii) {
+          pStatedata[idx].DevStress[ii] = 
+            RR*(pStatedata[idx].DevStress[ii]*RT); 
+        }
+        D = RR*(D*RT);
+      }
+
+      double ekkdot = D.Trace();
+      double sigm_new = sigm_old + ekkdot*bulk*delT;
+      Matrix3 sigdev_new = zero;
+      for (int ii = 0; ii < 5; ++ii) {
+         sigdev_new += pStatedata[idx].DevStress[ii];
+      }
+      pStress_new[idx] = sigdev_new + Identity*sigm_new;
 
       Matrix3 sig = pStress_new[idx];
 
+
       //if (dbgSig.active()) {
-      //  dbgSig << " pnew = " << sig_m << endl;
+      //  dbgSig << " pnew = " << sigm_new << endl;
       //  dbgSig << "  S_dev = [" 
-      //         << DevStress(0,0) << " " << DevStress(1,1) << " " 
-      //         << DevStress(2,2) << " " << DevStress(1,2) << " " 
-      //         << DevStress(2,0) << " " << DevStress(0,1) << "]" << endl;
+      //         << sigdev_new(0,0) << " " << sigdev_new(1,1) << " " 
+      //         << sigdev_new(2,2) << " " << sigdev_new(1,2) << " " 
+      //         << sigdev_new(2,0) << " " << sigdev_new(0,1) << "]" << endl;
       //  dbgSig << "  sig = [" 
       //         << sig(0,0) << " " << sig(1,1) << " " << sig(2,2) << " " 
       //         << sig(1,2) <<" "<< sig(2,0) << " " << sig(0,1) << "]" << endl;
@@ -899,6 +910,14 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       for(int imw=0;imw<5;imw++){
         svedot += pStatedata[idx].DevStress[imw].NormSquared()/(2.*Gmw[imw])
                   *RTau[imw] ;
+	/*
+	if (pTemperature[idx] > 450.0) {
+          cout << "\tidx = " << idx << " j = " << imw 
+	       << "\n\t\t S_j:S_j = " << pStatedata[idx].DevStress[imw].NormSquared()
+	       << " mu_j = " << Gmw[imw] << " tau_j = " << RTau[imw] 
+	       << " wdot_j = " << svedot << endl;
+	}
+	*/
       }
       pVeHeatRate_new[idx] = svedot/rhoCv;
 
@@ -910,9 +929,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       double coa3   = (crad*crad*crad)/arad3;
       double topc   = 3.*(coa3/crad)*cdot;
       double oocoa3 = 1.0/(1.0 + coa3);
-      Matrix3 SRate = (D*(2.0*G) - DevStress*topc - sovertau)*oocoa3;
-      double scrdot = (DevStress.NormSquared()*topc + 
-                       DevStress.Contract(SRate)*coa3)/(2.0*G);
+      Matrix3 SRate = (D*(2.0*G) - sigdev_new*topc - sovertau)*oocoa3;
+      double scrdot = (sigdev_new.NormSquared()*topc + 
+                       sigdev_new.Contract(SRate)*coa3)/(2.0*G);
 
       //if (dbg.active()) {
       //  dbg << "SRate = [" 
@@ -932,27 +951,23 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Update the volume change heat rate
       pVolHeatRate_new[idx] = d_initialData.Gamma*pTemperature[idx]*ekkdot;
 
-      // Update the total internal heat rate
+      // Update the total internal heat rate  (this is from Hackett and Bennett,
+      // IJNME, 2000, 49:1191-1209)
       pIntHeatRate_new[idx] = -pVolHeatRate_new[idx] + pVeHeatRate_new[idx] +
                                pCrHeatRate_new[idx];
-      //dbg << "idx = " << " qdot_v = " << pVolHeatRate_new[idx]
-      //                 << " qdot_ve = " << pVeHeatRate_new[idx]
-      //                 << " qdot_cr = " << pCrHeatRate_new[idx]
-      //                 << " qdot = " << pIntHeatRate_new[idx] << endl;
+      /*
+      if (pTemperature[idx] > 450.0) {
+      cout << "\t idx = " << idx << "\n\t\t qdot_v = " << pVolHeatRate_new[idx]
+	               << " T = " << pTemperature[idx] << " Tr(edot) = " << ekkdot
+                       << "\n\t\t qdot_ve = " << pVeHeatRate_new[idx]
+                       << "\n\t\t qdot_cr = " << pCrHeatRate_new[idx]
+                       << "\n\t\t qdot = " << pIntHeatRate_new[idx] << endl;
+      }
+      */
 
       // Compute the strain energy for all the particles
-      sig_old = (pStress_new[idx] + sig_old)*.5;
-      se += (D.Contract(sig_old))*pVol_new[idx]*delT;
-
-      if (d_useObjectiveRate) {
-
-        // Rotate everything back to lab coordinates
-        pStress_new[idx] = RR*(pStress_new[idx]*RT);
-        for (int ii = 0; ii < 5; ++ii) {
-          pStatedata[idx].DevStress[ii] = 
-            RR*(pStatedata[idx].DevStress[ii]*RT); 
-        }
-      }
+      Matrix3 sigma = (pStress_new[idx] + pStress[idx])*.5;
+      se += (D.Contract(sigma))*pVol_new[idx]*delT;
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
