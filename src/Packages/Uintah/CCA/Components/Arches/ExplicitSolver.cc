@@ -406,7 +406,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                            false);
     if (d_maxDensityLag > 0.0)
       sched_checkDensityLag(sched, patches, matls,
-			    d_timeIntegratorLabels[curr_level]);
+			    d_timeIntegratorLabels[curr_level],
+                            false);
 //    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     d_props->sched_computeDenRefArray(sched, patches, matls,
 				      d_timeIntegratorLabels[curr_level]);
@@ -440,7 +441,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                               true);
       if (d_maxDensityLag > 0.0)
         sched_checkDensityLag(sched, patches, matls,
-			      d_timeIntegratorLabels[curr_level]);
+			      d_timeIntegratorLabels[curr_level],
+                              true);
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
@@ -3365,7 +3367,7 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
     }
     if (after_average)
       if ((timelabels->integrator_step_name == "Corrector")||
-        (timelabels->integrator_step_name == "CorrectorRK3"))
+          (timelabels->integrator_step_name == "CorrectorRK3"))
         new_dw->put(sum_vartype(densityLag),
                     d_lab->d_densityLagAfterAverage_label); 
       else
@@ -3380,16 +3382,24 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
 //****************************************************************************
 void 
 ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,const PatchSet* patches,
-				  const MaterialSet* matls,
-			   	  const TimeIntegratorLabel* timelabels)
+				      const MaterialSet* matls,
+			   	      const TimeIntegratorLabel* timelabels,
+                                      bool after_average)
 {
   string taskname =  "ExplicitSolver::checkDensityLag" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ExplicitSolver::checkDensityLag,
-			  timelabels);
+			  timelabels, after_average);
 
-  tsk->requires(Task::NewDW, timelabels->densityLag);
+  if (after_average)
+    if ((timelabels->integrator_step_name == "Corrector")||
+        (timelabels->integrator_step_name == "CorrectorRK3"))
+      tsk->requires(Task::NewDW, d_lab->d_densityLagAfterAverage_label);
+    else
+      tsk->requires(Task::NewDW, d_lab->d_densityLagAfterIntermAverage_label);
+  else
+    tsk->requires(Task::NewDW, timelabels->densityLag);
 
 
   sched->addTask(tsk, patches, matls);
@@ -3403,7 +3413,8 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
 			   const MaterialSubset*,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+			   const TimeIntegratorLabel* timelabels,
+                           bool after_average)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -3411,7 +3422,14 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
 
   double densityLag = 0.0;
   sum_vartype denLag;
-  new_dw->get(denLag, timelabels->densityLag);
+  if (after_average)
+    if ((timelabels->integrator_step_name == "Corrector")||
+        (timelabels->integrator_step_name == "CorrectorRK3"))
+      new_dw->get(denLag, d_lab->d_densityLagAfterAverage_label);
+    else
+      new_dw->get(denLag, d_lab->d_densityLagAfterIntermAverage_label);
+  else
+    new_dw->get(denLag, timelabels->densityLag);
   densityLag = denLag;
 
   for (int p = 0; p < patches->size(); p++) {
