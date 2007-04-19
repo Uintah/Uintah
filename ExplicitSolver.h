@@ -163,7 +163,8 @@ public:
 
       void sched_checkDensityLag(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
+			        const TimeIntegratorLabel* timelabels,
+                                bool after_average);
 
       void sched_updateDensityGuess(SchedulerP&, const PatchSet* patches,
 				const MaterialSet* matls,
@@ -313,7 +314,8 @@ private:
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
+			  const TimeIntegratorLabel* timelabels,
+                          bool after_average);
 
       void updateDensityGuess(const ProcessorGroup*,
 			  const PatchSubset* patches,
