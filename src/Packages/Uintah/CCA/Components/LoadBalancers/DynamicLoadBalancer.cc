@@ -47,7 +47,7 @@ DynamicLoadBalancer::~DynamicLoadBalancer()
 {
 }
 
-void DynamicLoadBalancer::collectParticlesForRegrid(const GridP& oldGrid, const vector<vector<Region> >& newGridRegions, 
+void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions, 
                                                     vector<vector<double> >& costs)
 {
   // collect particles from the old grid's patches onto processor 0 and then distribute them
@@ -74,7 +74,7 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const GridP& oldGrid, const 
     for (unsigned r = 0; r < level.size(); r++, grid_index++) {
       const Region& region = level[r];;
 
-      if (l >= oldGrid->numLevels()) {
+      if (l >= (unsigned) oldGrid->numLevels()) {
         // new patch - no particles yet
         recvcounts[0]++;
         totalsize++;
@@ -175,19 +175,19 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const GridP& oldGrid, const 
   unsigned cost_level = 0;
   unsigned cost_index = 0;
   for (unsigned i = 0; i < num_particles.size(); i++, cost_index++) {
-    if (costs[cost_level].size() >= cost_index) {
+    if (costs[cost_level].size() <= cost_index) {
       cost_index = 0;
       cost_level++;
     }
     costs[cost_level][cost_index] += num_particles[i];
   }
   // make sure that all regions got covered
-  ASSERT(cost_level == costs.size()+1);
-  ASSERT(cost_index == costs[cost_level].size());
+  ASSERTEQ(cost_level, costs.size()-1);
+  ASSERTEQ(cost_index, costs[cost_level].size());
 }
 
 
-void DynamicLoadBalancer::collectParticles(const GridP& grid, vector<vector<double> >& costs)
+void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<double> >& costs)
 {
   if (d_processorAssignment.size() == 0)
     return; // if we haven't been through the LB yet, don't try this.
@@ -235,6 +235,7 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, vector<vector<doub
       // add to particle list
       PatchInfo p(id,thisPatchParticles);
       particleList.push_back(p);
+      dbg << "  Pre gather " << id << " part: " << thisPatchParticles << endl;
     }
   }
 
@@ -271,12 +272,12 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, vector<vector<doub
       }
     }
 
-    for (unsigned i = 0; i < num_patches; i++) {
+    for (int i = 0; i < num_patches; i++) {
       num_particles[all_particles[i].id] = all_particles[i].numParticles;
     }
   }
   else {
-    for (unsigned i = 0; i < num_patches; i++)
+    for (int i = 0; i < num_patches; i++)
       num_particles[particleList[i].id] = particleList[i].numParticles;
   }
 
@@ -284,15 +285,15 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, vector<vector<doub
   unsigned cost_level = 0;
   unsigned cost_index = 0;
   for (unsigned i = 0; i < num_particles.size(); i++, cost_index++) {
-    if (costs[cost_level].size() >= cost_index) {
+    if (costs[cost_level].size() <= cost_index) {
       cost_index = 0;
       cost_level++;
     }
     costs[cost_level][cost_index] += num_particles[i];
   }
   // make sure that all regions got covered
-  ASSERT(cost_level == costs.size()+1);
-  ASSERT(cost_index == costs[cost_level].size());
+  ASSERTEQ(cost_level, costs.size()-1);
+  ASSERTEQ(cost_index, costs[cost_level].size());
 
 }
 
@@ -429,15 +430,18 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   if (on_regrid) {
     // prepare the list of regions so the getCosts can operate the same when called from here 
     // or from dynamicallyLoadBalanceAndSplit.
-    for (unsigned l = 0; l < grid->numLevels(); l++) {
+    for (int l = 0; l < grid->numLevels(); l++) {
       regions.push_back(vector<Region>());
-      for (unsigned p = 0; p < grid->getLevel(l)->numPatches(); p++) {
+      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
         const Patch* patch = grid->getLevel(l)->getPatch(p);
         regions[l].push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
       }
     }
+    getCosts(olddw->getGrid(), regions, patch_costs, on_regrid);
   }
-  getCosts(grid, regions, patch_costs, on_regrid);
+  else {
+    getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
+  }
 
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
@@ -521,7 +525,7 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch
   unsigned cost_level = 0;
   unsigned cost_index = 0;
   for (unsigned i = 0; i < d_tempAssignment.size(); i++, cost_index++) {
-    if (patch_costs[cost_level].size() >= cost_index) {
+    if (patch_costs[cost_level].size() <= cost_index) {
       cost_index = 0;
       cost_level++;
     }
@@ -870,13 +874,13 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
 //    Either case that's regridding needs to be treated the same for collecting particles.
 // 
 //    patches only matters during a regrid.  In this case, 'grid' is the old grid.
-void DynamicLoadBalancer::getCosts(const GridP& grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs,
+void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs,
                                    bool during_regrid)
 {
   costs.clear();
   if (during_regrid) {
     costs.resize(patches.size());
-    for (int l = 0; l < patches.size(); l++) 
+    for (unsigned l = 0; l < patches.size(); l++) 
     {
       for(vector<Region>::const_iterator patch=patches[l].begin();patch!=patches[l].end();patch++)
       {
@@ -902,14 +906,23 @@ void DynamicLoadBalancer::getCosts(const GridP& grid, const vector<vector<Region
       collectParticles(grid, costs);
     }
   }
-
+  
+  if (dbg.active() && d_myworld->myrank() == 0) {
+    for (unsigned l = 0; l < costs.size(); l++)
+      for (unsigned p = 0; p < costs[l].size(); p++)
+        dbg << "L"  << l << " P " << p << " cost " << costs[l][p] << endl;
+  }
 }
+
 void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, SizeList min_patch_size,vector<vector<Region> > &patches, bool canSplit)
 {
   double start = Time::currentSeconds();
 
   int *dimensions=d_sharedState->getActiveDims();
-  
+
+  if (d_myworld->myrank() == 0)
+    dbg << "SPLIT!!!\n";
+
   d_tempAssignment.resize(0);
 
   //loop over levels
@@ -945,7 +958,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
   //get costs (get costs will determine algorithm).  Do this on the grid in the case we have
   // MPI operations to do for collecting particles
   vector<vector<double> > costs;
-  getCosts(oldGrid,patches,costs, true);
+  getCosts(oldGrid.get_rep(),patches,costs, true);
 
   for(unsigned int l=0;l<patches.size();l++)
   {
@@ -1080,6 +1093,13 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
     patches[l]=assignedPatches;
 
   }  //end for each level
+
+  if (dbg.active() && d_myworld->myrank() == 0) {
+    for (unsigned p = 0; p < d_tempAssignment.size(); p++)
+      dbg << "GridIndex "  << p << " -> proc " << d_tempAssignment[p] << endl;
+  }
+
+
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
 }
 
@@ -1130,7 +1150,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
     }
     else  //regridder has called dynamic load balancer so we must dynamically Allocate
     {
-        dynamicAllocate=true;
+      dynamicAllocate=true;
     }
 
     if (dynamicAllocate || state != check) {

@@ -113,16 +113,16 @@ namespace Uintah {
     bool assignPatchesCyclic(const GridP& grid, bool force);
 
     /// Helper for assignPatchesFactor.  Collects each patch's particles
-    void collectParticles(const GridP& grid, vector<vector<double> >& costs);
+    void collectParticles(const Grid* grid, vector<vector<double> >& costs);
     // same, but can be called from both LB as a pre-existing grid, or from the Regridder as potential regions
-    void collectParticlesForRegrid(const GridP& oldGrid, const vector<vector<Region> >& newGridRegions, vector<vector<double> >& costs);
+    void collectParticlesForRegrid(const Grid* oldGrid, const vector<vector<Region> >& newGridRegions, vector<vector<double> >& costs);
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, int* output);
     bool thresholdExceeded(const std::vector<vector<double> >& patch_costs);
 
     //Assign costs to a list of patches
-    void getCosts(const GridP& grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs, bool during_regrid);
+    void getCosts(const Grid* grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs, bool during_regrid);
     void sortPatches(vector<Region> &patches);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
