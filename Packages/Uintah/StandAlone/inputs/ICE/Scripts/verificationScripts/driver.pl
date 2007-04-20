@@ -102,8 +102,14 @@ while(1)
 
     if(0 == $failed_cnt  )
     {
+
+	open(finalDone, ">$ARGV[0].TMP");
 	
-#	`echo DONE> $ARGV[0].DONE`;    # Creating the DONE file for the parent script to read 
+	open(htmlFile, ">$ARGV[0].htm ");
+	print htmlFile "<html>\n";
+
+	open(fileList, ">$ARGV[0].results");
+	print fileList "$ARGV[0].htm\n";
 
 	##########
 	### Cleaning the DONE files in the child directories (to prepare for the next regression tester)
@@ -128,26 +134,43 @@ while(1)
 			{
 			    $write_line = $line;
 			}
+			$html_write = "<img src=\"$write_line\" alt=\"$line\">";
+			print fileList "$write_line\n";
 		    }
 		    else
 		    {
 			chomp($line);
 			$write_line = $line;
+			$html_write = "<B>$line</B><BR>";
 		    }
-		    `echo \"$write_line\" >> $ARGV[0].TMP`;
+#		    `echo \"$write_line\" >> $ARGV[0].TMP`;
+		    print finalDone "$write_line\n";
+		    print htmlFile "$html_write \n";
 		}
 		close(doneFile);
+		close(htmlFile);
+		close(fileList);
 		print "Cleaning the"." $fl_name.DONE"."\n";
 		`rm -f $fl_name.DONE`;
 	    }
 	    $i++;
 	}
-	`mv $ARGV[0].TMP $ARGV[0].DONE`;
+	close (finalDone);
+	`cp $ARGV[0].TMP $ARGV[0].DONE`;
+	print htmlFile "</html>\n";
+	$i = 1;
 	foreach $email (@emails) # This sends email to all recipients when the tests are completed
 	{
 	    print "A email shall be sent to $email\n";
+	    if (1==$i)
+	    {
+		print "Adding the line the TMP file $i\n";
+		`echo \"The testing framework tree is at $curr_dir\">>$ARGV[0].TMP`;
+		$i = 0;
+	    }
+	    `tar  zcvf results.tar.gz  -T $ARGV[0].results`;
 	    # Send an email ;
-	    `cat $ARGV[0].DONE | mail -s Test $email`;
+	    `cat $ARGV[0].TMP | mail -s Test -a results.tar.gz  $email`;
 	}
 	
 	last;   # Break out of the loop all tests have completed successfully	
