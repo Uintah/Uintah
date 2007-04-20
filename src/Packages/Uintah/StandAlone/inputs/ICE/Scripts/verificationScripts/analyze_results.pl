@@ -79,16 +79,41 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     
     # The gnuplot script creation
     open(gpFile, ">$output_file.gp");
-    print gpFile "set term postscript\n";
+    print gpFile "set term png \n";
     
 #    print gpFile "set ylabel \"Error\"\n";
 #    print gpFile "set xlabel \"Resolution\"\n";    # The problem is, x-axis can be anything (viscosity, resolution, timestep)
-    print gpFile "set output \"err_$output_file.ps\"\n";
-    print gpFile "plot \'$output_file.dat\' using 1:2 t \'$test_title\' with linespoints\n";
 
-    print gpFile "set output \"order_$output_file.ps\"\n";
-    print gpFile "plot \'$output_file.dat\' using 1:3 t \'Order of Accuracy \- $test_title\' with linespoints\n";
-    
+
+    print gpFile "set autoscale\n";
+    print gpFile "set grid xtics ytics\n";
+    print gpFile "set y2tics\n";
+
+
+    print gpFile "set title \"$test_title\"\n";
+
+    print gpFile "set output \"err_$output_file.png\"\n";
+
+    if (-e "baseLine/$output_file.dat")
+    {
+	print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints, \'baseLine/$output_file.dat\' using 1:2 t \'Base Line\' with linespoints\n";
+    }   
+    else
+    {
+	print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints\n"; 
+    }
+    print gpFile "set title \"Order of Accuracy - $test_title\"\n";
+    print gpFile "set output \"order_$output_file.png\"\n";
+
+    if (-e "baseLine/$output_file.dat")
+    {
+	print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints,  \'baseLine/$output_file.dat\' using 1:3 t \'Base Line\' with linespoints\n";
+    }
+    else
+    {
+	print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints\n";
+    }
+
 
     close(gpFile);
     `gnuplot $output_file.gp`;
@@ -98,13 +123,13 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     {
 	
 	`echo \"Title: $test_title\" >> $launcher.DONE`;
-	`echo \"Results\/err_$output_file.ps\" >> $launcher.DONE`;
-	`echo \"Results\/order_$output_file.ps\" >> $launcher.DONE`;
+	`echo \"Results\/err_$output_file.png\" >> $launcher.DONE`;
+	`echo \"Results\/order_$output_file.png\" >> $launcher.DONE`;
 	
 	# The results (the plots and the little table) are moved in a directory called Results
 	
 	`mkdir -p Results`;
-	`mv $output_file.gp $output_file.dat err_$output_file.ps order_$output_file.ps Results/.`;
+	`mv $output_file.gp $output_file.dat err_$output_file.png order_$output_file.png Results/.`;
 	`rm -f .$output_file.tmp`;
     }
     
