@@ -124,10 +124,10 @@ void addRequires_Lodi(Task* t,
   }
   if(where == "update_press_CC"){
     setLODI_bcs = true;
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
+    //t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls, gn);
-    // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
-    // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
+    t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
+    t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
   }
   if(where == "implicitPressureSolve"){
     setLODI_bcs=true;
@@ -574,12 +574,10 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   //__________________________________
   // Subsonic non-reflective outflow
   if (flowDir == "outFlow" && Mach < 1.0){
-  
-    L1 = rightFace *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[1])
-       + leftFace  * L1;
-              
-    L5 = leftFace  *(0.5 * K * (press - p_infinity)/domainLength[n_dir] + s[5])
-       + rightFace * L5;
+    double term1 = 0.5 * K * (press - p_infinity)/domainLength[n_dir];
+    
+    L1 = rightFace * (term1 + s[1]) + leftFace  * L1;
+    L5 = leftFace  * (term1 + s[5]) + rightFace * L5;
   }
   
   //__________________________________

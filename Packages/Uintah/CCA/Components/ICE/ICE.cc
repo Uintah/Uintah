@@ -2122,7 +2122,17 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
-        vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c];  //needed for LODI BCs
+        
+        //needed for LODI BCs
+        vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c]; 
+        
+        double dp_drho, dp_de, c_2;
+        ice_matl->getEOS()->computePressEOS(rho_micro[indx][c],gamma[indx][c],
+                                          cv[indx][c], Temp_CC[indx][c], press_CC[c],
+                                          dp_drho, dp_de);
+                                          
+        c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[indx][c] * rho_micro[indx][c]);
+        speedSound[indx][c] = sqrt(c_2);
       }
       
       //____ B U L L E T   P R O O F I N G----
@@ -4984,6 +4994,7 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
             }
           }  // icematl
         }  // matl loop
+        
         VarLabel* V_Label = getMaxMach_face_VarLabel(face);
         new_dw->put(max_vartype(maxMach), V_Label);
       }  // is lodi Face
