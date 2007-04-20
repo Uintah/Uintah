@@ -11,7 +11,7 @@
    
    <LoadBalancer>
         <type>PLB</type>
-        <timestepInterval>      1000  </timestepInterval>
+        <timestepInterval>      100  </timestepInterval>
         <dynamicAlgorithm>      patchFactorParticles</dynamicAlgorithm>
         <cellFactor>            1.25  </cellFactor>
         <gainThreshold>         0.0   </gainThreshold>
