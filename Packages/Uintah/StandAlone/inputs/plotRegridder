@@ -26,8 +26,8 @@ unalias rm
 # remove your droppings and make a copy of the output file
 rm -f gp .data .regridData .plotStats_tmp .tmp
 cp $out .tmpDirty
-
-grep "regridding\|timestep\|DONE\|Compile\|REGRIDDING:" .tmpDirty >& .tmpClean 
+echo "Cleaning out the excess spew from the output file"
+grep "regridding\|timestep\|DONE\|Compile\|REGRIDDING:" .tmpDirty |grep -v "Mass gained" >& .tmpClean 
 grep Time= .tmpClean |grep Mem >& .plotStats_tmp1
 
 #__________________________________
