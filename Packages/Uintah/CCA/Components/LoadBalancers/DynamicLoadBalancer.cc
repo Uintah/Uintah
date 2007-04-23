@@ -496,7 +496,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         currentProcCost += patchCost;
       }
       if (d_myworld->myrank() == 0)
-        cout << "Level " << l << " Patch " << index << "-> proc " << currentProc 
+        lb << "Level " << l << " Patch " << index << "-> proc " << currentProc 
             << " PatchCost: " << patchCost << ", ProcCost: "
             << currentProcCost << " group cost " << total_cost << "  avg cost " << avgCostPerProc << endl;
     }
