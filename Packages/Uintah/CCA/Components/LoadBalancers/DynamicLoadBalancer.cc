@@ -442,7 +442,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   else {
     getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
   }
-
+  int level_offset=0;
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
     int num_patches = level->numPatches();
@@ -462,7 +462,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
     int currentProc = 0;
     double currentProcCost = 0;
-     
+    
     for (int p = 0; p < num_patches; p++) {
       int index;
       if (d_doSpaceCurve) {
@@ -479,11 +479,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double patchCost = patch_costs[l][index];
       double notakeimb=fabs(currentProcCost-avgCostPerProc);
       double takeimb=fabs(currentProcCost+patchCost-avgCostPerProc);
-              
+
       if (notakeimb<takeimb) {
         // move to next proc and add this patch
         currentProc++;
-        d_tempAssignment[index] = currentProc;
+        d_tempAssignment[level_offset+index] = currentProc;
         //update average (this ensures we don't over/under fill to much)
         total_cost -= currentProcCost;
         avgCostPerProc = total_cost / (num_procs-currentProc);
@@ -492,14 +492,15 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       else {
         // add patch to currentProc
         ASSERTRANGE(currentProc,0,d_myworld->size());
-        d_tempAssignment[index] = currentProc;
+        d_tempAssignment[level_offset+index] = currentProc;
         currentProcCost += patchCost;
       }
       if (d_myworld->myrank() == 0)
-        dbg << "Patch " << index << "-> proc " << currentProc 
+        cout << "Level " << l << " Patch " << index << "-> proc " << currentProc 
             << " PatchCost: " << patchCost << ", ProcCost: "
             << currentProcCost << " group cost " << total_cost << "  avg cost " << avgCostPerProc << endl;
     }
+    level_offset+=num_patches;
   }
 
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
@@ -541,9 +542,9 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch
   double max_temp = 0;
 
   for (int i = 0; i < d_myworld->size(); i++) {
-    avg_current += currentProcCosts[i];
     if (currentProcCosts[i] > max_current) max_current = currentProcCosts[i];
-    if (tempProcCosts[i] > max_temp) max_temp = currentProcCosts[i];
+    if (tempProcCosts[i] > max_temp) max_temp = tempProcCosts[i];
+    avg_current += currentProcCosts[i];
     avg_temp += tempProcCosts[i];
   }
   avg_current /= d_myworld->size();
