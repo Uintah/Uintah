@@ -491,6 +491,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       }
       else {
         // add patch to currentProc
+        ASSERTRANGE(currentProc,0,d_myworld->size());
         d_tempAssignment[index] = currentProc;
         currentProcCost += patchCost;
       }
@@ -920,9 +921,6 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
 
   int *dimensions=d_sharedState->getActiveDims();
 
-  if (d_myworld->myrank() == 0)
-    dbg << "SPLIT!!!\n";
-
   d_tempAssignment.resize(0);
 
   //loop over levels
@@ -952,7 +950,6 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
       sfc.SetRefinementsByDelta(delta);
     }
     sortPatches(cur_level_patches);
-
   }
 
   //get costs (get costs will determine algorithm).  Do this on the grid in the case we have
@@ -965,12 +962,12 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
     double totalCost=0;
     double targetCost=0;
     double currentCost=0;
-    for(unsigned int i=0;i<costs.size();i++)
+    for(unsigned int i=0;i<costs[l].size();i++)
     {
       totalCost+=costs[l][i];
     }
     targetCost=totalCost/d_myworld->size();
-   
+
     vector<Region> assignedPatches;
     stack<Region> unassignedPatches;
     stack<double> unassignedPatchesCost;
@@ -1003,6 +1000,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
       if(currentCost+cost<targetCost)  //if patch fits in current processor
       {
         //assign to current proc
+        ASSERTRANGE(currentProc,0,num_procs);
         d_tempAssignment.push_back(currentProc);
         assignedPatches.push_back(patch);
         
@@ -1060,7 +1058,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
         {
           double takeimb=fabs(currentCost+cost-targetCost);
           double notakeimb=fabs(currentCost-targetCost);
-
+          
           if(notakeimb<takeimb) //taking patch would cause more imbalance then not taking it
           {
             //move to next proc
@@ -1078,6 +1076,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
           {
             // IMPORTANT:  This tells the load balancer to not do its own load balancing after the regrid
             //assign to this proc
+            ASSERTRANGE(currentProc,0,num_procs);
             d_tempAssignment.push_back(currentProc);
             assignedPatches.push_back(patch);
 
