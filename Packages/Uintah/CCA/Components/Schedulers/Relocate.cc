@@ -870,6 +870,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       cerrLock.unlock();
     }
   }
+#if SCI_ASSERTION_LEVEL >= 3
   if(!mixedDebug.active()){
     // this is bad for the MixedScheduler... I think it is ok to
     // just remove it... at least for now... as it is only for info
@@ -892,7 +893,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
     }
   }
-
+#endif
   if (pg->size() > 1)
     finalizeCommunication();
 
