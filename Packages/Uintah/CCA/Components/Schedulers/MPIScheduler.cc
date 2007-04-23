@@ -123,6 +123,7 @@ MPIScheduler::createSubScheduler()
 void
 MPIScheduler::verifyChecksum()
 {
+#if SCI_ASSERTION_LEVEL >= 3
   TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER); 
 
   // Compute a simple checksum to make sure that all processes
@@ -145,6 +146,7 @@ MPIScheduler::verifyChecksum()
     MPI_Abort(d_myworld->getComm(), 1);
   }
   mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
+#endif
 }
 
 #ifdef USE_TAU_PROFILING
