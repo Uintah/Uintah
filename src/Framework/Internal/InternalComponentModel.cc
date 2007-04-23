@@ -40,6 +40,7 @@
 
 #include <sci_defs/dataflow_defs.h>
 #include <sci_defs/wx_defs.h>
+#include <sci_defs/mpi_defs.h>
 
 #include <Framework/Internal/FrameworkInternalException.h>
 #include <Framework/Internal/InternalComponentModel.h>
@@ -79,7 +80,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
     addService(new InternalFrameworkServiceDescription(this, "cca.ApplicationLoaderService", &ApplicationLoader::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.EventService", &EventService::create));
 
-#if HAVE_MPI
+#if HAVE_MPICH
     addService(new InternalFrameworkServiceDescription(this, "cca.MPIService", &MPIService::create));
 #endif
 
