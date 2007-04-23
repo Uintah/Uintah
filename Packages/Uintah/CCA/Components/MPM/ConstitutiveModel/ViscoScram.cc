@@ -748,9 +748,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
 	// If the relaxation time is smaller than delT, assume that
 	// the deviatoric stress in the Maxwell element is zero
-	if (RTau[imw] > 0.1*delTinv) {
-          pStatedata[idx].DevStress[imw] = zero;
-	  continue;
+        if (d_doTimeTemperature) {
+	  if (RTau[imw] > 0.1*delTinv) {
+            pStatedata[idx].DevStress[imw] = zero;
+	    continue;
+	  }
 	}
 
         // First Runga-Kutta Term
