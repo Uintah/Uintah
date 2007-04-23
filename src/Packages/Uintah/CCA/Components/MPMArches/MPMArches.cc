@@ -128,11 +128,14 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
    if(!dataArchiver){
      throw InternalError("MPMARCHES:couldn't get output port", __FILE__, __LINE__);
    }
-   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-
-   d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
    d_arches->attachPort("output",dataArchiver);
    d_mpm->attachPort("output",dataArchiver);
+
+   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+   if(!sched){
+     throw InternalError("MPMARCHES:couldn't get scheduler port", __FILE__, __LINE__);
+   }
+
    d_mpm->attachPort("scheduler",sched);
 
    d_mpm->setMPMLabel(Mlb);
