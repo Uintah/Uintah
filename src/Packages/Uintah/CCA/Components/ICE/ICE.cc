@@ -54,6 +54,9 @@
 
 #define SET_CFI_BC 0
 
+//#define CHANGWEI 1   // to invoke changwei's modifications to heat exchange
+#undef CHANGWEI
+
 
 using std::vector;
 using std::max;
@@ -202,6 +205,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if(!solver) {
     throw InternalError("ICE:couldn't get solver port", __FILE__, __LINE__);
   }
+  
+  //__________________________________
+  //  If using Changwei's model
+#ifdef CHANGWEI  
+  if (d_myworld->myrank() == 0){
+    cout << "------------------------------Using Changwei's version of exchange"<< endl;
+  }
+#endif      
       
   //__________________________________
   //  Custom BC setup
@@ -4723,7 +4734,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
         vel_CC[m][c] += bb[m];
       }
 
-      //---------- E N E R G Y   E X C H A N G E     
+      //---------- E N E R G Y   E X C H A N G E   
+#ifndef CHANGWEI  
       for(int m = 0; m < numALLMatls; m++) {
         tmp = delT*sp_vol_CC[m][c] / cv[m][c];
         for(int n = 0; n < numALLMatls; n++)  {
@@ -4731,6 +4743,31 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
           a(m,n) = -beta(m,n);
         }
       }
+#endif      
+#ifdef CHANGWEI
+      for(int m = 0; m < numALLMatls; m++) {
+        tmp = delT*sp_vol_CC[m][c] / cv[m][c];
+        for(int n = 0; n < numALLMatls; n++)  {
+        
+          double ratio = pow(mass_L[n][c]/mass_L[m][c], 2.0);
+        
+          ratio = ratio >= 1.0 ? ratio : 1.0/ratio;
+          
+          if(ratio > 1e12){
+            ratio = 1e12;
+          }
+          if(ratio < 1e5){
+            ratio = 1e5;
+          }  
+          if(m==n){
+            ratio = 0.0;
+          }
+          beta(m,n) = vol_frac_CC[n][c] * ratio * tmp;
+          a(m,n) = -beta(m,n);
+        }
+      }
+#endif      
+      
       //   Form matrix (a) diagonal terms
       for(int m = 0; m < numALLMatls; m++) {
         a(m,m) = 1.;
