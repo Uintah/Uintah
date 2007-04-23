@@ -121,4 +121,7 @@
   <library name="CCA_Components_samploecomponent">
     <component name="SCIRun.samploecomponent" />
   </library>
+  <library name="CCA_Components_TestMPI">
+    <component name="SCIRun.TestMPI" />
+  </library>
 </metacomponentmodel>
