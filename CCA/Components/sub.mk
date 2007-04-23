@@ -47,7 +47,7 @@ SUBDIRS   := \
 	     $(SRCDIR)/TestEchoEvent               \
 	     $(SRCDIR)/TestRegisterEventListener   \
 	     $(SRCDIR)/TestProcessEvents           \
-	     $(SRCDIR)/TestSubscription 
+	     $(SRCDIR)/TestSubscription
 
 ifeq ($(HAVE_WX),yes)
   SUBDIRS += \
@@ -64,6 +64,7 @@ endif
 
 ifeq ($(HAVE_MPI),yes)
   SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello
+  SUBDIRS += $(SRCDIR)/TestMPI
 # $(SRCDIR)/PLinSolver
 endif
 
