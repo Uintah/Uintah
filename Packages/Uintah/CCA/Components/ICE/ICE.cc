@@ -440,11 +440,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
-  if (materials_ps){
-    mat_ps = materials_ps;
-  }else{
+  if (prob_spec->findBlock("MaterialProperties"))
     mat_ps = prob_spec;
-  }
+  else if (materials_ps)
+    mat_ps = materials_ps;
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
 
