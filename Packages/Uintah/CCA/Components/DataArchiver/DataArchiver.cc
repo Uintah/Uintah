@@ -1201,9 +1201,11 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
 
 
-      // Create a metadata element to store the per-timestep endianess
+      // Create a metadata element to store the per-timestep endianness
       ProblemSpecP metaElem = rootElem->appendChild("Meta");
       metaElem->appendElement("endianness", endianness().c_str());
+      metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
+      metaElem->appendElement("numProcs", d_myworld->size());
       
 
       ProblemSpecP timeElem = rootElem->appendChild("Time");

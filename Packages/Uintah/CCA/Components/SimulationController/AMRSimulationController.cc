@@ -37,6 +37,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include <Packages/Uintah/Core/Util/share.h> // for dbg_barrier's SCISHARE
+
 using std::cerr;
 using std::cout;
 
@@ -45,7 +47,7 @@ using namespace Uintah;
 
 DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
-extern DebugStream dbg_barrier;
+extern SCISHARE DebugStream dbg_barrier;
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
@@ -266,6 +268,14 @@ void AMRSimulationController::run()
      t += delt;
      TAU_DB_DUMP();
    }
+
+   // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
+   delt_vartype delt_var;
+   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+   delt = delt_var;
+   adjustDelT(delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), t);
+   calcWallTime();
+   printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep(),delt,t);
 
    d_ups->releaseDocument();
 }

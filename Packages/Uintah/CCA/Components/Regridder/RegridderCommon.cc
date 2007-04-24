@@ -17,12 +17,15 @@
 #include <sstream>
 #include <deque>
 
+#include <Packages/Uintah/Core/Util/share.h> // for dbg_barrier's SCISHARE
+
 using namespace std;
 using namespace Uintah;
 
+
 DebugStream rdbg("Regridder", false);
 DebugStream dilate_dbg("Regridder_dilate", false);
-extern DebugStream dbg_barrier;
+extern SCISHARE DebugStream dbg_barrier;
 
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
