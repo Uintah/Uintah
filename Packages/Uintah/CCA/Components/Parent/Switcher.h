@@ -21,6 +21,7 @@ namespace Uintah {
 			      SimulationStateP&);
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
+    virtual void outputPS(Dir& dir);
     virtual void scheduleInitialize(const LevelP& level,
 				    SchedulerP& sched);
     virtual void scheduleComputeStableTimestep(const LevelP& level,
@@ -31,6 +32,8 @@ namespace Uintah {
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
     virtual void scheduleInitNewVars(const LevelP& level, SchedulerP& sched);
     virtual void scheduleCarryOverVars(const LevelP& level, SchedulerP& sched);
+    virtual void scheduleSwitchInitialization(const LevelP& level, 
+                                              SchedulerP& sched);
     virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);

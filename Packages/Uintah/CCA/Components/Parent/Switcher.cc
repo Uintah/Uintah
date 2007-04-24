@@ -26,6 +26,8 @@
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/OS/Dir.h>
+#include <sstream>
 
 
 
@@ -242,10 +244,21 @@ Switcher::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   // compute vars for the next component that may not have been computed by the current
   scheduleInitNewVars(level,sched);
 
+  scheduleSwitchInitialization(level,sched);
+
   // carry over vars that will be needed by a future component
   scheduleCarryOverVars(level,sched);
+
+
 }
 
+void Switcher::scheduleSwitchInitialization(const LevelP& level, 
+                                            SchedulerP& sched)
+{
+  if (d_switchState == switching)
+    d_sim->switchInitialize(level,sched);
+
+}
 
 void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
@@ -343,7 +356,7 @@ void Switcher::switchTest(const ProcessorGroup*,
   }
 }
 
-void Switcher::initNewVars(const ProcessorGroup* group,
+void Switcher::initNewVars(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
@@ -353,9 +366,6 @@ void Switcher::initNewVars(const ProcessorGroup* group,
 
   if (!switch_condition)
     return;
-
-  SimulationInterface* next_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex+1));
-  next_sim->switchInitialize(group, patches, matls, old_dw, new_dw);
 
   for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
     VarLabel* l = d_initVarLabels[d_componentIndex+1][i];
@@ -502,6 +512,50 @@ void Switcher::outputProblemSpec(ProblemSpecP& ps)
   d_sim->outputProblemSpec(ps);
 }
 
+void Switcher::outputPS(Dir& dir)
+{
+
+  for (unsigned i = 0; i < d_numComponents; i++) {
+    
+    SimulationInterface* sim = dynamic_cast<SimulationInterface*> (getPort("sim",i));	 
+    ProblemSpecInterface* psi = 
+      dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
+    ProblemSpecP ups = psi->readInputFile();
+    std::stringstream stream;
+    stream << i;
+    string inputname = dir.getName() + "/input.xml." + stream.str();
+    cout << "outputing file " << inputname << endl;
+    ups->output(inputname.c_str());
+    
+  }
+  
+  string inputname = dir.getName()+"/input.xml";
+  ProblemSpecReader psr(inputname);
+  ProblemSpecP inputDoc = psr.readInputFile();
+
+  int count = 0;
+  ProblemSpecP sim_block = inputDoc->findBlock("SimulationComponent");
+  for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
+       child = child->findNextBlock("subcomponent")) {
+    ProblemSpecP in_file = child->findBlock("input_file");
+    string nodeName = in_file->getNodeName();
+    cout << "nodeName = " << nodeName << endl;
+    if (nodeName == "input_file") {
+      std::stringstream stream;
+      stream << count++;
+      string inputname =  dir.getName() + "/input.xml." + stream.str();
+      cout << "inputname = " << inputname << endl;
+      child->appendElement("input_file",inputname);
+    }
+    child->removeChild(in_file);
+    
+  }
+  inputDoc->output(inputname.c_str());
+  inputDoc->releaseDocument();
+
+    
+
+}
 void Switcher::addToTimestepXML(ProblemSpecP& spec)
 {
   spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );

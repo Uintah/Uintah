@@ -424,6 +424,8 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
       string inputname = d_dir.getName()+"/input.xml";
       params->output(inputname.c_str());
 
+      dynamic_cast<SimulationInterface*>(getPort("sim"))->outputPS(d_dir);
+
       createIndexXML(d_dir);
    
       // create checkpoints/index.xml (if we are saving checkpoints)
