@@ -172,7 +172,7 @@ namespace Uintah {
         d_restartTimestep = indices[indices.size() - 1];
       }
       else {
-        for (int index = 0; index < indices.size(); index++)
+        for (int index = 0; index < (int)indices.size(); index++)
           if (indices[index] == d_restartTimestep) {
             d_restartIndex = index;
             break;
