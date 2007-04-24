@@ -44,13 +44,13 @@
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
-extern DebugStream dbg_barrier;
 
 #ifdef _WIN32
 #define SCISHARE __declspec(dllimport)
 #else
 #define SCISHARE
 #endif
+extern SCISHARE DebugStream dbg_barrier;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern SCISHARE SCIRun::Mutex       cerrLock;

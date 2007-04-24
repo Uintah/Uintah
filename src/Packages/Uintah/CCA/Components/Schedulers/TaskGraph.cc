@@ -427,14 +427,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks,
     dbg << d_myworld->myrank() << " Looking at task: " << task->getName() << '\n';
 
   GraphSortInfo& gsi = sortinfo.find(task)->second;
-  if(gsi.visited){
-    ostringstream error;
-    error << "Cycle detected in task graph: already did\n\t"
-	  << task->getName();
-    error << "\n";
-    SCI_THROW(InternalError(error.str(), __FILE__, __LINE__));
-  }
-
+  // we throw an exception before calling processTask if this task has already been visited
   gsi.visited = true;
    
   processDependencies(task, task->getRequires(), sortedTasks, sortinfo);
@@ -462,18 +455,22 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
 	Task* vtask = edge->comp->task;
         GraphSortInfo& gsi = sortinfo.find(vtask)->second;
 	if(!gsi.sorted){
-	  if(gsi.visited){
-	    ostringstream error;
-	    error << "Cycle detected in task graph: trying to do\n\t"
-		  << task->getName();
-	    error << "\nbut already did:\n\t"
-		  << vtask->getName();
-	    error << ",\nwhile looking for variable: \n\t" 
-		  << req->var->getName();
-	    error << "\n";
-	    SCI_THROW(InternalError(error.str(), __FILE__, __LINE__));
-	  }
-	  processTask(vtask, sortedTasks, sortinfo);
+          try {
+            // this try-catch mechanism will serve to print out the entire TG cycle
+	    if(gsi.visited){
+	      cout << d_myworld->myrank() << " Cycle detected in task graph\n";
+	      SCI_THROW(InternalError("Cycle detected in task graph", __FILE__, __LINE__));
+	    }
+
+            // recursively process the dependencies of the computing task
+            processTask(vtask, sortedTasks, sortinfo);
+          } catch (InternalError& e) {
+              cout << d_myworld->myrank() << "   Task " << task->getName()
+	           << " requires " << req->var->getName() << " from " 
+		   << vtask->getName() << "\n";
+
+            throw;
+          }
 	}
       }
     }
