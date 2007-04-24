@@ -14,6 +14,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/MultiLevelField.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
@@ -32,6 +33,7 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Persistent/Pstreams.h>
 
+
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
@@ -39,6 +41,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -46,6 +49,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 
+#include <sci_hash_map.h>
 #include <teem/nrrd.h>
 
 #include <iostream>
@@ -55,6 +59,7 @@
 #include <iomanip>
 #include <stdio.h>
 #include <algorithm>
+#include <map>
 
 using namespace SCIRun;
 using namespace std;
@@ -63,6 +68,7 @@ using namespace Uintah;
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 typedef LVMesh::handle_type LVMeshHandle;
 
+bool use_all_levels = false;
 bool verbose = false;
 bool quiet = false;
 bool attached_header = true;
@@ -76,24 +82,33 @@ enum {
 };
 int matrix_op = None;
 
+map<const Patch*, list<const Patch*> > new2OldPatchMap_;
+
 class QueryInfo {
 public:
   QueryInfo() {}
   QueryInfo(DataArchive* archive,
+            GridP grid,
             LevelP level,
             string varname,
             int mat,
             int timestep,
+            bool combine_levels,
             const Uintah::TypeDescription *type):
-    archive(archive), level(level), varname(varname), mat(mat), timestep(timestep),
+    archive(archive), grid(grid),
+    level(level), varname(varname),
+    mat(mat), timestep(timestep),
+    combine_levels(combine_levels),
     type(type)
   {}
   
   DataArchive* archive;
+  GridP grid;
   LevelP level;
   string varname;
   int mat;
   int timestep;
+  bool combine_levels;
   const Uintah::TypeDescription *type;
 };
 
@@ -110,6 +125,10 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -v,--variable <variable name>\n";
   cerr << "  -m,--material <material number> [defaults to first material found]\n";
   cerr << "  -l,--level <level index> [defaults to 0]\n";
+  cerr << "  -a,--all - Use all levels.  Overrides -l.  Uses the resolution\n";
+  cerr << "             of the finest level. Fills the entire domain by \n";
+  cerr << "             interpolating data from lower resolution levels\n";
+  cerr << "             when necessary.\n";
   cerr << "  -mo <operator> type of operator to apply to matricies.\n";
   cerr << "                 Options are none, det, norm, and trace\n";
   cerr << "                 [defaults to none]\n";
@@ -201,12 +220,310 @@ unsigned int get_nrrd_type() {
 /////////////////////////////////////////////////////////////////////
 //
 
+bool
+is_periodic_bcs(IntVector cellir, IntVector ir)
+{
+  if( cellir.x() == ir.x() ||
+      cellir.y() == ir.y() ||
+      cellir.z() == ir.z() )
+    return true;
+  else
+    return false;
+}
+
+void
+get_periodic_bcs_range(IntVector cellmax, IntVector datamax,
+                       IntVector range, IntVector& newrange)
+{
+  if( cellmax.x() == datamax.x())
+    newrange.x( range.x() + 1 );
+  else
+    newrange.x( range.x() );
+  if( cellmax.y() == datamax.y())
+    newrange.y( range.y() + 1 );
+  else
+    newrange.y( range.y() );
+  if( cellmax.z() == datamax.z())
+    newrange.z( range.z() + 1 );
+  else
+    newrange.z( range.z() );
+}
 
 
 //
 /////////////////////////////////////////////////////////////////////
 
+bool 
+update_mesh_handle( LevelP& level,
+                    IntVector& hi,
+                    IntVector& range,
+                    BBox& box,
+                    Uintah::TypeDescription::Type type,
+                    LVMeshHandle& mesh_handle)
+{
+  //   cerr<<"In update_mesh_handled: type = "<<type<<"\n";
+  
+  switch ( type ){
+  case Uintah::TypeDescription::CCVariable:
+    {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary ){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
+      if( mesh_handle.get_rep() == 0 ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x(),newrange.y(),
+                                          newrange.z(), box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x(), range.y(),
+                                          range.z(), box.min(),
+                                          box.max());
+//                cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+        }
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
+                mesh_handle->get_nj() != (unsigned int) range.y() ||
+                mesh_handle->get_nk() != (unsigned int) range.z() ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x(),newrange.y(),
+                                          newrange.z(), box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x(), range.y(),
+                                          range.z(), box.min(),
+                                          box.max());
+//                cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+        }
+      } 
+      return true;
+    }
+  case Uintah::TypeDescription::NCVariable:
+    {
+      if( mesh_handle.get_rep() == 0 ){
+        mesh_handle = scinew LVMesh(range.x(), range.y(),
+                                        range.z(), box.min(),
+                                        box.max());
+//              cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+      }else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
+               mesh_handle->get_nj() != (unsigned int) range.y() ||
+               mesh_handle->get_nk() != (unsigned int) range.z() ){
+        mesh_handle = scinew LVMesh(range.x(), range.y(),
+                                        range.z(), box.min(),
+                                        box.max());
+//              cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+      }
+      return true;
+    }
+  case Uintah::TypeDescription::SFCXVariable:
+    {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary ){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
+      if( mesh_handle.get_rep() == 0 ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+//           cerr<<"is periodic?\n";
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x(),newrange.y() - 1,
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
+                                      range.z() - 1, box.min(),
+                                      box.max());
+        }
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
+                mesh_handle->get_nj() != (unsigned int) range.y() -1 ||
+                mesh_handle->get_nk() != (unsigned int) range.z() -1 ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x(),newrange.y() - 1,
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
+                                      range.z()-1, box.min(),
+                                      box.max());
+        }
+      }
+      return true;
+    }
+  case Uintah::TypeDescription::SFCYVariable:
+    {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary ){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
+      if( mesh_handle.get_rep() == 0 ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y(),
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y(),
+                                      range.z()-1, box.min(),
+                                      box.max());
+        }
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() -1 ||
+                mesh_handle->get_nj() != (unsigned int) range.y() ||
+                mesh_handle->get_nk() != (unsigned int) range.z() -1 ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y(),
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y(),
+                                      range.z()-1, box.min(),
+                                      box.max());
+        }
+      }
+      return true;
+    }
+  case Uintah::TypeDescription::SFCZVariable:
+     {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary ){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
+      if( mesh_handle.get_rep() == 0 ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y() - 1,
+                                          newrange.z(), box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
+                                      range.z(), box.min(),
+                                      box.max());
+        }
+      } else if(mesh_handle->get_ni() != (unsigned int) range.x() -1 ||
+                mesh_handle->get_nj() != (unsigned int) range.y() -1 ||
+                mesh_handle->get_nk() != (unsigned int) range.z() ){
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y() - 1,
+                                          newrange.z(), box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
+                                      range.z(), box.min(),
+                                      box.max());
+        }
+      }     
+      return true;
+    }
+  default:
+    return false;
+  }
+}
 
+template <class T, class VarT, class FIELD>
+void
+getPatchData(QueryInfo& qinfo, IntVector& offset,
+             FIELD* sfield, const Patch* patch)
+{
+  IntVector patch_low, patch_high;
+  VarT patch_data;
+  try {
+    qinfo.archive->query(patch_data, qinfo.varname, qinfo.mat, patch,
+                         qinfo.timestep);
+  } catch (Exception& e) {
+    //     error("query caused an exception: " + string(e.message()));
+    cerr << "getPatchData::error in query function\n";
+    cerr << e.message()<<"\n";
+    return;
+  }
+
+  if ( remove_boundary ) {
+    if(sfield->basis_order() == 0){
+      patch_low = patch->getInteriorCellLowIndex();
+      patch_high = patch->getInteriorCellHighIndex();
+    } else {
+      patch_low = patch->getInteriorNodeLowIndex();
+      switch (qinfo.type->getType()) {
+      case Uintah::TypeDescription::SFCXVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
+        break;
+      case Uintah::TypeDescription::SFCYVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
+        break;
+      case Uintah::TypeDescription::SFCZVariable:
+        patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
+        break;
+      default:
+        patch_high = patch->getInteriorNodeHighIndex();   
+      } 
+    }
+      
+  } else { // Don't remove the boundary
+    if( sfield->basis_order() == 0){
+      patch_low = patch->getCellLowIndex();
+      patch_high = patch->getCellHighIndex();
+    } else {
+      patch_low = patch->getNodeLowIndex();
+      switch (qinfo.type->getType()) {
+      case Uintah::TypeDescription::SFCXVariable:
+        patch_high = patch->getSFCXHighIndex();
+        break;
+      case Uintah::TypeDescription::SFCYVariable:
+        patch_high = patch->getSFCYHighIndex();
+        break;
+      case Uintah::TypeDescription::SFCZVariable:
+        patch_high = patch->getSFCZHighIndex();
+        break;
+      case Uintah::TypeDescription::NCVariable:
+        patch_high = patch->getNodeHighIndex();
+        break;
+      default:
+        cerr << "build_field::unknown variable.\n";
+        exit(1);
+      }
+    }
+  } // if (remove_boundary)
+
+    // Rewindow the data if we need only a subset.  This should never
+    // get bigger (thus requiring reallocation).  rewindow returns
+    // true iff no reallocation is needed.
+  ASSERT(patch_data.rewindow( patch_low, patch_high ));
+    
+  PatchToFieldThread<VarT, T, FIELD> *worker = 
+    scinew PatchToFieldThread<VarT, T, FIELD>(sfield, patch_data, offset,
+                                              patch_low, patch_high);
+  worker->run();
+  delete worker;
+}
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -226,71 +543,261 @@ void build_field(QueryInfo &qinfo,
   // Loop over each patch and get the data from the data archive.
   for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
        patch_it != qinfo.level->patchesEnd(); ++patch_it){
-    IntVector patch_low, patch_high;
-    VarT patch_data;
     const Patch* patch = *patch_it;
     // This gets the data
-    qinfo.archive->query( patch_data, qinfo.varname, qinfo.mat, patch,
-                          qinfo.timestep);
-    if ( remove_boundary ) {
-      if(sfield->basis_order() == 0){
-        patch_low = patch->getInteriorCellLowIndex();
-        patch_high = patch->getInteriorCellHighIndex();
-      } else {
-        patch_low = patch->getInteriorNodeLowIndex();
-        switch (qinfo.type->getType()) {
-        case Uintah::TypeDescription::SFCXVariable:
-          patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
-          break;
-        case Uintah::TypeDescription::SFCYVariable:
-          patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
-          break;
-        case Uintah::TypeDescription::SFCZVariable:
-          patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
-          break;
-        default:
-          patch_high = patch->getInteriorNodeHighIndex();   
-        } 
-      }
-      
-    } else { // Don't remove the boundary
-      if( sfield->basis_order() == 0){
-        patch_low = patch->getCellLowIndex();
-        patch_high = patch->getCellHighIndex();
-      } else {
-        patch_low = patch->getNodeLowIndex();
-        switch (qinfo.type->getType()) {
-        case Uintah::TypeDescription::SFCXVariable:
-          patch_high = patch->getSFCXHighIndex();
-          break;
-        case Uintah::TypeDescription::SFCYVariable:
-          patch_high = patch->getSFCYHighIndex();
-          break;
-        case Uintah::TypeDescription::SFCZVariable:
-          patch_high = patch->getSFCZHighIndex();
-          break;
-        case Uintah::TypeDescription::NCVariable:
-          patch_high = patch->getNodeHighIndex();
-          break;
-        default:
-          cerr << "build_field::unknown variable.\n";
-          exit(1);
-        }
-      }
-    } // if (remove_boundary)
-
-    // Rewindow the data if we need only a subset.  This should never
-    // get bigger (thus requiring reallocation).  rewindow returns
-    // true iff no reallocation is needed.
-    ASSERT(patch_data.rewindow( patch_low, patch_high ));
-    
-    PatchToFieldThread<VarT, T, FIELD> *worker = 
-      scinew PatchToFieldThread<VarT, T, FIELD>(sfield, patch_data, offset,
-                                                patch_low, patch_high);
-    worker->run();
-    delete worker;
+    getPatchData<T, VarT, FIELD>(qinfo, offset, sfield, patch);
   }
 }
+
+GridP 
+build_minimal_patch_grid( GridP oldGrid )
+{
+  int nlevels = oldGrid->numLevels();
+  GridP newGrid = scinew Grid();
+  const SuperPatchContainer* superPatches;
+
+  for( int i = 0; i < nlevels; i++ ){
+    LevelP level = oldGrid->getLevel(i);
+    LocallyComputedPatchVarMap patchGrouper;
+    const PatchSubset* patches = level->allPatches()->getUnion();
+    patchGrouper.addComputedPatchSet(patches);
+    patchGrouper.makeGroups();
+    superPatches = patchGrouper.getSuperPatches(level.get_rep());
+    ASSERT(superPatches != 0);
+
+    LevelP newLevel =
+      newGrid->addLevel(level->getAnchor(), level->dCell());
+
+//     cerr<<"Level "<<i<<":\n";
+//    int count = 0;
+    SuperPatchContainer::const_iterator superIter;
+    for (superIter = superPatches->begin();
+         superIter != superPatches->end(); superIter++) {
+      IntVector low = (*superIter)->getLow();
+      IntVector high = (*superIter)->getHigh();
+      IntVector inLow = high; // taking min values starting at high
+      IntVector inHigh = low; // taking max values starting at low
+
+//       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
+
+      for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
+        const Patch* patch = (*superIter)->getBoxes()[p];
+        inLow = Min(inLow, patch->getInteriorCellLowIndex());
+        inHigh = Max(inHigh, patch->getInteriorCellHighIndex());
+      }
+      
+      Patch* newPatch =
+        newLevel->addPatch(low, high, inLow, inHigh);
+      newLevel->setExtraCells( level->getExtraCells() );
+      list<const Patch*> oldPatches; 
+      for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
+        const Patch* patch = (*superIter)->getBoxes()[p];
+        oldPatches.push_back(patch);
+      }
+      new2OldPatchMap_[newPatch] = oldPatches;
+    }
+    newLevel->finalizeLevel();
+  }
+  return newGrid;
+}
+// // Similar to build_field, but is called from build_multi_level_field.
+
+template<class T, class VarT, class FIELD>
+void
+build_patch_field(QueryInfo& qinfo,
+                  const Patch* patch,
+                  IntVector& offset,
+                  FIELD* field)
+{
+  // Initialize the data
+  field->fdata().initialize((typename FIELD::value_type)(0));
+
+  map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
+    new2OldPatchMap_.find(patch);
+  if( oldPatch_it == new2OldPatchMap_.end() ) {
+    //  error("No mapping from old patches to new patches.");
+    cerr<<"No mapping from old patches to new patches.\n";
+    return;
+  }
+    
+  list<const Patch*> oldPatches = (*oldPatch_it).second;
+  for(list<const Patch*>::iterator patch_it = oldPatches.begin();
+      patch_it != oldPatches.end(); ++patch_it){
+    getPatchData<T, VarT, FIELD>(qinfo, offset, field, *patch_it );
+  }
+}
+
+template <class T, class VarT, class FIELD>
+FieldHandle
+build_multi_level_field(QueryInfo &qinfo)
+{
+  IntVector offset;
+  if(verbose) cout<<"Building minimal patch grid.\n";
+  GridP grid_minimal = build_minimal_patch_grid( qinfo.grid );
+  if(verbose) cout<<"Minimal patch grid built.\n";
+
+  vector<MultiLevelFieldLevel< FIELD >*> levelfields;
+
+    for(int i = 0; i < grid_minimal->numLevels(); i++){
+      LevelP level = grid_minimal->getLevel( i );
+      vector<LockingHandle< FIELD > > patchfields;
+    
+      // At this point we should have a mimimal patch set in our
+      // grid_minimal, and we want to make a LatVolField for each patch.
+      for(Level::const_patchIterator patch_it = level->patchesBegin();
+          patch_it != level->patchesEnd(); ++patch_it){
+      
+        
+        IntVector patch_low, patch_high, range;
+        BBox pbox;
+        if( remove_boundary ){
+          patch_low = (*patch_it)->getInteriorNodeLowIndex();
+          patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+          pbox.extend((*patch_it)->getInteriorBox().lower());
+          pbox.extend((*patch_it)->getInteriorBox().upper());
+        } else {
+          patch_low = (*patch_it)->getLowIndex();
+          patch_high = (*patch_it)->getHighIndex(); 
+          pbox.extend((*patch_it)->getBox().lower());
+          pbox.extend((*patch_it)->getBox().upper());
+        }
+        // ***** This seems like a hack *****
+        range = patch_high - patch_low + IntVector(1,1,1); 
+        // **********************************
+
+
+      
+//         cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+//           range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
+//           "high index is "<<patch_high<<" , size is  "<<
+//           pbox.min()<<", "<<pbox.max()<<" for Patch address "<<
+//           (*patch_it)<<"\n";
+      
+        LVMeshHandle mh = 0;
+        qinfo.level = level;
+        update_mesh_handle(qinfo.level, patch_high, 
+                           range, pbox, qinfo.type->getType(), mh); 
+
+        FIELD *field = scinew FIELD( mh );
+//         set_field_properties(field, qinfo, patch_low);
+
+        build_patch_field<T, VarT, FIELD> (qinfo, (*patch_it), 
+                                           patch_low, field);
+
+        patchfields.push_back( field );
+      }
+      MultiLevelFieldLevel<FIELD> *mrlevel = 
+        scinew MultiLevelFieldLevel<FIELD>( patchfields, i );
+      levelfields.push_back(mrlevel);
+    }
+    return scinew MultiLevelField<typename FIELD::mesh_type, 
+                                  typename FIELD::basis_type,
+                                  typename FIELD::fdata_type>(levelfields);
+}
+
+
+template <class T, class VarT, class FIELD, class FLOC>
+void build_combined_level_field(QueryInfo &qinfo,
+                                IntVector& offset,
+                                FIELD *sfield)
+{
+ // TODO: Bigler
+  // Not sure I need this yet
+  sfield->fdata().initialize(T(0));
+
+  if(verbose) cout<<"Building Multi-level Field\n";
+
+  FieldHandle fh =
+    build_multi_level_field<T, VarT, FIELD>(qinfo);
+  if(verbose) cout<<"Multi-level Field is built\n";
+
+  typedef MultiLevelField<typename FIELD::mesh_type, 
+                          typename FIELD::basis_type,
+                          typename FIELD::fdata_type> MLField;
+  typedef GenericField<typename FIELD::mesh_type, 
+                       typename FIELD::basis_type,
+                       typename FIELD::fdata_type>  GF;
+
+  MLField *mlfield = (MLField*) fh.get_rep();;
+
+  // print out some field info.
+
+  BBox box;
+  //  int nx, ny, nz;
+  typename FIELD::mesh_handle_type dst_mh = sfield->get_typed_mesh();
+  box = dst_mh->get_bounding_box();
+  if(verbose)
+    cout<<"The output field is has grid dimensions of "
+        << dst_mh->get_ni() <<"x"<<dst_mh->get_nj()<<"x"<<dst_mh->get_nk()
+        <<" and a geometric range from "<< box.min() <<" to "<<box.max()<<"\n";
+
+  typename FIELD::mesh_handle_type src_mh;
+  if(verbose) cout<<"The input data has "<<mlfield->nlevels()<<" levels:\n";
+  for(int i = 0; i < mlfield->nlevels(); i++){
+    const MultiLevelFieldLevel<GF> *lev = mlfield->level(i);
+    if(verbose) cout<<"\tLevel "<<i<<" has "
+                    <<lev->patches.size()<<" fields:\n";
+    for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+      src_mh = lev->patches[j]->get_typed_mesh();
+      box = src_mh->get_bounding_box();
+      if(verbose)
+        cout<<"\t\tField "<<j<<" has dimesions "
+            << src_mh->get_ni() <<"x"<<src_mh->get_nj()
+            <<"x"<<src_mh->get_nk()
+            <<" and a geometric range from "
+            << box.min() <<" to "<<box.max()<<"\n";
+    }
+  }
+
+
+
+
+  // first Map level 0 src field data to the dst field
+  for(int i = 0; i < mlfield->nlevels(); i++){
+    const MultiLevelFieldLevel<GF> *lev = mlfield->level(i);
+    typename FIELD::handle_type src_fh;
+    for(unsigned int j = 0; j < lev->patches.size(); j++ ){
+      src_fh = lev->patches[j];
+      src_mh = src_fh->get_typed_mesh();
+
+      if(!quiet) cerr<<"Filling destination field with level "<<i<<" data ";
+      int count = 0;
+
+
+      typename FLOC::iterator itr, end_itr;
+      dst_mh->begin(itr);
+      dst_mh->end(end_itr);
+      while (itr != end_itr) {
+        typename FLOC::array_type locs;
+        double weights[MESH_WEIGHT_MAXSIZE];
+        Point p;
+        dst_mh->get_center(p, *itr);
+        bool failed = true;
+        const int nw = src_mh->get_weights(p, locs, weights);
+        typename FIELD::value_type val;
+    
+        if (nw > 0)	{
+          failed = false;
+          if (locs.size())
+            val = (typename FIELD::value_type)(src_fh->value(locs[0])*weights[0]);
+          for (unsigned int k = 1; k < locs.size(); k++) {
+            val +=(typename FIELD::value_type)(src_fh->value(locs[k])*weights[k]);
+          }
+        }
+        if (!failed) sfield->set_value(val, *itr);
+        ++itr;
+        if(!quiet){
+          if( count == 100000 ) {
+            cerr<<"."; count = 0;
+          } else { ++count; }
+        }
+      }
+      if(!quiet) cerr<<" done.\n";
+    }
+  }
+}
+
+
 
 // helper function for wrap_nrrd
 
@@ -484,22 +991,32 @@ void getData(QueryInfo &qinfo, IntVector &low,
   Nrrd *out;
   if( basis_order == 0 ){
     LVFieldCB* sf = scinew LVFieldCB(mesh_handle_);
+    typedef typename LVFieldCB::mesh_type::Cell FLOC;
     if (!sf) {
       cerr << "Cannot allocate memory for field\n";
       return;
     }
-    build_field(qinfo, low, data_T, gridVar, sf);
+    if(qinfo.combine_levels){
+      build_combined_level_field<T, VarT, LVFieldCB, FLOC>(qinfo, low, sf);
+    } else {
+      build_field(qinfo, low, data_T, gridVar, sf);
+    }
     // Convert the field to a nrrd
     out = wrap_nrrd(sf);
     // Clean up our memory
     delete sf;
   } else {
     LVFieldLB* sf = scinew LVFieldLB(mesh_handle_);
+    typedef typename LVFieldLB::mesh_type::Node FLOC;
     if (!sf) {
       cerr << "Cannot allocate memory for field\n";
       return;
     }
-    build_field(qinfo, low, data_T, gridVar, sf);
+    if(qinfo.combine_levels){
+      build_combined_level_field<T, VarT, LVFieldLB, FLOC>(qinfo, low, sf);
+    } else {
+      build_field(qinfo, low, data_T, gridVar, sf);
+    }
     // Convert the field to a nrrd
     out = wrap_nrrd(sf);
     // Clean up our memory
@@ -546,6 +1063,7 @@ void getVariable(QueryInfo &qinfo, IntVector &low, IntVector& hi,
                  IntVector &range, BBox &box,
                  string &filename) {
 
+
   LVMeshHandle mesh_handle_;
   switch( qinfo.type->getType() ) {
   case Uintah::TypeDescription::CCVariable:
@@ -591,34 +1109,6 @@ void getVariable(QueryInfo &qinfo, IntVector &low, IntVector& hi,
   }
 }
 
-bool
-is_periodic_bcs(IntVector cellir, IntVector ir)
-{
-  if( cellir.x() == ir.x() ||
-      cellir.y() == ir.y() ||
-      cellir.z() == ir.z() )
-    return true;
-  else
-    return false;
-}
-
-void
-get_periodic_bcs_range(IntVector cellmax, IntVector datamax,
-                       IntVector range, IntVector& newrange)
-{
-  if( cellmax.x() == datamax.x())
-    newrange.x( range.x() + 1 );
-  else
-    newrange.x( range.x() );
-  if( cellmax.y() == datamax.y())
-    newrange.y( range.y() + 1 );
-  else
-    newrange.y( range.y() );
-  if( cellmax.z() == datamax.z())
-    newrange.z( range.z() + 1 );
-  else
-    newrange.z( range.z() );
-}
 
 int main(int argc, char** argv)
 {
@@ -652,6 +1142,8 @@ int main(int argc, char** argv)
       material = atoi(argv[++i]);
     } else if (s == "-l" || s == "--level") {
       level_index = atoi(argv[++i]);
+    } else if (s == "-a" || s == "--all"){
+      use_all_levels = true;
     } else if (s == "-vv" || s == "--verbose") {
       verbose = true;
     } else if (s == "-q" || s == "--quiet") {
@@ -795,10 +1287,21 @@ int main(int argc, char** argv)
         continue;
       }
     
+      //////////////////////////////////////////////////
+      // Set the level pointer
+      LevelP level;
+      if( use_all_levels ){ // set to level zero
+        level = grid->getLevel( 0 );
+        if( grid->numLevels() == 1 ){ // only one level to use
+          use_all_levels = false;
+        }
+      } else {  // set to requested level
+        level = grid->getLevel(level_index);
+      }
+
       ///////////////////////////////////////////////////
       // Check the material number.
 
-      LevelP level = grid->getLevel(level_index);
       const Patch* patch = *(level->patchesBegin());
       ConsecutiveRangeSet matls =
         archive->queryMaterials(variable_name, patch, time);
@@ -841,8 +1344,8 @@ int main(int argc, char** argv)
       const Uintah::TypeDescription* td = types[var_index];
       const Uintah::TypeDescription* subtype = td->getSubType();
     
-      QueryInfo qinfo(archive, level, variable_name, mat_num, time,
-                      td);
+      QueryInfo qinfo(archive, grid, level, variable_name, mat_num, 
+                      time, use_all_levels, td);
 
       IntVector hi, low, range;
       BBox box;
@@ -870,6 +1373,29 @@ int main(int argc, char** argv)
           range = newrange;
         }
       }
+
+      // Adjust the range for using all levels
+      if(use_all_levels && grid->numLevels() > 0){
+        double exponent = grid->numLevels() - 1;
+        range.x( range.x() * int(pow(2, exponent)));
+        range.y( range.y() * int(pow(2, exponent)));
+        range.z( range.z() * int(pow(2, exponent)));
+        low.x( low.x() * int(pow(2, exponent)));
+        low.y( low.y() * int(pow(2, exponent)));
+        low.z( low.z() * int(pow(2, exponent)));
+        hi.x( hi.x() * int(pow(2, exponent)));
+        hi.y( hi.y() * int(pow(2, exponent)));
+        hi.z( hi.z() * int(pow(2, exponent)));
+
+        if(verbose){
+          cout<<"The entire domain for all levels will have an index range of "
+              <<low<<" to "<<hi
+              <<" and a spatial range from "<<box.min()<<" to "
+              << box.max()<<".\n";
+        }
+      }
+
+
       
       
       // Figure out the filename
