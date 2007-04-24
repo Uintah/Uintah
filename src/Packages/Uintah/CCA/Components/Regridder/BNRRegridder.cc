@@ -312,8 +312,8 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
 
     if(p==numprocs)
     {
-      //no flags exit
-      return;
+      //no flags on any processors so exit
+      return;   
     }
  
     //find the bounds
@@ -327,16 +327,12 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
       }
     }
   }
-  else if (flags.size()==0)
-  {
-    //no flags on this level
-    return;
-  }
 
   //create initial task
   BNRTask::controller_=this;
   FlagsList flagslist;
-  flagslist.locs=&flags[0];
+  if(flags.size()>0)
+    flagslist.locs=&flags[0];
   flagslist.size=flags.size();
   tasks_.push_back(BNRTask(patch,flagslist,procs,rank,0,0));
   BNRTask *root=&tasks_.back();
