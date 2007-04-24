@@ -191,12 +191,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
                        const ProblemSpecP& materials_ps,
                        GridP& grid, SimulationStateP&   sharedState)
 {
+  cout_doing << d_myworld->myrank() << " Doing ICE::problemSetup " << "\t\t\t ICE" << endl;
   d_sharedState = sharedState;
   d_press_matl = scinew MaterialSubset();
   d_press_matl->add(0);
   d_press_matl->addReference();
 
-  cout_norm << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(!dataArchiver){
     throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);
@@ -498,6 +498,7 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec,
                       GridP& grid,
                       SimulationStateP& sharedState)
 {
+  cout_doing << d_myworld->myrank() << " Doing ICE::addMaterial " << "\t\t\t ICE" << endl;
   d_recompile = true;
   ProblemSpecP mat_ps       =  prob_spec->findBlock("AddMaterialProperties");
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
@@ -536,6 +537,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
  _____________________________________________________________________*/
 void ICE::outputProblemSpec(ProblemSpecP& root_ps)
 {
+  cout_doing << d_myworld->myrank() << " Doing ICE::addMaterial " << "\t\t\t ICE" << endl;
 
   ProblemSpecP root = root_ps->getRootNode();
 
@@ -567,7 +569,9 @@ void ICE::outputProblemSpec(ProblemSpecP& root_ps)
  _____________________________________________________________________*/
 void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
 {
-  cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitializeAddedMaterial " << endl;
+  cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitializeAddedMaterial \t\t\t\tL-"
+             <<level->getIndex() << endl;
+             
   Task* t = scinew Task("ICE::actuallyInitializeAddedMaterial",
                   this, &ICE::actuallyInitializeAddedMaterial);
 
@@ -667,7 +671,9 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 {
-  cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitialize " << endl;
+  cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitialize \t\t\t\tL-"
+             <<level->getIndex() << endl;
+  
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
 
@@ -737,7 +743,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 _____________________________________________________________________*/
 void ICE::restartInitialize()
 {
-    cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
+  cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
   // disregard initial dt when restarting
   d_initialDt = 10000.0;
   
