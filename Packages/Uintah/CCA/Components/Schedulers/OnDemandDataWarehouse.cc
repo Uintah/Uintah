@@ -1992,7 +1992,7 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
         try {
           var.copyPatch(srcvar, low, high);
         } catch (InternalError& e) {
-          cout << "  Can't copy patch " << neighbor->getID() << " for var " << *label << " " << low << " " << high << endl;
+          cout << "  Can't copy patch " << neighbor->getID() << " on matl " << matlIndex << " for var " << *label << " " << low << " " << high << endl;
           cout << e.message() << endl;
           throw;
         }
