@@ -175,8 +175,10 @@ while(1)
 	
 	last;   # Break out of the loop all tests have completed successfully	
     }
+    
+    $secs = 120;
 
-    print "Gonna Sleep for 1 min\nzzzzzzzzzzzzzzzzzzzz.......\n";
-    sleep(60);  # This puts the script in sleep for x mins
+    print "Gonna Sleep for $secs seconds\nzzzzzzzzzzzzzzzzzzzz.......\n";
+    sleep($secs);  # This puts the script in sleep for x mins
 
 }
