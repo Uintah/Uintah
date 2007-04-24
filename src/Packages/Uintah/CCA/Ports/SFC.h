@@ -266,6 +266,7 @@ protected:
   int mergemode;
   bool BulletProof(int mode)
   {
+
     bool retval=true;
 
     if(dim<1 || dim >3)
@@ -310,11 +311,11 @@ protected:
     int low[3],high[3];
     for(int d=0;d<dim;d++)
     {
-      low[d]=center[d]-dimensions[d]/2;
-      high[d]=center[d]+dimensions[d]/2;
+      low[d]=int(center[d]-dimensions[d]/2);
+      high[d]=int(ceil(center[d]+dimensions[d]/2));
     }
 
-    for(int i=0;i<n;i++)
+    for(unsigned int i=0;i<n;i++)
     {
       for(int d=0;d<dim;d++)
       {
@@ -360,7 +361,9 @@ protected:
 template<class LOCS> template<int DIM>
 void SFC<LOCS>::ProfileMergeParameters(int repeat)
 {
+#if SCI_ASSERTION_LEVEL >= 3
   ASSERT(BulletProof(Parallel));
+#endif
 
   rank=d_myworld->myrank();
   Comm=d_myworld->getComm();
