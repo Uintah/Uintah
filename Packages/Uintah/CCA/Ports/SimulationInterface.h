@@ -9,10 +9,12 @@
 #include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-
+#include <Core/OS/Dir.h>
 #include <Packages/Uintah/CCA/Ports/share.h>
 
 namespace Uintah {
+
+  using SCIRun::Dir;
 /**************************************
 
 CLASS
@@ -43,7 +45,6 @@ WARNING
 ****************************************/
 
   class DataWarehouse;
-  class ProcessorGroup;
    class SCISHARE SimulationInterface : public UintahParallelPort {
    public:
      SimulationInterface();
@@ -56,6 +57,7 @@ WARNING
                                GridP& grid, SimulationStateP& state) = 0;
 
      virtual void outputProblemSpec(ProblemSpecP& ps) {}
+     virtual void outputPS(Dir& dir) {}
       
      //////////
      // Insert Documentation Here:
@@ -67,6 +69,8 @@ WARNING
      //////////
      // Insert Documentation Here:
      virtual void restartInitialize() {}
+
+     virtual void switchInitialize(const LevelP& level,SchedulerP&) {}
       
      //////////
      // Insert Documentation Here:
@@ -103,10 +107,6 @@ WARNING
      // use this to get the progress ratio of an AMR subcycle
      double getSubCycleProgress(DataWarehouse* fineNewDW);
 
-     /// called from Switcher::initNewVars when switching TO this component
-     virtual void switchInitialize(const ProcessorGroup*, const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* old_dw, DataWarehouse* new_dw) {}
 
      //////////
      // ask the component if it needs to be recompiled
