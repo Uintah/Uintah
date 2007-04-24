@@ -341,10 +341,17 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
+#if 0
   if (materials_ps)
     mat_ps       =  materials_ps->findBlock("MaterialProperties");
   else
     mat_ps       =  prob_spec->findBlock("MaterialProperties");
+#endif
+
+  if (prob_spec->findBlock("MaterialProperties"))
+    mat_ps = prob_spec->findBlock("MaterialProperties");
+  else if (materials_ps)
+    mat_ps = materials_ps->findBlock("MaterialProperties");
 
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 

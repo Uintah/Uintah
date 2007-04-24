@@ -120,12 +120,22 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   ProblemSpecP restart_mat_ps = 0;
+  ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
+  if (prob_spec_mat_ps)
+    restart_mat_ps = prob_spec;
+  else if (materials_ps)
+    restart_mat_ps = materials_ps;
+  else
+    restart_mat_ps = prob_spec;
+
+#if 0
   if (materials_ps){
     restart_mat_ps = materials_ps;
   }
   else{
     restart_mat_ps = prob_spec;
   }
+#endif
 
   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 

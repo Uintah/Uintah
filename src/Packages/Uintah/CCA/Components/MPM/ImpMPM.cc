@@ -137,10 +137,21 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    ProblemSpecP mpm_ps = 0;
    ProblemSpecP restart_mat_ps = 0;
 
+  ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
+  if (prob_spec_mat_ps)
+    restart_mat_ps = prob_spec;
+  else if (materials_ps)
+    restart_mat_ps = materials_ps;
+  else
+    restart_mat_ps = prob_spec;
+
+
+#if 0
    if (materials_ps)
      restart_mat_ps = materials_ps;
    else
      restart_mat_ps = prob_spec;
+#endif
 
    ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 
@@ -342,6 +353,16 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   }
 #endif
   
+}
+
+void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
+{
+
+ if (flags->d_useLoadCurves) {
+    // Schedule the initialization of HeatFlux BCs per particle
+    scheduleInitializeHeatFluxBCs(level, sched);
+  }
+
 }
 
 
@@ -3362,17 +3383,4 @@ double ImpMPM::recomputeTimestep(double current_dt)
   return current_dt*flags->d_delT_decrease_factor;
 }
 
-// note - currently this task is not compiled into the taskgraph.
-//   the functions called must be in order and must not have MPI communication
-//   between them (i.e., no ghost cells)
-void ImpMPM::switchInitialize(const ProcessorGroup* group, const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw, DataWarehouse* new_dw)
-{
-  // note 'matls' is ALL matls.
-  if (flags->d_useLoadCurves) {
-    countMaterialPointsPerLoadCurve(group, patches, matls, old_dw, new_dw);
-    initializeHeatFluxBC(group, patches, matls, old_dw, new_dw);
-  }
-}
 
