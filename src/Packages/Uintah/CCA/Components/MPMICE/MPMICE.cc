@@ -119,6 +119,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
                           const ProblemSpecP& materials_ps, 
                           GridP& grid, SimulationStateP& sharedState)
 {
+  cout_doing << "Doing MPMICE::problemSetup " << endl;
   d_sharedState = sharedState;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
@@ -200,10 +201,15 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
   
-  ProblemSpecP mpm_ps = prob_spec->findBlock("MPM");
-  if(mpm_ps){ 
-    mpm_ps->get("testForNegTemps_mpm",d_testForNegTemps_mpm);
+  
+  ProblemSpecP mpm_ps = 0;
+  mpm_ps = prob_spec->findBlock("MPM");
+  
+  if(!mpm_ps){
+    mpm_ps = materials_ps->findBlock("MPM");
   }
+  mpm_ps->get("testForNegTemps_mpm",d_testForNegTemps_mpm);
+  
   //__________________________________
   //  bulletproofing
   if(d_doAMR && !d_sharedState->isLockstepAMR()){
@@ -225,6 +231,10 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 {
   d_mpm->outputProblemSpec(root_ps);
   d_ice->outputProblemSpec(root_ps);
+  
+  // Global flags required by mpmice
+  ProblemSpecP mpm_ps = root_ps->findBlock("MPM");
+  mpm_ps->appendElement("testForNegTemps_mpm", d_testForNegTemps_mpm);
 }
 
 
