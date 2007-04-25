@@ -148,6 +148,8 @@ while(1)
 		close(doneFile);
 		print "Cleaning the"." $fl_name.DONE"."\n";
 		`rm -f $fl_name.DONE`;
+		`rm -f $fl_name.results`;
+#		`rm -f $fl_name.DONE`;
 	    }
 	    $i++;
 	}
@@ -155,7 +157,7 @@ while(1)
 	close(fileList);
 
 	close (finalDone);
-	`cp $ARGV[0].TMP $ARGV[0].DONE`;
+	`mv $ARGV[0].TMP $ARGV[0].DONE`;
 	print htmlFile "</html>\n";
 	$i = 1;
 	foreach $email (@emails) # This sends email to all recipients when the tests are completed
