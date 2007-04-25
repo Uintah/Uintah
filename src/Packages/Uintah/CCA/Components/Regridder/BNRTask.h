@@ -72,7 +72,7 @@ WARNING
   enum Task_Status { NEW, GATHERING_FLAG_COUNT, BROADCASTING_FLAG_COUNT,
                      COMMUNICATING_SIGNATURES, SUMMING_SIGNATURES, BROADCASTING_ACCEPTABILITY,
                      WAITING_FOR_TAGS, BROADCASTING_CHILD_TASKS, WAITING_FOR_CHILDREN,
-                     WAITING_FOR_PATCH_COUNT, WAITING_FOR_PATCHES, TERMINATED };
+                     WAITING_FOR_PATCH_COUNT, WAITING_FOR_PATCHES, SENDING_TO_PARENT, TERMINATED };
 
   class BNRRegridder;
 
@@ -134,9 +134,9 @@ WARNING
     static BNRRegridder *controller_;   // controlling algorithm;
 
     vector<Region> my_patches_;    // list of patches
-    unsigned int my_size_;              // number of patches on the parent
-    unsigned int left_size_;            // number of patches in left child
-    unsigned int right_size_;           // number of patches in right child
+    int my_size_;              // number of patches on the parent
+    int left_size_;            // number of patches in left child
+    int right_size_;           // number of patches in right child
   };
 
 } // End namespace Uintah

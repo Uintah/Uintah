@@ -340,7 +340,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
   //place on immediate_q_
   immediate_q_.push(root);                  
   //control loop
- 
+
   while(true)
   {
     BNRTask *task;
@@ -374,7 +374,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
       {
         BNRTask *task=request_to_task_[indicies_[c]];
         free_requests_.push(indicies_[c]);
-        if(--task->remaining_requests_==0)  //task has completed communication
+        if(--(task->remaining_requests_)==0)  //task has completed communication
         {
           if(task->status_!=TERMINATED)     //if task needs more work
           {
