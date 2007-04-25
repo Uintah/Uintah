@@ -109,7 +109,15 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
    // set to false if restartSetup is called - we can't do it there
    // as the first timestep doesn't have any tasks
    d_outputInitTimestep = p->findBlock("outputInitTimestep") != 0;
-   p->require("filebase", d_filebase);
+   
+   // problemSetup is called again from the Switcher to reset vars (and frequency) it wants to save
+   //   DO NOT get it again.  Currently the directory won't change mid-run, so calling problemSetup
+   //   will not change the directory.  What happens then, is even if a switched component wants a 
+   //   different uda name, it will not get one until sus restarts (i.e., when you switch, component
+   //   2's data dumps will be in whichever uda started sus.), which is not optimal.  So we disable
+   //   this feature until we can make the DataArchiver make a new directory mid-run.
+   if (d_filebase == "")
+     p->require("filebase", d_filebase);
 
    // get output timestep or time interval info
    d_outputInterval = 0;
