@@ -868,18 +868,18 @@ wrap_copy( Matrix3* fdata, double*& datap, unsigned int size){
 template<class FIELD>
 Nrrd* wrap_nrrd(FIELD *source) {
   Nrrd *out = nrrdNew();
-  int dim = 3;
+  int dim = -1;
   size_t size[5];
   
-  size[0] = source->fdata().dim3();
-  size[1] = source->fdata().dim2();
-  size[2] = source->fdata().dim1();
-
-  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
-
   const SCIRun::TypeDescription *td = 
     source->get_type_description(Field::FDATA_TD_E);
   if( td->get_name().find( "Vector") != string::npos ) {  // Vectors
+    dim = 4;
+    size[0] = 3;
+    size[1] = source->fdata().dim3();
+    size[2] = source->fdata().dim2();
+    size[3] = source->fdata().dim1();
+  
     unsigned int num_vec = source->fdata().size();
     double *data = new double[num_vec*3];
     if (!data) {
@@ -939,6 +939,11 @@ Nrrd* wrap_nrrd(FIELD *source) {
       return 0;
     }
   } else { // Scalars
+    dim = 3;
+    size[0] = source->fdata().dim3();
+    size[1] = source->fdata().dim2();
+    size[2] = source->fdata().dim1();
+
     // We don't need to copy data, so just get the pointer to the data
     size_t field_size = (source->fdata().size() *
                          sizeof(typename FIELD::value_type));
@@ -959,6 +964,9 @@ Nrrd* wrap_nrrd(FIELD *source) {
       return 0;
     }
   }
+
+  if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+
 }
 
 
@@ -1038,8 +1046,10 @@ void getData(QueryInfo &qinfo, IntVector &low,
 
   if (out) {
     // Now write it out
-    if (!quiet) cout << "Writing nrrd file\n";
     string filetype = attached_header? ".nrrd": ".nhdr";
+
+    if (!quiet) cout << "Writing nrrd file: " << filename + filetype << "\n";
+
     if (nrrdSave(string(filename + filetype).c_str(), out, 0)) {
       // There was a problem
       err = biffGetDone(NRRD);
