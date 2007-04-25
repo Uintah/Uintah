@@ -416,8 +416,7 @@ private:
     int ts = 0;
     while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
       ts++;
-    GridP grid = queryGrid( ts);
-    Patch* patch = NULL;
+
     // idx needs to be initialized before it is used in findPatchAndIndex.
     particleIndex idx = 0;
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
@@ -425,6 +424,8 @@ private:
       // nothing prevents this from changing between timesteps, so we have to
       // do this every time -- if that can't actually happen we might be able
       // to speed this up.
+      Patch* patch = NULL;
+      GridP grid = queryGrid( ts);
       findPatchAndIndex(grid, patch, idx, particleID, matlIndex, ts);
       //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
       if (patch == NULL)
