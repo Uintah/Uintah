@@ -122,7 +122,6 @@ while(1)
 		open(doneFile, "$fl_name.DONE");
 		while($line=<doneFile>)
 		{
-#		    print $line;
 		    if ($line !~ m/Title/)  # If the line is not a Title then we add the path in front of it
 		    {
 			chomp($line);
@@ -143,18 +142,18 @@ while(1)
 			$write_line = $line;
 			$html_write = "<B>$line</B><BR>";
 		    }
-#		    `echo \"$write_line\" >> $ARGV[0].TMP`;
 		    print finalDone "$write_line\n";
 		    print htmlFile "$html_write \n";
 		}
 		close(doneFile);
-		close(htmlFile);
-		close(fileList);
 		print "Cleaning the"." $fl_name.DONE"."\n";
 		`rm -f $fl_name.DONE`;
 	    }
 	    $i++;
 	}
+	close(htmlFile);
+	close(fileList);
+
 	close (finalDone);
 	`cp $ARGV[0].TMP $ARGV[0].DONE`;
 	print htmlFile "</html>\n";
