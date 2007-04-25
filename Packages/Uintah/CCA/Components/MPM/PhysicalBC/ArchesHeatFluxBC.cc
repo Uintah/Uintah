@@ -169,8 +169,10 @@ ArchesHeatFluxBC::fluxPerParticle(double time) const
 
   // Get the initial heatflux that is applied ( t = 0.0 )
   double heatflx = heatflux(time);
+#if 0
   cout << "heatflx = " << heatflx << endl;
   cout << "area = " << area << endl;
+#endif
 
   // Calculate the heatflux per particle
   return (heatflx*area)/static_cast<double>(d_numMaterialPoints);
