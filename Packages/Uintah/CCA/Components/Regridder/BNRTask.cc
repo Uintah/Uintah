@@ -102,7 +102,9 @@ void BNRTask::continueTask()
       goto WAIT_FOR_PATCH_COUNT;
     case WAITING_FOR_PATCHES:                                             //10
       goto WAIT_FOR_PATCHES;
-    case TERMINATED:                                                      //11
+    case SENDING_TO_PARENT:                                               //11
+      goto TERMINATE;
+    case TERMINATED:                                                      //12
       return;
      default:
       cerr << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": error invalid status_: " << status_ << endl;
@@ -435,6 +437,8 @@ void BNRTask::continueTask()
       //send patch list to parent
       MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
     }
+    status_=SENDING_TO_PARENT;
+    return;
   }
   
   TERMINATE:
@@ -445,7 +449,7 @@ void BNRTask::continueTask()
   if(parent_!=0 && sibling_->status_==TERMINATED )
   {
     
-    //place parent_ on delay queue (parent is waiting for communication from children)
+    //place parent_ on immediate queue (parent is waiting for communication from children and both are done sending)
     controller_->immediate_q_.push(parent_);
   }
   
@@ -464,6 +468,8 @@ void BNRTask::continueTaskSerial()
                   goto TASK_START;
           case WAITING_FOR_CHILDREN:                                            //8
                   goto WAIT_FOR_CHILDREN;
+          case SENDING_TO_PARENT:
+                  goto TERMINATE;
           case GATHERING_FLAG_COUNT:                                            //1
           case BROADCASTING_FLAG_COUNT:                                         //2
           case COMMUNICATING_SIGNATURES:                                        //3
@@ -473,7 +479,7 @@ void BNRTask::continueTaskSerial()
           case BROADCASTING_CHILD_TASKS:                                        //7
           case WAITING_FOR_PATCH_COUNT:                                         //9
           case WAITING_FOR_PATCHES:                                             //10
-          case TERMINATED:                                                      //11
+          case TERMINATED:                                                      //12
           default:
                   cout << "Error invalid status(" << status_ << ") in serial task\n";
                   exit(0);
@@ -563,8 +569,11 @@ void BNRTask::continueTaskSerial()
       //send patch list to parent
       MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
     }
+    status_=SENDING_TO_PARENT;
+    return;
   }
   
+  TERMINATE:
   status_=TERMINATED;
   
   //if parent is waiting activiate parent 
