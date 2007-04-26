@@ -246,7 +246,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 
     if (uncompress((Bytef*)buffer, &uncompressed_size,
 		   (const Bytef*)compressed_data, compressed_datasize) != Z_OK)
-       cerr << "uncompress failed in Uintah::Variable::read\n";
+      throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
 
     uncompressedData = &bufferStr;
   }
