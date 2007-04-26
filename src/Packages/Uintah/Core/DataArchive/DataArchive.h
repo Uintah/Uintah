@@ -173,6 +173,8 @@ public:
 
   TimeData& getTimeData(int index);
 
+  int getNumProcs(int index);
+
   std::string name(){ return d_filebase;}
   
   //! Set up data arachive for restarting a Uintah simulation   
