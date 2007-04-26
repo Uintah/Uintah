@@ -231,7 +231,8 @@
        <cfl>0.3</cfl>  <!-- IMPLICIT CFL = 0.3, EXPLICIT CFL = 0.2ISH -->
        <ICE>
         <advection type = "SecondOrder" />
-
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+        
 <!-- (A)  DELETE THIS TO RUN EXPLICIT 
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive </Scheme_for_delT_calc>  
