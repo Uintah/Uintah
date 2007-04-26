@@ -23,6 +23,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/Material.h>
@@ -56,6 +57,7 @@ using namespace std;
 #define Y_DIM 2
 #define Z_DIM 3
 #define RANDOM 4
+#define PROC_NUM 5
   
 class PatchVisualizer : public Module {
 public:
@@ -66,7 +68,7 @@ public:
 
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box,
-		      const Vector & change);
+		      const Vector & change, const Transform& shift);
   bool getGrid();
   void setupColors();
   int getScheme(string scheme);
@@ -173,10 +175,11 @@ bool PatchVisualizer::getGrid()
 
 // adds the lines to edges that make up the box defined by box 
 void PatchVisualizer::addBoxGeometry(GeomLines* edges, const Box& box,
-				     const Vector & change)
+				     const Vector & change,
+                                     const Transform& shift)
 {
-  Point min = box.lower() + change;
-  Point max = box.upper() - change;
+  Point min = shift.project(box.lower() + change);
+  Point max = shift.project(box.upper() - change);
   
   edges->add(Point(min.x(), min.y(), min.z()),
 	     Point(min.x(), min.y(), max.z()));
@@ -240,6 +243,8 @@ int PatchVisualizer::getScheme(string scheme) {
     return Z_DIM;
   if (scheme == "random")
     return RANDOM;
+  if (scheme == "proc_num")
+    return PROC_NUM;
   cerr << "PatchVisualizer: Warning: Unknown color scheme!\n";
   return SOLID;
 }
@@ -277,6 +282,11 @@ void PatchVisualizer::execute()
   in= (ArchiveIPort *) get_iport("Data Archive");
   // color map
   inColorMap =  (ColorMapIPort *) get_iport("ColorMap");
+  // Matrix
+  MatrixIPort *mat_in= (MatrixIPort *) get_iport("Matrix");
+
+
+
   // Create the output port
   ogeom= (GeometryOPort *) get_oport("Geometry");
 
@@ -306,12 +316,22 @@ void PatchVisualizer::execute()
     }
   }
 
+  // check for input matrix
+  MatrixHandle mH = 0;
+  Transform pt; // patch transform initialized as identity matrix
+  if( mat_in ){
+    if( mat_in->get( mH ) ){
+      if(mH.get_rep() != 0);
+      pt = mH->toTransform();
+    }
+  }
+
   //////////////////////////////////////////////////////////////////
   // Extract the geometry from the archive
   //////////////////////////////////////////////////////////////////
   
   // it's faster when we don't use push_back and know the exact size
-  vector< vector<Box> > patches(numLevels);
+  vector< vector<pair<Box, int> > > patches(numLevels);
 
   // initialize the min and max for the entire region.
   // Note: there are already function that compute this, but they currently
@@ -323,7 +343,7 @@ void PatchVisualizer::execute()
   for(int l = 0;l<numLevels;l++){
     LevelP level = grid->getLevel(l);
 
-    vector<Box> patch_list(level->numPatches());
+    vector<pair<Box, int> > patch_list(level->numPatches());
     Level::const_patchIterator iter;
     //---------------------------------------
     // for each patch in the level
@@ -331,7 +351,9 @@ void PatchVisualizer::execute()
     for(iter=level->patchesBegin();iter != level->patchesEnd(); iter++){
       const Patch* patch=*iter;
       Box box = patch->getBox();
-      patch_list[i] = box;
+      patch_list[i].first = box;
+      patch_list[i].second = 0;
+//         archive->queryPatchwiseProcessor( patch, old_timestep); 
 
       // determine boundaries
       if (box.upper().x() > max.x())
@@ -398,7 +420,7 @@ void PatchVisualizer::execute()
       //---------------------------------------
       // for each patch in the level
       for(unsigned int i = 0; i < patches[l].size(); i++){
-	addBoxGeometry(edges, patches[l][i], change_v);
+	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
       }
       
       level_geom->add(scinew GeomMaterial(edges, level_color[level_index]));
@@ -411,9 +433,9 @@ void PatchVisualizer::execute()
       // for each patch in the level
       for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
-	addBoxGeometry(edges, patches[l][i], change_v);
+	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
 	level_geom->add(scinew GeomMaterial(edges,
-			       cmap->lookup(patches[l][i].lower().x())));
+			       cmap->lookup(patches[l][i].first.lower().x())));
       }
       
       break;
@@ -424,9 +446,9 @@ void PatchVisualizer::execute()
       // for each patch in the level
       for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
-	addBoxGeometry(edges, patches[l][i], change_v);
+	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
 	level_geom->add(scinew GeomMaterial(edges,
-			       cmap->lookup(patches[l][i].lower().y())));
+			       cmap->lookup(patches[l][i].first.lower().y())));
       }
       
       break;
@@ -437,9 +459,9 @@ void PatchVisualizer::execute()
       // for each patch in the level
       for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
-	addBoxGeometry(edges, patches[l][i], change_v);
+	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
 	level_geom->add(scinew GeomMaterial(edges,
-			       cmap->lookup(patches[l][i].lower().z())));
+			       cmap->lookup(patches[l][i].first.lower().z())));
       }
       
       break;
@@ -451,11 +473,24 @@ void PatchVisualizer::execute()
       // for each patch in the level
       for(unsigned int i = 0; i < patches[l].size(); i++){
 	GeomLines* edges = scinew GeomLines();
-	addBoxGeometry(edges, patches[l][i], change_v);
+	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
 	level_geom->add(scinew GeomMaterial(edges, cmap->lookup(drand48())));
       }
       
       break;
+//     case PROC_NUM:
+//       // for each patch we need to establish its processor number.
+//       cmap->Scale( 0, double(archive->queryNumProcessors()));
+//       //---------------------------------------
+//       // for each patch in the level
+//       for(unsigned int i = 0; i < patches[l].size(); i++){
+// 	GeomLines* edges = scinew GeomLines();
+// 	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
+// 	level_geom->
+//           add(scinew GeomMaterial(edges, 
+//                                   cmap->lookup(patches[l][i].second)));
+//       }
+//       break;
     } // end of switch
     
     // add all the edges for the level
