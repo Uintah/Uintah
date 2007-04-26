@@ -252,15 +252,15 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
       if(patch_sets[l].empty())
         break;
 
-      double total_vol=0;
-      double sum_of_vol_squared=0;
+      double total_cells=0;
+      double sum_of_cells_squared=0;
       int n = patch_sets[l].size();
-      //calculate total volume and volume squared
+      //calculate total cells and cells squared
       for(int p=0;p<n;p++)
       {
-        double vol=double(patch_sets[l][p].getVolume());
-        total_vol+=vol;
-        sum_of_vol_squared+=vol*vol;
+        double cells=double(patch_sets[l][p].getVolume());
+        total_cells+=cells;
+        sum_of_cells_squared+=cells*cells;
       }
       //calculate conversion factor into simulation coordinates
       double factor=1;
@@ -269,9 +269,9 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
           factor*=newGrid->getLevel(l)->dCell()[d];
       }
       //calculate mean
-      double mean = total_vol /(double) n;
-      double stdv = sqrt((sum_of_vol_squared-total_vol*total_vol/(double)n)/(double)n);
-      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Volume: " << setw(8) << total_vol << " Mean Volume: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Real Volume: " << setw(8) << total_vol*factor << endl;
+      double mean = total_cells /(double) n;
+      double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells/(double)n)/(double)n);
+      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Total Cells: " << setw(8) << total_cells << " Mean Cells: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
     }
   }
 }
