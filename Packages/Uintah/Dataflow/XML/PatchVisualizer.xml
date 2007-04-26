@@ -23,6 +23,10 @@
        <name>ColorMap</name>
        <datatype>SCIRun::ColorMap</datatype>
      </port>
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
