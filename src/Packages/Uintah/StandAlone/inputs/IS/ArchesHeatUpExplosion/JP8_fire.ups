@@ -177,7 +177,6 @@
   <DataArchiver>
     <filebase>JP8_fire.uda</filebase>
     <outputTimestepInterval> 10 </outputTimestepInterval>
-    <compression>gzip</compression>
     <save label="vol_frac_CC"/>
     <save label="press_CC"/>
     <save label="temp_CC"/>

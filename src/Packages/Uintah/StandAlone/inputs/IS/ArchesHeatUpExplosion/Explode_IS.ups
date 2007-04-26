@@ -196,7 +196,7 @@
   <DataArchiver>
     <filebase>Explode_IS.uda</filebase>
     <outputInterval> 0.0000025 </outputInterval>
-    <compression>gzip</compression>
+
     <save label="vol_frac_CC"/>
     <save label="press_CC"/>
     <save label="temp_CC"/>

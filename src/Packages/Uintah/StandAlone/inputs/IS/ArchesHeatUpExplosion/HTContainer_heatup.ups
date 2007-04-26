@@ -20,7 +20,7 @@
     <delt_max>           1.0        </delt_max>
     <delt_init>          0.01        </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <max_iterations>	 800	     </max_iterations>
+    <!--<max_iterations>	 800	     </max_iterations> -->
   </Time>
 
   <!--____________________________________________________________________-->
@@ -153,7 +153,6 @@
   <DataArchiver>
     <filebase>HTContainer_heatup.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <compression>gzip</compression>
     <save label="p.x"/>
     <save label="p.velocity"/>
     <save label="g.temperature"/>
