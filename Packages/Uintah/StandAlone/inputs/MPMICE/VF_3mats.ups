@@ -21,7 +21,6 @@
    <DataArchiver>
        <filebase>VF3mat.uda</filebase>
        <outputInterval>.0001</outputInterval>
-       <compression>gzip</compression> 
        <!--<outputDoubleAsFloat/>  scirun doesn't like this for some reason.-->
        <save label = "p.particleID"/>
        <save label = "p.x"/>
