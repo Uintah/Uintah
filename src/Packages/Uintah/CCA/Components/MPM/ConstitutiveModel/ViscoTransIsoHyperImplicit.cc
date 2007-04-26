@@ -52,6 +52,7 @@ ViscoTransIsoHyperImplicit::ViscoTransIsoHyperImplicit(ProblemSpecP& ps,
   ps->require("max_fiber_strain",d_initialData.crit_stretch);
   ps->require("max_matrix_strain",d_initialData.crit_shear);
   ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
+  ps->get("active",d_active);
   ps->require("y1", d_initialData.y1);//viscoelastic prop's
   ps->require("y2", d_initialData.y2);
   ps->require("y3", d_initialData.y3);
@@ -199,6 +200,7 @@ void ViscoTransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
   cm_ps->appendElement("t5", d_initialData.t5);
   cm_ps->appendElement("t6", d_initialData.t6);
   cm_ps->appendElement("StrainEnergy",d_StrainEnergy); // MooneyRivlin or VerondaWestmann
+  cm_ps->appendElement("active",d_active);
 }
 
 ViscoTransIsoHyperImplicit* ViscoTransIsoHyperImplicit::clone()
@@ -504,6 +506,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                                         pset, px,
                                                         deformationGradient_new,                                                        dx, interpolator);
       }
+
+      double time = d_sharedState->getElapsedTime();
+
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -592,9 +597,10 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         fiber_stress = (DY*dWdI4tilde*I4tilde
                         - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
         double p = Bulk*log(J)/J; // p -= qVisco;
+        double active_stress = d_active*(time+delT);
         if (p >= -1.e-5 && p <= 1.e-5)
           p = 0.;
-        pressure = Identity*p;
+        pressure = Identity*(p + active_stress);
         
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
 
@@ -986,6 +992,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                                         pset, px,
                                                         deformationGradient_new,                                                        dx, interpolator);
      }
+     double time = d_sharedState->getElapsedTime();
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1048,7 +1055,8 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         double p = Bulk*log(J)/J; // p -= qVisco;
         if (p >= -1.e-5 && p <= 1.e-5)
           p = 0.;
-        pressure = Identity*p;
+        double active_stress = d_active*(time+delT);
+        pressure = Identity*(p + active_stress);
         //Cauchy stress
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
 

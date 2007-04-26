@@ -28,6 +28,7 @@ namespace Uintah {
       private:
          // Create datatype for storing model parameters
 	  bool d_useModifiedEOS; 
+          double d_active;
           string d_StrainEnergy;
 	  public:
 	  struct CMData {   //______________________________modified here
