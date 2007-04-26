@@ -67,7 +67,7 @@ WARNING
     Grid* CreateGrid(Grid* oldGrid, vector< vector<Region> > &patch_sets );
     
     bool getTags(int &tag1, int &tag2);
-    void OutputGridStats(vector< vector<Region> > &patch_sets);
+    void OutputGridStats(vector< vector<Region> > &patch_sets, Grid* newGrid);
 
     bool d_loadBalance;             //should the regridder call the load balancer before creating the grid
 
