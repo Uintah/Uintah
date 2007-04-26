@@ -125,7 +125,8 @@ usage( const std::string & message,
       cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
       cerr << "Valid options are:\n";
       cerr << "-h[elp]              : This usage information.\n";
-      cerr << "-mpm                 : \n";
+      cerr << "-mpm                 : option for explicit MPM\n";
+      cerr << "-impm                : option for implicit MPM\n";
       cerr << "-mpmf                : option for Fracture\n";
       cerr << "-rmpm                : option for rigid MPM\n";
       cerr << "-smpm                : option for shell MPM\n";
