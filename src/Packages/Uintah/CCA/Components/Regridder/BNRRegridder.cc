@@ -168,7 +168,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   
-  OutputGridStats(patch_sets);
+  OutputGridStats(patch_sets, newGrid);
 
   newGrid->performConsistencyCheck();
   return newGrid;
@@ -242,7 +242,7 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
 }
 
 
-void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets)
+void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* newGrid)
 {
   if (dbgstats.active() && d_myworld->myrank() == 0) 
   {
@@ -262,10 +262,16 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets)
         total_vol+=vol;
         sum_of_vol_squared+=vol*vol;
       }
+      //calculate conversion factor into simulation coordinates
+      double factor=1;
+      for(int d=0;d<3;d++)
+      {
+          factor*=newGrid->getLevel(l)->dCell()[d];
+      }
       //calculate mean
       double mean = total_vol /(double) n;
       double stdv = sqrt((sum_of_vol_squared-total_vol*total_vol/(double)n)/(double)n);
-      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Volume: " << setw(8) << total_vol<< " Mean Volume: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << endl;
+      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Volume: " << setw(8) << total_vol << " Mean Volume: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Real Volume: " << setw(8) << total_vol*factor << endl;
     }
   }
 }
