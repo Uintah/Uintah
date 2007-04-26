@@ -27,6 +27,7 @@ namespace Uintah {
   private:
     // Create datatype for storing model parameters
     bool d_useModifiedEOS; 
+    double d_active; 
   public:
     struct CMData {
       double Bulk;
