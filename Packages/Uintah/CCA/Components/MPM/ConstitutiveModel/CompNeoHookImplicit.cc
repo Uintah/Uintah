@@ -33,6 +33,7 @@ CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMFlags* Mflag)
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+  ps->get("active",d_active); 
   ps->get("useModifiedEOS",d_useModifiedEOS); 
 }
 
@@ -61,6 +62,7 @@ CompNeoHookImplicit::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("bulk_modulus",d_initialData.Bulk);
   cm_ps->appendElement("shear_modulus",d_initialData.Shear);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
+  cm_ps->appendElement("active",d_active);
 }
 
 
@@ -192,6 +194,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     DataWarehouse* parent_old_dw = 
       new_dw->getOtherDataWarehouse(Task::ParentOldDW);
     pset = parent_old_dw->getParticleSubset(dwi, patch);
+    parent_old_dw->get(delT,           lb->delTLabel,   getLevel(patches));
     parent_old_dw->get(px,             lb->pXLabel,                  pset);
     parent_old_dw->get(pvolumeold,     lb->pVolumeLabel,             pset);
     parent_old_dw->get(pmass,          lb->pMassLabel,               pset);
@@ -248,6 +251,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                                         dx, interpolator);
       }
 
+      double time = d_sharedState->getElapsedTime();
+
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -269,8 +274,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         double mubar = 1./3. * bElBar_new.Trace()*shear;
         Matrix3 shrTrl = (bElBar_new*shear - Identity*mubar);
 
+        double active_stress = d_active*(time+delT);
+
         // get the hydrostatic part of the stress
-        double p = bulk*log(J)/J;
+        double p = bulk*log(J)/J + active_stress;
 
         // compute the total stress (volumetric + deviatoric)
         pstress[idx] = Identity*p + shrTrl/J;
@@ -468,6 +475,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                                         deformationGradient_new,                                                        dx, interpolator);
      }
 
+     double time = d_sharedState->getElapsedTime();
+
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -483,8 +492,9 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         double mubar = 1./3. * bElBar_new.Trace()*shear;
         Matrix3 shrTrl = (bElBar_new*shear - Identity*mubar);
 
+        double active_stress = d_active*(time+delT);
         // get the hydrostatic part of the stress
-        double p = bulk*log(J)/J;
+        double p = bulk*log(J)/J + active_stress;
 
         // compute the total stress (volumetric + deviatoric)
         pstress[idx] = Identity*p + shrTrl/J;
