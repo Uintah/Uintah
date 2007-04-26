@@ -193,6 +193,17 @@ DataArchive::getTimeData(int index)
   return td;
 }
 
+int DataArchive::getNumProcs(int index)
+{
+  ProblemSpecP ps=getTimestepDoc(index);
+  ProblemSpecP meta=ps->findBlock("Meta");
+  int procs=-1;
+  if(meta!=0)
+  {
+    meta->get("numProcs",procs);
+  }
+  return procs;
+}
 
 GridP
 DataArchive::queryGrid( int index, const ProblemSpec* ups)
