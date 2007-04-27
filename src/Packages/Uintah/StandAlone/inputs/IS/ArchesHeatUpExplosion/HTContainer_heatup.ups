@@ -20,7 +20,7 @@
     <delt_max>           1.0        </delt_max>
     <delt_init>          0.01        </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <!--<max_iterations>	 800	     </max_iterations> -->
+    <!--<max_iterations>         800         </max_iterations> -->
   </Time>
 
   <!--____________________________________________________________________-->
@@ -155,14 +155,10 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.velocity"/>
-    <save label="g.temperature"/>
-    <save label="g.temperaturenobc"/>
-    <save label="p.mass"/>
     <save label="p.stress"/>
     <save label="p.temperature"/>
     <save label="p.externalHeatFlux"/>
     <save label="p.externalHeatRate"/>
-    <save label="g.temperatureStar"/>
     <save label="g.externalHeatRate"/>
     <save label="g.mass"/>
     <save label="ThermalEnergy"/>
@@ -177,8 +173,8 @@
   <MPM>
     <time_integrator>               implicit </time_integrator>
     <dynamic>                       true     </dynamic>
-    <solver>                        petsc	</solver>
-    <DoMechanics>		    false    </DoMechanics>
+    <solver>                        petsc       </solver>
+    <DoMechanics>                   false    </DoMechanics>
     <convergence_criteria_disp>     1.e-5    </convergence_criteria_disp>
     <convergence_criteria_energy>   4.e-5    </convergence_criteria_energy>
     <iters_before_timestep_restart> 12       </iters_before_timestep_restart>
@@ -209,12 +205,12 @@
   <MaterialProperties>
     <MPM>
       <material name="Steel Ring">    <!-- MATL 0 -->
-  	<density>7830.0</density>
-  	<toughness>80.e6</toughness>
- 	<thermal_conductivity>20</thermal_conductivity>
-  	<specific_heat>477</specific_heat>
-  	<room_temp>294.0</room_temp>
-  	<melt_temp>1793.0</melt_temp>
+        <density>7830.0</density>
+        <toughness>80.e6</toughness>
+        <thermal_conductivity>20</thermal_conductivity>
+        <specific_heat>477</specific_heat>
+        <room_temp>294.0</room_temp>
+        <melt_temp>1793.0</melt_temp>
         <initial_material_temperature>  300.0 </initial_material_temperature>
 
         <constitutive_model type="elastic_plastic">
@@ -318,26 +314,26 @@ For fast heat tape experiment:
 -->
 
     <PhysicalBC>
-	<MPM>
+        <MPM>
         <arches_heat_flux> 
        <!-- <heat_flux> -->
-		<geom_object>
-		    <cylinder>
-			<bottom>           [0.0,0.0,-.06985]   </bottom>
-			<top>              [0.0,0.0, .06985]   </top>
-			<radius>           0.05715   </radius>
-		    </cylinder>
+                <geom_object>
+                    <cylinder>
+                        <bottom>           [0.0,0.0,-.06985]   </bottom>
+                        <top>              [0.0,0.0, .06985]   </top>
+                        <radius>           0.05715   </radius>
+                    </cylinder>
                 </geom_object>
-		<polynomial_data>
-		  <file> 11_43_51/polynomial_96.dat</file> 
-		  <file> 11_43_51/polynomial_97.dat</file> 
-		  <file> 11_43_51/polynomial_98.dat</file> 
-		  <file> 11_43_51/polynomial_99.dat</file> 
-		  <file> 11_43_51/polynomial_100.dat</file> 
-		  <file> 11_43_51/polynomial_101.dat</file> 
-		  <file> 11_43_51/polynomial_102.dat</file> 
-		  <file> 11_43_51/polynomial_103.dat</file> 
-		</polynomial_data>
+                <polynomial_data>
+                  <file> 11_43_51/polynomial_96.dat</file> 
+                  <file> 11_43_51/polynomial_97.dat</file> 
+                  <file> 11_43_51/polynomial_98.dat</file> 
+                  <file> 11_43_51/polynomial_99.dat</file> 
+                  <file> 11_43_51/polynomial_100.dat</file> 
+                  <file> 11_43_51/polynomial_101.dat</file> 
+                  <file> 11_43_51/polynomial_102.dat</file> 
+                  <file> 11_43_51/polynomial_103.dat</file> 
+                </polynomial_data>
                 <load_curve>
                   <id>1</id>
                   <time_point>
@@ -351,7 +347,7 @@ For fast heat tape experiment:
                  </load_curve>
         </arches_heat_flux> 
         <!-- </heat_flux> -->
-	</MPM>
+        </MPM>
     </PhysicalBC>
 
        
