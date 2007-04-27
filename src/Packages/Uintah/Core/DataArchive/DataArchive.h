@@ -173,7 +173,10 @@ public:
 
   TimeData& getTimeData(int index);
 
-  int getNumProcs(int index);
+
+  // Processor Information for Visualization
+  int queryPatchwiseProcessor( const Patch* patch, int index );
+  int queryNumProcs(int index);
 
   std::string name(){ return d_filebase;}
   
@@ -202,6 +205,9 @@ public:
   //! if we are reading the simulation grid from the uda,
   //! and thus is only necessary on a true restart.
   GridP queryGrid(int index, const ProblemSpec* ups = 0);
+
+
+
 
 #if 0
   //////////

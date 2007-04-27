@@ -193,7 +193,20 @@ DataArchive::getTimeData(int index)
   return td;
 }
 
-int DataArchive::getNumProcs(int index)
+int
+DataArchive::queryPatchwiseProcessor(const Patch* patch, int index )
+{
+  TimeData& timedata = getTimeData(index);
+  d_lock.lock();
+
+  int proc = timedata.d_patchInfo[patch->getLevel()->
+                                  getIndex()][patch->getLevelIndex()].proc;
+
+  d_lock.unlock();
+  return proc;
+}
+
+int DataArchive::queryNumProcs(int index)
 {
   ProblemSpecP ps=getTimestepDoc(index);
   ProblemSpecP meta=ps->findBlock("Meta");
@@ -491,6 +504,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
 #ifndef _WIN32
   const char* tag = AllocatorSetDefaultTag("QUERY");
 #endif
+
   TimeData& timedata = getTimeData(index);
   ASSERT(timedata.d_initialized);
   // make sure info for this patch gets parsed from p*****.xml.
@@ -1099,3 +1113,4 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
   d_lock.unlock();
   return numMatls;
 }
+
