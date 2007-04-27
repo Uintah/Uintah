@@ -201,14 +201,14 @@
     <save label="press_CC"/>
     <save label="temp_CC"/>
     <save label="rho_CC"/>
+    <!--
     <save label="sp_vol_CC"/>
     <save label="delP_Dilatate"/>
+    -->
     <save label="vel_CC"/>
     <save label="p.x"/>
-    <save label="p.particleID"/>
     <save label="p.mass"/>
     <save label="p.temperature"/>
-    <save label="p.volume"/>
     <save label="p.stress"/>
     <save label="p.plasticStrain"/>
     <save label="p.plasticStrainRate"/>

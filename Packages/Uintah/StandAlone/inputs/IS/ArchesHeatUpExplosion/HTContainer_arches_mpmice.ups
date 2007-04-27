@@ -8,45 +8,45 @@
 
   <SimulationComponent>
       <type>switcher</type>
-      	<subcomponent>
-            <SimulationComponent>
-		<type> mpmice </type>
-	    </SimulationComponent>
-	    <input_file> JP8_fire.ups</input_file>
-	    <SwitchCriteria type = "Timestep">
-	       <timestep> 1 </timestep>
-	    </SwitchCriteria>
-	</subcomponent>
         <subcomponent>
-	    <SimulationComponent>
-      	       <type> impm </type>
+            <SimulationComponent>
+                <type> mpmice </type>
+            </SimulationComponent>
+            <input_file> JP8_fire.ups</input_file>
+            <SwitchCriteria type = "Timestep">
+               <timestep> 1 </timestep>
+            </SwitchCriteria>
+        </subcomponent>
+        <subcomponent>
+            <SimulationComponent>
+               <type> impm </type>
             </SimulationComponent>
             <input_file> HTContainer_heatup.ups</input_file>
             <SwitchCriteria type = "PBXTemperature">
-	       <material> 1 </material>
-	       <temperature> 450 </temperature>
+               <material> 1 </material>
+               <temperature> 450 </temperature>
             </SwitchCriteria>
-	    <init var = "p.acceleration" matls = "mpm_matls" />
-	    <init var = "p.externalHeatFlux" matls = "mpm_matls" />
-<!--	    <init var = "p.loadCurveID" matls = "mpm_matls" />  -->
+            <init var = "p.acceleration" matls = "mpm_matls" />
+            <init var = "p.externalHeatFlux" matls = "mpm_matls" />
+<!--        <init var = "p.loadCurveID" matls = "mpm_matls" />  -->
         </subcomponent>
         <subcomponent>
-	    <SimulationComponent>
+            <SimulationComponent>
                 <type> mpmice </type>
             </SimulationComponent>
             <input_file> Explode_IS.ups</input_file>
         </subcomponent>
-	<carry_over var="press_CC" />
-	<carry_over var="temp_CC" />
-	<carry_over var="rho_CC" />
-	<carry_over var="sp_vol_CC" />
-	<carry_over var="vel_CC" />
-	<carry_over var="NC_CCweight" />
+        <carry_over var="press_CC" />
+        <carry_over var="temp_CC" />
+        <carry_over var="rho_CC" />
+        <carry_over var="sp_vol_CC" />
+        <carry_over var="vel_CC" />
+        <carry_over var="NC_CCweight" />
         <carry_over var="heatRate_CC" />
-	<!--
-	<carry_over var="vol_frac_CC" />
-	<carry_over var="delP_Dilatate" />
-	-->
+        <!--
+        <carry_over var="vol_frac_CC" />
+        <carry_over var="delP_Dilatate" />
+        -->
   </SimulationComponent>
    
   <!--____________________________________________________________________-->
@@ -59,7 +59,7 @@
     <delt_max>           1.0        </delt_max>
     <delt_init>          0.01        </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <!--<max_iterations>	 800	     </max_iterations> -->
+    <!--<max_iterations>         800         </max_iterations> -->
   </Time>
 
   <!--____________________________________________________________________-->
@@ -222,8 +222,8 @@
   <MPM>
     <time_integrator>               implicit </time_integrator>
     <dynamic>                       true     </dynamic>
-    <solver>                        petsc	</solver>
-    <DoMechanics>		    false    </DoMechanics>
+    <solver>                        petsc       </solver>
+    <DoMechanics>                   false    </DoMechanics>
     <convergence_criteria_disp>     1.e-5    </convergence_criteria_disp>
     <convergence_criteria_energy>   4.e-5    </convergence_criteria_energy>
     <iters_before_timestep_restart> 12       </iters_before_timestep_restart>
@@ -256,12 +256,12 @@
   <MaterialProperties>
     <MPM>
       <material name="Steel Ring">    <!-- MATL 0 -->
-  	<density>7830.0</density>
-  	<toughness>80.e6</toughness>
- 	<thermal_conductivity>20</thermal_conductivity>
-  	<specific_heat>477</specific_heat>
-  	<room_temp>294.0</room_temp>
-  	<melt_temp>1793.0</melt_temp>
+        <density>7830.0</density>
+        <toughness>80.e6</toughness>
+        <thermal_conductivity>20</thermal_conductivity>
+        <specific_heat>477</specific_heat>
+        <room_temp>294.0</room_temp>
+        <melt_temp>1793.0</melt_temp>
         <initial_material_temperature>  300.0 </initial_material_temperature>
 
         <constitutive_model type="elastic_plastic">
@@ -322,16 +322,16 @@
       </material>
 
       <material name="reactant">    <!-- MATL 1 -->
-  	<density>              1840.0 </density>
-  	<thermal_conductivity> 0.452  </thermal_conductivity>
-  	<specific_heat>        996.0  </specific_heat>
-  	<C_p>                  996.0  </C_p>
-  	<room_temp>            294.0  </room_temp>
-  	<melt_temp>            688.0  </melt_temp>
+        <density>              1840.0 </density>
+        <thermal_conductivity> 0.452  </thermal_conductivity>
+        <specific_heat>        996.0  </specific_heat>
+        <C_p>                  996.0  </C_p>
+        <room_temp>            294.0  </room_temp>
+        <melt_temp>            688.0  </melt_temp>
 
-  	<constitutive_model type="comp_neo_hook">
-  	  <shear_modulus>80.0e9</shear_modulus>
-  	  <bulk_modulus>173.33e9</bulk_modulus>
+        <constitutive_model type="comp_neo_hook">
+          <shear_modulus>80.0e9</shear_modulus>
+          <bulk_modulus>173.33e9</bulk_modulus>
           
         </constitutive_model>
         <geom_object>
@@ -369,26 +369,26 @@ For fast heat tape experiment:
 -->
 
     <PhysicalBC>
-	<MPM>
+        <MPM>
         <arches_heat_flux> 
        <!-- <heat_flux> -->
-		<geom_object>
-		    <cylinder>
-			<bottom>           [0.0,0.0,-.06985]   </bottom>
-			<top>              [0.0,0.0, .06985]   </top>
-			<radius>           0.05715   </radius>
-		    </cylinder>
+                <geom_object>
+                    <cylinder>
+                        <bottom>           [0.0,0.0,-.06985]   </bottom>
+                        <top>              [0.0,0.0, .06985]   </top>
+                        <radius>           0.05715   </radius>
+                    </cylinder>
                 </geom_object>
-		<polynomial_data>
-		  <file> 11_43_51/polynomial_96.dat</file> 
-		  <file> 11_43_51/polynomial_97.dat</file> 
-		  <file> 11_43_51/polynomial_98.dat</file> 
-		  <file> 11_43_51/polynomial_99.dat</file> 
-		  <file> 11_43_51/polynomial_100.dat</file> 
-		  <file> 11_43_51/polynomial_101.dat</file> 
-		  <file> 11_43_51/polynomial_102.dat</file> 
-		  <file> 11_43_51/polynomial_103.dat</file> 
-		</polynomial_data>
+                <polynomial_data>
+                  <file> 11_43_51/polynomial_96.dat</file> 
+                  <file> 11_43_51/polynomial_97.dat</file> 
+                  <file> 11_43_51/polynomial_98.dat</file> 
+                  <file> 11_43_51/polynomial_99.dat</file> 
+                  <file> 11_43_51/polynomial_100.dat</file> 
+                  <file> 11_43_51/polynomial_101.dat</file> 
+                  <file> 11_43_51/polynomial_102.dat</file> 
+                  <file> 11_43_51/polynomial_103.dat</file> 
+                </polynomial_data>
                 <load_curve>
                   <id>1</id>
                   <time_point>
@@ -402,6 +402,6 @@ For fast heat tape experiment:
                  </load_curve>
         </arches_heat_flux> 
         <!-- </heat_flux> -->
-	</MPM>
+        </MPM>
     </PhysicalBC>
 </Uintah_specification>
