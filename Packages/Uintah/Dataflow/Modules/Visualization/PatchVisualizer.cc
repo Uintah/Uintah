@@ -98,7 +98,7 @@ private:
   vector< double > times;
   DataArchiveHandle archive;
   int old_generation;
-  int old_timestep;
+  int timestep;
   int numLevels;
   GridP grid;
   
@@ -124,7 +124,7 @@ DECLARE_MAKER(PatchVisualizer)
   level5_color_scheme(get_ctx()->subVar("level5_color_scheme")),
   nl(get_ctx()->subVar("nl")),
   patch_seperate(get_ctx()->subVar("patch_seperate")),
-  old_generation(-1), old_timestep(0), numLevels(0),
+  old_generation(-1), timestep(0), numLevels(0),
   grid(NULL)
 {
 
@@ -154,20 +154,20 @@ bool PatchVisualizer::getGrid()
   archive = handle->getDataArchive();
   int new_generation = handle->generation;
   bool archive_dirty =  new_generation != old_generation;
-  int timestep = handle->timestep();
+  int t = handle->timestep();
   if (archive_dirty) {
     old_generation = new_generation;
     vector< int > indices;
     times.clear();
     archive->queryTimesteps( indices, times );
-    // set old_timestep to something that will cause a new grid
+    // set timestep to something that will cause a new grid
     // to be queried.
-    old_timestep = -1;
+    timestep = -1;
   }
-  if (timestep != old_timestep) {
+  if (t != timestep) {
     double time = times[timestep];
     grid = archive->queryGrid(time);
-    old_timestep = timestep;
+    timestep = t;
     return true;
   }
   return false;
@@ -352,8 +352,8 @@ void PatchVisualizer::execute()
       const Patch* patch=*iter;
       Box box = patch->getBox();
       patch_list[i].first = box;
-      patch_list[i].second = 0;
-//         archive->queryPatchwiseProcessor( patch, old_timestep); 
+      patch_list[i].second = 
+        archive->queryPatchwiseProcessor( patch, timestep); 
 
       // determine boundaries
       if (box.upper().x() > max.x())
@@ -478,19 +478,26 @@ void PatchVisualizer::execute()
       }
       
       break;
-//     case PROC_NUM:
-//       // for each patch we need to establish its processor number.
-//       cmap->Scale( 0, double(archive->queryNumProcessors()));
-//       //---------------------------------------
-//       // for each patch in the level
-//       for(unsigned int i = 0; i < patches[l].size(); i++){
-// 	GeomLines* edges = scinew GeomLines();
-// 	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
-// 	level_geom->
-//           add(scinew GeomMaterial(edges, 
-//                                   cmap->lookup(patches[l][i].second)));
-//       }
-//       break;
+    case PROC_NUM:
+      // for each patch we need to establish its processor number.
+      int nprocs = archive->queryNumProcs(timestep);
+      if( nprocs != -1 ){
+        cmap->Scale( 0.0, double(nprocs));
+      } else {
+        cmap->Scale( 0.0, 1.0);        
+        warning("uda has no processor information, output undefined.");
+      }
+      //---------------------------------------
+      // for each patch in the level
+      for(unsigned int i = 0; i < patches[l].size(); i++){
+	GeomLines* edges = scinew GeomLines();
+	addBoxGeometry(edges, patches[l][i].first, change_v, pt);
+        int patch_proc = patches[l][i].second;
+	level_geom-> add(scinew GeomMaterial(edges, 
+                                             cmap->lookup((patch_proc == -1) ? 
+                                                          0.0:patch_proc )));
+      }
+      break;
     } // end of switch
     
     // add all the edges for the level

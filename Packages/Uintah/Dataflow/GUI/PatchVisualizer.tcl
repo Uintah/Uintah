@@ -143,6 +143,10 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 		    -command $n -value random
 	    pack $colorscheme.random -side top -anchor w -pady 2 -ipadx 3
 
+	    radiobutton $colorscheme.proc_num -text "proc_num" -variable $var \
+		    -command $n -value proc_num
+	    pack $colorscheme.proc_num -side top -anchor w -pady 2 -ipadx 3
+
 	    # create the solid color selection menue
 	    # st = $w.l(level)grid
 	    set st "$w.l$i"
