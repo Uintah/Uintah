@@ -3562,13 +3562,13 @@ if test "$sci_required_mpi" = "yes"; then
                 fi
 
                 if test "$HAVE_MPI" != "yes"; then
-                   SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
-                                $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
-
-                   # try mpich again without the pmpich
-                   if test "$HAVE_MPI" != "yes"; then
-                     SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
+                   SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich,$_sci_lib,,,optional)
+
+                   # try mpich again with pmpich
+                   if test "$HAVE_MPI" != "yes"; then
+                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
                    fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
@@ -5305,7 +5305,7 @@ fi
 AC_LANG([C++])
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                          HYPRE,
-                         $_sci_lib,$MPI_LIB_DIR_FLAG $MPI_LIB_FLAG -lm,,$_sci_optional)
+                         $_sci_lib,$MPI_LIB_DIR_FLAG $MPI_LIB_FLAG -lm -ldl,,$_sci_optional)
 AC_LANG([C])
 
 if test "$HAVE_HYPRE" = "yes" ; then
