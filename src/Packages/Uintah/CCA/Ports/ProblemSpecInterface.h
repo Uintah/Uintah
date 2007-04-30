@@ -7,6 +7,8 @@
 
 #include <Packages/Uintah/CCA/Ports/share.h>
 
+#include <string>
+
 namespace Uintah {
 /**************************************
 
@@ -43,6 +45,7 @@ WARNING
       virtual ~ProblemSpecInterface();
       
       virtual ProblemSpecP readInputFile() = 0;
+      virtual std::string getInputFile() = 0;
       
    private:
       ProblemSpecInterface(const ProblemSpecInterface&);
