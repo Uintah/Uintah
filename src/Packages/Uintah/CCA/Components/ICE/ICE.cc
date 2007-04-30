@@ -188,7 +188,7 @@ double ICE::recomputeTimestep(double current_dt)
  Function~  ICE::problemSetup--
 _____________________________________________________________________*/
 void ICE::problemSetup(const ProblemSpecP& prob_spec, 
-                       const ProblemSpecP& materials_ps,
+                       const ProblemSpecP& restart_prob_spec,
                        GridP& grid, SimulationStateP&   sharedState)
 {
   cout_doing << d_myworld->myrank() << " Doing ICE::problemSetup " << "\t\t\t ICE" << endl;
@@ -341,18 +341,13 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
-#if 0
-  if (materials_ps)
-    mat_ps       =  materials_ps->findBlock("MaterialProperties");
-  else
-    mat_ps       =  prob_spec->findBlock("MaterialProperties");
-#endif
 
-  if (prob_spec->findBlock("MaterialProperties"))
+  if (prob_spec->findBlock("MaterialProperties")){
     mat_ps = prob_spec->findBlock("MaterialProperties");
-  else if (materials_ps)
-    mat_ps = materials_ps->findBlock("MaterialProperties");
-
+  }else if (restart_prob_spec){
+    mat_ps = restart_prob_spec->findBlock("MaterialProperties");
+  }
+  
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
 
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
@@ -440,14 +435,17 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
-  if (prob_spec->findBlock("MaterialProperties"))
-    mat_ps = prob_spec;
-  else if (materials_ps)
-    mat_ps = materials_ps;
+  ProblemSpecP orig_or_restart_ps = 0;
+  if (prob_spec->findBlock("MaterialProperties")){
+    orig_or_restart_ps = prob_spec;
+  }else if (restart_prob_spec){
+    orig_or_restart_ps = restart_prob_spec;
+  }  
+    
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
 
-    modelMaker->makeModels(mat_ps, prob_spec, grid, sharedState, d_doAMR);
+    modelMaker->makeModels(orig_or_restart_ps, prob_spec, grid, sharedState, d_doAMR);
     d_models = modelMaker->getModels();
     releasePort("ModelMaker");
     d_modelSetup = scinew ICEModelSetup();

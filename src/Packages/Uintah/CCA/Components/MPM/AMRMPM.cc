@@ -91,15 +91,15 @@ AMRMPM::~AMRMPM()
 }
 
 void AMRMPM::problemSetup(const ProblemSpecP& prob_spec, 
-                          const ProblemSpecP& materials_ps,GridP& grid,
+                          const ProblemSpecP& restart_prob_spec,GridP& grid,
                           SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   ProblemSpecP restart_mat_ps = 0;
-  if (materials_ps){
-    restart_mat_ps = materials_ps;
+  if (restart_prob_spec){
+    restart_mat_ps = restart_prob_spec;
   }
   else{
     restart_mat_ps = prob_spec;

@@ -53,7 +53,7 @@ WARNING
      //////////
      // Insert Documentation Here:
      virtual void problemSetup(const ProblemSpecP& params, 
-                               const ProblemSpecP& materials_ps,
+                               const ProblemSpecP& restart_prob_spec,
                                GridP& grid, SimulationStateP& state) = 0;
 
      virtual void outputProblemSpec(ProblemSpecP& ps) {}

@@ -26,7 +26,7 @@ PatchCombiner::~PatchCombiner()
 }
 
 void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, 
-                                 const ProblemSpecP& /*materials_ps*/, 
+                                 const ProblemSpecP& /*restart_prob_spec*/, 
                                  GridP& grid, SimulationStateP& state)
 {
   d_sharedState = state;

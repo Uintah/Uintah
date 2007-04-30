@@ -46,7 +46,7 @@ WARNING
     virtual ~Poisson1();
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& materials_ps, 
+                              const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,
 				    SchedulerP& sched);

@@ -21,7 +21,7 @@ namespace Uintah {
       virtual ~None();
       
       virtual void problemSetup(const ProblemSpecP& ps, 
-                                const ProblemSpecP& materials_ps, 
+                                const ProblemSpecP& restart_prob_spec, 
                                 SimulationStateP& sharedState);
 
       virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);

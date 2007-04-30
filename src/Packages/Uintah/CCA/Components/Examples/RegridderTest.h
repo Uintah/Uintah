@@ -48,7 +48,7 @@ WARNING
 
     // Interface inherited from Simulation Interface
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& materials_ps, 
+                              const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP& state );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );

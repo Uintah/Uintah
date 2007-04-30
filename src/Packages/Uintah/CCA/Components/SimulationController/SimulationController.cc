@@ -228,19 +228,19 @@ namespace Uintah {
     if(!d_sim)
       throw InternalError("No simulation component", __FILE__, __LINE__);
 
-    ProblemSpecP materials_ps = 0;
+    ProblemSpecP restart_prob_spec = 0;
 
     if (d_restarting) {
       // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
-      materials_ps = d_archive->getTimestepDoc(d_restartIndex);
-      d_sim->readFromTimestepXML(materials_ps);
+      restart_prob_spec = d_archive->getTimestepDoc(d_restartIndex);
+      d_sim->readFromTimestepXML(restart_prob_spec);
     }
 
-    // Pass the materials_ps to the problemSetup.  For restarting, 
-    // pull the <MaterialProperties> from the material_ps.  If it is not
+    // Pass the restart_prob_spec to the problemSetup.  For restarting, 
+    // pull the <MaterialProperties> from the restart_prob_spec.  If it is not
     // available, then we will pull the properties from the d_ups instead.
     // Needs to be done before DataArchive::restartInitialize
-    d_sim->problemSetup(d_ups, materials_ps, grid, d_sharedState);
+    d_sim->problemSetup(d_ups, restart_prob_spec, grid, d_sharedState);
     
 
     if (d_restarting) {
@@ -251,7 +251,7 @@ namespace Uintah {
       // set prevDelt to what it was in the last simulation.  If in the last 
       // sim we were clamping delt based on the values of prevDelt, then
       // delt will be off if it doesn't match.
-      ProblemSpecP timeSpec = materials_ps->findBlock("Time");
+      ProblemSpecP timeSpec = restart_prob_spec->findBlock("Time");
       if (timeSpec) {
         d_sharedState->d_prev_delt = 0.0;
         if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
