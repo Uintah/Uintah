@@ -19,6 +19,7 @@ namespace Uintah {
       // be sure to call releaseDocument on this ProblemSpecP
       virtual ProblemSpecP readInputFile();
 
+      virtual std::string getInputFile() { return d_filename; }
       // replaces <include> tag with xml file tree
       void resolveIncludes(ProblemSpecP params);
    private:
