@@ -36,7 +36,7 @@ Poisson3::~Poisson3()
 }
 
 void Poisson3::problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& materials_ps, 
+                            const ProblemSpecP& restart_prob_spec, 
                             GridP&, SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;

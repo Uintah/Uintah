@@ -138,7 +138,7 @@ Switcher::~Switcher()
 }
 
 void Switcher::problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& materials_ps, GridP& grid,
+                            const ProblemSpecP& restart_prob_spec, GridP& grid,
                             SimulationStateP& sharedState)
 {
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex));
@@ -165,7 +165,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
     ProblemSpecInterface* psi = 
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
     ProblemSpecP ups = psi->readInputFile();
-    sim->problemSetup(ups,materials_ps,grid,sharedState);
+    sim->problemSetup(ups,restart_prob_spec,grid,sharedState);
     sharedState->clearMaterials();
   }
   
@@ -176,7 +176,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
   ProblemSpecP ups;
   if (psi) {
     ups = psi->readInputFile();
-    d_sim->problemSetup(ups,materials_ps,grid,sharedState);
+    d_sim->problemSetup(ups,restart_prob_spec,grid,sharedState);
   } else {
     throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
   }
@@ -485,10 +485,10 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",
                                                   d_componentIndex));
 
-    ProblemSpecP ups,materials_ps=0;
+    ProblemSpecP ups,restart_prob_spec=0;
     if (psi) {
       ups = psi->readInputFile();
-      d_sim->problemSetup(ups,materials_ps,const_cast<GridP&>(grid),
+      d_sim->problemSetup(ups,restart_prob_spec,const_cast<GridP&>(grid),
                           d_sharedState);
     }
     // we need this to get the "ICE surrounding matl"

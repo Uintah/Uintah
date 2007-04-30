@@ -34,7 +34,7 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& materials_ps, GridP&,
+                            const ProblemSpecP& restart_prob_spec, GridP&,
 			    SimulationStateP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);

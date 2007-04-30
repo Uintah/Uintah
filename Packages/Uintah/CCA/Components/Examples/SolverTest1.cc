@@ -32,7 +32,7 @@ SolverTest1::~SolverTest1()
 }
 
 void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, 
-                               const ProblemSpecP& materials_ps, 
+                               const ProblemSpecP& restart_prob_spec, 
                                GridP&, SimulationStateP& sharedState)
 {
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));

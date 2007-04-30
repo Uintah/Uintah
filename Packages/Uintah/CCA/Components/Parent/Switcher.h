@@ -17,7 +17,7 @@ namespace Uintah {
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& materials_ps, GridP& grid,
+                              const ProblemSpecP& restart_prob_spec, GridP& grid,
 			      SimulationStateP&);
 
     virtual void outputProblemSpec(ProblemSpecP& ps);

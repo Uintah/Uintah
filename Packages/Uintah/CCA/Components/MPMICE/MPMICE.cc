@@ -116,7 +116,7 @@ double MPMICE::recomputeTimestep(double current_dt)
 //______________________________________________________________________
 //
 void MPMICE::problemSetup(const ProblemSpecP& prob_spec, 
-                          const ProblemSpecP& materials_ps, 
+                          const ProblemSpecP& restart_prob_spec, 
                           GridP& grid, SimulationStateP& sharedState)
 {
   cout_doing << "Doing MPMICE::problemSetup " << endl;
@@ -131,7 +131,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_ice->setWithMPM();
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->attachPort("scheduler",sched);
-  d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
+  d_mpm->problemSetup(prob_spec, restart_prob_spec,grid, d_sharedState);
   d_8or27 = d_mpm->flags->d_8or27; 
   if(d_8or27==8){
     NGN=1;
@@ -143,7 +143,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     (getPort("switch_criteria"));
   
   if (d_switchCriteria) {
-    d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
+    d_switchCriteria->problemSetup(prob_spec,restart_prob_spec,d_sharedState);
   }
 
   //__________________________________
@@ -168,7 +168,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     d_ice->attachPort("modelmaker",models);
   }
   
-  d_ice->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
+  d_ice->problemSetup(prob_spec, restart_prob_spec,grid, d_sharedState);
 
 
   if(models){  // some models may need to have access to MPMLabels
@@ -206,7 +206,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   mpm_ps = prob_spec->findBlock("MPM");
   
   if(!mpm_ps){
-    mpm_ps = materials_ps->findBlock("MPM");
+    mpm_ps = restart_prob_spec->findBlock("MPM");
   }
   mpm_ps->get("testForNegTemps_mpm",d_testForNegTemps_mpm);
   

@@ -38,13 +38,13 @@ AMRICE::~AMRICE()
 }
 //___________________________________________________________________
 void AMRICE::problemSetup(const ProblemSpecP& params, 
-                          const ProblemSpecP& materials_ps, 
+                          const ProblemSpecP& restart_prob_spec, 
                           GridP& grid, SimulationStateP& sharedState)
 {
   cout_doing << d_myworld->myrank() 
              << " Doing problemSetup  \t\t\t AMRICE" << '\n';
              
-  ICE::problemSetup(params, materials_ps,grid, sharedState);
+  ICE::problemSetup(params, restart_prob_spec,grid, sharedState);
   ProblemSpecP ice_ps;
   ProblemSpecP amr_ps = params->findBlock("AMR");
   if (amr_ps)

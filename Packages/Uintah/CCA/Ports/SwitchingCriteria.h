@@ -19,7 +19,7 @@ namespace Uintah {
     virtual ~SwitchingCriteria();
 
     virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& materials_ps,
+                              const ProblemSpecP& restart_prob_spec,
                               SimulationStateP& state) = 0;
 
     virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched)

@@ -123,7 +123,7 @@ ImpMPM::~ImpMPM()
 }
 
 void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, 
-                          const ProblemSpecP& materials_ps,GridP& grid,
+                          const ProblemSpecP& restart_prob_spec,GridP& grid,
                           SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
@@ -140,15 +140,15 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
   if (prob_spec_mat_ps)
     restart_mat_ps = prob_spec;
-  else if (materials_ps)
-    restart_mat_ps = materials_ps;
+  else if (restart_prob_spec)
+    restart_mat_ps = restart_prob_spec;
   else
     restart_mat_ps = prob_spec;
 
 
 #if 0
-   if (materials_ps)
-     restart_mat_ps = materials_ps;
+   if (restart_prob_spec)
+     restart_mat_ps = restart_prob_spec;
    else
      restart_mat_ps = prob_spec;
 #endif
@@ -246,7 +246,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
      (getPort("switch_criteria"));
    
    if (d_switchCriteria) {
-     d_switchCriteria->problemSetup(restart_mat_ps,materials_ps,d_sharedState);
+     d_switchCriteria->problemSetup(restart_mat_ps,restart_prob_spec,d_sharedState);
    }
     
    
