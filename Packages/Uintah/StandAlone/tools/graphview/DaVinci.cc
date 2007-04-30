@@ -50,7 +50,7 @@ DaVinci::run()
 
   pid_t pid = fork();
   if (pid == -1)
-    throw ErrnoException("fork() failed", errno);
+    throw ErrnoException("fork() failed", errno, __FILE__, __LINE__);
   else if (pid == 0) {
     // child
 
@@ -344,7 +344,7 @@ readline(int fd)
 	*eol = '\0';
       line << buf;
     } else if (len == -1)
-      throw ErrnoException("read() error", errno);
+      throw ErrnoException("read() error", errno, __FILE__, __LINE__);
   } while (need_more);
     
   return line.str();
@@ -363,7 +363,7 @@ writeline(int fd, string str)
       written += len;
     else if ((len == -1) && (errno != EINTR))
       //	  cerr << "write() error: " << errno << endl;
-      throw ErrnoException("write() error", errno);
+      throw ErrnoException("write() error", errno, __FILE__, __LINE__);
     else {
       char buf[64];
       sprintf(buf, "Unexpected write() return code %ld", len);

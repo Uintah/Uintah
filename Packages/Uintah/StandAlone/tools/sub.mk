@@ -7,9 +7,8 @@ SUBDIRS := \
 	$(SRCDIR)/dumpfields  \
 	$(SRCDIR)/extractors  \
 	$(SRCDIR)/pfs         \
-	$(SRCDIR)/puda
-
-#	$(SRCDIR)/graphview
+	$(SRCDIR)/puda        \
+        $(SRCDIR)/graphview
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
