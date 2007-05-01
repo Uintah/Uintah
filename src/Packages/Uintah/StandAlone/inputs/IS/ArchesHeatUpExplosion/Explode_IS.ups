@@ -201,6 +201,7 @@
     <save label="press_CC"/>
     <save label="temp_CC"/>
     <save label="rho_CC"/>
+    <save label="totalMassBurned"/>
     <!--
     <save label="sp_vol_CC"/>
     <save label="delP_Dilatate"/>
