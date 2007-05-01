@@ -368,6 +368,7 @@ private:
                                                const MaterialSet*);
 
   void scheduleInterpolateParticlesToGrid(     SchedulerP&, const PatchSet*,
+                                               const MaterialSubset*,
                                                const MaterialSet*);
 
   void scheduleProjectCCHeatSourceToNodes(     SchedulerP&, const PatchSet*,
