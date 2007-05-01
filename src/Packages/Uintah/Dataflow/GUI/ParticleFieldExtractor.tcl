@@ -237,7 +237,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
     }
         
     method buildLevels { args } {
-        puts "buildLevels input is $args"
+#        puts "buildLevels input is $args"
 	set w $pf
 	set buttontype radiobutton
 	set c "$this-c needexecute"

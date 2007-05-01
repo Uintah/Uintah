@@ -267,7 +267,7 @@ public:
   // query the variable value for a particular particle  overtime;
   template<class T>
   void query(vector<T>& values, const string& name,
-	     int matlIndex, long64 particleID,
+	     int matlIndex, long64 particleID, int levelIndex,
 	     double startTime, double endTime) ;
   //////////
   // similarly, we want to be able to track variable values in a particular
@@ -361,7 +361,7 @@ private:
   Mutex d_lock;
 
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-			 long64 particleID, int matIndex,
+			 long64 particleID, int matIndex, int levelIndex,
 			 int index);
 
   static DebugStream dbg;
@@ -396,6 +396,7 @@ private:
   template<class T>
   void DataArchive::query(vector<T>& values, const string& name,
 			  int matlIndex, long64 particleID,
+			  int levelIndex,
 			  double startTime, double endTime)
   {
     double call_start = SCIRun::Time::currentSeconds();
@@ -434,7 +435,7 @@ private:
       // to speed this up.
       Patch* patch = NULL;
       GridP grid = queryGrid( ts);
-      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, ts);
+      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
       //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
       if (patch == NULL)
 	throw VariableNotFoundInGrid(name,particleID,matlIndex,
