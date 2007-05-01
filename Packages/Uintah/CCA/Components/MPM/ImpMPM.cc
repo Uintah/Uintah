@@ -3283,13 +3283,9 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
                                 DataWarehouse* new_dw)
 {
   if(pg->myrank() == 0){
-    static bool printed=false;
-    if(!printed){
-      sumlong_vartype pcount;
-      new_dw->get(pcount, lb->partCountLabel);
-      cerr << "Created " << (long) pcount << " total particles\n";
-      printed=true;
-    }
+    sumlong_vartype pcount;
+    new_dw->get(pcount, lb->partCountLabel);
+    cerr << "Created " << (long) pcount << " total particles\n";
   }
 }
 

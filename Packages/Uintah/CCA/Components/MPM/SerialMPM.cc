@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/AMR.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
@@ -373,7 +374,7 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
   Task* t = scinew Task("MPM::printParticleCount",
                         this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
 }
 
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
@@ -1273,11 +1274,7 @@ void SerialMPM::printParticleCount(const ProcessorGroup* pg,
   new_dw->get(pcount, lb->partCountLabel);
   
   if(pg->myrank() == 0){
-    static bool printed=false;
-    if(!printed){
-      cerr << "Created " << (long) pcount << " total particles\n";
-      printed=true;
-    }
+    cerr << "Created " << (long) pcount << " total particles\n";
   }
 }
 
