@@ -474,8 +474,9 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 {
   bool retval = false;
   if (d_switchState == switching) {
-    if (d_myworld->myrank() == 0)
-      cout << "   Switching components!\n";
+    if (d_myworld->myrank() == 0){
+      cout << "------------Switching components: ";
+    }
     d_componentIndex++;
     d_sharedState->clearMaterials();
     d_sharedState->d_switchState = true;
@@ -490,7 +491,14 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
       ups = psi->readInputFile();
       d_sim->problemSetup(ups,restart_prob_spec,const_cast<GridP&>(grid),
                           d_sharedState);
+        
+      if (d_myworld->myrank() == 0){
+        string filename= psi->getInputFile();
+        cout << " Reading input file "<< filename<< endl;;
+      }                                 
     }
+
+    
     // we need this to get the "ICE surrounding matl"
     d_sim->restartInitialize();
     d_sharedState->finalizeMaterials();
