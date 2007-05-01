@@ -577,8 +577,8 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     d_perproc_patches->addReference();
   }
 
-  scheduleApplyExternalLoads(             sched, d_perproc_patches,matls);
-  scheduleInterpolateParticlesToGrid(     sched, d_perproc_patches,matls);
+  scheduleApplyExternalLoads(          sched, d_perproc_patches,         matls);
+  scheduleInterpolateParticlesToGrid(  sched, d_perproc_patches,one_matl,matls);
   if (flags->d_projectHeatSource) {
     scheduleComputeCCVolume(           sched, d_perproc_patches,one_matl,matls);
     scheduleProjectCCHeatSourceToNodes(sched, d_perproc_patches,one_matl,matls);
@@ -642,6 +642,7 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 
 void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const PatchSet* patches,
+                                                const MaterialSubset* one_matl,
                                                 const MaterialSet* matls)
 {
   Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
@@ -660,6 +661,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
   }
+  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
 
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
@@ -680,6 +682,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gExternalHeatFluxLabel);
+  t->computes(lb->NC_CCweightLabel, one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -699,7 +702,6 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
 
   t->computes(lb->heatRate_CCLabel);
   t->modifies(lb->gExternalHeatRateLabel);
-  t->computes(lb->NC_CCweightLabel, one_matl);
 
   sched->addTask(t, patches, matls);
 }
@@ -1558,13 +1560,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
 
     constNCVariable<double> NC_CCweight;
-    NCVariable<double> NC_CCweight_copy;
     old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
-    new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
-    // carry forward interpolation weight
-    IntVector low = patch->getNodeLowIndex();
-    IntVector hi  = patch->getNodeHighIndex();
-    NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
@@ -1700,6 +1696,16 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     new_dw->allocateAndPut(gTemperature,lb->gTemperatureLabel, 0,patch);
     gTemperature.initialize(0.0);
+
+    // carry forward interpolation weight
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double> NC_CCweight_copy;
+    old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
+    new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
+    IntVector low = patch->getNodeLowIndex();
+    IntVector hi  = patch->getNodeHighIndex();
+    NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
