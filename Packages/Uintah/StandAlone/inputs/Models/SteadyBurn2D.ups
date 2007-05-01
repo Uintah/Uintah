@@ -125,6 +125,7 @@
     <save label="p.mass"/>
     <save label="p.particleID"/>
     <save label="SteadyBurn.BurningCell"/>
+    <save label="totalMassBurned"/>
     <!--
       <save label="p.temperature"/>
       <save label="p.velocity"/>
