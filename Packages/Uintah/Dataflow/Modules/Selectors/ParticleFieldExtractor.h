@@ -183,7 +183,7 @@ private:
   void extract_data(string display_mode, string varname, 
                     vector<string> mat_list,
                     vector<string> type_list, string particleID);
-  //  void graph(string, string);
+  void graph(string, string);
 
  
 };

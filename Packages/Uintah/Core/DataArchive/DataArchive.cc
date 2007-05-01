@@ -610,7 +610,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
 
 void 
 DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-                               long64 particleID, int matlIndex,
+                               long64 particleID, int matlIndex, int levelIndex,
                                int index)
 {
   Patch *local = patch;
@@ -632,10 +632,11 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
     }
   }
   patch = NULL;
-  for (int level_nr = 0;
-       (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
+//   for (int level_nr = 0;
+//        (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
     
-    const LevelP level = grid->getLevel(level_nr);
+//     const LevelP level = grid->getLevel(level_nr);
+    const LevelP level = grid->getLevel(levelIndex);
     
     for (Level::const_patchIterator iter = level->patchesBegin();
          (iter != level->patchesEnd()) && (patch == NULL); iter++) {
@@ -656,7 +657,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
       if( patch != NULL )
         break;
     }
-  }
+//  }
 }
 
 void
