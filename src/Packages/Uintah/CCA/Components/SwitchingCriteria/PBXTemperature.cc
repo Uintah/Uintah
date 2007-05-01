@@ -53,7 +53,7 @@ void PBXTemperature::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 #if 0
   t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
   t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
-  t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
+  t->requires(Task::OldDW, Mlb->NC_CCweightLabel,one_matl,
                                                   Ghost::AroundCells, 1);
 #endif
   t->requires(Task::OldDW, Mlb->pTemperatureLabel,Ghost::None,0);
@@ -108,7 +108,7 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
                                                                                 
     new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
     new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
-    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0,    patch,gac, 1);
+    old_dw->get(NC_CCweight,  Mlb->NC_CCweightLabel,  0,    patch,gac, 1);
     IntVector nodeIdx[8];
 
     for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
