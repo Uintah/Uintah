@@ -207,18 +207,6 @@ Painter::for_each(WindowLayout &layout, SliceWindowFunc func)
    return value;
 }
 
-template <class T>
-int			
-Painter::for_each(T func) {
-  int value = 0;
-  WindowLayouts::iterator liter = layouts_.begin();
-  WindowLayouts::iterator lend = layouts_.end();
-  for (; liter != lend; ++liter) {
-    ASSERT(liter->second);
-    value += for_each(*(liter->second), func);
-  }
-  return value;
-}
 
 
 Painter::NrrdSlice::NrrdSlice(Painter *painter,
