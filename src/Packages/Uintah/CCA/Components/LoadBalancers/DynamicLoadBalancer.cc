@@ -786,7 +786,7 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
   }
 }
 
-void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
+void DynamicLoadBalancer::sortPatches(vector<Region> &patches, vector<double> &costs)
 {
   if(d_doSpaceCurve) //reorder by sfc
   {
@@ -857,6 +857,7 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
     
     //reorder patches
     vector<Region> reorderedPatches(patches.size());
+    vector<double> reorderedCosts(patches.size());
     for(unsigned int i=0;i<indices.size();i++)
     {
         DistributedIndex di=indices[i];
@@ -864,7 +865,10 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches)
         //int index=displs[di.p]/sizeof(DistributedIndex)+di.i;
         int index=(int)ceil((float)di.p*patches.size()/d_myworld->size())+di.i;
         reorderedPatches[i]=patches[index];
+        reorderedCosts[i]=costs[index];
     }
+    patches=reorderedPatches;
+    costs=reorderedCosts;
   }
   //random? cyclicic?
 }
@@ -924,18 +928,21 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
 
   d_tempAssignment.resize(0);
 
+  //get costs (get costs will determine algorithm).  Do this on the grid in the case we have
+  // MPI operations to do for collecting particles
+  vector<vector<double> > costs;
+  getCosts(oldGrid.get_rep(),patches,costs, true);
+  
   //loop over levels
   for(unsigned int l=0;l<patches.size();l++)
   {
-    vector<Region> &cur_level_patches=patches[l];
-
     //set SFC parameters here so they are the same if we need to sort after splitting later
     if (d_doSpaceCurve)        
     {
 
-      Region bounds=*cur_level_patches.begin();
+      Region bounds=*patches[l].begin();
       //find domain bounds
-      for(vector<Region>::iterator patch=cur_level_patches.begin();patch<cur_level_patches.end();patch++)
+      for(vector<Region>::iterator patch=patches[l].begin()+1;patch<patches[l].end();patch++)
       {
          bounds.low()=Min(patch->low(),bounds.low());
          bounds.high()=Max(patch->high(),bounds.high());
@@ -950,16 +957,8 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
       sfc.SetCenter(c);
       sfc.SetRefinementsByDelta(delta);
     }
-    sortPatches(cur_level_patches);
-  }
-
-  //get costs (get costs will determine algorithm).  Do this on the grid in the case we have
-  // MPI operations to do for collecting particles
-  vector<vector<double> > costs;
-  getCosts(oldGrid.get_rep(),patches,costs, true);
-
-  for(unsigned int l=0;l<patches.size();l++)
-  {
+    sortPatches(patches[l],costs[l]);
+    
     double totalCost=0;
     double targetCost=0;
     double currentCost=0;
@@ -997,9 +996,11 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
         toAssignPatch++;
         toAssignCost++;
       }
-      
+     
+      //if(d_myworld->myrank()==0) cout << "Patch:" << patch << " cost:" << cost << " currentCost:" << currentCost << " targetCost:" << targetCost << endl;
       if(currentCost+cost<targetCost)  //if patch fits in current processor
       {
+        //if(d_myworld->myrank()==0) cout << "Assigning to " << currentProc << endl;
         //assign to current proc
         ASSERTRANGE(currentProc,0,num_procs);
         d_tempAssignment.push_back(currentProc);
@@ -1031,6 +1032,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
 
         if(canSplit && l!=0 && size[dim]>1 && currentCost+minCost<=targetCost) //if can be split and splitting should help
         {
+          //if(d_myworld->myrank()==0) cout << " Splitting " << endl;
           //calculate split point
           int mid=patch.getLow()[dim]+(int(size[dim])/2)*min_patch_size[l][dim];
           //split patch
@@ -1040,20 +1042,26 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
           vector<Region> newpatches;
           newpatches.push_back(left);
           newpatches.push_back(right);
+          
+          //derive costs by a percentage of old costs
+            //ideally we would recalculate costs but particles cause a problem currently
+          double newCost=cost * double(left.getVolume())/patch.getVolume();
            
+          vector<double> newcosts;
+          newcosts.push_back(newCost);
+          newcosts.push_back(cost-newCost);
+          
           //sort both patches in serial
-          sortPatches(newpatches);
+          sortPatches(newpatches,newcosts);
           
           //place in reverse order on to assign stack
           unassignedPatches.push(newpatches[1]);
           unassignedPatches.push(newpatches[0]);
 
-          //derive costs by a percentage of old costs
-            //ideally we would recalculate costs but particles cause a problem currently
-          double newCost=cost * double(newpatches[0].getVolume())/patch.getVolume();
-
-          unassignedPatchesCost.push(newCost);
-          unassignedPatchesCost.push(cost-newCost);
+          unassignedPatchesCost.push(newcosts[1]);
+          unassignedPatchesCost.push(newcosts[0]);
+          
+          //if(d_myworld->myrank()==0) cout << " Left: " << newpatches[0] << ":" << newcosts[0] << " Right:" << newpatches[1] << ":" << newcosts[1] << endl;
         }
         else  //cannot be split so attempt to assign it to currentProc
         {
@@ -1062,6 +1070,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
           
           if(notakeimb<takeimb) //taking patch would cause more imbalance then not taking it
           {
+            //if(d_myworld->myrank()==0) cout << "Next proc\n";
             //move to next proc
             currentProc++;
            
@@ -1075,6 +1084,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
           }
           else  //take patch as it causes the least imbalance
           {
+            //if(d_myworld->myrank()==0) cout << "Assigning to(2) " << currentProc << endl;
             // IMPORTANT:  This tells the load balancer to not do its own load balancing after the regrid
             //assign to this proc
             ASSERTRANGE(currentProc,0,num_procs);
