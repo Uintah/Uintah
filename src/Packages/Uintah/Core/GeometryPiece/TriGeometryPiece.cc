@@ -460,9 +460,17 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
 
 void TriGeometryPiece::scale(const double factor)
 {
+  Vector origin(0.,0.,0.);
+
   for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end(); 
        itr++) {
-    *itr *= factor;
+    origin = origin +  itr->asVector();
+  }
+  origin = origin/(static_cast<double>(d_points.size()));
+
+  for (vector<Point>::iterator itr = d_points.begin(); itr != d_points.end(); 
+       itr++) {
+    *itr = factor*(*itr - origin) + origin;
   }
 }
 
