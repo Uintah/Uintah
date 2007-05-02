@@ -27,7 +27,7 @@
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <Time>
-    <maxTime>            1.0         </maxTime>
+    <maxTime>            1000.0      </maxTime>
     <initTime>           0.0         </initTime>
     <delt_min>           1.0e-19     </delt_min>
     <delt_max>           1.0e-4      </delt_max>
