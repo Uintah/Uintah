@@ -50,13 +50,16 @@ void PBXTemperature::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   MaterialSubset* one_matl = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
-#if 0
+#if 1
   t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
-  t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
+  t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,
+              Ghost::AroundCells, 1);
   t->requires(Task::OldDW, Mlb->NC_CCweightLabel,one_matl,
-                                                  Ghost::AroundCells, 1);
+              Ghost::AroundCells, 1);
 #endif
+#if 0
   t->requires(Task::OldDW, Mlb->pTemperatureLabel,Ghost::None,0);
+#endif
 
   t->computes(d_sharedState->get_switch_label(), level.get_rep());
 
@@ -89,6 +92,8 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
                                                      Ghost::AroundNodes, 1,
                                                      Mlb->pXLabel);
 
+
+#if 0
     old_dw->get(pTemperature,Mlb->pTemperatureLabel,       pset);
 
 
@@ -100,15 +105,18 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
         break;
       }
     }
+#endif 
 
-#if 0
+#if 1
     constNCVariable<double> gmass, gtemperature;
     constNCVariable<double> NC_CCweight;
     Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
     new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
-    new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
+
+    new_dw->get(gtemperature, Mlb->gTemperatureLabel, 0, patch,gac, 1);
     old_dw->get(NC_CCweight,  Mlb->NC_CCweightLabel,  0,    patch,gac, 1);
+
     IntVector nodeIdx[8];
 
     for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
@@ -135,6 +143,7 @@ void PBXTemperature::switchTest(const ProcessorGroup* group,
         && (MaxMass-MinMass)/MaxMass < 1.0
         &&  MaxMass > d_TINY_RHO){
         if(Temp_CC_mpm >= d_temperature){
+          //          cout << "Temp_CC_mpm = " << Temp_CC_mpm << endl;
          sw=1;
          break;
         }
