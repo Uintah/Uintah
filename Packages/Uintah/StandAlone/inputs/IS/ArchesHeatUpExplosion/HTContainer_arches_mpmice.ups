@@ -53,10 +53,10 @@
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <Time>
-    <maxTime>          80.0         </maxTime>
+    <maxTime>          10000.0       </maxTime>
     <initTime>           0.0         </initTime>
-    <delt_min>           .01     </delt_min>
-    <delt_max>           1.0        </delt_max>
+    <delt_min>           .01         </delt_min>
+    <delt_max>           1.0         </delt_max>
     <delt_init>          0.01        </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
     <!--<max_iterations>         800         </max_iterations> -->
