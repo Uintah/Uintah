@@ -4,7 +4,7 @@
 #include <Core/Geometry/Point.h>
 #include <iostream>
 #include <fstream>
-
+#include <sstream>
 
 using namespace Uintah;
 using namespace std;
@@ -56,8 +56,9 @@ void PolynomialData::loadData()
 
     ifstream polyFile(d_fileNames[i].c_str());
     if (!polyFile) {
-          throw ProblemSetupException("ERROR: opening polynomial data file",
-                                      __FILE__, __LINE__);
+      ostringstream warn;
+      warn << "ERROR: opening polynomial data file: "<< d_fileNames[i].c_str();
+      throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
     }
 
     double data;
