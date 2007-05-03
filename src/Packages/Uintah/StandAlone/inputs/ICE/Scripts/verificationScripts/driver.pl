@@ -133,7 +133,7 @@ while(1)
 			{
 			    $write_line = $line;
 			}
-			$html_write = "<img src=\"$write_line\" alt=\"$line\">";
+			$html_write = "<img src=\"$write_line\" alt=\"$line\"><BR>";
 			print fileList "$write_line\n";
 		    }
 		    else

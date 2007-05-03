@@ -3,6 +3,7 @@
 # use module
 use XML::Simple;
 use Data::Dumper;
+use Cwd;
 # create object
 $xml = new XML::Simple(forcearray => 1);
 #$xml = new XML::Simple;
@@ -81,19 +82,31 @@ close(MYDATA);
 
 open(statsFile,">$ARGV[0]".".stat");
 
-# Creating new ups files for each test
+
+# This loop will make sure our synchronization file is created 
+
 
 for ($i=0;$i<$num_of_tests;$i++)
 {
-    
     if ($compCommand[$i])
     {
-	$tmp_err = `cat .$errFile[$i].tmp`;
+	$tmp_fl_name = ".".$errFile[$i].".tmp";
+	$tmp_err=`cat $tmp_fl_name`;
+
+
 	chomp($tmp_err);
 	
 	$tmp_err++;
 	`echo $tmp_err > .$errFile[$i].tmp`;
     }
+
+}
+
+# Creating new ups files for each test
+
+for ($i=0;$i<$num_of_tests;$i++)
+{
+    
 
     open(inpFile, $test_upsF[$i]) or die("$test_upsF[$i], File Not Found");
 
@@ -225,10 +238,12 @@ for ($i=0;$i<$num_of_tests;$i++)
     else 
     {
 	print statsFile "Command Used (interactive) : "."$int $test_ups"."\n";
+	print "Launching sus\n";
 	$now = time();
 	$tmp=`$int $test_ups`;
 	if($compCommand[$i])
 	{
+	    print "Launching analyze_results.pl $compFilename\n";
 	    $tmp=`analyze_results.pl $compFilename`;
 	}
 	$fin = time()-$now;
