@@ -1,3 +1,23 @@
+
+%_________________________________
+% 05/01/07   --Todd
+% This matLab script plots the head flux curves
+% The format of the "polynomial_#.dat" files 
+% 
+% --start file polynomial_#.dat---
+% relative axial location (from low end of the cylinder)
+% A
+% B
+% C
+% D
+% E'polynomial_100.dat','polynomial_101.dat'
+%  ---end file polynomial_#.dat---
+% 
+% The coefficients are for a function of the form:
+% 
+% HT Flux = A + B*sin(theta) + C*cos(theta) + D*sin(2*theta) + E*cos (2*theta)
+% Note the bottom of the container is at 270 degrees
+
 close all;
 clear all;
 
