@@ -235,6 +235,13 @@ public:
   // entries in the hash table (like restartInitialize does)
   void query( Variable& var, const string& name, int matlIndex, 
               const Patch* patch, int timeIndex, DataFileInfo* dfi = 0);
+
+  void query( Variable& var, const string& name, int matlIndex, 
+              const Patch* patch, int timeIndex,
+              Ghost::GhostType, int ngc);
+
+  void queryRegion(Variable& var, const string& name, int matlIndex, 
+                   const Level* patch, int timeIndex, IntVector low, IntVector high);
   
   //////////
   // query the variable value for a particular particle  overtime;
