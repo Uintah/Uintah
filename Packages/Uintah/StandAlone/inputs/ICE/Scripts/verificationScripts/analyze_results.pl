@@ -118,6 +118,8 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     close(gpFile);
     `gnuplot $output_file.gp`;
 
+    
+
     # The DONE file has the basic info about the results - The two plots will be included and the test title will be added to the file
     if ($tmp_err<=0)
     {
