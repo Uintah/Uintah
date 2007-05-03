@@ -551,6 +551,10 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     if(dfi->numParticles == -1)
       throw InternalError("DataArchive::query:Cannot get numParticles",
                           __FILE__, __LINE__);
+
+    if (patch->isVirtual())
+      throw InternalError("DataArchive::query: Particle query on virtual patches "
+                          "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__);
     psetDBType::key_type key(matlIndex, patch);
     ParticleSubset* psubset = 0;
     psetDBType::iterator psetIter = d_psetDB.find(key);
@@ -606,6 +610,75 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   dbg << "DataArchive::query() completed in "
       << Time::currentSeconds()-tstart << " seconds\n";
 }
+
+void DataArchive::query( Variable& var, const string& name, int matlIndex, 
+                         const Patch* patch, int timeIndex,
+                         Ghost::GhostType gt, int ngc)
+{
+  TimeData& td = getTimeData(timeIndex);
+  if (ngc == 0)
+    query(var, name, matlIndex, patch, timeIndex, 0);
+  else if (td.d_varInfo.find(name) != td.d_varInfo.end()) {
+    VarData& varinfo = td.d_varInfo[name];
+    const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
+    IntVector low, high;
+    patch->computeVariableExtents(type->getType(), varinfo.boundaryLayer, gt, ngc, low, high);
+    queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
+  }
+  else {
+    cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " 
+         << timeIndex << "\nPlease make sure the correct material index is specified\n";
+    throw InternalError("DataArchive::query:Variable not found",
+                        __FILE__, __LINE__);
+  }
+  
+}
+
+void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex, 
+                              const Level* level, int timeIndex, IntVector low, IntVector high)
+{
+  // NOTE - this is not going to do error checking like making sure the entire volume is filled.  
+  //   We'll assume that if there were bad regions, they would have been caught in the simulation.
+  GridVariable* gridvar = dynamic_cast<GridVariable*>(&var);
+  ASSERT(gridvar);
+  gridvar->allocate(low, high);
+
+  TimeData& td = getTimeData(timeIndex);
+  VarData& varinfo = td.d_varInfo[name];
+  const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
+  
+  Patch::VariableBasis basis = Patch::translateTypeToBasis(type->getType(), false);
+  Patch::selectType patches;
+  
+  level->selectPatches(low, high, patches);
+  for(int i=0;i<patches.size();i++){
+    const Patch* patch = patches[i];
+    IntVector l, h;
+
+    l = Max(patch->getInteriorLowIndex(basis), low);
+    h = Min(patch->getInteriorHighIndex(basis), high);
+    if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
+      continue;
+    GridVariable* tmpVar = gridvar->cloneType();
+    query(*tmpVar, name, matlIndex, patch, timeIndex);
+
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
+    try {
+      gridvar->copyPatch(tmpVar, l, h);
+    } catch (InternalError& e) {
+      cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
+           << " actual patch " << patch->getInteriorLowIndex(basis) << " " << patch->getInteriorHighIndex(basis) 
+           << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
+      throw e;
+    }
+    delete tmpVar;
+  }
+}
+
 
 
 void 
