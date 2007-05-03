@@ -102,10 +102,10 @@ double PolynomialData::interpolateRadial(const int polyNum, const double theta)
   double value = 0.;
   int order = 0;
   value += d_polyData[polyNum][0];
-  value += d_polyData[polyNum][1]* cos(theta);
-  value += d_polyData[polyNum][2]* sin(theta);
-  value += d_polyData[polyNum][3]* cos(2.*theta);
-  value += d_polyData[polyNum][4]* sin(2.*theta);
+  value += d_polyData[polyNum][1]* sin(theta);
+  value += d_polyData[polyNum][2]* cos(theta);
+  value += d_polyData[polyNum][3]* sin(2.*theta);
+  value += d_polyData[polyNum][4]* cos(2.*theta);
 
 #if 0
   for (vector<double>::iterator iter = d_polyData[polyNum].begin(); 

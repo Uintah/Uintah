@@ -54,7 +54,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
                                  vector<GeometryObject*>& d_geom_objs)
 {
   // Print the physical boundary conditions
-  printPhysicalBCs();
+  //  printPhysicalBCs();
 
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numParticles,dwi,patch,new_dw);
