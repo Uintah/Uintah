@@ -50,7 +50,7 @@
     <initTime>           0.0         </initTime>
     <delt_min>           1.0e-19     </delt_min>
     <delt_max>           1.0e-4      </delt_max>
-    <delt_init>          1.0e-7      </delt_init>
+    <delt_init>          1.0e-9      </delt_init>
     <max_delt_increase>  0.15        </max_delt_increase>
     <timestep_multiplier>0.4         </timestep_multiplier>
     <!--<max_iterations>      10         </max_iterations>-->
