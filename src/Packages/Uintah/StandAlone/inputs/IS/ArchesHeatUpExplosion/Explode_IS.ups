@@ -219,7 +219,8 @@
     <save label="p.velocity"/>
     <save label="g.mass"/>
     <save label="g.temperature"/>
-    <checkpoint cycle = "4" timestepInterval = "10"/>
+    <checkpoint cycle = "6" interval = "3e-6"/>
+     <!-- 100 timesteps at delT = 3e-8 -->
   </DataArchiver>
 
   <Debug>

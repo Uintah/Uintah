@@ -156,14 +156,12 @@
     <save label="p.x"/>
     <save label="p.velocity"/>
     <save label="p.stress"/>
+    <save label="p.mass"/>
     <save label="p.temperature"/>
     <save label="p.externalHeatFlux"/>
-    <save label="p.externalHeatRate"/>
-    <save label="g.externalHeatRate"/>
     <save label="g.mass"/>
-    <save label="ThermalEnergy"/>
-
-    <checkpoint cycle="2" timestepInterval="10"/>
+    <save label="g.temperature"/>
+    <checkpoint cycle="4" timestepInterval="10"/>
   </DataArchiver>
 
   <Debug>
