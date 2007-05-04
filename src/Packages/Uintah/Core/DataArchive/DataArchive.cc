@@ -40,11 +40,11 @@ DataArchive::DataArchive(const std::string& filebase,
                          int processor /* = 0 */, int numProcessors /* = 1 */,
                          bool verbose /* = true */ ) :
   ref_cnt(0), lock("DataArchive ref_cnt lock"),
+  timestep_cache_size(10), default_cache_size(10), 
   d_filebase(filebase), 
   d_cell_scale( Vector(1.0,1.0,1.0) ),
-  d_processor(processor), d_numProcessors(numProcessors),
-  default_cache_size(10), timestep_cache_size(10),
-  d_lock("DataArchive lock")
+  d_processor(processor),
+  d_numProcessors(numProcessors), d_lock("DataArchive lock")
 {
 
   string index(filebase+"/index.xml");
@@ -162,7 +162,7 @@ DataArchive::queryTimesteps( std::vector<int>& index,
 DataArchive::TimeData& 
 DataArchive::getTimeData(int index)
 {
-  ASSERTRANGE(index, 0, d_timeData.size());
+  ASSERTRANGE(index, 0, (int)d_timeData.size());
   TimeData& td = d_timeData[index];
   if (!td.d_initialized)
     td.init();
@@ -348,7 +348,6 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
           if(!r->get("id", id))
             throw InternalError("DataArchive::queryGrid:Error parsing patch id",
                                 __FILE__, __LINE__);
-          int proc = -1;
           IntVector lowIndex;
           if(!r->get("lowIndex", lowIndex))
             throw InternalError("DataArchive::queryGrid:Error parsing patch lowIndex",
@@ -615,23 +614,25 @@ void DataArchive::query( Variable& var, const string& name, int matlIndex,
                          const Patch* patch, int timeIndex,
                          Ghost::GhostType gt, int ngc)
 {
-  TimeData& td = getTimeData(timeIndex);
   if (ngc == 0)
     query(var, name, matlIndex, patch, timeIndex, 0);
-  else if (td.d_varInfo.find(name) != td.d_varInfo.end()) {
-    VarData& varinfo = td.d_varInfo[name];
-    const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
-    IntVector low, high;
-    patch->computeVariableExtents(type->getType(), varinfo.boundaryLayer, gt, ngc, low, high);
-    queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
-  }
   else {
-    cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " 
-         << timeIndex << "\nPlease make sure the correct material index is specified\n";
-    throw InternalError("DataArchive::query:Variable not found",
-                        __FILE__, __LINE__);
+    TimeData& td = getTimeData(timeIndex);
+    td.parsePatch(patch); // make sure vars is actually populated
+    if (td.d_varInfo.find(name) != td.d_varInfo.end()) {
+      VarData& varinfo = td.d_varInfo[name];
+      const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
+      IntVector low, high;
+      patch->computeVariableExtents(type->getType(), varinfo.boundaryLayer, gt, ngc, low, high);
+      queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
+    }
+    else {
+      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " 
+           << timeIndex << "\nPlease make sure the correct material index is specified\n";
+      throw InternalError("DataArchive::query:Variable not found",
+                          __FILE__, __LINE__);
+    }
   }
-  
 }
 
 void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex, 
@@ -644,15 +645,20 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
   gridvar->allocate(low, high);
 
   TimeData& td = getTimeData(timeIndex);
-  VarData& varinfo = td.d_varInfo[name];
-  const TypeDescription* type = TypeDescription::lookupType(varinfo.type);
-  
-  Patch::VariableBasis basis = Patch::translateTypeToBasis(type->getType(), false);
+  const TypeDescription* type = 0;
+  Patch::VariableBasis basis;
   Patch::selectType patches;
   
   level->selectPatches(low, high, patches);
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
+    
+    if (type == 0) {
+      td.parsePatch(patch); // make sure varInfo is loaded
+      VarData& varinfo = td.d_varInfo[name];
+      type = TypeDescription::lookupType(varinfo.type);
+      basis = Patch::translateTypeToBasis(type->getType(), false);
+    }
     IntVector l, h;
 
     l = Max(patch->getInteriorLowIndex(basis), low);
@@ -776,7 +782,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   // variables if that data belongs on this processor
   VarHashMapIterator iter(&timedata.d_datafileInfo);
   iter.first();
-  for (iter; iter.ok(); ++iter) {
+  for (; iter.ok(); ++iter) {
     VarnameMatlPatch& key = iter.get_key();
     DataFileInfo& data = iter.get_data();
 
@@ -878,7 +884,7 @@ DataArchive::setTimestepCacheSize(int new_size) {
 }
 
 DataArchive::TimeData::TimeData(DataArchive* da, ProblemSpecP timestepDoc, string timestepURL) :
-  da(da), d_tstop(timestepDoc), d_tsurl(timestepURL), d_initialized(false)
+  d_initialized(false), d_tstop(timestepDoc), d_tsurl(timestepURL), da(da)
 {
   d_tsurldir = timestepURL.substr(0, timestepURL.find_last_of('/')+1);
 }
@@ -963,9 +969,9 @@ DataArchive::TimeData::init()
       else {
 
         // get level info out of the xml file: should be lX/pxxxxx.xml
-        int level = 0;
-        int start = datafile.find_first_of("l",0, datafile.length()-3);
-        int end = datafile.find_first_of("/");
+        unsigned level = 0;
+        unsigned start = datafile.find_first_of("l",0, datafile.length()-3);
+        unsigned end = datafile.find_first_of("/");
         if (start != string::npos && end != string::npos && end > start && end-start <= 2)
           level = atoi(datafile.substr(start+1, end-start).c_str());
 
@@ -1026,7 +1032,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       
       if (addMaterials) {
         // set the material to existing.  index+1 to use matl -1
-        if (index+1 >= d_matlInfo[levelNum].size())
+        if (index+1 >= (int)d_matlInfo[levelNum].size())
           d_matlInfo[levelNum].resize(index+2);
         d_matlInfo[levelNum][index] = true;
       }
@@ -1070,7 +1076,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
         d_globaldata = filename;
       }
       else {
-        ASSERTRANGE(patchid-basePatch, 0, d_patchInfo[levelNum].size());
+        ASSERTRANGE(patchid-basePatch, 0, (int)d_patchInfo[levelNum].size());
         PatchData& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
         if (!patchinfo.parsed) {
           patchinfo.parsed = true;
