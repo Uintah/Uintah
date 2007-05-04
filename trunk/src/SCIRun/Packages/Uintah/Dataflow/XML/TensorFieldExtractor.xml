@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="TensorFieldExtractor" category="Selectors">
+  <overview>
+    <authors>
+      <author>Packages/Kurt Zimmerman</author>
+    </authors>
+    <summary>Select tensor data from a Uintah Data Archive.</summary>
+    <description>
+      <p>Version Date: </p><p>Version: 1.0</p>
+      <p>Select the variable to extract from the Uintah Data
+      Archive. Level buttons refer to the resolution levels of an AMR
+      calculation, with the lowest resolution data being level
+      zero. If "all" is selected a multi-resolution field is created
+      which contains all levels of resoution. (Currently we have no
+      tools for multi-resolution tensor visualization. View one level
+      at a time or create a multi-resolution scalar field from one of
+      the tensor components.)
+      </p>
+      <p>The material button allows the user to select which material
+      to visualize.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+   </outputs>
+  </io>
+</component>

@@ -1,0 +1,10 @@
+#!/usr/local/bin/python
+
+from sys import argv,exit
+from helpers.runSusTests import runSusTests
+
+TESTS = [   ("HePlume", "HePlume.ups", 1.1,"ALL"), \
+            ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux")
+    	]
+
+exit(runSusTests(argv, TESTS, "Models"))

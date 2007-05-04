@@ -1,0 +1,189 @@
+#!/bin/csh
+
+
+#__________________________________
+# bulletproofinG
+
+set tmp = (`which display` `which convert` `which composite` `which ffmpeg`)
+
+if ( $status ) then
+  echo " ERROR: Could not find one of the following image processing commands"
+  echo "    display"
+  echo "    convert"
+  echo "    composite"
+  echo "    ffmpeg"
+  exit(0)
+endif
+
+unalias rm
+unalias cp
+
+set ans = "n"
+
+#__________________________________
+# Defaults
+set FONT_DEFAULT = "-font helvetica -pointsize 14"
+
+while ( $ans == "n" || $ans == "N")
+  #__________________________________
+  #  User inputs
+  echo "Would you like to make a backup of your images?[n]"
+  set backup = $<
+  
+  set size_default =  `identify -verbose movie.0000.ppm | grep Geometry | cut -d ":" -f2`
+  
+  echo "Enter the size of the movie [$size_default] (note frame size must be a mutiple of 2)"
+  set size = $<
+
+  echo  "Play back speed, frames per second [5]"
+  set playBackSpeed = $<  
+
+
+  #__________________________________
+  #  apply defaults
+  if ( $backup == "" ) then
+    set backup = "n"
+  endif
+  if ( $size == "" ) then
+    set size = $size_default
+  endif
+  if ( $playBackSpeed == "" ) then
+    set playBackSpeed = "5"
+  endif
+
+  echo "-------------------"
+  echo "backup images..........$backup"
+  echo "movie size.............$size"
+  echo "movie playback speed...$playBackSpeed"
+  echo "-------------------"
+  echo ""
+  echo "Is this correct? [y]"
+  set ans = $<
+end
+
+#__________________________________
+#  Add Titles and show the user a sample image
+echo ""
+echo "Do you want to add titles to movie? [n]"
+set ans = $<
+set redo = ""
+set N_title = ""
+set S_title = ""
+
+
+while( $ans == "y" || $ans == "Y" || $redo == "n" )
+  echo  "Enter the title for the top of the image"
+  set N_title = "$<"
+  echo  "Enter the title for the bottom of the movie"
+  set S_title = "$<"
+  
+  echo "white or black font color (w/b) [w]"
+  set fontColor = $<
+  if ( $fontColor == "" ) then
+   set fontColor  = "white"
+   set bkgrdColor = "black"
+  else
+   set fontColor  = "black"
+   set bkgrdColor = "white"
+  endif
+    
+  set FONT = "$FONT_DEFAULT -fill $fontColor -background $bkgrdColor"
+    
+  set moviePPM = movie.*.ppm
+  cat $moviePPM[1] | pnmsplit - %d.ppm
+  
+  #__________________________________
+  # generate the labels
+  cp 0.ppm test.0.ppm
+  rm -f Label*.ppm
+  
+  if ( "$N_title" != "" ) then    
+    convert 0.ppm $FONT -gravity north -annotate +0+5 "$N_title" test.0.ppm
+  endif
+  
+  cp test.0.ppm test.a.ppm
+  
+  if ( "$S_title" != "" ) then
+    convert test.0.ppm $FONT -gravity south -annotate +0+5 "$S_title" test.a.ppm
+  endif
+  
+  
+  echo "Close the popup window to continue"
+  
+  display test.a.ppm
+  
+  echo "Is this correct? [y]"
+  set ans = "n"
+  set redo = $<
+  rm test.*.ppm   
+end
+
+#___________________________________________________-
+# Now do the work
+if( $backup == "y" || $backup == "Y" ) then
+  mkdir orgs
+  echo "copying images to orgs/"
+  cp * orgs/.
+endif
+
+#__________________________________
+#  convert ppm names to number.ppm
+echo "Now converting ppm names into something ffmpeg can digest"
+cat movie.*.ppm| pnmsplit - %d.ppm
+
+#__________________________________
+# resize all the ppm files
+set PPM = [0-9]*.ppm
+
+foreach T ($PPM:q)
+ echo "resizing "$T "& adding labels"
+ set num = `basename $T .ppm`
+ 
+ # add the titles to the indivdual frames
+ cp -f $T $num.0.ppm
+ 
+ if ( "$N_title" != "" ) then
+  convert $num.ppm $FONT -gravity north -annotate +0+5 "$N_title" $num.0.ppm
+ endif
+ 
+ cp $num.0.ppm $num.b.ppm
+ 
+ if ( "$S_title" != "" ) then
+  convert $num.0.ppm $FONT -gravity south -annotate +0+5 "$S_title" $num.b.ppm
+  
+ endif
+ rm $num.ppm
+ rm $num.0.ppm
+ 
+ convert -resize $size $num.b.ppm $num.a.ppm
+ 
+ rm $num.b.ppm
+end 
+
+
+
+rm Label*.ppm
+#__________________________________
+# make the movies mpg
+echo "___________________________________"
+echo "Now making the movie"
+rm movie.mpeg
+ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.ppm -r 30 movie.mpeg
+#ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.ppm -r 30 movie.mpeg
+#__________________________________
+echo "__________________________________"
+echo "Do you want to keep the individual titled frames as jpgs? [n]"
+set ans = $<
+
+foreach T ($PPM:q)
+  set num = `basename $T .ppm`
+  if( $ans == "y" ) then
+    convert $num.a.ppm $num.a.jpg      # ppms are huge compared to jpgs
+    echo "converting $num.a.ppm $num.a.jpg"
+  endif
+  rm $num.a.ppm 
+end
+
+
+
+exit
