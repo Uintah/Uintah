@@ -198,19 +198,19 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   
+  // define material subsets  
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();
+  
   const MaterialSubset* react_matl = matl0->thisMaterial();  
   MaterialSubset* one_matl     = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   
-  /*
-    const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
-    const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
-  */
-  
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,                  gac,1);
-  /* t->requires(Task::NewDW, Ilb->temp_CCLabel,      mpm_matls,  gac,1); */
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gac,1);
+  Task::DomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
+
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
   /*     Reactants    */
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
@@ -351,6 +351,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
  
     Vector dx = patch->dCell();
     MIN_MASS_IN_A_CELL = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
+    
 
     /* Cell Iteration */
     IntVector nodeIdx[8];
@@ -439,7 +440,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         sp_vol_src_0[c]  -= createdVolx;
         sp_vol_src_1[c]    += createdVolx;
       }  // if (cell is ignited)
-    }  // cell iterator  
+    }  // cell iterator
+
 
     /*  set symetric BC  */
     setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
