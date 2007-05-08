@@ -47,7 +47,6 @@ namespace Uintah {
       SFCYVariable<double> old_vVelocity;
       SFCZVariable<double> old_wVelocity;
       CCVariable<double> old_density;
-      CCVariable<double> old_old_density;
       CCVariable<double> old_scalar;
       CCVariable<double> old_reactscalar;
       SFCXVariable<double> uVelocity;
