@@ -71,10 +71,8 @@ namespace Uintah {
       constSFCZVariable<double> wVelRhoHat;
       constCCVariable<double> divergence;
       constCCVariable<double> old_scalar;
-      constCCVariable<double> old_old_scalar;
       constCCVariable<double> enthalpy;
       constCCVariable<double> old_enthalpy;
-      constCCVariable<double> old_old_enthalpy;
       constCCVariable<double> temperature;
       constCCVariable<double> cp;
       constCCVariable<double> absorption;
