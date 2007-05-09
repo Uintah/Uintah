@@ -162,6 +162,8 @@ DataArchive::queryTimesteps( std::vector<int>& index,
 DataArchive::TimeData& 
 DataArchive::getTimeData(int index)
 {
+
+
   ASSERTRANGE(index, 0, (int)d_timeData.size());
   TimeData& td = d_timeData[index];
   if (!td.d_initialized)
@@ -189,19 +191,17 @@ DataArchive::getTimeData(int index)
   }
   // Finally insert our new candidate at the top of the list.
   d_lastNtimesteps.push_front(index);
-
   return td;
 }
 
 int
 DataArchive::queryPatchwiseProcessor(const Patch* patch, int index )
 {
-  TimeData& timedata = getTimeData(index);
   d_lock.lock();
+  TimeData& timedata = getTimeData(index);
 
   int proc = timedata.d_patchInfo[patch->getLevel()->
                                   getIndex()][patch->getLevelIndex()].proc;
-
   d_lock.unlock();
   return proc;
 }
@@ -221,10 +221,12 @@ int DataArchive::queryNumProcs(int index)
 GridP
 DataArchive::queryGrid( int index, const ProblemSpec* ups)
 {
-  double start = Time::currentSeconds();
+
   d_lock.lock();
 
+  double start = Time::currentSeconds();
   TimeData& timedata = getTimeData(index);
+
   if (timedata.d_grid != 0) {
     d_lock.unlock();
     return timedata.d_grid;
@@ -504,7 +506,10 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   const char* tag = AllocatorSetDefaultTag("QUERY");
 #endif
 
+  d_lock.lock();
   TimeData& timedata = getTimeData(index);
+  d_lock.unlock();
+
   ASSERT(timedata.d_initialized);
   // make sure info for this patch gets parsed from p*****.xml.
   d_lock.lock();  
@@ -617,7 +622,9 @@ void DataArchive::query( Variable& var, const string& name, int matlIndex,
   if (ngc == 0)
     query(var, name, matlIndex, patch, timeIndex, 0);
   else {
+    d_lock.lock();
     TimeData& td = getTimeData(timeIndex);
+    d_lock.unlock();
     td.parsePatch(patch); // make sure vars is actually populated
     if (td.d_varInfo.find(name) != td.d_varInfo.end()) {
       VarData& varinfo = td.d_varInfo[name];
@@ -644,7 +651,9 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
   ASSERT(gridvar);
   gridvar->allocate(low, high);
 
+  d_lock.lock();
   TimeData& td = getTimeData(timeIndex);
+  d_lock.unlock();
   const TypeDescription* type = 0;
   Patch::VariableBasis basis;
   Patch::selectType patches;
@@ -1179,7 +1188,9 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
   double start = Time::currentSeconds();
 
   d_lock.lock();
+
   TimeData& timedata = getTimeData(index);
+
   timedata.parsePatch(patch);
 
   int numMatls;
