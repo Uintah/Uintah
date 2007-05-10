@@ -49,7 +49,7 @@ MPI_Request* BNRTask::getRequest()
   else
   {
     //get a free request
-    int index=controller_->free_requests_.top();
+    int index=controller_->free_requests_.front();
     
     //assign request
     controller_->free_requests_.pop();
