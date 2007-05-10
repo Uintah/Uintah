@@ -27,9 +27,9 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
   //check if queue has tags
   if(tags_.size()>1)
   {
-    tag1=tags_.top(); 
+    tag1=tags_.front(); 
     tags_.pop();
-    tag2=tags_.top();
+    tag2=tags_.front();
     tags_.pop(); 
     return true;  
   }
@@ -43,7 +43,7 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
   //check if 1 tag is on the queue and 1 avialable at the end
   else if(tags_.size()==1 && free_tags==1)
   {
-    tag1=tags_.top();
+    tag1=tags_.front();
     tags_.pop();
     tag2=free_tag_start_<<1; free_tag_start_++;
     return true;
@@ -361,7 +361,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
     }
     else if(!immediate_q_.empty())  //check for tasks that are able to make progress
     {
-      task=immediate_q_.top();
+      task=immediate_q_.front();
       immediate_q_.pop();
       //runable task found, continue task
       //cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;

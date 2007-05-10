@@ -81,9 +81,9 @@ WARNING
      
     //queues for tasks
     list<BNRTask> tasks_;				    //list of tasks created throughout the run
-    stack<BNRTask*> immediate_q_;   //tasks that are always ready to run
+    queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
     queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
-    stack<int> tags_;							  //available tags
+    queue<int> tags_;							  //available tags
     PatchFixer patchfixer_;         //Fixup class
     SizeList d_minPatchSize;       //minimum patch size in each dimension
 
@@ -91,7 +91,7 @@ WARNING
     vector<MPI_Request> requests_;    //MPI requests
     vector<int> indicies_;            //return value from waitsome
     vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
-    stack<int>  free_requests_;       //list of free requests
+    queue<int>  free_requests_;       //list of free requests
   };
 
 } // End namespace Uintah
