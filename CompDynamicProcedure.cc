@@ -25,6 +25,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
@@ -534,10 +535,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
 
@@ -971,14 +970,11 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     }
 
     // Get the PerPatch CellInformation data
-
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     
@@ -1445,10 +1441,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     
@@ -2208,14 +2202,11 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
-
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // get physical constants
@@ -3009,7 +3000,10 @@ CompDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
