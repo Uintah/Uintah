@@ -38,6 +38,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -2627,15 +2628,19 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     old_dw->get(denMicro, d_Alab->d_densityMicroLabel, matlIndex, 
 		patch, Ghost::AroundCells, numGhostCellsG);    
 
-    // patch geometry information
-    
+    // Get the PerPatch CellInformation data from oldDW, initialize it if it is
+    // not there
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
+      throw InvalidValue("cellInformation should not be initialized yet",
+			 __FILE__, __LINE__);
+    if (old_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) 
+      old_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
     else {
       cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
+      //cout << "cellInfo MPMArches INIT" << endl;
     }
+    new_dw->put(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // computes su_drag[x,y,z], sp_drag[x,y,z] for arches at cell centers
@@ -3713,10 +3718,8 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // memory for MPM
