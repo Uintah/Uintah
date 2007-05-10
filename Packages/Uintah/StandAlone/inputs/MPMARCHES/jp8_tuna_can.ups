@@ -21,7 +21,7 @@
 
    <DataArchiver>
         <filebase>jp8_tuna_can.uda</filebase>
-	<outputInterval>0.005</outputInterval>
+	<outputInterval>0.1</outputInterval>
 	<compression>gzip</compression>
         <outputDoubleAsFloat/>
         <outputInitTimestep/>
@@ -68,7 +68,7 @@
 	<save label="htfluxRadZ"/>
 	<save label="tempSolid_CC"/>
 
-	<checkpoint cycle = "2" interval = "0.01"/>
+	<checkpoint cycle = "2" interval = "0.2"/>
 
    </DataArchiver>
 
@@ -317,7 +317,10 @@
                 </PressureSolver>
 
 		<MomentumSolver>
-		    <convection_scheme>central</convection_scheme>
+                <!-- Set convection_scheme to central here to get 2nd order 
+                 central differencing for velocity. It is disabled here
+                 since it doesn't work well for 10^3 tester problem -->
+                    <convection_scheme>upwind</convection_scheme>
                     <pressure_correction>false</pressure_correction>
                     <filter_divergence_constraint>false</filter_divergence_constraint>
                 </MomentumSolver>
