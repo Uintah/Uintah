@@ -22,6 +22,7 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -496,6 +497,14 @@ Arches::paramInit(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // Initialize cellInformation
+    PerPatch<CellInformationP> cellInfoP;
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //cout << "cellInfo original INIT" << endl;
+
+
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -724,18 +733,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constCCVariable<int> cellType;
 
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
@@ -1061,18 +1062,10 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
     
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1558,14 +1551,10 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 

@@ -23,6 +23,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -1145,14 +1146,10 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1991,20 +1988,22 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<int> cellType_new;
     new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
     cellType_new.copyData(cellType);
-    // Get the PerPatch CellInformation data
+
+    // Get the PerPatch CellInformation data from oldDW, initialize it if it is
+    // not there
+    if (!(d_MAlab)) {
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
+      if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+        throw InvalidValue("cellInformation should not be initialized yet",
+			   __FILE__, __LINE__);
+      if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+        old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+      else {
+        cellInfoP.setData(scinew CellInformation(patch));
+      }
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
 
-#if 0
-    PerPatch<CellInformationP> cellInfoP;
-    cellInfoP.setData(scinew CellInformation(patch));
-    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-#endif
     SFCXVariable<double> uVelocity_new;
     new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     uVelocity_new.copyData(uVelocity); // copy old into new
@@ -2447,10 +2446,8 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
