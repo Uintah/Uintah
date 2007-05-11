@@ -32,6 +32,8 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   rdbg << "RegridderCommon::RegridderCommon() BGN" << endl;
   d_filterType = FILTER_STAR;
   d_lastRegridTimestep = 0;
+  d_lastActualRegridTimestep = 0;
+  d_dilationUpdateLastRegrid = false;
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
                              CCVariable<int>::getTypeDescription());
   d_dilatedCellsRegridLabel  = VarLabel::create("DilatedCellsRegrid",
@@ -68,6 +70,53 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << endl;
   bool retval = d_newGrid;
+  if(d_newGrid)
+  {
+    int timeStepsSinceRegrid=d_sharedState->getCurrentTopLevelTimeStep() - d_lastActualRegridTimestep;
+    if(d_dynamicDilation && d_sharedState->getCurrentTopLevelTimeStep()!=1)
+    {
+      if(d_dilationUpdateLastRegrid)
+      {
+        d_dilationUpdateLastRegrid=false;
+      }
+      else
+      {
+        if(timeStepsSinceRegrid<d_gridReuseTargetLow)
+        {
+          //increase dilation
+          int numDims=d_sharedState->getNumDims();
+          int *activeDims=d_sharedState->getActiveDims();
+          for(int d=0;d<numDims;d++)
+          {
+            d_cellRegridDilation[activeDims[d]]++;
+          }
+          if(d_myworld->myrank()==0)
+            cout << "Increasing Regrid Dilation to:" << d_cellRegridDilation << endl;
+          d_dilationUpdateLastRegrid=true;
+        }
+        else if(timeStepsSinceRegrid>d_gridReuseTargetHigh)
+        {
+          //decrease dilation
+          int numDims=d_sharedState->getNumDims();
+          int *activeDims=d_sharedState->getActiveDims();
+          IntVector newDilation(0,0,0);
+          for(int d=0;d<numDims;d++)
+          {
+            if(d_cellRegridDilation[activeDims[d]]>0)
+              newDilation[activeDims[d]]=d_cellRegridDilation[activeDims[d]]-1;
+          }
+          if(newDilation!=d_cellRegridDilation)
+          {
+            if(d_myworld->myrank()==0)
+              cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
+            newDilation=d_cellRegridDilation;
+            d_dilationUpdateLastRegrid=true;
+          }
+        }
+      }
+    }
+    d_lastActualRegridTimestep=d_sharedState->getCurrentTopLevelTimeStep();
+  }
   d_newGrid = false;
   rdbg << "RegridderCommon::needRecompile( " << retval << " ) END" << endl;
   return retval;
@@ -171,7 +220,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   {
     MPI_Barrier(d_myworld->getComm());
   }
-    
+
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
   return retval;
 }
@@ -294,13 +343,20 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_minBoundaryCells = IntVector(1,1,1);
   d_maxTimestepsBetweenRegrids = 50;
   d_minTimestepsBetweenRegrids = 1;
-
+  d_gridReuseTargetLow=4;
+  d_gridReuseTargetHigh=10;
+  d_dynamicDilation=false;
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
   regrid_spec->get("cell_regrid_dilation", d_cellRegridDilation);
   regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
   regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
   regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
   regrid_spec->get("min_timestep_interval", d_minTimestepsBetweenRegrids);
+  regrid_spec->get("dynamic_dilation",d_dynamicDilation);
+  regrid_spec->get("grid_reuse_target_low",d_gridReuseTargetLow);
+  regrid_spec->get("grid_reuse_target_high",d_gridReuseTargetHigh);
+  ASSERT(d_gridReuseTargetLow<=d_gridReuseTargetHigh);
+
   // set up filters
   /* 
   dilate_dbg << "Initializing cell deletion filter\n";

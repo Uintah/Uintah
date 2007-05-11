@@ -126,6 +126,9 @@ WARNING
     bool d_isAdaptive; //!< if false, do not regrid (stick with what you got)
 
     // input parameters from ups file
+    bool  d_dynamicDilation;
+    int   d_gridReuseTargetLow;
+    int   d_gridReuseTargetHigh;
     SizeList  d_cellNum; 
     SizeList  d_cellRefinementRatio;
     IntVector d_cellStabilityDilation;
@@ -155,7 +158,9 @@ WARNING
     vector<int> d_numDeleted;
 
     bool d_newGrid;
-    int d_lastRegridTimestep;
+    int d_lastRegridTimestep;         //The last time the full regridder was called (grid may not change)
+    int d_lastActualRegridTimestep;   //The last time the grid was changed
+    bool d_dilationUpdateLastRegrid;  //Was the last dilation changed on the last regrid
     int d_maxTimestepsBetweenRegrids;
     int d_minTimestepsBetweenRegrids;
 
