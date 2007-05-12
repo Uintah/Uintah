@@ -277,7 +277,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 			                 const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label,getLevel(patches));
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
