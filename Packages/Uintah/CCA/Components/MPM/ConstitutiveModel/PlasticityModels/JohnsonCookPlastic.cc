@@ -162,10 +162,12 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
 
   double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
   double strainRatePart = 1.0;
-  if (epdot < 1.0) 
+  if (epdot < 1.0){ 
     strainRatePart = pow((1.0 + epdot),d_CM.C);
-  else
+  }
+  else{
     strainRatePart = 1.0 + d_CM.C*log(epdot);
+  }
   d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
   double m = d_CM.m;
   double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
