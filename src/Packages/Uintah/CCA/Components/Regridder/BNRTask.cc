@@ -102,8 +102,6 @@ void BNRTask::continueTask()
       goto WAIT_FOR_PATCH_COUNT;
     case WAITING_FOR_PATCHES:                                             //10
       goto WAIT_FOR_PATCHES;
-    case SENDING_TO_PARENT:                                               //11
-      goto TERMINATE;
     case TERMINATED:                                                      //12
       return;
      default:
@@ -437,8 +435,6 @@ void BNRTask::continueTask()
       //send patch list to parent
       MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
     }
-    status_=SENDING_TO_PARENT;
-    return;
   }
   
   TERMINATE:
@@ -468,8 +464,6 @@ void BNRTask::continueTaskSerial()
                   goto TASK_START;
           case WAITING_FOR_CHILDREN:                                            //8
                   goto WAIT_FOR_CHILDREN;
-          case SENDING_TO_PARENT:
-                  goto TERMINATE;
           case GATHERING_FLAG_COUNT:                                            //1
           case BROADCASTING_FLAG_COUNT:                                         //2
           case COMMUNICATING_SIGNATURES:                                        //3
@@ -569,11 +563,8 @@ void BNRTask::continueTaskSerial()
       //send patch list to parent
       MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
     }
-    status_=SENDING_TO_PARENT;
-    return;
   }
   
-  TERMINATE:
   status_=TERMINATED;
   
   //if parent is waiting activiate parent 
