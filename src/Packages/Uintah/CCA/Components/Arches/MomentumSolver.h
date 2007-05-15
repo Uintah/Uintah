@@ -93,7 +93,8 @@ public:
 		 const MaterialSet* matls,
 		 const TimeIntegratorLabel* timelabels,
 		 int index,
-		 bool extraProjection);
+		 bool extraProjection,
+                 bool doing_EKT_now);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized momentum matrix
@@ -101,23 +102,27 @@ public:
 				   const MaterialSet* matls,
 		 		   const TimeIntegratorLabel* timelabels,
 				   int index,
-				   bool extraProjection);
+				   bool extraProjection,
+                                   bool doing_EKT_now);
  
 
       void solveVelHat(const LevelP& level,
 		       SchedulerP&,
-		       const TimeIntegratorLabel* timelabels);
+		       const TimeIntegratorLabel* timelabels,
+                       bool d_EKTCorrection);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrixVelHat(SchedulerP&, const PatchSet* patches,
 					 const MaterialSet* matls,
-					 const TimeIntegratorLabel* timelabels);
+					 const TimeIntegratorLabel* timelabels,
+                                         bool d_EKTCorrection);
  
       void sched_averageRKHatVelocities(SchedulerP& sched,
 					const PatchSet* patches,
 				 	const MaterialSet* matls,
-				        const TimeIntegratorLabel* timelabels);
+				        const TimeIntegratorLabel* timelabels,
+                                        bool d_EKTCorrection);
 
       void sched_prepareExtraProjection(SchedulerP& sched, const PatchSet* patches,
 				   const MaterialSet* matls,
@@ -155,7 +160,8 @@ private:
 			     DataWarehouse* new_dw,
 		 	     const TimeIntegratorLabel* timelabels,
 			     int index,
-			     bool extraProjection);
+			     bool extraProjection,
+                             bool doing_EKT_now);
 
 
       void buildLinearMatrixVelHat(const ProcessorGroup* pc,
@@ -163,14 +169,16 @@ private:
 				   const MaterialSubset* matls,
 				   DataWarehouse*,
 				   DataWarehouse*,
-				   const TimeIntegratorLabel* timelabels);
+				   const TimeIntegratorLabel* timelabels,
+                                   bool d_EKTCorrection);
 
       void averageRKHatVelocities(const ProcessorGroup*,
 			          const PatchSubset* patches,
 			          const MaterialSubset* matls,
 			          DataWarehouse* old_dw,
 			          DataWarehouse* new_dw,
-				  const TimeIntegratorLabel* timelabels);
+				  const TimeIntegratorLabel* timelabels,
+                                  bool d_EKTCorrection);
 
       void prepareExtraProjection(const ProcessorGroup* pc,
 				   const PatchSubset* patches,

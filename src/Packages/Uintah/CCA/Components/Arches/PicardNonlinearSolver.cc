@@ -491,7 +491,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    d_momSolver->solveVelHat(level, subsched, d_timeIntegratorLabels[curr_level]);
+    d_momSolver->solveVelHat(level, subsched,
+                             d_timeIntegratorLabels[curr_level], false);
     // using RKSSP averaging to perform underrelaxation
     if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
        sched_saveFECopies(subsched, local_patches, local_matls,
@@ -514,7 +515,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 				    false, false, false, false);
 
       d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
-					    d_timeIntegratorLabels[curr_level]);
+					    d_timeIntegratorLabels[curr_level],
+                                            false);
       d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
     } 
 
@@ -528,7 +530,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(subsched, local_patches, local_matls,
-			 d_timeIntegratorLabels[curr_level], index, false);
+			 d_timeIntegratorLabels[curr_level], index,
+                         false, false);
     }
     if (d_pressure_correction)
     sched_updatePressure(subsched, local_patches, local_matls,
