@@ -169,8 +169,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")&&
-        (timelabels->integrator_step_number == TimeIntegratorStepNumber::First))
+    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor"))
       tsk->computes(d_lab->d_uVelocityEKTLabel);
 
     break;
@@ -180,8 +179,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")&&
-        (timelabels->integrator_step_number == TimeIntegratorStepNumber::First))
+    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor"))
       tsk->computes(d_lab->d_vVelocityEKTLabel);
 
     break;
@@ -191,8 +189,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")&&
-        (timelabels->integrator_step_number == TimeIntegratorStepNumber::First))
+    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor"))
       tsk->computes(d_lab->d_wVelocityEKTLabel);
 
     break;
@@ -337,8 +334,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     SFCXVariable<double> uVel_EKT;
     SFCYVariable<double> vVel_EKT;
     SFCZVariable<double> wVel_EKT;
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")&&
-        (timelabels->integrator_step_number == TimeIntegratorStepNumber::First))
+    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor"))
       switch (index) {
 
       case Arches::XDIR:
