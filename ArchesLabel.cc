@@ -106,7 +106,16 @@ ArchesLabel::ArchesLabel()
   // V-Velocity Labels
   d_vVelocitySPBCLabel = VarLabel::create("vVelocitySPBC", 
 				       SFCYVariable<double>::getTypeDescription() );
+  // W-Velocity Labels
+  d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", 
+				       SFCZVariable<double>::getTypeDescription() );
 
+  d_uVelocityEKTLabel = VarLabel::create("uVelocityEKT", 
+				       SFCXVariable<double>::getTypeDescription() );
+  d_vVelocityEKTLabel = VarLabel::create("vVelocityEKT", 
+				       SFCYVariable<double>::getTypeDescription() );
+  d_wVelocityEKTLabel = VarLabel::create("wVelocityEKT", 
+				       SFCZVariable<double>::getTypeDescription() );
   // labels for ref density and pressure
   d_refDensity_label = VarLabel::create("refDensityLabel",
 				       sum_vartype::getTypeDescription() );
@@ -115,9 +124,6 @@ ArchesLabel::ArchesLabel()
   d_refPressure_label = VarLabel::create("refPressureLabel",
 				       sum_vartype::getTypeDescription() );
 
-  // W-Velocity Labels
-  d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", 
-				       SFCZVariable<double>::getTypeDescription() );
   // Scalar 
   d_scalarSPLabel = VarLabel::create("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
@@ -741,6 +747,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocitySPBCLabel);
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
+  VarLabel::destroy(d_uVelocityEKTLabel);
+  VarLabel::destroy(d_vVelocityEKTLabel);
+  VarLabel::destroy(d_wVelocityEKTLabel);
   VarLabel::destroy(d_scalarSPLabel);
   VarLabel::destroy(d_scalarEKTLabel);
   VarLabel::destroy(d_scalarTempLabel);
