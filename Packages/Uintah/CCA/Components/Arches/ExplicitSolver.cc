@@ -349,7 +349,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index,
-			 doing_EKT_now);
+			 false, doing_EKT_now);
       }
       doing_EKT_now = false;
     }
@@ -417,7 +417,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level]);
+    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level],
+                             d_EKTCorrection);
 
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
@@ -446,7 +447,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                               true);
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
-					    d_timeIntegratorLabels[curr_level]);
+					    d_timeIntegratorLabels[curr_level],
+                                            d_EKTCorrection);
     } 
 
     d_props->sched_computeDrhodt(sched, patches, matls,
@@ -459,7 +461,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(sched, patches, matls,
-			 d_timeIntegratorLabels[curr_level], index, false);
+			 d_timeIntegratorLabels[curr_level], index,
+                         false, false);
     }
 
     if (d_extraProjection) {
@@ -471,7 +474,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index,
-			 d_extraProjection);
+			 d_extraProjection, false);
       }
     }
 

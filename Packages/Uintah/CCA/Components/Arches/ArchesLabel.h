@@ -104,23 +104,15 @@ namespace Uintah {
       const VarLabel* d_presNonLinSrcPBLMLabel;
 
       // U-Velocity Labels
-
-      // for old_dw in computePressureBC and for new_dw in linearsolve
       const VarLabel* d_uVelocitySPBCLabel;
-
-
-
       // V-Velocity Labels
-
-      // for old_dw in computePressureBC
       const VarLabel* d_vVelocitySPBCLabel;
-
-
       // W-Velocity Labels
-
-      // for old_dw in computePressureBC
       const VarLabel* d_wVelocitySPBCLabel;
 
+      const VarLabel* d_uVelocityEKTLabel;
+      const VarLabel* d_vVelocityEKTLabel;
+      const VarLabel* d_wVelocityEKTLabel;
 
       // Scalar Labels
       //computed for old_dw in paramInit
