@@ -98,7 +98,7 @@ WARNING
     void CreateTasks();
     MPI_Request* getRequest();
                 
-    bool Broadcast(void *message, int count, MPI_Datatype datatype,unsigned int tag);
+    bool Broadcast(void *message, int count, MPI_Datatype datatype);
 
     // Task information
     Task_Status status_;                // Status of current task

@@ -36,8 +36,8 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
   //check if tags can be allocated 
   else if(free_tags>1)
   {
-    tag1=free_tag_start_<<1; free_tag_start_++;
-    tag2=free_tag_start_<<1; free_tag_start_++;
+    tag1=free_tag_start_; free_tag_start_++;
+    tag2=free_tag_start_; free_tag_start_++;
     return true;
   }
   //check if 1 tag is on the queue and 1 avialable at the end
@@ -45,7 +45,7 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
   {
     tag1=tags_.front();
     tags_.pop();
-    tag2=free_tag_start_<<1; free_tag_start_++;
+    tag2=free_tag_start_; free_tag_start_++;
     return true;
   }
   //no more tags available
@@ -66,11 +66,10 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
   {  
     MPI_Attr_get(d_myworld->getComm(),MPI_TAG_UB,&tag_ub,&flag);
     if(flag)
-      maxtag_=(*tag_ub>>1);
+      maxtag_=*tag_ub;
     else
-      maxtag_=(32767>>1);
+      maxtag_=32767;
 
-    maxtag_++;
     int div=maxtag_/numprocs;
     int rem=maxtag_%numprocs;
   

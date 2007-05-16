@@ -168,7 +168,7 @@ void BNRTask::continueTask()
     
     BROADCAST_FLAG_COUNT:
   
-    if(Broadcast(&flagscount_[0],flagscount_.size()*sizeof(FlagsCount),MPI_BYTE,1))
+    if(Broadcast(&flagscount_[0],flagscount_.size()*sizeof(FlagsCount),MPI_BYTE))
       return;
     
     if(flags_.size==0)  //if i don't have any flags don't participate any longer
@@ -311,7 +311,7 @@ void BNRTask::continueTask()
     status_=BROADCASTING_ACCEPTABILITY;
     BROADCAST_ACCEPTABILITY:
     //broadcast acceptablity  
-    if(Broadcast(&acceptable_,1,MPI_INT,1))
+    if(Broadcast(&acceptable_,1,MPI_INT))
     {
       return;
     }
@@ -367,7 +367,7 @@ void BNRTask::continueTask()
       stage_=0;
       BROADCAST_CHILD_TASKS:
       //broadcast children tasks
-      if(Broadcast(&ctasks_,sizeof(ChildTasks),MPI_BYTE,0))
+      if(Broadcast(&ctasks_,sizeof(ChildTasks),MPI_BYTE))
       {
         return;
       }
@@ -384,8 +384,8 @@ void BNRTask::continueTask()
     {  
       
       //begin # of patches recv
-      MPI_Irecv(&left_size_,1,MPI_INT,MPI_ANY_SOURCE,left_->tag_+1,controller_->d_myworld->getComm(),getRequest());
-      MPI_Irecv(&right_size_,1,MPI_INT,MPI_ANY_SOURCE,right_->tag_+1,controller_->d_myworld->getComm(),getRequest());
+      MPI_Irecv(&left_size_,1,MPI_INT,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());
+      MPI_Irecv(&right_size_,1,MPI_INT,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());
       //recv's might not be done yet so place back on delay_q
       status_=WAITING_FOR_PATCH_COUNT;  
       return;
@@ -428,7 +428,7 @@ void BNRTask::continueTask()
     my_size_=my_patches_.size();
   
     //send patch_ count to parent
-    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_+1,controller_->d_myworld->getComm(),getRequest());
+    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
      
     if(my_size_>0)
     {
@@ -556,7 +556,7 @@ void BNRTask::continueTaskSerial()
     my_size_=my_patches_.size();
   
     //send patch count to parent
-    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_+1,controller_->d_myworld->getComm(),getRequest());
+    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
      
     if(my_size_>0)
     {
@@ -793,7 +793,7 @@ Split BNRTask::FindSplit()
  * the return value indicates if there is more broadcasting to 
  * perform on this processor
  * *********************************************************/
-bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigned int tag_inc)
+bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype)
 {
   unsigned int partner;
   //broadcast flagscount_ back to procs
@@ -807,7 +807,7 @@ bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigne
       if(partner<p_group_.size())
       {
         //Nonblocking send msg to partner
-        MPI_Isend(message,count_,datatype,p_group_[partner],tag_+tag_inc,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(message,count_,datatype,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
         return true;
       }
     }
@@ -816,7 +816,7 @@ bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigne
       partner=p_rank_-stride;
         
       //Nonblocking recieve msg from partner
-      MPI_Irecv(message,count_,datatype,p_group_[partner],tag_+tag_inc,controller_->d_myworld->getComm(),getRequest());  
+      MPI_Irecv(message,count_,datatype,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());  
       return true;
     }
     else
