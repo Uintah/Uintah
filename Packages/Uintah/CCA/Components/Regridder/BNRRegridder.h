@@ -89,6 +89,7 @@ WARNING
 
     //request handeling variables
     vector<MPI_Request> requests_;    //MPI requests
+    vector<MPI_Status>  statuses_;     //MPI statuses
     vector<int> indicies_;            //return value from waitsome
     vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
     queue<int>  free_requests_;       //list of free requests

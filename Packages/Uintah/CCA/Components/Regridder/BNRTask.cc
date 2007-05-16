@@ -41,6 +41,7 @@ MPI_Request* BNRTask::getRequest()
     MPI_Request request;
     controller_->requests_.push_back(request);
     controller_->indicies_.push_back(0);
+    controller_->statuses_.push_back(MPI_Status());
     
     //assign request
     controller_->request_to_task_.push_back(this);
@@ -90,23 +91,22 @@ void BNRTask::continueTask()
       goto COMMUNICATE_SIGNATURES;
     case SUMMING_SIGNATURES:                                              //4
       goto SUM_SIGNATURES;
-    case BROADCASTING_ACCEPTABILITY:                                      //5
-      goto BROADCAST_ACCEPTABILITY;
-    case WAITING_FOR_TAGS:                                                //6
+    case WAITING_FOR_TAGS:                                                //5
       goto WAIT_FOR_TAGS;                                            
-    case BROADCASTING_CHILD_TASKS:                                        //7
+    case BROADCASTING_CHILD_TASKS:                                        //6
       goto BROADCAST_CHILD_TASKS;
-    case WAITING_FOR_CHILDREN:                                            //8
+    case WAITING_FOR_CHILDREN:                                            //7
       goto WAIT_FOR_CHILDREN;                                  
-    case WAITING_FOR_PATCH_COUNT:                                         //9
+    case WAITING_FOR_PATCH_COUNT:                                         //8
       goto WAIT_FOR_PATCH_COUNT;
-    case WAITING_FOR_PATCHES:                                             //10
+    case WAITING_FOR_PATCHES:                                             //9
       goto WAIT_FOR_PATCHES;
-    case TERMINATED:                                                      //12
+    case TERMINATED:                                                      //10
       return;
-     default:
-      cerr << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": error invalid status_: " << status_ << endl;
-      return;
+    default:
+      char error[100];
+      sprintf(error,"Error invalid status (%d) in parallel task\n",status_);
+      throw InternalError(error,__FILE__,__LINE__);
   }
                   
   TASK_START:
@@ -237,7 +237,7 @@ void BNRTask::continueTask()
     sum_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
     sum_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
     sum_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
-    //sum_ signatures
+    //sum signatures
     stage_=0;
     status_=COMMUNICATING_SIGNATURES;
     COMMUNICATE_SIGNATURES:
@@ -281,13 +281,13 @@ void BNRTask::continueTask()
       }
       else if(p_rank_< (stride<<1))
       {
-          partner=p_rank_-stride;
+        partner=p_rank_-stride;
           
-          //Nonblocking recieve msg from partner
-          MPI_Isend(&count_[0][0],count_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Isend(&count_[1][0],count_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Isend(&count_[2][0],count_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          return;
+        //Nonblocking recieve msg from partner
+        MPI_Isend(&count_[0][0],count_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(&count_[1][0],count_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(&count_[2][0],count_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        return;
       }
     }
     //deallocate sum_ array
@@ -296,6 +296,8 @@ void BNRTask::continueTask()
     sum_[2].clear();  
   }  
   
+  //controlling task determines if the current patch is good or not
+  //if not find the location to split this patch
   if(p_rank_==0)
   {
     //bound signatures
@@ -303,44 +305,23 @@ void BNRTask::continueTask()
     
     //check tolerance a
     CheckTolA();
-  }  
-  
-  if(p_group_.size()>1)
-  {
-    stage_=0;
-    status_=BROADCASTING_ACCEPTABILITY;
-    BROADCAST_ACCEPTABILITY:
-    //broadcast acceptablity  
-    if(Broadcast(&acceptable_,1,MPI_INT))
-    {
-      return;
-    }
-  }  
 
-  if(acceptable_)
-  {
-    if(p_rank_==0)
+    if(acceptable_)
     {
-      my_patches_.push_back(patch_);
+      //set d=-1 to signal that the patch is acceptable
+      ctasks_.split.d=-1;
     }
-    //signature is no longer needed so free memory
-    count_[0].clear();
-    count_[1].clear();
-    count_[2].clear();
-  }
-  else
-  {
-    if(p_rank_==0)
+    else
     {
+      //find split
       ctasks_.split=FindSplit();
+      
+      //split the current patch
       ctasks_.left=ctasks_.right=patch_;
       ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
-    
-      //signature is no longer needed so free memory
-      count_[0].clear();
-      count_[1].clear();
-      count_[2].clear();
+  
 
+      WAIT_FOR_TAGS:
       //check if tags are available
       if(!controller_->getTags(ctasks_.ltag,ctasks_.rtag) )
       {
@@ -348,41 +329,43 @@ void BNRTask::continueTask()
         controller_->tag_q_.push(this);
         return;
       }
-      WAIT_FOR_TAGS:
-      
-      controller_->task_count_+=2;
-      
     }
-    else
+  }  
+  
+  //signature is no longer needed so free memory
+  count_[0].clear();
+  count_[1].clear();
+  count_[2].clear();
+  //broadcast child tasks
+  if(p_group_.size()>1)
+  {
+    status_=BROADCASTING_CHILD_TASKS;
+    stage_=0;
+    BROADCAST_CHILD_TASKS:
+    //broadcast children tasks
+    if(Broadcast(&ctasks_,sizeof(ChildTasks),MPI_BYTE))
     {
-      //signature is no longer needed so free memory
-      count_[0].clear();
-      count_[1].clear();
-      count_[2].clear();
+      return;
     }
-
-    if(p_group_.size()>1)
-    {
-      status_=BROADCASTING_CHILD_TASKS;
-      stage_=0;
-      BROADCAST_CHILD_TASKS:
-      //broadcast children tasks
-      if(Broadcast(&ctasks_,sizeof(ChildTasks),MPI_BYTE))
-      {
-        return;
-      }
-    }
-    
+  }
+  
+  if(ctasks_.split.d==-1)
+  {
+      //current patch is acceptable
+      my_patches_.push_back(patch_);
+  }
+  else
+  {
+    //create tasks
     CreateTasks();
-    
+  
+    //Wait for childern to reactivate parent
     status_=WAITING_FOR_CHILDREN;  
     return;
-    
     WAIT_FOR_CHILDREN:
     
     if(p_rank_==0)
     {  
-      
       //begin # of patches recv
       MPI_Irecv(&left_size_,1,MPI_INT,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());
       MPI_Irecv(&right_size_,1,MPI_INT,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());
@@ -394,7 +377,7 @@ void BNRTask::continueTask()
       status_=WAITING_FOR_PATCHES;
       
       my_patches_.resize(left_size_+right_size_);
-      
+     
       //recieve patch_sets from children on child tag
       if(left_size_>0)
       {
@@ -406,7 +389,7 @@ void BNRTask::continueTask()
       }    
       return;
       WAIT_FOR_PATCHES:
-      
+    
       controller_->tags_.push(left_->tag_);    //reclaim tag
       controller_->tags_.push(right_->tag_);    //reclaim tag
       
@@ -417,9 +400,8 @@ void BNRTask::continueTask()
         my_patches_.resize(0);
         my_patches_.push_back(patch_);
       }
-    }
+    } //if(p_rank_==0)
   }
-
   
   //COMMUNICATE_PATCH_LIST:  
   if(p_rank_==0 && parent_!=0)
@@ -453,7 +435,7 @@ void BNRTask::continueTask()
 }
 
 /***************************************************
- * Same as continue task but on 1 processor only
+ * Same as continueTask but on 1 processor only
  * ************************************************/
 void BNRTask::continueTaskSerial()
 {
@@ -464,20 +446,10 @@ void BNRTask::continueTaskSerial()
                   goto TASK_START;
           case WAITING_FOR_CHILDREN:                                            //8
                   goto WAIT_FOR_CHILDREN;
-          case GATHERING_FLAG_COUNT:                                            //1
-          case BROADCASTING_FLAG_COUNT:                                         //2
-          case COMMUNICATING_SIGNATURES:                                        //3
-          case SUMMING_SIGNATURES:                                              //4
-          case BROADCASTING_ACCEPTABILITY:                                      //5
-          case WAITING_FOR_TAGS:                                                //6
-          case BROADCASTING_CHILD_TASKS:                                        //7
-          case WAITING_FOR_PATCH_COUNT:                                         //9
-          case WAITING_FOR_PATCHES:                                             //10
-          case TERMINATED:                                                      //12
           default:
-                  cout << "Error invalid status(" << status_ << ") in serial task\n";
-                  exit(0);
-                  return;
+                  char error[100];
+                  sprintf(error,"Error invalid status (%d) in serial task\n",status_);
+                  throw InternalError(error,__FILE__,__LINE__);
   }
                   
   TASK_START:
@@ -504,17 +476,18 @@ void BNRTask::continueTaskSerial()
   else
   {
     ctasks_.split=FindSplit();
+      
+    //split the current patch
+    ctasks_.left=ctasks_.right=patch_;
+    ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
+    
+    ctasks_.ltag=-1;
+    ctasks_.rtag=-1;
      
     //signature is no longer needed so free memory
     count_[0].clear();
     count_[1].clear();
     count_[2].clear();
-
-    ctasks_.left=ctasks_.right=patch_;
-    ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
-    ctasks_.ltag=0;
-    ctasks_.rtag=0;
-    controller_->task_count_+=2;
       
     CreateTasks();
     
@@ -524,7 +497,7 @@ void BNRTask::continueTaskSerial()
     
     WAIT_FOR_CHILDREN:
     
-    if(left_->tag_!=0 || right_->tag_!=0)
+    if(left_->tag_!=-1 || right_->tag_!=-1)
     {
       controller_->tags_.push(left_->tag_);    //reclaim tag
       controller_->tags_.push(right_->tag_);    //reclaim tag
@@ -856,9 +829,8 @@ void BNRTask::CreateTasks()
 
   rightflags_.locs=flags_.locs+front;
   rightflags_.size=flags_.size-front;
-    
-  //create new tasks   
   
+  //create new tasks
   controller_->tasks_.push_back(BNRTask(ctasks_.left,leftflags_,p_group_,p_rank_,this,ctasks_.ltag));
   left_=&controller_->tasks_.back();
   
@@ -870,6 +842,7 @@ void BNRTask::CreateTasks()
 
   controller_->immediate_q_.push(left_);
   controller_->immediate_q_.push(right_);
+  controller_->task_count_+=2;
 }
 
   
