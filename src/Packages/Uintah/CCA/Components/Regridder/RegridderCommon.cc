@@ -81,7 +81,8 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
       }
       else
       {
-        if(timeStepsSinceRegrid<d_gridReuseTargetLow)
+        //if regrid is below threashold and the regrid was not forced
+        if(timeStepsSinceRegrid<d_gridReuseTargetLow && timeStepsSinceRegrid<=d_maxTimestepsBetweenRegrids)
         {
           //increase dilation
           int numDims=d_sharedState->getNumDims();
@@ -109,7 +110,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           {
             if(d_myworld->myrank()==0)
               cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
-            newDilation=d_cellRegridDilation;
+            d_cellRegridDilation=newDilation;
             d_dilationUpdateLastRegrid=true;
           }
         }
