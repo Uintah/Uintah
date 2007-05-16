@@ -72,7 +72,8 @@ MPIService::getComm() {
     rlist.erase(rlist.end()-1);
     ulist.push_back(c);
     MPI_Comm result = c->getComm();
-    return result;
+    long fcomm = MPI_Comm_c2f(result);
+    return fcomm;
   }
   // make a new duplicate. save it and return it.
   MPI_Comm tmp;

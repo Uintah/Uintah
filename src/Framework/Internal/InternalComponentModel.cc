@@ -55,7 +55,10 @@
 #include <Framework/Internal/GUIService.h>
 #include <Framework/SCIRunFramework.h>
 #include <Framework/Internal/EventService.h>
-#include <Framework/Internal/MPIService.h>
+
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
+# include <Framework/Internal/MPIService.h>
+#endif
 
 #if BUILD_DATAFLOW
 # include <Framework/Dataflow/DataflowScheduler.h>
@@ -80,7 +83,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
     addService(new InternalFrameworkServiceDescription(this, "cca.ApplicationLoaderService", &ApplicationLoader::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.EventService", &EventService::create));
 
-#if HAVE_MPICH
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
     addService(new InternalFrameworkServiceDescription(this, "cca.MPIService", &MPIService::create));
 #endif
 
