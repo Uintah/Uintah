@@ -65,12 +65,12 @@ WARNING
   struct ChildTasks
   {
     Split split;                                   // location of split that created these tasks
-    Region left, right;                       // child patches
     int ltag, rtag;                                // communication tags for patches
+    Region left, right;                            // child patches
   };
 
   enum Task_Status { NEW, GATHERING_FLAG_COUNT, BROADCASTING_FLAG_COUNT,
-                     COMMUNICATING_SIGNATURES, SUMMING_SIGNATURES, BROADCASTING_ACCEPTABILITY,
+                     COMMUNICATING_SIGNATURES, SUMMING_SIGNATURES,
                      WAITING_FOR_TAGS, BROADCASTING_CHILD_TASKS, WAITING_FOR_CHILDREN,
                      WAITING_FOR_PATCH_COUNT, WAITING_FOR_PATCHES, TERMINATED };
 
@@ -102,7 +102,7 @@ WARNING
 
     // Task information
     Task_Status status_;                // Status of current task
-    Region patch_;                 // patch that is being worked on
+    Region patch_;                      // patch that is being worked on
     FlagsList flags_;                   // list of flags inside this task
     BNRTask *parent_;                   // pointer to parent task
     BNRTask *sibling_;                  // pointer to sibling task
@@ -116,7 +116,7 @@ WARNING
     vector<int>     count_[3];          // histogram signature
                 
     // MPI Communication state
-    unsigned int tag_;                  // unique message tag
+    int tag_;                           // unique message tag
     unsigned int remaining_requests_;   // remaining requests on this task
     int stage_;                         // hypercube send/recieve stage
     int d_;                             // dimension of hypercube

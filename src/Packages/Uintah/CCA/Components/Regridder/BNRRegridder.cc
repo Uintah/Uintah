@@ -279,7 +279,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
 {
   int rank=d_myworld->myrank();
   int numprocs=d_myworld->size();
-  
+ 
   vector<int> procs(numprocs);
   for(int p=0;p<numprocs;p++)
     procs[p]=p;
@@ -345,7 +345,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
   //place on immediate_q_
   immediate_q_.push(root);                  
   //control loop
-
+  //MPI_Errhandler_set(d_myworld->getComm(), MPI_ERRORS_RETURN);
   while(true)
   {
     BNRTask *task;
@@ -363,7 +363,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
       task=immediate_q_.front();
       immediate_q_.pop();
       //runable task found, continue task
-      //cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;
       if(task->p_group_.size()==1)
         task->continueTaskSerial();
       else
@@ -373,7 +372,29 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
     {
       int count;
       //wait on requests
-      MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],MPI_STATUSES_IGNORE);
+      //MPI_STATUSES_IGNORE
+      if(MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],&statuses_[0])==MPI_ERR_IN_STATUS)
+      {
+              BNRTask *task;
+              cerr << "rank:" << rank << " error in MPI_Waitsome status\n";
+              for(int c=0;c<count;c++)
+              {
+                if(statuses_[c].MPI_ERROR!=MPI_SUCCESS)
+                {
+                  char message[MPI_MAX_ERROR_STRING];
+                  int length;
+
+                  MPI_Error_string(statuses_[c].MPI_ERROR,message,&length);
+                  cerr << "Error message" << ": '" << message << "'\n";
+                  
+                  task=request_to_task_[indicies_[c]];
+                  cerr << "Task status:" << task->status_ << " patch:" << task->patch_ << endl;
+                }
+              }
+              cerr << "Entering infinite loop\n";
+              while(1); //hang so debugger can be attached
+      }
+      
       //handle each request
       for(int c=0;c<count;c++)
       {
@@ -420,7 +441,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
   }
  
   tasks_.clear();
-
 }
 
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
