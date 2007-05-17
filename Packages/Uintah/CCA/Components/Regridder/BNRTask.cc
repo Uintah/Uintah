@@ -79,30 +79,35 @@ void BNRTask::continueTask()
   unsigned int p;
   unsigned int partner;
   int start;
+  int num_ints;
+  int index, shift;
+  int mask;
   
   switch (status_)
   {
     case NEW:                                                             //0
       goto TASK_START;
-    case GATHERING_FLAG_COUNT:                                            //1
-      goto GATHER_FLAG_COUNT;
-    case BROADCASTING_FLAG_COUNT:                                         //2
-      goto BROADCAST_FLAG_COUNT;
-    case COMMUNICATING_SIGNATURES:                                        //3
+    case REDUCING_FLAG_INFO:                                              //1
+      goto REDUCE_FLAG_INFO;
+    case UPDATING_FLAG_INFO:                                              //2
+      goto UPDATE_FLAG_INFO;
+    case BROADCASTING_FLAG_INFO:                                         //3
+      goto BROADCAST_FLAG_INFO;
+    case COMMUNICATING_SIGNATURES:                                        //4
       goto COMMUNICATE_SIGNATURES;
-    case SUMMING_SIGNATURES:                                              //4
+    case SUMMING_SIGNATURES:                                              //5
       goto SUM_SIGNATURES;
-    case WAITING_FOR_TAGS:                                                //5
+    case WAITING_FOR_TAGS:                                                //6
       goto WAIT_FOR_TAGS;                                            
-    case BROADCASTING_CHILD_TASKS:                                        //6
+    case BROADCASTING_CHILD_TASKS:                                        //7
       goto BROADCAST_CHILD_TASKS;
-    case WAITING_FOR_CHILDREN:                                            //7
+    case WAITING_FOR_CHILDREN:                                            //8
       goto WAIT_FOR_CHILDREN;                                  
-    case WAITING_FOR_PATCH_COUNT:                                         //8
+    case WAITING_FOR_PATCH_COUNT:                                         //9
       goto WAIT_FOR_PATCH_COUNT;
-    case WAITING_FOR_PATCHES:                                             //9
+    case WAITING_FOR_PATCHES:                                             //10
       goto WAIT_FOR_PATCHES;
-    case TERMINATED:                                                      //10
+    case TERMINATED:                                                      //11
       return;
     default:
       char error[100];
@@ -116,23 +121,38 @@ void BNRTask::continueTask()
   
   if(p_group_.size()>1)
   {
-    //gather # of flags_ on root
-    status_=GATHERING_FLAG_COUNT;
+    //create flag_info_
+
+    //determine the number of integers needed for bitfield
+    num_ints=p_group_.size()/(sizeof(int)*8);
+    if(p_group_.size()%(sizeof(int)*8)!=0)
+      num_ints++;
+    
+    flag_info_.resize(3+num_ints);    //1 for sum, 2 for max info, and one for each required int
+    flag_info_buffer_.resize(3+num_ints);
+
+    flag_info_.assign(3+num_ints,0);  //initialize to 0
+    
+    //initialize flag info
+    flag_info_[0]=flag_info_[2]=flags_.size; //set sum and max
+    flag_info_[1]=p_rank_;                  //set location of max
+    //set bitfield
+    if(flags_.size>0)
+    {
+      index=p_rank_/(sizeof(int)*8);    //index into flag_info_
+      flag_info_[3+index]=1<<(p_rank_-index*(sizeof(int)*8));    //place a 1 in the bit field to represent me
+    }
+    //reduce flag info_ onto root
+    status_=REDUCING_FLAG_INFO;
     //set mpi state
     stage_=0;
   
-    //Allocate recieve buffer
-    flagscount_.resize(1<<d_);    //make this big enough to recieve for entire hypercube
-    flagscount_[0].count=flags_.size;
-    flagscount_[0].rank=p_group_[p_rank_];
-
     //Gather the flags onto the root processor without blocking
-    GATHER_FLAG_COUNT:
+    REDUCE_FLAG_INFO:
 
     if(stage_<d_)
     {
       stride=1<<(d_-1-stage_);
-      msg_size=1<<stage_;
 
       stage_++;
       if(p_rank_<stride)  //recieving
@@ -141,57 +161,80 @@ void BNRTask::continueTask()
         if(partner<p_group_.size())
         {
           //Nonblocking recieve msg from partner
-          MPI_Irecv(&flagscount_[msg_size],msg_size*sizeof(FlagsCount),MPI_BYTE,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+          MPI_Irecv(&flag_info_buffer_[0],flag_info_buffer_.size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        
+          status_=UPDATING_FLAG_INFO;
           return;
-        }
-        else
-        {
-          for(int f=0;f<msg_size;f++)
+          
+          UPDATE_FLAG_INFO:
+          //update sum
+          flag_info_[0]+=flag_info_buffer_[0];
+          //update max
+          if(flag_info_buffer_[2]>flag_info_[2] || (flag_info_buffer_[2]==flag_info_[2] && flag_info_buffer_[1]<flag_info_[1]))
           {
-              flagscount_[msg_size+f].count=0;
-              flagscount_[msg_size+f].rank=-1;
-          }    
-          goto GATHER_FLAG_COUNT;
+            flag_info_[1]=flag_info_buffer_[1];   //set new rank of max
+            flag_info_[2]=flag_info_buffer_[2];   //set new  max
+          }
+          //update bit field
+          for(int i=3;i<flag_info_.size();i++)
+          {
+            flag_info_[i]|=flag_info_buffer_[i];
+          }
         }
+
+        status_=REDUCING_FLAG_INFO;
+        goto REDUCE_FLAG_INFO;
       }
       else if(p_rank_ < (stride<<1) )  //sending
       {
         int partner=p_rank_-stride;
       
         //non blocking send msg of size size to partner
-        MPI_Isend(&flagscount_[0],msg_size*sizeof(FlagsCount),MPI_BYTE,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(&flag_info_[0],flag_info_.size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
         return;
       }
     }
     
-    status_=BROADCASTING_FLAG_COUNT;
+    status_=BROADCASTING_FLAG_INFO;
     stage_=0;
     
-    BROADCAST_FLAG_COUNT:
+    BROADCAST_FLAG_INFO:
   
-    if(Broadcast(&flagscount_[0],flagscount_.size()*sizeof(FlagsCount),MPI_BYTE))
+    if(Broadcast(&flag_info_[0],flag_info_.size(),MPI_INT))
       return;
     
-    //sort ascending #flags_
-    sort(flagscount_.begin(),flagscount_.end());
+    total_flags_=flag_info_[0];
     
-    //update p_rank_
-    for(p=0;p<p_group_.size();p++)
+    //remove processors from p_group_ that have zero flags
+    p=0;
+    mask=1;
+    for(int i=0;i<p_group_.size();i++,index++)
     {
-      if(flagscount_[p].rank==p_group_[p_rank_])
+      index=i/(sizeof(int)*8);
+      shift=i-(index)*(sizeof(int)*8);
+      //if the bit for this local rank is set
+      if( (flag_info_[3+index]>>shift)&mask )
       {
-          p_rank_=p;
-          break;
+        if(i==p_rank_)          //update p_rank_
+          p_rank_=p;    
+        p_group_[p]=p_group_[i];  //update p_group_
+        
+        if(i==flag_info_[1])  //if this is the master processor
+        {
+            swap(p_group_[0],p_group_[p]); //place it at the front of the p_group_
+            if(p_rank_==p)                //if i'm master
+              p_rank_=0;                      //set my rank to 0
+            else if(p_rank_==0)           //if i'm rank 0
+              p_rank_=p;                      //set my rank to p
+        }
+        p++;
       }
     }
-    //update p_group_
-    for(p=0;p<p_group_.size();p++)
-    {
-      if(flagscount_[p].count==0)
-              break;
-      p_group_[p]=flagscount_[p].rank;  
-    }
     p_group_.resize(p);
+    
+    //clear buffers
+    flag_info_.clear();
+    flag_info_buffer_.clear();
     
     if(flags_.size==0)  //if i don't have any flags don't participate any longer
     {
@@ -207,18 +250,6 @@ void BNRTask::continueTask()
       p<<=1;
       d_++;
     }
-    //compute total # of flags on new root 
-    if(p_rank_==0)
-    {
-      total_flags_=0;
-      for(unsigned int p=0;p<p_group_.size();p++)
-      {
-        total_flags_+=flagscount_[p].count;
-      }
-    }
-  
-    //give buffer back to OS
-    flagscount_.clear();  
   }
   else
   {

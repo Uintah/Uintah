@@ -39,17 +39,6 @@ WARNING
   
 ****************************************/
 
-  struct FlagsCount 
-  {
-    int rank;
-    int count;
-  };
-
-  inline bool operator<(const FlagsCount &f1, const FlagsCount &f2)
-  {
-    return f1.count>f2.count;
-  }
-
   struct FlagsList
   {
     IntVector* locs;                                // flag location
@@ -69,7 +58,7 @@ WARNING
     Region left, right;                            // child patches
   };
 
-  enum Task_Status { NEW, GATHERING_FLAG_COUNT, BROADCASTING_FLAG_COUNT,
+  enum Task_Status { NEW, REDUCING_FLAG_INFO, UPDATING_FLAG_INFO, BROADCASTING_FLAG_INFO,
                      COMMUNICATING_SIGNATURES, SUMMING_SIGNATURES,
                      WAITING_FOR_TAGS, BROADCASTING_CHILD_TASKS, WAITING_FOR_CHILDREN,
                      WAITING_FOR_PATCH_COUNT, WAITING_FOR_PATCHES, TERMINATED };
@@ -104,6 +93,7 @@ WARNING
     Task_Status status_;                // Status of current task
     Region patch_;                      // patch that is being worked on
     FlagsList flags_;                   // list of flags inside this task
+    vector<int> flag_info_;             // information on the flags on all processors
     BNRTask *parent_;                   // pointer to parent task
     BNRTask *sibling_;                  // pointer to sibling task
     BNRTask *left_, *right_;            // left and right child tasks
@@ -124,7 +114,7 @@ WARNING
     int d_;                             // dimension of hypercube
                 
     // Communication buffers
-    vector<FlagsCount> flagscount_;     // buffer for gathering the number of flags
+    vector<int> flag_info_buffer_;       // buffer for reducing flag info
     vector<int> sum_;                   // buffer for calculating global histogram
     ChildTasks ctasks_;                 // structure of child tasks
 
