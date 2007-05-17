@@ -113,7 +113,9 @@ WARNING
     IntVector offset_;                  // offset for indexing 
 
     // Signatures
-    vector<int>     count_[3];          // histogram signature
+    int sig_size_;                      // size of the signature
+    vector<int>     count_;             // histogram signature
+    IntVector sig_offset_;              // offset into count_ and sum_ for each dimension      
                 
     // MPI Communication state
     int tag_;                           // unique message tag
@@ -123,7 +125,7 @@ WARNING
                 
     // Communication buffers
     vector<FlagsCount> flagscount_;     // buffer for gathering the number of flags
-    vector<int> sum_[3];                // buffer for calculating global histogram
+    vector<int> sum_;                   // buffer for calculating global histogram
     ChildTasks ctasks_;                 // structure of child tasks
 
     // Participating processor information
@@ -133,10 +135,10 @@ WARNING
     // pointer to controlling algorithm
     static BNRRegridder *controller_;   // controlling algorithm;
 
-    vector<Region> my_patches_;    // list of patches
-    int my_size_;              // number of patches on the parent
-    int left_size_;            // number of patches in left child
-    int right_size_;           // number of patches in right child
+    vector<Region> my_patches_;         // list of patches
+    int my_size_;                       // number of patches on the parent
+    int left_size_;                     // number of patches in left child
+    int right_size_;                    // number of patches in right child
   };
 
 } // End namespace Uintah
