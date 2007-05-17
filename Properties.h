@@ -156,6 +156,10 @@ public:
 	return d_H_air;
       }
 
+      inline double getCarbonContent(double f) const{
+	return d_carbon_fuel*f+d_carbon_air*(1.0-f);
+      }
+
 protected :
 
 private:
@@ -259,11 +263,11 @@ private:
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
-      double d_sootFactor;
       bool d_3d_periodic;
       bool d_inverse_density_average;
       double d_H_air;
       bool d_tabulated_soot;
+      double d_f_stoich, d_carbon_fuel, d_carbon_air;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif

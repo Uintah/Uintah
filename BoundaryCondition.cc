@@ -137,6 +137,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_props->computeInletProperties(
                         d_flowInlets[d_numInlets]->streamMixturefraction,
                         d_flowInlets[d_numInlets]->calcStream);
+      double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
+      if (f > 0.0)
+        d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
       ++total_cellTypes;
       ++d_numInlets;
     }
@@ -2007,7 +2010,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   // This parameter only needs to be set for fuel inlets for which
   // mixture fraction > 0, if there is an air inlet, and air has some CO2,
   // this air CO2 will be counted in the balance automatically
-  params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
+  // params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
