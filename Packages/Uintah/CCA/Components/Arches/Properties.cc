@@ -108,6 +108,11 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_mixingModel->problemSetup(db);
   if (d_calcEnthalpy)
     d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
+  if (d_reactingFlow) {
+    d_f_stoich = d_mixingModel->getFStoich();
+    d_carbon_fuel = d_mixingModel->getCarbonFuel();
+    d_carbon_air = d_mixingModel->getCarbonAir();
+  }
 
 
   d_co_output = d_mixingModel->getCOOutput();
@@ -148,8 +153,6 @@ Properties::problemSetup(const ProblemSpecP& params)
       }
       else
         db->getWithDefault("empirical_soot",d_empirical_soot,true);
-      if (d_empirical_soot)
-        db->getWithDefault("SootFactor",d_sootFactor,1.0);
     }
   }
 }
@@ -682,21 +685,20 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  
 
 	  if (d_radiationCalc) {
-	    // bc is the mass-atoms of carbon per mass of reactant mixture
-	    // taken from radcoef.f
-	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    if ((d_calcReactingScalar)||(d_tabulated_soot)) 
 	      sootFV[currCell] = outStream.getSootFV();
 	    else {
 	      if (d_empirical_soot) {
-	        if (temperature[currCell] > 1000) {
-		  double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+	        if (temperature[currCell] > 1000.0) {
+                  double carbon_content = 
+                           getCarbonContent(inStream.d_mixVars[0]);
+		  double bc = carbon_content * local_den;
 		  double c3 = 0.1;
 		  double rhosoot = 1950.0;
 		  double cmw = 12.0;
 
-		  if (inStream.d_mixVars[0] > 0.1)
-		    sootFV[currCell] = c3*bc*cmw/rhosoot*d_sootFactor;
+		  if (inStream.d_mixVars[0] > d_f_stoich)
+		    sootFV[currCell] = c3*bc*cmw/rhosoot;
 		  else
 		    sootFV[currCell] = 0.0;
 	        }

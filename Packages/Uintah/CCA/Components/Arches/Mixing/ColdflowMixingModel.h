@@ -99,6 +99,18 @@ public:
 	return 0.0;
       }
 
+      inline double getFStoich() const{
+	return 0.0;
+      }
+
+      inline double getCarbonFuel() const{
+	return 0.0;
+      }
+
+      inline double getCarbonAir() const{
+	return 0.0;
+      }
+
 
 
 protected :
