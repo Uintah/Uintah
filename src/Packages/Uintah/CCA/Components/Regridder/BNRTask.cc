@@ -234,9 +234,7 @@ void BNRTask::continueTask()
 
   if(p_group_.size()>1)
   {
-    sum_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
-    sum_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
-    sum_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
+    sum_.resize(sig_size_);
     //sum signatures
     stage_=0;
     status_=COMMUNICATING_SIGNATURES;
@@ -256,19 +254,15 @@ void BNRTask::continueTask()
           status_=SUMMING_SIGNATURES;
           
           //Nonblocking recieve msg from partner
-          MPI_Irecv(&sum_[0][0],sum_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Irecv(&sum_[1][0],sum_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Irecv(&sum_[2][0],sum_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+          MPI_Irecv(&sum_[0],sig_size_,MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
           return;
 
           SUM_SIGNATURES:
-            
-          for(int d=0;d<3;d++)
+          
+          
+          for(unsigned int i=0;i<sig_size_;i++)
           {
-            for(unsigned int i=0;i<count_[d].size();i++)
-            {
-              count_[d][i]+=sum_[d][i];
-            }
+            count_[i]+=sum_[i];
           }
             
           status_=COMMUNICATING_SIGNATURES;
@@ -284,16 +278,12 @@ void BNRTask::continueTask()
         partner=p_rank_-stride;
           
         //Nonblocking recieve msg from partner
-        MPI_Isend(&count_[0][0],count_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-        MPI_Isend(&count_[1][0],count_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-        MPI_Isend(&count_[2][0],count_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(&count_[0],sig_size_,MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
         return;
       }
     }
     //deallocate sum_ array
-    sum_[0].clear();  
-    sum_[1].clear();  
-    sum_[2].clear();  
+    sum_.clear();  
   }  
   
   //controlling task determines if the current patch is good or not
@@ -333,9 +323,7 @@ void BNRTask::continueTask()
   }  
   
   //signature is no longer needed so free memory
-  count_[0].clear();
-  count_[1].clear();
-  count_[2].clear();
+  count_.clear();
   //broadcast child tasks
   if(p_group_.size()>1)
   {
@@ -469,9 +457,7 @@ void BNRTask::continueTaskSerial()
     my_patches_.push_back(patch_);
       
     //signature is no longer needed so free memory
-    count_[0].clear();
-    count_[1].clear();
-    count_[2].clear();
+    count_.clear();
   }
   else
   {
@@ -485,9 +471,7 @@ void BNRTask::continueTaskSerial()
     ctasks_.rtag=-1;
      
     //signature is no longer needed so free memory
-    count_[0].clear();
-    count_[1].clear();
-    count_[2].clear();
+    count_.clear();
       
     CreateTasks();
     
@@ -552,23 +536,25 @@ void BNRTask::continueTaskSerial()
 
 void BNRTask::ComputeLocalSignature()
 {
+  IntVector size=patch_.getHigh()-patch_.getLow();
+  sig_offset_[0]=0;
+  sig_offset_[1]=size[0];
+  sig_offset_[2]=size[0]+size[1];
+  sig_size_=size[0]+size[1]+size[2];
+  
   //resize signature count_
-  count_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
-  count_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
-  count_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
+  count_.resize(sig_size_);
 
   //initialize signature
-  count_[0].assign(count_[0].size(),0);
-  count_[1].assign(count_[1].size(),0);
-  count_[2].assign(count_[2].size(),0);
+  count_.assign(sig_size_,0);
   
   //count flags
   for(int f=0;f<flags_.size;f++)
   {
       IntVector loc=flags_.locs[f]+offset_;
-      count_[0][loc[0]]++;
-      count_[1][loc[1]]++;
-      count_[2][loc[2]]++;
+      count_[loc[0]]++;
+      count_[sig_offset_[1]+loc[1]]++;
+      count_[sig_offset_[2]+loc[2]]++;
   }
 }
 void BNRTask::BoundSignatures()
@@ -583,14 +569,14 @@ void BNRTask::BoundSignatures()
       //search for first non zero
       for(i=0;i<size[d];i++)
       {
-        if(count_[d][i]!=0)
+        if(count_[sig_offset_[d]+i]!=0)
           break;
       }
       low[d]=i+patch_.getLow()[d];
       //search for last non zero
       for(i=size[d]-1;i>=0;i--)
       {
-        if(count_[d][i]!=0)
+        if(count_[sig_offset_[d]+i]!=0)
               break;  
       }
       high[d]=i+1+patch_.getLow()[d];
@@ -633,7 +619,7 @@ Split BNRTask::FindSplit()
     int index=patch_.getLow()[d]+offset_[d]+1;
     for(int i=1;i<size[d]-1;i++,index++)
     {
-      if(count_[d][index]==0)
+      if(count_[sig_offset_[d]+index]==0)
       {
           split.d=d;
           split.index=index-offset_[d];
@@ -654,12 +640,12 @@ Split BNRTask::FindSplit()
       int s;
       
       int index=patch_.getLow()[d]+offset_[d];
-      last_d2=count_[d][index+1]-count_[d][index];
+      last_d2=count_[sig_offset_[d]+index+1]-count_[sig_offset_[d]+index];
       int last_s=sign(last_d2);
       index++;
       for(int i=1;i<size[d]-1;i++,index++)
       {
-        d2=count_[d][index-1]+count_[d][index+1]-2*count_[d][index];
+        d2=count_[sig_offset_[d]+index-1]+count_[sig_offset_[d]+index+1]-2*count_[sig_offset_[d]+index];
         s=sign(d2);
         
         //if sign change
@@ -708,7 +694,7 @@ Split BNRTask::FindSplit()
         last_d2=d2;
         last_s=s;
       }
-      d2=count_[d][index-1]-count_[d][index];
+      d2=count_[sig_offset_[d]+index-1]-count_[sig_offset_[d]+index];
       s=sign(d2);
               
       //if sign change
