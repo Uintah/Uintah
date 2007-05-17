@@ -84,6 +84,9 @@ public:
       //
       //
       virtual double getAdiabaticAirEnthalpy() const = 0;
+      virtual double getFStoich() const = 0;
+      virtual double getCarbonFuel() const = 0;
+      virtual double getCarbonAir() const = 0;
       virtual bool getCOOutput() const = 0;
       virtual bool getSulfurChem() const = 0;
       virtual bool getSootPrecursors() const = 0;
