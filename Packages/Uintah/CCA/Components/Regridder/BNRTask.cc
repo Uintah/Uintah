@@ -78,6 +78,7 @@ void BNRTask::continueTask()
   int msg_size;
   unsigned int p;
   unsigned int partner;
+  int start;
   
   switch (status_)
   {
@@ -171,20 +172,9 @@ void BNRTask::continueTask()
     if(Broadcast(&flagscount_[0],flagscount_.size()*sizeof(FlagsCount),MPI_BYTE))
       return;
     
-    if(flags_.size==0)  //if i don't have any flags don't participate any longer
-    {
-      if(parent_==0)
-      {
-        //sort flags_ so this processor knows who will be broadcasting the results out
-        sort(flagscount_.begin(),flagscount_.end());
-        p_group_[0]=flagscount_[0].rank;        
-      }
-      p_rank_=-1;
-      goto TERMINATE;    
-    }
     //sort ascending #flags_
     sort(flagscount_.begin(),flagscount_.end());
-
+    
     //update p_rank_
     for(p=0;p<p_group_.size();p++)
     {
@@ -202,6 +192,12 @@ void BNRTask::continueTask()
       p_group_[p]=flagscount_[p].rank;  
     }
     p_group_.resize(p);
+    
+    if(flags_.size==0)  //if i don't have any flags don't participate any longer
+    {
+      p_rank_=-1;
+      goto TERMINATE;    
+    }
     
     //calculate hypercube dimensions
     p=1;    
@@ -259,7 +255,6 @@ void BNRTask::continueTask()
 
           SUM_SIGNATURES:
           
-          
           for(unsigned int i=0;i<sig_size_;i++)
           {
             count_[i]+=sum_[i];
@@ -309,7 +304,6 @@ void BNRTask::continueTask()
       //split the current patch
       ctasks_.left=ctasks_.right=patch_;
       ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
-  
 
       WAIT_FOR_TAGS:
       //check if tags are available
@@ -355,27 +349,50 @@ void BNRTask::continueTask()
     if(p_rank_==0)
     {  
       //begin # of patches recv
-      MPI_Irecv(&left_size_,1,MPI_INT,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());
-      MPI_Irecv(&right_size_,1,MPI_INT,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());
+
+      //if i'm also the master of the children tasks copy the patches from the child task
+      if(left_->p_group_[0]==p_group_[0])
+      {
+         left_size_=left_->my_patches_.size();
+         my_patches_.assign(left_->my_patches_.begin(),left_->my_patches_.end());
+      }
+      else
+      {
+        MPI_Irecv(&left_size_,1,MPI_INT,left_->p_group_[0],left_->tag_,controller_->d_myworld->getComm(),getRequest());
+      }
+      if(right_->p_group_[0]==p_group_[0])
+      {
+         right_size_=right_->my_patches_.size();
+         my_patches_.insert(my_patches_.end(),right_->my_patches_.begin(),right_->my_patches_.end());
+      }
+      else
+      {
+        MPI_Irecv(&right_size_,1,MPI_INT,right_->p_group_[0],right_->tag_,controller_->d_myworld->getComm(),getRequest());
+      }
       //recv's might not be done yet so place back on delay_q
       status_=WAITING_FOR_PATCH_COUNT;  
-      return;
+      if(remaining_requests_>0)
+        return;
       
       WAIT_FOR_PATCH_COUNT:
       status_=WAITING_FOR_PATCHES;
       
+      start=my_patches_.size();               //start of receive buff
+      //resize my_patches_ buffer to recieve
       my_patches_.resize(left_size_+right_size_);
      
-      //recieve patch_sets from children on child tag
-      if(left_size_>0)
+      //recieve patch_sets from children on child tag only if it hasn't been copied already
+      if(left_->p_group_[0]!=p_group_[0])
       {
-        MPI_Irecv(&my_patches_[0],left_size_*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        MPI_Irecv(&my_patches_[start],left_size_*sizeof(Region),MPI_BYTE,left_->p_group_[0],left_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        start+=left_size_;                        //move recieve buffer forward
       }
-      if(right_size_>0)
+      if(right_->p_group_[0]!=p_group_[0])
       {
-        MPI_Irecv(&my_patches_[0]+left_size_,right_size_*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        MPI_Irecv(&my_patches_[start],right_size_*sizeof(Region),MPI_BYTE,right_->p_group_[0],right_->tag_,controller_->d_myworld->getComm(),getRequest());    
       }    
-      return;
+      if(remaining_requests_>0)
+        return;
       WAIT_FOR_PATCHES:
     
       controller_->tags_.push(left_->tag_);    //reclaim tag
@@ -394,16 +411,19 @@ void BNRTask::continueTask()
   //COMMUNICATE_PATCH_LIST:  
   if(p_rank_==0 && parent_!=0)
   {
-    //send up the chain or to the root processor
-    my_size_=my_patches_.size();
-  
-    //send patch_ count to parent
-    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
-     
-    if(my_size_>0)
+    if(p_group_[0]!=parent_->p_group_[0]) //if I am not the same rank as the parent master process
     {
-      //send patch list to parent
-      MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      //send up to the master using mpi
+      my_size_=my_patches_.size();
+  
+      //send patch_ count to parent
+      MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+     
+      if(my_size_>0)
+      {
+        //send patch list to parent
+        MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      }
     }
   }
   
@@ -414,7 +434,6 @@ void BNRTask::continueTask()
   //if parent is waiting activiate parent 
   if(parent_!=0 && sibling_->status_==TERMINATED )
   {
-    
     //place parent_ on immediate queue (parent is waiting for communication from children and both are done sending)
     controller_->immediate_q_.push(parent_);
   }
@@ -427,7 +446,6 @@ void BNRTask::continueTask()
  * ************************************************/
 void BNRTask::continueTaskSerial()
 {
-  
   switch (status_)
   {
           case NEW:                                                             //0
@@ -485,18 +503,11 @@ void BNRTask::continueTaskSerial()
     {
       controller_->tags_.push(left_->tag_);    //reclaim tag
       controller_->tags_.push(right_->tag_);    //reclaim tag
-    }  
+    }
     //copy patches from left children
-    for(unsigned int p=0;p<left_->my_patches_.size();p++)
-    {
-      my_patches_.push_back(left_->my_patches_[p]);
-    }
-    //copy patches from left and right children
-    for(unsigned int p=0;p<right_->my_patches_.size();p++)
-    {
-      my_patches_.push_back(right_->my_patches_[p]);
-    }
-        
+    my_patches_.assign(left_->my_patches_.begin(),left_->my_patches_.end());
+    my_patches_.insert(my_patches_.end(),right_->my_patches_.begin(),right_->my_patches_.end());
+    
     //check tolerance b and take better patchset
     CheckTolB();
     if(!acceptable_)
@@ -507,18 +518,20 @@ void BNRTask::continueTaskSerial()
   }
   
   //COMMUNICATE_PATCH_LIST:  
-  if( parent_!=0 && parent_->p_group_.size()!=1)
+  if( parent_!=0 && parent_->p_group_[0]!=p_group_[0])  //if parent exists and I am not also the master on the parent
   {
-    //send up the chain or to the root processor
-    my_size_=my_patches_.size();
-  
-    //send patch count to parent
-    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
-     
-    if(my_size_>0)
     {
-      //send patch list to parent
-      MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      //send up the chain or to the root processor
+      my_size_=my_patches_.size();
+  
+      //send patch count to parent
+      MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+     
+      if(my_size_>0)
+      {
+        //send patch list to parent
+        MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      }
     }
   }
   
@@ -791,7 +804,6 @@ bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype)
 void BNRTask::CreateTasks()
 {
   FlagsList leftflags_,rightflags_;
-    
   //split the flags
   int front=0, back=flags_.size-1;  
   int d=ctasks_.split.d, v=ctasks_.split.index;
