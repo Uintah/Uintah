@@ -91,6 +91,8 @@ WARNING
     void runTask( DetailedTask* task, int iteration );
     void runReductionTask( DetailedTask* task );        
 
+    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const string& var);
+
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
     { return d_myworld; }
