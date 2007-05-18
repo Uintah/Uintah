@@ -128,6 +128,10 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
+     char tmpname[512];
+     sprintf (tmpname, "Iteration %d", iterations);
+     TAU_PROFILE_TIMER_DYNAMIC(iteration_timer, tmpname, "", TAU_USER);
+     TAU_PROFILE_START(iteration_timer); 
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
        doRegridding(currentGrid, false);
      }
@@ -264,7 +268,13 @@ void AMRSimulationController::run()
      if(d_output){
        d_output->executedTimestep(delt, currentGrid);
      }
-
+     /*
+     TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
+     TAU_PROFILE_START(sleepy);
+     sleep(1);
+     TAU_PROFILE_STOP(sleepy);
+     TAU_PROFILE_STOP(iteration_timer);
+     */
      t += delt;
      TAU_DB_DUMP();
    }

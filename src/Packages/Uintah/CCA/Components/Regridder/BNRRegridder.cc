@@ -1,3 +1,4 @@
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
@@ -97,6 +98,7 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
+  TAU_PROFILE("BNRRegridder::regrid", " ", TAU_USER);
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
   vector< vector<Region> > patch_sets(min(oldGrid->numLevels()+1,d_maxLevels));
 
@@ -174,6 +176,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
 {
+  TAU_PROFILE("BNRRegridder::CreateGrid()", " ", TAU_USER);
 
   Grid* newGrid = scinew Grid();
   
@@ -212,6 +215,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
 }
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
 {
+  TAU_PROFILE("BNRRegridder::CreateCoarseFlagSets()", " ", TAU_USER);
   DataWarehouse *dw=sched_->getLastDW();
 
   int toplevel=min(oldGrid->numLevels(),d_maxLevels-1);
@@ -277,6 +281,7 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
 
 void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
 {
+  TAU_PROFILE("BNRRegridder::RunBR()", " ", TAU_USER);
   int rank=d_myworld->myrank();
   int numprocs=d_myworld->size();
  
@@ -592,6 +597,7 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
 //to do in parallel since the number of patches is typically very small
 void BNRRegridder::PostFixup(vector<Region> &patches)
 {
+  TAU_PROFILE("BNRRegridder::PostFixup()", " ", TAU_USER);
   //calculate total volume
   int volume=0;
   for(unsigned int p=0;p<patches.size();p++)
@@ -647,6 +653,7 @@ void BNRRegridder::PostFixup(vector<Region> &patches)
 void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int l)
 {
+  TAU_PROFILE("BNRRegridder::AddSafetyLayer()", " ", TAU_USER);
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches
