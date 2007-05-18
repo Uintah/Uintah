@@ -16,6 +16,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DependencyException.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/IncorrectAllocation.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
@@ -71,6 +72,10 @@ static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 extern DebugStream mpidbg;
 static Mutex ssLock( "send state lock" );
+
+struct ParticleSend : public RefCounted {
+  int numParticles;
+};
 
 // we want a particle message to have a unique tag per patch/matl/batch/dest.
 // we only have 32K message tags, so this will have to do.
@@ -376,7 +381,15 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
         int tag = PARTICLESET_TAG;
         //if (d_myworld->myrank() == 43 && dest == 40)
         particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl;
-        MPI_Bsend(&numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm());
+
+        ParticleSend* data = new ParticleSend;
+        data->numParticles = numParticles;
+
+        Sendlist* sl = new Sendlist(0, data);
+        MPI_Request request;
+        MPI_Isend(&data->numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm(), &request);
+
+        dynamic_cast<MPIScheduler*>(d_scheduler)->addToSendList(request, sizeof(int), sl, "particle send");
 
         ssLock.lock();  // Dd: ??       
         old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);

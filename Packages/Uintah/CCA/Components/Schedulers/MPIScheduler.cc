@@ -740,18 +740,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     d_times.clear();
     //emitTime("time since last execute");
   }
-  // We do not use many Bsends, so this doesn't need to be
-  // big.  We make it moderately large anyway - memory is cheap.
-  void* old_mpibuffer;
-  int old_mpibuffersize;
-#ifndef _WIN32
-  // windows mpich doesn't like this here, but everybody else's needs it...
-  MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
-#endif
-#define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
-  char* mpibuffer = scinew char[MPI_BUFSIZE];
-  MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
-
+  
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
@@ -860,12 +849,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   finalizeTimestep();
 
   int junk;
-  MPI_Buffer_detach(&mpibuffer, &junk);
-  delete[] mpibuffer;
-#ifndef _WIN32
-  if(old_mpibuffersize)
-    MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
-#endif
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
@@ -994,3 +977,10 @@ MPIScheduler::emitTime(char* label, double dt)
    d_labels.push_back(label);
    d_times.push_back(dt);
 }
+
+void 
+MPIScheduler::addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* handler, const string& var)
+{
+  sends_.add(request, bytes, handler, var, 0);
+}
+
