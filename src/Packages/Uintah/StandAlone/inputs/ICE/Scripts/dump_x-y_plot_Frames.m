@@ -27,7 +27,7 @@ for i = 1:length(dump_timestep)
   
   t = sprintf('%4.3d msec',physicalTime*1000)
   title(t)
-  f_name = sprintf('movie.%i.ppm',i-1)
+  f_name = sprintf('movie.%04d.ppm',i-1)
   F = getframe(gcf);
   [X,map] = frame2im(F);
   imwrite(X,f_name)
