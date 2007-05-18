@@ -848,8 +848,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   finalizeTimestep();
 
-  int junk;
-
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
     //emitTime("finalize");
