@@ -3144,11 +3144,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       for(ParticleSubset::iterator iter  = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
+#if 0
         bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
         bool pointInAny = lvl->containsPoint(pxnew[idx]);
         if((!pointInReal && pointInAny)
-            || (pmassNew[idx] <= flags->d_min_part_mass)
-            || pTempNew[idx] < 0. ){
+#endif
+        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 
 //             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
