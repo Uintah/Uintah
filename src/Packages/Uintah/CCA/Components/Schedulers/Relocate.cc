@@ -639,7 +639,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           const Patch* toPatch = 0; // patch to relocate to
 
           if (deliter != delset->end() && idx == *deliter) {
-            // all you need to do to keep a particle is neither keep it or 
+            // all you need to do to delete a particle is neither keep it or 
             // relocate it.  So just go to the next deleted particle and wait for a match
             deliter++;
           }
@@ -662,7 +662,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
               // and there are a limited number of neighbors, perhaps it won't matter much
               int i=0;
               for(;i<(int)neighbors.size();i++){
-                if(neighbors[i]->getBox().contains(px[idx])){
+                if(neighbors[i]->containsPointInRealCells(px[idx])){
                   break;
                 }
               }
@@ -672,11 +672,13 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
                   toPatch = findCoarsePatch(px[idx], prevToCoarsenPatch, coarseLevel);
                   prevToCoarsenPatch = toPatch;
                 }
-                if(!toPatch && level->containsPoint(px[idx])){
+#if SCI_ASSERTION_LEVEL >= 1
+                if(!toPatch && level->containsPointInRealCells(px[idx])){
                   // Make sure that the particle really left the world
                   static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
                   warn.invoke();
                 }
+#endif
               }
               else {
                 toPatch = neighbors[i];
