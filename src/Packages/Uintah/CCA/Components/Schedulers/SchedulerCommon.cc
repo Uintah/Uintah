@@ -820,7 +820,10 @@ SchedulerCommon::finalizeTimestep()
 
 void
 SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim)
-{  
+{
+  TAU_PROFILE("SchedulerCommon::scheduleAndDoDataCopy()", " ", TAU_USER);
+  TAU_PROFILE_TIMER(sched_timer,"schedule", "", TAU_USER);
+  TAU_PROFILE_START(sched_timer);
   double start = Time::currentSeconds();
   // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
@@ -1015,6 +1018,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 #endif
   this->compile(); 
   d_sharedState->regriddingCompilationTime += Time::currentSeconds() - start;
+  
+  TAU_PROFILE_STOP(sched_timer);
+  TAU_PROFILE_TIMER(copy_timer,"copy", "", TAU_USER);
+  TAU_PROFILE_START(copy_timer);
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
   double executeTime = d_sharedState->taskExecTime;
@@ -1058,7 +1065,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   d_sharedState->taskExecTime = executeTime;
   d_sharedState->taskGlobalCommTime = globalCommTime;
   d_sharedState->taskLocalCommTime = localCommTime;
-  
+  TAU_PROFILE_STOP(copy_timer);
 }
 
 
