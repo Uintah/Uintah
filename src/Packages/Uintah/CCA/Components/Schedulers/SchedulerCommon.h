@@ -165,6 +165,7 @@ WARNING
     const set<string>& getNoScrubVars() { return noScrubVars_;}
     const set<string>& getCopyDataVars() { return copyDataVars_;}
 
+    virtual bool useInternalDeps();
   protected:
     void finalizeTimestep();
     
@@ -179,7 +180,6 @@ WARNING
     void printTrackedVars(DetailedTask* dt, bool before);
     
     virtual void verifyChecksum() = 0;
-    virtual bool useInternalDeps();
 
     vector<TaskGraph*> graphs;
     int currentTG_;
