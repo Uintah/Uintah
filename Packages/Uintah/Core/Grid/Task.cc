@@ -339,15 +339,10 @@ Task::modifies(const VarLabel* var,
 	       const MaterialSubset* matls, DomainSpec matls_dom, bool oldTG)
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
-    // in order to implement modifies for reduction variables, the
-    // TaskGraph::setupTaskConnections would have to be rewritten for
-    // one thing.
-    SCI_THROW(InternalError("Modifies not implemented for reduction variables.", __FILE__, __LINE__));
-    /*
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
-    */
+    ASSERT(patches == 0);
   }  
 
   Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, patches, matls,
@@ -363,6 +358,37 @@ Task::modifies(const VarLabel* var,
   d_computes.insert(make_pair(var, dep));
   d_modifies.insert(make_pair(var, dep));
 }
+
+void 
+Task::modifies(const VarLabel* var, const Level* level,
+               const MaterialSubset* matls, DomainSpec matls_domain, bool oldTG)
+{
+  const TypeDescription* vartype = var->typeDescription();
+  
+  if (matls == 0 && vartype->isReductionVariable()) {
+    // default material for a reduction variable is the global material (-1)
+    matls = getGlobalMatlSubset();
+    matls_domain = OutOfDomain;
+  }  
+
+  if (!vartype->isReductionVariable())
+    SCI_THROW(InternalError("modifies with level should only be used for reduction variable", __FILE__, __LINE__));
+
+
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, var, oldTG, level, matls,
+				      matls_domain);
+  dep->next=0;
+  if (mod_tail)
+    mod_tail->next=dep;
+  else
+    mod_head=dep;
+  mod_tail=dep;
+
+  d_requires.insert(make_pair(var, dep));
+  d_computes.insert(make_pair(var, dep));
+  d_modifies.insert(make_pair(var, dep));
+}
+
 
 void
 Task::modifies(const VarLabel* var, const PatchSubset* patches,

@@ -163,6 +163,9 @@ WARNING
      typedef multimap<const VarLabel*, Task::Dependency*, VarLabel::Compare>
        CompMap;
 
+     typedef map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
+
+
      /// Helper function for processTasks, processing the dependencies
      /// for the given task in the dependency list whose head is req.
      /// Will call processTask (recursively, as this is a helper for 
@@ -177,7 +180,7 @@ WARNING
      /// compute will be replaced by its modifying dependency on the CompMap.
      void addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo, 
                              Task::Dependency* req, CompMap& comps,
-			     bool modifies);
+			     ReductionTasksMap& reductionTasks, bool modifies);
 
      /// Used by (the public) createDetailedDependencies to store comps
      /// in a ComputeTable (See TaskGraph.cc).
@@ -233,8 +236,8 @@ WARNING
      int currentIteration;
 
      typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare>
-     ReductionTasksMap;
-     ReductionTasksMap d_reductionTasks;
+     DetailedReductionTasksMap;
+     DetailedReductionTasksMap d_reductionTasks;
    };
 
 } // End namespace Uintah

@@ -260,6 +260,9 @@ void AMRSimulationController::run()
 		      level);
        }
      }
+     
+     // override for the global level as well (which only matters on dw 0)
+     d_scheduler->get_dw(0)->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
      calcWallTime();
 
@@ -788,8 +791,8 @@ void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,
   }
   Task* task = scinew Task("coarsenDelt", this,
                            &AMRSimulationController::coarsenDelt);
- 
-  task->computes(d_sharedState->get_delt_label());
+
+  task->modifies(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }

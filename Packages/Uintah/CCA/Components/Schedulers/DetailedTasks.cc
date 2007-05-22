@@ -695,6 +695,14 @@ DetailedTask::addRequires(DependencyBatch* req)
   return reqs.insert(make_pair(req, req)).second;
 }
 
+void DetailedTask::decrementExternalDepCount()
+{
+  //cout << "Task " << this->getTask()->getName() << " dec " << externalDependencyCount_-1 << endl;
+  externalDependencyCount_--;
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps())
+    taskGroup->mpiCompletedTasks_.push(this);
+}
+
 void
 DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
 				    const VarLabel* var)
@@ -799,7 +807,7 @@ operator<<(ostream& out, const DetailedTask& task)
     }
     // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
     if (task.getTask()->getType() == Task::OncePerProc)
-      cout << ", on multiple levels";
+      out << ", on multiple levels";
     else
       out << ", Level " << getLevel(patches)->getIndex();
   }
@@ -872,11 +880,18 @@ DetailedTasks::getNextInternalReadyTask()
   readyQueueMutex_.lock();
 #endif
   DetailedTask* nextTask = readyTasks_.front();
-  //DetailedTask* nextTask = readyTasks_.top();
   readyTasks_.pop();
 #if !defined( _AIX )
   readyQueueMutex_.unlock();
 #endif
+  return nextTask;
+}
+
+DetailedTask*
+DetailedTasks::getNextExternalReadyTask()
+{
+  DetailedTask* nextTask = mpiCompletedTasks_.front();
+  mpiCompletedTasks_.pop();
   return nextTask;
 }
 
@@ -964,6 +979,14 @@ void DependencyBatch::received(const ProcessorGroup * pg)
     cerrLock.unlock();
   }
 
+  list<DetailedTask*>::iterator iter;
+  for (iter = toTasks.begin(); iter != toTasks.end(); iter++) {
+    // if the count is 0, the task will add itself to the external ready queue
+    //cout << pg->myrank() << "  Dec: " << *fromTask << " for " << *(*iter) << endl;
+    (*iter)->decrementExternalDepCount();
+  }
+
+#if 0
   if (!receiveListeners_.empty()) {
     // only needed when multiple tasks need a batch
     ASSERT(toTasks.size() > 1);
@@ -977,6 +1000,7 @@ void DependencyBatch::received(const ProcessorGroup * pg)
     receiveListeners_.clear();
    lock_->unlock();
   }
+#endif
 }
 
 void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,

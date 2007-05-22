@@ -190,6 +190,14 @@ namespace Uintah {
     void addInternalDependency(DetailedTask* prerequisiteTask,
 			       const VarLabel* var);
 
+    // external dependencies will count how many messages this task
+    // is waiting for.  When it hits 0, we can add it to the 
+    // DetailedTasks::mpiCompletedTasks list.
+    void clearExternalDepCount() { externalDependencyCount_ = 0; }
+    void incrementExternalDepCount() { externalDependencyCount_++; }
+    void decrementExternalDepCount();
+    int getExternalDepCount() { return externalDependencyCount_; }
+
     bool areInternalDependenciesSatisfied()
     { return (numPendingInternalDependencies == 0); }
   protected:
@@ -204,6 +212,8 @@ namespace Uintah {
     map<DependencyBatch*, DependencyBatch*> reqs;
     DependencyBatch* comp_head;
     DetailedTasks* taskGroup;
+
+    int externalDependencyCount_;
 
     mutable string name_; /* doesn't get set until getName() is called
 			     the first time. */
@@ -274,7 +284,11 @@ namespace Uintah {
     void emitEdges(ProblemSpecP edgesElement, int rank);
 
     DetailedTask* getNextInternalReadyTask();
-    
+    int numInternalReadyTasks() { return readyTasks_.size(); }
+
+    DetailedTask* getNextExternalReadyTask();
+    int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
+
     void createScrubCounts();
 
     bool mustConsiderInternalDependencies()
@@ -338,6 +352,7 @@ namespace Uintah {
     
     TaskQueue readyTasks_; 
     TaskQueue initiallyReadyTasks_;
+    TaskQueue mpiCompletedTasks_;
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the

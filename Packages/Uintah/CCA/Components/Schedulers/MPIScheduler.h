@@ -79,12 +79,16 @@ WARNING
     virtual void execute(int tgnum = 0, int iteration = 0);
 
     virtual SchedulerP createSubScheduler();
-      
-    void postMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
-		       list<DependencyBatch*>& externalRecvs,
-		       bool only_old_recvs, int abort_point, int iteration);
-    void processMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
-		       list<DependencyBatch*>& externalRecvs );    
+    
+    virtual bool useInternalDeps() { return useExternalQueue_; }
+
+
+
+    void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
+
+    enum { TEST, WAIT_ONCE, WAIT_ALL};
+
+    void processMPIRecvs(int how_much);    
 
     void postMPISends( DetailedTask* task, int iteration );
 
@@ -119,12 +123,14 @@ WARNING
     Output*       oport_;
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
-    
+    CommRecMPI            recvs_;
+
     double           d_lasttime;
     vector<char*>    d_labels;
     vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
+    bool useExternalQueue_;
 
     void emitTime(char* label);
     void emitTime(char* label, double time);

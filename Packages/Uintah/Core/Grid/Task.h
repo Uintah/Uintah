@@ -535,6 +535,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, bool oldTG=false);
+
+    //////////
+    // Modify reduction vars
+    void modifies(const VarLabel*, const Level* level,
+		  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain, bool oldTG=false);
     
     //////////
     // Tells the task to actually execute the function assigned to it.
