@@ -15,6 +15,10 @@ if ( $status ) then
   exit(0)
 endif
 
+
+set firstFrame = movie.0000.*
+set ext  = `echo $firstFrame | awk -F. '{print $3 }'`
+
 unalias rm
 unalias cp
 
@@ -30,7 +34,7 @@ while ( $ans == "n" || $ans == "N")
   echo "Would you like to make a backup of your images?[n]"
   set backup = $<
   
-  set size_default =  `identify -verbose movie.0000.ppm | grep Geometry | cut -d ":" -f2`
+  set size_default =  `identify -verbose movie.0000.* | grep Geometry | cut -d ":" -f2`
   
   echo "Enter the size of the movie [$size_default] (note frame size must be a mutiple of 2)"
   set size = $<
@@ -88,34 +92,35 @@ while( $ans == "y" || $ans == "Y" || $redo == "n" )
   endif
     
   set FONT = "$FONT_DEFAULT -fill $fontColor -background $bkgrdColor"
-    
-  set moviePPM = movie.*.ppm
-  cat $moviePPM[1] | pnmsplit - %d.ppm
+  
+  @ num  = `echo $firstFrame | awk -F. '{print $2 }'`
+  echo " Now converting $firstFrame to $num.png"
+  convert $firstFrame $num.png
   
   #__________________________________
   # generate the labels
-  cp 0.ppm test.0.ppm
-  rm -f Label*.ppm
+  cp 0000.png test.0.png
+  rm -f Label*.png
   
   if ( "$N_title" != "" ) then    
-    convert 0.ppm $FONT -gravity north -annotate +0+5 "$N_title" test.0.ppm
+    convert 0.png $FONT -gravity north -annotate +0+5 "$N_title" test.0.png
   endif
   
-  cp test.0.ppm test.a.ppm
+  cp test.0.png test.a.png
   
   if ( "$S_title" != "" ) then
-    convert test.0.ppm $FONT -gravity south -annotate +0+5 "$S_title" test.a.ppm
+    convert test.0.png $FONT -gravity south -annotate +0+5 "$S_title" test.a.png
   endif
   
   
   echo "Close the popup window to continue"
   
-  display test.a.ppm
+  display test.a.png
   
   echo "Is this correct? [y]"
   set ans = "n"
   set redo = $<
-  rm test.*.ppm   
+  rm test.*.png   
 end
 
 #___________________________________________________-
@@ -127,61 +132,72 @@ if( $backup == "y" || $backup == "Y" ) then
 endif
 
 #__________________________________
-#  convert ppm names to number.ppm
-echo "Now converting ppm names into something ffmpeg can digest"
-cat movie.*.ppm| pnmsplit - %d.ppm
+#  convert png names to number.png
+echo "Now converting $ext files into png files so ffmpeg can digest them"
+@ count  = 0
+
+foreach i ( *.*.$ext)
+  @ num  = `echo $i | awk -F. '{print $2 }'`
+  echo " Now converting $i to $num.png"
+  convert $i -depth 8 $num.png
+  @ count +=1
+end
+
+if ( $count != ($num + 1) ) then
+  echo " ERROR: the images are not consecutively numbered"
+  echo " Now exiting $count"
+  rm [0-9]*.png
+  exit(0)
+endif
 
 #__________________________________
-# resize all the ppm files
-set PPM = [0-9]*.ppm
+# resize and add labels to all the png files
+set PNG = [0-9]*.png
 
-foreach T ($PPM:q)
+foreach T ($PNG:q)
  echo "resizing "$T "& adding labels"
- set num = `basename $T .ppm`
+ set num = `basename $T .png`
  
  # add the titles to the indivdual frames
- cp -f $T $num.0.ppm
+ cp -f $T $num.0.png
  
  if ( "$N_title" != "" ) then
-  convert $num.ppm $FONT -gravity north -annotate +0+5 "$N_title" $num.0.ppm
+  convert $num.png $FONT -gravity north -annotate +0+5 "$N_title" $num.0.png
  endif
  
- cp $num.0.ppm $num.b.ppm
+ cp $num.0.png $num.b.png
  
  if ( "$S_title" != "" ) then
-  convert $num.0.ppm $FONT -gravity south -annotate +0+5 "$S_title" $num.b.ppm
-  
+  convert $num.0.png $FONT -gravity south -annotate +0+5 "$S_title" $num.b.png 
  endif
- rm $num.ppm
- rm $num.0.ppm
  
- convert -resize $size $num.b.ppm $num.a.ppm
+ rm $num.png
+ rm $num.0.png
  
- rm $num.b.ppm
+ convert -resize $size $num.b.png -depth 8 $num.a.png 
+ 
+ rm $num.b.png
 end 
 
 
-
-rm Label*.ppm
+rm Label*.png
 #__________________________________
 # make the movies mpg
 echo "___________________________________"
 echo "Now making the movie"
 rm movie.mpeg
-ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.ppm -r 30 movie.mpeg
-#ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.ppm -r 30 movie.mpeg
+ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.mpeg
+#ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.mpeg
 #__________________________________
 echo "__________________________________"
-echo "Do you want to keep the individual titled frames as jpgs? [n]"
+echo "Do you want to keep the individual titled frames as png? [n]"
 set ans = $<
 
-foreach T ($PPM:q)
-  set num = `basename $T .ppm`
-  if( $ans == "y" ) then
-    convert $num.a.ppm $num.a.jpg      # ppms are huge compared to jpgs
-    echo "converting $num.a.ppm $num.a.jpg"
-  endif
-  rm $num.a.ppm 
+foreach T ($PNG:q)
+  if( $ans != "y" ) then
+    set num = `basename $T .png`
+    rm $num.a.png 
+  endif 
 end
 
 
