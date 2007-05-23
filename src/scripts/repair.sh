@@ -1,17 +1,20 @@
 #! /bin/sh
 
 #
-# repair.sh <bad_include>
+# repair.sh [-quiet] <bad_include>
 #
 # The purpose of this script is to find .d (Makefile dependency files
 # that have bad (old) include files in them and to delete the .d and
 # corresponding .o file.
 
-if test $# != 1 || test $1 = "-h" || test $1 = "-help" || test $1 = "--help"; then
+usage()
+{
   echo ""
-  echo "Usage: $0 <bad_include>"
+  echo "Usage: $0 [-quiet] <bad_include>"
   echo ""
-  echo "  bad_include - the name of the bad file (or some unique text"
+  echo "  -h[elp]     - Print this help."
+  echo "  -quiet      - Don't print out a warning if no files found."
+  echo "  bad_include - The name of the bad file (or some unique text"
   echo "                that is grep'd for in the .d files.)"
   echo ""
   echo "This script will run through all the .d (Makefile Dependency)"
@@ -43,6 +46,27 @@ if test $# != 1 || test $1 = "-h" || test $1 = "-help" || test $1 = "--help"; th
   echo "../src/scripts/repair.sh SCIBaWGL.h"
   echo ""
   exit
+}
+
+if test $# = 0; then
+    echo ""
+    echo "Bad number of arguments..."
+    usage
+fi
+
+if test $1 = "-h" || test $1 = "-help" || test $1 = "--help"; then
+    usage
+fi
+
+if test $1 = "-quiet"; then
+    be_quiet=true
+    shift
+fi
+
+if test $# = 0; then
+    echo ""
+    echo "Bad number of arguments..."
+    usage
 fi
 
 bad_inc=$1
@@ -78,7 +102,7 @@ for file in $files; do
    done
 done
 
-if test $file_found = "no"; then
+if test "$be_quiet" != "true" -a $file_found = "no"; then
    echo ""
    echo "No matching files found. (Perhaps your 'bad_include' was incorrect?)"
    echo "If you continue to have problems with this script, please contact"
