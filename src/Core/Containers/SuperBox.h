@@ -1360,7 +1360,11 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 #endif
   }
 }
-
+// makeSmallestContainingSuperBox
+// Composes the smallest SuperBox that contains both this SuperBox
+// and the BasicBox called neighbor.  If no such SuperBox exists that
+// is contained within the region called withinRegion or if any of the
+// boxes in this SuperBox are "unavailable" then NULL is returned. 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 template <class RangeQuerier>
 CompositeBox<BoxP, Point, Volume, Value, Evaluator>*
@@ -1398,6 +1402,7 @@ makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
     
     RangeContainer boxes;
     rangeQuerier.query(low, high, boxes);
+    ASSERT(boxes.size()>=2);  //there must be at least 2 patches returned in this otherwise the range query is broken
     if (prevNumBoxes >= (unsigned long)boxes.size())
       return 0; // nothing new found -- no enclosing super box exists
     prevNumBoxes = boxes.size();
