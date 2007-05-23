@@ -28,6 +28,7 @@
   <!--____________________________________________________________________-->
   <Grid>
     <BoundaryConditions>
+      <!--______________LEFT____________-->
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -45,6 +46,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
+      <!--______________RIGHT____________-->
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -98,6 +100,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
+      <!--______________BACK____________-->
       <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -114,7 +117,8 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-      </Face>  
+      </Face>
+      <!--______________FRONT____________-->
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -137,8 +141,8 @@
     <!--____________________________________________________________________-->
     <Level>
            <Box label = "3D">
-              <lower>        [-0.075,-0.075,-0.075]   </lower>
-              <upper>        [ 0.075, 0.075, 0.075]   </upper>
+              <lower>        [-0.10,-0.10,-0.10]   </lower>
+              <upper>        [ 0.10, 0.10, 0.10]   </upper>
 
               <extraCells>   [0,0,0]            </extraCells>
               <patches>      [1,1,1]            </patches>
@@ -167,7 +171,9 @@
   <Debug>
   </Debug>
 
-  
+  <!--____________________________________________________________________-->
+  <!--    M P M     P  A  R  A  M  E  T  E  R  S                          -->
+  <!--____________________________________________________________________-->  
   <MPM>
     <time_integrator>               implicit </time_integrator>
     <dynamic>                       true     </dynamic>
@@ -317,9 +323,9 @@ For fast heat tape experiment:
        <!-- <heat_flux> -->
                 <geom_object>
                     <cylinder>
-                        <bottom>           [0.0,0.0,-.06985]   </bottom>
-                        <top>              [0.0,0.0, .06985]   </top>
-                        <radius>           0.05715   </radius>
+                        <bottom>    [0.0,0.0,-.06985] </bottom>
+                        <top>       [0.0,0.0, .06985] </top>
+                        <radius>    0.05715           </radius>
                     </cylinder>
                 </geom_object>
                 <polynomial_data>
