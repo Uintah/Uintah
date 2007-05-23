@@ -384,6 +384,7 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
 
         ParticleSend* data = new ParticleSend;
         data->numParticles = numParticles;
+        data->addReference();
 
         Sendlist* sl = new Sendlist(0, data);
         MPI_Request request;
