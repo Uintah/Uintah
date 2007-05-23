@@ -5681,6 +5681,22 @@ for testfile in $sci_defs_files; do
   else
     mv $testfile $file
     AC_MSG_WARN($file has changed.)
+
+    # Because the make system isn't smart enough to notice when a new
+    # petsc or hypre is specified to configure, these checks help clean up the code.
+    # The "-d Packages" is used to skip these checks if this is the first time
+    # we have run configure.
+
+    if test -d Packages -a "$file" = "include/sci_defs/petsc_defs.h"; then
+       echo "WARNING: petsc dependent .o files are probably out of date... removing..."
+       ../src/scripts/repair.sh -quiet petsc
+    fi
+
+    if test -d Packages -a "$file" = "include/sci_defs/hypre_defs.h"; then
+       echo "WARNING: hypre dependent .o files are probably out of date... removing..."
+       ../src/scripts/repair.sh -quiet hypre
+    fi
+
   fi
 done
 

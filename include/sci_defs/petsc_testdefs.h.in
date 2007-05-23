@@ -33,5 +33,16 @@
 @DEF_PETSC@
 @DEF_PETSC_UNI@
 
+/* 
+   For reference, (if you have petsc, then) you are linking verses this PETSc:
+
+   @PETSC_LIB_DIR_FLAG@
+
+   @INC_PETSC_H@
+
+   (Note, the above info is used to tell when the user configures
+   verses a new PETSc, so please leave it here.)
+*/
+
 #endif
 
