@@ -795,8 +795,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       }
       else {
         initiateTask( task, abort, abort_point, iteration );
-        ASSERT(recvs_.numRequests() == 0);
         processMPIRecvs(WAIT_ALL);
+        ASSERT(recvs_.numRequests() == 0);
         runTask(task, iteration);
       }
     }
@@ -809,7 +809,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         
         if (task->getTask()->getType() == Task::Reduction){
           if(!abort) {
-            dbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+            taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
             initiateReduction(task);
           }
           numTasksDone++;
@@ -817,11 +817,11 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         else {
           initiateTask( task, abort, abort_point, iteration );
           if (task->getExternalDepCount() > 0) {
-            dbg << d_myworld->myrank() << "  Initiating task " << task->getTask()->getName() << endl;
+            taskdbg << d_myworld->myrank() << "  Initiating task " << task->getTask()->getName() << endl;
             processMPIRecvs(TEST);
           }
           else {
-            dbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+            taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
             runTask(task, iteration);
             numTasksDone++;
           }
@@ -832,7 +832,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       //   in DependencyBatch::received, which is called when a message is delivered.
       else if (dts->numExternalReadyTasks() > 0) {
         DetailedTask * task = dts->getNextExternalReadyTask();
-        dbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+        taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
         ASSERT(task->getExternalDepCount() == 0);
         runTask(task, iteration);
         numTasksDone++;
