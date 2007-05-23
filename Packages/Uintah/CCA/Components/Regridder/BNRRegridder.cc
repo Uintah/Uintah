@@ -491,7 +491,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   regrid_spec->getWithDefault("do_loadBalancing",d_loadBalance,false);
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
-  regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.25);
+  regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.125);
   //bound tolerances
   if (tola_ < 0) {
     if (d_myworld->myrank() == 0)
