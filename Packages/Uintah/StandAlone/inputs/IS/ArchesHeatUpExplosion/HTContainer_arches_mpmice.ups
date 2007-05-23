@@ -5,7 +5,9 @@
   <Meta>
     <title/>
   </Meta>
-
+  <!--____________________________________________________________________-->
+  <!--         C O M P O N E N T   S W I T C H E R                        -->
+  <!--____________________________________________________________________-->
   <SimulationComponent>
       <type>switcher</type>
         <subcomponent>
@@ -17,6 +19,7 @@
                <timestep> 1 </timestep>
             </SwitchCriteria>
         </subcomponent>
+        
         <subcomponent>
             <SimulationComponent>
                <type> impm </type>
@@ -26,10 +29,11 @@
                <material> 1 </material>
                <temperature> 450 </temperature>
             </SwitchCriteria>
-            <init var = "p.acceleration" matls = "mpm_matls" />
+            <init var = "p.acceleration"     matls = "mpm_matls" />
             <init var = "p.externalHeatFlux" matls = "mpm_matls" />
 <!--        <init var = "p.loadCurveID" matls = "mpm_matls" />  -->
         </subcomponent>
+        
         <subcomponent>
             <SimulationComponent>
                 <type> mpmice </type>
@@ -43,10 +47,6 @@
         <carry_over var="vel_CC" />
         <carry_over var="NC_CCweight" />
         <carry_over var="heatRate_CC" />
-        <!--
-        <carry_over var="vol_frac_CC" />
-        <carry_over var="delP_Dilatate" />
-        -->
   </SimulationComponent>
    
   <!--____________________________________________________________________-->
@@ -67,6 +67,7 @@
   <!--____________________________________________________________________-->
   <Grid>
     <BoundaryConditions>
+      <!--______________LEFT____________-->
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -84,6 +85,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
+      <!--______________RIGHT____________-->
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -137,6 +139,7 @@
                               <value> 0.0  </value>
         </BCType>
       </Face>
+      <!--______________BACK____________-->
       <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -153,7 +156,8 @@
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-      </Face>  
+      </Face> 
+      <!--______________FRONT____________--> 
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                               <value> 101325.0   </value>
@@ -175,8 +179,8 @@
     <!--____________________________________________________________________-->
     <Level>
            <Box label="3D">
-              <lower>        [-0.075,-0.075,-0.075]   </lower>
-              <upper>        [ 0.075, 0.075, 0.075]   </upper>
+              <lower>        [-0.10,-0.10,-0.10]   </lower>
+              <upper>        [ 0.10, 0.10, 0.10]   </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
               <resolution>   [10,10,10]      </resolution>
