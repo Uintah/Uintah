@@ -653,23 +653,23 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
       dbg << d_myworld->myrank() << "   Creating level " << i << " tg " << endl;
       d_sim->scheduleTimeAdvance(currentGrid->getLevel(i), d_scheduler);
     }
-    if (d_doAMR && currentGrid->numLevels() > 1) {
-      for (int i = 0; i < currentGrid->numLevels(); i++) {
+    for (int i = 0; i < currentGrid->numLevels(); i++) {
+      if (d_doAMR && currentGrid->numLevels() > 1) {
         dbg << d_myworld->myrank() << "   Doing Int TG level " << i << " tg " << endl;
         // taskgraphs numlevels-2*numlevels-1
         d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
-        // schedule a coarsen from the finest level to this level
-        for (int j = currentGrid->numLevels()-2; j >= i; j--) {
-          dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << endl;
-          d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
-          d_sim->scheduleFinalizeTimestep(currentGrid->getLevel(j), d_scheduler);
-        }
-        // schedule a refineInterface from this level to the finest level
-        for (int j = i; j < currentGrid->numLevels(); j++) {
-          if (j != 0) {
-            dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << endl;
-            d_sim->scheduleRefineInterface(currentGrid->getLevel(j), d_scheduler, j==i, true);
-          }
+      }
+      // schedule a coarsen from the finest level to this level
+      for (int j = currentGrid->numLevels()-2; j >= i; j--) {
+        dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << endl;
+        d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
+      }
+      d_sim->scheduleFinalizeTimestep(currentGrid->getLevel(i), d_scheduler);
+      // schedule a refineInterface from this level to the finest level
+      for (int j = i; j < currentGrid->numLevels(); j++) {
+        if (j != 0) {
+          dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << endl;
+          d_sim->scheduleRefineInterface(currentGrid->getLevel(j), d_scheduler, j==i, true);
         }
       }
     }
