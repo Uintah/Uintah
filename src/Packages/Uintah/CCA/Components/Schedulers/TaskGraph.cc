@@ -1274,11 +1274,10 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           continue; // will we need to fix for mixed scheduling?
         }
 
-	if(!ct.findReductionComps(req, 0, matl, creators, d_myworld)){
-	  cout << "Failure finding " << *req << " for " 
-	       << task->getTask()->getName() << "\n"; 
-	  SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
-	}
+	ct.findReductionComps(req, 0, matl, creators, d_myworld);
+        // if the size is 0, that's fine.  It means that there are more procs than patches on this level,
+        // so the reducer will pick a benign value that won't affect the reduction
+
         ASSERTRANGE(task->getAssignedResourceIndex(), 0, d_myworld->size());
         for (unsigned i = 0; i < creators.size(); i++) {
           DetailedTask* creator = creators[i];
