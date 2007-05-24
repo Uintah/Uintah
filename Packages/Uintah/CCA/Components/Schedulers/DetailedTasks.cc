@@ -808,7 +808,7 @@ operator<<(ostream& out, const DetailedTask& task)
     // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
     if (task.getTask()->getType() == Task::OncePerProc)
       out << ", on multiple levels";
-    else
+    else if (patches->size() > 1)
       out << ", Level " << getLevel(patches)->getIndex();
   }
   const MaterialSubset* matls = task.getMaterials();
