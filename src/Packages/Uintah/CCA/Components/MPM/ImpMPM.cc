@@ -630,7 +630,7 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                                                                 
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleApplyExternalLoads\t\t");
-  Task* t=scinew Task("MPM::applyExternalLoads",
+  Task* t=scinew Task("IMPM::applyExternalLoads",
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -779,7 +779,6 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
                                   const MaterialSet* matls)
 {
   printSchedule(patches,cout_doing,"IMPM::scheduleCreateMatrix\t\t");
-  heatConductionModel->scheduleDestroyHCMatrix(sched,patches,matls);
   Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
@@ -2102,7 +2101,7 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
                            bool recursion)
 {
   if (cout_doing.active())
-    cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
+    cout_doing <<"Doing destroyMatrix \t\t\t\t IMPM"  << "\n" << "\n";
 
   d_solver->destroyMatrix(recursion);
 }
