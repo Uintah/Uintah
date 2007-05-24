@@ -1,4 +1,4 @@
-/*
+smpic/*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -34,7 +34,7 @@
    causes problems, so we turn it off too. This prevents it from being included (from mpi.h).
    We don't use it anyway. */
 #define MPIPP_H
-#define MPICH_SKIP_MPICXX
+#define MPICH_SKIP_MPICXX 1
 
 @DEF_MPI@
 @DEF_MPI_UNI@
