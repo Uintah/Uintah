@@ -7293,7 +7293,7 @@ echo $ECHO_N "checking for \`basename $CXX\` version 7.4... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -7356,7 +7356,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 7.3.1.1... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -7415,7 +7415,7 @@ echo $ECHO_N "checking for \`basename $CXX\` version 7.3.1.1... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -7475,7 +7475,7 @@ echo $ECHO_N "checking for \`basename $F77\` version 7.3.1.1... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -7581,7 +7581,7 @@ echo $ECHO_N "checking for \`basename $AS\` version 7.3.1.1... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -7833,7 +7833,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 4.0.0... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -8013,7 +8013,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 2.95.3... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -8072,7 +8072,7 @@ echo $ECHO_N "checking for \`basename $CXX\` version 2.95.3... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -8675,7 +8675,7 @@ echo $ECHO_N "checking for \`basename $F77\` version 0.5.25... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -8805,7 +8805,7 @@ echo $ECHO_N "checking for \`basename $CC\` version 2.95.3... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -8866,7 +8866,7 @@ echo $ECHO_N "checking for \`basename $F77\` version 0.5.25... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -8926,7 +8926,7 @@ echo $ECHO_N "checking for \`basename $CXX\` version 2.95.3... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -9849,7 +9849,7 @@ echo $ECHO_N "checking for \`basename $MAKE\` version 3.78.1... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -21544,16 +21544,29 @@ CORRECT_ITCL_VERSION=no
 
 # if we don't have the tcl/tkConfig.sh files, we can grab the version number from the header file
 if ! test -f "$_sci_lib/tclConfig.sh"; then
-  TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
-  TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
-  TCL_PREFIX=$sci_thirdparty_dir
+   if test -f $sci_thirdparty_include/tcl.h; then
+      TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+      TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
+      TCL_PREFIX=$sci_thirdparty_dir
+   else
+      SKIP_TCL_TK_VERSION_COMPARE=true
+      { echo "$as_me:$LINENO: WARNING: tcl.h not found..." >&5
+echo "$as_me: WARNING: tcl.h not found..." >&2;}
+   fi
 fi
 
 if ! test -f "$_sci_lib/tkConfig.sh"; then
-  TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
-  TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+   if test -f $sci_thirdparty_include/tk.h; then
+      TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+      TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+   else
+      SKIP_TCL_TK_VERSION_COMPARE=true
+      { echo "$as_me:$LINENO: WARNING: tk.h not found..." >&5
+echo "$as_me: WARNING: tk.h not found..." >&2;}
+   fi
 fi
 
+if test "$SKIP_TCL_TK_VERSION_COMPARE" != "true"; then
 
     ##  SCI_CHECK_VAR_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
@@ -21595,7 +21608,7 @@ echo $ECHO_N "checking for Tcl version 8.3.2... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -21654,7 +21667,7 @@ echo $ECHO_N "checking for Tk version 8.3.2... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -21713,7 +21726,7 @@ echo $ECHO_N "checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL..
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -21731,6 +21744,11 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
       eval $_SCI_NOTCORRECT_
     fi
 
+else
+   TCL_PREFIX="Tcl/tk not found..."
+   TCL_VERSION=
+   TK_VERSION=
+fi
 
 
 
@@ -47506,13 +47524,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 # depends upon petsc - also check for mpi-uni as it most often exists in the
 # same directory
 
-# We only use the optimized petsc lib even if we are building a debug SCIRun
-#if test "$debug" = "yes"; then
-#  PETSC_SUB=libg
-#else
-  PETSC_SUB=libO
-#fi
-PETSC_VERSION_DIR=petsc-2.2.1
+PETSC_VERSION_DIR=petsc-2.3.2
 
 if test -z "$PETSC_ARCH"; then
 case $host in
@@ -47601,6 +47613,14 @@ echo "$as_me: error: You must specify a directory with the --with-mpiuni=dir." >
    { (exit 1); exit 1; }; }
   echo
 elif test "$with_unipetsc"; then
+
+  echo
+  # To fix this, just do the same thing as below for the full petsc.
+  { { echo "$as_me:$LINENO: error: FIX ME... configure for mpiuni is broken... need to handle the PETSC_SUB correctly." >&5
+echo "$as_me: error: FIX ME... configure for mpiuni is broken... need to handle the PETSC_SUB correctly." >&2;}
+   { (exit 1); exit 1; }; }
+  echo
+
   _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
   if test ! -d "$_sci_lib" || test ! -d "$with_unipetsc/include/mpiuni" ||
      test ! -d "$with_unipetsc/bmake/$PETSC_ARCH" ; then
@@ -48673,8 +48693,19 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       break
     fi
 
+    PETSC_SUB=lib/libO
+
     if test "$with_petsc"; then
-      _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$petsc_arch"
+
+      ####################################################
+      # The newer (2.3+) versions of petsc don't use the libO anymore...
+      have23=`echo "$with_petsc" | grep "2.3."`
+      if test "$have23"; then
+         PETSC_SUB=lib
+      fi
+      ####################################################
+
+      _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
       _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
     else
       # Modify _sci_dirs to have correct path information:
@@ -48684,11 +48715,11 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
         fi
 
         #this is where the lib actually lives
-        if test ! -d "$i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$petsc_arch"; then
+        if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
           continue
         fi
 
-        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$petsc_arch"
+        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
         _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
       done
     fi
@@ -49718,7 +49749,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
     _sci_inc=""
 
     if test "$with_unipetsc"; then
-      _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+      _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
@@ -51892,7 +51923,7 @@ echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.99.0... $ECHO_C" >&
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -61855,7 +61886,7 @@ echo $ECHO_N "checking for \`basename $WX_CONFIG\` version 2.6... $ECHO_C" >&6
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -68075,17 +68106,17 @@ echo "$as_me: WARNING: $file has changed." >&2;}
 
     # Because the make system isn't smart enough to notice when a new
     # petsc or hypre is specified to configure, these checks help clean up the code.
-    # The "-d Packages" is used to skip these checks if this is the first time
+    # The "-d StandAlone" is used to skip these checks if this is the first time
     # we have run configure.
 
-    if test -d Packages -a "$file" = "include/sci_defs/petsc_defs.h"; then
+    if test -d StandAlone -a "$file" = "include/sci_defs/petsc_defs.h"; then
        echo "WARNING: petsc dependent .o files are probably out of date... removing..."
-       ../src/scripts/repair.sh -quiet petsc
+       $path_to_src/scripts/repair.sh -quiet petsc
     fi
 
-    if test -d Packages -a "$file" = "include/sci_defs/hypre_defs.h"; then
+    if test -d StandAlone -a "$file" = "include/sci_defs/hypre_defs.h"; then
        echo "WARNING: hypre dependent .o files are probably out of date... removing..."
-       ../src/scripts/repair.sh -quiet hypre
+       $path_to_src/scripts/repair.sh -quiet hypre
     fi
 
   fi

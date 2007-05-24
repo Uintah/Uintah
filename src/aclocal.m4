@@ -751,7 +751,7 @@ AC_DEFUN(SCI_CHECK_VERSION,
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[[0-9]]*[[a-z]]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then
@@ -928,7 +928,7 @@ AC_DEFUN(SCI_CHECK_VAR_VERSION,
       _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
       _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[[0-9]]*[[a-z]]*%%g'`
       _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[[0-9]]*[[a-z]]*\.%%'`
-      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+      if test "$_CUR_2_" $_SCI_COMP_ "$_CUR_1_"; then
         _SCI_BIGGER_=no
         break
       elif test $_CUR_1_ -gt $_CUR_2_; then

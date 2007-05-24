@@ -2484,21 +2484,37 @@ CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
 
 # if we don't have the tcl/tkConfig.sh files, we can grab the version number from the header file
-if ! test -f "$_sci_lib/tclConfig.sh"; then 
-  TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
-  TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
-  TCL_PREFIX=$sci_thirdparty_dir
+if ! test -f "$_sci_lib/tclConfig.sh"; then
+   if test -f $sci_thirdparty_include/tcl.h; then
+      TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+      TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
+      TCL_PREFIX=$sci_thirdparty_dir
+   else
+      SKIP_TCL_TK_VERSION_COMPARE=true
+      AC_MSG_WARN(tcl.h not found...)
+   fi
 fi
 
 if ! test -f "$_sci_lib/tkConfig.sh"; then 
-  TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
-  TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+   if test -f $sci_thirdparty_include/tk.h; then
+      TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+      TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+   else
+      SKIP_TCL_TK_VERSION_COMPARE=true
+      AC_MSG_WARN(tk.h not found...)
+   fi
 fi
 
-SCI_CHECK_VAR_VERSION(Tcl,$TCL_VERSION$TCL_PATCH_LEVEL,8.3.2,,continue)
-SCI_CHECK_VAR_VERSION(Tk,$TK_VERSION$TK_PATCH_LEVEL,8.3.2,,continue)
-SCI_CHECK_VAR_VERSION(equal Tcl and Tk, $TCL_VERSION$TCL_PATCH_LEVEL,
-                      $TK_VERSION$TK_PATCH_LEVEL,,continue,-ne)
+if test "$SKIP_TCL_TK_VERSION_COMPARE" != "true"; then 
+   SCI_CHECK_VAR_VERSION(Tcl,$TCL_VERSION$TCL_PATCH_LEVEL,8.3.2,,continue)
+   SCI_CHECK_VAR_VERSION(Tk,$TK_VERSION$TK_PATCH_LEVEL,8.3.2,,continue)
+   SCI_CHECK_VAR_VERSION(equal Tcl and Tk, $TCL_VERSION$TCL_PATCH_LEVEL,
+                         $TK_VERSION$TK_PATCH_LEVEL,,continue,-ne)
+else
+   TCL_PREFIX="Tcl/tk not found..."
+   TCL_VERSION=
+   TK_VERSION=
+fi
 
 AC_SUBST(TCL_PREFIX)
 AC_SUBST(TCL_VERSION)
@@ -3654,13 +3670,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 # depends upon petsc - also check for mpi-uni as it most often exists in the 
 # same directory
 
-# We only use the optimized petsc lib even if we are building a debug SCIRun
-#if test "$debug" = "yes"; then
-#  PETSC_SUB=libg
-#else
-  PETSC_SUB=libO
-#fi
-PETSC_VERSION_DIR=petsc-2.2.1
+PETSC_VERSION_DIR=petsc-2.3.2
 
 if test -z "$PETSC_ARCH"; then
 case $host in
@@ -3717,6 +3727,12 @@ if test "$with_mpiuni" = "yes"; then
   AC_MSG_ERROR(You must specify a directory with the --with-mpiuni=dir.)
   echo
 elif test "$with_unipetsc"; then
+
+  echo
+  # To fix this, just do the same thing as below for the full petsc.
+  AC_MSG_ERROR(FIX ME... configure for mpiuni is broken... need to handle the PETSC_SUB correctly.)
+  echo
+
   _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
   if test ! -d "$_sci_lib" || test ! -d "$with_unipetsc/include/mpiuni" ||
      test ! -d "$with_unipetsc/bmake/$PETSC_ARCH" ; then
@@ -3788,8 +3804,19 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       break
     fi
 
+    PETSC_SUB=lib/libO
+
     if test "$with_petsc"; then
-      _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$petsc_arch"
+
+      ####################################################
+      # The newer (2.3+) versions of petsc don't use the libO anymore...
+      have23=`echo "$with_petsc" | grep "2.3."`
+      if test "$have23"; then
+         PETSC_SUB=lib
+      fi
+      ####################################################
+
+      _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
       _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
     else
       # Modify _sci_dirs to have correct path information:
@@ -3799,11 +3826,11 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
         fi
   
         #this is where the lib actually lives
-        if test ! -d "$i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$petsc_arch"; then
+        if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
           continue
         fi
   
-        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/lib/$PETSC_SUB/$petsc_arch"
+        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
         _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
       done  
     fi
@@ -3857,7 +3884,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     _sci_inc=""
 
     if test "$with_unipetsc"; then
-      _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+      _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
@@ -5684,17 +5711,17 @@ for testfile in $sci_defs_files; do
 
     # Because the make system isn't smart enough to notice when a new
     # petsc or hypre is specified to configure, these checks help clean up the code.
-    # The "-d Packages" is used to skip these checks if this is the first time
+    # The "-d StandAlone" is used to skip these checks if this is the first time
     # we have run configure.
 
-    if test -d Packages -a "$file" = "include/sci_defs/petsc_defs.h"; then
+    if test -d StandAlone -a "$file" = "include/sci_defs/petsc_defs.h"; then
        echo "WARNING: petsc dependent .o files are probably out of date... removing..."
-       ../src/scripts/repair.sh -quiet petsc
+       $path_to_src/scripts/repair.sh -quiet petsc
     fi
 
-    if test -d Packages -a "$file" = "include/sci_defs/hypre_defs.h"; then
+    if test -d StandAlone -a "$file" = "include/sci_defs/hypre_defs.h"; then
        echo "WARNING: hypre dependent .o files are probably out of date... removing..."
-       ../src/scripts/repair.sh -quiet hypre
+       $path_to_src/scripts/repair.sh -quiet hypre
     fi
 
   fi
