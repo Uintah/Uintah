@@ -332,9 +332,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
      
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
-
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
@@ -360,7 +357,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // model
       // For RigidMPM, this isn't done
 
-      const Level* lvl = patch->getLevel();
       double Cp=mpm_matl->getSpecificHeat();
 
       // Loop over particles
@@ -413,6 +409,12 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pColor_new.copyData(pColor);
       }    
 
+      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
+                                                     false,dwi,patch, 0);
+#if 0
+
+      const Level* lvl = patch->getLevel();
+      // BJW - Relocate deletes particles in extra cells
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
       if(flags->d_8or27==27){
@@ -426,6 +428,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
         }
       }
+#endif
       new_dw->deleteParticles(delset);      
     }
 

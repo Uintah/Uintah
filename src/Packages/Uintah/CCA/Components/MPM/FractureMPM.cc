@@ -3026,19 +3026,14 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	CMV += pvelocitynew[idx]*pmass[idx];
       }
 
-      // Delete particles that have left the domain
-      // This is only needed if extra cells are being used.
-      // Also delete particles whose mass is too small (due to combustion)
+      // Delete particles whose mass is too small (due to combustion)
       // For particles whose new velocity exceeds a maximum set in the input
       // file, set their velocity back to the velocity that it came into
       // this step with
       for(ParticleSubset::iterator iter  = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
-        bool pointInAny = lvl->containsPoint(pxnew[idx]);
-        if((!pointInReal && pointInAny)
-           || (pmassNew[idx] <= flags->d_min_part_mass)){
+        if(pmassNew[idx] <= flags->d_min_part_mass){
           delset->addParticle(idx);
         }
         if(pvelocitynew[idx].length() > flags->d_max_vel){
