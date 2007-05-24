@@ -46,7 +46,6 @@ ifeq ($(IS_AIX),yes)
         $(ICE_LIB)                                       \
         $(MPMICE_LIB)                                    \
         Packages/Uintah/CCA/Components/PatchCombiner     \
-        $(DUMMY_LIB)                                     \
         $(ARCHES_SUB_LIBS)
 endif
 
