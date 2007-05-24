@@ -1213,7 +1213,6 @@ void ImpMPM::scheduleRefine(const PatchSet* patches,
 
   t->computes(lb->NC_CCweightLabel, one_matl);
 
-
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
   Level* level = const_cast<Level*>(getLevel(patches));
@@ -3676,6 +3675,22 @@ void ImpMPM::refine(const ProcessorGroup*,
                                                                                 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);
+      }
+    }
+    //__________________________________
+    // - Initialize NC_CCweight = 0.125
+    // - Find the walls with symmetry BC and double NC_CCweight
+    NCVariable<double> NC_CCweight;
+    new_dw->allocateAndPut(NC_CCweight, lb->NC_CCweightLabel,    0, patch);
+    NC_CCweight.initialize(0.125);
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+      int mat_id = 0;
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+                                                  !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+        }
       }
     }
   }
