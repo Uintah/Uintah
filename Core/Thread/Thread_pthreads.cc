@@ -43,20 +43,31 @@
 #include <sci_defs/bits_defs.h>
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+#  define _GNU_SOURCE
 #endif
 
 #define __USE_UNIX98
 #include <pthread.h>
 #ifndef PTHREAD_MUTEX_RECURSIVE
-#define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
+#  define PTHREAD_MUTEX_RECURSIVE PTHREAD_MUTEX_RECURSIVE_NP
 #endif
+
+//////////////////////////////////////////////////////
+// begin: Danger Will Robinson! Danger Will Robinson!
+
 #define private public
 #define protected public
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h> // So ConditionVariable can get to Mutex::priv_
+
 #undef private
 #undef protected
+
+// end: Danger Will Robinson! Danger Will Robinson!
+//////////////////////////////////////////////////////
+
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Barrier.h>
@@ -80,8 +91,8 @@ extern "C" {
 #include <fstream>
 #include <string>
 #ifdef __APPLE__
-#include <sys/types.h>
-#include <sys/sysctl.h>
+#  include <sys/types.h>
+#  include <sys/sysctl.h>
 #endif
 
 #include <TauProfilerForSCIRun.h>
