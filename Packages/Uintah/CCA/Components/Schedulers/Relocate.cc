@@ -647,7 +647,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             // do nothing - what we wanted was to set toPatch, and we'll add that to a scatterRecord
             prevToRefinePatch = toPatch;
           }
-          else if(patch->getBox().contains(px[idx])){
+          else if(patch->containsPointInRealCells(px[idx])){
             // is particle going to a finer patch?  Note, a particle does not have to leave the current patch
             // to go to a finer patch
             keepset->addParticle(idx);
