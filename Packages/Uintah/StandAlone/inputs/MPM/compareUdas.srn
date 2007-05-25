@@ -1,68 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.3" name="{Main}" bbox="{0 7 1081 779}" creationDate="{Wed May 23 2007}" creationTime="{10:28:47}" geometry="{944x1170+60+142}">
+<network version="v1.25.3" name="{Main}" bbox="{5 0 809 601}" creationDate="{Wed May 23 2007}" creationTime="{10:49:00}" geometry="{807x1158+0+0}">
   <note>{}</note>
   <modules>
     <module id="m1" package="Uintah" category="DataIO" name="ArchiveReader">
-      <position x="1" y="7"/>
-      <var name="tcl_status" val="{Executing}"/>
-      <var name="ui_geometry" val="{697x79+33+658}"/>
+      <position x="8" y="2"/>
     </module>
-    <module id="m2" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
-      <position x="75" y="382"/>
-      <var name="minVal" val="{0}"/>
-      <var name="maxVal" val="{4.57370281219e-06}"/>
-      <var name="scaleMode" val="{fixed}"/>
-      <var name="ui_geometry" val="{390x113+206+707}"/>
+    <module id="m2" package="Uintah" category="Selectors" name="TimestepSelector">
+      <position x="7" y="89"/>
+      <var name="timeposition_x" val="{-0.724489795918}"/>
+      <var name="timeposition_y" val="{0.887755102041}"/>
+      <var name="ui_geometry" val="{499x256+19+375}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
-      <position x="281" y="33"/>
+    <module id="m3" package="Uintah" category="DataIO" name="ArchiveReader">
+      <position x="439" y="0"/>
+    </module>
+    <module id="m4" package="Uintah" category="Selectors" name="TimestepSelector">
+      <position x="441" y="94"/>
+      <var name="timeposition_x" val="{0.602040816327}"/>
+      <var name="timeposition_y" val="{0.908163265306}"/>
+      <var name="ui_geometry" val="{499x256+392+385}"/>
+    </module>
+    <module id="m5" package="Uintah" category="Visualization" name="ParticleVis">
+      <position x="5" y="407"/>
+    </module>
+    <module id="m6" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
+      <position x="5" y="190"/>
+      <var name="tcl_status" val="{Calling ParticleFieldExtractor!}"/>
+    </module>
+    <module id="m7" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
+      <position x="219" y="25"/>
       <var name="mapName" val="{Rainbow}"/>
       <var name="gamma" val="{0.0}"/>
-      <var name="resolution" val="{255}"/>
+      <var name="resolution" val="{256}"/>
       <var name="reverse" val="{0}"/>
       <var name="faux" val="{0}"/>
-      <var name="positionList" val="{{0 39} {4 22}}"/>
-      <var name="nodeList" val="{770 3476}"/>
-      <var name="width" val="{696}"/>
-      <var name="height" val="{40}"/>
-      <var name="ui_geometry" val="{708x845+232+325}"/>
+      <var name="positionList" val="{}"/>
+      <var name="nodeList" val="{}"/>
+      <var name="width" val="{1}"/>
+      <var name="height" val="{1}"/>
     </module>
-    <module id="m4" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
-      <position x="2" y="290"/>
+    <module id="m8" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
+      <position x="48" y="299"/>
+    </module>
+    <module id="m9" package="SCIRun" category="Visualization" name="ShowColorMap">
+      <position x="207" y="408"/>
+      <var name="length" val="{half1}"/>
+      <var name="side" val="{left}"/>
+      <var name="numlabels" val="{5}"/>
+      <var name="scale" val="{1.0}"/>
+      <var name="numsigdigits" val="{5}"/>
+      <var name="units" val="{}"/>
+      <var name="text_color" val="{1}"/>
+      <var name="text-fontsize" val="{1}"/>
+      <var name="extra-padding" val="{0}"/>
+      <var name="ui_geometry" val="{314x343+164+698}"/>
+    </module>
+    <module id="m10" package="SCIRun" category="Render" name="Viewer">
+      <position x="267" y="557"/>
+    </module>
+    <module id="m11" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
+      <position x="440" y="184"/>
       <var name="tcl_status" val="{Calling ParticleFieldExtractor!}"/>
-      <var name="level" val="{2}"/>
-      <var name="psVar" val="{p.mass}"/>
-      <var name="pvVar" val="{p.velocity}"/>
-      <var name="pNMaterials" val="{}"/>
-      <var name="ui_geometry" val="{344x249+468+355}"/>
     </module>
-    <module id="m5" package="Uintah" category="Selectors" name="TimestepSelector" gui_visible="yes">
-      <position x="0" y="87"/>
-      <var name="tcl_status" val="{Done}"/>
-      <var name="max_time" val="{157}"/>
-      <var name="timeval" val="{0.00155002011778}"/>
-      <var name="def-color-a" val="{}"/>
-      <var name="timeposition_x" val="{-0.478550603914}"/>
-      <var name="timeposition_y" val="{0.885464389838}"/>
-      <var name="ui_geometry" val="{499x274+1091+477}"/>
+    <module id="m12" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
+      <position x="465" y="294"/>
     </module>
-    <module id="m6" package="SCIRun" category="Render" name="Viewer">
-      <position x="0" y="735"/>
+    <module id="m13" package="Uintah" category="Visualization" name="ParticleVis">
+      <position x="440" y="401"/>
     </module>
-    <module id="m7" package="Uintah" category="Visualization" name="ParticleVis">
-      <position x="1" y="479"/>
-      <var name="max_" val="{1.07479095459e-06}"/>
-      <var name="isFixed" val="{1}"/>
-      <var name="radius" val="{0.00101}"/>
-      <var name="auto_radius" val="{0}"/>
-      <var name="min_crop_length" val="{0.0}"/>
-      <var name="max_crop_length" val="{0.0}"/>
-      <var name="drawspheres" val="{1}"/>
-      <var name="ui_geometry" val="{394x583+22+55}"/>
+    <module id="m14" package="SCIRun" category="Math" name="BuildTransform">
+      <position x="644" y="0"/>
     </module>
-    <module id="m8" package="SCIRun" category="Visualization" name="ShowColorMap">
-      <position x="58" y="610"/>
+    <module id="m15" package="SCIRun" category="Visualization" name="ShowColorMap">
+      <position x="624" y="399"/>
       <var name="length" val="{half2}"/>
       <var name="side" val="{left}"/>
       <var name="numlabels" val="{5}"/>
@@ -72,96 +83,30 @@
       <var name="text_color" val="{1}"/>
       <var name="text-fontsize" val="{1}"/>
       <var name="extra-padding" val="{0}"/>
-      <var name="ui_geometry" val="{314x340+424+634}"/>
-    </module>
-    <module id="m9" package="Uintah" category="Visualization" name="PatchVisualizer">
-      <position x="341" y="383"/>
-      <var name="level1_color_scheme" val="{random}"/>
-      <var name="level2_color_scheme" val="{random}"/>
-      <var name="nl" val="{3}"/>
-      <var name="ui_geometry" val="{640x221+466+646}"/>
-    </module>
-    <module id="m10" package="Uintah" category="DataIO" name="ArchiveReader">
-      <position x="575" y="13"/>
-      <var name="tcl_status" val="{Executing}"/>
-      <var name="ui_geometry" val="{414x79+584+442}"/>
-    </module>
-    <module id="m11" package="Uintah" category="Selectors" name="TimestepSelector" gui_visible="yes">
-      <position x="579" y="105"/>
-      <var name="tcl_status" val="{Done}"/>
-      <var name="max_time" val="{162}"/>
-      <var name="timeval" val="{0.00161000732589}"/>
-      <var name="timeposition_x" val="{0.377551020408}"/>
-      <var name="timeposition_y" val="{0.867346938776}"/>
-      <var name="ui_geometry" val="{499x274+1091+173}"/>
-    </module>
-    <module id="m12" package="Uintah" category="Selectors" name="ParticleFieldExtractor">
-      <position x="582" y="283"/>
-      <var name="tcl_status" val="{Calling ParticleFieldExtractor!}"/>
-      <var name="level" val="{2}"/>
-      <var name="psVar" val="{p.mass}"/>
-      <var name="pvVar" val="{p.velocity}"/>
-      <var name="ui_geometry" val="{314x229+264+365}"/>
-    </module>
-    <module id="m13" package="Uintah" category="Visualization" name="RescaleColorMapForParticles">
-      <position x="649" y="373"/>
-      <var name="minVal" val="{0}"/>
-      <var name="maxVal" val="{4.57370281219e-06}"/>
-      <var name="scaleMode" val="{fixed}"/>
-      <var name="ui_geometry" val="{390x113+452+979}"/>
-    </module>
-    <module id="m14" package="Uintah" category="Visualization" name="ParticleVis">
-      <position x="582" y="467"/>
-      <var name="max_" val="{1.07479095459e-06}"/>
-      <var name="isFixed" val="{1}"/>
-      <var name="radius" val="{0.001}"/>
-      <var name="auto_radius" val="{0}"/>
-      <var name="min_crop_length" val="{0.0}"/>
-      <var name="max_crop_length" val="{0.0}"/>
-      <var name="drawspheres" val="{1}"/>
-      <var name="ui_geometry" val="{394x583+430+43}"/>
-    </module>
-    <module id="m15" package="Uintah" category="Visualization" name="PatchVisualizer">
-      <position x="916" y="371"/>
-      <var name="nl" val="{3}"/>
-    </module>
-    <module id="m16" package="SCIRun" category="Math" name="BuildTransform">
-      <position x="860" y="18"/>
-      <var name="rotate_z" val="{1.0}"/>
-      <var name="translate_x" val="{0.3781}"/>
-      <var name="translate_y" val="{0.0}"/>
-      <var name="translate_z" val="{0.0}"/>
-      <var name="shear_plane_c" val="{1.0}"/>
-      <var name="shear_plane_d" val="{1.0}"/>
-      <var name="ui_geometry" val="{419x405+281+298}"/>
+      <var name="ui_geometry" val="{314x343+578+691}"/>
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m5" toport="0"/>
-    <connection id="c2" from="m10" fromport="0" to="m11" toport="0"/>
-    <connection id="c3" from="m4" fromport="0" to="m7" toport="0"/>
-    <connection id="c4" from="m4" fromport="0" to="m2" toport="0"/>
-    <connection id="c5" from="m12" fromport="0" to="m14" toport="0"/>
-    <connection id="c6" from="m12" fromport="0" to="m13" toport="0"/>
-    <connection id="c7" from="m5" fromport="0" to="m4" toport="0"/>
-    <connection id="c8" from="m5" fromport="0" to="m9" toport="0"/>
-    <connection id="c9" from="m5" fromport="1" to="m6" toport="0"/>
-    <connection id="c10" from="m11" fromport="0" to="m12" toport="0"/>
-    <connection id="c11" from="m11" fromport="0" to="m15" toport="0"/>
-    <connection id="c12" from="m2" fromport="0" to="m8" toport="0"/>
-    <connection id="c13" from="m3" fromport="0" to="m9" toport="1"/>
-    <connection id="c14" from="m3" fromport="0" to="m2" toport="1"/>
-    <connection id="c15" from="m3" fromport="0" to="m13" toport="1"/>
-    <connection id="c16" from="m4" fromport="0" to="m7" toport="1"/>
-    <connection id="c17" from="m12" fromport="0" to="m14" toport="1"/>
-    <connection id="c18" from="m7" fromport="0" to="m6" toport="1"/>
-    <connection id="c19" from="m8" fromport="0" to="m6" toport="2"/>
-    <connection id="c20" from="m9" fromport="0" to="m6" toport="3"/>
-    <connection id="c21" from="m14" fromport="0" to="m6" toport="4"/>
-    <connection id="c22" from="m2" fromport="0" to="m7" toport="4"/>
-    <connection id="c23" from="m13" fromport="0" to="m14" toport="4"/>
-    <connection id="c24" from="m16" fromport="0" to="m14" toport="5"/>
-    <connection id="c25" from="m15" fromport="0" to="m6" toport="5"/>
-    <connection id="c26" from="m11" fromport="1" to="m6" toport="6"/>
+    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
+    <connection id="c2" from="m3" fromport="0" to="m4" toport="0"/>
+    <connection id="c3" from="m6" fromport="0" to="m5" toport="0"/>
+    <connection id="c4" from="m6" fromport="0" to="m8" toport="0"/>
+    <connection id="c5" from="m11" fromport="0" to="m13" toport="0"/>
+    <connection id="c6" from="m11" fromport="0" to="m12" toport="0"/>
+    <connection id="c7" from="m2" fromport="0" to="m6" toport="0"/>
+    <connection id="c8" from="m2" fromport="1" to="m10" toport="0"/>
+    <connection id="c9" from="m4" fromport="0" to="m11" toport="0"/>
+    <connection id="c10" from="m8" fromport="0" to="m9" toport="0"/>
+    <connection id="c11" from="m12" fromport="0" to="m15" toport="0"/>
+    <connection id="c12" from="m7" fromport="0" to="m8" toport="1"/>
+    <connection id="c13" from="m7" fromport="0" to="m12" toport="1"/>
+    <connection id="c14" from="m5" fromport="0" to="m10" toport="1"/>
+    <connection id="c15" from="m9" fromport="0" to="m10" toport="2"/>
+    <connection id="c16" from="m4" fromport="1" to="m10" toport="3"/>
+    <connection id="c17" from="m13" fromport="0" to="m10" toport="4"/>
+    <connection id="c18" from="m8" fromport="0" to="m5" toport="4"/>
+    <connection id="c19" from="m12" fromport="0" to="m13" toport="4"/>
+    <connection id="c20" from="m14" fromport="0" to="m13" toport="5"/>
+    <connection id="c21" from="m15" fromport="0" to="m10" toport="5"/>
   </connections>
 </network>
