@@ -77,13 +77,15 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	global $this-psVar;
 	global $this-pvVar;
 	global $this-ptVar;
-	global $this-pNMaterials;
+	global $this-pNMaterials
 	global $this-level
+        global $this-onMaterials
 	set $this-psVar ""
 	set $this-pvVar ""
 	set $this-ptVar ""
 	set $this-pName ""
 	set $this-level 0
+        set $this-onMaterials ""
         set $this-button_push 0
 
 	# selection stuff
@@ -270,10 +272,23 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	}
     }
 
+    method materialButton { b } {
+        if { [isOn p$b] } {
+            if { [lsearch [set $this-onMaterials] $b] == -1 } {
+                lappend $this-onMaterials $b
+            }
+        } else {
+            set i [lsearch [set $this-onMaterials] $b]
+            if { $i != -1 } {
+                set $this-onMaterials [lreplace [set $this-onMaterials] $i $i]
+            }
+        }
+        $this-c needexecute
+    }
+    
     method buildPMaterials { ns } {
 	set parent $pf
 	set buttontype checkbutton
-	set c "$this-c needexecute"
 
 	frame $parent.m -relief flat -borderwidth 2
 	pack $parent.m -side top
@@ -284,17 +299,30 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	
 	set selected 0;
 	for {set i 0} { $i < $ns} {incr i} {
+
 	    $buttontype $parent.m.m.p$i -text $i \
-		-offvalue 0 -onvalue 1 -command $c \
+		-offvalue 0 -onvalue 1 -command "$this materialButton $i" \
 		-variable $this-p$i
 	    pack $parent.m.m.p$i -side left
 	    #puts [$parent.m.p$i configure -variable]
+
 	    if { [isOn p$i] } {
-		set selected 1;
-	    }
-	}
+		set selected 1
+	    } else {
+                set j [lsearch [set $this-onMaterials] $i]
+                if { $j != -1 } {
+                    $parent.m.m.p$i select
+                    set selected 1
+                }
+            }
+        }
 	
-	if { !$selected } { $parent.m.m.p0 select }
+        if { !$selected } { 
+            $parent.m.m.p0 select 
+            if { [llength [set $this-onMaterials]] == 0 } {
+                lappend $this-onMaterials 0
+            }
+        }
 	set num_materials $ns
     }
 
