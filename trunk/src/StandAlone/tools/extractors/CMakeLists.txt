@@ -1,0 +1,7 @@
+ADD_EXECUTABLE(timeextract timeextract.cc)
+ADD_EXECUTABLE(lineextract lineextract.cc)
+ADD_EXECUTABLE(partextract partextract.cc)
+ADD_EXECUTABLE(faceextract faceextract.cc)
+ADD_EXECUTABLE(extractF extractF.cc)
+ADD_EXECUTABLE(extractV extractV.cc)
+ADD_EXECUTABLE(extractX extractS.cc)
