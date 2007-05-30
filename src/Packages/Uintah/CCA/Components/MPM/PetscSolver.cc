@@ -3,6 +3,7 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>
 
+#include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/Core/Exceptions/PetscError.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -98,6 +99,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 					   const PatchSubset* patches,
                                            const int DOFsPerNode)
 {
+  TAU_PROFILE("MPMPetscSolver::createLocalToGlobalMapping", " ", TAU_USER);
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
@@ -171,6 +173,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::solve(vector<double>& guess)
 {
+  TAU_PROFILE("MPMPetscSolver::solve", " ", TAU_USER);
   PC          precond;           
   KSP         solver;
 #if 0
@@ -217,6 +220,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 				  const map<int,int>& dof_diag)
 {
+  TAU_PROFILE("MPMPetscSolver::createMatrix", " ", TAU_USER);
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
 
@@ -324,6 +328,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::destroyMatrix(bool recursion)
 {
+  TAU_PROFILE("MPMPetscSolver::destroyMatrix", " ", TAU_USER);
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
@@ -425,6 +430,7 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 
 void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
+  TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
   IS is;
   int* indices;
   int in = 0;
@@ -488,6 +494,7 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
 void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 {
+  TAU_PROFILE("MPMPetscSolver::removeFixedDOFHEAT", " ", TAU_USER);
   finalizeMatrix();
   assembleFluxVector();
 
