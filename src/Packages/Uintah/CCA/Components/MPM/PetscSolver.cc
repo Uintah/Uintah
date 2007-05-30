@@ -206,7 +206,10 @@ void MPMPetscSolver::solve(vector<double>& guess)
     }
 
   }
+  TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
+  TAU_PROFILE_START(solve);
   KSPSolve(solver,d_B,d_x);
+  TAU_PROFILE_STOP(solve);
 #ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
