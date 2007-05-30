@@ -2113,6 +2113,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
                           DataWarehouse* new_dw)
 {
   map<int,int> dof_diag;
+  d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     if (cout_doing.active()) {
@@ -2120,7 +2121,6 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 		 << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
 
-    d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
     
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
@@ -2155,7 +2155,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
           int l2g_node_num;
           for (int k = 0; k < 8; k++) {
             if (patch->containsNode(ni[k]) ) {
-              l2g_node_num = l2g[ni[k]] - l2g[lowIndex];
+              l2g_node_num = l2g[ni[k]];
               dof.push_back(l2g_node_num);
               dof.push_back(l2g_node_num+1);
               dof.push_back(l2g_node_num+2);
