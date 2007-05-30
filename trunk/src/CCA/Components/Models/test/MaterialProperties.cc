@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/MaterialProperties.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Models/test/MaterialProperties.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
 

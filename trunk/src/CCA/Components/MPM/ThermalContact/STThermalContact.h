@@ -1,15 +1,15 @@
 #ifndef __STThermalContact__
 #define __STThermalContact__
 
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
+#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MinMax.h>
 #include <math.h>
 
 namespace Uintah {

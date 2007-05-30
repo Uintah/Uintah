@@ -36,15 +36,15 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
 #ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/Filter.h>
 #endif
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -156,6 +156,10 @@ public:
 	return d_H_air;
       }
 
+      inline double getCarbonContent(double f) const{
+	return d_carbon_fuel*f+d_carbon_air*(1.0-f);
+      }
+
 protected :
 
 private:
@@ -259,11 +263,11 @@ private:
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
-      double d_sootFactor;
       bool d_3d_periodic;
       bool d_inverse_density_average;
       double d_H_air;
       bool d_tabulated_soot;
+      double d_f_stoich, d_carbon_fuel, d_carbon_air;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif

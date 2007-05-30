@@ -31,8 +31,8 @@ WARNING
    * This interface is written for Hypre 1.9.0b (released 2005).
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
   class AMRSolver :

@@ -7,22 +7,22 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
-#include <Packages/Uintah/Core/Grid/AMR.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <CCA/Components/Solvers/HypreDriverSStruct.h>
+#include <CCA/Components/Solvers/MatrixUtil.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 #include <iomanip>
 #include <iostream>

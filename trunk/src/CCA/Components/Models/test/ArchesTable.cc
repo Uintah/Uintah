@@ -1,12 +1,12 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Thread/Time.h>
+#include <CCA/Components/Models/test/ArchesTable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Thread/Time.h>
 #include <iostream>
 #include <fstream>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 #define MAXINDEPENDENTS 100
 

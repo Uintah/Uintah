@@ -1,5 +1,5 @@
 // Implementation of TangentModulusTensor
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
+#include <Core/Math/TangentModulusTensor.h>
 
 using namespace Uintah;
 

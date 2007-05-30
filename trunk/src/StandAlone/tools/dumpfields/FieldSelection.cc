@@ -1,5 +1,5 @@
 #include "FieldSelection.h"
-#include "Packages/Uintah/Core/Exceptions/ProblemSetupException.h"
+#include "Core/Exceptions/ProblemSetupException.h"
 #include "utils.h"
 #include <algorithm>
 #include <iostream>

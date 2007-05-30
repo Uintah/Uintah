@@ -1,25 +1,25 @@
 #ifndef VECTORPARTICLES_H
 #define VECTORPARTICLES_H
 
-#include <Packages/Uintah/Core/Datatypes/PSet.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-//#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Datatypes/PSet.h>
+#include <Core/DataArchive/DataArchive.h>
+//#include <Core/Math/Matrix3.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
 
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/Persistent.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Containers/LockingHandle.h>
+#include <SCIRun/Core/Persistent/Persistent.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Core/Datatypes/share.h>
 namespace Uintah {
   using std::vector;
   using namespace SCIRun;

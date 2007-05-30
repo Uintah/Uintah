@@ -2,10 +2,10 @@
 #define __OPERATORS_UNARYFIELDOPERATOR_H__
 
 #include "OperatorThread.h"
-#include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Semaphore.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Semaphore.h>
+#include <Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
 using namespace SCIRun;

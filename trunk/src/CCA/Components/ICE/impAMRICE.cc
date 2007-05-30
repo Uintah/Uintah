@@ -1,22 +1,22 @@
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/AMRICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/AMRICE.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
 
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/AMR.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Exceptions/ProblemSetupException.h> 
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 using namespace SCIRun;
 using namespace Uintah;

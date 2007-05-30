@@ -1,10 +1,10 @@
 #ifndef UINTAH_HOMEBREW_LoadBalancerCommon_H
 #define UINTAH_HOMEBREW_LoadBalancerCommon_H
 
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Level.h>
 
 #include <set>
 #include <string>

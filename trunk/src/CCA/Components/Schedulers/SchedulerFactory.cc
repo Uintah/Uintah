@@ -1,12 +1,12 @@
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/SchedulerFactory.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using std::cerr;

@@ -10,10 +10,10 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Time.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Thread/Time.h>
 #include <iostream>
 
 using namespace SCIRun;

@@ -1,11 +1,11 @@
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/TriGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
+#include <Core/GeometryPiece/SphereGeometryPiece.h>
+#include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

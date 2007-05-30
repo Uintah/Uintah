@@ -1,10 +1,10 @@
 
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Core/Util/Assert.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Parallel/BufferInfo.h>
+#include <Core/Util/RefCounted.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 
-#include <Packages/Uintah/Core/Parallel/share.h>
+#include <Core/Parallel/share.h>
 using namespace Uintah;
 
 SCISHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );

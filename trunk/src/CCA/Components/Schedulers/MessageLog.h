@@ -1,8 +1,8 @@
 #ifndef UINTAH_HOMEBREW_MessageLog_H
 #define UINTAH_HOMEBREW_MessageLog_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Task.h>
 #include <fstream>
 
 namespace Uintah {

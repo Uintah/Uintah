@@ -3,7 +3,7 @@
 
 
 #include "PlasticityModel.h"    
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

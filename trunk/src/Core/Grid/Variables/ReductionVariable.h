@@ -1,15 +1,15 @@
 #ifndef UINTAH_HOMEBREW_ReductionVARIABLE_H
 #define UINTAH_HOMEBREW_ReductionVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/DataItem.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
-#include <Core/Util/Endian.h>
+#include <Core/Grid/Variables/ReductionVariableBase.h>
+#include <Core/Grid/Variables/DataItem.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Exceptions/TypeMismatchException.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <SCIRun/Core/Util/Endian.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>

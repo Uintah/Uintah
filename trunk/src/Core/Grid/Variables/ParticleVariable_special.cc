@@ -1,11 +1,11 @@
 #ifndef Uintah_Core_Grid_ParticleVariable_special_cc
 #define Uintah_Core_Grid_ParticleVariable_special_cc
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Level.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 using namespace Uintah;
 using namespace SCIRun;

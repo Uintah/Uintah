@@ -1,10 +1,10 @@
 #ifndef UINTAH_MPMBOUNDCOND_H
 #define UINTAH_MPMBOUNDCOND_H
 
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/share.h>
 
 namespace Uintah {
 

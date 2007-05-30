@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/TriangularCrack.h>
+#include <CCA/Components/MPM/Crack/TriangularCrack.h>
 #include <string>
 #include <iostream>
 

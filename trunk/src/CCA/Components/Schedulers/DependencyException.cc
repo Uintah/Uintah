@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Schedulers/DependencyException.h>
+#include <CCA/Components/Schedulers/DependencyException.h>
 #include <sstream>
 
 using namespace Uintah;

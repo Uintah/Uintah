@@ -1,7 +1,7 @@
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/Point.h>
+#include <CCA/Components/MPM/PhysicalBC/PolynomialData.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>

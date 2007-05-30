@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <CCA/Components/MPMArches/CutCellInfo.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 #include <iostream>
 
 using namespace std;

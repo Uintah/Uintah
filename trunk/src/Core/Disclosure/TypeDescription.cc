@@ -1,9 +1,9 @@
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/Assert.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 #include <map>
 #include <vector>
 #include <iostream>

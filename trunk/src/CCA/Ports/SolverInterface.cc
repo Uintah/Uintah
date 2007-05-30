@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <CCA/Ports/SolverInterface.h>
 
 using namespace Uintah;
 

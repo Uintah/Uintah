@@ -1,79 +1,80 @@
 //----- BoundaryCondition.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Grid/Variables/Stencil.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 #include <iostream>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/celltypeInit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/areain_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/profscalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inlbcs_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inlpresbcinout_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcscalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcuvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcvvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcwvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcpress_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmenthalpywallbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmscalarwallbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
+#include <CCA/Components/Arches/fortran/celltypeInit_fort.h>
+#include <CCA/Components/Arches/fortran/areain_fort.h>
+#include <CCA/Components/Arches/fortran/profscalar_fort.h>
+#include <CCA/Components/Arches/fortran/inlbcs_fort.h>
+#include <CCA/Components/Arches/fortran/inlpresbcinout_fort.h>
+#include <CCA/Components/Arches/fortran/bcscalar_fort.h>
+#include <CCA/Components/Arches/fortran/bcuvel_fort.h>
+#include <CCA/Components/Arches/fortran/bcvvel_fort.h>
+#include <CCA/Components/Arches/fortran/bcwvel_fort.h>
+#include <CCA/Components/Arches/fortran/bcpress_fort.h>
+#include <CCA/Components/Arches/fortran/profv_fort.h>
+#include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
+#include <CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
+#include <CCA/Components/Arches/fortran/mmenthalpywallbc_fort.h>
+#include <CCA/Components/Arches/fortran/mmscalarwallbc_fort.h>
+#include <CCA/Components/Arches/fortran/mmwallbc_fort.h>
+#include <CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
+#include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
+#include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
+#include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
+#include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition
@@ -136,6 +137,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_props->computeInletProperties(
                         d_flowInlets[d_numInlets]->streamMixturefraction,
                         d_flowInlets[d_numInlets]->calcStream);
+      double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
+      if (f > 0.0)
+        d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
       ++total_cellTypes;
       ++d_numInlets;
     }
@@ -703,11 +707,9 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-    CellInformation* cellInfo = cellInfoP.get().get_rep();
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // Get the low and high index for the variable and the patch
     IntVector domLo = cellType.getFortLowIndex();
@@ -750,8 +752,8 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
 	bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-	fort_areain(domLo, domHi, idxLo, idxHi, cellInfo->sew, cellInfo->sns,
-		    cellInfo->stb, inlet_area, cellType, cellid,
+	fort_areain(domLo, domHi, idxLo, idxHi, cellinfo->sew, cellinfo->sns,
+		    cellinfo->stb, inlet_area, cellType, cellid,
 		    d_flowfieldCellTypeVal,
 		    xminus, xplus, yminus, yplus, zminus, zplus);
 	
@@ -2008,7 +2010,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   // This parameter only needs to be set for fuel inlets for which
   // mixture fraction > 0, if there is an air inlet, and air has some CO2,
   // this air CO2 will be counted in the balance automatically
-  params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
+  // params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
@@ -3415,10 +3417,8 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
@@ -3872,10 +3872,8 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(constVars.density, d_lab->d_densityCPLabel, matlIndex, patch, 

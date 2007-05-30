@@ -1,10 +1,10 @@
 #ifndef __DAMAGE_MODEL_H__
 #define __DAMAGE_MODEL_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 
 namespace Uintah {

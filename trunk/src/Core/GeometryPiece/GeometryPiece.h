@@ -1,24 +1,25 @@
 #ifndef __GEOMETRY_PIECE_H__
 #define __GEOMETRY_PIECE_H__
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Util/RefCounted.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
+namespace SLIVR {
   class Point;
   class Vector;
 }
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
-using namespace SCIRun;
+using SLIVR::Point;
+using SLIVR::Vector;
 
 class Box;
 class GeometryPiece;

@@ -1,9 +1,9 @@
 #ifndef BSPLINE_INTERPOLATOR_H
 #define BSPLINE_INTERPOLATOR_H
 
-#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Core/Grid/ParticleInterpolator.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   class Patch;

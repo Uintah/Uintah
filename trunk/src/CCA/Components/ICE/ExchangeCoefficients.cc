@@ -1,6 +1,6 @@
-#include <Packages/Uintah/CCA/Components/ICE/ExchangeCoefficients.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/ICE/ExchangeCoefficients.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <iostream>
 #include <sstream>
 

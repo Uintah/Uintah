@@ -1,7 +1,7 @@
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 using namespace Uintah;
 using namespace SCIRun;

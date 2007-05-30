@@ -1,15 +1,15 @@
 #ifndef SCI_project_NCTensorField_h
 #define SCI_project_NCTensorField_h 1
 
-#include <Packages/Uintah/Core/Datatypes/TensorField.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Core/Datatypes/TensorField.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

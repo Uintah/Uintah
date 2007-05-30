@@ -1,9 +1,9 @@
 #ifndef Packages_Uintah_CCA_Components_Switcher_h
 #define Packages_Uintah_CCA_Components_Switcher_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 #include <map>
 using std::map;

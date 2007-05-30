@@ -1,4 +1,4 @@
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <list>
 #include <vector>

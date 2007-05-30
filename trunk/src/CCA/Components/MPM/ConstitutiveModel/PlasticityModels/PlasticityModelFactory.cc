@@ -5,9 +5,9 @@
 #include "MTSPlastic.h"
 #include "SCGPlastic.h"
 #include "PTWPlastic.h"
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>

@@ -1,9 +1,9 @@
 #ifndef PARTICLESET_H
 #define PARTICLESET_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Util/RefCounted.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
    typedef int particleIndex;
    typedef int particleId;

@@ -2,14 +2,14 @@
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
 
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/share.h>
 namespace Uintah {
 
   class ProcessorGroup;

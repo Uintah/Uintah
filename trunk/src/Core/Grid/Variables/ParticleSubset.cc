@@ -1,11 +1,11 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/ProgressiveWarning.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/ProgressiveWarning.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <algorithm>

@@ -1,12 +1,12 @@
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
+#include <Core/Grid/Box.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/CrackBC.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
 
 using namespace Uintah;
 using std::vector;

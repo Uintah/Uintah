@@ -36,9 +36,9 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
   using namespace SCIRun;

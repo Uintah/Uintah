@@ -5,10 +5,10 @@
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPlastic.h>
 
 #include <math.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 #ifdef _WIN32
 #include <float.h>

@@ -1,5 +1,5 @@
-#include <Packages/Uintah/Core/Grid/AMR.h>
-#include <Core/Math/MinMax.h>
+#include <Core/Grid/AMR.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 using namespace SCIRun;
 

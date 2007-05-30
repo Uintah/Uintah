@@ -1,13 +1,13 @@
 #ifndef Packages_Uintah_CCA_Components_MPM_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_MPM_BoundaryCond_h
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 #include <typeinfo>
 
 namespace Uintah {

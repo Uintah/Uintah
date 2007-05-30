@@ -5,11 +5,11 @@
 //--------------------------------------------------------------------------
 
 #include <sci_defs/hypre_defs.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
+#include <CCA/Components/Solvers/HypreDriverSStruct.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 //__________________________________

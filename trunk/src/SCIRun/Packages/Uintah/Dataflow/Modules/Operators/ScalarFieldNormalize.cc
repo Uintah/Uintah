@@ -1,19 +1,19 @@
 
 #include <math.h>
 
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Basis/Constant.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Containers/FData.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Dataflow/Modules/Operators/UnaryFieldOperator.h>
+#include <Core/Disclosure/TypeUtils.h>
 
 
 

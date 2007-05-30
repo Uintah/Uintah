@@ -1,22 +1,22 @@
 
-#include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
-#include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/Examples/SolverTest1.h>
+#include <CCA/Components/Examples/ExamplesLabel.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimpleMaterial.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Ports/Scheduler.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

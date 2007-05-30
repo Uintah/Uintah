@@ -23,25 +23,25 @@
 #define COMPAREMMS_H
 
 
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Basis/Constant.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Containers/FData.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ProgressReporter.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Util/ProgressReporter.h>
 #include <Dataflow/Network/Module.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
+#include <Dataflow/Modules/Operators/MMS/MMS.h>
+#include <Dataflow/Modules/Operators/MMS/MMS1.h>
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_off.h>

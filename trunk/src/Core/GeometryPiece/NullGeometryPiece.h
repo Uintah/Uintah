@@ -1,14 +1,14 @@
 #ifndef __NULL_GEOMETRY_OBJECT_H__
 #define __NULL_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Core/Geometry/Point.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Box.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************

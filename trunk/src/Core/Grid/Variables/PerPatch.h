@@ -1,11 +1,11 @@
 #ifndef UINTAH_HOMEBREW_PERPATCH_H
 #define UINTAH_HOMEBREW_PERPATCH_H
 
-#include <Packages/Uintah/Core/Grid/Variables/PerPatchBase.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/Variables/PerPatchBase.h>
+#include <Core/Exceptions/TypeMismatchException.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 namespace Uintah {
 /**************************************

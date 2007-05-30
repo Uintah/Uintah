@@ -1,15 +1,15 @@
 #ifndef UINTAH_HOMEBREW_Patch_H
 #define UINTAH_HOMEBREW_Patch_H
 
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Region.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/fixedvector.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Region.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/fixedvector.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #undef None
 
 #include <sgi_stl_warnings_off.h>
@@ -19,7 +19,7 @@
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
 

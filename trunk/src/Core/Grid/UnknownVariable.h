@@ -14,12 +14,12 @@
 #ifndef UINTAH_EXCEPTIONS_UNKNOWNVARIABLE_H
 #define UINTAH_EXCEPTIONS_UNKNOWNVARIABLE_H
 
-#include <Core/Exceptions/Exception.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::Exception;

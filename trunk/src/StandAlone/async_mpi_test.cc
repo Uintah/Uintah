@@ -10,11 +10,11 @@
 #include <sys/time.h>
 #endif
 #include <stdlib.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/ConditionVariable.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/ConditionVariable.h>
 
 #ifdef _WIN32
 #include <windows.h>

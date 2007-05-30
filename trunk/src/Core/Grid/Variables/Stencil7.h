@@ -2,11 +2,11 @@
 #ifndef Packages_Uintah_Core_Grid_Stencil7_h
 #define Packages_Uintah_Core_Grid_Stencil7_h
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Util/FancyAssert.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
 #include <iostream>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
   class TypeDescription;
   struct SCISHARE Stencil7 {

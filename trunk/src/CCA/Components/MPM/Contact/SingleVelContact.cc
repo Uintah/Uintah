@@ -6,22 +6,22 @@
 // fields.  The main purpose of this type of contact is to
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
-#include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Components/MPM/Contact/SingleVelContact.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>

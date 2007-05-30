@@ -2,10 +2,10 @@
 #ifndef UINTAH_HOMEBREW_SFCXVariableBase_H
 #define UINTAH_HOMEBREW_SFCXVariableBase_H
 
-#include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
+#include <Core/Grid/Variables/GridVariable.h>
+#include <Core/Grid/Variables/constVariable.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace SCIRun {
   class IntVector;
 }

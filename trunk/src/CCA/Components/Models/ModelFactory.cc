@@ -1,26 +1,26 @@
 
-#include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Components/Models/test/Mixing.h>
-#include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
-#include <Packages/Uintah/CCA/Components/Models/test/PassiveScalar.h>
-#include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
-#include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
-#include <Packages/Uintah/CCA/Components/Models/test/VorticityConfinement.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Unsteady_Burn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
+#include <CCA/Components/Models/ModelFactory.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/SimulationState.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/test/Mixing.h>
+#include <CCA/Components/Models/test/AdiabaticTable.h>
+#include <CCA/Components/Models/test/PassiveScalar.h>
+#include <CCA/Components/Models/test/SimpleRxn.h>
+#include <CCA/Components/Models/test/TestModel.h>
+#include <CCA/Components/Models/test/flameSheet_rxn.h>
+#include <CCA/Components/Models/test/VorticityConfinement.h>
+#include <CCA/Components/Models/HEChem/Simple_Burn.h>
+#include <CCA/Components/Models/HEChem/Steady_Burn.h>
+#include <CCA/Components/Models/HEChem/Unsteady_Burn.h>
+#include <CCA/Components/Models/HEChem/IandG.h>
+#include <CCA/Components/Models/HEChem/JWLpp.h>
+#include <CCA/Components/Models/HEChem/LightTime.h>
 // containsFortran
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
+#include <CCA/Components/Models/Radiation/RadiationDriver.h>
 // containsFortran
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -86,10 +86,12 @@ void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
     else if(type == "VorticityConfinement")
       d_models.push_back(scinew VorticityConfinement(d_myworld, model_ps));
-// containsFortran
     else if(type == "Radiation")
+#ifndef NO_RADIATION
       d_models.push_back(scinew RadiationDriver(d_myworld, model_ps));
-// containsFortran
+#else
+      throw ProblemSetupException("Radiation not supported in this build", __FILE__, __LINE__);
+#endif
     else
       throw ProblemSetupException("Unknown model: "+type, __FILE__, __LINE__);
   }

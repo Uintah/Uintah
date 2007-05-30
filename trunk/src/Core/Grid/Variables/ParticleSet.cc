@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
+#include <Core/Grid/Variables/ParticleSet.h>
 
 using namespace Uintah;
 

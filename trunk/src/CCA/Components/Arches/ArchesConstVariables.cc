@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
 
 using namespace Uintah;
 

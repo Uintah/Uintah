@@ -1,8 +1,8 @@
-#include <Packages/Uintah/CCA/Components/ICE/EOS/JWLC.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/ICE/EOS/JWLC.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <iomanip>
 

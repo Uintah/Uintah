@@ -1,8 +1,8 @@
-#include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Endian.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>

@@ -1,7 +1,7 @@
 #ifndef _YIELDCONDITIONFACTORY_H_
 #define _YIELDCONDITIONFACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

@@ -1,14 +1,14 @@
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Disclosure/TypeUtils.h>
 #include <utility>
 using namespace Uintah;
 using std::pair;

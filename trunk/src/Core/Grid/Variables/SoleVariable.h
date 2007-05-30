@@ -1,14 +1,14 @@
 #ifndef UINTAH_HOMEBREW_SoleVARIABLE_H
 #define UINTAH_HOMEBREW_SoleVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/DataItem.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
+#include <Core/Grid/Variables/SoleVariableBase.h>
+#include <Core/Grid/Variables/DataItem.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Exceptions/TypeMismatchException.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Endian.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>

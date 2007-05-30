@@ -1,24 +1,24 @@
 #ifndef UINTAH_HOMEBREW_DataArchive_H
 #define UINTAH_HOMEBREW_DataArchive_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarnameMatlPatch.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Containers/HashTable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Variables/VarnameMatlPatch.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Util/Handle.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <SCIRun/Core/Containers/HashTable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -32,7 +32,7 @@
 #include <unistd.h>
 #endif
 
-#include <Packages/Uintah/Core/DataArchive/share.h>
+#include <Core/DataArchive/share.h>
 namespace Uintah {
 
 using namespace SCIRun;

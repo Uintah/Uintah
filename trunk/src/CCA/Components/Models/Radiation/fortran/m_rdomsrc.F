@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
 
       integer i,j,k
       double precision PI

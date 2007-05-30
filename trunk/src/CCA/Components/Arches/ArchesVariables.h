@@ -3,12 +3,12 @@
 #ifndef Uintah_Components_Arches_ArchesVariables_h
 #define Uintah_Components_Arches_ArchesVariables_h
 
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
 
 /**************************************
 CLASS
@@ -47,7 +47,6 @@ namespace Uintah {
       SFCYVariable<double> old_vVelocity;
       SFCZVariable<double> old_wVelocity;
       CCVariable<double> old_density;
-      CCVariable<double> old_old_density;
       CCVariable<double> old_scalar;
       CCVariable<double> old_reactscalar;
       SFCXVariable<double> uVelocity;

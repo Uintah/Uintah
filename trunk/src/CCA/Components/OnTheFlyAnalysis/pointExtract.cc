@@ -1,21 +1,21 @@
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/pointExtract.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/OnTheFlyAnalysis/pointExtract.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Containers/StaticArray.h>
-#include <Core/OS/Dir.h> // for MKDIR
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
+#include <SCIRun/Core/OS/Dir.h> // for MKDIR
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <sys/stat.h>
 #ifndef _WIN32
 #include <dirent.h>

@@ -5,20 +5,20 @@
 // be used for example when a single velocity field is
 // present in the problem, so doing contact wouldn't make
 // sense.
-#include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/Contact/NullContact.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Task.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MPMFlags.h>
 using namespace Uintah;
 
 NullContact::NullContact(const ProcessorGroup* myworld,

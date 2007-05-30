@@ -29,28 +29,28 @@ LOG
 ****************************************/
 #include "ParticleFieldExtractor.h"
 
-#include <Core/Util/Timer.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Mutex.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <SCIRun/Core/Util/Timer.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Datatypes/ScalarParticles.h>
+#include <Dataflow/Ports/ScalarParticlesPort.h>
+#include <Core/Datatypes/VectorParticles.h>
+#include <Dataflow/Ports/VectorParticlesPort.h>
+#include <Core/Datatypes/TensorParticles.h>
+#include <Dataflow/Ports/TensorParticlesPort.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Semaphore.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
@@ -632,7 +632,7 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, int index,
 //                           sp, vp, tp, pseth, scale,
 //                           scalar_type, have_sp, have_vp,
 //                           have_tp, have_ids, sema,
-//                           &smutex, &vmutex, &tmutex, &imutex, gui);
+//                           &smutex, &vmutex, &tmutex, &imutex, gui_);
 
 //     thrd->run(); 
   }

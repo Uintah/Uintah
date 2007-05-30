@@ -8,10 +8,10 @@
 #include <math.h>
 using namespace std;
 
-#include<Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include<Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Ports/share.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <CCA/Ports/share.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 using namespace SCIRun;
 using namespace Uintah;
 namespace Uintah{

@@ -34,9 +34,9 @@ WARNING
   
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Core/Containers/OffsetArray1.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <Core/Util/RefCounted.h>
+#include <SCIRun/Core/Containers/OffsetArray1.h>
 namespace Uintah {
   using namespace SCIRun;
   class Patch;

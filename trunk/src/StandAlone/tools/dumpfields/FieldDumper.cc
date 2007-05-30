@@ -1,5 +1,5 @@
 #include "FieldDumper.h"
-#include <Core/OS/Dir.h>
+#include <SCIRun/Core/OS/Dir.h>
 #include <iomanip>
 
 using namespace std;

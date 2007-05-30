@@ -1,35 +1,35 @@
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <Core/Math/Matrix3.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Thread/Mutex.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -332,9 +332,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
      
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
-
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
@@ -360,7 +357,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // model
       // For RigidMPM, this isn't done
 
-      const Level* lvl = patch->getLevel();
       double Cp=mpm_matl->getSpecificHeat();
 
       // Loop over particles
@@ -413,6 +409,12 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pColor_new.copyData(pColor);
       }    
 
+      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
+                                                     false,dwi,patch, 0);
+#if 0
+
+      const Level* lvl = patch->getLevel();
+      // BJW - Relocate deletes particles in extra cells
       // Delete particles that have left the domain
       // This is only needed if extra cells are being used.
       if(flags->d_8or27==27){
@@ -426,6 +428,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
         }
       }
+#endif
       new_dw->deleteParticles(delset);      
     }
 

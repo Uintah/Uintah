@@ -20,24 +20,24 @@
 // If viscosity or diffusion are zero, use an alternate method to apply sources, avoiding solve
 // More efficient multi-scalar advection
 // Look at neighbor stuff for projectVelocity
-#include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
-#include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Math/Rand48.h>
-#include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Examples/SimpleCFD.h>
+#include <CCA/Components/Examples/ExamplesLabel.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Level.h>
+#include <Core/Math/Rand48.h>
+#include <Core/Grid/SimpleMaterial.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <sci_values.h>
 #include <iomanip>
 

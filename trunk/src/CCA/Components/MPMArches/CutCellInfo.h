@@ -33,11 +33,11 @@ WARNING
   
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Core/Containers/OffsetArray1.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <CCA/Components/MPMArches/CutCellInfoP.h>
+#include <Core/Util/RefCounted.h>
+#include <SCIRun/Core/Containers/OffsetArray1.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/Array3.h>
 namespace Uintah {
   using namespace SCIRun;
 

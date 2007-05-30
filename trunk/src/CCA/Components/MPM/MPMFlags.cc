@@ -1,10 +1,10 @@
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
-#include <Packages/Uintah/Core/Grid/BSplineInterpolator.h>
-//#include <Packages/Uintah/Core/Grid/AMRInterpolator.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LinearInterpolator.h>
+#include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/BSplineInterpolator.h>
+//#include <Core/Grid/AMRInterpolator.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

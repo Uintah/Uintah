@@ -4,15 +4,15 @@
 //      1.  Nearly, all the overloaded operations of the Matrix class,
 //      no dynamic memory allocation.
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/CubeRoot.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Assert.h>
-#include <Core/Util/Endian.h>
-#include <Core/Math/MinMax.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/CubeRoot.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Endian.h>
+#include <SCIRun/Core/Math/MinMax.h>
 #include "./TntJama/tnt.h"
 #include "./TntJama/jama_eig.h"
 

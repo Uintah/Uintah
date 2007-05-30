@@ -1,10 +1,10 @@
-#include <Packages/Uintah/CCA/Components/ICE/DynamicModel.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <CCA/Components/ICE/DynamicModel.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Patch.h>
 
 using namespace Uintah;
 static DebugStream cout_doing("ICE_DOING_COUT", false);

@@ -1,17 +1,17 @@
 #ifndef UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_AMRSIMULATIONCONTROLLER_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/SimulationController/SimulationController.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
-#include <Packages/Uintah/CCA/Components/SimulationController/share.h>
+#include <CCA/Components/SimulationController/share.h>
 namespace Uintah {
 
 class SimulationInterface;

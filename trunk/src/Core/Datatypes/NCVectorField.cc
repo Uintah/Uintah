@@ -1,11 +1,11 @@
-#include <Packages/Uintah/Core/Datatypes/NCVectorField.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Core/Datatypes/NCVectorField.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/Grid.h>
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 using std::vector;
 

@@ -2,9 +2,9 @@
 #define __ACOUSTICTENSOR_CHECK_H__
 
 #include "StabilityCheck.h"	
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Math/FastMatrix.h>
+#include <Core/Math/TangentModulusTensor.h>
 
 namespace Uintah {
 

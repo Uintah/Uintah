@@ -36,8 +36,8 @@ POSSIBLE REVISIONS
  
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <CCA/Components/Arches/Mixing/MixingModel.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -101,6 +101,18 @@ public:
       }
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
+      }
+
+      inline double getFStoich() const{
+	return 0.0;
+      }
+
+      inline double getCarbonFuel() const{
+	return 0.0;
+      }
+
+      inline double getCarbonAir() const{
+	return 0.0;
       }
 
 protected :

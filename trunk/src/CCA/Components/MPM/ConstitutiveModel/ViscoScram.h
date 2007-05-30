@@ -1,7 +1,7 @@
 #ifndef __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 #define __VISCOSCRAM_CONSTITUTIVE_MODEL_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 
 namespace Uintah {
   struct ViscoScramStateData {
@@ -9,14 +9,14 @@ namespace Uintah {
   };   
 }
 
-#include <Core/Util/Endian.h>
+#include <SCIRun/Core/Util/Endian.h>
 namespace SCIRun {
   void swapbytes( Uintah::ViscoScramStateData& d);
 } // namespace SCIRun
 
 #include "ConstitutiveModel.h"
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <math.h>
 #include <sgi_stl_warnings_off.h>

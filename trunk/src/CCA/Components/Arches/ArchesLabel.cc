@@ -1,16 +1,16 @@
 //----- ArchesLabel.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;
 
@@ -106,7 +106,16 @@ ArchesLabel::ArchesLabel()
   // V-Velocity Labels
   d_vVelocitySPBCLabel = VarLabel::create("vVelocitySPBC", 
 				       SFCYVariable<double>::getTypeDescription() );
+  // W-Velocity Labels
+  d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", 
+				       SFCZVariable<double>::getTypeDescription() );
 
+  d_uVelocityEKTLabel = VarLabel::create("uVelocityEKT", 
+				       SFCXVariable<double>::getTypeDescription() );
+  d_vVelocityEKTLabel = VarLabel::create("vVelocityEKT", 
+				       SFCYVariable<double>::getTypeDescription() );
+  d_wVelocityEKTLabel = VarLabel::create("wVelocityEKT", 
+				       SFCZVariable<double>::getTypeDescription() );
   // labels for ref density and pressure
   d_refDensity_label = VarLabel::create("refDensityLabel",
 				       sum_vartype::getTypeDescription() );
@@ -115,9 +124,6 @@ ArchesLabel::ArchesLabel()
   d_refPressure_label = VarLabel::create("refPressureLabel",
 				       sum_vartype::getTypeDescription() );
 
-  // W-Velocity Labels
-  d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", 
-				       SFCZVariable<double>::getTypeDescription() );
   // Scalar 
   d_scalarSPLabel = VarLabel::create("scalarSP",
 				   CCVariable<double>::getTypeDescription() );
@@ -741,6 +747,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocitySPBCLabel);
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
+  VarLabel::destroy(d_uVelocityEKTLabel);
+  VarLabel::destroy(d_vVelocityEKTLabel);
+  VarLabel::destroy(d_wVelocityEKTLabel);
   VarLabel::destroy(d_scalarSPLabel);
   VarLabel::destroy(d_scalarEKTLabel);
   VarLabel::destroy(d_scalarTempLabel);

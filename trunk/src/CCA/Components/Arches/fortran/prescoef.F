@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_fort.h>
+#include <CCA/Components/Arches/fortran/prescoef_fort.h>
 #include "param4.h"
 *----------------------------------------------------------------------- 
 *     Written by Seshadri Kumar, August 4, 1995

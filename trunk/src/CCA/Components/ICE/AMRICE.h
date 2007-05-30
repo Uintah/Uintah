@@ -1,13 +1,13 @@
 #ifndef Packages_Uintah_CCA_Components_ICE_AMRICE_h
 #define Packages_Uintah_CCA_Components_ICE_AMRICE_h
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/AMR.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Components/ICE/share.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Components/ICE/share.h>
 
 //#define REFLUX_DBG 
 #undef REFLUX_DBG

@@ -33,9 +33,9 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -84,6 +84,9 @@ public:
       //
       //
       virtual double getAdiabaticAirEnthalpy() const = 0;
+      virtual double getFStoich() const = 0;
+      virtual double getCarbonFuel() const = 0;
+      virtual double getCarbonAir() const = 0;
       virtual bool getCOOutput() const = 0;
       virtual bool getSulfurChem() const = 0;
       virtual bool getSootPrecursors() const = 0;

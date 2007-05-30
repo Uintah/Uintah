@@ -24,10 +24,10 @@ DESCRIPTION
 
 ****************************************/ 
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Dataflow/Ports/ScalarParticlesPort.h>
 
 namespace Uintah {
 using namespace SCIRun;

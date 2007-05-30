@@ -1,27 +1,27 @@
 #ifndef UINTAH_HOMEBREW_FRACTUREMPM_H
 #define UINTAH_HOMEBREW_FRACTUREMPM_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <CCA/Components/MPM/Crack/Crack.h>
 // put here to avoid template problems
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/Short27.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Contact/Contact.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Core/Grid/Variables/ParticleSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/share.h>
 namespace Uintah {
 
 using namespace SCIRun;

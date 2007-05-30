@@ -1,10 +1,10 @@
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/Assert.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Util/RefCounted.h>
+#include <SCIRun/Core/Thread/AtomicCounter.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace SCIRun;

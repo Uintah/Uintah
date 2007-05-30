@@ -1,16 +1,16 @@
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Math/MiscMath.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/ICE/CustomBCs/LODI.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/EOS/EquationOfState.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 #include <typeinfo>
 
 using namespace Uintah;

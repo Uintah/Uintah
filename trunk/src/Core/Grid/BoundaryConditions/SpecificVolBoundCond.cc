@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SpecificVolBoundCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/BoundaryConditions/SpecificVolBoundCond.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

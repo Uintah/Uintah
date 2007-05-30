@@ -3,7 +3,7 @@
 #define UINTAH_HOMEBREW_VarnameMatlPatch_H
 
 #include <string>
-#include <Core/Containers/HashTable.h>
+#include <SCIRun/Core/Containers/HashTable.h>
 
 namespace Uintah {
 class Patch;

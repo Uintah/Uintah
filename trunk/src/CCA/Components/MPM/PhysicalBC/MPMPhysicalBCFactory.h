@@ -1,8 +1,8 @@
 #ifndef __Uintah_MPM_MPMPhysicalBCFactory__
 #define __Uintah_MPM_MPMPhysicalBCFactory__
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>

@@ -1,17 +1,17 @@
 #ifndef SCI_project_NCScalarField_h
 #define SCI_project_NCScalarField_h 1
 
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 
-#include <Core/Datatypes/ScalarFieldRGBase.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Datatypes/ScalarFieldRGBase.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sci_values.h>
 #include <sgi_stl_warnings_off.h>

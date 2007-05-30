@@ -1,23 +1,23 @@
-#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
+#include <Core/Math/Short27.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/PetscSolver.h>
+#include <CCA/Components/MPM/SimpleSolver.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Task.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Grid/LinearInterpolator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 
 using namespace Uintah;
 using namespace SCIRun;

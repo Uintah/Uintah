@@ -2,11 +2,11 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing_h
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Components/Models/test/MaterialProperties.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Components/Models/test/MaterialProperties.h>
 
 namespace Uintah {
 

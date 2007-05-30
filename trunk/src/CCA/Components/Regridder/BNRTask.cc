@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRTask.h>
+#include <CCA/Components/Regridder/BNRRegridder.h>
+#include <CCA/Components/Regridder/BNRTask.h>
 
 using namespace Uintah;
 #include <vector>
@@ -41,6 +41,7 @@ MPI_Request* BNRTask::getRequest()
     MPI_Request request;
     controller_->requests_.push_back(request);
     controller_->indicies_.push_back(0);
+    controller_->statuses_.push_back(MPI_Status());
     
     //assign request
     controller_->request_to_task_.push_back(this);
@@ -49,7 +50,7 @@ MPI_Request* BNRTask::getRequest()
   else
   {
     //get a free request
-    int index=controller_->free_requests_.top();
+    int index=controller_->free_requests_.front();
     
     //assign request
     controller_->free_requests_.pop();
@@ -77,21 +78,25 @@ void BNRTask::continueTask()
   int msg_size;
   unsigned int p;
   unsigned int partner;
+  int start;
+  int num_ints;
+  int index, shift;
+  int mask;
   
   switch (status_)
   {
     case NEW:                                                             //0
       goto TASK_START;
-    case GATHERING_FLAG_COUNT:                                            //1
-      goto GATHER_FLAG_COUNT;
-    case BROADCASTING_FLAG_COUNT:                                         //2
-      goto BROADCAST_FLAG_COUNT;
-    case COMMUNICATING_SIGNATURES:                                        //3
+    case REDUCING_FLAG_INFO:                                              //1
+      goto REDUCE_FLAG_INFO;
+    case UPDATING_FLAG_INFO:                                              //2
+      goto UPDATE_FLAG_INFO;
+    case BROADCASTING_FLAG_INFO:                                         //3
+      goto BROADCAST_FLAG_INFO;
+    case COMMUNICATING_SIGNATURES:                                        //4
       goto COMMUNICATE_SIGNATURES;
-    case SUMMING_SIGNATURES:                                              //4
+    case SUMMING_SIGNATURES:                                              //5
       goto SUM_SIGNATURES;
-    case BROADCASTING_ACCEPTABILITY:                                      //5
-      goto BROADCAST_ACCEPTABILITY;
     case WAITING_FOR_TAGS:                                                //6
       goto WAIT_FOR_TAGS;                                            
     case BROADCASTING_CHILD_TASKS:                                        //7
@@ -102,13 +107,12 @@ void BNRTask::continueTask()
       goto WAIT_FOR_PATCH_COUNT;
     case WAITING_FOR_PATCHES:                                             //10
       goto WAIT_FOR_PATCHES;
-    case SENDING_TO_PARENT:                                               //11
-      goto TERMINATE;
-    case TERMINATED:                                                      //12
+    case TERMINATED:                                                      //11
       return;
-     default:
-      cerr << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": error invalid status_: " << status_ << endl;
-      return;
+    default:
+      char error[100];
+      sprintf(error,"Error invalid status (%d) in parallel task\n",status_);
+      throw InternalError(error,__FILE__,__LINE__);
   }
                   
   TASK_START:
@@ -117,23 +121,38 @@ void BNRTask::continueTask()
   
   if(p_group_.size()>1)
   {
-    //gather # of flags_ on root
-    status_=GATHERING_FLAG_COUNT;
+    //create flag_info_
+
+    //determine the number of integers needed for bitfield
+    num_ints=p_group_.size()/(sizeof(int)*8);
+    if(p_group_.size()%(sizeof(int)*8)!=0)
+      num_ints++;
+    
+    flag_info_.resize(3+num_ints);    //1 for sum, 2 for max info, and one for each required int
+    flag_info_buffer_.resize(3+num_ints);
+
+    flag_info_.assign(3+num_ints,0);  //initialize to 0
+    
+    //initialize flag info
+    flag_info_[0]=flag_info_[2]=flags_.size; //set sum and max
+    flag_info_[1]=p_rank_;                  //set location of max
+    //set bitfield
+    if(flags_.size>0)
+    {
+      index=p_rank_/(sizeof(int)*8);    //index into flag_info_
+      flag_info_[3+index]=1<<(p_rank_-index*(sizeof(int)*8));    //place a 1 in the bit field to represent me
+    }
+    //reduce flag info_ onto root
+    status_=REDUCING_FLAG_INFO;
     //set mpi state
     stage_=0;
   
-    //Allocate recieve buffer
-    flagscount_.resize(1<<d_);    //make this big enough to recieve for entire hypercube
-    flagscount_[0].count=flags_.size;
-    flagscount_[0].rank=p_group_[p_rank_];
-
     //Gather the flags onto the root processor without blocking
-    GATHER_FLAG_COUNT:
+    REDUCE_FLAG_INFO:
 
     if(stage_<d_)
     {
       stride=1<<(d_-1-stage_);
-      msg_size=1<<stage_;
 
       stage_++;
       if(p_rank_<stride)  //recieving
@@ -142,68 +161,86 @@ void BNRTask::continueTask()
         if(partner<p_group_.size())
         {
           //Nonblocking recieve msg from partner
-          MPI_Irecv(&flagscount_[msg_size],msg_size*sizeof(FlagsCount),MPI_BYTE,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+          MPI_Irecv(&flag_info_buffer_[0],flag_info_buffer_.size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        
+          status_=UPDATING_FLAG_INFO;
           return;
-        }
-        else
-        {
-          for(int f=0;f<msg_size;f++)
+          
+          UPDATE_FLAG_INFO:
+          //update sum
+          flag_info_[0]+=flag_info_buffer_[0];
+          //update max
+          if(flag_info_buffer_[2]>flag_info_[2] || (flag_info_buffer_[2]==flag_info_[2] && flag_info_buffer_[1]<flag_info_[1]))
           {
-              flagscount_[msg_size+f].count=0;
-              flagscount_[msg_size+f].rank=-1;
-          }    
-          goto GATHER_FLAG_COUNT;
+            flag_info_[1]=flag_info_buffer_[1];   //set new rank of max
+            flag_info_[2]=flag_info_buffer_[2];   //set new  max
+          }
+          //update bit field
+          for(int i=3;i<flag_info_.size();i++)
+          {
+            flag_info_[i]|=flag_info_buffer_[i];
+          }
         }
+
+        status_=REDUCING_FLAG_INFO;
+        goto REDUCE_FLAG_INFO;
       }
       else if(p_rank_ < (stride<<1) )  //sending
       {
         int partner=p_rank_-stride;
       
         //non blocking send msg of size size to partner
-        MPI_Isend(&flagscount_[0],msg_size*sizeof(FlagsCount),MPI_BYTE,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(&flag_info_[0],flag_info_.size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
         return;
       }
     }
     
-    status_=BROADCASTING_FLAG_COUNT;
+    status_=BROADCASTING_FLAG_INFO;
     stage_=0;
     
-    BROADCAST_FLAG_COUNT:
+    BROADCAST_FLAG_INFO:
   
-    if(Broadcast(&flagscount_[0],flagscount_.size()*sizeof(FlagsCount),MPI_BYTE,1))
+    if(Broadcast(&flag_info_[0],flag_info_.size(),MPI_INT))
       return;
+    
+    total_flags_=flag_info_[0];
+    
+    //remove processors from p_group_ that have zero flags
+    p=0;
+    mask=1;
+    for(int i=0;i<p_group_.size();i++,index++)
+    {
+      index=i/(sizeof(int)*8);
+      shift=i-(index)*(sizeof(int)*8);
+      //if the bit for this local rank is set
+      if( (flag_info_[3+index]>>shift)&mask )
+      {
+        if(i==p_rank_)          //update p_rank_
+          p_rank_=p;    
+        p_group_[p]=p_group_[i];  //update p_group_
+        
+        if(i==flag_info_[1])  //if this is the master processor
+        {
+            swap(p_group_[0],p_group_[p]); //place it at the front of the p_group_
+            if(p_rank_==p)                //if i'm master
+              p_rank_=0;                      //set my rank to 0
+            else if(p_rank_==0)           //if i'm rank 0
+              p_rank_=p;                      //set my rank to p
+        }
+        p++;
+      }
+    }
+    p_group_.resize(p);
+    
+    //clear buffers
+    flag_info_.clear();
+    flag_info_buffer_.clear();
     
     if(flags_.size==0)  //if i don't have any flags don't participate any longer
     {
-      if(parent_==0)
-      {
-        //sort flags_ so this processor knows who will be broadcasting the results out
-        sort(flagscount_.begin(),flagscount_.end());
-        p_group_[0]=flagscount_[0].rank;        
-      }
       p_rank_=-1;
       goto TERMINATE;    
     }
-    //sort ascending #flags_
-    sort(flagscount_.begin(),flagscount_.end());
-
-    //update p_rank_
-    for(p=0;p<p_group_.size();p++)
-    {
-      if(flagscount_[p].rank==p_group_[p_rank_])
-      {
-          p_rank_=p;
-          break;
-      }
-    }
-    //update p_group_
-    for(p=0;p<p_group_.size();p++)
-    {
-      if(flagscount_[p].count==0)
-              break;
-      p_group_[p]=flagscount_[p].rank;  
-    }
-    p_group_.resize(p);
     
     //calculate hypercube dimensions
     p=1;    
@@ -213,18 +250,6 @@ void BNRTask::continueTask()
       p<<=1;
       d_++;
     }
-    //compute total # of flags on new root 
-    if(p_rank_==0)
-    {
-      total_flags_=0;
-      for(unsigned int p=0;p<p_group_.size();p++)
-      {
-        total_flags_+=flagscount_[p].count;
-      }
-    }
-  
-    //give buffer back to OS
-    flagscount_.clear();  
   }
   else
   {
@@ -236,10 +261,8 @@ void BNRTask::continueTask()
 
   if(p_group_.size()>1)
   {
-    sum_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
-    sum_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
-    sum_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
-    //sum_ signatures
+    sum_.resize(sig_size_);
+    //sum signatures
     stage_=0;
     status_=COMMUNICATING_SIGNATURES;
     COMMUNICATE_SIGNATURES:
@@ -258,19 +281,14 @@ void BNRTask::continueTask()
           status_=SUMMING_SIGNATURES;
           
           //Nonblocking recieve msg from partner
-          MPI_Irecv(&sum_[0][0],sum_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Irecv(&sum_[1][0],sum_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Irecv(&sum_[2][0],sum_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+          MPI_Irecv(&sum_[0],sig_size_,MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
           return;
 
           SUM_SIGNATURES:
-            
-          for(int d=0;d<3;d++)
+          
+          for(unsigned int i=0;i<sig_size_;i++)
           {
-            for(unsigned int i=0;i<count_[d].size();i++)
-            {
-              count_[d][i]+=sum_[d][i];
-            }
+            count_[i]+=sum_[i];
           }
             
           status_=COMMUNICATING_SIGNATURES;
@@ -283,21 +301,19 @@ void BNRTask::continueTask()
       }
       else if(p_rank_< (stride<<1))
       {
-          partner=p_rank_-stride;
+        partner=p_rank_-stride;
           
-          //Nonblocking recieve msg from partner
-          MPI_Isend(&count_[0][0],count_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Isend(&count_[1][0],count_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          MPI_Isend(&count_[2][0],count_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
-          return;
+        //Nonblocking recieve msg from partner
+        MPI_Isend(&count_[0],sig_size_,MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
+        return;
       }
     }
     //deallocate sum_ array
-    sum_[0].clear();  
-    sum_[1].clear();  
-    sum_[2].clear();  
+    sum_.clear();  
   }  
   
+  //controlling task determines if the current patch is good or not
+  //if not find the location to split this patch
   if(p_rank_==0)
   {
     //bound signatures
@@ -305,44 +321,22 @@ void BNRTask::continueTask()
     
     //check tolerance a
     CheckTolA();
-  }  
-  
-  if(p_group_.size()>1)
-  {
-    stage_=0;
-    status_=BROADCASTING_ACCEPTABILITY;
-    BROADCAST_ACCEPTABILITY:
-    //broadcast acceptablity  
-    if(Broadcast(&acceptable_,1,MPI_INT,1))
-    {
-      return;
-    }
-  }  
 
-  if(acceptable_)
-  {
-    if(p_rank_==0)
+    if(acceptable_)
     {
-      my_patches_.push_back(patch_);
+      //set d=-1 to signal that the patch is acceptable
+      ctasks_.split.d=-1;
     }
-    //signature is no longer needed so free memory
-    count_[0].clear();
-    count_[1].clear();
-    count_[2].clear();
-  }
-  else
-  {
-    if(p_rank_==0)
+    else
     {
+      //find split
       ctasks_.split=FindSplit();
+      
+      //split the current patch
       ctasks_.left=ctasks_.right=patch_;
       ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
-    
-      //signature is no longer needed so free memory
-      count_[0].clear();
-      count_[1].clear();
-      count_[2].clear();
 
+      WAIT_FOR_TAGS:
       //check if tags are available
       if(!controller_->getTags(ctasks_.ltag,ctasks_.rtag) )
       {
@@ -350,65 +344,88 @@ void BNRTask::continueTask()
         controller_->tag_q_.push(this);
         return;
       }
-      WAIT_FOR_TAGS:
-      
-      controller_->task_count_+=2;
-      
     }
-    else
+  }  
+  
+  //signature is no longer needed so free memory
+  count_.clear();
+  //broadcast child tasks
+  if(p_group_.size()>1)
+  {
+    status_=BROADCASTING_CHILD_TASKS;
+    stage_=0;
+    BROADCAST_CHILD_TASKS:
+    //broadcast children tasks
+    if(Broadcast(&ctasks_,sizeof(ChildTasks),MPI_BYTE))
     {
-      //signature is no longer needed so free memory
-      count_[0].clear();
-      count_[1].clear();
-      count_[2].clear();
+      return;
     }
-
-    if(p_group_.size()>1)
-    {
-      status_=BROADCASTING_CHILD_TASKS;
-      stage_=0;
-      BROADCAST_CHILD_TASKS:
-      //broadcast children tasks
-      if(Broadcast(&ctasks_,sizeof(ChildTasks),MPI_BYTE,0))
-      {
-        return;
-      }
-    }
-    
+  }
+  
+  if(ctasks_.split.d==-1)
+  {
+      //current patch is acceptable
+      my_patches_.push_back(patch_);
+  }
+  else
+  {
+    //create tasks
     CreateTasks();
-    
+  
+    //Wait for childern to reactivate parent
     status_=WAITING_FOR_CHILDREN;  
     return;
-    
     WAIT_FOR_CHILDREN:
     
     if(p_rank_==0)
     {  
-      
       //begin # of patches recv
-      MPI_Irecv(&left_size_,1,MPI_INT,MPI_ANY_SOURCE,left_->tag_+1,controller_->d_myworld->getComm(),getRequest());
-      MPI_Irecv(&right_size_,1,MPI_INT,MPI_ANY_SOURCE,right_->tag_+1,controller_->d_myworld->getComm(),getRequest());
+
+      //if i'm also the master of the children tasks copy the patches from the child task
+      if(left_->p_group_[0]==p_group_[0])
+      {
+         left_size_=left_->my_patches_.size();
+         my_patches_.assign(left_->my_patches_.begin(),left_->my_patches_.end());
+      }
+      else
+      {
+        MPI_Irecv(&left_size_,1,MPI_INT,left_->p_group_[0],left_->tag_,controller_->d_myworld->getComm(),getRequest());
+      }
+      if(right_->p_group_[0]==p_group_[0])
+      {
+         right_size_=right_->my_patches_.size();
+         my_patches_.insert(my_patches_.end(),right_->my_patches_.begin(),right_->my_patches_.end());
+      }
+      else
+      {
+        MPI_Irecv(&right_size_,1,MPI_INT,right_->p_group_[0],right_->tag_,controller_->d_myworld->getComm(),getRequest());
+      }
       //recv's might not be done yet so place back on delay_q
       status_=WAITING_FOR_PATCH_COUNT;  
-      return;
+      if(remaining_requests_>0)
+        return;
       
       WAIT_FOR_PATCH_COUNT:
       status_=WAITING_FOR_PATCHES;
       
+      start=my_patches_.size();               //start of receive buff
+      //resize my_patches_ buffer to recieve
       my_patches_.resize(left_size_+right_size_);
-      
-      //recieve patch_sets from children on child tag
-      if(left_size_>0)
+     
+      //recieve patch_sets from children on child tag only if it hasn't been copied already
+      if(left_->p_group_[0]!=p_group_[0])
       {
-        MPI_Irecv(&my_patches_[0],left_size_*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,left_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        MPI_Irecv(&my_patches_[start],left_size_*sizeof(Region),MPI_BYTE,left_->p_group_[0],left_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        start+=left_size_;                        //move recieve buffer forward
       }
-      if(right_size_>0)
+      if(right_->p_group_[0]!=p_group_[0])
       {
-        MPI_Irecv(&my_patches_[0]+left_size_,right_size_*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,right_->tag_,controller_->d_myworld->getComm(),getRequest());    
+        MPI_Irecv(&my_patches_[start],right_size_*sizeof(Region),MPI_BYTE,right_->p_group_[0],right_->tag_,controller_->d_myworld->getComm(),getRequest());    
       }    
-      return;
+      if(remaining_requests_>0)
+        return;
       WAIT_FOR_PATCHES:
-      
+    
       controller_->tags_.push(left_->tag_);    //reclaim tag
       controller_->tags_.push(right_->tag_);    //reclaim tag
       
@@ -419,26 +436,26 @@ void BNRTask::continueTask()
         my_patches_.resize(0);
         my_patches_.push_back(patch_);
       }
-    }
+    } //if(p_rank_==0)
   }
-
   
   //COMMUNICATE_PATCH_LIST:  
   if(p_rank_==0 && parent_!=0)
   {
-    //send up the chain or to the root processor
-    my_size_=my_patches_.size();
-  
-    //send patch_ count to parent
-    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_+1,controller_->d_myworld->getComm(),getRequest());
-     
-    if(my_size_>0)
+    if(p_group_[0]!=parent_->p_group_[0]) //if I am not the same rank as the parent master process
     {
-      //send patch list to parent
-      MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      //send up to the master using mpi
+      my_size_=my_patches_.size();
+  
+      //send patch_ count to parent
+      MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+     
+      if(my_size_>0)
+      {
+        //send patch list to parent
+        MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      }
     }
-    status_=SENDING_TO_PARENT;
-    return;
   }
   
   TERMINATE:
@@ -448,7 +465,6 @@ void BNRTask::continueTask()
   //if parent is waiting activiate parent 
   if(parent_!=0 && sibling_->status_==TERMINATED )
   {
-    
     //place parent_ on immediate queue (parent is waiting for communication from children and both are done sending)
     controller_->immediate_q_.push(parent_);
   }
@@ -457,33 +473,20 @@ void BNRTask::continueTask()
 }
 
 /***************************************************
- * Same as continue task but on 1 processor only
+ * Same as continueTask but on 1 processor only
  * ************************************************/
 void BNRTask::continueTaskSerial()
 {
-  
   switch (status_)
   {
           case NEW:                                                             //0
                   goto TASK_START;
           case WAITING_FOR_CHILDREN:                                            //8
                   goto WAIT_FOR_CHILDREN;
-          case SENDING_TO_PARENT:
-                  goto TERMINATE;
-          case GATHERING_FLAG_COUNT:                                            //1
-          case BROADCASTING_FLAG_COUNT:                                         //2
-          case COMMUNICATING_SIGNATURES:                                        //3
-          case SUMMING_SIGNATURES:                                              //4
-          case BROADCASTING_ACCEPTABILITY:                                      //5
-          case WAITING_FOR_TAGS:                                                //6
-          case BROADCASTING_CHILD_TASKS:                                        //7
-          case WAITING_FOR_PATCH_COUNT:                                         //9
-          case WAITING_FOR_PATCHES:                                             //10
-          case TERMINATED:                                                      //12
           default:
-                  cout << "Error invalid status(" << status_ << ") in serial task\n";
-                  exit(0);
-                  return;
+                  char error[100];
+                  sprintf(error,"Error invalid status (%d) in serial task\n",status_);
+                  throw InternalError(error,__FILE__,__LINE__);
   }
                   
   TASK_START:
@@ -503,24 +506,21 @@ void BNRTask::continueTaskSerial()
     my_patches_.push_back(patch_);
       
     //signature is no longer needed so free memory
-    count_[0].clear();
-    count_[1].clear();
-    count_[2].clear();
+    count_.clear();
   }
   else
   {
     ctasks_.split=FindSplit();
-     
-    //signature is no longer needed so free memory
-    count_[0].clear();
-    count_[1].clear();
-    count_[2].clear();
-
+      
+    //split the current patch
     ctasks_.left=ctasks_.right=patch_;
     ctasks_.left.high()[ctasks_.split.d]=ctasks_.right.low()[ctasks_.split.d]=ctasks_.split.index;
-    ctasks_.ltag=0;
-    ctasks_.rtag=0;
-    controller_->task_count_+=2;
+    
+    ctasks_.ltag=-1;
+    ctasks_.rtag=-1;
+     
+    //signature is no longer needed so free memory
+    count_.clear();
       
     CreateTasks();
     
@@ -530,22 +530,15 @@ void BNRTask::continueTaskSerial()
     
     WAIT_FOR_CHILDREN:
     
-    if(left_->tag_!=0 || right_->tag_!=0)
+    if(left_->tag_!=-1 || right_->tag_!=-1)
     {
       controller_->tags_.push(left_->tag_);    //reclaim tag
       controller_->tags_.push(right_->tag_);    //reclaim tag
-    }  
+    }
     //copy patches from left children
-    for(unsigned int p=0;p<left_->my_patches_.size();p++)
-    {
-      my_patches_.push_back(left_->my_patches_[p]);
-    }
-    //copy patches from left and right children
-    for(unsigned int p=0;p<right_->my_patches_.size();p++)
-    {
-      my_patches_.push_back(right_->my_patches_[p]);
-    }
-        
+    my_patches_.assign(left_->my_patches_.begin(),left_->my_patches_.end());
+    my_patches_.insert(my_patches_.end(),right_->my_patches_.begin(),right_->my_patches_.end());
+    
     //check tolerance b and take better patchset
     CheckTolB();
     if(!acceptable_)
@@ -556,24 +549,23 @@ void BNRTask::continueTaskSerial()
   }
   
   //COMMUNICATE_PATCH_LIST:  
-  if( parent_!=0 && parent_->p_group_.size()!=1)
+  if( parent_!=0 && parent_->p_group_[0]!=p_group_[0])  //if parent exists and I am not also the master on the parent
   {
-    //send up the chain or to the root processor
-    my_size_=my_patches_.size();
-  
-    //send patch count to parent
-    MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_+1,controller_->d_myworld->getComm(),getRequest());
-     
-    if(my_size_>0)
     {
-      //send patch list to parent
-      MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      //send up the chain or to the root processor
+      my_size_=my_patches_.size();
+  
+      //send patch count to parent
+      MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+     
+      if(my_size_>0)
+      {
+        //send patch list to parent
+        MPI_Isend(&my_patches_[0],my_size_*sizeof(Region),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),getRequest());
+      }
     }
-    status_=SENDING_TO_PARENT;
-    return;
   }
   
-  TERMINATE:
   status_=TERMINATED;
   
   //if parent is waiting activiate parent 
@@ -588,23 +580,25 @@ void BNRTask::continueTaskSerial()
 
 void BNRTask::ComputeLocalSignature()
 {
+  IntVector size=patch_.getHigh()-patch_.getLow();
+  sig_offset_[0]=0;
+  sig_offset_[1]=size[0];
+  sig_offset_[2]=size[0]+size[1];
+  sig_size_=size[0]+size[1]+size[2];
+  
   //resize signature count_
-  count_[0].resize(patch_.getHigh()[0]-patch_.getLow()[0]);
-  count_[1].resize(patch_.getHigh()[1]-patch_.getLow()[1]);
-  count_[2].resize(patch_.getHigh()[2]-patch_.getLow()[2]);
+  count_.resize(sig_size_);
 
   //initialize signature
-  count_[0].assign(count_[0].size(),0);
-  count_[1].assign(count_[1].size(),0);
-  count_[2].assign(count_[2].size(),0);
+  count_.assign(sig_size_,0);
   
   //count flags
   for(int f=0;f<flags_.size;f++)
   {
       IntVector loc=flags_.locs[f]+offset_;
-      count_[0][loc[0]]++;
-      count_[1][loc[1]]++;
-      count_[2][loc[2]]++;
+      count_[loc[0]]++;
+      count_[sig_offset_[1]+loc[1]]++;
+      count_[sig_offset_[2]+loc[2]]++;
   }
 }
 void BNRTask::BoundSignatures()
@@ -619,14 +613,14 @@ void BNRTask::BoundSignatures()
       //search for first non zero
       for(i=0;i<size[d];i++)
       {
-        if(count_[d][i]!=0)
+        if(count_[sig_offset_[d]+i]!=0)
           break;
       }
       low[d]=i+patch_.getLow()[d];
       //search for last non zero
       for(i=size[d]-1;i>=0;i--)
       {
-        if(count_[d][i]!=0)
+        if(count_[sig_offset_[d]+i]!=0)
               break;  
       }
       high[d]=i+1+patch_.getLow()[d];
@@ -669,7 +663,7 @@ Split BNRTask::FindSplit()
     int index=patch_.getLow()[d]+offset_[d]+1;
     for(int i=1;i<size[d]-1;i++,index++)
     {
-      if(count_[d][index]==0)
+      if(count_[sig_offset_[d]+index]==0)
       {
           split.d=d;
           split.index=index-offset_[d];
@@ -690,12 +684,12 @@ Split BNRTask::FindSplit()
       int s;
       
       int index=patch_.getLow()[d]+offset_[d];
-      last_d2=count_[d][index+1]-count_[d][index];
+      last_d2=count_[sig_offset_[d]+index+1]-count_[sig_offset_[d]+index];
       int last_s=sign(last_d2);
       index++;
       for(int i=1;i<size[d]-1;i++,index++)
       {
-        d2=count_[d][index-1]+count_[d][index+1]-2*count_[d][index];
+        d2=count_[sig_offset_[d]+index-1]+count_[sig_offset_[d]+index+1]-2*count_[sig_offset_[d]+index];
         s=sign(d2);
         
         //if sign change
@@ -744,7 +738,7 @@ Split BNRTask::FindSplit()
         last_d2=d2;
         last_s=s;
       }
-      d2=count_[d][index-1]-count_[d][index];
+      d2=count_[sig_offset_[d]+index-1]-count_[sig_offset_[d]+index];
       s=sign(d2);
               
       //if sign change
@@ -802,7 +796,7 @@ Split BNRTask::FindSplit()
  * the return value indicates if there is more broadcasting to 
  * perform on this processor
  * *********************************************************/
-bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigned int tag_inc)
+bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype)
 {
   unsigned int partner;
   //broadcast flagscount_ back to procs
@@ -816,7 +810,7 @@ bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigne
       if(partner<p_group_.size())
       {
         //Nonblocking send msg to partner
-        MPI_Isend(message,count_,datatype,p_group_[partner],tag_+tag_inc,controller_->d_myworld->getComm(),getRequest());
+        MPI_Isend(message,count_,datatype,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
         return true;
       }
     }
@@ -825,7 +819,7 @@ bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigne
       partner=p_rank_-stride;
         
       //Nonblocking recieve msg from partner
-      MPI_Irecv(message,count_,datatype,p_group_[partner],tag_+tag_inc,controller_->d_myworld->getComm(),getRequest());  
+      MPI_Irecv(message,count_,datatype,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());  
       return true;
     }
     else
@@ -841,7 +835,6 @@ bool BNRTask::Broadcast(void *message, int count_, MPI_Datatype datatype,unsigne
 void BNRTask::CreateTasks()
 {
   FlagsList leftflags_,rightflags_;
-    
   //split the flags
   int front=0, back=flags_.size-1;  
   int d=ctasks_.split.d, v=ctasks_.split.index;
@@ -865,9 +858,8 @@ void BNRTask::CreateTasks()
 
   rightflags_.locs=flags_.locs+front;
   rightflags_.size=flags_.size-front;
-    
-  //create new tasks   
   
+  //create new tasks
   controller_->tasks_.push_back(BNRTask(ctasks_.left,leftflags_,p_group_,p_rank_,this,ctasks_.ltag));
   left_=&controller_->tasks_.back();
   
@@ -879,6 +871,7 @@ void BNRTask::CreateTasks()
 
   controller_->immediate_q_.push(left_);
   controller_->immediate_q_.push(right_);
+  controller_->task_count_+=2;
 }
 
   

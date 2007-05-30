@@ -1,11 +1,11 @@
-#include <Packages/Uintah/Core/GeometryPiece/CorrugEdgeGeomPiece.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/GeometryPiece/CorrugEdgeGeomPiece.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Grid/Box.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Math/Matrix3.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;

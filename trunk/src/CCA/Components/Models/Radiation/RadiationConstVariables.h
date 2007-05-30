@@ -1,10 +1,10 @@
 //----- RadiationConstVariables.h -----------------------------------------------
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Core/Exceptions/PetscError.h>
 
 #ifndef Uintah_Components_Models_RadiationConstVariables_h
 #define Uintah_Components_Models_RadiationConstVariables_h
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 /**************************************
 CLASS

@@ -2,10 +2,10 @@
 #define UINTAH_TENSOR_2D_H
 
 // Headers
-#include <Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 // Base class
-#include <Packages/Uintah/Core/Math/Tensor.h>
+#include <Core/Math/Tensor.h>
 
 namespace Uintah {
 

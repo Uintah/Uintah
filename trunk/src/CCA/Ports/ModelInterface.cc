@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <CCA/Ports/ModelInterface.h>
 
 using namespace Uintah;
 

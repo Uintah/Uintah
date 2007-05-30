@@ -10,44 +10,44 @@
  *  Copyright (C) 2003 U of U
  */
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/MultiLevelField.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenericField.h>
+#include <Core/Math/Matrix3.h>
+#include <SCIRun/Core/Basis/Constant.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Datatypes/MultiLevelField.h>
+#include <SCIRun/Core/Containers/FData.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
 
 
-#include <Core/Math/MinMax.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/OS/Dir.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Persistent/Pstreams.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/OS/Dir.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Semaphore.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Persistent/Pstreams.h>
 
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Dataflow/Modules/Selectors/PatchToField.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/DataArchive/DataArchive.h>
 
 #include <sci_hash_map.h>
 #include <teem/nrrd.h>

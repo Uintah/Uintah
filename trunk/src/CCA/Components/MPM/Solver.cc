@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+#include <CCA/Components/MPM/Solver.h>
 
 using namespace Uintah;
 

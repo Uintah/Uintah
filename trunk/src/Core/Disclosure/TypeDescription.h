@@ -8,7 +8,7 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <sci_mpi.h>
 
-#include <Packages/Uintah/Core/Disclosure/share.h>
+#include <Core/Disclosure/share.h>
 
 namespace Uintah {
 

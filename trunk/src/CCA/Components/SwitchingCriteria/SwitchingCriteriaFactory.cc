@@ -1,11 +1,11 @@
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/None.h>
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/TimestepNumber.h>
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/PBXTemperature.h>
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SteadyState.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
+#include <CCA/Components/SwitchingCriteria/None.h>
+#include <CCA/Components/SwitchingCriteria/TimestepNumber.h>
+#include <CCA/Components/SwitchingCriteria/PBXTemperature.h>
+#include <CCA/Components/SwitchingCriteria/SteadyState.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 
 #include <iostream>

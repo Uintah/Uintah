@@ -1,33 +1,34 @@
 //----- ScalarSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/ScalarSolver.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/PetscSolver.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/RHSSolver.h>
+#include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 
 using namespace Uintah;
@@ -307,10 +308,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO
@@ -549,8 +548,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+
   tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   
@@ -561,25 +559,10 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  Task::WhichDW old_values_dw;
-  if (timelabels->use_old_values) old_values_dw = parent_old_dw;
-  else old_values_dw = Task::NewDW;
-
-   tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,
-		 Ghost::None, Arches::ZEROGHOSTCELLS);
-   tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
-		 Ghost::None, Arches::ZEROGHOSTCELLS);
-
   tsk->requires(Task::NewDW, d_lab->d_scalCoefSBLMLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
 
@@ -628,18 +611,15 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables scalarVars;
     ArchesConstVariables constScalarVars;
+
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -650,15 +630,6 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       old_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    DataWarehouse* old_values_dw;
-    if (timelabels->use_old_values) old_values_dw = parent_old_dw;
-    else old_values_dw = new_dw;
-    
-    old_values_dw->get(constScalarVars.old_old_scalar, d_lab->d_scalarSPLabel, 
-		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_values_dw->get(constScalarVars.old_old_density, d_lab->d_densityCPLabel, 
-		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
     // for explicit calculation
     if (doing_EKT_now)
       new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
@@ -666,13 +637,6 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     else
       new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 
                   matlIndex, patch);
-
-    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
       new_dw->get(constScalarVars.scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 

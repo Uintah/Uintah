@@ -1,8 +1,8 @@
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/RectangleBCData.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/BoundaryConditions/RectangleBCData.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <iostream>
 using namespace SCIRun;
 using namespace Uintah;

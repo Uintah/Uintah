@@ -1,14 +1,14 @@
 #ifndef __SHELL_GEOMETRY_OBJECT_H__
 #define __SHELL_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <math.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////

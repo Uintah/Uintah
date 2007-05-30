@@ -1,11 +1,11 @@
 
-#include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
+#include <StandAlone/tools/puda/tecplot.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Disclosure/TypeDescription.h>
 
-#include <Core/Containers/Array3.h>
-#include <Core/Geometry/Point.h>
+#include <SCIRun/Core/Containers/Array3.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 #include <fstream>
 #include <iomanip>

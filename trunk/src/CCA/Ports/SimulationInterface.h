@@ -1,16 +1,16 @@
 #ifndef UINTAH_HOMEBREW_SimulationInterface_H
 #define UINTAH_HOMEBREW_SimulationInterface_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Core/OS/Dir.h>
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <Core/Parallel/UintahParallelPort.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Util/Handle.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <SCIRun/Core/OS/Dir.h>
+#include <CCA/Ports/share.h>
 
 namespace Uintah {
 

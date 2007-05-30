@@ -1,15 +1,15 @@
 #ifndef _TURBULENCE_H
 #define _TURBULENCE_H
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 namespace Uintah {
 

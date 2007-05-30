@@ -2,10 +2,10 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_AMRSimpleCFD_h
 #define Packages_Uintah_CCA_Components_Examples_AMRSimpleCFD_h
 
-#include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <CCA/Components/Examples/SimpleCFD.h>
+#include <Core/Grid/Task.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/share.h>
 namespace Uintah {
   class SCISHARE AMRSimpleCFD : public SimpleCFD {
   public:

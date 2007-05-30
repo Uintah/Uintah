@@ -1,16 +1,16 @@
-#include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/ICE/Diffusion.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 #define SMALL_NUM 1.0e-100
 
 #include <typeinfo>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 using namespace Uintah;
 namespace Uintah {
 /* ---------------------------------------------------------------------

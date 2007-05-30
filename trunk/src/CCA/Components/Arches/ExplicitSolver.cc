@@ -1,41 +1,42 @@
 //----- ExplicitSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
-#include <Core/Containers/StaticArray.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ReactiveScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Math/MiscMath.h>
+#include <CCA/Components/Arches/ExplicitSolver.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/EnthalpySolver.h>
+#include <CCA/Components/Arches/MomentumSolver.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ScalarSolver.h>
+#include <CCA/Components/Arches/ReactiveScalarSolver.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 #ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/Filter.h>
 #endif
 
 #include <math.h>
@@ -348,7 +349,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index,
-			 doing_EKT_now);
+			 false, doing_EKT_now);
       }
       doing_EKT_now = false;
     }
@@ -416,7 +417,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level]);
+    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level],
+                             d_EKTCorrection);
 
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
@@ -445,7 +447,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                               true);
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
-					    d_timeIntegratorLabels[curr_level]);
+					    d_timeIntegratorLabels[curr_level],
+                                            d_EKTCorrection);
     } 
 
     d_props->sched_computeDrhodt(sched, patches, matls,
@@ -458,7 +461,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(sched, patches, matls,
-			 d_timeIntegratorLabels[curr_level], index, false);
+			 d_timeIntegratorLabels[curr_level], index,
+                         false, false);
     }
 
     if (d_extraProjection) {
@@ -470,7 +474,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
 			 d_timeIntegratorLabels[curr_level], index,
-			 d_extraProjection);
+			 d_extraProjection, false);
       }
     }
 
@@ -873,14 +877,10 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1444,16 +1444,13 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1797,20 +1794,23 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<int> cellType_new;
     new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
     cellType_new.copyData(cellType);
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
+
+    // Get the PerPatch CellInformation data from oldDW, initialize it if it is
+    // not there
+    if (!(d_MAlab)) {
+      PerPatch<CellInformationP> cellInfoP;
+      if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+        throw InvalidValue("cellInformation should not be initialized yet",
+			   __FILE__, __LINE__);
+      if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+        old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+      else {
+        cellInfoP.setData(scinew CellInformation(patch));
+        //cout << "cellInfo INIT" << endl;
+      }
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }
 
-#if 0
-    PerPatch<CellInformationP> cellInfoP;
-    cellInfoP.setData(scinew CellInformation(patch));
-    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-#endif
     SFCXVariable<double> uVelocity_new;
     new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     uVelocity_new.copyData(uVelocity); // copy old into new
@@ -2329,10 +2329,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
@@ -3002,18 +3000,10 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     //getting current time

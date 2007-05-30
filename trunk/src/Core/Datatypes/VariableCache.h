@@ -16,17 +16,17 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Persistent/Persistent.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Persistent/Persistent.h>
+#include <Core/Math/Matrix3.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Core/Datatypes/share.h>
 namespace Uintah {
   using std::vector;
   using std::string;

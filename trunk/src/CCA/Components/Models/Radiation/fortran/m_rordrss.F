@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
 C***********************************************************************
 C     SUBROUTINE RORDR (RORDR stands for "Radiation-ORDinates-Rectangular")
 C     Generates the table of direction cosines and quadrature weights for 

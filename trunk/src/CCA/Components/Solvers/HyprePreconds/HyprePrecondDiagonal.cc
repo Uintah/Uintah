@@ -4,12 +4,12 @@
 // Hypre Diagonal (geometric multigrid #2) preconditioner.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondDiagonal.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Solvers/HyprePreconds/HyprePrecondDiagonal.h>
+#include <CCA/Components/Solvers/HypreDriver.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 //__________________________________

@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 
       integer i,j,k
 

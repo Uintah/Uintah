@@ -21,11 +21,11 @@
 
 #include <sci_values.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/ScalarMinMax.h>
+#include <Dataflow/Modules/Operators/ScalarMinMax.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Ports/FieldPort.h>

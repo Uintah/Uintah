@@ -1,9 +1,9 @@
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace SCIRun;
 using namespace Uintah;

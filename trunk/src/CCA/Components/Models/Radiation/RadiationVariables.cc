@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
+#include <CCA/Components/Models/Radiation/RadiationVariables.h>
 
 using namespace Uintah;
 

@@ -1,9 +1,9 @@
 #ifndef UINTAH_HOMEBREW_NirvanaLoadBalancer_H
 #define UINTAH_HOMEBREW_NirvanaLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Core/Geometry/IntVector.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #include <set>
 
 namespace Uintah {

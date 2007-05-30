@@ -1,31 +1,31 @@
 #ifndef UINTAH_GRID_LEVEL_H
 #define UINTAH_GRID_LEVEL_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Core/Containers/OffsetArray1.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Util/Handle.h>
+#include <SCIRun/Core/Containers/OffsetArray1.h>
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
 #undef max
 #endif
 
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/fixedvector.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/fixedvector.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::Vector;

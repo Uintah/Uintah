@@ -1,8 +1,8 @@
 #ifndef Packages_Uintah_Core_Grid_SimpleMaterial_h
 #define Packages_Uintah_Core_Grid_SimpleMaterial_h
 
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
 using namespace SCIRun;

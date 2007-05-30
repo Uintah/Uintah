@@ -1,8 +1,8 @@
-#include <Packages/Uintah/CCA/Components/ICE/customInitialize.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
+#include <CCA/Components/ICE/customInitialize.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 using namespace Uintah;
 namespace Uintah {

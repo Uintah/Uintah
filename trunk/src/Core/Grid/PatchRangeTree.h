@@ -1,11 +1,11 @@
-#include <Core/Containers/RangeTree.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Containers/RangeTree.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
   using namespace SCIRun;

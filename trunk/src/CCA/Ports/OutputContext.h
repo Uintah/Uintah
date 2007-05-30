@@ -5,7 +5,7 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
    /**************************************

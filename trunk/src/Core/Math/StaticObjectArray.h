@@ -21,7 +21,7 @@
 #ifndef Uintah_Core_Math_StaticObjectArray_h
 #define Uintah_Core_Math_StaticObjectArray_h
 
-#include <Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 using namespace SCIRun;
 

@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/LinearMMS.h>
+#include <StandAlone/tools/compare_mms/LinearMMS.h>
 
 #include <math.h>
 

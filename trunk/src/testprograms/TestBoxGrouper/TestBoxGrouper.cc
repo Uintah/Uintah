@@ -1,7 +1,7 @@
 #include <Packages/Uintah/testprograms/TestBoxGrouper/TestBoxGrouper.h>
 #include <Packages/Uintah/testprograms/TestBoxGrouper/Box.h>
 #include <Packages/Uintah/testprograms/TestBoxGrouper/BoxRangeQuerier.h>
-#include <Core/Containers/SuperBox.h>
+#include <SCIRun/Core/Containers/SuperBox.h>
 
 using namespace std;
 using namespace SCIRun;

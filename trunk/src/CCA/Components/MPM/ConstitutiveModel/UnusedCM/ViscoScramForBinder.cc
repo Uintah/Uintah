@@ -1,23 +1,23 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // just added
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/Crack/FractureDefine.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/Short27.h> //for Fracture
+#include <Core/Grid/Variables/NodeIterator.h> // just added
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
-#include <Core/Math/MinMax.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Endian.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>

@@ -1,8 +1,8 @@
 #ifndef Uintah_Core_Grid_ComputeSet_special_cc
 #define Uintah_Core_Grid_ComputeSet_special_cc
 
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Patch.h>
 #include <algorithm>
 
 namespace Uintah {

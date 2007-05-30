@@ -1,24 +1,24 @@
 #ifndef UINTAH_HOMEBREW_GRID_H
 #define UINTAH_HOMEBREW_GRID_H
 
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
+namespace SLIVR {
   class BBox;
   class Point;
   class Vector;
 }
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   class ProcessorGroup;
@@ -68,15 +68,15 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    Level* addLevel(const SCIRun::Point& anchor,
-                    const SCIRun::Vector& dcell, int id=-1);
+    Level* addLevel(const SLIVR::Point& anchor,
+                    const SLIVR::Vector& dcell, int id=-1);
    
     void performConsistencyCheck() const;
     void printStatistics() const;
 
     //////////
     // Computes the physical boundaries for the grid (including extra cells)
-    void getSpatialRange(SCIRun::BBox& b) const;
+    void getSpatialRange(SLIVR::BBox& b) const;
 
     const Patch* getPatchByID(int id, int startLevel) const;
 
@@ -84,11 +84,11 @@ WARNING
     // Returns the boundary of the grid exactly (without
     // extra cells).  The value returned is the same value
     // as found in the .ups file.
-    void getInteriorSpatialRange(SCIRun::BBox& b) const;
+    void getInteriorSpatialRange(SLIVR::BBox& b) const;
     
     //////////
     // Computes the length of the grid
-    void getLength(SCIRun::Vector& length,
+    void getLength(SLIVR::Vector& length,
                    const string flag = "plusExtraCells") const;
     
     //////////

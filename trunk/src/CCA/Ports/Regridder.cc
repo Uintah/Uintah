@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
+#include <CCA/Ports/Regridder.h>
 
 using namespace Uintah;
 

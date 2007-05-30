@@ -1,16 +1,16 @@
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverPFMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSparseMSG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverCG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverHybrid.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverPFMG.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverSparseMSG.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverCG.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverHybrid.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
+#include <CCA/Components/Solvers/HypreDriverStruct.h>
+#include <CCA/Components/Solvers/HypreDriverSStruct.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 #include <sci_comp_warn_fixes.h>
 

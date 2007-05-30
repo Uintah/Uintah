@@ -2,9 +2,9 @@
 #ifndef UINTAH_HOMEBREW_VarLabelMatl_H
 #define UINTAH_HOMEBREW_VarLabelMatl_H
 
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 
 namespace Uintah {
 

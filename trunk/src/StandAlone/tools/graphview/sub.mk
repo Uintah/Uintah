@@ -12,6 +12,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Util \
 	Core/Exceptions  \
 	Core/Util  
 

@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/normpress_fort.h>
+#include <CCA/Components/Arches/fortran/normpress_fort.h>
 C-----------------------------------------------------------------------
 C     EXPLANATION OF SYMBOLS USED:
 C

@@ -19,22 +19,22 @@
 //    Author : J. Davison de St. Germain
 //    Date   : Jan 2006
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/CompareMMS.h>
+#include <Dataflow/Modules/Operators/CompareMMS.h>
 
-#include <Core/Datatypes/FieldInterface.h>
+#include <SCIRun/Core/Datatypes/FieldInterface.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Core/Datatypes/Archive.h>
+#include <Core/Disclosure/TypeUtils.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>

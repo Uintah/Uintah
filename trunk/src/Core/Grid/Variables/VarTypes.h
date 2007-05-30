@@ -2,9 +2,9 @@
 #define UINTAH_HOMEBREW_VarTypes_H
 
 
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
    /**************************************

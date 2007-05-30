@@ -6,20 +6,20 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <Core/Containers/Array1.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Geom/ColorMap.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Thread/CrowdMonitor.h>
+#include <SCIRun/Core/Containers/Array1.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Geom/ColorMap.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
-#include <Packages/Uintah/Core/Datatypes/GLAnimatedStreams.h>
+#include <Core/Datatypes/GLAnimatedStreams.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

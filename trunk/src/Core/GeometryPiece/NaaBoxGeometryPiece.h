@@ -1,15 +1,11 @@
 #ifndef __NAABOX_GEOMETRY_OBJECT_H__
 #define __NAABOX_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Box.h>
+#include <Core/Math/Matrix3.h>
 
-#include <Core/Geometry/Vector.h>
-
-namespace SCIRun {
-  class Point;
-}
+#include <SCIRun/Core/Geometry/Vector.h>
 
 namespace Uintah {
 

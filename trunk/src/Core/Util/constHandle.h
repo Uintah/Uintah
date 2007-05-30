@@ -1,8 +1,8 @@
 #ifndef UINTAH_GRID_CONSTHANDLE_H
 #define UINTAH_GRID_CONSTHANDLE_H
 
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Core/Util/Assert.h>
+#include <Core/Util/Handle.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 namespace Uintah {
 

@@ -4,9 +4,9 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>  // Petsc uses mpi, so need to include mpi_defs.h
 
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <CCA/Components/MPM/Solver.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <set>

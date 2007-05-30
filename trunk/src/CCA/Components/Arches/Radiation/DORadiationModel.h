@@ -33,8 +33,8 @@ WARNINGS
 POSSIBLE REVISIONS
     None
 ***************************************************************************/
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <CCA/Components/Arches/Radiation/RadiationModel.h>
+#include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 
 namespace Uintah {
 

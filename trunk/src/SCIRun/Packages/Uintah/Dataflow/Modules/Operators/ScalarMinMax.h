@@ -22,15 +22,15 @@
 #if !defined(SCALARMINMAX_H)
 #define SCALARMINMAX_H
 
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ProgressReporter.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Datatypes/FieldInterface.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Util/ProgressReporter.h>
 #include <Dataflow/Network/Module.h>
 #include <sci_values.h>
 

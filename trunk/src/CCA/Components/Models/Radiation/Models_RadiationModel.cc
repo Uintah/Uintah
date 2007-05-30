@@ -1,6 +1,6 @@
 //----- Models_RadiationModel.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationModel.h>
+#include <CCA/Components/Models/Radiation/Models_RadiationModel.h>
 
 using namespace Uintah;
 

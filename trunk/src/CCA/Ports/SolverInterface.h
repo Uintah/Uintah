@@ -2,17 +2,17 @@
 #ifndef Packages_Uintah_CCA_Ports_SolverInterace_h
 #define Packages_Uintah_CCA_Ports_SolverInterace_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Core/Parallel/UintahParallelPort.h>
+#include <Core/Grid/LevelP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Task.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <CCA/Ports/share.h>
 
 namespace Uintah {
   class VarLabel;

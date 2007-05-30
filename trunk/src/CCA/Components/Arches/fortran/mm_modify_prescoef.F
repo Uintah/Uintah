@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
+#include <CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #include "param4.h"
 
 *     local variables

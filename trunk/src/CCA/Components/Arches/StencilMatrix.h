@@ -30,7 +30,7 @@ WARNING
    none
 *************************************************************************/
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <iostream>
 
 namespace Uintah {

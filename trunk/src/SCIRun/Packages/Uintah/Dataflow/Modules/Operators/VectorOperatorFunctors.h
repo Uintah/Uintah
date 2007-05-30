@@ -7,7 +7,7 @@
  * Copyright 2000
  */
 
-#include <Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 /* Functors used by VectorFieldOperator and VectorParticlesOperator */
 namespace Uintah {

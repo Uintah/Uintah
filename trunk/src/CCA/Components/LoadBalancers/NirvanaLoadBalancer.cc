@@ -1,17 +1,17 @@
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
 
 using namespace Uintah;
 using namespace std;

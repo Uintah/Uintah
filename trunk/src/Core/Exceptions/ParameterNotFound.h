@@ -13,12 +13,12 @@
 #ifndef UINTAH_EXCEPTIONS_PARAMETERNOTFOUND_H
 #define UINTAH_EXCEPTIONS_PARAMETERNOTFOUND_H
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/share.h>
+#include <Core/Exceptions/share.h>
 namespace Uintah {
 
    class SCISHARE ParameterNotFound : public ProblemSetupException {

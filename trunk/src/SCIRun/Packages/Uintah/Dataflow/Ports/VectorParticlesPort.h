@@ -14,7 +14,7 @@
 #define SCI_project_VectorParticlesPort_h 1
 
 #include <Dataflow/Network/Ports/SimplePort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
+#include <Core/Datatypes/VectorParticles.h>
 
 namespace Uintah {
 

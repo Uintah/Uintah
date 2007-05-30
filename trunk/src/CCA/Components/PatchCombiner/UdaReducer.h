@@ -1,15 +1,15 @@
 #ifndef UINTAH_HOMEBREW_Component_UdaReducer_H
 #define UINTAH_HOMEBREW_Component_UdaReducer_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/SimulationStateP.h>
 
-#include <Packages/Uintah/CCA/Components/PatchCombiner/share.h>
+#include <CCA/Components/PatchCombiner/share.h>
 
 #include <vector>
 

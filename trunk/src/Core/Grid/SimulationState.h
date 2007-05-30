@@ -1,13 +1,13 @@
 #ifndef UINTAH_HOMEBREW_SimulationState_H
 #define UINTAH_HOMEBREW_SimulationState_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationTime.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
@@ -15,7 +15,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
 using namespace SCIRun;

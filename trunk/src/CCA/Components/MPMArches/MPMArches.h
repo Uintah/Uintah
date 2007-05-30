@@ -30,13 +30,13 @@ WARNING
 
 ****************************************/
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SimulationInterface.h>
 
 namespace Uintah {
  struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
@@ -48,13 +48,13 @@ namespace SCIRun {
 
 }
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <CCA/Components/Arches/Arches.h>
 
-#include <Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #undef RIGID_MPM
 // #define RIGID_MPM

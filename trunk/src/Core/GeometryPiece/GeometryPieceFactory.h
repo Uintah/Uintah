@@ -1,8 +1,8 @@
 #ifndef __GEOMETRY_OBJECT_FACTORY_H__
 #define __GEOMETRY_OBJECT_FACTORY_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
@@ -10,7 +10,7 @@
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 namespace Uintah {
 
   class SCISHARE GeometryPieceFactory

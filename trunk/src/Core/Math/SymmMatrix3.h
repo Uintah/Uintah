@@ -1,10 +1,10 @@
 #ifndef __SYMM_MATRIX3_H__
 #define __SYMM_MATRIX3_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/TntJama/tnt.h>
 
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Core/Math/share.h>
 namespace Uintah {
 
   using SCIRun::Vector;

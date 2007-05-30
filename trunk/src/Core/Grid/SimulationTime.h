@@ -1,9 +1,9 @@
 #ifndef UINTAH_HOMEBREW_SimulationTime_H
 #define UINTAH_HOMEBREW_SimulationTime_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
 /**************************************

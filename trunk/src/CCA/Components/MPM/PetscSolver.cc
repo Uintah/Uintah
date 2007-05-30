@@ -3,11 +3,11 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Components/MPM/PetscSolver.h>
+#include <Core/Exceptions/PetscError.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 
 #include <vector>
 #include <iostream>

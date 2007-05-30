@@ -1,9 +1,9 @@
 #ifndef UINTAH_HOMEBREW_BNRTASK_H
 #define UINTAH_HOMEBREW_BNRTASK_H
 
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Components/Regridder/RegridderCommon.h>
 #include <queue>
-#include <Packages/Uintah/Core/Grid/Region.h>
+#include <Core/Grid/Region.h>
 
 namespace Uintah {
 
@@ -39,17 +39,6 @@ WARNING
   
 ****************************************/
 
-  struct FlagsCount 
-  {
-    int rank;
-    int count;
-  };
-
-  inline bool operator<(const FlagsCount &f1, const FlagsCount &f2)
-  {
-    return f1.count>f2.count;
-  }
-
   struct FlagsList
   {
     IntVector* locs;                                // flag location
@@ -65,14 +54,14 @@ WARNING
   struct ChildTasks
   {
     Split split;                                   // location of split that created these tasks
-    Region left, right;                       // child patches
     int ltag, rtag;                                // communication tags for patches
+    Region left, right;                            // child patches
   };
 
-  enum Task_Status { NEW, GATHERING_FLAG_COUNT, BROADCASTING_FLAG_COUNT,
-                     COMMUNICATING_SIGNATURES, SUMMING_SIGNATURES, BROADCASTING_ACCEPTABILITY,
+  enum Task_Status { NEW, REDUCING_FLAG_INFO, UPDATING_FLAG_INFO, BROADCASTING_FLAG_INFO,
+                     COMMUNICATING_SIGNATURES, SUMMING_SIGNATURES,
                      WAITING_FOR_TAGS, BROADCASTING_CHILD_TASKS, WAITING_FOR_CHILDREN,
-                     WAITING_FOR_PATCH_COUNT, WAITING_FOR_PATCHES, SENDING_TO_PARENT, TERMINATED };
+                     WAITING_FOR_PATCH_COUNT, WAITING_FOR_PATCHES, TERMINATED };
 
   class BNRRegridder;
 
@@ -98,12 +87,13 @@ WARNING
     void CreateTasks();
     MPI_Request* getRequest();
                 
-    bool Broadcast(void *message, int count, MPI_Datatype datatype,unsigned int tag);
+    bool Broadcast(void *message, int count, MPI_Datatype datatype);
 
     // Task information
     Task_Status status_;                // Status of current task
-    Region patch_;                 // patch that is being worked on
+    Region patch_;                      // patch that is being worked on
     FlagsList flags_;                   // list of flags inside this task
+    vector<int> flag_info_;             // information on the flags on all processors
     BNRTask *parent_;                   // pointer to parent task
     BNRTask *sibling_;                  // pointer to sibling task
     BNRTask *left_, *right_;            // left and right child tasks
@@ -113,17 +103,19 @@ WARNING
     IntVector offset_;                  // offset for indexing 
 
     // Signatures
-    vector<int>     count_[3];          // histogram signature
+    int sig_size_;                      // size of the signature
+    vector<int>     count_;             // histogram signature
+    IntVector sig_offset_;              // offset into count_ and sum_ for each dimension      
                 
     // MPI Communication state
-    unsigned int tag_;                  // unique message tag
+    int tag_;                           // unique message tag
     unsigned int remaining_requests_;   // remaining requests on this task
     int stage_;                         // hypercube send/recieve stage
     int d_;                             // dimension of hypercube
                 
     // Communication buffers
-    vector<FlagsCount> flagscount_;     // buffer for gathering the number of flags
-    vector<int> sum_[3];                // buffer for calculating global histogram
+    vector<int> flag_info_buffer_;       // buffer for reducing flag info
+    vector<int> sum_;                   // buffer for calculating global histogram
     ChildTasks ctasks_;                 // structure of child tasks
 
     // Participating processor information
@@ -133,10 +125,10 @@ WARNING
     // pointer to controlling algorithm
     static BNRRegridder *controller_;   // controlling algorithm;
 
-    vector<Region> my_patches_;    // list of patches
-    int my_size_;              // number of patches on the parent
-    int left_size_;            // number of patches in left child
-    int right_size_;           // number of patches in right child
+    vector<Region> my_patches_;         // list of patches
+    int my_size_;                       // number of patches on the parent
+    int left_size_;                     // number of patches in left child
+    int right_size_;                    // number of patches in right child
   };
 
 } // End namespace Uintah

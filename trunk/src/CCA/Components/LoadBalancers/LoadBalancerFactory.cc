@@ -1,13 +1,13 @@
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
+#include <CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
+#include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
+#include <CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
+#include <CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
+#include <CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using std::cerr;

@@ -1,4 +1,4 @@
-#include <Packages/Uintah/Core/Exceptions/InvalidCompressionMode.h>
+#include <Core/Exceptions/InvalidCompressionMode.h>
 #include <iostream>
 #include <sstream>
 using namespace Uintah;

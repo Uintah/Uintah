@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/Core/Math/Primes.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Math/Primes.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 using namespace SCIRun;
 
 // From the primes FAQ

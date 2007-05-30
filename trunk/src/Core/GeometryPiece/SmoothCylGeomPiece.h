@@ -1,15 +1,15 @@
 #ifndef __SMOOTH_CYL_PIECE_H__
 #define __SMOOTH_CYL_PIECE_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
-#include <Core/Geometry/Point.h>
+#include <Core/GeometryPiece/SmoothGeomPiece.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 #include <math.h>
 #ifndef M_PI
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////

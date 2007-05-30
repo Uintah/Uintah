@@ -1,16 +1,16 @@
-#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
+#include <Core/Math/Short27.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Task.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/SimulationState.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 using namespace SCIRun;

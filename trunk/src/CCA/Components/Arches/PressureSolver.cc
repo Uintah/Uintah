@@ -2,48 +2,49 @@
 
 #include <sci_defs/hypre_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/LinearSolver.h>
+#include <CCA/Components/Arches/PetscSolver.h>
 #ifdef HAVE_HYPRE
-#include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
+#include <CCA/Components/Arches/HypreSolver.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace std;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/add_hydrostatic_term_topressure_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/normpress_fort.h>
+#include <CCA/Components/Arches/fortran/add_hydrostatic_term_topressure_fort.h>
+#include <CCA/Components/Arches/fortran/normpress_fort.h>
 
 // ****************************************************************************
 // Default constructor for PressureSolver
@@ -272,10 +273,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
   
@@ -633,19 +632,11 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 
 
     // Get the PerPatch CellInformation data
-
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     old_dw->get(prel, d_lab->d_pressurePSLabel,

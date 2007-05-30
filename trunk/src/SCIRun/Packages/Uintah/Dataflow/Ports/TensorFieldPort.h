@@ -13,7 +13,7 @@
 #ifndef SCI_project_TensorFieldPort_h
 #define SCI_project_TensorFieldPort_h 1
 
-#include <Packages/Uintah/Core/Datatypes/TensorField.h>
+#include <Core/Datatypes/TensorField.h>
 
 #include <Dataflow/Network/Ports/SimplePort.h>
 

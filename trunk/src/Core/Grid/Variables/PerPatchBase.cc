@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/PerPatchBase.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Variables/PerPatchBase.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
 using namespace SCIRun;

@@ -4,11 +4,11 @@
 // Hypre SMG (geometric multigrid #1) solver.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
+#include <CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 //__________________________________

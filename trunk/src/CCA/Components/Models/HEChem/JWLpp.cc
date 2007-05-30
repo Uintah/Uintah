@@ -1,18 +1,18 @@
 
-#include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/Models/HEChem/JWLpp.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/ICELabel.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
 #include <iostream>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 using namespace std;

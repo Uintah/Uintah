@@ -1,6 +1,6 @@
 #include "CopperCp.h"
 #include <math.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 	 

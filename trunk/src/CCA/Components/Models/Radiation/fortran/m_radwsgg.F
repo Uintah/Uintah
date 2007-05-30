@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
 C***********************************************************************
 C	SUBROUTINE RADWSGG - calculates spectral gas and soot absorption  
 C	coefficients for cartesian or cylindrical geometries.

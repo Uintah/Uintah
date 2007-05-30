@@ -1,6 +1,6 @@
 #include <Uintah/Dataflow/Modules/Operators/TensorParticlesOperator.h>
 
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <Uintah/Core/Datatypes/TensorParticles.h>
 #include <Uintah/Core/Datatypes/ScalarParticles.h>

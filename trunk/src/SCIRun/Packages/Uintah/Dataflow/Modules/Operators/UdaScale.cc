@@ -8,12 +8,12 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/GuiInterface/GuiVar.h> 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <Core/Datatypes/Archive.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Dataflow/Ports/ArchivePort.h>
 
 namespace Uintah {
 

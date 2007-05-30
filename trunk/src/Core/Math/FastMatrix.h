@@ -34,11 +34,11 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
+namespace SLIVR {
   class Vector;
 }
 
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Core/Math/share.h>
 namespace Uintah {
   using namespace std;
   class SCISHARE FastMatrix {
@@ -63,7 +63,7 @@ namespace Uintah {
     // Warning - this do not do any pivoting...
     void destructiveSolve(double* b);
     void destructiveSolve(double* b1, double* b2);
-    void destructiveSolve(SCIRun::Vector* b);
+    void destructiveSolve(SLIVR::Vector* b);
 
     void transpose(const FastMatrix& transpose);
     void multiply(const vector<double>& b, vector<double>& X) const;
@@ -87,7 +87,7 @@ namespace Uintah {
     void big_destructiveInvert(FastMatrix& inverse);
     void big_destructiveSolve(double* b);
     void big_destructiveSolve(double* b1, double* b2);
-    void big_destructiveSolve(SCIRun::Vector* b);
+    void big_destructiveSolve(SLIVR::Vector* b);
 
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);

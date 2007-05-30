@@ -1,8 +1,8 @@
 #ifndef UINTAH_HOMEBREW_PARTICLEDATA_H
 #define UINTAH_HOMEBREW_PARTICLEDATA_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/Variables/ParticleSet.h>
 
 namespace Uintah {
 

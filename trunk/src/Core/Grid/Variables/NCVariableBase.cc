@@ -1,11 +1,11 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/NCVariableBase.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
+#include <Core/Grid/Variables/NCVariableBase.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Parallel/BufferInfo.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Mutex.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 
 #include <iostream>
 

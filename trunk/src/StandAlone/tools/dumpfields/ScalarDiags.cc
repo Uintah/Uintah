@@ -1,6 +1,6 @@
 #include "ScalarDiags.h"
 #include "TensorDiags.h"
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <string>
 #include <map>

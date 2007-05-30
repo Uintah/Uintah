@@ -1,11 +1,11 @@
 #include <sci_defs/hypre_defs.h>
-#include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
-#include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Solvers/SolverFactory.h>
+#include <CCA/Components/Solvers/CGSolver.h>
+#include <CCA/Components/Solvers/DirectSolve.h>
+#include <CCA/Components/Solvers/HypreSolver.h>
+#include <CCA/Components/Solvers/AMRSolver.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using namespace Uintah;

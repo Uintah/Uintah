@@ -1,10 +1,10 @@
 #ifndef Packages_Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
 #define Packages_Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/share.h>
+#include <CCA/Components/LoadBalancers/share.h>
 namespace Uintah {
 
   class ProcessorGroup;

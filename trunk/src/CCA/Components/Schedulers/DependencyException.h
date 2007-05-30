@@ -14,10 +14,10 @@
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_DEPENDENCY_EXCEPTION_H
 #define UINTAH_COMPONENTS_SCHEDULERS_DEPENDENCY_EXCEPTION_H
 
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Exceptions/Exception.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

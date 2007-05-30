@@ -1,7 +1,7 @@
 #ifndef Uintah_Component_Arches_OdtData_h
 #define Uintah_Component_Arches_OdtData_h
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 namespace Uintah {
   struct odtData { 

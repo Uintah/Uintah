@@ -1,8 +1,8 @@
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Parallel/Parallel.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 #include <iostream>
 using namespace std;
@@ -31,11 +31,11 @@ void PatchRangeQuerier::query(IntVector low, IntVector high,
   back_insert_iterator<ResultContainer> result_ii(result);
   
   ResultContainer tmp;
-  //add 1 to the low and subtract 1 from the high
-    //this adjusts for ghost cells that may have been included in the low and high
-    //this assumes the minimum patch size is greater than 2
-  level_->selectPatches(low+IntVector(1,1,1), high-IntVector(1,1,1), tmp);  
-
+  //add the extra cells to the low and subtract them from the high
+    //this adjusts for the extra cells that may have been included in the low and high
+    //this assumes the minimum patch size is greater than 2*extra_cells
+  IntVector offset=level_->getExtraCells();
+  level_->selectPatches(low+offset, high-offset, tmp);  
   
   for(ResultContainer::iterator iter = tmp.begin(); iter != tmp.end(); iter++){
     if(patches_.find(*iter) != patches_.end())

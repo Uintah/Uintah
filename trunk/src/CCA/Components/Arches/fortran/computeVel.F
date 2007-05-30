@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
+#include <CCA/Components/Arches/fortran/computeVel_fort.h>
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL add pressure gradient term for momentum eqn

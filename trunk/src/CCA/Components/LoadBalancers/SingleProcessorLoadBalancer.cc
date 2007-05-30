@@ -1,9 +1,9 @@
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <Core/Grid/Level.h>
 
 using namespace Uintah;
 using namespace std;

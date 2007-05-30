@@ -2,12 +2,12 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_NonAdiabaticTable_h
 #define Packages_Uintah_CCA_Components_Examples_NonAdiabaticTable_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <CCA/Ports/ModelInterface.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <vector>
 

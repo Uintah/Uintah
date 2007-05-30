@@ -7,12 +7,12 @@
 
 #include "AnimatedStreams.h"
 
-#include <Core/Containers/Array1.h>
-#include <Core/Geom/ColorMap.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Containers/Array1.h>
+#include <SCIRun/Core/Geom/ColorMap.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Thread/CrowdMonitor.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>

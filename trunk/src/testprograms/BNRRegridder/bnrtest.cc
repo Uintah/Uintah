@@ -1,8 +1,8 @@
 
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
+#include <SCIRun/Core/Parallel/Parallel.h>
+#include <SCIRun/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/Regridder/BNRRegridder.h>
+#include <CCA/Components/Regridder/PatchFixer.h>
 using namespace Uintah;
 
 #include <iostream>

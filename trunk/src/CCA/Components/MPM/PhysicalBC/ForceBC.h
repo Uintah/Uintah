@@ -1,10 +1,10 @@
 #ifndef UINTAH_GRID_ForceBC_H
 #define UINTAH_GRID_ForceBC_H
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

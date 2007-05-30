@@ -3,8 +3,8 @@
 
 // RunLengthEncoder with speciailizations for basic types, Vector's,
 // and Point's. 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Core/Geometry/SpecializedRunLengthEncoder.h>
+#include <Core/Math/Matrix3.h>
+#include <SCIRun/Core/Geometry/SpecializedRunLengthEncoder.h>
 
 // Specializations of the DefaultRunLengthSequencer, to override the
 // EqualElementSequencer version with the EqualIntervalSequencer

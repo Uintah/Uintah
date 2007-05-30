@@ -2,15 +2,15 @@
 #ifndef Uintah_Components_Arches_BoundaryCondition_h
 #define Uintah_Components_Arches_BoundaryCondition_h
 
-#include <Core/Containers/Array1.h>
+#include <SCIRun/Core/Containers/Array1.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Ports/SchedulerP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <vector>

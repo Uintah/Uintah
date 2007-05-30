@@ -1,23 +1,23 @@
 
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
+#include <Core/Grid/Level.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Box.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 
-#include <Core/Geometry/BBox.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Util/ProgressiveWarning.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Thread/AtomicCounter.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Util/ProgressiveWarning.h>
 
 #include <iostream>
 #include <algorithm>
@@ -28,7 +28,7 @@
 #define BRYAN_SELECT_CACHE
 
 #ifdef SELECT_RANGETREE
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
+#include <Core/Grid/PatchRangeTree.h>
 #endif
 
 #ifdef _WIN32

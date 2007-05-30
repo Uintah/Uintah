@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Core/Datatypes/TensorField.h>
+#include <Core/Datatypes/TensorField.h>
 
-#include <Core/Containers/String.h>
+#include <SCIRun/Core/Containers/String.h>
 
 #include <iostream>
 

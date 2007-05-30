@@ -1,13 +1,13 @@
 //  Short27.cc
 
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/Core/Math/CubeRoot.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Assert.h>
-#include <Core/Util/Endian.h>
+#include <Core/Math/Short27.h>
+#include <Core/Math/CubeRoot.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Endian.h>
 
 
 #include <stdlib.h>

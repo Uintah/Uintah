@@ -1,10 +1,10 @@
 
-#include <Packages/Uintah/StandAlone/tools/puda/asci.h>
+#include <StandAlone/tools/puda/asci.h>
 
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <StandAlone/tools/puda/util.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/GridP.h>
 
 #include <vector>
 #include <iostream>

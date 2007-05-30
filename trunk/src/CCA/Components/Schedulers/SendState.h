@@ -2,8 +2,8 @@
 #define UINTAH_HOMEBREW_SendState_H
 
 #include <map>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
 
 namespace Uintah {
   using namespace std;

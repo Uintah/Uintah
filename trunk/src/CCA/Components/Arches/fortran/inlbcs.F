@@ -3,8 +3,8 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inlbcs_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/param4.h>
+#include <CCA/Components/Arches/fortran/inlbcs_fort.h>
+#include <CCA/Components/Arches/fortran/param4.h>
       
 c*********************************************************************
 c     Locals :
@@ -24,7 +24,7 @@ c*********************************************************************
       JEND = idxHi(2)
       KEND = idxHi(3)
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/ramping.h>
+#include <CCA/Components/Arches/fortran/ramping.h>
 
 
 C-----------------------------------------------------------------------

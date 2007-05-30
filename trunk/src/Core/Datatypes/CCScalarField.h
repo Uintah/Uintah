@@ -2,14 +2,14 @@
 #define SCI_project_CCScalarField_h 1
 
 //#include "Packages/UintahScalarField.h"
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/CellIterator.h>
 
-#include <Core/Datatypes/ScalarFieldRGBase.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
+#include <SCIRun/Core/Datatypes/ScalarFieldRGBase.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 #include <sci_values.h>
 #include <sgi_stl_warnings_off.h>

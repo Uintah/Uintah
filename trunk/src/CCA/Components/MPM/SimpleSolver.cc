@@ -1,7 +1,7 @@
-#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Components/MPM/SimpleSolver.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 #include <iostream>
 #include <vector>
 

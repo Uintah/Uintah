@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

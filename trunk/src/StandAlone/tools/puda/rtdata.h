@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/StandAlone/tools/puda/puda.h>
+#include <StandAlone/tools/puda/puda.h>
 
 namespace Uintah {
 

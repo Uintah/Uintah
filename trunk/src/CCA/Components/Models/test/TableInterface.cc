@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
+#include <CCA/Components/Models/test/TableInterface.h>
 
 using namespace Uintah;
 

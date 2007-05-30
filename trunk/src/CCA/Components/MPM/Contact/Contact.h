@@ -1,11 +1,11 @@
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
 #include <math.h>
 
 namespace Uintah {

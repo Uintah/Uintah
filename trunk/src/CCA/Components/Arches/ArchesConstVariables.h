@@ -1,15 +1,15 @@
 //----- ArchesConstVariables.h -----------------------------------------------
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Core/Exceptions/PetscError.h>
 
 #ifndef Uintah_Components_Arches_ArchesConstVariables_h
 #define Uintah_Components_Arches_ArchesConstVariables_h
 
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
 
 /**************************************
 CLASS
@@ -71,10 +71,8 @@ namespace Uintah {
       constSFCZVariable<double> wVelRhoHat;
       constCCVariable<double> divergence;
       constCCVariable<double> old_scalar;
-      constCCVariable<double> old_old_scalar;
       constCCVariable<double> enthalpy;
       constCCVariable<double> old_enthalpy;
-      constCCVariable<double> old_old_enthalpy;
       constCCVariable<double> temperature;
       constCCVariable<double> cp;
       constCCVariable<double> absorption;

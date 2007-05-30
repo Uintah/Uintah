@@ -1,12 +1,12 @@
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SteadyState.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <CCA/Components/SwitchingCriteria/SteadyState.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Parallel/Parallel.h>
 #include <string>
 #include <iostream>
 

@@ -1,9 +1,9 @@
 #ifndef _CONTACTFACTORY_H_
 #define _CONTACTFACTORY_H_
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
 

@@ -2,26 +2,26 @@
 
 #include <fstream> // work around compiler bug with RHEL 3
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationSolver.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Models/Radiation/Models_HypreSolver.h>
+#include <CCA/Components/Models/Radiation/Models_RadiationSolver.h>
+#include <SCIRun/Core/Containers/Array1.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <CCA/Components/Models/Radiation/RadiationVariables.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/PetscError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <stdlib.h>
 #include <stdio.h>

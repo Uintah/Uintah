@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
+#include <CCA/Components/Arches/fortran/explicit_vel_fort.h>
 C-----------------------------------------------------------------------
 *	PHI	Variable for which equation is being solved (i/p) 
 *	AE,AW,AN,AS,AT,AB,AP

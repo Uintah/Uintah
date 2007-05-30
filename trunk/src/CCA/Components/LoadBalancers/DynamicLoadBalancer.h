@@ -1,10 +1,10 @@
 #ifndef UINTAH_HOMEBREW_DynamicLoadBalancer_H
 #define UINTAH_HOMEBREW_DynamicLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/SFC.h>
 #include <set>
 #include <string>
 
@@ -144,7 +144,11 @@ namespace Uintah {
     ProblemSpecP d_pspec;
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
-    float d_cellFactor;
+    
+    double d_cellCost;      //cost weight per cell 
+    double d_particleCost;  //cost weight per particle
+    double d_patchCost;     //cost weight per patch
+    
     int d_dynamicAlgorithm;
     bool d_doSpaceCurve;
     bool d_collectParticles;

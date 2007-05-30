@@ -5,44 +5,44 @@
 #include <fstream> // work around compiler bug with RHEL 3
 
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <CCA/Components/Arches/Radiation/DORadiationModel.h>
+#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
 #ifdef HAVE_HYPRE
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
-//#include <Packages/Uintah/CCA/Components/Arches/Mixing/Common.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Core/Containers/OffsetArray1.h>
-#include <Core/Thread/Time.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+//#include <CCA/Components/Arches/Mixing/Common.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <SCIRun/Core/Containers/OffsetArray1.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <math.h>
-#include <Core/Math/MiscMath.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 
 
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
 //****************************************************************************
 // Default constructor for DORadiationModel
 //****************************************************************************

@@ -2,7 +2,7 @@
 #define __ROUSSELIER_YIELD_MODEL_H__
 
 #include "YieldCondition.h"	
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

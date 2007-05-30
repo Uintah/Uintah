@@ -1,8 +1,8 @@
 #ifndef __BOUND_COND_FACTORY_H__
 #define __BOUND_COND_FACTORY_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

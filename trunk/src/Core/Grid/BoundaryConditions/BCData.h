@@ -5,8 +5,8 @@
 #include <map>
 #include <string>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 
 namespace Uintah {
 using std::map;

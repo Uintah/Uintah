@@ -1,18 +1,18 @@
 
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/TimestepSelector.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Dataflow/Modules/Selectors/TimestepSelector.h>
+#include <Core/DataArchive/DataArchive.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/Color.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Geom/GeomText.h>
-#include <Core/Geom/GeomLine.h>
-#include <Core/Geom/GeomSticky.h>
-#include <Core/Geom/Material.h>
-#include <Core/Geom/GeomGroup.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Datatypes/Color.h>
+#include <SCIRun/Core/Datatypes/DenseMatrix.h>
+#include <SCIRun/Core/Geom/GeomText.h>
+#include <SCIRun/Core/Geom/GeomLine.h>
+#include <SCIRun/Core/Geom/GeomSticky.h>
+#include <SCIRun/Core/Geom/Material.h>
+#include <SCIRun/Core/Geom/GeomGroup.h>
 #include <Dataflow/Network/Scheduler.h>
 
 

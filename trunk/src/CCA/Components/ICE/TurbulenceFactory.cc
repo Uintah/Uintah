@@ -1,10 +1,10 @@
 
-#include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
-#include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
-#include <Packages/Uintah/CCA/Components/ICE/DynamicModel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/ICE/TurbulenceFactory.h>
+#include <CCA/Components/ICE/SmagorinskyModel.h>
+#include <CCA/Components/ICE/DynamicModel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

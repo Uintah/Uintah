@@ -1,13 +1,13 @@
 #ifndef ARCHIVE_H
 #define ARCHIVE_H
 
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Persistent/Persistent.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Containers/LockingHandle.h>
+#include <SCIRun/Core/Persistent/Persistent.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Core/DataArchive/DataArchive.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Core/Datatypes/share.h>
 namespace Uintah {
 
 using namespace SCIRun;

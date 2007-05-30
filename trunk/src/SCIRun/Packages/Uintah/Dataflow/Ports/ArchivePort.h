@@ -13,7 +13,7 @@
 #ifndef SCI_project_ArchivePort_h
 #define SCI_project_ArchivePort_h 1
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Core/Datatypes/Archive.h>
 
 #include <Dataflow/Network/Ports/SimplePort.h>
 

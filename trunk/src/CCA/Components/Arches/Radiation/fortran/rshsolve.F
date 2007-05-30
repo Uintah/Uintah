@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
 
       integer i,j,k
 

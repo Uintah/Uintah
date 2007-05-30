@@ -2,16 +2,16 @@
 #ifndef Uintah_Components_Arches_hypreSolver_h
 #define Uintah_Components_Arches_hypreSolver_h
 
-#include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Arches/LinearSolver.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
-#include <Core/Containers/Array1.h>
+#include <SCIRun/Core/Containers/Array1.h>
 
 #include <utilities.h>
 #include <HYPRE_struct_ls.h>

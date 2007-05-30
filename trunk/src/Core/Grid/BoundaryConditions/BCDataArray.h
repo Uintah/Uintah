@@ -1,17 +1,17 @@
 #ifndef UINTAH_GRID_BCDataArray_H
 #define UINTAH_GRID_BCDataArray_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/BoundaryConditions/BCData.h>
+#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
 /*!

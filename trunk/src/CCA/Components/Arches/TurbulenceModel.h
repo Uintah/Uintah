@@ -37,9 +37,9 @@ WARNING
    none
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/Arches.h>
 #ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/Filter.h>
 #endif
 namespace Uintah {
 class TimeIntegratorLabel;

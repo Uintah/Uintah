@@ -1,7 +1,7 @@
 
 #include "LevelField.h"
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Math/Matrix3.h>
 #include <utility>
 using namespace Uintah;
 using std::pair;

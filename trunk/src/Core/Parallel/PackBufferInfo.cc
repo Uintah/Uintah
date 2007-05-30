@@ -1,8 +1,8 @@
 
-#include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/Assert.h>
+#include <Core/Parallel/PackBufferInfo.h>
+#include <Core/Util/RefCounted.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 using namespace Uintah;
 

@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 #include "TimestepSelector.h"
 #include <iostream> 
 #include <sstream>

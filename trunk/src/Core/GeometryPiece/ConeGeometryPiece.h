@@ -1,12 +1,12 @@
 #ifndef __CONE_GEOMETRY_OBJECT_H__
 #define __CONE_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************

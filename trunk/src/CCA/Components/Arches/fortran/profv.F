@@ -3,8 +3,8 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/param4.h>
+#include <CCA/Components/Arches/fortran/profv_fort.h>
+#include <CCA/Components/Arches/fortran/param4.h>
 
 c*********************************************************************
 c     Local Variables :
@@ -40,7 +40,7 @@ C---------------------------------------------------------------------
         ENDIF
       endif
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/ramping.h>
+#include <CCA/Components/Arches/fortran/ramping.h>
 
 c
 c     debug to try pure diffusion case: if we don't do this, then

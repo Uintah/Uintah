@@ -22,6 +22,6 @@ To update each external file, do (from Uintah/src/SCIRun):
 
 svn merge -N https://code.sci.utah.edu/svn/SCIRun/cibc/trunk/SCIRun/src@<OLD_REVISION> https://code.sci.utah.edu/svn/SCIRun/cibc/trunk/SCIRun/src@<NEW_REVISION> .
 
-The current revision is 37506.  Update this when you update the SCIRun version.
+The current revision is 37631.  Update this when you update the SCIRun version.
 
 Then commit the changes.

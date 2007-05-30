@@ -2,13 +2,13 @@
 #ifndef UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 #define UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/Relocate.h>
+#include <CCA/Components/Schedulers/MessageLog.h>
+#include <CCA/Components/Schedulers/ThreadPool.h>
+#include <CCA/Ports/DataWarehouseP.h>
  
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Core/Grid/Task.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

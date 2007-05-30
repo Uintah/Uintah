@@ -1,14 +1,14 @@
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/CrackBC.h>
+#include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
+#include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 using namespace std;
 using namespace Uintah;

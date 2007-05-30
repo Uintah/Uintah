@@ -1,12 +1,12 @@
 #ifndef __CONTACT_MATERIAL_SPEC_H__
 #define __CONTACT_MATERIAL_SPEC_H__
 
-#include <Core/Containers/StaticArray.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <vector>
 

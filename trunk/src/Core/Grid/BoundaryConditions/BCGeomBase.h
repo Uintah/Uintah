@@ -1,10 +1,10 @@
 #ifndef UINTAH_GRID_BCGeomBase_H
 #define UINTAH_GRID_BCGeomBase_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
+#include <Core/Grid/BoundaryConditions/BCData.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

@@ -2,18 +2,18 @@
 #ifndef Uintah_Core_Grid_ComputeSet_h
 #define Uintah_Core_Grid_ComputeSet_h
 
-#include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Util/constHandle.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/constHandle.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <algorithm>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::InternalError;
@@ -494,7 +494,7 @@ WARNING
 } // end namespace Uintah
 
 #ifdef __PGI
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>
+#include <Core/Grid/Variables/ComputeSet_special.cc>
 #endif
 
 

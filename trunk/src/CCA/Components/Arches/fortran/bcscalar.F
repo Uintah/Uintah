@@ -1,6 +1,6 @@
 c
 c
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcscalar_fort.h>
+#include <CCA/Components/Arches/fortran/bcscalar_fort.h>
 #include "param4.h"
 C-----------------------------------------------------------------------
 C     THIS SUBROUTINE CALCULATES THE BOUNDARY CONDITONS FOR F

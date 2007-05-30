@@ -1,22 +1,22 @@
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Persistent/Persistent.h>
-#include <Core/Geometry/Point.h>
+#include <SCIRun/Core/Containers/LockingHandle.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Persistent/Persistent.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Core/Datatypes/share.h>
 namespace Uintah {
 using std::vector;
 using namespace SCIRun;

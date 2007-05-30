@@ -14,13 +14,13 @@
 #ifndef UINTAH_EXCEPTIONS_ConvergenceFailure_H
 #define UINTAH_EXCEPTIONS_ConvergenceFailure_H
 
-#include <Core/Exceptions/Exception.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/share.h>
+#include <Core/Exceptions/share.h>
 namespace Uintah {
   using namespace std;
   class SCISHARE ConvergenceFailure : public SCIRun::Exception {

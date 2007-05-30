@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Patch.h>
 #include <iostream>
 
 using namespace std;

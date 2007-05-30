@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <assert.h>
 #include "GV_TaskGraph.h"
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
 using namespace std;
 using namespace SCIRun;

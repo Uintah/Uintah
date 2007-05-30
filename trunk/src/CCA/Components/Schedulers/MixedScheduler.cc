@@ -1,13 +1,13 @@
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
+#include <CCA/Components/Schedulers/MixedScheduler.h>
 
-#include <Core/Thread/Time.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <set>

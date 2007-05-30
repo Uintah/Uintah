@@ -1,9 +1,9 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Util/Endian.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Util/Endian.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <mpi.h>
 
 using namespace Uintah;

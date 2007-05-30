@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Core/Exceptions/PetscError.h>
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>

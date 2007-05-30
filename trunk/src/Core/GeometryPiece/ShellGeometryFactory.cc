@@ -1,11 +1,11 @@
-#include <Packages/Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/PlaneShellPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SphereShellPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderShellPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/GUVSphereShellPiece.h>
+#include <Core/GeometryPiece/ShellGeometryFactory.h>
+#include <Core/GeometryPiece/PlaneShellPiece.h>
+#include <Core/GeometryPiece/SphereShellPiece.h>
+#include <Core/GeometryPiece/CylinderShellPiece.h>
+#include <Core/GeometryPiece/GUVSphereShellPiece.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <iostream>
 #include <string>

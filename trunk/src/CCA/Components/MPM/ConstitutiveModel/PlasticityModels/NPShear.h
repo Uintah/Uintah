@@ -2,7 +2,7 @@
 #define __NP_SHEAR_MODEL_H__
 
 #include "ShearModulusModel.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

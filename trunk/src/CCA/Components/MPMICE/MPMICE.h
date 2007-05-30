@@ -1,23 +1,23 @@
 #ifndef UINTAH_HOMEBREW_MPMICE_H
 #define UINTAH_HOMEBREW_MPMICE_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <CCA/Ports/SwitchingCriteria.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/CCA/Components/MPMICE/share.h>
+#include <CCA/Components/MPMICE/share.h>
 namespace Uintah {
   class ICE;
   class ICELabel;

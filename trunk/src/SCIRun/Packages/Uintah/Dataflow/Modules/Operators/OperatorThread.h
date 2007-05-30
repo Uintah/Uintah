@@ -1,14 +1,14 @@
 #if ! defined(UINTAH_OPERATOR_THREAD_H)
 #define UINTAH_OPERATOR_THREAD_H
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Mutex.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Semaphore.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/Array3.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

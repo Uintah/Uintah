@@ -1,8 +1,9 @@
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Core/Util/DebugStream.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
+using SCIRun::DebugStream;
 using namespace std;
 
 static DebugStream dbg( "GeometryPiece", false );

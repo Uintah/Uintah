@@ -1,12 +1,12 @@
 #ifndef UINTAH_MPM_ARCHES_HEATFLUXBC_H
 #define UINTAH_MPM_ARCHES_HEATFLUXBC_H
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/LoadCurve.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <CCA/Components/MPM/PhysicalBC/PolynomialData.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>

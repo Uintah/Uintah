@@ -1,13 +1,13 @@
 #ifndef PARTICLE_INTERPOLATOR_H
 #define PARTICLE_INTERPOLATOR_H
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 #include <vector>
 
-#include <Packages/Uintah/Core/Grid/share.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/share.h>
+#include <Core/Grid/Variables/NCVariable.h>
 namespace Uintah {
 
   class Patch;

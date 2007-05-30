@@ -1,11 +1,11 @@
 #ifndef UINTAH_HOMEBREW_Ghost_H
 #define UINTAH_HOMEBREW_Ghost_H
 
-#include <Core/Util/Assert.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #undef None
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
    /**************************************
      

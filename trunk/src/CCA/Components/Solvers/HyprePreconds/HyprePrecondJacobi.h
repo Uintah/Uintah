@@ -34,7 +34,7 @@ WARNING
    matrices.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
+#include <CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
 
 namespace Uintah {
   

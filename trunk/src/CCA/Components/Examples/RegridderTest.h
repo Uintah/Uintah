@@ -1,11 +1,11 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_RegridderTest_h
 #define Packages_Uintah_CCA_Components_Examples_RegridderTest_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/share.h>
 namespace Uintah
 {
   class SimpleMaterial;

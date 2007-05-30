@@ -28,28 +28,28 @@ LOG
     Created January 5, 1999
 ****************************************/
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
+#include <Dataflow/Modules/Selectors/FieldExtractor.h>
 
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Timer.h>
+#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Transform.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Timer.h>
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignArray3.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Grid/Variables/ShareAssignArray3.h>
+#include <Dataflow/Ports/ArchivePort.h>
  
 #include <iostream> 
 #include <sstream>

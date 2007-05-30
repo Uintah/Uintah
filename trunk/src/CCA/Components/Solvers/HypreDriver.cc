@@ -1,26 +1,26 @@
 #include <sci_defs/hypre_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Containers/Array2.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Thread/Time.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Solvers/HypreDriver.h>
+#include <CCA/Components/Solvers/HypreDriverStruct.h>
+#include <CCA/Components/Solvers/HypreDriverSStruct.h>
+#include <CCA/Components/Solvers/MatrixUtil.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/ConvergenceFailure.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <SCIRun/Core/Containers/Array1.h>
+#include <SCIRun/Core/Containers/Array2.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <iomanip>
 
 using namespace Uintah;

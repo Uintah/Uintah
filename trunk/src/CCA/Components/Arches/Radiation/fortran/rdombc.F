@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
       integer I,J,K,IST,IEND,JST,JEND,KST,KEND
 
       double precision PI,PI1,SIG

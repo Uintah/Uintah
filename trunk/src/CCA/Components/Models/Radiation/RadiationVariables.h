@@ -3,7 +3,7 @@
 #ifndef Uintah_Components_Models_RadiationVariables_h
 #define Uintah_Components_Models_RadiationVariables_h
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 /**************************************
 CLASS

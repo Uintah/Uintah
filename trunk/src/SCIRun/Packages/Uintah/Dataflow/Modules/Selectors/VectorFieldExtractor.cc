@@ -29,7 +29,7 @@ LOG
 ****************************************/
 #include "VectorFieldExtractor.h"
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 #include <iostream> 
 #include <string>

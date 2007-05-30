@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdombmcalc_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdombmcalc_fort.h>
 
       integer i,ii,j,jj,k,kk,m
 
@@ -120,7 +120,7 @@ c            write(6,*)xx(i),qfluxb(i,j,kk),zz(kk)
       END IF
 
 c     Calculate relative error in energy balance for lprob(one/two)
-c     Note: We make use of the symmetry in heat fluxes here
+c     Note: We take advantage of the symmetry in heat fluxes here
 
       do 60 k=idxlo(3),idxhi(3)
          do 55 j=idxlo(2),idxhi(2)

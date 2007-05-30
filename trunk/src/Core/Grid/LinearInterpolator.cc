@@ -1,5 +1,5 @@
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/LinearInterpolator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
     

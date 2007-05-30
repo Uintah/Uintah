@@ -2,14 +2,14 @@
 #ifndef UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 #define UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Schedulers/GhostOffsetVarMap.h>
+#include <CCA/Components/Schedulers/Relocate.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <set>
@@ -165,6 +165,7 @@ WARNING
     const set<string>& getNoScrubVars() { return noScrubVars_;}
     const set<string>& getCopyDataVars() { return copyDataVars_;}
 
+    virtual bool useInternalDeps();
   protected:
     void finalizeTimestep();
     
@@ -179,7 +180,6 @@ WARNING
     void printTrackedVars(DetailedTask* dt, bool before);
     
     virtual void verifyChecksum() = 0;
-    virtual bool useInternalDeps();
 
     vector<TaskGraph*> graphs;
     int currentTG_;

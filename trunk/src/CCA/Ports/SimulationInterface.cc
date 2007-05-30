@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <Core/Grid/Task.h>
 
 using namespace Uintah;
 using namespace SCIRun;

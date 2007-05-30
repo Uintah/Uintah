@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
       integer i,j,k
 
       do 30 k=idxlo(3),idxhi(3)

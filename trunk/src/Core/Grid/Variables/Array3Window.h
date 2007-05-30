@@ -1,15 +1,15 @@
 #ifndef UINTAH_HOMEBREW_Array3Window_H
 #define UINTAH_HOMEBREW_Array3Window_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3Data.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/Variables/Array3Data.h>
 #include <limits.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #if SCI_ASSERTION_LEVEL >= 3
 // test the range and throw a more informative exception
 // instead of testing one index's range
-#include <Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <sstream>
 using std::ostringstream;

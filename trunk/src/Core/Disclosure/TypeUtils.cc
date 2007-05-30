@@ -1,10 +1,10 @@
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <float.h>
 #include <limits.h>

@@ -17,11 +17,11 @@ WARNING
   
 ****************************************/
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Exceptions/InternalError.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 namespace Uintah {
 

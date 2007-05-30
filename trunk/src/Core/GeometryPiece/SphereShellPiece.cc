@@ -1,10 +1,10 @@
-#include <Packages/Uintah/Core/GeometryPiece/SphereShellPiece.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/GeometryPiece/SphereShellPiece.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Grid/Box.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <math.h>
 #ifndef M_PI

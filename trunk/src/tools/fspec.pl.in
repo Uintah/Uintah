@@ -8,7 +8,7 @@ $output=shift;
 
 open(FILE, "<$source") or die "cannot open $source for reading: $!";
 
-open(OUT, ">$output");
+open(OUT, ">$output") or die "cannot open $output for writing: $!";
 
 LINE: while(<FILE>){
  # Scan for the return type.  Must be a simple type, or void

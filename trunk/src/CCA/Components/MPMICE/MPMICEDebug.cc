@@ -1,14 +1,14 @@
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 #include <iostream>
 #include <fstream>

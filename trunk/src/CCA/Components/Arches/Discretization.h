@@ -2,22 +2,22 @@
 #ifndef Uintah_Components_Arches_Discretization_h
 #define Uintah_Components_Arches_Discretization_h
 
-//#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-//#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-//#include <Packages/Uintah/Core/Grid/FCVariable.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+//#include <CCA/Components/Arches/StencilMatrix.h>
+//#include <Core/Grid/Variables/CCVariable.h>
+//#include <Core/Grid/FCVariable.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
 #ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/Filter.h>
 #endif
 
-#include <Core/Containers/Array1.h>
+#include <SCIRun/Core/Containers/Array1.h>
 namespace Uintah {
   class ProcessorGroup;
 

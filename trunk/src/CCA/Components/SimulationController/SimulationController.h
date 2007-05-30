@@ -1,18 +1,18 @@
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Packages/Uintah/CCA/Components/SimulationController/share.h>
+#include <CCA/Components/SimulationController/share.h>
 
 namespace Uintah {
 

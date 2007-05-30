@@ -1,11 +1,11 @@
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <CCA/Components/Models/Radiation/Models_CellInformation.h>
+#include <CCA/Components/Models/Radiation/RadiationDriver.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 #include <iostream>
 
 using namespace std;
@@ -13,7 +13,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #ifndef _WIN32 // no fortran
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
 #endif
 
 Models_CellInformation::Models_CellInformation(const Patch* patch)

@@ -29,7 +29,7 @@ LOG
 ****************************************/
 #include "TensorFieldExtractor.h"
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 #include <iostream> 
 #include <vector>

@@ -2,9 +2,9 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing3_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing3_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Core/Containers/FastHashTable.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <SCIRun/Core/Containers/FastHashTable.h>
 #include <map>
 #include <vector>
 

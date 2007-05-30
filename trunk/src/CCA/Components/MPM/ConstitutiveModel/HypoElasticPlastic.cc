@@ -5,38 +5,38 @@
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
+#include <CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/DataWarehouse.h>
 
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LinearInterpolator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Math/FastMatrix.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/Short27.h> //for Fracture
+#include <Core/Math/TangentModulusTensor.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Math/MinMax.h>
-#include <Core/Math/Gaussian.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Math/Gaussian.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 #include <math.h>
 

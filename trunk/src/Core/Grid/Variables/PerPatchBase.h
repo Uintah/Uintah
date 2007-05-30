@@ -5,10 +5,10 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Variable.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::IntVector;

@@ -1,31 +1,32 @@
 //----- OdtClosure.cc --------------------------------------------------
-#include <Packages/Uintah/CCA/Components/Arches/OdtData.h>
-#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/Arches/OdtData.h>
+#include <CCA/Components/Arches/OdtClosure.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Grid/Variables/Stencil.h>
+#include <Core/Grid/Level.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <iostream>
 using namespace std;
 
@@ -324,14 +325,11 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
 //#ifndef PetscFilter
     // Get the PerPatch CellInformation data
-
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 //#endif
     
@@ -1182,10 +1180,8 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     int numGC = 1;
@@ -1337,7 +1333,10 @@ OdtClosure::computeScalarDissipation(const ProcessorGroup*,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index

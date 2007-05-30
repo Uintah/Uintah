@@ -1,13 +1,13 @@
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/STThermalContact.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 #include <vector>
 
 using namespace Uintah;

@@ -1,21 +1,21 @@
 
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimpleMaterial.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

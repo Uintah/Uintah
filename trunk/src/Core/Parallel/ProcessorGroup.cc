@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 

@@ -8,14 +8,14 @@
 #include <queue>
 #include <unistd.h>
 #include <stdlib.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/ConditionVariable.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/ConditionVariable.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <sys/time.h>
-#include <Packages/Uintah/Core/Parallel/MPI_Communicator.h>
+#include <Core/Parallel/MPI_Communicator.h>
 
 #define debug_main
 #define debug_main_thread
@@ -294,6 +294,6 @@ RET_TYPE MPI_CALL(NAME)(CALLSIG){\
   }\
 } \
 
-#include <Packages/Uintah/Core/Parallel/stubs.h>
+#include <Core/Parallel/stubs.h>
 #endif
 #endif

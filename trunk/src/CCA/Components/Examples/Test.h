@@ -1,9 +1,9 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Test_h
 #define Packages_Uintah_CCA_Components_Examples_Test_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
 

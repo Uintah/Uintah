@@ -1,31 +1,31 @@
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/DataWarehouse.h>
 
-#include <Core/Exceptions/ErrnoException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Thread/Time.h>
+#include <SCIRun/Core/Exceptions/ErrnoException.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Thread/Time.h>
 
 #include <fstream>
 #include <iostream>
@@ -820,7 +820,10 @@ SchedulerCommon::finalizeTimestep()
 
 void
 SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim)
-{  
+{
+  TAU_PROFILE("SchedulerCommon::scheduleAndDoDataCopy()", " ", TAU_USER);
+  TAU_PROFILE_TIMER(sched_timer,"schedule", "", TAU_USER);
+  TAU_PROFILE_START(sched_timer);
   double start = Time::currentSeconds();
   // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
@@ -1015,6 +1018,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 #endif
   this->compile(); 
   d_sharedState->regriddingCompilationTime += Time::currentSeconds() - start;
+  
+  TAU_PROFILE_STOP(sched_timer);
+  TAU_PROFILE_TIMER(copy_timer,"copy", "", TAU_USER);
+  TAU_PROFILE_START(copy_timer);
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
   double executeTime = d_sharedState->taskExecTime;
@@ -1058,7 +1065,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   d_sharedState->taskExecTime = executeTime;
   d_sharedState->taskGlobalCommTime = globalCommTime;
   d_sharedState->taskLocalCommTime = localCommTime;
-  
+  TAU_PROFILE_STOP(copy_timer);
 }
 
 

@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #include <sstream>
 #include <iostream>
 

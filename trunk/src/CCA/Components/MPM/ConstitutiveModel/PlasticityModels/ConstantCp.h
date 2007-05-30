@@ -2,7 +2,7 @@
 #define __CONSTANT_SPECIFIC_HEAT_MODEL_H__
 
 #include "SpecificHeatModel.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

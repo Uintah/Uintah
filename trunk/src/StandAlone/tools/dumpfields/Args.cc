@@ -1,5 +1,5 @@
-#include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <StandAlone/tools/dumpfields/Args.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <float.h>
 #include <iostream>
 

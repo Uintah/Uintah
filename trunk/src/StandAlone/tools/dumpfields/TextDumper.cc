@@ -2,8 +2,8 @@
 #include "ScalarDiags.h"
 #include "VectorDiags.h"
 #include "TensorDiags.h"
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
 
 using namespace std;
 

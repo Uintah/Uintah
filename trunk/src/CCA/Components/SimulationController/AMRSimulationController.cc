@@ -1,43 +1,43 @@
 #include <sci_defs/malloc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Thread/Time.h>
-#include <Core/OS/ProcessInfo.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Containers/Array3.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/OS/ProcessInfo.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationTime.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Output.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
 
-#include <Packages/Uintah/Core/Util/share.h> // for dbg_barrier's SCISHARE
+#include <Core/Util/share.h> // for dbg_barrier's SCISHARE
 
 using std::cerr;
 using std::cout;
@@ -128,6 +128,12 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
+#ifdef USE_TAU_PROFILING
+     char tmpname[512];
+     sprintf (tmpname, "Iteration %d", iterations);
+     TAU_PROFILE_TIMER_DYNAMIC(iteration_timer, tmpname, "", TAU_USER);
+     TAU_PROFILE_START(iteration_timer); 
+#endif
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
        doRegridding(currentGrid, false);
      }
@@ -254,6 +260,9 @@ void AMRSimulationController::run()
 		      level);
        }
      }
+     
+     // override for the global level as well (which only matters on dw 0)
+     d_scheduler->get_dw(0)->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
      calcWallTime();
 
@@ -264,7 +273,13 @@ void AMRSimulationController::run()
      if(d_output){
        d_output->executedTimestep(delt, currentGrid);
      }
-
+#ifdef USE_TAU_PROFILING
+     TAU_PROFILE_STOP(iteration_timer);
+     TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
+     TAU_PROFILE_START(sleepy);
+     sleep(1);
+     TAU_PROFILE_STOP(sleepy);
+#endif
      t += delt;
      TAU_DB_DUMP();
    }
@@ -638,23 +653,23 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
       dbg << d_myworld->myrank() << "   Creating level " << i << " tg " << endl;
       d_sim->scheduleTimeAdvance(currentGrid->getLevel(i), d_scheduler);
     }
-    if (d_doAMR && currentGrid->numLevels() > 1) {
-      for (int i = 0; i < currentGrid->numLevels(); i++) {
+    for (int i = 0; i < currentGrid->numLevels(); i++) {
+      if (d_doAMR && currentGrid->numLevels() > 1) {
         dbg << d_myworld->myrank() << "   Doing Int TG level " << i << " tg " << endl;
         // taskgraphs numlevels-2*numlevels-1
         d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
-        // schedule a coarsen from the finest level to this level
-        for (int j = currentGrid->numLevels()-2; j >= i; j--) {
-          dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << endl;
-          d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
-          d_sim->scheduleFinalizeTimestep(currentGrid->getLevel(j), d_scheduler);
-        }
-        // schedule a refineInterface from this level to the finest level
-        for (int j = i; j < currentGrid->numLevels(); j++) {
-          if (j != 0) {
-            dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << endl;
-            d_sim->scheduleRefineInterface(currentGrid->getLevel(j), d_scheduler, j==i, true);
-          }
+      }
+      // schedule a coarsen from the finest level to this level
+      for (int j = currentGrid->numLevels()-2; j >= i; j--) {
+        dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << endl;
+        d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
+      }
+      d_sim->scheduleFinalizeTimestep(currentGrid->getLevel(i), d_scheduler);
+      // schedule a refineInterface from this level to the finest level
+      for (int j = i; j < currentGrid->numLevels(); j++) {
+        if (j != 0) {
+          dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << endl;
+          d_sim->scheduleRefineInterface(currentGrid->getLevel(j), d_scheduler, j==i, true);
         }
       }
     }
@@ -776,8 +791,8 @@ void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,
   }
   Task* task = scinew Task("coarsenDelt", this,
                            &AMRSimulationController::coarsenDelt);
- 
-  task->computes(d_sharedState->get_delt_label());
+
+  task->modifies(d_sharedState->get_delt_label());
   task->setType(Task::OncePerProc);
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }

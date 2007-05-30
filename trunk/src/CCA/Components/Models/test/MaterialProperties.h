@@ -2,7 +2,7 @@
 #ifndef Uintah_MaterialProperties_h
 #define Uintah_MaterialProperties_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
   class MaterialProperties {

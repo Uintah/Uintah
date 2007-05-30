@@ -7,12 +7,12 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/BufferInfo.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Parallel/share.h>
+#include <Core/Parallel/share.h>
 namespace Uintah {
   using namespace std;
   

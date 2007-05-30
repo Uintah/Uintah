@@ -4,33 +4,33 @@
 // multimaterial checks in dynamic model
 // Avoid recomputation of variance
 
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
-#include <Packages/Uintah/CCA/Components/Models/test/AdiabaticTable.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Math/MiscMath.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/ConservationTest.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/Diffusion.h>
+#include <CCA/Components/Models/test/AdiabaticTable.h>
+#include <CCA/Components/Models/test/TableFactory.h>
+#include <CCA/Components/Models/test/TableInterface.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 #include <iostream>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <stdio.h>
 
 using namespace Uintah;

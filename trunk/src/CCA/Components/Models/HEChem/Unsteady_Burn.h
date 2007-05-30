@@ -2,8 +2,8 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_Unsteady_Burn_h
 #define Packages_Uintah_CCA_Components_Examples_Unsteady_Burn_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;

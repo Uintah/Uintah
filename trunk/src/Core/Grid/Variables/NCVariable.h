@@ -1,23 +1,23 @@
 #ifndef UINTAH_HOMEBREW_NCVARIABLE_H
 #define UINTAH_HOMEBREW_NCVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/constGridVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
-#include <Packages/Uintah/Core/IO/SpecializedRunLengthEncoder.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/NCVariableBase.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/constGridVariable.h>
+#include <Core/Grid/Variables/GridVariable.h>
+#include <Core/IO/SpecializedRunLengthEncoder.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Exceptions/TypeMismatchException.h>
 
-#include <Packages/Uintah/CCA/Ports/InputContext.h>
-#include <Packages/Uintah/CCA/Ports/OutputContext.h>
+#include <CCA/Ports/InputContext.h>
+#include <CCA/Ports/OutputContext.h>
 
-#include <Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #ifndef _WIN32
 #include <unistd.h>

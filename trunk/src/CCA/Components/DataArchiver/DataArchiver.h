@@ -1,17 +1,17 @@
 #ifndef UINTAH_HOMEBREW_DataArchiver_H
 #define UINTAH_HOMEBREW_DataArchiver_H
 
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/MaterialSetP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Core/Util/Assert.h>
-#include <Core/OS/Dir.h>
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Thread/Mutex.h>
+#include <CCA/Ports/Output.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Variables/MaterialSetP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/OS/Dir.h>
+#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 
-#include <Packages/Uintah/CCA/Components/DataArchiver/share.h>
+#include <CCA/Components/DataArchiver/share.h>
 namespace Uintah {
 
 using SCIRun::ConsecutiveRangeSet;

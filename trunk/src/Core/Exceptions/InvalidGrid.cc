@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/InvalidGrid.h>
 #include <iostream>
 #include <sstream>
 using namespace Uintah;

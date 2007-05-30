@@ -1,9 +1,9 @@
 #ifndef UINTAH_HOMEBREW_ProblemSpec_H
 #define UINTAH_HOMEBREW_ProblemSpec_H
 
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <string>
@@ -14,13 +14,16 @@
 
 typedef struct _xmlNode xmlNode;
 
-namespace SCIRun {
-  class IntVector;
+namespace SLIVR {
   class Vector;
   class Point;
 }
 
-#include <Packages/Uintah/Core/ProblemSpec/share.h>
+namespace SCIRun {
+  class IntVector;
+}
+
+#include <Core/ProblemSpec/share.h>
 namespace Uintah {
 
 class TypeDescription;
@@ -31,8 +34,8 @@ using std::map;
 using std::ostream;
 
 using SCIRun::IntVector;
-using SCIRun::Vector;
-using SCIRun::Point;
+using SLIVR::Vector;
+using SLIVR::Point;
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up

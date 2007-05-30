@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_HIERARCHICALREGRIDDER_H
 #define UINTAH_HOMEBREW_HIERARCHICALREGRIDDER_H
 
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Components/Regridder/RegridderCommon.h>
 
 #include <set>
 using std::set;

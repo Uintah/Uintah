@@ -1,6 +1,6 @@
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace SCIRun;

@@ -14,22 +14,22 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
+#include <Dataflow/Modules/Visualization/VariablePlotter.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Core/Containers/StringUtil.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/VariableCache.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
-//#include <Packages/Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Thread/CrowdMonitor.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <Dataflow/Ports/ArchivePort.h>
+#include <Core/Datatypes/Archive.h>
+#include <Core/Datatypes/VariableCache.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
+#include <Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
+//#include <Core/Grid/FaceIterator.h> // Includ after Patch.h
+#include <Core/Disclosure/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>

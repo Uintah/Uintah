@@ -1,12 +1,12 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
 
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
+#include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
+#include <CCA/Components/ICE/CustomBCs/LODI2.h>
+#include <Core/Grid/SimulationState.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/share.h>
 namespace Uintah {
   class DataWarehouse;
 

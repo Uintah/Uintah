@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #include <iostream>
 

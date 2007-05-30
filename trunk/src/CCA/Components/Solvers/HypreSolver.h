@@ -1,8 +1,8 @@
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolver_h
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
   class HypreSolver2 : public SolverInterface, public UintahParallelComponent {

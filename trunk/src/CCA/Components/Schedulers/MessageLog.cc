@@ -1,11 +1,11 @@
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
+#include <CCA/Components/Schedulers/MessageLog.h>
+#include <Core/Grid/Patch.h>
+#include <CCA/Ports/Output.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/Time.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>

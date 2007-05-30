@@ -1,7 +1,7 @@
 #ifndef _EQUATION_OF_STATE_FACTORY_H_
 #define _EQUATION_OF_STATE_FACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

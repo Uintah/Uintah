@@ -1,15 +1,15 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_LODI_h
 #define Packages_Uintah_CCA_Components_Ice_LODI_h
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <typeinfo>

@@ -1,8 +1,8 @@
 #ifndef UINTAH_HOMEBREW_BNRREGRIDDER_H
 #define UINTAH_HOMEBREW_BNRREGRIDDER_H
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRTask.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
+#include <CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Components/Regridder/BNRTask.h>
+#include <CCA/Components/Regridder/PatchFixer.h>
 #include <queue>
 #include <stack>
 #include <list>
@@ -81,17 +81,18 @@ WARNING
      
     //queues for tasks
     list<BNRTask> tasks_;				    //list of tasks created throughout the run
-    stack<BNRTask*> immediate_q_;   //tasks that are always ready to run
+    queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
     queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
-    stack<int> tags_;							  //available tags
+    queue<int> tags_;							  //available tags
     PatchFixer patchfixer_;         //Fixup class
     SizeList d_minPatchSize;       //minimum patch size in each dimension
 
     //request handeling variables
     vector<MPI_Request> requests_;    //MPI requests
+    vector<MPI_Status>  statuses_;     //MPI statuses
     vector<int> indicies_;            //return value from waitsome
     vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
-    stack<int>  free_requests_;       //list of free requests
+    queue<int>  free_requests_;       //list of free requests
   };
 
 } // End namespace Uintah

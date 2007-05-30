@@ -2,8 +2,8 @@
 #ifndef UINTAH_HOMEBREW_NodeIterator_H
 #define UINTAH_HOMEBREW_NodeIterator_H
 
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
 

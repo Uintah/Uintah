@@ -1,8 +1,8 @@
-#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/Point.h>
+#include <Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <sstream>
 #ifndef DMIN
 #  define DMIN(a,b) (a < b ? a : b)

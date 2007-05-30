@@ -1,12 +1,12 @@
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 #include <typeinfo>
 
 #define d_SMALL_NUM 1e-100

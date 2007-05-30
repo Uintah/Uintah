@@ -1,15 +1,15 @@
 #ifndef UINTAH_SCHEDULERS_THREADPOOL_H
 #define UINTAH_SCHEDULERS_THREADPOOL_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/RecursiveMutex.h>
-#include <Core/Thread/Semaphore.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/RecursiveMutex.h>
+#include <SCIRun/Core/Thread/Semaphore.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

@@ -1,13 +1,13 @@
 
-#include <Packages/Uintah/CCA/Components/Examples/BoundaryConditions.h>
-#include <Packages/Uintah/CCA/Components/Examples/RegionDB.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Components/Examples/BoundaryConditions.h>
+#include <CCA/Components/Examples/RegionDB.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 
-#include <Core/Math/MiscMath.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iostream>

@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/Archive.h>
+#include <SCIRun/Core/Util/NotFinished.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 namespace Uintah {
 using namespace SCIRun;

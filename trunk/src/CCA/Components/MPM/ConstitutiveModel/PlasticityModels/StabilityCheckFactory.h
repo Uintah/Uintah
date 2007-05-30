@@ -1,7 +1,7 @@
 #ifndef _STABILITYCHECKFACTORY_H_
 #define _STABILITYCHECKFACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

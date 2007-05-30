@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/UnknownVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <sstream>
 #include <iostream>
 

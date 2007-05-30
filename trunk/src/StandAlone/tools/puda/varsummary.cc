@@ -1,15 +1,15 @@
 
-#include <Packages/Uintah/StandAlone/tools/puda/varsummary.h>
+#include <StandAlone/tools/puda/varsummary.h>
 
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <StandAlone/tools/puda/util.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 
-#include <Core/Containers/ConsecutiveRangeSet.h>
+#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
 
 #include <sci_defs/bits_defs.h>
 

@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/Variables/GridIterator.h>
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/EllipticCrack.h>
+#include <CCA/Components/MPM/Crack/EllipticCrack.h>
 #include <iostream>
 
 using std::cout;

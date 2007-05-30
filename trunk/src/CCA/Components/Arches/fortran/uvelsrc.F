@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
+#include <CCA/Components/Arches/fortran/uvelsrc_fort.h>
 #include "param4.h"
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION

@@ -8,9 +8,9 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdio.h>
-#include <Core/Exceptions/ErrnoException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Exceptions/ErrnoException.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include "DaVinci.h"
 #include "graphview.h"
 #include "GV_TaskGraph.h"

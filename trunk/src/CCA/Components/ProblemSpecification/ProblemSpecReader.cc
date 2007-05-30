@@ -1,14 +1,14 @@
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h> // Only used for MPI cerr
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h> // process determination
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Core/Parallel/Parallel.h> // Only used for MPI cerr
+#include <Core/Parallel/ProcessorGroup.h> // process determination
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-//#include <Core/XMLUtil/SimpleErrorHandler.h>
-#include <Core/XMLUtil/XMLUtil.h>
+//#include <SCIRun/Core/XMLUtil/SimpleErrorHandler.h>
+#include <SCIRun/Core/XMLUtil/XMLUtil.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <string>

@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Exceptions/ConvergenceFailure.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>

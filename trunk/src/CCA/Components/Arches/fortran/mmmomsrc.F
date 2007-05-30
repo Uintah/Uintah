@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
+#include <CCA/Components/Arches/fortran/mmmomsrc_fort.h>
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity

@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/arrass_fort.h>
+#include <CCA/Components/Arches/fortran/arrass_fort.h>
 C-----------------------------------------------------------------------
 C     WRITTEN, OCTOBER 14, 1996, BY SESHADRI KUMAR
 C

@@ -1,11 +1,11 @@
 #ifndef UINTAH_ICEDIFFUSION_H
 #define UINTAH_ICEDIFFUSION_H
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/share.h>
 namespace Uintah { 
   class DataWarehouse;
   

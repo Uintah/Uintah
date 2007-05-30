@@ -1,13 +1,13 @@
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Util/constHandle.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Util/constHandle.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
@@ -17,7 +17,7 @@
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   class Level;
@@ -535,6 +535,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, bool oldTG=false);
+
+    //////////
+    // Modify reduction vars
+    void modifies(const VarLabel*, const Level* level,
+		  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain, bool oldTG=false);
     
     //////////
     // Tells the task to actually execute the function assigned to it.
@@ -763,6 +768,6 @@ WARNING
 } // End namespace Uintah
 
 // This mus tbe at the bottom
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/DataWarehouse.h>
 
 #endif

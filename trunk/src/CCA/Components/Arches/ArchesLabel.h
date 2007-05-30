@@ -3,9 +3,9 @@
 #ifndef Uintah_Components_Arches_ArchesLabel_h
 #define Uintah_Components_Arches_ArchesLabel_h
 
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Util/Handle.h>
 
 
 /**************************************
@@ -104,23 +104,15 @@ namespace Uintah {
       const VarLabel* d_presNonLinSrcPBLMLabel;
 
       // U-Velocity Labels
-
-      // for old_dw in computePressureBC and for new_dw in linearsolve
       const VarLabel* d_uVelocitySPBCLabel;
-
-
-
       // V-Velocity Labels
-
-      // for old_dw in computePressureBC
       const VarLabel* d_vVelocitySPBCLabel;
-
-
       // W-Velocity Labels
-
-      // for old_dw in computePressureBC
       const VarLabel* d_wVelocitySPBCLabel;
 
+      const VarLabel* d_uVelocityEKTLabel;
+      const VarLabel* d_vVelocityEKTLabel;
+      const VarLabel* d_wVelocityEKTLabel;
 
       // Scalar Labels
       //computed for old_dw in paramInit

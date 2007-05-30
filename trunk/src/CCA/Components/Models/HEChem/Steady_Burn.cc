@@ -1,17 +1,17 @@
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Models/HEChem/Steady_Burn.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Labels/MPMICELabel.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <iomanip>
 #include <iostream>
 
@@ -198,19 +198,19 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
   
+  // define material subsets  
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();
+  
   const MaterialSubset* react_matl = matl0->thisMaterial();  
   MaterialSubset* one_matl     = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   
-  /*
-    const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
-    const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
-  */
-  
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,                  gac,1);
-  /* t->requires(Task::NewDW, Ilb->temp_CCLabel,      mpm_matls,  gac,1); */
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,              gac,1);
+  Task::DomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
+
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
   /*     Products     */
   /*     Reactants    */
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
@@ -267,7 +267,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
                                       const ModelInfo* mi){
   
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label,getLevel(patches));
   
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */
@@ -351,6 +351,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
  
     Vector dx = patch->dCell();
     MIN_MASS_IN_A_CELL = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
+    
 
     /* Cell Iteration */
     IntVector nodeIdx[8];
@@ -439,7 +440,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         sp_vol_src_0[c]  -= createdVolx;
         sp_vol_src_1[c]    += createdVolx;
       }  // if (cell is ignited)
-    }  // cell iterator  
+    }  // cell iterator
+
 
     /*  set symetric BC  */
     setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);

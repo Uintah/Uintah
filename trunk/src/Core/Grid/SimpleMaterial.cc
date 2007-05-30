@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
+#include <Core/Grid/SimpleMaterial.h>
 
 using namespace Uintah;
 

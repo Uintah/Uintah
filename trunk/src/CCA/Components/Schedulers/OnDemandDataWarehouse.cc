@@ -1,41 +1,42 @@
 #include <TauProfilerForSCIRun.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/ProgressiveWarning.h>
-#include <Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/ProgressiveWarning.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
 
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DependencyException.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/IncorrectAllocation.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DependencyException.h>
+#include <CCA/Components/Schedulers/IncorrectAllocation.h>
+#include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <Core/Exceptions/TypeMismatchException.h>
+#include <Core/Grid/UnknownVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Parallel/BufferInfo.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <string>
@@ -71,6 +72,10 @@ static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 extern DebugStream mpidbg;
 static Mutex ssLock( "send state lock" );
+
+struct ParticleSend : public RefCounted {
+  int numParticles;
+};
 
 // we want a particle message to have a unique tag per patch/matl/batch/dest.
 // we only have 32K message tags, so this will have to do.
@@ -376,7 +381,16 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
         int tag = PARTICLESET_TAG;
         //if (d_myworld->myrank() == 43 && dest == 40)
         particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl;
-        MPI_Bsend(&numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm());
+
+        ParticleSend* data = new ParticleSend;
+        data->numParticles = numParticles;
+        data->addReference();
+
+        Sendlist* sl = new Sendlist(0, data);
+        MPI_Request request;
+        MPI_Isend(&data->numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm(), &request);
+
+        dynamic_cast<MPIScheduler*>(d_scheduler)->addToSendList(request, sizeof(int), sl, "particle send");
 
         ssLock.lock();  // Dd: ??       
         old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);

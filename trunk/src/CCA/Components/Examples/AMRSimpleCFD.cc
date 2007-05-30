@@ -11,20 +11,20 @@
 // Implement boundary-only variables
 // Change applybc to work with coarse-fine boundaries
 // refineInterface should not require old coarse if step == nsteps -1;
-#include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
-#include <Packages/Uintah/CCA/Components/Examples/ExamplesLabel.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/Examples/AMRSimpleCFD.h>
+#include <CCA/Components/Examples/ExamplesLabel.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Parallel/Parallel.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 #include <iomanip>
 
 using namespace Uintah;

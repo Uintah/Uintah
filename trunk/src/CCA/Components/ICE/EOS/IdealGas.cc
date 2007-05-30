@@ -1,7 +1,7 @@
-#include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ICE/EOS/IdealGas.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 

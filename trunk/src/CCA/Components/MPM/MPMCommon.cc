@@ -1,8 +1,8 @@
-#include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h> 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <CCA/Components/MPM/MPMCommon.h> 
+#include <Core/Grid/Patch.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Level.h>
 
 
 using namespace Uintah;

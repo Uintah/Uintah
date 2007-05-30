@@ -4,27 +4,28 @@
 // Do not EVER put a #include for anything in CCA/Components in here.
 // Ask steve for a better way
 
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
+namespace SLIVR {
   class Point;
   class Vector;
 }
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/share.h>
 namespace Uintah {
 
-using namespace SCIRun;
+using SLIVR::Point;
+using SLIVR::Vector;
 
  class Patch;
  class DataWarehouse;

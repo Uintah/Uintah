@@ -1,9 +1,9 @@
 #ifndef __DIFFERENCE_GEOMETRY_OBJECT_H__
 #define __DIFFERENCE_GEOMETRY_OBJECT_H__      
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************

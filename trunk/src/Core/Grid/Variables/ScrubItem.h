@@ -1,10 +1,10 @@
 #ifndef UINTAH_HOMEBREW_ScrubItem_H
 #define UINTAH_HOMEBREW_ScrubItem_H
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Containers/TrivialAllocator.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Containers/TrivialAllocator.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
 

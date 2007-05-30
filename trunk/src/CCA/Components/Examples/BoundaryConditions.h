@@ -2,14 +2,14 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_BoundaryConditions_h
 #define Packages_Uintah_CCA_Components_Examples_BoundaryConditions_h
 
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Level.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <map>

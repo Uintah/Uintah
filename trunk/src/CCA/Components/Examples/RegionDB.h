@@ -2,9 +2,9 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_RegionDB_h
 #define Packages_Uintah_CCA_Components_Examples_RegionDB_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/GridP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <map>

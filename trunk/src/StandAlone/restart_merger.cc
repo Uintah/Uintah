@@ -16,13 +16,13 @@
  *  Copyright (C) 2001 U of U
  */
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Core/OS/Dir.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
+#include <SCIRun/Core/OS/Dir.h>
 #include <iostream>
 #include <string>
 #include <vector>

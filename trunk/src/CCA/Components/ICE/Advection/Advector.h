@@ -1,17 +1,17 @@
 #ifndef UINTAH_ADVECTOR_H
 #define UINTAH_ADVECTOR_H
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/FluxDatatypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Util/ProgressiveWarning.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/ICE/Advection/FluxDatatypes.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Labels/ICELabel.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Util/ProgressiveWarning.h>
 
 namespace Uintah {
 

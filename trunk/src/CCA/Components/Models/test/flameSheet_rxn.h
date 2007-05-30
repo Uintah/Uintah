@@ -2,14 +2,14 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 #define Packages_Uintah_CCA_Components_Examples_flameSheet_rxn_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <map>
 #include <vector>

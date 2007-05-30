@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
       integer i,j,k
 
       double precision PI,SIG,aterm,bterm,lhs,rhs,error

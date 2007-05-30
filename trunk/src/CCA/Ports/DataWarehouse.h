@@ -1,35 +1,31 @@
 #ifndef UINTAH_HOMEBREW_DataWarehouse_H
 #define UINTAH_HOMEBREW_DataWarehouse_H
 
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatchBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Variables/CCVariableBase.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/Variables/ParticleVariableBase.h>
+#include <Core/Grid/Variables/NCVariableBase.h>
+#include <Core/Grid/Variables/SFCXVariableBase.h>
+#include <Core/Grid/Variables/SFCYVariableBase.h>
+#include <Core/Grid/Variables/SFCZVariableBase.h>
+#include <Core/Grid/Variables/ReductionVariableBase.h>
+#include <Core/Grid/Variables/PerPatchBase.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/SoleVariableBase.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Grid/Task.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
-  class Vector;
-}
-
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <CCA/Ports/share.h>
 
 namespace Uintah {
 

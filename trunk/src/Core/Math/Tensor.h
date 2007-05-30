@@ -2,8 +2,8 @@
 #define UINTAH_TENSOR_H
 
 // Headers
-#include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Math/StaticNumberArray.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <Core/Math/StaticNumberArray.h>
 
 namespace Uintah {
 

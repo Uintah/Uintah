@@ -1,9 +1,9 @@
 #ifndef UINTAH_GRID_NoneBoundCond_H
 #define UINTAH_GRID_NoneBoundCond_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 namespace Uintah {
    

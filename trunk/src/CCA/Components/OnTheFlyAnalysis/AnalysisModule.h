@@ -1,17 +1,17 @@
 #ifndef Packages_Uintah_CCA_Ports_AnalysisModule_h
 #define Packages_Uintah_CCA_Ports_AnalysisModule_h
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
-#include <Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/share.h>
+#include <CCA/Components/OnTheFlyAnalysis/share.h>
 namespace Uintah {
 
   class DataWarehouse;

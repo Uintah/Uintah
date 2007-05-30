@@ -33,8 +33,8 @@ DESCRIPTION
 WARNING
    none
 ****************************************/
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
 class PhysicalConstants;

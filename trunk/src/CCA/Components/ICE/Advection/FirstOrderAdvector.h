@@ -1,9 +1,9 @@
 #ifndef UINTAH_FIRST_ORDER_ADVECTOR_H
 #define UINTAH_FIRST_ORDER_ADVECTOR_H
 
-#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 namespace Uintah {
 

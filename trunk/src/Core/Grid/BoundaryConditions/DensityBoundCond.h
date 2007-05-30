@@ -1,10 +1,10 @@
 #ifndef UINTAH_GRID_DensityBoundCond_H
 #define UINTAH_GRID_DensityBoundCond_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
    
 /**************************************

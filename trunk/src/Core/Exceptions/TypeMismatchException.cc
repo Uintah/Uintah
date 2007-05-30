@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Core/Exceptions/TypeMismatchException.h>
 #include <iostream>
 #include <sstream>
 

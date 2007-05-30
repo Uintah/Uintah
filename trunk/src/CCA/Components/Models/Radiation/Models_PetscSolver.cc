@@ -1,21 +1,21 @@
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_PetscSolver.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Models/Radiation/Models_PetscSolver.h>
+#include <SCIRun/Core/Containers/Array1.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <CCA/Components/Models/Radiation/RadiationVariables.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/PetscError.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #undef CHKERRQ
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 #include <vector>

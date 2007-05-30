@@ -1,19 +1,19 @@
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Math/Primes.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Core/Containers/StaticArray.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Math/Primes.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BCData.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Math/MiscMath.h>
+#include <SCIRun/Core/Thread/AtomicCounter.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 
 #include <iostream>
 #include <sstream>

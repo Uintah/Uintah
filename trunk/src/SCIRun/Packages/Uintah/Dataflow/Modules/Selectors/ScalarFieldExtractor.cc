@@ -28,7 +28,7 @@ LOG
     Created January 5, 1999
 ****************************************/
 #include "ScalarFieldExtractor.h"
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeDescription.h>
 
  
 #include <iostream> 

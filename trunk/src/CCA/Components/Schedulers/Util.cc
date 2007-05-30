@@ -1,6 +1,6 @@
 
 
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using SCIRun::DebugStream;
 DebugStream mixedDebug( "MixedScheduler", false );

@@ -2,18 +2,18 @@
 #define UINTAH_PATCHDATATHREAD_H
 
 
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Util/Timer.h>
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/ThreadGroup.h>
+#include <SCIRun/Core/Thread/Semaphore.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Util/Timer.h>
+#include <Core/Grid/Variables/Variable.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Patch.h>
+#include <Core/DataArchive/DataArchive.h>
 
 
 #include <sgi_stl_warnings_off.h>

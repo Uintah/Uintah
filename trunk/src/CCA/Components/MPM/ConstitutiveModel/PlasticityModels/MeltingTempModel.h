@@ -2,8 +2,8 @@
 #define __MELTING_TEMP_MODEL_H__
 
 #include "PlasticityState.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 

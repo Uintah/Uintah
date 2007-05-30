@@ -24,7 +24,7 @@ c    None
 c   
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
+#include <CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     INITIALIZATION ROUTINE     

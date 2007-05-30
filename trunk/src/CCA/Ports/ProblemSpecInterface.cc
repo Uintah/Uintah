@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
 
 using namespace Uintah;
 

@@ -1,9 +1,9 @@
 #ifndef UINTAH_COMPARE_MMS_MMS1_H
 #define UINTAH_COMPARE_MMS_MMS1_H
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
+#include <Dataflow/Modules/Operators/MMS/MMS.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/share.h>
+#include <Dataflow/Modules/Operators/MMS/share.h>
 
 class MMS1 : public MMS {
 

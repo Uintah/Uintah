@@ -1,7 +1,7 @@
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
-#include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 using namespace std;
 using namespace Uintah;

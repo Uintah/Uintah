@@ -1,15 +1,15 @@
 #ifndef Uintah_Components_Models_Models_HypreSolver_h
 #define Uintah_Components_Models_Models_HypreSolver_h
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationSolver.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Models/Radiation/Models_RadiationSolver.h>
+#include <CCA/Components/Models/Radiation/RadiationVariables.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
-#include <Core/Containers/Array1.h>
+#include <SCIRun/Core/Containers/Array1.h>
 
 #include <utilities.h>
 #include <HYPRE_struct_ls.h>

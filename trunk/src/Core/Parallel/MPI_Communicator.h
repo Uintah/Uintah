@@ -5,11 +5,11 @@
 #include <queue>
 #include <unistd.h>
 #include <stdlib.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/ConditionVariable.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Thread/Runnable.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/ConditionVariable.h>
 #include <sys/time.h>
 
 int WAIT_TIME_DEFAULT   = 10000; //how many microseconds to sleep before triggering the progress loop

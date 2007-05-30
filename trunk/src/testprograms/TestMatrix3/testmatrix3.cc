@@ -1,5 +1,5 @@
 #include "testmatrix3.h"
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <SCIRun/Core/Math/Matrix3.h>
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>

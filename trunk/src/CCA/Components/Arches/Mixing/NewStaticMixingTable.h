@@ -34,8 +34,8 @@ POSSIBLE REVISIONS
 	Read and interpolate 4-D tables e.g., non-adiabatic flamelets/extent of reaction tables 
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <CCA/Components/Arches/Mixing/MixingModel.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -100,6 +100,15 @@ public:
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
       }
+      inline double getCarbonFuel() const{
+	return d_carbon_fuel;
+      }
+      inline double getCarbonAir() const{
+	return d_carbon_air;
+      }
+      inline double getFStoich() const{
+	return d_f_stoich;
+      }
 
 protected :
 
@@ -151,9 +160,9 @@ private:
       std::vector<std::string> vars_units;
       int d_indepvarscount;
       int Hl_index, F_index, Fvar_index;
-      int T_index, Rho_index, Cp_index, Enthalpy_index, Hs_index;
+      int T_index, Rho_index, Cp_index, Hs_index;
       double d_H_fuel, d_H_air;
-      bool d_adiab_enth_inputs;
+      double d_f_stoich, d_carbon_fuel, d_carbon_air;
 }; // end class NewStaticMixingTable
 
 } // end namespace Uintah

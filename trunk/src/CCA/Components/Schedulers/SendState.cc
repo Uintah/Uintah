@@ -1,9 +1,9 @@
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/Schedulers/SendState.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Parallel/Parallel.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 
 using namespace Uintah;

@@ -1,8 +1,8 @@
 #ifndef UINTAH_GRID_BoundCond_H
 #define UINTAH_GRID_BoundCond_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

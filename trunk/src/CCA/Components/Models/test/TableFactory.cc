@@ -1,7 +1,7 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Models/test/TableFactory.h>
+#include <CCA/Components/Models/test/ArchesTable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
 

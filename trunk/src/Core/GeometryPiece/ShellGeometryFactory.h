@@ -1,9 +1,9 @@
 #ifndef __SHELL_GEOM_FACTORY_H__
 #define __SHELL_GEOM_FACTORY_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
   class GeometryPiece;

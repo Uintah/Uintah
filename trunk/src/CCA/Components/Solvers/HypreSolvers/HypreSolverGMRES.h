@@ -31,7 +31,7 @@ WARNING
    Works with Hypre Struct interface only.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
 
 namespace Uintah {
   

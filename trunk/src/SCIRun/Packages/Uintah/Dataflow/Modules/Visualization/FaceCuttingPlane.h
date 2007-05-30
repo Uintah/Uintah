@@ -1,15 +1,15 @@
 #ifndef __FACECUTTINGPLANE_H_
 #define __FACECUTTINGPLANE_H_
 
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/BBox.h> 
-#include <Core/Geometry/Transform.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/BBox.h> 
+#include <SCIRun/Core/Geometry/Transform.h>
 
 using namespace SCIRun;
 namespace Uintah {

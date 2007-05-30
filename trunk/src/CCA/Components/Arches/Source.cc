@@ -1,41 +1,41 @@
 //----- Source.cc ----------------------------------------------
 
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
+#include <CCA/Components/Arches/fortran/mascal_scalar_fort.h>
+#include <CCA/Components/Arches/fortran/mascal_fort.h>
 #ifdef divergenceconstraint
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
+#include <CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
 #else
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include <CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
+#include <CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
+#include <CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
+#include <CCA/Components/Arches/fortran/mmmomsrc_fort.h>
+#include <CCA/Components/Arches/fortran/scalsrc_fort.h>
+#include <CCA/Components/Arches/fortran/uvelsrc_fort.h>
+#include <CCA/Components/Arches/fortran/vvelsrc_fort.h>
+#include <CCA/Components/Arches/fortran/wvelsrc_fort.h>
 
 //****************************************************************************
 // Constructor for Source

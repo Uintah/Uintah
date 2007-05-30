@@ -1,5 +1,5 @@
 #include "TestConsecutiveRangeSet.h"
-#include <Core/Containers/ConsecutiveRangeSet.h>
+#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
 #include <sstream>
 #include <stdlib.h>
 #ifndef _WIN32

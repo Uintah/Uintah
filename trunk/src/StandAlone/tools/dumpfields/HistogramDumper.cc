@@ -1,10 +1,10 @@
-#include <Packages/Uintah/StandAlone/tools/dumpfields/HistogramDumper.h>
-#include <Packages/Uintah/StandAlone/tools/dumpfields/ScalarDiags.h>
-#include <Packages/Uintah/StandAlone/tools/dumpfields/TensorDiags.h>
+#include <StandAlone/tools/dumpfields/HistogramDumper.h>
+#include <StandAlone/tools/dumpfields/ScalarDiags.h>
+#include <StandAlone/tools/dumpfields/TensorDiags.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <iomanip>
 #include <sstream>

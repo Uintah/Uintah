@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <string>
 #include <iostream>
 

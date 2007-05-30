@@ -1,6 +1,6 @@
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

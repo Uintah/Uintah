@@ -1,5 +1,5 @@
 #include "TestRangeTree.h"
-#include <Core/Containers/RangeTree.h>
+#include <SCIRun/Core/Containers/RangeTree.h>
 #include "Point.h"
 #include <stdlib.h>
 #ifndef _WIN32

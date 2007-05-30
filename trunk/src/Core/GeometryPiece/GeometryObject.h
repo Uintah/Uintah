@@ -2,9 +2,9 @@
 #ifndef __GEOMETRY_OBJECT_H__
 #define __GEOMETRY_OBJECT_H__
 
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <list>
@@ -12,7 +12,7 @@
 #include   <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 class GeometryPiece;

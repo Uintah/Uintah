@@ -1,6 +1,6 @@
 #include "ZerilliArmstrongPlastic.h"
 #include <math.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 
 using namespace Uintah;

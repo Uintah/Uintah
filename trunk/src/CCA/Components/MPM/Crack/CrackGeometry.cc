@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
-#include <Core/Geometry/Vector.h>
+#include <CCA/Components/MPM/Crack/CrackGeometry.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 #include <math.h>
 
 using namespace Uintah;

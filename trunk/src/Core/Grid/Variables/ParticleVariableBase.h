@@ -2,15 +2,15 @@
 #ifndef UINTAH_HOMEBREW_ParticleVariableBase_H
 #define UINTAH_HOMEBREW_ParticleVariableBase_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
-#include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/Variable.h>
+#include <Core/Grid/Variables/constVariable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
   class BufferInfo;
   class OutputContext;

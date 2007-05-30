@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/MPM/ImpMPMFlags.h>
-#include <Core/Util/DebugStream.h>
+#include <CCA/Components/MPM/ImpMPMFlags.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 using namespace SCIRun;

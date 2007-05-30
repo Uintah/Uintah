@@ -2,9 +2,9 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_AMRWave_h
 #define Packages_Uintah_CCA_Components_Examples_AMRWave_h
 
-#include <Packages/Uintah/CCA/Components/Examples/Wave.h>
+#include <CCA/Components/Examples/Wave.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/share.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;

@@ -1,14 +1,14 @@
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #ifdef USE_PERFEX_COUNTERS
 #include "counters.h"
 #endif

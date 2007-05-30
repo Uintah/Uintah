@@ -1,10 +1,10 @@
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/XMLUtil/XMLUtil.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/XMLUtil/XMLUtil.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <iterator>

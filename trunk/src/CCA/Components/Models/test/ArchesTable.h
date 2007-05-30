@@ -2,7 +2,7 @@
 #ifndef Uintah_ArchesTable_h
 #define Uintah_ArchesTable_h
 
-#include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
+#include <CCA/Components/Models/test/TableInterface.h>
 #include <sstream>
 
 namespace Uintah {

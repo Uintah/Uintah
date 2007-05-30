@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 #include <sstream>
 

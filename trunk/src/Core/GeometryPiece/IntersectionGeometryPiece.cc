@@ -1,8 +1,8 @@
-#include <Packages/Uintah/Core/GeometryPiece/IntersectionGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/Point.h>
+#include <Core/GeometryPiece/IntersectionGeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/Grid/Box.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 using namespace SCIRun;
 using namespace Uintah;

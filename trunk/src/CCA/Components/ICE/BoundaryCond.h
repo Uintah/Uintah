@@ -1,28 +1,28 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/C_BC_driver.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
+#include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
+#include <CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
+#include <CCA/Components/ICE/CustomBCs/LODI2.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/DensityBoundCond.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/Stencil7.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Containers/StaticArray.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 #include <time.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/share.h>
 namespace Uintah {
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);

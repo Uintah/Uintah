@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Ports/TensorParticlesPort.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;

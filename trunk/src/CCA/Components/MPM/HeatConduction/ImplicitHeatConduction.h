@@ -3,11 +3,11 @@
 
 #include <sci_defs/petsc_defs.h>
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/Array3.h>
 #include <vector>
 #include <string>
 #include <math.h>

@@ -2,12 +2,12 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_ParticleTest1_h
 #define Packages_Uintah_CCA_Components_Examples_ParticleTest1_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/share.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;

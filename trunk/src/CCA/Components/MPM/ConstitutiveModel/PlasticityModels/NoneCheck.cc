@@ -1,5 +1,5 @@
 #include "NoneCheck.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

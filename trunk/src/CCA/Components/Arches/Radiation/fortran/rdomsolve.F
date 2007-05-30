@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 
       integer i,j,k,ii,jj,kk,iii,jjj,kkk
 

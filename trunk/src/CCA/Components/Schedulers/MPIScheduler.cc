@@ -1,21 +1,21 @@
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/SendState.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <sgi_stl_warnings_off.h>
@@ -23,7 +23,7 @@
 #include <iomanip>
 #include <map>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Parallel/Vampir.h>
+#include <Core/Parallel/Vampir.h>
 #ifdef USE_PERFEX_COUNTERS
 #include "counters.h"
 #endif
@@ -96,6 +96,10 @@ void
 MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
                            SimulationStateP& state)
 {
+  ProblemSpecP params = prob_spec->findBlock("Scheduler");
+  if(params){
+    params->get("useExternalReadyQueue", useExternalQueue_);
+  }
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 }
@@ -229,36 +233,17 @@ MPIScheduler::initiateTask( DetailedTask          * task,
 //   TAU_MAPPING_PROFILE_START(phaseprofiler,0);
 
 
-  double recvstart = Time::currentSeconds();
 #ifdef USE_PERFEX_COUNTERS
   long long dummy, recv_flops;
   start_counters(0, 19);
 #endif  
-  CommRecMPI recvs;
-  list<DependencyBatch*> externalRecvs;
-  postMPIRecvs( task, recvs, externalRecvs, only_old_recvs, abort_point, iteration);
-  processMPIRecvs( task, recvs, externalRecvs );
+  postMPIRecvs( task, only_old_recvs, abort_point, iteration);
   if(only_old_recvs)
     return;
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &recv_flops);
   mpi_info_.totalcommflops += recv_flops;
 #endif
-  
-  double drecv = Time::currentSeconds() - recvstart;
-  mpi_info_.totalrecv += drecv;
-
-  double start_total_send = mpi_info_.totalsend;
-  double start_total_task = mpi_info_.totaltask;
-
-  runTask(task, iteration);
-
-  double dsend = mpi_info_.totalsend - start_total_send;
-  double dtask = mpi_info_.totaltask - start_total_task;
-  emitNode(task, Time::currentSeconds(), dsend+dtask+drecv, dtask,
-	   mpi_info_.totalexecflops - start_total_exec_flops,
-	   mpi_info_.totalcommflops - start_total_comm_flops);
-
 
 //   TAU_MAPPING_PROFILE_STOP(0);
   TAU_MAPPING_PROFILE_STOP(0);
@@ -324,21 +309,20 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   start_counters(0, 19);
 #endif
   
+  double dtask = Time::currentSeconds()-taskstart;
+  mpi_info_.totaltask += dtask;
 
-  double sendstart = Time::currentSeconds();
   postMPISends( task, iteration );
-  task->done(dws);
-  double stop = Time::currentSeconds();
+  task->done(dws); // should this be timed with taskstart? - BJW
+  double teststart = Time::currentSeconds();
 
   sendsLock.lock(); // Dd... could do better?
   sends_.testsome( d_myworld );
   sendsLock.unlock(); // Dd... could do better?
 
 
-  mpi_info_.totaltestmpi += Time::currentSeconds() - stop;
+  mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
-  double dsend = Time::currentSeconds()-sendstart;
-  double dtask = sendstart-taskstart;
 
 #ifdef USE_PERFEX_COUNTERS
   long long send_flops;
@@ -348,19 +332,16 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   
   taskdbg << d_myworld->myrank() << " Completed task: ";
   printTask(taskdbg, task); taskdbg << '\n';
-
-  mpi_info_.totalsend += dsend;
-  mpi_info_.totaltask += dtask;
 }
 
 void
 MPIScheduler::runReductionTask( DetailedTask         * task )
 {
-  const Task::Dependency* comp = task->getTask()->getComputes();
-  ASSERT(!comp->next);
+  const Task::Dependency* mod = task->getTask()->getModifies();
+  ASSERT(!mod->next);
   
-  OnDemandDataWarehouse* dw = dws[comp->mapDataWarehouse()].get_rep();
-  dw->reduceMPI(comp->var, comp->reductionLevel, comp->matls);
+  OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
+  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls);
   task->done(dws);
 
   taskdbg << d_myworld->myrank() << " Completed task: ";
@@ -371,6 +352,7 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
 void
 MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 {
+  double sendstart = Time::currentSeconds();
   if( dbg.active()) {
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
@@ -476,6 +458,8 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       mpi_info_.totalsendmpi += Time::currentSeconds() - start;
     }
   } // end for (DependencyBatch * batch = task->getComputes() )
+  double dsend = Time::currentSeconds()-sendstart;
+  mpi_info_.totalsend += dsend;
 
 } // end postMPISends();
 
@@ -487,10 +471,9 @@ bool operator()(DependencyBatch* a, DependencyBatch* b)
 }
 };
 void
-MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
-			    list<DependencyBatch*>& externalRecvs,
-			    bool only_old_recvs, int abort_point, int iteration)
+MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration)
 {
+  double recvstart = Time::currentSeconds();
   TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
 
   // Receive any of the foreign requires
@@ -519,8 +502,10 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
     // while subsequent threads calling this will block and wait for
     // that first thread to receive the data.
 
+    task->incrementExternalDepCount();
+    //cout << d_myworld->myrank() << "  Add dep count to task " << *task << " for ext: " << *batch->fromTask << ": " << task->getExternalDepCount() << endl;
     if( !batch->makeMPIRequest() ) {
-      externalRecvs.push_back( batch );
+      //externalRecvs.push_back( batch ); // no longer necessary
 
       if( mixedDebug.active() ) {
 	cerrLock.lock();mixedDebug << "Someone else already receiving it\n";
@@ -643,7 +628,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 #ifdef USE_PACKING
       MPI_Pack_size(count, datatype, d_myworld->getComm(), &bytes);
 #endif
-      recvs.add(requestid, bytes,
+      recvs_.add(requestid, bytes,
 		scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
                 ostr.str(), batch->messageTag);
       mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
@@ -662,30 +647,45 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
     }
   } // end for
 
+  double drecv = Time::currentSeconds() - recvstart;
+  mpi_info_.totalrecv += drecv;
+
 
 } // end postMPIRecvs()
 
 void
-MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
-			       list<DependencyBatch*>& outstandingExtRecvs )
+MPIScheduler::processMPIRecvs(int how_much)
 {
   TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
 
   // Should only have external receives in the MixedScheduler version which
   // shouldn't use this function.
-  ASSERT(outstandingExtRecvs.empty());
+  // ASSERT(outstandingExtRecvs.empty());
   double start = Time::currentSeconds();
 
-  // This will allow some receives to be "handled" by their
-  // AfterCommincationHandler while waiting for others.  
-  mpidbg << d_myworld->myrank() << " Start waiting...\n";
-  while( (recvs.numRequests() > 0)) {
-    bool keep_waiting = recvs.waitsome(d_myworld);
-    if (!keep_waiting)
-      break;
-  }
-  mpidbg << d_myworld->myrank() << " Done  waiting...\n";
+  switch (how_much) {
+  case TEST:
+    if (recvs_.numRequests() > 0)
+      recvs_.testsome(d_myworld);
+    break;
+  case WAIT_ONCE:
+    mpidbg << d_myworld->myrank() << " Start waiting...\n";
+    if(recvs_.numRequests() > 0) {
+      recvs_.waitsome(d_myworld);
+    }
+    mpidbg << d_myworld->myrank() << " Done  waiting...\n";
 
+  case WAIT_ALL:
+    // This will allow some receives to be "handled" by their
+    // AfterCommincationHandler while waiting for others.  
+    mpidbg << d_myworld->myrank() << " Start waiting...\n";
+    while( (recvs_.numRequests() > 0)) {
+      bool keep_waiting = recvs_.waitsome(d_myworld);
+      if (!keep_waiting)
+        break;
+    }
+    mpidbg << d_myworld->myrank() << " Done  waiting...\n";
+  }
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
 } // end processMPIRecvs()
@@ -735,23 +735,17 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
+  for (int i = 0; i < ntasks; i++)
+    dts->localTask(i)->clearExternalDepCount();
+
+
+
   if(timeout.active()){
     d_labels.clear();
     d_times.clear();
     //emitTime("time since last execute");
   }
-  // We do not use many Bsends, so this doesn't need to be
-  // big.  We make it moderately large anyway - memory is cheap.
-  void* old_mpibuffer;
-  int old_mpibuffersize;
-#ifndef _WIN32
-  // windows mpich doesn't like this here, but everybody else's needs it...
-  MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
-#endif
-#define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
-  char* mpibuffer = scinew char[MPI_BUFSIZE];
-  MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
-
+  
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
@@ -780,27 +774,81 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   bool abort=false;
   int abort_point = 987654;
 
-  while( numTasksDone < ntasks ) {
+  int i = 0;
 
-    DetailedTask * task = dts->getNextInternalReadyTask();
+  while( numTasksDone < ntasks) {
+    //cout << d_myworld->myrank() << "  looping " << ntasks << " ntd " << numTasksDone << endl;
+    i++;
 
-    numTasksDone++;
-    taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
+    DetailedTask * task = 0;
+    // normal case - NOT using the queued task-receiving structure
+    // run the task right after initiating the receives
+    if (!useExternalQueue_) {
+      DetailedTask * task = dts->getNextInternalReadyTask();
 
-    if (task->getTask()->getType() == Task::Reduction){
-      if(!abort)
-	initiateReduction(task);
+      numTasksDone++;
+      //taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
+
+      if (task->getTask()->getType() == Task::Reduction){
+        if(!abort)
+          initiateReduction(task);
+      }
+      else {
+        initiateTask( task, abort, abort_point, iteration );
+        processMPIRecvs(WAIT_ALL);
+        ASSERT(recvs_.numRequests() == 0);
+        runTask(task, iteration);
+      }
     }
     else {
-      initiateTask( task, abort, abort_point, iteration );
+      // using queued task receiving structure
+
+      // if we have an internally-ready task, initiate its recvs
+      if (dts->numInternalReadyTasks() > 0) {
+        DetailedTask * task = dts->getNextInternalReadyTask();
+        
+        if (task->getTask()->getType() == Task::Reduction){
+          if(!abort) {
+            taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+            initiateReduction(task);
+          }
+          numTasksDone++;
+        }
+        else {
+          initiateTask( task, abort, abort_point, iteration );
+          if (task->getExternalDepCount() > 0) {
+            taskdbg << d_myworld->myrank() << "  Initiating task " << task->getTask()->getName() << endl;
+            processMPIRecvs(TEST);
+          }
+          else {
+            taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+            runTask(task, iteration);
+            numTasksDone++;
+          }
+        }
+      }
+      // otherwise, run a task that has its communication complete
+      // tasks get in this queue automatically when their receive count hits 0
+      //   in DependencyBatch::received, which is called when a message is delivered.
+      else if (dts->numExternalReadyTasks() > 0) {
+        DetailedTask * task = dts->getNextExternalReadyTask();
+        taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+        ASSERT(task->getExternalDepCount() == 0);
+        runTask(task, iteration);
+        numTasksDone++;
+      }
+      else {
+        // we have nothing to do, so wait until we get something
+        processMPIRecvs(WAIT_ONCE);
+      }
     }
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
+      // TODO - abort might not work with external queue...
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
     }
-
   } // end while( numTasksDone < ntasks )
 
   // wait for all tasks to finish -- i.e. MixedScheduler
@@ -858,14 +906,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   finalizeTimestep();
-
-  int junk;
-  MPI_Buffer_detach(&mpibuffer, &junk);
-  delete[] mpibuffer;
-#ifndef _WIN32
-  if(old_mpibuffersize)
-    MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
-#endif
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
@@ -994,3 +1034,10 @@ MPIScheduler::emitTime(char* label, double dt)
    d_labels.push_back(label);
    d_times.push_back(dt);
 }
+
+void 
+MPIScheduler::addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* handler, const string& var)
+{
+  sends_.add(request, bytes, handler, var, 0);
+}
+

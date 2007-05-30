@@ -1,8 +1,8 @@
 #ifndef UINTAH_MPM_POLYNOMIAL_H
 #define UINTAH_MPM_POLYNOMIAL_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Geometry/Point.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <vector>
 #include <string>
 

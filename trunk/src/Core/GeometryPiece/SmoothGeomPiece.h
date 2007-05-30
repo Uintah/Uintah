@@ -1,9 +1,9 @@
 #ifndef __SMOOTH_PIECE_H__
 #define __SMOOTH_PIECE_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -14,7 +14,7 @@
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
   using std::vector;

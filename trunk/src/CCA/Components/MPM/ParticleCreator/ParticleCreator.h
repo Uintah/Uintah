@@ -1,12 +1,12 @@
 #ifndef __PARTICLE_CREATOR_H__
 #define __PARTICLE_CREATOR_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>

@@ -3,11 +3,11 @@
 
 
 #include "ScalarOperatorFunctors.h"
-#include <Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

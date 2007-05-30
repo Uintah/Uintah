@@ -1,20 +1,20 @@
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Thread/Time.h>
-#include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
+#include <Core/Grid/Grid.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationState.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 #include <iostream> // debug only
 #include <stack>
@@ -179,7 +179,7 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
       cost_index = 0;
       cost_level++;
     }
-    costs[cost_level][cost_index] += num_particles[i];
+    costs[cost_level][cost_index] += num_particles[i]*d_particleCost;
   }
   // make sure that all regions got covered
   ASSERTEQ(cost_level, costs.size()-1);
@@ -289,7 +289,7 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<doubl
       cost_index = 0;
       cost_level++;
     }
-    costs[cost_level][cost_index] += num_particles[i];
+    costs[cost_level][cost_index] += num_particles[i]*d_particleCost;
   }
   // make sure that all regions got covered
   ASSERTEQ(cost_level, costs.size()-1);
@@ -890,7 +890,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
     {
       for(vector<Region>::const_iterator patch=patches[l].begin();patch!=patches[l].end();patch++)
       {
-        costs[l].push_back(patch->getVolume());
+        costs[l].push_back(d_patchCost+patch->getVolume()*d_cellCost);
       }
     }
     if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
@@ -904,7 +904,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
     {
       for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
       {
-        costs[l].push_back(grid->getLevel(l)->getPatch(p)->getVolume());
+        costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getVolume()*d_cellCost);
       }
     }
     if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
@@ -1214,7 +1214,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   string dynamicAlgo;
   double interval = 0;
-  double cellFactor = .1;
   int timestepInterval = 0;
   double threshold = 0.0;
   bool spaceCurve = false;
@@ -1226,7 +1225,9 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     if (timestepInterval != 0 && !p->get("interval", interval))
       interval = 0.0; // default
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
-    p->getWithDefault("cellFactor", cellFactor, .1);
+    p->getWithDefault("cellCost", d_cellCost, 2);
+    p->getWithDefault("particleCost", d_particleCost, 1);
+    p->getWithDefault("patchCost", d_patchCost, 0);
     p->getWithDefault("gainThreshold", threshold, 0.0);
     p->getWithDefault("doSpaceCurve", spaceCurve, false);
   }
@@ -1255,7 +1256,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   d_lbTimestepInterval = timestepInterval;
   d_doSpaceCurve = spaceCurve;
   d_lbThreshold = threshold;
-  d_cellFactor = cellFactor;
   
   ASSERT(d_sharedState->getNumDims()>0 || d_sharedState->getNumDims()<4);
   //set curve parameters that do not change between timesteps

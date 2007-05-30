@@ -1,9 +1,9 @@
 #ifndef UINTAH_GRID_PressureBoundCond_H
 #define UINTAH_GRID_PressureBoundCond_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

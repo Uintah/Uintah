@@ -30,30 +30,30 @@ LOG
 #define FIELDEXTRACTOR_H 1
 
 
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Core/Datatypes/MultiLevelField.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h> 
-#include <Core/Math/MinMax.h>
-#include <Core/Util/Timer.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Basis/Constant.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <Core/Math/Matrix3.h>
+#include <SCIRun/Core/Datatypes/MultiLevelField.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Util/Timer.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
 
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
+#include <Core/Datatypes/Archive.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Dataflow/Modules/Selectors/PatchToField.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -61,7 +61,7 @@ LOG
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/share.h>
+#include <Dataflow/Modules/Selectors/share.h>
 namespace Uintah {
 using namespace SCIRun;
 

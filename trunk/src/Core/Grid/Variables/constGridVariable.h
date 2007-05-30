@@ -1,10 +1,10 @@
 #ifndef UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 #define UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Util/Assert.h>
+#include <Core/Grid/Variables/constVariable.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 namespace Uintah {
 

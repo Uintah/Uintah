@@ -1,8 +1,8 @@
 #ifndef _PARTICLECREATORFACTORY_H_
 #define _PARTICLECREATORFACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

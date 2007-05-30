@@ -1,8 +1,8 @@
 #include "GLAnimatedStreams.h"
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Util/NotFinished.h>
-#include <Core/Geom/DrawInfoOpenGL.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Datatypes/FieldInterface.h>
+#include <SCIRun/Core/Util/NotFinished.h>
+#include <SCIRun/Core/Geom/DrawInfoOpenGL.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <sci_gl.h>
 #include <math.h>
 #include <float.h>
@@ -170,7 +170,6 @@ GLAnimatedStreams::clone()
   return scinew GLAnimatedStreams( *this );
 }
 
-#ifdef SCI_OPENGL
 void 
 GLAnimatedStreams::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
@@ -202,7 +201,6 @@ GLAnimatedStreams::draw(DrawInfoOpenGL* di, Material* mat, double)
   mutex.unlock();
 
 }
-#endif
 
 void
 GLAnimatedStreams::drawWireFrame()

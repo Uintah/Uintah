@@ -1,8 +1,8 @@
 
 
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Util/share.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <Core/Util/share.h>
 
 using SCIRun::Mutex;
 SCISHARE Mutex cerrLock( "cerr lock" );

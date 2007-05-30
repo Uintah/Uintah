@@ -1,15 +1,15 @@
 #ifndef __CYLINDER_GEOMETRY_OBJECT_H__
 #define __CYLINDER_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #ifndef M_PI
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************

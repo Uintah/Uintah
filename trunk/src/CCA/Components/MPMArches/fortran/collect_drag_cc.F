@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
+#include <CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
 #include "param4.h"
 
 *     local variables

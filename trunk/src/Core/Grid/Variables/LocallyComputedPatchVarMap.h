@@ -20,15 +20,15 @@
 #ifndef LOCALLYCOMPUTEDPATCHVARMAP
 #define LOCALLYCOMPUTEDPATCHVARMAP
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Core/Containers/SuperBox.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <SCIRun/Core/Containers/SuperBox.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   inline int getVolume(const IntVector& low, const IntVector& high)

@@ -1,49 +1,50 @@
 //----- Arches.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/CompDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/CompLocalDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/ExplicitSolver.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/SmagorinskyModel.h>
+#include <CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <CCA/Components/Arches/IncDynamicProcedure.h>
+#include <CCA/Components/Arches/CompDynamicProcedure.h>
+#include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
+#include <CCA/Components/Arches/OdtClosure.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/Output.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Containers/StaticArray.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Math/MiscMath.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 
 #include <iostream>
 #include <fstream>
@@ -54,7 +55,7 @@ using std::string;
 using namespace Uintah;
 using namespace SCIRun;
 #ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#include <CCA/Components/Arches/Filter.h>
 #endif
 
 
@@ -496,6 +497,14 @@ Arches::paramInit(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // Initialize cellInformation
+    PerPatch<CellInformationP> cellInfoP;
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //cout << "cellInfo original INIT" << endl;
+
+
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
@@ -724,18 +733,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constCCVariable<int> cellType;
 
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
@@ -1061,18 +1062,10 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
     
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    else {
-
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     IntVector idxLo = patch->getCellFORTLowIndex();
@@ -1558,14 +1551,10 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else {
-      cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    }
-
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 

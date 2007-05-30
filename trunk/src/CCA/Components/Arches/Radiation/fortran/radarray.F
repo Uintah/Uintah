@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
 c      SUBROUTINE radarray(RGAMMA,SD15,SD,SD7,SD3)
 
 

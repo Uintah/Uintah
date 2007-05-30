@@ -1,8 +1,8 @@
 
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Thread/Mutex.h>
 #include <map>
 #include <iostream>
 #include <sstream>

@@ -14,13 +14,13 @@
 #ifndef UINTAH_EXCEPTIONS_VARIABLENOTFOUNDINGRID_H
 #define UINTAH_EXCEPTIONS_VARIABLENOTFOUNDINGRID_H
 
-#include <Core/Exceptions/Exception.h>
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/share.h>
+#include <Core/Exceptions/share.h>
 namespace Uintah {
   
   class SCISHARE VariableNotFoundInGrid : public SCIRun::Exception {

@@ -1,10 +1,10 @@
 #ifndef SIMPLE_SOLVER_H
 #define SIMPLE_SOLVER_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Math/Sparse.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Math/Sparse.h>
+#include <CCA/Components/MPM/Solver.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <set>

@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Ports/ScalarParticlesPort.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;

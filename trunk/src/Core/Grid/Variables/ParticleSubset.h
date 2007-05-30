@@ -1,10 +1,10 @@
 #ifndef PARTICLESUBSET_H
 #define PARTICLESUBSET_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/ParticleSet.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/Ghost.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -15,7 +15,7 @@
 using std::ostream;
 using SCIRun::IntVector;
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
   class Patch;
 /**************************************

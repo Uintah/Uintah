@@ -1,11 +1,11 @@
 #ifndef UINTAH_GRID_SideBCData_H
 #define UINTAH_GRID_SideBCData_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>

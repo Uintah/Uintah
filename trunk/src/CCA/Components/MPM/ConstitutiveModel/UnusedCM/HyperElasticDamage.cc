@@ -26,10 +26,10 @@
 //      Usage:
 
 
-#include <Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 #include "ConstitutiveModelFactory.h"
 #include "HyperElasticDamage.h"
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 using namespace std;

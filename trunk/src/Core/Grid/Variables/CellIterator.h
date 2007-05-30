@@ -2,9 +2,10 @@
 #ifndef UINTAH_HOMEBREW_CellIterator_H
 #define UINTAH_HOMEBREW_CellIterator_H
 
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Util/Assert.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
 

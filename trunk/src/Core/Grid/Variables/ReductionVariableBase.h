@@ -2,14 +2,14 @@
 #ifndef UINTAH_HOMEBREW_ReductionVariableBase_H
 #define UINTAH_HOMEBREW_ReductionVariableBase_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
+#include <Core/Grid/Variables/Variable.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
 using std::ostream;

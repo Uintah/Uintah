@@ -8,10 +8,10 @@
 #ifndef __MATRIX3_H__
 #define __MATRIX3_H__
 
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Matrix3) prototype
-#include <Core/Geometry/Vector.h>
-#include <Core/Util/Assert.h>
+#include <Core/Math/TntJama/tnt.h>
+#include <Core/Disclosure/TypeUtils.h> // for get_funTD(Matrix3) prototype
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 #include <math.h>
 
@@ -21,7 +21,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Core/Math/share.h>
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -679,7 +679,7 @@ namespace Uintah {
 } // End namespace Uintah
 
 // Added for compatibility with core types
-#include <Core/Datatypes/TypeName.h>
+#include <SCIRun/Core/Datatypes/TypeName.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

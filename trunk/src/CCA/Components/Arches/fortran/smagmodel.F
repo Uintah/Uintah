@@ -3,8 +3,8 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/smagmodel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/param4.h>
+#include <CCA/Components/Arches/fortran/smagmodel_fort.h>
+#include <CCA/Components/Arches/fortran/param4.h>
 
 
 

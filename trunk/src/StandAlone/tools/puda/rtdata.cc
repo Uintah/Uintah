@@ -1,14 +1,14 @@
 
-#include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
+#include <StandAlone/tools/puda/rtdata.h>
 
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <StandAlone/tools/puda/util.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 
-#include <Core/OS/Dir.h>
+#include <SCIRun/Core/OS/Dir.h>
 
 #include <iomanip>
 

@@ -1,10 +1,10 @@
 #ifndef SCI_project_TensorField_h
 #define SCI_project_TensorField_h 1
 
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/ScalarField.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Geometry/Point.h>
+#include <SCIRun/Core/Datatypes/Datatype.h>
+#include <SCIRun/Core/Datatypes/ScalarField.h>
+#include <SCIRun/Core/Containers/LockingHandle.h>
+#include <SCIRun/Core/Geometry/Point.h>
 
 namespace Uintah {
 

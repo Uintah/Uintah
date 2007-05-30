@@ -1,5 +1,5 @@
 #include "VonMisesYield.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <math.h>
 
 using namespace Uintah;

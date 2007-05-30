@@ -1,9 +1,9 @@
 #ifndef UINTAH_DYNAMICMODEL_H
 #define UINTAH_DYNAMICMODEL_H
 
-#include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
-#include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
-#include <Core/Containers/StaticArray.h>
+#include <CCA/Components/ICE/Turbulence.h>
+#include <CCA/Components/ICE/SmagorinskyModel.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 #include <math.h>
 
 namespace Uintah {

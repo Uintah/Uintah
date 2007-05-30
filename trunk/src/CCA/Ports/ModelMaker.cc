@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <CCA/Ports/ModelMaker.h>
 
 using namespace Uintah;
 

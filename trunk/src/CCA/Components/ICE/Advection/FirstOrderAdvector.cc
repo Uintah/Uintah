@@ -1,11 +1,11 @@
-#include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Patch.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Endian.h>
 #include <iostream>
 
 //#define SPEW

@@ -6,9 +6,9 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace SCIRun {
   class IntVector;
 }

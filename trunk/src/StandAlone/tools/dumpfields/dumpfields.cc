@@ -17,22 +17,22 @@
 
 #include <assert.h>
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include "Packages/Uintah/Core/Exceptions/ProblemSetupException.h"
-#include <Core/Math/MinMax.h>
-#include <Core/Util/Endian.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/OS/Dir.h>
-#include <Core/Containers/Array3.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Util/Endian.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/OS/Dir.h>
+#include <SCIRun/Core/Containers/Array3.h>
 
 #include <iostream>
 #include <string>

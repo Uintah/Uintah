@@ -20,10 +20,10 @@
 #ifndef UINTAH_GHOSTOFFSETVARMAP_H
 #define UINTAH_GHOSTOFFSETVARMAP_H
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Grid/Ghost.h>
 #include <map>
 
 namespace Uintah {

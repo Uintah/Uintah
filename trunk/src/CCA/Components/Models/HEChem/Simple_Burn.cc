@@ -1,25 +1,25 @@
 
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/Models/HEChem/Simple_Burn.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Labels/MPMICELabel.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
-#include <Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
 using namespace std;
@@ -277,7 +277,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 			                 const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label,getLevel(patches));
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();

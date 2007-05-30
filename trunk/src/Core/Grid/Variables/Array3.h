@@ -1,14 +1,14 @@
 #ifndef UINTAH_HOMEBREW_ARRAY3_H
 #define UINTAH_HOMEBREW_ARRAY3_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Array3Window.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Grid/Variables/Array3Window.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Math/Matrix3.h>
 
-#include <Core/Util/Endian.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MinMax.h>
+#include <SCIRun/Core/Util/Endian.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>

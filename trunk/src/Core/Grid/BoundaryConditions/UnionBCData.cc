@@ -1,11 +1,11 @@
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/UnionBCData.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/BoundaryConditions/UnionBCData.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Level.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace SCIRun;

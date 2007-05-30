@@ -35,12 +35,12 @@
  *     small matrices
  */
 
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/Assert.h>
-#include <Core/Util/FancyAssert.h>
+#include <Core/Math/FastMatrix.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
 #include <iostream>
 using namespace std;
 using namespace Uintah;

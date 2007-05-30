@@ -2,14 +2,14 @@
 #define Uintah_Package_Dataflow_Modules_Visualization_VariablePlotter_h 1
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
 // needs to be included here so Array3 knows about swapbytes(Matrix3)
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/VariableCache.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Core/Math/Matrix3.h>
+#include <Dataflow/Ports/ArchivePort.h>
+#include <Core/Datatypes/Archive.h>
+#include <Core/Datatypes/VariableCache.h>
+#include <Core/Grid/GridP.h>
 
 namespace Uintah {
 

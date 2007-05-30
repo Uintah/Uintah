@@ -1,4 +1,4 @@
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Core/Grid/Ghost.h>
 
 using namespace Uintah;
 using namespace SCIRun;

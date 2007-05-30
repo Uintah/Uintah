@@ -4,20 +4,20 @@
 #ifndef _WIN32
 #include <inttypes.h>
 #else
-#include <Core/Util/Endian.h> // for long64 and the like
+#include <SCIRun/Core/Util/Endian.h> // for long64 and the like
 #endif
 #include <float.h>
 
-namespace SCIRun {
+namespace SLIVR {
   class Point;
   class Vector;
 }
 
-#include <Packages/Uintah/Core/Disclosure/share.h>
-namespace Uintah {
+using SLIVR::Point;
+using SLIVR::Vector;
 
-using SCIRun::Point;
-using SCIRun::Vector;
+#include <Core/Disclosure/share.h>
+namespace Uintah {
 
 class Matrix3;
 class Stencil7;
@@ -45,19 +45,19 @@ SCISHARE const TypeDescription* fun_getTypeDescription(Vector*);
 // true for Matrix3 too.  However, both the fun_getTypeDescription of
 // Matrix3 and Stencil7 are inplemented in their respective .cc files.
 
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Core/Math/share.h>
 // since these are defined in Math/Grid, and declared here, we need to export them correctly
 SCISHARE const TypeDescription* fun_getTypeDescription(Matrix3*);
 SCISHARE const TypeDescription* fun_getTypeDescription(Short27*);
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 SCISHARE const TypeDescription* fun_getTypeDescription(Stencil7*);
 
 // Added by Oren for implicit ICE AMR pressure solver type that
 // appears in ICELabel.cc.
 SCISHARE const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
-#include <Packages/Uintah/Core/Disclosure/share.h>
+#include <Core/Disclosure/share.h>
 
 // these functions are for getting safe values of types
 // return back the value in the argument (so we don't have to include
@@ -81,13 +81,13 @@ SCISHARE void fun_getSmallValue(Vector*);
 
 } // End namespace Uintah
    
-#include <Core/Datatypes/TypeName.h>
+#include <SCIRun/Core/Datatypes/TypeName.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
 // typename.h redefines SCISHARE
-#include <Packages/Uintah/Core/Disclosure/share.h>
+#include <Core/Disclosure/share.h>
 namespace SCIRun {
  using std::string;
  using Uintah::long64;

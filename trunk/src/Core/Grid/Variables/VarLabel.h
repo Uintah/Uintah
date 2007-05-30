@@ -6,10 +6,10 @@
 #include <string>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Util/RefCounted.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::IntVector;

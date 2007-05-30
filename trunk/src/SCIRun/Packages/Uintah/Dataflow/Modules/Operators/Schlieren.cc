@@ -1,8 +1,8 @@
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/Schlieren.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Dataflow/Modules/Operators/Schlieren.h>
+#include <Core/Disclosure/TypeUtils.h>
 
 #include <math.h>
 

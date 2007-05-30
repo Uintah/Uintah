@@ -1,10 +1,10 @@
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <set>
 #include <iostream>
 #include <algorithm>

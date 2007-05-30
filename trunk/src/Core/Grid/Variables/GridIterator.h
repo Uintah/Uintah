@@ -2,12 +2,12 @@
 #ifndef UINTAH_HOMEBREW_GridIterator_H
 #define UINTAH_HOMEBREW_GridIterator_H
 
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iostream>

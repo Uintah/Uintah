@@ -35,26 +35,26 @@
  */
 
 #include "FaceCuttingPlane.h"
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geom/ColorMap.h>
-#include <Core/Geom/GeomTriangles.h>
-#include <Core/Geom/View.h>
-#include <Core/Geom/GeomGrid.h>
-#include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/GeomLine.h>
-#include <Core/Geom/Material.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Thread/CrowdMonitor.h>
+#include <SCIRun/Core/Datatypes/FieldInterface.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geom/ColorMap.h>
+#include <SCIRun/Core/Geom/GeomTriangles.h>
+#include <SCIRun/Core/Geom/View.h>
+#include <SCIRun/Core/Geom/GeomGrid.h>
+#include <SCIRun/Core/Geom/GeomGroup.h>
+#include <SCIRun/Core/Geom/GeomLine.h>
+#include <SCIRun/Core/Geom/Material.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
-#include <Core/Util/NotFinished.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <SCIRun/Core/Util/NotFinished.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <iostream>
 #include <algorithm>
 

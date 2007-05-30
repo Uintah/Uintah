@@ -1,7 +1,7 @@
 #ifndef UINTAH_GRID_HANDLE_H
 #define UINTAH_GRID_HANDLE_H
 
-#include <Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 namespace Uintah {
 

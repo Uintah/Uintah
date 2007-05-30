@@ -13,11 +13,11 @@
 #include "PlasticityModels/MeltingTempModel.h"
 #include "PlasticityModels/SpecificHeatModel.h"
 #include <math.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/TangentModulusTensor.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
 

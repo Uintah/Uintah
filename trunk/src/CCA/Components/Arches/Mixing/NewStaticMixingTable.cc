@@ -1,13 +1,13 @@
 //----- NewStaticMixingTable.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <iostream>
 #include <math.h>
-#include <Core/Math/MiscMath.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 #include <iomanip>
 #include <stdio.h>
 #include <fstream>
@@ -58,24 +58,9 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("tabulated_soot",d_tabulated_soot,false);
 
   db->require("inputfile",d_inputfile);
-  if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
-    db->require("h_fuel",d_H_fuel);
-    db->require("h_air",d_H_air);
-    d_adiab_enth_inputs = true;
-  }
-  else
-    d_adiab_enth_inputs = false;
 
   // Define mixing table, which includes call reaction model constructor
   readMixingTable(d_inputfile);
-  if (!d_adiab_enth_inputs) {
-    if (!(Enthalpy_index == -1))
-      d_H_air=tableLookUp(0.0, 0.0, 0.0, Enthalpy_index);
-    else {
-      throw InvalidValue("No way provided to compute adiabatic enthalpy",
-                         __FILE__, __LINE__);
-    }
-  }
 }
 
       
@@ -112,34 +97,23 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
   double zero_heat_loss=0.0;
-  double zero_mixFracVars=0.0;
   //Absolute enthalpy
   double enthalpy=0.0;
   // Adiabatic enthalpy
-  double adia_enthalpy=0.0;
-  double interp_adiab_enthalpy = 0.0;
-  if (d_adiab_enth_inputs)
-    interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
+  double adiab_enthalpy=0.0;
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
   if(d_calcEnthalpy){
 	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, zero_heat_loss, Hs_index);
 	enthalpy=inStream.d_enthalpy;
-	if (!(Enthalpy_index == -1))
-          adia_enthalpy=tableLookUp(mixFrac, zero_mixFracVars, zero_heat_loss, Enthalpy_index);
-	else if (d_adiab_enth_inputs)
-	  adia_enthalpy=interp_adiab_enthalpy;
-	else {
-          throw InvalidValue("No way provided to compute adiabatic enthalpy",
-                             __FILE__, __LINE__);
-	}
+        adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
 
         if ((inStream.d_initEnthalpy)||
-	    ((Abs(adia_enthalpy-enthalpy)/Abs(adia_enthalpy) < 1.0e-4)&&
+	    ((Abs(adiab_enthalpy-enthalpy)/Abs(adiab_enthalpy) < 1.0e-4)&&
 	     (mixFrac < 1.0e-4)))
           	current_heat_loss = zero_heat_loss;
         else
-  		current_heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
+  		current_heat_loss=(adiab_enthalpy-enthalpy)/(sensible_enthalpy+small);
 
 	if(current_heat_loss < -1.0 || current_heat_loss > 1.0){
 		if (inStream.d_currentCell.x() == -2) {
@@ -150,7 +124,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
 				<< " at cell " << inStream.d_currentCell << endl;
 		}
 		cout<< "Absolute enthalpy is : "<< enthalpy << endl;
-		cout<< "Adiabatic enthalpy is : "<< adia_enthalpy << endl;
+		cout<< "Adiabatic enthalpy is : "<< adiab_enthalpy << endl;
 		cout<< "Sensible enthalpy is : "<< sensible_enthalpy << endl;
   		cout<< "Mixture fraction is :  "<< mixFrac << endl;
   		cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
@@ -167,12 +141,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   outStream.d_temperature=tableLookUp(mixFrac, mixFracVars, current_heat_loss, T_index);  
   outStream.d_density=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Rho_index);  
   outStream.d_cp=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Cp_index);  
-  if (!(Enthalpy_index == -1))
-    outStream.d_enthalpy=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Enthalpy_index);  
-  else if (d_adiab_enth_inputs)
-    outStream.d_enthalpy=interp_adiab_enthalpy;
-  else
-    outStream.d_enthalpy=0.0;
+  outStream.d_enthalpy=adiab_enthalpy;
   outStream.d_co2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2_index);  
   outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);  
 
@@ -192,14 +161,6 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
 
   outStream.d_heatLoss = current_heat_loss;
 
-  /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){
-  	cout<<"Temperature for properties outbound is:  "<<outStream.d_temperature<<endl;
-  	cout<<"Density for properties outbound is:  "<<outStream.d_density<<endl;
-  	cout<<"Mixture fraction for properties outbound  is :  "<<mixFrac<<endl;
-  	cout<<"Mixture fraction variance for properties outbound is :  "<<mixFracVars<<endl;
-  	cout<<"Heat loss for properties outbound is :  "<<current_heat_loss<<endl;
-  }*/
-  //cout<<"Temperature is:  "<<outStream.d_temperature<<endl;
 }
 
 
@@ -335,7 +296,14 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   std::string header;
   while (getline(fd, header) && header[0] == '#') { /* skip header lines */ }
 
-  sscanf(header.c_str(), "%i", &d_indepvarscount);
+  std::istringstream stream_header(header);
+  stream_header >> d_f_stoich;
+
+  fd >> d_H_fuel;
+  fd >> d_H_air;
+  fd >> d_carbon_fuel;
+  fd >> d_carbon_air;
+  fd >> d_indepvarscount;
   cout<< "d_indepvars count: " << d_indepvarscount << endl;
   
   indepvars_names = vector<string>(d_indepvarscount);
@@ -373,7 +341,6 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   Rho_index = -1;
   T_index = -1;
   Cp_index = -1;
-  Enthalpy_index = -1;
   Hs_index = -1;
   co2_index = -1;
   h2o_index = -1;
@@ -392,8 +359,6 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    T_index = ii;
     else if(vars_names[ii]== "heat_capacity")
 	    Cp_index = ii;
-    else if(vars_names[ii]== "enthalpy")
-	    Enthalpy_index = ii;
     else if(vars_names[ii]== "sensible_heat")
 	    Hs_index = ii;
     else if(vars_names[ii]== "CO2")

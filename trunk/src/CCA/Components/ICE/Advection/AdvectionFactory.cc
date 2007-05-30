@@ -1,9 +1,9 @@
-#include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/ICE/Advection/AdvectionFactory.h>
+#include <CCA/Components/ICE/Advection/FirstOrderAdvector.h>
+#include <CCA/Components/ICE/Advection/SecondOrderAdvector.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 #include <map>
 #include <string>
 #include <stdlib.h>

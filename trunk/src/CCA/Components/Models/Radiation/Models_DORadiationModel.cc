@@ -4,24 +4,24 @@
 
 #include <fstream> // work around compiler bug with RHEL 3
 
-#include <Core/Containers/OffsetArray1.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationSolver.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_DORadiationModel.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_PetscSolver.h>
+#include <SCIRun/Core/Containers/OffsetArray1.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <CCA/Components/Models/Radiation/Models_CellInformationP.h>
+#include <CCA/Components/Models/Radiation/Models_RadiationSolver.h>
+#include <CCA/Components/Models/Radiation/Models_DORadiationModel.h>
+#include <CCA/Components/Models/Radiation/Models_PetscSolver.h>
 #ifdef HAVE_HYPRE
 #  include <Packages/Uintah/CCA/Components/Models/Radiation/Models_HypreSolver.h>
 #endif
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <math.h>
 
 using namespace std;
@@ -29,21 +29,21 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #ifndef _WIN32 //no fortran
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radcal_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdombc_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomflux_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdombmcalc_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomvolq_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rshsolve_fort.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_radwsgg_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_radcal_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdombc_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdomflux_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdombmcalc_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdomvolq_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rshsolve_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
 #endif
 //****************************************************************************
 // Default constructor for Models_DORadiationModel

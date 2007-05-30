@@ -22,9 +22,9 @@
  *                  than once.
  */
 
-#include    <Packages/Uintah/Core/Math/CubeRoot.h>
-#include    <math.h>
-#include    <stdio.h>
+#include <Core/Math/CubeRoot.h>
+#include <math.h>
+#include <stdio.h>
 
 
 /* epsilon surrounding for near zero values */

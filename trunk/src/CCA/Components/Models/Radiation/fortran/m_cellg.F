@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
 #include "m_param4.h"
 
 c*********************************************************************

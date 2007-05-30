@@ -23,14 +23,14 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Geom/Material.h>
+#include <SCIRun/Core/Basis/Constant.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Containers/FData.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Geom/Material.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>

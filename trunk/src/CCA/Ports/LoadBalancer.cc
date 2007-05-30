@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 using namespace Uintah;
 

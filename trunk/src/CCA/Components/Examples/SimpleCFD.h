@@ -2,21 +2,21 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_SimpleCFD_h
 #define Packages_Uintah_CCA_Components_Examples_SimpleCFD_h
 
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/CCA/Components/Examples/BoundaryConditions.h>
-#include <Packages/Uintah/CCA/Components/Examples/RegionDB.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <CCA/Components/Examples/BoundaryConditions.h>
+#include <CCA/Components/Examples/RegionDB.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Task.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/share.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;

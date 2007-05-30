@@ -1,10 +1,10 @@
 #ifndef UINTAH_HOMEBREW_SHELLMPM_H
 #define UINTAH_HOMEBREW_SHELLMPM_H
 
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/share.h>
 namespace Uintah {
 
 using namespace SCIRun;

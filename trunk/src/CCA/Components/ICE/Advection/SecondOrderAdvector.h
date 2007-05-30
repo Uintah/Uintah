@@ -1,12 +1,12 @@
 #ifndef UINTAH_SECOND_ORDER_ADVECTOR_H
 #define UINTAH_SECOND_ORDER_ADVECTOR_H
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/ICE/Advection/SecondOrderBase.h>
+#include <Core/Disclosure/TypeDescription.h>
 
-#include <Core/Containers/StaticArray.h>
+#include <SCIRun/Core/Containers/StaticArray.h>
 
 namespace Uintah {
 

@@ -1,14 +1,15 @@
-#include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <TauProfilerForSCIRun.h>
+#include <CCA/Components/Regridder/BNRRegridder.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/PatchRangeTree.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <CCA/Ports/Scheduler.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <CCA/Ports/SFC.h>
 using namespace Uintah;
 
 #include <vector>
@@ -27,25 +28,25 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
   //check if queue has tags
   if(tags_.size()>1)
   {
-    tag1=tags_.top(); 
+    tag1=tags_.front(); 
     tags_.pop();
-    tag2=tags_.top();
+    tag2=tags_.front();
     tags_.pop(); 
     return true;  
   }
   //check if tags can be allocated 
   else if(free_tags>1)
   {
-    tag1=free_tag_start_<<1; free_tag_start_++;
-    tag2=free_tag_start_<<1; free_tag_start_++;
+    tag1=free_tag_start_; free_tag_start_++;
+    tag2=free_tag_start_; free_tag_start_++;
     return true;
   }
   //check if 1 tag is on the queue and 1 avialable at the end
   else if(tags_.size()==1 && free_tags==1)
   {
-    tag1=tags_.top();
+    tag1=tags_.front();
     tags_.pop();
-    tag2=free_tag_start_<<1; free_tag_start_++;
+    tag2=free_tag_start_; free_tag_start_++;
     return true;
   }
   //no more tags available
@@ -66,11 +67,10 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
   {  
     MPI_Attr_get(d_myworld->getComm(),MPI_TAG_UB,&tag_ub,&flag);
     if(flag)
-      maxtag_=(*tag_ub>>1);
+      maxtag_=*tag_ub;
     else
-      maxtag_=(32767>>1);
+      maxtag_=32767;
 
-    maxtag_++;
     int div=maxtag_/numprocs;
     int rem=maxtag_%numprocs;
   
@@ -98,6 +98,7 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
+  TAU_PROFILE("BNRRegridder::regrid", " ", TAU_USER);
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
   vector< vector<Region> > patch_sets(min(oldGrid->numLevels()+1,d_maxLevels));
 
@@ -175,6 +176,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
 {
+  TAU_PROFILE("BNRRegridder::CreateGrid()", " ", TAU_USER);
 
   Grid* newGrid = scinew Grid();
   
@@ -213,6 +215,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
 }
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
 {
+  TAU_PROFILE("BNRRegridder::CreateCoarseFlagSets()", " ", TAU_USER);
   DataWarehouse *dw=sched_->getLastDW();
 
   int toplevel=min(oldGrid->numLevels(),d_maxLevels-1);
@@ -278,9 +281,10 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
 
 void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
 {
+  TAU_PROFILE("BNRRegridder::RunBR()", " ", TAU_USER);
   int rank=d_myworld->myrank();
   int numprocs=d_myworld->size();
-  
+ 
   vector<int> procs(numprocs);
   for(int p=0;p<numprocs;p++)
     procs[p]=p;
@@ -346,7 +350,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
   //place on immediate_q_
   immediate_q_.push(root);                  
   //control loop
-
+  //MPI_Errhandler_set(d_myworld->getComm(), MPI_ERRORS_RETURN);
   while(true)
   {
     BNRTask *task;
@@ -361,10 +365,9 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
     }
     else if(!immediate_q_.empty())  //check for tasks that are able to make progress
     {
-      task=immediate_q_.top();
+      task=immediate_q_.front();
       immediate_q_.pop();
       //runable task found, continue task
-      //cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;
       if(task->p_group_.size()==1)
         task->continueTaskSerial();
       else
@@ -374,7 +377,29 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
     {
       int count;
       //wait on requests
-      MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],MPI_STATUSES_IGNORE);
+      //MPI_STATUSES_IGNORE
+      if(MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],&statuses_[0])==MPI_ERR_IN_STATUS)
+      {
+              BNRTask *task;
+              cerr << "rank:" << rank << " error in MPI_Waitsome status\n";
+              for(int c=0;c<count;c++)
+              {
+                if(statuses_[c].MPI_ERROR!=MPI_SUCCESS)
+                {
+                  char message[MPI_MAX_ERROR_STRING];
+                  int length;
+
+                  MPI_Error_string(statuses_[c].MPI_ERROR,message,&length);
+                  cerr << "Error message" << ": '" << message << "'\n";
+                  
+                  task=request_to_task_[indicies_[c]];
+                  cerr << "Task status:" << task->status_ << " patch:" << task->patch_ << endl;
+                }
+              }
+              cerr << "Entering infinite loop\n";
+              while(1); //hang so debugger can be attached
+      }
+      
       //handle each request
       for(int c=0;c<count;c++)
       {
@@ -421,7 +446,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
   }
  
   tasks_.clear();
-
 }
 
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
@@ -467,7 +491,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   regrid_spec->getWithDefault("do_loadBalancing",d_loadBalance,false);
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
-  regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.25);
+  regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.125);
   //bound tolerances
   if (tola_ < 0) {
     if (d_myworld->myrank() == 0)
@@ -573,6 +597,7 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
 //to do in parallel since the number of patches is typically very small
 void BNRRegridder::PostFixup(vector<Region> &patches)
 {
+  TAU_PROFILE("BNRRegridder::PostFixup()", " ", TAU_USER);
   //calculate total volume
   int volume=0;
   for(unsigned int p=0;p<patches.size();p++)
@@ -628,6 +653,7 @@ void BNRRegridder::PostFixup(vector<Region> &patches)
 void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int l)
 {
+  TAU_PROFILE("BNRRegridder::AddSafetyLayer()", " ", TAU_USER);
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches

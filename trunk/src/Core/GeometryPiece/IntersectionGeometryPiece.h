@@ -1,13 +1,13 @@
 #ifndef __INTERSECTION_GEOMETRY_OBJECT_H__
 #define __INTERSECTION_GEOMETRY_OBJECT_H__      
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 

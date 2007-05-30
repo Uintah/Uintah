@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Core/Malloc/Allocator.h>
+#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

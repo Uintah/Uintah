@@ -1,20 +1,20 @@
 //  ICEMaterial.cc
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/EOS/EquationOfState.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <iostream>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 

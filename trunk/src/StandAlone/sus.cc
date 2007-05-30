@@ -13,34 +13,34 @@
  */
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
-#include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
-#include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
-#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderFactory.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
-#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/Models/ModelFactory.h>
+#include <CCA/Components/Solvers/CGSolver.h>
+#include <CCA/Components/Solvers/DirectSolve.h>
+#include <CCA/Components/Solvers/HypreSolver.h>
+#include <CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
+#include <CCA/Components/Solvers/SolverFactory.h>
+#include <CCA/Components/Regridder/RegridderFactory.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
+#include <CCA/Components/Schedulers/SchedulerFactory.h>
+#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
-#include <Core/Exceptions/Exception.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/Environment.h>
-#include <Core/Util/FileUtils.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Thread/Time.h>
+#include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Util/Environment.h>
+#include <SCIRun/Core/Util/FileUtils.h>
 
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/ieeefp_defs.h>
@@ -154,7 +154,7 @@ usage( const std::string & message,
   quit();
 }
 
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/InvalidGrid.h>
 
 int
 main( int argc, char** argv )

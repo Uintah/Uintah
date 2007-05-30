@@ -1,7 +1,7 @@
 #ifndef __COMPOSITE_CONTACT_H__
 #define __COMPOSITE_CONTACT_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <CCA/Components/MPM/Contact/Contact.h>
 #include <list>
 
 namespace Uintah {

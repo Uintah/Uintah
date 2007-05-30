@@ -1,13 +1,13 @@
 #ifndef UINTAH_HOMEBREW_SwitchingCriteria_H
 #define UINTAH_HOMEBREW_SwitchingCriteria_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Parallel/UintahParallelPort.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <CCA/Ports/share.h>
 
 namespace Uintah {
 

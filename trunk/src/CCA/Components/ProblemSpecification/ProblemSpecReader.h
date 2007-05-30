@@ -1,14 +1,14 @@
 #ifndef __PROBLEM_SPEC_READER_H__ 
 #define __PROBLEM_SPEC_READER_H__
 
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/share.h>
+#include <CCA/Components/ProblemSpecification/share.h>
 namespace Uintah {
       
    class SCISHARE ProblemSpecReader : public ProblemSpecInterface {

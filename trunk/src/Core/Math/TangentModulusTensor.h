@@ -2,14 +2,14 @@
 #define __UINTAH_TANGENT_MODULUS_4D_H__
 
 // Headers
-#include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <Core/Math/FastMatrix.h>
+#include <Core/Math/Matrix3.h>
 
 // Base class
-#include <Packages/Uintah/Core/Math/Tensor4D.h>
+#include <Core/Math/Tensor4D.h>
 
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Core/Math/share.h>
 namespace Uintah {
 
   /*! \class TangentModulusTensor

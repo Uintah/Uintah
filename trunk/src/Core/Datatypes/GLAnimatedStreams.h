@@ -3,20 +3,19 @@
 
 #include <sci_defs/ogl_defs.h>
 
-#include <Core/Thread/Mutex.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Ray.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Geom/ColorMap.h>
-#include <Core/Geom/GeomObj.h>
+#include <SCIRun/Core/Thread/Mutex.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Ray.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/BBox.h>
+#include <SCIRun/Core/Geometry/Transform.h>
+#include <SCIRun/Core/Datatypes/Field.h>
+#include <SCIRun/Core/Geom/ColorMap.h>
+#include <SCIRun/Core/Geom/GeomObj.h>
 
 #include <sci_gl.h>
-#include <sci_glu.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Core/Datatypes/share.h>
 namespace Uintah {
 
 using SCIRun::Point;
@@ -86,9 +85,7 @@ public:
   ~GLAnimatedStreams();
 
 
-#ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
-#endif
   
   virtual GeomObj* clone();
   virtual void get_bounds(BBox& bb){

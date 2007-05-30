@@ -1,12 +1,12 @@
-#include <Packages/Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Core/Util/FancyAssert.h>
+#include <CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
+#include <Core/Grid/Grid.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
 
 #include <iostream> // debug only
 

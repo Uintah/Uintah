@@ -6,7 +6,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Labels/share.h>
+#include <Core/Labels/share.h>
 
 namespace Uintah {
 

@@ -14,12 +14,12 @@
 #ifndef UINTAH_EXCEPTIONS_INVALIDVALUE_H
 #define UINTAH_EXCEPTIONS_INVALIDVALUE_H
 
-#include <Core/Exceptions/Exception.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/share.h>
+#include <Core/Exceptions/share.h>
 namespace Uintah {
 
    using namespace SCIRun;

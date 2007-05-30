@@ -31,15 +31,15 @@ LOG
 #define PARTICLEFIELDEXTRACTOR_H 1
 
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Core/Datatypes/Archive.h>
+#include <Dataflow/Ports/ArchivePort.h>
+#include <Dataflow/Ports/ScalarParticlesPort.h>
+#include <Dataflow/Ports/VectorParticlesPort.h>
+#include <Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Module.h> 
-#include <Core/GuiInterface/GuiVar.h> 
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Thread/Runnable.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <SCIRun/Core/Thread/Runnable.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
@@ -51,7 +51,7 @@ namespace SCIRun {
   class Mutex;
 }
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/share.h>
+#include <Dataflow/Modules/Selectors/share.h>
 namespace Uintah {
   class PFEThread;
 

@@ -7,8 +7,8 @@
 #ifndef UINTAH_HOMEBREW_CRACKFRONTNODE_H
 #define UNITAH_HOMEBREW_CRACKFRONTNODE_H
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 namespace Uintah {
 

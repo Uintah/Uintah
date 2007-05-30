@@ -5,7 +5,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Parallel/share.h>
+#include <Core/Parallel/share.h>
 namespace Uintah {
 
 class ProcessorGroup;

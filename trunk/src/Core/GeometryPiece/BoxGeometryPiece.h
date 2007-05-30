@@ -1,14 +1,10 @@
 #ifndef __BOX_GEOMETRY_OBJECT_H__
 #define __BOX_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Box.h>
 
-namespace SCIRun {
-  class Point;
-}
-
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************

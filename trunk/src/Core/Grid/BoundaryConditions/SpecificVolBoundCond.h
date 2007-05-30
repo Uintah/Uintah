@@ -1,8 +1,8 @@
 #ifndef UINTAH_GRID_SpecificVolBoundCond_H
 #define UINTAH_GRID_SpecificVolBoundCond_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
    

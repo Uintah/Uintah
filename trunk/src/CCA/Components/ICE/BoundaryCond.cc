@@ -1,22 +1,22 @@
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/AMR.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/BoundaryConditions/fillFace.h>
 
 #include <typeinfo>
-#include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
  // Note:  BC_dbg doesn't work if the iterator bound is

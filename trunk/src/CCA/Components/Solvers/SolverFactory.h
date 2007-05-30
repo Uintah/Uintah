@@ -35,10 +35,10 @@ WARNING
    sus cannot pass linking.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/SolverInterface.h>
 
-#include <Packages/Uintah/CCA/Components/Solvers/share.h>
+#include <CCA/Components/Solvers/share.h>
 namespace Uintah {
 
   class ProcessorGroup;

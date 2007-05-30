@@ -1,8 +1,8 @@
 #ifndef UINTAH_GRID_BCDataBase_H
 #define UINTAH_GRID_BCDataBase_H
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>

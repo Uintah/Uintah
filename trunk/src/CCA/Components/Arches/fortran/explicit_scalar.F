@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
+#include <CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 C-----------------------------------------------------------------------
 *
 *
@@ -40,7 +40,7 @@ c*********************************************************************
      &              su(i,j,k) -ap(i,j,k)*old_phi(i,j,k)
                phi(i,j,k) = rhs/apo
 c Following lines to fix density delay problem for helium.
-c One would also need to edit Properties.cc to use it.
+c One would also need to edit Properties.cc to utilize it.
 c               phi(i,j,k) = phi(i,j,k)*old_den(i,j,k)
 c               phi(i,j,k) = phi(i,j,k) * 0.133D0/
 c     /(0.133D0*1.184344D0+phi(i,j,k)*(0.133D0-1.184344D0))

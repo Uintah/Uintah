@@ -2,12 +2,12 @@
 #ifndef UINTAH_HOMEBREW_PSPatchMatlGhost_H
 #define UINTAH_HOMEBREW_PSPatchMatlGhost_H
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Patch.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 using SCIRun::IntVector;
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 namespace Uintah {
 
 

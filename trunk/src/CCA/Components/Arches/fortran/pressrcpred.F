@@ -1,6 +1,6 @@
 c
 c
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include <CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #include "param4.h"
 
       integer IST, JST, KST, IEND, JEND, KEND

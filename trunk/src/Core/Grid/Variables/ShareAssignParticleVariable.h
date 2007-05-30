@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_SHAREASSIGNPARTICLEVARIABLE_H
 #define UINTAH_HOMEBREW_SHAREASSIGNPARTICLEVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
 #ifndef _WIN32
 #include <unistd.h>

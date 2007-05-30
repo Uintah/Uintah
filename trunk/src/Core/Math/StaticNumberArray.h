@@ -2,10 +2,10 @@
 #define UINTAH_STATIC_NUMBER_ARRAY_H
 
 // Headers
-#include <Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 // Base Class
-#include <Packages/Uintah/Core/Math/StaticObjectArray.h>
+#include <Core/Math/StaticObjectArray.h>
 
 namespace Uintah {
 

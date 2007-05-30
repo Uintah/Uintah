@@ -4,23 +4,24 @@
 // Do not EVER put a #include for anything in CCA/Components in here.
 // Ask steve for a better way
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
+namespace SLIVR {
   class Point;
   class Vector;
 }
 
-#include <Packages/Uintah/CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/share.h>
 namespace Uintah {
-  using namespace SCIRun;
+  using SLIVR::Point;
+  using SLIVR::Vector;
   class ICELabel;
   class EquationOfState;
   class GeometryObject;

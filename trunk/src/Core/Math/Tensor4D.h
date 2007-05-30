@@ -2,13 +2,13 @@
 #define UINTAH_TENSOR_4D_H
 
 // Headers
-#include <Core/Util/Assert.h>
+#include <SCIRun/Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
 // Base class
-#include <Packages/Uintah/Core/Math/Tensor.h>
+#include <Core/Math/Tensor.h>
 
 namespace Uintah {
 

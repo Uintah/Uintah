@@ -44,6 +44,9 @@ SET(SCIRUN_VERSION_PATCH "@SCIRUN_VERSION_PATCH@")
 # The SCIRUN source tree.
 SET(scirun_src_dir "@scirun_src_dir@")
 
+# building dataflow
+SET(BUILD_DATAFLOW "@BUILD_DATAFLOW@")
+
 # The SCIRun binary tree.
 SET(scirun_obj_dir "@scirun_obj_dir@")
 

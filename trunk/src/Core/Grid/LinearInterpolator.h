@@ -1,15 +1,15 @@
 #ifndef LINEAR_INTERPOLATOR_H
 #define LINEAR_INTERPOLATOR_H
 
-#include <Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <Core/Grid/ParticleInterpolator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <vector>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
 

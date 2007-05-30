@@ -10,7 +10,7 @@
 #include <Persistent/Persistent.h>
 #include <Containers/LockingHandle.h>
 
-#include <Packages/Uintah/Datatypes/Particles/ParticleGridReader.h>
+#include <Datatypes/Particles/ParticleGridReader.h>
 
 using namespace SCIRun;
 using namespace Uintah;

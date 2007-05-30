@@ -1,9 +1,9 @@
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <SCIRun/Core/Util/FancyAssert.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 using namespace Uintah;
 using namespace SCIRun;
 

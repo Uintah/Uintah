@@ -1,7 +1,7 @@
 #ifndef __ARCHES_MATERIAL_H__
 #define __ARCHES_MATERIAL_H__
 
-#include <Packages/Uintah/Core/Grid/Material.h>
+#include <Core/Grid/Material.h>
 
 
 namespace Uintah {

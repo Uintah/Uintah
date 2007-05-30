@@ -2,7 +2,7 @@
 #define UINTAH_COMPARE_MMS_LinearMMS_H
 
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
+#include <StandAlone/tools/compare_mms/MMS.h>
 
 class LinearMMS : public MMS {
 

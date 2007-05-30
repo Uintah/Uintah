@@ -5,9 +5,9 @@
 #ifndef __SHORT27_H__
 #define __SHORT27_H__
 
-#include <Core/Geometry/Vector.h>
-#include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Short27) prototype
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Util/Assert.h>
+#include <Core/Disclosure/TypeUtils.h> // for get_funTD(Short27) prototype
 
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
@@ -19,8 +19,8 @@ namespace SCIRun {
   class TypeDescription;
   class Piostream;
 }
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Core/Math/TntJama/tnt.h>
+#include <Core/Math/share.h>
 namespace Uintah {
 using namespace SCIRun;
 
@@ -66,7 +66,7 @@ inline short &Short27::operator [] (int i)
 } // End namespace Uintah
 
 // Added for compatibility with core types
-#include <Core/Datatypes/TypeName.h>
+#include <SCIRun/Core/Datatypes/TypeName.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

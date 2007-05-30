@@ -14,9 +14,9 @@
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_INCORRECT_ALLOCATION_H
 #define UINTAH_COMPONENTS_SCHEDULERS_INCORRECT_ALLOCATION_H
 
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Core/Exceptions/Exception.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <SCIRun/Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

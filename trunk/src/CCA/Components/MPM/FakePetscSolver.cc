@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Core/Exceptions/InternalError.h>
+#include <CCA/Components/MPM/PetscSolver.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
 
 
 using namespace Uintah;

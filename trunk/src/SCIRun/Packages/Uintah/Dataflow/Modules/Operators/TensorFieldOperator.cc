@@ -1,7 +1,7 @@
 #include "TensorFieldOperator.h"
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/BBox.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 

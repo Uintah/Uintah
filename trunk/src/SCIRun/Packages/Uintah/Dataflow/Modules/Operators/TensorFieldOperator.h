@@ -1,20 +1,20 @@
 #ifndef __DERIVE_TENSORFIELDOPERATOR_H__
 #define __DERIVE_TENSORFIELDOPERATOR_H__
 
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/FData.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
+#include <SCIRun/Core/Basis/Constant.h>
+#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
+#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <SCIRun/Core/Containers/FData.h>
+#include <SCIRun/Core/Containers/StringUtil.h>
+#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Util/TypeDescription.h>
+#include <SCIRun/Core/Util/DynamicLoader.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/TensorOperatorFunctors.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/OperatorThread.h>
+#include <Dataflow/Modules/Operators/TensorOperatorFunctors.h>
+#include <Dataflow/Modules/Operators/UnaryFieldOperator.h>
+#include <Dataflow/Modules/Operators/OperatorThread.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>

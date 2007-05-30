@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <CCA/Ports/SFC.h>
 
 
 namespace Uintah

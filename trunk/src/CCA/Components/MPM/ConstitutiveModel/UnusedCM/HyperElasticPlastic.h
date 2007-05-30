@@ -3,14 +3,14 @@
 
 
 #include "ConstitutiveModel.h"	
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
 #include <math.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
 

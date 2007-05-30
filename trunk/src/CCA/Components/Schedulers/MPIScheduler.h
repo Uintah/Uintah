@@ -1,15 +1,15 @@
 #ifndef UINTAH_HOMEBREW_MPISCHEDULER_H
 #define UINTAH_HOMEBREW_MPISCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Components/Schedulers/MessageLog.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Parallel/PackBufferInfo.h>
  
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
+#include <Core/Grid/Task.h>
+#include <Core/Parallel/BufferInfo.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
@@ -79,17 +79,23 @@ WARNING
     virtual void execute(int tgnum = 0, int iteration = 0);
 
     virtual SchedulerP createSubScheduler();
-      
-    void postMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
-		       list<DependencyBatch*>& externalRecvs,
-		       bool only_old_recvs, int abort_point, int iteration);
-    void processMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
-		       list<DependencyBatch*>& externalRecvs );    
+    
+    virtual bool useInternalDeps() { return useExternalQueue_; }
+
+
+
+    void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
+
+    enum { TEST, WAIT_ONCE, WAIT_ALL};
+
+    void processMPIRecvs(int how_much);    
 
     void postMPISends( DetailedTask* task, int iteration );
 
     void runTask( DetailedTask* task, int iteration );
     void runReductionTask( DetailedTask* task );        
+
+    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const string& var);
 
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
@@ -117,12 +123,14 @@ WARNING
     Output*       oport_;
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
-    
+    CommRecMPI            recvs_;
+
     double           d_lasttime;
     vector<char*>    d_labels;
     vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
+    bool useExternalQueue_;
 
     void emitTime(char* label);
     void emitTime(char* label, double time);

@@ -28,7 +28,7 @@ WARNING
    none
 
 ************************************************************************/
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

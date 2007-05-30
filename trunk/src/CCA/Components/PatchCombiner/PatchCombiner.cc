@@ -1,11 +1,11 @@
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/MaterialSetP.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/MaterialSetP.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;
 

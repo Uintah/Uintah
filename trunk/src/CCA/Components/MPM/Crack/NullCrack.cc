@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/NullCrack.h>
+#include <CCA/Components/MPM/Crack/NullCrack.h>
 
 
 using namespace Uintah;

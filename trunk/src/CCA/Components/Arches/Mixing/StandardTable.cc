@@ -1,13 +1,13 @@
 //----- StandardTable.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Math/MiscMath.h>
+#include <CCA/Components/Arches/Mixing/StandardTable.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Components/Models/test/TableFactory.h>
+#include <CCA/Components/Models/test/TableInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <SCIRun/Core/Math/MiscMath.h>
 #include <math.h>
 #include <stdio.h>
 #include <iostream>

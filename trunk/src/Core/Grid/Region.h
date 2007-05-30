@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_Region_H
 #define UINTAH_HOMEBREW_Region_H
 
-#include <Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
 
 #undef None
 
@@ -14,7 +14,7 @@
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/share.h>
 
 namespace Uintah {
 

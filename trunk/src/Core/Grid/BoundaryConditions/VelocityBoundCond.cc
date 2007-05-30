@@ -1,8 +1,8 @@
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/BoundaryConditions/VelocityBoundCond.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 #include <stdlib.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 using namespace Uintah;
 
 VelocityBoundCond::VelocityBoundCond(ProblemSpecP& ps,const std::string& kind)

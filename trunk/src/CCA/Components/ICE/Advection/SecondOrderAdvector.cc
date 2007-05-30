@@ -1,13 +1,13 @@
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <CCA/Components/ICE/Advection/SecondOrderAdvector.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Disclosure/TypeDescription.h>
 
-#include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Util/Endian.h>
 #include <iostream>
 
 //#define REFLUX_DBG

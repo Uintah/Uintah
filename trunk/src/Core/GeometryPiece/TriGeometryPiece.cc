@@ -1,11 +1,9 @@
-#include <Packages/Uintah/Core/GeometryPiece/TriGeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Geometry/Plane.h>
-#include <Core/Geometry/Ray.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Box.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iostream>
