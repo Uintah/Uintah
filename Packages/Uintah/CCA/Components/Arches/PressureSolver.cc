@@ -347,9 +347,9 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // show the effect of AE, etc. in AP for the 
     // intrusion boundaries
     if (d_boundaryCondition->anyArchesPhysicalBC())
-      if (d_boundaryCondition->getIntrusionBC())
+      /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->intrusionPressureBC(pc, patch, cellinfo,
-					         &pressureVars,&constPressureVars);
+					         &pressureVars,&constPressureVars);*/
     
     if (d_MAlab)
       d_boundaryCondition->mmpressureBC(pc, patch, cellinfo,
