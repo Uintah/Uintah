@@ -582,17 +582,23 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
 
   int toresource = to->getAssignedResourceIndex();
+  int fromresource = from->getAssignedResourceIndex();
 
   if ((toresource == d_myworld->myrank() || 
-       (req->patches_dom != Task::NormalDomain && from->getAssignedResourceIndex() == d_myworld->myrank())) && 
+       (req->patches_dom != Task::NormalDomain && fromresource == d_myworld->myrank())) && 
        fromPatch && !req->var->typeDescription()->isReductionVariable()) {
     // add scrub counts for local tasks, and not for non-data deps
     addScrubCount(req->var, matl, fromPatch, req->whichdw);
   }
 
-  if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex() || 
-     req->var->typeDescription()->isReductionVariable()) {
+  if(fromresource == d_myworld->myrank() && (fromresource == toresource || 
+     req->var->typeDescription()->isReductionVariable())) {
     to->addInternalDependency(from, req->var);
+    return;
+  }
+
+  // if neither task talks to this processor, return
+  if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
     return;
   }
 
