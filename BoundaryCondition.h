@@ -103,7 +103,12 @@ public:
 
       bool getOutletBC() { return d_outletBoundary; }
       
-      bool getIntrusionBC() { return d_intrusionBoundary; }
+      bool getIntrusionBC() { 
+        cout << "Intrusion machinery has been disabled" << endl;
+        exit(1);
+        return 1;
+      //return d_intrusionBoundary; 
+      }
 
       bool anyArchesPhysicalBC() { 
        return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); }
@@ -226,6 +231,9 @@ public:
       // Also sets flat profiles for density
       // ** WARNING ** Properties profile not done yet
       void sched_setProfile(SchedulerP&, const PatchSet* patches,
+			    const MaterialSet* matls);
+
+      void sched_Prefill(SchedulerP&, const PatchSet* patches,
 			    const MaterialSet* matls);
 
       void sched_initInletBC(SchedulerP&, const PatchSet* patches,
@@ -627,6 +635,12 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
+      void Prefill(const ProcessorGroup* pc,
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
+
       void initInletBC(const ProcessorGroup* pc,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
@@ -692,12 +706,15 @@ private:
 	double flowRate;           
 	double inletVel;           
 	double fcr;
+        int d_prefill_index;
         bool d_ramping_inlet_flowrate;
+        bool d_prefill;
         InletStream streamMixturefraction;
 	// calculated values
 	Stream calcStream;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPieceP> d_geomPiece;
+	std::vector<GeometryPieceP> d_prefillGeomPiece;
 	void problemSetup(ProblemSpecP& params);
 	// reduction variable label to get area
 	VarLabel* d_area_label;

@@ -341,6 +341,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : densityIN,[u,v,w]VelocityIN
   // compute : densitySP, [u,v,w]VelocitySP, scalarSP
   d_boundaryCondition->sched_setProfile(sched, patches, matls);
+  d_boundaryCondition->sched_Prefill(sched, patches, matls);
 
   // if multimaterial, update celltype for mm intrusions for exact
   // initialization.
