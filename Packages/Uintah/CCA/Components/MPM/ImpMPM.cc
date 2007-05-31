@@ -2114,6 +2114,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 {
   map<int,int> dof_diag;
   d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
+  int numMatls = d_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     if (cout_doing.active()) {
@@ -2132,7 +2133,6 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
     new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
     visited.initialize(0);
 
-    int numMatls = d_sharedState->getNumMPMMatls();
     for (int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
