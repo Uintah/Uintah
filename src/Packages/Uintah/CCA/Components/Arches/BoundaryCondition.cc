@@ -75,6 +75,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition
@@ -209,6 +210,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   // if multimaterial then add an id for multimaterial wall
   if (d_MAlab) 
     d_mmWallID = total_cellTypes;
+  if ((d_MAlab)&&(d_intrusionBoundary))
+    d_mmWallID = d_intrusionBC->d_cellTypeID;
 
   //adding mms access
   if (d_doMMS) {
@@ -387,17 +390,19 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
     if (d_intrusionBoundary) {
+      Box patchInteriorBox = patch->getInteriorBox();
       int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
       for (int ii = 0; ii < nofGeomPieces; ii++) {
         GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
         Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchBox);
+        Box b = geomBox.intersect(patchInteriorBox);
         if (!(b.degenerate())) {
-          CellIterator iter = patch->getCellCenterIterator(b);
-          IntVector idxLo = iter.begin();
-          IntVector idxHi = iter.end() - IntVector(1,1,1);
-          celltypeval = d_intrusionBC->d_cellTypeID;
-          fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
+          for (CellIterator iter = patch->getCellCenterIterator(b);
+               !iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if (piece->inside(p)) 
+              cellType[*iter] = d_intrusionBC->d_cellTypeID;
+          }
         }
       }
     }
@@ -584,14 +589,34 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
       // resets old mmwall type back to flow field and sets cells with void fraction
       // of less than .5 to mmWall
 
-      fort_mmcelltypeinit(idxLo, idxHi, mmGasVolFrac, mmCellType, d_mmWallID,
-      			  d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+      if (d_intrusionBoundary) {
+        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
 
-      fort_mmcelltypeinit(idxLo, idxHi, voidFracMPM, mmCellTypeMPM, d_mmWallID,
-      			  d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
-      if (d_cutCells)
-	fort_mmcelltypeinit(idxLo, idxHi, voidFracCutCell, mmCellTypeCutCell, d_mmWallID,
-			    d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+              if (cellType[currCell] == d_mmWallID) {
+                mmGasVolFrac[currCell] = 0.0;
+                voidFracMPM[currCell] = 0.0;
+              }
+              else {
+                mmGasVolFrac[currCell] = 1.0;
+                voidFracMPM[currCell] = 1.0;
+              }
+            }
+          }
+        }
+      }
+      else {
+        fort_mmcelltypeinit(idxLo, idxHi, mmGasVolFrac, mmCellType, d_mmWallID,
+      			    d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+
+        fort_mmcelltypeinit(idxLo, idxHi, voidFracMPM, mmCellTypeMPM, d_mmWallID,
+      			    d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+        if (d_cutCells)
+	  fort_mmcelltypeinit(idxLo, idxHi, voidFracCutCell, mmCellTypeCutCell, d_mmWallID,
+			      d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);  
+      }
     }
     else {
 
@@ -1926,7 +1951,9 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID, bool calcVariance,
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
+  d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
+  d_prefill = false;
   // add cellId to distinguish different inlets
   d_area_label = VarLabel::create("flowarea"+cellID,
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
@@ -1941,7 +1968,9 @@ BoundaryCondition::FlowInlet::FlowInlet():
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
+  d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
+  d_prefill = false;
 }
 
 BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
@@ -1951,6 +1980,7 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   flowRate(copy.flowRate),
   inletVel(copy.inletVel),
   fcr(copy.fcr),
+  d_prefill_index(copy.d_prefill_index),
   d_ramping_inlet_flowrate(copy.d_ramping_inlet_flowrate),
   streamMixturefraction(copy.streamMixturefraction),
   calcStream(copy.calcStream),
@@ -1960,6 +1990,11 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   for (vector<GeometryPieceP>::const_iterator it = copy.d_geomPiece.begin();
        it != copy.d_geomPiece.end(); ++it)
     d_geomPiece.push_back((*it)->clone());
+  
+  if (d_prefill)
+    for (vector<GeometryPieceP>::const_iterator it = copy.d_prefillGeomPiece.begin();
+       it != copy.d_prefillGeomPiece.end(); ++it)
+      d_prefillGeomPiece.push_back((*it)->clone());
 
   d_area_label->addReference();
   d_flowRate_label->addReference();
@@ -1981,10 +2016,13 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   flowRate = copy.flowRate;
   inletVel = copy.inletVel;
   fcr = copy.fcr;
+  d_prefill_index = copy.d_prefill_index;
   d_ramping_inlet_flowrate = copy.d_ramping_inlet_flowrate;
   streamMixturefraction = copy.streamMixturefraction;
   calcStream = copy.calcStream;
   d_geomPiece = copy.d_geomPiece;
+  if (d_prefill)
+    d_prefillGeomPiece = copy.d_prefillGeomPiece;
 
   return *this;
 }
@@ -2038,6 +2076,28 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   if (d_reactingScalarSolve) {
     params->require("reacting_scalar", reactscalar);
     streamMixturefraction.d_rxnVars.push_back(reactscalar);
+  }
+  std::string d_prefill_direction;
+  params->getWithDefault("prefill_direction",d_prefill_direction,"");
+  if (!(d_prefill_direction == "")) {
+    if (d_prefill_direction == "X") {
+      d_prefill_index = 1;
+      d_prefill = true;
+    }
+    else if (d_prefill_direction == "Y") {
+    d_prefill_index = 2;
+    d_prefill = true;
+    }
+    else if (d_prefill_direction == "Z") {
+    d_prefill_index = 3;
+    d_prefill = true;
+    }
+    else
+      throw InvalidValue("Wrong prefill direction.", __FILE__, __LINE__);
+  }
+  if (d_prefill) {
+    ProblemSpecP prefillGeomObjPS = params->findBlock("prefill_geom_object");
+    GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece);
   }
  
 }
@@ -5230,3 +5290,137 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
     }
   }
 }
+//****************************************************************************
+// Schedule  prefill
+//****************************************************************************
+void 
+BoundaryCondition::sched_Prefill(SchedulerP& sched, const PatchSet* patches,
+				    const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("BoundaryCondition::Prefill",
+			  this,
+			  &BoundaryCondition::Prefill);
+
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  for (int ii = 0; ii < d_numInlets; ii++) {
+    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_area_label);
+    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_flowRate_label);
+  }
+
+  if (d_enthalpySolve) {
+    tsk->modifies(d_lab->d_enthalpySPLabel);
+  }
+  if (d_reactingScalarSolve) {
+    tsk->modifies(d_lab->d_reactscalarSPLabel);
+  }
+    
+  // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
+  tsk->modifies(d_lab->d_densityCPLabel);
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+
+  tsk->modifies(d_lab->d_scalarSPLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+//****************************************************************************
+// Actually set flat profile at flow inlet boundary
+//****************************************************************************
+void 
+BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
+				  const PatchSubset* patches,
+				  const MaterialSubset*,
+				  DataWarehouse*,
+				  DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    CCVariable<double> density;
+    SFCXVariable<double> uVelocity;
+    SFCYVariable<double> vVelocity;
+    SFCZVariable<double> wVelocity;
+    SFCXVariable<double> uVelRhoHat;
+    SFCYVariable<double> vVelRhoHat;
+    SFCZVariable<double> wVelRhoHat;
+    CCVariable<double> scalar;
+    CCVariable<double> reactscalar;
+    CCVariable<double> enthalpy;
+
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    
+    new_dw->getModifiable(density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    if (d_reactingScalarSolve)
+      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+    
+    if (d_enthalpySolve) 
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+
+
+    // loop thru the flow inlets to set all the components of velocity and density
+    if (d_inletBoundary) {
+      double time = 0.0;
+      double ramping_factor;
+      Box patchInteriorBox = patch->getInteriorBox();
+      for (int indx = 0; indx < d_numInlets; indx++) {
+        sum_vartype area_var;
+        new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
+        double area = area_var;
+        delt_vartype flow_r;
+        new_dw->get(flow_r, d_flowInlets[indx]->d_flowRate_label);
+	double flow_rate = flow_r;
+        FlowInlet* fi = d_flowInlets[indx];
+        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
+                                time, ramping_factor);
+        if (fi->d_prefill) {
+          int nofGeomPieces = (int)fi->d_prefillGeomPiece.size();
+          for (int ii = 0; ii < nofGeomPieces; ii++) {
+            GeometryPieceP  piece = fi->d_prefillGeomPiece[ii];
+            Box geomBox = piece->getBoundingBox();
+            Box b = geomBox.intersect(patchInteriorBox);
+            if (!(b.degenerate())) {
+              for (CellIterator iter = patch->getCellCenterIterator(b);
+                !iter.done(); iter++) {
+                Point p = patch->cellPosition(*iter);
+                if (piece->inside(p)) {
+                  if (fi->d_prefill_index == 1)
+                    uVelocity[*iter] = flow_rate/
+                                       (fi->calcStream.d_density * area);
+                  if (fi->d_prefill_index == 2)
+                    vVelocity[*iter] = flow_rate/
+                                       (fi->calcStream.d_density * area);
+                  if (fi->d_prefill_index == 3)
+                    wVelocity[*iter] = flow_rate/
+                                       (fi->calcStream.d_density * area);
+                  density[*iter] = fi->calcStream.d_density;
+                  scalar[*iter] = fi->streamMixturefraction.d_mixVars[0];
+                  if (d_enthalpySolve)
+                    enthalpy[*iter] = fi->calcStream.d_enthalpy;
+                  if (d_reactingScalarSolve)
+                    reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    uVelRhoHat.copyData(uVelocity); 
+    vVelRhoHat.copyData(vVelocity); 
+    wVelRhoHat.copyData(wVelocity); 
+  }
+}
+

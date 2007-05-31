@@ -102,6 +102,7 @@ $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmwallbc_trans_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/profscalar_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/profv_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/get_ramping_factor_fort.h
 $(SRCDIR)/CellInformation.$(OBJEXT): $(SRCDIR)/fortran/cellg_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/apcal_all_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/mm_modify_prescoef_fort.h

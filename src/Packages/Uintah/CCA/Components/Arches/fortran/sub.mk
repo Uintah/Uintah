@@ -59,7 +59,8 @@ SRCS += \
 	$(SRCDIR)/vvelsrc.F \
 	$(SRCDIR)/wallbc.F \
 	$(SRCDIR)/wvelcoef.F \
-	$(SRCDIR)/wvelsrc.F 
+	$(SRCDIR)/wvelsrc.F \
+        $(SRCDIR)/get_ramping_factor.F
 
 PSELIBS := 
 
@@ -121,4 +122,5 @@ $(SRCDIR)/wvelsrc.$(OBJEXT): $(SRCDIR)/wvelsrc_fort.h
 $(SRCDIR)/intrusion_computevel.$(OBJEXT): $(SRCDIR)/intrusion_computevel_fort.h
 $(SRCDIR)/mmbcvelocity_momex.$(OBJEXT): $(SRCDIR)/mmbcvelocity_momex_fort.h
 $(SRCDIR)/mmbcenthalpy_energyex.$(OBJEXT): $(SRCDIR)/mmbcenthalpy_energyex_fort.h
+$(SRCDIR)/get_ramping_factor.$(OBJEXT): $(SRCDIR)/get_ramping_factor_fort.h
 

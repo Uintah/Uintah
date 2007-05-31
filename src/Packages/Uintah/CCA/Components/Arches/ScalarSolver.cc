@@ -484,9 +484,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
       d_boundaryCondition->scalarBC(pc, patch,
 				    &scalarVars, &constScalarVars);
-      if (d_boundaryCondition->getIntrusionBC())
+      /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
-					       &scalarVars, &constScalarVars);
+					       &scalarVars, &constScalarVars);*/
     }
     // apply multimaterial intrusion wallbc
     if (d_MAlab)
