@@ -157,6 +157,7 @@
   <DataArchiver>
     <filebase>HTContainer_heatup.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="p.particleID"/> 
     <save label="p.x"/>
     <save label="p.velocity"/>
     <save label="p.stress"/>
