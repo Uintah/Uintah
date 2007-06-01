@@ -11,7 +11,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -51,7 +51,7 @@ WARNING
 
 class SimulationState;
 
-  class SCISHARE Output : public UintahParallelPort {
+  class UINTAHSHARE Output : public UintahParallelPort {
   public:
     Output();
     virtual ~Output();

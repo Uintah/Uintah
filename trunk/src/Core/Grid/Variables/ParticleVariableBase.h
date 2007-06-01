@@ -10,7 +10,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
   class BufferInfo;
   class OutputContext;
@@ -51,7 +51,7 @@ WARNING
 
   typedef constVariableBase<ParticleVariableBase> constParticleVariableBase;
 
-   class SCISHARE ParticleVariableBase : public Variable {
+   class UINTAHSHARE ParticleVariableBase : public Variable {
    public:
       
       virtual ~ParticleVariableBase();

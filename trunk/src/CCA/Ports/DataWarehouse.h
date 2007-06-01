@@ -25,7 +25,7 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -64,7 +64,7 @@ WARNING
 	
 ****************************************/
       
-class SCISHARE DataWarehouse : public RefCounted {
+class UINTAHSHARE DataWarehouse : public RefCounted {
 
 public:
   virtual ~DataWarehouse();

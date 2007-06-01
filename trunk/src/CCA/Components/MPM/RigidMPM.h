@@ -14,7 +14,7 @@
 #include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -50,7 +50,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE RigidMPM : public SerialMPM {
+class UINTAHSHARE RigidMPM : public SerialMPM {
 public:
   RigidMPM(const ProcessorGroup* myworld);
   virtual ~RigidMPM();

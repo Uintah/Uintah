@@ -140,15 +140,19 @@ foreach i ( *.*.$ext)
   @ num  = `echo $i | awk -F. '{print $2 }'`
   echo " Now converting $i to $num.png"
   convert $i -depth 8 $num.png
+  
+  if ( $count != $num )then
+    echo " ERROR: the images are not consecutively numbered"
+    echo " Image number is: $num but it should be $count"
+    rm [0-9]*.png
+    exit(0)
+  endif
+  
   @ count +=1
+  
 end
 
-if ( $count != ($num + 1) ) then
-  echo " ERROR: the images are not consecutively numbered"
-  echo " Now exiting $count"
-  rm [0-9]*.png
-  exit(0)
-endif
+
 
 #__________________________________
 # resize and add labels to all the png files

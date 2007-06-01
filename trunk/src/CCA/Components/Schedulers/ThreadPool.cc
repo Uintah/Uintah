@@ -33,13 +33,13 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
+#define UINTAHSHARE __declspec(dllimport)
 #else
-#define SCISHARE
+#define UINTAHSHARE
 #endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCISHARE SCIRun::Mutex       cerrLock;
+extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 1

@@ -12,11 +12,11 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
   class VarLabel;
-  class SCISHARE SolverParameters {
+  class UINTAHSHARE SolverParameters {
   public:
     SolverParameters() : solveOnExtraCells(false), residualNormalization(1) {}
     void setSolveOnExtraCells(bool s) {
@@ -37,7 +37,7 @@ namespace Uintah {
     double residualNormalization;
   };
   
-  class SCISHARE SolverInterface : public UintahParallelPort {
+  class UINTAHSHARE SolverInterface : public UintahParallelPort {
   public:
     SolverInterface();
     virtual ~SolverInterface();

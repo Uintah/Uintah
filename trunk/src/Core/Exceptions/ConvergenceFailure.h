@@ -20,10 +20,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Exceptions/share.h>
+#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
   using namespace std;
-  class SCISHARE ConvergenceFailure : public SCIRun::Exception {
+  class UINTAHSHARE ConvergenceFailure : public SCIRun::Exception {
   public:
     ConvergenceFailure(const string& msg,
 		       int numiterations, double final_residual,

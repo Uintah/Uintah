@@ -8,7 +8,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Task.h>
 
-#include <CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -42,7 +42,7 @@ WARNING
 ****************************************/
 
   class VarLabel;
-  class SCISHARE Wave : public UintahParallelComponent, public SimulationInterface {
+  class UINTAHSHARE Wave : public UintahParallelComponent, public SimulationInterface {
   public:
     Wave(const ProcessorGroup* myworld);
     virtual ~Wave();

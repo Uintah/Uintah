@@ -20,13 +20,13 @@ using namespace Uintah;
 using namespace std;
 
 #ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
+#define UINTAHSHARE __declspec(dllimport)
 #else
-#define SCISHARE
+#define UINTAHSHARE
 #endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCISHARE SCIRun::Mutex       cerrLock;
+extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 extern DebugStream brydbg;
 static DebugStream dbg("TaskGraph", false);
@@ -582,17 +582,23 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
 
   int toresource = to->getAssignedResourceIndex();
+  int fromresource = from->getAssignedResourceIndex();
 
   if ((toresource == d_myworld->myrank() || 
-       (req->patches_dom != Task::NormalDomain && from->getAssignedResourceIndex() == d_myworld->myrank())) && 
+       (req->patches_dom != Task::NormalDomain && fromresource == d_myworld->myrank())) && 
        fromPatch && !req->var->typeDescription()->isReductionVariable()) {
     // add scrub counts for local tasks, and not for non-data deps
     addScrubCount(req->var, matl, fromPatch, req->whichdw);
   }
 
-  if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex() || 
-     req->var->typeDescription()->isReductionVariable()) {
+  if(fromresource == d_myworld->myrank() && (fromresource == toresource || 
+     req->var->typeDescription()->isReductionVariable())) {
     to->addInternalDependency(from, req->var);
+    return;
+  }
+
+  // if neither task talks to this processor, return
+  if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
     return;
   }
 
@@ -808,7 +814,7 @@ operator<<(ostream& out, const DetailedTask& task)
     // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
     if (task.getTask()->getType() == Task::OncePerProc)
       out << ", on multiple levels";
-    else
+    else if (patches->size() > 1)
       out << ", Level " << getLevel(patches)->getIndex();
   }
   const MaterialSubset* matls = task.getMaterials();

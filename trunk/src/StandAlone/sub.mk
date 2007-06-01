@@ -16,9 +16,9 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 #
 COMPONENTS      = Packages/Uintah/CCA/Components
 CA              = Packages/Uintah/CCA/Components/Arches
-#DUMMY_LIB       = Packages/Uintah/CCA/Components/Dummy
-ARCHES_SUB_LIBS= $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
-ARCHES_LIBS    = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
+#DUMMY_LIB      = Packages/Uintah/CCA/Components/Dummy
+ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
+ARCHES_LIBS     = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
 MPM_LIB         = Packages/Uintah/CCA/Components/MPM
 ICE_LIB         = Packages/Uintah/CCA/Components/ICE
 MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
@@ -46,7 +46,6 @@ ifeq ($(IS_AIX),yes)
         $(ICE_LIB)                                       \
         $(MPMICE_LIB)                                    \
         Packages/Uintah/CCA/Components/PatchCombiner     \
-        $(DUMMY_LIB)                                     \
         $(ARCHES_SUB_LIBS)
 endif
 

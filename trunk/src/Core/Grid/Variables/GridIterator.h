@@ -7,7 +7,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iostream>
@@ -48,7 +48,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE GridIterator {
+class UINTAHSHARE GridIterator {
 public:
   inline ~GridIterator() {}
     

@@ -17,7 +17,7 @@
 #include <CCA/Ports/SwitchingCriteria.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 
-#include <CCA/Components/MPMICE/share.h>
+#include <CCA/Components/MPMICE/uintahshare.h>
 namespace Uintah {
   class ICE;
   class ICELabel;
@@ -58,7 +58,7 @@ WARNING
 
 enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 
-class SCISHARE MPMICE : public SimulationInterface, public UintahParallelComponent {
+class UINTAHSHARE MPMICE : public SimulationInterface, public UintahParallelComponent {
 
 public:
 //  MPMICE(const ProcessorGroup* myworld, const bool doAMR);

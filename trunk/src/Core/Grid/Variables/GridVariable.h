@@ -3,7 +3,7 @@
 
 #include <Core/Grid/Variables/Variable.h>
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -37,7 +37,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE GridVariable : public Variable {
+  class UINTAHSHARE GridVariable : public Variable {
   public:
     GridVariable() {}
     virtual ~GridVariable() {};

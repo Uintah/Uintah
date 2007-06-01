@@ -9,14 +9,14 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 
-#include <CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
   using namespace SCIRun;
   
-  class SCISHARE MPMCommon {
+  class UINTAHSHARE MPMCommon {
 
   public:
 

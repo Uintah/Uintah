@@ -8,7 +8,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -42,7 +42,7 @@ WARNING
 ****************************************/
 
   //! Takes care of AMR Regridding.
-  class SCISHARE Regridder : public UintahParallelPort {
+  class UINTAHSHARE Regridder : public UintahParallelPort {
   public:
     Regridder();
     virtual ~Regridder();

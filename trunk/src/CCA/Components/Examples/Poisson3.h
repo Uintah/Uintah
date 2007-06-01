@@ -8,7 +8,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/NCVariable.h>
 
-#include <CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -45,7 +45,7 @@ WARNING
 
 
 
-  class SCISHARE Poisson3 : public UintahParallelComponent, public SimulationInterface {
+  class UINTAHSHARE Poisson3 : public UintahParallelComponent, public SimulationInterface {
   public:
     Poisson3(const ProcessorGroup* myworld);
     virtual ~Poisson3();

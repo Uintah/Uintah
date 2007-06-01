@@ -9,7 +9,7 @@
 // Base class
 #include <Core/Math/Tensor4D.h>
 
-#include <Core/Math/share.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
 
   /*! \class TangentModulusTensor
@@ -21,7 +21,7 @@ namespace Uintah {
    *  \author  Copyright (C) 2003 Container Dynamics Group
    */
 
-  class SCISHARE TangentModulusTensor : public Tensor4D<double>
+  class UINTAHSHARE TangentModulusTensor : public Tensor4D<double>
     {
     public:
 

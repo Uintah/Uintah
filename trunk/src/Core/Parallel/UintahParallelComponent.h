@@ -7,7 +7,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Parallel/share.h>
+#include <Core/Parallel/uintahshare.h>
 namespace Uintah {
    using std::string;
    class UintahParallelPort;
@@ -42,7 +42,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE UintahParallelComponent {
+   class UINTAHSHARE UintahParallelComponent {
       struct PortRecord {
 	 PortRecord(UintahParallelPort* conn);
 	 std::vector<UintahParallelPort*> connections;

@@ -1,11 +1,11 @@
-#undef SCISHARE
+#undef UINTAHSHARE
 
 #ifdef _WIN32
 #ifdef BUILD_Packages_Uintah_CCA_Components_Examples
-#define SCISHARE __declspec(dllexport)
+#define UINTAHSHARE __declspec(dllexport)
 #else
-#define SCISHARE __declspec(dllimport)
+#define UINTAHSHARE __declspec(dllimport)
 #endif
 #else
-#define SCISHARE
+#define UINTAHSHARE
 #endif

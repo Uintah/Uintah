@@ -6,7 +6,7 @@
 #include <SCIRun/Core/Geometry/Vector.h>
 #include <vector>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 #include <Core/Grid/Variables/NCVariable.h>
 namespace Uintah {
 
@@ -17,7 +17,7 @@ namespace Uintah {
   using SCIRun::Point;
   using std::vector;
 
-  class SCISHARE ParticleInterpolator {
+  class UINTAHSHARE ParticleInterpolator {
     
   public:
     

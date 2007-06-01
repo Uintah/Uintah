@@ -17,7 +17,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
   using namespace std;
@@ -53,7 +53,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE Scheduler : public UintahParallelPort {
+  class UINTAHSHARE Scheduler : public UintahParallelPort {
   public:
     Scheduler();
     virtual ~Scheduler();

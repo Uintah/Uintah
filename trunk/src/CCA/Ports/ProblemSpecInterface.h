@@ -5,7 +5,7 @@
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 #include <string>
 
@@ -39,7 +39,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE ProblemSpecInterface : public UintahParallelPort {
+   class UINTAHSHARE ProblemSpecInterface : public UintahParallelPort {
    public:
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();

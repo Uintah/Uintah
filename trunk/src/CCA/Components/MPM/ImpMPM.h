@@ -26,7 +26,7 @@
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
-#include <CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -67,7 +67,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE ImpMPM : public MPMCommon, public UintahParallelComponent, 
+class UINTAHSHARE ImpMPM : public MPMCommon, public UintahParallelComponent, 
   public SimulationInterface {
 public:
   ImpMPM(const ProcessorGroup* myworld);
@@ -92,6 +92,21 @@ public:
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(          const LevelP& level, SchedulerP&);
+  virtual void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
+                                                                                
+  virtual void scheduleRefineInterface(const LevelP& fineLevel,
+                                       SchedulerP& scheduler,
+                                       bool needCoarse, bool needFine);
+                                                                                
+  virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
+                                                                                
+  /// Schedule to mark flags for AMR regridding
+  virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                     SchedulerP& sched);
+                                                                                
+  /// Schedule to mark initial flags for AMR regridding
+  void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                    SchedulerP& sched);
 
   virtual bool restartableTimesteps();
   virtual double recomputeTimestep(double new_dt);
@@ -332,6 +347,25 @@ private:
 				       const MaterialSubset* matls,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
+
+  void refine(                         const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse*,
+                                       DataWarehouse* new_dw);
+                                                                                
+  void errorEstimate(                  const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse*,
+                                       DataWarehouse* new_dw);
+                                                                                
+  void initialErrorEstimate(           const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse*,
+                                       DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   void interpolateStressToGrid(        const ProcessorGroup*,

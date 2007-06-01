@@ -317,11 +317,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				      cellinfo, &velocityVars,
 				      &constVelocityVars);
 
-      if (d_boundaryCondition->getIntrusionBC())
+      /*if (d_boundaryCondition->getIntrusionBC())
 	d_boundaryCondition->calculateIntrusionVel(pc, patch,
 						   index, cellinfo,
 						   &velocityVars,
-						   &constVelocityVars);
+						   &constVelocityVars);*/
     }
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC()))
     d_boundaryCondition->addPresGradVelocityOutletPressureBC(pc, patch, index, cellinfo,
@@ -996,7 +996,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 				        &constVelocityVars);
 	}
 
-        if (d_boundaryCondition->getIntrusionBC()) {
+        /*if (d_boundaryCondition->getIntrusionBC()) {
 	  // if 0'ing stuff below for zero friction drag
 #if 0
 	  d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
@@ -1006,7 +1006,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	  d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
 						   cellinfo, &velocityVars,
 						   &constVelocityVars);
-	}
+	}*/
       }
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion

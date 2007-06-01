@@ -7,7 +7,7 @@
 
 #include <Core/DataArchive/DataArchive.h>
 
-#include <Core/Datatypes/share.h>
+#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -47,7 +47,7 @@ typedef LockingHandle<Archive> ArchiveHandle;
   // LockingHandle and Persistent stuff in DataArchive.
   typedef LockingHandle<DataArchive> DataArchiveHandle;
   
-class SCISHARE Archive : public Datatype {
+class UINTAHSHARE Archive : public Datatype {
 
 public:
   // GROUP: Constructors:

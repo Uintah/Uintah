@@ -15,7 +15,7 @@ namespace SLIVR {
   class Vector;
 }
 
-#include <Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using SLIVR::Point;
@@ -54,7 +54,7 @@ WARNING
 	
 ****************************************/
       
-class SCISHARE GeometryPiece : public RefCounted {
+class UINTAHSHARE GeometryPiece : public RefCounted {
 	 
 public:
   //////////

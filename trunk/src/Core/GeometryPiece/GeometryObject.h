@@ -12,7 +12,7 @@
 #include   <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 class GeometryPiece;
@@ -51,7 +51,7 @@ WARNING
 	
 ****************************************/
 
-class SCISHARE GeometryObject {
+class UINTAHSHARE GeometryObject {
 	 
 public:
   //////////

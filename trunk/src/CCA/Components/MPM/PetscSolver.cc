@@ -3,6 +3,7 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>
 
+#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/MPM/PetscSolver.h>
 #include <Core/Exceptions/PetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -18,8 +19,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-//#define LOG
 #undef LOG
+//#define LOG
 #undef DEBUG_PETSC
 
 //#define USE_SPOOLES
@@ -98,6 +99,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 					   const PatchSubset* patches,
                                            const int DOFsPerNode)
 {
+  TAU_PROFILE("MPMPetscSolver::createLocalToGlobalMapping", " ", TAU_USER);
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
@@ -171,6 +173,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::solve(vector<double>& guess)
 {
+  TAU_PROFILE("MPMPetscSolver::solve", " ", TAU_USER);
   PC          precond;           
   KSP         solver;
 #if 0
@@ -203,7 +206,10 @@ void MPMPetscSolver::solve(vector<double>& guess)
     }
 
   }
+  TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
+  TAU_PROFILE_START(solve);
   KSPSolve(solver,d_B,d_x);
+  TAU_PROFILE_STOP(solve);
 #ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
@@ -217,6 +223,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 				  const map<int,int>& dof_diag)
 {
+  TAU_PROFILE("MPMPetscSolver::createMatrix", " ", TAU_USER);
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
 
@@ -232,6 +239,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
   map<int,int>::const_iterator itr;
   for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
+    ASSERTRANGE(itr->first,0,numlrows);
     diag[itr->first] = itr->second;
   }
 
@@ -268,7 +276,8 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     if (numlcolumns < DIAG_MAX)
       DIAG_MAX = numlcolumns;
 
-    for (int i = 0; i < numlrows; i++){ 
+    for (int i = 0; i < numlrows; i++){
+      ASSERT(diag[i]>0);
       onnz[i]=ONNZ_MAX;
       if(diag[i]==1){
          onnz[i]=0;
@@ -324,6 +333,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::destroyMatrix(bool recursion)
 {
+  TAU_PROFILE("MPMPetscSolver::destroyMatrix", " ", TAU_USER);
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
@@ -425,6 +435,7 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 
 void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
+  TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
   IS is;
   int* indices;
   int in = 0;
@@ -488,6 +499,7 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
 void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 {
+  TAU_PROFILE("MPMPetscSolver::removeFixedDOFHEAT", " ", TAU_USER);
   finalizeMatrix();
   assembleFluxVector();
 

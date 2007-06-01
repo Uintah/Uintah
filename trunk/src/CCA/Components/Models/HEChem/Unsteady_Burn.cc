@@ -304,7 +304,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
                                       const ModelInfo* mi){
   
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label,getLevel(patches));
   
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */

@@ -15,7 +15,7 @@
 using std::ostream;
 using SCIRun::IntVector;
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
   class Patch;
 /**************************************
@@ -49,7 +49,7 @@ WARNING
 
   class ParticleVariableBase;
 
-  class SCISHARE ParticleSubset : public RefCounted {
+  class UINTAHSHARE ParticleSubset : public RefCounted {
   public:
     ParticleSubset(ParticleSet* pset, bool fill,
 		   int matlIndex, const Patch*,
@@ -153,7 +153,7 @@ WARNING
       return neighbor_subsets;
     }
     
-    SCISHARE friend ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
+    UINTAHSHARE friend ostream& operator<<(ostream& out, Uintah::ParticleSubset& pset);
 
    private:
     //////////

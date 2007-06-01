@@ -459,14 +459,12 @@
                     </cylinder>
                 </geom_object>
                 <polynomial_data>
-                  <file> 11_43_51/polynomial_96.dat</file> 
-                  <file> 11_43_51/polynomial_97.dat</file> 
-                  <file> 11_43_51/polynomial_98.dat</file> 
-                  <file> 11_43_51/polynomial_99.dat</file> 
-                  <file> 11_43_51/polynomial_100.dat</file> 
-                  <file> 11_43_51/polynomial_101.dat</file> 
-                  <file> 11_43_51/polynomial_102.dat</file> 
-                  <file> 11_43_51/polynomial_103.dat</file> 
+                  <file> case3/polynomial_97.dat</file> 
+                  <file> case3/polynomial_98.dat</file> 
+                  <file> case3/polynomial_99.dat</file> 
+                  <file> case3/polynomial_100.dat</file> 
+                  <file> case3/polynomial_101.dat</file> 
+                  <file> case3/polynomial_102.dat</file>  
                 </polynomial_data>
                 <load_curve>
                   <id>1</id>

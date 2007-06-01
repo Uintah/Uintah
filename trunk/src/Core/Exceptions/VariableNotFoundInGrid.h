@@ -20,10 +20,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Exceptions/share.h>
+#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
   
-  class SCISHARE VariableNotFoundInGrid : public SCIRun::Exception {
+  class UINTAHSHARE VariableNotFoundInGrid : public SCIRun::Exception {
   public:
     VariableNotFoundInGrid(const std::string& varname, long particleID,
 			   int matlIndex, const std::string& extramsg, 

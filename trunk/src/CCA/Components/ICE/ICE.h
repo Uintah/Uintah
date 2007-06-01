@@ -38,7 +38,7 @@
 
 #define MAX_MATLS 16
 
-#include <CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah { 
   using namespace SCIRun;
   class ModelInfo; 
@@ -46,7 +46,7 @@ namespace Uintah {
   class Turbulence;
   class AnalysisModule;
     
-    class SCISHARE ICE : public UintahParallelComponent, public SimulationInterface {
+    class UINTAHSHARE ICE : public UintahParallelComponent, public SimulationInterface {
     public:
       ICE(const ProcessorGroup* myworld, const bool doAMR = false);
       virtual ~ICE();

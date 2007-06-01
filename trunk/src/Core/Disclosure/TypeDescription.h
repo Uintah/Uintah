@@ -8,7 +8,7 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <sci_mpi.h>
 
-#include <Core/Disclosure/share.h>
+#include <Core/Disclosure/uintahshare.h>
 
 namespace Uintah {
 
@@ -45,7 +45,7 @@ class Variable;
       
 ****************************************/
     
-class SCISHARE TypeDescription {
+class UINTAHSHARE TypeDescription {
 public:
   enum Type {
     CCVariable,
@@ -98,7 +98,7 @@ public:
 
   MPI_Datatype getMPIType() const;
 
-  struct SCISHARE Register {
+  struct UINTAHSHARE Register {
     Register(const TypeDescription*);
     ~Register();
   };

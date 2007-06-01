@@ -20,7 +20,7 @@
 #include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 
@@ -58,7 +58,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
+class UINTAHSHARE SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
 public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();

@@ -297,7 +297,8 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
 
 void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 {
-
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
   Task* t = scinew Task("ImpMPM::actuallyInitialize",
                         this, &ImpMPM::actuallyInitialize);
   t->computes(lb->partCountLabel);
@@ -352,7 +353,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     scheduleInitializeHeatFluxBCs(level, sched);
   }
 #endif
-  
 }
 
 void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
@@ -431,7 +431,7 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
 
       double fluxPerPart = 0.;
       // Save the material points per load curve in the HeatFluxBC object
-      HeatFluxBC* phf;
+      HeatFluxBC* phf=0;
       if (bcs_type == "HeatFlux") {
         phf 
           = dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
@@ -442,7 +442,7 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
         //cout << "fluxPerPart = " << fluxPerPart << endl;
       }
       
-      ArchesHeatFluxBC* pahf;
+      ArchesHeatFluxBC* pahf=0;
       if (bcs_type == "ArchesHeatFlux") {
         pahf = 
           dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
@@ -553,6 +553,9 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
 
 void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev,SchedulerP& sched)
 {
+  if (!flags->doMPMOnLevel(lev->getIndex(), lev->getGrid()->numLevels()))
+    return;
+
   if (cout_doing.active())
     cout_doing << "ImpMPM::scheduleComputeStableTimestep " << endl;
 
@@ -570,12 +573,13 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev,SchedulerP& sched)
 void
 ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
+
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
-  if (!d_perproc_patches) {
-    LoadBalancer* loadbal = sched->getLoadBalancer();
-    d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
-    d_perproc_patches->addReference();
-  }
+  LoadBalancer* loadbal = sched->getLoadBalancer();
+  d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
+  d_perproc_patches->addReference();
 
   scheduleApplyExternalLoads(          sched, d_perproc_patches,         matls);
   scheduleInterpolateParticlesToGrid(  sched, d_perproc_patches,one_matl,matls);
@@ -622,7 +626,8 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                         const MaterialSet* matls)
                                                                                 
 {
-  Task* t=scinew Task("MPM::applyExternalLoads",
+  printSchedule(patches,cout_doing,"IMPM::scheduleApplyExternalLoads\t\t");
+  Task* t=scinew Task("IMPM::applyExternalLoads",
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -645,6 +650,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const MaterialSubset* one_matl,
                                                 const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleInterpolateParticlesToGrid\t\t");
   Task* t = scinew Task("ImpMPM::interpolateParticlesToGrid",
                         this,&ImpMPM::interpolateParticlesToGrid);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::AroundNodes,1);
@@ -692,6 +698,7 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
                                                 const MaterialSubset* one_matl,
                                                 const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleProjectCCHeatSourceToNodes\t\t");
   Task* t = scinew Task("ImpMPM::projectCCHeatSourceToNodes",
                         this,&ImpMPM::projectCCHeatSourceToNodes);
 
@@ -711,6 +718,7 @@ void ImpMPM::scheduleComputeCCVolume(SchedulerP& sched,
                                      const MaterialSubset* one_matl,
                                      const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeCCVolume\t\t");
   Task* t = scinew Task("ImpMPM::computeCCVolume",
                         this,&ImpMPM::computeCCVolume);
                                                                                 
@@ -733,9 +741,7 @@ void ImpMPM::scheduleComputeHeatExchange(SchedulerP& sched,
    *   the temperature differences)
    *   out(G.EXTERNAL_HEAT_RATE) */
 
-  if (cout_doing.active())
-    cout_doing << getpid() << " Doing MPM::ThermalContact::computeHeatExchange " << endl;
-
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeHeatExchange\t\t");
   Task* t = scinew Task("ThermalContact::computeHeatExchange",
                         thermalContactModel,
                         &ThermalContact::computeHeatExchange);
@@ -750,6 +756,7 @@ void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
                                    const MaterialSet* matls,
                                    bool recursion)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleDestroyMatrix\t\t");
   Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix,
                          recursion);
 
@@ -760,6 +767,7 @@ void ImpMPM::scheduleDestroyHCMatrix(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleDestroyHCMatrix\t\t");
   heatConductionModel->scheduleDestroyHCMatrix(sched,patches,matls);
 }
 
@@ -767,6 +775,7 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleCreateMatrix\t\t");
   Task* t = scinew Task("ImpMPM::createMatrix",this,&ImpMPM::createMatrix);
 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
@@ -778,6 +787,7 @@ void ImpMPM::scheduleCreateHCMatrix(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleCreateHCMatrix\t\t");
   heatConductionModel->scheduleCreateHCMatrix(sched,patches,matls);
 }
 
@@ -785,6 +795,7 @@ void ImpMPM::scheduleApplyBoundaryConditions(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleApplyBoundaryConditions\t\t");
   Task* t = scinew Task("ImpMPM::applyBoundaryCondition",
                         this, &ImpMPM::applyBoundaryConditions);
 
@@ -798,6 +809,7 @@ void ImpMPM::scheduleApplyHCBoundaryConditions(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleApplyHCBoundaryConditions\t");
   heatConductionModel->scheduleApplyHCBoundaryConditions(sched,patches,matls);
 }
 
@@ -805,6 +817,7 @@ void ImpMPM::scheduleComputeContact(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeContact\t");
   Task* t = scinew Task("ImpMPM::computeContact",
                          this, &ImpMPM::computeContact);
 
@@ -827,6 +840,7 @@ void ImpMPM::scheduleFindFixedDOF(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFindFixedDOF\t");
   Task* t = scinew Task("ImpMPM::findFixedDOF", this, 
                         &ImpMPM::findFixedDOF);
 
@@ -840,6 +854,7 @@ void ImpMPM::scheduleFindFixedHCDOF(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFindFixedHCDOF\t");
   heatConductionModel->scheduleFindFixedHCDOF(sched,patches,matls);
 }
 
@@ -848,6 +863,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                          const MaterialSet* matls,
                                          bool recursion)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensor\t");
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ImpMPM::computeStressTensor",
                     this, &ImpMPM::computeStressTensor,recursion);
@@ -864,6 +880,7 @@ void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFormStiffnessMatrix\t");
   Task* t = scinew Task("ImpMPM::formStiffnessMatrix",
                     this, &ImpMPM::formStiffnessMatrix);
 
@@ -877,6 +894,7 @@ void ImpMPM::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFormHCStiffnessMatrix\t");
   heatConductionModel->scheduleFormHCStiffnessMatrix(sched,patches,matls);
 }
 
@@ -884,6 +902,7 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeInternalForce\t");
   Task* t = scinew Task("ImpMPM::computeInternalForce",
                          this, &ImpMPM::computeInternalForce);
 
@@ -899,6 +918,7 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
                            const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFormQ\t");
   Task* t = scinew Task("ImpMPM::formQ", this, 
                         &ImpMPM::formQ);
 
@@ -918,6 +938,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
 void ImpMPM::scheduleFormHCQ(SchedulerP& sched,const PatchSet* patches,
                              const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFormHCQ\t");
   heatConductionModel->scheduleFormHCQ(sched,patches,matls);
 }
 
@@ -925,6 +946,7 @@ void ImpMPM::scheduleAdjustHCQAndHCKForBCs(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleFormHCQAndHCKForBCs\t");
   heatConductionModel->scheduleAdjustHCQAndHCKForBCs(sched,patches,matls);
 }
 
@@ -932,6 +954,7 @@ void ImpMPM::scheduleSolveForDuCG(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleSolveForDuCG\t");
   Task* t = scinew Task("ImpMPM::solveForDuCG", this, 
                         &ImpMPM::solveForDuCG);
 
@@ -942,6 +965,7 @@ void ImpMPM::scheduleSolveForTemp(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleSolveForTemp\t");
   heatConductionModel->scheduleSolveForTemp(sched,patches,matls);
 }
 
@@ -949,6 +973,7 @@ void ImpMPM::scheduleGetDisplacementIncrement(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleGetDisplacementIncrement\t");
   Task* t = scinew Task("ImpMPM::getDisplacementIncrement", this, 
                         &ImpMPM::getDisplacementIncrement);
 
@@ -961,6 +986,7 @@ void ImpMPM::scheduleGetTemperatureIncrement(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleGetTemperatureIncrement\t");
   heatConductionModel->scheduleGetTemperatureIncrement(sched,patches,matls);
 }
 
@@ -968,6 +994,7 @@ void ImpMPM::scheduleUpdateGridKinematics(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleUpdateGridKinematics\t");
   Task* t = scinew Task("ImpMPM::updateGridKinematics", this, 
                         &ImpMPM::updateGridKinematics);
 
@@ -991,6 +1018,7 @@ void ImpMPM::scheduleCheckConvergence(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleCheckConvergence\t");
   Task* t = scinew Task("ImpMPM::checkConvergence", this,
                         &ImpMPM::checkConvergence);
 
@@ -1043,6 +1071,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                          const MaterialSet* matls)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeStressTensor\t");
   Task* t = scinew Task("ImpMPM::computeStressTensor",
                     this, &ImpMPM::computeStressTensor);
 
@@ -1059,6 +1088,7 @@ void ImpMPM::scheduleUpdateTotalDisplacement(SchedulerP& sched,
                                              const MaterialSet* matls)
 {
   if(!flags->d_doGridReset){
+    printSchedule(patches,cout_doing,"IMPM::scheduleUpdateTotalDisplacement\t");
     Task* t = scinew Task("ImpMPM::updateTotalDisplacement",
                               this, &ImpMPM::updateTotalDisplacement);
 
@@ -1073,6 +1103,7 @@ void ImpMPM::scheduleComputeAcceleration(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleComputeAcceleration\t");
   Task* t = scinew Task("ImpMPM::computeAcceleration",
                             this, &ImpMPM::computeAcceleration);
 
@@ -1093,6 +1124,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {
+  printSchedule(patches,cout_doing,"IMPM::scheduleInterpolateToParticlesAndUpdate\t");
   Task* t=scinew Task("ImpMPM::interpolateToParticlesAndUpdate",
                     this, &ImpMPM::interpolateToParticlesAndUpdate);
 
@@ -1138,6 +1170,105 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->ThermalEnergyLabel);
   sched->addTask(t, patches, matls);
 }
+
+void ImpMPM::scheduleRefine(const PatchSet* patches,
+                            SchedulerP& sched)
+{
+  printSchedule(patches,cout_doing,"MPM::scheduleRefine\t\t");
+  Task* t = scinew Task("ImpMPM::refine", this, &ImpMPM::refine);
+                                                                                
+  t->computes(lb->partCountLabel);
+  t->computes(lb->pXLabel);
+  t->computes(lb->pMassLabel);
+  t->computes(lb->pVolumeLabel);
+  t->computes(lb->pDispLabel);
+  t->computes(lb->pVelocityLabel);
+  t->computes(lb->pAccelerationLabel);
+  t->computes(lb->pExternalForceLabel);
+  t->computes(lb->pTemperatureLabel);
+  t->computes(lb->pTempPreviousLabel);
+  t->computes(lb->pSizeLabel);
+  t->computes(lb->pParticleIDLabel);
+  t->computes(lb->pDeformationMeasureLabel);
+  t->computes(lb->pStressLabel);
+  t->computes(lb->pCellNAPIDLabel);
+  t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
+  t->computes(d_sharedState->get_delt_label());
+
+  t->computes(lb->pExternalHeatFluxLabel);
+
+  t->computes(lb->heatRate_CCLabel);
+  if(!flags->d_doGridReset){
+    t->computes(lb->gDisplacementLabel);
+  }
+
+  if (flags->d_useLoadCurves) {
+    // Computes the load curve ID associated with each particle
+    t->computes(lb->pLoadCurveIDLabel);
+  }
+
+  t->computes(lb->NC_CCweightLabel, one_matl);
+
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+
+  Level* level = const_cast<Level*>(getLevel(patches));
+#if 1
+  if (flags->d_useLoadCurves) {
+    // Schedule the initialization of HeatFlux BCs per particle
+    scheduleInitializeHeatFluxBCs(level, sched);
+  }
+#endif
+}
+                                                                                
+void ImpMPM::scheduleRefineInterface(const LevelP& /*fineLevel*/,
+                                        SchedulerP& /*scheduler*/,
+                                        bool, bool)
+{
+  // do nothing for now
+}
+                                                                                
+void ImpMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/,
+                                SchedulerP& /*sched*/)
+{
+  // do nothing for now
+}
+//______________________________________________________________________
+// Schedule to mark flags for AMR regridding
+void ImpMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched)
+{
+  // main way is to count particles, but for now we only want particles on
+  // the finest level.  Thus to schedule cells for regridding during the
+  // execution, we'll coarsen the flagged cells (see coarsen).
+                                                                                
+  if (cout_doing.active())
+    cout_doing << "ImpMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+                                                                                
+  // The simulation controller should not schedule it every time step
+  Task* task = scinew Task("errorEstimate", this, &ImpMPM::errorEstimate);
+                                                                                
+  // if the finest level, compute flagged cells
+  if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
+    task->requires(Task::NewDW, lb->pXLabel, Ghost::AroundCells, 0);
+  }
+  else {
+    task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
+                   0, Task::FineLevel, d_sharedState->refineFlagMaterials(),
+                   Task::NormalDomain, Ghost::None, 0);
+  }
+  task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
+  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
+                                                                                
+}
+//______________________________________________________________________
+// Schedule to mark initial flags for AMR regridding
+void ImpMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                             SchedulerP& sched)
+{
+  scheduleErrorEstimate(coarseLevel, sched);
+}
+
 void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
@@ -1491,7 +1622,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           }
         }
         if (!heatFluxMagPerPart.empty()) {
-          double mag = heatFluxMagPerPart[0];
+          //double mag = heatFluxMagPerPart[0];
 	  //cout << "heat flux mag = " << mag << endl;
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
@@ -1967,7 +2098,7 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
                            bool recursion)
 {
   if (cout_doing.active())
-    cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
+    cout_doing <<"Doing destroyMatrix \t\t\t\t IMPM"  << "\n" << "\n";
 
   d_solver->destroyMatrix(recursion);
 }
@@ -1979,6 +2110,9 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
                           DataWarehouse* new_dw)
 {
   map<int,int> dof_diag;
+  d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
+  int global_offset;
+  int numMatls = d_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     if (cout_doing.active()) {
@@ -1986,19 +2120,20 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 		 << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
 
-    d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
     
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
 
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
-
+    
+    //set the global offset if this is the first patch
+    if(pp==0)
+      global_offset=l2g[lowIndex];
     CCVariable<int> visited;
     new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
     visited.initialize(0);
 
-    int numMatls = d_sharedState->getNumMPMMatls();
     for (int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
@@ -2021,7 +2156,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
           int l2g_node_num;
           for (int k = 0; k < 8; k++) {
             if (patch->containsNode(ni[k]) ) {
-              l2g_node_num = l2g[ni[k]] - l2g[lowIndex];
+              l2g_node_num = l2g[ni[k]] - global_offset; //subtract global offset in order to map into array correctly
               dof.push_back(l2g_node_num);
               dof.push_back(l2g_node_num+1);
               dof.push_back(l2g_node_num+2);
@@ -3385,4 +3520,178 @@ double ImpMPM::recomputeTimestep(double current_dt)
   return current_dt*flags->d_delT_decrease_factor;
 }
 
+void ImpMPM::initialErrorEstimate(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* /*matls*/,
+                                  DataWarehouse*,
+                                  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing initialErrorEstimate\t\t\t\t");
+                                                                                
+    CCVariable<int> refineFlag;
+    PerPatch<PatchFlagP> refinePatchFlag;
+    new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+                          0, patch);
+    new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+                0, patch);
+                                                                                
+    PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+                                                                                
+                                                                                
+    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      // Loop over particles
+      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+      constParticleVariable<Point> px;
+      new_dw->get(px, lb->pXLabel, pset);
+                                                                                
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        refineFlag[patch->getLevel()->getCellIndex(px[*iter])] = true;
+        refinePatch->set();
+      }
+    }
+  }
+}
 
+void ImpMPM::errorEstimate(const ProcessorGroup* group,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  if (level->getIndex() == level->getGrid()->numLevels()-1) {
+    // on finest level, we do the same thing as initialErrorEstimate, so call it
+    initialErrorEstimate(group, patches, matls, old_dw, new_dw);
+  }
+  else {
+    // coarsen the errorflag.
+    const Level* fineLevel = level->getFinerLevel().get_rep();
+                                                                                
+    for(int p=0;p<patches->size();p++){
+      const Patch* coarsePatch = patches->get(p);
+      printTask(patches, coarsePatch,cout_doing,
+                "Doing errorEstimate\t\t\t\t\t");
+                                                                                
+      CCVariable<int> refineFlag;
+      PerPatch<PatchFlagP> refinePatchFlag;
+                                                                                
+      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
+                            0, coarsePatch);
+      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
+                  0, coarsePatch);
+                                                                                
+      PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+                                                                                
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
+                                                                                
+      // coarsen the fineLevel flag
+      for(int i=0;i<finePatches.size();i++){
+        const Patch* finePatch = finePatches[i];
+                                                                                
+        IntVector cl, ch, fl, fh;
+        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+        constCCVariable<int> fineErrorFlag;
+        new_dw->getRegion(fineErrorFlag,
+                          d_sharedState->get_refineFlag_label(), 0,
+                          fineLevel,fl, fh, false);
+                                                                                
+        //__________________________________
+        //if the fine level flag has been set
+        // then set the corrsponding coarse level flag
+        for(CellIterator iter(cl, ch); !iter.done(); iter++){
+          IntVector fineStart(level->mapCellToFiner(*iter));
+                                                                                
+          for(CellIterator inside(IntVector(0,0,0),
+               fineLevel->getRefinementRatio()); !inside.done(); inside++){
+                                                                                
+            if (fineErrorFlag[fineStart+*inside]) {
+              refineFlag[*iter] = 1;
+              refinePatch->set();
+            }
+          }
+        }  // coarse patch iterator
+      }  // fine patch loop
+    } // coarse patch loop
+  }
+}
+
+void ImpMPM::refine(const ProcessorGroup*,
+                   const PatchSubset* patches,
+                   const MaterialSubset* /*matls*/,
+                   DataWarehouse*,
+                   DataWarehouse* new_dw)
+{
+  // just create a particle subset if one doesn't exist
+  for (int p = 0; p<patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing refine\t\t\t");
+                                                                                
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+                                                                                
+      if (cout_doing.active()) {
+        cout_doing <<"Doing refine on patch "
+                   << patch->getID() << " material # = " << dwi << endl;
+      }
+                                                                                
+      // this is a new patch, so create empty particle variables.
+      if (!new_dw->haveParticleSubset(dwi, patch)) {
+        ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
+                                                                                
+        // Create arrays for the particle data
+        ParticleVariable<Point>  px;
+        ParticleVariable<double> pmass, pvolume, pTemperature;
+        ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
+        ParticleVariable<double> pErosion, pTempPrev;
+        ParticleVariable<int>    pLoadCurve;
+        ParticleVariable<long64> pID;
+        ParticleVariable<Matrix3> pdeform, pstress;
+                                                                                
+        new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
+        new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
+        new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
+        new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
+        new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
+        new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
+        new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
+        new_dw->allocateAndPut(pID,            lb->pParticleIDLabel,    pset);
+        new_dw->allocateAndPut(pdisp,          lb->pDispLabel,          pset);
+        if (flags->d_useLoadCurves){
+          new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
+        }
+        new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
+        new_dw->allocateAndPut(pErosion,       lb->pErosionLabel,       pset);
+                                                                                
+        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
+                                                           mpm_matl,new_dw);
+      }
+    }
+    //__________________________________
+    // - Initialize NC_CCweight = 0.125
+    // - Find the walls with symmetry BC and double NC_CCweight
+    NCVariable<double> NC_CCweight;
+    new_dw->allocateAndPut(NC_CCweight, lb->NC_CCweightLabel,    0, patch);
+    NC_CCweight.initialize(0.125);
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+      int mat_id = 0;
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+        for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+                                                  !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+        }
+      }
+    }
+  }
+} // end refine()

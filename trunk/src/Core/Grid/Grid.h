@@ -18,7 +18,7 @@ namespace SLIVR {
   class Vector;
 }
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
@@ -53,7 +53,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE Grid : public RefCounted {
+  class UINTAHSHARE Grid : public RefCounted {
   public:
     Grid();
     virtual ~Grid();
@@ -98,7 +98,7 @@ WARNING
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid) const;
 
-    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+    UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     // Used in Level and Patch for stretched grids
     enum Axis {

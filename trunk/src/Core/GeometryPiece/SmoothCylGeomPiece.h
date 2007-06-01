@@ -9,7 +9,7 @@
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ namespace Uintah {
 */
 /////////////////////////////////////////////////////////////////////////////
 
-  class SCISHARE SmoothCylGeomPiece : public SmoothGeomPiece {
+  class UINTAHSHARE SmoothCylGeomPiece : public SmoothGeomPiece {
 	 
   public:
     //////////////////////////////////////////////////////////////////////

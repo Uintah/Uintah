@@ -19,13 +19,13 @@
 #include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
 
-class SCISHARE AMRMPM : public SerialMPM {
+class UINTAHSHARE AMRMPM : public SerialMPM {
 
 public:
   AMRMPM(const ProcessorGroup* myworld);

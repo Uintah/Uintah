@@ -4,7 +4,7 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Box.h>
 
-#include <Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -47,7 +47,7 @@ WARNING
 ****************************************/
 
 
-      class SCISHARE BoxGeometryPiece : public GeometryPiece {
+      class UINTAHSHARE BoxGeometryPiece : public GeometryPiece {
 	 
       public:
 	 //////////

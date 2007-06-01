@@ -17,7 +17,7 @@
 #include <sstream>
 #include <deque>
 
-#include <Core/Util/share.h> // for dbg_barrier's SCISHARE
+#include <Core/Util/uintahshare.h> // for dbg_barrier's UINTAHSHARE
 
 using namespace std;
 using namespace Uintah;
@@ -25,7 +25,7 @@ using namespace Uintah;
 
 DebugStream rdbg("Regridder", false);
 DebugStream dilate_dbg("Regridder_dilate", false);
-extern SCISHARE DebugStream dbg_barrier;
+extern UINTAHSHARE DebugStream dbg_barrier;
 
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {

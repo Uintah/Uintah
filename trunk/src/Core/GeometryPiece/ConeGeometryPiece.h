@@ -6,7 +6,7 @@
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 
-#include <Core/GeometryPiece/share.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -53,7 +53,7 @@ WARNING
         
 ****************************************/
 
-  class SCISHARE ConeGeometryPiece : public CylinderGeometryPiece {
+  class UINTAHSHARE ConeGeometryPiece : public CylinderGeometryPiece {
     
   public:
     //////////

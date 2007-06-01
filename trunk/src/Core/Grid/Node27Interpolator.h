@@ -3,12 +3,12 @@
 
 #include <Core/Grid/ParticleInterpolator.h>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Patch;
 
-  class SCISHARE Node27Interpolator : public ParticleInterpolator {
+  class UINTAHSHARE Node27Interpolator : public ParticleInterpolator {
     
   public:
     

@@ -4,7 +4,7 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
-#include <Core/Parallel/share.h>
+#include <Core/Parallel/uintahshare.h>
 namespace Uintah {
 /**************************************
 
@@ -35,7 +35,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE ProcessorGroup {
+   class UINTAHSHARE ProcessorGroup {
    public:
       ~ProcessorGroup();
       

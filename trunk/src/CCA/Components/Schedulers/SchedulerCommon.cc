@@ -46,14 +46,14 @@ using namespace SCIRun;
 using namespace std;
 
 #ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
+#define UINTAHSHARE __declspec(dllimport)
 #else
-#define SCISHARE
+#define UINTAHSHARE
 #endif
-extern SCISHARE DebugStream dbg_barrier;
+extern UINTAHSHARE DebugStream dbg_barrier;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCISHARE SCIRun::Mutex       cerrLock;
+extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg("SchedulerCommon", false);

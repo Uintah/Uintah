@@ -38,10 +38,10 @@ namespace SLIVR {
   class Vector;
 }
 
-#include <Core/Math/share.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
   using namespace std;
-  class SCISHARE FastMatrix {
+  class UINTAHSHARE FastMatrix {
   public:
     FastMatrix(int rows, int cols);
     ~FastMatrix();

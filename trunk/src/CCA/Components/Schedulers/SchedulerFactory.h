@@ -5,12 +5,12 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/Output.h>
 
-#include <CCA/Components/Schedulers/share.h>
+#include <CCA/Components/Schedulers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
  
-  class SCISHARE SchedulerFactory
+  class UINTAHSHARE SchedulerFactory
   {
   public:
     // this function has a switch for all known load balancers

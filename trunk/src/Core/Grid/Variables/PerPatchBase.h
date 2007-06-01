@@ -8,7 +8,7 @@
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Variable.h>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -46,7 +46,7 @@ WARNING
 ****************************************/
 
   // inherits from Variable solely for the purpose of stuffing it in the DW
-  class SCISHARE PerPatchBase : public Variable {
+  class UINTAHSHARE PerPatchBase : public Variable {
    public:
       
       virtual ~PerPatchBase();

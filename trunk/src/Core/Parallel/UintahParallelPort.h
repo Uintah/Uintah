@@ -3,7 +3,7 @@
 
 #include <Core/Util/RefCounted.h>
 
-#include <Core/Parallel/share.h>
+#include <Core/Parallel/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -35,7 +35,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE UintahParallelPort : public RefCounted {
+class UINTAHSHARE UintahParallelPort : public RefCounted {
 public:
            UintahParallelPort();
   virtual ~UintahParallelPort();

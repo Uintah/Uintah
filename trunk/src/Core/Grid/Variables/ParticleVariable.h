@@ -28,7 +28,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 using std::cout;
 using std::endl;
 namespace Uintah {
@@ -335,7 +335,7 @@ private:
   
   // specialization for T=Point
   template <>
-  SCISHARE void ParticleVariable<Point>::gather(ParticleSubset* pset,
+  UINTAHSHARE void ParticleVariable<Point>::gather(ParticleSubset* pset,
 				       vector<ParticleSubset*> subsets,
 				       vector<ParticleVariableBase*> srcs,
 				       const vector<const Patch*>& srcPatches,
@@ -418,7 +418,7 @@ template<class T>
   
   // specialized for T=Point
   template<>
-  SCISHARE void
+  UINTAHSHARE void
     ParticleVariable<Point>::packMPI(void* buf, int bufsize, int* bufpos,
 				     const ProcessorGroup* pg,
 				     ParticleSubset* pset,
@@ -471,7 +471,7 @@ template<class T>
 
   // Specialized in ParticleVariable_special.cc
   template<>
-  SCISHARE void
+  UINTAHSHARE void
   ParticleVariable<double>::emitNormal(ostream& out, const IntVector&,
 				  const IntVector&, ProblemSpecP varnode, bool outputDoubleAsFloat );
 

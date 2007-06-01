@@ -37,7 +37,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include <Core/Util/share.h> // for dbg_barrier's SCISHARE
+#include <Core/Util/uintahshare.h> // for dbg_barrier's UINTAHSHARE
 
 using std::cerr;
 using std::cout;
@@ -47,7 +47,7 @@ using namespace Uintah;
 
 DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
-extern SCISHARE DebugStream dbg_barrier;
+extern UINTAHSHARE DebugStream dbg_barrier;
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :

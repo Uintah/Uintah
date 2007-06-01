@@ -18,7 +18,7 @@ namespace SLIVR {
   class Vector;
 }
 
-#include <CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
   using SLIVR::Point;
   using SLIVR::Vector;
@@ -55,7 +55,7 @@ WARNING
 
 ****************************************/
  
- class SCISHARE ICEMaterial : public Material {
+ class UINTAHSHARE ICEMaterial : public Material {
  public:
    ICEMaterial(ProblemSpecP&);
    

@@ -10,7 +10,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <SCIRun/Core/OS/Dir.h>
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
@@ -45,7 +45,7 @@ WARNING
 ****************************************/
 
   class DataWarehouse;
-   class SCISHARE SimulationInterface : public UintahParallelPort {
+   class UINTAHSHARE SimulationInterface : public UintahParallelPort {
    public:
      SimulationInterface();
      virtual ~SimulationInterface();

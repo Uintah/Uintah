@@ -14,7 +14,7 @@
 
 #include <Core/Grid/Variables/CCVariable.h>
 
-#include <CCA/Ports/share.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 /**************************************
@@ -61,7 +61,7 @@ WARNING
 
     virtual ~ModelSetup() {};
   };
-  class SCISHARE ModelInfo {
+  class UINTAHSHARE ModelInfo {
   public:
     ModelInfo(const VarLabel* delt, 
 	      const VarLabel* mass_source,
@@ -109,7 +109,7 @@ WARNING
   
   
    //________________________________________________
-   class SCISHARE ModelInterface : public UintahParallelPort {
+   class UINTAHSHARE ModelInterface : public UintahParallelPort {
    public:
      ModelInterface(const ProcessorGroup* d_myworld);
      virtual ~ModelInterface();

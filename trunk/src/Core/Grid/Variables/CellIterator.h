@@ -5,7 +5,7 @@
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Util/Assert.h>
 
-#include <Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -40,7 +40,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE CellIterator {
+class UINTAHSHARE CellIterator {
 public:
   inline ~CellIterator() {}
     

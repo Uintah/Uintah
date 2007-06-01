@@ -8,7 +8,7 @@
 #include <numeric>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Math/share.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
 using namespace std;
 
@@ -155,12 +155,12 @@ template<class ValueType, class IndexType> class SparseMatrix {
   
 };
 
-SCISHARE valarray<double> cgSolve(SparseMatrix<double,int>& A, valarray<double>& b,
+UINTAHSHARE valarray<double> cgSolve(SparseMatrix<double,int>& A, valarray<double>& b,
 	  		          int conflag);
 
-SCISHARE double eigenvalue(SparseMatrix<double,int>& A, valarray<double>& eigenvector);
+UINTAHSHARE double eigenvalue(SparseMatrix<double,int>& A, valarray<double>& eigenvector);
 
-SCISHARE double conditionNum(SparseMatrix<double,int>& A);
+UINTAHSHARE double conditionNum(SparseMatrix<double,int>& A);
 
 }
 

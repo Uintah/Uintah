@@ -21,7 +21,7 @@ namespace SLIVR {
   class Vector;
 }
 
-#include <CCA/Components/MPM/share.h>
+#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using SLIVR::Point;
@@ -65,7 +65,7 @@ WARNING
 
 ****************************************/
 
- class SCISHARE MPMMaterial : public Material {
+ class UINTAHSHARE MPMMaterial : public Material {
  public:
 
    // Default Constructor

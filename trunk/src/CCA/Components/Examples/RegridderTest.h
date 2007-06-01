@@ -5,7 +5,7 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 
-#include <CCA/Components/Examples/share.h>
+#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah
 {
   class SimpleMaterial;
@@ -41,7 +41,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE RegridderTest: public UintahParallelComponent, public SimulationInterface {
+  class UINTAHSHARE RegridderTest: public UintahParallelComponent, public SimulationInterface {
   public:
     RegridderTest ( const ProcessorGroup* myworld );
     virtual ~RegridderTest ( void );

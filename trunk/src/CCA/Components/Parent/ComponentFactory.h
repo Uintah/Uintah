@@ -5,14 +5,14 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
-#include <CCA/Components/Parent/share.h>
+#include <CCA/Components/Parent/uintahshare.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class UintahParallelComponent;
 
-  class SCISHARE ComponentFactory  {
+  class UINTAHSHARE ComponentFactory  {
   
   public:
     // this function has a switch for all known components

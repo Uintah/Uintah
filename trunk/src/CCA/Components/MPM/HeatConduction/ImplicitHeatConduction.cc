@@ -248,6 +248,9 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
   int numMatls = d_sharedState->getNumMPMMatls();
 
   map<int,int> dof_diag;
+  d_HC_solver->createLocalToGlobalMapping(pg,d_perproc_patches,
+                                            patches,1);
+  int global_offset; 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     if (cout_doing.active()) {
@@ -255,15 +258,15 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
                  << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
     
-    d_HC_solver->createLocalToGlobalMapping(pg,d_perproc_patches,
-                                            patches,1);
     
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     
     Array3<int> l2g(lowIndex,highIndex);
     d_HC_solver->copyL2G(l2g,patch);
-    
+    //set global offset if this is the first patch
+    if(pp==0)
+      global_offset=l2g[lowIndex];
     CCVariable<int> visited;
     new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
     visited.initialize(0);
@@ -290,7 +293,7 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
           int l2g_node_num;
           for (int k = 0; k < 8; k++) {
             if (patch->containsNode(ni[k]) ) {
-              l2g_node_num = l2g[ni[k]] - l2g[lowIndex];
+              l2g_node_num = l2g[ni[k]] - global_offset; //subtract global offset to map into array correctly
               dof.push_back(l2g_node_num);
             }
           }

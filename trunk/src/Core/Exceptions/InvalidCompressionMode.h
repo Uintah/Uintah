@@ -18,11 +18,11 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Exceptions/share.h>
+#include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
   using namespace SCIRun;
 
-  class SCISHARE InvalidCompressionMode : public Exception {
+  class UINTAHSHARE InvalidCompressionMode : public Exception {
   public:
     InvalidCompressionMode(const std::string& invalidmode,
 			   const std::string& vartype,

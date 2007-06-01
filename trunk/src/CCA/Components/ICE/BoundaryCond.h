@@ -22,7 +22,7 @@
 #include <SCIRun/Core/Containers/StaticArray.h>
 #include <time.h>
 
-#include <CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
  // setenv SCI_DEBUG "ICE_BC_DBG:+,ICE_BC_DOING:+"
 static DebugStream BC_dbg(  "ICE_BC_DBG", false);
@@ -36,7 +36,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   
   //__________________________________
   //  Temperature, pressure and other CCVariables
-  SCISHARE void setBC(CCVariable<double>& var,     
+  UINTAHSHARE void setBC(CCVariable<double>& var,     
                       const std::string& type,
                       const CCVariable<double>&gamma,
                       const CCVariable<double>&cv, 
@@ -46,7 +46,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                       DataWarehouse* new_dw,
                       customBC_var_basket* C_BC_basket);
             
-  SCISHARE void setBC(CCVariable<double>& var,     
+  UINTAHSHARE void setBC(CCVariable<double>& var,     
                       const std::string& type,     // stub function
                       const Patch* patch,  
                       SimulationStateP& sharedState,
@@ -54,7 +54,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                       DataWarehouse* new_dw); 
   //__________________________________
   //  P R E S S U R E        
-  SCISHARE void setBC(CCVariable<double>& press_CC,          
+  UINTAHSHARE void setBC(CCVariable<double>& press_CC,          
                       StaticArray<CCVariable<double> >& rho_micro,
                       StaticArray<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
@@ -66,7 +66,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                       DataWarehouse* new_dw,
                       customBC_var_basket* C_BC_basket);
              
-  SCISHARE void setBC(CCVariable<double>& press_CC,          
+  UINTAHSHARE void setBC(CCVariable<double>& press_CC,          
                       StaticArray<CCVariable<double> >& rho_micro,
                       StaticArray<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
@@ -79,7 +79,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              
   //__________________________________
   //    V E C T O R   
-  SCISHARE void setBC(CCVariable<Vector>& variable,
+  UINTAHSHARE void setBC(CCVariable<Vector>& variable,
                       const std::string& type,
                       const Patch* patch,
                       SimulationStateP& sharedState,
@@ -87,7 +87,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
                       DataWarehouse* new_dw, 
                       customBC_var_basket* C_BC_basket);
              
-  SCISHARE void setBC(CCVariable<Vector>& variable,  // stub function
+  UINTAHSHARE void setBC(CCVariable<Vector>& variable,  // stub function
                       const std::string& type,
                       const Patch* patch,
                       SimulationStateP& sharedState,
@@ -96,7 +96,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
   //__________________________________
   //    SPECIFC VOLUME
-  SCISHARE void setSpecificVolBC(CCVariable<double>& sp_vol,
+  UINTAHSHARE void setSpecificVolBC(CCVariable<double>& sp_vol,
                                  const string& kind,
                                  const bool isMassSp_vol,
                                  constCCVariable<double> rho_CC,

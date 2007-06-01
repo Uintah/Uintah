@@ -6,14 +6,14 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Labels/share.h>
+#include <Core/Labels/uintahshare.h>
 
 namespace Uintah {
 
 using std::vector;
   class VarLabel;
 
-    class SCISHARE MPMLabel {
+    class UINTAHSHARE MPMLabel {
     public:
 
       MPMLabel();

@@ -11,7 +11,7 @@
 
 #include <SCIRun/Core/Geometry/Vector.h>
 
-#include <CCA/Components/OnTheFlyAnalysis/share.h>
+#include <CCA/Components/OnTheFlyAnalysis/uintahshare.h>
 namespace Uintah {
 
   class DataWarehouse;
@@ -20,7 +20,7 @@ namespace Uintah {
   class Patch;
   
 
-  class SCISHARE AnalysisModule {
+  class UINTAHSHARE AnalysisModule {
 
   public:
     

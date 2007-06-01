@@ -7,14 +7,14 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <CCA/Components/ICE/share.h>
+#include <CCA/Components/ICE/uintahshare.h>
 
 //#define REFLUX_DBG 
 #undef REFLUX_DBG
 #define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && (var == "scalar-f" || var == "vol_frac")) ?1:0  )
 
 namespace Uintah {
-  class SCISHARE AMRICE : public ICE{
+  class UINTAHSHARE AMRICE : public ICE{
   public:
     AMRICE(const ProcessorGroup* myworld);
     virtual ~AMRICE();

@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_REFCOUNTED_H
 #define UINTAH_HOMEBREW_REFCOUNTED_H
 
-#include <Core/Util/share.h>
+#include <Core/Util/uintahshare.h>
 namespace Uintah {
 /**************************************
 
@@ -32,7 +32,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE RefCounted {
+   class UINTAHSHARE RefCounted {
    public:
       RefCounted();
       virtual ~RefCounted();
