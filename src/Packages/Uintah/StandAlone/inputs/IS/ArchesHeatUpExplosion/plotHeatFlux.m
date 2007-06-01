@@ -10,7 +10,7 @@
 % B
 % C
 % D
-% E'polynomial_100.dat','polynomial_101.dat'
+% E
 %  ---end file polynomial_#.dat---
 % 
 % The coefficients are for a function of the form:
@@ -24,12 +24,12 @@ clear all;
 %________________________________
 % USER INPUTS
 %'
-dir = 'case3'
-%dat = {'polynomial_46.dat','polynomial_47.dat', 'polynomial_48.dat','polynomial_49.dat','polynomial_50.dat','polynomial_51.dat','polynomial_52.dat','polynomial_53.dat'}
-dat = {'polynomial_96.dat','polynomial_97.dat','polynomial_98.dat','polynomial_99.dat','polynomial_100.dat','polynomial_101.dat','polynomial_102.dat','polynomial_103.dat'}
+dir = 'case1'
+dat = {'polynomial_47.dat', 'polynomial_48.dat','polynomial_49.dat','polynomial_50.dat','polynomial_51.dat','polynomial_52.dat'}
+%dat = {'polynomial_97.dat','polynomial_98.dat','polynomial_99.dat','polynomial_100.dat','polynomial_101.dat','polynomial_102.dat'}
 
-%legendText = {'46','47','48', '49', '50','51','52','53'}
-legendText = {'96','97', '98', '99','100','101','102','103'}
+legendText = {'47','48', '49', '50','51','52'}
+%legendText = {'97', '98', '99','100','101','102'}
 
 symbol = {'-b','-r','-g','-c','-m','-k','.b','.r'};
 
