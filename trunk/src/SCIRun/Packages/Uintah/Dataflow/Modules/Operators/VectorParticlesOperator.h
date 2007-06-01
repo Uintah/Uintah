@@ -2,11 +2,11 @@
 #define __OPERATORS_VECTORPARTICLESOPERATOR_H__
 
 #include "VectorOperatorFunctors.h"
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
-#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

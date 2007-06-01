@@ -23,7 +23,7 @@
  *
  *  Copyright (C) 2000 SCI Group
  */
-#include <Dataflow/Modules/Visualization/VariablePlotter.h>
+#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
@@ -36,10 +36,10 @@
 #include <SCIRun/Core/Geom/Material.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <Core/Math/Matrix3.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Core/Datatypes/Archive.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>

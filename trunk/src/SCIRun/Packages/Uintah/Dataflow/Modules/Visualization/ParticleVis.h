@@ -1,13 +1,13 @@
 #ifndef PARTICLEVIS_H
 #define PARTICLEVIS_H
 
-#include <Dataflow/Ports/ScalarParticlesPort.h>
-#include <Dataflow/Ports/VectorParticlesPort.h>
-#include <Dataflow/Ports/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {

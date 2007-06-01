@@ -2,10 +2,10 @@
 #define __OPERATORS_TENSORTOTENSORCONVERTOR_H__
 
 #include "TensorOperatorFunctors.h"
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
-#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <SCIRun/Dataflow/Network/Module.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 
 namespace Uintah {

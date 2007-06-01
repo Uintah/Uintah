@@ -1,8 +1,8 @@
-#include <Dataflow/Modules/Operators/VectorParticlesOperator.h>
-#include <Uintah/Core/Datatypes/VectorParticles.h>
-#include <Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/VectorParticlesOperator.h>
+#include <Core/Datatypes/VectorParticles.h>
+#include <Core/Datatypes/ScalarParticles.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
 
 #include <SCIRun/Core/Malloc/Allocator.h>
 

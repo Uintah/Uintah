@@ -34,11 +34,11 @@ LOG
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Datatypes/ScalarParticles.h>
-#include <Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Core/Datatypes/VectorParticles.h>
-#include <Dataflow/Ports/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Core/Datatypes/TensorParticles.h>
-#include <Dataflow/Ports/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/IntVector.h>

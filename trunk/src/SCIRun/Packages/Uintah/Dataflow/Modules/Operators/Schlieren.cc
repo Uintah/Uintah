@@ -1,7 +1,7 @@
 #include <SCIRun/Core/Datatypes/LatVolMesh.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <Dataflow/Modules/Operators/Schlieren.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/Schlieren.h>
 #include <Core/Disclosure/TypeUtils.h>
 
 #include <math.h>

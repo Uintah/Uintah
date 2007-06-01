@@ -7,14 +7,14 @@
 #include <SCIRun/Core/Containers/FData.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
 #include <SCIRun/Core/Datatypes/GenericField.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>
 
-#include <Dataflow/Modules/Operators/TensorOperatorFunctors.h>
-#include <Dataflow/Modules/Operators/UnaryFieldOperator.h>
-#include <Dataflow/Modules/Operators/OperatorThread.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/TensorOperatorFunctors.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/OperatorThread.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>

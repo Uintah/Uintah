@@ -31,10 +31,10 @@ LOG
 
 
 #include <Core/Datatypes/Archive.h>
-#include <Dataflow/Ports/ArchivePort.h>
-#include <Dataflow/Modules/Selectors/FieldExtractor.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>

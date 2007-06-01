@@ -1,10 +1,10 @@
 #include "ParticleEigenEvaluator.h"
 #include <math.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <Uintah/Core/Datatypes/TensorParticles.h>
-#include <Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Uintah/Core/Datatypes/VectorParticles.h>
-#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Datatypes/TensorParticles.h>
+#include <Core/Datatypes/ScalarParticles.h>
+#include <Core/Datatypes/VectorParticles.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 
 namespace Uintah {
 

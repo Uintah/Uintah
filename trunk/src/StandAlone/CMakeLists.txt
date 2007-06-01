@@ -31,7 +31,6 @@
 ADD_EXECUTABLE(sus sus.cc)
 ADD_EXECUTABLE(partvarRange partvarRange.cc)
 ADD_EXECUTABLE(selectpart selectpart.cc)
-ADD_EXECUTABLE(uda2nrrd uda2nrrd.cc)
 ADD_EXECUTABLE(compare_uda compare_uda.cc)
 ADD_EXECUTABLE(slb slb.cc)
 ADD_EXECUTABLE(async_mpi_test async_mpi_test.cc)
@@ -84,9 +83,58 @@ TARGET_LINK_LIBRARIES(compare_uda
   Core_Math
 )
 
+TARGET_LINK_LIBRARIES(partvarRange
+  Core_Containers
+  Core_Exceptions
+  Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_Disclosure
+  Packages_Uintah_Core_DataArchive
+)
+
 TARGET_LINK_LIBRARIES(async_mpi_test
   ${MPI_LIBRARY}
 )
+
+TARGET_LINK_LIBRARIES(restart_merger
+  Core_Exceptions
+  Core_OS
+  Packages_Uintah_Core_DataArchive
+  Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_ProblemSpec
+  Packages_Uintah_CCA_Components_DataArchiver
+)
+  
+TARGET_LINK_LIBRARIES(selectpart
+  Core_Containers
+  Core_Exceptions
+  Core_Geometry
+  Core_Util
+  Packages_Uintah_Core_DataArchive
+  Packages_Uintah_Core_Exceptions
+  Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_Util
+)
+  
+TARGET_LINK_LIBRARIES(slb
+  Core_Exceptions
+  Packages_Uintah_Core_GeometryPiece
+  Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_ProblemSpec
+  Packages_Uintah_CCA_Components_ProblemSpecification
+)
+
+IF(TEEM_LIBRARY AND !MINIMAL_CORE)  
+  ADD_EXECUTABLE(uda2nrrd uda2nrrd.cc)
+  TARGET_LINK_LIBRARIES(uda2nrrd
+    Core_Exceptions
+    Core_Datatypes
+    Core_Geometry
+    Packages_Uintah_Core_DataArchive
+    Packages_Uintah_Core_Grid
+  )
+ENDIF(TEEM_LIBRARY AND !MINIMAL_CORE)  
+  
+  
 
 ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(Benchmarks)

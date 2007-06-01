@@ -44,7 +44,7 @@
 #include <SCIRun/Core/Geom/GeomGroup.h>
 #include <SCIRun/Core/Geom/GeomLine.h>
 #include <SCIRun/Core/Geom/Material.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Math/MinMax.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>

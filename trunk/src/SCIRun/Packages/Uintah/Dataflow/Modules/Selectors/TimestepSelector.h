@@ -28,11 +28,11 @@ LOG
 
 
 #include <Core/Datatypes/Archive.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>

@@ -11,7 +11,7 @@
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Geom/ColorMap.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>

@@ -29,7 +29,7 @@
 #include <SCIRun/Core/Containers/FData.h>
 #include <SCIRun/Core/Datatypes/Field.h>
 #include <SCIRun/Core/Datatypes/GenericField.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Geom/Material.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>

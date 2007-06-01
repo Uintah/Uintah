@@ -37,7 +37,7 @@ LOG
 #include <SCIRun/Core/Datatypes/MultiLevelField.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Geometry/Point.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 #include <SCIRun/Core/Math/MinMax.h>
 #include <SCIRun/Core/Util/Timer.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
@@ -53,7 +53,7 @@ LOG
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Dataflow/Modules/Selectors/PatchToField.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -61,7 +61,7 @@ LOG
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Dataflow/Modules/Selectors/share.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/share.h>
 namespace Uintah {
 using namespace SCIRun;
 

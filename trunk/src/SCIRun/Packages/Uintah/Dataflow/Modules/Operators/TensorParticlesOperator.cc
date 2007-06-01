@@ -2,10 +2,10 @@
 
 #include <SCIRun/Core/Malloc/Allocator.h>
 
-#include <Uintah/Core/Datatypes/TensorParticles.h>
-#include <Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Datatypes/TensorParticles.h>
+#include <Core/Datatypes/ScalarParticles.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
 
 #include <math.h>
 

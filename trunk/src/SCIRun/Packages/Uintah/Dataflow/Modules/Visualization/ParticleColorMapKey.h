@@ -12,7 +12,7 @@
 
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {

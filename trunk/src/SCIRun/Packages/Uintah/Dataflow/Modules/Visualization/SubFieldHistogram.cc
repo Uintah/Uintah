@@ -22,7 +22,7 @@
  * Simple interface to volume rendering stuff
  */
 
-#include <Dataflow/Modules/Visualization/SubFieldHistogram.h>
+#include <Packages/Uintah/Dataflow/Modules/Visualization/SubFieldHistogram.h>
 
 #include <SCIRun/Core/Containers/Array1.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
@@ -36,7 +36,7 @@
 #include <SCIRun/Core/Geom/ColorMap.h>
 #include <SCIRun/Core/Geom/Material.h>
 #include <SCIRun/Core/Geom/HistogramTex.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>

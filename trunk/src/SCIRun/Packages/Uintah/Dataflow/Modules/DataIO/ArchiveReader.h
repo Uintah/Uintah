@@ -30,10 +30,10 @@ LOG
     Created January 5, 1999
 ----------------------------------------------------------------------*/
     
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Core/Datatypes/Archive.h>
 #include <Dataflow/Network/Module.h> 
-#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 
 namespace Uintah {
 

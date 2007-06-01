@@ -14,13 +14,13 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Dataflow/Modules/Visualization/VariablePlotter.h>
+#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Core/Datatypes/Archive.h>
 #include <Core/Datatypes/VariableCache.h>
 #include <Core/Grid/Grid.h>

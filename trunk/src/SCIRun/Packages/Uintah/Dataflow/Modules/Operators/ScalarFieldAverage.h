@@ -3,7 +3,7 @@
 
 
 #include "ScalarOperatorFunctors.h"
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <SCIRun/Core/Util/TypeDescription.h>

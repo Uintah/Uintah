@@ -1,5 +1,5 @@
 
-#include <Dataflow/Ports/VectorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace SCIRun;

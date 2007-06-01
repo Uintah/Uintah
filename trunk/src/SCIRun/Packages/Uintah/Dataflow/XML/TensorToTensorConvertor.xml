@@ -6,10 +6,6 @@
       <author>Biswajit Banerjee</author>
     </authors>
     <summary>Convert the tensors in a Tensor particle field.</summary>
-    <description>
-      <p>Version Date: unknown</p><p>Version: 1.0</p>
-      <p>Convert the tensors in a Tensor particle field.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

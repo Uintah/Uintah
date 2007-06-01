@@ -43,7 +43,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Dataflow/Modules/Selectors/PatchToField.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -1386,7 +1386,7 @@ int main(int argc, char** argv)
 
       // Adjust the range for using all levels
       if(use_all_levels && grid->numLevels() > 0){
-        double exponent = grid->numLevels() - 1;
+        int exponent = grid->numLevels() - 1;
         range.x( range.x() * int(pow(2, exponent)));
         range.y( range.y() * int(pow(2, exponent)));
         range.z( range.z() * int(pow(2, exponent)));

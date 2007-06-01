@@ -115,5 +115,4 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Grid
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_Core_Grid)
 ENDIF(BUILD_SHARED_LIBS)
-SUBDIRS(BoundaryConditions Variables)
 

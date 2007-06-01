@@ -1,4 +1,4 @@
-#include <Dataflow/Modules/Visualization/ParticleColorMapKey.h>
+#include <Packages/Uintah/Dataflow/Modules/Visualization/ParticleColorMapKey.h>
 #include <SCIRun/Core/Geom/ColorMap.h>
 #include <SCIRun/Core/Geom/GeomGroup.h>
 #include <SCIRun/Core/Geom/GeomText.h>

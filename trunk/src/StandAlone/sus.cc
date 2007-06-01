@@ -43,7 +43,7 @@
 #include <SCIRun/Core/Util/FileUtils.h>
 
 #include <sci_defs/mpi_defs.h>
-#include <sci_defs/ieeefp_defs.h>
+//#include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
 
 #ifdef USE_VAMPIR
@@ -326,6 +326,7 @@ main( int argc, char** argv )
     udaDir = filename;
     filename = filename + "/input.xml";
 
+#ifndef _WIN32
     // If restarting (etc), make sure that the uda specified is not a symbolic link to an Uda.
     // This is because the sym link can (will) be updated to point to a new uda, thus creating
     // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
@@ -335,6 +336,7 @@ main( int argc, char** argv )
       cout << "\n";
       exit( 1 );
     }
+#endif
   }
 
   if (!Uintah::Parallel::usingMPI()) {
@@ -362,13 +364,14 @@ main( int argc, char** argv )
   
  if( Uintah::Parallel::getMPIRank() == 0 ) {
     // helpful for cleaning out old stale udas
-    time_t t = time(NULL) ;
+#ifndef _WIN32
+   time_t t = time(NULL) ;
     string time_string(ctime(&t));
     char name[256];
     gethostname(name, 256);
     cerr << "Date:    " << time_string; // has its own newline
     cerr << "Machine: " << name << endl;
-
+#endif
     // Run svn diff on Packages/Uintah 
     if (do_svnDiff){
       cerr << "____SVN_____________________________________________________________"<< endl;

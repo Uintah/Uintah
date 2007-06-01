@@ -29,14 +29,14 @@
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 00:11:18 2004
 
-#include <Dataflow/Modules/Visualization/TextureBuilder.h>
+#include <Dataflow/Modules/Visualization/ConvertNrrdsToTexture.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 
 
 namespace Uintah {
 using namespace SCIRun;
 
-class UTextureBuilder : public TextureBuilder
+class UTextureBuilder : public ConvertNrrdsToTexture
 {
 public:
   UTextureBuilder(GuiContext*);
@@ -52,14 +52,15 @@ using namespace Uintah;
 using SCIRun::ColorMapIPort;
 using SCIRun::ColorMapOPort;
 using SCIRun::ColorMapHandle;
-using SCIRun::TextureBuilder;
+using SCIRun::ConvertNrrdsToTexture;
 using SCIRun::Module;
 
 
 DECLARE_MAKER(UTextureBuilder)
 
 UTextureBuilder::UTextureBuilder(GuiContext* ctx)
-  : TextureBuilder(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
+  : ConvertNrrdsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
+//: ConvertNrrdsToTexture(ctx)
 {}
 
 UTextureBuilder::~UTextureBuilder()
@@ -75,7 +76,7 @@ UTextureBuilder::execute()
   ColorMapHandle cmap_h;
 
   if( !cmap_iport->get( cmap_h ) || !(cmap_h.get_rep()) ) {
-    TextureBuilder::execute();
+    ConvertNrrdsToTexture::execute();
     return;
   }
 
@@ -95,9 +96,6 @@ UTextureBuilder::execute()
       return;
     }
 
-  TextureBuilder::execute();
+  ConvertNrrdsToTexture::execute();
   cmap_oport->send(cmap_h);
 }
-
-
-

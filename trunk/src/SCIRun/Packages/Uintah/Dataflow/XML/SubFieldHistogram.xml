@@ -27,8 +27,6 @@
       <author>Kurt Zimmerman</author>
     </authors>
     <summary>A volume renderer.</summary>
-    <description>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

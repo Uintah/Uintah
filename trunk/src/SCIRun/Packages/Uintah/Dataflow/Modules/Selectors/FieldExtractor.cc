@@ -28,7 +28,7 @@ LOG
     Created January 5, 1999
 ****************************************/
 
-#include <Dataflow/Modules/Selectors/FieldExtractor.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
 
 #include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
@@ -49,7 +49,7 @@ LOG
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Grid/Variables/ShareAssignArray3.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
  
 #include <iostream> 
 #include <sstream>

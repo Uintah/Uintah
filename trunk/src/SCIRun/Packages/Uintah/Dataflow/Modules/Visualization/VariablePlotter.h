@@ -3,10 +3,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 // needs to be included here so Array3 knows about swapbytes(Matrix3)
 #include <Core/Math/Matrix3.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Core/Datatypes/Archive.h>
 #include <Core/Datatypes/VariableCache.h>
 #include <Core/Grid/GridP.h>

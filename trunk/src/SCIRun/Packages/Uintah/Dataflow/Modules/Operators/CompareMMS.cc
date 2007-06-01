@@ -19,7 +19,7 @@
 //    Author : J. Davison de St. Germain
 //    Date   : Jan 2006
 
-#include <Dataflow/Modules/Operators/CompareMMS.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/CompareMMS.h>
 
 #include <SCIRun/Core/Datatypes/FieldInterface.h>
 

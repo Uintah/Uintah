@@ -14,5 +14,6 @@ ADD_EXECUTABLE(dumpfields dumpfields.cc
 )
 
 TARGET_LINK_LIBRARIES(dumpfields
-        Packages_Uintah_Core_DataArchive   
+   Packages_Uintah_Core_DataArchive   
+   Core_OS
 )

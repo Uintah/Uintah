@@ -21,7 +21,7 @@
 
 #include <sci_values.h>
 
-#include <Dataflow/Modules/Operators/ScalarMinMax.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/ScalarMinMax.h>
 
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/BBox.h>

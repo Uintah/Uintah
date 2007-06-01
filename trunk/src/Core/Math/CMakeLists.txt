@@ -39,6 +39,11 @@ SET(Packages_Uintah_Core_Math_SRCS
   TangentModulusTensor.cc
 )
 
+IF(WIN32)
+  SET(Packages_Uintah_Core_Math_SRCS ${Packages_Uintah_Core_Math_SRCS} Rand48.cc)
+ENDIF(WIN32)
+
+
 ADD_LIBRARY(Packages_Uintah_Core_Math ${Packages_Uintah_Core_Math_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Math

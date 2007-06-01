@@ -6,7 +6,7 @@
 #include <SCIRun/Core/Datatypes/LatVolMesh.h>
 #include <SCIRun/Core/Containers/FData.h>
 #include <SCIRun/Core/Datatypes/GenericField.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>

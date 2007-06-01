@@ -30,9 +30,9 @@
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Math/Matrix3.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Core/Datatypes/Archive.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>

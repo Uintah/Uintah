@@ -10,10 +10,10 @@
 #include <Dataflow/Network/Module.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 #include <Core/Datatypes/Archive.h>
 #include <Core/DataArchive/DataArchive.h>
-#include <Dataflow/Ports/ArchivePort.h>
+#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 
 namespace Uintah {
 

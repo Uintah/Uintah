@@ -5,9 +5,9 @@
 
 #include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
 #include <sgi_stl_warnings_off.h>

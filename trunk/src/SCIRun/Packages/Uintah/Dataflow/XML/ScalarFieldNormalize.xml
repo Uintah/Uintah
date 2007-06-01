@@ -9,13 +9,6 @@
       <author>Todd Harman</author>
     </authors>
     <summary>Normalize a scalar field based on its value a point</summary>
-    <description>
-      <p>Version Date: Dec. 2004</p>
-      <p>This module normalizes a scalar field</p>
-      <p>   scalarField[c] = scalarField[c]/scalarField[probe Point] </p>
-      <p>The probe point is a user input. The point is specified as an
-      index into the data array.</p>
-    </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">

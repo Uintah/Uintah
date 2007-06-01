@@ -26,11 +26,11 @@
 #include <SCIRun/Core/Geom/GeomSphere.h>
 #include <SCIRun/Core/Geom/GeomEllipsoid.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Geom/ColorMap.h>
 #include <SCIRun/Core/Datatypes/PropertyManager.h>
 #include <SCIRun/Core/Math/MinMax.h>
-#include <Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>

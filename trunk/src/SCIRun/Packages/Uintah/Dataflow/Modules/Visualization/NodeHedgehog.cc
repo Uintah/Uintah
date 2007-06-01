@@ -25,7 +25,7 @@
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Math/MinMax.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <SCIRun/Core/Thread/Thread.h>
 #include <SCIRun/Core/Thread/Semaphore.h>

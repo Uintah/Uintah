@@ -3,11 +3,11 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <SCIRun/Core/GuiInterface/GuiVar.h>
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>
 
-#include <Dataflow/Modules/Operators/UnaryFieldOperator.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>

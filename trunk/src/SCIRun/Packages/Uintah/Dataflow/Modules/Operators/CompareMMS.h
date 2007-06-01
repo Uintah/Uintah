@@ -40,8 +40,8 @@
 #include <SCIRun/Core/Util/ProgressReporter.h>
 #include <Dataflow/Network/Module.h>
 
-#include <Dataflow/Modules/Operators/MMS/MMS.h>
-#include <Dataflow/Modules/Operators/MMS/MMS1.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_off.h>
