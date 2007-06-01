@@ -25,11 +25,13 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/AMR.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -53,6 +55,7 @@
 #include <Core/Grid/BoundaryConditions/fillFace.h>
 #include <CCA/Components/MPM/PetscSolver.h>
 #include <CCA/Components/MPM/SimpleSolver.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Math/FastMatrix.h>
 #include <sgi_stl_warnings_off.h>

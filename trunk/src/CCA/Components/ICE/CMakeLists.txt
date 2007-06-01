@@ -71,7 +71,6 @@ SET(Packages_Uintah_CCA_Components_ICE_SRCS
 ADD_LIBRARY(Packages_Uintah_CCA_Components_ICE ${Packages_Uintah_CCA_Components_ICE_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_ICE
-  Packages_Uintah_CCA_Components_MPM
   Packages_Uintah_CCA_Components_OnTheFlyAnalysis
   Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Grid
@@ -97,5 +96,3 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_ICE
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_ICE)
 ENDIF(BUILD_SHARED_LIBS)
-SUBDIRS(EOS Advection CustomBCs)
-

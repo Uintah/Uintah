@@ -1,6 +1,7 @@
 #ifndef UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 #define UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 
+#include <Core/Grid/Variables/GridVariable.h>
 #include <Core/Grid/Variables/constVariable.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
@@ -77,6 +78,7 @@ WARNING
     { this->rep_.print(out); }
   };
 
+  typedef constVariableBase<GridVariableBase> constGridVariableBase;
 } // end namespace Uintah
 
 

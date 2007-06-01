@@ -594,6 +594,8 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double>    pCrackRadius;
     constParticleVariable<Vector>    pVelocity;
     constParticleVariable<double>    pTempPrev, pTempCur;
+    constParticleVariable<double>    pRandOld;
+    constParticleVariable<StateData> pStatedataOld;
     ParticleVariable<Matrix3>   pStrainRate_new;
     ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
     ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
@@ -616,13 +618,13 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
                            pCrackRadiusLabel_preReloc,            pset);
     new_dw->allocateAndPut(pStrainRate_new,
                            pStrainRateLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pRand,
-                           pRandLabel_preReloc,                   pset);
-    new_dw->allocateAndPut(pStatedata,
-                           pStatedataLabel_preReloc,              pset);
-    old_dw->copyOut(pRand,           pRandLabel,                  pset);
-    old_dw->copyOut(pStatedata,      pStatedataLabel,             pset);
-    ASSERTEQ(pset, pStatedata.getParticleSubset());
+    // transfer rand and state data from old dw to new
+    old_dw->get(pRandOld,        pRandLabel,                   pset);
+    old_dw->get(pStatedataOld,   pStatedataLabel,              pset);
+    new_dw->allocateAndPut(pRand,           pRandLabel_preReloc,                   pset);
+    new_dw->allocateAndPut(pStatedata,      pStatedataLabel_preReloc,              pset);
+    pRand.copyData(&pRandOld.getBaseRep());
+    pStatedata.copyData(&pStatedataOld.getBaseRep());
 
     constParticleVariable<Point> px;
     constParticleVariable<Matrix3> deformationGradient, pstress;

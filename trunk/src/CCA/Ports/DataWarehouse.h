@@ -3,14 +3,10 @@
 
 #include <Core/Util/Handle.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/Variables/CCVariableBase.h>
+#include <Core/Grid/Variables/constGridVariable.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Grid/Variables/ParticleVariableBase.h>
-#include <Core/Grid/Variables/NCVariableBase.h>
-#include <Core/Grid/Variables/SFCXVariableBase.h>
-#include <Core/Grid/Variables/SFCYVariableBase.h>
-#include <Core/Grid/Variables/SFCZVariableBase.h>
 #include <Core/Grid/Variables/ReductionVariableBase.h>
 #include <Core/Grid/Variables/PerPatchBase.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -24,6 +20,10 @@
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
+
+namespace SCIRun {
+  class Vector;
+}
 
 #include <CCA/Ports/uintahshare.h>
 
@@ -79,9 +79,6 @@ public:
   // by reference to avoid ambiguity with other put overloaded methods.
   virtual void put(Variable*, const VarLabel*, int matlIndex,
 		   const Patch*) = 0;
-  virtual void allocateAndPutGridVar(Variable*, const VarLabel*, 
-				     int matlIndex, const Patch*) = 0;
-
 
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
@@ -139,10 +136,6 @@ public:
 		   ParticleSubset*) = 0;
   virtual void get(constParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Patch* patch) = 0;
-  void getCopy(ParticleVariableBase&, const VarLabel*,
-	       ParticleSubset*);
-  void copyOut(ParticleVariableBase&, const VarLabel*,
-	       ParticleSubset*);
   virtual void getModifiable(ParticleVariableBase&, const VarLabel*,
 			     ParticleSubset*) = 0;
   virtual void put(ParticleVariableBase&, const VarLabel*,
@@ -154,150 +147,42 @@ public:
   getParticleVariable(const VarLabel*, int matlIndex, const Patch*) = 0;
 
   // Generic grid based variables
+     
+  virtual void get(constGridVariableBase& var,
+                   const VarLabel* label, int matlIndex, const Patch* patch,
+                   Ghost::GhostType gtype, int numGhostCells) = 0;
 
-  void copyOutGridData(Variable* var, const VarLabel* label, int matlIndex,
-		       const Patch* patch,
-		       Ghost::GhostType gtype = Ghost::None,
-		       int numGhostCells = 0);
-     
-     
-  // Node Centered (NC) Variables
-  virtual void allocateTemporary(NCVariableBase&, const Patch*,
-				 Ghost::GhostType = Ghost::None,
-				 int numGhostCells = 0,
-				 const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
-  virtual void allocateAndPut(NCVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*,
-			      Ghost::GhostType = Ghost::None,
-			      int numGhostCells = 0) = 0;
-  virtual void get(constNCVariableBase&, const VarLabel*, int matlIndex,
-		   const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-  virtual void getModifiable(NCVariableBase&, const VarLabel*,
-			     int matlIndex, const Patch*) = 0;
-  virtual void getRegion(constNCVariableBase&, const VarLabel*,
-  			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high,
-                         bool useBoundaryCells = true) = 0;
-  void copyOut(NCVariableBase& var, const VarLabel* label, int matlIndex,
+  virtual void getModifiable(GridVariableBase& var,
+                   const VarLabel* label, int matlIndex, const Patch* patch) = 0;
+
+  virtual void allocateTemporary(GridVariableBase& var, const Patch* patch,
+                          Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0,
+                          const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
+
+  virtual void allocateAndPut(GridVariableBase& var,
+                              const VarLabel* label, int matlIndex,
+                              const Patch* patch, Ghost::GhostType gtype = Ghost::None,
+                              int numGhostCells = 0) = 0;
+
+  virtual void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
+            bool replace = false) = 0;
+
+  virtual void getRegion(constGridVariableBase&, const VarLabel*,
+                          int matlIndex, const Level* level,
+                          const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true) = 0;
+
+  // Copy out of the warehouse into an allocated variable. 
+  virtual void copyOut(GridVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { copyOut_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  void getCopy(NCVariableBase& var, const VarLabel* label, int matlIndex,
+	       int numGhostCells = 0) = 0;
+
+  // Makes var a copy of the specified warehouse data, allocating it
+  // to the appropriate size first.
+  virtual void getCopy(GridVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  virtual void put(NCVariableBase&, const VarLabel*,
-		   int matlIndex, const Patch*, bool replace = false) = 0;
+	       int numGhostCells = 0) = 0;
       
-  // Cell Centered (CC) Variables
-  virtual void allocateTemporary(CCVariableBase&, const Patch*, 
-				 Ghost::GhostType = Ghost::None,
-				 int numGhostCells = 0,
-				 const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
-  virtual void allocateAndPut(CCVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*, 
-			      Ghost::GhostType = Ghost::None,
-			      int numGhostCells = 0) = 0;
-  virtual void get(constCCVariableBase&, const VarLabel*, int matlIndex,
-		   const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-  virtual void getModifiable(CCVariableBase&, const VarLabel*,
-			     int matlIndex, const Patch*) = 0;
-  virtual void getRegion(constCCVariableBase&, const VarLabel*,
-  			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high,
-                         bool useBoundaryCells = true) = 0;
-  void copyOut(CCVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { copyOut_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  void getCopy(CCVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  virtual void put(CCVariableBase&, const VarLabel*,
-		   int matlIndex, const Patch*, bool replace = false) = 0;
-
-  // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
-  virtual void allocateTemporary(SFCXVariableBase&, const Patch*,
-				 Ghost::GhostType = Ghost::None,
-				 int numGhostCells = 0,
-				 const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
-  virtual void allocateAndPut(SFCXVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*,
-			      Ghost::GhostType = Ghost::None,
-			      int numGhostCells = 0) = 0;
-  virtual void get(constSFCXVariableBase&, const VarLabel*, int matlIndex,
-		   const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-  virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
-			     int matlIndex, const Patch*) = 0;
-  virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
-  			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high,
-                         bool useBoundaryCells = true) = 0;
-  void copyOut(SFCXVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { copyOut_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  void getCopy(SFCXVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  virtual void put(SFCXVariableBase&, const VarLabel*,
-		   int matlIndex, const Patch*, bool replace = false) = 0;
-
-  virtual void allocateTemporary(SFCYVariableBase&, const Patch*,
-				 Ghost::GhostType = Ghost::None,
-				 int numGhostCells = 0,
-				 const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
-  virtual void allocateAndPut(SFCYVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*,
-			      Ghost::GhostType = Ghost::None,
-			      int numGhostCells = 0) = 0;
-  virtual void get(constSFCYVariableBase&, const VarLabel*, int matlIndex,
-		   const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-  virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
-			     int matlIndex, const Patch*) = 0;
-  virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
-  			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high,
-                         bool useBoundaryCells = true) = 0;
-  void copyOut(SFCYVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { copyOut_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  void getCopy(SFCYVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  virtual void put(SFCYVariableBase&, const VarLabel*,
-		   int matlIndex, const Patch*, bool replace = false) = 0;
-
-  virtual void allocateTemporary(SFCZVariableBase&, const Patch*,
-				 Ghost::GhostType = Ghost::None,
-				 int numGhostCells = 0,
-				 const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
-  virtual void allocateAndPut(SFCZVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*,
-			      Ghost::GhostType = Ghost::None,
-			      int numGhostCells = 0) = 0;
-  virtual void get(constSFCZVariableBase&, const VarLabel*, int matlIndex,
-		   const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-  virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
-			     int matlIndex, const Patch*) = 0;
-  virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
-  			 int matlIndex, const Level* level,
-  			 const IntVector& low, const IntVector& high,
-                         bool useBoundaryCells = true) = 0;
-  void copyOut(SFCZVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { copyOut_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  void getCopy(SFCZVariableBase& var, const VarLabel* label, int matlIndex,
-	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
-	       int numGhostCells = 0)
-  { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
-  virtual void put(SFCZVariableBase&, const VarLabel*,
-		   int matlIndex, const Patch*, bool replace = false) = 0;
 
   // PerPatch Variables
   virtual void get(PerPatchBase&, const VarLabel*,
@@ -370,47 +255,9 @@ protected:
   int d_generation;
      
 private:
-  // Copy out of the warehouse into an allocated variable. 
-  template <class Variable>
-  void copyOut_template(Variable& var, const VarLabel* label,
-			int matlIndex, const Patch* patch,
-			Ghost::GhostType gtype = Ghost::None,
-			int numGhostCells = 0);
-
-  // Makes var a copy of the specified warehouse data, allocating it
-  // to the appropriate size first.
-  template <class Variable>
-  void getCopy_template(Variable& var, const VarLabel* label,
-			int matlIndex, const Patch* patch,
-			Ghost::GhostType gtype = Ghost::None,
-			int numGhostCells = 0);
-
   DataWarehouse(const DataWarehouse&);
   DataWarehouse& operator=(const DataWarehouse&);
 };
-
-template <class Variable>
-void DataWarehouse::copyOut_template(Variable& var, const VarLabel* label,
-				     int matlIndex, const Patch* patch,
-				     Ghost::GhostType gtype, int numGhostCells)
-{
-  constVariableBase<Variable>* constVar = var.cloneConstType();
-  this->get(*constVar, label, matlIndex, patch, gtype, numGhostCells);
-  var.copyData(&constVar->getBaseRep());
-  delete constVar;
-}
-
-template <class Variable>
-void DataWarehouse::getCopy_template(Variable& var, const VarLabel* label,
-				     int matlIndex, const Patch* patch,
-				     Ghost::GhostType gtype, int numGhostCells)
-{
-  constVariableBase<Variable>* constVar = var.cloneConstType();
-  this->get(*constVar, label, matlIndex, patch, gtype, numGhostCells);
-  var.allocate(&constVar->getBaseRep());
-  var.copyData(&constVar->getBaseRep());
-  delete constVar;
-}
 
 } // End namespace Uintah
 

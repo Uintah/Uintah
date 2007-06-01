@@ -456,6 +456,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
   ParticleVariable<double>    pRand;
   ParticleVariable<StateData> pStatedata;
+  constParticleVariable<double>    pRandOld;
+  constParticleVariable<StateData> pStatedataOld;
 
 
   // Loop thru patches
@@ -518,12 +520,13 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                            pCrackRadiusLabel_preReloc,            pset);
     new_dw->allocateAndPut(pStrainRate_new, 
                            pStrainRateLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pRand,        
-                           pRandLabel_preReloc,                   pset);
-    new_dw->allocateAndPut(pStatedata,   
-                           pStatedataLabel_preReloc,              pset);
-    old_dw->copyOut(pRand,           pRandLabel,                   pset);
-    old_dw->copyOut(pStatedata,      pStatedataLabel,              pset);
+    // transfer rand and state data from old dw to new
+    old_dw->get(pRandOld,        pRandLabel,                   pset);
+    old_dw->get(pStatedataOld,   pStatedataLabel,              pset);
+    new_dw->allocateAndPut(pRand,           pRandLabel_preReloc,                   pset);
+    new_dw->allocateAndPut(pStatedata,      pStatedataLabel_preReloc,              pset);
+    pRand.copyData(&pRandOld.getBaseRep());
+    pStatedata.copyData(&pStatedataOld.getBaseRep());
     ASSERTEQ(pset, pStatedata.getParticleSubset());
 
     // Loop thru particles in the patch
@@ -1016,6 +1019,8 @@ ViscoScram::carryForward(const PatchSubset* patches,
     ParticleVariable<Matrix3>   pStrainRate_new;
     ParticleVariable<StateData> pStatedata;
     ParticleVariable<double>    pRand;
+    constParticleVariable<StateData> pStatedataOld;
+    constParticleVariable<double>    pRandOld;
 
     new_dw->allocateAndPut(pVolHeatRate_new, 
                            pVolChangeHeatRateLabel_preReloc,      pset);
@@ -1027,12 +1032,14 @@ ViscoScram::carryForward(const PatchSubset* patches,
                            pCrackRadiusLabel_preReloc,            pset);
     new_dw->allocateAndPut(pStrainRate_new,         
                            pStrainRateLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pStatedata,  
-                           pStatedataLabel_preReloc,              pset);
-    new_dw->allocateAndPut(pRand,         
-                           pRandLabel_preReloc,                   pset);
-    old_dw->copyOut(pRand,      pRandLabel,      pset);
-    old_dw->copyOut(pStatedata, pStatedataLabel, pset);
+
+    // transfer rand and state data from old dw to new
+    old_dw->get(pRandOld,        pRandLabel,                   pset);
+    old_dw->get(pStatedataOld,   pStatedataLabel,              pset);
+    new_dw->allocateAndPut(pRand,           pRandLabel_preReloc,                   pset);
+    new_dw->allocateAndPut(pStatedata,      pStatedataLabel_preReloc,              pset);
+    pRand.copyData(&pRandOld.getBaseRep());
+    pStatedata.copyData(&pStatedataOld.getBaseRep());
 
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){

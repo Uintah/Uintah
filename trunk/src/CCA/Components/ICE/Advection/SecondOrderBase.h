@@ -10,8 +10,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Ghost.h>
 
-using SLIVR::Min;
-using SLIVR::Max;
+using namespace SLIVR;
 
 #define d_SMALL_NUM 1e-100
 //#define DUMP_LIMITER

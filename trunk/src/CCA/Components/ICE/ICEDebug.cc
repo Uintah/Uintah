@@ -11,6 +11,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/OS/Dir.h> // for MKDIR
+#include <SCIRun/Core/Util/FileUtils.h> // for DIR on windows
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>

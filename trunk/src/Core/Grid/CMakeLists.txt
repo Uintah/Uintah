@@ -48,13 +48,12 @@ SET(Packages_Uintah_Core_Grid_SRCS
   Node27Interpolator.cc
   BSplineInterpolator.cc
 
-  Variables/CCVariableBase.cc             
   Variables/CellIterator.cc               
   Variables/ComputeSet.cc                 
   Variables/ComputeSet_special.cc         
   Variables/GridIterator.cc               
+  Variables/GridVariableBase.cc             
   Variables/LocallyComputedPatchVarMap.cc 
-  Variables/NCVariableBase.cc             
   Variables/ParticleSet.cc                
   Variables/ParticleSubset.cc             
   Variables/ParticleVariableBase.cc       
@@ -64,9 +63,6 @@ SET(Packages_Uintah_Core_Grid_SRCS
   Variables/ReductionVariableBase.cc      
   Variables/ReductionVariable_special.cc  
   Variables/ScrubItem.cc                  
-  Variables/SFCXVariableBase.cc           
-  Variables/SFCYVariableBase.cc           
-  Variables/SFCZVariableBase.cc           
   Variables/SoleVariableBase.cc           
   Variables/SoleVariable_special.cc       
   Variables/Stencil7.cc                   

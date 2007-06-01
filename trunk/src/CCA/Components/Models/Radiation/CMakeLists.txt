@@ -57,11 +57,30 @@ SET(Packages_Uintah_CCA_Components_Models_Radiation_SRCS
   RadiationVariables.cc
 )
 
+IF (PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Models_Radiation_SRCS ${Packages_Uintah_CCA_Components_Models_Radiation_SRCS} Models_PetscSolver.cc)
+ELSE (PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Models_Radiation_SRCS ${Packages_Uintah_CCA_Components_Models_Radiation_SRCS} Models_FakePetscSolver.cc)
+ENDIF (PETSC_LIBRARY)
+
+IF (HYPRE_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Models_Radiation_SRCS ${Packages_Uintah_CCA_Components_Models_Radiation_SRCS} Models_HypreSolver.cc)
+ENDIF (HYPRE_LIBRARY)
+
 ADD_LIBRARY(Packages_Uintah_CCA_Components_Models_Radiation ${Packages_Uintah_CCA_Components_Models_Radiation_SRCS})
 SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Models_Radiation PROPERTIES LINKER_LANGUAGE CXX)
 
 TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models_Radiation
-
+  Packages_Uintah_Core_Disclosure
+  Packages_Uintah_Core_Exceptions
+  Packages_Uintah_Core_GeometryPiece
+  Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_ProblemSpec
+  Packages_Uintah_Core_Util
+  Packages_Uintah_CCA_Ports
+  Packages_Uintah_CCA_Components_ICE
+  Core_Exceptions
+  Core_Util
 )
 
 IF(BUILD_SHARED_LIBS)

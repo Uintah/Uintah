@@ -64,7 +64,13 @@ SET(Packages_Uintah_CCA_Components_MPM_SRCS
   ConstitutiveModel/ViscoScramImplicit.cc
   ConstitutiveModel/MWViscoElastic.cc
   ConstitutiveModel/IdealGasMP.cc
-
+  ConstitutiveModel/Membrane.cc 			
+  ConstitutiveModel/ShellMaterial.cc 		
+  ConstitutiveModel/HypoElasticPlastic.cc		
+  ConstitutiveModel/ElasticPlastic.cc		
+  ConstitutiveModel/Water.cc			
+  ConstitutiveModel/SoilFoam.cc
+  
   ConstitutiveModel/PlasticityModels/PlasticityState.cc
   ConstitutiveModel/PlasticityModels/DamageModel.cc
   ConstitutiveModel/PlasticityModels/DamageModelFactory.cc
@@ -163,6 +169,13 @@ SET(Packages_Uintah_CCA_Components_MPM_SRCS
   HeatConduction/ImplicitHeatConduction.cc
 )
 
+IF (PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_MPM_SRCS ${Packages_Uintah_CCA_Components_MPM_SRCS} PetscSolver.cc)
+ELSE (PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_MPM_SRCS ${Packages_Uintah_CCA_Components_MPM_SRCS} FakePetscSolver.cc)
+ENDIF (PETSC_LIBRARY)
+
+
 ADD_LIBRARY(Packages_Uintah_CCA_Components_MPM ${Packages_Uintah_CCA_Components_MPM_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPM
@@ -190,5 +203,3 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPM
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_MPM)
 ENDIF(BUILD_SHARED_LIBS)
-SUBDIRS(ConstitutiveModel Contact ThermalContact PhysicalBC ParticleCreator Crack HeatConduction)
-

@@ -11,6 +11,7 @@
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Math/MiscMath.h>
 #include <iostream>
+#include <iomanip>
 #include <sci_values.h>
 
 using namespace Uintah;
@@ -230,6 +231,7 @@ void Grid::performConsistencyCheck() const
       if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
            integerTest_distance > smallNum){
         ostringstream desc;
+        desc << setprecision(20);
         desc << " The finer Level " << fineLevel->getIndex()
              << " "<< Fbox_min << " "<< Fbox_max
              << " upper or lower limits are not divisible by the cell spacing "

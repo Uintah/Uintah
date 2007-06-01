@@ -88,8 +88,6 @@ public:
    // by reference to avoid ambiguity with other put overloaded methods.
    virtual void put(Variable*, const VarLabel*, int matlIndex,
 		    const Patch*);   
-   virtual void allocateAndPutGridVar(Variable*, const VarLabel*, 
-				      int matlIndex, const Patch*);   
    
    // Reduction Variables
    virtual void get(ReductionVariableBase&, const VarLabel*,
@@ -149,104 +147,37 @@ public:
    getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
    void printParticleSubsets();
 
+   void get(constGridVariableBase& var, const VarLabel* label, int matlIndex, 
+            const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
+
+   void getModifiable(GridVariableBase& var, const VarLabel* label, int matlIndex, 
+                      const Patch* patch);
+
+   void allocateTemporary(GridVariableBase& var, const Patch* patch,
+                          Ghost::GhostType gtype, int numGhostCells,
+                          const IntVector& boundaryLayer);
+
+   void allocateAndPut(GridVariableBase& var, const VarLabel* label, int matlIndex,
+                       const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
+
+   void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
+            bool replace = false);
+
+   virtual void getRegion(constGridVariableBase&, const VarLabel*,
+                          int matlIndex, const Level* level,
+                          const IntVector& low, const IntVector& high,
+                          bool useBoundaryCells = true);
+
+   virtual void copyOut(GridVariableBase& var, const VarLabel* label, int matlIndex,
+	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
+	       int numGhostCells = 0);
+   virtual void getCopy(GridVariableBase& var, const VarLabel* label, int matlIndex,
+	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
+	       int numGhostCells = 0);
+
+
    void print();
-   // NCVariables Variables
-   virtual void allocateTemporary(NCVariableBase&, const Patch*,
-				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0,
-				  const IntVector& boundaryLayer = IntVector(0,0,0));
-   virtual void allocateAndPut(NCVariableBase&, const VarLabel*,
-			       int matlIndex, const Patch*,
-			       Ghost::GhostType = Ghost::None,
-			       int numGhostCells = 0);
-   virtual void get(constNCVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void getModifiable(NCVariableBase&, const VarLabel*, int matlIndex,
-			      const Patch*);
-   virtual void getRegion(constNCVariableBase&, const VarLabel*,
-			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true);
-   virtual void put(NCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*, bool replace = false);
 
-   // CCVariables Variables
-   virtual void allocateTemporary(CCVariableBase&, const Patch*, 
-				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0,
-				  const IntVector& boundaryLayer = IntVector(0,0,0));
-   virtual void allocateAndPut(CCVariableBase&, const VarLabel*,
-			       int matlIndex, const Patch*, 
-			       Ghost::GhostType = Ghost::None,
-			       int numGhostCells = 0);
-   virtual void get(constCCVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void getModifiable(CCVariableBase&, const VarLabel*, int matlIndex,
-			      const Patch*);
-   virtual void getRegion(constCCVariableBase&, const VarLabel*,
-			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true);
-   virtual void put(CCVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*, bool replace = false);
-
-   // SFC[X-Z]Variables Variables
-   virtual void allocateTemporary(SFCXVariableBase&, const Patch*,
-				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0,
-				  const IntVector& boundaryLayer = IntVector(0,0,0));
-   virtual void allocateAndPut(SFCXVariableBase&, const VarLabel*,
-			       int matlIndex, const Patch*,
-			       Ghost::GhostType = Ghost::None,
-			       int numGhostCells = 0);			 
-   virtual void get(constSFCXVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*);
-   virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
-			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true);
-   virtual void put(SFCXVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*, bool replace = false);
-
-   virtual void allocateTemporary(SFCYVariableBase&, const Patch*,
-				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0,
-				  const IntVector& boundaryLayer = IntVector(0,0,0)); 
-   virtual void allocateAndPut(SFCYVariableBase&, const VarLabel*,
-			       int matlIndex, const Patch*,
-			       Ghost::GhostType = Ghost::None,
-			       int numGhostCells = 0);			 
-   virtual void get(constSFCYVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*);
-   virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
-			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true);
-   virtual void put(SFCYVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*, bool replace = false);
-
-   virtual void allocateTemporary(SFCZVariableBase&, const Patch*,
-				  Ghost::GhostType = Ghost::None,
-				  int numGhostCells = 0,
-				  const IntVector& boundaryLayer = IntVector(0,0,0));	 
-   virtual void allocateAndPut(SFCZVariableBase&, const VarLabel*,
-			       int matlIndex, const Patch*,
-			       Ghost::GhostType = Ghost::None,
-			       int numGhostCells = 0);			 
-   virtual void get(constSFCZVariableBase&, const VarLabel*, int matlIndex,
-		    const Patch*, Ghost::GhostType, int numGhostCells);
-   virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
-			      int matlIndex, const Patch*);
-   virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
-			  int matlIndex, const Level* level,
-			  const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true);
-   virtual void put(SFCZVariableBase&, const VarLabel*,
-		    int matlIndex, const Patch*, bool replace = false);
    // PerPatch Variables
    virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);
    virtual void put(PerPatchBase&, const VarLabel*,
@@ -358,29 +289,12 @@ private:
      VarAccessMap d_accesses;
    };  
 
-   void getGridVar(GridVariable& var,
-                   const VarLabel* label, int matlIndex, const Patch* patch,
-                   Ghost::GhostType gtype, int numGhostCells);
-
-   void allocateTemporaryGridVar(GridVariable& var, const Patch* patch,
-                                 Ghost::GhostType gtype, int numGhostCells,
-                                 const IntVector& boundaryLayer);
-
-   void allocateAndPutGridVar(GridVariable& var,
-                              const VarLabel* label, int matlIndex,
-                              const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
-
-   void putGridVar(GridVariable& var,
-                   const VarLabel* label, int matlIndex, const Patch* patch,
-       bool replace = false);
-
-   void recvMPIGridVar(BufferInfo& buffer, const DetailedDep* dep,
+  void getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
+           Ghost::GhostType gtype, int numGhostCells);
+  void recvMPIGridVar(BufferInfo& buffer, const DetailedDep* dep,
            const VarLabel* label, int matlIndex, const Patch* patch);
 
-   virtual void getRegionGridVar(GridVariable&, const VarLabel*,
-                          int matlIndex, const Level* level,
-                          const IntVector& low, const IntVector& high,
-                          bool useBoundaryCells = true);
+
 
   // These will throw an exception if access is not allowed for the
   // curent task.

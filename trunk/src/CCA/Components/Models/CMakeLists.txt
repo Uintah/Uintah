@@ -30,6 +30,29 @@
 
 SET(Packages_Uintah_CCA_Components_Models_SRCS
   ModelFactory.cc
+  
+  HEChem/Simple_Burn.cc   
+  HEChem/Steady_Burn.cc   
+  HEChem/Unsteady_Burn.cc 
+  HEChem/IandG.cc         
+  HEChem/LightTime.cc     
+  HEChem/JWLpp.cc
+
+  test/Mixing.cc 
+  test/SimpleRxn.cc 
+  test/AdiabaticTable.cc 
+  test/NonAdiabaticTable.cc 
+  test/ArchesTable.cc 
+  test/MaterialProperties.cc 
+  test/PassiveScalar.cc 
+  test/TableInterface.cc 
+  test/TableFactory.cc 
+  test/TestModel.cc 
+  test/VorticityConfinement.cc 
+  test/flameSheet_rxn.cc 
+# test/Mixing2.cc
+# test/Mixing2.cc 
+# test/Mixing3.cc
 )
 
 ADD_LIBRARY(Packages_Uintah_CCA_Components_Models ${Packages_Uintah_CCA_Components_Models_SRCS})
@@ -61,7 +84,5 @@ IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Models)
 ENDIF(BUILD_SHARED_LIBS)
 
-ADD_SUBDIRECTORY(test)
-ADD_SUBDIRECTORY(HEChem)
 ADD_SUBDIRECTORY(Radiation)
 

@@ -320,14 +320,14 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
           continue;
 
         // pending the task that allocates the var, we may not have allocated it yet
-        GridVariable* v;
+        GridVariableBase* v;
         switch (td->getType()) {
         case TypeDescription::CCVariable:
         case TypeDescription::NCVariable:
         case TypeDescription::SFCXVariable:
         case TypeDescription::SFCYVariable:
         case TypeDescription::SFCZVariable: 
-          v = dynamic_cast<GridVariable*>(dw->d_varDB.get(label, m, patch));
+          v = dynamic_cast<GridVariableBase*>(dw->d_varDB.get(label, m, patch));
           break;
         default: 
           throw InternalError("Cannot track var type of non-grid-type",__FILE__,__LINE__); break;
@@ -1151,22 +1151,22 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo GridVariable", __FILE__, __LINE__));
-              GridVariable* v = dynamic_cast<GridVariable*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
+                                          "in copyDataTo GridVariableBase", __FILE__, __LINE__));
+              GridVariableBase* v = dynamic_cast<GridVariableBase*>(oldDataWarehouse->d_varDB.get(label, matl, oldPatch));
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
-                GridVariable* newVariable = v->cloneType();
+                GridVariableBase* newVariable = v->cloneType();
                 newVariable->rewindow( newLowIndex, newHighIndex );
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_varDB.put(label, matl, newPatch, newVariable, false);
               } else {
-                GridVariable* newVariable = 
-                  dynamic_cast<GridVariable*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
+                GridVariableBase* newVariable = 
+                  dynamic_cast<GridVariableBase*>(newDataWarehouse->d_varDB.get(label, matl, newPatch ));
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
                 if (oldPatch->isVirtual()) {
                   // it can happen where the old patch was virtual and this is not
-                  GridVariable* tmpVar = newVariable->cloneType();
+                  GridVariableBase* tmpVar = newVariable->cloneType();
                   oldDataWarehouse->d_varDB.get(label, matl, oldPatch, *tmpVar);
                   tmpVar->offset(oldPatch->getVirtualOffset());
                   newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
