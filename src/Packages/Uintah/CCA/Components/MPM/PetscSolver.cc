@@ -19,8 +19,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-//#define LOG
 #undef LOG
+//#define LOG
 #undef DEBUG_PETSC
 
 //#define USE_SPOOLES
@@ -239,6 +239,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
   map<int,int>::const_iterator itr;
   for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
+    ASSERTRANGE(itr->first,0,numlrows);
     diag[itr->first] = itr->second;
   }
 
@@ -275,7 +276,8 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     if (numlcolumns < DIAG_MAX)
       DIAG_MAX = numlcolumns;
 
-    for (int i = 0; i < numlrows; i++){ 
+    for (int i = 0; i < numlrows; i++){
+      ASSERT(diag[i]>0);
       onnz[i]=ONNZ_MAX;
       if(diag[i]==1){
          onnz[i]=0;
