@@ -92,7 +92,6 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-trdump", PETSC_NULL);
 #endif
 }
-
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 					   const PatchSet* perproc_patches,
@@ -124,7 +123,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     }
     d_numNodes[p] = mytotal;
   }
-
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
@@ -219,14 +218,13 @@ void MPMPetscSolver::solve(vector<double>& guess)
 #endif
   KSPDestroy(solver);
 }
-
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 				  const map<int,int>& dof_diag)
 {
   TAU_PROFILE("MPMPetscSolver::createMatrix", " ", TAU_USER);
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
-
+  
   int numlcolumns = numlrows;
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes; 
@@ -305,10 +303,15 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 //    MatGetType(d_A, &type);
 //    cout << "MatType = " << type << endl;
 
+    //set the initial stash size.
+    //for now set it to be 1M
+    //it should be counted and set dynamically
+    //the stash is used by nodes that neighbor my patches on the + faces.
+    MatStashSetInitialSize(d_A,1000000,0);
     if(d_DOFsPerNode>=1){
       MatSetOption(d_A, MAT_USE_INODES);
     }
-
+    
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
 
@@ -448,7 +451,7 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
     // Take care of the d_B side
     PetscScalar v = 0.;
     const int index = *iter;
-
+      
     VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
     MatSetValue(d_A,index,index,1.,INSERT_VALUES);
   }
@@ -509,8 +512,8 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 
     PetscScalar v_zero = 0.;
     //    VecSetValues(d_diagonal,1,&j,&v_one,INSERT_VALUES);
-    MatSetValue(d_A,j,j,1.,INSERT_VALUES);
     VecSetValues(d_B,1,&j,&v_zero,INSERT_VALUES);
+    MatSetValue(d_A,j,j,1.,INSERT_VALUES);
 
   }
   
@@ -542,7 +545,6 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   }
 
   // zeroing out the columns
-
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
     const int index = *iter;
