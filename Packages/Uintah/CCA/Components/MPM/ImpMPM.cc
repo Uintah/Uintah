@@ -2114,6 +2114,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 {
   map<int,int> dof_diag;
   d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
+  int global_offset;
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -2128,7 +2129,10 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
-
+    
+    //set the global offset if this is the first patch
+    if(pp==0)
+      global_offset=l2g[lowIndex];
     CCVariable<int> visited;
     new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
     visited.initialize(0);
@@ -2155,7 +2159,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
           int l2g_node_num;
           for (int k = 0; k < 8; k++) {
             if (patch->containsNode(ni[k]) ) {
-              l2g_node_num = l2g[ni[k]];
+              l2g_node_num = l2g[ni[k]] - global_offset; //subtract global offset in order to map into array correctly
               dof.push_back(l2g_node_num);
               dof.push_back(l2g_node_num+1);
               dof.push_back(l2g_node_num+2);
