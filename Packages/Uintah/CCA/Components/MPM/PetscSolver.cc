@@ -94,8 +94,8 @@ void MPMPetscSolver::initialize()
 }
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
-					   const PatchSet* perproc_patches,
-					   const PatchSubset* patches,
+                                           const PatchSet* perproc_patches,
+                                           const PatchSubset* patches,
                                            const int DOFsPerNode)
 {
   TAU_PROFILE("MPMPetscSolver::createLocalToGlobalMapping", " ", TAU_USER);
@@ -150,17 +150,17 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
                         + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
-	
-	for (int colY = low.y(); colY < high.y(); colY ++) {
-	  int idx = idx_slab;
-	  idx_slab += dnodes.x()*DOFsPerNode;
-	  for (int colX = low.x(); colX < high.x(); colX ++) {
-	    l2g[IntVector(colX, colY, colZ)] = idx;
-	    idx += DOFsPerNode;
-	  }
-	}
+        int idx_slab = petscglobalIndex;
+        petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
+        
+        for (int colY = low.y(); colY < high.y(); colY ++) {
+          int idx = idx_slab;
+          idx_slab += dnodes.x()*DOFsPerNode;
+          for (int colX = low.x(); colX < high.x(); colX ++) {
+            l2g[IntVector(colX, colY, colZ)] = idx;
+            idx += DOFsPerNode;
+          }
+        }
       }
       IntVector d = high-low;
       totalNodes+=d.x()*d.y()*d.z()*DOFsPerNode;
@@ -219,7 +219,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
   KSPDestroy(solver);
 }
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
-				  const map<int,int>& dof_diag)
+                                  const map<int,int>& dof_diag)
 {
   TAU_PROFILE("MPMPetscSolver::createMatrix", " ", TAU_USER);
   int me = d_myworld->myrank();
