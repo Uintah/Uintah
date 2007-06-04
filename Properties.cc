@@ -279,6 +279,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_h2sINLabel);
       tsk->computes(d_lab->d_so2INLabel);
       tsk->computes(d_lab->d_so3INLabel);
+      tsk->computes(d_lab->d_sulfurINLabel);
     }
     if (d_soot_precursors) {
       tsk->computes(d_lab->d_c2h2INLabel);
@@ -310,6 +311,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_h2sINLabel);
       tsk->modifies(d_lab->d_so2INLabel);
       tsk->modifies(d_lab->d_so3INLabel);
+      tsk->modifies(d_lab->d_sulfurINLabel);
     }
     if (d_soot_precursors) {
       tsk->modifies(d_lab->d_c2h2INLabel);
@@ -398,6 +400,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> h2s;
     CCVariable<double> so2;
     CCVariable<double> so3;
+    CCVariable<double> sulfur;
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
 
@@ -486,6 +489,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			       matlIndex, patch);
 	new_dw->allocateAndPut(so3, d_lab->d_so3INLabel,
 			       matlIndex, patch);
+	new_dw->allocateAndPut(sulfur, d_lab->d_sulfurINLabel,
+			       matlIndex, patch);
       }
       if (d_soot_precursors) {
         new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel,
@@ -528,6 +533,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			      matlIndex, patch);
 	new_dw->getModifiable(so3, d_lab->d_so3INLabel,
 			      matlIndex, patch);
+	new_dw->getModifiable(sulfur, d_lab->d_sulfurINLabel,
+			      matlIndex, patch);
       }
       if (d_soot_precursors) {
         new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel,
@@ -563,6 +570,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       h2s.initialize(0.0);
       so2.initialize(0.0);
       so3.initialize(0.0);
+      sulfur.initialize(0.0);
     }
     if (d_soot_precursors) {
       c2h2.initialize(0.0);
@@ -659,6 +667,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    h2s[currCell] = outStream.getH2S();
 	    so2[currCell] = outStream.getSO2();
 	    so3[currCell] = outStream.getSO3();
+	    sulfur[currCell] = outStream.getSULFUR();
 	  }
           if (d_soot_precursors) {
             c2h2[currCell] = outStream.getC2H2();
@@ -869,10 +878,13 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_so3INLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_sulfurINLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     tsk->computes(d_lab->d_h2sINLabel);
     tsk->computes(d_lab->d_so2INLabel);
     tsk->computes(d_lab->d_so3INLabel);
+    tsk->computes(d_lab->d_sulfurINLabel);
   }
 
   if (d_soot_precursors) {
@@ -941,6 +953,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> h2sIN;
     constCCVariable<double> so2IN;
     constCCVariable<double> so3IN;
+    constCCVariable<double> sulfurIN;
     constCCVariable<double> c2h2IN;
     constCCVariable<double> ch4IN;
 
@@ -948,6 +961,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> h2sIN_new;
     CCVariable<double> so2IN_new;
     CCVariable<double> so3IN_new;
+    CCVariable<double> sulfurIN_new;
     CCVariable<double> c2h2IN_new;
     CCVariable<double> ch4IN_new;
 
@@ -1142,6 +1156,12 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       new_dw->allocateAndPut(so3IN_new, d_lab->d_so3INLabel,
 			     matlIndex, patch);
       so3IN_new.copyData(so3IN);
+      
+	  old_dw->get(sulfurIN, d_lab->d_sulfurINLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(sulfurIN_new, d_lab->d_sulfurINLabel,
+			     matlIndex, patch);
+      sulfurIN_new.copyData(sulfurIN);
     }
     
     if (d_soot_precursors) {

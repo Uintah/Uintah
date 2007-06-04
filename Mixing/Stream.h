@@ -122,6 +122,9 @@ namespace Uintah {
       inline double getSO3() const {
         return d_so3;
       }
+      inline double getSULFUR() const {
+        return d_sulfur;
+      }
       inline double getCO() const {
         return d_co;
       }
@@ -197,6 +200,7 @@ namespace Uintah {
       double d_h2s;
       double d_so2;
       double d_so3;
+      double d_sulfur;
       double d_co;
 
       double d_c2h2;
