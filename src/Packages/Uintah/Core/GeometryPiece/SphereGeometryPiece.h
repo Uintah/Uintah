@@ -85,7 +85,7 @@ public:
   // Returns the voulme of the sphere
   inline double volume() const
   {
-    return (4.0/3.0*M_PI*pow(d_radius,3.0));
+    return ((4.0/3.0)*M_PI*pow(d_radius,3.0));
   }
 
   //////////
