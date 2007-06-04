@@ -4501,7 +4501,7 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
 
   if (zplus) {
     int colZ = idxHi.z();
-    double pi = acos(-1.0);
+    //double pi = acos(-1.0);
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	
@@ -5155,8 +5155,8 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
   // Get the wall boundary and flow field codes
   int wall_celltypeval = wallCellType();
 
-  double time=d_lab->d_sharedState->getElapsedTime();
-  double current_time = time + time_shift;
+  //double time=d_lab->d_sharedState->getElapsedTime();
+  //double current_time = time + time_shift;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
