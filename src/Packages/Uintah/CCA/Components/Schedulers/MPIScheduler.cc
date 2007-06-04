@@ -73,7 +73,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          MPIScheduler   * parentScheduler) :
   SchedulerCommon( myworld, oport ),
-  log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport)
+  log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport), useExternalQueue_(false)
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
