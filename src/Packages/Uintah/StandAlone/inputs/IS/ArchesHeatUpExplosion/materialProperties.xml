@@ -96,7 +96,6 @@
       <thermal_contact></thermal_contact>
     </MPM>
     <!--______________________________________________________________________ -->
-    
     <ICE>
          <material name = "Atmosphere">       <!-- MATL 2 -->   
            <EOS type = "ideal_gas"> </EOS>

@@ -136,49 +136,9 @@
   <!--____________________________________________________________________-->
   <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
   <!--____________________________________________________________________-->
-  <!-- Warning: you must have a link of this xml file in the sus directory-->
+  <!-- Warning: you must have a link of these xml files in the sus directory-->
   <include href="materialProperties.xml"/>
   
-<!--
+  <include href="physicalBC.xml"/>
 
-For fast heat tape experiment:
-   Power Input = 76 kW/m^2
-   Grid Spacing = .2/100  (resolution) = .002
-   Partical Spacing = Grid Spacing/#particles = .002/2 = .001
-   Particle Surface Area = (.001)^2 = 1e-6
-   Flux applied = PowerInput* Particle SA = 76,000 * 1e-6 = .076 Watts
-
--->
-    <PhysicalBC>
-        <MPM>
-        <arches_heat_flux> 
-          <geom_object>
-              <cylinder>
-                <bottom>    [0.0,0.0,-.06985] </bottom>
-                <top>       [0.0,0.0, .06985] </top>
-                <radius>    0.05715           </radius>
-              </cylinder>
-          </geom_object>
-          <polynomial_data>
-            <file> case3/polynomial_97.dat</file> 
-            <file> case3/polynomial_98.dat</file> 
-            <file> case3/polynomial_99.dat</file> 
-            <file> case3/polynomial_100.dat</file> 
-            <file> case3/polynomial_101.dat</file> 
-            <file> case3/polynomial_102.dat</file> 
-          </polynomial_data>
-          <load_curve>
-            <id>1</id>
-            <time_point>
-              <time> 0 </time>
-              <load> 76000</load>
-            </time_point>
-            <time_point>
-              <time> 1 </time>
-              <load> 76000 </load>
-            </time_point>
-          </load_curve>
-        </arches_heat_flux> 
-        </MPM>
-    </PhysicalBC>
 </Uintah_specification>
