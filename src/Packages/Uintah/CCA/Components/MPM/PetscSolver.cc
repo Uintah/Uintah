@@ -238,7 +238,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   map<int,int>::const_iterator itr;
   for (itr=dof_diag.begin(); itr != dof_diag.end(); itr++) {
     ASSERTRANGE(itr->first,0,numlrows);
-    ASSERT(iter->second>0);
+    ASSERT(itr->second>0);
     diag[itr->first] = itr->second;
   }
 
