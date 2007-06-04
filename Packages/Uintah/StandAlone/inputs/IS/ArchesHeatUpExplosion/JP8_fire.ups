@@ -114,55 +114,9 @@
   <!--____________________________________________________________________-->
   <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
   <!--____________________________________________________________________-->
-  <!-- Warning: you must have a link of this xml file in the sus directory-->
+  <!-- Warning: you must have a link of these xml files in the sus directory-->
   <include href="materialProperties.xml"/>
 
-  <!--____________________________________________________________________-->
-  <!--      M O D E L S                                                   -->
-  <!--____________________________________________________________________-->
-<!--  <Models>
-      <Model type="Simple_Burn">
-        <Active>       true         </Active>
-        <fromMaterial> reactant     </fromMaterial>
-        <toMaterial>  PBXproductGases </toMaterial>
-        <ThresholdTemp>       450.0 </ThresholdTemp>
-        <ThresholdPressure> 50000.0 </ThresholdPressure>
-        <Enthalpy>        2000000.0 </Enthalpy>
-        <BurnCoeff>            7.53 </BurnCoeff>
-        <refPressure>      101325.0 </refPressure>
-      </Model>
-  </Models>            
--->
-    <PhysicalBC>
-        <MPM>
-        <arches_heat_flux> 
-          <geom_object>
-              <cylinder>
-                <bottom>    [0.0,0.0,-.06985] </bottom>
-                <top>       [0.0,0.0, .06985] </top>
-                <radius>    0.05715           </radius>
-              </cylinder>
-          </geom_object>
-          <polynomial_data>
-            <file> case3/polynomial_97.dat</file> 
-            <file> case3/polynomial_98.dat</file> 
-            <file> case3/polynomial_99.dat</file> 
-            <file> case3/polynomial_100.dat</file> 
-            <file> case3/polynomial_101.dat</file> 
-            <file> case3/polynomial_102.dat</file> 
-          </polynomial_data>
-          <load_curve>
-            <id>1</id>
-            <time_point>
-              <time> 0 </time>
-              <load> 76000</load>
-            </time_point>
-            <time_point>
-              <time> 1 </time>
-              <load> 76000 </load>
-            </time_point>
-          </load_curve>
-        </arches_heat_flux> 
-        </MPM>
-    </PhysicalBC>
+  <include href="physicalBC.xml"/>
+
 </Uintah_specification>
