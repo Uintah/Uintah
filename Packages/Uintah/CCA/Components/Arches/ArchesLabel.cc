@@ -225,6 +225,8 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_so3INLabel = VarLabel::create("so3IN",
 				  CCVariable<double>::getTypeDescription() );
+  d_sulfurINLabel = VarLabel::create("sulfurIN",
+				  CCVariable<double>::getTypeDescription() );
   d_coINLabel = VarLabel::create("coIN",
 				  CCVariable<double>::getTypeDescription() );
   d_c2h2INLabel = VarLabel::create("c2h2IN",
@@ -671,7 +673,11 @@ ArchesLabel::ArchesLabel()
   // carbon balance labels
   d_CO2FlowRateLabel = VarLabel::create("CO2FlowRate",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_SO2FlowRateLabel = VarLabel::create("SO2FlowRate",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_carbonEfficiencyLabel = VarLabel::create("carbonEfficiency",
+	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
+  d_sulfurEfficiencyLabel = VarLabel::create("sulfurEfficiency",
 	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
   d_scalarFlowRateLabel = VarLabel::create("scalarFlowRate",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
@@ -785,6 +791,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_h2sINLabel);
   VarLabel::destroy(d_so2INLabel);
   VarLabel::destroy(d_so3INLabel);
+  VarLabel::destroy(d_sulfurINLabel);
   VarLabel::destroy(d_coINLabel);
   VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_ch4INLabel);
@@ -923,6 +930,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_ShRFLabel);
   VarLabel::destroy(d_CO2FlowRateLabel);
   VarLabel::destroy(d_carbonEfficiencyLabel);
+  VarLabel::destroy(d_SO2FlowRateLabel);
+  VarLabel::destroy(d_sulfurEfficiencyLabel);
   VarLabel::destroy(d_scalarFlowRateLabel);
   VarLabel::destroy(d_scalarEfficiencyLabel);
   VarLabel::destroy(d_enthalpyFlowRateLabel);

@@ -206,6 +206,10 @@ public:
 
       inline bool getCarbonBalance() const{
 	return d_carbon_balance;
+	  }
+	  
+	  inline bool getSulfurBalance() const{
+	return d_sulfur_balance;
       }      
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
@@ -706,6 +710,7 @@ private:
 	double flowRate;           
 	double inletVel;           
 	double fcr;
+	double fsr;
         int d_prefill_index;
         bool d_ramping_inlet_flowrate;
         bool d_prefill;
@@ -823,7 +828,7 @@ private:
       IntrusionBdry* d_intrusionBC;
 
       bool d_carbon_balance;
-
+	  bool d_sulfur_balance;
       string d_mms;
       double d_airDensity, d_heDensity;
       Vector d_gravity;
