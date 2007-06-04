@@ -826,7 +826,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   }
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
-  if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
+  if (d_sharedState->getCurrentTopLevelTimeStep() > 0)
     d_initialDt = 10000.0;
   
   cout_doing << d_myworld->myrank() << " --------------------------------------------------------L-" 
@@ -1996,8 +1996,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
     delt = std::min(delt_CFL, delt_cond);
     delt = std::min(delt, d_initialDt);
-
-    d_initialDt = 10000.0;
 
     const Level* level = getLevel(patches);
     //__________________________________
