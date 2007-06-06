@@ -48,6 +48,9 @@ void MPMPetscSolver::initialize()
 {
   // store in a vector so we can customize the settings easily
   vector<char*> args;
+  //null argument is needed as it normaly stores the command
+  args.push_back("");
+  
 #ifdef DEBUG_PETSC
   args.push_back("ImpMPM::problemSetup");
   args.push_back("-on_error_attach_debugger");
@@ -55,6 +58,7 @@ void MPMPetscSolver::initialize()
 #ifdef LOG
   args.push_back("-log_summary");
   args.push_back("-log_info");
+  args.push_back("-info");
 #if 0
   args.push_back("-log_exclude_actions");
   args.push_back("-log_exclude_objects");
