@@ -119,7 +119,49 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
+#if 0
+    //Reduce the number of working processors
+    int stages=1;
+    int stride=1;
+    int rank=d_myworld->myrank();
+    int procs=d_myworld->size();
+    MPI_Comm comm=d_myworld->getComm();
+    MPI_Status status;
+    //consoldate flags along a hypercube sending the shortest distance first
+      //this is important for keeping flags clustered(ordered according to LB)
+    for(int i=0;i<stages;i++)
+    {
+     if(rank%(stride*2)==0 && rank+stride<procs)
+     {
+       //recieve from rank+stride
+       int numReceive;
+       //recieve number of flags
+       MPI_Recv(&numReceive,1,MPI_INT,rank+stride,0,comm,&status);
+      
+       int size=coarse_flag_vector.size();
+       coarse_flag_vector.resize(size+numReceive);
 
+       //recieve new flags
+       MPI_Recv(&coarse_flag_vector[size],numReceive*sizeof(IntVector),MPI_BYTE,rank+stride,0,comm,&status);
+     }
+     else
+     {
+       //send to rank-stride
+       int numSend=coarse_flag_vector.size();
+       MPI_Send(&numSend,1,MPI_INT,rank-stride,0,comm);
+
+       MPI_Send(&coarse_flag_vector[0],numSend*sizeof(IntVector),MPI_BYTE,rank-stride,0,comm);
+       coarse_flag_vector.resize(0);
+       break;
+     }
+     stride*=2;
+    }
+#endif
+#if 1
+    //send flags to the begining processors
+      //this is important for being able to exploite on-node communication
+    
+#endif
     //Parallel BR over coarse flags
       //flags on level l are used to create patches on level l+1
    
