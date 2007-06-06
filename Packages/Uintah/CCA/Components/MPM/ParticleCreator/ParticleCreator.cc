@@ -725,7 +725,7 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   // Check in front (+y)
   if(!piece->inside(p+Vector(0.,dxpp.y(),0.)))
     ss++;
-#if 0
+#if 1
   // Check below (-z)
   if(!piece->inside(p-Vector(0.,0.,dxpp.z())))
     ss++;
