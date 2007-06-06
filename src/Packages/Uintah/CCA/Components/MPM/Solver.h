@@ -38,8 +38,6 @@ namespace Uintah {
 
     virtual void destroyMatrix(bool recursion) = 0;
     
-    virtual void allocateDiagonal() {};
-    
     virtual void fillMatrix(int, int[], int, int j[],double v[]) = 0;
 
     virtual void fillVector(int, double,bool add = false) = 0;

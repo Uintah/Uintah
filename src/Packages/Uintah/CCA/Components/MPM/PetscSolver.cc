@@ -303,7 +303,15 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                     globalcolumns, PETSC_DEFAULT, diag, 
                     PETSC_DEFAULT, onnz, &d_A);
 #endif
-
+  
+    //allocate the diagonal
+    int low,high;
+    MatGetOwnershipRange(d_A,&low,&high);
+    for(int i=low;i<high;i++)
+    {
+      MatSetValue(d_A,i,i,0,ADD_VALUES);
+    }
+    flushMatrix();
 //    MatType type;
 //    MatGetType(d_A, &type);
 //    cout << "MatType = " << type << endl;
@@ -318,6 +326,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     }
     
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
+    MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
 
     // Create vectors.  Note that we form 1 vector from scratch and
     // then duplicate as needed.
@@ -548,7 +557,6 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
     ISDestroy(is);
   }
 
-  MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
   // zeroing out the columns
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
