@@ -488,6 +488,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
                                                    DataWarehouse* old_dw,
                                                    DataWarehouse* new_dw)
 {
+  d_HC_solver->allocateDiagonal();
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
@@ -571,6 +572,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
     delete interpolator;
 
   }
+  //allocate the diagonal because 1's will be added to the diagonal later.
   d_HC_solver->finalizeMatrix();
 
 }
