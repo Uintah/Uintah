@@ -50,6 +50,8 @@ namespace Uintah {
     void createMatrix(const ProcessorGroup* pg, const map<int,int>& dof_diag);
 
     void destroyMatrix(bool recursion);
+  
+    inline void allocateDiagonal();
 
     inline void fillMatrix(int,int[],int,int j[],double v[]);
 
@@ -113,6 +115,16 @@ namespace Uintah {
                                          int j[],double value[])
   {
     MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
+  }
+  //this is a hack to force petsc allocates the diagonals.
+  inline void MPMPetscSolver::allocateDiagonal()
+  {
+    int low,high;
+    MatGetOwnershipRange(d_A,&low,&high);
+    for(int i=low;i<high;i++)
+    {
+      MatSetValue(d_A,i,i,0,ADD_VALUES);
+    }
   }
 
 #endif
