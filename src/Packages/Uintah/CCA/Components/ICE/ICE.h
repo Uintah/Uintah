@@ -952,7 +952,6 @@ namespace Uintah {
       double d_EVIL_NUM;
       double d_SMALL_NUM; 
       double d_TINY_RHO;
-      double d_initialDt;
       double d_CFL;
       double d_delT_knob;
       int d_max_iceMatl_indx;
