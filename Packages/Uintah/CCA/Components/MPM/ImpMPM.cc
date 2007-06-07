@@ -1041,7 +1041,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
                              const PatchSet*, const MaterialSet*)
 {
   d_recompileSubsched = true;
-  Task* task = scinew Task("scheduleIterate", this, &ImpMPM::iterate,level,
+  Task* task = scinew Task("ImpMPM::iterate", this, &ImpMPM::iterate,level,
                            sched.get_rep());
 
   task->hasSubScheduler();
@@ -1329,7 +1329,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     // Create the tasks
     
     // This task only zeros out the stiffness matrix it doesn't free any memory.
-    scheduleDestroyMatrix(           d_subsched,level->eachPatch(),matls,true);
+    scheduleDestroyMatrix(           d_subsched,d_perproc_patches,matls,true);
     
     if (flags->d_doMechanics) {
       scheduleComputeStressTensor(   d_subsched,level->eachPatch(),matls,true);
@@ -2517,7 +2517,6 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
      }   // if
     }    // matls
   }
-  d_solver->finalizeMatrix();
 }
 
 void ImpMPM::computeInternalForce(const ProcessorGroup*,
@@ -2688,7 +2687,6 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         d_solver->fillVector(dof[2],double(v[2]));
         Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
       }
-      d_solver->assembleVector();
       if(isnan(Q)){
         cout << "RHS contains a nan, restarting timestep" << endl;
         new_dw->abortTimestep();
@@ -2723,6 +2721,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
   bool tsr = parent_new_dw->timestepRestarted();
 
   if(!tsr){  // if a tsr has already been called for don't do the solve
+    d_solver->assembleVector();
     d_solver->removeFixedDOF(num_nodes);
     vector<double> guess;
     d_solver->solve(guess);   
