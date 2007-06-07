@@ -226,13 +226,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
-      int extraFlushesLeft = flag->d_extraSolverFlushes;
-      int flushSpacing = 0;
-
-      if ( extraFlushesLeft > 0 ) {
-	flushSpacing = pset->numParticles() / flag->d_extraSolverFlushes;
-      }
-
       if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
         old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
@@ -380,26 +373,10 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
           }
         }
         solver->fillMatrix(24,dof,24,dof,v);
-
-	flushSpacing--;
-
-	if ( ( flushSpacing <= 0 ) && ( extraFlushesLeft > 0 ) ) {
-	  flushSpacing = pset->numParticles() / flag->d_extraSolverFlushes;
-	  extraFlushesLeft--;
-	  solver->flushMatrix();
-	}
-
       }  // end of loop over particles
-      
-      while ( extraFlushesLeft ) {
-	extraFlushesLeft--;
-	solver->flushMatrix();
-      }
-
     }
     delete interpolator;
   }
-  solver->flushMatrix();
 }
 
 
@@ -467,12 +444,11 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                                       deformationGradient_new,
                                                       dx, interpolator);
      }
-     else if(!flag->d_doGridReset){
+     else /*if(!flag->d_doGridReset)*/{
         constNCVariable<Vector> gdisplacement;
         new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
-        computeDeformationGradientFromTotalDisplacement(gdisplacement,
-                                                        pset, px,
-                                                        deformationGradient_new,                                                        dx, interpolator);
+        computeDeformationGradientFromTotalDisplacement(gdisplacement,pset, px,
+                                                      deformationGradient_new,dx, interpolator);
      }
 
      double time = d_sharedState->getElapsedTime();
@@ -483,7 +459,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
-
+        
         Matrix3 bElBar_new = deformationGradient_new[idx]
                            * deformationGradient_new[idx].Transpose()
                            * pow(J,-(2./3.));
@@ -503,7 +479,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         pvolume_deformed[idx] = volold*J;
       }
       delete interpolator;
-     }
+    }
    }
 }
 

@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/Core/Exceptions/PetscError.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 
@@ -448,10 +449,10 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
 
-
 void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
   TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
+  flushMatrix();
   IS is;
   int* indices;
   int in = 0;
@@ -469,26 +470,15 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
     MatSetValue(d_A,index,index,1.,INSERT_VALUES);
   }
 
-  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+  finalizeMatrix();
 
-  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
-  delete[] indices;
-  
-
-  PetscScalar one = 1.0;
-#if (PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
-  MatZeroRowsIS(d_A,is,one);
-#endif
-  ISDestroy(is);
 #if 0
   MatTranspose(d_A,PETSC_NULL);
   MatZeroRows(d_A,is,&one);
   MatTranspose(d_A,PETSC_NULL);
 #endif
+  
+  PetscScalar one = 1.0;
 
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
@@ -509,8 +499,17 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   VecAssemblyBegin(d_diagonal);
   VecAssemblyEnd(d_diagonal);
   MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
-  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+  
+  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
+  delete[] indices;
+
+#if (PETSC_VERSION_MINOR == 2)
+  MatZeroRows(d_A,is,&one);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  MatZeroRowsIS(d_A,is,one);
+#endif
+  ISDestroy(is);
 }
 
 void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
