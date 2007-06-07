@@ -51,13 +51,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
     
-    // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
-    // get the init delt when it didn't compute delt on L0.
-    if (d_sharedState->getCurrentTopLevelTimeStep() > 1){
-      d_initialDt = 10000.0;
-    }
-
-
    if(d_turbulence){
       // The turblence model is also called directly from
       // accumlateMomentumSourceSinks.  
