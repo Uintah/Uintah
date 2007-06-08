@@ -28,7 +28,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMFlags* Mflag)
-  : ConstitutiveModel(Mflag), ImplicitCM()
+  : ConstitutiveModel(Mflag), ImplicitCM(), d_active(0)
 {
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -38,7 +38,7 @@ CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMFlags* Mflag)
 }
 
 CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
-  : ConstitutiveModel(cm), ImplicitCM(cm)
+  : ConstitutiveModel(cm), ImplicitCM(cm), d_active(0)
 {
 
   d_useModifiedEOS = cm->d_useModifiedEOS;
