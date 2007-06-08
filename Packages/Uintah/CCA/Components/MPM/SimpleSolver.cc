@@ -219,7 +219,7 @@ void SimpleSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 }
 
 
-void SimpleSolver::removeFixedDOFHeat(int num_nodes)
+void SimpleSolver::removeFixedDOFHeat()
 {
 
   SparseMatrix<double,int> KKK(KK.Rows(),KK.Columns());
@@ -275,7 +275,7 @@ void SimpleSolver::removeFixedDOFHeat(int num_nodes)
 
 }
 
-void SimpleSolver::removeFixedDOF(int num_nodes)
+void SimpleSolver::removeFixedDOF()
 {
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
@@ -309,7 +309,7 @@ void SimpleSolver::removeFixedDOF(int num_nodes)
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
   
-  for (int j = 0; j < num_nodes; j++) {
+  for (int j = 0; j < d_totalNodes; j++) {
     if (compare(KK[j][j],0.)) {
       KKK[j][j] = 1.;
       Q[j] = 0.;

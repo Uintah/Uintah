@@ -38,6 +38,7 @@ MPMPetscSolver::MPMPetscSolver()
   d_x = 0;
   d_t = 0;
   d_flux = 0;
+  d_iteration=0;
 }
 
 MPMPetscSolver::~MPMPetscSolver()
@@ -419,8 +420,8 @@ void MPMPetscSolver::assembleVector()
 {
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
-  VecAssemblyBegin(d_x);
-  VecAssemblyEnd(d_x);
+//  VecAssemblyBegin(d_x);
+//  VecAssemblyEnd(d_x);
 }
 
 void MPMPetscSolver::assembleTemporaryVector()
@@ -448,15 +449,13 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 {
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
-
-void MPMPetscSolver::removeFixedDOF(int num_nodes)
+void MPMPetscSolver::removeFixedDOF()
 {
   TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
   flushMatrix();
   IS is;
   int* indices;
-  int in = 0;
-
+  int in=0;
   indices = new int[d_DOF.size()];
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
@@ -482,10 +481,15 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
+  int low=0,high=0;
+  MatGetOwnershipRange(d_A,&low,&high);
+  int size=high-low;
+
   MatGetDiagonal(d_A,d_diagonal);
   PetscScalar* diag;
   VecGetArray(d_diagonal,&diag);
-  for (int j = 0; j < num_nodes; j++) {
+  
+  for (int j = 0; j < size; j++) {
     if (compare(diag[j],0.)) {
       VecSetValues(d_diagonal,1,&j,&one,INSERT_VALUES);
       PetscScalar v = 0.;
@@ -510,9 +514,27 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   MatZeroRowsIS(d_A,is,one);
 #endif
   ISDestroy(is);
+
+#if 0
+  char matfile[100],vecfile[100];
+  
+  PetscViewer matview, vecview;
+  sprintf(vecfile,"output/vector.%d.%d",Parallel::getMPISize(),d_iteration);
+  sprintf(matfile,"output/matrix.%d.%d",Parallel::getMPISize(),d_iteration);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,vecfile,&vecview);
+  VecView(d_B,vecview);
+  PetscViewerDestroy(vecview);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,matfile,&matview);
+  MatView(d_A,matview);
+  PetscViewerDestroy(matview);
+
+  d_iteration++;
+#endif
 }
 
-void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
+void MPMPetscSolver::removeFixedDOFHeat()
 {
   TAU_PROFILE("MPMPetscSolver::removeFixedDOFHEAT", " ", TAU_USER);
   finalizeMatrix();

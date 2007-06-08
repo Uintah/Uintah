@@ -673,7 +673,6 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
                                                    DataWarehouse* old_dw,
                                                    DataWarehouse* new_dw)
 {
-  int num_nodes = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
@@ -681,7 +680,6 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
     IntVector nodes = patch->getNInteriorNodes();
-    num_nodes += (nodes.x())*(nodes.y())*(nodes.z());
 
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
@@ -711,7 +709,7 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
   
   d_HC_solver->applyBCSToRHS();
   
-  d_HC_solver->removeFixedDOFHeat(num_nodes);
+  d_HC_solver->removeFixedDOFHeat();
       
 
 }

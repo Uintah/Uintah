@@ -47,6 +47,7 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
@@ -2706,16 +2707,12 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
                           DataWarehouse* new_dw)
 
 {
-  int num_nodes = 0;
-  for(int p = 0; p<patches->size();p++) {
-    const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
+  if (cout_doing.active()) {
+    for(int p = 0; p<patches->size();p++) {
+      const Patch* patch = patches->get(p);
       cout_doing <<"Doing solveForDuCG on patch " << patch->getID()
-		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+		  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
-
-    IntVector nodes = patch->getNInteriorNodes();
-    num_nodes += (nodes.x()-2)*(nodes.y()-2)*(nodes.z()-2)*3;
   }
 
   DataWarehouse* parent_new_dw=new_dw->getOtherDataWarehouse(Task::ParentNewDW);
@@ -2723,7 +2720,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 
   if(!tsr){  // if a tsr has already been called for don't do the solve
     d_solver->assembleVector();
-    d_solver->removeFixedDOF(num_nodes);
+    d_solver->removeFixedDOF();
     vector<double> guess;
     d_solver->solve(guess);   
   }
