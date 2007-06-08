@@ -48,9 +48,9 @@ namespace Uintah {
     
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch) = 0;
 
-    virtual void removeFixedDOF(int num_nodes) = 0;
+    virtual void removeFixedDOF() = 0;
 
-    virtual void removeFixedDOFHeat(int num_nodes) = 0;
+    virtual void removeFixedDOFHeat() = 0;
 
     virtual void flushMatrix() = 0;
 
