@@ -15,7 +15,7 @@
    <Time>
        <maxTime>0.5</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.025</delt_min>
+       <delt_min>0.0025</delt_min>
        <delt_max>0.025</delt_max>
        <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
@@ -61,17 +61,14 @@
       </MPM>
 
       <Regridder>
-        <type> BNR </type>
+        <!--<type> BNR </type>-->
         <min_patch_size> [[8,8,1]] </min_patch_size>
-        <patch_ratio_to_target>1</patch_ratio_to_target>
         <max_levels>                  2       </max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio>  [2,2,1]  </lattice_refinement_ratio>
+        <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
         <cell_stability_dilation>   [1,1,0]   </cell_stability_dilation>
-        <cell_regrid_dilation>      [1,1,0]   </cell_regrid_dilation>
         <cell_deletion_dilation>    [1,1,0]   </cell_deletion_dilation>
         <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
-        <max_timestep_interval>    10 </max_timestep_interval>
       </Regridder>
       <useLockStep>       true </useLockStep>
     </AMR>
@@ -156,7 +153,7 @@
            <Box label="1">
               <lower>[ 0.0, 0.0,0.0]</lower>
               <upper>[24.0,24.0,0.5]</upper>
-              <patches>[2,2,1]</patches>
+              <patches>[3,3,1]</patches>
               <extraCells>[0,0,0]</extraCells>
               <resolution>[24,24,1]</resolution>
            </Box>
