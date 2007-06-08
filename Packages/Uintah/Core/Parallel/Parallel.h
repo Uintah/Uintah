@@ -76,6 +76,8 @@ WARNING
       // under MPI, than 0 is returned.  Rank value is set after call to
       // initializeManager();
       static int getMPIRank();
+
+      static int getMPISize();
       
       //////////
       // Returns true if this process is using MPI
