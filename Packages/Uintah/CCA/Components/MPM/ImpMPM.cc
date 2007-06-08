@@ -348,6 +348,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t = scinew Task("ImpMPM::printParticleCount",
                   this, &ImpMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
+  t->setType(Task::OncePerProc);
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
 
 #if 1
