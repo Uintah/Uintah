@@ -93,7 +93,7 @@
                      <max>[4.0,4.0,0.5]</max>
                   </box>
                   <res>[2,2,1]</res>
-                  <velocity>[100.0,100.0,0]</velocity>
+                  <velocity>[99.0,99.0,0]</velocity>
                   <temperature>12</temperature>
               </geom_object>
               <geom_object>
@@ -102,7 +102,7 @@
                      <max>[84.0,84.0,0.5]</max>
                   </box>
                   <res>[2,2,1]</res>
-                  <velocity>[-100.0,-100.0,0]</velocity>
+                  <velocity>[-99.0,-99.0,0]</velocity>
                   <temperature>12</temperature>
                </geom_object>
            </material>
