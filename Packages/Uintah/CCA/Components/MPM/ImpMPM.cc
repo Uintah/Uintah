@@ -2116,7 +2116,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 {
   map<int,int> dof_diag;
   d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
-  int global_offset;
+  int global_offset=0;
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
