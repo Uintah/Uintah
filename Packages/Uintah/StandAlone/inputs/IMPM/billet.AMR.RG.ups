@@ -13,7 +13,7 @@
    </SimulationComponent>
 
    <Time>
-       <maxTime>5.5</maxTime>
+       <maxTime>1.0</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.0025</delt_min>
        <delt_max>0.025</delt_max>
@@ -61,8 +61,6 @@
       </MPM>
 
       <Regridder>
-        <!--
-         -->
         <type> BNR </type>
         <min_patch_size> [[4,4,1]] </min_patch_size>
         <max_levels>                  2       </max_levels>
