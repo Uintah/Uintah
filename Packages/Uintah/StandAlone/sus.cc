@@ -404,7 +404,7 @@ main( int argc, char** argv )
     //__________________________________
     // grab AMR from the ups file if not specified on the command line
     if (!do_AMR)
-      do_AMR = (bool) ups->findBlock("AMR");
+      do_AMR = (bool) ups->findBlock("doAMR");
 
     // don't do AMR on combine-patches or reduce-uda
     if (reduce_uda || combine_patches)
