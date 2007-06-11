@@ -2237,14 +2237,10 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                 patch->getFaceNodes(face,0,l,h);
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector n = *it;
-                  int dof[3];
                   int l2g_node_num = l2g[n];
-                  dof[0] = l2g_node_num;
-                  dof[1] = l2g_node_num+1;
-                  dof[2] = l2g_node_num+2;
-                  d_solver->d_DOF.insert(dof[0]);
-                  d_solver->d_DOF.insert(dof[1]);
-                  d_solver->d_DOF.insert(dof[2]);
+                  d_solver->d_DOF.insert(l2g_node_num);
+                  d_solver->d_DOF.insert(l2g_node_num+1);
+                  d_solver->d_DOF.insert(l2g_node_num+2);
                 }
               }
               delete vel_bcs;
@@ -2295,17 +2291,13 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                 if (face == Patch::zminus || face == Patch::zplus)
                   DOF=IntVector(max(DOF.x(),0),max(DOF.y(),0),max(DOF.z(),1));
                 
-                int dof[3];
                 int l2g_node_num = l2g[n];
-                dof[0] = l2g_node_num;
-                dof[1] = l2g_node_num+1;
-                dof[2] = l2g_node_num+2;
                 if (DOF.x())
-                  d_solver->d_DOF.insert(dof[0]);
+                  d_solver->d_DOF.insert(l2g_node_num);
                 if (DOF.y())
-                  d_solver->d_DOF.insert(dof[1]);
+                  d_solver->d_DOF.insert(l2g_node_num+1);
                 if (DOF.z())
-                  d_solver->d_DOF.insert(dof[2]);
+                  d_solver->d_DOF.insert(l2g_node_num+2);
               }
               delete sym_bcs;
             }
@@ -2420,22 +2412,18 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
 
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector n = *iter;
-        int dof[3];
         int l2g_node_num = l2g[n];
-        dof[0] = l2g_node_num;
-        dof[1] = l2g_node_num+1;
-        dof[2] = l2g_node_num+2;
 
         // Just look on the grid to see if the gmass is 0 and then remove that
         if (compare(mass[n],0.)) {
-          d_solver->d_DOF.insert(dof[0]);
-          d_solver->d_DOF.insert(dof[1]);
-          d_solver->d_DOF.insert(dof[2]);
+          d_solver->d_DOF.insert(l2g_node_num);
+          d_solver->d_DOF.insert(l2g_node_num+1);
+          d_solver->d_DOF.insert(l2g_node_num+2);
         }
         if (contact[n] == 2) {  // Rigid Contact imposed on these nodes
           for(int i=0;i<3;i++){
             if(d_contact_dirs[i]==1){
-             d_solver->d_DOF.insert(dof[i]);  // specifically, these DOFs
+             d_solver->d_DOF.insert(l2g_node_num+i);  // specifically, these DOFs
             }
           }
         }// contact ==2
@@ -2506,15 +2494,18 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 
       double v[1];
 
+      int dof[3];
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector n = *iter;
-        int dof[1];
         int l2g_node_num = l2g[n];
         v[0] = gmass[*iter]*(4./(dt*dt));
-        for(int ii=0;ii<3;ii++){
-          dof[0] = l2g_node_num+ii;
-          d_solver->fillMatrix(1,dof,1,dof,v);
-        }
+        dof[0]=l2g_node_num;
+        dof[1]=l2g_node_num+1;
+        dof[2]=l2g_node_num+2;
+
+        d_solver->fillMatrix(1,&dof[0],1,&dof[0],v);
+        d_solver->fillMatrix(1,&dof[1],1,&dof[1],v);
+        d_solver->fillMatrix(1,&dof[2],1,&dof[2],v);
       }  // node iterator
      }   // if
     }    // matls
@@ -2664,11 +2655,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector n = *iter;
-        int dof[3];
         int l2g_node_num = l2g[n];
-        dof[0] = l2g_node_num;
-        dof[1] = l2g_node_num+1;
-        dof[2] = l2g_node_num+2;
 
         double v[3];
         v[0] = extForce[n].x() + intForce[n].x();
@@ -2684,9 +2671,9 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
           v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
                    accel[n].z())*mass[n];
         }
-        d_solver->fillVector(dof[0],double(v[0]));
-        d_solver->fillVector(dof[1],double(v[1]));
-        d_solver->fillVector(dof[2],double(v[2]));
+        d_solver->fillVector(l2g_node_num,double(v[0]));
+        d_solver->fillVector(l2g_node_num+1,double(v[1]));
+        d_solver->fillVector(l2g_node_num+2,double(v[2]));
         Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
       }
       if(isnan(Q)){
@@ -2763,12 +2750,8 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
       if (flags->d_doMechanics) {
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
           IntVector n = *iter;
-          int dof[3];
           int l2g_node_num = l2g[n] - begin;
-          dof[0] = l2g_node_num;
-          dof[1] = l2g_node_num+1;
-          dof[2] = l2g_node_num+2;
-          dispInc[n] = Vector(x[dof[0]],x[dof[1]],x[dof[2]]);
+          dispInc[n] = Vector(x[l2g_node_num],x[l2g_node_num+1],x[l2g_node_num+2]);
         }
       }
     }
@@ -2903,14 +2886,10 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     int begin = d_solver->getRHS(getQ);
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector n = *iter;
-      int dof[3];
       int l2g_node_num = l2g[n] - begin;
-      dof[0] = l2g_node_num;
-      dof[1] = l2g_node_num+1;
-      dof[2] = l2g_node_num+2;
       dispIncNorm += Dot(dispInc[n],dispInc[n]);
-      dispIncQNorm += dispInc[n].x()*getQ[dof[0]] +
-      dispInc[n].y()*getQ[dof[1]] +  dispInc[n].z()*getQ[dof[2]];
+      dispIncQNorm += dispInc[n].x()*getQ[l2g_node_num] +
+      dispInc[n].y()*getQ[l2g_node_num+1] +  dispInc[n].z()*getQ[l2g_node_num+2];
     }
     // We are computing both dispIncQNorm0 and dispIncNormMax (max residuals)
     // We are computing both dispIncQNorm and dispIncNorm (current residuals)
