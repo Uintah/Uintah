@@ -9,6 +9,28 @@
    <SimulationComponent>
       <type> impm </type>
    </SimulationComponent>
+   <doAMR>false</doAMR>
+    <AMR>
+      <MPM>
+        <min_grid_level>-1</min_grid_level>
+        <max_grid_level>-1</max_grid_level>
+      </MPM>
+      <Regridder>
+        <type> BNR </type>
+        <min_patch_size> [[4,4,4]] </min_patch_size>
+        <patch_ratio_to_target>1</patch_ratio_to_target>
+        <max_levels>                  2       </max_levels>
+        <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
+        <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
+        <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
+        <cell_deletion_dilation>    [1,1,1]   </cell_deletion_dilation>
+        <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
+        <max_timestep_interval>    10 </max_timestep_interval>
+      </Regridder>
+      <useLockStep>       true </useLockStep>
+    </AMR>
+<!--
+-->
 
   <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -34,15 +56,15 @@
   <DataArchiver>
     <filebase>HTContainer_heatup.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
-    <save label="p.particleID"/> 
-    <save label="p.x"/>
-    <save label="p.velocity"/>
-    <save label="p.stress"/>
-    <save label="p.mass"/>
-    <save label="p.temperature"/>
-    <save label="p.externalHeatFlux"/>
-    <save label="g.mass"/>
-    <save label="g.temperature"/>
+    <save label="p.particleID"       levels="-1"/> 
+    <save label="p.x"                levels="-1"/>
+    <save label="p.velocity"         levels="-1"/>
+    <save label="p.stress"           levels="-1"/>
+    <save label="p.mass"             levels="-1"/>
+    <save label="p.temperature"      levels="-1"/>
+    <save label="p.externalHeatFlux" levels="-1"/>
+    <save label="g.mass"             levels="-1"/>
+    <save label="g.temperature"      levels="-1"/>
     <checkpoint cycle="4" timestepInterval="10"/>
   </DataArchiver>
 
