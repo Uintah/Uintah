@@ -22,6 +22,8 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
@@ -58,29 +60,33 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "Usage: " << progname << " [options] "
          << "-uda <archive file>\n\n";
     cerr << "Valid options are:\n";
-    cerr << "  -h,--help\n";
-    cerr << "  -v,--variable <variable name>\n";
-    cerr << "  -m,--material <material number> [defaults to 0]\n";
-    cerr << "  -tlow,--timesteplow [int] (sets start output timestep to int) [defaults to 0]\n";
-    cerr << "  -thigh,--timestephigh [int] (sets end output timestep to int) [defaults to last timestep]\n";
-    cerr << "  -timestep,--timestep [int] (only outputs from timestep int) [defaults to 0]\n";
-    cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
-    cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
-    cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
-    cerr << "  -o,--out <outputfilename> [defaults to stdout]\n"; 
-    cerr << "  -vv,--verbose (prints status of output)\n";
-    cerr << "  -q,--quiet (only print data values)\n";
-    cerr << "  -cellCoords (prints the cell centered coordinates on that level)\n";
-    cerr << "  --cellIndexFile <filename> (file that contains a list of cell indices)\n";
+    cerr << "  -h,        --help\n";
+    cerr << "  -v,        --variable:      <variable name>\n";
+    cerr << "  -m,        --material:      <material number> [defaults to 0]\n";
+    cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
+    cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
+    cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int) [defaults to 0]\n";
+    cerr << "  -istart,   --indexs:        <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
+    cerr << "  -iend,     --indexe:        <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
+    cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
+    cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
+    cerr << "  -vv,       --verbose:       (prints status of output)\n";
+    cerr << "  -q,        --quiet:         (only print data values)\n";
+    cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
+    cerr << "  --cellIndexFile:             <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
     cerr << "                                   [int 101, 43, 0]\n";
     cerr << "                                   [int 102, 44, 0]\n";
+    cerr << "----------------------------------------------------------------------------------------\n";
+    cerr << " For particle variables the average over all particles in a cell is returned.\n";
     exit(1);
 }
 
 // arguments are the dataarchive, the successive arguments are the same as 
 // the arguments to archive->query for data values.  Then comes a type 
 // dexcription of the variable being queried, and last is an output stream.
+
+
 //______________________________________________________________________
 //
 template<class T>
@@ -291,7 +297,224 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
     } // if level exists
     
   } // timestep loop
-} 
+}
+//______________________________________________________________________
+//  compute the average of all particles.
+ 
+template<class T>
+void compute_ave(ParticleVariable<T>& var,
+                 CCVariable<T>& ave,
+                 ParticleVariable<Point>& pos,
+                 const Patch* patch) 
+{
+  IntVector lo = patch->getCellLowIndex();
+  IntVector hi = patch->getCellHighIndex();
+  ave.allocate(lo,hi);
+  T zero(0.0);
+  ave.initialize(zero);
+  
+  CCVariable<double> count;
+  count.allocate(lo,hi);
+  count.initialize(0.0);
+  
+  ParticleSubset* pset = var.getParticleSubset();
+  if(pset->numParticles() > 0){
+    ParticleSubset::iterator iter = pset->begin();
+    for( ;iter != pset->end(); iter++ ){
+      IntVector c;
+      patch->findCell(pos[*iter], c);
+      ave[c]    = ave[c] + var[*iter];
+      count[c] += 1;      
+    }
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      ave[c] = ave[c]/(count[c] + 1e-100);
+    }
+  }
+}
+//______________________________________________________________________
+// Used for Particle Variables
+template<class T>
+void printData_PV(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
+               int material, const bool use_cellIndex_file, int levelIndex,
+               IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
+               unsigned long time_start, unsigned long time_end, ostream& out) 
+
+{
+  // query time info from dataarchive
+  vector<int> index;
+  vector<double> times;
+
+  archive->queryTimesteps(index, times);
+  ASSERTEQ(index.size(), times.size());
+  if (!quiet){
+    cout << "There are " << index.size() << " timesteps\n";
+  }
+  
+  // set default max time value
+  if (time_end == (unsigned long)-1) {
+    if (verbose) {
+      cout <<"Initializing time_step_upper to "<<times.size()-1<<"\n";
+    }
+    time_end = times.size() - 1;
+  }      
+
+  //__________________________________
+  // bullet proofing 
+  if (time_end >= times.size() || time_end < time_start) {
+    cerr << "timestephigh("<<time_end<<") must be greater than " << time_start 
+         << " and less than " << times.size()-1 << endl;
+    exit(1);
+  }
+  if (time_start >= times.size() || time_end > times.size()) {
+    cerr << "timestep must be between 0 and " << times.size()-1 << endl;
+    exit(1);
+  }
+  
+  //__________________________________IntVector c = cells[i];
+  // make sure the user knows it could be really slow if he
+  // tries to output a big range of data...
+  IntVector var_range = var_end - var_start;
+  if (var_range.x() && var_range.y() && var_range.z()) {
+    cerr << "PERFORMANCE WARNING: Outputting over 3 dimensions!\n";
+  }
+  else if ((var_range.x() && var_range.y()) ||
+           (var_range.x() && var_range.z()) ||
+           (var_range.y() && var_range.z())){
+    cerr << "PERFORMANCE WARNING: Outputting over 2 dimensions\n";
+  }
+
+  // set defaults for output stream
+  out.setf(ios::scientific,ios::floatfield);
+  out.precision(16);
+  
+  bool cellNotFound = false;
+  //__________________________________
+  // loop over timesteps
+  for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
+  
+    cerr << "%outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
+
+    //__________________________________
+    //  does the requested level exist
+    bool levelExists = false;
+    GridP grid = archive->queryGrid(time_step); 
+    int numLevels = grid->numLevels();
+   
+    for (int L = 0;L < numLevels; L++) {
+      const LevelP level = grid->getLevel(L);
+      if (level->getIndex() == levelIndex){
+        levelExists = true;
+      }
+    }
+    if (!levelExists){
+      cerr<< " Level " << levelIndex << " does not exist at this timestep " << time_step << endl;
+    }
+    
+    if(levelExists){   // only extract data if the level exists
+      const LevelP level = grid->getLevel(levelIndex);
+      
+      // find the corresponding patches
+      Level::selectType patches;
+      level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+      if( patches.size() == 0){
+        cerr << " Could not find any patches on Level " << level->getIndex()
+             << " that contain cells along line: " << var_start << " and " << var_end 
+             << " Double check the starting and ending indices "<< endl;
+        exit(1);
+      }
+
+      // query all the data and compute the average up front
+      vector<Variable*> vars(patches.size());
+      vector<Variable*> ave(patches.size());
+      for (int p = 0; p < patches.size(); p++) {
+        vars[p] = scinew ParticleVariable<T>;
+        ave[p]  = scinew CCVariable<T>;
+
+        archive->query( *(ParticleVariable<T>*)vars[p], variable_name, 
+                        material, patches[p], time_step);
+        Variable* pos;
+        pos = scinew ParticleVariable<Point>;    
+
+        archive->query( *(ParticleVariable<Point>*)pos, "p.x", material, patches[p], time_step);
+
+        compute_ave<T>(*(ParticleVariable<T>*)vars[p],
+                       *(CCVariable<T>*)ave[p],
+                       *(ParticleVariable<Point>*)pos,
+                       patches[p]);
+      }
+      
+      //__________________________________
+      // User input starting and ending indicies    
+      if(!use_cellIndex_file) {
+
+        for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
+          IntVector c = *ci;
+
+          // find out which patch it's on (to keep the printing in sorted order.
+          // alternatively, we could just iterate through the patches)
+          int p = 0;
+          for (; p < patches.size(); p++) {
+            IntVector low  = patches[p]->getLowIndex();
+            IntVector high = patches[p]->getHighIndex();
+            if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+                c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+              break;
+          }
+          if (p == patches.size()) {
+            cellNotFound = true;
+            continue;
+          }
+          
+          T val;
+          val = (*dynamic_cast<CCVariable<T>*>(ave[p]))[c];
+          
+         if(d_printCell_coords){
+            Point point = level->getCellPosition(c);
+            out << point.x() << " "<< point.y() << " " << point.z() << " "<<val << endl;;
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
+          }
+        }
+        for (unsigned i = 0; i < vars.size(); i++)
+          delete vars[i];
+      }
+
+      //__________________________________
+      // If the cell indicies were read from a file. 
+      if(use_cellIndex_file) {
+        for (int i = 0; i<(int) cells.size(); i++) {
+          IntVector c = cells[i];
+          int p = 0;
+          
+          for (; p < patches.size(); p++) {
+            IntVector low  = patches[p]->getLowIndex();
+            IntVector high = patches[p]->getHighIndex();
+            if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+                c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+              break;
+          }
+          if (p == patches.size()) {
+            cellNotFound = true;
+            continue;
+          }
+          
+          T val;
+          val = (*dynamic_cast<CCVariable<T>*>(ave[p]))[c];
+          
+          if(d_printCell_coords){
+            Point point = level->getCellPosition(c);
+            out << point.x() << " "<< point.y() << " " << point.z() << " "<< val << endl;
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;
+          }
+        }
+      } // if cell index file
+      out << endl;
+    } // if level exists
+    
+  } // timestep loop
+}
 
 /*_______________________________________________________________________
  Function:  readCellIndicies--
@@ -471,48 +694,90 @@ int main(int argc, char** argv)
     
     //__________________________________
     //  print data
-    switch (subtype->getType()) {
-    case Uintah::TypeDescription::double_type:
-      printData<double>(archive, variable_name, td, material, use_cellIndex_file,
-                        levelIndex, var_start, var_end, cells,
-                        time_start, time_end, *output_stream);
-      break;
-    case Uintah::TypeDescription::float_type:
-      printData<float>(archive, variable_name, td, material, use_cellIndex_file,
-                        levelIndex, var_start, var_end, cells,
-                        time_start, time_end, *output_stream);
-      break;
-    case Uintah::TypeDescription::int_type:
-      printData<int>(archive, variable_name, td, material, use_cellIndex_file,
-                     levelIndex, var_start, var_end, cells,
-                     time_start, time_end, *output_stream);
-      break;
-    case Uintah::TypeDescription::Vector:
-      printData<Vector>(archive, variable_name, td, material, use_cellIndex_file,
-                        levelIndex, var_start, var_end, cells,
-                        time_start, time_end, *output_stream);    
-      break;
-    case Uintah::TypeDescription::Other:
-      if (subtype->getName() == "Stencil7") {
-        printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
+    //  N C / C C   V A R I A B L E S  
+    if(td->getType() != Uintah::TypeDescription::ParticleVariable){
+      switch (subtype->getType()) {
+      case Uintah::TypeDescription::double_type:
+        printData<double>(archive, variable_name, td, material, use_cellIndex_file,
+                          levelIndex, var_start, var_end, cells,
+                          time_start, time_end, *output_stream);
+        break;
+      case Uintah::TypeDescription::float_type:
+        printData<float>(archive, variable_name, td, material, use_cellIndex_file,
+                          levelIndex, var_start, var_end, cells,
+                          time_start, time_end, *output_stream);
+        break;
+      case Uintah::TypeDescription::int_type:
+        printData<int>(archive, variable_name, td, material, use_cellIndex_file,
+                       levelIndex, var_start, var_end, cells,
+                       time_start, time_end, *output_stream);
+        break;
+      case Uintah::TypeDescription::Vector:
+        printData<Vector>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
                           time_start, time_end, *output_stream);    
         break;
+      case Uintah::TypeDescription::Other:
+        if (subtype->getName() == "Stencil7") {
+          printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
+                            levelIndex, var_start, var_end, cells,
+                            time_start, time_end, *output_stream);    
+          break;
+        }
+        // don't break on else - flow to the error statement
+      case Uintah::TypeDescription::Matrix3:
+      case Uintah::TypeDescription::bool_type:
+      case Uintah::TypeDescription::short_int_type:
+      case Uintah::TypeDescription::long_type:
+      case Uintah::TypeDescription::long64_type:
+        cerr << "Subtype is not implemented\n";
+        exit(1);
+        break;
+      default:
+        cerr << "Unknown subtype\n";
+        exit(1);
       }
-      // don't break on else - flow to the error statement
-    case Uintah::TypeDescription::Matrix3:
-    case Uintah::TypeDescription::bool_type:
-    case Uintah::TypeDescription::short_int_type:
-    case Uintah::TypeDescription::long_type:
-    case Uintah::TypeDescription::long64_type:
-      cerr << "Subtype is not implemented\n";
-      exit(1);
-      break;
-    default:
-      cerr << "Unknown subtype\n";
-      exit(1);
     }
-
+    //__________________________________
+    //  P A R T I C L E   V A R I A B L E  
+    if(td->getType() == Uintah::TypeDescription::ParticleVariable){
+      switch (subtype->getType()) {
+      case Uintah::TypeDescription::double_type:
+        printData_PV<double>(archive, variable_name, td, material, use_cellIndex_file,
+                          levelIndex, var_start, var_end, cells,
+                          time_start, time_end, *output_stream);
+        break;
+      case Uintah::TypeDescription::float_type:
+        printData_PV<float>(archive, variable_name, td, material, use_cellIndex_file,
+                          levelIndex, var_start, var_end, cells,
+                          time_start, time_end, *output_stream);
+        break;
+      case Uintah::TypeDescription::int_type:
+        printData_PV<int>(archive, variable_name, td, material, use_cellIndex_file,
+                       levelIndex, var_start, var_end, cells,
+                       time_start, time_end, *output_stream);
+        break;
+      case Uintah::TypeDescription::Vector:
+        printData_PV<Vector>(archive, variable_name, td, material, use_cellIndex_file,
+                          levelIndex, var_start, var_end, cells,
+                          time_start, time_end, *output_stream);    
+        break;
+      case Uintah::TypeDescription::Other:
+        // don't break on else - flow to the error statement
+      case Uintah::TypeDescription::Matrix3:
+      case Uintah::TypeDescription::bool_type:
+      case Uintah::TypeDescription::short_int_type:
+      case Uintah::TypeDescription::long_type:
+      case Uintah::TypeDescription::long64_type:
+        cerr << "Subtype is not implemented\n";
+        exit(1);
+        break;
+      default:
+        cerr << "Unknown subtype\n";
+        exit(1);
+      }
+    }    
+    
     // Delete the output file if it was created.
     if (output_file_name != "-") {
       delete((ofstream*)output_stream);
