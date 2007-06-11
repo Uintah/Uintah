@@ -16,6 +16,7 @@
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
 
@@ -97,11 +98,9 @@ void ImplicitHeatConduction::scheduleCreateHCMatrix(SchedulerP& sched,
                                                                                 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
 
-  if (!d_perproc_patches) {
-    d_perproc_patches=patches;
-    d_perproc_patches->addReference();
-  }
-
+  d_perproc_patches=patches;
+  d_perproc_patches->addReference();
+  
   sched->addTask(t, patches, matls);
  }
 }
@@ -236,7 +235,6 @@ void ImplicitHeatConduction::destroyHCMatrix(const ProcessorGroup*,
     cout_doing <<"Doing destroyHCMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
 
     d_HC_solver->destroyMatrix(false);
-
 }
 
 void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
@@ -250,7 +248,7 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
   map<int,int> dof_diag;
   d_HC_solver->createLocalToGlobalMapping(pg,d_perproc_patches,
                                             patches,1);
-  int global_offset; 
+  int global_offset=0; 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     if (cout_doing.active()) {
@@ -571,7 +569,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
     delete interpolator;
 
   }
-  d_HC_solver->finalizeMatrix();
+//  d_HC_solver->finalizeMatrix();
 
 }
 
@@ -664,7 +662,6 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     }  // matls
     delete interpolator;
   }    // patches
-  d_HC_solver->assembleVector();
 }
 
 void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
@@ -706,12 +703,10 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
     }
   }    // patches
   d_HC_solver->assembleTemporaryVector();
-  
+  d_HC_solver->assembleVector();
+  d_HC_solver->finalizeMatrix();
   d_HC_solver->applyBCSToRHS();
-  
   d_HC_solver->removeFixedDOFHeat();
-      
-
 }
 
 void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,

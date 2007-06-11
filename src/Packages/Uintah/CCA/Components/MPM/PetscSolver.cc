@@ -109,8 +109,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
   d_totalNodes = 0;
-
-   for (int p = 0; p < perproc_patches->size(); p++) {
+  for (int p = 0; p < perproc_patches->size(); p++) {
     d_startIndex[p] = d_totalNodes;
     int mytotal = 0;
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
@@ -129,7 +128,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     }
     d_numNodes[p] = mytotal;
   }
-  
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
@@ -153,8 +152,11 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
+      
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
                         + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
+
+
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
         int idx_slab = petscglobalIndex;
         petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
@@ -420,8 +422,6 @@ void MPMPetscSolver::assembleVector()
 {
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
-//  VecAssemblyBegin(d_x);
-//  VecAssemblyEnd(d_x);
 }
 
 void MPMPetscSolver::assembleTemporaryVector()
@@ -537,9 +537,9 @@ void MPMPetscSolver::removeFixedDOF()
 void MPMPetscSolver::removeFixedDOFHeat()
 {
   TAU_PROFILE("MPMPetscSolver::removeFixedDOFHEAT", " ", TAU_USER);
-  finalizeMatrix();
-  assembleFluxVector();
 
+  //do matrix modifications first 
+ 
   for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
        iter++) {
     int j = *iter;
@@ -560,7 +560,25 @@ void MPMPetscSolver::removeFixedDOFHeat()
     indices[in++] = *iter;
   }
 
+  if( d_DOF.size() !=0)
+  {
+    // zeroing out the columns
+    for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
+       iter++) {
+      const int index = *iter;
+      vector<int>& neighbors = d_DOFNeighbors[index];
 
+      for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
+           n++) {
+        int ierr;
+        // zero out the columns
+        ierr = MatSetValue(d_A,*n,index,0,INSERT_VALUES);
+        if (ierr)
+          cout << "MatSetValue error for " << index << "," << *n << endl;
+      }
+    }
+  }
+  
   finalizeMatrix();
 
   if (d_DOF.size() != 0) {
@@ -578,21 +596,6 @@ void MPMPetscSolver::removeFixedDOFHeat()
     ISDestroy(is);
   }
 
-  // zeroing out the columns
-  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
-       iter++) {
-    const int index = *iter;
-    vector<int>& neighbors = d_DOFNeighbors[index];
-
-    for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
-         n++) {
-      int ierr;
-      // zero out the columns
-      ierr = MatSetValue(d_A,*n,index,0,INSERT_VALUES);
-      if (ierr)
-        cout << "MatSetValue error for " << index << "," << *n << endl;
-    }
-  }
 
   int* indices_flux = new int[d_DOFFlux.size()];
   in = 0;
@@ -600,18 +603,18 @@ void MPMPetscSolver::removeFixedDOFHeat()
        iter++) {
     indices_flux[in++] = *iter;
   }
+
+
+  //do vector modifications
   
-
-
-#if (PETSC_VERSION_MINOR == 3)
   PetscScalar* y = new PetscScalar[d_DOF.size()];
   PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
+
+  assembleFluxVector();
+#if (PETSC_VERSION_MINOR == 3)
   VecScale(d_t,-1.);
   VecGetValues(d_t,d_DOF.size(),indices,y);
   VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
-  VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
-  assembleVector();
-  VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
 #endif
 #if (PETSC_VERSION_MINOR == 2)
   PetscInt nlocal_t,nlocal_flux;
@@ -623,8 +626,6 @@ void MPMPetscSolver::removeFixedDOFHeat()
   VecGetArray(d_flux,&d_flux_tmp);
   VecGetLocalSize(d_t,&nlocal_t);
   VecGetLocalSize(d_flux,&nlocal_flux);
-  PetscScalar* y = new PetscScalar[d_DOF.size()];
-  PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
   PetscInt low_t,high_t;
   VecGetOwnershipRange(d_t,&low_t,&high_t);
   PetscInt low_flux,high_flux;
@@ -640,18 +641,18 @@ void MPMPetscSolver::removeFixedDOFHeat()
   }
   VecRestoreArray(d_t,&d_t_tmp);
   VecRestoreArray(d_flux,&d_flux_tmp);
+
+#endif
+  
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
   assembleVector();
   VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
-
-#endif
 
   delete[] y;
   delete[] y_flux;
 
   assembleFluxVector();
   assembleVector();
-  finalizeMatrix();
 
   delete[] indices;
   delete[] indices_flux;
