@@ -44,6 +44,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StaticArray.h>
 #include <iostream>
+#include <sstream>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 
@@ -1957,9 +1958,11 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID, bool calcVariance,
   d_ramping_inlet_flowrate = false;
   d_prefill = false;
   // add cellId to distinguish different inlets
-  d_area_label = VarLabel::create("flowarea"+cellID,
+  std::stringstream stream_cellID;
+  stream_cellID << d_cellTypeID;
+  d_area_label = VarLabel::create("flowarea"+stream_cellID.str(),
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
-  d_flowRate_label = VarLabel::create("flowRate"+cellID,
+  d_flowRate_label = VarLabel::create("flowRate"+stream_cellID.str(),
    ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
 }
 
