@@ -13,7 +13,6 @@
         <type>PLB</type>
         <timestepInterval>      100  </timestepInterval>
         <dynamicAlgorithm>      patchFactorParticles</dynamicAlgorithm>
-        <cellFactor>            1.25  </cellFactor>
         <gainThreshold>         0.0   </gainThreshold>
         <levelIndependent>      true  </levelIndependent>
         <doSpaceCurve>          true  </doSpaceCurve>
@@ -137,8 +136,7 @@
 
       <Regridder>
         <type> BNR </type>
-        <min_patch_size> [[8,8,1][16,16,1]] </min_patch_size>
-        <patch_ratio_to_target>.25</patch_ratio_to_target>
+        <min_patch_size> [[8,8,1]]   </min_patch_size>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,0]   </cell_stability_dilation>
@@ -255,35 +253,34 @@
                <useObjectiveRate>              false </useObjectiveRate>
                <useModifiedEOS>                true  </useModifiedEOS>
              </constitutive_model>
-                <geom_object>
-                  <difference>  <!-- 1.25" dia bore -->
-                    <cylinder label="inner steel cylinder 2"> </cylinder>
-                    <union>
-                      <cylinder label="bore">
-                        <bottom>   [0.0, 0, -0.0381]    </bottom>
-                        <top>      [0.0, 0, 0.0381]     </top>  
-                        <radius>       0.0381           </radius>
-                      </cylinder>
-                      <box label="hot chunk 2">
-                        <min>      [-0.01,  0.049,  -0.1]   </min>
-                        <max>      [ 0.01,  0.0508, 0.1]   </max>
-                      </box>
-                    </union>
-                  </difference>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         300.0           </temperature>
-                </geom_object> 
-                
-                <geom_object> <!-- hot HMX particles #2-->
-                  <intersection>
-                    <cylinder label="inner steel cylinder 2"> </cylinder>
-                    <box label="hot chunk 2"> </box>
-                  </intersection>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         600.0           </temperature>
-                </geom_object>       
+             <geom_object> <!-- hot HMX particles -->
+               <intersection>
+                  <box label="hot chunk 2">
+                     <min>      [-0.01,  0.049,  -0.1]   </min>
+                     <max>      [ 0.01,  0.0508, 0.1]    </max>
+                  </box>
+                  <cylinder label="inner steel cylinder 2"> </cylinder>
+               </intersection>
+               <res>                 [2,2,2]         </res>
+               <velocity>            [0.0,0.0,0.0]   </velocity>
+               <temperature>         600.0           </temperature>
+             </geom_object>
+             <geom_object>
+               <difference>  
+                 <difference>
+                   <cylinder label="inner steel cylinder 2"> </cylinder>
+                   <box label="hot chunk 2">                 </box>
+                 </difference>
+                 <cylinder label="bore">
+                   <bottom>   [0.0, 0, -0.0381]    </bottom>
+                   <top>      [0.0, 0, 0.0381]     </top>  
+                   <radius>       0.0381           </radius>
+                 </cylinder>
+               </difference>
+               <res>                 [2,2,2]         </res>
+               <velocity>            [0.0,0.0,0.0]   </velocity>
+               <temperature>         300.0           </temperature>
+             </geom_object> 
          </material>
 
          <contact>                                               
@@ -345,7 +342,7 @@
 
       <exchange_properties>  
          <exchange_coefficients>
-           <momentum>  [0, 1e15, 1e15 ]     </momentum>
+           <momentum>  [0, 1e15, 1e9 ]     </momentum>
            <heat>      [0, 1e10, 1e10 ]     </heat>   
         </exchange_coefficients>
       </exchange_properties> 

@@ -858,7 +858,6 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     }
     delete interpolator;
   }
-  solver->flushMatrix();
 }
 
 void

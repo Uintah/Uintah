@@ -5,6 +5,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Box.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Grid/BoundaryConditions/BoundCondReader.h>
@@ -17,6 +18,7 @@
 #include <SCIRun/Core/Thread/AtomicCounter.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Thread/Thread.h>
+#include <SCIRun/Core/Thread/Time.h>
 #include <SCIRun/Core/Util/ProgressiveWarning.h>
 
 #include <iostream>
@@ -138,25 +140,25 @@ Level::const_patchIterator Level::allPatchesEnd() const
 }
 
 Patch* Level::addPatch(const IntVector& lowIndex, 
-		       const IntVector& highIndex,
-		       const IntVector& inLowIndex, 
-		       const IntVector& inHighIndex)
+                       const IntVector& highIndex,
+                       const IntVector& inLowIndex, 
+                       const IntVector& inHighIndex)
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
-			    inHighIndex);
+                            inHighIndex);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
     return r;
 }
 
 Patch* Level::addPatch(const IntVector& lowIndex, 
-		       const IntVector& highIndex,
-		       const IntVector& inLowIndex, 
-		       const IntVector& inHighIndex,
-		       int ID)
+                       const IntVector& highIndex,
+                       const IntVector& inLowIndex, 
+                       const IntVector& inHighIndex,
+                       int ID)
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
-			    inHighIndex,ID);
+                            inHighIndex,ID);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
     return r;
@@ -195,9 +197,9 @@ void Level::performConsistencyCheck() const
       Box b1 = getBox(r1->getInteriorCellLowIndex(), r1->getInteriorCellHighIndex());
       Box b2 = getBox(r2->getInteriorCellLowIndex(), r2->getInteriorCellHighIndex());
       if(b1.overlaps(b2)){
-	cerr << "r1: " << *r1 << '\n';
-	cerr << "r2: " << *r2 << '\n';
-	SCI_THROW(InvalidGrid("Two patches overlap",__FILE__,__LINE__));
+        cerr << "r1: " << *r1 << '\n';
+        cerr << "r2: " << *r2 << '\n';
+        SCI_THROW(InvalidGrid("Two patches overlap",__FILE__,__LINE__));
       }
     }
   }
@@ -374,7 +376,7 @@ Point Level::positionToIndex(const Point& p) const
 }
 
 void Level::selectPatches(const IntVector& low, const IntVector& high,
-			  selectType& neighbors) const
+                          selectType& neighbors) const
 {
 #ifdef BRYAN_SELECT_CACHE
     
@@ -398,7 +400,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       IntVector l=Max(patch->getCellLowIndex(), low);
       IntVector u=Min(patch->getCellHighIndex(), high);
       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
-	neighbors.push_back(*iter);
+        neighbors.push_back(*iter);
    }
 #elif defined( SELECT_GRID )
    IntVector start = (low-d_idxLow)*d_gridSize/d_idxSize;
@@ -407,18 +409,18 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    end=Min(d_gridSize-IntVector(1,1,1), end);
    for(int iz=start.z();iz<=end.z();iz++){
       for(int iy=start.y();iy<=end.y();iy++){
-	 for(int ix=start.x();ix<=end.x();ix++){
-	    int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
-	    int s = d_gridStarts[gridIdx];
-	    int e = d_gridStarts[gridIdx+1];
-	    for(int i=s;i<e;i++){
-	       Patch* patch = d_gridPatches[i];
-	       IntVector l=Max(patch->getCellLowIndex(), low);
-	       IntVector u=Min(patch->getCellHighIndex(), high);
-	       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
-		  neighbors.push_back(patch);
-	    }
-	 }
+         for(int ix=start.x();ix<=end.x();ix++){
+            int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
+            int s = d_gridStarts[gridIdx];
+            int e = d_gridStarts[gridIdx+1];
+            for(int i=s;i<e;i++){
+               Patch* patch = d_gridPatches[i];
+               IntVector l=Max(patch->getCellLowIndex(), low);
+               IntVector u=Min(patch->getCellHighIndex(), high);
+               if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
+                  neighbors.push_back(patch);
+            }
+         }
       }
    }
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
@@ -428,7 +430,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       neighbors[i]=neighbors[j];
       j++;
       while(j < (int)neighbors.size() && neighbors[i] == neighbors[j] )
-	 j++;
+         j++;
       i++;
    }
    neighbors.resize(i);
@@ -450,7 +452,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
       IntVector l=Max(patch->getCellLowIndex(), low);
       IntVector u=Min(patch->getCellHighIndex(), high);
       if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
-	 tneighbors.push_back(*iter);
+         tneighbors.push_back(*iter);
    }
    ASSERTEQ(neighbors.size(), tneighbors.size());
    sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
@@ -476,7 +478,7 @@ bool Level::containsPoint(const Point& p) const
        iter != d_realPatches.end(); iter++){
       const Patch* patch = *iter;
       if(patch->getBox().contains(p))
-	 return true;
+         return true;
    }
    return false;
 }
@@ -488,7 +490,7 @@ bool Level::containsPointInRealCells(const Point& p) const
        iter != d_realPatches.end(); iter++){
       const Patch* patch = *iter;
       if(patch->containsPointInRealCells(p))
-	 return true;
+         return true;
    }
    return false;
 }
@@ -516,7 +518,6 @@ void Level::finalizeLevel()
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
   // set each_patch and all_patches before creating virtual patches
-  
   each_patch = scinew PatchSet();
   each_patch->addReference();
 
@@ -538,28 +539,28 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   Box domain(bbox.min(), bbox.max());
   Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
   IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()),
-		   (int)rint(vextent.z()));
+                   (int)rint(vextent.z()));
   d_periodicBoundaries = IntVector(periodicX ? 1 : 0, periodicY ? 1 : 0,
-				   periodicZ ? 1 : 0);
+                                   periodicZ ? 1 : 0);
   IntVector periodicBoundaryRange = d_periodicBoundaries * extent;
 
   int x,y,z;
   for(int i=0;i<(int)tmp_patches.size();i++) {
     for (x = -d_periodicBoundaries.x(); x <= d_periodicBoundaries.x(); x++) {
       for (y = -d_periodicBoundaries.y(); y <= d_periodicBoundaries.y(); y++) {
-	for (z = -d_periodicBoundaries.z(); z <= d_periodicBoundaries.z(); z++)
-	{
-	  IntVector offset = IntVector(x, y, z) * periodicBoundaryRange;
-	  if (offset == IntVector(0,0,0))
-	    continue;
-	  Box box =
-	    getBox(tmp_patches[i]->getLowIndex() + offset - IntVector(1,1,1),
-		   tmp_patches[i]->getHighIndex() + offset + IntVector(1,1,1));
-	  if (box.overlaps(domain)) {
-	    Patch* newPatch = tmp_patches[i]->createVirtualPatch(offset);
-	    d_virtualAndRealPatches.push_back(newPatch);
-	  }
-	}
+        for (z = -d_periodicBoundaries.z(); z <= d_periodicBoundaries.z(); z++)
+        {
+          IntVector offset = IntVector(x, y, z) * periodicBoundaryRange;
+          if (offset == IntVector(0,0,0))
+            continue;
+          Box box =
+            getBox(tmp_patches[i]->getLowIndex() + offset - IntVector(1,1,1),
+                   tmp_patches[i]->getHighIndex() + offset + IntVector(1,1,1));
+          if (box.overlaps(domain)) {
+            Patch* newPatch = tmp_patches[i]->createVirtualPatch(offset);
+            d_virtualAndRealPatches.push_back(newPatch);
+          }
+        }
       }
     }
   }
@@ -567,11 +568,11 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   all_patches->sortSubsets();
   std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
   std::sort(d_virtualAndRealPatches.begin(), d_virtualAndRealPatches.end(),
-	    Patch::Compare());
+            Patch::Compare());
   
   setBCTypes();
-}
 
+}
 void Level::setBCTypes()
 {
 #ifdef SELECT_GRID
@@ -593,12 +594,12 @@ void Level::setBCTypes()
       IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
       IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
       for(int iz=start.z();iz<end.z();iz++){
-	 for(int iy=start.y();iy<end.y();iy++){
-	    for(int ix=start.x();ix<end.x();ix++){
-	       int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
-	       counts[gridIdx]++;
-	    }
-	 }
+         for(int iy=start.y();iy<end.y();iy++){
+            for(int ix=start.x();ix<end.x();ix++){
+               int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
+               counts[gridIdx]++;
+            }
+         }
       }
    }
    d_gridStarts.resize(numCells+1);
@@ -615,50 +616,76 @@ void Level::setBCTypes()
       IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
       IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
       for(int iz=start.z();iz<end.z();iz++){
-	 for(int iy=start.y();iy<end.y();iy++){
-	    for(int ix=start.x();ix<end.x();ix++){
-	       int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
-	       int pidx = d_gridStarts[gridIdx]+counts[gridIdx];
-	       d_gridPatches[pidx]=patch;
-	       counts[gridIdx]++;
-	    }
-	 }
+         for(int iy=start.y();iy<end.y();iy++){
+            for(int ix=start.x();ix<end.x();ix++){
+               int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
+               int pidx = d_gridStarts[gridIdx]+counts[gridIdx];
+               d_gridPatches[pidx]=patch;
+               counts[gridIdx]++;
+            }
+         }
       }
    }
 #else
 #ifdef SELECT_RANGETREE
-   if (d_rangeTree != NULL)
-     delete d_rangeTree;
-   d_rangeTree = scinew PatchRangeTree(d_virtualAndRealPatches);
+  if (d_rangeTree != NULL)
+    delete d_rangeTree;
+  d_rangeTree = scinew PatchRangeTree(d_virtualAndRealPatches);
 #endif   
 #endif
-   patchIterator iter;
-   int idx;
-  for(iter=d_virtualAndRealPatches.begin(), idx = 0;
-      iter != d_virtualAndRealPatches.end(); iter++){
-    Patch* patch = *iter;
-    if(patch->isVirtual())
-      patch->setLevelIndex( -1 );
+  patchIterator iter;
+  
+  ProcessorGroup *myworld=Parallel::getRootProcessorGroup();
+  int numProcs=myworld->size();
+  int rank=myworld->myrank();
+  vector<int> displacements(numProcs);
+  vector<int> recvcounts(numProcs);
+
+  //create recvcounts and displacement arrays
+  int div=d_virtualAndRealPatches.size()/numProcs;
+  int mod=d_virtualAndRealPatches.size()%numProcs;
+  for(int p=0;p<numProcs;p++)
+  {     
+    if(p<mod)
+      recvcounts[p]=div+1;
     else
-      patch->setLevelIndex(idx++);
+      recvcounts[p]=div;
+  }
+  displacements[0]=0;
+  for(int p=1;p<numProcs;p++)
+  {
+    displacements[p]=displacements[p-1]+recvcounts[p-1];
+  }
+   
+  vector<unsigned int> bctypes(d_virtualAndRealPatches.size());
+  vector<unsigned int> mybctypes(recvcounts[rank]);
+  
+  int idx;
+  patchIterator startpatch=d_virtualAndRealPatches.begin()+displacements[rank];
+  patchIterator endpatch=startpatch+recvcounts[rank];
+  //for each of my patches
+  for(iter=startpatch,idx=0; iter != endpatch; iter++,idx++){
+    Patch* patch = *iter;
     //cout << "Patch bounding box = " << patch->getBox() << endl;
     // See if there are any neighbors on the 6 faces
+    int bitfield=0;
     for(Patch::FaceType face = Patch::startFace;
-	face <= Patch::endFace; face=Patch::nextFace(face)){
+        face <= Patch::endFace; face=Patch::nextFace(face)){
+      bitfield<<=2;
       IntVector l,h;
       patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
       Patch::selectType neighbors;
       selectPatches(l, h, neighbors);
       
       if(neighbors.size() == 0){
-	if(d_index != 0){
-	  // See if there are any patches on the coarse level at that face
-	  IntVector fineLow, fineHigh;
-	  patch->getFace(face, IntVector(0,0,0), d_refinementRatio,
-			 fineLow, fineHigh);
-	  IntVector coarseLow = mapCellToCoarser(fineLow);
-	  IntVector coarseHigh = mapCellToCoarser(fineHigh);
-	  const LevelP& coarseLevel = getCoarserLevel();
+        if(d_index != 0){
+          // See if there are any patches on the coarse level at that face
+          IntVector fineLow, fineHigh;
+          patch->getFace(face, IntVector(0,0,0), d_refinementRatio,
+                         fineLow, fineHigh);
+          IntVector coarseLow = mapCellToCoarser(fineLow);
+          IntVector coarseHigh = mapCellToCoarser(fineHigh);
+          const LevelP& coarseLevel = getCoarserLevel();
           
 #if 0
           // add 1 to the corresponding index on the plus edges 
@@ -676,22 +703,66 @@ void Level::setBCTypes()
             coarseHigh[2]++;
           }
 #endif
-	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
-	  if(neighbors.size() == 0){
-	    patch->setBCType(face, Patch::None);
-            bcout << "  Setting Patch " << patch->getID() << " face " << face << " to None\n";
-	  } else {
-	    patch->setBCType(face, Patch::Coarse);
-            bcout << "  Setting Patch " << patch->getID() << " face " << face << " to Coarse\n";
-	  }
-	} else {
-	  patch->setBCType(face, Patch::None);
-          bcout << "  Setting Patch " << patch->getID() << " face " << face << " to None\n";
-	}
+          coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
+          
+          if(neighbors.size() == 0){
+            bitfield|=Patch::None;
+          } else {
+            bitfield|=Patch::Coarse;
+          }
+        } else {
+          bitfield|=Patch::None;
+        }
       } else {
-	patch->setBCType(face, Patch::Neighbor);
-        bcout << "  Setting Patch " << patch->getID() << " face " << face << " to Neighbor\n";
+        bitfield|=Patch::Neighbor;
       }
+    }
+    mybctypes[idx]=bitfield;
+  }
+
+  if(numProcs>1)
+  {
+    //allgather bctypes
+    MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+  }
+  else
+  {
+     bctypes.swap(mybctypes);
+  }
+  int i;
+  //loop through patches
+  for(iter=d_virtualAndRealPatches.begin(),i=0,idx=0;iter!=d_virtualAndRealPatches.end();iter++,i++)
+  {
+    Patch *patch=*iter;
+  
+    if(patch->isVirtual())
+      patch->setLevelIndex( -1 );
+    else
+      patch->setLevelIndex(idx++);
+    
+    int bitfield=bctypes[i];
+    int mask=3;
+    //loop through faces
+    for(int j=5;j>=0;j--)
+    {
+      int bc_type=bitfield&mask;
+      if(rank==0)
+      {
+        switch(bc_type)
+        {
+          case Patch::None:
+            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to None\n";      
+            break;
+          case Patch::Coarse:
+            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to Coarse\n";
+            break;
+          case Patch::Neighbor:
+            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to Neighbor\n";
+            break;
+        }
+      }
+      patch->setBCType(Patch::FaceType(j),Patch::BCType(bc_type));
+      bitfield>>=2;
     }
     patch->finalizePatch();
   }
@@ -716,10 +787,10 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
        face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
     
     for(patchIterator iter=d_virtualAndRealPatches.begin(); 
-	iter != d_virtualAndRealPatches.end(); iter++){
+        iter != d_virtualAndRealPatches.end(); iter++){
       Patch* patch = *iter;
       if (patch->getBCType(face_side) == Patch::None) {
-	patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
+        patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
       }
     }  // end of patchIterator
   }
@@ -753,7 +824,7 @@ const Patch* Level::selectPatchForCellIndex( const IntVector& idx) const
     selectType::iterator it;
     for( it = pv.begin(); it != pv.end(); it++)
       if( (*it)->containsCell(idx) )
-	return *it;
+        return *it;
   }
   return 0;
 }
@@ -768,7 +839,7 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
     selectType::iterator it;
     for( it = pv.begin(); it != pv.end(); it++)
       if( (*it)->containsNode(idx) )
-	return *it;
+        return *it;
   }
   return 0;
 }
@@ -797,8 +868,8 @@ IntVector Level::interpolateCellToCoarser(const IntVector& idx, Vector& weight) 
 {
   IntVector i(idx-(d_refinementRatio-IntVector(1,1,1)));
   weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-		  double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-		  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+                  double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+                  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
   return i/d_refinementRatio;
 }
 
@@ -806,8 +877,8 @@ IntVector Level::interpolateXFaceToCoarser(const IntVector& idx, Vector& weight)
 {
   IntVector i(idx-(d_refinementRatio-IntVector(d_refinementRatio.x(),1,1)));
   weight=Vector(double(i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-		double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-		double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+                double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+                double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
   return i/d_refinementRatio;
 }
 
@@ -815,8 +886,8 @@ IntVector Level::interpolateYFaceToCoarser(const IntVector& idx, Vector& weight)
 {
   IntVector i(idx-(d_refinementRatio-IntVector(1,d_refinementRatio.y(),1)));
   weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-		  double(i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-		  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+                  double(i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+                  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
   return i/d_refinementRatio;
 }
 
@@ -824,20 +895,20 @@ IntVector Level::interpolateZFaceToCoarser(const IntVector& idx, Vector& weight)
 {
   IntVector i(idx-(d_refinementRatio-IntVector(1,1,d_refinementRatio.z())));
   weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-		double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-		double(i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+                double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+                double(i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
   return i/d_refinementRatio;
 }
 
 IntVector Level::interpolateToCoarser(const IntVector& idx, const IntVector& dir,
-			      Vector& weight) const
+                              Vector& weight) const
 {
   IntVector d(IntVector(1,1,1)-dir);
   IntVector i(idx-(d_refinementRatio-d-dir*d_refinementRatio));
   Vector o(d.asVector()*0.5);
   weight=Vector(double(o.x()+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-		  double(o.y()+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-		  double(o.z()+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
+                  double(o.y()+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
+                  double(o.z()+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
   return i/d_refinementRatio;
 }
 

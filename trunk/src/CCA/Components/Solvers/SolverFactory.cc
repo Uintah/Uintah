@@ -50,9 +50,6 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
         << ") Valid Solvers: CGSolver, DirectSolver, HypreSolver, AMRSolver, hypreamr \n";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
-  if (world->myrank() == 0){
-    cout << "Pressure solver:  \t" << solver << endl;
-  }
 
   return solve;
 }
