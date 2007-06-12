@@ -1922,7 +1922,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     }
     delete interpolator;
   }
-  solver->flushMatrix();
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -2148,7 +2148,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     }
     delete interpolator;
   }
-  solver->flushMatrix();
 }
 
 /*! Compute the elastic tangent modulus tensor for isotropic
