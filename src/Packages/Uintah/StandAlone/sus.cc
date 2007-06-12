@@ -401,9 +401,12 @@ main( int argc, char** argv )
       throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
 
 
-    //__________________________________
-    // grab AMR from the ups file if not specified on the command line
+    //if the AMR block is defined default to turning amr on
     if (!do_AMR)
+      do_AMR = (bool) ups->findBlock("AMR");
+
+    //if doAMR is defined set do_AMR.
+    if(do_AMR) 
       ups->get("doAMR",do_AMR);
     
     // don't do AMR on combine-patches or reduce-uda
