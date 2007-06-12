@@ -25,11 +25,11 @@
   </Time>
   
   <LoadBalancer>
-     <type>DLB</type>
-     <cellFactor>           1.25            </cellFactor>
-     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
-     <doSpaceCurve>         true            </doSpaceCurve>
-     <timestepInterval>     200             </timestepInterval>
+    <type>DLB</type>
+    <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
+    <doSpaceCurve>         true            </doSpaceCurve>
+    <timestepInterval>     100             </timestepInterval>
+    <outputNthProc>         8              </outputNthProc>
   </LoadBalancer>
 
   <!--____________________________________________________________________-->
