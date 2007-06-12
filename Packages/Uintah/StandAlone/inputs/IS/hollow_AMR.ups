@@ -13,7 +13,6 @@
         <type>PLB</type>
         <timestepInterval>      100  </timestepInterval>
         <dynamicAlgorithm>      patchFactorParticles</dynamicAlgorithm>
-        <cellFactor>            1.25  </cellFactor>
         <gainThreshold>         0.0   </gainThreshold>
         <levelIndependent>      true  </levelIndependent>
         <doSpaceCurve>          true  </doSpaceCurve>
@@ -137,8 +136,7 @@
 
       <Regridder>
         <type> BNR </type>
-        <min_patch_size> [[8,8,1][16,16,1]]   </min_patch_size>
-        <patch_ratio_to_target>     .25       </patch_ratio_to_target>
+        <min_patch_size> [[8,8,1]]   </min_patch_size>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,0]   </cell_stability_dilation>
