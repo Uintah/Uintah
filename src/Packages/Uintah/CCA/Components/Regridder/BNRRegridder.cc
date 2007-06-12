@@ -284,7 +284,6 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
     // parameters based on next-fine level.
     spacing = spacing / d_cellRefinementRatio[l];
   }
-  cout << d_myworld->myrank() << " finalizetime:" << ftime << " bcstime:" << btime << endl;
   return newGrid;
 }
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
