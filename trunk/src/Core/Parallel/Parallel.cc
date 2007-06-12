@@ -35,6 +35,7 @@ static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
 static int             worldRank = -1;
+static int             worldSize = -1;
 static ProcessorGroup* rootContext = 0;
 
 static
@@ -207,7 +208,6 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #endif
 
      worldComm=MPI_COMM_WORLD;
-     int worldSize;
      if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
        MpiError("MPI_Comm_size", status);
 
@@ -238,6 +238,12 @@ int
 Parallel::getMPIRank()
 {
   return worldRank;
+}
+
+int
+Parallel::getMPISize()
+{
+  return worldSize;
 }
 
 void

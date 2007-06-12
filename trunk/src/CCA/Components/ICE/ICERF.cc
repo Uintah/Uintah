@@ -159,8 +159,6 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     }  //  matl loop
 //  cout << "delT based on conduction "<< delt_cond<<endl;
     delt = std::min(delt_CFL, delt_cond);
-    delt = std::min(delt, d_initialDt);
-    d_initialDt = 10000.0;
 
     //__________________________________
     //  Bullet proofing

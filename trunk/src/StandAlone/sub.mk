@@ -351,6 +351,9 @@ fake_arches:
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
+tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract
+	;
+
 puda: prereqs Packages/Uintah/StandAlone/tools/puda/puda
 
 dumpfields: prereqs Packages/Uintah/StandAlone/tools/dumpfields/dumpfields

@@ -169,16 +169,7 @@ SET(Packages_Uintah_CCA_Components_MPM_SRCS
   HeatConduction/ImplicitHeatConduction.cc
 )
 
-IF (PETSC_LIBRARY)
-  SET(Packages_Uintah_CCA_Components_MPM_SRCS ${Packages_Uintah_CCA_Components_MPM_SRCS} PetscSolver.cc)
-ELSE (PETSC_LIBRARY)
-  SET(Packages_Uintah_CCA_Components_MPM_SRCS ${Packages_Uintah_CCA_Components_MPM_SRCS} FakePetscSolver.cc)
-ENDIF (PETSC_LIBRARY)
-
-
-ADD_LIBRARY(Packages_Uintah_CCA_Components_MPM ${Packages_Uintah_CCA_Components_MPM_SRCS})
-
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPM
+SET(LIBS
   Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Grid
   Packages_Uintah_Core_Util
@@ -199,6 +190,18 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPM
   ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
+
+IF (PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_MPM_SRCS ${Packages_Uintah_CCA_Components_MPM_SRCS} PetscSolver.cc)
+  SET(LIBS ${LIBS} ${PETSC_LIBRARIES})
+ELSE (PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_MPM_SRCS ${Packages_Uintah_CCA_Components_MPM_SRCS} FakePetscSolver.cc)
+ENDIF (PETSC_LIBRARY)
+
+
+ADD_LIBRARY(Packages_Uintah_CCA_Components_MPM ${Packages_Uintah_CCA_Components_MPM_SRCS})
+
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPM ${LIBS})
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_MPM)

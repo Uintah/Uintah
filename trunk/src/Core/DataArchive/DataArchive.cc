@@ -231,7 +231,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
     d_lock.unlock();
     return timedata.d_grid;
   }
-
+ 
   timedata.d_patchInfo.clear();
   timedata.d_matlInfo.clear();
 
@@ -1137,7 +1137,7 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
   // the processor of the same index as the patch.  Many datasets
   // have only one patch per processor, so this is a reasonable
   // first attempt.  Future attemps could perhaps be smarter.
-  if (!patchinfo.parsed && !d_xmlParsed[levelIndex][patchIndex]) {
+  if (!patchinfo.parsed && patchIndex < d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
     parseFile(d_xmlUrls[levelIndex][patchIndex], levelIndex, levelBasePatchID);
     d_xmlParsed[levelIndex][patchIndex] = true;
   }

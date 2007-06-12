@@ -113,10 +113,7 @@ SET(Packages_Uintah_CCA_Components_Arches_SRCS
   TurbulenceModel.cc
 )
 
-ADD_LIBRARY(Packages_Uintah_CCA_Components_Arches ${Packages_Uintah_CCA_Components_Arches_SRCS})
-SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Arches PROPERTIES LINKER_LANGUAGE CXX)
-
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches
+SET(LIBS 
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_Core_GeometryPiece
   Packages_Uintah_Core_Grid
@@ -139,6 +136,24 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches
   ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
+
+IF(PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Arches_SRCS ${Packages_Uintah_CCA_Components_Arches_SRCS} PetscSolver.cc Filter.cc)
+  SET(LIBS ${LIBS} ${PETSC_LIBRARIES} 
+ELSE(PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Arches_SRCS ${Packages_Uintah_CCA_Components_Arches_SRCS} FakePetscSolver.cc)
+ENDIF(PETSC_LIBRARY)
+
+IF(HYPRE_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Arches_SRCS ${Packages_Uintah_CCA_Components_Arches_SRCS} HypreSolver.cc)
+  SET(LIBS ${LIBS} ${HYPRE_LIBRARY} 
+ENDIF(HYPRE_LIBRARY)
+
+
+ADD_LIBRARY(Packages_Uintah_CCA_Components_Arches ${Packages_Uintah_CCA_Components_Arches_SRCS})
+SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Arches PROPERTIES LINKER_LANGUAGE CXX)
+
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches ${LIBS})
 
 ADD_SUBDIRECTORY(Mixing)
 ADD_SUBDIRECTORY(Radiation)

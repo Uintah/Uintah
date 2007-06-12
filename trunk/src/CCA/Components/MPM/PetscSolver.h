@@ -63,9 +63,9 @@ namespace Uintah {
 
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
-    void removeFixedDOF(int num_nodes);
+    void removeFixedDOF();
 
-    void removeFixedDOFHeat(int num_nodes);
+    void removeFixedDOFHeat();
 
     void finalizeMatrix();
 
@@ -91,6 +91,7 @@ namespace Uintah {
     vector<int> d_numNodes,d_startIndex;
     int d_totalNodes;
     int d_DOFsPerNode;
+    int d_iteration;
 
     // Petsc matrix and vectors
 #ifdef HAVE_PETSC

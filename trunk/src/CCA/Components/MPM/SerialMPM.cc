@@ -374,6 +374,7 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
   Task* t = scinew Task("MPM::printParticleCount",
                         this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
+  t->setType(Task::OncePerProc);
   sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
 }
 

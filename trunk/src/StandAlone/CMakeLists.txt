@@ -55,7 +55,6 @@ SET(SUS_LIBS
         Packages_Uintah_Core_Exceptions  
         Packages_Uintah_CCA_Ports        
         Packages_Uintah_CCA_Components_Parent 
-        Packages_Uintah_CCA_Components_Models 
         Packages_Uintah_CCA_Components_DataArchiver  
         Packages_Uintah_CCA_Components_LoadBalancers 
         Packages_Uintah_CCA_Components_Regridder     
@@ -66,6 +65,9 @@ SET(SUS_LIBS
         Packages_Uintah_CCA_Components_Solvers
 )
 
+IF(ICE)
+  SET(SUS_LIBS ${SUS_LIBS} Packages_Uintah_CCA_Components_Models)
+ENDIF(ICE)
 IF(HYPRE_LIBRARY)
   SET(SUS_LIBS ${SUS_LIBS} ${HYPRE_LIBRARY})
 ENDIF(HYPRE_LIBRARY)

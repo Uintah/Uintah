@@ -149,6 +149,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_h2s=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s_index);  
     outStream.d_so2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2_index);
     outStream.d_so3=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so3_index);  
+    outStream.d_sulfur=tableLookUp(mixFrac, mixFracVars, current_heat_loss, sulfur_index);  
   }
   if (d_co_output)
     outStream.d_co=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co_index);  
@@ -347,6 +348,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   h2s_index = -1;
   so2_index = -1;
   so3_index = -1;
+  sulfur_index = -1;
   co_index = -1;
   c2h2_index = -1;
   ch4_index = -1;
@@ -371,6 +373,8 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    so2_index = ii;
     else if(vars_names[ii]== "SO3")
 	    so3_index = ii;
+    else if(vars_names[ii]== "SULFUR")
+	    sulfur_index = ii;
     else if(vars_names[ii]== "CO")
 	    co_index = ii;
     else if(vars_names[ii]== "C2H2")
@@ -382,35 +386,35 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     cout<<vars_names[ii]<<endl;
   }
   if ((F_index == -1)||(Rho_index == -1)) 
-    throw InvalidValue("No mixture fraction or density found in table"
+    throw InvalidValue("No mixture fraction or density found in table "
                        + inputfile, __FILE__, __LINE__);
 
   if (((Hs_index == -1)||(Hl_index == -1))&&(d_calcEnthalpy)) 
-    throw InvalidValue("No sensible heat or heat loss found in table"
+    throw InvalidValue("No sensible heat or heat loss found in table "
                        + inputfile, __FILE__, __LINE__);
 
   if ((Fvar_index == -1)&&(d_calcVariance)) 
-    throw InvalidValue("No variance found in table" + inputfile,
+    throw InvalidValue("No variance found in table " + inputfile,
                        __FILE__, __LINE__);
 
   if ((T_index == -1)||(Cp_index == -1)||(co2_index == -1)||(h2o_index == -1)) 
-    throw InvalidValue("No temperature or Cp or CO2 or H2O found in table"
+    throw InvalidValue("No temperature or Cp or CO2 or H2O found in table "
                        + inputfile, __FILE__, __LINE__);
   if ((d_sulfur_chem)&&
-      ((h2s_index == -1)||(so2_index == -1)||(so3_index == -1))) 
-    throw InvalidValue("No H2S, SO2 or SO3 for sulfur chemistry found in table"
+      ((h2s_index == -1)||(so2_index == -1)||(so3_index == -1)||(sulfur_index == -1))) 
+    throw InvalidValue("No H2S, SO2, S or SO3 for sulfur chemistry found in table "
                        + inputfile, __FILE__, __LINE__);
 
   if ((d_co_output)&&(co_index == -1))
-    throw InvalidValue("No CO found in table" + inputfile,
+    throw InvalidValue("No CO found in table " + inputfile,
                        __FILE__, __LINE__);
 
   if ((d_soot_precursors)&&((c2h2_index == -1)||(ch4_index == -1)))
-    throw InvalidValue("No C2H2 or CH4 found in table" + inputfile,
+    throw InvalidValue("No C2H2 or CH4 found in table " + inputfile,
                        __FILE__, __LINE__);
 
   if ((d_tabulated_soot)&&(soot_index == -1))
-    throw InvalidValue("No sootFV found in table" + inputfile,
+    throw InvalidValue("No sootFV found in table " + inputfile,
                        __FILE__, __LINE__);
 
   cout << "CO2 index is "  << co2_index  << endl;
@@ -418,6 +422,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   cout << "H2S index is "  << h2s_index  << endl;
   cout << "SO2 index is "  << so2_index  << endl;
   cout << "SO3 index is "  << so3_index  << endl;
+  cout << "S index is "  << sulfur_index  << endl;
   cout << "CO index is "   << co_index   << endl;
   cout << "C2H2 index is " << c2h2_index << endl;
   cout << "CH4 index is "  << ch4_index  << endl;

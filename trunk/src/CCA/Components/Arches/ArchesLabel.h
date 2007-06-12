@@ -236,6 +236,7 @@ namespace Uintah {
       const VarLabel* d_h2sINLabel;
       const VarLabel* d_so2INLabel;
       const VarLabel* d_so3INLabel;
+      const VarLabel* d_sulfurINLabel;
       const VarLabel* d_coINLabel;
       const VarLabel* d_c2h2INLabel;
       const VarLabel* d_ch4INLabel;
@@ -421,7 +422,9 @@ namespace Uintah {
       const VarLabel* d_ShELabel;
       const VarLabel* d_ShRFLabel;
       const VarLabel* d_CO2FlowRateLabel;
+      const VarLabel* d_SO2FlowRateLabel;
       const VarLabel* d_carbonEfficiencyLabel;
+      const VarLabel* d_sulfurEfficiencyLabel;
       const VarLabel* d_scalarFlowRateLabel;
       const VarLabel* d_scalarEfficiencyLabel;
       const VarLabel* d_enthalpyFlowRateLabel;

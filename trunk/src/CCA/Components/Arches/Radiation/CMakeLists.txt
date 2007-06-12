@@ -51,10 +51,7 @@ SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS
   DORadiationModel.cc
 )
 
-ADD_LIBRARY(Packages_Uintah_CCA_Components_Arches_Radiation ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS})
-SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Arches_Radiation PROPERTIES LINKER_LANGUAGE CXX)
-
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches_Radiation
+SET(LIBS 
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_Core_Grid
   Packages_Uintah_Core_Util
@@ -65,16 +62,28 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches_Radiation
   Core_Util
   Core_Thread
   Core_Geometry
-  ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
-  ${M_LIBRARY}
-  ${FLIBS}
-  ${LIBS}
-  ${PETSC_LIBRARY}
-  ${LIBS}
-  ${HYPRE_LIBRARY}
 )
 
+IF(PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS 
+    ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS} RadLinearSolver.cc)
+  SET(LIBS ${LIBS} ${PETSC_LIBRARIES} 
+ELSE(PETSC_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS 
+    ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS} FakeRadLinearSolver.cc)
+ENDIF(PETSC_LIBRARY)
+
+IF(HYPRE_LIBRARY)
+  SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS 
+    ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS} RadHypreSolver.cc)
+  SET(LIBS ${LIBS} ${HYPRE_LIBRARY} 
+ENDIF(HYPRE_LIBRARY)
+  
+
+ADD_LIBRARY(Packages_Uintah_CCA_Components_Arches_Radiation ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS})
+SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Arches_Radiation PROPERTIES LINKER_LANGUAGE CXX)
+
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches_Radiation ${LIBS})
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Arches_Radiation)
 ENDIF(BUILD_SHARED_LIBS)

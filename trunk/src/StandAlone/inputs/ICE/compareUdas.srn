@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v3.1.0" name="{Main}" bbox="{0 4 931 786}" creationDate="{Fri Jun 01 2007}" creationTime="{09:36:22}" geometry="{1161x1028+0+0}">
+<network version="v3.1.0" name="{Main}" bbox="{0 4 931 786}" creationDate="{Fri Jun 01 2007}" creationTime="{16:51:54}" geometry="{1161x1028+0+0}">
   <note>{}</note>
   <modules>
     <module id="m1" package="Uintah" category="DataIO" name="ArchiveReader" version="1.0">
       <position x="1" y="7"/>
-      <var name="filebase" val="{}" substitute="no"/>
+      <var name="filebase" val="{C:/Bryan/SCIRun/uintah-dbg/runs/hotBlob2mat8patch.uda.000}" substitute="no"/>
       <var name="tcl_status" val="{Executing}" substitute="no"/>
+      <var name="ui_geometry" val="{523x82+20+281}" substitute="no"/>
     </module>
     <module id="m2" package="SCIRun" category="Visualization" name="CreateStandardColorMaps" version="1.0">
       <position x="273" y="4"/>
@@ -27,13 +28,14 @@
       <var name="sVar" val="{rho_CC}" substitute="no"/>
       <var name="sMatNum" val="{0}" substitute="no"/>
       <var name="remove_boundary_cells" val="{0}" substitute="no"/>
+      <var name="ui_geometry" val="{319x104+0+0}" substitute="no"/>
     </module>
     <module id="m4" package="Uintah" category="Selectors" name="TimestepSelector" version="1.0">
       <position x="0" y="93"/>
-      <var name="tcl_status" val="{Calling TimestepSelector!}" substitute="no"/>
-      <var name="time" val="{33}" substitute="no"/>
-      <var name="max_time" val="{33}" substitute="no"/>
-      <var name="timeval" val="{0.0001}" substitute="no"/>
+      <var name="tcl_status" val="{Done}" substitute="no"/>
+      <var name="time" val="{8}" substitute="no"/>
+      <var name="max_time" val="{8}" substitute="no"/>
+      <var name="timeval" val="{0.00104249287374}" substitute="no"/>
       <var name="animate" val="{0}" substitute="no"/>
       <var name="tinc" val="{1}" substitute="no"/>
       <var name="def-color-r" val="{1.0}" substitute="no"/>
@@ -56,7 +58,7 @@
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x641+-32000+-32000" substitute="no"/>
+      <var name="ViewWindow_0-geometry" val="654x640+-31996+-31970" substitute="no"/>
       <var name="ViewWindow_0-view-eyep-x" val="{0.691108534685}" substitute="no"/>
       <var name="ViewWindow_0-view-eyep-y" val="{1.00920660064}" substitute="no"/>
       <var name="ViewWindow_0-view-eyep-z" val="{4.17130308669}" substitute="no"/>
@@ -246,9 +248,10 @@
       <position x="231" y="218"/>
       <var name="level" val="{0}" substitute="no"/>
       <var name="tcl_status" val="{Calling FieldExtractor!}" substitute="no"/>
-      <var name="sVar" val="{}" substitute="no"/>
+      <var name="sVar" val="{mom_L_ME_CC}" substitute="no"/>
       <var name="sMatNum" val="{0}" substitute="no"/>
       <var name="remove_boundary_cells" val="{0}" substitute="no"/>
+      <var name="ui_geometry" val="{319x104+0+0}" substitute="no"/>
     </module>
     <module id="m15" package="Uintah" category="Visualization" name="NodeHedgehog" version="1.0">
       <position x="231" y="470"/>

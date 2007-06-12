@@ -444,10 +444,12 @@ main( int argc, char** argv )
     ctl->attachPort("sim", sim);
     comp->attachPort("solver", solve);
     
+#ifndef NO_ICE
     //__________________________________
     //  Model
     ModelMaker* modelmaker = scinew ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
+#endif
 
     //__________________________________
     // Load balancer
@@ -500,7 +502,9 @@ main( int argc, char** argv )
     delete solve;
     delete output;
     delete reader;
+#ifndef NO_ICE
     delete modelmaker;
+#endif
   } catch (Exception& e) {
     
     cerrLock.lock();

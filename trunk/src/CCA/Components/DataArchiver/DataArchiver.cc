@@ -655,7 +655,7 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
          if (hrefNode == "")
             throw InternalError("timestep href attribute not found", __FILE__, __LINE__);
 
-         unsigned int href_pos = (unsigned int)hrefNode.find_first_of("/");
+         string::size_type href_pos = hrefNode.find_first_of("/");
 
          string href = hrefNode;
          if (href_pos != string::npos)

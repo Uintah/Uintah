@@ -49,9 +49,9 @@ namespace Uintah {
     
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
-    void removeFixedDOF(int num_nodes);
+    void removeFixedDOF();
 
-    void removeFixedDOFHeat(int num_nodes);
+    void removeFixedDOFHeat();
 
     void finalizeMatrix();
 

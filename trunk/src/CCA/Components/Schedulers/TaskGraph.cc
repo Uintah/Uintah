@@ -900,21 +900,6 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
       //if(task->getTask()->getType() == Task::Reduction || comp->deptype == Task::Modifies) {
         // this is either the task computing the var, modifying it, or the reduction itself
 	ct.remembercomp(task, comp, 0, comp->matls, d_myworld);
-#if 0
-      } else {
-	// create internal dependencies to reduction tasks from any task
-	// computing the reduction
-	DetailedTask* reductionTask = d_reductionTasks[comp->var];
-	ASSERTRANGE(reductionTask->getAssignedResourceIndex(), 0, d_myworld->size());
-	ASSERTRANGE(task->getAssignedResourceIndex(), 0, d_myworld->size());
-	if (reductionTask->getAssignedResourceIndex() == 
-	    task->getAssignedResourceIndex() &&
-	    task->getAssignedResourceIndex() == me) {
-	  // the tasks are on the same processor, so add an internal dependency
-	  reductionTask->addInternalDependency(task, comp->var);
-	}
-      }
-#endif
     } else {
       // Normal tasks
       constHandle<PatchSubset> patches =
@@ -944,7 +929,7 @@ TaskGraph::remapTaskDWs(int dwmap[])
     // we need to find the coarsest level.  The NewDW is relative to the coarsest
     // level executing in this taskgraph.
     if (type_ == Scheduler::IntermediateTaskGraph) {
-      if (d_tasks[i]->getType() == Task::OncePerProc) {
+      if (d_tasks[i]->getType() == Task::OncePerProc || d_tasks[i]->getType() == Task::Output) {
         levelmin = 0;
         continue;
       }

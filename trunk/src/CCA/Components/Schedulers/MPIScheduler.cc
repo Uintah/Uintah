@@ -73,7 +73,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          MPIScheduler   * parentScheduler) :
   SchedulerCommon( myworld, oport ),
-  log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport)
+  log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport), useExternalQueue_(false)
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
@@ -330,8 +330,6 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   mpi_info_.totalcommflops += send_flops;
 #endif
   
-  taskdbg << d_myworld->myrank() << " Completed task: ";
-  printTask(taskdbg, task); taskdbg << '\n';
 }
 
 void
@@ -787,7 +785,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
-      //taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
+      taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
       if (task->getTask()->getType() == Task::Reduction){
         if(!abort)
@@ -798,6 +796,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         processMPIRecvs(WAIT_ALL);
         ASSERT(recvs_.numRequests() == 0);
         runTask(task, iteration);
+        taskdbg << d_myworld->myrank() << " Completed task: ";
+        printTask(taskdbg, task); taskdbg << '\n';
       }
     }
     else {

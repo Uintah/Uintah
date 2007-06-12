@@ -112,6 +112,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   {
     patch_sets[0].push_back(Region((*p)->getInteriorCellLowIndex(),(*p)->getInteriorCellHighIndex()));
   }
+    
+  int rank=d_myworld->myrank();
+  int procs=d_myworld->size();
+  MPI_Comm comm=d_myworld->getComm();
 
   //For each level Fine to Coarse
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
@@ -119,7 +123,83 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
-
+#if 0
+    
+    
+    //Calcualte coarsening factor
+    int coarsen_factor=d_minPatchSize[l+1][0]*d_minPatchSize[l+1][1]*d_minPatchSize[l+1][2]/d_cellRefinementRatio[l][0]/d_cellRefinementRatio[l][1]/d_cellRefinementRatio[l][2];
+    //Calculate the number of stages to reduce
+      //this is a guess based on the coarsening factor and the number of processors
+    int stages=log(coarsen_factor)/log(2.0) + log(procs)/log(2.0)/4;
+    if(rank==0)
+            cout << "stages:" << stages << endl;
+    int stride=1;
+    MPI_Status status;
+    //consoldate flags along a hypercube sending the shortest distance first
+      //this is important for keeping flags clustered(ordered according to LB)
+    for(int i=0;i<stages;i++)
+    {
+     if(rank%(stride*2)==0)
+     {
+      if(rank+stride<procs)
+      {
+        //recieve from rank+stride
+        int size=coarse_flag_vector.size();
+        int numReceive;
+        //recieve number of flags
+        MPI_Recv(&numReceive,1,MPI_INT,rank+stride,0,comm,&status);
+        coarse_flag_vector.resize(size+numReceive);
+        //recieve new flags
+        MPI_Recv(&coarse_flag_vector[size],numReceive*sizeof(IntVector),MPI_BYTE,rank+stride,0,comm,&status);
+      }
+     }
+     else
+     {
+       //send to rank-stride
+       int numSend=coarse_flag_vector.size();
+       //send number of flags
+       MPI_Send(&numSend,1,MPI_INT,rank-stride,0,comm);
+       //send flags
+       MPI_Send(&coarse_flag_vector[0],numSend*sizeof(IntVector),MPI_BYTE,rank-stride,0,comm);
+       coarse_flag_vector.clear();
+       break;
+     }
+     stride*=2;
+    }
+#endif
+#if 0
+    //send flags to the begining processors
+      //this is important for being able to exploit on-node communication
+    stride=1<<stages; 
+    if(rank%stride==0)
+    {
+        int to=rank/stride;
+        if(to!=rank)
+        {
+          int numSend=coarse_flag_vector.size();
+          //send number of flags
+          MPI_Send(&numSend,1,MPI_INT,to,0,comm);
+          //send flags
+          MPI_Send(&coarse_flag_vector[0],numSend*sizeof(IntVector),MPI_BYTE,to,0,comm);
+          coarse_flag_vector.clear();
+        }
+    }
+   
+    if(rank<ceil(procs/(float)stride))
+    {
+      int from=rank*stride;
+      if(from!=rank)
+      {
+        //recieve from rank+stride
+        int numReceive;
+        //recieve number of flags
+        MPI_Recv(&numReceive,1,MPI_INT,from,0,comm,&status);
+        coarse_flag_vector.resize(numReceive);
+        //recieve new flags
+        MPI_Recv(&coarse_flag_vector[0],numReceive*sizeof(IntVector),MPI_BYTE,from,0,comm,&status);
+      }
+    }
+#endif
     //Parallel BR over coarse flags
       //flags on level l are used to create patches on level l+1
    

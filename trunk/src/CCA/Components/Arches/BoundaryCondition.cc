@@ -43,9 +43,11 @@
 #include <Core/Disclosure/TypeUtils.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Containers/StaticArray.h>
-#include <iostream>
 #include <SCIRun/Core/Math/MiscMath.h>
 #include <SCIRun/Core/Math/MinMax.h>
+
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace Uintah;
@@ -125,6 +127,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   int total_cellTypes = 0;
   
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
+  db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
     for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
@@ -1951,13 +1954,16 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID, bool calcVariance,
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
+  fsr = 0.0;
   d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
   d_prefill = false;
   // add cellId to distinguish different inlets
-  d_area_label = VarLabel::create("flowarea"+cellID,
+  std::stringstream stream_cellID;
+  stream_cellID << d_cellTypeID;
+  d_area_label = VarLabel::create("flowarea"+stream_cellID.str(),
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
-  d_flowRate_label = VarLabel::create("flowRate"+cellID,
+  d_flowRate_label = VarLabel::create("flowRate"+stream_cellID.str(),
    ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
 }
 
@@ -1968,6 +1974,7 @@ BoundaryCondition::FlowInlet::FlowInlet():
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
+  fsr = 0.0;
   d_prefill_index = 0;
   d_ramping_inlet_flowrate = false;
   d_prefill = false;
@@ -1980,6 +1987,7 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   flowRate(copy.flowRate),
   inletVel(copy.inletVel),
   fcr(copy.fcr),
+  fsr(copy.fsr),
   d_prefill_index(copy.d_prefill_index),
   d_ramping_inlet_flowrate(copy.d_ramping_inlet_flowrate),
   streamMixturefraction(copy.streamMixturefraction),
@@ -2016,6 +2024,7 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   flowRate = copy.flowRate;
   inletVel = copy.inletVel;
   fcr = copy.fcr;
+  fsr = copy.fsr;
   d_prefill_index = copy.d_prefill_index;
   d_ramping_inlet_flowrate = copy.d_ramping_inlet_flowrate;
   streamMixturefraction = copy.streamMixturefraction;
@@ -2049,6 +2058,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   // mixture fraction > 0, if there is an air inlet, and air has some CO2,
   // this air CO2 will be counted in the balance automatically
   // params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
+  params->getWithDefault("SulfurMassFractionInFuel", fsr, 0.0);
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
@@ -3892,6 +3902,9 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   if (d_carbon_balance)
     tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_sulfur_balance)
+    tsk->requires(Task::NewDW, d_lab->d_so2INLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_enthalpySolve)
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -3899,6 +3912,8 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   tsk->computes(d_lab->d_scalarFlowRateLabel);
   if (d_carbon_balance)
     tsk->computes(d_lab->d_CO2FlowRateLabel);
+  if (d_sulfur_balance)
+    tsk->computes(d_lab->d_SO2FlowRateLabel);
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpyFlowRateLabel);
 
@@ -3924,6 +3939,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
 
     constCCVariable<double> scalar;
     constCCVariable<double> co2;
+    constCCVariable<double> so2;
     constCCVariable<double> enthalpy;
 
     new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel,
@@ -3963,6 +3979,16 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
 			&co2IN, &co2OUT); 
       new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
     }
+
+    double so2IN = 0.0;
+    double so2OUT = 0.0;
+    if (d_sulfur_balance) {
+      new_dw->get(so2, d_lab->d_so2INLabel, matlIndex,
+		  patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    getVariableFlowRate(pc,patch, cellinfo, &constVars, so2, &so2IN, &so2OUT); 
+      new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateLabel);
+	}  
+	  
     double enthalpyIN = 0.0;
     double enthalpyOUT = 0.0;
     if (d_enthalpySolve) {
@@ -3998,6 +4024,10 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
     tsk->computes(d_lab->d_carbonEfficiencyLabel);
   }
+  if (d_sulfur_balance) {
+    tsk->requires(Task::NewDW, d_lab->d_SO2FlowRateLabel);
+    tsk->computes(d_lab->d_sulfurEfficiencyLabel);
+  }
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
     tsk->requires(Task::NewDW, d_lab->d_totalRadSrcLabel);
@@ -4018,17 +4048,20 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw)
 {
-    sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_enthalpyFlowRate;
+    sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_SO2FlowRate, sum_enthalpyFlowRate;
     sum_vartype sum_totalRadSrc;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
     double CO2FlowRate = 0.0;
+	double SO2FlowRate = 0.0;
     double enthalpyFlowRate = 0.0;
     double totalFlowRate = 0.0;
     double totalCarbonFlowRate = 0.0;
+	double totalSulfurFlowRate = 0.0;
     double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
     double carbonEfficiency = 0.0;
+	double sulfurEfficiency = 0.0;
     double enthalpyEfficiency = 0.0;
     double totalRadSrc = 0.0;
     double normTotalRadSrc = 0.0;
@@ -4039,6 +4072,10 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     if (d_carbon_balance) {
       new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
       CO2FlowRate = sum_CO2FlowRate;
+    }
+    if (d_sulfur_balance) {
+      new_dw->get(sum_SO2FlowRate, d_lab->d_SO2FlowRateLabel);
+      SO2FlowRate = sum_SO2FlowRate;
     }
     if (d_enthalpySolve) {
       new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
@@ -4057,6 +4094,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 	  totalFlowRate += fi->flowRate;
       if ((d_carbon_balance)&&(scalarValue > 0.0))
 	    totalCarbonFlowRate += fi->flowRate * fi->fcr;
+      if ((d_sulfur_balance)&&(scalarValue > 0.0))
+	    totalSulfurFlowRate += fi->flowRate * fi->fsr;
       if ((d_enthalpySolve)&&(scalarValue > 0.0))
 	    totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
     }
@@ -4073,6 +4112,13 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       else 
 	throw InvalidValue("No carbon in the domain", __FILE__, __LINE__);
       new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
+    }
+    if (d_sulfur_balance) {
+      if (totalSulfurFlowRate > 0.0)
+	sulfurEfficiency = SO2FlowRate * 32.0/64.0 /totalSulfurFlowRate;
+      else 
+	throw InvalidValue("No sulfur in the domain", __FILE__, __LINE__);
+      new_dw->put(delt_vartype(sulfurEfficiency), d_lab->d_sulfurEfficiencyLabel);
     }
     if (d_enthalpySolve) {
       if (totalEnthalpyFlowRate < 0.0) {
@@ -4459,7 +4505,7 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
 
   if (zplus) {
     int colZ = idxHi.z();
-    double pi = acos(-1.0);
+    //double pi = acos(-1.0);
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	
@@ -5113,8 +5159,8 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
   // Get the wall boundary and flow field codes
   int wall_celltypeval = wallCellType();
 
-  double time=d_lab->d_sharedState->getElapsedTime();
-  double current_time = time + time_shift;
+  //double time=d_lab->d_sharedState->getElapsedTime();
+  //double current_time = time + time_shift;
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;

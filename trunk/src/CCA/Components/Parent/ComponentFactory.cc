@@ -64,8 +64,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   if (sim_comp == "impm" || sim_comp == "IMPM") {
     return scinew ImpMPM(world);
   } 
-#else
-  throw ProblemSetupException("MPM Components not supported in this build", __FILE__, __LINE__);
 #endif
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
@@ -74,8 +72,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     else
       return scinew ICE(world);
   } 
-#else
-  throw ProblemSetupException("ICE Components not supported in this build", __FILE__, __LINE__);
 #endif
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
@@ -90,22 +86,16 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   if (sim_comp == "fmpmice" || sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
     return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
   } 
-#else
-  throw ProblemSetupException("MPMICE Components not supported in this build", __FILE__, __LINE__);
 #endif
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
     return scinew Arches(world);
   } 
-#else
-  throw ProblemSetupException("Arches Components not supported in this build", __FILE__, __LINE__);
 #endif
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world);
   } 
-#else
-  throw ProblemSetupException("MPMArches Components not supported in this build", __FILE__, __LINE__);
 #endif
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
@@ -151,6 +141,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   } 
 
   throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
-                              "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3",
-                              __FILE__, __LINE__);
+                              "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3"
+                              "\nMake sure that component is supported in this build", __FILE__, __LINE__);
 }

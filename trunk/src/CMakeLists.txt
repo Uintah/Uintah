@@ -114,6 +114,9 @@ ENDIF(TEEM_INCLUDE)
 
 IF(MPI_INCLUDE)
   INCLUDE_DIRECTORIES(${MPI_INCLUDE})
+  
+  # IF MPICH...
+  ADD_DEFINITIONS(-DMPICH_SKIP_MPICXX)
 ENDIF(MPI_INCLUDE)
 
 IF(ARCHES OR RADIATION)
@@ -150,13 +153,5 @@ ADD_SUBDIRECTORY(Core)
 ADD_SUBDIRECTORY(CCA)
 ADD_SUBDIRECTORY(StandAlone)
 
-#options
-
-# scirun on
-# sus on
-# standalone utils on
-
-# look for petsc
-# look for hypre
 # look for tau
-
+# - REQUIRE MPI, disclude MPICXX

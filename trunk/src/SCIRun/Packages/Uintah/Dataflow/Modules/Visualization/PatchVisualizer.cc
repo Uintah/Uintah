@@ -165,8 +165,7 @@ bool PatchVisualizer::getGrid()
     timestep = -1;
   }
   if (t != timestep) {
-    double time = times[timestep];
-    grid = archive->queryGrid(time);
+    grid = archive->queryGrid(t);
     timestep = t;
     return true;
   }

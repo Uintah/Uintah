@@ -55,14 +55,11 @@ SET(Packages_Uintah_CCA_Components_Models_SRCS
 # test/Mixing3.cc
 )
 
-ADD_LIBRARY(Packages_Uintah_CCA_Components_Models ${Packages_Uintah_CCA_Components_Models_SRCS})
-
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models
+SET(LIBS
   Core_Exceptions
   Core_Geometry
   Core_Thread
   Core_Util
-  Packages_Uintah_CCA_Components_MPM
   Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Disclosure
   Packages_Uintah_Core_Exceptions
@@ -73,16 +70,28 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models
   Packages_Uintah_Core_Parallel
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_CCA_Components_ICE
-  Packages_Uintah_CCA_Components_MPMICE
   ${XML2_LIBRARY}
   ${MPI_LIBRARY}
   ${F_LIBRARY}
   ${M_LIBRARY}
 )
 
+IF(PETSC_LIBRARY)
+  SET(LIBS ${LIBS} ${PETSC_LIBRARIES} 
+ENDIF(PETSC_LIBRARY)
+
+IF(HYPRE_LIBRARY)
+  SET(LIBS ${LIBS} ${HYPRE_LIBRARY} 
+ENDIF(HYPRE_LIBRARY)
+  
+ADD_LIBRARY(Packages_Uintah_CCA_Components_Models ${Packages_Uintah_CCA_Components_Models_SRCS})
+
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models ${LIBS})
+
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Models)
 ENDIF(BUILD_SHARED_LIBS)
 
-ADD_SUBDIRECTORY(Radiation)
-
+IF(RADIATION)
+  ADD_SUBDIRECTORY(Radiation)
+ENDIF(RADIATION)

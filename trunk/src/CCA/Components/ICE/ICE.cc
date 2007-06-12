@@ -332,14 +332,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   cout_norm << "Limiter on speed of sound inside delT calc.: " << d_delT_knob<< endl;
   
   //__________________________________
-  // Pull out from Time section
-  d_initialDt = 10000.0;
-  ProblemSpecP time_ps = prob_spec->findBlock("Time");
-  time_ps->get("delt_init",d_initialDt);
-  cout_norm << "Initial dt = " << d_initialDt << endl;
-  cout_norm << "Pulled out Time block of the input file" << endl;
-
-  //__________________________________
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
 
@@ -742,8 +734,6 @@ _____________________________________________________________________*/
 void ICE::restartInitialize()
 {
   cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
-  // disregard initial dt when restarting
-  d_initialDt = 10000.0;
   
   if(d_analysisModule){
     d_analysisModule->restartInitialize();
@@ -827,8 +817,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   }
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
-  if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
-    d_initialDt = 10000.0;
   
   cout_doing << d_myworld->myrank() << " --------------------------------------------------------L-" 
              <<level->getIndex()<< endl;
@@ -1996,9 +1984,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 //    cout << "delT based on conduction "<< delt_cond<<endl;
 
     delt = std::min(delt_CFL, delt_cond);
-    delt = std::min(delt, d_initialDt);
-
-    d_initialDt = 10000.0;
 
     const Level* level = getLevel(patches);
     //__________________________________

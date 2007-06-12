@@ -1957,7 +1957,9 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_scalarEfficiencyLabel);
   tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
   tsk->computes(d_lab->d_carbonEfficiencyLabel);
+  tsk->computes(d_lab->d_sulfurEfficiencyLabel);
   tsk->computes(d_lab->d_CO2FlowRateLabel);
+  tsk->computes(d_lab->d_SO2FlowRateLabel);
   tsk->computes(d_lab->d_scalarFlowRateLabel);
 
   tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
@@ -2037,9 +2039,11 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
     double carbon_efficiency = 0.0;
+    double sulfur_efficiency = 0.0;
     double scalar_efficiency = 0.0;
     double enthalpy_efficiency = 0.0;
     double CO2FlowRate = 0.0;
+    double SO2FlowRate = 0.0;
     double scalarFlowRate = 0.0;
 
     new_dw->put(delt_vartype(uvwout), d_lab->d_uvwoutLabel);
@@ -2048,9 +2052,11 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
     new_dw->put(delt_vartype(carbon_efficiency), d_lab->d_carbonEfficiencyLabel);
+    new_dw->put(delt_vartype(sulfur_efficiency), d_lab->d_sulfurEfficiencyLabel);
     new_dw->put(delt_vartype(enthalpy_efficiency), d_lab->d_enthalpyEfficiencyLabel);
     new_dw->put(delt_vartype(scalar_efficiency), d_lab->d_scalarEfficiencyLabel);
     new_dw->put(delt_vartype(CO2FlowRate), d_lab->d_CO2FlowRateLabel);
+    new_dw->put(delt_vartype(SO2FlowRate), d_lab->d_SO2FlowRateLabel);
     new_dw->put(delt_vartype(scalarFlowRate), d_lab->d_scalarFlowRateLabel);
 
   }

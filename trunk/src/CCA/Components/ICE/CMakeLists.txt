@@ -70,7 +70,7 @@ SET(Packages_Uintah_CCA_Components_ICE_SRCS
 
 ADD_LIBRARY(Packages_Uintah_CCA_Components_ICE ${Packages_Uintah_CCA_Components_ICE_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_ICE
+SET(LIBS
   Packages_Uintah_CCA_Components_OnTheFlyAnalysis
   Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Grid
@@ -92,6 +92,12 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_ICE
   ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
+
+IF(HYPRE_LIBRARY)
+  SET(LIBS ${LIBS} ${HYPRE_LIBRARY})
+ENDIF(HYPRE_LIBRARY)
+
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_ICE ${LIBS})
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_ICE)
