@@ -106,7 +106,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 
   //create coarse flag sets
   CreateCoarseFlagSets(oldGrid,coarse_flag_sets);
-
+  
   //add old level 0 to patch sets
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
@@ -123,16 +123,12 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
-#if 0
-    
-    
+   
     //Calcualte coarsening factor
     int coarsen_factor=d_minPatchSize[l+1][0]*d_minPatchSize[l+1][1]*d_minPatchSize[l+1][2]/d_cellRefinementRatio[l][0]/d_cellRefinementRatio[l][1]/d_cellRefinementRatio[l][2];
     //Calculate the number of stages to reduce
       //this is a guess based on the coarsening factor and the number of processors
     int stages=log(coarsen_factor)/log(2.0) + log(procs)/log(2.0)/4;
-    if(rank==0)
-            cout << "stages:" << stages << endl;
     int stride=1;
     MPI_Status status;
     //consoldate flags along a hypercube sending the shortest distance first
@@ -166,8 +162,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
      }
      stride*=2;
     }
-#endif
-#if 0
     //send flags to the begining processors
       //this is important for being able to exploit on-node communication
     stride=1<<stages; 
@@ -199,7 +193,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
         MPI_Recv(&coarse_flag_vector[0],numReceive*sizeof(IntVector),MPI_BYTE,from,0,comm,&status);
       }
     }
-#endif
     //Parallel BR over coarse flags
       //flags on level l are used to create patches on level l+1
    
@@ -264,7 +257,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
   Point anchor = oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-  
+
   //For each level Coarse -> Fine
   for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++)
   {
@@ -291,6 +284,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
     // parameters based on next-fine level.
     spacing = spacing / d_cellRefinementRatio[l];
   }
+  cout << d_myworld->myrank() << " finalizetime:" << ftime << " bcstime:" << btime << endl;
   return newGrid;
 }
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
@@ -366,9 +360,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
   int numprocs=d_myworld->size();
  
   vector<int> procs(numprocs);
-  for(int p=0;p<numprocs;p++)
-    procs[p]=p;
-  
+  BNRTask *root=0;  
   //bound local flags
   Region patch;
   if(flags.size()>0)
@@ -387,142 +379,171 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
     //use INT_MAX to signal no patch;
     patch.low()[0]=INT_MAX;
   }
+  int prank=-1;
   //Calculate global bounds
   if(numprocs>1)
   {
     vector<Region> bounds(numprocs);
     MPI_Allgather(&patch,sizeof(Region),MPI_BYTE,&bounds[0],sizeof(Region),MPI_BYTE,d_myworld->getComm());
 
-    //search for first processor that has flags 
-    int p=0;
-    while(bounds[p].getLow()[0]==INT_MAX && p<numprocs )
+    //calculate participating processor set
+    int count=0;
+    for(int p=0;p<numprocs;p++)
     {
-      p++;
+      if(bounds[p].getLow()[0]!=INT_MAX)
+      {
+        if(p==rank)
+        {
+          prank=count;
+        }
+        procs[count++]=p;   
+      }
     }
-
-    if(p==numprocs)
+  
+    if(count==0) 
     {
       //no flags on any processors so exit
       return;   
     }
- 
+            
+    procs.resize(count);
+    
     //find the bounds
-    patch=bounds[p];
-    for(p++;p<numprocs;p++)
+    patch=bounds[procs[0]];
+    for(int p=1;p<count;p++)
     {
-      if(bounds[p].getLow()[0]!=INT_MAX)
-      { 
-          patch.low()=Min(patch.getLow(),bounds[p].getLow());
-          patch.high()=Max(patch.getHigh(),bounds[p].getHigh());
-      }
+      patch.low()=Min(patch.getLow(),bounds[procs[p]].getLow());
+      patch.high()=Max(patch.getHigh(),bounds[procs[p]].getHigh());
     }
   }
-
-  //create initial task
-  BNRTask::controller_=this;
-  FlagsList flagslist;
+  
   if(flags.size()>0)
-    flagslist.locs=&flags[0];
-  flagslist.size=flags.size();
-  tasks_.push_back(BNRTask(patch,flagslist,procs,rank,0,0));
-  BNRTask *root=&tasks_.back();
- 
-  //place on immediate_q_
-  immediate_q_.push(root);                  
-  //control loop
-  //MPI_Errhandler_set(d_myworld->getComm(), MPI_ERRORS_RETURN);
-  while(true)
   {
-    BNRTask *task;
-    //check tag_q for processors waiting for tags
-
-    if(!tag_q_.empty() && tags_.size() + free_tag_end_ - free_tag_start_>1 )
+    //create initial task
+    BNRTask::controller_=this;
+    FlagsList flagslist;
+ 
+    flagslist.locs=&flags[0];
+    flagslist.size=flags.size();
+    tasks_.push_back(BNRTask(patch,flagslist,procs,prank,0,0));
+    root=&tasks_.back();
+ 
+    //place on immediate_q_
+    immediate_q_.push(root);                  
+    //control loop
+    //MPI_Errhandler_set(d_myworld->getComm(), MPI_ERRORS_RETURN);
+    while(true)
     {
+      BNRTask *task;
+      //check tag_q for processors waiting for tags
+
+      if(!tag_q_.empty() && tags_.size() + free_tag_end_ - free_tag_start_>1 )
+      {
         //2 tags are available continue the task
         task=tag_q_.front();
         tag_q_.pop();
         task->continueTask();
-    }
-    else if(!immediate_q_.empty())  //check for tasks that are able to make progress
-    {
-      task=immediate_q_.front();
-      immediate_q_.pop();
-      //runable task found, continue task
-      if(task->p_group_.size()==1)
-        task->continueTaskSerial();
-      else
-        task->continueTask();
-    }
-    else if(free_requests_.size()<requests_.size())  //no tasks can make progress finish communication
-    {
-      int count;
-      //wait on requests
-      //MPI_STATUSES_IGNORE
-      if(MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],&statuses_[0])==MPI_ERR_IN_STATUS)
-      {
-              BNRTask *task;
-              cerr << "rank:" << rank << " error in MPI_Waitsome status\n";
-              for(int c=0;c<count;c++)
-              {
-                if(statuses_[c].MPI_ERROR!=MPI_SUCCESS)
-                {
-                  char message[MPI_MAX_ERROR_STRING];
-                  int length;
-
-                  MPI_Error_string(statuses_[c].MPI_ERROR,message,&length);
-                  cerr << "Error message" << ": '" << message << "'\n";
-                  
-                  task=request_to_task_[indicies_[c]];
-                  cerr << "Task status:" << task->status_ << " patch:" << task->patch_ << endl;
-                }
-              }
-              cerr << "Entering infinite loop\n";
-              while(1); //hang so debugger can be attached
       }
-      
-      //handle each request
-      for(int c=0;c<count;c++)
+      else if(!immediate_q_.empty())  //check for tasks that are able to make progress
       {
-        BNRTask *task=request_to_task_[indicies_[c]];
-        free_requests_.push(indicies_[c]);
-        if(--(task->remaining_requests_)==0)  //task has completed communication
+        task=immediate_q_.front();
+        immediate_q_.pop();
+        //runable task found, continue task
+        if(task->p_group_.size()==1)
+          task->continueTaskSerial();
+        else
+          task->continueTask();
+      }
+      else if(free_requests_.size()<requests_.size())  //no tasks can make progress finish communication
+      {
+        int count;
+        //wait on requests
+        //MPI_STATUSES_IGNORE
+        if(MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],&statuses_[0])==MPI_ERR_IN_STATUS)
         {
-          if(task->status_!=TERMINATED)     //if task needs more work
+                BNRTask *task;
+                cerr << "rank:" << rank << " error in MPI_Waitsome status\n";
+                for(int c=0;c<count;c++)
+                {
+                  if(statuses_[c].MPI_ERROR!=MPI_SUCCESS)
+                  {
+                    char message[MPI_MAX_ERROR_STRING];
+                    int length;
+                    
+                    MPI_Error_string(statuses_[c].MPI_ERROR,message,&length);
+                    cerr << "Error message" << ": '" << message << "'\n";
+                  
+                    task=request_to_task_[indicies_[c]];
+                    cerr << "Task status:" << task->status_ << " patch:" << task->patch_ << endl;
+                  }
+                }
+                cerr << "Entering infinite loop so debugger can be attached\n";
+                while(1); //hang so debugger can be attached
+        }
+      
+        //handle each request
+        for(int c=0;c<count;c++)
+        {
+          BNRTask *task=request_to_task_[indicies_[c]];
+          free_requests_.push(indicies_[c]);
+          if(--(task->remaining_requests_)==0)  //task has completed communication
           {
-            immediate_q_.push(task);        //place it on the immediate_q 
+            if(task->status_!=TERMINATED)     //if task needs more work
+            {
+              immediate_q_.push(task);        //place it on the immediate_q 
+            }
           }
         }
       }
-    }
-    else if(tag_q_.empty())  //no tasks remaining, no communication waiting, algorithm is done
-    {
-      break; 
-    }
-    else
-    {
-      //no tasks on the immediate_q, tasks are on the taq_q
-      if(tags_.size() + free_tag_end_ - free_tag_start_ < 2) //this if might not be needed 
+      else if(tag_q_.empty())  //no tasks remaining, no communication waiting, algorithm is done
       {
-        throw InternalError("Not enough tags",__FILE__,__LINE__);
+        break; 
+      }
+      else
+      {
+        //no tasks on the immediate_q, tasks are on the taq_q
+        if(tags_.size() + free_tag_end_ - free_tag_start_ < 2) //this if might not be needed 
+        {
+          throw InternalError("Not enough tags",__FILE__,__LINE__);
+        }
       }
     }
-  }
  
-  //check for controlling processors 
-  if(rank==tasks_.front().p_group_[0])
-  {
-    //assign the patches to my list
-    patches.assign(tasks_.front().my_patches_.begin(),tasks_.front().my_patches_.end());
+    //check for controlling processors 
+    if(rank==root->p_group_[0])
+    {
+      //assign the patches to my list
+      patches.assign(root->my_patches_.begin(),root->my_patches_.end());
+    }
   }
+  
   if(numprocs>1)
   {
-    //broad cast size out
+    //communicate the patchset to rank 0 for broadcasting
+    if(root!=0 && rank==root->p_group_[0] && rank!=0) //if I am the root and not rank 0
+    {
+      int size=patches.size();
+      //send to rank 0
+      MPI_Send(&size,1,MPI_INT,0,0,d_myworld->getComm());
+      MPI_Send(&patches[0],size*sizeof(Region),MPI_BYTE,0,0,d_myworld->getComm());
+    }
+    else if(rank==0 && (root==0 || rank!=root->p_group_[0])) //if I am rank 0 and not the root
+    {
+      MPI_Status status;
+      int size;
+      //receive from any rank
+      MPI_Recv(&size,1,MPI_INT,MPI_ANY_SOURCE,0,d_myworld->getComm(),&status);
+      patches.resize(size);
+      MPI_Recv(&patches[0],size*sizeof(Region),MPI_BYTE,MPI_ANY_SOURCE,0,d_myworld->getComm(),&status);
+    }
+          
+    //broadcast size out
     unsigned int size=patches.size();
-    MPI_Bcast(&size,1,MPI_INT,tasks_.front().p_group_[0],d_myworld->getComm());
+    MPI_Bcast(&size,1,MPI_INT,0,d_myworld->getComm());
     //resize patchlist
     patches.resize(size);
     //broadcast patches
-    MPI_Bcast(&patches[0],size*sizeof(Region),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
+    MPI_Bcast(&patches[0],size*sizeof(Region),MPI_BYTE,0,d_myworld->getComm());
   }
  
   tasks_.clear();
