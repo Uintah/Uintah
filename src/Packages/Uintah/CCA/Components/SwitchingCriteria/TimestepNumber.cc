@@ -15,7 +15,7 @@ TimestepNumber::TimestepNumber(ProblemSpecP& ps)
 {
   ps->require("timestep",d_timestep);
   if (Parallel::getMPIRank() == 0) {
-    cout << "timestep = " << d_timestep << endl;
+    cout << "Switching criteria: \tTimestep Number: switch components on timestep " << d_timestep << endl;
   }
 }
 
