@@ -1550,14 +1550,14 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
          dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
 #if 0
         cout << *ahfbc << endl;
-        cout << "ahfbc type = " << ahfbc->getType() << endl;
-        cout << "surface area = " << ahfbc->getSurfaceArea() << endl;
-        cout << "heat flux = " << ahfbc->heatflux(time) << endl;
+        cout << "ahfbc type =        " << ahfbc->getType() << endl;
+        cout << "surface area =      " << ahfbc->getSurfaceArea() << endl;
+        cout << "heat flux =         " << ahfbc->heatflux(time) << endl;
         cout << "flux per particle = " << ahfbc->fluxPerParticle(time) << endl;
 #endif
         ahfbcP.push_back(ahfbc);
 
-        // Calculate the force per particle at current time
+        // Calculate the heat flux per particle at current time
 
         heatFluxMagPerPart.push_back(ahfbc->fluxPerParticle(time));
       }
@@ -3176,8 +3176,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pxnew[idx] = px[idx];
         }
 
-        // thermal_energy += pTemp[idx] * pmass[idx] * Cp;
-        thermal_energy += tempRate * pmass[idx] * Cp;
+        thermal_energy += pTemp[idx] * pmass[idx] * Cp;
+        //thermal_energy += tempRate * pmass[idx] * Cp;
         // Thermal energy due to temperature flux (spatially varying part).
         thermal_energy2 += potential_energy* pvolume[idx];
         ke += .5*pmass[idx]*pvelnew[idx].length2();
@@ -3210,7 +3210,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
-    new_dw->put(sum_vartype(thermal_energy+thermal_energy2), lb->ThermalEnergyLabel);
+    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
 
     delete interpolator;
   }
