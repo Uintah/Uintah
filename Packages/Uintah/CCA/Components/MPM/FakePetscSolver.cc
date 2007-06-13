@@ -102,12 +102,12 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 }
 
 
-void MPMPetscSolver::removeFixedDOF(int num_nodes)
+void MPMPetscSolver::removeFixedDOF()
 {
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOF()!", __FILE__, __LINE__ );
 }
 
-void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
+void MPMPetscSolver::removeFixedDOFHeat()
 {
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOFHeat()!", __FILE__, __LINE__ );
 }
