@@ -96,6 +96,7 @@ WARNING
     
     virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
     virtual const set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
+    virtual const set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
 
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;

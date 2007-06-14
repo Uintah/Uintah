@@ -513,6 +513,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   // we can (probably) safely assume that we'll avoid duplicates, since if they were inserted 
   // in the above, they wouldn't need to be marked as such
   for (Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next) {
+    d_computedVars.insert(dep->var);
     if(treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end()) {
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
@@ -557,6 +558,7 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
 
   d_initRequires.clear();
   d_initRequiredVars.clear();
+  d_computedVars.clear();
   numTasks_ = 0;
 
   addTaskGraph(NormalTaskGraph);

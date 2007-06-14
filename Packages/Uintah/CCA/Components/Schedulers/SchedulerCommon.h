@@ -86,6 +86,8 @@ WARNING
       { return d_initRequires; }
     virtual const set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const
        { return d_initRequiredVars; }
+    virtual const set<const VarLabel*, VarLabel::Compare>& getComputedVars() const
+       { return d_computedVars; }
 
     virtual LoadBalancer* getLoadBalancer();
     virtual void releaseLoadBalancer();
@@ -241,6 +243,7 @@ WARNING
     //! set in addTask - can be used until initialize is called...
     vector<const Task::Dependency*> d_initRequires;
     set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
+    set<const VarLabel*, VarLabel::Compare> d_computedVars;
   };
 } // End namespace Uintah
 
