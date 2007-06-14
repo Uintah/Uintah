@@ -608,3 +608,34 @@ bool Switcher::restartableTimesteps() {
 double Switcher::recomputeTimestep(double dt) {
   return d_sim->recomputeTimestep(dt);
 }
+
+//______________________________________________________________________
+//     AMR
+void Switcher::scheduleRefineInterface(const LevelP& fineLevel,
+                                       SchedulerP& sched,
+                                       bool needCoarseOld, 
+                                       bool needCoarseNew)
+{
+  d_sim->scheduleRefineInterface(fineLevel,sched, needCoarseOld, needCoarseNew);
+}
+                                    
+void Switcher::scheduleRefine (const PatchSet* patches, 
+                               SchedulerP& sched){
+  d_sim->scheduleRefine(patches, sched);
+}
+
+void Switcher::scheduleCoarsen(const LevelP& coarseLevel, 
+                               SchedulerP& sched){
+  d_sim->scheduleCoarsen(coarseLevel, sched);
+}
+
+
+void Switcher::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                            SchedulerP& sched){
+  d_sim->scheduleInitialErrorEstimate(coarseLevel,sched);
+}
+                                          
+void Switcher::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                     SchedulerP& sched){
+  d_sim->scheduleErrorEstimate(coarseLevel,sched);
+}

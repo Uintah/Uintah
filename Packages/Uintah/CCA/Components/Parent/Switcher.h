@@ -54,6 +54,26 @@ namespace Uintah {
     virtual void addToTimestepXML(ProblemSpecP&);
     virtual void readFromTimestepXML(const ProblemSpecP&);
 
+
+    // AMR
+    virtual void scheduleRefineInterface(const LevelP& fineLevel,
+                                         SchedulerP& scheduler,
+                                         bool needCoarseOld, 
+                                         bool needCoarseNew);
+                                         
+    virtual void scheduleRefine (const PatchSet* patches, 
+                                 SchedulerP& sched); 
+    
+    virtual void scheduleCoarsen(const LevelP& coarseLevel, 
+                                 SchedulerP& sched);
+
+
+    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                              SchedulerP& sched);
+                                               
+    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                       SchedulerP& sched);
+
     enum switchState { idle, switching };
   private:
     void switchTest(const ProcessorGroup*,
