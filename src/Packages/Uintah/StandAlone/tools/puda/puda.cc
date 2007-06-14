@@ -177,7 +177,9 @@ main(int argc, char** argv)
     string s=argv[i];
     if(s == "-timesteps"){
       clf.do_timesteps=true;}
-    else if( s == "-no_extra_cells" ) {
+    else if( s == "-no_extra_cells" ||
+             s == "-no_extracells" ||
+             s == "-no_ExtraCells" ) {
       clf.use_extra_cells = false;
     }
     else if(s == "-tecplot"){ 
@@ -197,11 +199,17 @@ main(int argc, char** argv)
         if (clf.ccVarInput[0] == '-')
           usage("-tecplot <i_xd> <ccVariable name> <tskip> ", argv[0]);
       }
-    } else if(s == "-gridstats"){
+    } else if(s == "-gridstats" ||
+              s == "-gridStats" ||
+              s == "-grid_stats"){
       clf.do_gridstats=true;
-    } else if(s == "-listvariables"){
+    } else if(s == "-listvariables" || 
+              s == "-listVariables" || 
+              s == "-list_variables"){
       clf.do_listvars=true;
-    } else if(s == "-varsummary"){
+    } else if(s == "-varsummary" ||
+              s == "-varSummary" ||
+              s == "-var_summary"){
       clf.do_varsummary=true;
     } else if(s == "-jim1"){
       clf.do_jim1=true;
@@ -266,17 +274,24 @@ main(int argc, char** argv)
       clf.do_PTvar_all = false;
     } else if (s == "-patch") {
       clf.do_patch = true;
-    } else if (s == "-material") {
+    } else if (s == "-material" ||
+               s == "-matl") {
       clf.do_material = true;
     } else if (s == "-verbose") {
       clf.do_verbose = true;
-    } else if (s == "-timesteplow") {
+    } else if (s == "-timesteplow" ||
+               s == "-timeStepLow" ||
+               s == "-timestep_low") {
       clf.time_step_lower = strtoul(argv[++i],(char**)NULL,10);
       clf.tslow_set = true;
-    } else if (s == "-timestephigh") {
+    } else if (s == "-timestephigh" ||
+               s == "-timeStepHigh" ||
+               s == "-timestep_high") {
       clf.time_step_upper = strtoul(argv[++i],(char**)NULL,10);
       clf.tsup_set = true;
-    } else if (s == "-timestepinc") {
+    } else if (s == "-timestepinc" ||
+               s == "-timestepInc" ||
+               s == "-timestep_inc") {
       clf.time_step_inc = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-matl") {
       clf.matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
@@ -300,7 +315,8 @@ main(int argc, char** argv)
 
   try {
     DataArchive* da = scinew DataArchive( clf.filebase );
-    
+    //__________________________________
+    //  LIST TIMESTEPS
     if(clf.do_timesteps){
       vector<int> index;
       vector<double> times;
@@ -310,11 +326,15 @@ main(int argc, char** argv)
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
     }
-    //______________________________________________________________________
+    //__________________________________
+
     //    DO GRIDSTATS
     if(clf.do_gridstats){
       gridstats( da, clf.tslow_set, clf.tsup_set, clf.time_step_lower, clf.time_step_upper );
     }
+    
+    //__________________________________
+    //  LIST VARIABLES
     if(clf.do_listvars){
       vector<string> vars;
       vector<const Uintah::TypeDescription*> types;
