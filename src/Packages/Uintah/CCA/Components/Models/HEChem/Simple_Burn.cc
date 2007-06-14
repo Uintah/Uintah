@@ -355,7 +355,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
      // Find if the cell contains surface:
       patch->findNodesFromCell(*iter,nodeIdx);
       double MaxMass = d_SMALL_NUM;
-      double MinMass = 1.0/d_SMALL_NUM;
+      double MinMass = 1.0/d_SMALL_NUM;                 
       for (int nN=0; nN<8; nN++) {
         MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*
                                    NCsolidMass[nodeIdx[nN]]);
@@ -363,6 +363,11 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
                                    NCsolidMass[nodeIdx[nN]]); 
       }               
 
+
+      //===============================================
+      //If you change the burning criteria logic you must also modify
+      //CCA/Components/SwitchCriteria
+      //===============================================
       if ( (MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
         && (MaxMass-MinMass)/MaxMass < 1.0
         &&  MaxMass > d_TINY_RHO){
