@@ -84,19 +84,12 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
     int indx = mpm_matl->getDWIndex();
 
-    constParticleVariable<double> pTemperature;
-    ParticleSubset* pset = old_dw->getParticleSubset(indx, patch,
-                                                     Ghost::AroundNodes, 1,
-                                                     Mlb->pXLabel);
-
-    constNCVariable<double> gmass, gtemperature;
+    constNCVariable<double> gmass, gTempAllMatls;
     constNCVariable<double> NC_CCweight;
     Ghost::GhostType  gac = Ghost::AroundCells;
                                                                                 
     new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
-    new_dw->get(gtemperature, Mlb->gTemperatureLabel, 0,    patch,gac, 1);
-    // I don't understand why we're not using gTemperature from the reactant -Todd
-    
+    new_dw->get(gTempAllMatls,Mlb->gTemperatureLabel, 0,    patch,gac, 1);
     old_dw->get(NC_CCweight,  Mlb->NC_CCweightLabel,  0,    patch,gac, 1);
 
     IntVector nodeIdx[8];
@@ -115,7 +108,7 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
         MaxMass = std::max(MaxMass,NC_CCw_mass);
         MinMass = std::min(MinMass,NC_CCw_mass);
         cmass    += NC_CCw_mass;
-        Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
+        Temp_CC_mpm += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
       }
       Temp_CC_mpm /= cmass;
 
