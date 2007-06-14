@@ -50,7 +50,7 @@ Dir Dir::create(const string& name)
 {
    int code = MKDIR(name.c_str(), 0777);
    if(code != 0)
-      throw ErrnoException("Dir::create (mkdir call)", errno, __FILE__, __LINE__);
+      throw ErrnoException("Dir::create (mkdir call): " + name, errno, __FILE__, __LINE__);
    return Dir(name);
 }
 
@@ -82,7 +82,7 @@ void Dir::remove(bool throwOnError)
 {
   int code = rmdir(name_.c_str());
   if (code != 0) {
-    ErrnoException exception("Dir::remove (rmdir call)", errno, __FILE__, __LINE__);
+    ErrnoException exception("Dir::remove (rmdir call): " + name_, errno, __FILE__, __LINE__);
     if (throwOnError)
       throw exception;
     else
