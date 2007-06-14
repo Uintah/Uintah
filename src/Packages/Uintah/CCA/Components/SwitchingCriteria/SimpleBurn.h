@@ -1,5 +1,5 @@
-#ifndef Packages_Uintah_CCA_Components_Switching_PBXTemperature_h
-#define Packages_Uintah_CCA_Components_Switching_PBXTemperature_h
+#ifndef Packages_Uintah_CCA_Components_Switching_SimpleBurn_h
+#define Packages_Uintah_CCA_Components_Switching_SimpleBurn_h
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
@@ -13,13 +13,11 @@ namespace Uintah {
   class ProcessorGroup;
   class DataWarehouse;
 
-  class PBXTemperature : public SwitchingCriteria
+  class SimpleBurnCriteria : public SwitchingCriteria
     {
     public:
-      // this function has a switch for all known SwitchingCriteria
-    
-      PBXTemperature(ProblemSpecP& ps);
-      virtual ~PBXTemperature();
+      SimpleBurnCriteria(ProblemSpecP& ps);
+      virtual ~SimpleBurnCriteria();
       
       virtual void problemSetup(const ProblemSpecP& ps, 
                                 const ProblemSpecP& restart_prob_spec, 
@@ -35,6 +33,7 @@ namespace Uintah {
     private:
       unsigned int d_material;
       double d_temperature;
+      
       SimulationStateP d_sharedState; 
       MPMLabel* Mlb;
       MPMICELabel* MIlb;
