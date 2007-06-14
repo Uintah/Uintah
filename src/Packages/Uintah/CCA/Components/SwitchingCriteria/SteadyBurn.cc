@@ -61,7 +61,6 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   one_matl->addReference();
   
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
-  const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
   
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
@@ -99,8 +98,8 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
     
     // mpm matls
     constNCVariable<double> NC_CCweight;
+    constNCVariable<double> gTempAllMatls;
     StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-    StaticArray<constNCVariable<double> > gtemperature(numMPMMatls);
     StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
     StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
     
@@ -111,12 +110,11 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
       new_dw->get(gmass[m],        Mlb->gMassLabel,        indx, patch,gac, 1);
-      new_dw->get(gtemperature[m], Mlb->gTemperatureLabel, indx, patch,gac, 1);
       old_dw->get(vol_frac_mpm[m], Ilb->vol_frac_CCLabel,  indx, patch,gac, 1);
       new_dw->allocateTemporary(temp_CC_mpm[m], patch);
     }
-    
-    old_dw->get(NC_CCweight, Mlb->NC_CCweightLabel, 0, patch,gac, 1);
+    new_dw->get(gTempAllMatls, Mlb->gTemperatureLabel, 0, patch,gac, 1);
+    old_dw->get(NC_CCweight,   Mlb->NC_CCweightLabel,  0, patch,gac, 1);
     
     constParticleVariable<Point>  px;
     ParticleSubset* pset = old_dw->getParticleSubset(d_indx, patch, gac,1, Mlb->pXLabel);
@@ -151,7 +149,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
           for (int in=0;in<8;in++){
             double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[m][nodeIdx[in]];
             cmass    += NC_CCw_mass;
-            Temp_CC  += gtemperature[m][nodeIdx[in]] * NC_CCw_mass;
+            Temp_CC  += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
           }
           Temp_CC /= cmass;
           temp_CC_mpm[m][c] = Temp_CC;
