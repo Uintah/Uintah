@@ -1,7 +1,8 @@
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/None.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/TimestepNumber.h>
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/PBXTemperature.h>
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SimpleBurn.h>
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SteadyBurn.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/SteadyState.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -35,15 +36,18 @@ SwitchingCriteria* SwitchingCriteriaFactory::create(ProblemSpecP& ps,
   } else if (criteria == "timestep" || criteria == "Timestep" || 
              criteria == "TIMESTEP")  {
     switch_criteria = new TimestepNumber(switch_ps);
-  } else if (criteria == "PBXTemperature" || criteria == "pbxtemperature" || 
-             criteria == "PBX_temperature")  {
-    switch_criteria = new PBXTemperature(switch_ps);
+  } else if (criteria == "SimpleBurn" || criteria == "Simple_Burn" || 
+             criteria == "simpleBurn" || criteria == "simple_Burn")  {
+    switch_criteria = new SimpleBurnCriteria(switch_ps);
+  } else if (criteria == "SteadyBurn" || criteria == "Steady_Burn" || 
+             criteria == "steadyBurn" || criteria == "steady_Burn")  {
+    switch_criteria = new SteadyBurnCriteria(switch_ps);
   } else if (criteria == "SteadyState" || criteria == "steadystate")  {
     switch_criteria = new SteadyState(switch_ps);
   } else {
-    throw ProblemSetupException("Unknown switching criteria."
-                                "Valid criteria: None",
-                                __FILE__, __LINE__);
+    ostringstream warn;
+    warn<<"\n ERROR:\n Unknown switching criteria (" << criteria << ")\n";
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
   }
 
   return switch_criteria;
