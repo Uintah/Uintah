@@ -103,6 +103,7 @@ namespace Uintah {
     
     vector<vector<string> > d_initVars;
     vector<vector<string> > d_initMatls;
+    vector<vector<int> > d_initLevels;
     vector<vector<VarLabel*> > d_initVarLabels;
 
     vector<string> d_carryOverVars;
