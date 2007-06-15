@@ -48,6 +48,10 @@ void SimpleBurnCriteria::problemSetup(const ProblemSpecP& ps,
 //
 void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+  if (level->hasFinerLevel()){
+    return;    // only do test on the finest level
+  }
+
   Task* t = scinew Task("switchTest", this, &SimpleBurnCriteria::switchTest);
 
   MaterialSubset* one_matl = scinew MaterialSubset();
