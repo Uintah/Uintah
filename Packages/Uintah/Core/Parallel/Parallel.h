@@ -62,6 +62,9 @@ WARNING
       // in theory MPI uses a faster library.
       static void initializeManager( int& argc, char**& argv, 
 				     const std::string & scheduler );
+
+      // check to see whether initializeManager has been called
+      static bool isInitialized();
       
       //////////
       // Insert Documentation Here:
