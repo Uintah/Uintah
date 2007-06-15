@@ -8,10 +8,10 @@
 #include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <deque>
+#include   <list>
 #include   <map>
 #include   <iosfwd>
 #include   <iostream>
-#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Grid/share.h>
@@ -125,6 +125,13 @@ WARNING
       return d_lowIndex.x() >= d_highIndex.x() || d_lowIndex.y() >= d_highIndex.y() || d_lowIndex.z() >= d_highIndex.z();
     }
 
+    //O(p log p)
+    static void difference(list<Region> &l1, list<Region> &l2, list<Region> &diff1);
+    static void difference(list<Region> &l1, const list<Region>::iterator &l1_begin, const list<Region>::iterator &l1_end,
+                    list<Region> &l2, const list<Region>::iterator &l2_begin, const list<Region>::iterator &l2_end,
+                    const Region &bounds, list<Region> &diff);
+
+    //O(p^2)
     static deque<Region> difference(const Region& b1, const Region& b2);
     static deque<Region> difference(deque<Region>& region1, deque<Region>& region22);
    
