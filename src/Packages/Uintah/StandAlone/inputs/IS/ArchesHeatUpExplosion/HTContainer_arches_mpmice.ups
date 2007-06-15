@@ -32,8 +32,8 @@
                <ThresholdTemperature> 450  </ThresholdTemperature>
             </SwitchCriteria>
             
-            <init var = "p.acceleration"     matls = "mpm_matls" />
-            <init var = "p.externalHeatFlux" matls = "mpm_matls" />
+            <init var = "p.acceleration"     matls = "mpm_matls" levels="-1"/>
+            <init var = "p.externalHeatFlux" matls = "mpm_matls" levels="-1"/>
         </subcomponent>
         
         <subcomponent>
@@ -72,38 +72,13 @@
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <DataArchiver>
+  <DataArchiver>  
     <filebase>HTContainer_arches_mpmice.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
-
-    <save label="vol_frac_CC"/>
-    <save label="press_CC"/>
-    <save label="temp_CC"/>
-    <save label="rho_CC"/>
-    <save label="sp_vol_CC"/>
-    <save label="delP_Dilatate"/>
-    <save label="vel_CC"/>
-    <save label="p.x"/>
-    <save label="p.particleID"/>
-    <save label="p.mass"/>
-    <save label="p.temperature"/>
-    <save label="p.volume"/>
-    <save label="p.stress"/>
-    <save label="p.plasticStrain"/>
-    <save label="p.plasticStrainRate"/>
-    <save label="p.porosity"/>
-    <save label="p.damage"/>
-    <save label="p.localized"/>
-    <save label="p.velocity"/>
-    <save label="g.mass"/>
-    <save label="g.temperature"/>
-    <checkpoint cycle="2" timestepInterval="10"/>
   </DataArchiver>
 
   <Debug>
   </Debug>
 
-  
   <MPM>
     <time_integrator>               implicit </time_integrator>
     <dynamic>                       true     </dynamic>
@@ -124,7 +99,24 @@
     <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
   </MPM>
+  <!--____________________________________________________________________-->
+  <!--     A M R                                                          -->
+  <!--____________________________________________________________________--> 
+  <doAMR>false</doAMR>
+  <AMR>
+    <ICE>
+      <do_Refluxing>        false </do_Refluxing>
+      <orderOfInterpolation>1     </orderOfInterpolation>
 
+      <!--<Refinement_Criteria_Thresholds>
+      </Refinement_Criteria_Thresholds> -->
+    </ICE>
+    <MPM>
+      <min_grid_level>-1</min_grid_level>
+      <max_grid_level>-1</max_grid_level>
+    </MPM>
+    <useLockStep>  true </useLockStep>
+  </AMR>
 
 
   <!--____________________________________________________________________-->
