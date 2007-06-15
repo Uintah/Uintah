@@ -31,6 +31,7 @@ using std::ostringstream;
 
 //static bool            allowThreads;
 static bool            determinedIfUsingMPI = false;
+static bool            initialized = false;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
@@ -95,6 +96,13 @@ Parallel::forceNoMPI()
   ::usingMPI=false;
 }
 
+bool 
+Parallel::isInitialized()
+{
+  return initialized;
+}
+
+
 void
 Parallel::determineIfRunningUnderMPI( int argc, char** argv )
 {
@@ -156,6 +164,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
 			   " before initializeManager()", __FILE__, __LINE__ );
    }
+   initialized = true;
 
    if( worldRank != -1 ) { // IF ALREADY INITIALIZED, JUST RETURN...
       return;
