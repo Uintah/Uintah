@@ -531,7 +531,7 @@ ENDIF(UNIX)
 
 #-----------------------------------------------------------------------------
 # lapack library
-OPTION(WITH_LAPACK "Build with lapack library" ON)
+OPTION(WITH_LAPACK "Build with lapack library" OFF)
 MARK_AS_ADVANCED(WITH_LAPACK)		   
 IF(WITH_LAPACK OR LAPACK_DIR)		   
   IF(CMAKE_SYSTEM MATCHES "IRIX.*" OR CMAKE_SYSTEM MATCHES "OSF.*" OR CMAKE_SYSTEM MATCHES "AIX.*" OR APPLE)
