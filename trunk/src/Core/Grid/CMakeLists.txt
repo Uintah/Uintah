@@ -104,7 +104,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Grid
   Packages_Uintah_Core_Util
   Packages_Uintah_Core_Math
   Packages_Uintah_Core_Disclosure
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
   ${Z_LIBRARY}
 )
 

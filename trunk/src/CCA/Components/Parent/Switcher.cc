@@ -200,6 +200,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
     if (label) {
       d_carryOverVarLabels.push_back(label);
+      sched->overrideVariableBehavior(d_carryOverVars[i], true, false, false);
     }
     else {
       string error = "Cannot find VarLabel = " + d_carryOverVars[i];
@@ -305,8 +306,8 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
       if (!d_carryOverVarLabels[i])
         continue;
 
-      // if it's required by the old dw in this tg, then it should also be computed
-      const set<const VarLabel*, VarLabel::Compare>& vars = sched->getInitialRequiredVars();
+      // intersect the variables specified with the variables not marked to be computed
+      const set<const VarLabel*, VarLabel::Compare>& vars = sched->getComputedVars();
       if (vars.find(d_carryOverVarLabels[i]) != vars.end()) {
         //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
         continue;
@@ -606,4 +607,35 @@ bool Switcher::restartableTimesteps() {
 
 double Switcher::recomputeTimestep(double dt) {
   return d_sim->recomputeTimestep(dt);
+}
+
+//______________________________________________________________________
+//     AMR
+void Switcher::scheduleRefineInterface(const LevelP& fineLevel,
+                                       SchedulerP& sched,
+                                       bool needCoarseOld, 
+                                       bool needCoarseNew)
+{
+  d_sim->scheduleRefineInterface(fineLevel,sched, needCoarseOld, needCoarseNew);
+}
+                                    
+void Switcher::scheduleRefine (const PatchSet* patches, 
+                               SchedulerP& sched){
+  d_sim->scheduleRefine(patches, sched);
+}
+
+void Switcher::scheduleCoarsen(const LevelP& coarseLevel, 
+                               SchedulerP& sched){
+  d_sim->scheduleCoarsen(coarseLevel, sched);
+}
+
+
+void Switcher::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                            SchedulerP& sched){
+  d_sim->scheduleInitialErrorEstimate(coarseLevel,sched);
+}
+                                          
+void Switcher::scheduleErrorEstimate(const LevelP& coarseLevel,
+                                     SchedulerP& sched){
+  d_sim->scheduleErrorEstimate(coarseLevel,sched);
 }

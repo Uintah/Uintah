@@ -77,7 +77,7 @@ using namespace SCIRun;
 #include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
+#include <CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition

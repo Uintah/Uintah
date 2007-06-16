@@ -32,7 +32,8 @@ SET(Packages_Uintah_CCA_Components_SwitchingCriteria_SRCS
   SwitchingCriteriaFactory.cc
   None.cc
   TimestepNumber.cc
-  PBXTemperature.cc
+  SimpleBurn.cc
+  SteadyBurn.cc
   SteadyState.cc
 )
 
@@ -52,7 +53,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_SwitchingCriteria
   Packages_Uintah_Core_Util
   Packages_Uintah_Core_ProblemSpec
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)

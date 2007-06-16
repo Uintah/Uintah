@@ -79,6 +79,8 @@ FORTRAN_DEPENDENCY(fortran/scalsrc.F CCA_Components_Arches)
 FORTRAN_DEPENDENCY(fortran/uvelsrc.F CCA_Components_Arches)
 FORTRAN_DEPENDENCY(fortran/vvelsrc.F CCA_Components_Arches)
 FORTRAN_DEPENDENCY(fortran/wvelsrc.F CCA_Components_Arches)
+FORTRAN_DEPENDENCY(fortran/wallbc.F CCA_Components_Arches)
+FORTRAN_DEPENDENCY(fortran/get_ramping_factor.F CCA_Components_Arches)
 
 SET(Packages_Uintah_CCA_Components_Arches_SRCS
   ${CCA_Components_Arches_FORTRAN_SRCS}
@@ -111,6 +113,10 @@ SET(Packages_Uintah_CCA_Components_Arches_SRCS
   OdtData.cc
   Source.cc
   TurbulenceModel.cc
+
+  # fortran files without fspec
+  fortran/fixval.F
+  fortran/fixval_trans.F
 )
 
 SET(LIBS 
@@ -133,20 +139,19 @@ SET(LIBS
   ${LIBS}
   ${XML2_LIBRARY}
   ${F_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 
 IF(PETSC_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Arches_SRCS ${Packages_Uintah_CCA_Components_Arches_SRCS} PetscSolver.cc Filter.cc)
-  SET(LIBS ${LIBS} ${PETSC_LIBRARIES} 
+  SET(LIBS ${LIBS} ${PETSC_LIBRARIES})
 ELSE(PETSC_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Arches_SRCS ${Packages_Uintah_CCA_Components_Arches_SRCS} FakePetscSolver.cc)
 ENDIF(PETSC_LIBRARY)
 
 IF(HYPRE_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Arches_SRCS ${Packages_Uintah_CCA_Components_Arches_SRCS} HypreSolver.cc)
-  SET(LIBS ${LIBS} ${HYPRE_LIBRARY} 
+  SET(LIBS ${LIBS} ${HYPRE_LIBRARY})
 ENDIF(HYPRE_LIBRARY)
 
 

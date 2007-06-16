@@ -635,9 +635,16 @@ void Level::setBCTypes()
 #endif
   patchIterator iter;
   
-  ProcessorGroup *myworld=Parallel::getRootProcessorGroup();
-  int numProcs=myworld->size();
-  int rank=myworld->myrank();
+  ProcessorGroup *myworld=NULL;
+  int numProcs=1;
+  int rank=0;
+  if (Parallel::isInitialized()) {
+    // only sus uses Parallel, but anybody else who uses DataArchive to read data does not
+    ProcessorGroup *myworld=Parallel::getRootProcessorGroup();
+    int numProcs=myworld->size();
+    int rank=myworld->myrank();
+  }
+
   vector<int> displacements(numProcs);
   vector<int> recvcounts(numProcs);
 

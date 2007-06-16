@@ -28,6 +28,10 @@
 
 # CMakeLists.txt for Packages/Uintah/CCA/Components/Models
 
+IF(RADIATION)
+  ADD_SUBDIRECTORY(Radiation)
+ENDIF(RADIATION)
+
 SET(Packages_Uintah_CCA_Components_Models_SRCS
   ModelFactory.cc
   
@@ -69,21 +73,15 @@ SET(LIBS
   Packages_Uintah_Core_Labels
   Packages_Uintah_Core_Parallel
   Packages_Uintah_Core_ProblemSpec
-  Packages_Uintah_CCA_Components_ICE
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${F_LIBRARY}
   ${M_LIBRARY}
 )
 
-IF(PETSC_LIBRARY)
-  SET(LIBS ${LIBS} ${PETSC_LIBRARIES} 
-ENDIF(PETSC_LIBRARY)
+IF(RADIATION)
+  SET(LIBS ${LIBS} Packages_Uintah_CCA_Components_Models_Radiation)
+ENDIF(RADIATION)
 
-IF(HYPRE_LIBRARY)
-  SET(LIBS ${LIBS} ${HYPRE_LIBRARY} 
-ENDIF(HYPRE_LIBRARY)
-  
 ADD_LIBRARY(Packages_Uintah_CCA_Components_Models ${Packages_Uintah_CCA_Components_Models_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models ${LIBS})
@@ -91,7 +89,3 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models ${LIBS})
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Models)
 ENDIF(BUILD_SHARED_LIBS)
-
-IF(RADIATION)
-  ADD_SUBDIRECTORY(Radiation)
-ENDIF(RADIATION)

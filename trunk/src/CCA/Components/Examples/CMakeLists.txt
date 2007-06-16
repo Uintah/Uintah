@@ -62,7 +62,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Examples
   Packages_Uintah_Core_Math
   Packages_Uintah_Core_Parallel
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

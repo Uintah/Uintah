@@ -68,7 +68,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Schedulers
   Core_Util
   ${XML2_LIBRARY}
   ${TAU_LIBRARY}
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
   ${VAMPIR_LIBRARY}
   ${PERFEX_LIBRARY}
 )

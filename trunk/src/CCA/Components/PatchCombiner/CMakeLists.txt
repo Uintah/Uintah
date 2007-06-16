@@ -50,7 +50,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_PatchCombiner
   Core_Thread
   Core_Util
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

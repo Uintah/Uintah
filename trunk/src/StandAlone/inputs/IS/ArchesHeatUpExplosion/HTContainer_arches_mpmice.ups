@@ -10,29 +10,30 @@
       <type>switcher</type>
         <subcomponent>
             <SimulationComponent>
-                <type> mpmice </type>
+              <type> mpmice </type>
             </SimulationComponent>
             <input_file> JP8_fire.ups</input_file>
+            
             <SwitchCriteria type = "Timestep">
                <timestep> 1 </timestep>
             </SwitchCriteria>
         </subcomponent>
         <subcomponent>
             <SimulationComponent>
-               <type> impm </type>
+              <type> impm </type>
             </SimulationComponent>
             <input_file> HTContainer_heatup.ups</input_file>
-            <SwitchCriteria type = "PBXTemperature">
-               <material>    1   </material>
-               <temperature> 450 </temperature>
+            
+            <SwitchCriteria type = "simpleBurn">
+               <reactant_material>    1    </reactant_material>
+               <ThresholdTemperature> 450  </ThresholdTemperature>
             </SwitchCriteria>
-            <init var = "p.acceleration" matls = "mpm_matls" />
+            <init var = "p.acceleration"     matls = "mpm_matls" />
             <init var = "p.externalHeatFlux" matls = "mpm_matls" />
-<!--        <init var = "p.loadCurveID" matls = "mpm_matls" />  -->
         </subcomponent>
         <subcomponent>
             <SimulationComponent>
-                <type> mpmice </type>
+              <type> mpmice </type>
             </SimulationComponent>
             <input_file> Explode_IS.ups</input_file>
         </subcomponent>

@@ -49,7 +49,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_DataArchive
   Core_Containers
   Core_Util
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)

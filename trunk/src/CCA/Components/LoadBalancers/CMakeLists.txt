@@ -56,7 +56,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_LoadBalancers
   Core_Exceptions
   Core_Util
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
 )
 
 IF(BUILD_SHARED_LIBS)

@@ -47,7 +47,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Parallel
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_Core_Util
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
   ${VAMPIR_LIBRARY}
 )
 

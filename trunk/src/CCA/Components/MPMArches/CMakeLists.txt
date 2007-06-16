@@ -44,6 +44,9 @@ SET(Packages_Uintah_CCA_Components_MPMArches_SRCS
   MPMArches.cc
   MPMArchesLabel.cc
   CutCellInfo.cc
+
+  # fortran files without fspec
+  fortran/arrass.F
 )
 
 ADD_LIBRARY(Packages_Uintah_CCA_Components_MPMArches ${Packages_Uintah_CCA_Components_MPMArches_SRCS})
@@ -68,7 +71,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPMArches
   Core_Geometry
   ${XML2_LIBRARY}
   ${PETSC_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
   ${F_LIBRARY}
 )

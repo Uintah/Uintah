@@ -47,7 +47,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Labels
   Packages_Uintah_Core_Util
   Packages_Uintah_Core_Math
   Packages_Uintah_Core_ProblemSpec
-  ${MPI_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)

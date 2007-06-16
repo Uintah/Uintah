@@ -187,7 +187,6 @@ SET(LIBS
   Core_Math
   ${XML2_LIBRARY}
   ${VT_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

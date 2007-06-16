@@ -1,5 +1,6 @@
 #include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <CCA/Components/ICE/EOS/IdealGas.h>
+#include <CCA/Components/ICE/EOS/HardSphereGas.h>
 #include <CCA/Components/ICE/EOS/JWL.h>
 #include <CCA/Components/ICE/EOS/TST.h>
 #include <CCA/Components/ICE/EOS/JWLC.h>
@@ -30,6 +31,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     
     if (mat_type == "ideal_gas") 
       return(scinew IdealGas(child));
+    else if (mat_type == "hard_sphere_gas") 
+      return(scinew HardSphereGas(child));
     else if (mat_type == "TST") 
       return(scinew TST(child));
     else if (mat_type == "JWL") 

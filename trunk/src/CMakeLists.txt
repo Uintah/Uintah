@@ -95,7 +95,73 @@ ENDIF(NOT RADIATION)
 # DV Fix need error checking to make sure SCIRun gets included
 SET(LOAD_PACKAGE "SCIRun,Teem,Uintah" CACHE STRING "Building SCIRun, Teem, and Uintah packages by default.")
 
+IF(ARCHES OR RADIATION)
+  # fortran files
+  ENABLE_LANGUAGE(Fortran)
+  FIND_PROGRAM(PERL perl)
+  SET(FORTRAN_UNDERSCORE end CACHE STRING "What type of fortran underscore style - end,none")
+  SET(FSPEC ${CMAKE_CURRENT_BINARY_DIR}/genfspec.pl CACHE FILE "Path to fspec")
+  CONFIGURE_FILE(${UINTAH_SOURCE_DIR}/tools/fspec.pl.in ${FSPEC})
 
+  STRING(REGEX MATCH gfortran HAVE_GFORTRAN ${CMAKE_Fortran_COMPILER})
+  STRING(REGEX MATCH xlf HAVE_XLF ${CMAKE_Fortran_COMPILER})
+  STRING(REGEX MATCH pg77 HAVE_PG77 ${CMAKE_Fortran_COMPILER})
+  STRING(REGEX MATCH g77 HAVE_G77 ${CMAKE_Fortran_COMPILER})
+  STRING(REGEX MATCH ifort HAVE_IFORT ${CMAKE_Fortran_COMPILER})
+  STRING(REGEX MATCH f77 HAVE_F77 ${CMAKE_Fortran_COMPILER})
+
+  # tried to do 'elseif' but cmake wouldn't let me --bjw
+  IF(HAVE_GFORTRAN)
+    FIND_LIBRARY(F_LIBRARY NAMES gfortran)
+  ENDIF(HAVE_GFORTRAN)
+  IF(HAVE_XLF)
+    FIND_LIBRARY(F_LIBRARY NAMES xlf90)
+    SET(FORTRAN_UNDERSCORE none CACE STRING "What type of fortran underscore style - end,none")
+  ENDIF(HAVE_XLF)
+  IF(HAVE_PGF77)
+    FIND_LIBRARY(F_LIBRARY NAMES pgftnrtl)
+  ENDIF(HAVE_PGF77)
+  IF(HAVE_G77)
+    FIND_LIBRARY(F_LIBRARY NAMES g2c)
+    SET(FORTRAN_UNDERSCORE linux CACE STRING "What type of fortran underscore style - end,none")
+  ENDIF(HAVE_G77)
+  IF(HAVE_ifort)
+    FIND_LIBRARY(F_LIBRARY NAMES ifcore)
+  ENDIF(HAVE_ifort)
+  IF(HAVE_F77)
+    # sgi needs ftn fortran
+    #IF(CMAKE_SYSTEM MATCHES "IRIX.*")
+    # dec needs for Ufor
+    #IF(CMAKE_SYSTEM MATCHES "OSF.*")
+    # FIND_LIBRARY(F_LIBRARY NAMES ........)
+  ENDIF(HAVE_F77)
+
+  IF(NOT F_LIBRARY)
+    MESSAGE(FATAL_ERROR "Cannot find fortran library")
+  ENDIF(NOT F_LIBRARY)
+
+  # Adds fortran file to list of srcs and creates the .h file for it
+  MACRO(FORTRAN_DEPENDENCY fortran_file lib)
+    # should pass in a fortran_file and package it belongs to.  I.e.,
+    # FORTRAN_DEPENDENCY(fortran/bcscalar_fort.h CCA_Components_Arches)
+    STRING(REPLACE .F _fort.h header ${CMAKE_CURRENT_BINARY_DIR}/${fortran_file})
+    STRING(REPLACE .F .fspec fspec_file ${fortran_file})
+    FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran)
+    SET(${lib}_FORTRAN_SRCS ${${lib}_FORTRAN_SRCS} ${fortran_file})
+    # if everybody has cmake 2.4.5, we can do IS_NEWER_THAN, and not create these files on every cmake
+    #IF(${CMAKE_CURRENT_SOURCE_DIR}/${fspec_file} IS_NEWER_THAN ${header})
+    IF(NOT EXISTS ${header})
+      EXECUTE_PROCESS(COMMAND perl ${FSPEC} ${CMAKE_CURRENT_SOURCE_DIR}/${fspec_file} ${header})
+    ENDIF(NOT EXISTS ${header})
+    #ENDIF(${CMAKE_CURRENT_SOURCE_DIR}/${fspec_file} IS_NEWER_THAN ${header})
+
+  ENDMACRO(FORTRAN_DEPENDENCY)
+ELSE(ARCHES OR RADIATION)
+  MACRO(FORTRAN_DEPENDENCY fortran_file lib)
+  ENDMACRO(FORTRAN_DEPENDENCY)
+ENDIF(ARCHES OR RADIATION)
+
+# do this before scirun so we can include our stuff in SCIRun/Packages/Uintah/Dataflow
 INCLUDE_DIRECTORIES(
   ${UINTAH_SOURCE_DIR}
   ${UINTAH_SOURCE_DIR}/SCIRun
@@ -104,8 +170,22 @@ INCLUDE_DIRECTORIES(
   ${UINTAH_SOURCE_DIR}/SCIRun/include
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}/SCIRun/include
+)
+
+ADD_SUBDIRECTORY(SCIRun)
+
+INCLUDE_DIRECTORIES(
+  ${PETSC_INCLUDES}
+  ${HYPRE_INCLUDE}
   ${XML2_INCLUDE}
 )
+
+# grab the BUILD_DATAFLOW prop so we can use it to build Core_Datatypes
+GET_DIRECTORY_PROPERTY( BUILD_DATAFLOW DIRECTORY SCIRun DEFINITION BUILD_DATAFLOW)
+
+IF(NOT MPI_LIBRARY)
+  MESSAGE(FATAL_ERROR "MPI Required!  Specify MPI_DIR=<path-to-mpi>")
+ENDIF(NOT MPI_LIBRARY)
 
 IF(TEEM_INCLUDE)
   INCLUDE_DIRECTORIES(${TEEM_INCLUDE})
@@ -118,36 +198,6 @@ IF(MPI_INCLUDE)
   # IF MPICH...
   ADD_DEFINITIONS(-DMPICH_SKIP_MPICXX)
 ENDIF(MPI_INCLUDE)
-
-IF(ARCHES OR RADIATION)
-  # fortran files
-  ENABLE_LANGUAGE(Fortran)
-  FIND_PROGRAM(PERL perl)
-  SET(FORTRAN_UNDERSCORE end CACHE STRING "What type of fortran underscore style - end,none")
-# TODO - if AIX, set UNDERSCORE to none
-  SET(FSPEC ${CMAKE_CURRENT_BINARY_DIR}/genfspec.pl CACHE FILE "Path to fspec")
-  CONFIGURE_FILE(${UINTAH_SOURCE_DIR}/tools/fspec.pl.in ${FSPEC})
-
-  # Adds fortran file to list of srcs and creates the .h file for it
-  MACRO(FORTRAN_DEPENDENCY fortran_file lib)
-    # should pass in a fortran_file and package it belongs to.  I.e.,
-    # FORTRAN_DEPENDENCY(fortran/bcscalar_fort.h CCA_Components_Arches)
-    STRING(REPLACE .F _fort.h header ${CMAKE_CURRENT_BINARY_DIR}/${fortran_file})
-    STRING(REPLACE .F .fspec fspec_file ${fortran_file})
-    FILE(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fortran)
-    SET(${lib}_FORTRAN_SRCS ${${lib}_FORTRAN_SRCS} ${fortran_file})
-    EXECUTE_PROCESS(COMMAND perl ${FSPEC} ${CMAKE_CURRENT_SOURCE_DIR}/${fspec_file} ${header})
-  ENDMACRO(FORTRAN_DEPENDENCY)
-ELSE(ARCHES OR RADIATION)
-  MACRO(FORTRAN_DEPENDENCY fortran_file lib)
-  ENDMACRO(FORTRAN_DEPENDENCY)
-ENDIF(ARCHES OR RADIATION)
-
-
-ADD_SUBDIRECTORY(SCIRun)
-
-# grab the BUILD_DATAFLOW prop so we can use it to build Core_Datatypes
-GET_DIRECTORY_PROPERTY( BUILD_DATAFLOW DIRECTORY SCIRun DEFINITION BUILD_DATAFLOW)
 
 ADD_SUBDIRECTORY(Core)
 ADD_SUBDIRECTORY(CCA)

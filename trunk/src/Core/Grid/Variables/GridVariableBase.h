@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_GRIDVARIABLE_H
 
 #include <Core/Grid/Variables/Variable.h>
+#include <Core/Grid/Variables/constVariable.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/uintahshare.h>
@@ -37,6 +38,9 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+
+  class GridVariableBase;
+  typedef constVariableBase<GridVariableBase> constGridVariableBase;
 
   class UINTAHSHARE GridVariableBase : public Variable {
   public:

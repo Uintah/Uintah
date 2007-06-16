@@ -8,7 +8,8 @@ SRCS     += \
 	$(SRCDIR)/SwitchingCriteriaFactory.cc \
 	$(SRCDIR)/None.cc                     \
 	$(SRCDIR)/TimestepNumber.cc           \
-	$(SRCDIR)/PBXTemperature.cc 	      \
+	$(SRCDIR)/SimpleBurn.cc               \
+	$(SRCDIR)/SteadyBurn.cc               \
 	$(SRCDIR)/SteadyState.cc
 
 PSELIBS := \

@@ -339,7 +339,12 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,      indx, patch, gac, 1);
       new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,   indx, patch, gac, 1);
     }
-
+    
+    
+    //===============================================
+    //If you change the burning surface criteria logic you must also modify
+    //CCA/Components/SwitchCriteria/SteadyBurn.cc
+    //===============================================
     /* count how many reactant particles in each cell */
     for(ParticleSubset::iterator iter=pset->begin(), iter_end=pset->end(); iter != iter_end; iter++){
       particleIndex idx = *iter;

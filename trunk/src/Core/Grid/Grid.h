@@ -98,6 +98,9 @@ WARNING
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid) const;
 
+    // Returns true if the two grids cover the exact same region.  Patch structure can be different.
+    bool isSimilar(const Grid& othergrid) const;
+    
     UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     // Used in Level and Patch for stretched grids

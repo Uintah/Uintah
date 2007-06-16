@@ -53,7 +53,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_MPMICE
   Core_Geometry
   Core_Util
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

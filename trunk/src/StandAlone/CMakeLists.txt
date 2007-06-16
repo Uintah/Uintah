@@ -94,7 +94,7 @@ TARGET_LINK_LIBRARIES(partvarRange
 )
 
 TARGET_LINK_LIBRARIES(async_mpi_test
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
 )
 
 TARGET_LINK_LIBRARIES(restart_merger

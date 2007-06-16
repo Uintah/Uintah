@@ -59,7 +59,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Datatypes
   Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Exceptions
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
 )

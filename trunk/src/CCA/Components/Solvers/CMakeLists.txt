@@ -33,30 +33,10 @@ SET(Packages_Uintah_CCA_Components_Solvers_SRCS
   DirectSolve.cc
   SolverFactory.cc
 )
-ADD_LIBRARY(Packages_Uintah_CCA_Components_Solvers ${Packages_Uintah_CCA_Components_Solvers_SRCS})
-
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Solvers
-  Core_Containers
-  Core_Exceptions
-  Core_Geometry
-  Core_Thread
-  Core_Util
-  Core_Geometry
-  Packages_Uintah_CCA_Ports
-  Packages_Uintah_Core_Exceptions
-  Packages_Uintah_Core_Grid
-  Packages_Uintah_Core_Util
-  Packages_Uintah_Core_Disclosure
-  Packages_Uintah_Core_Parallel
-  Packages_Uintah_Core_ProblemSpec
-  ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
-  ${BLAS_LIBRARY}
-  ${LAPACK_LIBRARY}
-)
 
 IF (HYPRE_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Solvers_SRCS
+    ${Packages_Uintah_CCA_Components_Solvers_SRCS}
     HypreSolver.cc 
     AMRSolver.cc
     HypreDriver.cc
@@ -80,11 +60,32 @@ IF (HYPRE_LIBRARY)
     HyprePreconds/HyprePrecondJacobi.cc
     HyprePreconds/HyprePrecondDiagonal.cc
   )
-
-  TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Solvers
-    ${HYPRE_LIBRARY}
-  )
 ENDIF (HYPRE_LIBRARY)
+
+ADD_LIBRARY(Packages_Uintah_CCA_Components_Solvers ${Packages_Uintah_CCA_Components_Solvers_SRCS})
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Solvers
+  Core_Containers
+  Core_Exceptions
+  Core_Geometry
+  Core_Thread
+  Core_Util
+  Core_Geometry
+  Packages_Uintah_CCA_Ports
+  Packages_Uintah_Core_Exceptions
+  Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_Util
+  Packages_Uintah_Core_Disclosure
+  Packages_Uintah_Core_Parallel
+  Packages_Uintah_Core_ProblemSpec
+  ${XML2_LIBRARY}
+  ${LAPACK_LIBRARY}
+  ${CBLAS_LIBRARY}
+)
+
+IF (HYPRE_LIBRARY)
+  TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Solvers ${HYPRE_LIBRARY})
+ENDIF (HYPRE_LIBRARY)
+
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Solvers)

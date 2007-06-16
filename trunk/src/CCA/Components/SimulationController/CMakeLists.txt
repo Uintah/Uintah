@@ -54,7 +54,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_SimulationController
   Core_Util
   Core_Exceptions
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

@@ -881,14 +881,53 @@ bool Grid::operator==(const Grid& othergrid) const
     for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
       const Patch* otherpatch = *otheriter;
-      if (patch->getLowIndex() != otherpatch->getLowIndex() ||
-          patch->getHighIndex() != otherpatch->getHighIndex())
+      if (patch->getInteriorCellLowIndex() != otherpatch->getInteriorCellLowIndex() ||
+          patch->getInteriorCellHighIndex() != otherpatch->getInteriorCellHighIndex())
         return false;
     }
       
   }
   return true;
 
+}
+bool Grid::isSimilar(const Grid& othergrid) const
+{
+  if(numLevels() != othergrid.numLevels())
+     return false;
+
+  deque<Region> r1, r2, difference;
+ 
+  for(int i=numLevels()-1;i>=0;i--)
+  {
+    const Level* l1=getLevel(i).get_rep();
+    const Level* l2=othergrid.getLevel(i).get_rep();
+
+    r1.clear();
+    r2.clear();
+                  
+    //fill deques
+    Level::const_patchIterator iter;
+    for(iter=l1->patchesBegin(); iter!=l1->patchesEnd();iter++)
+    {
+      const Patch* patch=*iter;
+      r1.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
+    }
+    
+    for(iter=l2->patchesBegin(); iter!=l2->patchesEnd();iter++)
+    {
+      const Patch* patch=*iter;
+      r2.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
+    }
+
+    //compare regions
+    difference=Region::difference(r1,r2);
+    if(!difference.empty())  //if region in r1 that is not in r2
+      return false;
+    difference=Region::difference(r2,r1);
+    if(!difference.empty())  //if region in r1 that is not in r2
+      return false;
+  }
+  return true;
 }
 
 IntVector Grid::run_partition3D(list<int> primes)

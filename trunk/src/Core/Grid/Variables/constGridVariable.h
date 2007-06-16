@@ -77,8 +77,6 @@ WARNING
     void print(std::ostream& out) const
     { this->rep_.print(out); }
   };
-
-  typedef constVariableBase<GridVariableBase> constGridVariableBase;
 } // end namespace Uintah
 
 

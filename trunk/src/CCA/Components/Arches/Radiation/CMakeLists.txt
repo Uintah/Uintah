@@ -49,6 +49,15 @@ SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS
   RadiationModel.cc
   RadiationSolver.cc
   DORadiationModel.cc
+
+  #fortran files without fspec
+  fortran/find.F
+  fortran/fixradval.F
+  fortran/eih2o.F
+  fortran/eico2.F
+  fortran/eco2.F
+  fortran/eh2o.F
+  fortran/soot.F
 )
 
 SET(LIBS 
@@ -67,7 +76,7 @@ SET(LIBS
 IF(PETSC_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS 
     ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS} RadLinearSolver.cc)
-  SET(LIBS ${LIBS} ${PETSC_LIBRARIES} 
+  SET(LIBS ${LIBS} ${PETSC_LIBRARIES})
 ELSE(PETSC_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS 
     ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS} FakeRadLinearSolver.cc)
@@ -76,14 +85,14 @@ ENDIF(PETSC_LIBRARY)
 IF(HYPRE_LIBRARY)
   SET(Packages_Uintah_CCA_Components_Arches_Radiation_SRCS 
     ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS} RadHypreSolver.cc)
-  SET(LIBS ${LIBS} ${HYPRE_LIBRARY} 
+  SET(LIBS ${LIBS} ${HYPRE_LIBRARY})
 ENDIF(HYPRE_LIBRARY)
   
 
 ADD_LIBRARY(Packages_Uintah_CCA_Components_Arches_Radiation ${Packages_Uintah_CCA_Components_Arches_Radiation_SRCS})
 SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Arches_Radiation PROPERTIES LINKER_LANGUAGE CXX)
 
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches_Radiation ${LIBS})
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches_Radiation ${LIBS} ${F_LIBRARY})
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Arches_Radiation)
 ENDIF(BUILD_SHARED_LIBS)

@@ -49,7 +49,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Arches_Mixing
   Core_Thread
   Core_Geometry
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
   ${F_LIBRARY}
 )

@@ -55,7 +55,6 @@ SET(LIBS
   ${COMPONENTS}_Solvers
   ${COMPONENTS}_SwitchingCriteria
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
 )
 
 IF(ARCHES)

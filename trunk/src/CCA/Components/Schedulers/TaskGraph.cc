@@ -377,8 +377,9 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
          && !(req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)){
         // if this is an Intermediate TG and the requested data is done from another TG,
         // we need to look in this TG first, but don't worry if you don't find it
+        cout << "  Cannot find compute for the following variable with the following patch or material sets\n";
         if(req->patches){
-          cout << req->patches->size() << " Patches: ";
+          cout << req->patches->size() << " Patches from 'requires': ";
           for(int i=0;i<req->patches->size();i++)
             cout << req->patches->get(i)->getID() << " ";
           cout << '\n';
@@ -398,7 +399,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
           cout << "On global level\n";
         }
         if(req->matls){
-          cout << req->matls->size() << " Matls: ";
+          cout << req->matls->size() << " Matls from 'requires': ";
           for(int i=0;i<req->matls->size();i++)
             cout << req->matls->get(i) << " ";
           cout << '\n';

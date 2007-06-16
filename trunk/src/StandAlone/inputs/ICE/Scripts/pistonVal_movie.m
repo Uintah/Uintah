@@ -32,6 +32,7 @@ if( s0 ~=0 || s1 ~= 0)
   disp('Cannot execute uintah utilites puda or lineextract');
   disp('  a) make sure you are in the right directory, and');
   disp('  b) the utilities (puda/lineextract) have been compiled');
+  return;
 end
 %________________________________
 %  extract the physical time for each dump

@@ -3,9 +3,9 @@
 
 #include <Core/Util/Handle.h>
 #include <Core/Grid/GridP.h>
-#include <Core/Grid/Variables/constGridVariable.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Util/RefCounted.h>
+#include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/Grid/Variables/ReductionVariableBase.h>
 #include <Core/Grid/Variables/PerPatchBase.h>

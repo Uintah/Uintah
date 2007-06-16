@@ -53,7 +53,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Math
   Core_Thread
   Packages_Uintah_Core_Disclosure
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

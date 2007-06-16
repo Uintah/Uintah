@@ -57,7 +57,6 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Ports
   Core_Geometry
   Core_Containers
   Core_Util
-  ${MPI_LIBRARY}
 )
 
 IF(BUILD_SHARED_LIBS)

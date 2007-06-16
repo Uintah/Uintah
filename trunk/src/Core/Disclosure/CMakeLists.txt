@@ -41,7 +41,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Disclosure
   Core_Util
   Core_Geometry
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
 )
 
 IF(BUILD_SHARED_LIBS)

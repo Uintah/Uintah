@@ -55,6 +55,15 @@ SET(Packages_Uintah_CCA_Components_Models_Radiation_SRCS
   Models_RadiationModel.cc
   Models_RadiationSolver.cc
   RadiationVariables.cc
+
+  #fortran files without fspec
+  fortran/m_find.F
+  fortran/m_fixradval.F
+  fortran/m_eih2o.F
+  fortran/m_eico2.F
+  fortran/m_eco2.F
+  fortran/m_eh2o.F
+  fortran/m_soot.F
 )
 
 SET(LIBS
@@ -85,7 +94,7 @@ ENDIF (HYPRE_LIBRARY)
 ADD_LIBRARY(Packages_Uintah_CCA_Components_Models_Radiation ${Packages_Uintah_CCA_Components_Models_Radiation_SRCS})
 SET_TARGET_PROPERTIES(Packages_Uintah_CCA_Components_Models_Radiation PROPERTIES LINKER_LANGUAGE CXX)
 
-TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models_Radiation ${LIBS})
+TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_Models_Radiation ${LIBS} ${F_LIBRARY})
 
 IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_Uintah_CCA_Components_Models_Radiation)

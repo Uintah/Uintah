@@ -51,7 +51,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_DataArchiver
   Core_Thread
   Core_Util
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
+  ${MPI_LIBS}
   ${M_LIBRARY}
   ${SOCKET_LIBRARY}
 )

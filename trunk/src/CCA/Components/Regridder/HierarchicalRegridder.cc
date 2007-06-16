@@ -606,7 +606,6 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
 
     Grid bogusGrid;
     Level* addToLevel = newLevel.get_rep();
-    IntVector periodic;
 #if 1
     if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0) {
 #endif
@@ -655,13 +654,6 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
         addToLevel->addPatch(startCell, endCell + IntVector(1,1,1), 
 			     inStartCell, inEndCell + IntVector(1,1,1), patchID);
       }
-      if(levelIdx == 0){
-        periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-      } else {
-        periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
-      }
-      addToLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-      addToLevel->assignBCS(grid_ps_);
 #if 1
     }
 #endif
@@ -742,11 +734,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
           }
         }
       }
-      newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-      newLevel->assignBCS(grid_ps_);
-      
     }
-  
   }
 
   d_newGrid = true;
@@ -759,6 +747,19 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
     d_newGrid = false;
     delete newGrid;
     return oldGrid;
+  }
+
+  // do this after the grid check, as it's expensive and we don't want to do it if we're just going to throw it away
+  for (int levelIdx = 0; levelIdx < newGrid->numLevels(); levelIdx++) {
+    LevelP lev = newGrid->getLevel(levelIdx);
+    IntVector periodic;
+    if(levelIdx == 0){
+      periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+    } else {
+      periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
+    }
+    lev->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+    lev->assignBCS(grid_ps_);
   }
 
   newGrid->performConsistencyCheck();

@@ -47,6 +47,7 @@ SET(Packages_Uintah_CCA_Components_ICE_SRCS
 
   EOS/EquationOfState.cc
   EOS/EquationOfStateFactory.cc
+  EOS/HardSphereGas.cc
   EOS/IdealGas.cc
   EOS/TST.cc
   EOS/JWL.cc
@@ -89,7 +90,6 @@ SET(LIBS
   Core_Util
   Core_OS
   ${XML2_LIBRARY}
-  ${MPI_LIBRARY}
   ${M_LIBRARY}
 )
 

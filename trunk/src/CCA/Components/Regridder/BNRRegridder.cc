@@ -232,13 +232,21 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
  
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,patch_sets);
-
   if (*newGrid == *oldGrid) 
   {
     delete newGrid;
     return oldGrid;
   }
 
+  //finalize the grid
+  IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+  for(int l=0;l<newGrid->numLevels();l++)
+  {
+    LevelP level= newGrid->getLevel(l);
+    level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+    level->assignBCS(grid_ps_);
+  }
+  
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   
@@ -256,8 +264,6 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
   Vector spacing = oldGrid->getLevel(0)->dCell();
   Point anchor = oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
-  IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-
   //For each level Coarse -> Fine
   for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++)
   {
@@ -277,10 +283,6 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
       //create patch
       level->addPatch(low, high, low, high);
     }
-
-    level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-    level->assignBCS(grid_ps_);
-    
     // parameters based on next-fine level.
     spacing = spacing / d_cellRefinementRatio[l];
   }
