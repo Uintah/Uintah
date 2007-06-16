@@ -57,29 +57,18 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>JP8_fire.uda</filebase>
-    <outputTimestepInterval> 10 </outputTimestepInterval>
+    <outputTimestepInterval> 1 </outputTimestepInterval>
     <save label="vol_frac_CC"/>
     <save label="press_CC"/>
     <save label="temp_CC"/>
     <save label="rho_CC"/>
     <save label="sp_vol_CC"/>
-    <save label="delP_Dilatate"/>
     <save label="vel_CC"/>
-    <save label="p.x"/>    
-    <save label="p.particleID"/>    
-    <save label="p.mass"/>
-    <save label="p.temperature"/>
-    <save label="p.volume"/>
-    <save label="p.stress"/>
-    <save label="p.plasticStrain"/>
-    <save label="p.plasticStrainRate"/>
-    <save label="p.porosity"/>
-    <save label="p.damage"/>
-    <save label="p.localized"/>
-    <save label="p.velocity"/>
-    <save label="g.mass"/>
-    <save label="g.temperature"/>
-    <checkpoint cycle = "4" timestepInterval = "500"/>
+    <save label="p.x"            levels="-1"/>
+    <save label="p.particleID"   levels="-1"/>
+    <save label="p.mass"         levels="-1"/>
+    <save label="p.temperature"  levels="-1"/>
+    <checkpoint cycle="4" timestepInterval="1"/>
   </DataArchiver>
 
   <Debug>
@@ -112,7 +101,24 @@
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
     <erosion algorithm = "ZeroStress"/>
   </MPM>
+  <!--____________________________________________________________________-->
+  <!--     A M R                                                          -->
+  <!--____________________________________________________________________-->  
+  <doAMR>false</doAMR>
+  <AMR>
+    <ICE>
+      <do_Refluxing>        false </do_Refluxing>
+      <orderOfInterpolation>1     </orderOfInterpolation>
 
+      <Refinement_Criteria_Thresholds>
+      </Refinement_Criteria_Thresholds>
+    </ICE>
+    <MPM>
+      <min_grid_level>-1</min_grid_level>
+      <max_grid_level>-1</max_grid_level>
+    </MPM>
+    <useLockStep>  true </useLockStep>
+  </AMR>
   <!--____________________________________________________________________-->
   <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
   <!--____________________________________________________________________-->   

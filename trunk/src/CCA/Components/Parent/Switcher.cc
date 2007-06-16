@@ -32,6 +32,7 @@
 
 
 using namespace Uintah;
+#define ALL_LEVELS  99
 
 Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, 
                    bool doAMR) : UintahParallelComponent(myworld)
@@ -46,6 +47,8 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
 
     vector<string> init_vars;
     vector<string> init_matls;
+    vector<int> init_levels;
+    
     string in("");
     if (!child->get("input_file",in))
       throw ProblemSetupException("Need input file for subcomponent", __FILE__, __LINE__);
@@ -73,16 +76,25 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     for (ProblemSpecP var=child->findBlock("init"); var != 0; var = var->findNextBlock("init")) {
       map<string,string> attributes;
       var->getAttributes(attributes);
-      string name = attributes["var"];
-      string matls = attributes["matls"];
-      if (name != "") 
+      string name   = attributes["var"];
+      string matls  = attributes["matls"];
+      
+      stringstream s_level(attributes["levels"]);
+      int levels = ALL_LEVELS;
+      s_level >> levels;
+      
+      if (name != ""){ 
         init_vars.push_back(name);
-      else
+      }else{
         continue;
+      }
+      
+      init_levels.push_back(levels);
       init_matls.push_back(matls);
     }
     d_initVars.push_back(init_vars);
     d_initMatls.push_back(init_matls);
+    d_initLevels.push_back(init_levels);
     num_components++;
   }
 
@@ -380,9 +392,40 @@ void Switcher::initNewVars(const ProcessorGroup*,
       matls = d_sharedState->allMaterials()->getSubset(0);
     else 
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
+    //__________________________________
+    //initialize a variable on this level?
+    const Level* level = getLevel(patches);
+    int numLevels = level->getGrid()->numLevels();
+    int L_indx = getLevel(patches)->getIndex();
+    int relative_indx = L_indx - numLevels;
+    int init_Levels = d_initLevels[d_componentIndex+1][i];
+    
+    bool onThisLevel = false;
+
+    if( init_Levels == L_indx      ||   // user can specify: a level,
+        init_Levels == ALL_LEVELS  ||   // nothing,
+        init_Levels == relative_indx){  // or a relative indx, -1, -2
+      onThisLevel = true;
+    }
   
+    if(onThisLevel == false){
+      continue;
+    }
+    
+    // Bulletproofing
+    if(l->typeDescription()->getType() == TypeDescription::ParticleVariable &&
+       relative_indx != -1){
+      ostringstream warn;
+      warn << " \nERROR: switcher: subcomponent: init var: (" << l->getName() 
+           << ") \n particle variables can only be initialized on the finest level \n"
+           << " of a multilevel grid.  Add levels=\"-1\" to that variable" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    
     for (int m = 0; m < matls->size(); m++) {
       const int indx = matls->get(m);
+        
       for (int p = 0; p < patches->size(); p++) {
         const Patch* patch = patches->get(p);
         // loop over certain vars and init them into the DW

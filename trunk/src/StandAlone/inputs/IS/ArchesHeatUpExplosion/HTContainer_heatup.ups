@@ -9,26 +9,7 @@
    <SimulationComponent>
       <type> impm </type>
    </SimulationComponent>
-   <doAMR>false</doAMR>
-    <AMR>
-      <MPM>
-        <min_grid_level>-1</min_grid_level>
-        <max_grid_level>-1</max_grid_level>
-      </MPM>
-      <Regridder>
-        <type> BNR </type>
-        <min_patch_size> [[4,4,4]] </min_patch_size>
-        <patch_ratio_to_target>1</patch_ratio_to_target>
-        <max_levels>                  2       </max_levels>
-        <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
-        <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
-        <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
-        <cell_deletion_dilation>    [1,1,1]   </cell_deletion_dilation>
-        <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
-        <max_timestep_interval>    10 </max_timestep_interval>
-      </Regridder>
-      <useLockStep>       true </useLockStep>
-    </AMR>
+
 <!--
 -->
 
@@ -65,7 +46,9 @@
     <save label="p.externalHeatFlux" levels="-1"/>
     <save label="g.mass"             levels="-1"/>
     <save label="g.temperature"      levels="-1"/>
-    <checkpoint cycle="4" timestepInterval="10"/>
+    <save label="ThermalEnergy"/> 
+
+    <checkpoint cycle="4" timestepInterval="10"/> 
   </DataArchiver>
 
   <Debug>
@@ -92,6 +75,17 @@
     <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
   </MPM>
+  <!--____________________________________________________________________-->
+  <!--     A M R                                                          -->
+  <!--____________________________________________________________________--> 
+  <doAMR>false</doAMR>
+  <AMR>
+    <MPM>
+      <min_grid_level>-1</min_grid_level>
+      <max_grid_level>-1</max_grid_level>
+    </MPM>
+    <useLockStep>  true </useLockStep>
+  </AMR>
 
   <!--____________________________________________________________________-->
   <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->

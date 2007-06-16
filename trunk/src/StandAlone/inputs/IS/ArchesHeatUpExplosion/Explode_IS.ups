@@ -89,20 +89,20 @@
     <save label="sp_vol_CC"/>
     <save label="delP_Dilatate"/>
     -->
-    <save label="p.particleID"/> 
-    <save label="vel_CC"/>
-    <save label="p.x"/>
-    <save label="p.mass"/>
-    <save label="p.temperature"/>
-    <save label="p.stress"/>
-    <save label="p.plasticStrain"/>
-    <save label="p.plasticStrainRate"/>
-    <save label="p.porosity"/>
-    <save label="p.damage"/>
-    <save label="p.localized"/>
-    <save label="p.velocity"/>
-    <save label="g.mass"/>
-    <save label="g.temperature"/>
+    <save label="p.x"                   levels="-1"/>
+    <save label="p.particleID"          levels="-1"/>
+    <save label="p.mass"                levels="-1"/>
+    <save label="p.temperature"         levels="-1"/>
+    <save label="p.volume"              levels="-1"/>
+    <save label="p.stress"              levels="-1"/>
+    <save label="p.plasticStrain"       levels="-1"/>
+    <save label="p.plasticStrainRate"   levels="-1"/>
+    <save label="p.porosity"            levels="-1"/>
+    <save label="p.damage"              levels="-1"/>
+    <save label="p.localized"           levels="-1"/>
+    <save label="p.velocity"            levels="-1"/>
+    <save label="g.mass"                levels="-1"/>
+    <save label="g.temperature"         levels="-1"/>
     <checkpoint cycle = "6" interval = "3e-6"/>
      <!-- 100 timesteps at delT = 3e-8 -->
   </DataArchiver>
@@ -164,7 +164,38 @@
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
     <erosion algorithm = "ZeroStress"/>
   </MPM>
+  <!--____________________________________________________________________-->
+  <!--     A M R                                                          -->
+  <!--____________________________________________________________________-->
+  <doAMR>false</doAMR>
+  <AMR>
+    <ICE>
+      <do_Refluxing>        false </do_Refluxing>
+      <orderOfInterpolation>1     </orderOfInterpolation>
 
+      <Refinement_Criteria_Thresholds>
+      </Refinement_Criteria_Thresholds>
+    </ICE>
+    <MPM>
+      <min_grid_level>-1</min_grid_level>
+      <max_grid_level>-1</max_grid_level>
+    </MPM>
+    <!--
+    <Regridder>
+      <type> BNR </type>
+      <min_patch_size> [[4,4,4]] </min_patch_size>
+      <patch_ratio_to_target>1</patch_ratio_to_target>
+      <max_levels>                  2       </max_levels>
+      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
+      <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
+      <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
+      <cell_deletion_dilation>    [1,1,1]   </cell_deletion_dilation>
+      <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
+      <max_timestep_interval>    10 </max_timestep_interval>
+    </Regridder>
+    -->
+    <useLockStep> true </useLockStep>
+  </AMR>
   <!--____________________________________________________________________-->
   <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
   <!--____________________________________________________________________-->   
