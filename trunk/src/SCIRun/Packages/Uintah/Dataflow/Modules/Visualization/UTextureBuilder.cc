@@ -38,6 +38,11 @@ using namespace SCIRun;
 
 class UTextureBuilder : public ConvertNrrdsToTexture
 {
+  double last_minf_;
+  double last_maxf_;
+  int last_nbits_;
+  int last_generation_;
+  NrrdDataHandle last_nrrdH_;
 public:
   UTextureBuilder(GuiContext*);
   virtual ~UTextureBuilder();
@@ -59,8 +64,8 @@ using SCIRun::Module;
 DECLARE_MAKER(UTextureBuilder)
 
 UTextureBuilder::UTextureBuilder(GuiContext* ctx)
-  : ConvertNrrdsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
-//: ConvertNrrdsToTexture(ctx)
+  : ConvertNrrdsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah"),
+    last_minf_(1), last_maxf_(-1), last_generation_(-1), last_nbits_(0), last_nrrdH_(0)
 {}
 
 UTextureBuilder::~UTextureBuilder()
@@ -80,12 +85,65 @@ UTextureBuilder::execute()
     return;
   }
 
+  bool nothing_changed = false;
+
+  NrrdDataHandle nrrdH;
+  if (!get_input_handle("Nrrd", nrrdH)) {
+    send_output_handle("ColorMap", cmap_h, true);
+    return;
+  }
+
+  double minf = cmap_h->getMin();
+  double maxf = cmap_h->getMax();
+  const int nbits = 8;
+
+  if (last_generation_ == nrrdH->generation &&
+      last_minf_ == minf &&
+      last_maxf_ == maxf &&
+      last_nbits_ == nbits &&
+      last_nrrdH_.get_rep())
+  {
+    // nothing changed...
+    // TODO - send texture: send_output_handle("Nrrd", last_nrrdH_, true);
+    send_output_handle("ColorMap", cmap_h, true);
+    return;
+  }
+
+  // quantize the input nrrd
+
+  // must detach because we are about to modify the input nrrd.
+  nrrdH.detach(); 
+
+  Nrrd *nin = nrrdH->nrrd_;
+
+  remark("Quantizing -- min=" + to_string(minf) +
+         " max=" + to_string(maxf) + " nbits=" + to_string(nbits));
+  NrrdRange *range = nrrdRangeNew(minf, maxf);
+  NrrdData *nrrd = scinew NrrdData;
+  if (nrrdQuantize(nrrd->nrrd_, nin, range, nbits))
+  {
+    char *err = biffGetDone(NRRD);
+    error(string("Trouble quantizing: ") + err);
+    free(err);
+    return;
+  }
+
+  nrrdKeyValueCopy(nrrd->nrrd_, nin);
+  // set current state for next execution
+  last_generation_ = nrrdH->generation;
+  last_minf_ = minf;
+  last_maxf_ = maxf;
+  last_nbits_ = nbits;
+  last_nrrdH_ = nrrdH;
+
+  send_output_handle("Nrrd", last_nrrdH_, true);
+  /*
   if( cmap_h->IsScaled() ){
     gui_fixed_.set( 1 );
     gui_vminval_.set(cmap_h->getMin() );
     gui_vmaxval_.set(cmap_h->getMax() );
   }
-
+  */
 
   // Get a handle to the output ColorMap port.
    ColorMapOPort* cmap_oport = ( ColorMapOPort *) get_oport("ColorMap");
