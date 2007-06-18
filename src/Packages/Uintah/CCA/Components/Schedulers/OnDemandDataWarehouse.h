@@ -149,7 +149,8 @@ public:
    getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
    void printParticleSubsets();
 
-   void print();
+   virtual void print();
+   virtual void clear();
    // NCVariables Variables
    virtual void allocateTemporary(NCVariableBase&, const Patch*,
 				  Ghost::GhostType = Ghost::None,
