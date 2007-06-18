@@ -588,8 +588,6 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev,SchedulerP& sched)
 void
 ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-
-  cout << " d_minGridLevel " << flags->d_minGridLevel << endl;
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
 
