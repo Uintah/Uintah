@@ -127,13 +127,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
 
-  ProblemSpecP amr_ps = root->findBlock("AMR");
-  if (amr_ps) {
-    ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
-    mpm_amr_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
-    mpm_amr_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
-  }
-
   mpm_flag_ps->get("boundary_traction_faces", d_bndy_face_txt_list);
 
   if (dbg.active()) {
@@ -178,8 +171,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("accumulate_strain_energy", d_accStrainEnergy);
   ps->appendElement("use_load_curves", d_useLoadCurves);
   ps->appendElement("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
-  ps->appendElement("min_grid_level", d_minGridLevel);
-  ps->appendElement("max_grid_level", d_maxGridLevel);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
   ps->appendElement("manual_new_material", d_addNewMaterial);
