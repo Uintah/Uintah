@@ -93,6 +93,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
                                 DataWarehouse* new_dw)
 {
   double timeToSwitch = 0;
+  const Level* level = getLevel(patches);
   
   if (level->hasFinerLevel() == false){  // only on finest level
   
