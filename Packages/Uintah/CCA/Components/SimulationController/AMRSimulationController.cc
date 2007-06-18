@@ -427,12 +427,12 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
           << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << endl;
 
     d_scheduler->execute(levelNum, iteration);
-
+    
     if(levelNum+1 < grid->numLevels()){
       ASSERT(newDWStride > 0);
       subCycleExecute(grid, curDW, newDWStride, levelNum+1, false);
     }
-
+ 
     if (d_doAMR && grid->numLevels() > 1 && (step < numSteps-1 || levelNum == 0)) {
       // Since the execute of the intermediate is time-based,
       // execute the intermediate TG relevant to this level, if we are in the 
@@ -457,6 +457,12 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
       d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
       d_scheduler->execute(levelNum+grid->numLevels(), iteration);
     }
+    
+    if (curDW % dwStride != 0) {
+      //the currentDW(old datawarehouse) should no longer be needed - in the case of NonPermanent OldDW scrubbing
+      d_scheduler->get_dw(curDW)->clear();
+    }
+    
   }
   if (levelNum == 0) {
     // execute the final TG
