@@ -321,7 +321,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
         continue;
 
       if (d_computedVars.find(d_carryOverVarLabels[i]) != d_computedVars.end()) {
-        cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
+        //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
         continue;
       }
       MaterialSubset* matls = scinew MaterialSubset;
@@ -344,7 +344,11 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
          iter++) {
       t->requires(Task::OldDW, iter->first, iter->second, Task::OutOfDomain, Ghost::None, 0);
       t->computes(iter->first, iter->second, Task::OutOfDomain);
-      cout << d_myworld->myrank() << "  Carry over " << *iter->first << " matl " << *iter->second << " on level " << level->getIndex() << endl;
+      
+      if(UintahParallelComponent::d_myworld->myrank() == 0){
+        cout << d_myworld->myrank() << "  Carry over " << *iter->first 
+             << "     \t matl " << *iter->second << "       \t level " << level->getIndex() << endl;
+      }
     }  
   }
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
