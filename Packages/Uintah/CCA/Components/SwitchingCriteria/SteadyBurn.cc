@@ -205,5 +205,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
   
   // compute on every level
   max_vartype switch_condition(timeToSwitch);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
+
+  const Level* allLevels = 0;
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
 }
