@@ -260,16 +260,14 @@ Switcher::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 
   // carry over vars that will be needed by a future component
   scheduleCarryOverVars(level,sched);
-
-
 }
 
 void Switcher::scheduleSwitchInitialization(const LevelP& level, 
                                             SchedulerP& sched)
 {
-  if (d_switchState == switching)
+  if (d_doSwitching[level->getIndex()]) {
     d_sim->switchInitialize(level,sched);
-
+  }
 }
 
 void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
