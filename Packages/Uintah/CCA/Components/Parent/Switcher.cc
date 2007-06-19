@@ -211,7 +211,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
     if (label) {
       d_carryOverVarLabels.push_back(label);
-      sched->overrideVariableBehavior(d_carryOverVars[i], true, false, false);
+      sched->overrideVariableBehavior(d_carryOverVars[i], false, false, true);
     }
     else {
       string error = "Cannot find VarLabel = " + d_carryOverVars[i];

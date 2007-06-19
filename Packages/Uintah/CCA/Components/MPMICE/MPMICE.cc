@@ -920,6 +920,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
   Task* t = NULL;
 
   printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure\t\t\t");
@@ -941,7 +943,10 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,Ilb->rho_CCLabel,        mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
   t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
-  t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
+
+  if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
+    t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
+  }
  
  
   t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
@@ -967,7 +972,9 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->modifies(Ilb->rho_CCLabel,         mpm_matls); 
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   t->computes(Ilb->rho_CCLabel,         ice_matls);
-  t->computes(MIlb->NC_CCweightLabel,   press_matl);
+  if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
+    t->computes(MIlb->NC_CCweightLabel,   press_matl);
+  }
 
   sched->addTask(t, patches, all_matls);
 }
@@ -1746,10 +1753,15 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     
     sum_imp_delP.initialize(0.0);
 
-    // Carry forward NC_CCweight here as this tsk is always called on all levels
-    new_dw->transferFrom(old_dw, MIlb->NC_CCweightLabel, patches, press_matl);
+    // Carry forward NC_CCweight here as this tsk is always called on all levels.
+    //   but only do on the MPM level(s)
+    cout << "  Level " << L_indx << " " << level->getGrid()->numLevels() << endl;
+    if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
+      cout << "  doing transfer on level " << L_indx << " " << level->getGrid()->numLevels() << endl;
+      new_dw->transferFrom(old_dw, MIlb->NC_CCweightLabel, patches, press_matl);
+    }
 
-    StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
+      StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
     StaticArray<ICEMaterial*> ice_matl(numALLMatls);
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -2359,7 +2371,9 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
   d_ice->scheduleRefineInterface(fineLevel, scheduler, needOld, needNew);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, needOld, needNew);
 
-  if(fineLevel->getIndex() > 0 && d_sharedState->isCopyDataTimestep()){
+  if(fineLevel->getIndex() > 0 && d_sharedState->isCopyDataTimestep() &&
+     d_mpm->flags->doMPMOnLevel(fineLevel->getIndex(),
+                                fineLevel->getGrid()->numLevels())) {
     cout_doing << d_myworld->myrank() 
                << " MPMICE::scheduleRefineInterface \t\t\tL-"
                << fineLevel->getIndex() << endl;
@@ -2424,11 +2438,16 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 
+  const Level* level = getLevel(patches);
+
   printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
-  task->computes(MIlb->NC_CCweightLabel);
+  if(d_mpm->flags->doMPMOnLevel(level->getIndex(),level->getGrid()->numLevels())) {
+    task->computes(MIlb->NC_CCweightLabel);
+  }
+
   task->computes(Mlb->heatRate_CCLabel);
   task->computes(Ilb->sp_vol_CCLabel);
   task->computes(MIlb->vel_CCLabel);
@@ -2587,29 +2606,32 @@ MPMICE::refine(const ProcessorGroup*,
                DataWarehouse*,
                DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     printTask(patches,patch,"Doing refine\t\t\t\t\t");
      
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     
-    // First do NC_CCweight 
-    NCVariable<double> NC_CCweight;
-    new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch);
-    //__________________________________
-    // - Initialize NC_CCweight = 0.125
-    // - Find the walls with symmetry BC and
-    //   double NC_CCweight
-    NC_CCweight.initialize(0.125);
-    vector<Patch::FaceType>::const_iterator iter;
-    for (iter  = patch->getBoundaryFaces()->begin();
-         iter != patch->getBoundaryFaces()->end(); ++iter){
-      Patch::FaceType face = *iter;
-      int mat_id = 0;
-      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-        for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
-            !iter.done(); iter++) {
-          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+    if(d_mpm->flags->doMPMOnLevel(level->getIndex(),level->getGrid()->numLevels())) {
+      // First do NC_CCweight 
+      NCVariable<double> NC_CCweight;
+      new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch);
+      //__________________________________
+      // - Initialize NC_CCweight = 0.125
+      // - Find the walls with symmetry BC and
+      //   double NC_CCweight
+      NC_CCweight.initialize(0.125);
+      vector<Patch::FaceType>::const_iterator iter;
+      for (iter  = patch->getBoundaryFaces()->begin();
+           iter != patch->getBoundaryFaces()->end(); ++iter){
+        Patch::FaceType face = *iter;
+        int mat_id = 0;
+        if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+          for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+              !iter.done(); iter++) {
+            NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+          }
         }
       }
     }
