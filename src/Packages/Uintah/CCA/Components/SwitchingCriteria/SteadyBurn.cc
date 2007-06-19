@@ -67,15 +67,13 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   Ghost::GhostType  gac = Ghost::AroundCells;
   
   if (level->hasFinerLevel() == false){  // only on the finest level
-
     t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gac,1);
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl, gac,1);
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gac,1);
   }
   
-  // on all levels
-  t->computes(d_sharedState->get_switch_label(), level.get_rep());
+  t->computes(d_sharedState->get_switch_label());
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
@@ -207,5 +205,5 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
   
   // compute on every level
   max_vartype switch_condition(timeToSwitch);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
 }
