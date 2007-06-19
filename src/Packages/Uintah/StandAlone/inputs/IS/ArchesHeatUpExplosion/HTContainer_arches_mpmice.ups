@@ -10,6 +10,8 @@
   <!--____________________________________________________________________-->
   <SimulationComponent>
       <type>switcher</type>
+
+
         <subcomponent>
             <SimulationComponent>
               <type> mpmice </type>
@@ -20,28 +22,37 @@
                <timestep> 1 </timestep>
             </SwitchCriteria>
         </subcomponent>
-        
+
         <subcomponent>
             <SimulationComponent>
               <type> impm </type>
             </SimulationComponent>
             <input_file> HTContainer_heatup.ups</input_file>
             
+            <SwitchCriteria type = "steadyBurn">
+               <reactant_material>    1    </reactant_material>
+               <BoundaryParticles>    3    </BoundaryParticles>
+               <ThresholdTemperature> 550  </ThresholdTemperature>
+            </SwitchCriteria>
+            
+            <!--
             <SwitchCriteria type = "simpleBurn">
                <reactant_material>    1    </reactant_material>
                <ThresholdTemperature> 450  </ThresholdTemperature>
             </SwitchCriteria>
+            -->
             
             <init var = "p.acceleration"     matls = "mpm_matls" levels="-1"/>
             <init var = "p.externalHeatFlux" matls = "mpm_matls" levels="-1"/>
         </subcomponent>
-        
+       
         <subcomponent>
             <SimulationComponent>
               <type> mpmice </type>
             </SimulationComponent>
             <input_file> Explode_IS.ups</input_file>
         </subcomponent>
+
         <carry_over var="press_CC" />
         <carry_over var="temp_CC" />
         <carry_over var="rho_CC" />
@@ -49,6 +60,8 @@
         <carry_over var="vel_CC" />
         <carry_over var="NC_CCweight" />
         <carry_over var="heatRate_CC" />
+        <carry_over var="vol_frac_CC"/>     <!-- needed by steady burn-->
+
   </SimulationComponent>
    
   <!--____________________________________________________________________-->
