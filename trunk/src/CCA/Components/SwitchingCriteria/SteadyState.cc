@@ -92,7 +92,7 @@ void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 
   t->computes(heatFluxSumLabel);
   t->computes(heatFluxSumTimeDerivativeLabel);
-  t->computes(d_sharedState->get_switch_label(), level.get_rep());
+  t->computes(d_sharedState->get_switch_label());
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
@@ -145,7 +145,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   new_dw->put(heatFluxSumTimeDerivative,heatFluxSumTimeDerivativeLabel);
 
   max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label());
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
 
 }
 

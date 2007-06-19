@@ -63,7 +63,7 @@ void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
   t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
 
-  t->computes(d_sharedState->get_switch_label(), level.get_rep());
+  t->computes(d_sharedState->get_switch_label());
 
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 
@@ -129,5 +129,5 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
   }  //patches
 
   max_vartype switch_condition(timeToSwitch);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
 }

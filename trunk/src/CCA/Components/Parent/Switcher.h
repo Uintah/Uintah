@@ -4,13 +4,14 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 #include <map>
+#include <set>
 using std::map;
+using std::set;
 
 namespace Uintah {
-
-  class VarLabel;
   class Switcher : public UintahParallelComponent, public SimulationInterface {
   public:
     Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR);
@@ -93,6 +94,12 @@ namespace Uintah {
 
 
     switchState d_switchState;
+
+    // since tasks are scheduled per-level, we can't turn the switch flag off
+    // until they all are done, and since we need to turn it off during compilation,
+    // we need to keep track of which levels we've switched
+    vector<bool> d_doSwitching;
+
     // used to sync other switch tasks
     //VarLabel* d_switchLabel;
     SimulationInterface* d_sim;
@@ -101,6 +108,7 @@ namespace Uintah {
     unsigned int d_numComponents;
     unsigned int d_componentIndex;
     
+    set<const VarLabel*, VarLabel::Compare> d_computedVars;
     vector<vector<string> > d_initVars;
     vector<vector<string> > d_initMatls;
     vector<vector<int> > d_initLevels;
