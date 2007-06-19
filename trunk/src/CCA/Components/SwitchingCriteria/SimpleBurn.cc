@@ -48,10 +48,6 @@ void SimpleBurnCriteria::problemSetup(const ProblemSpecP& ps,
 //
 void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  if (level->hasFinerLevel()){
-    return;    // only do test on the finest level
-  }
-
   Task* t = scinew Task("switchTest", this, &SimpleBurnCriteria::switchTest);
 
   MaterialSubset* one_matl = scinew MaterialSubset();
@@ -59,9 +55,12 @@ void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   one_matl->addReference();
   
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::NewDW, Mlb->gMassLabel,                gac, 1);
-  t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
-  t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
+  
+  if(level->hasFinerLevel() == false){  // only on finest level
+    t->requires(Task::NewDW, Mlb->gMassLabel,                gac, 1);
+    t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,gac, 1);
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,gac, 1);
+  }
 
   t->computes(d_sharedState->get_switch_label());
 
@@ -81,52 +80,56 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
                                 DataWarehouse* new_dw)
 {
   double timeToSwitch = 0;
+  const Level* level = getLevel(patches);
+  
+  if (level->hasFinerLevel() == false){  // only on finest level
 
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-                                                                                
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
-    int indx = mpm_matl->getDWIndex();
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
 
-    constNCVariable<double> gmass, gTempAllMatls;
-    constNCVariable<double> NC_CCweight;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-                                                                                
-    new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
-    new_dw->get(gTempAllMatls,Mlb->gTemperatureLabel, 0,    patch,gac, 1);
-    old_dw->get(NC_CCweight,  Mlb->NC_CCweightLabel,  0,    patch,gac, 1);
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
+      int indx = mpm_matl->getDWIndex();
 
-    IntVector nodeIdx[8];
-    for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
-      IntVector c = *iter;
-      patch->findNodesFromCell(*iter,nodeIdx);
+      constNCVariable<double> gmass, gTempAllMatls;
+      constNCVariable<double> NC_CCweight;
+      Ghost::GhostType  gac = Ghost::AroundCells;
 
-      double Temp_CC_mpm = 0.0;
-      double cmass = 1.e-100;
+      new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
+      new_dw->get(gTempAllMatls,Mlb->gTemperatureLabel, 0,    patch,gac, 1);
+      old_dw->get(NC_CCweight,  Mlb->NC_CCweightLabel,  0,    patch,gac, 1);
 
-      double MaxMass = d_SMALL_NUM;
-      double MinMass = 1.0/d_SMALL_NUM;
+      IntVector nodeIdx[8];
+      for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        patch->findNodesFromCell(*iter,nodeIdx);
 
-      for (int in=0;in<8;in++){
-        double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-        MaxMass = std::max(MaxMass,NC_CCw_mass);
-        MinMass = std::min(MinMass,NC_CCw_mass);
-        cmass    += NC_CCw_mass;
-        Temp_CC_mpm += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
-      }
-      Temp_CC_mpm /= cmass;
+        double Temp_CC_mpm = 0.0;
+        double cmass = 1.e-100;
 
+        double MaxMass = d_SMALL_NUM;
+        double MinMass = 1.0/d_SMALL_NUM;
 
-      if ( (MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
-        && (MaxMass-MinMass)/MaxMass < 1.0
-        &&  MaxMass > d_TINY_RHO){
-        if(Temp_CC_mpm >= d_temperature){
-         timeToSwitch=1;
-         break;
+        for (int in=0;in<8;in++){
+          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          MaxMass = std::max(MaxMass,NC_CCw_mass);
+          MinMass = std::min(MinMass,NC_CCw_mass);
+          cmass    += NC_CCw_mass;
+          Temp_CC_mpm += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
         }
-      }
-    } // iter
-  }  //patches
+        Temp_CC_mpm /= cmass;
+
+
+        if ( (MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
+          && (MaxMass-MinMass)/MaxMass < 1.0
+          &&  MaxMass > d_TINY_RHO){
+          if(Temp_CC_mpm >= d_temperature){
+           timeToSwitch=1;
+           break;
+          }
+        }
+      } // iter
+    }  //patches
+  } // finest Level
 
   max_vartype switch_condition(timeToSwitch);
   new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);

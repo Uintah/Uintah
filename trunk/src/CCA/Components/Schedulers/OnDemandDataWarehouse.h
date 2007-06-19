@@ -150,6 +150,9 @@ public:
    void get(constGridVariableBase& var, const VarLabel* label, int matlIndex, 
             const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
 
+   virtual void print();
+   virtual void clear();
+
    void getModifiable(GridVariableBase& var, const VarLabel* label, int matlIndex, 
                       const Patch* patch);
 
@@ -175,8 +178,6 @@ public:
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0);
 
-
-   void print();
 
    // PerPatch Variables
    virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);

@@ -63,6 +63,8 @@ using SCIRun::FastHashTable;
    DWDatabase();
    ~DWDatabase();
 
+   void clear();
+   
    bool exists(const VarLabel* label, int matlIndex, const DomainType* dom) const;
    void put(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable* var, bool replace);
@@ -123,6 +125,12 @@ DWDatabase<DomainType>::DWDatabase()
 template<class DomainType>
 DWDatabase<DomainType>::~DWDatabase()
 {
+  clear();
+}
+
+template<class DomainType>
+void DWDatabase<DomainType>::clear()
+{
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end(); iter++){
 
@@ -140,6 +148,7 @@ DWDatabase<DomainType>::~DWDatabase()
 #endif
     delete iter->second.var;
   }
+  vars.clear();
 }
 
 template<class DomainType>

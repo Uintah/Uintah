@@ -136,6 +136,15 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
 
+
+  // read in AMR flags from the main ups file
+  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+  if (amr_ps) {
+    ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
+    mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
+    mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
+  }
+    
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;

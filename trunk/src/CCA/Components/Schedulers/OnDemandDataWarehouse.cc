@@ -102,6 +102,11 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
 
 OnDemandDataWarehouse::~OnDemandDataWarehouse()
 {
+  clear();
+}
+
+void OnDemandDataWarehouse::clear()
+{
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
     for (int i = 0; i<(int)iter->second->size(); i++ )
@@ -129,6 +134,8 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
       delete pvar_itr->second;
     delete iter->second;
   }
+  d_varDB.clear();
+  d_levelDB.clear();
 }
 
 bool OnDemandDataWarehouse::isFinalized() const

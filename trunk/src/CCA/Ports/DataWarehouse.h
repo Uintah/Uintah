@@ -140,6 +140,10 @@ public:
 			     ParticleSubset*) = 0;
   virtual void put(ParticleVariableBase&, const VarLabel*,
 		   bool replace = false) = 0;
+
+  virtual void print() = 0;
+  virtual void clear() = 0;
+  
      
   virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 						    ParticleSubset*) = 0;
