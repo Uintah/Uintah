@@ -65,7 +65,8 @@ SET(LIBS
   Core_Thread
   Core_Util
   Packages_Uintah_CCA_Ports
-  Packages_Uintah_Core_Disclosure
+  Packages_Uintah_CCA_Components_ICE
+  Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Exceptions
   Packages_Uintah_Core_Grid
   Packages_Uintah_Core_Util
