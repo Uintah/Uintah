@@ -34,7 +34,7 @@ void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
 
-  t->computes(d_sharedState->get_switch_label(), level.get_rep());
+  t->computes(d_sharedState->get_switch_label());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 }
 
@@ -53,5 +53,5 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
     sw = 0;
 
   max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
 }
