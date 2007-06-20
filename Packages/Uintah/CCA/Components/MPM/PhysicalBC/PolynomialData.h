@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Geometry/Point.h>
 #include <vector>
+#include <deque>
 #include <string>
 
 namespace Uintah {
@@ -36,6 +37,9 @@ GENERAL INFORMATION
    double interpolateRadial(const int polyNum, const double theta);
    double interpolateValue(const Point& test_pt);
 
+   std::string d_endCapName;
+   double d_endCapLow, d_endCapHigh;   
+
  private:
 
    PolynomialData();
@@ -44,7 +48,7 @@ GENERAL INFORMATION
    
 
    std::vector<std::string> d_fileNames;
-   std::vector<std::vector<double> > d_polyData;
+   std::deque<std::vector<double> > d_polyData;
    std::vector<double> d_polyRange;
 
    double d_length;
