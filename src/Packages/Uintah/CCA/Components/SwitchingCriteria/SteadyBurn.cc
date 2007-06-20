@@ -121,6 +121,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
         new_dw->get(gmass[m],        Mlb->gMassLabel,        indx, patch,gan, 2);
         old_dw->get(vol_frac_mpm[m], Ilb->vol_frac_CCLabel,  indx, patch,gac, 1);
         new_dw->allocateTemporary(temp_CC_mpm[m], patch, gac,1);
+        temp_CC_mpm[m].initialize(0.0);
       }
       new_dw->get(gTempAllMatls, Mlb->gTemperatureLabel, 0, patch,gan, 2);
       old_dw->get(NC_CCweight,   Mlb->NC_CCweightLabel,  0, patch,gan, 2);
@@ -193,6 +194,11 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
                    
                     if(vol_frac_mpm[m][cell] > 0.2 && 
                         temp_CC_mpm[m][cell] > d_temperature){
+                        cout << " The switching criteria satisfied in cell "<<cell
+                             << " vol_frac_mpm " << vol_frac_mpm[m][cell]
+                             << " temp_CC_mpm " << temp_CC_mpm[m][cell] 
+                             << " matl " << m 
+                             << " main cell " << c << endl;
                       timeToSwitch = 1;
                       break;
                     }
