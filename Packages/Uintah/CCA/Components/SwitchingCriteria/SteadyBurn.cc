@@ -70,7 +70,7 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   if (level->hasFinerLevel() == false){  // only on the finest level
     t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gan,2);
-    t->requires(Task::NewDW, Mlb->pXLabel,          mpm_matls, gac,1);
+    t->requires(Task::OldDW, Mlb->pXLabel,          mpm_matls, gac,1);
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,  gan,2);
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
   }
@@ -126,8 +126,8 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       old_dw->get(NC_CCweight,   Mlb->NC_CCweightLabel,  0, patch,gan, 2);
 
       constParticleVariable<Point>  px;
-      ParticleSubset* pset = new_dw->getParticleSubset(d_indx, patch, gac,1, Mlb->pXLabel);
-      new_dw->get(px, Mlb->pXLabel, pset);
+      ParticleSubset* pset = old_dw->getParticleSubset(d_indx, patch, gac,1, Mlb->pXLabel);
+      old_dw->get(px, Mlb->pXLabel, pset);
 
       //Which cells contain particles
       CCVariable<double> pFlag;
