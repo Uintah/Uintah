@@ -194,6 +194,7 @@ public:
   double taskExecTime;
   double taskLocalCommTime;
   double taskGlobalCommTime;
+  double taskWaitCommTime;
   double outputTime;
 
 private:

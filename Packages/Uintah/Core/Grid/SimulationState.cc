@@ -335,6 +335,7 @@ void SimulationState::clearStats()
   taskExecTime = 0;
   taskGlobalCommTime = 0;
   taskLocalCommTime = 0;
+  taskWaitCommTime = 0;
   outputTime = 0;
 }
 

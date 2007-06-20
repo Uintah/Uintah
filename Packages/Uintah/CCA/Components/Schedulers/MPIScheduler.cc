@@ -854,7 +854,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   // wait for all tasks to finish -- i.e. MixedScheduler
   // MPIScheduler will just continue.
   wait_till_all_done();
-
+  
   //if (d_generation > 2)
   //dws[dws.size()-2]->printParticleSubsets();
 
@@ -887,6 +887,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   if (d_sharedState != 0) { // subschedulers don't have a sharedState
     d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
+    d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
   }
 
