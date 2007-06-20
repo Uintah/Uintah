@@ -18,18 +18,24 @@ PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom,
     throw ProblemSetupException("**ERROR** No polynomial data specified.",
                                 __FILE__,__LINE__);
 
+  d_endCapName = "";
+
   for (ProblemSpecP fileData = polyData->findBlock("file"); fileData != 0;
        fileData = fileData->findNextBlock("file")) {
     
     string fileName;
     fileData->get(fileName);
-    d_fileNames.push_back(fileName);
+
+    if (fileName.find("endcap") != string::npos) {
+      d_endCapName = fileName;
+    }
+    else
+      d_fileNames.push_back(fileName);
   }
 
   d_bottom = bottom;
   d_top = top;
               
-  //cout << "number of files read " << d_fileNames.size() << endl;
   loadData();
 
 }
@@ -45,6 +51,8 @@ void PolynomialData::outputProblemSpec(ProblemSpecP& ps)
        itr != d_fileNames.end(); itr++) {
     pd_ps->appendElement("file",*itr);
   }
+  if (d_endCapName != "")
+    pd_ps->appendElement("file",d_endCapName);
 
 }
 
@@ -52,7 +60,6 @@ void PolynomialData::loadData()
 {
 
   for (unsigned int i = 0; i < d_fileNames.size(); i++) {
-    // cout << "opening file: " << d_fileNames[i] << endl;
 
     ifstream polyFile(d_fileNames[i].c_str());
     if (!polyFile) {
@@ -86,10 +93,41 @@ void PolynomialData::loadData()
     polyFile.close();
   }
 
+  if (d_endCapName != "") {
+    ifstream endCapFile(d_endCapName.c_str());
+    if (!endCapFile) {
+      ostringstream warn;
+      warn << "ERROR: opening polynomial data file: "<< d_endCapName.c_str();
+      throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
+    }
+    endCapFile >> d_endCapLow;
+    endCapFile >> d_endCapHigh;
+
+    cout << "d_endCapLow = " << d_endCapLow << " d_endCapHigh = " << d_endCapHigh << endl;
+
+    vector<double> dataList;
+    dataList.push_back(d_endCapLow);
+    for (int i = 1; i < 5; i++)
+      dataList.push_back(0.);
+
+    d_polyData.push_front(dataList);
+
+    dataList.clear();
+
+    dataList.push_back(d_endCapHigh);
+    for (int i = 1; i < 5; i++)
+      dataList.push_back(0.);
+
+    d_polyData.push_back(dataList);
+  }
+
   Vector diff = d_top.asVector() - d_bottom.asVector();
-  double increment = diff.length()/(d_fileNames.size() - 1);
+  double increment = diff.length()/(d_polyData.size() - 1);
   
-  for (unsigned int j = 0; j < d_fileNames.size(); j++) {
+  cout << "size of d_polyData = " << d_polyData.size() << endl;
+  cout << "size of d_fileNames = " << d_fileNames.size() << endl;
+
+  for (unsigned int j = 0; j < d_polyData.size(); j++) {
     double t =  increment*static_cast<double>(j);
     d_polyRange.push_back(t);
   }
@@ -100,22 +138,12 @@ double PolynomialData::interpolateRadial(const int polyNum, const double theta)
 {
 
   double value = 0.;
-  int order = 0;
+
   value += d_polyData[polyNum][0];
   value += d_polyData[polyNum][1]* sin(theta);
   value += d_polyData[polyNum][2]* cos(theta);
   value += d_polyData[polyNum][3]* sin(2.*theta);
   value += d_polyData[polyNum][4]* cos(2.*theta);
-
-#if 0
-  for (vector<double>::iterator iter = d_polyData[polyNum].begin(); 
-       iter != d_polyData[polyNum].end(); iter++) {
-    //value += *iter * pow(theta,order);
-    value += *iter * cos(order*theta)
-    cout << "theta = " << theta << " polynomial = " << *iter << " value = " << value << endl;
-    order++;
-  }
-#endif
 
   return value;
 }
@@ -176,7 +204,6 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   double minValue = interpolateRadial(min,theta);
   double maxValue = interpolateRadial(max,theta);
 
-  //  cout << "minValue = " << minValue << " maxValue = " << maxValue << endl;
   if (minValue < 0. || maxValue < 0.)
     cout << "WARNING values less than 0" << endl;
 
@@ -194,7 +221,6 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   if (value < minValue && value < maxValue)
     cout << "WARNING values computed incorrectly" << endl;
     
-
   return value;
   
 }
