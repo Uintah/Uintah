@@ -93,6 +93,14 @@ WARNING
       {
         return ((2.0*M_PI*d_radius)*height());
       }
+
+    //////////
+    // Calculate the surface area
+    //
+    virtual inline double surfaceAreaEndCaps() const
+      {
+        return ( 2.*M_PI*d_radius*d_radius);
+      }
     
     //////////
     // Calculate the volume
