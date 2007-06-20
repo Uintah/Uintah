@@ -59,13 +59,15 @@ printTask( ostream& out, DetailedTask* task )
 {
   out << task->getTask()->getName();
   if(task->getPatches()){
-    out << " on patches ";
+    out << " \t on patches ";
     const PatchSubset* patches = task->getPatches();
     for(int p=0;p<patches->size();p++){
       if(p != 0)
 	out << ", ";
       out << patches->get(p)->getID();
     }
+    const Level* level = getLevel(patches);
+   out << "\t  L-"<< level->getIndex();
   }
 }
 
@@ -342,7 +344,7 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
   dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls);
   task->done(dws);
 
-  taskdbg << d_myworld->myrank() << " Completed task: ";
+  taskdbg << d_myworld->myrank() << " Completed task: \t";
   printTask(taskdbg, task); taskdbg << '\n';
 
 }
@@ -785,7 +787,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
-      taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
+      taskdbg << me << " Initiating task:  \t"; printTask(taskdbg, task); taskdbg << '\n';
 
       if (task->getTask()->getType() == Task::Reduction){
         if(!abort)
@@ -796,7 +798,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         processMPIRecvs(WAIT_ALL);
         ASSERT(recvs_.numRequests() == 0);
         runTask(task, iteration);
-        taskdbg << d_myworld->myrank() << " Completed task: ";
+        taskdbg << d_myworld->myrank() << " Completed task:  \t";
         printTask(taskdbg, task); taskdbg << '\n';
       }
     }
