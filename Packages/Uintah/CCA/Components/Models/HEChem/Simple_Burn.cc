@@ -215,6 +215,11 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
  if(d_active){
   Task* t = scinew Task("Simple_Burn::computeModelSources",this, 
                         &Simple_Burn::computeModelSources, mi);
+                        
+  if (level->hasFinerLevel()){  // only on finest level
+    return;
+  }     
+                        
   cout_doing << "SIMPLE_BURN::scheduleComputeModelSources "<<  endl;  
   t->requires( Task::OldDW, mi->delT_Label);
   Ghost::GhostType  gac = Ghost::AroundCells;  
