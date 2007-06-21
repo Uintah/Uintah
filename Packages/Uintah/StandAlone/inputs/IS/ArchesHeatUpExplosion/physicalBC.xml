@@ -21,14 +21,14 @@ For fast heat tape experiment:
                 <radius>    0.05715           </radius>
               </cylinder>
           </geom_object>
-          <polynomial_data>
-            <file> case3/polynomial_97.dat</file> 
-            <file> case3/polynomial_98.dat</file> 
-            <file> case3/polynomial_99.dat</file> 
-            <file> case3/polynomial_100.dat</file> 
-            <file> case3/polynomial_101.dat</file> 
-            <file> case3/polynomial_102.dat</file> 
-          </polynomial_data>
+          <curveFit_coefs_data>
+            <file> case3/curveFit_coefs_97.dat</file> 
+            <file> case3/curveFit_coefs_98.dat</file> 
+            <file> case3/curveFit_coefs_99.dat</file> 
+            <file> case3/curveFit_coefs_100.dat</file> 
+            <file> case3/curveFit_coefs_101.dat</file> 
+            <file> case3/curveFit_coefs_102.dat</file> 
+          </curveFit_coefs_data>
           <load_curve>
             <id>1</id>
             <time_point>
