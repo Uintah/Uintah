@@ -64,6 +64,9 @@ WARNING
 			      const GridP& grid,
 			      const SimulationStateP& state);
 
+    //! On a Switch, basically asks whether to turn off/on the Regridding
+    virtual void switchInitialize(const ProblemSpecP& params);
+
     //! Asks if we need to recompile the task graph.
     //! Will return true if we did a regrid
     virtual bool needRecompile(double time, double delt,

@@ -446,6 +446,7 @@ main( int argc, char** argv )
     
     ctl->attachPort("sim", sim);
     comp->attachPort("solver", solve);
+    comp->attachPort("regridder", reg);
     
 #ifndef NO_ICE
     //__________________________________

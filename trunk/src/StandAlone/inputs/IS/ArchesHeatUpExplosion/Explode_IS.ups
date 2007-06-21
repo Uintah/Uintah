@@ -215,6 +215,26 @@
   <!--      M O D E L S                                                   -->
   <!--____________________________________________________________________-->
   <Models>
+      <Model type="Steady_Burn">
+        <fromMaterial>         reactant     </fromMaterial>
+        <toMaterial>           productGases </toMaterial>
+        <IdealGasConst>        8.314        </IdealGasConst>
+        <PreExpCondPh>         1.637e15     </PreExpCondPh>
+        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>
+        <HeatConductCondPh>    0.2          </HeatConductCondPh>
+        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+        <BoundaryParticles>    3            </BoundaryParticles>
+        <ThresholdPressure>    50000        </ThresholdPressure>
+        <IgnitionTemp>         550.0        </IgnitionTemp>
+      </Model>
+  
+      <!--  Don't forget to change switching criteria section -->
+      <!--
       <Model type="Simple_Burn">
         <Active>       true         </Active>
         <fromMaterial> reactant     </fromMaterial>
@@ -225,6 +245,7 @@
         <BurnCoeff>            7.53 </BurnCoeff>
         <refPressure>      101325.0 </refPressure>
       </Model>
+      -->
   </Models>            
 
 </Uintah_specification>

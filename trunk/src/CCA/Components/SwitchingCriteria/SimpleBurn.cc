@@ -117,13 +117,15 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
           Temp_CC_mpm += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
         }
         Temp_CC_mpm /= cmass;
+        
+        double ratio = (MaxMass-MinMass)/MaxMass ;
 
-
-        if ( (MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
-          && (MaxMass-MinMass)/MaxMass < 1.0
-          &&  MaxMass > d_TINY_RHO){
+        if ( ratio > 0.4 && ratio < 1.0 &&  MaxMass > d_TINY_RHO){
           if(Temp_CC_mpm >= d_temperature){
            timeToSwitch=1;
+           cout << " The switching criteria satisfied in cell "<<c
+                << " (MaxMass-MinMass)/MaxMass " << ratio
+                << " temp_CC_mpm " << Temp_CC_mpm << endl;
            break;
           }
         }
@@ -132,5 +134,7 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
   } // finest Level
 
   max_vartype switch_condition(timeToSwitch);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
+
+  const Level* allLevels = 0;
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(), allLevels);
 }

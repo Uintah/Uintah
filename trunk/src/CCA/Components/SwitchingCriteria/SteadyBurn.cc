@@ -65,12 +65,14 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   
   Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gan = Ghost::AroundNodes;
   
   if (level->hasFinerLevel() == false){  // only on the finest level
     t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
-    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gac,1);
-    t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl, gac,1);
-    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gac,1);
+    t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gan,2);
+    t->requires(Task::OldDW, Mlb->pXLabel,          mpm_matls, gac,1);
+    t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,  gan,2);
+    t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
   }
   
   t->computes(d_sharedState->get_switch_label());
@@ -111,18 +113,18 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
       StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
 
-
       Ghost::GhostType  gac = Ghost::AroundCells;
-
+      Ghost::GhostType  gan = Ghost::AroundNodes;
       for (int m = 0; m < numMPMMatls; m++) {
         Material* matl = d_sharedState->getMaterial(m);
         int indx = matl->getDWIndex();
-        new_dw->get(gmass[m],        Mlb->gMassLabel,        indx, patch,gac, 1);
+        new_dw->get(gmass[m],        Mlb->gMassLabel,        indx, patch,gan, 2);
         old_dw->get(vol_frac_mpm[m], Ilb->vol_frac_CCLabel,  indx, patch,gac, 1);
-        new_dw->allocateTemporary(temp_CC_mpm[m], patch);
+        new_dw->allocateTemporary(temp_CC_mpm[m], patch, gac,1);
+        temp_CC_mpm[m].initialize(0.0);
       }
-      new_dw->get(gTempAllMatls, Mlb->gTemperatureLabel, 0, patch,gac, 1);
-      old_dw->get(NC_CCweight,   Mlb->NC_CCweightLabel,  0, patch,gac, 1);
+      new_dw->get(gTempAllMatls, Mlb->gTemperatureLabel, 0, patch,gan, 2);
+      old_dw->get(NC_CCweight,   Mlb->NC_CCweightLabel,  0, patch,gan, 2);
 
       constParticleVariable<Point>  px;
       ParticleSubset* pset = old_dw->getParticleSubset(d_indx, patch, gac,1, Mlb->pXLabel);
@@ -142,27 +144,30 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
         patch->findCell(px[idx],c);
         pFlag[c] += 1.0;
       }
+
       //__________________________________
-      // compute temp_CC_mpm in cells that contain particles
-      for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
+      // compute temp_CC_mpm in cells that contain some mass 
+      // The computational domain needs to hit the ghost cells
+      
+      CellIterator iter =patch->getCellIterator();
+      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+      for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) { 
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
 
-        if(pFlag[c] > 0){
-
-          for (int m = 0; m < numMPMMatls; m++) {
-            double Temp_CC = 0.0;
-            double cmass = 1.e-100;
-
-            for (int in=0;in<8;in++){
-              double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[m][nodeIdx[in]];
-              cmass    += NC_CCw_mass;
-              Temp_CC  += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
-            }
+        for (int m = 0; m < numMPMMatls; m++) {
+          double Temp_CC = 0.0;
+          double cmass = 1.e-100;
+          for (int in=0;in<8;in++){
+            double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[m][nodeIdx[in]];
+            cmass    += NC_CCw_mass;
+            Temp_CC  += gTempAllMatls[nodeIdx[in]] * NC_CCw_mass;
+          }
+          if (cmass > 1e-100){  
             Temp_CC /= cmass;
             temp_CC_mpm[m][c] = Temp_CC;
           }
-        }  // particle in cell
+        }
       } // cell iterator    
 
       //__________________________________
@@ -172,7 +177,6 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
 
         double MaxMass = d_SMALL_NUM;
         double MinMass = 1.0/d_SMALL_NUM;
-
         for (int in=0;in<8;in++){
           double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[d_material][nodeIdx[in]];
           MaxMass = std::max(MaxMass,NC_CCw_mass);
@@ -185,14 +189,20 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
             for(int j = -1; j<=1; j++){
               for(int k = -1; k<=1; k++){
                 IntVector cell = c + IntVector(i,j,k);
-
                 if( pFlag[cell] <= d_BP){
                   for (int m = 0; m < numMPMMatls; m++){
+                   
                     if(vol_frac_mpm[m][cell] > 0.2 && 
                         temp_CC_mpm[m][cell] > d_temperature){
+                        cout << " The switching criteria satisfied in cell "<<cell
+                             << " vol_frac_mpm " << vol_frac_mpm[m][cell]
+                             << " temp_CC_mpm " << temp_CC_mpm[m][cell] 
+                             << " matl " << m 
+                             << " main cell " << c << endl;
                       timeToSwitch = 1;
                       break;
                     }
+                    
                   }
                 }  //endif
               }  // k
@@ -205,5 +215,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
   
   // compute on every level
   max_vartype switch_condition(timeToSwitch);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
+
+  const Level* allLevels = 0;
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
 }

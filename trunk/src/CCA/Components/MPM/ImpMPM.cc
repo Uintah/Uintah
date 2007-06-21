@@ -372,9 +372,17 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
 void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
 {
-
- if (flags->d_useLoadCurves) {
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
+  if (flags->d_useLoadCurves) {
     // Schedule the initialization of HeatFlux BCs per particle
+    if(UintahParallelComponent::d_myworld->myrank() == 0){
+      cout << " \n--------------------------------------------------------------"<< endl;
+      cout << " ImpMPM: the heat flux BC cannot be applied on the timestep" << endl; 
+      cout << " immediately after a component switch.  The computes/requires " << endl;
+      cout << " cannot be met and one pseudo timestep must take place" << endl;
+      cout << " ---------------------------------------------------------------\n"<< endl;
+    }
     scheduleInitializeHeatFluxBCs(level, sched);
   }
 

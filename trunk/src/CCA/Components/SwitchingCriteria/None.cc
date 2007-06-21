@@ -37,5 +37,6 @@ void None::switchTest(const ProcessorGroup* group,
 {
   double sw = 0;
   max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),0);
+  const Level* allLevels = 0;
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
 }

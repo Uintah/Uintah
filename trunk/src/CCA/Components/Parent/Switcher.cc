@@ -15,6 +15,7 @@
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/SwitchingCriteria.h>
+#include <CCA/Ports/Regridder.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <CCA/Components/SwitchingCriteria/None.h>
@@ -211,7 +212,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
     if (label) {
       d_carryOverVarLabels.push_back(label);
-      sched->overrideVariableBehavior(d_carryOverVars[i], true, false, false);
+      sched->overrideVariableBehavior(d_carryOverVars[i], false, false, true);
     }
     else {
       string error = "Cannot find VarLabel = " + d_carryOverVars[i];
@@ -260,16 +261,14 @@ Switcher::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 
   // carry over vars that will be needed by a future component
   scheduleCarryOverVars(level,sched);
-
-
 }
 
 void Switcher::scheduleSwitchInitialization(const LevelP& level, 
                                             SchedulerP& sched)
 {
-  if (d_switchState == switching)
+  if (d_doSwitching[level->getIndex()]) {
     d_sim->switchInitialize(level,sched);
-
+  }
 }
 
 void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
@@ -323,7 +322,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
         continue;
 
       if (d_computedVars.find(d_carryOverVarLabels[i]) != d_computedVars.end()) {
-        cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
+        //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
         continue;
       }
       MaterialSubset* matls = scinew MaterialSubset;
@@ -346,7 +345,11 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
          iter++) {
       t->requires(Task::OldDW, iter->first, iter->second, Task::OutOfDomain, Ghost::None, 0);
       t->computes(iter->first, iter->second, Task::OutOfDomain);
-      cout << d_myworld->myrank() << "  Carry over " << *iter->first << " matl " << *iter->second << " on level " << level->getIndex() << endl;
+      
+      if(UintahParallelComponent::d_myworld->myrank() == 0){
+        cout << d_myworld->myrank() << "  Carry over " << *iter->first 
+             << "     \t matl " << *iter->second << "       \t level " << level->getIndex() << endl;
+      }
     }  
   }
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
@@ -558,6 +561,10 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 
     // re-initialize the DataArchiver to output according the the new component's specs
     dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
+    // re-initialize some Regridder Parameters
+    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if (regridder)
+      regridder->switchInitialize(ups);
 
     d_sharedState->d_simTime->problemSetup(ups);
 

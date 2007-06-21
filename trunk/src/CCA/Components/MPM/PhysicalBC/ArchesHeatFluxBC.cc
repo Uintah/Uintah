@@ -104,11 +104,22 @@ ArchesHeatFluxBC::flagMaterialPoint(const Point& p,
     // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
     double tol = dxpp.length()/2.;
     CylinderGeometryPiece* cgp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    GeometryPiece* outer = new CylinderGeometryPiece(cgp->top(), 
-                                                     cgp->bottom(), 
+    Vector offset(0.,0.,0.);
+    Vector off_plus(0.,0.,0.),off_minus(0.,0.,0.);
+    
+    if (d_polyData->d_endCapName != "") {
+      Vector cgp_vec = cgp->top() - cgp->bottom();
+      double cgp_len = cgp_vec.length();
+      Vector cgp_u_vec = cgp_vec/cgp_len;
+      off_plus = cgp_u_vec*tol;
+      off_minus = -cgp_u_vec*tol;
+    }
+
+    GeometryPiece* outer = new CylinderGeometryPiece(cgp->top() + off_plus, 
+                                                     cgp->bottom() + off_minus, 
                                                      cgp->radius()+tol);
-    GeometryPiece* inner = new CylinderGeometryPiece(cgp->top(), 
-                                                     cgp->bottom(), 
+    GeometryPiece* inner = new CylinderGeometryPiece(cgp->top() + off_minus, 
+                                                     cgp->bottom() + off_plus, 
                                                      cgp->radius()-tol);
     GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
@@ -145,7 +156,10 @@ ArchesHeatFluxBC::getSurfaceArea() const
     area = gp->volume()/gp->smallestSide();
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    area = gp->surfaceArea();
+    if (d_polyData->d_endCapName != "")
+      area = gp->surfaceArea() + gp->surfaceAreaEndCaps();
+    else
+      area = gp->surfaceArea();
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     area = gp->surfaceArea();

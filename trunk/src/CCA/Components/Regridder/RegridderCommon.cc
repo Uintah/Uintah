@@ -270,6 +270,28 @@ bool RegridderCommon::flaggedCellsOnFinestLevel(const GridP& grid)
   
 }
 
+void RegridderCommon::switchInitialize(const ProblemSpecP& params)
+{
+  // on a switch, for right now, only change adaptivity.  Maybe
+  //   later we can change criteria, but min-patch-size and cell-refinement
+  //   need to stay the same
+  ProblemSpecP amr_spec = params->findBlock("AMR");
+  ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
+  if (regrid_spec) {
+    // only changes if "adaptive" is there
+    bool adaptive = d_isAdaptive;
+    regrid_spec->get("adaptive", adaptive);
+    if (d_myworld->myrank() == 0 && d_isAdaptive != adaptive) {
+      if (adaptive)
+        cout << "Enabling Regridder\n";
+      else
+        cout << "Disabling Regridder\n";
+    }
+    d_isAdaptive = adaptive;
+  }
+}
+
+
 void RegridderCommon::problemSetup(const ProblemSpecP& params, 
                                    const GridP& oldGrid,
 				   const SimulationStateP& state)
@@ -285,16 +307,12 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
-  if (!regrid_spec) {
-    d_isAdaptive = false;
-    if (d_myworld->myrank() == 0) {
-      rdbg << "No Regridder section specified.  Using static Grid.\n";
-    }
-    rdbg << "RegridderCommon::problemSetup() END" << endl;
-    return;
+  d_isAdaptive = true;  // use if "adaptive" not there
+  regrid_spec->get("adaptive", d_isAdaptive);
+  if (!d_isAdaptive) {
+    cout << "Regridder inactive.  Using static Grid.\n";
   }
 
-  d_isAdaptive = true;
   // get max num levels
   regrid_spec->require("max_levels", d_maxLevels);
 

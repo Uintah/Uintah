@@ -619,22 +619,22 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, int index,
   for(Level::const_patchIterator patch = level->patchesBegin();
       patch != level->patchesEnd(); patch++ ){
 //     update_progress(count++/size, my_timer);
-    sema->down();
-    Thread *thrd =
-      new Thread( scinew PFEThread( this, archive,
-                                    *patch,  sp, vp, tp, pseth, scale,
-                                    scalar_type, have_sp, have_vp,
-                                    have_tp, have_ids, sema,
-                                    &smutex, &vmutex, &tmutex, &imutex, gui_),
-                  "Particle Field Extractor Thread");
-    thrd->detach();
-//     PFEThread *thrd = scinew PFEThread( this, archive, *patch,
-//                           sp, vp, tp, pseth, scale,
-//                           scalar_type, have_sp, have_vp,
-//                           have_tp, have_ids, sema,
-//                           &smutex, &vmutex, &tmutex, &imutex, gui_);
+//     sema->down();
+//     Thread *thrd =
+//       new Thread( scinew PFEThread( this, archive,
+//                                     *patch,  sp, vp, tp, pseth, scale,
+//                                     scalar_type, have_sp, have_vp,
+//                                     have_tp, have_ids, sema,
+//                                     &smutex, &vmutex, &tmutex, &imutex, gui_),
+//                   "Particle Field Extractor Thread");
+//     thrd->detach();
+    PFEThread *thrd = scinew PFEThread( this, archive, *patch,
+                          sp, vp, tp, pseth, scale,
+                          scalar_type, have_sp, have_vp,
+                          have_tp, have_ids, sema,
+                          &smutex, &vmutex, &tmutex, &imutex, gui_);
 
-//     thrd->run(); 
+    thrd->run(); 
   }
   sema->down( max_workers );
   if( sema )  delete sema;

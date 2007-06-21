@@ -51,6 +51,8 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
 			      const SimulationStateP& state) = 0;
 
+    virtual void switchInitialize(const ProblemSpecP& params) = 0;
+
     //! Asks if we need to recompile the task graph.
     virtual bool needRecompile(double time, double delt,
 			       const GridP& grid) = 0;
