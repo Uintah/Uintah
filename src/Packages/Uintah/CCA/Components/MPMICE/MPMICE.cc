@@ -1755,9 +1755,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     // Carry forward NC_CCweight here as this tsk is always called on all levels.
     //   but only do on the MPM level(s)
-    cout << "  Level " << L_indx << " " << level->getGrid()->numLevels() << endl;
     if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
-      cout << "  doing transfer on level " << L_indx << " " << level->getGrid()->numLevels() << endl;
       new_dw->transferFrom(old_dw, MIlb->NC_CCweightLabel, patches, press_matl);
     }
 
