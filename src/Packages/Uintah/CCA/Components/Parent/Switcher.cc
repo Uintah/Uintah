@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
+#include <Packages/Uintah/CCA/Ports/Regridder.h>
 #include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <Packages/Uintah/CCA/Components/SwitchingCriteria/None.h>
@@ -560,6 +561,10 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 
     // re-initialize the DataArchiver to output according the the new component's specs
     dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
+    // re-initialize some Regridder Parameters
+    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if (regridder)
+      regridder->switchInitialize(ups);
 
     d_sharedState->d_simTime->problemSetup(ups);
 
