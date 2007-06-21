@@ -157,9 +157,9 @@ ArchesHeatFluxBC::getSurfaceArea() const
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     if (d_polyData->d_endCapName != "")
-      area = gp->surfaceArea();
-    else
       area = gp->surfaceArea() + gp->surfaceAreaEndCaps();
+    else
+      area = gp->surfaceArea();
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     area = gp->surfaceArea();
