@@ -5,7 +5,7 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 #include <map>
 #include <set>
