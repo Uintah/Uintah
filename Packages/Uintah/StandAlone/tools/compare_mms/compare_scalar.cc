@@ -1,15 +1,19 @@
 /*
  *  compare_scalar.cc:
  *
- *     ????
+ *   A MMS comparison utility for advection of passive scalar.
+ *   Reads the initialization scalar profile and advects analytically 
+ *   using the velocity and compares it against the last time-step of the
+ *   UDA file. 
+ *
  *
  *  Written by:
- *   ????
+ *   Amjidanutpan Ramanujam
  *   C-SAFE
  *   University of Utah
  *   
  *
- *  Copyright (C) 2005 U of U
+ *  Copyright (C) 2007 U of U
  */
 
 #include <Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar.h>
