@@ -61,6 +61,7 @@
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <sgi_stl_warnings_off.h>
 #include <set>
+#include <map>
 #include <numeric>
 #include <algorithm>
 #include <limits>
@@ -1985,6 +1986,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
     }
 
+#define debug 
+#undef debug
+
 
     if (flags->d_temp_solve == true) {
     // This actually solves for the grid temperatures assuming a linear
@@ -1995,6 +1999,197 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // the right hand side by the transpose.  This will yield a matrix
     // that is 8 x 8 and will yield the nodal temperatures even when 
     // the number of particles is less than the 8 (number of grid nodes).
+
+
+      multimap<IntVector, particleTempShape> cell_map;
+      vector<multimap<IntVector,particleTempShape> > sparse_cell_map(7);
+      for (int m = 0; m < numMatls; m++) {
+
+        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+        int matl = mpm_matl->getDWIndex();
+        
+        // Create arrays for the particle data
+        constParticleVariable<Point>  px;
+        constParticleVariable<double> pTemperature;
+        
+        ParticleSubset* pset = old_dw->getParticleSubset(matl, patch,
+                                                         Ghost::AroundNodes, 1,
+                                                         lb->pXLabel);
+        
+        old_dw->get(px,             lb->pXLabel,                 pset);
+        old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
+
+        
+        for (ParticleSubset::iterator iter = pset->begin(); iter < pset->end();
+             iter++) {
+          vector<IntVector> ni_cell(interpolator->size());
+
+          interpolator->findCellAndWeights(px[*iter],ni_cell,S);
+        
+          particleTempShape ptshape;
+
+          ptshape.particleTemps = pTemperature[*iter];
+          ptshape.cellNodes = ni_cell;
+          ptshape.shapeValues = S;
+
+          IntVector cellID = ni_cell[0];
+          cell_map.insert(pair<IntVector,particleTempShape>(cellID,ptshape));
+        }
+      }
+#ifdef debug
+      cout << "size of cell_map before = " << cell_map.size() << endl;
+#endif
+      for (multimap<IntVector,particleTempShape>::iterator iter = 
+             cell_map.begin(); iter != cell_map.end(); 
+           iter = cell_map.upper_bound(iter->first)) {
+#ifdef debug
+        cout << "cell = " << iter->first << " temp = " 
+             << iter->second.particleTemps << " count = " 
+             << cell_map.count(iter->first) << endl;
+#endif
+
+        
+        if (cell_map.count(iter->first) < 8 ) {
+#ifdef debug
+          cout << "Inserting cell " << iter->first << " into sparse_cell_map" 
+               << endl;
+#endif
+          multimap<IntVector,particleTempShape>& smap = 
+            sparse_cell_map[cell_map.count(iter->first)-1];
+        
+          pair<multimap<IntVector,particleTempShape>::iterator,
+            multimap<IntVector,particleTempShape>::iterator> eq_range;
+          eq_range = cell_map.equal_range(iter->first);
+          IntVector cellID = iter->first;
+          
+          smap.insert(eq_range.first,eq_range.second);
+          cell_map.erase(eq_range.first,eq_range.second);
+        }  
+
+      }
+#ifdef debug
+      cout << "size of cell_map after = " << cell_map.size() << endl;
+
+      for (int i = 0; i < 7; i++) {
+        cout << "size of sparse_cell_map[" << i << "] after = " 
+             << sparse_cell_map[i].size() << endl;
+      }
+#endif
+      // Process all of the cells with 8 particles in them
+      FastMatrix A(8,8);
+      double B[8];
+#ifdef debug    
+      cout << "Working on cells with 8 particles" << endl;
+#endif
+      for (multimap<IntVector,particleTempShape>::iterator iter = 
+             cell_map.begin(); iter != cell_map.end(); 
+           iter=cell_map.upper_bound(iter->first)) {
+#ifdef debug        
+        cout << "working on cell " << iter->first << endl;
+#endif
+
+        pair<multimap<IntVector,particleTempShape>::iterator,
+            multimap<IntVector,particleTempShape>::iterator> eq_range;
+
+        eq_range = cell_map.equal_range(iter->first);
+        int count = 0;
+
+        particleTempShape ptshape;
+        for (multimap<IntVector,particleTempShape>::iterator it = 
+               eq_range.first; it != eq_range.second; it++) {
+          ptshape = it->second;
+          
+          B[count] = ptshape.particleTemps;
+          
+          for (int j = 0; j < 8; j++) {
+            A(count,j) = ptshape.shapeValues[j];
+          }
+          count++;
+        }
+        
+        A.destructiveSolve(B);
+        A.zero();
+        for (int j = 0; j < 8; j++) {
+          gTemperature[ptshape.cellNodes[j]] = B[j];
+#ifdef debug
+          cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
+               << gTemperature[ptshape.cellNodes[j]] << endl;
+#endif
+        }
+      }
+
+      // Work on the cells that have fewer than 8 particles in them
+      for (int i = 6; i >= 0; i--) {
+#ifdef debug
+        cout << "Working on cells with " << i + 1 << " particles" << endl;
+#endif
+        multimap<IntVector,particleTempShape>& smap = sparse_cell_map[i];
+
+        FastMatrix A(8,8);
+        double B[8];
+
+        for (multimap<IntVector,particleTempShape>::iterator it = smap.begin();
+             it != smap.end();it=smap.upper_bound(it->first)) {
+#ifdef debug
+          cout << "working on cell " << it->first << endl;
+#endif
+          
+          pair<multimap<IntVector,particleTempShape>::iterator,
+            multimap<IntVector,particleTempShape>::iterator> eq_range;
+          
+          eq_range = smap.equal_range(it->first);
+          int count = 0;
+          A.zero();
+          for (int i = 0; i < 8; i++) B[i] = 0.;
+          particleTempShape ptshape;
+
+          for (multimap<IntVector, particleTempShape>::iterator i =
+                 eq_range.first; i != eq_range.second; i++) {
+            ptshape = i->second;
+            B[count] = ptshape.particleTemps;
+            for (int j = 0; j < 8; j++) {
+              A(count,j) = ptshape.shapeValues[j];
+            }
+            count++;
+          }
+
+          FastMatrix A_t(8,8);
+          A_t.transpose(A);
+          double A_tB[8];
+          A_t.multiply(B,A_tB);
+          FastMatrix A_tA(8,8);
+          A_tA.multiply(A_t,A);
+          
+          for (int i = 0; i < 8; i++) {
+            if (gTemperature[ptshape.cellNodes[i]] != 0.0) {
+#ifdef debug
+              cout << "i = " << i << " setting gTemperature[" 
+                   << ptshape.cellNodes[i] << "]=" 
+                   << gTemperature[ptshape.cellNodes[i]] << endl;
+#endif
+              for (int j = 0; j < 8; j++)
+                A_tA(i,j) = 0.;
+
+              A_tA(i,i) = 1.0;
+              A_tB[i] = gTemperature[ptshape.cellNodes[i]];
+            }
+          }
+          
+          A_tA.destructiveSolve(A_tB);
+          for (int j = 0; j < 8; j++) {
+            gTemperature[ptshape.cellNodes[j]] = A_tB[j];
+#ifdef debug
+            cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
+                 << gTemperature[ptshape.cellNodes[j]] << endl;
+#endif
+          }
+        
+        }
+          
+      }
+       
+#if 0
+
       for (int m = 0; m < numMatls; m++) {
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
         int matl = mpm_matl->getDWIndex();
@@ -2029,24 +2224,24 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           for (int i = 0; i<8;i++) B[i] = 0.;
           
           while(ni_cell[0] == ni[0] && iter != pset->end()) {
-#if 0
+#if 1
             cout << "numParticles = " << numParticles << endl;
             cout << "px[" << *iter << "]= " << px[*iter] << endl;
 #endif
             for (int j = 0; j < 8; j++) {
-#if 0
+#if 1
               cout << "Filling A[" << numParticles << "][" << j << "]" << endl;
 #endif
               A(numParticles,j) = S[j];
             }
-#if 0
+#if 1
             cout << "pTemperature[" << *iter << "] = " << pTemperature[*iter] 
                  << endl;
 #endif
             B[numParticles] = pTemperature[*iter];
             iter++;
             numParticles++;
-#if 0
+#if 1
             cout << "*iter = " << *iter << " numParticles = " << numParticles 
                  << endl;
 #endif
@@ -2055,6 +2250,41 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           }
           
           if (numParticles < 8) {
+            cout << "numParticles < 8" << endl;
+            FastMatrix A_t(8,8);
+            A_t.transpose(A);
+            A.print(cout);
+            A_t.print(cout);
+            double A_tB[8];
+            A_t.multiply(B,A_tB);
+            FastMatrix A_tA(8,8);
+            A_tA.multiply(A_t,A);
+            A_tA.print(cout);
+            // Check if gTemperature has been solved for at some of the nodes
+            // and add that information to the matrix
+
+            for (int i = 0; i < 8; i++) {
+              if (patch->containsNode(ni_cell[i])) {
+                if (gTemperature[ni_cell[i]] != 0.0) {
+                  cout << "i = " << i << " setting gTemperature[" << ni_cell[i] << "]=" << gTemperature[ni_cell[i]] << endl;
+                  for (int j = 0; j < 8; j++) 
+                    A_tA(i,j) = 0.;
+                  
+                  A_tA(i,i) = 1.0;
+                  A_tB[i] = gTemperature[ni_cell[i]];
+                }
+              }
+            }
+
+            A_tA.print(cout);
+            A_tA.destructiveSolve(A_tB);
+            for (int j = 0; j < 8; j++) B[j] = A_tB[j];
+            
+          }
+#if 0
+
+          if (numParticles < 8) {
+            cout << "numParticles < 8" << endl;
             FastMatrix A_t(8,8);
             A_t.transpose(A);
             A.print(cout);
@@ -2066,14 +2296,15 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             A_tA.print(cout);
             cout << "condition number = " << A_tA.conditionNumber() << endl;
             A_tA.destructiveSolve(A_tB_t);
-            
-          } else {
+          }
+#endif 
+          else {
             A.destructiveSolve(B);
           }
           for (int i = 0; i < 8; i++) {
             if(patch->containsNode(ni_cell[i])) {
               gTemperature[ni_cell[i]] = B[i];
-#if 0
+#if 1
               cout << "gTemperature[" << ni_cell[i] << "]= " 
                    << gTemperature[ni_cell[i]]  << endl;
 #endif
@@ -2085,6 +2316,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           
         }
       }
+#endif
+
+
     }
 
     for(int m = 0; m < numMatls; m++){
