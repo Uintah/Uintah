@@ -222,6 +222,12 @@ namespace Uintah {
     d_lb = d_scheduler->getLoadBalancer();
     d_lb->problemSetup(d_ups, d_sharedState);
     
+    // set up regridder with initial information about grid.
+    // do before sim - so that Switcher (being a sim) can reset the state of the regridder
+    d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if (d_regridder) {
+      d_regridder->problemSetup(d_ups, grid, d_sharedState);
+    }
 
     // Initialize the CFD and/or MPM components
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
@@ -299,12 +305,6 @@ namespace Uintah {
       Dir dir(d_fromDir);
       d_output->restartSetup(dir, 0, d_restartTimestep, t,
                              d_restartFromScratch, d_restartRemoveOldDir);
-    }
-
-    // set up regridder with initial infor about grid
-    d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-    if (d_regridder) {
-      d_regridder->problemSetup(d_ups, grid, d_sharedState);
     }
 
   }
