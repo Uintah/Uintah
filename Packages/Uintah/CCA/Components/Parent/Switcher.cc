@@ -225,6 +225,11 @@ void Switcher::problemSetup(const ProblemSpecP& params,
   // re-initialize the DataArchiver to output according the the new component's specs
   dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
 
+  // do this again, in case of a restart
+  Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+  if (regridder)
+    regridder->switchInitialize(ups);
+
   // re-initialize the time info
   d_sharedState->d_simTime->problemSetup(ups);
 }
@@ -300,8 +305,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
     // var, we add to the compute list
     d_computedVars = sched->getComputedVars();
   }
-  Task* t = scinew Task("Switcher::carryOverVars",
-                        this, & Switcher::carryOverVars);
+
   if (d_doSwitching[level->getIndex()]) {
     // clear and reset carry-over db
     if (level->getIndex() >= (int) d_matlVarsDB.size()) {
@@ -327,17 +331,21 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
       }
       MaterialSubset* matls = scinew MaterialSubset;
       matls->addReference();
-      for (int j = 0; j < d_sharedState->getMaxMatlIndex(); j++) {
-        // if it exists in the old DW for this level (iff it is 
-        // on the level, it will be in the procSet's patches)
-        if (sched->get_dw(0)->exists(d_carryOverVarLabels[i], j, procset->getSubset(d_myworld->myrank())->get(0))) {
-          matls->add(j);
+      if (procset->getSubset(d_myworld->myrank())->size() > 0) {
+        for (int j = 0; j < d_sharedState->getMaxMatlIndex(); j++) {
+          // if it exists in the old DW for this level (iff it is 
+          // on the level, it will be in the procSet's patches)
+          if (sched->get_dw(0)->exists(d_carryOverVarLabels[i], j, procset->getSubset(d_myworld->myrank())->get(0))) {
+            matls->add(j);
+          }
         }
       }
       d_matlVarsDB[level->getIndex()][d_carryOverVarLabels[i]] = matls;
     }
   }
 
+  Task* t = scinew Task("Switcher::carryOverVars",
+                        this, & Switcher::carryOverVars);
   // schedule the vars for carrying over (if this happens before a switch, don't do it)
   if (level->getIndex() < (int) d_matlVarsDB.size()) {
     for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); 
