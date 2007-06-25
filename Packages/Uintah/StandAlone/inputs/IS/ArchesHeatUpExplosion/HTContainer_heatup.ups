@@ -87,6 +87,9 @@
       <max_grid_level>-1</max_grid_level>
     </MPM>
     <useLockStep>  true </useLockStep>
+    <Regridder>
+      <adaptive>false</adaptive>
+    </Regridder>
   </AMR>
 
   <!--____________________________________________________________________-->
