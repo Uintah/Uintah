@@ -1,29 +1,16 @@
 /*
- *  compare_mms.cc:
+ *  compare_scalar.cc:
  *
- *     Compares the data in a Uintah Data Archive (UDA) with the
- *     results of an analytical solution.  
+ *     ????
  *
  *  Written by:
- *   J. Davison de St. Germain
+ *   ????
  *   C-SAFE
  *   University of Utah
- *   Jun 9 2005
+ *   
  *
  *  Copyright (C) 2005 U of U
  */
-
-//#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
-//#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
-
-
-
-/*
-#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
-#include <Packages/Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
-#include <Packages/Uintah/StandAlone/tools/compare_mms/LinearMMS.h>
-#include <Packages/Uintah/StandAlone/tools/compare_mms/SineMMS.h>
-*/
 
 #include <Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar.h>
 
@@ -62,23 +49,22 @@ using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
-long iround(double num)
+long
+iround(double num)
 {
   return (long)(num+0.5);
 }
 
-
-
 /////////////////////////////////////////////////////
 // is_int(double) - checks if the double can qualify as an integer
 
-int is_int(double a, double tol = 1e-10)
+int
+is_int(double a, double tol = 1e-10)
 {
   long b;
   b = iround(a);
-  return (abs(a-b)<=tol)? 1 : 0;
+  return (fabs(a-b)<=tol)? 1 : 0;
 }
-
 
 //////////////////////////////////////////////////////
 // Arguments
