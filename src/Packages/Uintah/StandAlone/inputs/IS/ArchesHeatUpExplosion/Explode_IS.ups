@@ -165,7 +165,7 @@
         <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
         <BoundaryParticles>    3            </BoundaryParticles>
         <ThresholdPressure>    50000        </ThresholdPressure>
-        <IgnitionTemp>         450.0        </IgnitionTemp>
+        <IgnitionTemp>         500.0        </IgnitionTemp>
       </Model>
   
       <!--  Don't forget to change switching criteria section -->
