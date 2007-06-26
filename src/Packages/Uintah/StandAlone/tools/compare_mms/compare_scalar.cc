@@ -8,10 +8,12 @@
  *
  *
  *  Written by:
- *   Amjidanutpan Ramanujam
+ *   Amjidanutpan Ramanujam (ramanuja_at_cs_dot_utah_dot_edu)
  *   C-SAFE
  *   University of Utah
- *   
+ *
+ *  Borrowed from:
+ *   compare_mms.cc written by J. Davison de St. Germain
  *
  *  Copyright (C) 2007 U of U
  */
@@ -220,8 +222,6 @@ main( int argc, char *argv[] )
 
     cout<<"resolution"<<resolution<<endl;
     cout<<"velocity"<<velocity<<endl;
-//    cout<<offset<<endl;
-//    printf("Offset:[%5.16le %le %le]\n",offset.x(),offset.y(),offset.z());
 
     if (!(is_int(offset.x()) && is_int(offset.y()) && is_int(offset.z()) ) )
     {
@@ -232,7 +232,6 @@ main( int argc, char *argv[] )
     unsigned int loopLowerBound = 0;
     bool initialize_analytical_values = true;
 
-//#ifdef _NOT_YET_
 
     CCVariable<double> analytic_value;
     
@@ -324,7 +323,6 @@ main( int argc, char *argv[] )
 		
 		IntVector a(new_x, new_y, new_z);
 		
-                cout <<"Cell:     "<< cell << "\n";
 		if ( initialize_analytical_values )
 		  analytic_value[a] = scalarVar[cell];  // This is where I should fill the analytical value
 		else {
@@ -334,8 +332,6 @@ main( int argc, char *argv[] )
 		  if( diff > maxDiff ) maxDiff = diff;
 		  if( diff < minDiff ) minDiff = diff;
 		  
-		  printf( "UDA value: %le, Analytic Value: %le.  Diff: %le, fabs(Diff): %le\n", 
-			  scalarVar[cell], analytic_value[a], diff, fabs(diff) );
 		}
                 
                 i=i+1;
@@ -349,11 +345,14 @@ main( int argc, char *argv[] )
 	  fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
         } // end variable iteration
       } // end levels iteration
+      if (initialize_analytical_values)
+	timeIndex = index.size()-2;   // This moves the time index to the last but 2 time-step
+                                      // (we need the last but one time-step,
+                                      // but the loop incrementer will do that)
       initialize_analytical_values = false;
-      loopLowerBound = index.size()-1;
+
     } // end time iteration
 
-//#endif
     
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
