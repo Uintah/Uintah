@@ -32,7 +32,7 @@
             <SwitchCriteria type = "steadyBurn">
                <reactant_material>    1    </reactant_material>
                <BoundaryParticles>    3    </BoundaryParticles>
-               <ThresholdTemperature> 450  </ThresholdTemperature>
+               <ThresholdTemperature> 505  </ThresholdTemperature>
             </SwitchCriteria>
             
             <!--
@@ -107,7 +107,7 @@
     <do_grid_reset>                 true     </do_grid_reset>
     <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
     <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
-    <temperature_solve>             false    </temperature_solve>
+    <temperature_solve>             true     </temperature_solve>
     <use_load_curves>               true     </use_load_curves>
     <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
