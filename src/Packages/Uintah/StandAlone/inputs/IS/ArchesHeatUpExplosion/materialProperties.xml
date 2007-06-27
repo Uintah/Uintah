@@ -118,8 +118,8 @@
                  </difference>
             <res>                      [2,2,2]       </res>
             <velocity>           [0.0,0.0,0.0]       </velocity>
-            <temperature>        298.0               </temperature>
-            <density>            1.17982             </density>
+            <temperature>        300.0               </temperature>
+            <density>            1.17929469274       </density>
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
@@ -147,7 +147,7 @@
              <res>                      [2,2,2]       </res>
              <velocity>           [0.0,0.0,0.0]       </velocity>
              <temperature>        300.0               </temperature>
-             <density>            1.62605283294106    </density>
+            <density>            1.93782675228839    </density>
              <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
