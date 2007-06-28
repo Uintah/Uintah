@@ -2110,11 +2110,13 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         A.destructiveSolve(B);
         A.zero();
         for (int j = 0; j < 8; j++) {
-          gTemperature[ptshape.cellNodes[j]] = B[j];
+          if (patch->containsNode(ptshape.cellNodes[j])) {
+            gTemperature[ptshape.cellNodes[j]] = B[j];
 #ifdef debug
-          cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
-               << gTemperature[ptshape.cellNodes[j]] << endl;
+            cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
+                 << gTemperature[ptshape.cellNodes[j]] << endl;
 #endif
+          }
         }
       }
 
@@ -2161,27 +2163,31 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           A_tA.multiply(A_t,A);
           
           for (int i = 0; i < 8; i++) {
-            if (gTemperature[ptshape.cellNodes[i]] != 0.0) {
+            if (patch->containsNode(ptshape.cellNodes[i])) {
+              if (gTemperature[ptshape.cellNodes[i]] != 0.0) {
 #ifdef debug
-              cout << "i = " << i << " setting gTemperature[" 
-                   << ptshape.cellNodes[i] << "]=" 
-                   << gTemperature[ptshape.cellNodes[i]] << endl;
+                cout << "i = " << i << " setting gTemperature[" 
+                     << ptshape.cellNodes[i] << "]=" 
+                     << gTemperature[ptshape.cellNodes[i]] << endl;
 #endif
-              for (int j = 0; j < 8; j++)
-                A_tA(i,j) = 0.;
-
-              A_tA(i,i) = 1.0;
-              A_tB[i] = gTemperature[ptshape.cellNodes[i]];
+                for (int j = 0; j < 8; j++)
+                  A_tA(i,j) = 0.;
+                
+                A_tA(i,i) = 1.0;
+                A_tB[i] = gTemperature[ptshape.cellNodes[i]];
+              }
             }
           }
           
           A_tA.destructiveSolve(A_tB);
           for (int j = 0; j < 8; j++) {
-            gTemperature[ptshape.cellNodes[j]] = A_tB[j];
+            if (patch->containsNode(ptshape.cellNodes[j])) {
+              gTemperature[ptshape.cellNodes[j]] = A_tB[j];
 #ifdef debug
-            cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
-                 << gTemperature[ptshape.cellNodes[j]] << endl;
+              cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
+                   << gTemperature[ptshape.cellNodes[j]] << endl;
 #endif
+            }
           }
         
         }
