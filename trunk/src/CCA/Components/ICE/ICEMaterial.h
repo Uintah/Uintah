@@ -9,19 +9,16 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SLIVR {
-  class Point;
-  class Vector;
-}
-
 #include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
-  using SLIVR::Point;
-  using SLIVR::Vector;
+  using SCIRun::Point;
+  using SCIRun::Vector;
   class ICELabel;
   class EquationOfState;
   class GeometryObject;

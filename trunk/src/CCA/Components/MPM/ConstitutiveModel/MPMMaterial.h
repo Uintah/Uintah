@@ -12,20 +12,18 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SLIVR {
-  class Point;
-  class Vector;
-}
 
 #include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
-using SLIVR::Point;
-using SLIVR::Vector;
+using SCIRun::Point;
+using SCIRun::Vector;
 
  class Patch;
  class DataWarehouse;

@@ -6,15 +6,12 @@
 #else
 #include <SCIRun/Core/Util/Endian.h> // for long64 and the like
 #endif
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 #include <float.h>
 
-namespace SLIVR {
-  class Point;
-  class Vector;
-}
-
-using SLIVR::Point;
-using SLIVR::Vector;
+using SCIRun::Point;
+using SCIRun::Vector;
 
 #include <Core/Disclosure/uintahshare.h>
 namespace Uintah {

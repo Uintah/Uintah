@@ -6,20 +6,18 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-namespace SLIVR {
-  class Point;
-  class Vector;
-}
-
 #include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
-using SLIVR::Point;
-using SLIVR::Vector;
+using SCIRun::Point;
+using SCIRun::Vector;
 
 class Box;
 class GeometryPiece;

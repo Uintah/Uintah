@@ -5,6 +5,9 @@
 #include <Core/Util/RefCounted.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
+
 #include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
@@ -13,11 +16,6 @@
 #include <sgi_stl_warnings_on.h>
 
 typedef struct _xmlNode xmlNode;
-
-namespace SLIVR {
-  class Vector;
-  class Point;
-}
 
 namespace SCIRun {
   class IntVector;
@@ -34,8 +32,8 @@ using std::map;
 using std::ostream;
 
 using SCIRun::IntVector;
-using SLIVR::Vector;
-using SLIVR::Point;
+using SCIRun::Vector;
+using SCIRun::Point;
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up

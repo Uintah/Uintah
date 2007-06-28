@@ -21,10 +21,6 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
-  class Vector;
-}
-
 #include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {

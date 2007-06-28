@@ -7,7 +7,7 @@
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Ray.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
-#include <slivr/Plane.h>
+#include <SCIRun/Core/Geometry/Plane.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
@@ -19,7 +19,7 @@ using std::list;
 #include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
-using SLIVR::Plane;
+using SCIRun::Plane;
 
 /**************************************
 	

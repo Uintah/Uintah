@@ -10,7 +10,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Ghost.h>
 
-using namespace SLIVR;
+using namespace SCIRun;
 
 #define d_SMALL_NUM 1e-100
 //#define DUMP_LIMITER

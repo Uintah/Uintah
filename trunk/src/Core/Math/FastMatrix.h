@@ -34,9 +34,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SLIVR {
-  class Vector;
-}
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #include <Core/Math/uintahshare.h>
 namespace Uintah {
@@ -63,7 +61,7 @@ namespace Uintah {
     // Warning - this do not do any pivoting...
     void destructiveSolve(double* b);
     void destructiveSolve(double* b1, double* b2);
-    void destructiveSolve(SLIVR::Vector* b);
+    void destructiveSolve(SCIRun::Vector* b);
 
     void transpose(const FastMatrix& transpose);
     void multiply(const vector<double>& b, vector<double>& X) const;
