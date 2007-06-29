@@ -45,8 +45,8 @@ SET(Packages_Uintah_CCA_Components_MPMArches_SRCS
   MPMArchesLabel.cc
   CutCellInfo.cc
 
-  # fortran files without fspec
-  fortran/arrass.F
+  # fortran files without fspec, e.g.
+  # fortran/file.F
 )
 
 ADD_LIBRARY(Packages_Uintah_CCA_Components_MPMArches ${Packages_Uintah_CCA_Components_MPMArches_SRCS})

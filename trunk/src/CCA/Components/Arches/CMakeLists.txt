@@ -29,6 +29,7 @@
 # CMakeLists.txt for Packages/Uintah/CCA/Components/Arches
 
 FORTRAN_DEPENDENCY(fortran/areain.F CCA_Components_Arches)
+FORTRAN_DEPENDENCY(fortran/arrass.F CCA_Components_Arches)
 FORTRAN_DEPENDENCY(fortran/inlpresbcinout.F CCA_Components_Arches)
 FORTRAN_DEPENDENCY(fortran/bcpress.F CCA_Components_Arches)
 FORTRAN_DEPENDENCY(fortran/bcscalar.F CCA_Components_Arches)
