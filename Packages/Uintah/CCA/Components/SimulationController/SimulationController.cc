@@ -498,31 +498,31 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   // one reduce for max
   std::vector<double> toReduce, avgReduce, maxReduce;
   std::vector<const char*> statLabels;
+  double total_time=0, overhead_time=0, percent_overhead=0;
   if (d_myworld->size() > 1) {
     toReduce.push_back(memuse);
+    toReduce.push_back(d_sharedState->compilationTime);
+    toReduce.push_back(d_sharedState->regriddingTime);
+    toReduce.push_back(d_sharedState->regriddingCompilationTime);
+    toReduce.push_back(d_sharedState->regriddingCopyDataTime);
+    toReduce.push_back(d_sharedState->loadbalancerTime);
+    toReduce.push_back(d_sharedState->taskExecTime);
+    toReduce.push_back(d_sharedState->taskGlobalCommTime);
+    toReduce.push_back(d_sharedState->taskLocalCommTime);
+    toReduce.push_back(d_sharedState->taskWaitCommTime);
+    toReduce.push_back(d_sharedState->outputTime);
     statLabels.push_back("Mem usage");
-    if (stats.active()) {
-      toReduce.push_back(d_sharedState->compilationTime);
-      toReduce.push_back(d_sharedState->regriddingTime);
-      toReduce.push_back(d_sharedState->regriddingCompilationTime);
-      toReduce.push_back(d_sharedState->regriddingCopyDataTime);
-      toReduce.push_back(d_sharedState->loadbalancerTime);
-      toReduce.push_back(d_sharedState->taskExecTime);
-      toReduce.push_back(d_sharedState->taskGlobalCommTime);
-      toReduce.push_back(d_sharedState->taskLocalCommTime);
-      toReduce.push_back(d_sharedState->taskWaitCommTime);
-      toReduce.push_back(d_sharedState->outputTime);
-      statLabels.push_back("Recompile");
-      statLabels.push_back("Regridding");
-      statLabels.push_back("Regrid-schedule");
-      statLabels.push_back("Regrid-copydata");
-      statLabels.push_back("LoadBalance");
-      statLabels.push_back("TaskExec");
-      statLabels.push_back("TaskGlobalComm");
-      statLabels.push_back("TaskLocalComm");
-      statLabels.push_back("TaskWaitCommTime");
-      statLabels.push_back("Output");
-    }
+    statLabels.push_back("Recompile");
+    statLabels.push_back("Regridding");
+    statLabels.push_back("Regrid-schedule");
+    statLabels.push_back("Regrid-copydata");
+    statLabels.push_back("LoadBalance");
+    statLabels.push_back("TaskExec");
+    statLabels.push_back("TaskGlobalComm");
+    statLabels.push_back("TaskLocalComm");
+    statLabels.push_back("TaskWaitCommTime");
+    statLabels.push_back("Output");
+    
     if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
       toReduce.push_back(highwater);
     avgReduce.resize(toReduce.size());
@@ -544,7 +544,44 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       avg_highwater = avgReduce[avgReduce.size()-1];
       max_highwater = maxReduce[maxReduce.size()-1];
     }
+    //sum up the average times for simulation components
+    total_time=0;
+    for(int i=1;i<10;i++)
+      total_time+=avgReduce[i];
+    //sum up the average time for overhead related components
+    for(int i=1;i<6;i++)
+      overhead_time+=avgReduce[i];
+    
+    //calculate percentage of time spent in overhead
+    percent_overhead=overhead_time/total_time;
   }
+  else
+  {
+    //sum up the times for simulation components
+    total_time=d_sharedState->compilationTime
+              +d_sharedState->regriddingTime
+              +d_sharedState->regriddingCompilationTime
+              +d_sharedState->regriddingCopyDataTime
+              +d_sharedState->loadbalancerTime
+              +d_sharedState->taskExecTime
+              +d_sharedState->taskGlobalCommTime
+              +d_sharedState->taskLocalCommTime
+              +d_sharedState->taskWaitCommTime;
+    
+    //sum up the average time for overhead related components
+    overhead_time=d_sharedState->compilationTime
+              +d_sharedState->regriddingTime
+              +d_sharedState->regriddingCompilationTime
+              +d_sharedState->regriddingCopyDataTime
+              +d_sharedState->loadbalancerTime;
+    
+    //calculate percentage of time spent in overhead
+    percent_overhead=overhead_time/total_time;
+    
+  }
+  float alpha=2.0/31;
+  d_sharedState->overhead=alpha*percent_overhead+(1-alpha)*d_sharedState->overhead;
+
   d_sharedState->clearStats();
 
   // calculate mean/std dev
