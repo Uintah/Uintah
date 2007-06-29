@@ -680,7 +680,6 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
 
     }
   }
-  cout << " level " << k << "  cellnum " << d_cellNum[k] << " mps " << d_minPatchSize[k] << endl;
   if (k!=0 && Mod( d_cellNum[k], d_minPatchSize[k] ) != IntVector(0,0,0) ) {
     ostringstream msg;
     msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minPatchSize[k] << ")\n";
