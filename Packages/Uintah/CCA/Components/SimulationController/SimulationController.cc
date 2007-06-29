@@ -581,7 +581,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   }
   float alpha=2.0/31;
   d_sharedState->overhead=alpha*percent_overhead+(1-alpha)*d_sharedState->overhead;
-
   d_sharedState->clearStats();
 
   // calculate mean/std dev
@@ -659,12 +658,16 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     dbg.flush();
     cout.flush();
 
-    if (stats.active() && d_myworld->size() > 1) {
-      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-        if (maxReduce[i] > 0)
-          stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i]
-                << " LIB%: " << 1-(avgReduce[i]/maxReduce[i]) << endl;
+    if (stats.active()) {
+      if(d_myworld->size()>1)
+      {
+        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+          if (maxReduce[i] > 0)
+            stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i]
+                  << " LIB%: " << 1-(avgReduce[i]/maxReduce[i]) << endl;
+        }
       }
+      stats << "Percent Time in overhead:" << d_sharedState->overhead*100 << endl;
     } 
 
 
