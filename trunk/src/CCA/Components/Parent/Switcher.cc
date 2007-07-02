@@ -8,6 +8,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
@@ -459,6 +460,27 @@ void Switcher::initNewVars(const ProcessorGroup*,
           default:
             throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
           }
+          break;
+        case TypeDescription::NCVariable:
+          switch(l->typeDescription()->getSubType()->getType()) {
+          case TypeDescription::double_type:
+            {
+            NCVariable<double> q;
+            new_dw->allocateAndPut(q, l, indx,patch);
+            q.initialize(0);
+            break;
+            }
+          case TypeDescription::Vector:
+            {
+            NCVariable<Vector> q;
+            new_dw->allocateAndPut(q, l, indx,patch);
+            q.initialize(Vector(0,0,0));
+            break;
+            }
+          default:
+            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+          }
+          break;
         case TypeDescription::ParticleVariable:
           {
           ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
