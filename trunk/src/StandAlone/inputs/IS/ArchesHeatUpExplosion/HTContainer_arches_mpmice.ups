@@ -30,7 +30,7 @@
             <SwitchCriteria type = "steadyBurn">
                <reactant_material>    1    </reactant_material>
                <BoundaryParticles>    3    </BoundaryParticles>
-               <ThresholdTemperature> 550  </ThresholdTemperature>
+               <ThresholdTemperature> 505  </ThresholdTemperature>
             </SwitchCriteria>
             
             <!--
@@ -105,7 +105,7 @@
     <do_grid_reset>                 true     </do_grid_reset>
     <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
     <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
-    <temperature_solve>             false    </temperature_solve>
+    <temperature_solve>             true     </temperature_solve>
     <use_load_curves>               true     </use_load_curves>
     <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
@@ -127,6 +127,21 @@
       <max_grid_level>-1</max_grid_level>
     </MPM>
     <useLockStep>  true </useLockStep>
+    
+    <Regridder>
+      <adaptive>false</adaptive>
+      <type> BNR </type>
+      <min_patch_size> [[8,8,8]] </min_patch_size>
+      <patch_ratio_to_target>1</patch_ratio_to_target>
+      <max_levels>                  2       </max_levels>
+      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
+      <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
+      <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
+      <cell_deletion_dilation>    [1,1,1]   </cell_deletion_dilation>
+      <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
+      <max_timestep_interval>    100 </max_timestep_interval>
+    </Regridder>
+    
   </AMR>
 
 

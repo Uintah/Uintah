@@ -124,25 +124,6 @@
           <Scheme_for_delT_calc> aggressive </Scheme_for_delT_calc>  
           <knob_for_speedSound>  0.000        </knob_for_speedSound>   
         </TimeStepControl>
-
-        <ImplicitSolver>
-           <max_outer_iterations>      20     </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-4   </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 16 </iters_before_timestep_restart>
-            <Parameters>
-               <tolerance>1.e-6      </tolerance>
-               <norm>     LInfinity  </norm>
-               <criteria> Absolute   </criteria>
-
-             <solver>         cg     </solver>
-             <preconditioner> pfmg   </preconditioner>
-             <maxiterations>  200    </maxiterations>
-             <npre>           1      </npre>  
-             <npost>          1      </npost> 
-             <skip>           1      </skip>  
-             <jump>           0      </jump>  
-            </Parameters>
-        </ImplicitSolver>
  -->
       </ICE>        
   </CFD>
@@ -180,20 +161,10 @@
       <min_grid_level>-1</min_grid_level>
       <max_grid_level>-1</max_grid_level>
     </MPM>
-    <!--
     <Regridder>
-      <type> BNR </type>
-      <min_patch_size> [[4,4,4]] </min_patch_size>
-      <patch_ratio_to_target>1</patch_ratio_to_target>
-      <max_levels>                  2       </max_levels>
-      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
-      <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
-      <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
-      <cell_deletion_dilation>    [1,1,1]   </cell_deletion_dilation>
-      <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
-      <max_timestep_interval>    10 </max_timestep_interval>
+      <adaptive>false</adaptive>
     </Regridder>
-    -->
+
     <useLockStep> true </useLockStep>
   </AMR>
   <!--____________________________________________________________________-->
@@ -217,7 +188,7 @@
   <Models>
       <Model type="Steady_Burn">
         <fromMaterial>         reactant     </fromMaterial>
-        <toMaterial>           productGases </toMaterial>
+        <toMaterial>        PBXproductGases </toMaterial>
         <IdealGasConst>        8.314        </IdealGasConst>
         <PreExpCondPh>         1.637e15     </PreExpCondPh>
         <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
@@ -230,7 +201,7 @@
         <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
         <BoundaryParticles>    3            </BoundaryParticles>
         <ThresholdPressure>    50000        </ThresholdPressure>
-        <IgnitionTemp>         550.0        </IgnitionTemp>
+        <IgnitionTemp>         500.0        </IgnitionTemp>
       </Model>
   
       <!--  Don't forget to change switching criteria section -->
@@ -238,7 +209,7 @@
       <Model type="Simple_Burn">
         <Active>       true         </Active>
         <fromMaterial> reactant     </fromMaterial>
-        <toMaterial>  PBXproductGases </toMaterial>
+        <toMaterial>  productGases  </toMaterial>
         <ThresholdTemp>       450.0 </ThresholdTemp>
         <ThresholdPressure> 50000.0 </ThresholdPressure>
         <Enthalpy>        2000000.0 </Enthalpy>

@@ -29,15 +29,12 @@ For fast heat tape experiment:
             <file> case3/curveFit_coefs_101.dat</file> 
             <file> case3/curveFit_coefs_102.dat</file> 
           </polynomial_data>
+          <!-- Only needed by to invoke the external heat flux machinery -->
           <load_curve>
             <id>1</id>
             <time_point>
               <time> 0 </time>
-              <load> 76000</load>
-            </time_point>
-            <time_point>
-              <time> 1 </time>
-              <load> 76000 </load>
+              <load> 0</load>
             </time_point>
           </load_curve>
         </arches_heat_flux> 

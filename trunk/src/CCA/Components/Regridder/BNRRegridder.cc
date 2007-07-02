@@ -128,7 +128,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     int coarsen_factor=d_minPatchSize[l+1][0]*d_minPatchSize[l+1][1]*d_minPatchSize[l+1][2]/d_cellRefinementRatio[l][0]/d_cellRefinementRatio[l][1]/d_cellRefinementRatio[l][2];
     //Calculate the number of stages to reduce
       //this is a guess based on the coarsening factor and the number of processors
-    int stages=log((double)coarsen_factor)/log(2.0) + log((double)procs)/log(2.0)/4;
+    int stages=log((float)coarsen_factor)/log(2.0) + log((float)procs)/log(2.0)/4;
     int stride=1;
     MPI_Status status;
     //consoldate flags along a hypercube sending the shortest distance first
@@ -637,7 +637,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
 
 
   for (int k = 0; k < d_maxLevels; k++) {
-    if (k < (d_maxLevels-1)) {
+    if (k < (d_maxLevels)) {
       problemSetup_BulletProofing(k);
     }
   }

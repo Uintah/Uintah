@@ -554,6 +554,15 @@ private:
 
 };
       
+
+ struct particleTempShape {
+   double particleTemps;
+   vector<IntVector> cellNodes;
+   vector<double> shapeValues;
+ };
+ 
+ typedef struct particleTempShape particleTempShape;
+ 
 } // end namespace Uintah
 
 #endif

@@ -66,8 +66,11 @@ printTask( ostream& out, DetailedTask* task )
 	out << ", ";
       out << patches->get(p)->getID();
     }
-    const Level* level = getLevel(patches);
-   out << "\t  L-"<< level->getIndex();
+    
+    if (task->getTask()->getType() != Task::OncePerProc) {
+      const Level* level = getLevel(patches);
+      out << "\t  L-"<< level->getIndex();
+    }
   }
 }
 

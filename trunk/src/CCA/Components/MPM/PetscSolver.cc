@@ -583,19 +583,18 @@ void MPMPetscSolver::removeFixedDOFHeat()
 
   if (d_DOF.size() != 0) {
     cout << "Zeroing out rows" << endl;
-    IS is;
-    ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
+  }
+  IS is;
+  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
        
-    PetscScalar one = 1.0;
+  PetscScalar one = 1.0;
 #if (PETSC_VERSION_MINOR == 2)
-    MatZeroRows(d_A,is,&one);
+  MatZeroRows(d_A,is,&one);
 #endif
 #if (PETSC_VERSION_MINOR == 3)
-    MatZeroRowsIS(d_A,is,one);
+  MatZeroRowsIS(d_A,is,one);
 #endif
-    ISDestroy(is);
-  }
-
+  ISDestroy(is);
 
   int* indices_flux = new int[d_DOFFlux.size()];
   in = 0;

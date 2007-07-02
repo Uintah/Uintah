@@ -196,6 +196,8 @@ public:
   double taskGlobalCommTime;
   double taskWaitCommTime;
   double outputTime;
+  //averge percent time in overhead
+  double overhead;
 
 private:
 

@@ -2,12 +2,11 @@
 
 SRCDIR := Packages/Uintah/StandAlone/tools/compare_mms
 
-SRCS := $(SRCDIR)/compare_mms.cc \
-        $(SRCDIR)/ExpMMS.cc \
-        $(SRCDIR)/LinearMMS.cc \
-        $(SRCDIR)/SineMMS.cc 
 
-PROGRAM := $(SRCDIR)/compare_mms
+#SRCS := $(SRCDIR)/compare_scalar.cc 
+
+#PROGRAM := $(SRCDIR)/compare_scalar
+
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
@@ -52,7 +51,31 @@ LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
         $(CANTERA_LIBRARY) \
         $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
+########################################################
+# compare_mms
+
+SRCS := $(SRCDIR)/compare_mms.cc \
+        $(SRCDIR)/ExpMMS.cc \
+        $(SRCDIR)/LinearMMS.cc \
+        $(SRCDIR)/SineMMS.cc 
+
+PROGRAM := $(SRCDIR)/compare_mms
+
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
 
-compare_mms: prereqs Packages/Uintah/StandAlone/compare_mms/compare_mms
+########################################################
+# compare_scalar
+
+SRCS := $(SRCDIR)/compare_scalar.cc 
+
+PROGRAM := $(SRCDIR)/compare_scalar
+
+
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
+compare_mms: prereqs Packages/Uintah/StandAlone/tools/compare_mms/compare_mms
+compare_scalar: prereqs Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar
