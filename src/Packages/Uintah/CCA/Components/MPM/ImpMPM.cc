@@ -350,6 +350,8 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   }
 
   t->computes(lb->NC_CCweightLabel, one_matl);
+  if (flags->d_temp_solve == false)
+    t->computes(lb->gTemperatureLabel,one_matl);
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
@@ -570,7 +572,12 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
           NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }
       }
-    }
+   }
+   if (flags->d_temp_solve == false) {
+     NCVariable<double> gTemperature;
+     new_dw->allocateAndPut(gTemperature, lb->gTemperatureLabel,    0, patch);
+     gTemperature.initialize(0.);
+   }
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
@@ -691,7 +698,10 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
   }
-  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
+  t->requires(Task::OldDW,lb->NC_CCweightLabel, one_matl,Ghost::AroundCells,1);
+  if (flags->d_temp_solve == false)
+    //    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::AroundCells,1);
+    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::None,0);
 
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
@@ -1799,6 +1809,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
+  static int timestep=0;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t\t");
@@ -1817,6 +1829,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     // Create arrays for the grid data
+    constNCVariable<double> gTemperatureOld;
     NCVariable<double> gTemperature;
     StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
       gExternalHeatRate(numMatls),gExternalHeatFlux(numMatls),
@@ -1844,6 +1857,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     new_dw->allocateAndPut(gTemperature,lb->gTemperatureLabel, 0,patch);
     gTemperature.initialize(0.0);
+    if (flags->d_temp_solve == false)
+      old_dw->get(gTemperatureOld, lb->gTemperatureLabel, 0,patch,Ghost::None,0);
 
     // carry forward interpolation weight
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1988,7 +2003,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
 #define debug 
 #undef debug
-
 
     if (flags->d_temp_solve == true) {
     // This actually solves for the grid temperatures assuming a linear
@@ -2189,11 +2203,16 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 #endif
             }
           }
-        
         }
-          
       }
-       
+    }
+    if (flags->d_temp_solve == false) {
+      if(timestep>0){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          IntVector c = *iter;
+          gTemperature[c] = gTemperatureOld[c];
+        }
+      }
     }
 
     for(int m = 0; m < numMatls; m++){
@@ -2213,6 +2232,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     delete interpolator;
   }  // End loop over patches
+  timestep++;
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
