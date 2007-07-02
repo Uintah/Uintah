@@ -481,7 +481,6 @@ void Switcher::initNewVars(const ProcessorGroup*,
             throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
           }
           break;
-          }
         case TypeDescription::ParticleVariable:
           {
           ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
