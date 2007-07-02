@@ -90,6 +90,8 @@ WARNING
     //! Returns the max number of levels this regridder will store
     virtual int maxLevels() { return d_maxLevels; }
 
+    virtual bool useDynamicDilation() { return d_dynamicDilation; }
+
     enum FilterType {
       FILTER_STAR,
       FILTER_BOX
@@ -130,8 +132,7 @@ WARNING
 
     // input parameters from ups file
     bool  d_dynamicDilation;
-    int   d_gridReuseTargetLow;
-    int   d_gridReuseTargetHigh;
+    IntVector d_maxDilation;
     SizeList  d_cellNum; 
     SizeList  d_cellRefinementRatio;
     IntVector d_cellStabilityDilation;
@@ -162,10 +163,11 @@ WARNING
 
     bool d_newGrid;
     int d_lastRegridTimestep;         //The last time the full regridder was called (grid may not change)
-    int d_lastActualRegridTimestep;   //The last time the grid was changed
-    bool d_dilationUpdateLastRegrid;  //Was the last dilation changed on the last regrid
+    int d_dilationTimestep;           //The last timestep that the dilation was changed
     int d_maxTimestepsBetweenRegrids;
     int d_minTimestepsBetweenRegrids;
+    double d_amrOverheadLow;          //Percentage low target for AMR overhead
+    double d_amrOverheadHigh;         //Percentage high target for AMR overhead
 
     bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
 

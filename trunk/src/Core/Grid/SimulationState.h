@@ -16,6 +16,8 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
+
+#define OVERHEAD_WINDOW 40
 namespace Uintah {
 
 using namespace SCIRun;
@@ -196,8 +198,13 @@ public:
   double taskGlobalCommTime;
   double taskWaitCommTime;
   double outputTime;
-  //averge percent time in overhead
-  double overhead;
+
+  //percent time in overhead samples
+  double overhead[OVERHEAD_WINDOW];
+  double overheadWeights[OVERHEAD_WINDOW];
+  //next sample to write to
+  int overheadIndex;
+  double overheadAvg;
 
 private:
 

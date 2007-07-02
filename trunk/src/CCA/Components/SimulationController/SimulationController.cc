@@ -527,10 +527,21 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       toReduce.push_back(highwater);
     avgReduce.resize(toReduce.size());
     maxReduce.resize(toReduce.size());
-    MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
-               d_myworld->getComm());
-    MPI_Reduce(&toReduce[0], &maxReduce[0], toReduce.size(), MPI_DOUBLE, MPI_MAX, 0,
-               d_myworld->getComm());
+    
+    
+    //if AMR and using dynamic dilation use an allreduce
+    if(d_regridder && d_regridder->useDynamicDilation())
+    {
+      MPI_Allreduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, d_myworld->getComm());
+      MPI_Allreduce(&toReduce[0], &maxReduce[0], toReduce.size(), MPI_DOUBLE, MPI_MAX, d_myworld->getComm());
+    }
+    else
+    {
+      MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
+                 d_myworld->getComm());
+      MPI_Reduce(&toReduce[0], &maxReduce[0], toReduce.size(), MPI_DOUBLE, MPI_MAX, 0,
+                 d_myworld->getComm());
+    }
 
     // make sums averages
     for (unsigned i = 0; i < avgReduce.size(); i++) {
@@ -579,8 +590,28 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     percent_overhead=overhead_time/total_time;
     
   }
-  float alpha=2.0/31;
-  d_sharedState->overhead=alpha*percent_overhead+(1-alpha)*d_sharedState->overhead;
+
+  //set the overhead sample
+  if(d_n>2)  //ignore the first 3 samples, they are not good samples
+  {
+    d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
+    //increment the overhead index
+      
+    double overhead=0;
+    double weight=0;
+
+    int t=min(d_n-2,OVERHEAD_WINDOW);
+    //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
+    for(int i=0;i<t;i++)
+    {
+      overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
+      weight+=d_sharedState->overheadWeights[i];
+    }
+    d_sharedState->overheadAvg=overhead/weight; 
+    
+    d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
+    //increase overhead size if needed
+  } 
   d_sharedState->clearStats();
 
   // calculate mean/std dev
@@ -667,7 +698,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
                   << " LIB%: " << 1-(avgReduce[i]/maxReduce[i]) << endl;
         }
       }
-      stats << "Percent Time in overhead:" << d_sharedState->overhead*100 << endl;
+      if(d_n>2)
+        stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  endl;
     } 
 
 
@@ -713,8 +745,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
  
     d_prevWallTime = d_wallTime;
-    d_n++;
   }
+  d_n++;
 }
   
 } // namespace Uintah {
