@@ -103,7 +103,7 @@ void PolynomialData::loadData()
     endCapFile >> d_endCapLow;
     endCapFile >> d_endCapHigh;
 
-    cout << "d_endCapLow = " << d_endCapLow << " d_endCapHigh = " << d_endCapHigh << endl;
+    //cout << "d_endCapLow = " << d_endCapLow << " d_endCapHigh = " << d_endCapHigh << endl;
 
     vector<double> dataList;
     dataList.push_back(d_endCapLow);
@@ -124,8 +124,8 @@ void PolynomialData::loadData()
   Vector diff = d_top.asVector() - d_bottom.asVector();
   double increment = diff.length()/(d_polyData.size() - 1);
   
-  cout << "size of d_polyData = " << d_polyData.size() << endl;
-  cout << "size of d_fileNames = " << d_fileNames.size() << endl;
+  //cout << "size of d_polyData = " << d_polyData.size() << endl;
+  //cout << "size of d_fileNames = " << d_fileNames.size() << endl;
 
   for (unsigned int j = 0; j < d_polyData.size(); j++) {
     double t =  increment*static_cast<double>(j);
