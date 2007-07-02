@@ -80,6 +80,8 @@ WARNING
 
     //! If the Regridder set up the load balance in the process of Regridding
     virtual bool isLoadBalanced() { return false; }
+
+    virtual bool useDynamicDilation() = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);
