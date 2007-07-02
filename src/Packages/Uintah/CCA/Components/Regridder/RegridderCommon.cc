@@ -32,8 +32,7 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   rdbg << "RegridderCommon::RegridderCommon() BGN" << endl;
   d_filterType = FILTER_STAR;
   d_lastRegridTimestep = 0;
-  d_lastActualRegridTimestep = 0;
-  d_dilationUpdateLastRegrid = false;
+  d_dilationTimestep = 3;
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
                              CCVariable<int>::getTypeDescription());
   d_dilatedCellsRegridLabel  = VarLabel::create("DilatedCellsRegrid",
@@ -70,53 +69,59 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << endl;
   bool retval = d_newGrid;
-  if(d_newGrid)
+  
+  if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>10) //make sure a semi-decent sample has been taken
   {
-    int timeStepsSinceRegrid=d_sharedState->getCurrentTopLevelTimeStep() - d_lastActualRegridTimestep;
-    if(d_dynamicDilation && d_sharedState->getCurrentTopLevelTimeStep()!=1)
+    //compute the average overhead
+
+    //if above overhead threshold
+    if(d_sharedState->overheadAvg>d_amrOverheadHigh)
     {
-      if(d_dilationUpdateLastRegrid)
+      //increase dilation
+      int numDims=d_sharedState->getNumDims();
+      int *activeDims=d_sharedState->getActiveDims();
+      IntVector newDilation;
+      for(int d=0;d<numDims;d++)
       {
-        d_dilationUpdateLastRegrid=false;
+        int dim=activeDims[d];
+         //do not exceed maximum dilation
+         if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
+         newDilation[dim]=d_cellRegridDilation[dim]+1;
+       }
+       if(newDilation!=d_cellRegridDilation)
+       {
+         if(d_myworld->myrank()==0)
+           cout << "Increasing Regrid Dilation to:" << newDilation << endl;
+         d_cellRegridDilation=newDilation;
+         //reset the dilation overhead
+         d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
+         retval=true;
+       }
+    }
+    //if below overhead threshold
+    else if(d_sharedState->overheadAvg<d_amrOverheadLow)
+    {          
+      //decrease dilation
+      int numDims=d_sharedState->getNumDims();
+      int *activeDims=d_sharedState->getActiveDims();
+      IntVector newDilation(0,0,0);
+      for(int d=0;d<numDims;d++)
+      {
+        int dim=activeDims[d];
+        //do not lower dilation to be less than 0
+        if(d_cellRegridDilation[dim]>0)
+          newDilation[dim]=d_cellRegridDilation[dim]-1;
       }
-      else
+      if(newDilation!=d_cellRegridDilation)
       {
-        //if regrid is below threashold and the regrid was not forced
-        if(timeStepsSinceRegrid<d_gridReuseTargetLow && timeStepsSinceRegrid<=d_maxTimestepsBetweenRegrids)
-        {
-          //increase dilation
-          int numDims=d_sharedState->getNumDims();
-          int *activeDims=d_sharedState->getActiveDims();
-          for(int d=0;d<numDims;d++)
-          {
-            d_cellRegridDilation[activeDims[d]]++;
-          }
-          if(d_myworld->myrank()==0)
-            cout << "Increasing Regrid Dilation to:" << d_cellRegridDilation << endl;
-          d_dilationUpdateLastRegrid=true;
-        }
-        else if(timeStepsSinceRegrid>d_gridReuseTargetHigh)
-        {
-          //decrease dilation
-          int numDims=d_sharedState->getNumDims();
-          int *activeDims=d_sharedState->getActiveDims();
-          IntVector newDilation(0,0,0);
-          for(int d=0;d<numDims;d++)
-          {
-            if(d_cellRegridDilation[activeDims[d]]>0)
-              newDilation[activeDims[d]]=d_cellRegridDilation[activeDims[d]]-1;
-          }
-          if(newDilation!=d_cellRegridDilation)
-          {
-            if(d_myworld->myrank()==0)
-              cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
-            d_cellRegridDilation=newDilation;
-            d_dilationUpdateLastRegrid=true;
-          }
-        }
+        if(d_myworld->myrank()==0)
+          cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
+        d_cellRegridDilation=newDilation;
+        //reset the dilation overhead
+        d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
+        retval=true;
       }
     }
-    d_lastActualRegridTimestep=d_sharedState->getCurrentTopLevelTimeStep();
   }
   d_newGrid = false;
   rdbg << "RegridderCommon::needRecompile( " << retval << " ) END" << endl;
@@ -128,13 +133,13 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
   TAU_PROFILE("RegridderCommon::needsToReGrid()", " ", TAU_USER);
   rdbg << "RegridderCommon::needsToReGrid() BGN" << endl;
-
+  
   int timeStepsSinceRegrid=d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
   int retval = false;
+  
   if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
   } else if ( timeStepsSinceRegrid  > d_maxTimestepsBetweenRegrids ) {
-    d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
     retval = true;
   }
   else //check if flags are contained within the finer levels patches
@@ -212,10 +217,10 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     {
       retval=result;
     }
-    
-    if(retval)
-      d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   }
+  
+  if(retval==true)
+    d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
   if(dbg_barrier.active())
   {
@@ -356,14 +361,16 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   }
   
 
+  d_maxDilation = IntVector(4,4,4);
   d_cellStabilityDilation = IntVector(1,1,1);
   d_cellRegridDilation = IntVector(0,0,0);
   d_cellDeletionDilation = IntVector(1,1,1);
   d_minBoundaryCells = IntVector(1,1,1);
   d_maxTimestepsBetweenRegrids = 50;
   d_minTimestepsBetweenRegrids = 1;
-  d_gridReuseTargetLow=4;
-  d_gridReuseTargetHigh=10;
+  d_amrOverheadLow=.05;
+  d_amrOverheadHigh=.15;
+
   d_dynamicDilation=false;
   regrid_spec->get("cell_stability_dilation", d_cellStabilityDilation);
   regrid_spec->get("cell_regrid_dilation", d_cellRegridDilation);
@@ -372,9 +379,10 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
   regrid_spec->get("min_timestep_interval", d_minTimestepsBetweenRegrids);
   regrid_spec->get("dynamic_dilation",d_dynamicDilation);
-  regrid_spec->get("grid_reuse_target_low",d_gridReuseTargetLow);
-  regrid_spec->get("grid_reuse_target_high",d_gridReuseTargetHigh);
-  ASSERT(d_gridReuseTargetLow<=d_gridReuseTargetHigh);
+  regrid_spec->get("amr_overhead_low",d_amrOverheadLow);
+  regrid_spec->get("amr_overhead_high",d_amrOverheadHigh);
+  regrid_spec->get("max_dilation",d_maxDilation);
+  ASSERT(d_amrOverheadLow<=d_amrOverheadHigh);
 
   // set up filters
   /* 
