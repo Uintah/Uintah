@@ -314,7 +314,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
   d_isAdaptive = true;  // use if "adaptive" not there
   regrid_spec->get("adaptive", d_isAdaptive);
-  if (!d_isAdaptive) {
+  
+  if (d_myworld->myrank() == 0 &&!d_isAdaptive) {
     cout << "Regridder inactive.  Using static Grid.\n";
   }
 
