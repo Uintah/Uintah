@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -458,6 +459,28 @@ void Switcher::initNewVars(const ProcessorGroup*,
             }
           default:
             throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+          }
+          break;
+        case TypeDescription::NCVariable:
+          switch(l->typeDescription()->getSubType()->getType()) {
+          case TypeDescription::double_type:
+            {
+            NCVariable<double> q;
+            new_dw->allocateAndPut(q, l, indx,patch);
+            q.initialize(0);
+            break;
+            }
+          case TypeDescription::Vector:
+            {
+            NCVariable<Vector> q;
+            new_dw->allocateAndPut(q, l, indx,patch);
+            q.initialize(Vector(0,0,0));
+            break;
+            }
+          default:
+            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+          }
+          break;
           }
         case TypeDescription::ParticleVariable:
           {
