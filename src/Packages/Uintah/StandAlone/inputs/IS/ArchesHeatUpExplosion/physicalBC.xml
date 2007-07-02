@@ -28,6 +28,7 @@ For fast heat tape experiment:
             <file> case3/curveFit_coefs_100.dat</file> 
             <file> case3/curveFit_coefs_101.dat</file> 
             <file> case3/curveFit_coefs_102.dat</file> 
+            <file> case3/endcap_averages.dat</file> 
           </polynomial_data>
           <!-- Only needed by to invoke the external heat flux machinery -->
           <load_curve>
