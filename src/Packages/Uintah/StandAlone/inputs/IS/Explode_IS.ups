@@ -315,7 +315,8 @@
     <save label="g.mass"/>
     <save label="g.temperature"/>
 
-    <checkpoint cycle = "4" timestepInterval = "500"/>
+    <!--<checkpoint cycle = "4" timestepInterval = "500"/>-->
+    <checkpoint walltimeStart="1500" walltimeInterval="1800" cycle="4"/>
   </DataArchiver>
 
   <Debug>
