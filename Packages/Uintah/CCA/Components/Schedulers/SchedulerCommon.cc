@@ -50,7 +50,6 @@ using namespace std;
 #else
 #define SCISHARE
 #endif
-extern SCISHARE DebugStream dbg_barrier;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern SCISHARE SCIRun::Mutex       cerrLock;
@@ -793,11 +792,6 @@ void SchedulerCommon::compile()
   }
 #endif
   m_locallyComputedPatchVarMap->makeGroups();
-
-  if(dbg_barrier.active())
-  {
-    MPI_Barrier(d_myworld->getComm());
-  }
 }
 
 bool SchedulerCommon::isOldDW(int idx) const
