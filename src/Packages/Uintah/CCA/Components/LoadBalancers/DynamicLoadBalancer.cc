@@ -1068,7 +1068,7 @@ void DynamicLoadBalancer::dynamicallyLoadBalanceAndSplit(const GridP& oldGrid, S
           double takeimb=fabs(currentCost+cost-targetCost);
           double notakeimb=fabs(currentCost-targetCost);
           
-          if(notakeimb<takeimb && currentCost!=0) //taking patch would cause more imbalance then not taking it
+          if(notakeimb<takeimb) //taking patch would cause more imbalance then not taking it
           {
             //if(d_myworld->myrank()==0) cout << "Next proc\n";
             //move to next proc
