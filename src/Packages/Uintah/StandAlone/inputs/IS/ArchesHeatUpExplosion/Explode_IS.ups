@@ -42,7 +42,7 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>Explode_IS.uda</filebase>
-    <outputInterval> 0.0000025 </outputInterval>
+    <outputInterval> 0.000025 </outputInterval>
 
     <save label="vol_frac_CC"/>
     <save label="press_CC"/>
@@ -58,6 +58,7 @@
     <save label="p.mass"                levels="-1"/>
     <save label="p.temperature"         levels="-1"/>
     <save label="p.volume"              levels="-1"/>
+<!--
     <save label="p.stress"              levels="-1"/>
     <save label="p.plasticStrain"       levels="-1"/>
     <save label="p.plasticStrainRate"   levels="-1"/>
@@ -67,8 +68,9 @@
     <save label="p.velocity"            levels="-1"/>
     <save label="g.mass"                levels="-1"/>
     <save label="g.temperature"         levels="-1"/>
-    <checkpoint cycle = "6" interval = "3e-6"/>
-     <!-- 100 timesteps at delT = 3e-8 -->
+-->    
+    <checkpoint cycle = "6" timestepInterval = "300"/>
+     <!-- 300 timesteps at 6 sec. per time (step 3L amr) -->
   </DataArchiver>
 
   <Debug>
