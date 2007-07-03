@@ -51,7 +51,7 @@ SRCS     += \
 	$(SRCDIR)/ProgressiveWarning.cc
 
 ifneq ($(IS_REDSTORM),yes)
-  SRCS +=
+  SRCS += \
 	$(SRCDIR)/DynamicLoader.cc      \
 	$(SRCDIR)/DynamicCompilation.cc \
 	$(SRCDIR)/soloader.cc           \
