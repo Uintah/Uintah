@@ -122,8 +122,42 @@
 
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [1,1,1]            </patches>
-              <resolution>   [10,10,10]         </resolution>
+              <resolution>   [10,10,10]          </resolution>
            </Box>
     </Level>
+
+<!--
+    <Level>
+           <Box label = "16mm res.">
+              <lower>        [-0.48,-0.48,-0.48]   </lower>
+              <upper>        [ 0.48, 0.48, 0.48]   </upper>
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [4,4,4]            </patches>
+              <resolution>   [60,60,60]         </resolution>
+           </Box>
+    </Level>
+        <Level>
+           <Box label = "4mm res.">
+              <lower>        [-0.16,-0.16,-0.16]   </lower>
+              <upper>        [ 0.16, 0.16, 0.16]   </upper>
+
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [4,4,4]            </patches>
+              <resolution>   [80,80,80]         </resolution>
+           </Box>
+    </Level>
+        
+   
+    <Level>
+           <Box label = "1mm res.">
+              <lower>        [-0.06,-0.06,-0.072]   </lower>
+              <upper>        [ 0.06, 0.06, 0.072]   </upper>
+
+              <extraCells>   [1,1,1]                </extraCells>
+              <patches>      [10,10,6]                </patches>
+              <resolution>   [120,120,144]          </resolution>
+           </Box>
+    </Level>
+-->
   </Grid>
 </Uintah_Include>
