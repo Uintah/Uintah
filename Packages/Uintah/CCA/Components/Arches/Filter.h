@@ -18,7 +18,7 @@
 
 #ifdef HAVE_PETSC
 extern "C" {
-#include "petscmat.h"
+#  include <petscmat.h>
 }
 #endif
 
