@@ -16,13 +16,13 @@
 #include <Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <utility>
-#include <typeinfo>
-#include <sstream>
-#include <iostream>
-#include <algorithm>
-#include <string>
-#include <map>
+#include   <utility>
+#include   <typeinfo>
+#include   <sstream>
+#include   <iostream>
+#include   <algorithm>
+#include   <string>
+#include   <map>
 #include <sgi_stl_warnings_on.h>
 
 using namespace std;
@@ -133,7 +133,10 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     radius_stream >> r;
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
-    
+
+    if( !radius_stream || !origin_stream ) {
+      printf( "WARNING: BoundCondReader.cc: stringstream failed...\n" );
+    }    
     
     //  bullet proofing-- origin must be on the same plane as the face
     bool test = true;
