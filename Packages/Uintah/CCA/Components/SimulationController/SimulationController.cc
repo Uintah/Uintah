@@ -21,8 +21,9 @@
 #include <Core/Thread/Time.h>
 
 #ifndef _WIN32
-#include <sys/param.h>
+#  include <sys/param.h>
 #endif
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -202,7 +203,6 @@ namespace Uintah {
     // Print out meta data
     if (d_myworld->myrank() == 0){
       grid->printStatistics();
-    
       amrout << "Restart grid\n" << *grid.get_rep() << endl;
     }
 
