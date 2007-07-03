@@ -163,11 +163,15 @@ void Exception::sci_throw(const Exception& exc)
       // exception will be thrown by the SCI_THROW macro
       return;
     } else if(strcasecmp(emode, "dbx") == 0){
+#if defined( REDSTORM )
+      cout << "Error: running debugger at exception is not supported on RedStorm\n";
+#else
       // Fire up the debugger
       char command[100];
       if(getenv("SCI_DBXCOMMAND")){
 	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
       } else {
+      cout << "Error: running debugger at exception is not supported on RedStorm\n";
 #ifdef HAVE_EXC
 	sprintf(command, "winterm -c dbx -p %d &", getpid());
 #else
@@ -177,13 +181,18 @@ void Exception::sci_throw(const Exception& exc)
       cerr << "Starting: " << command << '\n';
       system(command);
       emode="ask";
+#endif
     } else if(strcasecmp(emode, "cvd") == 0){
+#if defined( REDSTORM )
+      cout << "Error: running debugger at exception is not supported on RedStorm\n";
+#else
       // Fire up the slow, fancy debugger
       char command[100];
       sprintf(command, "cvd -pid %d &", getpid());
       cerr << "Starting: " << command << '\n';
       system(command);
       emode="ask";
+#endif
     } else if(strcasecmp(emode, "abort") == 0){
       // This will trigger the thread library, but we cannot
       // directly call the thread library here or it would create

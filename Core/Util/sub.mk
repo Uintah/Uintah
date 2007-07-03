@@ -35,8 +35,6 @@ SRCDIR   := Core/Util
 
 SRCS     += \
 	$(SRCDIR)/DebugStream.cc        \
-	$(SRCDIR)/DynamicLoader.cc      \
-	$(SRCDIR)/DynamicCompilation.cc \
 	$(SRCDIR)/Endian.cc             \
 	$(SRCDIR)/Environment.cc        \
 	$(SRCDIR)/FileUtils.cc          \
@@ -47,12 +45,19 @@ SRCS     += \
 	$(SRCDIR)/SizeTypeConvert.cc    \
 	$(SRCDIR)/RWS.cc                \
 	$(SRCDIR)/sci_system.cc         \
-	$(SRCDIR)/soloader.cc           \
 	$(SRCDIR)/Signals.cc            \
 	$(SRCDIR)/Socket.cc             \
 	$(SRCDIR)/Timer.cc              \
 	$(SRCDIR)/TypeDescription.cc    \
-  $(SRCDIR)/ProgressiveWarning.cc
+	$(SRCDIR)/ProgressiveWarning.cc
+
+ifneq ($(IS_REDSTORM),yes)
+  SRCS +=
+	$(SRCDIR)/DynamicLoader.cc      \
+	$(SRCDIR)/DynamicCompilation.cc \
+	$(SRCDIR)/soloader.cc           \
+	$(SRCDIR)/Socket.cc             
+endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
 

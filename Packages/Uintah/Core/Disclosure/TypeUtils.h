@@ -2,10 +2,11 @@
 #define UINTAH_HOMEBREW_TypeUtils_H
 
 #ifndef _WIN32
-#include <inttypes.h>
+#  include <inttypes.h>
 #else
-#include <Core/Util/Endian.h> // for long64 and the like
+#  include <Core/Util/Endian.h> // for long64 and the like
 #endif
+
 #include <float.h>
 
 namespace SCIRun {
@@ -78,24 +79,26 @@ SCISHARE void fun_getSmallValue(long64*);
 SCISHARE void fun_getLargeValue(Vector*);
 SCISHARE void fun_getSmallValue(Vector*);
 
-
 } // End namespace Uintah
    
 #include <Core/Datatypes/TypeName.h>
 #include <sgi_stl_warnings_off.h>
-#include <string>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
+#if !defined( REDSTORM )
 // typename.h redefines SCISHARE
 #include <Packages/Uintah/Core/Disclosure/share.h>
 namespace SCIRun {
- using std::string;
- using Uintah::long64;
-template<> SCISHARE const string find_type_name(long64*);
+  using std::string;
+  using Uintah::long64;
 
-SCISHARE const TypeDescription* get_type_description(long64*);
+  template<> SCISHARE const string find_type_name(long64*);
+
+  SCISHARE const TypeDescription* get_type_description(long64*);
 
 } // namespace SCIRun 
+#endif // REDSTORM
 
 #endif
 

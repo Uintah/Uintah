@@ -37,8 +37,8 @@
 #include <vector>
 #include <stdlib.h>
 
-#ifdef _WIN32
-#include <time.h>
+#if defined(_WIN32) || defined(REDSTORM)
+#  include <time.h>
 #endif
 
 using namespace Uintah;

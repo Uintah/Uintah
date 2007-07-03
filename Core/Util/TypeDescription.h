@@ -96,7 +96,9 @@ public:
     ~Register();
   };
 
+#if !defined( REDSTORM )
   void fill_compile_info(CompileInfo *ci) const;
+#endif
 
   //! convert a string that ends in .cc to end in .h
   static string cc_to_h(const string &dot_cc);

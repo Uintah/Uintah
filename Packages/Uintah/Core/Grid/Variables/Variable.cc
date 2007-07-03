@@ -11,10 +11,12 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/SizeTypeConvert.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <sstream>
-#include <iostream>
+#include   <sstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
+
 #include <zlib.h>
 #include <math.h>
 #include <errno.h>
@@ -23,7 +25,7 @@ using namespace std;
 using namespace Uintah;
 
 #ifdef _WIN32
-#include <io.h>
+#  include <io.h>
 #endif
 
 Variable::Variable()
@@ -35,13 +37,15 @@ Variable::~Variable()
 {
 }
 
-void Variable::setForeign()
+void
+Variable::setForeign()
 {
    d_foreign = true;
 }
 
-void Variable::emit(OutputContext& oc, const IntVector& l,
-		    const IntVector& h, const string& compressionModeHint)
+void
+Variable::emit( OutputContext& oc, const IntVector& l,
+                const IntVector& h, const string& compressionModeHint )
 {
   bool use_rle = false;
   bool use_gzip = false;
@@ -82,14 +86,16 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
 				   virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
     }
   }
-  else
+  else {
     emitNormal(outstream, l, h, oc.varnode, oc.outputDoubleAsFloat);
+  }
 
   string preGzip = outstream.str();
   string preGzip2;
   string buffer; // trying to avoid copying the strings back and forth
   string buffer2;
   string* writeoutString = &preGzip;
+
   if (use_gzip) {
     writeoutString = gzipCompress(&preGzip, &buffer);
     if (writeoutString != &buffer)
@@ -117,6 +123,8 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
     }
   }
 
+  errno = -1;
+
   const char* writebuffer = (*writeoutString).c_str();
   unsigned long writebufferSize = (*writeoutString).size();
 #ifdef _WIN32
@@ -126,7 +134,9 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
 #endif
 
   if(s != (long)writebufferSize) {
-    cerr << "Variable::emit - write system call failed writing to " << oc.filename << " with errno " << errno << ": " << strerror(errno) <<  endl;
+    cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
+         << " with errno " << errno << ": " << strerror(errno) <<  endl;
+    cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
 
     SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
   }
@@ -153,8 +163,14 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
     oc.varnode->appendElement("compression", compressionMode);
 }
 
-string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
+string*
+Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 {
+#if defined(REDSTORM)
+  cout << "ERROR: compression not currently supported on RedStorm.\n";
+  exit( 1 );
+#else
+
   unsigned long uncompressedSize = pUncompressed->size();
 
   // follows compress guidelines: 1% more than source size + 12
@@ -188,11 +204,13 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 			       save space */
     return pBuffer;
   } 
+#endif
 }
 
 
-void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
-		    const string& compressionMode)
+void
+Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
+                const string& compressionMode )
 {
   bool use_rle = false;
   bool use_gzip = false;
@@ -229,6 +247,10 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
   ic.cur += datasize;
 
   if (use_gzip) {
+#if defined( REDSTORM )
+    printf("Error: compression not supported on RedStorm\n");
+    exit(1);
+#else
     // use gzip compression
 
     // first read the uncompressed data size
@@ -249,6 +271,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
       throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
 
     uncompressedData = &bufferStr;
+#endif
   }
 
   istringstream instream(*uncompressedData);
@@ -263,18 +286,21 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 #endif
 }
 
-bool Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,
-		       const IntVector& /*h*/, ProblemSpecP /*varnode*/)
+bool
+Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,
+                  const IntVector& /*h*/, ProblemSpecP /*varnode*/)
 {
   return false; // not supported by default
 }
   
-void Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
+void
+Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
 {
   SCI_THROW(InvalidCompressionMode("rle",
 			       virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
 }
 
-void Variable::offsetGrid(const IntVector& /*offset*/)
+void
+Variable::offsetGrid(const IntVector& /*offset*/)
 {
 }

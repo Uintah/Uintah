@@ -99,6 +99,7 @@ void SimulationState::registerMaterial(Material* matl)
 {
    matl->registerParticleState(this);
    matl->setDWIndex((int)matls.size());
+
    matls.push_back(matl);
    if ((int)matls.size() > max_matl_index) {
      max_matl_index = matls.size();
@@ -169,8 +170,9 @@ void SimulationState::finalizeMaterials()
   all_mpm_matls = scinew MaterialSet();
   all_mpm_matls->addReference();
   vector<int> tmp_mpm_matls(mpm_matls.size());
-  for(int i=0;i<(int)mpm_matls.size();i++)
+  for( int i=0; i<(int)mpm_matls.size(); i++ ) {
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
+  }
   all_mpm_matls->addAll(tmp_mpm_matls);
   
   if (all_arches_matls && all_arches_matls->removeReference())
@@ -196,8 +198,9 @@ void SimulationState::finalizeMaterials()
   all_matls = scinew MaterialSet();
   all_matls->addReference();
   vector<int> tmp_matls(matls.size());
-  for(int i=0 ;i<(int)matls.size();i++)
+  for(int i=0; i<(int)matls.size(); i++) {
     tmp_matls[i] = matls[i]->getDWIndex();
+  }
   all_matls->addAll(tmp_matls);
 
   if (allInOneMatl && allInOneMatl->removeReference())
