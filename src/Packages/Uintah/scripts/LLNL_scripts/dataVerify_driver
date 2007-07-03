@@ -6,7 +6,7 @@
 # usage
 #_____________________________________________________________________.
 
-FILES      := $(shell cat pscp_files)
+FILES      := $(shell cat /tmp/pscp_files)
 TAR_FILES  := $(wildcard *.tar)
 
           

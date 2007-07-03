@@ -103,14 +103,15 @@ cd $localDir
 #-------------------------------
 # make a sorted list of files / directories to test
 # let the user edit that file with vi
-/bin/rm -f pscp_files
+/bin/rm -f /tmp/pscp_files
 
-find . -maxdepth 1 -type f             -exec basename {} \; > pscp_files
-find . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >>pscp_files
-find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> pscp_files
+find . -maxdepth 1 -type f             -exec basename {} \; > /tmp/pscp_files
+find . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >>/tmp/pscp_files
+find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> /tmp/pscp_files
 
 echo "Now starting vi in a separate xterm:  Add/remove the files or directories you want verified to the following list"
-xterm -bg "DarkSlateGray" -fg "orange" -e "vi pscp_files" 
+xterm -bg "DarkSlateGray" -fg "orange" -e "vi /tmp/pscp_files" 
+chmod ug+rw /tmp/pscp_files
 
 /usr/bin/time -p gmake -f /usr/gapps/uintah/scripts/dataVerify_driver -j $nproc
 
