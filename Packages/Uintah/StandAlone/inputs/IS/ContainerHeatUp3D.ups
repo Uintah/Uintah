@@ -231,7 +231,8 @@
     <save label = "g.mass"/>
     <save label = "heatRate_CC"/>
 
-    <checkpoint cycle = "2" timestepInterval = "10"/>
+    <!--<checkpoint cycle = "2" timestepInterval = "10"/>-->
+    <checkpoint walltimeStart="1500" walltimeInterval="1800" cycle="4"/>
   </DataArchiver>
 
   <Debug>
