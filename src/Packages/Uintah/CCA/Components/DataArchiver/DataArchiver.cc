@@ -43,14 +43,18 @@
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#define MAXHOSTNAMELEN 256
-#include <winsock2.h>
-#include <process.h>
-#include <time.h>
+#  define MAXHOSTNAMELEN 256
+#  include <winsock2.h>
+#  include <process.h>
+#  include <time.h>
 #else
-#include <sys/param.h>
-#include <strings.h>
-#include <unistd.h>
+#  include <sys/param.h>
+#  include <strings.h>
+#  include <unistd.h>
+#endif
+
+#if defined(REDSTORM)
+#  include <time.h>
 #endif
 
 //TODO - BJW - if multilevel reduction doesn't work, fix all
@@ -1666,6 +1670,7 @@ DataArchiver::output(const ProcessorGroup*,
     // Open the data file
     filename = (char*) dataFilename.c_str();
     fd = open(filename, flags, 0666);
+
     if ( fd == -1 ) {
       cerr << "Cannot open dataFile: " << dataFilename << '\n';
       throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
@@ -1954,7 +1959,7 @@ DataArchiver::makeVersionedDir()
   cout << "DataArchiver created " << dirName << endl;
   d_dir = Dir(dirName);
    
-}
+} // end makeVersionedDir()
 
 void
 DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)

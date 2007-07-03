@@ -27,18 +27,30 @@ MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
 SRCS := $(SRCDIR)/sus.cc
 
 ifeq ($(IS_AIX),yes)
+  SET_AIX_LIB := yes
+endif
+
+ifeq ($(IS_REDSTORM),yes)
+  SET_AIX_LIB := yes
+endif
+
+ifeq ($(SET_AIX_LIB),yes)
   AIX_LIBRARY := \
-        Core/XMLUtil  \
+        Core/Containers   \
         Core/Malloc       \
         Core/Math         \
-        Core/Containers   \
-        Core/Persistent   \
         Core/OS           \
+        Core/Persistent   \
+        Core/Thread       \
+        Core/XMLUtil      \
         Packages/Uintah/Core/Math                        \
         Packages/Uintah/Core/GeometryPiece               \
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
 	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Solvers              \
         Packages/Uintah/CCA/Components/Examples          \
         $(DUMMY_LIB)                                     \
         $(ARCHES_LIBS)                                   \
@@ -85,9 +97,8 @@ else
         $(AIX_LIBRARY)
 endif
 
-ifeq ($(IS_AIX),yes)
+ifeq ($(SET_AIX_LIB),yes)
   LIBS := \
-        $(TCL_LIBRARY) \
         $(TEEM_LIBRARY) \
         $(XML2_LIBRARY) \
         $(Z_LIBRARY) \
@@ -99,7 +110,7 @@ ifeq ($(IS_AIX),yes)
         $(LAPACK_LIBRARY) \
         $(MPI_LIBRARY) \
         $(X_LIBRARY) \
-        -lld $(M_LIBRARY)
+        $(M_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \

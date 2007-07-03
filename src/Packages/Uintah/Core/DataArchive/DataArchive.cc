@@ -144,6 +144,10 @@ DataArchive::queryTimesteps( std::vector<int>& index,
             timeVal >> currentTime;
             timestepVal >> timestepNumber;
 
+            if( !timeVal || !timestepVal ) {
+              printf( "WARNING: DataArchive.cc: stringstream failed...\n" );
+            }
+
           }
 
           d_tsindex.push_back(timestepNumber);

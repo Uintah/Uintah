@@ -1,6 +1,7 @@
 
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -12,13 +13,14 @@
 using namespace SCIRun;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
+#  pragma set woff 1209
 #endif
 
 namespace SCIRun {
 
 using std::string;
 
+#if !defined(REDSTORM)
 template<> const string find_type_name(long64*)
 {
   static const string name = "long64";
@@ -33,6 +35,7 @@ const TypeDescription* get_type_description(long64*)
   }
   return td;
 }
+#endif
 
 } // namespace SCIRun
 

@@ -33,7 +33,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/OS
 
-SRCS     += $(SRCDIR)/Dir.cc $(SRCDIR)/sock.cc $(SRCDIR)/ProcessInfo.cc 
+SRCS     += \
+	$(SRCDIR)/Dir.cc \
+	$(SRCDIR)/ProcessInfo.cc 
+
+ifneq ($(IS_REDSTORM),yes)
+   SRCS += $(SRCDIR)/sock.cc
+endif
 
 PSELIBS := Core/Exceptions
 LIBS := $(SOCKET_LIBRARY)

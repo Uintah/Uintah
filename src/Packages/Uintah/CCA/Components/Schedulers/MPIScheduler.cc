@@ -9,23 +9,27 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Parallel/Vampir.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <sstream>
-#include <iomanip>
-#include <map>
+#include   <sstream>
+#include   <iomanip>
+#include   <map>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Parallel/Vampir.h>
+
 #ifdef USE_PERFEX_COUNTERS
-#include "counters.h"
+#  include <Packages/Uintah/CCA/Components/Schedulers/counters.h>
 #endif
 
 // Pack data into a buffer before sending -- testing to see if this
@@ -748,7 +752,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     d_times.clear();
     //emitTime("time since last execute");
   }
-  
+
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 

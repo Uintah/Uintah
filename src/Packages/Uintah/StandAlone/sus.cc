@@ -67,6 +67,8 @@
 #include <vector>
 #include <sys/stat.h>
 
+#include <time.h>
+
 using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
@@ -350,7 +352,10 @@ main( int argc, char** argv )
   mode_t mask_gor = 0022;
   umask(mask_gor);
 #endif
+
+#if defined(__SGI__)
   Thread::disallow_sgi_OpenGL_page0_sillyness();
+#endif
 
 #ifndef HAVE_MPICH
   // If regular MPI, then initialize after parsing the args...
@@ -371,12 +376,16 @@ main( int argc, char** argv )
 
     // Run svn diff on Packages/Uintah 
     if (do_svnDiff){
-      cerr << "____SVN_____________________________________________________________"<< endl;
+#if defined(REDSTORM)
+      cerr << "WARNING:  SVN DIFF is disabled.\n";
+#else
+      cerr << "____SVN_____________________________________________________________\n";
       create_sci_environment( NULL, 0 );
       string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
       string cmd = "svn diff " + sdir;
       system(cmd.c_str());
-      cerr << "____SVN_______________________________________________________________"<< endl;
+      cerr << "____SVN_______________________________________________________________\n";
+#endif
     }
   }
   
@@ -384,6 +393,7 @@ main( int argc, char** argv )
   // Create the components
   try {
 
+#if !defined(REDSTORM)
     char * st = getenv( "INITIAL_SLEEP_TIME" );
     if( st != 0 ){
       int sleepTime = atoi( st );
@@ -392,7 +402,7 @@ main( int argc, char** argv )
       cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " is " << getpid() << "\n";
       Time::waitFor( (double)sleepTime );
     }
-
+#endif
     //__________________________________
     // Read input file
     ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
@@ -546,6 +556,7 @@ main( int argc, char** argv )
   }
 }
 
+#if !defined(REDSTORM)
 extern "C" {
   void dgesvd_() {
     cerr << "Error: dgesvd called!\n";
@@ -577,3 +588,4 @@ extern "C" {
     Thread::exitAll(1);
   }
 }
+#endif

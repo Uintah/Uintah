@@ -216,6 +216,7 @@ TypeDescription::get_filename() const
 }
 
 
+#if !defined( REDSTORM )
 void 
 TypeDescription::fill_compile_info(CompileInfo *ci) const
 {
@@ -249,7 +250,7 @@ TypeDescription::fill_compile_info(CompileInfo *ci) const
     }
   }
 }
-
+#endif
 
 const TypeDescription* 
 TypeDescription::lookup_type(const std::string& t)
