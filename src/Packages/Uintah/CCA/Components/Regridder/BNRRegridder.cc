@@ -662,9 +662,9 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
       
     }
 
-    if(k!=0 && d_cellNum[k][dir] != 1 && d_minPatchSize[k][dir] < 4) {
+    if(k!=0 && d_cellNum[k][dir] != 1 && d_minPatchSize[k][dir] <= 4) {
       ostringstream msg;
-      msg << "Problem Setup: Regridder: Min Patch Size needs to be at least 4 cells in each dimension \n"
+      msg << "Problem Setup: Regridder: Min Patch Size needs to be greater than 4 cells in each dimension \n"
           << "except for 1-cell-wide dimensions.\n"
           << "  Patch size on level " << k << ": " << d_minPatchSize[k] << endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
