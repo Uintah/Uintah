@@ -44,6 +44,7 @@
             
             <init var = "p.acceleration"     matls = "mpm_matls" levels="-1"/>
             <init var = "p.externalHeatFlux" matls = "mpm_matls" levels="-1"/>
+            <init var = "g.temperature" matls = "mpm_matls" levels="-1"/>
         </subcomponent>
        
         <subcomponent>
