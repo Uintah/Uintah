@@ -136,8 +136,8 @@
       <type> BNR </type>
       <min_patch_size> [[8,8,8]] </min_patch_size>
       <patch_ratio_to_target>1</patch_ratio_to_target>
-      <max_levels>                  2       </max_levels>
-      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
+      <max_levels>                  3       </max_levels>
+      <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
       <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
       <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
       <cell_deletion_dilation>    [1,1,1]   </cell_deletion_dilation>
