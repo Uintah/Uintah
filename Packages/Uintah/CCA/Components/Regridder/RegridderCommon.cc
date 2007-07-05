@@ -86,7 +86,9 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           int dim=activeDims[d];
           //do not exceed maximum dilation
           if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
-          newDilation[dim]=d_cellRegridDilation[dim]+1;
+            newDilation[dim]=d_cellRegridDilation[dim]+1;
+          else
+            newDilation[dim]=d_cellRegridDilation[dim];
         }
         if(newDilation!=d_cellRegridDilation)
         {
@@ -111,6 +113,8 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           //do not lower dilation to be less than 0
           if(d_cellRegridDilation[dim]>0)
             newDilation[dim]=d_cellRegridDilation[dim]-1;
+          else
+            newDilation[dim]=d_cellRegridDilation[dim];
         }
         if(newDilation!=d_cellRegridDilation)
         {
