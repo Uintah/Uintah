@@ -27,7 +27,8 @@ SRCS     += \
 	$(SRCDIR)/LinearInterpolator.cc \
 	$(SRCDIR)/AMR.cc \
 	$(SRCDIR)/Node27Interpolator.cc \
-	$(SRCDIR)/BSplineInterpolator.cc 
+	$(SRCDIR)/BSplineInterpolator.cc \
+	$(SRCDIR)/TOBSplineInterpolator.cc 
 
 PSELIBS := \
 	Core/Geometry \
