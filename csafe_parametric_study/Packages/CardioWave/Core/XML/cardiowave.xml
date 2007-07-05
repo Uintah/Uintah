@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE cw SYSTEM "cardiowave.dtd">
+<cw>
+
+<synapse>
+<name>Modified LuoRudy Model</name>
+<file>SynMLR.c</file>
+<nodetype>mlr_nodetype</nodetype>
+<parameters>Eb=-59.87 
+Ek=-77.0 
+Ek1=-87.26 
+Ena=54.4
+Gb=0.03921 
+Gna=23.0 
+Gk=0.282
+Gk1=0.6047
+Gkp=0.0183
+Gsi=0.09
+</parameters>
+<description>This is a modified version of the LuoRudy Model.
+</description>
+</synapse>
+
+<synapse>
+<name>Resistive Gap Junction</name>
+<file>SynPassiveGJ.c</file>
+<nodetype>passivegj_nodetype</nodetype>
+<parameters>spassivegj_resistance=0.0015
+</parameters>
+<description>This is a simple resistive gap junction model.
+</description>
+</synapse>
+
+<nwsolver>
+<name>GMRES/Parallel solver</name>
+<file>SparseOps1D.c Parallel1D.c SolverGMRES.c</file>
+<parameters>solverrestart=15
+maxiter=500
+solvertol=1.000000e-05
+</parameters>
+<description>This is the GMRES solver using a parallel solver.
+</description>
+</nwsolver>
+
+<nwsolver>
+<name>GMRES/Single solver</name>
+<file>SparseOpsNone.c ParallelNone.c SolverGMRES.c</file>
+<parameters>solverrestart=15
+maxiter=500
+solvertol=1.000000e-05
+</parameters>
+<description>This is the GMRES solver using a single processor.
+</description>
+</nwsolver>
+
+<nwsolver>
+<name>CG/Parallel solver</name>
+<file>SparseOps1D.c Parallel1D.c SolverGMRES.c</file>
+<parameters>maxiter=500
+solvertol=1.000000e-05
+</parameters>
+<description>This is the Conjungate Gradient solver using a parallel solver.
+</description>
+</nwsolver>
+
+<nwsolver>
+<name>CG/Single solver</name>
+<file>SparseOpsNone.c ParallelNone.c SolverGMRES.c</file>
+<parameters>maxiter=500
+solvertol=1.000000e-05
+</parameters>
+<description>This is the Conjungate Gradient solver using a single processor.
+</description>
+</nwsolver>
+
+<nwtimestep>
+<name>Semi-Implicit Timestepper</name>
+<file>TstepSBmicro.c</file>
+<parameters>dt=0.005
+tfinal=5
+</parameters>
+<description>This is currently the only timestepper for the discrete multidomain available.
+</description>
+</nwtimestep>
+
+<output>
+<name>SCIRun output</name>
+<file>OutputSCIRun.c</file>
+<parameters>dumpspacing=0.005
+dumpvm=yes
+dumpvi=no
+dumpve=no
+dumpvb=no
+dumpq=no
+dumpaux=no
+dumptime=no
+dumpstep=500
+outputfile=result.out
+</parameters>
+<description>The configuration writes a series of output files with a header file that can be read into SCIRun. The 'dumpstep' parameter can be used to set the number of timeframes in a single file. All the separate files are linked by one NRRD header file.
+</description>
+</output>
+
+<output>
+<name>SCIRun/Text output</name>
+<file>OutputSCIRun.c OutputText.c</file>
+<parameters>dumpspacing=0.005
+dumpvm=yes
+dumpvi=no
+dumpve=no
+dumpvb=no
+dumpq=no
+dumpaux=no
+dumptime=no
+dumpstep=500
+printspacing=0.005
+printnodes=0
+printvm=yes
+printvi=no
+printve=no
+printq=no
+printaux=no
+printtime=no
+outputfile=result.out
+</parameters>
+<description>This configuration writes a series of output files with a header file that can be read into SCIRun. The 'dumpstep' parameter can be used to set the number of timeframes in a single file. All the separate files are linked by one NRRD header file. This configuration as well writes text files of a certain node to be able to track progress.
+</description>
+</output>
+
+<output>
+<name>Dump/Text output</name>
+<file>OutputDump.c OutputText.c</file>
+<parameters>dumpspacing=0.005
+dumpvm=yes
+dumpvi=no
+dumpve=no
+dumpvb=no
+dumpq=no
+dumpaux=no
+dumptime=no
+printspacing=0.005
+printnodes=0
+printvm=yes
+printvi=no
+printve=no
+printq=no
+printaux=no
+printtime=no
+outputfile=result.out
+</parameters>
+<description>This configuration is the default CardioWave way of outputting data. Unfortunately there is no easy way of importing data in this format into SCIRun as it is a pure memory dump of the results. Hence only use this one if the results are not to be displayed in SCIRun. 
+</description>
+</output>
+
+<neurowave>
+<file>NeuroKernel.c VectorOps.c CWaveKernel.c</file>
+<parameters>beta=1.0
+cm=1.0
+debug=4
+loadstate=no
+savestate=no
+loadfile=restart.load
+savefile=restart.save
+statefile=restart
+checkpoint=no
+ckptfile=check
+ckptinterval=1.0
+useauxvars=no
+</parameters>
+<description>Default parameters for neurowave application.
+</description>
+</neurowave>
+
+<cardiowave>
+<file>VectorOps.c CWaveKernel.c</file>
+<parameters>beta=1.0
+cm=1.0
+debug=4
+loadstate=no
+savestate=no
+loadfile=restart.load
+savefile=restart.save
+statefile=restart
+checkpoint=no
+ckptfile=check
+ckptinterval=1.0
+useauxvars=no
+</parameters>
+<description>Default parameters for cardiowave application.
+</description>
+</cardiowave>
+
+
+<defaultsynapse>
+<name>Modified LuoRudy Model</name>
+</defaultsynapse>
+
+<defaultnwsolver>
+<name>GMRES/Parallel solver</name>
+</defaultnwsolver>
+
+<defaultnwtimestep>
+<name>Semi-Implicit Timestepper</name>
+</defaultnwtimestep>
+
+<defaultoutput>
+<name>SCIRun output</name>
+</defaultoutput>
+
+</cw>
+

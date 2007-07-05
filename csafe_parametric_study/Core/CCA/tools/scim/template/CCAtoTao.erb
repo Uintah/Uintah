@@ -1,0 +1,81 @@
+#include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <Core/CCA/spec/cca_sidl.h>
+#include <CCA/Components/TAO/FileReader/TestS.h>
+
+using namespace SCIRun;
+using namespace std;
+
+extern "C" BridgeComponent* make_Bridge_<%= $templateArgv[0]%>() {
+  return static_cast<BridgeComponent*>(new Bridge1());
+}
+ 
+Bridge1::Bridge1() {
+}
+ Bridge1::~Bridge1() {
+}
+ void Bridge1::setServices(const BridgeServices* svcs) {
+  BridgeServices* services = const_cast<BridgeServices* >(svcs);
+<port>
+  my<%= $inPortName%>* <%= $inPortName%>_ptr = new my<%= $inPortName%>();
+  my<%= $inPortName%>::pointer otherptr = my<%= $inPortName%>::pointer(<%= $inPortName%>_ptr);
+  <%= $inPortName%>_ptr->bservices = services;
+  services->addProvidesPort( (void*)&otherptr,"pde","sci.cca.ports.<%= $inPortName%>", CCA);
+  services->registerUsesPort("hello", "corba.FileReader", Tao);
+</port>
+}
+<port>
+my<%= $inPortName%>::my<%= $inPortName%>() {
+}
+ my<%= $inPortName%>::~my<%= $inPortName%>() {
+}
+<method>
+<%= $inMethodType%> my<%= $inPortName%>::<%= $inMethodName%>( <%= outDefArgs(method(:ccaType))%>) {
+  int argc = 0;
+  //Not general
+  const char *ior = "file://test.ior";
+  CORBA::ORB_var orb = CORBA::ORB_init(argc, NULL, "" ACE_ENV_ARG_PARAMETER);
+  CORBA::Object_var tmp = orb->string_to_object(ior ACE_ENV_ARG_PARAMETER);
+  //Not general
+  Test::FileReader_var hello = Test::FileReader::_narrow(tmp.in () ACE_ENV_ARG_PARAMETER);
+
+  //Data
+  Test::FileReader::double_array_var _nodes = new Test::FileReader::double_array;
+  Test::FileReader::long_array_var _boundaries=new Test::FileReader::long_array;
+  Test::FileReader::long_array_var _dirichletNodes=new Test::FileReader::long_array;
+  Test::FileReader::double_array_var _dirichletValues=new Test::FileReader::double_array;
+
+  //Not general
+  hello-><%= $inMethodName%>(_nodes, _boundaries, _dirichletNodes,
+                             _dirichletValues
+                             ACE_ENV_ARG_DECL_WITH_DEFAULTS );
+
+  //Data2
+  std::cerr << _nodes->length() << " nodes\n";
+  nodes.resize(_nodes->length());
+  for(unsigned int i=0; i< _nodes->length(); i++){
+    nodes[i] = _nodes[i];
+  }
+  std::cerr << _boundaries->length() << " nodes\n";
+  boundaries.resize(_boundaries->length());
+  for(unsigned int i=0; i< _boundaries->length(); i++){
+    boundaries[i] = _boundaries[i];
+  }
+  std::cerr << _dirichletNodes->length() << " nodes\n";
+  dirichletNodes.resize(_dirichletNodes->length());
+  for(unsigned int i=0; i< _dirichletNodes->length(); i++){
+    dirichletNodes[i] = _dirichletNodes[i];
+  }
+  std::cerr << _dirichletValues->length() << " nodes\n";
+  dirichletValues.resize(_dirichletValues->length());
+  for(unsigned int i=0; i< _dirichletValues->length(); i++){
+    dirichletValues[i] = _dirichletValues[i];
+  }
+                                                                                                                                      
+  orb->destroy(ACE_ENV_SINGLE_ARG_PARAMETER);
+}
+</method>
+</port>
+
+

@@ -1,0 +1,80 @@
+# Generated automatically from Makefile.in by configure.
+# Makefile for logging
+
+include ../make.include
+
+SRCTOP  := ..
+SRCDIR  := .
+OBJTOP  := /home/sci/simpson/sv/scirun_upgrade/SCIRun/src/Packages/CollabVis/Standalone/Server
+
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+VPATH := $(SRCDIR)
+
+INCLUDES += -I$(SRCTOP) $(XML_INCLUDE)
+
+INCLUDES := $(sort $(INCLUDES))
+#SOFLAGS := $(SOFLAGS) -rpath ${LIBDIR}
+
+OBJS = Handshake.o GetClientList.o SetViewingMethod.o GetZTex.o MouseMove.o \
+	ViewFrame.o Multicast.o Goodbye.o Compression.o Chat.o Collaborate.o \
+	XDisplay.o GroupViewer.o Transfer.o
+
+SOLIB = ../lib/libMessage.so
+
+all:	$(SOLIB)
+
+$(SOLIB):	$(OBJS)
+	$(CXX) $(SOFLAGS)	$(OBJS) -o $(SOLIB) $(LIBS)
+
+clean:
+	/bin/rm -f $(SOLIB) $(OBJS)
+
+
+# -include $(OBJS:.o=.d)
+
+#
+# $Log$
+# Revision 1.1  2003/07/22 15:46:19  simpson
+# Moved CollabVis Server files to Packages/CollabVis/Standalone -- adding these files
+#
+# Revision 1.1  2003/06/18 21:28:04  simpson
+# Adding CollabVis files/dirs
+#
+# Revision 1.9  2001/10/10 17:32:44  luke
+# Updated config and make to allow for vpath (multi-arch) compilation using the same src tree
+#
+# Revision 1.8  2001/10/03 17:59:19  luke
+# Added XDisplay protocol
+#
+# Revision 1.7  2001/09/23 02:24:11  luke
+# Added collaborate message
+#
+# Revision 1.6  2001/07/16 20:29:29  luke
+# Updated messages...
+#
+# Revision 1.5  2001/06/05 20:53:48  luke
+# Added driver and message for multicast
+#
+# Revision 1.4  2001/05/30 18:53:06  luke
+# Fixed linker problem that wouldn't allow constants to be properly included in library - this eliminates rpath...
+#
+# Revision 1.3  2001/05/29 22:34:24  luke
+# Linux works again
+#
+# Revision 1.2  2001/05/29 21:35:38  luke 
+# Fixed rpath problem so we don't need to set LD_LIBRARY_PATH
+#
+# Revision 1.1  2001/05/29 18:41:55  luke
+# Switched to autoconf/configure based system
+#
+# Revision 1.1  2001/05/11 20:06:03  luke
+# Initial coding of Message abstraction. Documentation not yet done.
+#

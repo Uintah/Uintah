@@ -1,0 +1,301 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+
+# SCI Network 1.20
+
+if {[string length [netedit getenv SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: This net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+}
+
+set DATADIR [netedit getenv SCIRUN_DATA]
+
+::netedit dontschedule
+
+set bbox {34 3 736 675}
+set Name {Main}
+
+# Create the Modules
+set m0 [addModuleAtPosition "MatlabInterface" "DataIO" "MatlabMatricesReader" 310 3]
+set m1 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 280 166]
+set m2 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 262 261]
+set m3 [addModuleAtPosition "MatlabInterface" "DataIO" "MatlabFieldsReader" 43 42]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 207 500]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 252 631]
+set m6 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 321 347]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataAt" 46 134]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 34 249]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 38 362]
+set m10 [addModuleAtPosition "MatlabInterface" "DataIO" "MatlabMatricesWriter" 337 96]
+set m11 [addModuleAtPosition "MatlabInterface" "DataIO" "MatlabNrrdsReader" 570 8]
+set m12 [addModuleAtPosition "MatlabInterface" "DataIO" "MatlabNrrdsWriter" 571 97]
+
+# Set the Module Notes Dispaly Options
+
+# Create the Connections between Modules
+set c0 [addConnection $m3 0 $m7 0]
+set c1 [addConnection $m0 0 $m10 0]
+set c2 [addConnection $m0 0 $m1 0]
+set c3 [addConnection $m11 0 $m12 0]
+set c4 [addConnection $m7 0 $m2 0]
+set c5 [addConnection $m2 0 $m6 0]
+set c6 [addConnection $m2 0 $m4 0]
+set c7 [addConnection $m8 0 $m9 0]
+set c8 [addConnection $m4 0 $m5 0]
+set c9 [addConnection $m2 0 $m9 1]
+set c10 [addConnection $m1 0 $m2 1]
+set c11 [addConnection $m9 0 $m4 1]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
+set $m0-notes {}
+set $m0-filename $DATADIR/Matlab/timeseries.mat
+set $m0-matrixinfotexts {{heartbeat                                 [ 490x 455 DOUBLE ]} {none} }
+set $m0-matrixnames {{heartbeat} {<none>} }
+set $m0-matrixname {heartbeat <none> <none> <none> <none> <none>}
+set $m1-notes {}
+set $m1-row_or_col {col}
+set $m1-selectable_min {0}
+set $m1-selectable_max {454}
+set $m1-selectable_inc {455}
+set $m1-selectable_units {Units}
+set $m1-range_min {0}
+set $m1-range_max {454}
+set $m1-playmode {loop}
+set $m1-dependence {independent}
+set $m1-current {140}
+set $m1-execmode {init}
+set $m1-delay {50}
+set $m1-inc-amount {1}
+set $m1-send-amount {1}
+set $m1-update-function {1}
+set $m2-notes {}
+set $m3-notes {}
+set $m3-filename $DATADIR/Matlab/geometry.mat
+set $m3-matrixinfotexts {{sockelectrode                             [TRISURFFIELD - NO FIELD DATA]} {none} }
+set $m3-matrixnames {{sockelectrode} {<none>} }
+set $m3-matrixname {{sockelectrode} {<none>} {<none>} {<none>} {<none>} {<none>} }
+set $m4-notes {}
+set $m4-nodes-on {0}
+set $m4-nodes-transparency {0}
+set $m4-nodes-as-disks {0}
+set $m4-nodes-usedefcolor {0}
+set $m4-edges-on {1}
+set $m4-edges-transparency {1}
+set $m4-edges-usedefcolor {0}
+set $m4-faces-on {1}
+set $m4-use-normals {0}
+set $m4-use-transparency {0}
+set $m4-faces-usedefcolor {0}
+set $m4-vectors-on {0}
+set $m4-normalize-vectors {}
+set $m4-has_vector_data {0}
+set $m4-bidirectional {0}
+set $m4-vectors-usedefcolor {0}
+set $m4-tensors-on {0}
+set $m4-has_tensor_data {0}
+set $m4-tensors-usedefcolor {0}
+set $m4-scalars-on {0}
+set $m4-scalars-transparency {0}
+set $m4-scalars-usedefcolor {1}
+set $m4-has_scalar_data {1}
+set $m4-text-on {0}
+set $m4-text-use-default-color {1}
+set $m4-text-color-r {1.0}
+set $m4-text-color-g {1.0}
+set $m4-text-color-b {1.0}
+set $m4-text-backface-cull {0}
+set $m4-text-fontsize {1}
+set $m4-text-precision {2}
+set $m4-text-render_locations {0}
+set $m4-text-show-data {1}
+set $m4-text-show-nodes {0}
+set $m4-text-show-edges {0}
+set $m4-text-show-faces {0}
+set $m4-text-show-cells {0}
+set $m4-def-color-r {0.5}
+set $m4-def-color-g {0.5}
+set $m4-def-color-b {0.5}
+set $m4-def-color-a {0.5}
+set $m4-node_display_type {Points}
+set $m4-edge_display_type {Lines}
+set $m4-data_display_type {Arrows}
+set $m4-tensor_display_type {Boxes}
+set $m4-scalar_display_type {Points}
+set $m4-active_tab {Edges}
+set $m4-node_scale {3.000000e-02}
+set $m4-edge_scale {1.500000e-02}
+set $m4-vectors_scale {0.30}
+set $m4-tensors_scale {0.30}
+set $m4-scalars_scale {3.000000e-01}
+set $m4-show_progress {}
+set $m4-interactive_mode {Interactive}
+set $m4-field-name {490sock}
+set $m4-field-name-update {1}
+set $m4-node-resolution {6}
+set $m4-edge-resolution {6}
+set $m4-data-resolution {6}
+set $m5-notes {}
+$m5 ui
+set $m5-ViewWindow_0-pos {}
+set $m5-ViewWindow_0-caxes {0}
+set $m5-ViewWindow_0-raxes {1}
+set $m5-ViewWindow_0-iaxes {}
+set $m5-ViewWindow_0-have_collab_vis {0}
+set $m5-ViewWindow_0-view-eyep-x {356.90558976560158}
+set $m5-ViewWindow_0-view-eyep-y {-217.83168376046882}
+set $m5-ViewWindow_0-view-eyep-z {275.76297210028065}
+set $m5-ViewWindow_0-view-lookat-x {9.3965147642432303}
+set $m5-ViewWindow_0-view-lookat-y {-5.4486293468300708}
+set $m5-ViewWindow_0-view-lookat-z {-0.44587813415264227}
+set $m5-ViewWindow_0-view-up-x {-0.55656310087314131}
+set $m5-ViewWindow_0-view-up-y {0.15165713958774363}
+set $m5-ViewWindow_0-view-up-z {0.81684614632042984}
+set $m5-ViewWindow_0-view-fov {20}
+set $m5-ViewWindow_0-view-eyep_offset-x {}
+set $m5-ViewWindow_0-view-eyep_offset-y {}
+set $m5-ViewWindow_0-view-eyep_offset-z {}
+set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m5-ViewWindow_0-bgcolor-r {0}
+set $m5-ViewWindow_0-bgcolor-g {0}
+set $m5-ViewWindow_0-bgcolor-b {0}
+set $m5-ViewWindow_0-shading {}
+set $m5-ViewWindow_0-do_stereo {0}
+set $m5-ViewWindow_0-ambient-scale {1.0}
+set $m5-ViewWindow_0-diffuse-scale {1.0}
+set $m5-ViewWindow_0-specular-scale {0.4}
+set $m5-ViewWindow_0-emission-scale {1.0}
+set $m5-ViewWindow_0-shininess-scale {1.0}
+set $m5-ViewWindow_0-polygon-offset-factor {1.0}
+set $m5-ViewWindow_0-polygon-offset-units {0.0}
+set $m5-ViewWindow_0-point-size {1.0}
+set $m5-ViewWindow_0-line-width {1.0}
+set $m5-ViewWindow_0-sbase {0.40}
+set $m5-ViewWindow_0-sr {1}
+set $m5-ViewWindow_0-do_bawgl {0}
+set $m5-ViewWindow_0-drawimg {}
+set $m5-ViewWindow_0-saveprefix {}
+set $m5-ViewWindow_0-resx {}
+set $m5-ViewWindow_0-resy {}
+set $m5-ViewWindow_0-aspect {}
+set $m5-ViewWindow_0-aspect_ratio {}
+set $m5-ViewWindow_0-global-light {1}
+set $m5-ViewWindow_0-global-fog {0}
+set $m5-ViewWindow_0-global-debug {0}
+set $m5-ViewWindow_0-global-clip {1}
+set $m5-ViewWindow_0-global-cull {0}
+set $m5-ViewWindow_0-global-dl {0}
+set $m5-ViewWindow_0-global-type {Gouraud}
+set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-clip-num {}
+set $m5-ViewWindow_0-clip-visible {}
+set $m5-ViewWindow_0-clip-selected {}
+set $m5-ViewWindow_0-clip-visible-1 {}
+set $m5-ViewWindow_0-clip-normal-x-1 {}
+set $m5-ViewWindow_0-clip-normal-y-1 {}
+set $m5-ViewWindow_0-clip-normal-z-1 {}
+set $m5-ViewWindow_0-clip-normal-d-1 {}
+set $m5-ViewWindow_0-clip-visible-2 {}
+set $m5-ViewWindow_0-clip-normal-x-2 {}
+set $m5-ViewWindow_0-clip-normal-y-2 {}
+set $m5-ViewWindow_0-clip-normal-z-2 {}
+set $m5-ViewWindow_0-clip-normal-d-2 {}
+set $m5-ViewWindow_0-clip-visible-3 {}
+set $m5-ViewWindow_0-clip-normal-x-3 {}
+set $m5-ViewWindow_0-clip-normal-y-3 {}
+set $m5-ViewWindow_0-clip-normal-z-3 {}
+set $m5-ViewWindow_0-clip-normal-d-3 {}
+set $m5-ViewWindow_0-clip-visible-4 {}
+set $m5-ViewWindow_0-clip-normal-x-4 {}
+set $m5-ViewWindow_0-clip-normal-y-4 {}
+set $m5-ViewWindow_0-clip-normal-z-4 {}
+set $m5-ViewWindow_0-clip-normal-d-4 {}
+set $m5-ViewWindow_0-clip-visible-5 {}
+set $m5-ViewWindow_0-clip-normal-x-5 {}
+set $m5-ViewWindow_0-clip-normal-y-5 {}
+set $m5-ViewWindow_0-clip-normal-z-5 {}
+set $m5-ViewWindow_0-clip-normal-d-5 {}
+set $m5-ViewWindow_0-clip-visible-6 {}
+set $m5-ViewWindow_0-clip-normal-x-6 {}
+set $m5-ViewWindow_0-clip-normal-y-6 {}
+set $m5-ViewWindow_0-clip-normal-z-6 {}
+set $m5-ViewWindow_0-clip-normal-d-6 {}
+set $m5-ViewWindow_0-unused {1}
+set $m5-ViewWindow_0-unused {1}
+set $m5-ViewWindow_0-unused {1}
+set $m6-notes {}
+set $m7-notes {}
+set $m7-outputdataat {Nodes}
+set $m8-notes {}
+set $m8-tcl_status {Calling GenStandardColorMaps!}
+set $m8-positionList {}
+set $m8-nodeList {}
+set $m8-width {296}
+set $m8-height {40}
+set $m8-mapType {2}
+set $m8-minRes {12}
+set $m8-resolution {256}
+set $m8-realres {256}
+set $m8-gamma {0}
+set $m9-notes {}
+set $m9-isFixed {0}
+set $m9-min {-0.31913837790489197}
+set $m9-max {0.33422085642814636}
+set $m9-makeSymmetric {0}
+set $m10-notes {}
+set $m10-filename {/tmp/matfile.mat}
+set $m10-matrixname {heartbeat Matrix2 Matrix3 Matrix4 Matrix5 Matrix6}
+set $m10-dataformat {{same as data} {same as data} {same as data} {same as data} {same as data} {same as data}}
+set $m10-matrixformat {{numeric array} {numeric array} {numeric array} {numeric array} {numeric array} {numeric array}}
+set $m11-notes {}
+set $m11-filename $DATADIR/Matlab/timeseries.mat
+set $m11-matrixinfotexts {{heartbeat                                 [ 490x 455 DOUBLE ]} {none} }
+set $m11-matrixnames {{heartbeat} {<none>} }
+set $m11-matrixname {{heartbeat} {<none>} {<none>} {<none>} {<none>} {<none>} }
+set $m12-notes {}
+set $m12-filename {/tmp/nrrdmatlabfile.mat}
+set $m12-matrixname {Heartbeat Nrrd2 Nrrd3 Nrrd4 Nrrd5 Nrrd6}
+set $m12-dataformat {{same as data} {same as data} {same as data} {same as data} {same as data} {same as data}}
+set $m12-matrixformat {{numeric array} {numeric array} {numeric array} {numeric array} {numeric array} {numeric array}}
+$m0 initialize_ui
+$m1 initialize_ui
+$m6 initialize_ui
+$m7 initialize_ui
+$m8 initialize_ui
+$m9 initialize_ui
+$m11 initialize_ui
+
+::netedit scheduleok

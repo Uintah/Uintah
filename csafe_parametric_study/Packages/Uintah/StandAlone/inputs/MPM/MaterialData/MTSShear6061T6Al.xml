@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 6061T6 Aluminum Alloy (0.8%-1.2% Mg)  -->
+<Uintah_Include>
+  <shear_modulus_model type="mts_shear">
+    <mu_0>28.0e9</mu_0>
+    <D>4.50e9</D>
+    <T_0>294</T_0>
+  </shear_modulus_model>
+</Uintah_Include>

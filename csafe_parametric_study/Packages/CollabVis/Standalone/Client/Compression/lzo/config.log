@@ -1,0 +1,81 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:637: checking for a BSD compatible install
+configure:690: checking whether build environment is sane
+configure:747: checking whether make sets ${MAKE}
+configure:793: checking for working aclocal
+configure:806: checking for working autoconf
+configure:819: checking for working automake
+configure:832: checking for working autoheader
+configure:845: checking for working makeinfo
+configure:868: checking host system type
+configure:890: checking whether to enable maintainer-specific portions of Makefiles
+configure:914: checking whether we are using GNU make
+configure:990: checking if malloc debugging is wanted
+configure:1033: checking for Cygwin environment
+configure:1066: checking for mingw32 environment
+configure:1097: checking for executable suffix
+configure:1170: checking for gcc
+configure:1283: checking whether the C compiler (gcc  ) works
+configure:1299: gcc -o conftest    conftest.c  1>&5
+configure:1325: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:1330: checking whether we are using GNU C
+configure:1358: checking whether gcc accepts -g
+configure:1394: checking for c++
+configure:1426: checking whether the C++ compiler (c++  ) works
+configure:1442: c++ -o conftest    conftest.C  1>&5
+configure:1468: checking whether the C++ compiler (c++  ) is a cross-compiler
+configure:1473: checking whether we are using GNU C++
+configure:1501: checking whether c++ accepts -g
+configure:1971: checking how to run the C preprocessor
+configure:2051: checking for ANSI C header files
+configure:2155: checking whether time.h and sys/time.h may both be included
+configure:2193: checking for assert.h
+configure:2193: checking for ctype.h
+configure:2193: checking for limits.h
+configure:2193: checking for signal.h
+configure:2193: checking for stddef.h
+configure:2193: checking for time.h
+configure:2233: checking for malloc.h
+configure:2233: checking for memory.h
+configure:2233: checking for unistd.h
+configure:2273: checking for sys/param.h
+configure:2273: checking for sys/resource.h
+configure:2273: checking for sys/time.h
+configure:2273: checking for sys/times.h
+configure:2313: checking for endian.h
+configure:2313: checking for sys/endian.h
+configure:2313: checking for unchecked.h
+configure:2353: checking for zlib.h
+configure:2394: checking whether limits.h is sane
+configure:2480: checking for ptrdiff_t
+configure:2513: checking for size_t
+configure:2547: checking size of unsigned short
+configure:2586: checking size of unsigned
+configure:2625: checking size of unsigned long
+configure:2664: checking size of char *
+configure:2703: checking size of ptrdiff_t
+configure:2745: checking size of size_t
+configure:2793: checking for working const
+configure:2869: checking the byte order
+configure:2923: checking for memcmp
+configure:2923: checking for memcpy
+configure:2923: checking for memmove
+configure:2923: checking for memset
+configure:2982: checking for memicmp
+configure:2982: checking for strcasecmp
+configure:2982: checking for strncasecmp
+configure:2982: checking for stricmp
+configure:2982: checking for strnicmp
+configure:3041: checking for atol
+configure:3041: checking for fstat
+configure:3041: checking for getrusage
+configure:3041: checking for gettimeofday
+configure:3041: checking for lstat
+configure:3041: checking for stat
+configure:3041: checking for times
+configure:3098: checking for 8-bit clean memcmp
+configure:3147: checking whether signed to unsigned casting is broken
+configure:3179: checking whether gcc suffers the -fschedule-insns bug
+configure:3222: checking whether gcc suffers the -fstrength-reduce bug

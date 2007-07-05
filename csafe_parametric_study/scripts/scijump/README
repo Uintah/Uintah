@@ -1,0 +1,33 @@
+Mac OS X bundle
+
+scijump.app
+  / Contents
+    / Frameworks
+    / MacOS
+      scijump
+    / Resources
+    / PlugIns
+    / SharedFrameworks
+    Info.plist
+    / PkgInfo
+
+Makefile target:
+
+$(FWK_EXE).app/Contents/PkgInfo: $(FWK_EXE) $(SRCTOP)/osx/scijump/Info.plist.in $(SRCTOP)/osx/scijump/wxmac.icns
+        mkdir -p $(FWK_EXE).app/Contents
+        mkdir -p $(FWK_EXE).app/Contents/MacOS
+        mkdir -p $(FWK_EXE).app/Contents/Resources
+
+        sed -e "s/IDENTIFIER/`echo $(SRCTOP) | sed -e 's,\.\./,,g' | sed -e 's,/,.,g'`/" \
+        -e "s/EXECUTABLE/splitter/" \
+        -e "s/VERSION/$(FWK_VERSION)/" \
+        $(SRCTOP)/osx/scijump/Info.plist.in >$(FWK_EXE).app/Contents/Info.plist
+
+
+        echo -n "APPL????" >$(FWK_EXE).app/Contents/PkgInfo
+
+
+        ln -f $(FWK_EXE) $(FWK_EXE).app/Contents/MacOS/$(FWK_EXE)
+
+
+        cp -f $(SRCTOP)/osx/scijump/wxmac.icns $(FWK_EXE).app/Contents/Resources/wxmac.icns

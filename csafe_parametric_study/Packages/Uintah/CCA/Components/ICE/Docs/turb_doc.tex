@@ -1,0 +1,233 @@
+\documentclass[12pt,titlepage]{article}
+\textwidth 468pt
+\textheight 648pt
+\voffset=-0.5in
+%\evensidemargin=0pt
+\oddsidemargin=0pt
+\topmargin=0mm
+\parskip 15pt  
+\parindent 0pt 
+\setlength{\rightskip}{0pt}
+\setlength{\floatsep}{24pt}
+\usepackage{graphicx}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%
+\section{Smagrinsky model}
+Conservation of mass:
+\begin{equation}
+    \frac{\partial \bar{\rho}^m}{\partial t} + \frac{\partial \bar{\rho}^m \tilde{u}_j^m}
+    {\partial x_j}=0
+\label{eq:lesmass}
+\end{equation}
+
+Conservation of momentum:
+\begin{eqnarray}
+    \lefteqn{\frac{\partial (\bar{\rho}^m \tilde{u}_i^m)}{\partial t} +
+    \frac{\partial \bar{\rho}^m \tilde{u}_i^m \tilde{u}_j^m}{\partial x_j} =
+    \theta^m \frac{\partial \tilde{\sigma}_{ij}}{\partial x_j} +\bar{\rho}^m \tilde{g}_i\nonumber}\\
+    & & +\frac{\partial \theta^m (\tilde{\sigma}_{ij}^m-\tilde{\sigma}_{ij})}{\partial x_j}
+    +\sum_{l=1}^N \tilde{f}^{lm}
+    -\frac{\partial{\bar{\rho}^m (\widetilde{u_i^m u_j^m}-\tilde{u}_i^m \tilde{u}_j^m})}{\partial x_j}
+\label{eq:lesmom}
+\end{eqnarray}
+
+\begin{displaymath}
+\tau_{ij}=\bar{\rho}^m(\widetilde{u_i^m u_j^m}-\tilde{u}_i^m \tilde{u}_j^m) =
+           - 2 \bar{\rho} \nu_t (\tilde{S}_{ij}-\frac{1}{3} \delta_{ij}\tilde{S}_{kk})
+	   + \frac{1}{3} \delta_{ij}\tau_{kk}
+\end{displaymath}
+
+\begin{equation}
+\nu_t = (C_s \Delta)^2\tilde{S} \label{eq:turbviscosity}
+\end{equation}
+
+$\tilde{S}_{ij}$ is the large scale strain rate tensor given by,
+\begin{displaymath}
+\tilde{S}_{ij}=\frac{1}{2} (\frac{\partial \tilde{u}_i^m}{\partial x_j}
+               +\frac{\partial \tilde{u}_j^m}{\partial x_i})
+\end{displaymath}
+where $\tilde{S}$ is the resolved shear stress and is given by
+\begin{displaymath}
+\tilde{S}=\sqrt{2 \tilde{S}_{ij} \tilde{S}_{ij}}
+\end{displaymath}
+
+So the effective stress tensor $\tau^{eff}$
+\begin{displaymath}
+\tau_{ij}^{eff}=2 \mu_{eff} (\tilde{S}_{ij}-\frac{1}{3} \delta_{ij}\tilde{S}_{kk})
+                + \frac{1}{3} \delta_{ij}\tau_{kk}
+\end{displaymath}
+
+With the isotropic part omitted, the SGS stresses is included in the governing equations 
+by replacing the molecular viscosity with
+effective viscosity where $\mu_{eff} = \mu + \mu_{t}$.
+
+\begin{eqnarray}
+\lefteqn{\int_s \nabla \theta \tau_f dS = \int_s \nabla \theta (\mu + \mu_{t})_f
+(2 S_{ij}-\frac{2}{3}\frac{\partial{u_k}}{\partial{x_k}}\delta_{ij})dS\nonumber}\\
+& = & \int_s \nabla \theta (\mu + \rho\nu_{t})_f(2 S_{ij}-\frac{2}{3}\frac{\partial{u_k}}
+ {\partial{x_k}}\delta_{ij})dS\nonumber
+\end{eqnarray}
+
+It need viscosity at the face center value $\nu_f$ to calculate $\tau_f$. 
+\begin{displaymath}
+\nu_f=\frac{2(\nu_{c+}\nu_{c-})}{\nu_{c+}+\nu_{c-}}
+\end{displaymath}
+
+\begin{eqnarray}
+\lefteqn{\nu_t^c = (C_s \Delta)^2\tilde{S}= (C_s \Delta)^2\sqrt{2 \tilde{S}_{ij}^c \tilde{S}_{ij}^c}\nonumber}\\
+& & =(C_s\Delta)^2\sqrt{2(S_{11}^2+S_{22}^2+S_{33}^2+S_{12}S_{12}+S_{21}S_{21}+S_{13}S_{13}
+     +S_{31}S_{31}+S_{23}S_{23}+S_{32}S_{32})}\nonumber\\
+& & =(C_s\Delta)^2\sqrt{2(S_{11}^2+S_{22}^2+S_{33}^2+2(S_{12}S_{12}+S_{13}S_{13}+S_{23}S_{23}))}
+\end{eqnarray}
+
+\begin{displaymath}
+\tilde{S}_{ij}^c=\frac{1}{2} (\frac{\partial \tilde{u}_i^f}{\partial x_j}
+               +\frac{\partial \tilde{u}_j^f}{\partial x_i})
+\end{displaymath}
+
+\begin{displaymath}
+\tilde{S}_{11}^c=\frac{\partial \tilde{u}^f}{\partial x}=\frac{\tilde{u_+}^f-\tilde{u_-}^f}{\Delta x}
+\end{displaymath}
+\begin{displaymath}
+\tilde{S}_{22}^c=\frac{\partial \tilde{v}^f}{\partial y}=\frac{\tilde{v_+}^f-\tilde{v_-}^f}{\Delta y}
+\end{displaymath}
+\begin{displaymath}
+\tilde{S}_{33}^c=\frac{\partial \tilde{w}^f}{\partial z}=\frac{\tilde{w_+}^f-\tilde{w_-}^f}{\Delta z}
+\end{displaymath}
+\begin{displaymath}
+\tilde{S}_{12}^c=\frac{1}{2} (\frac{\partial \tilde{u}^f}{\partial y}+\frac{\partial \tilde{v}^f}{\partial x})
+                =\frac{1}{2} (\frac{\tilde{u_+}^f-\tilde{u_-}^f}{\Delta y}
+		 +\frac{\tilde{v_+}^f-\tilde{v_-}^f}{\Delta  x})
+\end{displaymath}
+\begin{displaymath}
+\tilde{S}_{13}^c=\frac{1}{2} (\frac{\partial \tilde{u}^f}{\partial z}+\frac{\partial \tilde{w}^f}{\partial x})
+                =\frac{1}{2} (\frac{\tilde{u_+}^f-\tilde{u_-}^f}{\Delta z}
+		 +\frac{\tilde{w_+}^f-\tilde{w_-}^f}{\Delta  x})
+\end{displaymath}
+\begin{displaymath}
+\tilde{S}_{23}^c=\frac{1}{2} (\frac{\partial \tilde{v}^f}{\partial z}+\frac{\partial \tilde{w}^f}{\partial y})
+                =\frac{1}{2} (\frac{\tilde{v_+}^f-\tilde{v_-}^f}{\Delta z}
+		 +\frac{\tilde{w_+}^f-\tilde{w_-}^f}{\Delta  y})
+\end{displaymath}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dynamic model}
+
+To apply test filter $\hat{\Delta}=2\Delta$, we get
+
+{\setlength\arraycolsep{2pt}
+\begin{eqnarray}
+\hat{\bar{u}}_{i,j,k} & = & \frac{1}{8} \bar{u}_{i  ,j  ,k  }+{} \nonumber\\
+              & & {}    \frac{1}{16}\bar{u}_{i-1,j  ,k  }+\frac{1}{16}\bar{u}_{i+1,j,  k  } +
+                        \frac{1}{16}\bar{u}_{i  ,j-1,k  }+\frac{1}{16}\bar{u}_{i  ,j+1,k  } +{} \nonumber\\ 
+	      & & {} 	\frac{1}{32}\bar{u}_{i-1,j-1,k  }+\frac{1}{32}\bar{u}_{i+1,j-1,k  } + 
+	                \frac{1}{32}\bar{u}_{i-1,j+1,k  }+\frac{1}{32}\bar{u}_{i+1,j+1,k  } +{} \nonumber\\
+  	      & & {}    \frac{1}{16}\bar{u}_{i,  j,  k-1}+ {} \nonumber\\                                     
+	      & & {}    \frac{1}{32}\bar{u}_{i-1,j,  k-1}+\frac{1}{32}\bar{u}_{i+1,j,  k-1} +
+	                \frac{1}{32}\bar{u}_{i,  j-1,k-1}+\frac{1}{32}\bar{u}_{i,  j+1,k-1} +{} \nonumber\\
+	      & & {}    \frac{1}{64}\bar{u}_{i-1,j-1,k-1}+\frac{1}{64}\bar{u}_{i+1,j-1,k-1} +
+	                \frac{1}{64}\bar{u}_{i-1,j+1,k-1}+\frac{1}{64}\bar{u}_{i+1,j+1,k-1} +{} \nonumber\\
+	      & & {}    \frac{1}{16}\bar{u}_{i,  j,  k+1}+{} \nonumber\\
+	      & & {}    \frac{1}{32}\bar{u}_{i-1,j,  k+1}+\frac{1}{32}\bar{u}_{i+1,j,  k+1} + 
+	                \frac{1}{32}\bar{u}_{i,  j-1,k+1}+\frac{1}{32}\bar{u}_{i,  j+1,k+1} +{} \nonumber\\
+	      & & {}    \frac{1}{64}\bar{u}_{i-1,j-1,k+1}+\frac{1}{64}\bar{u}_{i+1,j-1,k+1} +
+	                \frac{1}{64}\bar{u}_{i-1,j+1,k+1}+\frac{1}{64}\bar{u}_{i+1,j+1,k+1}\nonumber
+\end{eqnarray}}
+
+\begin{displaymath}
+\tau_{ij}=\bar{\rho}(\widetilde{u_i u_j}-\tilde{u}_i \tilde{u}_j)
+        =\overline{\rho u_i u_j}-(\frac{\overline{\rho u_i} \overline{\rho u_j}}{\bar{\rho}})
+\end{displaymath}
+
+\begin{displaymath}
+T_{ij} =\hat{\bar{\rho}}(\widehat{\overline{u_i u_j}}-\hat{\bar{u}}_i \hat{\bar{u}}_j)
+       =\widehat{\overline{\rho u_i u_j}}- (\frac{\widehat{\overline{\rho u_i}}
+\widehat{\overline{\rho u_j}}}{\hat{\bar{\rho}}})
+\end{displaymath}
+The difference between this tensor $T$ and the
+filtered value of $\tau$ can be written in terms of quantities that can be resolved:
+
+\begin{displaymath}
+L_{ij}=T_{ij} - \hat{\tau_{ij}} = \widehat{(\frac{\overline{\rho u_i} \overline{\rho
+u_j}}{\bar{\rho}})}-(\frac{\widehat{\overline{\rho u_i}} \widehat{\overline{\rho
+u_j}}}{\hat{\bar{\rho}}})
+=\widehat{(\bar{\rho}\tilde{u_i}\tilde{u_j})}-\frac{\widehat{\bar{\rho}\tilde{u_i}}
+ \widehat{\bar{\rho}\tilde{u_j}}}{\hat{\bar{\rho}}}
+\end{displaymath}
+
+we can write out the Smagorinsky model for each filter
+
+\begin{displaymath}
+\tau_{ij}-\frac{1}{3} \delta_{ij}\tau_{kk}= - 2 \bar{\rho}(C_s \Delta)^2\tilde{S}
+(\tilde{S}_{ij}-\frac{1}{3} \delta_{ij}\tilde{S}_{kk})
+\end{displaymath}
+\begin{displaymath}
+T_{ij}-\frac{1}{3} \delta_{ij}T_{kk}= - 2\hat{\bar{\rho}}(C_s \hat{\Delta})^2
+\hat{\tilde{S}} (\hat{\tilde{S}}_{ij}-\frac{1}{3} \delta_{ij}\hat{\tilde{S}}_{kk})
+\end{displaymath}
+
+Subtracting of the test-scale average of $\tau_{ij}$ from $T_{ij}$, we get
+
+\begin{equation}
+L_{ij} - \frac{1}{3} \delta_{ij}L_{kk} = 2 \hat{\bar{\rho}}(C_s
+\Delta)^2\widehat{\tilde{S} (\tilde{S}_{ij}-\frac{1}{3} \delta_{ij}\tilde{S}_{kk})}
+-2\hat{\bar{\rho}}(C_s\hat{\Delta})^2\hat{\tilde{S}} (\hat{\tilde{S_{ij}}}-\frac{1}{3}
+\delta_{ij}\hat{\tilde{S}}_{kk}) = C_s^2M_{ij}
+\label{eq:lij}
+\end{equation}
+
+where
+\begin{displaymath}
+M_{ij} =\alpha_{ij}-\hat{\beta}_{ij} = 2\hat{\bar{\rho}}(\Delta)^2\widehat{\tilde{S}
+(\tilde{S}_{ij}-\frac{1}{3} \delta_{ij}\tilde{S}_{kk})}
+-2\hat{\bar{\rho}}(\hat{\Delta})^2\hat{\tilde{S}} (\hat{\tilde{S_{ij}}}-\frac{1}{3}
+\delta_{ij}\hat{\tilde{S}}_{kk})
+\end{displaymath}
+
+\begin{displaymath}
+\alpha_{ij}=-2\hat{\bar{\rho}}(\hat{\Delta})^2\hat{\tilde{S}}
+(\hat{\tilde{S_{ij}}}-\frac{1}{3} \delta_{ij}\hat{\tilde{S}}_{kk})
+\end{displaymath}
+
+\begin{displaymath}
+\beta_{ij}=-2 \bar{\rho}(\Delta)^2\tilde{S}
+(\tilde{S}_{ij}-\frac{1}{3} \delta_{ij}\tilde{S}_{kk})
+\end{displaymath}
+
+Equation \ref{eq:lij} is an overdetermined but closed system of equations for the 
+Smagorinsky constant $C_s$. The most common method is to use the
+least-squares solution described by Lilly to minimize the difference
+between the closure assumption and the resolved stresses.
+
+\begin{displaymath}
+C_s^2=\frac{L_{ij}M_{ij}}{M_{ij}M_{ij}}
+\end{displaymath}
+
+$C_s^2$ can be negative, and developers of the model
+claim this provides a backscatter model. However, often in practice this term is
+truncated to zero to inhibit the potential for diverging solutions. Sometimes the
+numerator and denominator are averaged over some homogeneous region to avoid
+excessively large values of $C_s$. This has been found to be necessary for stability.
+Alternatively, isolated large values may simply be truncated.
+
+\begin{displaymath}
+L_{ij}M_{ij}=L_{11}M_{11}+L_{22}M_{22}+L_{33}M_{33}+2(L_{12}M_{12}+L_{13}M_{13}+L_{23}M_{23})
+\end{displaymath}
+
+\begin{displaymath}
+M_{ij}M_{ij}=M_{11}M_{11}+M_{22}M_{22}+M_{33}M_{33}+2(M_{12}M_{12}+M_{13}M_{13}+M_{23}M_{23})
+\end{displaymath}
+
+
+
+
+
+
+
+
+
+
+\end{document}

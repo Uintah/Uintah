@@ -1,0 +1,8 @@
+void smagmodel(constSFCXVariable<double> uu, constSFCYVariable<double> vv,
+     constSFCZVariable<double> ww, constCCVariable<double> ucc,
+     constCCVariable<double> vcc, constCCVariable<double> wcc,
+     constCCVariable<double>  den,
+     CCVariable<double> vis, IntVector domlo, IntVector domhi,
+     OffsetArray1<double> sew, OffsetArray1<double> sns,
+     OffsetArray1<double> stb,
+     double viscos, double CF, double fac_mesh, double filterl);

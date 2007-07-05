@@ -1,0 +1,92 @@
+
+# Using TAU with Uintah
+
+# First, retrieve the appropriate packages (TAU is required, PDT and VTF are optional)
+# PDT provides for auto-instrumentation.  Tasks in Uintah are manually instrumented, so PDT
+# is not required for task level granularity.  VTF is needed to create the tau2vtf tool for
+# creating VAMPIR trace files.
+
+wget http://www.cs.uoregon.edu/research/paracomp/proj/pdtoolkit/Download/pdt_latest.tar.gz
+wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/tau_latest.tar.gz
+wget http://www.cs.uoregon.edu/research/paracomp/tau/vtf3-1.34.tar.gz                    
+
+tar -xzvf pdt_latest.tar.gz
+cd pdtoolkit-3.6
+./configure -g++
+make install -j
+
+# No build necessary
+tar -xzvf vtf3-1.34.tar.gz
+
+tar -xzvf tau_latest.tar.gz
+cd tau-2.15.1
+
+./installtau -mpiinc=/usr/local/lam/include -mpilib=/usr/local/lam/lib -vtf=/usr/sci/projects/Uintah/tau/vtf3-1.34 -pdt=/usr/sci/projects/Uintah/tau/pdtoolkit-3.6 -slog2
+
+./installtau -mpiinc=/usr/local/lam/include -mpilib=/usr/local/lam/lib
+
+
+# first, an Inferno config without TAU
+../src/configure \
+--enable-package=Uintah \
+--enable-optimize='-march=pentium4 -msse -msse2 -O3' \
+--enable-assertion-level=0 \
+--with-mpi=/usr/local/lam \
+--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-32bit/petsc-2.2.1 \
+--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-32bit/hypre-1.9.0b-o/src/hypre \
+--with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.25.2/Linux/gcc-4.1.0-32bit \
+--with-atlas=/usr/local/atlas
+
+make prereqs
+make sus -j4
+
+# now with TAU (task level granularity)
+
+../src/configure \
+--enable-package=Uintah \
+--enable-optimize='-march=pentium4 -msse -msse2 -O3' \
+--enable-assertion-level=0 \
+--with-mpi=/usr/local/lam \
+--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-32bit/petsc-2.2.1 \
+--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-32bit/hypre-1.9.0b-o/src/hypre \
+--with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.25.2/Linux/gcc-4.1.0-32bit \
+--with-atlas=/usr/local/atlas \
+--with-tau=/usr/sci/projects/Uintah/tau/tau-2.15.1/i386_linux/lib/Makefile.tau-mpi
+
+
+# now with TAU (full auto-instrumentation granularity)
+
+../src/configure \
+--enable-package=Uintah \
+--enable-optimize='-march=pentium4 -msse -msse2 -O3' \
+--enable-assertion-level=0 \
+--with-mpi=/usr/local/lam \
+--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-32bit/petsc-2.2.1 \
+--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-32bit/hypre-1.9.0b-o/src/hypre \
+--with-thirdparty=/usr/sci/projects/SCIRun/Thirdparty/1.25.2/Linux/gcc-4.1.0-32bit \
+--with-atlas=/usr/local/atlas \
+--with-tau=/usr/sci/projects/Uintah/tau/tau-2.15.1/i386_linux/lib/Makefile.tau-mpi-pdt
+
+mpirun -np 1 ./sus -amr -ice -solver hypreamr ../../../../src/Packages/Uintah/StandAlone/inputs/ICE/impAdvectAMR.ups 
+
+mpirun -np 2 Packages/Uintah/StandAlone/sus -amr -ice -solver hypreamr ../src/Packages/Uintah/StandAlone/inputs/ICE/impAdvectAMR.ups 
+
+2 -MD   -c ../src/Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.cc -o Packag
+
+
+
+
+# Granularity - tasks and MPI calls
+
+# Basic Profiling
+Makefile.tau-mpi
+
+# Callpath Profiling (e.g. A => B => C means "C when called by B when called by A)
+Makefile.tau-callpath-mpi
+
+# Tracing
+Makefile.tau-mpi-trace
+
+# Use '-pdt' Makefiles for full auto-instrumentation
+
+For more advanced usage and questions/comments, contact amorris@cs.uoregon.edu or sameer@cs.uoregon.edu
