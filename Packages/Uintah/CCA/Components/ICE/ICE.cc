@@ -53,8 +53,8 @@
 
 #define SET_CFI_BC 0
 
-//#define CHANGWEI 1   // to invoke changwei's modifications to heat exchange
-#undef CHANGWEI
+#define CHANGWEI 1   // to invoke changwei's modifications to heat exchange
+//#undef CHANGWEI
 
 
 using std::vector;

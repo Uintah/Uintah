@@ -9,9 +9,6 @@ SRCS    += \
 
 RADIATION :=
 
-# containsFortran
-RADIATION += $(SRCDIR)/Radiation   
-# containsFortran
 
 SUBDIRS := $(SRCDIR)/test \
            $(SRCDIR)/HEChem \

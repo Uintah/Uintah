@@ -18,8 +18,8 @@ SRCDIR := Packages/Uintah/CCA/Components/Dummy
 # do not modify...
 #
 #FAKE_ICE       = $(SRCDIR)/FakeICE.cc $(SRCDIR)/FakeAMRICE.cc
-#FAKE_ARCHES     = $(SRCDIR)/FakeArches.cc
-#FAKE_MPMARCHES  = $(SRCDIR)/FakeMPMArches.cc
+FAKE_ARCHES      = $(SRCDIR)/FakeArches.cc
+FAKE_MPMARCHES   = $(SRCDIR)/FakeMPMArches.cc
 #FAKE_MPM       = $(SRCDIR)/FakeMPM.cc
 #FAKE_MPMICE    = $(SRCDIR)/FakeMPMICE.cc
 
