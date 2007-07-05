@@ -1,0 +1,6 @@
+VERSION 1.0
+----------------------------------------------
+SCIRun/Matlab function library:
+For enhanced functionality a set of functions
+has been added to Matlab.
+----------------------------------------------

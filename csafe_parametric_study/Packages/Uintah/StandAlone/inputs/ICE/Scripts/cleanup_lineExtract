@@ -1,0 +1,21 @@
+#!/bin/csh
+#-------------------------------------------------
+#    cleanup_lineExtract <filename> 
+#-------------------------------------------------
+set filename = $argv[1]
+
+echo "file is " $filename
+if ($#argv != 1) then
+  echo " cleanup_lineExtract <filename>"
+  exit(0)
+endif
+
+# this rips out the brackes from [xxx yyy zzz]
+sed 's/\[//g' $filename | sed 's/\]//g' >$filename.tmp
+
+# this rips out A.(p,n,s,e,w,t,b): 
+sed s/"A..:"/""/g < $filename.tmp > $filename
+
+
+rm -f  $filename.tmp
+exit(1)

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xml-stylesheet href="../../../../doc/faq.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!-- 
+
+ !!!!WARNING!!!!
+ !!!!WARNING!!!!
+ !!!!WARNING!!!!
+ !!!!WARNING!!!!
+
+ This file is out of date and obsolete.  The current FAQ is stored in
+ the C-SAFE web site (cvs tree). Please do not add anything to this
+ file!
+
+ !!!!WARNING!!!!
+ !!!!WARNING!!!!
+ !!!!WARNING!!!!
+ !!!!WARNING!!!!
+
+  Entry format:
+             Keywords 
+             Question
+             Answer
+     Questions and answers are delimited with <p> or <pre> tags.
+
+  Example:
+  <entry>
+    <keywords>SGI, endian</keywords>
+    <question>
+      <p>
+        ...
+      </p>
+      ...
+    </question>
+    <answer>
+      <p>
+        ...
+      </p>
+      ...
+    </answer>
+  </entry>
+-->
+
+

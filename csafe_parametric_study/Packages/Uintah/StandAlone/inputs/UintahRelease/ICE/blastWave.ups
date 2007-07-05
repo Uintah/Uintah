@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>blastWave</title>
+   </Meta>    
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.9e-3      </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-7      </delt_init>
+       <max_delt_increase>  2.0         </max_delt_increase>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   B O U N D A R Y   C O N D I T I O N S                            -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"    var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"   var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"   var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+       <Level>
+           <Box label="2D">
+              <lower>        [-0.5,-0.5,-0.025]    </lower>
+              <upper>        [0.5,  0.5, 0.025]    </upper>
+              <extraCells>   [1,1,1]               </extraCells>
+              <patches>      [2,2,1]               </patches>
+              <resolution>   [200,200,1]             </resolution>
+           </Box>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>blastWave.uda</filebase>
+      <outputInterval>0.00001</outputInterval>
+      <save label="vel_CC"/>
+      <save label="temp_CC"/>
+      <save label="sp_vol_CC"/>
+      <save label="press_CC"/>
+      <save label="delP_Dilatate"/>
+      <checkpoint timestepInterval="15" cycle="2"/>"
+   </DataArchiver>
+   
+   <Debug>
+   </Debug>
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.25</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+      </ICE>        
+    </CFD>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          716                 </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           
+           <geom_object>
+             <difference>
+                <box label="Whole grid">
+                    <min>[ -1.0, -1.0, -1.0 ]           </min>
+                    <max>[ 1.0, 1.0, 1.0 ]              </max>
+                </box>
+                <sphere label="hot_spot">
+                    <origin>    [.0,.0,.0]              </origin>
+                    <radius>    0.05                    </radius>
+                </sphere>
+             </difference>
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       1.1792946927374306000    </density>
+               <pressure>      101325.0                 </pressure>
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+           
+           <geom_object>
+               <sphere label="hot_spot"/>
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       1.1792946927374306000    </density>
+               <pressure>      1013250.0                </pressure>
+               <temperature>   3000.0                   </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>
+</Uintah_specification>

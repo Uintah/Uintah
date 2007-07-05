@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./scijump.app/Contents/MacOS/scijump

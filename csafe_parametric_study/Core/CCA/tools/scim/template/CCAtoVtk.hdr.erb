@@ -1,0 +1,54 @@
+
+#include <Core/CCA/spec/cca_sidl.h>
+
+#include <vtkFloatArray.h>
+#include <vtkImageData.h>
+#include <vtkPointData.h>
+
+#include <SCIRun/Vtk/Component.h>
+#include <SCIRun/Vtk/OutPort.h>
+#include <SCIRun/Vtk/InPort.h>
+
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+
+using namespace std;
+using namespace SSIDL;
+
+namespace SCIRun {
+
+  class <%= rndBridgeName%> : public BridgeComponent{
+  public:
+    <%= rndBridgeName%>();
+    virtual ~<%= rndBridgeName%>();
+    virtual void setServices(const BridgeServices* svc);
+  private:
+    <%= rndBridgeName%>(const <%= rndBridgeName%>&);
+    <%= rndBridgeName%>& operator=(const <%= rndBridgeName%>&);
+    BridgeServices* services;
+  };
+
+  
+  class DataReader : public vtk::Component, public vtk::OutPort{
+  public:
+    DataReader();
+    ~DataReader() { if(vtkID) vtkID->Delete(); }
+    vtkObject* getOutput();
+    vtkImageData* vtkID;
+  };
+
+<port> 	
+  class <%= $inPortName%>: public sci::cca::ports::<%= $inPortName%>{
+  public:
+    <%= $inPortName%>(BridgeServices* svc) : mysvcs(svc) {}
+    ~<%= $inPortName%>() {}
+    <method>  
+    <%= $inMethodType%> <%= $inMethodName%>(<%= outDefArgs(method(:ccaType))%>);
+    </method>
+    BridgeServices* mysvcs;
+  };
+</port>
+
+} //namespace SCIRun
+
+

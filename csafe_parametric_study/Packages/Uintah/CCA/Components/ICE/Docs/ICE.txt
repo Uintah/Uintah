@@ -1,0 +1,29 @@
+computeLagrangianSpecificVolume
+______________________________________________________________________
+  - You need to use the rate form of compute lagrangian specific vol
+    to get pressurization in the piston in a cylinder problem. Why?
+       
+As the piston moves down the gas is pushed into the bottom cells, the mass 
+of the gas increases and the spec_vol decreases.  If you don't take into 
+account this change in sp_vol then the first guess at the pressure in 
+compute equil pressure will be wrong.  The equil pressure iteration will
+proceed as if there wasn't an increase in mass.
+     
+     
+            ______
+           /| . .|/
+           /| . .|/
+           /|____|/
+           /|    |/    (.) = particles (piston)
+           /| . .|/ 
+           /| . .|/      
+           /|____|/
+           /|    |/
+           /|    |/
+           /|   -|/------ Gas
+           /|____|/
+           /|    |/
+           /|    |/
+           /|    |/
+           /|____|/
+           ////////

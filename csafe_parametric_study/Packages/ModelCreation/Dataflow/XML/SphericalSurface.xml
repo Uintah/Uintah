@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="SphericalSurface" category="FieldsExample">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module creates an example spherical surface.
+    </summary>
+    <description>
+      <p>
+      This module creates an example spherical surface.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Discretization</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Radius</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
+

@@ -1,0 +1,485 @@
+/*
+ *
+ * NetConnection: Abstraction for a network connection.
+ * $Id$
+ *
+ * Written by:
+ *   Author: Eric Luke
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: April 2001
+ *
+ */
+
+#include <errno.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include <Network/NetConnection.h>
+#include <Network/NetDispatchManager.h>
+
+#include <Properties/ClientProperties.h>
+
+#include <Logging/Log.h>
+
+namespace SemotusVisum {
+namespace Network {
+
+using namespace SemotusVisum::Logging;
+using namespace SemotusVisum::Thread;
+using namespace SemotusVisum::Properties;
+
+NetConnectionHelper::NetConnectionHelper( NetConnection *parent ) :
+  parent( parent ) {
+}
+
+NetConnectionHelper::~NetConnectionHelper() {
+}
+
+void
+NetConnectionHelper::run() {
+
+  dataItem d;
+  
+  /* Wait for data on our connection. This includes both reading
+     and writing data. */
+  
+  while ( 1 ) {
+  
+    /* Reading / Writing data - wait for messages (data) in our inbox */
+    d = parent->mbox.receive();
+
+     static int looks = 0;
+
+      if ( looks == 0 )
+	cerr << "NCH: " << getpid() << endl;
+      looks = (looks + 1) % 10;
+    
+    {
+      char buffer[ 100 ];
+      snprintf( buffer, 100, "Net Data: %d/%d items in mailbox.",
+		parent->mbox.numItems(),
+		parent->mbox.size() );
+      Log::log( Logging::DEBUG, buffer );
+      if ( d.getData() == NULL )
+	Log::log( Logging::DEBUG, "Message is inbound!");
+      else
+	Log::log( Logging::DEBUG, "Message is outbound!");
+    }
+    
+    /* Inbound messages (from the network) have NULL data. This is
+       our cue to get info from Connection */
+    if ( d.getData() == NULL ) {
+      
+      /* First we do a sanity check on the inbound message. If it's
+	 requesting that we read more than MAX_MSG_SIZE, we've probably
+	 messed up our connection somehow. So, rather than risking the
+	 entire server, we just drop this connection. */
+      if ( d.getSize() > MAX_MSG_SIZE ) {
+	char * buffer = new char[ strlen( parent->name ) + 256 ];
+	sprintf( buffer,
+		 "Detected error in network. Dropping connection to %s.",
+		 parent->name );
+	Log::log( Logging::ERROR, buffer );
+	delete buffer;
+	
+	parent->netMonitor.getMailbox().send( parent );
+	return;
+      }
+      
+      // Lock the mutex - we cannot look for new data while we're
+      // currently reading data.
+      cerr << "Big data reader locking " <<
+	(void *)&(parent->readingData) << endl;
+      parent->readingData.lock();
+      parent->reading = 1;
+      unsigned dataSize;
+      int bytesread = 0;
+      char buffe[256];
+      
+      if ( ( bytesread =
+	     ( parent->connection.read( (char *)&dataSize,
+					sizeof(unsigned int) ) ) )
+	   < (int)sizeof(unsigned int) ) {
+	
+	sprintf( buffe, "Only read %d of %d bytes!", bytesread,
+		 sizeof( unsigned int ) );
+	Log::log( Logging::ERROR,
+		  buffe );
+      }
+      
+      sprintf( buffe, "Upcoming data is %u bytes!", dataSize );
+      Log::log( Logging::DEBUG, buffe );
+
+      char * buffer = new char[ dataSize + 1 ];
+      int bytesRead = parent->connection.read( buffer, dataSize );
+
+      // Now unlock the mutex - we can once again receive data.
+      parent->readingData.unlock();
+      cerr << "Big data reader unlocking " <<
+	(void *)&(parent->readingData) << endl;
+      parent->reading = 0;
+      
+      // If we got an error, and weren't interrupted, we're probably
+      // no longer connected...
+      if ( bytesRead <= 0 ) {
+	delete buffer;
+
+	char *buf = new char[ strlen( parent->name ) +
+			    strlen( strerror( errno ) ) +
+			    256 ];
+	sprintf( buf, "Client %s disconnected. Reason: %s",
+		 parent->name, strerror(errno) );
+	Log::log( Logging::WARNING, buf );
+	delete buf;
+	
+	parent->netMonitor.getMailbox().send( parent );
+	return;
+      }
+      char buf[100];
+
+      sprintf( buf, "Read %d bytes", bytesRead );
+      Log::log( Logging::DEBUG, buf );
+      Log::log( Logging::DEBUG, buffer );
+      
+      // Pass the data to the network dispatch manager.
+      if ( NetConnection::useDispatchManager )
+	NetDispatchManager::getInstance().fireCallback( buffer,
+							bytesRead,
+							parent->name );
+      else {
+	/* Call the callback function if it isn't NULL */
+	if ( NetConnection::callbackFunction != NULL ) {
+	  (*NetConnection::callbackFunction)( (void *)buffer );
+	}
+	delete buffer;
+      }
+    }
+
+    /* Outbound messages have a positive size. */
+    else {
+
+      int bytesWritten = 0;
+      unsigned int dataSize = d.getSize();
+      Log::log( Logging::DEBUG, "Writing message to network" );
+      
+      //      cerr << "Writing data size" << endl;
+
+      // Write the data size to our connection
+      bytesWritten = parent->connection.write( (const char *)&dataSize,
+					       sizeof( unsigned int ) );
+      //cerr << "Wrote " << bytesWritten << " bytes." << endl;
+      if ( bytesWritten != sizeof( unsigned int ) ) {
+	char buffer[1000];
+	
+	snprintf( buffer, 100,
+		  "Write error - wrote %d bytes (data size) on connection %s",
+		  bytesWritten, parent->name );
+	Log::log( Logging::ERROR, buffer );
+      }
+      //cerr << "Writing data to client" << endl;
+      // Write the data to our connection
+      bytesWritten = parent->connection.write( d.getData(),
+					       d.getSize() );
+      
+      //cerr << "Done writing" << endl;
+      // If there's an error, log it and move on.
+      if ( bytesWritten != d.getSize() ) {
+	char buffer[1000];
+	
+	snprintf( buffer, 100,
+		  "Write error - wrote %d/%d bytes on connection %s. Error = %s",
+		  bytesWritten, d.getSize(), parent->name, strerror(errno) );
+	Log::log( Logging::ERROR, buffer );
+      }
+
+    }
+    
+  }
+}
+
+NetMonitor::NetMonitor( list<NetConnection*>& connectList,
+			CrowdMonitor & connectListLock) :
+  removeBox( "NetMonitorMailbox", MAX_PENDING_ITEMS ),
+  handshakeBox( "HandshakeMailbox", MAX_PENDING_ITEMS ),
+  connectList( connectList ),
+  connectListLock( connectListLock )
+{
+  
+}
+
+NetMonitor::~NetMonitor() {
+
+}
+
+void
+NetMonitor::run() {
+
+  while ( 1 ) {
+    /*
+    static int looks = 0;
+
+    if ( looks == 0 )
+      cerr << "NM " << getpid() << endl;
+    looks = (looks + 1) % 10;
+    */
+    // Do we have connections that need to be disposed of?
+    if ( removeBox.numItems() > 0 ) {
+      NetConnection * removeConnection;
+      
+      //cerr << "Ready to tryReceive" << endl;
+      if ( removeBox.tryReceive( removeConnection ) == true ) {
+	//cerr << "Removing connection" << (void *)removeConnection << endl;
+	connectListLock.writeLock();
+	connectList.remove( removeConnection );
+	delete removeConnection;
+	connectListLock.writeUnlock();
+	//cerr << "Unlocked list" << endl;
+      }
+      //cerr << "Tried to receive" << endl;
+    }
+
+    // Do we have any incoming client handshake data?
+    if ( handshakeBox.numItems() > 0 ) {
+
+      MessageData data;
+      
+      if ( handshakeBox.tryReceive( data ) == true ) {
+	
+	Log::log( Logging::DEBUG, "Receiving client handshake data.");
+
+	// Create a handshake from the data.
+	Handshake * h = (Handshake *)(data.message);
+
+	if ( h == NULL ) {
+	  Log::log( Logging::ERROR, "Problem with handshake" );
+	}
+	else {
+	  
+	  // Create a client properties object
+	  ClientProperties * cp = new ClientProperties;
+	  
+	  // Populate it
+	  if ( ClientProperties::getFormats( *h, *cp ) == false ) {
+	    
+	    Log::log( Logging::ERROR, "Problem with handshake" );
+	    
+	    // There was a problem with the handshake. Delete the object.
+	    delete cp;
+	    delete h;
+	  }
+
+	  // We automatically add the client properties object to a static
+	  // list at creation. Thus, we are done.
+	}
+	
+      }
+    } 
+    
+    connectListLock.readLock(); 
+    int numConnections = connectList.size(); 
+    connectListLock.readUnlock(); 
+    
+    //cerr << "Num Connections = " << numConnections << endl;
+    if ( numConnections == 0 ) 
+      /* If we have no connections, sleep. */
+      sleep( 1 );
+    else 
+      /* Check for data available, and notify the net connections. */
+      NetConnection::notifyDataAvailable();
+  }
+}
+
+//////////
+// Instantiation of incoming Thread.
+SemotusVisum::Thread::Thread *
+NetConnection::incomingThread = NULL;
+
+//////////
+// Instantiation of the list of all active connections.
+list<NetConnection *>
+NetConnection::connectionList;
+
+//////////
+// Instantiation of connection list lock.
+CrowdMonitor
+NetConnection::connectionListLock( "ConnectionListLock" );
+
+//////////
+// Instantiation of network monitor.
+NetMonitor
+NetConnection::netMonitor( connectionList, connectionListLock );
+
+//////////
+// Instantiation of dispatch manager usage flag.
+bool
+NetConnection::useDispatchManager = true;
+
+//////////
+// Instantiation of callback function (when dispatch manager is not
+// in use.
+void
+(*NetConnection::callbackFunction)(void *) = NULL;
+  
+NetConnection::NetConnection( Connection &connection,
+			      const char * name ) :
+  readingData( "ReadingData" ), connection(connection),
+  mbox( name, MAX_PENDING_ITEMS )
+  
+{
+  //  cerr << "Creating a new reading mutex. Address is " <<
+  //  (void *)&readingData << endl;
+  this->name = strdup(name);
+
+  /* Set up incoming data thread */
+  if ( incomingThread == NULL ) {
+    incomingThread =
+      new SemotusVisum::Thread::Thread( &NetConnection::netMonitor,
+					"Network Monitor" );
+    incomingThread->detach();
+  }
+
+  //cerr << "Constructor. This = " << (void *)this << endl;
+  
+  /* Create a helper */
+  helper = new NetConnectionHelper( this );
+
+  /* Create a thread for the helper */
+  myThread = new SemotusVisum::Thread::Thread( helper, name );
+  
+  /* Add ourselves to the list of network connections. */
+
+  // Lock the list
+  connectionListLock.writeLock();
+  
+  // Add ourselves
+  connectionList.push_front( this );
+  
+  // Unlock the list
+  connectionListLock.writeUnlock();
+
+}
+
+
+NetConnection::NetConnection( const NetConnection& netConnect) :
+  readingData( "ReadingData" ), name( netConnect.name ),
+  connection( netConnect.connection ),
+  mbox( netConnect.name, netConnect.mbox.size() )
+  
+{
+  // When we copy a connection, we need not add it to the global list.
+  cerr << "Copy constructor" << endl;
+}
+
+
+NetConnection::~NetConnection() {
+
+  /* Wait until our helper is done. */
+  //cerr << "Destructor!" << endl;
+  
+  myThread->join();
+  
+  //cerr << "Helper done." << endl;
+  
+  /* Remove ourselves from the list. */
+
+  //cerr << "Removing ourselves " << endl;
+  // Lock the list
+  //connectionListLock.writeLock();
+  
+  // Remove ourselves
+  //connectionList.remove( this );
+  
+  // Unlock the list
+  //connectionListLock.writeUnlock();
+  //cerr << "We're removed" << endl;
+  
+  delete name;
+  delete &connection;
+  //delete myThread;
+  //cerr << "Done with destructor." << endl;
+}
+
+bool
+NetConnection::operator==( const NetConnection &nc ) {
+  
+  cerr << "Names: " << !strcmp( name, nc.name ) << endl;
+  cerr << "Threads: " << (myThread == nc.myThread) << endl;
+  return ( !strcmp( name, nc.name ) && myThread == nc.myThread );
+}
+
+
+void
+NetConnection::notifyDataAvailable() {
+  
+  connectionListLock.readLock();
+  int numConnections = connectionList.size();
+  connectionListLock.readUnlock();
+
+  /* If we have no connections, return. */
+  if ( numConnections == 0 ) return;
+
+  /* Else, pull a list of connections with data ready */
+  connectionListLock.readLock();
+  Connection ** connections =
+    connectionList.front()->getConnection().getReadyToRead();
+  connectionListLock.readUnlock();
+
+  if ( connections == NULL )
+    // No data.
+    return;
+
+  list<NetConnection*>::iterator li;
+  
+  for ( int i = 0; connections[ i ] != NULL; i++ ) {
+    
+    /* For each connection, find the net connection associated with it. */
+    NetConnection *nc = NULL;
+#if 0
+    unsigned int dataSize = 0;
+#endif
+    for ( li = connectionList.begin(), nc = NULL ;
+	  li != connectionList.end(); li++ ) {
+      if ( connections[ i ]->isEqual( (*li)->getConnection() ) ) {
+	nc = (*li);
+	break;
+      }
+						      
+    }
+
+    if ( nc == NULL )
+      // Error - a connection without a network connection. Can't Happen!
+      Log::log( Logging::ERROR,
+		"Can't happen - raw connection without a network connection!");
+    else {
+      /* not here....?
+      static int looks = 0;
+
+      if ( looks == 0 )
+	cerr << "Ping" << endl;
+      looks = (looks + 1) % 10;
+      */
+      
+      /* Only look for more data if we're not in the process of
+	 reading now... */
+      if ( nc->getMailbox().numItems() == 0 ) {
+	dataItem *di = new dataItem( NULL, -1 );
+	Log::log( Logging::DEBUG, "Ready to read data from net" );
+	if ( nc->getMailbox().trySend( *di ) == false )
+	  delete di;
+      }
+    }
+  }
+
+  delete connections;
+}
+
+int
+NetConnection::write( const char * data, const int numBytes ) {
+  return connection.write( data, numBytes );
+}
+
+
+
+}
+}
