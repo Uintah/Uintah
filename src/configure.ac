@@ -821,6 +821,7 @@ unset NUM_CPUS
 NEED_OSX_SYSTEMSTUBS=no
 NEED_OSX_HACK=no
 DEF_NEED_OSX_HACK=
+MAKE_ARCHIVES="no"
 
 case $host in
   *-irix*)
@@ -847,6 +848,7 @@ case $host in
   *-aix*)
     NUM_CPUS=4
     IS_AIX="yes"
+    MAKE_ARCHIVES="yes"
     ;;
   *-mingw*)
     NUM_CPUS=2
@@ -867,6 +869,7 @@ esac
 AC_SUBST(IS_OSX)
 AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
+AC_SUBST(MAKE_ARCHIVES)
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -2811,7 +2814,7 @@ if test "$HAVE_PNG" = "no"; then
   fi
 else
   if test "$_sci_optional" = "specific"; then
-       AC_MSG_CHECKING(that PNG is in requestion location '$with_png/lib')
+       AC_MSG_CHECKING(that PNG is in the requested location '$with_png/lib')
        # verify that it was found in the location requested.
        if test ! -e $with_png/lib/libpng.so &&
           test ! -e $with_png/lib/libpng.a &&
