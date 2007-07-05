@@ -95,8 +95,13 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst 
   else
 	rm -f $@
   endif
-  ifeq ($(IS_AIX),yes)
+  ifeq ($(MAKE_ARCHIVES),yes)
+    ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Creating Archive:   $@"
+	@ar -v -q $@ $(filter %.$(OBJEXT),$^) 2&> /dev/null
+    else
 	ar -v -q $@ $(filter %.$(OBJEXT),$^)
+    endif
   else
     ifeq ($(IS_OSX),yes)
       ifeq ($(SCI_MAKE_BE_QUIET),true)
