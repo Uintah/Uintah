@@ -1,1 +1,0 @@
-void get_ramping_factor(bool ramping, double time, double factor);
