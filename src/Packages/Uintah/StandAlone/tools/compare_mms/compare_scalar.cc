@@ -55,6 +55,28 @@ using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
+////////////////////////////////////////////////////
+// Finds out if two doubles are equal within the given tolerance
+
+bool
+is_equal(double num1, double num2, double tol = 1e-10)
+{
+  return ( (num1-num2) < tol)?true:false;
+}
+
+////////////////////////////////////////////////////
+// Finds out if two SCIRun::Vectors are equal within the given tolerance
+
+bool
+is_equal(Vector num1, Vector num2, double tol = 1e-10)
+{
+  return ( ( is_equal(num1.x(), num2.x(), tol) ) && ( is_equal(num1.y(), num2.y(), tol) ) && ( is_equal(num1.z(),num2.z(), tol) ) )?true:false;
+}
+
+
+////////////////////////////////////////////////////
+// Rounds off the double to the nearest integer
+
 long
 iround(double num)
 {
@@ -144,7 +166,7 @@ main( int argc, char *argv[] )
   try {
     DataArchive* da1 = scinew DataArchive(udaFileName);
 
-//     // Sample of how to read data from the DA xml file.
+    // Sample of how to read data from the DA xml file.
     ProblemSpecReader psr( udaFileName + "/input.xml" );
     ProblemSpecP docTop = psr.readInputFile();
     Vector resolution;
@@ -225,7 +247,7 @@ main( int argc, char *argv[] )
 
     if (!(is_int(offset.x()) && is_int(offset.y()) && is_int(offset.z()) ) )
     {
-      cerr<<"The offset is not an integer value"<<endl;
+      cerr<<"The offset is not an integer value"<<offset<<endl;
       exit(1);
     }
 
@@ -234,6 +256,7 @@ main( int argc, char *argv[] )
 
 
     CCVariable<double> analytic_value;
+    CCVariable<Vector> init_vel;
     
     ////////////////////////////
     // Iterate over TIME
@@ -256,6 +279,13 @@ main( int argc, char *argv[] )
           int i=0;
           double total_error=0.0;
 
+	  int vel_var_index = -1;
+	  for (int varIdx = 0; varIdx < vars.size();varIdx++) {
+	    if (vars[varIdx] == "vel_CC" ) {
+	      vel_var_index = varIdx;
+	      break;
+	    }
+	  }
           if( (vars[varIndex] != varName) ) continue;
             
 
@@ -286,14 +316,18 @@ main( int argc, char *argv[] )
                               matlIter++) {
               int matl = *matlIter;
 
-              // know that the first one in the test data set is pressure;
               CCVariable<double> scalarVar;
+	      CCVariable<Vector> velocityVar;
 	      //          CCVariable<Vector> vectorVar;
 	      da1->query(scalarVar, vars[varIndex], matl, patch, timeIndex);
+	      da1->query(velocityVar, vars[vel_var_index], matl, patch, timeIndex);
 	      if (initialize_analytical_values)
 	      {
 		da1->query(analytic_value, vars[varIndex], matl, patch, timeIndex);
+		cerr<<"vel_var_index:"<<vel_var_index<<endl;
+		da1->query(init_vel, vars[vel_var_index], matl, patch, timeIndex );
 	      }
+
 	      
               IntVector low, high, size;
 	      scalarVar.getSizes(low,high,size);
@@ -323,10 +357,18 @@ main( int argc, char *argv[] )
 		
 		IntVector a(new_x, new_y, new_z);
 		
-		if ( initialize_analytical_values )
-		  analytic_value[a] = scalarVar[cell];  // This is where I should fill the analytical value
+		if ( initialize_analytical_values ) {
+		  analytic_value[a] = scalarVar[cell];  // This is where the analytical value gets filled
+		}
 		else {
 		  diff = scalarVar[cell] - analytic_value[a];
+
+		  if ( !is_equal(velocityVar[cell], init_vel[cell]) ) {
+		    cerr<<"veloctiy fields don't match\n";
+		    cerr<<"current velocity"<<velocityVar[cell]<<" init_vel:"<<init_vel[cell]<<endl;
+		    cerr<<"Diff:"<<(velocityVar[cell]-init_vel[cell])<<endl;
+		    exit(1);
+		  }
 		  
 		  total_error+=diff*diff;
 		  if( diff > maxDiff ) maxDiff = diff;
