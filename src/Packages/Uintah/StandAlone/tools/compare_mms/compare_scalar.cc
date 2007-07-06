@@ -383,8 +383,10 @@ main( int argc, char *argv[] )
           } // end patch iteration
           
 	  cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
+
+	  if (!initialize_analytical_values)
+	    fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
 	  
-	  fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
         } // end variable iteration
       } // end levels iteration
       if (initialize_analytical_values)
