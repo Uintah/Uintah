@@ -1815,7 +1815,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t\t");
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
@@ -2665,7 +2665,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 		 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
     
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -3176,7 +3176,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
@@ -3376,7 +3376,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 		 <<"\t\t IMPM"<< "\n" << "\n";
     }
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
@@ -3573,7 +3573,10 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifies(lb->pExternalHeatFluxLabel);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-  }
+  } 
+  else
+    delete loadCurveIndex;
+
 }
 
 
