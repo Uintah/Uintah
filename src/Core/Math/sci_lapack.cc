@@ -100,7 +100,12 @@ void sort_eigens(double *Er, double *Ei, int N, double **Evecs=0)
 #if defined(HAVE_LAPACK)
 
 extern "C" {
-  int dgetrf_(int *m, int *n, double *a, int *lda, int *ipiv, int *info);
+#if defined(REDSTORM)
+#  define DGETRF dgetrf
+#else
+#  define DGETRF dgetrf_
+#endif
+  int DGETRF(int *m, int *n, double *a, int *lda, int *ipiv, int *info);
   int dgetri_(int *m, double *a, int *lda, int *ipiv, 
 	      double *work, int *lwork, int *info);
   int dgesvd_(char *jobu, char *jobvt, int *m, int *n, double *a, int *lda, 
@@ -127,7 +132,7 @@ bool lapackinvert(double *A, int n)
   lda = n;
   lwork = n;
   
-  dgetrf_(&n, &n, A, &lda, P, &info);  
+  DGETRF(&n, &n, A, &lda, P, &info);  
   dgetri_(&n, A, &lda, P, work, &lwork, &info); 
 
   delete work;
