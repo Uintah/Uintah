@@ -37,7 +37,7 @@
     <MPM>
        <time_integrator>implicit</time_integrator>
        <dynamic>true</dynamic>
-       <nodes8or27>8</nodes8or27>
+       <interpolator>linear</interpolator>
        <do_grid_reset>false</do_grid_reset>
        <ForceBC_force_increment_factor>0.0</ForceBC_force_increment_factor>
        <min_grid_level>0</min_grid_level>

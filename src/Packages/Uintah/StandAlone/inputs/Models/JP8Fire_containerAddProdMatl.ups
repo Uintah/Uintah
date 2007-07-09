@@ -25,7 +25,6 @@
     <!--    d) turn down the CFL                                            -->
     <!--    e) turn all the viscosities and thermal conductivities to 0     -->
     <!--    f) set advection to SecondOrder if it isn't already             -->
-    <!--    g) change the nodes8or27 flag to 27                             -->
     <!--    h) change <CanAddMaterial> from false to true                   -->
     <!--                                                                    -->
     <!-- 4) Edit the DataArchiver section to:
@@ -361,7 +360,7 @@
     </CFD>
     <MPM>
         <time_integrator>explicit</time_integrator>
-        <nodes8or27>8</nodes8or27>
+        <interpolator>                   linear     </interpolator>
         <minimum_particle_mass>          3.e-15     </minimum_particle_mass>
         <maximum_particle_velocity>      5.e3       </maximum_particle_velocity>
         <artificial_damping_coeff>       0.0        </artificial_damping_coeff>

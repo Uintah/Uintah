@@ -160,7 +160,6 @@
     </AMR>
     <MPM>
       <time_integrator>explicit</time_integrator>
-      <nodes8or27>8</nodes8or27>
       <testForNegTemps_mpm>false</testForNegTemps_mpm>
     </MPM>
 

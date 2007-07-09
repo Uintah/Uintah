@@ -411,24 +411,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
                                                      false,dwi,patch, 0);
-#if 0
-
-      const Level* lvl = patch->getLevel();
-      // BJW - Relocate deletes particles in extra cells
-      // Delete particles that have left the domain
-      // This is only needed if extra cells are being used.
-      if(flags->d_8or27==27){
-        for(ParticleSubset::iterator iter  = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
-          bool pointInAny = lvl->containsPoint(pxnew[idx]);
-          if((!pointInReal && pointInAny)){
-            delset->addParticle(idx);
-          }
-        }
-      }
-#endif
       new_dw->deleteParticles(delset);      
     }
 

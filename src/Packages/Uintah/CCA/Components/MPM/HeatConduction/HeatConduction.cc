@@ -392,6 +392,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       cout_doing <<"Doing solveHeatEquations on patch " << patch->getID() <<"\t\t\t MPM"<< endl;
 
 
+    string interp_type = d_flag->d_interpolator_type;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -435,8 +436,8 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
 	GtempRate.initialize(0.0);
       }
 
-      int n8or27=d_flag->d_8or27;
-      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+                       !iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = gdTdt[c]*((mass[c]-1.e-200)/mass[c]) +
 	   (externalHeatRate[c])/(mass[c]*Cv)+thermalContactTemperatureRate[c];
@@ -465,6 +466,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
 
 
     Ghost::GhostType  gnone = Ghost::None;
+    string interp_type = d_flag->d_interpolator_type;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -494,7 +496,8 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       }
       
       int n8or27=d_flag->d_8or27;
-      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+                       !iter.done();iter++){
         IntVector c = *iter;
         tempStar[c] = temp_old[c] + temp_rate[c] * delT;
 	if(d_flag->d_fracture) { // for FractureMPM
@@ -504,14 +507,15 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the temperature 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Temperature",tempStar,n8or27);
+      bc.setBoundaryCondition(  patch,dwi,"Temperature",tempStar,interp_type);
       if(d_flag->d_fracture) { // for FractureMPM
-        bc.setBoundaryCondition(patch,dwi,"Temperature",GtempStar,n8or27);
+        bc.setBoundaryCondition(patch,dwi,"Temperature",GtempStar,interp_type);
       }
 
       // Now recompute temp_rate as the difference between the temperature
       // interpolated to the grid (no bcs applied) and the new tempStar
-      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+                       !iter.done();iter++){
         IntVector c = *iter;
         temp_rate[c] = (tempStar[c] - temp_oldNoBC[c]) / delT;
 	if(d_flag->d_fracture) { // for FractureMPM

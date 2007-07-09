@@ -1520,13 +1520,14 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t");
+    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
+    string interp_type = flags->d_interpolator_type;
 
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
     NCVariable<Vector> gvelglobal;
@@ -1645,27 +1646,27 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       } // End of particle loop
 
-      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+                       !iter.done();iter++){
         IntVector c = *iter; 
-        totalmass       += gmass[c];
-        gmassglobal[c]  += gmass[c];
+        totalmass         += gmass[c];
+        gmassglobal[c]    += gmass[c];
         gvolumeglobal[c]  += gvolume[c];
-        gvelglobal[c]   += gvelocity[c];
-        gvelocity[c]    /= gmass[c];
-        gtempglobal[c]  += gTemperature[c];
-        gTemperature[c] /= gmass[c];
+        gvelglobal[c]     += gvelocity[c];
+        gvelocity[c]      /= gmass[c];
+        gtempglobal[c]    += gTemperature[c];
+        gTemperature[c]   /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
-        gSp_vol[c]      /= gmass[c];
+        gSp_vol[c]        /= gmass[c];
         gvelocityInterp[c]=gvelocity[c];
       }
 
       // Apply grid boundary conditions to the temperature
       // velocity BCs are set after exMomInterpolated in setBCsInterpolated
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,    n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,interp_type);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
-
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -1689,6 +1690,7 @@ void SerialMPM::setBCsInterpolated(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,"Doing setBCsInterpolated\t\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
+    string inter_type = flags->d_interpolator_type;
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -1696,21 +1698,14 @@ void SerialMPM::setBCsInterpolated(const ProcessorGroup*,
       NCVariable<Vector> gvelocity,gvelocityInterp;
       new_dw->getModifiable(gvelocity,      lb->gVelocityLabel,      dwi,patch);
       new_dw->getModifiable(gvelocityInterp,lb->gVelocityInterpLabel,dwi,patch);
-      int n8or27=flags->d_8or27;
 
       gvelocityInterp.copyData(gvelocity);
-/*
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        gvelocityInterp[c]=gvelocity[c];
-      }
-*/
 
       // Apply grid boundary conditions to the velocity before storing the data
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,       n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,       n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity,      inter_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity,      inter_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityInterp,inter_type);
     }
   }  // End loop over patches
 }
@@ -1878,7 +1873,6 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
         velGrad.set(0.0);
@@ -2136,9 +2130,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         IntVector projlow, projhigh;
         patch->getFaceNodes(face, 0, projlow, projhigh);
         Vector norm = face_norm(face);
-	double celldepth  = dx[iface/2]; // length in direction perpendicular to boundary
+	double celldepth  = dx[iface/2]; // length in dir. perp. to boundary
 
-	// loop over face nodes to find boundary forces, average stress (traction).
+	// loop over face nodes to find boundary forces, ave. stress (traction).
 	// Note that nodearea incorporates a factor of two as described in the
 	// bndyCellArea calculation in order to get node face areas.
         
@@ -2150,23 +2144,18 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
               // flip sign so that pushing on boundary gives positive force
               bndyForce[iface] -= internalforce[ijk];
 
-	      double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
+              double nodearea   = 2.0*gvolume[ijk]/celldepth; // node area
               for(int ic=0;ic<3;ic++) for(int jc=0;jc<3;jc++) {
-		bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*nodearea;
+               bndyTraction[iface][ic] += gstress[ijk](ic,jc)*norm[jc]*nodearea;
               }
-              
             }
           }
         }
-        
       } // faces
       
+      string interp_type = flags->d_interpolator_type;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,n8or27);
-
-#ifdef KUMAR
-      internalforce.initialize(Vector(0,0,0));
-#endif
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
@@ -2191,15 +2180,18 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     if(bndyContactCellArea_iface>0)
       bndyTraction[iface] /= bndyContactCellArea_iface;
     
-    new_dw->put(sumvec_vartype(bndyTraction[iface]),lb->BndyTractionLabel[iface]);
+    new_dw->put(sumvec_vartype(bndyTraction[iface]),
+                               lb->BndyTractionLabel[iface]);
     
-    // Use the face force and traction calculations to provide a second estimate of the
-    // contact area.
+    // Use the face force and traction calculations to provide a second estimate
+    // of the contact area.
     double bndyContactArea_iface = bndyContactCellArea_iface;
     if(bndyTraction[iface][iface/2]*bndyTraction[iface][iface/2]>1.e-12)
-      bndyContactArea_iface = bndyForce[iface][iface/2]/bndyTraction[iface][iface/2];
+      bndyContactArea_iface = bndyForce[iface][iface/2]
+                            / bndyTraction[iface][iface/2];
 
-    new_dw->put(sum_vartype(bndyContactArea_iface), lb->BndyContactAreaLabel[iface]);
+    new_dw->put(sum_vartype(bndyContactArea_iface),
+                            lb->BndyContactAreaLabel[iface]);
   }
 }
 
@@ -2218,6 +2210,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
     Ghost::GhostType  gnone = Ghost::None;
+    string interp_type = flags->d_interpolator_type;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -2240,8 +2233,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       NCVariable<Vector> acceleration;
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
-
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+  
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
@@ -2269,6 +2262,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing integrateAcceleration\t\t\t\t");
 
+    string interp_type = flags->d_interpolator_type;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -2285,7 +2279,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
       velocity_star.initialize(Vector(0,0,0));
 
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
                         !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
@@ -2310,13 +2304,13 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
     
     delt_vartype delT;            
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-                      
+
+    string interp_type = flags->d_interpolator_type;
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<Vector> gvelocityInterp;
-      int n8or27=flags->d_8or27;
 
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
@@ -2326,14 +2320,13 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       // acceleration before interpolating back to the particles
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",     gvelocity_star, n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",    gvelocity_star, n8or27);
-//    bc.setBoundaryCondition(patch,dwi,"Acceleration", gacceleration,  n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getNodeIterator(n8or27); !iter.done();
-                                                               iter++){
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);!iter.done();
+                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
       }
@@ -2344,15 +2337,14 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+        for(NodeIterator iter=patch->getNodeIterator(interp_type);
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
         }
       }  // d_doGridReset
       // Set symmetry BCs on acceleration if called for
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",    gacceleration,  n8or27);
-
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration, interp_type);
     } // matl loop
   }  // patch loop
 }
@@ -3155,11 +3147,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       for(ParticleSubset::iterator iter  = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-#if 0
-        bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
-        bool pointInAny = lvl->containsPoint(pxnew[idx]);
-        if((!pointInReal && pointInAny)
-#endif
         if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ){
           delset->addParticle(idx);
 //        cout << "Material = " << m << " Deleted Particle = " << idx 

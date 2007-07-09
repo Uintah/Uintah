@@ -33,7 +33,7 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
-       <nodes8or27>8</nodes8or27>
+       <interpolator>linear</interpolator>
     </MPM>
 
     <PhysicalConstants>
@@ -115,7 +115,7 @@
            <Box label = "1">
               <lower>[0,0,0]</lower>
               <upper>[1.0,1.0,.15]</upper>
-               <resolution>[40,40,3]</resolution>
+              <resolution>[40,40,3]</resolution>
               <patches>[2,2,1]</patches>
            </Box>
        </Level>

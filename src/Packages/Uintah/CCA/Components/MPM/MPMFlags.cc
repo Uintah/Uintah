@@ -17,7 +17,7 @@ static DebugStream dbg("MPMFlags", false);
 
 MPMFlags::MPMFlags()
 {
-  d_8or27 = 8;
+  d_interpolator_type = "linear";
   d_ref_temp = 0.0; // for thermal stress
   d_integrator_type = "explicit";
   d_integrator = Explicit;
@@ -81,7 +81,17 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   else{
     d_integrator = Explicit;
   }
-  mpm_flag_ps->get("nodes8or27", d_8or27);
+  int junk=0;
+  mpm_flag_ps->get("nodes8or27", junk);
+  if(junk!=0){
+     cerr << "nodes8or27 is deprecated, use " << endl;
+     cerr << "<interpolator>type</interpolator>" << endl;
+     cerr << "where type is one of the following:" << endl;
+     cerr << "linear, gimp, 4thorderBS" << endl;
+    exit(1);
+  }
+
+  mpm_flag_ps->get("interpolator", d_interpolator_type);
   mpm_flag_ps->get("AMR", d_AMR);
   mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
   mpm_flag_ps->get("withColor",  d_with_color);
@@ -117,12 +127,15 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   delete d_interpolator;
 
-  if(d_8or27==8){
-      d_interpolator = scinew LinearInterpolator();
-  } else if(d_8or27==27){
+  if(d_interpolator_type=="linear"){
+    d_interpolator = scinew LinearInterpolator();
+    d_8or27 = 8;
+  } else if(d_interpolator_type=="gimp"){
     d_interpolator = scinew Node27Interpolator();
-  } else if(d_8or27==64){
+    d_8or27 = 27;
+  } else if(d_interpolator_type=="4thorderBS"){
     d_interpolator = scinew BSplineInterpolator();
+    d_8or27 = 64;
   }
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
@@ -134,7 +147,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << "MPM Flags " << endl;
     dbg << "---------------------------------------------------------\n";
     dbg << " Time Integration            = " << d_integrator_type << endl;
-    dbg << " Nodes for interpolation     = " << d_8or27 << endl;
+    dbg << " Interpolation type          = " << d_interpolator_type << endl;
     dbg << " Reference temperature       = " << d_ref_temp << endl;  
     dbg << " With Color                  = " << d_with_color << endl;
     dbg << " Artificial Damping Coeff    = " << d_artificialDampCoeff << endl;
@@ -161,7 +174,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   ps->appendElement("time_integrator", d_integrator_type);
 
-  ps->appendElement("nodes8or27", d_8or27);
+  ps->appendElement("interpolator", d_interpolator_type);
   ps->appendElement("reference_temperature", d_ref_temp);
   ps->appendElement("withColor",  d_with_color);
   ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
