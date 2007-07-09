@@ -18,7 +18,6 @@
 #endif
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
@@ -51,12 +50,10 @@ using namespace std;
 // ****************************************************************************
 PressureSolver::PressureSolver(const ArchesLabel* label,
 			       const MPMArchesLabel* MAlb,
-			       TurbulenceModel* turb_model,
 			       BoundaryCondition* bndry_cond,
 			       PhysicalConstants* phys_const,
 			       const ProcessorGroup* myworld):
                                      d_lab(label), d_MAlab(MAlb),
-                                     d_turbModel(turb_model), 
                                      d_boundaryCondition(bndry_cond),
 				     d_physicalConsts(phys_const),
 				     d_myworld(myworld)
@@ -93,7 +90,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   d_discretize = scinew Discretization();
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_turbModel, d_physicalConsts);
+  d_source = scinew Source(d_physicalConsts);
   if (d_doMMS)
 	  d_source->problemSetup(db);
   string linear_sol;
