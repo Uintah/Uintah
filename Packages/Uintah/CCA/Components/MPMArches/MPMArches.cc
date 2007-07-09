@@ -933,9 +933,9 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
 
       // Apply grid boundary conditions to the velocity before storing the data
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,matlindex,"Velocity",gvelocity,8);
-      bc.setBoundaryCondition(patch,matlindex,"Symmetric",gvelocity,8);
-      bc.setBoundaryCondition(patch,matlindex,"Temperature",gTemperature,8);
+      bc.setBoundaryCondition(patch,matlindex,"Velocity",gvelocity,"linear");
+      bc.setBoundaryCondition(patch,matlindex,"Symmetric",gvelocity,"linear");
+      bc.setBoundaryCondition(patch,matlindex,"Temperature",gTemperature,"linear");
 
     }  // End loop over materials
 
@@ -4445,7 +4445,7 @@ void MPMArches::solveEquationsMotion(const ProcessorGroup* pg,
       new_dw->get(AccArchesNC,d_MAlb->AccArchesNCLabel,dwi,patch,Ghost::None,
 		  0);
       
-      for(NodeIterator iter = patch->getNodeIterator(d_mpm->flags->d_8or27);
+      for(NodeIterator iter = patch->getNodeIterator("linear");
 	  !iter.done();iter++)
 	acceleration[*iter] += AccArchesNC[*iter];
     }
@@ -4492,7 +4492,7 @@ void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
       new_dw->get(htrate_gasNC,Mlb->heaTranSolid_NCLabel,dwi,patch,
 		  Ghost::None, 0);
       
-      for(NodeIterator iter = patch->getNodeIterator(d_mpm->flags->d_8or27);
+      for(NodeIterator iter = patch->getNodeIterator("linear");
 	  !iter.done();iter++)
 	tempRate[*iter] += htrate_gasNC[*iter]/(mass[*iter]*Cv);
     }

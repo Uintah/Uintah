@@ -958,7 +958,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    int n8or27=flags->d_8or27;
     Ghost::GhostType  gan = Ghost::AroundNodes;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
@@ -1086,7 +1085,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       }
 
-      for(NodeIterator iter=patch->getNodeIterator(n8or27);!iter.done();iter++){
+      string interp_type = flags->d_interpolator_type;
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);!iter.done();iter++){
         IntVector c = *iter; 
         gvelocity[c]    /= gmass[c];
         gvelocityInterp[c]=gvelocity[c];
@@ -1115,15 +1115,15 @@ void AMRMPM::setBCsInterpolated(const ProcessorGroup*,
       NCVariable<Vector> gvelocity,gvelocityInterp;
       new_dw->getModifiable(gvelocity,      lb->gVelocityLabel,      dwi,patch);
       new_dw->getModifiable(gvelocityInterp,lb->gVelocityInterpLabel,dwi,patch);
-      int n8or27=flags->d_8or27;
+      string inter_type = flags->d_interpolator_type;
 
       gvelocityInterp.copyData(gvelocity);
 
       // Apply grid boundary conditions to the velocity before storing the data
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,       n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,       n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity,      inter_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity,      inter_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityInterp,inter_type);
     }
   }  // End loop over patches
 }
@@ -1276,8 +1276,9 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
         }
       }
 
+      string interp_type = flags->d_interpolator_type;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
     delete interpolator;
@@ -1316,7 +1317,8 @@ void AMRMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
 
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+      string interp_type = flags->d_interpolator_type;
+      for(NodeIterator iter = patch->getNodeIterator(interp_type);
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
@@ -1354,7 +1356,8 @@ void AMRMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
       velocity_star.initialize(Vector(0,0,0));
 
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+      string interp_type = flags->d_interpolator_type;
+      for(NodeIterator iter = patch->getNodeIterator(interp_type);
                         !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
@@ -1379,13 +1382,13 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
     
     delt_vartype delT;            
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-                      
+    string interp_type = flags->d_interpolator_type;
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
       constNCVariable<Vector> gvelocityInterp;
-      int n8or27=flags->d_8or27;
 
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
@@ -1395,12 +1398,12 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
       // acceleration before interpolating back to the particles
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",     gvelocity_star, n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",    gvelocity_star, n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getNodeIterator(n8or27); !iter.done();
+      for(NodeIterator iter = patch->getNodeIterator(interp_type); !iter.done();
                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
@@ -1412,15 +1415,14 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+        for(NodeIterator iter = patch->getNodeIterator(interp_type);
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
         }
       }  // d_doGridReset
       // Set symmetry BCs on acceleration if called for
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",    gacceleration,  n8or27);
-
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
     } // matl loop
   }  // patch loop
 }
@@ -1449,6 +1451,8 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     Vector dxcoarse=dx;
     IntVector ref_rat_fine;
 
+    string interp_type = flags->d_interpolator_type;
+
     // Find coarser level
     if(getLevel(patches)->hasCoarserLevel()){
       coarseLevel = getLevel(patches)->getCoarserLevel().get_rep();
@@ -1469,7 +1473,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
 
     if(!coarser && !finer){
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+      for(NodeIterator iter = patch->getNodeIterator(interp_type);
           !iter.done();iter++){
         IntVector c = *iter;
         zoi[c].p=1.;
@@ -1498,7 +1502,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     cout << "Patch node high index = " << patch->getNodeHighIndex() << endl;
     cout << "Patch cell high index = " << patch->getCellHighIndex() << endl;
 
-    for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+    for(NodeIterator iter = patch->getNodeIterator(interp_type);
         !iter.done();iter++){
       IntVector c = *iter;
 

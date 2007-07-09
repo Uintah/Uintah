@@ -295,7 +295,7 @@
 <!--
   <MPM>
     <time_integrator>                explicit </time_integrator>
-    <nodes8or27>                     8        </nodes8or27>
+    <interpolator>linear</interpolator>
     <minimum_particle_mass>          3.e-12   </minimum_particle_mass>
     <maximum_particle_velocity>      1.e3     </maximum_particle_velocity>
     <artificial_damping_coeff>       0.0      </artificial_damping_coeff>

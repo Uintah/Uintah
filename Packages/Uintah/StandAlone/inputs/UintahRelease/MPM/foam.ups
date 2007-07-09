@@ -20,7 +20,7 @@
   
   <MPM>
         <time_integrator>explicit</time_integrator>
-        <nodes8or27>27</nodes8or27>
+        <interpolator>                   gimp       </interpolator>
         <boundary_traction_faces>[xminus, yminus, zminus, xplus, yplus]
                                                 </boundary_traction_faces>
   </MPM>

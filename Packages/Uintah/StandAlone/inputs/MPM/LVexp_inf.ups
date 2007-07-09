@@ -42,9 +42,9 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
-       <nodes8or27>8</nodes8or27>
+       <interpolator>linear</interpolator>
        <use_load_curves>true</use_load_curves>
-        <do_grid_reset>true</do_grid_reset>
+       <do_grid_reset>true</do_grid_reset>
     </MPM>
 
     <PhysicalConstants>

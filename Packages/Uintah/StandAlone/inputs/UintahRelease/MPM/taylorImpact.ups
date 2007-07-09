@@ -55,7 +55,6 @@
 
   <MPM>
     <time_integrator>             explicit </time_integrator>
-    <nodes8or27>                  8        </nodes8or27>
     <use_load_curves>             false    </use_load_curves>
     <minimum_particle_mass>       1.0e-8   </minimum_particle_mass>
     <maximum_particle_velocity>   1.0e8    </maximum_particle_velocity>

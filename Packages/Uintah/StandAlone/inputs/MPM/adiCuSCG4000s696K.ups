@@ -58,7 +58,7 @@
     <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
     <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
     <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
-    <nodes8or27>8</nodes8or27>
+    <interpolator>linear</interpolator>
     <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
     <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
     <artificial_damping_coeff> 0.0 </artificial_damping_coeff>
