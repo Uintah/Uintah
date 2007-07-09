@@ -70,7 +70,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
  
   if(d_dynamicDilation)
   {
-    if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>10) //make sure a semi-decent sample has been taken
+    if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>5) //make sure a semi-decent sample has been taken
     {
       //compute the average overhead
 
@@ -85,7 +85,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
         {
           int dim=activeDims[d];
           //do not exceed maximum dilation
-          if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<=d_maxDilation[dim])
+          if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
             newDilation[dim]=d_cellRegridDilation[dim]+1;
           else
             newDilation[dim]=d_cellRegridDilation[dim];
@@ -143,7 +143,11 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   
   if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
+    if(d_myworld->myrank()==true)
+            cout << " ret: false on 0\n";
   } else if ( timeStepsSinceRegrid  > d_maxTimestepsBetweenRegrids ) {
+    if(d_myworld->myrank()==true)
+            cout << " ret: true on 1\n";
     retval = true;
   }
   else //check if flags are contained within the finer levels patches
@@ -224,6 +228,8 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     {
       retval=result;
     }
+    if(d_myworld->myrank()==true)
+            cout << " ret:" << retval << " on 2\n";
   }
   
   if(retval==true)
