@@ -149,7 +149,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   }
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_turbModel, d_physicalConsts);
+  d_source = scinew Source(d_physicalConsts);
   
   if (d_doMMS)
 	  d_source->problemSetup(db);
