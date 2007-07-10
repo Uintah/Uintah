@@ -1718,7 +1718,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 {
 
   printTask(patches, patches->get(0),cout_doing,
-            "Doing interpolateParticlesToGrid\t\t\t");
+            "Doing computeStressTensor\t\t\t");
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
@@ -2130,11 +2130,11 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         IntVector projlow, projhigh;
         patch->getFaceNodes(face, 0, projlow, projhigh);
         Vector norm = face_norm(face);
-	double celldepth  = dx[iface/2]; // length in dir. perp. to boundary
+        double celldepth  = dx[iface/2]; // length in dir. perp. to boundary
 
-	// loop over face nodes to find boundary forces, ave. stress (traction).
-	// Note that nodearea incorporates a factor of two as described in the
-	// bndyCellArea calculation in order to get node face areas.
+        // loop over face nodes to find boundary forces, ave. stress (traction).
+        // Note that nodearea incorporates a factor of two as described in the
+        // bndyCellArea calculation in order to get node face areas.
         
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
@@ -2887,11 +2887,10 @@ void SerialMPM::computeParticleTempFromGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,
               "Doing computeParticleTempFromGrid\t\t\t");
-	
+
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -2917,10 +2916,9 @@ void SerialMPM::computeParticleTempFromGrid(const ProcessorGroup*,
                                    iter != pset->end(); iter++) {
         particleIndex idx = *iter;
         double pTemp=0.0;
-	
+
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < flags->d_8or27; k++) {
           IntVector node = ni[k];
@@ -3075,7 +3073,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(m == RMI){
         rho_frac_min = .1;
       }
-      const Level* lvl = patch->getLevel();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
