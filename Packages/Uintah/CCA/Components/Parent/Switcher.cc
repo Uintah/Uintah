@@ -40,6 +40,7 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
 {
   int num_components = 0;
   d_componentIndex = 0;
+  d_switchState = idle;
   d_restarting = false;
 
   ProblemSpecP sim_block = ups->findBlock("SimulationComponent");
