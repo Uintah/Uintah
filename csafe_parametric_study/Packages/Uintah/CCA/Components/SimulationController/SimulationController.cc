@@ -660,9 +660,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       sprintf(walltime, ", elap T = %.2lf", d_wallTime);
     }
     ostringstream message;
-
-    message << "Time="         << time
-        << " (timestep "  << timestep 
+    message.setf(ios::scientific,ios::floatfield);
+    message.precision(10); 
+    message << "Time="         << time;
+    message.setf(ios::scientific ,ios::floatfield);
+    
+    
+    message << " (timestep "  << timestep 
         << "), delT="     << delt
         << walltime;
 #ifndef _WIN32
