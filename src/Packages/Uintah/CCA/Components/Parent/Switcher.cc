@@ -40,7 +40,7 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
 {
   int num_components = 0;
   d_componentIndex = 0;
-  d_switchState = idle;
+  d_restarting = false;
 
   ProblemSpecP sim_block = ups->findBlock("SimulationComponent");
   for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
@@ -307,7 +307,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
     d_computedVars = sched->getComputedVars();
   }
 
-  if (d_doSwitching[level->getIndex()]) {
+  if (d_doSwitching[level->getIndex()] || d_restarting) {
     // clear and reset carry-over db
     if (level->getIndex() >= (int) d_matlVarsDB.size()) {
       d_matlVarsDB.resize(level->getIndex()+1);
@@ -549,7 +549,7 @@ void Switcher::carryOverVars(const ProcessorGroup*,
 bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 {
   bool retval = false;
-
+  d_restarting = true;
   d_doSwitching.resize(grid->numLevels());
   for (int i = 0; i < grid->numLevels(); i++) {
     d_doSwitching[i] = d_switchState == switching;
@@ -686,6 +686,7 @@ void Switcher::scheduleInitializeAddedMaterial(const LevelP& level,
 }
 
 void Switcher::restartInitialize() {
+  d_restarting = true;
   d_sim->restartInitialize();
 }
 
