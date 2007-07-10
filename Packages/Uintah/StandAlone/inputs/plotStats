@@ -53,9 +53,13 @@ grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
 
 grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2  > .memAve
 grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4  > .memMax
-paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memAve .memMax>& .data
 
-rm -f .elapsedTime .meanTime .physicalTime .delT .memAve .memMax 
+
+awk 'NR==1 {init_time=$1; print 0} ; NR>1 {time=$1 - init_time; print time}' < .physicalTime > .physicalTime2
+
+paste -d "  " .elapsedTime .meanTime .physicalTime2 .delT .memAve .memMax>& .data
+
+rm -f .elapsedTime .meanTime .physicalTime* .delT .memAve .memMax 
 rm -f .plotStats_tmp .plotStats_tmp1 .tmp
 echo "Done extracting data"
 
@@ -67,7 +71,7 @@ echo "Generating the postscript file plotStats.ps"
 /bin/rm gp
 cat > gp << fin
 set terminal x11 1
-set terminal postscript color solid "Times-Roman" 9
+set terminal postscript color solid "Times-Roman" 12
 set output "plotStat.ps"
 fin
 endif
