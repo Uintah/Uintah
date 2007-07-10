@@ -100,6 +100,8 @@ namespace Uintah {
     // we need to keep track of which levels we've switched
     vector<bool> d_doSwitching;
 
+    bool d_restarting;
+
     // used to sync other switch tasks
     //VarLabel* d_switchLabel;
     SimulationInterface* d_sim;
