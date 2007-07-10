@@ -145,6 +145,7 @@ double PolynomialData::interpolateRadial(const int polyNum, const double theta)
   value += d_polyData[polyNum][3]* sin(2.*theta);
   value += d_polyData[polyNum][4]* cos(2.*theta);
 
+  value = max(0.0, value);       // clamp
   return value;
 }
 
@@ -204,9 +205,9 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   double minValue = interpolateRadial(min,theta);
   double maxValue = interpolateRadial(max,theta);
 
-  if (minValue < 0. || maxValue < 0.)
+  if (minValue < 0. || maxValue < 0.){
     cout << "WARNING values less than 0" << endl;
-
+  }
 
   // y = m*x + b for doing linear interpolation between two polynomial curves.
   double m = (maxValue - minValue)/(d_polyRange[max] - d_polyRange[min]);
