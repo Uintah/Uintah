@@ -117,7 +117,10 @@ fin
 # plot it up
 gnuplot gp
 
-
+if($hardcopy == "y" || $hardcopy == "Y") then
+  convert plotStat.ps plotStat.jpg
+  mogrify -rotate 90 plotStat.jpg
+endif
 #__________________________________
 # clean up
 rm -f gp .data
