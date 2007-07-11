@@ -21,6 +21,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
+#include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
@@ -482,8 +483,25 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
         copySection(checkpointsFromDir, d_checkpointsDir, "variables");
         copySection(checkpointsFromDir, d_checkpointsDir, "globals");
       }
-      if (removeOldDir)
-         restartFromDir.forceRemove(false);
+      if (removeOldDir) {
+        // Try to remove the old dir...
+        if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
+          // Something strange happened... let's test the filesystem...
+          if( !testFilesystem( restartFromDir.getName() ) ) {
+            // The file system just gave us some problems...
+            if( Parallel::usingMPI() ) {
+              printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+            } else {
+              printf( "WARNING: The filesystem appears to be flaky...\n" );
+            }
+          }
+          // Verify that "system works"
+          int code = system( "echo how_are_you" );
+          if (code != 0) {
+            printf( "WARNING: test of system call failed\n" );
+          }
+        }
+      }
    }
    else if (d_writeMeta) {
      // just add <restart from = ".." timestep = ".."> tag.
@@ -972,7 +990,19 @@ DataArchiver::beginOutputTimestep( double time, double delt,
         
         // remove out-dated checkpoint directory
         Dir expiredDir(d_checkpointTimestepDirs.front());
-        expiredDir.forceRemove(false);
+
+        // Try to remove the expired checkpoint directory...
+        if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
+          // Something strange happened... let's test the filesystem...
+          if( !testFilesystem( expiredDir.getName() ) ) {
+            // The file system just gave us some problems...
+            if( Parallel::usingMPI() ) {
+              printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+            } else {
+              printf( "WARNING: The filesystem appears to be flaky...\n" );
+            }
+          }
+        }
       }
       d_checkpointTimestepDirs.pop_front();
     }

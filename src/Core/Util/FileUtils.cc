@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #ifndef _WIN32
 #  include <unistd.h>
@@ -207,6 +208,62 @@ isSymLink( string filename )
     return( m & S_ISLNK(m) );
   }
   return false;
+}
+
+// Creates a temp file (in directoryPath), writes to it, and then deletes it...
+bool
+testFilesystem( string directoryPath )
+{
+  FILE * fp;
+
+  string fileName = directoryPath + "/scirun_filesystem_check_temp_file";
+
+  // Create a temporary file
+  fp = fopen( fileName.c_str(), "w" );
+  if( fp == NULL ) {
+    printf( "ERROR: testFilesystem() failed to create a temporary file in %s\n", directoryPath.c_str() );
+    printf( "       errno is %d\n", errno );
+      return false;
+  }
+
+  // Write to the file
+  char * myStr = "hello world";
+  for( int cnt = 0; cnt < 1000; cnt++ ) {
+    int numWritten = fwrite( myStr, 1, 11, fp );
+    if( numWritten != 11 ) {
+      printf( "ERROR: testFilesystem() failed to write data to temp file in %s\n", directoryPath.c_str() );
+      printf( "       iteration: %d, errno is %d\n", cnt, errno );
+      return false;
+    }
+  }
+
+  // Close the file
+  int result = fclose( fp );
+  if (result != 0) {
+    printf( "WARNING: fclose() failed while testing filesystem.\n" );
+    printf( "         errno is %d\n", errno );
+    return false;
+  }
+
+  // Check the files size
+  struct stat buf;
+  if( stat(fileName.c_str(), &buf) == 0 )
+  {
+    printf( "FILESYSTEM CHECK: Test file size is: %d\n", buf.st_size );
+  } else {
+    printf( "WARNING: stat() failed while testing filesystem.\n" );
+    printf( "         errno is %d\n", errno );
+    return false;
+  }
+
+  // Delete the file
+  int rc = remove( fileName.c_str() );
+  if (rc != 0) {
+    printf( "WARNING: remove() failed while testing filesystem.\n" );
+    printf( "         errno is %d\n", errno );
+    return false;
+  }
+  return true;
 }
 
 } // End namespace SCIRun
