@@ -143,11 +143,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   
   if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
-    if(d_myworld->myrank()==true)
-            cout << " ret: false on 0\n";
   } else if ( timeStepsSinceRegrid  > d_maxTimestepsBetweenRegrids ) {
-    if(d_myworld->myrank()==true)
-            cout << " ret: true on 1\n";
     retval = true;
   }
   else //check if flags are contained within the finer levels patches
@@ -228,8 +224,6 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     {
       retval=result;
     }
-    if(d_myworld->myrank()==true)
-            cout << " ret:" << retval << " on 2\n";
   }
   
   if(retval==true)
