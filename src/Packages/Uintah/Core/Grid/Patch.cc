@@ -1058,7 +1058,7 @@ Patch::getNodeIterator(const Box& b) const
 
 NodeIterator Patch::getNodeIterator(string interp_type) const
 {
-  if(interp_type!="gimp"){
+  if(interp_type!="gimp" && interp_type!="3rdorderBS"){
    return getNodeIterator();
   }
   else{

@@ -36,11 +36,11 @@ void TOBSplineInterpolator::findNodeComponents(const int& ix, int* xn, int& coun
   xn[0] = ix;
   xn[1] = ix+1;
 
-  if(xn[0] > low && cellpos - xn[0] < 0.5){ // lowest node is not on the lower boundary
+  if(cellpos - xn[0] < 0.5){ // lowest node is not on the lower boundary
     xn[count] = ix-1;
     count++; 
   }
-  if(xn[1] < hi  && xn[1] - cellpos < 0.5){ // highest node is not on the upper boundary
+  else{ // highest node is not on the upper boundary
     xn[count] = ix+2;
     count++;
   }
@@ -52,21 +52,7 @@ void TOBSplineInterpolator::getBSplineWeights(double* Sd, const int* xn,
                                             const double& cellpos)
 {
   for(int n=0;n<count;n++){
-     if(xn[n]==low){
-       Sd[n]=evalType3BSpline(cellpos-xn[n]);
-     }
-     else if(xn[n]==hi-1){
-       Sd[n]=evalType3BSpline(xn[n]-cellpos);
-     }
-     else if(xn[n]==low+1){
-       Sd[n]=evalType2BSpline(cellpos-xn[n]);
-     }
-     else if(xn[n]==hi-2){
-       Sd[n]=evalType2BSpline(xn[n]-cellpos);
-     }
-     else{
-       Sd[n]=evalType1BSpline(cellpos-xn[n]);
-     }
+    Sd[n]=evalType1BSpline(cellpos-xn[n]);
   }
 }
 
@@ -119,28 +105,13 @@ double TOBSplineInterpolator::evalType3BSpline(const double& dx)    // boundary 
   return 10.0;
 }
 
-
 void TOBSplineInterpolator::getBSplineGrads(double* dSd, const int* xn,
                                           const int& count,
                                           const int& low, const int& hi,
                                           const double& cellpos)
 {
   for(int n=0;n<count;n++){
-     if(xn[n]==low){
-       dSd[n]=evalType3BSplineGrad(cellpos-xn[n]);
-     }
-     else if(xn[n]==hi-1){
-       dSd[n]=-evalType3BSplineGrad(xn[n]-cellpos);
-     }
-     else if(xn[n]==low+1){
-       dSd[n]=evalType2BSplineGrad(cellpos-xn[n]);
-     }
-     else if(xn[n]==hi-2){
-       dSd[n]=-evalType2BSplineGrad(xn[n]-cellpos);
-     }
-     else{
-       dSd[n]=evalType1BSplineGrad(cellpos-xn[n]);
-     }
+    dSd[n]=evalType1BSplineGrad(cellpos-xn[n]);
   }
 }
 
@@ -214,15 +185,15 @@ void TOBSplineInterpolator::findCellAndWeights(const Point& pos,
 
   findNodeComponents(ix,xn,countx,low.x(),hi.x(),cellpos.x());
   findNodeComponents(iy,yn,county,low.y(),hi.y(),cellpos.y());
-//  findNodeComponents(iz,zn,countz,low.z(),hi.z(),cellpos.z());
-  zn[0]=iz;
-  zn[1]=iz+1;
+  findNodeComponents(iz,zn,countz,low.z(),hi.z(),cellpos.z());
+//  zn[0]=iz;
+//  zn[1]=iz+1;
 
   getBSplineWeights(Sx, xn, countx, low.x(), hi.x(), cellpos.x());
   getBSplineWeights(Sy, yn, county, low.y(), hi.y(), cellpos.y());
-//  getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
-  Sz[0]=0.5;
-  Sz[1]=0.5;
+  getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
+//  Sz[0]=0.5;
+//  Sz[1]=0.5;
 
   int n=0;
   for(int i=0;i<countx;i++){
@@ -261,21 +232,21 @@ void TOBSplineInterpolator::findCellAndShapeDerivatives(const Point& pos,
 
   findNodeComponents(ix,xn,countx,low.x(),hi.x(),cellpos.x());
   findNodeComponents(iy,yn,county,low.y(),hi.y(),cellpos.y());
-//  findNodeComponents(iz,zn,countz,low.z(),hi.z(),cellpos.z());
-  zn[0]=iz;
-  zn[1]=iz+1;
+  findNodeComponents(iz,zn,countz,low.z(),hi.z(),cellpos.z());
+//  zn[0]=iz;
+//  zn[1]=iz+1;
 
   getBSplineWeights(Sx, xn, countx, low.x(), hi.x(), cellpos.x());
   getBSplineWeights(Sy, yn, county, low.y(), hi.y(), cellpos.y());
-//  getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
-  Sz[0]=0.5;
-  Sz[1]=0.5;
+  getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
+//  Sz[0]=0.5;
+//  Sz[1]=0.5;
 
   getBSplineGrads(dSx,  xn, countx, low.x(), hi.x(), cellpos.x());
   getBSplineGrads(dSy,  yn, county, low.y(), hi.y(), cellpos.y());
-//  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z());
-  dSz[0]=0.0;
-  dSz[1]=0.0;
+  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z());
+//  dSz[0]=0.0;
+//  dSz[1]=0.0;
 
   int n=0;
   for(int i=0;i<countx;i++){
@@ -319,21 +290,21 @@ TOBSplineInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
   findNodeComponents(ix,xn,countx,low.x(),hi.x(),cellpos.x());
   findNodeComponents(iy,yn,county,low.y(),hi.y(),cellpos.y());
-//  findNodeComponents(iz,zn,countz,low.z(),hi.z(),cellpos.z());
-  zn[0]=iz;
-  zn[1]=iz+1;
+  findNodeComponents(iz,zn,countz,low.z(),hi.z(),cellpos.z());
+//  zn[0]=iz;
+//  zn[1]=iz+1;
 
   getBSplineWeights(Sx, xn, countx, low.x(), hi.x(), cellpos.x());
   getBSplineWeights(Sy, yn, county, low.y(), hi.y(), cellpos.y());
-//  getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
-  Sz[0]=0.5;
-  Sz[1]=0.5;
+  getBSplineWeights(Sz, zn, countz, low.z(), hi.z(), cellpos.z());
+//  Sz[0]=0.5;
+//  Sz[1]=0.5;
 
   getBSplineGrads(dSx,  xn, countx, low.x(), hi.x(), cellpos.x());
   getBSplineGrads(dSy,  yn, county, low.y(), hi.y(), cellpos.y());
-//  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z());
-  dSz[0]=0.0;
-  dSz[1]=0.0;
+  getBSplineGrads(dSz,  zn, countz, low.z(), hi.z(), cellpos.z());
+//  dSz[0]=0.0;
+//  dSz[1]=0.0;
 
   int n=0;
   for(int i=0;i<countx;i++){
