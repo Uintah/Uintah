@@ -35,6 +35,7 @@ setenv LOGIN              $user_test@$remote_machine
 setenv REMOTEDIR_TMP      `echo $string |cut -d\: -f2`
 setenv LOCALDIR           $localDir
 setenv REMOTEDIR          $REMOTEDIR_TMP/$LOCALDIR
+setenv PSCP_FILES         /tmp/pscp_files_$localDir
 
 echo "login:       $LOGIN"
 echo "nprocessors: $nproc"
@@ -85,15 +86,15 @@ cd $localDir
 #-------------------------------
 # make a sorted list of potential files to copy
 # let the user edit that file with vi
-/bin/rm -f /tmp/pscp_files
+/bin/rm -f $PSCP_FILES
 
-find . -maxdepth 1 -type f             -exec basename {} \; > /tmp/pscp_files
-find . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>/tmp/pscp_files
-find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> /tmp/pscp_files
+find . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
+find . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>$PSCP_FILES
+find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> $PSCP_FILES
 
 echo "Now starting vi in a separate xterm:  Remove the files you don't want transfered"
-xterm -bg "DarkSlateGray" -fg "orange" -e "vi /tmp/pscp_files"
-chmod ug+rw /tmp/pscp_files
+xterm -bg "DarkSlateGray" -fg "orange" -e "vi $PSCP_FILES"
+chmod ug+rw $PSCP_FILES
  
 /usr/bin/time -p gmake TAR=tar -f /usr/gapps/uintah/scripts/pscp2_driver_$OS -j $nproc
 
