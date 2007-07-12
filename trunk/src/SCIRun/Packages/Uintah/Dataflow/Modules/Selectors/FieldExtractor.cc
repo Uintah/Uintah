@@ -310,11 +310,28 @@ FieldExtractor::execute()
 
   CompileInfoHandle ci = FieldExtractorAlgo::get_compile_info(type, subtype);
   SCIRun::Handle<FieldExtractorAlgo> algo;
+
+  if (subtype->getType() == Uintah::TypeDescription::double_type)
+    algo = new FieldExtractorAlgoT<double>;
+  else if (subtype->getType() == Uintah::TypeDescription::float_type)
+    algo = new FieldExtractorAlgoT<float>;
+  else if (subtype->getType() == Uintah::TypeDescription::Vector)
+    algo = new FieldExtractorAlgoT<Vector>;
+  else if (subtype->getType() == Uintah::TypeDescription::Matrix3)
+    algo = new FieldExtractorAlgoT<Matrix3>;
+  else {
+    ostringstream str;
+    str << "Not a valid Uintah type: " << subtype->getName();
+    error(str.str().c_str());
+    return;
+  }
+
+#if 0
   if( !module_dynamic_compile(ci, algo) ){
     error("dynamic compile failed.");
     return;
   }
-
+#endif
   FieldHandle fHandle_ = algo->execute(qinfo, low, mesh_handle_,
                                        remove_boundary_cells.get());
 

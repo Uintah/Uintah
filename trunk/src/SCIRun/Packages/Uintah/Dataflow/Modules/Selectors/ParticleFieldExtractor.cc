@@ -517,8 +517,8 @@ ParticleFieldExtractor::execute()
   pvout = (VectorParticlesOPort *) get_oport("Vector Particles");
   ptout = (TensorParticlesOPort *) get_oport("Tensor Particles");
   ArchiveHandle handle;
-   if(!(in->get(handle) && handle.get_rep())){
-    warning("ParticleFieldExtractor::execute() Didn't get a handle.");
+   if(!in->get(handle)){
+     warning("ParticleFieldExtractor::execute() Didn't get a handle.");
      //     AllocatorSetDefaultTag(old_tag1);
      return;
    }
