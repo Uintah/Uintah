@@ -206,7 +206,7 @@ WARNING
      NodeIterator getNodeIterator(const Box& b) const;
 
      // Get a larger set of nodes if using GIMP
-     NodeIterator getNodeIterator(int n8or27) const;
+     NodeIterator getNodeIterator(string interp_type) const;
 
      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;

@@ -39,19 +39,18 @@
 #include <SCIRun/Core/Math/Expon.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sstream>
-#include <iostream>
+#include   <vector>
+#include   <sstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <float.h>
 
 #ifdef _WIN32
-# undef max
-# undef min
-#define isnan _isnan
+#  undef max
+#  undef min
+#  define isnan _isnan
 #endif
-
 
 #define SET_CFI_BC 0
 
@@ -77,8 +76,8 @@ static DebugStream cout_norm("ICE_NORMAL_COUT", false);
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 
-ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) 
-  : UintahParallelComponent(myworld)
+ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
+  UintahParallelComponent(myworld)
 {
   lb   = scinew ICELabel();
 
@@ -348,9 +347,20 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     string index("");
     ps->getAttribute("index",index);
     stringstream id(index);
-    int index_val = -1;
+
+    const int DEFAULT_VALUE = -1;
+
+    int index_val = DEFAULT_VALUE;
     id >> index_val;
-    cout_norm << "Material attribute = " << index_val << endl;
+
+    if( !id ) {
+      // stringstream parsing failed... on many (most) systems, the
+      // original value assigned to index_val would be left
+      // intact... but on some systems (redstorm) it inserts garbage,
+      // so we have to manually restore the value.
+      index_val = DEFAULT_VALUE;
+    }
+    //cout_norm << "Material attribute = " << index_val << endl;
 
     // Extract out the type of EOS and the associated parameters
     ICEMaterial *mat = scinew ICEMaterial(ps);

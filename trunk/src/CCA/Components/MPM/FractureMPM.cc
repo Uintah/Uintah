@@ -1520,7 +1520,9 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	} // End of loop over k
       } // End of loop over iter
 
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);!iter.done();iter++){
+      string interp_type = flags->d_interpolator_type;
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+                                           !iter.done();iter++){
         IntVector c = *iter; 
         totalmass      += (gmass[c]+Gmass[c]);
         gmassglobal[c] += (gmass[c]+Gmass[c]);
@@ -1547,18 +1549,17 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
-      
       MPMBoundCond bc;
       // above crack
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,      flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,      flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp,flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,   flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,      interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,      interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,   interp_type);
       // below crack
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   Gvelocity,      flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  Gvelocity,      flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  GvelocityInterp,flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature,   flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   Gvelocity,      interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  Gvelocity,      interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  GvelocityInterp,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature,   interp_type);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
 
@@ -1979,10 +1980,10 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
         }
 
       } // faces
-
+      string interp_type = flags->d_interpolator_type;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Ginternalforce,interp_type);
 
 #ifdef KUMAR
       internalforce.initialize(Vector(0,0,0));
@@ -2073,7 +2074,8 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(Gacceleration,lb->GAccelerationLabel, dwi, patch);
       Gacceleration.initialize(Vector(0.,0.,0.));
 
-       for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27); 
+      string interp_type = flags->d_interpolator_type;
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
 		        !iter.done(); iter++){
          IntVector c = *iter;
          // above crack
@@ -2132,7 +2134,8 @@ void FractureMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(Gvelocity_star,lb->GVelocityStarLabel, dwi, patch);
       Gvelocity_star.initialize(Vector(0.0));
 
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27); 
+      string interp_type = flags->d_interpolator_type;
+      for(NodeIterator iter=patch->getNodeIterator(interp_type);
 		       !iter.done(); iter++){
         IntVector c = *iter;
         // above crack
@@ -2181,20 +2184,20 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
-      
+      string interp_type = flags->d_interpolator_type;
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star,flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star,flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,flags->d_8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star,flags->d_8or27);
-      //bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration,flags->d_8or27);
-      //bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration,flags->d_8or27);
-      //bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,flags->d_8or27);
-      //obc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration,flags->d_8or27);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity_star,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star,interp_type);
+      //bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration,interp_type);
+      //bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration,interp_type);
+      //bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
+      //obc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration,interp_type);
       
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27); !iter.done();
+      for(NodeIterator iter = patch->getNodeIterator(interp_type); !iter.done();
                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
@@ -2202,8 +2205,8 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       }
       
       // Set symmetry BCs on acceleration if called for
-      bc.setBoundaryCondition(patch, dwi, "Symmetric", gacceleration, flags->d_8or27);
-      bc.setBoundaryCondition(patch, dwi, "Symmetric", Gacceleration, flags->d_8or27);
+      bc.setBoundaryCondition(patch, dwi, "Symmetric", gacceleration, interp_type);
+      bc.setBoundaryCondition(patch, dwi, "Symmetric", Gacceleration, interp_type);
 
     } // matl loop
   }  // patch loop
@@ -2956,7 +2959,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(m == RMI){
         rho_frac_min = .1;
       }
-      const Level* lvl = patch->getLevel();      
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();

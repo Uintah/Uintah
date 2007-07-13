@@ -18,14 +18,17 @@ using namespace SCIRun;
     ~MPMBoundCond();
 
     void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
-			      NCVariable<Vector>& variable,int n8or27=8);
-
-    void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
-			      NCVariable<double>& variable,int n8or27=8);
+			      NCVariable<Vector>& variable,
+                              string interp_type="linear");
 
     void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
 			      NCVariable<double>& variable,
-			      constNCVariable<double>& gvolume,int n8or27=8);
+                              string interp_type="linear");
+
+    void setBoundaryCondition(const Patch* patch,int dwi, const string& type,
+			      NCVariable<double>& variable,
+			      constNCVariable<double>& gvolume,
+                              string interp_type="linear");
 
   private:
 

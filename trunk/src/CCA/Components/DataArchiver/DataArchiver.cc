@@ -21,6 +21,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
+#include <Core/Util/FileUtils.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Exceptions/ErrnoException.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
@@ -43,14 +44,18 @@
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#define MAXHOSTNAMELEN 256
-#include <winsock2.h>
-#include <process.h>
-#include <time.h>
+#  define MAXHOSTNAMELEN 256
+#  include <winsock2.h>
+#  include <process.h>
+#  include <time.h>
 #else
-#include <sys/param.h>
-#include <strings.h>
-#include <unistd.h>
+#  include <sys/param.h>
+#  include <strings.h>
+#  include <unistd.h>
+#endif
+
+#if defined(REDSTORM)
+#  include <time.h>
 #endif
 
 //TODO - BJW - if multilevel reduction doesn't work, fix all
@@ -478,8 +483,25 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
         copySection(checkpointsFromDir, d_checkpointsDir, "variables");
         copySection(checkpointsFromDir, d_checkpointsDir, "globals");
       }
-      if (removeOldDir)
-         restartFromDir.forceRemove(false);
+      if (removeOldDir) {
+        // Try to remove the old dir...
+        if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
+          // Something strange happened... let's test the filesystem...
+          if( !testFilesystem( restartFromDir.getName() ) ) {
+            // The file system just gave us some problems...
+            if( Parallel::usingMPI() ) {
+              printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+            } else {
+              printf( "WARNING: The filesystem appears to be flaky...\n" );
+            }
+          }
+          // Verify that "system works"
+          int code = system( "echo how_are_you" );
+          if (code != 0) {
+            printf( "WARNING: test of system call failed\n" );
+          }
+        }
+      }
    }
    else if (d_writeMeta) {
      // just add <restart from = ".." timestep = ".."> tag.
@@ -968,7 +990,19 @@ DataArchiver::beginOutputTimestep( double time, double delt,
         
         // remove out-dated checkpoint directory
         Dir expiredDir(d_checkpointTimestepDirs.front());
-        expiredDir.forceRemove(false);
+
+        // Try to remove the expired checkpoint directory...
+        if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
+          // Something strange happened... let's test the filesystem...
+          if( !testFilesystem( expiredDir.getName() ) ) {
+            // The file system just gave us some problems...
+            if( Parallel::usingMPI() ) {
+              printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+            } else {
+              printf( "WARNING: The filesystem appears to be flaky...\n" );
+            }
+          }
+        }
       }
       d_checkpointTimestepDirs.pop_front();
     }
@@ -1666,6 +1700,7 @@ DataArchiver::output(const ProcessorGroup*,
     // Open the data file
     filename = (char*) dataFilename.c_str();
     fd = open(filename, flags, 0666);
+
     if ( fd == -1 ) {
       cerr << "Cannot open dataFile: " << dataFilename << '\n';
       throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
@@ -1954,7 +1989,7 @@ DataArchiver::makeVersionedDir()
   cout << "DataArchiver created " << dirName << endl;
   d_dir = Dir(dirName);
    
-}
+} // end makeVersionedDir()
 
 void
 DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)

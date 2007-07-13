@@ -9,6 +9,7 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Vampir.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <SCIRun/Core/Thread/Time.h>
@@ -16,16 +17,18 @@
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
+
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <sstream>
-#include <iomanip>
-#include <map>
+#include   <sstream>
+#include   <iomanip>
+#include   <map>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Parallel/Vampir.h>
+
 #ifdef USE_PERFEX_COUNTERS
-#include "counters.h"
+#  include <Packages/Uintah/CCA/Components/Schedulers/counters.h>
 #endif
 
 // Pack data into a buffer before sending -- testing to see if this
@@ -66,11 +69,8 @@ printTask( ostream& out, DetailedTask* task )
 	out << ", ";
       out << patches->get(p)->getID();
     }
-    
-    if (task->getTask()->getType() != Task::OncePerProc) {
-      const Level* level = getLevel(patches);
-      out << "\t  L-"<< level->getIndex();
-    }
+    const Level* level = getLevel(patches);
+   out << "\t  L-"<< level->getIndex();
   }
 }
 
@@ -748,7 +748,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     d_times.clear();
     //emitTime("time since last execute");
   }
-  
+
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 

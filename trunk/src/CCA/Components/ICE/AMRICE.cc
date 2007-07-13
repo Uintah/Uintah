@@ -101,6 +101,10 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     v_ss >> data.value;
     m_ss >> data.matl;
     
+    if( !n_ss || !v_ss || !m_ss ) {
+      printf( "WARNING: AMRICE.cc: stringstream failed...\n" );
+    }
+
     int numMatls = d_sharedState->getNumMatls();
 
     //__________________________________

@@ -13,11 +13,10 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <SCIRun/Core/Util/DebugStream.h>
+#include <SCIRun/Core/Thread/Time.h> 
 #include <iostream>
 #include <sstream>
 #include <deque>
-
-#include <Core/Util/uintahshare.h> // for dbg_barrier's UINTAHSHARE
 
 using namespace std;
 using namespace Uintah;
@@ -25,7 +24,6 @@ using namespace Uintah;
 
 DebugStream rdbg("Regridder", false);
 DebugStream dilate_dbg("Regridder_dilate", false);
-extern UINTAHSHARE DebugStream dbg_barrier;
 
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
@@ -69,57 +67,64 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
 {
   rdbg << "RegridderCommon::needRecompile() BGN" << endl;
   bool retval = d_newGrid;
-  
-  if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>10) //make sure a semi-decent sample has been taken
+ 
+  if(d_dynamicDilation)
   {
-    //compute the average overhead
-
-    //if above overhead threshold
-    if(d_sharedState->overheadAvg>d_amrOverheadHigh)
+    if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>5) //make sure a semi-decent sample has been taken
     {
-      //increase dilation
-      int numDims=d_sharedState->getNumDims();
-      int *activeDims=d_sharedState->getActiveDims();
-      IntVector newDilation;
-      for(int d=0;d<numDims;d++)
+      //compute the average overhead
+
+      //if above overhead threshold
+      if(d_sharedState->overheadAvg>d_amrOverheadHigh)
       {
-        int dim=activeDims[d];
-         //do not exceed maximum dilation
-         if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
-         newDilation[dim]=d_cellRegridDilation[dim]+1;
-       }
-       if(newDilation!=d_cellRegridDilation)
-       {
-         if(d_myworld->myrank()==0)
-           cout << "Increasing Regrid Dilation to:" << newDilation << endl;
-         d_cellRegridDilation=newDilation;
-         //reset the dilation overhead
-         d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
-         retval=true;
-       }
-    }
-    //if below overhead threshold
-    else if(d_sharedState->overheadAvg<d_amrOverheadLow)
-    {          
-      //decrease dilation
-      int numDims=d_sharedState->getNumDims();
-      int *activeDims=d_sharedState->getActiveDims();
-      IntVector newDilation(0,0,0);
-      for(int d=0;d<numDims;d++)
-      {
-        int dim=activeDims[d];
-        //do not lower dilation to be less than 0
-        if(d_cellRegridDilation[dim]>0)
-          newDilation[dim]=d_cellRegridDilation[dim]-1;
+        //increase dilation
+        int numDims=d_sharedState->getNumDims();
+        int *activeDims=d_sharedState->getActiveDims();
+        IntVector newDilation;
+        for(int d=0;d<numDims;d++)
+        {
+          int dim=activeDims[d];
+          //do not exceed maximum dilation
+          if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
+            newDilation[dim]=d_cellRegridDilation[dim]+1;
+          else
+            newDilation[dim]=d_cellRegridDilation[dim];
+        }
+        if(newDilation!=d_cellRegridDilation)
+        {
+          if(d_myworld->myrank()==0)
+            cout << "Increasing Regrid Dilation to:" << newDilation << endl;
+          d_cellRegridDilation=newDilation;
+           //reset the dilation overhead
+           d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
+           retval=true;
+         }
       }
-      if(newDilation!=d_cellRegridDilation)
-      {
-        if(d_myworld->myrank()==0)
-          cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
-        d_cellRegridDilation=newDilation;
-        //reset the dilation overhead
-        d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
-        retval=true;
+      //if below overhead threshold
+      else if(d_sharedState->overheadAvg<d_amrOverheadLow)
+      {          
+        //decrease dilation
+        int numDims=d_sharedState->getNumDims();
+        int *activeDims=d_sharedState->getActiveDims();
+        IntVector newDilation(0,0,0);
+        for(int d=0;d<numDims;d++)
+        {
+          int dim=activeDims[d];
+          //do not lower dilation to be less than 0
+          if(d_cellRegridDilation[dim]>0)
+            newDilation[dim]=d_cellRegridDilation[dim]-1;
+          else
+            newDilation[dim]=d_cellRegridDilation[dim];
+        }
+        if(newDilation!=d_cellRegridDilation)
+        {
+          if(d_myworld->myrank()==0)
+            cout << "Decreasing Regrid Dilation to:" << newDilation << endl;
+          d_cellRegridDilation=newDilation;
+          //reset the dilation overhead
+          d_dilationTimestep=d_sharedState->getCurrentTopLevelTimeStep();
+          retval=true;
+        }
       }
     }
   }
@@ -133,7 +138,6 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
   TAU_PROFILE("RegridderCommon::needsToReGrid()", " ", TAU_USER);
   rdbg << "RegridderCommon::needsToReGrid() BGN" << endl;
-  
   int timeStepsSinceRegrid=d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
   int retval = false;
   
@@ -166,7 +170,9 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       //fine patch deque
       for(int p=0;p<cp->size();p++)
       {
-        deque<Region> cpq, fpq, difference;  
+        //#define CONTAINER deque
+        #define CONTAINER list
+        CONTAINER<Region> cpq, fpq, difference;  
         const Patch *patch=cp->get(p);
 
         Patch::selectType fp;
@@ -187,14 +193,15 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
                             fine_level->mapCellToCoarser(fp[p]->getInteriorCellHighIndex())));
 
         //compute region of coarse patches that do not contain fine patches
-        difference=Region::difference(cpq,fpq);
+        //difference=Region::difference(cpq,fpq);
+        Region::difference(cpq,fpq,difference);
       
         //get flags for coarse patch
         constCCVariable<int> flags;
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(deque<Region>::iterator region=difference.begin();region<difference.end();region++)
+        for(CONTAINER<Region>::iterator region=difference.begin();region!=difference.end();region++)
         {
           for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
@@ -221,11 +228,6 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   
   if(retval==true)
     d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-
-  if(dbg_barrier.active())
-  {
-    MPI_Barrier(d_myworld->getComm());
-  }
 
   rdbg << "RegridderCommon::needsToReGrid( " << retval << " ) END" << endl;
   return retval;
@@ -314,7 +316,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
   d_isAdaptive = true;  // use if "adaptive" not there
   regrid_spec->get("adaptive", d_isAdaptive);
-  if (!d_isAdaptive) {
+  
+  if (d_myworld->myrank() == 0 &&!d_isAdaptive) {
     cout << "Regridder inactive.  Using static Grid.\n";
   }
 

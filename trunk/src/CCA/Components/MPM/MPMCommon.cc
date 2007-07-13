@@ -33,9 +33,19 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     string index("");
     ps->getAttribute("index",index);
     stringstream id(index);
-    int index_val = -1;
+    const int DEFAULT_VALUE = -1;
+    int index_val = DEFAULT_VALUE;
+
     id >> index_val;
-    //cout << "Material attribute = " << index_val << endl;
+
+    if( !id ) {
+      // stringstream parsing failed... on many (most) systems, the
+      // original value assigned to index_val would be left
+      // intact... but on some systems (redstorm) it inserts garbage,
+      // so we have to manually restore the value.
+      index_val = DEFAULT_VALUE;
+    }
+    // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
     MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);

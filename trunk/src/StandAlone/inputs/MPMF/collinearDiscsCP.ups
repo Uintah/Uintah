@@ -33,7 +33,6 @@
 
     <MPM>
        <time_integrator>fracture</time_integrator>
-       <nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <do_crack_propagation>true</do_crack_propagation>
         <smooth_crack_front>false</smooth_crack_front>

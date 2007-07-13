@@ -47,7 +47,6 @@ WARNING
 namespace Uintah {
   class ProcessorGroup;
 class PhysicalConstants;
-class TurbulenceModel;
 using namespace SCIRun;
 
 class Source {
@@ -65,7 +64,7 @@ public:
       // Construct an instance of a Source.
       // PRECONDITIONS
       // POSTCONDITIONS
-      Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const);
+      Source(PhysicalConstants* phys_const);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -196,7 +195,6 @@ public:
 
 private:
 
-      TurbulenceModel* d_turbModel;
       PhysicalConstants* d_physicalConsts;
       string d_mms;
       double d_airDensity, d_heDensity;

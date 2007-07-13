@@ -20,8 +20,8 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
-        <nodes8or27>27</nodes8or27>
-        <artificial_viscosity>true</artificial_viscosity>
+       <interpolator>gimp</interpolator>
+       <artificial_viscosity>true</artificial_viscosity>
     </MPM>
 
     <DataArchiver>

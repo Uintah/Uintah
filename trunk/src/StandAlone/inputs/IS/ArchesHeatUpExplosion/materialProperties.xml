@@ -125,19 +125,12 @@
          </material>
 
          <material name = "PBXproductGases">  <!-- MATL 3 -->
-           <EOS type = "JWLC">
-             <A>  8.580805e11</A>
-             <B>  7.546e9    </B>
-             <C>  7.8127e8   </C>
-             <R1> 4.306      </R1>
-             <R2> 0.80       </R2>
-             <om> 0.30       </om>
-             <rho0>1894.0    </rho0>
+           <EOS type="hard_sphere_gas">
+              <b> 1.4e-3 </b>
            </EOS>
-           <includeFlowWork>            false          </includeFlowWork>
            <dynamic_viscosity>          0.0            </dynamic_viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
-           <specific_heat>              544.96         </specific_heat>
+           <specific_heat>              716         </specific_heat>
            <gamma>                      1.4            </gamma>
            <geom_object>
                   <box>
@@ -147,7 +140,7 @@
              <res>                      [2,2,2]       </res>
              <velocity>           [0.0,0.0,0.0]       </velocity>
              <temperature>        300.0               </temperature>
-            <density>            1.93782675228839    </density>
+            <density>             1.1773508           </density>
              <pressure>           101325.0            </pressure>
            </geom_object>
          </material>

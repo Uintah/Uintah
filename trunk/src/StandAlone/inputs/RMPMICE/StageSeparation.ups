@@ -223,7 +223,6 @@
     </CFD>
     <MPM>
         <time_integrator>         explicit    </time_integrator>
-        <nodes8or27>              8           </nodes8or27>
         <withColor>               true        </withColor>
         <create_new_particles>    false       </create_new_particles>
         <erosion algorithm = "none"/>

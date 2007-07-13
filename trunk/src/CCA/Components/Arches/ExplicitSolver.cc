@@ -113,7 +113,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   }
 
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
-					  d_turbModel, d_boundaryCondition,
+					  d_boundaryCondition,
 					  d_physicalConsts, d_myworld);
   d_pressSolver->setMMS(d_doMMS);
   d_pressSolver->problemSetup(db); // d_mmInterface

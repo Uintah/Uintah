@@ -61,7 +61,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <sgi_stl_warnings_off.h>
 #include <set>
-#include <map>
 #include <numeric>
 #include <algorithm>
 #include <limits>
@@ -350,8 +349,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   }
 
   t->computes(lb->NC_CCweightLabel, one_matl);
-  if (flags->d_temp_solve == false)
-    t->computes(lb->gTemperatureLabel,one_matl);
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
@@ -572,12 +569,7 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
           NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }
       }
-   }
-   if (flags->d_temp_solve == false) {
-     NCVariable<double> gTemperature;
-     new_dw->allocateAndPut(gTemperature, lb->gTemperatureLabel,    0, patch);
-     gTemperature.initialize(0.);
-   }
+    }
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
@@ -698,10 +690,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
   }
-  t->requires(Task::OldDW,lb->NC_CCweightLabel, one_matl,Ghost::AroundCells,1);
-  if (flags->d_temp_solve == false)
-    //    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::AroundCells,1);
-    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::None,0);
+  t->requires(Task::OldDW,lb->NC_CCweightLabel,one_matl,Ghost::AroundCells,1);
 
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
@@ -1809,13 +1798,11 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw)
 {
-  static int timestep=0;
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t\t");
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
@@ -1829,7 +1816,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     // Create arrays for the grid data
-    constNCVariable<double> gTemperatureOld;
     NCVariable<double> gTemperature;
     StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
       gExternalHeatRate(numMatls),gExternalHeatFlux(numMatls),
@@ -1857,8 +1843,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     new_dw->allocateAndPut(gTemperature,lb->gTemperatureLabel, 0,patch);
     gTemperature.initialize(0.0);
-    if (flags->d_temp_solve == false)
-      old_dw->get(gTemperatureOld, lb->gTemperatureLabel, 0,patch,Ghost::None,0);
 
     // carry forward interpolation weight
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2001,8 +1985,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
     }
 
-#define debug 
-#undef debug
 
     if (flags->d_temp_solve == true) {
     // This actually solves for the grid temperatures assuming a linear
@@ -2013,12 +1995,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // the right hand side by the transpose.  This will yield a matrix
     // that is 8 x 8 and will yield the nodal temperatures even when 
     // the number of particles is less than the 8 (number of grid nodes).
-
-
-      multimap<IntVector, particleTempShape> cell_map;
-      vector<multimap<IntVector,particleTempShape> > sparse_cell_map(7);
       for (int m = 0; m < numMatls; m++) {
-
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
         int matl = mpm_matl->getDWIndex();
         
@@ -2032,185 +2009,80 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         
         old_dw->get(px,             lb->pXLabel,                 pset);
         old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
-
         
-        for (ParticleSubset::iterator iter = pset->begin(); iter < pset->end();
-             iter++) {
-          vector<IntVector> ni_cell(interpolator->size());
-
-          interpolator->findCellAndWeights(px[*iter],ni_cell,S);
         
-          particleTempShape ptshape;
-
-          ptshape.particleTemps = pTemperature[*iter];
-          ptshape.cellNodes = ni_cell;
-          ptshape.shapeValues = S;
-
-          IntVector cellID = ni_cell[0];
-          cell_map.insert(pair<IntVector,particleTempShape>(cellID,ptshape));
-        }
-      }
-#ifdef debug
-      cout << "size of cell_map before = " << cell_map.size() << endl;
-#endif
-      for (multimap<IntVector,particleTempShape>::iterator iter = 
-             cell_map.begin(); iter != cell_map.end(); 
-           iter = cell_map.upper_bound(iter->first)) {
-#ifdef debug
-        cout << "cell = " << iter->first << " temp = " 
-             << iter->second.particleTemps << " count = " 
-             << cell_map.count(iter->first) << endl;
-#endif
-
-        
-        if (cell_map.count(iter->first) < 8 ) {
-#ifdef debug
-          cout << "Inserting cell " << iter->first << " into sparse_cell_map" 
-               << endl;
-#endif
-          multimap<IntVector,particleTempShape>& smap = 
-            sparse_cell_map[cell_map.count(iter->first)-1];
-        
-          pair<multimap<IntVector,particleTempShape>::iterator,
-            multimap<IntVector,particleTempShape>::iterator> eq_range;
-          eq_range = cell_map.equal_range(iter->first);
-          IntVector cellID = iter->first;
-          
-          smap.insert(eq_range.first,eq_range.second);
-          cell_map.erase(eq_range.first,eq_range.second);
-        }  
-
-      }
-#ifdef debug
-      cout << "size of cell_map after = " << cell_map.size() << endl;
-
-      for (int i = 0; i < 7; i++) {
-        cout << "size of sparse_cell_map[" << i << "] after = " 
-             << sparse_cell_map[i].size() << endl;
-      }
-#endif
-      // Process all of the cells with 8 particles in them
-      FastMatrix A(8,8);
-      double B[8];
-#ifdef debug    
-      cout << "Working on cells with 8 particles" << endl;
-#endif
-      for (multimap<IntVector,particleTempShape>::iterator iter = 
-             cell_map.begin(); iter != cell_map.end(); 
-           iter=cell_map.upper_bound(iter->first)) {
-#ifdef debug        
-        cout << "working on cell " << iter->first << endl;
-#endif
-
-        pair<multimap<IntVector,particleTempShape>::iterator,
-            multimap<IntVector,particleTempShape>::iterator> eq_range;
-
-        eq_range = cell_map.equal_range(iter->first);
-        int count = 0;
-
-        particleTempShape ptshape;
-        for (multimap<IntVector,particleTempShape>::iterator it = 
-               eq_range.first; it != eq_range.second; it++) {
-          ptshape = it->second;
-          
-          B[count] = ptshape.particleTemps;
-          
-          for (int j = 0; j < 8; j++) {
-            A(count,j) = ptshape.shapeValues[j];
-          }
-          count++;
-        }
-        
-        A.destructiveSolve(B);
-        A.zero();
-        for (int j = 0; j < 8; j++) {
-          if (patch->containsNode(ptshape.cellNodes[j])) {
-            gTemperature[ptshape.cellNodes[j]] = B[j];
-#ifdef debug
-            cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
-                 << gTemperature[ptshape.cellNodes[j]] << endl;
-#endif
-          }
-        }
-      }
-
-      // Work on the cells that have fewer than 8 particles in them
-      for (int i = 6; i >= 0; i--) {
-#ifdef debug
-        cout << "Working on cells with " << i + 1 << " particles" << endl;
-#endif
-        multimap<IntVector,particleTempShape>& smap = sparse_cell_map[i];
-
         FastMatrix A(8,8);
         double B[8];
-
-        for (multimap<IntVector,particleTempShape>::iterator it = smap.begin();
-             it != smap.end();it=smap.upper_bound(it->first)) {
-#ifdef debug
-          cout << "working on cell " << it->first << endl;
-#endif
-          
-          pair<multimap<IntVector,particleTempShape>::iterator,
-            multimap<IntVector,particleTempShape>::iterator> eq_range;
-          
-          eq_range = smap.equal_range(it->first);
-          int count = 0;
+        
+        ParticleSubset::iterator iter = pset->begin();
+        
+        
+        vector<IntVector> ni_cell(interpolator->size());
+        if (iter != pset->end())
+          interpolator->findCellAndWeights(px[*iter], ni_cell, S);
+        
+        int numParticles = 0;
+        
+        while (iter != pset->end() ) {
+          interpolator->findCellAndWeights(px[*iter], ni, S);
           A.zero();
-          for (int i = 0; i < 8; i++) B[i] = 0.;
-          particleTempShape ptshape;
-
-          for (multimap<IntVector, particleTempShape>::iterator i =
-                 eq_range.first; i != eq_range.second; i++) {
-            ptshape = i->second;
-            B[count] = ptshape.particleTemps;
+          for (int i = 0; i<8;i++) B[i] = 0.;
+          
+          while(ni_cell[0] == ni[0] && iter != pset->end()) {
+#if 0
+            cout << "numParticles = " << numParticles << endl;
+            cout << "px[" << *iter << "]= " << px[*iter] << endl;
+#endif
             for (int j = 0; j < 8; j++) {
-              A(count,j) = ptshape.shapeValues[j];
+#if 0
+              cout << "Filling A[" << numParticles << "][" << j << "]" << endl;
+#endif
+              A(numParticles,j) = S[j];
             }
-            count++;
+#if 0
+            cout << "pTemperature[" << *iter << "] = " << pTemperature[*iter] 
+                 << endl;
+#endif
+            B[numParticles] = pTemperature[*iter];
+            iter++;
+            numParticles++;
+#if 0
+            cout << "*iter = " << *iter << " numParticles = " << numParticles 
+                 << endl;
+#endif
+            if (iter != pset->end())
+              interpolator->findCellAndWeights(px[*iter], ni, S);
           }
-
-          FastMatrix A_t(8,8);
-          A_t.transpose(A);
-          double A_tB[8];
-          A_t.multiply(B,A_tB);
-          FastMatrix A_tA(8,8);
-          A_tA.multiply(A_t,A);
           
+          if (numParticles < 8) {
+            FastMatrix A_t(8,8);
+            A_t.transpose(A);
+            A.print(cout);
+            A_t.print(cout);
+            double A_tB_t[8];
+            A_t.multiply(B,A_tB_t);
+            FastMatrix A_tA(8,8);
+            A_tA.multiply(A_t,A);
+            A_tA.print(cout);
+            cout << "condition number = " << A_tA.conditionNumber() << endl;
+            A_tA.destructiveSolve(A_tB_t);
+            
+          } else {
+            A.destructiveSolve(B);
+          }
           for (int i = 0; i < 8; i++) {
-            if (patch->containsNode(ptshape.cellNodes[i])) {
-              if (gTemperature[ptshape.cellNodes[i]] != 0.0) {
-#ifdef debug
-                cout << "i = " << i << " setting gTemperature[" 
-                     << ptshape.cellNodes[i] << "]=" 
-                     << gTemperature[ptshape.cellNodes[i]] << endl;
+            if(patch->containsNode(ni_cell[i])) {
+              gTemperature[ni_cell[i]] = B[i];
+#if 0
+              cout << "gTemperature[" << ni_cell[i] << "]= " 
+                   << gTemperature[ni_cell[i]]  << endl;
 #endif
-                for (int j = 0; j < 8; j++)
-                  A_tA(i,j) = 0.;
-                
-                A_tA(i,i) = 1.0;
-                A_tB[i] = gTemperature[ptshape.cellNodes[i]];
-              }
             }
           }
           
-          A_tA.destructiveSolve(A_tB);
-          for (int j = 0; j < 8; j++) {
-            if (patch->containsNode(ptshape.cellNodes[j])) {
-              gTemperature[ptshape.cellNodes[j]] = A_tB[j];
-#ifdef debug
-              cout << "gTemperature[" << ptshape.cellNodes[j] << "] = " 
-                   << gTemperature[ptshape.cellNodes[j]] << endl;
-#endif
-            }
-          }
-        }
-      }
-    }
-    if (flags->d_temp_solve == false) {
-      if(timestep>0){
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-          IntVector c = *iter;
-          gTemperature[c] = gTemperatureOld[c];
+          numParticles = 0;
+          copy(ni.begin(),ni.end(),ni_cell.begin());
+          
         }
       }
     }
@@ -2232,7 +2104,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     delete interpolator;
   }  // End loop over patches
-  timestep++;
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
@@ -2665,7 +2536,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 		 <<"\t\t\t IMPM"<< "\n" << "\n";
     }
     
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -3176,7 +3047,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
@@ -3376,7 +3247,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 		 <<"\t\t IMPM"<< "\n" << "\n";
     }
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
@@ -3573,7 +3444,10 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifies(lb->pExternalHeatFluxLabel);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-  }
+  } 
+  else
+    delete loadCurveIndex;
+
 }
 
 

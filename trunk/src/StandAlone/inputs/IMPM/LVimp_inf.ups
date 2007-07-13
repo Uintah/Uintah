@@ -41,9 +41,9 @@
    </DataArchiver>
 
     <MPM>
-       <time_integrator>implicit</time_integrator>
-       <nodes8or27>8</nodes8or27>
-       <use_load_curves>true</use_load_curves>
+        <time_integrator>implicit</time_integrator>
+        <interpolator>linear</interpolator>
+        <use_load_curves>true</use_load_curves>
         <do_grid_reset>true</do_grid_reset>
         <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>

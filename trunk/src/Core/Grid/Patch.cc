@@ -1056,9 +1056,9 @@ Patch::getNodeIterator(const Box& b) const
    return NodeIterator(low, high);
 }
 
-NodeIterator Patch::getNodeIterator(int n8or27) const
+NodeIterator Patch::getNodeIterator(string interp_type) const
 {
-  if(n8or27!=27){
+  if(interp_type!="gimp"){
    return getNodeIterator();
   }
   else{

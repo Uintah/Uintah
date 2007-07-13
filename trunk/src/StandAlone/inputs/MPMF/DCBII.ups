@@ -36,7 +36,6 @@
 
     <MPM>
        <time_integrator>fracture</time_integrator>
-       <nodes8or27>8</nodes8or27>
         <artificial_damping_coeff>5.e-7</artificial_damping_coeff>
        <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <use_volume_integral>false</use_volume_integral>

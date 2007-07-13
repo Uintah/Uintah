@@ -17,7 +17,6 @@ namespace Uintah {
   class ArchesLabel;
 class ProcessorGroup;
 class ArchesVariables;
-class TurbulenceModel;
 class PhysicalConstants;
 class Discretization;
 class Source;
@@ -75,7 +74,6 @@ public:
       //   A linear level solver is partially constructed.  
       PressureSolver(const ArchesLabel* label,
 		     const MPMArchesLabel* MAlb,
-		     TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
 		     PhysicalConstants* phys_const,
 		     const ProcessorGroup* myworld);
@@ -208,8 +206,6 @@ private:
       Source* d_source;
       // linear solver
       LinearSolver* d_linearSolver;
-      // turbulence model
-      TurbulenceModel* d_turbModel;
       // boundary condition
       BoundaryCondition* d_boundaryCondition;
       // physical constants

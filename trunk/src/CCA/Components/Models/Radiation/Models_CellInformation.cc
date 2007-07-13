@@ -13,7 +13,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #ifndef _WIN32 // no fortran
-#include <CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
+#  include <CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
 #endif
 
 Models_CellInformation::Models_CellInformation(const Patch* patch)

@@ -37,8 +37,8 @@
 #include <vector>
 #include <stdlib.h>
 
-#ifdef _WIN32
-#include <time.h>
+#if defined(_WIN32) || defined(REDSTORM)
+#  include <time.h>
 #endif
 
 using namespace Uintah;
@@ -50,7 +50,6 @@ using namespace std;
 #else
 #define UINTAHSHARE
 #endif
-extern UINTAHSHARE DebugStream dbg_barrier;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
@@ -793,11 +792,6 @@ void SchedulerCommon::compile()
   }
 #endif
   m_locallyComputedPatchVarMap->makeGroups();
-
-  if(dbg_barrier.active())
-  {
-    MPI_Barrier(d_myworld->getComm());
-  }
 }
 
 bool SchedulerCommon::isOldDW(int idx) const

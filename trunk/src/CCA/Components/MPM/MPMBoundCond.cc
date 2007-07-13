@@ -26,7 +26,8 @@ MPMBoundCond::~MPMBoundCond()
 
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                                         const string& type, 
-                                        NCVariable<Vector>& variable,int n8or27)
+                                        NCVariable<Vector>& variable,
+                                        string interp_type)
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -35,7 +36,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0);
-      if(n8or27==27){
+      if(interp_type=="gimp"){
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
@@ -61,7 +62,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *b;
                 variable[nd] = bcv;
               }
-              if(n8or27==27){
+              if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -80,7 +81,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *b;
                 variable[nd] = Vector(0,0,0);
               }
-              if(n8or27==27){
+              if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = Vector(0,0,0);
@@ -97,7 +98,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *b;
                 variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
               }
-              if(n8or27==27){
+              if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
@@ -109,7 +110,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *b;
                 variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
               }
-              if(n8or27==27){
+              if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
@@ -121,7 +122,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *b;
                 variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
               }
-              if(n8or27==27){
+              if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
@@ -140,7 +141,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                                         const string& type, 
                                         NCVariable<double>& variable,
-                                        int n8or27)
+                                        string interp_type)
 
 {
   for(Patch::FaceType face = Patch::startFace;
@@ -149,7 +150,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0);
-      if(n8or27==27){
+      if(interp_type=="gimp"){
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
@@ -169,7 +170,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               IntVector nd = *b;
               variable[nd] = bcv;
             }
-            if(n8or27==27){
+            if(interp_type=="gimp"){
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;
                 variable[nd] = bcv;
@@ -193,7 +194,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               IntVector nd = *b;
               variable[nd] = bcv;
             }
-            if(n8or27==27){
+            if(interp_type=="gimp"){
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;
                 variable[nd] = bcv;
@@ -201,7 +202,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             }
           }
 
-          if (bc->getKind() == "Neumann" && n8or27==27) {
+          if (bc->getKind() == "Neumann" && interp_type=="gimp") {
             Vector deltax = patch->dCell();
             double dx = -9;
             IntVector off(-9,-9,-9);
@@ -255,7 +256,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                                         const string& type, 
                                         NCVariable<double>& variable,
                                         constNCVariable<double>& gvolume,
-                                        int n8or27)
+                                        string interp_type)
 {
   Vector deltax = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;

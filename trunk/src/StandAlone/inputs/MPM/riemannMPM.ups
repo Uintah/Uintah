@@ -79,7 +79,7 @@
    </DataArchiver>
 
     <MPM>
-        <nodes8or27>27</nodes8or27>
+        <interpolator>gimp</interpolator>
         <artificial_viscosity>false</artificial_viscosity>
         <do_grid_reset>true</do_grid_reset>
     </MPM>

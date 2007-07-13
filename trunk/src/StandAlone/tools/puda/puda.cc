@@ -139,23 +139,15 @@ gridstats( DataArchive* da,
     GridP grid = da->queryGrid(t);
     grid->performConsistencyCheck();
     grid->printStatistics();
-    Vector domainLength;
-    grid->getLength(domainLength, "minusExtraCells");
-    cout << "Domain Length:        " << domainLength << endl;
-  
+
     for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
       cout << "Level: index " << level->getIndex() << ", id " << level->getID() << endl;
-      
-      IntVector lo, hi;
-      level->findInteriorCellIndexRange(lo,hi);
-      cout << "Total Number of Cells:" << hi-lo<<endl;
-      cout << "dx:                   " << level->dCell() << endl;
 
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-        cout << *patch << endl; 
+        cout << *patch << endl;
         cout << "\t   BC types: x- " << patch->getBCType(Patch::xminus) << ", x+ "<<patch->getBCType(Patch::xplus)
              << ", y- "<< patch->getBCType(Patch::yminus) << ", y+ "<< patch->getBCType(Patch::yplus)
              << ", z- "<< patch->getBCType(Patch::zminus) << ", z+ "<< patch->getBCType(Patch::zplus)<< endl;

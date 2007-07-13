@@ -37,7 +37,6 @@
 
     <MPM>
        <time_integrator>fracture</time_integrator>
-       <nodes8or27>8</nodes8or27>
         <use_load_curves> true </use_load_curves>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <use_volume_integral>false</use_volume_integral>

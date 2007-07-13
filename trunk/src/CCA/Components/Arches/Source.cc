@@ -6,7 +6,6 @@
 #include <CCA/Components/Arches/Discretization.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
-#include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -40,9 +39,8 @@ using namespace SCIRun;
 //****************************************************************************
 // Constructor for Source
 //****************************************************************************
-Source::Source(TurbulenceModel* turb_model, PhysicalConstants* phys_const)
-                           :d_turbModel(turb_model), 
-                            d_physicalConsts(phys_const)
+Source::Source(PhysicalConstants* phys_const)
+                           :d_physicalConsts(phys_const)
 {
 }
 

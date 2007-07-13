@@ -137,7 +137,7 @@ void HierarchicalRegridder::problemSetup(const ProblemSpecP& params,
     d_patchActive[k]->initialize(0);
     d_patchCreated[k]->initialize(0);
     d_patchDeleted[k]->initialize(0);
-    if (k < (d_maxLevels)) {
+    if (k < (d_maxLevels-1)) {
       problemSetup_BulletProofing(k);
     }
   }

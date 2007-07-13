@@ -190,7 +190,6 @@
     </CFD>
     <MPM>
         <time_integrator>explicit</time_integrator>
-        <nodes8or27>8</nodes8or27>
     </MPM>
 
     <!--____________________________________________________________________-->

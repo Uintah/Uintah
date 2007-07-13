@@ -37,8 +37,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <Core/Util/uintahshare.h> // for dbg_barrier's UINTAHSHARE
-
 using std::cerr;
 using std::cout;
 
@@ -47,7 +45,7 @@ using namespace Uintah;
 
 DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
-extern UINTAHSHARE DebugStream dbg_barrier;
+static DebugStream dbg_barrier("MPIBarriers",false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
@@ -126,8 +124,14 @@ void AMRSimulationController::run()
    if (d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep() < max_iterations) {
      max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
    }
+   double start,time[4]={0};
+   
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
+     for(int i=0;i<5;i++)
+     {
+       time[i]=0;
+     }
 #ifdef USE_TAU_PROFILING
      char tmpname[512];
      sprintf (tmpname, "Iteration %d", iterations);
@@ -136,6 +140,13 @@ void AMRSimulationController::run()
 #endif
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
        doRegridding(currentGrid, false);
+     }
+    
+     if(dbg_barrier.active())
+     {
+       start=Time::currentSeconds();
+       MPI_Barrier(d_myworld->getComm());
+       time[0]+=Time::currentSeconds()-start;
      }
 
      // Compute number of dataWarehouses - multiplies by the time refinement
@@ -203,6 +214,12 @@ void AMRSimulationController::run()
        d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
        d_scheduler->execute();
      }
+     if(dbg_barrier.active())
+     {
+       start=Time::currentSeconds();
+       MPI_Barrier(d_myworld->getComm());
+       time[1]+=Time::currentSeconds()-start;
+     }
 
      // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
      //   Needs to be done before advanceDataWarehouse
@@ -243,6 +260,12 @@ void AMRSimulationController::run()
          d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
        }
      }
+     if(dbg_barrier.active())
+     {
+       start=Time::currentSeconds();
+       MPI_Barrier(d_myworld->getComm());
+       time[2]+=Time::currentSeconds()-start;
+     }
 
      // adjust the delt for each level and store it in all applicable dws.
      double delt_fine = delt;
@@ -269,6 +292,24 @@ void AMRSimulationController::run()
      printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep()-1,delt,t);
      // Execute the current timestep, restarting if necessary
      executeTimestep(t, delt, currentGrid, totalFine);
+     if(dbg_barrier.active())
+     {
+       start=Time::currentSeconds();
+       MPI_Barrier(d_myworld->getComm());
+       time[3]+=Time::currentSeconds()-start;
+       double avg[4];
+       MPI_Reduce(&time,&avg,4,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+       if(d_myworld->myrank()==0)
+       {
+          cout << "Barrier Time: "; 
+          for(int i=0;i<4;i++)
+          {
+            avg[i]/=d_myworld->size();
+            cout << avg[i] << " ";
+          }
+          cout << endl;
+       }
+     }
 
      if(d_output){
        d_output->executedTimestep(delt, currentGrid);
@@ -619,15 +660,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
         cout << ", scheduling and copying took " << scheduleTime << ")";
       cout << endl;
     }
-    if(dbg_barrier.active())
-    {
-      MPI_Barrier(d_myworld->getComm());
-    }
     return true;
-  }
-  if(dbg_barrier.active())
-  {
-    MPI_Barrier(d_myworld->getComm());
   }
   return false;
 }
@@ -782,11 +815,6 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       }
     }
   } while(!success);
-
-  if(dbg_barrier.active())
-  {
-    MPI_Barrier(d_myworld->getComm());
-  }
 }
 
 void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,

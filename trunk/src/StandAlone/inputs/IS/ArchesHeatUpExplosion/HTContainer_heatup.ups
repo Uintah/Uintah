@@ -54,7 +54,9 @@
   <Debug>
   </Debug>
 
-  
+  <!--____________________________________________________________________-->
+  <!--    M P M     P  A  R  A  M  E  T  E  R  S                          -->
+  <!--____________________________________________________________________-->  
   <MPM>
     <time_integrator>               implicit </time_integrator>
     <dynamic>                       true     </dynamic>
@@ -106,119 +108,4 @@
 
   <include href="physicalBC.xml"/>
 
-<<<<<<< .working
-          <initial_mean_porosity>         0.005 </initial_mean_porosity>
-          <initial_std_porosity>          0.001 </initial_std_porosity>
-          <critical_porosity>             0.3   </critical_porosity>
-          <frac_nucleation>               0.1   </frac_nucleation>
-          <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
-          <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
-          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
-
-          <initial_mean_scalar_damage>    0.005  </initial_mean_scalar_damage>
-          <initial_std_scalar_damage>     0.001 </initial_std_scalar_damage>
-          <critical_scalar_damage>        1.0   </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
-        </constitutive_model>
-        <geom_object>
-          <difference>
-            <cylinder>
-              <bottom>           [0.0,0.0,-.06985]   </bottom>
-              <top>              [0.0,0.0, .06985]   </top>
-              <radius>           0.05715             </radius>
-            </cylinder>
-            <cylinder>
-              <bottom>           [0.0,0.0,-.0508]   </bottom>
-              <top>              [0.0,0.0, .0508]   </top>
-              <radius>           0.0508             </radius>
-            </cylinder>
-          </difference>
-          <res>                 [2,2,2]         </res>
-          <velocity>            [0.0,0.0,0.0]   </velocity>
-          <temperature>        300.0            </temperature>
-        </geom_object>
-      </material>
-
-      <material  name = "reactant">    <!-- MATL 1 -->
-         <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
-         <constitutive_model type = "visco_scram">
-          <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
-          <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
-          <randomize_parameters>          false </randomize_parameters>
-          <use_time_temperature_equation> false </use_time_temperature_equation>
-          <useObjectiveRate>              false </useObjectiveRate>
-          <useModifiedEOS>                true  </useModifiedEOS>        
-        </constitutive_model>
-        <geom_object>
-          <cylinder label = "inner cylinder">
-            <bottom>           [0.0,0.0,-.0508]   </bottom>
-            <top>              [0.0,0.0, .0508]   </top>
-            <radius>           0.0508             </radius>
-          </cylinder>
-          <res>                 [2,2,2]         </res>
-          <velocity>            [0.0,0.0,0.0]   </velocity>
-          <temperature>         300.0           </temperature>
-        </geom_object>
-      </material>
-
-      <contact>
-        <type>approach</type>
-        <materials>              [0,1]         </materials>
-        <mu> 0.0 </mu>
-      </contact>
-      <thermal_contact/>
-    </MPM>
-
-    </MaterialProperties>
-
-
-<!--
-
-For fast heat tape experiment:
-   Power Input = 76 kW/m^2
-   Grid Spacing = .2/100  (resolution) = .002
-   Partical Spacing = Grid Spacing/#particles = .002/2 = .001
-   Particle Surface Area = (.001)^2 = 1e-6
-   Flux applied = PowerInput* Particle SA = 76,000 * 1e-6 = .076 Watts
-
--->
-
-    <PhysicalBC>
-        <MPM>
-        <arches_heat_flux> 
-       <!-- <heat_flux> -->
-                <geom_object>
-                    <cylinder>
-                        <bottom>           [0.0,0.0,-.06985]   </bottom>
-                        <top>              [0.0,0.0, .06985]   </top>
-                        <radius>           0.05715   </radius>
-                    </cylinder>
-                </geom_object>
-                <polynomial_data>
-                  <file> case3/polynomial_97.dat</file> 
-                  <file> case3/polynomial_98.dat</file> 
-                  <file> case3/polynomial_99.dat</file> 
-                  <file> case3/polynomial_100.dat</file> 
-                  <file> case3/polynomial_101.dat</file> 
-                  <file> case3/polynomial_102.dat</file> 
-                </polynomial_data>
-                <load_curve>
-                  <id>1</id>
-                  <time_point>
-                    <time> 0 </time>
-                    <load> 76000</load>
-                  </time_point>
-                  <time_point>
-                    <time> 1 </time>
-                    <load> 76000 </load>
-                  </time_point>
-                 </load_curve>
-        </arches_heat_flux> 
-        <!-- </heat_flux> -->
-        </MPM>
-    </PhysicalBC>
-
-       
-=======
->>>>>>> .merge-right.r37761
 </Uintah_specification>

@@ -230,6 +230,9 @@ ProblemSpec::get(const string& name, double &value)
     checkForInputError(stringValue,"double"); 
     istringstream ss(stringValue);
     ss >> value;
+    if( !ss ) {
+      printf( "WARNING: ProblemSpec.cc: get(%s, double): stringstream failed...\n", name.c_str() );
+    }
   }
           
   return ps;
@@ -249,6 +252,9 @@ ProblemSpec::get(const string& name, unsigned int &value)
     checkForInputError(stringValue,"int"); 
     istringstream ss(stringValue);
     ss >> value;
+    if( !ss ) {
+      printf( "WARNING: ProblemSpec.cc: get(%s, uint): stringstream failed...\n", name.c_str() );
+    }
   }
           
   return ps;
@@ -269,6 +275,9 @@ ProblemSpec::get(const string& name, int &value)
     checkForInputError(stringValue,"int");
     istringstream ss(stringValue);
     ss >> value;
+    if( !ss ) {
+      printf( "WARNING: ProblemSpec.cc: get(%s, int): stringstream failed...\n", name.c_str() );
+    }
   }
 
   return ps;
@@ -289,6 +298,9 @@ ProblemSpec::get(const string& name, long &value)
     checkForInputError(stringValue,"int");
     istringstream ss(stringValue);
     ss >> value;
+    if( !ss ) {
+      printf( "WARNING: ProblemSpec.cc: get(%s, long): stringstream failed...\n", name.c_str() );
+    }
   }
 
   return ps;
@@ -309,6 +321,11 @@ ProblemSpec::get(const string& name, bool &value)
     istringstream result_stream(stringValue);
     string nospace_cmp;
     result_stream >> nospace_cmp;
+
+    if( !result_stream ) {
+      printf( "WARNING: ProblemSpec.cc: get(%s, bool): stringstream failed...\n", name.c_str() );
+    }
+
     if (nospace_cmp == "false") {
       value = false;
     }
@@ -1080,6 +1097,9 @@ ProblemSpec::getAttribute(const string& name, double &value)
   checkForInputError(stringValue,"double"); 
   istringstream ss(stringValue);
   ss >> value;
+  if( !ss ) {
+    printf( "WARNING: ProblemSpec.cc: getAttribute(%s, double): stringstream failed...\n", name.c_str() );
+  }
           
   return true;
 }
