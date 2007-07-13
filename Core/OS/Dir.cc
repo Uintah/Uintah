@@ -113,22 +113,23 @@ Dir::removeDir( const char * dirName )
 
   file = readdir(dir);
   while( file ) {
-    if( file->d_type & DT_DIR ) {
-      cout << "is a dir, recurse\n";
-      removeDir( file->d_name );
-    } else {
-      cout << "is a file, remove\n";
-      
-      int rc = std::remove( file->d_name );
-      if (rc != 0) {
-        cerr << "WARNING: remove() failed for '" << file->d_name 
-             << "'.  Return code is: " << rc << "\n";
-        return false;
+    if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") !=0) {
+      string fullpath = string(dirName) + "/" + file->d_name;
+      if( file->d_type & DT_DIR ) {
+        removeDir( fullpath.c_str() );
+      } else {
+        int rc = ::remove( fullpath.c_str() );
+        if (rc != 0) {
+          cout << "WARNING: remove() failed for '" << fullpath.c_str() 
+               << "'.  Return code is: " << rc << ", errno: " << errno << ": " << strerror(errno) << "\n";
+          return false;
+        }
       }
     }
     file = readdir(dir);
   }
 
+  closedir(dir);
   int code = rmdir( dirName );
 
   if (code != 0) {

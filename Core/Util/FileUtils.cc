@@ -222,7 +222,7 @@ testFilesystem( string directoryPath )
   fp = fopen( fileName.c_str(), "w" );
   if( fp == NULL ) {
     printf( "ERROR: testFilesystem() failed to create a temporary file in %s\n", directoryPath.c_str() );
-    printf( "       errno is %d\n", errno );
+    printf( "       errno is %d: %s\n", errno, strerror(errno) );
       return false;
   }
 
@@ -232,7 +232,7 @@ testFilesystem( string directoryPath )
     int numWritten = fwrite( myStr, 1, 11, fp );
     if( numWritten != 11 ) {
       printf( "ERROR: testFilesystem() failed to write data to temp file in %s\n", directoryPath.c_str() );
-      printf( "       iteration: %d, errno is %d\n", cnt, errno );
+      printf( "       iteration: %d, errno is %d: %s\n", cnt, errno, strerror(errno) );
       return false;
     }
   }
@@ -241,7 +241,7 @@ testFilesystem( string directoryPath )
   int result = fclose( fp );
   if (result != 0) {
     printf( "WARNING: fclose() failed while testing filesystem.\n" );
-    printf( "         errno is %d\n", errno );
+    printf( "         errno is %d: %s\n", errno, strerror(errno) );
     return false;
   }
 
@@ -252,7 +252,7 @@ testFilesystem( string directoryPath )
     printf( "FILESYSTEM CHECK: Test file size is: %d\n", buf.st_size );
   } else {
     printf( "WARNING: stat() failed while testing filesystem.\n" );
-    printf( "         errno is %d\n", errno );
+    printf( "         errno is %d: %s\n", errno, strerror(errno) );
     return false;
   }
 
@@ -260,7 +260,7 @@ testFilesystem( string directoryPath )
   int rc = remove( fileName.c_str() );
   if (rc != 0) {
     printf( "WARNING: remove() failed while testing filesystem.\n" );
-    printf( "         errno is %d\n", errno );
+    printf( "         errno is %d: %s\n", errno, strerror(errno) );
     return false;
   }
   return true;
