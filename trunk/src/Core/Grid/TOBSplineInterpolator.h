@@ -1,14 +1,14 @@
 #ifndef TO_BSPLINE_INTERPOLATOR_H
 #define TO_BSPLINE_INTERPOLATOR_H
 
-#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Core/Grid/ParticleInterpolator.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Patch;
 
-  class SCISHARE TOBSplineInterpolator : public ParticleInterpolator {
+  class UINTAHSHARE TOBSplineInterpolator : public ParticleInterpolator {
 
   //TO = ThirdOrder B Splines 
 

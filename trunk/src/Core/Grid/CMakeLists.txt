@@ -47,6 +47,7 @@ SET(Packages_Uintah_Core_Grid_SRCS
   AMR.cc
   Node27Interpolator.cc
   BSplineInterpolator.cc
+  TOBSplineInterpolator.cc
 
   Variables/CellIterator.cc               
   Variables/ComputeSet.cc                 
