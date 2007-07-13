@@ -108,6 +108,7 @@ public:
 
 bool Thread::initialized = false;
 const char* Thread::defaultAbortMode = "ask";
+bool Thread::callExit = true;
 
 
 bool Thread::isInitialized()
