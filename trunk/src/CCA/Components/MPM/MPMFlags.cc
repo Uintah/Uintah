@@ -2,6 +2,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 //#include <Core/Grid/AMRInterpolator.h>
 #include <SCIRun/Core/Util/DebugStream.h>
@@ -132,6 +133,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     d_8or27 = 8;
   } else if(d_interpolator_type=="gimp"){
     d_interpolator = scinew Node27Interpolator();
+    d_8or27 = 27;
+  } else if(d_interpolator_type=="3rdorderBS"){
+    d_interpolator = scinew TOBSplineInterpolator();
     d_8or27 = 27;
   } else if(d_interpolator_type=="4thorderBS"){
     d_interpolator = scinew BSplineInterpolator();
