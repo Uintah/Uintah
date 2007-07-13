@@ -57,7 +57,7 @@
     <save label="p.particleID"          levels="-1"/>
     <save label="p.mass"                levels="-1"/>
     <save label="p.temperature"         levels="-1"/>
-    <save label="p.volume"              levels="-1"/>
+    <save label="p.velocity"            levels="-1"/>
 <!--
     <save label="p.stress"              levels="-1"/>
     <save label="p.plasticStrain"       levels="-1"/>
