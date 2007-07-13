@@ -302,6 +302,17 @@ DESCRIPTION
             // set to "exit" (or something else) so we don't have to always 
             // wait for the user to input something
             static void setDefaultAbortMode(const char* abortMode);
+
+  private:
+    // If you loaded the thread library (via dlopen for example), and
+    // wanted to unload it, the thread library is designed to call
+    // exit for the application.  This is generally undesirable for
+    // plugins that make use of this library.
+    static bool callExit;
+  public:
+    // This only has an effect for the last thread that exits.
+    static void setCallExit(bool new_val) { callExit = new_val; }
+    static bool getCallExit() { return callExit; }
 	private:
 #ifdef _WIN32
             // in windows, we can't get around this with #define private public

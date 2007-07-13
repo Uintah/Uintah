@@ -603,7 +603,9 @@ Thread::exitAll(int code)
 	}
       }
     }
-    ::exit(code);
+
+    // See Thread.h for why we are doing this.
+    if (Thread::getCallExit()) ::exit(code);
   }
   else if ( !initialized ) {
     // This case happens if the thread library is not being used.
@@ -1093,8 +1095,8 @@ void
 RecursiveMutex::lock()
 {
   Thread* self = Thread::self();
-  int oldstate;
-  Thread_private* p;
+  int oldstate = 0;
+  Thread_private* p = NULL;
   if (self) {
     p = Thread::self()->priv_;
     oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
@@ -1264,8 +1266,8 @@ void
 Semaphore::down(int count)
 {
   Thread* self = Thread::self();
-  int oldstate;
-  Thread_private* p;
+  int oldstate = 0;
+  Thread_private* p = NULL;
   if (self) {
     p = Thread::self()->priv_;
     oldstate = Thread::push_bstack(p, Thread::BLOCK_SEMAPHORE, name_);
@@ -1328,15 +1330,17 @@ void
 ConditionVariable::wait(Mutex& m)
 {
   Thread* self = Thread::self();
-  int oldstate;
-  Thread_private* p;
   if (self) {
-    p = Thread::self()->priv_;
-    oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
-  }
-  pthread_cond_wait(&priv_->cond, &m.priv_->mutex);
-  if (self)
+    Thread_private* p = Thread::self()->priv_;
+    int oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+
+    pthread_cond_wait(&priv_->cond, &m.priv_->mutex);
+
     Thread::pop_bstack(p, oldstate);
+  } else {
+
+    pthread_cond_wait(&priv_->cond, &m.priv_->mutex);
+  }
 }
 
 
@@ -1344,8 +1348,8 @@ bool
 ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
   Thread* self = Thread::self();
-  int oldstate;
-  Thread_private* p;
+  int oldstate = 0;
+  Thread_private* p = NULL;
   if (self) {
     p = Thread::self()->priv_;
     oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
