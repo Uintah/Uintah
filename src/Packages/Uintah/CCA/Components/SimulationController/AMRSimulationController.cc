@@ -316,10 +316,10 @@ void AMRSimulationController::run()
      }
 #ifdef USE_TAU_PROFILING
      TAU_PROFILE_STOP(iteration_timer);
-     TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
-     TAU_PROFILE_START(sleepy);
-     sleep(1);
-     TAU_PROFILE_STOP(sleepy);
+//      TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
+//      TAU_PROFILE_START(sleepy);
+//      sleep(1);
+//      TAU_PROFILE_STOP(sleepy);
 #endif
      t += delt;
      TAU_DB_DUMP();
