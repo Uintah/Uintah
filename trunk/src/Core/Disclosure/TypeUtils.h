@@ -8,6 +8,9 @@
 #endif
 #include <float.h>
 
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+
 using SCIRun::Point;
 using SCIRun::Vector;
 
