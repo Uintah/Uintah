@@ -1,0 +1,7 @@
+#!/bin/csh
+
+set f = $argv
+
+grep -v "extra communication\|This warning has\|This means the data\|Reallocation needed" $f
+ 
+exit
