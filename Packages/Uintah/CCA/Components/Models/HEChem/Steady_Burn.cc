@@ -195,7 +195,8 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   printSchedule(level,"Steady_Burn::scheduleComputeModelSources\t\t\t");  
   t->requires( Task::OldDW, mi->delT_Label);
   
-  Ghost::GhostType  gac = Ghost::AroundCells;  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gan = Ghost::AroundNodes;  
   Ghost::GhostType  gn  = Ghost::None;
   
   // define material subsets  
@@ -217,7 +218,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
   t->requires(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
-  t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gac,1);
+  t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gan,1);
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
   t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
@@ -301,6 +302,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 
     Ghost::GhostType  gn  = Ghost::None;    
     Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gan = Ghost::AroundNodes;
     /* Reactant data */
     old_dw->get(solidTemp,       MIlb->temp_CCLabel,    m0, patch, gac, 1);
     new_dw->get(solidMass,       MIlb->cMassLabel,      m0, patch, gn,  0);
@@ -310,7 +312,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 
 
     constParticleVariable<Point>  px;
-    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gac,1, Mlb->pXLabel);
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gan,1, Mlb->pXLabel);
     old_dw->get(px, Mlb->pXLabel, pset);    
     /* Product Data */
        
