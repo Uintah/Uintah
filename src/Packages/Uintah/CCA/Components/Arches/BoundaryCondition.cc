@@ -5441,15 +5441,24 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
                 !iter.done(); iter++) {
                 Point p = patch->cellPosition(*iter);
                 if (piece->inside(p)) {
-                  if (fi->d_prefill_index == 1)
-                    uVelocity[*iter] = flow_rate/
+                  if (fi->d_prefill_index == 1) {
+                    Point p_shift = patch->cellPosition(*iter-IntVector(1,0,0));
+                    if (piece->inside(p_shift))
+                      uVelocity[*iter] = flow_rate/
                                        (fi->calcStream.d_density * area);
-                  if (fi->d_prefill_index == 2)
-                    vVelocity[*iter] = flow_rate/
+                  }
+                  if (fi->d_prefill_index == 2) {
+                    Point p_shift = patch->cellPosition(*iter-IntVector(0,1,0));
+                    if (piece->inside(p_shift))
+                      vVelocity[*iter] = flow_rate/
                                        (fi->calcStream.d_density * area);
-                  if (fi->d_prefill_index == 3)
-                    wVelocity[*iter] = flow_rate/
+                  }
+                  if (fi->d_prefill_index == 3) {
+                    Point p_shift = patch->cellPosition(*iter-IntVector(0,0,1));
+                    if (piece->inside(p_shift))
+                      wVelocity[*iter] = flow_rate/
                                        (fi->calcStream.d_density * area);
+                  }
                   density[*iter] = fi->calcStream.d_density;
                   scalar[*iter] = fi->streamMixturefraction.d_mixVars[0];
                   if (d_enthalpySolve)
