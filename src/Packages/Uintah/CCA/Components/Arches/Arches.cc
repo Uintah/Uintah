@@ -137,6 +137,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
     db->require("transport_enthalpy", d_calcEnthalpy);
     db->require("model_mixture_fraction_variance", d_calcVariance);
+    db->getWithDefault("transport_extra_scalars", d_calcExtraScalars, false);
   }
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",d_recompile,false);
@@ -260,6 +261,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 					      d_calcEnthalpy,
                                               d_calcVariance,
 					      d_myworld);
+    if (d_calcExtraScalars)
+      throw InvalidValue("Transport of extra scalars by picard solver is not implemented", __FILE__, __LINE__);
   }
   else if (nlSolver == "explicit") {
         d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
@@ -271,6 +274,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 					   d_calcEnthalpy,
                                            d_calcVariance,
 					   d_myworld);
+    d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
   }
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
