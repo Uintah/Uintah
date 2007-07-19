@@ -44,6 +44,7 @@ class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
 class ReactiveScalarSolver; 
+class ExtraScalarSolver; 
 class TurbulenceModel;
 class ScaleSimilarityModel;
 class Properties;
@@ -200,6 +201,9 @@ public:
       }
       inline void setEKTCorrection(bool EKTCorrection) {
         d_EKTCorrection=EKTCorrection;
+      }
+      inline void setCalcExtraScalars(bool calcExtraScalars) {
+        d_calcExtraScalars=calcExtraScalars;
       }
 
 protected :
@@ -395,11 +399,15 @@ private:
     bool d_EKTCorrection;
     bool d_KE_fromFC;
     double d_maxDensityLag;
+
+    ExtraScalarSolver* d_extraScalarSolver;
+    vector<ExtraScalarSolver*> extraScalars;
     
     //linear mms
     double cu, cv, cw, cp, phi0;
     // sine mms
     double amp;
+    bool d_calcExtraScalars;
 
 
 }; // End class ExplicitSolver

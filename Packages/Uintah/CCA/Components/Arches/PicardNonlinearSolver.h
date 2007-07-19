@@ -182,6 +182,8 @@ public:
       inline void setEKTCorrection(bool EKTCorrection) {
         d_EKTCorrection=EKTCorrection;
       }
+      inline void setCalcExtraScalars(bool calcExtraScalars) {
+      }
 
 protected :
 
