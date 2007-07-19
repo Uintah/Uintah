@@ -128,9 +128,12 @@ void AMRSimulationController::run()
    
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
-     for(int i=0;i<5;i++)
+     if(dbg_barrier.active())
      {
-       time[i]=0;
+       for(int i=0;i<4;i++)
+       {
+         time[i]=0;
+       }
      }
 #ifdef USE_TAU_PROFILING
      char tmpname[512];
