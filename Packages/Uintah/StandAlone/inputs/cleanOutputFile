@@ -2,6 +2,8 @@
 
 set f = $argv
 
-grep -v "extra communication\|This warning has\|This means the data\|Reallocation needed" $f
+grep -v "extra communication\|This warning has\|This means the data\|Reallocation needed" $f >& $f.tmp
+
+mv $f.tmp $f
  
 exit
