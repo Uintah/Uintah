@@ -24,6 +24,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/ReactiveScalarSolver.cc \
         $(SRCDIR)/RHSSolver.cc \
         $(SRCDIR)/ScalarSolver.cc \
+        $(SRCDIR)/ExtraScalarSolver.cc \
         $(SRCDIR)/SmagorinskyModel.cc \
         $(SRCDIR)/ScaleSimilarityModel.cc \
         $(SRCDIR)/IncDynamicProcedure.cc \

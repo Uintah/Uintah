@@ -251,6 +251,7 @@ private:
       bool d_calcReactingScalar;
       bool d_calcEnthalpy;
       bool d_calcVariance;
+      bool d_calcExtraScalars;
       bool d_mixedModel;
       bool d_doMMS;
       bool d_extraProjection;

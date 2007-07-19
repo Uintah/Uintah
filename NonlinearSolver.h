@@ -108,6 +108,8 @@ public:
       virtual void setExtraProjection(bool extraProjection) = 0;
 
       virtual void setEKTCorrection(bool EKTCorrection) = 0;
+
+      virtual void setCalcExtraScalars(bool calcExtraScalars) = 0;
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;
