@@ -39,12 +39,8 @@ using namespace std;
 //****************************************************************************
 ExtraScalarSolver::ExtraScalarSolver(const ArchesLabel* label,
 			   const MPMArchesLabel* MAlb,
-			   TurbulenceModel* turb_model,
-			   BoundaryCondition* bndry_cond,
 			   PhysicalConstants* physConst) :
                                  d_lab(label), d_MAlab(MAlb),
-                                 d_turbModel(turb_model), 
-                                 d_boundaryCondition(bndry_cond),
 				 d_physicalConsts(physConst)
 {
   d_discretize = 0;
@@ -89,8 +85,9 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
   d_scalar_nonlin_src_label = VarLabel::create(d_scalar_name+"NonlinSrc",
                                     CCVariable<double>::getTypeDescription());
 
-  db->getWithDefault("diffusion",d_diffusion,true);
-  db->getWithDefault("density_weighted",d_density_weighted,true);
+  db->require("initial_value",d_scalar_init_value);
+  db->getWithDefault("diffusion",d_scalar_diffusion,true);
+  db->getWithDefault("density_weighted",d_scalar_density_weighted,true);
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
@@ -98,7 +95,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
 //      else if (conv_scheme == "flux_limited") d_conv_scheme = 1;
 	else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
 
-  if ((d_conv_scheme = 0)&&(!(d_diffusion))) {
+  if ((d_conv_scheme = 0)&&(!(d_scalar_diffusion))) {
     cout << "WARNING! In the absence of diffusion, convection scheme" << endl;
     cout << "falls back on full upwind for scalar " << d_scalar_name << endl;
   }
@@ -145,32 +142,8 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
 
   d_rhsSolver = scinew RHSSolver();
 
-  d_dynScalarModel = d_turbModel->getDynScalarModel();
-  double model_turbPrNo;
-  model_turbPrNo = d_turbModel->getTurbulentPrandtlNumber();
-
-  // see if Prandtl number gets overridden here
-  d_turbPrNo = 0.0;
-//  if (!(d_dynScalarModel)) {
-  if (d_diffusion) {
-    if (db->findBlock("turbulentPrandtlNumber"))
-      db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
-
-    // if it is not set in both places
-    if ((d_turbPrNo == 0.0)&&(model_turbPrNo == 0.0))
-	  throw InvalidValue("Turbulent Prandtl number is not specified for"
-		             "mixture fraction ", __FILE__, __LINE__);
-    // if it is set in turbulence model
-    else if (d_turbPrNo == 0.0)
-      d_turbPrNo = model_turbPrNo;
-
-    // if it is set here or set in both places, 
-    // we only need to set mixture fraction Pr number in turbulence model
-    if (!(model_turbPrNo == d_turbPrNo)) {
-      cout << "Turbulent Prandtl number for mixture fraction is set to "
-      << d_turbPrNo << endl;
-      d_turbModel->setTurbulentPrandtlNumber(d_turbPrNo);
-    }
+  if (d_scalar_diffusion) {
+      db->require("turbulentPrandtlNumber",d_turbPrNo);
   }
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
@@ -230,9 +203,13 @@ ExtraScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  tsk->requires(Task::NewDW, d_scalar_label,
-		Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  if (d_density_weighted)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    tsk->requires(Task::OldDW, d_scalar_label,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  else
+    tsk->requires(Task::NewDW, d_scalar_label,
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  if (d_scalar_density_weighted)
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
@@ -242,15 +219,11 @@ ExtraScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   tsk->requires(old_values_dw, d_scalar_label,
 		 Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_density_weighted)
+  if (d_scalar_density_weighted)
     tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-/*  if (d_dynScalarModel)
-    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,
-		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  else */
-  if (d_diffusion)
+  if (d_scalar_diffusion)
     tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
 		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
@@ -304,6 +277,8 @@ ExtraScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
         tsk->computes(d_scalar_temp_label);
       else
         tsk->modifies(d_scalar_temp_label);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      tsk->computes(d_scalar_label);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -359,7 +334,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     
     CCVariable<double> const_density;
-    if (d_density_weighted)
+    if (d_scalar_density_weighted)
       old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
 		         matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     else {
@@ -369,18 +344,14 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
   
     // from new_dw get DEN, VIS, F, U, V, W
-    if (d_density_weighted)
+    if (d_scalar_density_weighted)
       new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else
       constScalarVars.density = const_density;
 
-/*    if (d_dynScalarModel)
-      new_dw->get(constScalarVars.viscosity, d_lab->d_scalarDiffusivityLabel, 
-		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    else*/
     CCVariable<double> zero_viscosity;
-    if (d_diffusion)
+    if (d_scalar_diffusion)
       new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else {
@@ -389,8 +360,13 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       constScalarVars.viscosity = zero_viscosity;
     }
 
-    new_dw->get(constScalarVars.scalar, d_scalar_label, 
-		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      old_dw->get(constScalarVars.scalar, d_scalar_label, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    else
+      new_dw->get(constScalarVars.scalar, d_scalar_label, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+
     // for explicit get old values
     new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
@@ -572,15 +548,26 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }*/
     CCVariable<double> scalar_temp;
     if (timelabels->multiple_steps) {
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
         new_dw->allocateAndPut(scalar_temp, d_scalar_temp_label, 
                   matlIndex, patch);
-      else
+        old_dw->copyOut(scalar_temp, d_scalar_label,
+		  matlIndex, patch);
+      }
+      else {
         new_dw->getModifiable(scalar_temp, d_scalar_temp_label,
                   matlIndex, patch);
-
-        new_dw->copyOut(scalar_temp, d_lab->d_scalarSPLabel,
+        new_dw->copyOut(scalar_temp, d_scalar_label,
 		  matlIndex, patch);
+      }
+    CCVariable<double> new_scalar;
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+      new_dw->allocateAndPut(new_scalar, d_scalar_label, 
+                matlIndex, patch);
+      old_dw->copyOut(new_scalar, d_scalar_label,
+                matlIndex, patch);
+    }
+
     }
 
   }
@@ -614,7 +601,7 @@ ExtraScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-  if (d_density_weighted)
+  if (d_scalar_density_weighted)
     tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
   
@@ -687,7 +674,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     CCVariable<double> const_density;
-    if (d_density_weighted)
+    if (d_scalar_density_weighted)
       new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     else {

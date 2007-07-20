@@ -92,8 +92,6 @@ ExplicitSolver::~ExplicitSolver()
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
     delete nosolve_timelabels;
-  for (int i=0; i < static_cast<int>(extraScalars.size()); i++)
-    delete extraScalars[i];
 }
 
 // ****************************************************************************
@@ -112,19 +110,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 	 probe_db = probe_db->findNextBlock("ProbePoints")) {
       probe_db->require("probe_point", prbPoint);
       d_probePoints.push_back(prbPoint);
-    }
-  }
-
-  if (d_calcExtraScalars) {
-    ProblemSpecP extra_sc_db = db->findBlock("ExtraScalars");
-    for (ProblemSpecP scalar_db = extra_sc_db->findBlock("scalar");
-         scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")) {
-      d_extraScalarSolver = scinew ExtraScalarSolver(d_lab, d_MAlab,
-					             d_turbModel,
-                                                     d_boundaryCondition,
-					             d_physicalConsts);
-      d_extraScalarSolver->problemSetup(scalar_db);
-      extraScalars.push_back(d_extraScalarSolver);
     }
   }
 
@@ -395,10 +380,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                               d_EKTCorrection, doing_EKT_now);
 
     if (d_calcExtraScalars)
-      for (int i=0; i < static_cast<int>(extraScalars.size()); i++)
-        extraScalars[i]->solve(sched, patches, matls, 
-		               d_timeIntegratorLabels[curr_level],
-                               false, false);
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++)
+        d_extraScalars->at(i)->solve(sched, patches, matls, 
+		                     d_timeIntegratorLabels[curr_level],
+                                     false, false);
 
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(sched, patches, matls,
