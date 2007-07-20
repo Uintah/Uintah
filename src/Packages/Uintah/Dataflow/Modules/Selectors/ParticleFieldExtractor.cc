@@ -566,9 +566,13 @@ ParticleFieldExtractor::execute()
    time = times[timestep];
 
    buildData( archive, timestep, sp, vp, tp );
-   psout->send( sp );
-   pvout->send( vp );
-   ptout->send( tp );     
+   if( sp != 0 ) psout->send( sp );
+   if( vp != 0 ) pvout->send( vp );
+   if( tp != 0 ) ptout->send( tp );     
+
+   if( sp == 0 && vp == 0 && tp == 0 ){
+     warning("ParticleField Extractor did not find particle data.");
+   }
    tcl_status.set("Done");
    //   AllocatorSetDefaultTag(old_tag1);
 }
