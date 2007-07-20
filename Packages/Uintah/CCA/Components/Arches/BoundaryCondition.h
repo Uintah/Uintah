@@ -64,6 +64,7 @@ class MPMArchesLabel;
 class ProcessorGroup;
 class DataWarehouse;
 class TimeIntegratorLabel;
+class ExtraScalarSolver;
 
 class BoundaryCondition {
 
@@ -536,6 +537,12 @@ public:
       inline bool getMMS() const {
         return d_doMMS;
       }
+      inline void setCalcExtraScalars(bool calcExtraScalars) {
+        d_calcExtraScalars=calcExtraScalars;
+      }
+      inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
+        d_extraScalars = extraScalars;
+      }
 
 
  
@@ -841,6 +848,8 @@ private:
 
       double d_turbPrNo;
       bool d_doMMS;
+      bool d_calcExtraScalars;
+      vector<ExtraScalarSolver*>* d_extraScalars;
 
 
 
