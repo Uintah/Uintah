@@ -71,8 +71,6 @@ public:
       // POSTCONDITIONS
       //   A linear level solver is partially constructed.  
       ExtraScalarSolver(const ArchesLabel* label, const MPMArchesLabel* MAlb, 
-		   TurbulenceModel* turb_model, 
-		   BoundaryCondition* bndry_cond,
 		   PhysicalConstants* physConst);
 
       // GROUP: Destructors:
@@ -116,6 +114,18 @@ public:
       }
       inline const VarLabel* getScalarLabel() {
         return d_scalar_label;
+      }
+      inline const double getScalarInitValue() {
+        return d_scalar_init_value;
+      }
+      inline const string getScalarName() {
+        return d_scalar_name;
+      }
+      inline void setTurbulenceModel(TurbulenceModel* turbModel) {
+        d_turbModel = turbModel;
+      }
+      inline void setBoundaryCondition(BoundaryCondition* boundaryCondition) {
+        d_boundaryCondition = boundaryCondition;
       }
 protected:
 
@@ -185,8 +195,9 @@ private:
       MultiMaterialSGSModel* d_mmSGSModel;
 #endif
       string d_scalar_name;
-      bool d_diffusion;
-      bool d_density_weighted;
+      double d_scalar_init_value;
+      bool d_scalar_diffusion;
+      bool d_scalar_density_weighted;
       const VarLabel* d_scalar_label;
       const VarLabel* d_scalar_temp_label;
       const VarLabel* d_scalar_coef_label;

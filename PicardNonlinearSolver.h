@@ -48,6 +48,7 @@ class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
+class ExtraScalarSolver;
 class PicardNonlinearSolver: public NonlinearSolver {
 
 public:
@@ -183,6 +184,8 @@ public:
         d_EKTCorrection=EKTCorrection;
       }
       inline void setCalcExtraScalars(bool calcExtraScalars) {
+      }
+      inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
       }
 
 protected :

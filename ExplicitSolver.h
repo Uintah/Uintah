@@ -205,6 +205,9 @@ public:
       inline void setCalcExtraScalars(bool calcExtraScalars) {
         d_calcExtraScalars=calcExtraScalars;
       }
+      inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
+        d_extraScalars = extraScalars;
+      }
 
 protected :
 
@@ -400,14 +403,12 @@ private:
     bool d_KE_fromFC;
     double d_maxDensityLag;
 
-    ExtraScalarSolver* d_extraScalarSolver;
-    vector<ExtraScalarSolver*> extraScalars;
-    
     //linear mms
     double cu, cv, cw, cp, phi0;
     // sine mms
     double amp;
     bool d_calcExtraScalars;
+    vector<ExtraScalarSolver*>* d_extraScalars;
 
 
 }; // End class ExplicitSolver
