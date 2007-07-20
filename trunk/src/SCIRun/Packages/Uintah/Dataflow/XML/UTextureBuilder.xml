@@ -13,16 +13,12 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Scalar Nrrd</name>
-        <datatype>SCIRun::Nrrd</datatype>
+        <name>Value Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Gradient Nrrd</name>
-        <datatype>SCIRun::Nrrd</datatype>
-      </port>
-      <port>
-        <name>Mask Nrrd</name>
-        <datatype>SCIRun::Nrrd</datatype>
+        <name>Gradient Magnitude Field</name>
+        <datatype>SCIRun::Field</datatype>
       </port>
       <port>
         <name>ColorMap</name>
@@ -33,6 +29,10 @@
       <port>
         <name>Texture</name>
         <datatype>SCIRun::Texture</datatype>
+      </port>
+      <port>
+        <name>JointHistoGram</name>
+        <datatype>SCIRun::Nrrd</datatype>      
       </port>
       <port>
         <name>ColorMap</name>

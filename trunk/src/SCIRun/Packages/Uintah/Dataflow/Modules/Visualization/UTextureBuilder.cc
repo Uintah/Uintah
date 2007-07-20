@@ -29,14 +29,14 @@
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 00:11:18 2004
 
-#include <Dataflow/Modules/Visualization/ConvertNrrdsToTexture.h>
+#include <Dataflow/Modules/Visualization/ConvertFieldsToTexture.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 
 
 namespace Uintah {
 using namespace SCIRun;
 
-class UTextureBuilder : public ConvertNrrdsToTexture
+class UTextureBuilder : public ConvertFieldsToTexture
 {
   double last_minf_;
   double last_maxf_;
@@ -57,14 +57,14 @@ using namespace Uintah;
 using SCIRun::ColorMapIPort;
 using SCIRun::ColorMapOPort;
 using SCIRun::ColorMapHandle;
-using SCIRun::ConvertNrrdsToTexture;
+using SCIRun::ConvertFieldsToTexture;
 using SCIRun::Module;
 
 
 DECLARE_MAKER(UTextureBuilder)
 
 UTextureBuilder::UTextureBuilder(GuiContext* ctx)
-  : ConvertNrrdsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah"),
+  : ConvertFieldsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah"),
     last_minf_(1), last_maxf_(-1), last_generation_(-1), last_nbits_(0), last_nrrdH_(0)
 {}
 
@@ -76,84 +76,31 @@ void
 UTextureBuilder::execute()
 {
 
-    // Get a handle to the ColorMap port.
+  // Get a handle to the ColorMap port.
   ColorMapIPort* cmap_iport = ( ColorMapIPort *) get_iport("ColorMap");
   ColorMapHandle cmap_h;
 
   if( !cmap_iport->get( cmap_h ) || !(cmap_h.get_rep()) ) {
-    ConvertNrrdsToTexture::execute();
+    ConvertFieldsToTexture::execute();
     return;
   }
 
-  bool nothing_changed = false;
-
-  NrrdDataHandle nrrdH;
-  if (!get_input_handle("Nrrd", nrrdH)) {
-    send_output_handle("ColorMap", cmap_h, true);
-    return;
-  }
-
-  double minf = cmap_h->getMin();
-  double maxf = cmap_h->getMax();
-  const int nbits = 8;
-
-  if (last_generation_ == nrrdH->generation &&
-      last_minf_ == minf &&
-      last_maxf_ == maxf &&
-      last_nbits_ == nbits &&
-      last_nrrdH_.get_rep())
-  {
-    // nothing changed...
-    // TODO - send texture: send_output_handle("Nrrd", last_nrrdH_, true);
-    send_output_handle("ColorMap", cmap_h, true);
-    return;
-  }
-
-  // quantize the input nrrd
-
-  // must detach because we are about to modify the input nrrd.
-  nrrdH.detach(); 
-
-  Nrrd *nin = nrrdH->nrrd_;
-
-  remark("Quantizing -- min=" + to_string(minf) +
-         " max=" + to_string(maxf) + " nbits=" + to_string(nbits));
-  NrrdRange *range = nrrdRangeNew(minf, maxf);
-  NrrdData *nrrd = scinew NrrdData;
-  if (nrrdQuantize(nrrd->nrrd_, nin, range, nbits))
-  {
-    char *err = biffGetDone(NRRD);
-    error(string("Trouble quantizing: ") + err);
-    free(err);
-    return;
-  }
-
-  nrrdKeyValueCopy(nrrd->nrrd_, nin);
-  // set current state for next execution
-  last_generation_ = nrrdH->generation;
-  last_minf_ = minf;
-  last_maxf_ = maxf;
-  last_nbits_ = nbits;
-  last_nrrdH_ = nrrdH;
-
-  send_output_handle("Nrrd", last_nrrdH_, true);
-  /*
   if( cmap_h->IsScaled() ){
     gui_fixed_.set( 1 );
     gui_vminval_.set(cmap_h->getMin() );
     gui_vmaxval_.set(cmap_h->getMax() );
   }
-  */
+
 
   // Get a handle to the output ColorMap port.
    ColorMapOPort* cmap_oport = ( ColorMapOPort *) get_oport("ColorMap");
-  
+
 
   if (!cmap_oport) {
      error("Unable to initialize oport 'ColorMap'.");
       return;
     }
 
-  ConvertNrrdsToTexture::execute();
+  ConvertFieldsToTexture::execute();
   cmap_oport->send(cmap_h);
 }

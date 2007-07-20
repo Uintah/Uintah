@@ -478,13 +478,10 @@ void NodeHedgehog::execute()
   int have_sfield = inscalarfield->get( ssfield ) && ssfield.get_rep();
   ScalarFieldInterfaceHandle sf_interface;
   if( have_sfield ){
-    if( !ssfield->is_scalar() ){
+    sf_interface = ssfield->query_scalar_interface();
+    if (sf_interface.get_rep() == 0) {
       warning("Second field is not a scalar field.  No Colormapping.");
       have_sfield = 0;
-    } else {
-      sf_interface = ssfield->query_scalar_interface();
-      if (sf_interface.get_rep() == 0)
-	have_sfield = 0;
     }
   }
   ColorMapHandle cmap;
