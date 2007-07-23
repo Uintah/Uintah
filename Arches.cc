@@ -211,6 +211,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts,
                               d_calcReactingScalar, 
                               d_calcEnthalpy, d_calcVariance);
+  d_props->setCalcExtraScalars(d_calcExtraScalars);
+  if (d_calcExtraScalars) d_props->setExtraScalars(&d_extraScalars);
   d_props->problemSetup(db);
 
   // read turbulence mode

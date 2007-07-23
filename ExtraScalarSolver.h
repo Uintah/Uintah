@@ -127,6 +127,9 @@ public:
       inline void setBoundaryCondition(BoundaryCondition* boundaryCondition) {
         d_boundaryCondition = boundaryCondition;
       }
+      inline const bool isDensityWeighted() {
+        return d_scalar_density_weighted;
+      }
 protected:
 
 private:
