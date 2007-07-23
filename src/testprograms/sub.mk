@@ -32,9 +32,10 @@
 SRCDIR := testprograms
 
 SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread
-ifeq ($(BUILD_SCIJUMP),yes)
-  SUBDIRS := $(SUBDIRS) $(SRCDIR)/Component
-endif
+
+#ifeq ($(BUILD_SCIJUMP),yes)
+#  SUBDIRS := $(SUBDIRS) $(SRCDIR)/Component
+#endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

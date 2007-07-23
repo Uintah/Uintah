@@ -67,9 +67,9 @@ ifeq ($(HAVE_MPI),yes)
 # $(SRCDIR)/PLinSolver
 endif
 
-ifeq ($(HAVE_BABEL),yes)
- SUBDIRS += $(SRCDIR)/BabelTest
-endif
+#ifeq ($(HAVE_BABEL),yes)
+# SUBDIRS += $(SRCDIR)/BabelTest
+#endif
 
 ifeq ($(HAVE_VTK),yes)
  SUBDIRS += $(SRCDIR)/VTK
