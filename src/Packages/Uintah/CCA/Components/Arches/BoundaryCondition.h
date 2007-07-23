@@ -640,7 +640,7 @@ private:
 
       ////////////////////////////////////////////////////////////////////////
       // Actually set the velocity, density and props flat profile
-      void setFlatProfile(const ProcessorGroup* pc,
+      void setProfile(const ProcessorGroup* pc,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
@@ -851,6 +851,12 @@ private:
       bool d_calcExtraScalars;
       vector<ExtraScalarSolver*>* d_extraScalars;
 
+      struct d_extraScalarBC {
+        string d_scalar_name;
+        double d_scalarBC_value;
+        int d_BC_ID; 
+      };
+      vector<d_extraScalarBC*> d_extraScalarBCs; 
 
 
 }; // End of class BoundaryCondition

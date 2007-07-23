@@ -12,6 +12,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/Stencil.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -111,6 +112,9 @@ BoundaryCondition::~BoundaryCondition()
   delete d_outletBC;
   for (int ii = 0; ii < d_numInlets; ii++)
     delete d_flowInlets[ii];
+  if (d_calcExtraScalars)
+    for (int i=0; i < static_cast<int>(d_extraScalarBCs.size()); i++)
+      delete d_extraScalarBCs[i];
 }
 
 //****************************************************************************
@@ -127,6 +131,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
   db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
+
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
     for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
@@ -143,6 +148,19 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
       if (f > 0.0)
         d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
+      if (d_calcExtraScalars) {
+        ProblemSpecP extra_scalar_db = inlet_db->findBlock("ExtraScalars");
+        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+          double value;
+          string name = d_extraScalars->at(i)->getScalarName();
+          extra_scalar_db->require(name, value);
+          d_extraScalarBC* bc = scinew d_extraScalarBC;
+          bc->d_scalar_name = name;
+          bc->d_scalarBC_value = value;
+          bc->d_BC_ID = total_cellTypes;
+          d_extraScalarBCs.push_back(bc);
+        }
+      }
       ++total_cellTypes;
       ++d_numInlets;
     }
@@ -173,6 +191,19 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressureBC->streamMixturefraction.d_scalarDisp=0.0;
     d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
                                     d_pressureBC->calcStream);
+    if (d_calcExtraScalars) {
+      ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+        double value;
+        string name = d_extraScalars->at(i)->getScalarName();
+        extra_scalar_db->require(name, value);
+        d_extraScalarBC* bc = scinew d_extraScalarBC;
+        bc->d_scalar_name = name;
+        bc->d_scalarBC_value = value;
+        bc->d_BC_ID = total_cellTypes;
+        d_extraScalarBCs.push_back(bc);
+      }
+    }
     ++total_cellTypes;
   }
   else {
@@ -190,6 +221,19 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_outletBC->streamMixturefraction.d_scalarDisp=0.0;
     d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
                                     d_outletBC->calcStream);
+    if (d_calcExtraScalars) {
+      ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+        double value;
+        string name = d_extraScalars->at(i)->getScalarName();
+        extra_scalar_db->require(name, value);
+        d_extraScalarBC* bc = scinew d_extraScalarBC;
+        bc->d_scalar_name = name;
+        bc->d_scalarBC_value = value;
+        bc->d_BC_ID = total_cellTypes;
+        d_extraScalarBCs.push_back(bc);
+      }
+    }
     ++total_cellTypes;
   }
   else {
@@ -845,7 +889,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
 {
   Task* tsk = scinew Task("BoundaryCondition::setProfile",
 			  this,
-			  &BoundaryCondition::setFlatProfile);
+			  &BoundaryCondition::setProfile);
 
   // This task requires cellTypeVariable and areaLabel for inlet boundary
   // Also densityIN, [u,v,w] velocityIN, scalarIN
@@ -875,6 +919,10 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   for (int ii = 0; ii < d_numInlets; ii++) 
     tsk->computes(d_flowInlets[ii]->d_flowRate_label);
 
+  if (d_calcExtraScalars)
+    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++)
+      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -882,7 +930,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
 // Actually set flat profile at flow inlet boundary
 //****************************************************************************
 void 
-BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
+BoundaryCondition::setProfile(const ProcessorGroup* /*pc*/,
 				  const PatchSubset* patches,
 				  const MaterialSubset*,
 				  DataWarehouse*,
@@ -1046,6 +1094,60 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
+
+    if (d_calcExtraScalars) {
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+        string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
+        CCVariable<double> extra_scalar;
+        new_dw->getModifiable(extra_scalar,
+                              d_extraScalars->at(i)->getScalarLabel(),
+                               matlIndex, patch);
+
+        if (d_inletBoundary) {
+          for (int ii = 0; ii < d_numInlets; ii++) {
+            int BC_ID = d_flowInlets[ii]->d_cellTypeID;
+
+            double extra_scalar_value;
+            for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
+              if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
+                  (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
+                extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
+
+            fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
+      		            extra_scalar_value, BC_ID,
+      		            xminus, xplus, yminus, yplus, zminus, zplus);
+          }
+        }
+
+        if (d_pressureBoundary) {
+          int BC_ID = d_pressureBC->d_cellTypeID;
+
+          double extra_scalar_value;
+          for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
+            if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
+                (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
+              extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
+
+          fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
+                          extra_scalar_value, BC_ID,
+      		          xminus, xplus, yminus, yplus, zminus, zplus);
+        }
+
+        if (d_outletBoundary) {
+          int BC_ID = d_outletBC->d_cellTypeID;
+
+          double extra_scalar_value;
+          for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
+            if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
+                (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
+              extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
+
+          fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
+                          extra_scalar_value, BC_ID,
+      		          xminus, xplus, yminus, yplus, zminus, zplus);
+        }
+      }
+    }
   }
 }
 
@@ -5371,6 +5473,11 @@ BoundaryCondition::sched_Prefill(SchedulerP& sched, const PatchSet* patches,
 
   tsk->modifies(d_lab->d_scalarSPLabel);
 
+  if (d_calcExtraScalars)
+    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
+    }
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -5475,6 +5582,44 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
+
+    if (d_calcExtraScalars)
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+        CCVariable<double> extra_scalar;
+        new_dw->getModifiable(extra_scalar,
+                              d_extraScalars->at(i)->getScalarLabel(), 
+		              matlIndex, patch);
+        string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
+        if (d_inletBoundary) {
+          Box patchInteriorBox = patch->getInteriorBox();
+          for (int indx = 0; indx < d_numInlets; indx++) {
+            FlowInlet* fi = d_flowInlets[indx];
+            if (fi->d_prefill) {
+              int BC_ID = fi->d_cellTypeID;
+              double extra_scalar_value;
+              for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
+                if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
+                    (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
+                  extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
+              int nofGeomPieces = (int)fi->d_prefillGeomPiece.size();
+              for (int ii = 0; ii < nofGeomPieces; ii++) {
+                GeometryPieceP  piece = fi->d_prefillGeomPiece[ii];
+                Box geomBox = piece->getBoundingBox();
+                Box b = geomBox.intersect(patchInteriorBox);
+                if (!(b.degenerate())) {
+                  for (CellIterator iter = patch->getCellCenterIterator(b);
+                    !iter.done(); iter++) {
+                    Point p = patch->cellPosition(*iter);
+                    if (piece->inside(p)) {
+                      extra_scalar[*iter] = extra_scalar_value;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
   }
 }
 
