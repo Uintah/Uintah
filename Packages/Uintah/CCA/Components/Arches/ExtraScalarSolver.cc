@@ -547,7 +547,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		  matlIndex, patch);
     }*/
     CCVariable<double> scalar_temp;
-    if (timelabels->multiple_steps) {
+    if (timelabels->multiple_steps)
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
         new_dw->allocateAndPut(scalar_temp, d_scalar_temp_label, 
                   matlIndex, patch);
@@ -560,13 +560,13 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
         new_dw->copyOut(scalar_temp, d_scalar_label,
 		  matlIndex, patch);
       }
+    
     CCVariable<double> new_scalar;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(new_scalar, d_scalar_label, 
                 matlIndex, patch);
       old_dw->copyOut(new_scalar, d_scalar_label,
                 matlIndex, patch);
-    }
 
     }
 
