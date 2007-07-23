@@ -70,9 +70,10 @@ SUBDIRS := \
 ifeq ($(BUILD_SCIJUMP),yes)
 SUBDIRS := \
 	$(SUBDIRS) \
-	$(SRCDIR)/CCA \
 	$(SRCDIR)/Babel 
 endif
+
+#$(SRCDIR)/CCA
 
 ifeq ($(HAVE_GLOBUS),yes)
 SUBDIRS+=$(SRCDIR)/globus_threads

@@ -31,8 +31,6 @@
 
 SRCDIR   := CCA
 
-SUBDIRS := $(SRCDIR)/Components
+#SUBDIRS := $(SRCDIR)/Components
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-
+#include $(SCIRUN_SCRIPTS)/recurse.mk
