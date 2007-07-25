@@ -1,30 +1,52 @@
-SRCDIR   := Framework
-FWKSIDL := ${SRCDIR}/framework.sidl
-OUTPUTDIR :=${OBJTOP_ABS}/$(SRCDIR)
+#
+#  For more information, please see: http://software.sci.utah.edu
+#
+#  The MIT License
+#
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+#
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
 
-INCLUDES := -I$(OUTPUTDIR) $(INCLUDES)
 
-GLUEDIR := glue
+# Makefile fragment for this subdirectory
 
-ifeq ($(IS_OSX),yes)
-  CP_FLAGS :=
-else
-  CP_FLAGS := -u
-endif
+SRCDIR := Framework
+SRCDIR_ABS :=  $(SRCTOP_ABS)/$(SRCDIR)
+FWKSIDL := $(SRCDIR_ABS)/scijump.sidl
+SCICCASIDL := $(SRCDIR_ABS)/sci-cca.sidl
 
-## use babel --vpath<path> for Impl sources
+OUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
+GLUEDIR := $(OUTPUTDIR_ABS)/glue
 
-${OUTPUTDIR}/babel.make: ${OUTPUTDIR}/${GLUEDIR}/server.make
+$(OUTPUTDIR_ABS)/babel.make: $(GLUEDIR)/server.make
 
-${OUTPUTDIR}/${GLUEDIR}/server.make: ${FWKSIDL} Core/Babel/timestamp
+$(GLUEDIR)/server.make: $(SCICCASIDL) $(FWKSIDL) Core/Babel/timestamp
 #if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
-	if ! test -d ${OUTPUTDIR}; then mkdir -p ${OUTPUTDIR}; fi
-#cp $(CP_FLAGS) $(dir $<)*Impl.* $(dir $@)
-	$(BABEL) --server=C++ --output-directory=${OUTPUTDIR} --hide-glue --repository-path=${BABEL_REPOSITORY} $<
+	if ! test -d $(OUTPUTDIR_ABS); then mkdir -p $(OUTPUTDIR_ABS); fi
+	$(BABEL) --server=C++ --output-directory=$(OUTPUTDIR_ABS) --hide-glue --repository-path=$(BABEL_REPOSITORY) $(SCICCASIDL) --vpath=$(SRCDIR_ABS) $(FWKSIDL)
 	mv $(dir $@)babel.make $@
 
-${OUTPUTDIR}/${GLUEDIR}/client.make: ${CCASIDL}
-	$(BABEL) --client=C++ --hide-glue --output-directory=${OUTPUTDIR} $<
+$(GLUEDIR)/client.make: $(CCASIDL)
+	$(BABEL) --client=C++ --hide-glue --output-directory=$(OUTPUTDIR_ABS) $<
 	mv $(dir $@)babel.make $@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -39,19 +61,19 @@ SRCS :=
 IORSRCS :=
 STUBSRCS :=
 SKELSRCS :=
-include ${OUTPUTDIR}/${GLUEDIR}/server.make
-SRCS += $(patsubst %,$(OUTPUTDIR)/$(GLUEDIR)/%,$(IORSRCS) $(STUBSRCS) $(SKELSRCS))
+include $(GLUEDIR)/server.make
+SRCS += $(patsubst %,$(GLUEDIR)/%,$(IORSRCS) $(STUBSRCS) $(SKELSRCS))
 
 STUBSRCS :=
-include ${OUTPUTDIR}/${GLUEDIR}/client.make
-SRCS += $(patsubst %,$(OUTPUTDIR)/$(GLUEDIR)/%,$(STUBSRCS))
+include $(GLUEDIR)/client.make
+SRCS += $(patsubst %,$(GLUEDIR)/%,$(STUBSRCS))
 
 IMPLSRCS :=
-include ${OUTPUTDIR}/babel.make
-SRCS += $(patsubst %,$(OUTPUTDIR)/%,$(IMPLSRCS))
+include $(OUTPUTDIR_ABS)/babel.make
+SRCS += $(patsubst %,$(OUTPUTDIR_ABS)/%,$(IMPLSRCS))
 
 PSELIBS :=
-INCLUDES += -I$(OUTPUTDIR)/$(GLUEDIR) $(BABEL_INCLUDE)
+INCLUDES += -I$(OUTPUTDIR_ABS) -I$(GLUEDIR) $(BABEL_INCLUDE)
 LIBS := $(BABEL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
