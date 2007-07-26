@@ -105,6 +105,7 @@ SET(Packages_Uintah_CCA_Components_Arches_SRCS
   ReactiveScalarSolver.cc
   RHSSolver.cc
   ScalarSolver.cc
+  ExtraScalarSolver.cc
   SmagorinskyModel.cc
   ScaleSimilarityModel.cc
   IncDynamicProcedure.cc
