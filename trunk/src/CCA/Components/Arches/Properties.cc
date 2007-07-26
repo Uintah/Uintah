@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <CCA/Components/Arches/Mixing/StandardTable.h>
+#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -1362,6 +1363,13 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
     tsk->modifies(d_lab->d_enthalpySPLabel);
   tsk->modifies(d_lab->d_densityGuessLabel);
 
+  if (d_calcExtraScalars)
+    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+      tsk->requires(Task::OldDW, d_extraScalars->at(i)->getScalarLabel(), 
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
+    }
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -1463,50 +1471,50 @@ Properties::averageRKProps(const ProcessorGroup*,
 
 	  bool average_failed = false;
 	    if (d_inverse_density_average)
-	      (new_scalar)[currCell] = (factor_old*(old_scalar)[currCell] +
-		  factor_new*(new_scalar)[currCell])/factor_divide;
+	      new_scalar[currCell] = (factor_old*old_scalar[currCell] +
+		  factor_new*new_scalar[currCell])/factor_divide;
 	    else
-	      (new_scalar)[currCell] = (factor_old*old_density[currCell]*
-		  (old_scalar)[currCell] + factor_new*new_density[currCell]*
-		  (new_scalar)[currCell])/(factor_divide*predicted_density);
+	      new_scalar[currCell] = (factor_old*old_density[currCell]*
+		  old_scalar[currCell] + factor_new*new_density[currCell]*
+		  new_scalar[currCell])/(factor_divide*predicted_density);
 // Following lines to fix density delay problem for helium.
 // One would also need to edit fortran/explicit.F to use it.
 //            (new_scalar)[currCell] = (new_scalar)[currCell]*predicted_density;
 //            (new_scalar)[currCell] = (new_scalar)[currCell]*0.133/(
 //              0.133*1.184344+(new_scalar)[currCell]*(0.133-1.184344));
-            if ((new_scalar)[currCell] > 1.0) {
-              if ((new_scalar)[currCell] < 1.0 + epsilon)
-		(new_scalar)[currCell] = 1.0;
+            if (new_scalar[currCell] > 1.0) {
+              if (new_scalar[currCell] < 1.0 + epsilon)
+		new_scalar[currCell] = 1.0;
               else {
-	        cout << "average failed with scalar > 1 at " << currCell << " , average value was " << (new_scalar)[currCell] << endl;
-	        (new_scalar)[currCell] = (fe_scalar)[currCell];
+	        cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+	        new_scalar[currCell] = fe_scalar[currCell];
 	        average_failed = true;
               }
 	    }
-            else if ((new_scalar)[currCell] < 0.0) {
-              if ((new_scalar)[currCell] > - epsilon)
-            	(new_scalar)[currCell] = 0.0;
+            else if (new_scalar[currCell] < 0.0) {
+              if (new_scalar[currCell] > - epsilon)
+            	new_scalar[currCell] = 0.0;
               else {
-	        cout << "average failed with scalar < 0 at " << currCell << " , average value was " << (new_scalar)[currCell] << endl;
-	        (new_scalar)[currCell] = (fe_scalar)[currCell];
+	        cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+	        new_scalar[currCell] = fe_scalar[currCell];
 	        average_failed = true;
               }
             }
 
 	  if (d_calcReactingScalar) {
 	      if (!average_failed) {
-	      (new_reactScalar)[currCell] = (factor_old *
-		old_density[currCell]*(old_reactScalar)[currCell] +
+	      new_reactScalar[currCell] = (factor_old *
+		old_density[currCell]*old_reactScalar[currCell] +
 		factor_new*new_density[currCell]*
-		(new_reactScalar)[currCell])/
+		new_reactScalar[currCell])/
 		(factor_divide*predicted_density);
-            if ((new_reactScalar)[currCell] > 1.0)
-		(new_reactScalar)[currCell] = 1.0;
-            else if ((new_reactScalar)[currCell] < 0.0)
-            	(new_reactScalar)[currCell] = 0.0;
+            if (new_reactScalar[currCell] > 1.0)
+		new_reactScalar[currCell] = 1.0;
+            else if (new_reactScalar[currCell] < 0.0)
+            	new_reactScalar[currCell] = 0.0;
 	      }
 	      else
-            	(new_reactScalar)[currCell] = (fe_reactScalar)[currCell];
+            	new_reactScalar[currCell] = fe_reactScalar[currCell];
 	  }
 
           if (d_calcEnthalpy)
@@ -1519,10 +1527,45 @@ Properties::averageRKProps(const ProcessorGroup*,
 
 	  density_guess[currCell] = predicted_density;
 
-	}
+	  }
+        }
       }
     }
-    }
+
+    if (d_calcExtraScalars)
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+        constCCVariable<double> old_extra_scalar;
+        CCVariable<double> new_extra_scalar;
+        old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
+		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        new_dw->getModifiable(new_extra_scalar,
+                              d_extraScalars->at(i)->getScalarLabel(), 
+		              matlIndex, patch);
+        bool scalar_density_weighted =
+                d_extraScalars->at(i)->isDensityWeighted();
+        for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+          for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	    for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	      IntVector currCell(colX, colY, colZ);
+          
+	      if (new_density[currCell] > 0.0) {
+                if (scalar_density_weighted)
+	          new_extra_scalar[currCell] = 
+                    (factor_old*old_density[currCell]*
+		    old_extra_scalar[currCell] + 
+                    factor_new*new_density[currCell]*
+		    new_extra_scalar[currCell])/
+                    (factor_divide* density_guess[currCell]);
+                else
+	          new_extra_scalar[currCell] = (factor_old*
+		    old_extra_scalar[currCell] + factor_new*
+		    new_extra_scalar[currCell])/(factor_divide);
+              }
+	    }
+          }
+        }
+      }
+
   }
 }
 

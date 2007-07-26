@@ -13,6 +13,7 @@
 #include <CCA/Components/Arches/PressureSolver.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ScalarSolver.h>
+#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/ReactiveScalarSolver.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
@@ -377,6 +378,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_enthalpySolver->solve(level, sched, patches, matls,
 			      d_timeIntegratorLabels[curr_level],
                               d_EKTCorrection, doing_EKT_now);
+
+    if (d_calcExtraScalars)
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++)
+        d_extraScalars->at(i)->solve(sched, patches, matls, 
+		                     d_timeIntegratorLabels[curr_level],
+                                     false, false);
 
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(sched, patches, matls,

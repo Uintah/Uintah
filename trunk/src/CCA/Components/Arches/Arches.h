@@ -79,6 +79,7 @@ namespace Uintah {
   class MPMArchesLabel;
   class ArchesLabel;
   class TimeIntegratorLabel;
+  class ExtraScalarSolver;
 #ifdef PetscFilter
   class Filter;
 #endif
@@ -297,6 +298,10 @@ private:
     double cu,cv,cw,cp,phi0;
     //sine mms
     double amp;
+    bool d_calcExtraScalars;
+    ExtraScalarSolver* d_extraScalarSolver;
+    vector<ExtraScalarSolver*> d_extraScalars;
+    
 
 }; // end class Arches
 

@@ -5,7 +5,7 @@ in two stages:
 
 1) Retrieve each external directory, via the svn:externals property
 on this directory.
-2) Retrieve each external toplevel file, via the svn cp command.
+2) Retrieve each external toplevel file, via the svn merge command.
 
 Currently each file and directory use a specific revision number.  This
 is to make sure we don't run into any "SCIRun is broken in the current
@@ -24,6 +24,6 @@ svn merge -N https://code.sci.utah.edu/svn/SCIRun/cibc/trunk/SCIRun/src@<OLD_REV
 
 The current revision of the externals is HEAD.
 
-The current revision is 37822.  Update this when you update the SCIRun version.
+The current revision is 38141.  Update this when you update the SCIRun version.
 
 Then commit the changes.

@@ -128,9 +128,12 @@ void AMRSimulationController::run()
    
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
-     for(int i=0;i<5;i++)
+     if(dbg_barrier.active())
      {
-       time[i]=0;
+       for(int i=0;i<4;i++)
+       {
+         time[i]=0;
+       }
      }
 #ifdef USE_TAU_PROFILING
      char tmpname[512];
@@ -316,10 +319,10 @@ void AMRSimulationController::run()
      }
 #ifdef USE_TAU_PROFILING
      TAU_PROFILE_STOP(iteration_timer);
-     TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
-     TAU_PROFILE_START(sleepy);
-     sleep(1);
-     TAU_PROFILE_STOP(sleepy);
+//      TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
+//      TAU_PROFILE_START(sleepy);
+//      sleep(1);
+//      TAU_PROFILE_STOP(sleepy);
 #endif
      t += delt;
      TAU_DB_DUMP();

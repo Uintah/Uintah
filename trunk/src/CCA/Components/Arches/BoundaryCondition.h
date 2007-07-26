@@ -64,6 +64,7 @@ class MPMArchesLabel;
 class ProcessorGroup;
 class DataWarehouse;
 class TimeIntegratorLabel;
+class ExtraScalarSolver;
 
 class BoundaryCondition {
 
@@ -536,6 +537,12 @@ public:
       inline bool getMMS() const {
         return d_doMMS;
       }
+      inline void setCalcExtraScalars(bool calcExtraScalars) {
+        d_calcExtraScalars=calcExtraScalars;
+      }
+      inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
+        d_extraScalars = extraScalars;
+      }
 
 
  
@@ -633,7 +640,7 @@ private:
 
       ////////////////////////////////////////////////////////////////////////
       // Actually set the velocity, density and props flat profile
-      void setFlatProfile(const ProcessorGroup* pc,
+      void setProfile(const ProcessorGroup* pc,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
@@ -841,7 +848,15 @@ private:
 
       double d_turbPrNo;
       bool d_doMMS;
+      bool d_calcExtraScalars;
+      vector<ExtraScalarSolver*>* d_extraScalars;
 
+      struct d_extraScalarBC {
+        string d_scalar_name;
+        double d_scalarBC_value;
+        int d_BC_ID; 
+      };
+      vector<d_extraScalarBC*> d_extraScalarBCs; 
 
 
 }; // End of class BoundaryCondition
