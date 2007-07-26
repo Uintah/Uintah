@@ -678,7 +678,9 @@ PFEThread::run()
       archive->query(pvv, pfe->pvVar.get(), matl, patch, pfe->timestep);    
       if( !have_subset){
         source_subset = pvv.getParticleSubset();
-        have_subset = true;
+        if( source_subset->getParticleSet()->numParticles() != 0 ){
+          have_subset = true;
+        }
       }
     }
     if( pfe->psVar.get() != ""){
@@ -688,7 +690,9 @@ PFEThread::run()
         archive->query(pvs, pfe->psVar.get(), matl, patch, pfe->timestep);
         if( !have_subset){
           source_subset = pvs.getParticleSubset();
-          have_subset = true;
+          if( source_subset->getParticleSet()->numParticles() != 0 ){
+            have_subset = true;
+          }
         }
         break;
       case TypeDescription::float_type:
@@ -696,7 +700,9 @@ PFEThread::run()
         archive->query(pvfloat, pfe->psVar.get(), matl, patch, pfe->timestep);
         if( !have_subset){
           source_subset = pvfloat.getParticleSubset();
-          have_subset = true;
+          if( source_subset->getParticleSet()->numParticles() != 0 ){
+            have_subset = true;
+          }
         }
         //cerr << "Got data\n";
         break;
@@ -705,7 +711,9 @@ PFEThread::run()
         archive->query(pvint, pfe->psVar.get(), matl, patch, pfe->timestep);
         if( !have_subset){
           source_subset = pvint.getParticleSubset();
-          have_subset = true;
+          if( source_subset->getParticleSet()->numParticles() != 0 ){
+            have_subset = true;
+          }
         }
         //cerr << "Got data\n";
         break;
@@ -716,7 +724,9 @@ PFEThread::run()
       archive->query(pvt, pfe->ptVar.get(), matl, patch, pfe->timestep);
       if( !have_subset){
         source_subset = pvt.getParticleSubset();
-        have_subset = true;
+          if( source_subset->getParticleSet()->numParticles() != 0 ){
+            have_subset = true;
+          }
       }
     }
     if(pfe->positionName != "")
