@@ -1,0 +1,80 @@
+#!/bin/csh
+
+set hardcopy = "n"
+if ( $#argv == 1 ) then
+  set hardcopy = $argv
+endif
+
+#__________________________________
+set f = `find HT* -name "out.*" -maxdepth 2 |sort`
+echo "examining each of these output files"
+find HT* -name "out.*" -maxdepth 2|sort
+#__________________________________
+/bin/rm -f .procs .date .elapsedTime .data
+touch .procs .date .elapsedTime
+
+foreach X ($f[*]:q)
+ grep Date $X | cut -d":" -f2-4 >> .date
+ grep processors $X | cut -d" " -f 2 >> .procs
+ grep Time= $X |tail -n 1  | cut -d"=" -f4 | cut -d"," -f1 >> .elapsedTime
+end
+
+#__________________________________
+# convert the date into something gnuplot can handle
+# Tue Jul 10 13:23:34 2007 -> 07/10/07_13:23
+# put quotes around the date
+# use the date command to reformat it
+awk -F, '{printf("\"%s\" \n",$1)}' <.date >&.date2
+awk -F, '{time=system("date +%D_%H:%M -d"$1)}'<.date2 >& .date
+
+paste -d "," .date .procs .elapsedTime |sort >& .data
+
+#__________________________________
+# compute number of cpu hours
+awk -F, ' {hr=$2 * $3/3600 ; printf( "%s, %g, %g, %g \n",$1, $2, $3, hr) }' < .data >& .data.tmp
+awk -F, 'NR==1 {sum=$4; printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )} ; NR>1 {sum=sum + $4; printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )}' <.data.tmp >& .data
+
+echo "Extracted data"
+echo "date #procs  #elapsed Time  cpu hrs  cum cpu hrs"
+more .data
+/bin/rm .procs .date .date2 .elapsedTime .data.tmp
+
+/bin/rm -f gp
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotCPU_utilization.jpg"
+/bin/rm -f gp
+cat > gp << fin
+set terminal postscript color solid "Times-Roman" 12
+set output "plotCPU_utilization.jpg"
+fin
+endif
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set grid xtics ytics 
+set y2tics
+set xdata time
+set format x "%b-%d \n %a \n"
+set timefmt "%m/%d%Y %H:%M"
+set ylabel 'CPU Hours'         textcolor lt 1
+set y2label 'Total CPU Hours'  textcolor lt 2
+set xlabel 'Date
+
+plot '.data' using 1:4 lw 3 t           'CPU hrs' with impulse,\
+     '.data' using 1:5 axis x1y2 t 'Cum. CPU hrs' with step
+
+pause -1 "Hit return to exit"
+fin
+#__________________________________
+# plot it up
+gnuplot gp
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  mogrify -rotate 90 plotCPU_utilization.jpg
+endif
+
+/bin/rm .data
+
+exit
