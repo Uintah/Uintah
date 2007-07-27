@@ -30,19 +30,31 @@
 # Makefile fragment for this subdirectory
 
 SRCDIR := Framework
+
 SRCDIR_ABS :=  $(SRCTOP_ABS)/$(SRCDIR)
-FWKSIDL := $(SRCDIR_ABS)/scijump.sidl
-SCICCASIDL := $(SRCDIR_ABS)/sci-cca.sidl
+SIDL := \
+        $(SRCDIR_ABS)/sci-cca.sidl \
+        $(SRCDIR_ABS)/scijump.sidl
 
 OUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
 GLUEDIR := $(OUTPUTDIR_ABS)/glue
 
+# Need a list ($(FWK_IMPLSRCS) of Babel impl files as target dependencies,
+# which forces running Babel whenever the impl files are changed.
+#
+# The full list of Babel impl files is included from Babel-generated
+# makefiles (below).
+
+FWK_IMPLSRCS := \
+                $(SRCDIR_ABS)/scijump_Topic_Impl.hxx \
+                $(SRCDIR_ABS)/scijump_Topic_Impl.cxx
+
 $(OUTPUTDIR_ABS)/babel.make: $(GLUEDIR)/server.make
 
-$(GLUEDIR)/server.make: $(SCICCASIDL) $(FWKSIDL) Core/Babel/timestamp
-#if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
+#--generate-subdirs
+$(GLUEDIR)/server.make: $(SIDL) $(FWK_IMPLSRCS) Core/Babel/timestamp
 	if ! test -d $(OUTPUTDIR_ABS); then mkdir -p $(OUTPUTDIR_ABS); fi
-	$(BABEL) --server=C++ --output-directory=$(OUTPUTDIR_ABS) --hide-glue --repository-path=$(BABEL_REPOSITORY) $(SCICCASIDL) --vpath=$(SRCDIR_ABS) $(FWKSIDL)
+	$(BABEL) --server=C++ --output-directory=$(OUTPUTDIR_ABS) --hide-glue --repository-path=$(BABEL_REPOSITORY) --vpath=$(SRCDIR_ABS) $(filter %.sidl, $+)
 	mv $(dir $@)babel.make $@
 
 $(GLUEDIR)/client.make: $(CCASIDL)
@@ -51,12 +63,7 @@ $(GLUEDIR)/client.make: $(CCASIDL)
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-#SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
-#        $(SRCDIR)/BabelComponentInstance.cc \
-#        $(SRCDIR)/BabelComponentDescription.cc \
-#        $(SRCDIR)/BabelPortInstance.cc
-
-SRCS :=
+#SRCS :=
 
 IORSRCS :=
 STUBSRCS :=
