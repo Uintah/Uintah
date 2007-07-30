@@ -1167,12 +1167,10 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->dispNewLabel,           Ghost::AroundCells,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pTempPreviousLabel,     Ghost::None);
@@ -3213,9 +3211,9 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, pacceleration,pexternalForce;
+      constParticleVariable<Vector> pvelocity, pacceleration;
       constParticleVariable<Vector> pDispOld,psize;
-      ParticleVariable<Vector> pvelnew,pexternalForceNew,paccNew,pDisp,psizeNew;
+      ParticleVariable<Vector> pvelnew,paccNew,pDisp,psizeNew;
       constParticleVariable<double> pmass, pvolume,pTempOld,pEro;
       ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pEroNew;
       ParticleVariable<double> pTempPreNew;
@@ -3234,7 +3232,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
       new_dw->get(pvolume,               lb->pVolumeDeformedLabel,       pset);
-      old_dw->get(pexternalForce,        lb->pExternalForceLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,             pset);
       old_dw->get(pacceleration,         lb->pAccelerationLabel,         pset);
       old_dw->get(pTempOld,              lb->pTemperatureLabel,          pset);
