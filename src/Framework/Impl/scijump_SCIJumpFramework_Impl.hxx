@@ -1,0 +1,246 @@
+// 
+// File:          scijump_SCIJumpFramework_Impl.hxx
+// Symbol:        scijump.SCIJumpFramework-v0.2.1
+// Symbol Type:   class
+// Babel Version: 1.0.4
+// Description:   Server-side implementation for scijump.SCIJumpFramework
+// 
+// WARNING: Automatically generated; only changes within splicers preserved
+// 
+// 
+
+#ifndef included_scijump_SCIJumpFramework_Impl_hxx
+#define included_scijump_SCIJumpFramework_Impl_hxx
+
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
+#endif
+#ifndef included_scijump_SCIJumpFramework_IOR_h
+#include "scijump_SCIJumpFramework_IOR.h"
+#endif
+#ifndef included_gov_cca_AbstractFramework_hxx
+#include "gov_cca_AbstractFramework.hxx"
+#endif
+#ifndef included_gov_cca_CCAException_hxx
+#include "gov_cca_CCAException.hxx"
+#endif
+#ifndef included_gov_cca_Services_hxx
+#include "gov_cca_Services.hxx"
+#endif
+#ifndef included_gov_cca_TypeMap_hxx
+#include "gov_cca_TypeMap.hxx"
+#endif
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
+#ifndef included_scijump_SCIJumpFramework_hxx
+#include "scijump_SCIJumpFramework.hxx"
+#endif
+#ifndef included_sidl_BaseClass_hxx
+#include "sidl_BaseClass.hxx"
+#endif
+#ifndef included_sidl_BaseInterface_hxx
+#include "sidl_BaseInterface.hxx"
+#endif
+#ifndef included_sidl_ClassInfo_hxx
+#include "sidl_ClassInfo.hxx"
+#endif
+#ifndef included_sidl_RuntimeException_hxx
+#include "sidl_RuntimeException.hxx"
+#endif
+
+
+// DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._includes)
+#include <Core/Thread/Mutex.h>
+// DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._includes)
+
+namespace scijump { 
+
+  /**
+   * Symbol "scijump.SCIJumpFramework" (version 0.2.1)
+   */
+  class SCIJumpFramework_impl : public virtual ::scijump::SCIJumpFramework 
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._inherits)
+  // Insert-Code-Here {scijump.SCIJumpFramework._inherits} (optional inheritance here)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._inherits)
+  {
+
+  // All data marked protected will be accessable by 
+  // descendant Impl classes
+  protected:
+
+    bool _wrapped;
+
+    // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._implementation)
+    SCIRun::Mutex* lockCompIDs;
+    // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._implementation)
+
+  public:
+    // default constructor, used for data wrapping(required)
+    SCIJumpFramework_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+    SCIJumpFramework_impl( struct scijump_SCIJumpFramework__object * s ) : 
+      StubBase(s,true), _wrapped(false) { _ctor(); }
+
+    // user defined construction
+    void _ctor();
+
+    // virtual destructor (required)
+    virtual ~SCIJumpFramework_impl() { _dtor(); }
+
+    // user defined destruction
+    void _dtor();
+
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
+
+    // static class initializer
+    static void _load();
+
+  public:
+
+
+    /**
+     * Registers the slave framework with the master framework. Intended to be called
+     * only by the representative slave framework process.
+     * @param size Total number of parallel slave frameworks.
+     * @param slaveURLs Urls of the slave framework.
+     * @param slaveName Name of the slave resource.
+     * @return A positive number or zero if framework was registered
+     * successfully, negative number on error.
+     */
+    int32_t
+    registerLoader_impl (
+      /* in */const ::std::string& slaveName,
+      /* in array<string> */::sidl::array< ::std::string> slaveURLs
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    int32_t
+    unregisterLoader_impl (
+      /* in */const ::std::string& slaveName
+    )
+    ;
+
+
+    /**
+     *  
+     * Create an empty TypeMap. Presumably this would be used in 
+     * an ensuing call to <code>getServices()</code>. The "normal" method of
+     * creating typemaps is found in the <code>Services</code> interface. It
+     * is duplicated here to break the "chicken and egg" problem.
+     */
+    ::gov::cca::TypeMap
+    createTypeMap_impl() // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+    /**
+     *  
+     * Retrieve a Services handle to the underlying framework. 
+     * This interface effectively causes the calling program to 
+     * appear as the image of a component inside the framework.
+     * This method may be called any number of times
+     * with different arguments, creating a new component image 
+     * each time. 
+     * The only proper method to destroy a Services obtained 
+     * from this interface is to pass it to releaseServices.
+     * 
+     * @param selfInstanceName the Component instance name,
+     * as it will appear in the framework.
+     * 
+     * @param selfClassName the Component type of the 
+     * calling program, as it will appear in the framework. 
+     * 
+     * @param selfProperties (which can be null) the properties 
+     * of the component image to appear. 
+     * 
+     * @throws CCAException in the event that selfInstanceName 
+     * is already in use by another component.
+     * 
+     * @return  A Services object that pertains to the
+     * image of the this component. This is identical
+     * to the object passed into Component.setServices() 
+     * when a component is created.
+     */
+    ::gov::cca::Services
+    getServices_impl (
+      /* in */const ::std::string& selfInstanceName,
+      /* in */const ::std::string& selfClassName,
+      /* in */::gov::cca::TypeMap selfProperties
+    )
+    // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  
+     * Inform framework that the <code>Services</code> handle is no longer needed by the 
+     * caller and that the reference to its component image is to be
+     * deleted from the context of the underlying framework. This invalidates
+     * any <code>ComponentID</code>'s or <code>ConnectionID</code>'s associated 
+     * with the given <code>Services</code>' component image. 
+     * 
+     * @param services The result of getServices earlier obtained.
+     * 
+     * @throws CCAException if the <code>Services</code>
+     * handle has already been released or is otherwise rendered invalid 
+     * or was not obtained from <code>getServices()</code>.
+     */
+    void
+    releaseServices_impl (
+      /* in */::gov::cca::Services services
+    )
+    // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  
+     * Tell the framework it is no longer needed and to clean up after itself. 
+     * @throws CCAException if the framework has already been shutdown.
+     */
+    void
+    shutdownFramework_impl() // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+    /**
+     *  
+     * Creates a new framework instance based on the same underlying 
+     * framework implementation. This does not copy the existing 
+     * framework, nor are any of the user-instantiated components in
+     * the original framework available in the newly created 
+     * <code>AbstractFramework</code>. 
+     * 
+     * @throws CCAException when one of the following conditions occur:
+     * 
+     * (1)the AbstractFramework previously had shutdownFramework() called on it, or 
+     * (2)the underlying framework implementation does not permit creation 
+     * of another instance.	 
+     */
+    ::gov::cca::AbstractFramework
+    createEmptyFramework_impl() // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+  };  // end class SCIJumpFramework_impl
+
+} // end namespace scijump
+
+// DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._misc)
+// Insert-Code-Here {scijump.SCIJumpFramework._misc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._misc)
+
+#endif
