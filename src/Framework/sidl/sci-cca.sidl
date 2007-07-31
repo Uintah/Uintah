@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2007 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -116,73 +116,6 @@ package sci {
       string getSubscriptionName();
     }
 
-    interface Builder extends gov.cca.Component {
-      string getFrameworkURL();
-      string getConfigDir();
-
-      // wrapper for ComponentRepository
-      void getComponentClassDescriptions(out array<ComponentClassDescription> descArray);
-
-      // wrappers for BuilderService mostly
-      void getPortInfo(in gov.cca.ComponentID cid, in string portName, out string model, out string type);
-
-      // manage component creation/destruction
-      gov.cca.ComponentID createInstance(in ComponentClassDescription classDesc);
-      void destroyInstance(in gov.cca.ComponentID cid, in float timeout);
-      int destroyInstances(in array<gov.cca.ComponentID> cidArray, in float timeout);
-
-      gov.cca.ComponentID generateBridge(in gov.cca.ComponentID user,
-                                                                  in string usesPortName,
-                                                                  in gov.cca.ComponentID provider,
-                                                                  in string providesPortName,
-                                                                  out gov.cca.ConnectionID connID1,
-                                                                  out gov.cca.ConnectionID connID2);
-
-      void getUsedPortNames(in gov.cca.ComponentID cid, out array<string> nameArray);
-      void getProvidedPortNames(in gov.cca.ComponentID cid, out array<string> nameArray);
-
-      void getCompatiblePortList(in gov.cca.ComponentID c1,
-                                                  in string port1,
-                                                  in gov.cca.ComponentID c2,
-                                                  out array<string> portArray);
-
-      void getBridgeablePortList(in gov.cca.ComponentID c1,
-                                                in string port1,
-                                                in gov.cca.ComponentID c2,
-                                                out array<string> portArray);
-
-      // manage connections
-      gov.cca.ConnectionID connect(in gov.cca.ComponentID usesCID,
-                                                       in string usesPortName,
-                                                       in gov.cca.ComponentID providesCID,
-                                                       in string providesPortName);
-      void disconnect(in gov.cca.ConnectionID connID, in float timeout); // note: don't support timeout yet
-      // void disconnectAll(); note: not implemented in BuilderService yet
-
-      void addComponentFromXML(in string filePath, in string componentModel);
-
-      void addFrameworkProxy(in string loaderName,
-                                              in string user,
-                                              in string domain,
-                                              in string loaderPath);
-      void removeFrameworkProxy(in string name);
-
-      // manage go ports for the UI
-      bool connectGoPort(in string usesName,
-                                      in string providesPortName,
-                                      in gov.cca.ComponentID cid,
-                                      out string usesPortName);
-      void disconnectGoPort(in string goPortName);
-      int go(in string goPortName);
-
-      bool applicationFileExists();
-      void loadApplication(in string fileName,
-                                       out array<gov.cca.ComponentID> cidList,
-                                       out array<gov.cca.ConnectionID> connList);
-      void saveApplication();
-      void saveApplication[As](in string fileName);
-    }
-
     package ports {
 
       interface BuilderService extends gov.cca.ports.BuilderService {
@@ -260,5 +193,74 @@ package sci {
       }
 
     } // package ports
+
+    package ui {
+      interface Builder extends gov.cca.Component {
+        string getFrameworkURL();
+        string getConfigDir();
+
+        // wrapper for ComponentRepository
+        void getComponentClassDescriptions(out array<sci.cca.ComponentClassDescription> descArray);
+
+        // wrappers for BuilderService mostly
+        void getPortInfo(in gov.cca.ComponentID cid, in string portName, out string model, out string type);
+
+        // manage component creation/destruction
+        gov.cca.ComponentID createInstance(in sci.cca.ComponentClassDescription classDesc);
+        void destroyInstance(in gov.cca.ComponentID cid, in float timeout);
+        int destroyInstances(in array<gov.cca.ComponentID> cidArray, in float timeout);
+
+        gov.cca.ComponentID generateBridge(in gov.cca.ComponentID user,
+                                                                    in string usesPortName,
+                                                                    in gov.cca.ComponentID provider,
+                                                                    in string providesPortName,
+                                                                    out gov.cca.ConnectionID connID1,
+                                                                    out gov.cca.ConnectionID connID2);
+
+        void getUsedPortNames(in gov.cca.ComponentID cid, out array<string> nameArray);
+        void getProvidedPortNames(in gov.cca.ComponentID cid, out array<string> nameArray);
+
+        void getCompatiblePortList(in gov.cca.ComponentID c1,
+                                                    in string port1,
+                                                    in gov.cca.ComponentID c2,
+                                                    out array<string> portArray);
+
+        void getBridgeablePortList(in gov.cca.ComponentID c1,
+                                                  in string port1,
+                                                  in gov.cca.ComponentID c2,
+                                                  out array<string> portArray);
+
+        // manage connections
+        gov.cca.ConnectionID connect(in gov.cca.ComponentID usesCID,
+                                                         in string usesPortName,
+                                                         in gov.cca.ComponentID providesCID,
+                                                         in string providesPortName);
+        void disconnect(in gov.cca.ConnectionID connID, in float timeout); // note: don't support timeout yet
+        // void disconnectAll(); note: not implemented in BuilderService yet
+
+        void addComponentFromXML(in string filePath, in string componentModel);
+
+        void addFrameworkProxy(in string loaderName,
+                                                in string user,
+                                                in string domain,
+                                                in string loaderPath);
+        void removeFrameworkProxy(in string name);
+
+        // manage go ports for the UI
+        bool connectGoPort(in string usesName,
+                                        in string providesPortName,
+                                        in gov.cca.ComponentID cid,
+                                        out string usesPortName);
+        void disconnectGoPort(in string goPortName);
+        int go(in string goPortName);
+
+        bool applicationFileExists();
+        void loadApplication(in string fileName,
+                                         out array<gov.cca.ComponentID> cidList,
+                                         out array<gov.cca.ConnectionID> connList);
+        void saveApplication();
+        void saveApplication[As](in string fileName);
+      }
+    }
   } // package cca
 } // package sci
