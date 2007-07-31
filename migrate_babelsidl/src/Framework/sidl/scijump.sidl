@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2007 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -29,38 +29,39 @@ require gov.cca version 0.8.1;
 require sci.cca version 0.2.1;
 
 package scijump version 0.2.1 {
-    class SCIJumpFramework implements-all sci.cca.AbstractFramework {}
+  class SCIJumpFramework implements-all sci.cca.AbstractFramework {}
 
-    class Services implements-all gov.cca.Services {
-      opaque getData();
-    }
+  class Services implements-all gov.cca.Services {
+    opaque getData();
+  }
 
-    class ComponentClassDescription implements-all sci.cca.ComponentClassDescription {}
+  class ComponentClassDescription implements-all sci.cca.ComponentClassDescription {}
 
-    //class Component implements-all gov.cca.Component {}
+  //class Component implements-all gov.cca.Component {}
 
-    //class Port implements-all gov.cca.Port {}
+  //class Port implements-all gov.cca.Port {}
 
-    class TypeMap implements-all gov.cca.TypeMap {
-      // use to set internal SCI::TypeMap data for now
-      //void setInternalData(in opaque data);
-      //opaque getInternalData();
-    }
+  class TypeMap implements-all gov.cca.TypeMap {
+    // use to set internal SCI::TypeMap data for now
+    //void setInternalData(in opaque data);
+    //opaque getInternalData();
+  }
 
-    class ComponentID implements-all gov.cca.ComponentID {}
+  class ComponentID implements-all gov.cca.ComponentID {}
 
-    class CCAException implements-all gov.cca.CCAException {}
+  class CCAException implements-all gov.cca.CCAException {}
 
-    // EventService classes
+  class BuilderService implements-all sci.cca.ports.BuilderService {}
 
-    class Topic implements-all sci.cca.Topic {}
-    class EventService implements-all sci.cca.ports.EventService {}
+  // EventService classes
 
-    // EventService classes
+  class Topic implements-all sci.cca.Topic {}
+  class EventService implements-all sci.cca.ports.EventService {}
 
-    // UI classes (maybe put the UI classes in a different sidl file?)
+  // EventService classes
 
-    class GUIBuilder implements-all sci.cca.Builder, sci.cca.EventListener {
+  package ui {
+    class GUIBuilder implements-all sci.cca.ui.Builder, sci.cca.EventListener {
       // manage UI ports for the GUI
       // note: no UI handling for TxtBuilder
       bool connectUIPort(in string usesName,
@@ -90,6 +91,5 @@ package scijump version 0.2.1 {
       // opaque type is wxColor*
       opaque getPortColor(in string portName);
     }
-
-    // UI classes (maybe put the UI classes in a different sidl file?)
+  } // package ui
 } // package scijump
