@@ -26,24 +26,27 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 #include <Core/OS/Dir.h>
+
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Util/FileUtils.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #include <errno.h>
+
 #include <iostream>
+
 #ifndef _WIN32
-#include <unistd.h>
-#include <dirent.h>
+#  include <unistd.h>
+#  include <dirent.h>
 #else
-#include <Core/Malloc/Allocator.h>
+#  include <Core/Malloc/Allocator.h>
 #endif
 
 using namespace std;
-
 using namespace SCIRun;
 
 Dir Dir::create(const string& name)
@@ -78,33 +81,80 @@ Dir& Dir::operator=(const Dir& copy)
    return *this;
 }
 
-void Dir::remove(bool throwOnError)
+void
+Dir::remove(bool throwOnError)
 {
   int code = rmdir(name_.c_str());
   if (code != 0) {
-    ErrnoException exception("Dir::remove (rmdir call): " + name_, errno, __FILE__, __LINE__);
+    ErrnoException exception("Dir::remove()::rmdir: " + name_, errno, __FILE__, __LINE__);
     if (throwOnError)
       throw exception;
     else
-      cerr << "WARNING: " << exception.message() << endl;
+      cerr << "WARNING: " << exception.message() << "\n";
   }
   return;
 }
 
-void Dir::forceRemove(bool throwOnError)
+// Removes a directory (and all its contents) using C++ calls.  Returns true if it succeeds.
+bool
+Dir::removeDir( const char * dirName )
+{
+  // Walk through the dir, delete files, find sub dirs, recurse, delete sub dirs, ...
+
+  DIR *    dir = opendir( dirName );
+  dirent * file = 0;
+
+  if( dir == NULL ) {
+    cout << "Error in Dir::removeDir():\n";
+    cout << "  opendir failed for " << dirName << "\n";
+    cout << "  - errno is " << errno << "\n";
+    return false;
+  }
+
+  file = readdir(dir);
+  while( file ) {
+    if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") !=0) {
+      string fullpath = string(dirName) + "/" + file->d_name;
+      if( file->d_type & DT_DIR ) {
+        removeDir( fullpath.c_str() );
+      } else {
+        int rc = ::remove( fullpath.c_str() );
+        if (rc != 0) {
+          cout << "WARNING: remove() failed for '" << fullpath.c_str() 
+               << "'.  Return code is: " << rc << ", errno: " << errno << ": " << strerror(errno) << "\n";
+          return false;
+        }
+      }
+    }
+    file = readdir(dir);
+  }
+
+  closedir(dir);
+  int code = rmdir( dirName );
+
+  if (code != 0) {
+    cerr << "Error, rmdir failed for '" << dirName << "'\n";
+    cerr << "  errno is " << errno << "\n";
+    return false;
+  }
+  return true;
+}
+
+void
+Dir::forceRemove(bool throwOnError)
 {
    int code = system((string("rm -f -r ") + name_).c_str());
    if (code != 0) {
-     ErrnoException exception(string("Dir::remove failed to remove: ") + name_, errno, __FILE__, __LINE__);
+     ErrnoException exception(string("Dir::forceRemove() failed to remove: ") + name_, errno, __FILE__, __LINE__);
      if (throwOnError)
        throw exception;
      else
-       cerr << "WARNING: " << exception.message() << endl;
+       cerr << "WARNING: " << exception.message() << "\n";
    }
-   return;
 }
 
-void Dir::remove(const string& filename, bool throwOnError)
+void
+Dir::remove(const string& filename, bool throwOnError)
 {
    string filepath = name_ + "/" + filename;
    int code = system((string("rm -f ") + filepath).c_str());
@@ -113,23 +163,25 @@ void Dir::remove(const string& filename, bool throwOnError)
      if (throwOnError)
        throw exception;
      else
-       cerr << "WARNING: " << exception.message() << endl;
+       cerr << "WARNING: " << exception.message() << "\n";
    }
-   return;
 }
 
-Dir Dir::createSubdir(const string& sub)
+Dir
+Dir::createSubdir(const string& sub)
 {
    return create(name_+"/"+sub);
 }
 
-Dir Dir::getSubdir(const string& sub)
+Dir
+Dir::getSubdir(const string& sub)
 {
    // This should probably do more
    return Dir(name_+"/"+sub);
 }
 
-void Dir::copy(Dir& destDir)
+void
+Dir::copy(Dir& destDir)
 {
    int code = system((string("cp -r ") + name_ + " " + destDir.name_).c_str());
    if (code != 0)
@@ -137,7 +189,8 @@ void Dir::copy(Dir& destDir)
    return;
 }
 
-void Dir::move(Dir& destDir)
+void
+Dir::move(Dir& destDir)
 {
    int code = system((string("mv ") + name_ + " " + destDir.name_).c_str());
    if (code != 0)
@@ -145,7 +198,8 @@ void Dir::move(Dir& destDir)
    return;
 }
 
-void Dir::copy(const std::string& filename, Dir& destDir)
+void
+Dir::copy(const std::string& filename, Dir& destDir)
 {
    string filepath = name_ + "/" + filename;
    int code =system((string("cp ") + filepath + " " + destDir.name_).c_str());
@@ -154,7 +208,8 @@ void Dir::copy(const std::string& filename, Dir& destDir)
    return;
 }
 
-void Dir::move(const std::string& filename, Dir& destDir)
+void
+Dir::move(const std::string& filename, Dir& destDir)
 {
    string filepath = name_ + "/" + filename;
    int code =system((string("mv ") + filepath + " " + destDir.name_).c_str());
@@ -163,8 +218,9 @@ void Dir::move(const std::string& filename, Dir& destDir)
    return;
 }
 
-void Dir::getFilenamesBySuffix(const std::string& suffix,
-			       vector<string>& filenames)
+void
+Dir::getFilenamesBySuffix( const std::string& suffix,
+                           vector<string>& filenames )
 {
   DIR* dir = opendir(name_.c_str());
   if (!dir) 
@@ -174,12 +230,13 @@ void Dir::getFilenamesBySuffix(const std::string& suffix,
     if ((strlen(file->d_name)>=strlen(ext)) && 
 	(strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
       filenames.push_back(file->d_name);
-      cout << "  Found " << file->d_name << endl;
+      cout << "  Found " << file->d_name << "\n";
     }
   }
 }
 
-bool Dir::exists()
+bool
+Dir::exists()
 {
   struct stat buf;
   if(LSTAT(name_.c_str(),&buf) != 0)
@@ -199,7 +256,8 @@ struct DIR
   dirent return_on_read;
 };
 
-DIR *opendir(const char *name)
+DIR *
+opendir(const char *name)
 {
   // grab the first file in the directory by ending name with "/*"
   DIR *dir = 0;
@@ -227,7 +285,8 @@ DIR *opendir(const char *name)
   return 0;
 }
 
-int closedir(DIR *dir)
+int
+closedir(DIR *dir)
 {
   int result = -1;
   if (dir) {
@@ -255,7 +314,9 @@ dirent *readdir(DIR *dir)
   return 0;
 }
 
-void rewinddir(DIR *dir)
+void
+rewinddir(DIR *dir)
 {
+  cout << "  WARNING!!!  Core/OS/Dir.cc rewinddir() is not implemented under Windows!\n";
 }
 #endif
