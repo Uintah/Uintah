@@ -15,7 +15,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrcFactory.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -114,13 +114,9 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
          src_db != 0; src_db = src_db->findNextBlock("source")) {
       string src_name;
       src_db->require("name",src_name);
-      if (src_name == "zero_src") {
         //cout << d_scalar_name << " " << src_name << endl;
-        d_extraScalarSrc = scinew ZeroExtraScalarSrc(d_lab, d_MAlab,
-					             d_scalar_nonlin_src_label);
-      }
-      else
-        throw InvalidValue("Source not supported: " + src_name, __FILE__, __LINE__);
+      d_extraScalarSrc = ExtraScalarSrcFactory::self().create(d_lab, d_MAlab,
+                         d_scalar_nonlin_src_label, src_name);
       d_extraScalarSrc->problemSetup(src_db);
       d_extraScalarSources.push_back(d_extraScalarSrc);
     }
