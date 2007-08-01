@@ -20,10 +20,8 @@ using namespace Uintah;
 ZeroExtraScalarSrc::ZeroExtraScalarSrc(const ArchesLabel* label, 
 			       const MPMArchesLabel* MAlb,
                                const VarLabel* d_src_label):
-                               ExtraScalarSrc(label, MAlb),
-                               d_scalar_nonlin_src_label(d_src_label)
+                               ExtraScalarSrc(label, MAlb, d_src_label)
 {
-d_scalar_nonlin_src_label->addReference();
 }
 
 //****************************************************************************
@@ -31,7 +29,6 @@ d_scalar_nonlin_src_label->addReference();
 //****************************************************************************
 ZeroExtraScalarSrc::~ZeroExtraScalarSrc()
 {
-  VarLabel::destroy(d_scalar_nonlin_src_label);
 }
 
 //****************************************************************************
