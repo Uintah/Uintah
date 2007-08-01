@@ -1,0 +1,24 @@
+#!/bin/csh
+
+if( $#argv == 0 ) then
+  echo " usage:  catBurnedMass  <uda>"
+  exit
+endif
+
+set uda = $argv
+if( ! -e $uda) then
+  echo " usage:  catBurnedMass  <uda>"
+  echo " The directory $uda does not exist now exiting"
+  exit
+endif
+
+/bin/rm TMB.dat
+
+cp totalMassBurned.dat  TMB.dat
+
+cat $uda/totalMassBurned.dat >> TMB.dat 
+
+sort TMB.dat | uniq > totalMassBurned.dat
+
+
+exit
