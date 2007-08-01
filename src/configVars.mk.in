@@ -695,7 +695,7 @@ endif
 .s.$(OBJEXT): $<
 	$(AS) $(ASFLAGS) -o $@ $< -o $@
 
-.cxx.o: $<
+.cxx.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
@@ -704,9 +704,9 @@ endif
 ifeq ($(CC_DEPEND_MODE),normal)
   ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling: $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
   else
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
   endif
 else
   ifeq ($(CC_DEPEND_MODE),modify)
