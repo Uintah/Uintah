@@ -42,7 +42,8 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for ExtraScalarSrc.
       ExtraScalarSrc(const ArchesLabel* label, 
-		     const MPMArchesLabel* MAlb);
+		     const MPMArchesLabel* MAlb,
+                     const VarLabel* d_src_label);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -63,6 +64,7 @@ public:
 protected:
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
+      const VarLabel* d_scalar_nonlin_src_label;
 
 private:
 

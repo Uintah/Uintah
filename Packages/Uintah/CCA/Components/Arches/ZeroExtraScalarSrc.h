@@ -60,7 +60,6 @@ public:
 				   const MaterialSet* matls,
 				   const TimeIntegratorLabel* timelabels);
 protected:
-      const VarLabel* d_scalar_nonlin_src_label;
 
 private:
       ZeroExtraScalarSrc();
