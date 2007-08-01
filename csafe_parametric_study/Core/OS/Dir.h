@@ -31,23 +31,24 @@
 #define Core_OS_Dir_H
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
+#include   <string>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#include <io.h>
-#include <direct.h>
-#include <sys/stat.h>
-#define S_IRUSR 0x0100
-#define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
-#define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
+#  include <io.h>
+#  include <direct.h>
+#  include <sys/stat.h>
+#  define S_IRUSR 0x0100
+#  define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
+#  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
 #endif
 
 #include <Core/OS/share.h>
+
 namespace SCIRun {
    
-   /**************************************
+/**************************************
      
      CLASS
        Dir
@@ -72,75 +73,74 @@ namespace SCIRun {
       
      WARNING
       
-     ****************************************/
+****************************************/
     
-   class SCISHARE Dir {
-   public:
-      Dir();
-      Dir(const Dir&);
-      Dir(const std::string&);
-      ~Dir();
-      Dir& operator=(const Dir&);
-
-      static Dir create(const std::string& name);
-      
-      void remove(bool throwOnError = true);
+class SCISHARE Dir {
+public:
+  Dir();
+  Dir(const Dir&);
+  Dir(const std::string&);
+  ~Dir();
+  Dir& operator=(const Dir&);
+  
+  static Dir create(const std::string& name);
+  
+  void remove(bool throwOnError = true);
     
-      // removes even if the directory has contents
-      void forceRemove(bool throwOnError = true);
+  // removes even if the directory has contents
+  void forceRemove(bool throwOnError = true);
 
-      // remove a file
-      void remove(const std::string& filename, bool throwOnError = true);
+  // remove a file
+  void remove(const std::string& filename, bool throwOnError = true);
 
-      // copy this directory to under the destination directory
-      void copy(Dir& destDir);
-      void move(Dir& destDir);
+  // copy this directory to under the destination directory
+  void copy(Dir& destDir);
+  void move(Dir& destDir);
 
-      // copy a file in this directory to the destination directory
-      void copy(const std::string& filename, Dir& destDir);
-      void move(const std::string& filename, Dir& destDir);
+  // copy a file in this directory to the destination directory
+  void copy(const std::string& filename, Dir& destDir);
+  void move(const std::string& filename, Dir& destDir);
+  
+  Dir createSubdir(const std::string& name);
+  Dir getSubdir(const std::string& name);
+  bool exists();
+  
+  void getFilenamesBySuffix( const std::string& suffix,
+                             std::vector<std::string>& filenames );
 
-      Dir createSubdir(const std::string& name);
-      Dir getSubdir(const std::string& name);
-      bool exists();
+  std::string getName() const {
+    return name_;
+  }
 
-      void getFilenamesBySuffix(const std::string& suffix,
-                                std::vector<std::string>& filenames);
+  // Delete the dir and all of its files/sub directories using C++ calls.
+  //
+  static bool removeDir( const char * dirName );
+  
+private:
 
-      std::string getName() const {
-         return name_;
-      }
-   private:
+  std::string name_;
+};
 
-      std::string name_;
-   };
 } // End namespace SCIRun
 
 #ifdef _WIN32
-// windows mkdir doesn't take permissions
-#  define MKDIR(dir, perm) mkdir(dir)
-// windows doesn't have lstat
-#  define LSTAT(file, buf) stat(file, buf)
-
+#  define MKDIR(dir, perm) mkdir(dir)       // windows mkdir doesn't take permissions
+#  define LSTAT(file, buf) stat(file, buf)  // windows doesn't have lstat
 // windows doesn't have dirent... make them here
-struct dirent
-{
-    char *d_name;
-};
+   struct dirent
+   {
+      char *d_name;
+   };
+   struct DIR;
 
-struct DIR;
+   SCISHARE DIR *opendir(const char *);
+   SCISHARE int closedir(DIR *);
+   SCISHARE dirent *readdir(DIR *);
 
-SCISHARE DIR *opendir(const char *);
-SCISHARE int closedir(DIR *);
-SCISHARE dirent *readdir(DIR *);
-
-// not implemented yet...
-SCISHARE void rewinddir(DIR *);
-
-
+   SCISHARE void rewinddir(DIR *); // not implemented yet...
 #else
 #  define MKDIR(dir, perm) mkdir(dir, perm)
 #  define LSTAT(file, buf) lstat(file, buf)
 #endif
 
-#endif
+#endif // Core_OS_Dir_H

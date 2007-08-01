@@ -65,6 +65,9 @@ SCISHARE bool validFile( std::string filename );
 SCISHARE bool validDir( std::string filename );
 SCISHARE bool isSymLink( std::string filename );
 
+// Creates a temp file (in directoryPath), writes to it, checks the resulting files size, and then deletes it...
+SCISHARE bool testFilesystem( std::string directoryPath );
+
 } // End namespace SCIRun
 
 #endif
