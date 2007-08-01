@@ -13,19 +13,15 @@ namespace Uintah {
 
   class ExtraScalarSrcFactory {
   public:
-    static ExtraScalarSrcFactory& self();
-    
-    
-    ExtraScalarSrc* create(const ArchesLabel* label, 
-			   const MPMArchesLabel* MAlb,
-                           const VarLabel* d_src_label,
-                           const std::string d_src_name);
-                              
-  private:
     ExtraScalarSrcFactory();
     ~ExtraScalarSrcFactory();
-    ExtraScalarSrcFactory(const ExtraScalarSrcFactory&); // no copying
-    ExtraScalarSrcFactory& operator=(const ExtraScalarSrcFactory&); // no assignment
+    
+    
+    static ExtraScalarSrc* create(const ArchesLabel* label, 
+			          const MPMArchesLabel* MAlb,
+                                  const VarLabel* d_src_label,
+                                  const std::string d_src_name);
+                              
   };
 
 } // End namespace Uintah

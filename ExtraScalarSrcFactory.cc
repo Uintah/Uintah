@@ -9,12 +9,6 @@
 using namespace std;
 using namespace Uintah;
 
-ExtraScalarSrcFactory& ExtraScalarSrcFactory::self()
-{
-  static ExtraScalarSrcFactory factory;
-  return factory;
-}
-
 ExtraScalarSrcFactory::ExtraScalarSrcFactory()
 {
 }
