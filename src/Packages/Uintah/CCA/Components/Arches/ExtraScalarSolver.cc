@@ -14,6 +14,8 @@
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
+#include <Packages/Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -46,6 +48,7 @@ ExtraScalarSolver::ExtraScalarSolver(const ArchesLabel* label,
   d_discretize = 0;
   d_source = 0;
   d_rhsSolver = 0;
+  d_calcExtraScalarSrcs = false;
 }
 
 //****************************************************************************
@@ -61,6 +64,9 @@ ExtraScalarSolver::~ExtraScalarSolver()
   VarLabel::destroy(d_scalar_coef_label);
   VarLabel::destroy(d_scalar_diff_coef_label);
   VarLabel::destroy(d_scalar_nonlin_src_label);
+  if (d_calcExtraScalarSrcs)
+    for (int i=0; i < static_cast<int>(d_extraScalarSources.size()); i++)
+      delete d_extraScalarSources[i];
 }
 
 //****************************************************************************
@@ -100,6 +106,25 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
     cout << "falls back on full upwind for scalar " << d_scalar_name << endl;
   }
 
+  d_calcExtraScalarSrcs = false;
+  ProblemSpecP extra_sc_src_db = db->findBlock("sources");
+  if (extra_sc_src_db != 0) {
+    d_calcExtraScalarSrcs = true;
+    for (ProblemSpecP src_db = extra_sc_src_db->findBlock("source");
+         src_db != 0; src_db = src_db->findNextBlock("source")) {
+      string src_name;
+      src_db->require("name",src_name);
+      if (src_name == "zero_src") {
+        //cout << d_scalar_name << " " << src_name << endl;
+        d_extraScalarSrc = scinew ZeroExtraScalarSrc(d_lab, d_MAlab,
+					             d_scalar_nonlin_src_label);
+      }
+      else
+        throw InvalidValue("Source not supported: " + src_name, __FILE__, __LINE__);
+      d_extraScalarSrc->problemSetup(src_db);
+      d_extraScalarSources.push_back(d_extraScalarSrc);
+    }
+  }
 
 /*  string limiter_type;
   if (d_conv_scheme == 1) {
@@ -166,6 +191,11 @@ ExtraScalarSolver::solve(SchedulerP& sched,
   sched_buildLinearMatrix(sched, patches, matls, timelabels, d_EKTCorrection,
                           doing_EKT_now);
   
+  if (d_calcExtraScalarSrcs)
+    for (int i=0; i < static_cast<int>(d_extraScalarSources.size()); i++)
+      d_extraScalarSources[i]->sched_addExtraScalarSrc(sched, patches,
+                                                       matls, timelabels);
+
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
   sched_scalarLinearSolve(sched, patches, matls, timelabels, d_EKTCorrection,
