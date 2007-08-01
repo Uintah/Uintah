@@ -33,12 +33,19 @@ SRCDIR := Framework/sidl
 
 SRCDIR_ABS :=  $(SRCTOP_ABS)/$(SRCDIR)
 IMPLDIR_ABS := $(SRCDIR_ABS)/Impl
+IMPLDIR := $(SRCDIR)/Impl
+GLUEDIR_ABS := $(IMPLDIR_ABS)/glue
+GLUEDIR := $(IMPLDIR)/glue
+
 SIDL := \
         $(SRCDIR_ABS)/sci-cca.sidl \
         $(SRCDIR_ABS)/scijump.sidl
 
+
 OUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
-GLUEDIR := $(OUTPUTDIR_ABS)/glue
+OUTIMPLDIR_ABS := $(OUTPUTDIR_ABS)/Impl
+OUTGLUEDIR_ABS := $(OUTIMPLDIR_ABS)/glue
+
 
 # Need a list ($(FWK_IMPLSRCS) of Babel impl files as target dependencies,
 # which forces running Babel whenever the impl files are changed.
@@ -50,18 +57,30 @@ FWK_IMPLSRCS := \
                 $(IMPLDIR_ABS)/scijump_SCIJumpFramework_Impl.hxx \
                 $(IMPLDIR_ABS)/scijump_SCIJumpFramework_Impl.cxx \
                 $(IMPLDIR_ABS)/scijump_Topic_Impl.hxx \
-                $(IMPLDIR_ABS)/scijump_Topic_Impl.cxx
+                $(IMPLDIR_ABS)/scijump_Topic_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_PublisherEventService_Impl.hxx \
+	            $(IMPLDIR_ABS)/scijump_PublisherEventService_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_Event_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_Event_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_SubscriberEventService_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_SubscriberEventService_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_EventListener_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_EventListener_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_Subscription_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_Subscription_Impl.cxx 
 
-$(OUTPUTDIR_ABS)/babel.make: $(GLUEDIR)/server.make
+
+$(GLUEDIR_ABS)/babel.make: $(GLUEDIR_ABS)/server.make
 
 #--generate-subdirs
-$(GLUEDIR)/server.make: $(SIDL) $(FWK_IMPLSRCS) Core/Babel/timestamp
-	if ! test -d $(OUTPUTDIR_ABS); then mkdir -p $(OUTPUTDIR_ABS); fi
-	$(BABEL) --server=C++ --output-directory=$(OUTPUTDIR_ABS) --hide-glue --repository-path=$(BABEL_REPOSITORY) --vpath=$(IMPLDIR_ABS) $(filter %.sidl, $+)
+$(GLUEDIR_ABS)/server.make: $(SIDL) $(FWK_IMPLSRCS) Core/Babel/timestamp
+	if ! test -d $(OUTGLUEDIR_ABS); then mkdir -p $(OUTGLUEDIR_ABS); fi
+	$(BABEL) --server=C++ --output-directory=$(IMPLDIR_ABS) --hide-glue --repository-path=$(BABEL_REPOSITORY) --vpath=$(IMPLDIR_ABS) $(filter %.sidl, $+)
 	mv $(dir $@)babel.make $@
 
-$(GLUEDIR)/client.make: $(CCASIDL)
-	$(BABEL) --client=C++ --hide-glue --output-directory=$(OUTPUTDIR_ABS) $<
+
+$(GLUEDIR_ABS)/client.make: $(CCASIDL)
+	$(BABEL) --client=C++ --hide-glue --output-directory=$(IMPLDIR_ABS) $<
 	mv $(dir $@)babel.make $@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -71,19 +90,19 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 IORSRCS :=
 STUBSRCS :=
 SKELSRCS :=
-include $(GLUEDIR)/server.make
+include $(GLUEDIR_ABS)/server.make
 SRCS += $(patsubst %,$(GLUEDIR)/%,$(IORSRCS) $(STUBSRCS) $(SKELSRCS))
 
 STUBSRCS :=
-include $(GLUEDIR)/client.make
+include $(GLUEDIR_ABS)/client.make
 SRCS += $(patsubst %,$(GLUEDIR)/%,$(STUBSRCS))
 
 IMPLSRCS :=
-include $(OUTPUTDIR_ABS)/babel.make
-SRCS += $(patsubst %,$(OUTPUTDIR_ABS)/%,$(IMPLSRCS))
+include $(IMPLDIR_ABS)/babel.make
+SRCS += $(patsubst %,$(IMPLDIR)/%,$(IMPLSRCS))
 
 PSELIBS := Core/Thread Framework/Core
-INCLUDES += -I$(OUTPUTDIR_ABS) -I$(GLUEDIR) $(BABEL_INCLUDE)
+INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
 LIBS := $(BABEL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
