@@ -59,6 +59,7 @@ namespace Uintah {
   class BoundaryCondition;
   class RHSSolver;
   class TimeIntegratorLabel;
+  class ExtraScalarSrc;
 
 class ExtraScalarSolver {
 
@@ -136,7 +137,7 @@ private:
 
       // GROUP: Constructors (Private):
       ////////////////////////////////////////////////////////////////////////
-      // Default : Construct an empty instance of the Pressure solver.
+      // Default : Construct an empty instance of the solver.
       ExtraScalarSolver();
 
       // GROUP: Action Methods (private) :
@@ -206,6 +207,10 @@ private:
       const VarLabel* d_scalar_coef_label;
       const VarLabel* d_scalar_diff_coef_label;
       const VarLabel* d_scalar_nonlin_src_label;
+
+      bool d_calcExtraScalarSrcs;
+      ExtraScalarSrc* d_extraScalarSrc;
+      vector<ExtraScalarSrc*> d_extraScalarSources;
 
 
 }; // End class ExtraScalarSolver
