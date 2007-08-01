@@ -115,7 +115,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
       string src_name;
       src_db->require("name",src_name);
         //cout << d_scalar_name << " " << src_name << endl;
-      d_extraScalarSrc = ExtraScalarSrcFactory::self().create(d_lab, d_MAlab,
+      d_extraScalarSrc = ExtraScalarSrcFactory::create(d_lab, d_MAlab,
                          d_scalar_nonlin_src_label, src_name);
       d_extraScalarSrc->problemSetup(src_db);
       d_extraScalarSources.push_back(d_extraScalarSrc);
