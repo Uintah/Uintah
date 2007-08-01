@@ -51,7 +51,9 @@ foreach $e (@{$data->{start}->[0]->{Test}})
 
 	print "$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]\n";
 	`rm -f $uda_files[$k].tmp`;    # Deleting the tmp file (if it already exists)
-	`$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]`;
+	@args = ("$int_command","-o","$uda_files[$k].tmp","-uda","$uda_files[$k]");
+	system("@args")==0 or die "@args failed: $?";
+#	`$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]`;
 	$tmp = `cat $uda_files[$k].tmp`; # This is the output from the compare_mms utility
 	chomp($tmp);   # Removing the carriage return from the end
 	my $prev_line = "";

@@ -62,12 +62,15 @@ for($i = 0; $i<=$#testFiles; $i++)
     if ( ($tmp[$#tmp] eq "xml") || ($tmp[$#tmp] eq "XML") )
     {
 	print "Launching driver.pl $testFileName & \n";
-	system("driver.pl $testFileName &");
+	@args = ("driver.pl","$testFileName &");
+	system("@args")==0 or die "@args failed";
     }
     elsif(($tmp[$#tmp] eq "tst") || ($tmp[$#tmp] eq "TST"))
     {
 	print "Launching run_tests.pl $testFileName\n";
-	`run_tests.pl $testFileName`;
+#	`run_tests.pl $testFileName`;
+	@args = ("run_tests.pl","$testFileName");
+	system("@args")==0  or die "@args failed";
     }
     
     # Change back into the current working dir to proceed with     

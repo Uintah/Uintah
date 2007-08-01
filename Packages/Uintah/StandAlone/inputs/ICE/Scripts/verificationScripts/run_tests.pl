@@ -48,7 +48,6 @@ foreach $e (@{$data->{Test}})
 $num_of_tests=$i;
 
 
-#print @compare_conf;
 # Extracting info out of the config file
 
 my $i=0;
@@ -240,11 +239,15 @@ for ($i=0;$i<$num_of_tests;$i++)
 	print statsFile "Command Used (interactive) : "."$int $test_ups"."\n";
 	print "Launching sus\n";
 	$now = time();
-	$tmp=`$int $test_ups`;
+#	$tmp=`$int $test_ups`;
+	@args = ("$int","$test_ups");
+	system("@args")==0 or die "@args failed: $?";
 	if($compCommand[$i])
 	{
 	    print "Launching analyze_results.pl $compFilename\n";
-	    $tmp=`analyze_results.pl $compFilename`;
+#	    $tmp=`analyze_results.pl $compFilename`;
+	    @args = ("analyze_results.pl","$test_ups");
+	    system("@args")==0 or die "@args failed: $?";
 	}
 	$fin = time()-$now;
 	print  statsFile "Running Time : ".$fin."\n";
