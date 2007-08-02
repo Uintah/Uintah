@@ -75,6 +75,6 @@ if($hardcopy == "y" || $hardcopy == "Y") then
   mogrify -rotate 90 plotCPU_utilization.jpg
 endif
 
-/bin/rm .data
+/bin/rm .data .gp
 
 exit
