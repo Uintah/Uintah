@@ -45,7 +45,9 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.Topic._includes)
-#include <string>;
+#include <string>
+#include <vector>
+#include <scijump_Event.hxx>
 // DO-NOT-DELETE splicer.end(scijump.Topic._includes)
 
 namespace scijump { 
@@ -67,6 +69,7 @@ namespace scijump {
 
     // DO-NOT-DELETE splicer.begin(scijump.Topic._implementation)
     std::string topicName;
+    std::vector< scijump::Event> eventList;
     // DO-NOT-DELETE splicer.end(scijump.Topic._implementation)
 
   public:
@@ -97,17 +100,24 @@ namespace scijump {
 
 
     /**
-     * @return Topic name (from EventService.createTopic)
+     *  Returns the topic name associated with this object 
      */
     ::std::string
     getTopicName_impl() ;
 
     /**
      *  Publish an event. 
+     * 
+     * @eventName - The name of this event. It is perhaps not a crucial
+     * piece of information. Can be inserted into the
+     * header or the body of the event by the event
+     * service.
+     * @eventBody - A typemap containing all the information to be 
+     * sent out.
      */
     void
     sendEvent_impl (
-      /* in */const ::std::string& name,
+      /* in */const ::std::string& eventName,
       /* in */::gov::cca::TypeMap eventBody
     )
     // throws:

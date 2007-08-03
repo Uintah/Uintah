@@ -33,6 +33,7 @@ SRCDIR := Framework
 
 SUBDIRS := \
            $(SRCDIR)/Core \
-           $(SRCDIR)/sidl
+           $(SRCDIR)/sidl \
+           $(SRCDIR)/StandAlone
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

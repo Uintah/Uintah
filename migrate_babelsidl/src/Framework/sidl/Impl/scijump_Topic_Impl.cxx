@@ -69,7 +69,7 @@ void scijump::Topic_impl::_load() {
 
 // user defined non-static methods:
 /**
- * @return Topic name (from EventService.createTopic)
+ *  Returns the topic name associated with this object 
  */
 ::std::string
 scijump::Topic_impl::getTopicName_impl () 
@@ -82,24 +82,33 @@ scijump::Topic_impl::getTopicName_impl ()
 
 /**
  *  Publish an event. 
+ * 
+ * @eventName - The name of this event. It is perhaps not a crucial
+ * piece of information. Can be inserted into the
+ * header or the body of the event by the event
+ * service.
+ * @eventBody - A typemap containing all the information to be 
+ * sent out.
  */
 void
 scijump::Topic_impl::sendEvent_impl (
-  /* in */const ::std::string& name,
+  /* in */const ::std::string& eventName,
   /* in */::gov::cca::TypeMap eventBody ) 
 // throws:
 //     ::sci::cca::EventServiceException
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Topic.sendEvent)
-  // Insert-Code-Here {scijump.Topic.sendEvent} (sendEvent method)
-  // 
-  // This method has not been implemented
-  // 
-    ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-    ex.setNote("This method has not been implemented");
-    ex.add(__FILE__, __LINE__, "sendEvent");
-    throw ex;
+  scijump::Event event = scijump::Event::_create();
+  //gov::cca::TypeMap eventHeader = gov::cca::TypeMap::_create();
+  //eventHeader.putString("eventName",eventName);
+
+  //TODO: framework should put other info in event header
+  //event.setHeader(eventHeader);
+  event.setBody(eventBody);
+  
+
+  eventList.push_back(event);
   // DO-NOT-DELETE splicer.end(scijump.Topic.sendEvent)
 }
 

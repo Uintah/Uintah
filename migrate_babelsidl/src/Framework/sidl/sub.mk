@@ -48,8 +48,40 @@ OUTGLUEDIR_ABS := $(OUTIMPLDIR_ABS)/glue
 
 $(IMPLDIR_ABS)/serverbabel.make: $(GLUEDIR_ABS)/serverbabel.make
 
+<<<<<<< .mine
+# Need a list ($(FWK_IMPLSRCS) of Babel impl files as target dependencies,
+# which forces running Babel whenever the impl files are changed.
+#
+# The full list of Babel impl files is included from Babel-generated
+# makefiles (below).
+
+FWK_IMPLSRCS := \
+                $(IMPLDIR_ABS)/scijump_SCIJumpFramework_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_SCIJumpFramework_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_TypeMap_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_TypeMap_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_Topic_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_Topic_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_PublisherEventService_Impl.hxx \
+	        $(IMPLDIR_ABS)/scijump_PublisherEventService_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_Event_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_Event_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_SubscriberEventService_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_SubscriberEventService_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_EventListener_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_EventListener_Impl.cxx \
+                $(IMPLDIR_ABS)/scijump_Subscription_Impl.hxx \
+                $(IMPLDIR_ABS)/scijump_Subscription_Impl.cxx 
+
+
+$(GLUEDIR_ABS)/babel.make: $(GLUEDIR_ABS)/server.make
+
+#--generate-subdirs
+$(GLUEDIR_ABS)/server.make: $(SIDL) $(FWK_IMPLSRCS) Core/Babel/timestamp
+=======
 #--generate-subdirs, target dep: $(FWK_IMPLSRCS)
 $(GLUEDIR_ABS)/serverbabel.make: $(SIDL) Core/Babel/timestamp
+>>>>>>> .r38266
 	if ! test -d $(OUTGLUEDIR_ABS); then mkdir -p $(OUTGLUEDIR_ABS); fi
 	$(BABEL) --server=C++ \
            --output-directory=$(IMPLDIR_ABS) \
