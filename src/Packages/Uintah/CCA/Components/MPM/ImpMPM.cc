@@ -1461,15 +1461,18 @@ void ImpMPM::iterate(const ProcessorGroup*,
     if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
       restart_nan=true;
-      cerr << "Restarting due to a nan residual" << endl;
+      if(UintahParallelComponent::d_myworld->myrank()==0)
+        cerr << "Restarting due to a nan residual" << endl;
     }
-    if (dispIncQNorm/dispIncQNorm0 < 0. ||dispIncNorm/dispIncNormMax < 0.){
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) < 0. ||dispIncNorm/(dispIncNormMax+1e-100) < 0.){
       restart_neg_residual=true;
-      cerr << "Restarting due to a negative residual" << endl;
+      if(UintahParallelComponent::d_myworld->myrank()==0)
+        cerr << "Restarting due to a negative residual" << endl;
     }
     if (count > flags->d_max_num_iterations){
       restart_num_iters=true;
-      cerr << "Restarting due to exceeding max number of iterations" << endl;
+      if(UintahParallelComponent::d_myworld->myrank()==0)
+        cerr << "Restarting due to exceeding max number of iterations" << endl;
     }
     if (restart_nan || restart_neg_residual || restart_num_iters) {
       new_dw->abortTimestep();
