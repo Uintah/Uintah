@@ -28,7 +28,7 @@ DebugStream dilate_dbg("Regridder_dilate", false);
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
   rdbg << "RegridderCommon::RegridderCommon() BGN" << endl;
-  d_filterType = FILTER_STAR;
+  d_filterType = FILTER_BOX;
   d_lastRegridTimestep = 0;
   d_dilationTimestep = 3;
   d_dilatedCellsStabilityLabel  = VarLabel::create("DilatedCellsStability",
@@ -189,8 +189,10 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
 
         //add overlapping fine patches to fpq
         for(int p=0;p<fp.size();p++)
+        {
           fpq.push_back(Region(fine_level->mapCellToCoarser(fp[p]->getInteriorCellLowIndex()),
                             fine_level->mapCellToCoarser(fp[p]->getInteriorCellHighIndex())));
+        }
 
         //compute region of coarse patches that do not contain fine patches
         //difference=Region::difference(cpq,fpq);
@@ -399,6 +401,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   sched_->overrideVariableBehavior("DilatedCellsStability", true, false, false);
   sched_->overrideVariableBehavior("DilatedCellsRegrid", true, false, false);
 
+  //d_lastRegridTimestep=d_sharedState->getCurrentTopLevelTimeStep();
 
   rdbg << "RegridderCommon::problemSetup() END" << endl;
 }
