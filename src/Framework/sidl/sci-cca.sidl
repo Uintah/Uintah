@@ -29,10 +29,6 @@
 package sci {
   package cca version 0.2.1 {
 
-    /** Exception used by EventService, Topic and WildcardTopic methods. */
-    interface EventServiceException extends gov.cca.CCAException {
-    }
-
     interface AbstractFramework extends gov.cca.AbstractFramework {
       //non-spec interface
       /**
@@ -66,55 +62,87 @@ package sci {
       string getLoaderName() throws gov.cca.CCAException;
     }
 
-    /**
-     * Stores event header and event body:
-     * Header: should not be empty, may contain delivery metadata
-     *              about the event, framework, component etc.
-     * Body: may be empty, may contain event data
-     */
-    interface Event {
-      //void setHeader(in gov.cca.TypeMap header);
-      //void setBody(in gov.cca.TypeMap body);
 
+    //EVENT SPEC:
+    /** Exception used by EventService, Topic and Subscription methods. */
+    interface EventServiceException extends gov.cca.CCAException {}
+
+    /** Payload of an event. The event's header is created
+        by the framework and may contain a timestamp or information
+        about the publisher etc. The body of the event is created
+        by the publisher using the Topic interface.*/
+    interface Event extends sidl.io.Serializable {
+
+      /** Return the event's header. The header is usually generated
+          by the framework and holds bookkeeping information
+
+      */
       gov.cca.TypeMap getHeader();
+
+      /** Returs the event's body. The body is the information the 
+          publisher is sending to the subscribers
+      */
       gov.cca.TypeMap getBody();
     }
 
     /** Interface implemented by components interested in events. */
     interface EventListener {
-      /** This is where event processing by a listener takes place. */
-      void processEvent(in string topicName, in Event theEvent);
+
+      /** This is where event processing by a listener takes place. This
+          is a call-back method that a topic subscriber implements and 
+          gets called for each new event.
+
+          @topicName - The topic for which the Event was created and sent.
+          @theEvent - The payload.
+      */
+      void processEvent(in string topicName, copy in Event theEvent);
     }
 
+    /** Interface through which events are sent by publishers. */  
     interface Topic {
-      /**
-       * @return Topic name (from EventService.createTopic)
-       */
+
+      /** Returns the topic name associated with this object */
       string getTopicName();
 
-      /** Publish an event. */
-      void sendEvent(in string name, in gov.cca.TypeMap eventBody) throws EventServiceException;
+      /** Publish an event. 
+	  
+          @eventName - The name of this event. It is perhaps not a crucial
+                       piece of information. Can be inserted into the
+                       header or the body of the event by the event
+                       service.
+          @eventBody - A typemap containing all the information to be 
+                       sent out.
+      */
+      void sendEvent(in string eventName, in gov.cca.TypeMap eventBody) 
+	    throws EventServiceException;
     }
 
-    /** Mechanism for grouping hierarchically related Topics for subscribers. */
+    /** Mechanism for keeping track of a subscription of one or more
+        topics. A subscription corresponds to one or more publishing
+        topics.*/
     interface Subscription {
-      /**
-       * Register an EventListener on a Topic or a group of Topics (through Subscription).
-       * @exception if listenerKey is null or empty or if listener is null
-       */
-      void registerEventListener(in string listenerKey, in EventListener theListener) throws EventServiceException;
+
+      /** Adds a listener to the collection of listeners for this Subscription.
+      
+          @listenerKey - It is used as an index to the collection (STL
+                         map) and the parameter \em theListener is a
+                         pointer to the /em Listener class.
+          @theListener - A pointer to the object that will listen for events.
+      */
+      void registerEventListener(in string listenerKey, in EventListener theListener) 	
+        throws EventServiceException;
 
       /**
-        * Unregister an EventListener on a Topic or a group of Topics (through Subscription).
-        * @exception if listenerKey is null or empty
-        */
+         Removes a listener from the collection of listeners for this Topic.
 
+         @listenerKey - It is used as an index to remove this listener.
+      */
       void unregisterEventListener(in string listenerKey);
-      /**
-        * @return Topic name (from EventService.createTopic)
-        */
+
+      /** Returns the name for this Subscription object */
       string getSubscriptionName();
     }
+    //End of EVENT SPEC
 
     package ports {
 
@@ -148,49 +176,50 @@ package sci {
           void addComponentClass(in string componentClassName) throws gov.cca.CCAException;
       }
 
-      /**
-        * The proposed event service is based on a publish-subscribe model:
-        * events are organized into a namespace of topics.
-        * This service is responsible for organizing the namespace of topics,
-        * setting and enforcing event policies,
-        * and maintaining the resources needed for event distribution.
+
+      //EVENT SPEC:
+      /** Interface to Event Service for a event publisher. A publisher can
+          send events by acquiring a specific topic on which to publish. */
+      interface PublisherEventService extends gov.cca.Port {
+
+        /** Get a Topic by passing a name that has the form X.Y.Z. The
+            method creates a topic of topicName it if it doesn't exist.
+
+	        @topicName - A dot delimited, hierarchical name of the topic
+                         on which to publish. Wildcard characters are not
+                         allowed for a topicName.
         */
-      interface EventService extends gov.cca.Port {
+        sci.cca.Topic getTopic(in string topicName) 
+          throws sci.cca.EventServiceException;
 
-        /**
-          * @return the Topic if it already exists,
-          * @exception EventServiceException if creating Topic fails
-          */
-        sci.cca.Topic createTopic(in string topicName) throws sci.cca.EventServiceException;
-
-        /**
-          * Get a Topic by name.
-          * @return Topic,
-          * @exception EventServiceException if topicName is empty or if not found
-          */
-        sci.cca.Topic getTopic(in string topicName) throws sci.cca.EventServiceException;
-
-        /**
-          * @return the Subscription if it already exists,
-          * @exception EventServiceException if creating Subscription fails
-          */
-        sci.cca.Subscription subscribeToEvents(in string topicName) throws sci.cca.EventServiceException;
-
-        /**
-          * Notifies the EventService that this Topic is no longer used.
-          * @exception EventServiceException if topicName is empty or if not found
-          */
-        void releaseTopic(in string topicName) throws sci.cca.EventServiceException;
-
-        /**
-          * Notifies the EventService that this Subscription is no longer used.
-          * @exception EventServiceException if topicName is empty or if not found
-          */
-        void releaseSubscription(in sci.cca.Subscription subscription) throws sci.cca.EventServiceException;
-
-        /** Process published events. */
-        void processEvents();
+        /** Returns true if topic already exists, false otherwise */
+        bool existsTopic(in string topicName);
       }
+
+      /** Interface to Event Service for a event subscriber. In order to get
+          events delivered to us we use this service to get a Subscription
+          and register a listener to this Subscription. In order to force
+          the event service to process the events in the queue, a subscriber
+          may call processEvents() */
+      interface SubscriberEventService extends gov.cca.Port {
+
+        /** Subscribe to one or more topics. 
+
+            @subscriptionName - A dot delimited hierarchical name selecting
+                                the list of topics to get events from. Wildcard 
+                                characters (*,?)  are allowed for a subscriptionName 
+                                to denote more than one topic.
+        */
+        sci.cca.Subscription getSubscription(in string subscriptionName) 
+	      throws sci.cca.EventServiceException;
+
+        /** Process published events. When the subscriber calls this method,
+            this thread or some other one delivers each event by calling
+            processEvent(...) on each listener belonging to each specific
+            Subscription */
+        void processEvents() throws EventServiceException;
+      }
+      //End of EVENT SPEC
 
     } // package ports
 

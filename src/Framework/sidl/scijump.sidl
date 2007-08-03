@@ -56,7 +56,14 @@ package scijump version 0.2.1 {
   // EventService classes
 
   class Topic implements-all sci.cca.Topic {}
-  class EventService implements-all sci.cca.ports.EventService {}
+  class Subscription implements-all sci.cca.Subscription {}
+  class Event implements-all sci.cca.Event {
+    void setHeader(in gov.cca.TypeMap h);
+    void setBody(in gov.cca.TypeMap b);
+  }
+  class EventListener implements-all sci.cca.EventListener {}
+  class PublisherEventService implements-all sci.cca.ports.PublisherEventService {}
+  class SubscriberEventService implements-all sci.cca.ports.SubscriberEventService {}
 
   // EventService classes
 
