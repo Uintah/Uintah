@@ -1446,15 +1446,6 @@ void ImpMPM::iterate(const ProcessorGroup*,
     d_subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
 
     if(UintahParallelComponent::d_myworld->myrank() == 0){
-      cerr << "dispIncNorm = "
-           <<  dispIncNorm << endl;
-      cerr << "dispIncNormMax = "
-           <<  dispIncNormMax << endl;
-      cerr << "dispIncQNorm = "
-           <<  dispIncQNorm << endl;
-      cerr << "dispIncQNorm0 = "
-           <<  dispIncQNorm0 << endl;
-      
       cerr << "dispIncNorm/dispIncNormMax = "
            << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
       cerr << "dispIncQNorm/dispIncQNorm0 = "
