@@ -66,6 +66,17 @@
   </SimulationComponent>
    
   <!--____________________________________________________________________-->
+  <!--      LOAD BALANCER (only turn this on during the explosion phase)  -->
+  <!--____________________________________________________________________-->   
+  <LoadBalancer>
+    <type>DLB</type>
+    <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
+    <doSpaceCurve>         true            </doSpaceCurve>
+    <timestepInterval>     100             </timestepInterval>
+    <outputNthProc>         8              </outputNthProc>
+  </LoadBalancer> 
+   
+  <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <Time>
@@ -81,7 +92,7 @@
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <include href="inputs/IS/ArchesHeatUpExplosion/Grid.xml"/>
+  <include href="Grid.xml"/>
 
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
