@@ -14,6 +14,13 @@ $xml = new XML::Simple(forcearray => 1);
 # read XML file
 $data = $xml->XMLin("$ARGV[0]");
 
+my $clean = 0;
+
+if ("$ARGV[1]" == 'clean')
+{
+  $clean = 1;
+}
+
 # Reading the meta data and finding out the number of tests
 
 my $i=0;
@@ -60,22 +67,42 @@ for($i = 0; $i<=$#testFiles; $i++)
 
   if ( ($tmp[$#tmp] eq "xml") || ($tmp[$#tmp] eq "XML") )
   {
+    if ($clean == 1)
+    {
+      print "cleaning the temp files \n";
+      system("rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
+    }
+
     print "Launching driver.pl $testFileName & \n";
     @args = ("driver.pl","$testFileName &");
     system("@args")==0 or die("ERROR(driver.pl): @args failed");
   }
   elsif(($tmp[$#tmp] eq "tst") || ($tmp[$#tmp] eq "TST"))
   {
-    print "Launching run_tests.pl $testFileName\n";
-#   `run_tests.pl $testFileName`;
-    @args = ("run_tests.pl","$testFileName");
-    system("@args")==0  or die("ERROR(driver.pl): @args failed");
+    if ($clean == 1)
+    {
+      print "cleaning the temp files \n";
+      system("rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
+    }
+    else 
+    {
+      print "Launching run_tests.pl $testFileName\n";
+#     `run_tests.pl $testFileName`;
+      @args = ("run_tests.pl","$testFileName");
+      system("@args")==0  or die("ERROR(driver.pl): @args failed");
+    }
   }
   
   # Change back into the current working dir to proceed with     
   # the other tests
   chdir($curr_dir);
 }
+
+if ($clean == 1)
+{
+  exit(0);   #   No need to wait for jobs to complete, its a clean job. So exit the script
+}
+
 
 while(1)
 {
