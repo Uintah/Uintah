@@ -16,7 +16,9 @@ $data = $xml->XMLin("$ARGV[0]");
 
 my $clean = 0;
 
-if ("$ARGV[1]" == 'clean')
+chomp($ARGV[1]);
+
+if ($ARGV[1] eq 'clean')
 {
   $clean = 1;
 }
