@@ -36,6 +36,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCS     += \
             $(SRCDIR)/ComponentModel.cc
 
-PSELIBS  :=
+PSELIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
