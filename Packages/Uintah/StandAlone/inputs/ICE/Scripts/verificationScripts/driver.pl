@@ -18,7 +18,7 @@ my $clean = 0;
 
 chomp($ARGV[1]);
 
-if ($ARGV[1] eq 'clean')
+if ($ARGV[1] eq "clean")
 {
   $clean = 1;
 }
@@ -73,11 +73,16 @@ for($i = 0; $i<=$#testFiles; $i++)
     {
       print "cleaning the temp files \n";
       system("rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
+      print "Launching driver.pl $testFileName  clean & \n";
+      @args = ("driver.pl","$testFileName clean &");
+      system("@args")==0 or die("ERROR(driver.pl): @args failed");      
     }
-
-    print "Launching driver.pl $testFileName & \n";
-    @args = ("driver.pl","$testFileName &");
-    system("@args")==0 or die("ERROR(driver.pl): @args failed");
+    else
+    {
+      print "Launching driver.pl $testFileName & \n";
+      @args = ("driver.pl","$testFileName &");
+      system("@args")==0 or die("ERROR(driver.pl): @args failed");
+    }
   }
   elsif(($tmp[$#tmp] eq "tst") || ($tmp[$#tmp] eq "TST"))
   {
