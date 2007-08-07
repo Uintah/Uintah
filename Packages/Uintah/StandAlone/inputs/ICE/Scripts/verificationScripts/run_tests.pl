@@ -233,7 +233,7 @@ for ($i=0;$i<$num_of_tests;$i++)
     {
         print "Launching analyze_results.pl $compFilename\n";
 #       $tmp=`analyze_results.pl $compFilename`;
-        @args = ("analyze_results.pl","$test_ups");
+        @args = ("analyze_results.pl","$compFilename");
         system("@args")==0 or die("ERROR(run_tests.pl):@args failed: $?");
     }
     $fin = time()-$now;
