@@ -310,13 +310,13 @@ HAVE_KEPLER := @HAVE_KEPLER@
 
 ifeq ($(BUILD_SCIJUMP),yes)
   # make configurable:
-  ifeq ($(IS_OSX),yes)
-    FWK_APP := scijump.app
-    FWK_EXE := scijump.app/Contents/MacOS/scijump
-  else
+  #ifeq ($(IS_OSX),yes)
+  #  FWK_APP := scijump.app
+  #  FWK_EXE := scijump.app/Contents/MacOS/scijump
+  #else
     FWK_APP :=
     FWK_EXE := scijump
-  endif
+  #endif
   # see also Framework/StandAlone/scijump_version.h
   FWK_VERSION := 0.1.1
   SUBDIRS := $(SUBDIRS) Framework CCA

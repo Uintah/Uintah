@@ -1728,6 +1728,7 @@ AC_SUBST(BUILD_PLUME)
 
 ## test for bison. yacc is not sufficient as it has no -o option.
 ## Only need for SCIJump currently.
+## N.B.: only used by deprecated SCIJump SIDL compiler
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
 if test "$enable_scijump" = "yes" -a "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
@@ -4359,8 +4360,8 @@ if test "$sci_required_babel" = "yes" ; then
   fi
 
   if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-    ## check for compatible version (0.99.0 or greater)
-    SCI_CHECK_VERSION($BABEL_BIN,--version,0.99.0,,echo configure: error: wrong Babel version.; exit)
+    ## check for compatible version (1.1.0 or greater)
+    SCI_CHECK_VERSION($BABEL_BIN,--version,1.1.0,,echo configure: error: wrong Babel version.; exit)
     DEF_BABEL="#define HAVE_BABEL 1"
     HAVE_BABEL="yes"
   fi
@@ -5568,7 +5569,7 @@ esac
 
 if test "$enable_scijump" = "yes"; then
   if test "$HAVE_BABEL" != "yes"; then
-    AC_MSG_WARN([could not find a Babel installation (recommended for SCIJump).])
+    AC_MSG_ERROR([could not find a Babel installation (recommended for SCIJump).])
   fi
   if test "$DEBUG" = "yes"; then
     DEF_DEBUG="#define FWK_DEBUG 1"
