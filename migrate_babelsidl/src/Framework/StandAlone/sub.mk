@@ -41,30 +41,26 @@ SRCDIR := Framework/StandAlone
 # Framework executable
 #
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA
-else
+#ifeq ($(LARGESOS),yes)
+#  PSELIBS := Core/CCA
+#else
   PSELIBS := \
              Framework/sidl \
              Core/Containers Core/Exceptions Core/Thread Core/Util
-  ifeq ($(HAVE_GLOBUS),yes)
-	  PSELIBS += Core/globus_threads
-  endif
-endif
+#  ifeq ($(HAVE_GLOBUS),yes)
+#	  PSELIBS += Core/globus_threads
+#  endif
+#endif
 
-LIBS := $(GLOBUS_LIBRARY)
+LIBS := $(GLOBUS_LIBRARY) $(BABEL_LIBRARY)
 
-ifeq ($(HAVE_BABEL), yes)
-  LIBS += $(SIDL_LIBRARY)
-endif
+#ifeq ($(HAVE_MPI),yes)
+#  LIBS += $(MPI_LIBRARY)
+#endif
 
-ifeq ($(HAVE_MPI),yes)
-  LIBS += $(MPI_LIBRARY)
-endif
-
-ifeq ($(HAVE_WX),yes)
-  LIBS += $(WX_LIBRARY)
-endif
+#ifeq ($(HAVE_WX),yes)
+#  LIBS += $(WX_LIBRARY)
+#endif
 
 PROGRAM := $(FWK_EXE)
 bundle_prologue: $(SRCTOP)/scripts/scijump/Info.plist.in
@@ -80,6 +76,8 @@ SRCS := $(SRCDIR)/main.cc
 ifeq ($(OS_NAME),Darwin)
   PROGRAM_LDFLAGS := -bind_at_load
   #ALLTARGETS := bundle_prologue $(ALLTARGETS) bundle_epilogue
-  ALLTARGETS := bundle_prologue $(ALLTARGETS)
+  #ALLTARGETS := bundle_prologue $(ALLTARGETS)
+  ALLTARGETS := $(ALLTARGETS)
 endif
+
 include $(SCIRUN_SCRIPTS)/program.mk

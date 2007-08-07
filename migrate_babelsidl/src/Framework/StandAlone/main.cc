@@ -3,7 +3,7 @@
 
   The MIT License
 
-  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  Copyright (c) 2007 Scientific Computing and Imaging Institute,
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -132,9 +132,9 @@ orbStart(sidlx::rmi::SimpleOrb& echo, int port_number)
 
 int
 main(int argc, char *argv[], char **environment) {
-  bool framework = true;
+  bool startFramework = true;
   bool loadNet = parse_args(argc, argv);
-  create_sci_environment(environment, 0);
+  //create_sci_environment(environment, 0);
 
   int orb_port_num = 22222;
 
@@ -144,21 +144,22 @@ main(int argc, char *argv[], char **environment) {
     int tid = orbStart(echo,orb_port_num);
     SCIJumpFramework sj;
 
-    if(framework) {
+    if (startFramework) {
       sj = SCIJumpFramework::_create();
+
       std::cerr << "URL to framework:\n" << sj._getURL() << std::endl;
-      //ofstream f("framework.url");
+      //std::ofstream f("framework.url");
       //std::string s;
-      //f<<sr->getURL().getString();
+      //f << sr->getURL().getString();
       //f.close();
     } else {
-      std::cerr << "Not finished: pass url to existing framework\n";
+      std::cerr << "Not finished: pass url to existing framework" << std::endl;
     }
 
-    gov::cca::TypeMap mainProperties = sj.createTypeMap();
-    mainProperties.putBool("internal component", true);
+    //gov::cca::TypeMap mainProperties = sj.createTypeMap();
+    //mainProperties.putBool("internal component", true);
 
-    gov::cca::Services mainServices = sj.getServices("SCIJump main", "main", mainProperties);
+    //gov::cca::Services mainServices = sj.getServices("SCIJump main", "main", mainProperties);
 
     /*
     gov::cca::ports::FrameworkProperties fwkProperties = mainServices.getPort("cca.FrameworkProperties");
@@ -181,9 +182,9 @@ main(int argc, char *argv[], char **environment) {
     }
     */
 
-#if !defined(HAVE_WX)
-    defaultBuilder = "txt";
-#endif
+//#if !defined(HAVE_WX)
+  //defaultBuilder = "txt";
+//#endif
 
     /*
     if (defaultBuilder == "gui") {
@@ -214,6 +215,11 @@ main(int argc, char *argv[], char **environment) {
     //broadcast, listen to URL periodically
     //sr->share(mainServices);
 
+  }
+  catch (sidl::RuntimeException& e) {
+    std::cerr << "Caught a SIDL runtime exception with note: " << e.getNote() << std::endl;
+    std::cerr << e.getTrace() << std::endl;
+    abort();
   }
   catch (...) {
     std::cerr << "Caught unexpected exception!\n";

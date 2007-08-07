@@ -26,7 +26,7 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
- 
+
 # Makefile fragment for this subdirectory
 
 SRCDIR := Framework/sidl
@@ -48,7 +48,7 @@ OUTGLUEDIR_ABS := $(OUTIMPLDIR_ABS)/glue
 
 $(IMPLDIR_ABS)/serverbabel.make: $(GLUEDIR_ABS)/serverbabel.make
 
-#--generate-subdirs, target dep: $(FWK_IMPLSRCS)
+#--generate-subdirs
 $(GLUEDIR_ABS)/serverbabel.make: $(SIDL) Core/Babel/timestamp
 	if ! test -d $(OUTGLUEDIR_ABS); then mkdir -p $(OUTGLUEDIR_ABS); fi
 	$(BABEL) --server=C++ \
@@ -78,7 +78,7 @@ include $(IMPLDIR_ABS)/serverbabel.make
 SRCS += $(patsubst %,$(IMPLDIR)/%,$(serverIMPLSRCS))
 
 PSELIBS := Core/Thread Framework/Core
-INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
 LIBS := $(BABEL_LIBRARY)
+INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
