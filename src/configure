@@ -9925,6 +9925,7 @@ fi
 
 ## test for bison. yacc is not sufficient as it has no -o option.
 ## Only need for SCIJump currently.
+## N.B.: only used by deprecated SCIJump SIDL compiler
 # Extract the first word of "bison", so it can be a program name with args.
 set dummy bison; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -51850,18 +51851,18 @@ fi
   fi
 
   if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-    ## check for compatible version (0.99.0 or greater)
+    ## check for compatible version (1.1.0 or greater)
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
     _SCI_VER_1_="0"
-    _SCI_VER_2_="0.99.0"
+    _SCI_VER_2_="1.1.0"
     _CUR_1_=""
     _CUR_2_=""
 
-    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.99.0" >&5
-echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.99.0... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 1.1.0" >&5
+echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 1.1.0... $ECHO_C" >&6
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -66347,8 +66348,9 @@ esac
 
 if test "$enable_scijump" = "yes"; then
   if test "$HAVE_BABEL" != "yes"; then
-    { echo "$as_me:$LINENO: WARNING: could not find a Babel installation (recommended for SCIJump)." >&5
-echo "$as_me: WARNING: could not find a Babel installation (recommended for SCIJump)." >&2;}
+    { { echo "$as_me:$LINENO: error: could not find a Babel installation (recommended for SCIJump)." >&5
+echo "$as_me: error: could not find a Babel installation (recommended for SCIJump)." >&2;}
+   { (exit 1); exit 1; }; }
   fi
   if test "$DEBUG" = "yes"; then
     DEF_DEBUG="#define FWK_DEBUG 1"
