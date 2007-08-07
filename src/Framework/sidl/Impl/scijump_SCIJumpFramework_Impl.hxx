@@ -2,7 +2,7 @@
 // File:          scijump_SCIJumpFramework_Impl.hxx
 // Symbol:        scijump.SCIJumpFramework-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.0.4
+// Babel Version: 1.1.0
 // Description:   Server-side implementation for scijump.SCIJumpFramework
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -50,9 +50,9 @@
 #endif
 
 
-// DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._includes)
+// DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._hincludes)
 #include <Core/Thread/Mutex.h>
-// DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._includes)
+// DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._hincludes)
 
 namespace scijump { 
 
@@ -63,6 +63,7 @@ namespace scijump {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._inherits)
   // Insert-Code-Here {scijump.SCIJumpFramework._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._inherits)
+
   {
 
   // All data marked protected will be accessable by 
@@ -81,8 +82,13 @@ namespace scijump {
     // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
-    SCIJumpFramework_impl( struct scijump_SCIJumpFramework__object * s ) : 
-      StubBase(s,true), _wrapped(false) { _ctor(); }
+      SCIJumpFramework_impl( struct scijump_SCIJumpFramework__object * ior ) : 
+        StubBase(ior,true), 
+      ::gov::cca::AbstractFramework((ior==NULL) ? NULL : &((
+        *ior).d_gov_cca_abstractframework)),
+    ::sci::cca::AbstractFramework((ior==NULL) ? NULL : &((
+      *ior).d_sci_cca_abstractframework)) , _wrapped(false) {_ctor();}
+
 
     // user defined construction
     void _ctor();
@@ -114,7 +120,7 @@ namespace scijump {
     int32_t
     registerLoader_impl (
       /* in */const ::std::string& slaveName,
-      /* in array<string> */::sidl::array< ::std::string> slaveURLs
+      /* in array<string> */::sidl::array< ::std::string>& slaveURLs
     )
     ;
 
@@ -173,7 +179,7 @@ namespace scijump {
     getServices_impl (
       /* in */const ::std::string& selfInstanceName,
       /* in */const ::std::string& selfClassName,
-      /* in */::gov::cca::TypeMap selfProperties
+      /* in */::gov::cca::TypeMap& selfProperties
     )
     // throws:
     //     ::gov::cca::CCAException
@@ -197,7 +203,7 @@ namespace scijump {
      */
     void
     releaseServices_impl (
-      /* in */::gov::cca::Services services
+      /* in */::gov::cca::Services& services
     )
     // throws:
     //     ::gov::cca::CCAException
@@ -239,8 +245,8 @@ namespace scijump {
 
 } // end namespace scijump
 
-// DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._misc)
-// Insert-Code-Here {scijump.SCIJumpFramework._misc} (miscellaneous things)
-// DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._misc)
+// DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._hmisc)
+// Insert-Code-Here {scijump.SCIJumpFramework._hmisc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._hmisc)
 
 #endif

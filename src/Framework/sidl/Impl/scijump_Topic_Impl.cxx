@@ -2,7 +2,7 @@
 // File:          scijump_Topic_Impl.cxx
 // Symbol:        scijump.Topic-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.0.4
+// Babel Version: 1.1.0
 // Description:   Server-side implementation for scijump.Topic
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -35,7 +35,7 @@
 // Insert-Code-Here {scijump.Topic._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(scijump.Topic._includes)
 
-// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+// special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
 scijump::Topic_impl::Topic_impl() : StubBase(reinterpret_cast< void*>(
   ::scijump::Topic::_wrapObj(reinterpret_cast< void*>(this))),false) , _wrapped(
   true){ 
@@ -93,7 +93,7 @@ scijump::Topic_impl::getTopicName_impl ()
 void
 scijump::Topic_impl::sendEvent_impl (
   /* in */const ::std::string& eventName,
-  /* in */::gov::cca::TypeMap eventBody ) 
+  /* in */::gov::cca::TypeMap& eventBody ) 
 // throws:
 //     ::sci::cca::EventServiceException
 //     ::sidl::RuntimeException

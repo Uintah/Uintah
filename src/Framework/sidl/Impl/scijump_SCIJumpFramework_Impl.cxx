@@ -2,7 +2,7 @@
 // File:          scijump_SCIJumpFramework_Impl.cxx
 // Symbol:        scijump.SCIJumpFramework-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.0.4
+// Babel Version: 1.1.0
 // Description:   Server-side implementation for scijump.SCIJumpFramework
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -41,7 +41,7 @@
 #include <Core/Thread/Guard.h>
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._includes)
 
-// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+// special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
 scijump::SCIJumpFramework_impl::SCIJumpFramework_impl() : StubBase(
   reinterpret_cast< void*>(::scijump::SCIJumpFramework::_wrapObj(
   reinterpret_cast< void*>(this))),false) , _wrapped(true){ 
@@ -86,7 +86,7 @@ void scijump::SCIJumpFramework_impl::_load() {
 int32_t
 scijump::SCIJumpFramework_impl::registerLoader_impl (
   /* in */const ::std::string& slaveName,
-  /* in array<string> */::sidl::array< ::std::string> slaveURLs ) 
+  /* in array<string> */::sidl::array< ::std::string>& slaveURLs ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.registerLoader)
   // Insert-Code-Here {scijump.SCIJumpFramework.registerLoader} (registerLoader method)
@@ -177,7 +177,7 @@ scijump::SCIJumpFramework_impl::createTypeMap_impl ()
 scijump::SCIJumpFramework_impl::getServices_impl (
   /* in */const ::std::string& selfInstanceName,
   /* in */const ::std::string& selfClassName,
-  /* in */::gov::cca::TypeMap selfProperties ) 
+  /* in */::gov::cca::TypeMap& selfProperties ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
@@ -210,7 +210,7 @@ scijump::SCIJumpFramework_impl::getServices_impl (
  */
 void
 scijump::SCIJumpFramework_impl::releaseServices_impl (
-  /* in */::gov::cca::Services services ) 
+  /* in */::gov::cca::Services& services ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException

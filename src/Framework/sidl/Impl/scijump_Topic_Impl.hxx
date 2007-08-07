@@ -2,7 +2,7 @@
 // File:          scijump_Topic_Impl.hxx
 // Symbol:        scijump.Topic-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.0.4
+// Babel Version: 1.1.0
 // Description:   Server-side implementation for scijump.Topic
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -44,11 +44,11 @@
 #endif
 
 
-// DO-NOT-DELETE splicer.begin(scijump.Topic._includes)
+// DO-NOT-DELETE splicer.begin(scijump.Topic._hincludes)
 #include <string>
 #include <vector>
 #include <scijump_Event.hxx>
-// DO-NOT-DELETE splicer.end(scijump.Topic._includes)
+// DO-NOT-DELETE splicer.end(scijump.Topic._hincludes)
 
 namespace scijump { 
 
@@ -59,6 +59,7 @@ namespace scijump {
   // DO-NOT-DELETE splicer.begin(scijump.Topic._inherits)
   // Insert-Code-Here {scijump.Topic._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(scijump.Topic._inherits)
+
   {
 
   // All data marked protected will be accessable by 
@@ -78,8 +79,10 @@ namespace scijump {
     // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
-    Topic_impl( struct scijump_Topic__object * s ) : StubBase(s,true), _wrapped(
-      false) { _ctor(); }
+      Topic_impl( struct scijump_Topic__object * ior ) : StubBase(ior,true), 
+    ::sci::cca::Topic((ior==NULL) ? NULL : &((*ior).d_sci_cca_topic)) , 
+      _wrapped(false) {_ctor();}
+
 
     // user defined construction
     void _ctor();
@@ -118,7 +121,7 @@ namespace scijump {
     void
     sendEvent_impl (
       /* in */const ::std::string& eventName,
-      /* in */::gov::cca::TypeMap eventBody
+      /* in */::gov::cca::TypeMap& eventBody
     )
     // throws:
     //     ::sci::cca::EventServiceException
@@ -129,8 +132,8 @@ namespace scijump {
 
 } // end namespace scijump
 
-// DO-NOT-DELETE splicer.begin(scijump.Topic._misc)
-// Insert-Code-Here {scijump.Topic._misc} (miscellaneous things)
-// DO-NOT-DELETE splicer.end(scijump.Topic._misc)
+// DO-NOT-DELETE splicer.begin(scijump.Topic._hmisc)
+// Insert-Code-Here {scijump.Topic._hmisc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(scijump.Topic._hmisc)
 
 #endif
