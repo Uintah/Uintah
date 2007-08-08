@@ -67,6 +67,9 @@ namespace SCIRun {
 
   bool ProcessInfo::IsSupported ( int info_type )
   {
+#if defined(REDSTORM)
+    return false;
+#endif
 
 #if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX ) || defined( __APPLE__ )
 
