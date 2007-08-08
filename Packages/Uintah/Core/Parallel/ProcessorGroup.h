@@ -35,6 +35,8 @@ WARNING
   
 ****************************************/
 
+   class Parallel;
+
    class SCISHARE ProcessorGroup {
    public:
       ~ProcessorGroup();
