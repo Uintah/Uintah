@@ -31,11 +31,11 @@
 
 SRCDIR   := Framework/Core
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCS     += \
             $(SRCDIR)/ComponentModel.cc
 
-PSELIBS :=
+#PSELIBS := Core/Thread Core/Util Core/Exceptions
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
