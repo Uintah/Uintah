@@ -58,9 +58,9 @@ LIBS := $(GLOBUS_LIBRARY) $(BABEL_LIBRARY)
 #  LIBS += $(MPI_LIBRARY)
 #endif
 
-#ifeq ($(HAVE_WX),yes)
-#  LIBS += $(WX_LIBRARY)
-#endif
+ifeq ($(HAVE_WX),yes)
+  LIBS += $(WX_LIBRARY)
+endif
 
 PROGRAM := $(FWK_EXE)
 bundle_prologue: $(SRCTOP)/scripts/scijump/Info.plist.in

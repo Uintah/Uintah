@@ -27,6 +27,12 @@
 #ifndef included_sci_cca_Topic_hxx
 #include "sci_cca_Topic.hxx"
 #endif
+#ifndef included_scijump_SCIJumpFramework_hxx
+#include "scijump_SCIJumpFramework.hxx"
+#endif
+#ifndef included_scijump_Subscription_hxx
+#include "scijump_Subscription.hxx"
+#endif
 #ifndef included_scijump_Topic_hxx
 #include "scijump_Topic.hxx"
 #endif
@@ -45,9 +51,11 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.Topic._hincludes)
+#include <map>
 #include <string>
 #include <vector>
 #include <scijump_Event.hxx>
+#include <scijump_Subscription.hxx>
 // DO-NOT-DELETE splicer.end(scijump.Topic._hincludes)
 
 namespace scijump { 
@@ -71,6 +79,11 @@ namespace scijump {
     // DO-NOT-DELETE splicer.begin(scijump.Topic._implementation)
     std::string topicName;
     std::vector< scijump::Event> eventList;
+
+    typedef std::map< std::string, Subscription> SubscriptionMap;
+    SubscriptionMap subscriptionMap;
+
+    SCIJumpFramework sjf;
     // DO-NOT-DELETE splicer.end(scijump.Topic._implementation)
 
   public:
@@ -101,6 +114,40 @@ namespace scijump {
 
   public:
 
+    /**
+     * user defined non-static method.
+     */
+    void
+    initialize_impl (
+      /* in */const ::std::string& topicName,
+      /* in */::scijump::SCIJumpFramework& sjf
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    addSubscription_impl (
+      /* in */const ::std::string& topicName,
+      /* in */::scijump::Subscription& theSubscription
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    removeSubscription_impl (
+      /* in */const ::std::string& topicName
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    processEvents_impl() ;
 
     /**
      *  Returns the topic name associated with this object 

@@ -54,16 +54,26 @@ package scijump version 0.2.1 {
   class BuilderService implements-all sci.cca.ports.BuilderService {}
 
   // EventService classes
-
-  class Topic implements-all sci.cca.Topic {}
-  class Subscription implements-all sci.cca.Subscription {}
+  class EventServiceException implements-all sci.cca.EventServiceException {}
+  class Topic implements-all sci.cca.Topic {
+    void initialize(in string topicName, in SCIJumpFramework sjf);
+    void addSubscription(in string topicName, in Subscription theSubscription);
+    void removeSubscription(in string topicName);
+    void processEvents();
+  }
+  class Subscription implements-all sci.cca.Subscription {
+    void initialize(in string subscriptionName, in SCIJumpFramework sjf);
+    void processEvents(in array<sci.cca.Event,1> eventList);
+  }
   class Event implements-all sci.cca.Event {
     void setHeader(in gov.cca.TypeMap h);
     void setBody(in gov.cca.TypeMap b);
   }
-  class EventListener implements-all sci.cca.EventListener {}
-  class PublisherEventService implements-all sci.cca.ports.PublisherEventService {}
-  class SubscriberEventService implements-all sci.cca.ports.SubscriberEventService {}
+  class EventService implements-all sci.cca.ports.PublisherEventService,
+                                    sci.cca.ports.SubscriberEventService {
+
+    void initialize(in SCIJumpFramework sjf);
+  }
 
   // EventService classes
 
