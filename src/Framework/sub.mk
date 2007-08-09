@@ -31,7 +31,7 @@
 
 SRCDIR := Framework
 
-#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SUBDIRS := \
            $(SRCDIR)/sidl \
@@ -40,9 +40,9 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 
-#PSELIBS := Core/Thread
-#LIBS := $(BABEL_LIBRARY)
-#include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+PSELIBS := Core/Thread Core/Util Core/Exceptions
+LIBS := $(BABEL_LIBRARY)
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 SUBDIRS := \
            $(SRCDIR)/StandAlone
