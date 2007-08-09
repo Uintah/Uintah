@@ -26,7 +26,7 @@ SteadyBurnCriteria::SteadyBurnCriteria(ProblemSpecP& ps)
   ps->require("ThresholdTemperature",d_temperature);
   ps->require("BoundaryParticles",   d_BP);
   
-  if (Parallel::getMPIRank() == 0) {
+  if (0&&Parallel::getMPIRank() == 0) {
     cout << "Switching criteria:  \tSteadyBurn, reactant matl: " 
          << d_material << " Threshold tempterature " << d_temperature 
          << ", Boundary Particles " << d_BP<< endl;
@@ -70,7 +70,7 @@ void SteadyBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sch
   if (level->hasFinerLevel() == false){  // only on the finest level
     t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, mpm_matls, gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,       mpm_matls, gan,2);
-    t->requires(Task::OldDW, Mlb->pXLabel,          mpm_matls, gac,1);
+    t->requires(Task::OldDW, Mlb->pXLabel,          mpm_matls, gan,1);
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,one_matl,  gan,2);
     t->requires(Task::OldDW, Mlb->NC_CCweightLabel, one_matl,  gan,2);
   }
@@ -127,7 +127,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       old_dw->get(NC_CCweight,   Mlb->NC_CCweightLabel,  0, patch,gan, 2);
 
       constParticleVariable<Point>  px;
-      ParticleSubset* pset = old_dw->getParticleSubset(d_indx, patch, gac,1, Mlb->pXLabel);
+      ParticleSubset* pset = old_dw->getParticleSubset(d_indx, patch, gan,1, Mlb->pXLabel);
       old_dw->get(px, Mlb->pXLabel, pset);
 
       //Which cells contain particles
@@ -194,11 +194,11 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
                    
                     if(vol_frac_mpm[m][cell] > 0.2 && 
                         temp_CC_mpm[m][cell] > d_temperature){
-                        cout << " The switching criteria satisfied in cell "<<cell
-                             << " vol_frac_mpm " << vol_frac_mpm[m][cell]
-                             << " temp_CC_mpm " << temp_CC_mpm[m][cell] 
-                             << " matl " << m 
-                             << " main cell " << c << endl;
+                      //cout << " The switching criteria satisfied in cell "<<cell
+                      //     << " vol_frac_mpm " << vol_frac_mpm[m][cell]
+                      //     << " temp_CC_mpm " << temp_CC_mpm[m][cell] 
+                      //     << " matl " << m 
+                      //     << " main cell " << c << endl;
                       timeToSwitch = 1;
                       break;
                     }
