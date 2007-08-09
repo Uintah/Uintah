@@ -54,6 +54,9 @@ foreach $e (@{$data->{start}->[0]->{Test}})
 #   `$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]`;
     $tmp = `cat $uda_files[$k].tmp`; # This is the output from the compare_mms utility
     chomp($tmp);   # Removing the carriage return from the end
+    @tmp_values = split(/ /,$tmp);
+    $cells = $tmp_values[0];  # The output of the tmp file will have the cells followed by global err
+    $err = $tmp_values[1];
     my $prev_line = "";
     if (-e "$output_file.dat")
     {
@@ -64,14 +67,14 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     if ($prev_line != "")  # Checking if the prev_line is empty (if the file is created for the first time this can happen)
     {
       @values = split(/ /,$prev_line);
-      $order_of_accuracy = log($values[1]/$tmp)/log($x[$k]/$values[0]);
-      print "echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat\n";
-      `echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat`;
+      $order_of_accuracy = log($values[2]/$err)/log($cells/$values[0]);
+      print "echo $cells $x[$k] $err $order_of_accuracy >> $output_file.dat\n";
+      `echo $cells $x[$k] $err $order_of_accuracy >> $output_file.dat`;
     } 
     else
     {
-      print "echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat\n";
-      `echo $x[$k] $tmp 0 >> $output_file.dat`;
+      print "echo $cells $x[$k] $err $order_of_accuracy >> $output_file.dat\n";
+      `echo $cells $x[$k] $err 0 >> $output_file.dat`;
     }
   }
 
@@ -92,22 +95,22 @@ foreach $e (@{$data->{start}->[0]->{Test}})
 
   if (-e "baseLine/$output_file.dat")
   {
-    print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints, \'baseLine/$output_file.dat\' using 1:2 t \'Base Line\' with linespoints\n";
+    print gpFile "plot \'$output_file.dat\' using 2:3 t \'Current test\' with linespoints, \'baseLine/$output_file.dat\' using 1:2 t \'Base Line\' with linespoints\n";
   }   
   else
   {
-    print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints\n"; 
+    print gpFile "plot \'$output_file.dat\' using 2:3 t \'Current test\' with linespoints\n"; 
   }
   print gpFile "set title \"Order of Accuracy - $test_title\"\n";
   print gpFile "set output \"order_$output_file.png\"\n";
 
   if (-e "baseLine/$output_file.dat")
   {
-    print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints,  \'baseLine/$output_file.dat\' using 1:3 t \'Base Line\' with linespoints\n";
+    print gpFile "plot \'$output_file.dat\' using 2:4 t \'Current test\' with linespoints,  \'baseLine/$output_file.dat\' using 1:3 t \'Base Line\' with linespoints\n";
   }
   else
   {
-    print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints\n";
+    print gpFile "plot \'$output_file.dat\' using 2:4 t \'Current test\' with linespoints\n";
   }
 
   close(gpFile);
