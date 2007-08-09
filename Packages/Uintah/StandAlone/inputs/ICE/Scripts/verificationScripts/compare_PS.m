@@ -162,7 +162,7 @@
         
 
 
-        fprintf(fid,'%g\n',L2norm);
+        fprintf(fid,'%d %g\n',length(xx), L2norm);
 %        plot(difference)
 %	figure(1)
 %	plot(exactSol,'k-')
