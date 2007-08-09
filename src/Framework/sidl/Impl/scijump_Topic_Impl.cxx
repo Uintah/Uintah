@@ -19,6 +19,12 @@
 #ifndef included_sci_cca_EventServiceException_hxx
 #include "sci_cca_EventServiceException.hxx"
 #endif
+#ifndef included_scijump_SCIJumpFramework_hxx
+#include "scijump_SCIJumpFramework.hxx"
+#endif
+#ifndef included_scijump_Subscription_hxx
+#include "scijump_Subscription.hxx"
+#endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
 #endif
@@ -32,7 +38,7 @@
 #include "sidl_NotImplementedException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.Topic._includes)
-// Insert-Code-Here {scijump.Topic._includes} (additional includes or code)
+#include <scijump_EventServiceException.hxx>
 // DO-NOT-DELETE splicer.end(scijump.Topic._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
@@ -69,6 +75,105 @@ void scijump::Topic_impl::_load() {
 
 // user defined non-static methods:
 /**
+ * Method:  initialize[]
+ */
+void
+scijump::Topic_impl::initialize_impl (
+  /* in */const ::std::string& topicName,
+  /* in */::scijump::SCIJumpFramework& sjf ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.Topic.initialize)
+  this->topicName = topicName;
+  this->sjf = sjf;
+  // DO-NOT-DELETE splicer.end(scijump.Topic.initialize)
+}
+
+/**
+ * Method:  addSubscription[]
+ */
+void
+scijump::Topic_impl::addSubscription_impl (
+  /* in */const ::std::string& topicName,
+  /* in */::scijump::Subscription& theSubscription ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.Topic.addSubscription)
+  if (topicName.empty()) {
+    EventServiceException ex = EventServiceException::_create();
+    ex.setNote("Topic name is empty");
+    throw ex;
+  }
+
+  if (theSubscription._is_nil()) {
+    EventServiceException ex = EventServiceException::_create();
+    ex.setNote("Subscription is null");
+    throw ex;
+  }
+
+  SubscriptionMap::iterator iter =  subscriptionMap.find(topicName);
+  if (iter != subscriptionMap.end()) {
+    EventServiceException ex = EventServiceException::_create();
+    ex.setNote("Subscription already registered for this topic");
+    throw ex;   
+  }
+  subscriptionMap[topicName] = theSubscription;
+  // DO-NOT-DELETE splicer.end(scijump.Topic.addSubscription)
+}
+
+/**
+ * Method:  removeSubscription[]
+ */
+void
+scijump::Topic_impl::removeSubscription_impl (
+  /* in */const ::std::string& topicName ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.Topic.removeSubscription)
+  if (topicName.empty()) {
+    EventServiceException ex = EventServiceException::_create();
+    ex.setNote("Topic name is empty");
+    throw ex;
+  }
+
+  SubscriptionMap::iterator iter =  subscriptionMap.find(topicName);
+  if (iter == subscriptionMap.end()) {
+    EventServiceException ex = EventServiceException::_create();
+    ex.setNote("Subscription not registered for this topic");
+    throw ex;   
+  }
+  subscriptionMap.erase(iter);
+  // DO-NOT-DELETE splicer.end(scijump.Topic.removeSubscription)
+}
+
+/**
+ * Method:  processEvents[]
+ */
+void
+scijump::Topic_impl::processEvents_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.Topic.processEvents)
+  sidl::array< sci::cca::Event> eventArr = 
+    sidl::array< sci::cca::Event>::create1d(eventList.size());
+  for(int i=0; i < eventList.size(); i++) {
+    eventArr.set(i,eventList[i]);
+  }
+
+  for (SubscriptionMap::iterator subscriptionIter = subscriptionMap.begin();
+       subscriptionIter != subscriptionMap.end(); subscriptionIter++) {
+
+    Subscription subscriptionPtr = subscriptionIter->second;
+    if (subscriptionPtr._is_nil()) {
+      EventServiceException ex = EventServiceException::_create();
+      ex.setNote("Subscription is nil");
+      throw ex;         
+    }
+    subscriptionPtr.processEvents(eventArr);
+  }
+
+  eventList.clear();
+  // DO-NOT-DELETE splicer.end(scijump.Topic.processEvents)
+}
+
+/**
  *  Returns the topic name associated with this object 
  */
 ::std::string
@@ -100,14 +205,13 @@ scijump::Topic_impl::sendEvent_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.Topic.sendEvent)
   scijump::Event event = scijump::Event::_create();
-  //gov::cca::TypeMap eventHeader = gov::cca::TypeMap::_create();
-  //eventHeader.putString("eventName",eventName);
+  gov::cca::TypeMap eventHeader = sjf.createTypeMap();
+  eventHeader.putString("eventName",eventName);
 
   //TODO: framework should put other info in event header
-  //event.setHeader(eventHeader);
+  event.setHeader(eventHeader);
   event.setBody(eventBody);
   
-
   eventList.push_back(event);
   // DO-NOT-DELETE splicer.end(scijump.Topic.sendEvent)
 }
