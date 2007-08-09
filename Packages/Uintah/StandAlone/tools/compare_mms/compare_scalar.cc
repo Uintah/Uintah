@@ -102,7 +102,11 @@ string udaFileName;
 void
 usage()
 {
-  printf( "\nUsage: compare_scalar <Uda Directory Name>\n\n" );
+  fprintf(stderr, "\nUsage: compare_scalar <Uda Directory Name>\n\n" );
+  cerr << "Valid options are:\n";
+  cerr << "-h[elp]              : This usage information.\n";
+  cerr << "-uda <archive file>\n";
+  cerr << "-o <output_file_name>\n";
   exit(1);
 }
 
@@ -244,6 +248,7 @@ main( int argc, char *argv[] )
 
     cout<<"resolution"<<resolution<<endl;
     cout<<"velocity"<<velocity<<endl;
+    cout<<"Offset:"<<offset<<endl;
 
     if (!(is_int(offset.x()) && is_int(offset.y()) && is_int(offset.z()) ) )
     {
@@ -370,11 +375,13 @@ main( int argc, char *argv[] )
 		    exit(1);
 		  }
 		  
-		  total_error+=diff*diff;
+		  total_error=total_error + (diff*diff);
 		  if( diff > maxDiff ) maxDiff = diff;
 		  if( diff < minDiff ) minDiff = diff;
 		  
 		}
+//		if (new_y == 50)
+//		cerr<<cell<<": " <<scalarVar[cell]<< a <<" :"<< analytic_value[a]<<endl;
                 
                 i=i+1;
               }
@@ -385,8 +392,8 @@ main( int argc, char *argv[] )
 	  cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
 
 	  if (!initialize_analytical_values)
-	    fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
-	  
+	    fprintf(outFile, "%d %le\n",i,sqrt(total_error/i)) ;
+
         } // end variable iteration
       } // end levels iteration
       if (initialize_analytical_values)
