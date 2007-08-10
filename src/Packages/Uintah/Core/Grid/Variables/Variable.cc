@@ -127,20 +127,23 @@ Variable::emit( OutputContext& oc, const IntVector& l,
 
   const char* writebuffer = (*writeoutString).c_str();
   unsigned long writebufferSize = (*writeoutString).size();
-#ifdef _WIN32
-  ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
-#else
-  ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
-#endif
+  if(writebufferSize>0)
+  {
+  #ifdef _WIN32
+    ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
+  #else
+    ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
+  #endif
 
-  if(s != (long)writebufferSize) {
-    cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
+    if(s != (long)writebufferSize) {
+      cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
          << " with errno " << errno << ": " << strerror(errno) <<  endl;
-    cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
+      cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
 
-    SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
+      SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
+    }
+    oc.cur += writebufferSize;
   }
-  oc.cur += writebufferSize;
 
   string compressionMode = compressionModeHint;
   if (try_all || (used_gzip != use_gzip) || (used_rle != use_rle)) {
@@ -234,18 +237,20 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
   data.resize(datasize);
   // casting from const char* -- use caution
-#ifdef _WIN32
-  ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-#else
-  ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-#endif
-  if(s != datasize) {
-    cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
-    SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
-  }
+  if(datasize>0)
+  {
+  #ifdef _WIN32
+    ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+  #else
+    ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+  #endif
+    if(s != datasize) {
+      cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
+      SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
+    }
   
-  ic.cur += datasize;
-
+    ic.cur += datasize;
+  }
   if (use_gzip) {
 #if defined( REDSTORM )
     printf("Error: compression not supported on RedStorm\n");
