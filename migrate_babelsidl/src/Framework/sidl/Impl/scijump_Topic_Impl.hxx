@@ -21,14 +21,14 @@
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
 #endif
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
 #ifndef included_sci_cca_EventServiceException_hxx
 #include "sci_cca_EventServiceException.hxx"
 #endif
 #ifndef included_sci_cca_Topic_hxx
 #include "sci_cca_Topic.hxx"
-#endif
-#ifndef included_scijump_SCIJumpFramework_hxx
-#include "scijump_SCIJumpFramework.hxx"
 #endif
 #ifndef included_scijump_Subscription_hxx
 #include "scijump_Subscription.hxx"
@@ -83,7 +83,7 @@ namespace scijump {
     typedef std::map< std::string, Subscription> SubscriptionMap;
     SubscriptionMap subscriptionMap;
 
-    SCIJumpFramework sjf;
+    ::sci::cca::AbstractFramework framework;
     // DO-NOT-DELETE splicer.end(scijump.Topic._implementation)
 
   public:
@@ -120,7 +120,7 @@ namespace scijump {
     void
     initialize_impl (
       /* in */const ::std::string& topicName,
-      /* in */::scijump::SCIJumpFramework& sjf
+      /* in */::sci::cca::AbstractFramework& framework
     )
     ;
 

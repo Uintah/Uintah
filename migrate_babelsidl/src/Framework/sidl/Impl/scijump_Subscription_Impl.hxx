@@ -18,6 +18,9 @@
 #ifndef included_scijump_Subscription_IOR_h
 #include "scijump_Subscription_IOR.h"
 #endif
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
 #ifndef included_sci_cca_Event_hxx
 #include "sci_cca_Event.hxx"
 #endif
@@ -29,9 +32,6 @@
 #endif
 #ifndef included_sci_cca_Subscription_hxx
 #include "sci_cca_Subscription.hxx"
-#endif
-#ifndef included_scijump_SCIJumpFramework_hxx
-#include "scijump_SCIJumpFramework.hxx"
 #endif
 #ifndef included_scijump_Subscription_hxx
 #include "scijump_Subscription.hxx"
@@ -52,7 +52,6 @@
 
 // DO-NOT-DELETE splicer.begin(scijump.Subscription._hincludes)
 #include <map>
-#include <scijump_EventListener.hxx>
 // DO-NOT-DELETE splicer.end(scijump.Subscription._hincludes)
 
 namespace scijump { 
@@ -75,9 +74,9 @@ namespace scijump {
 
     // DO-NOT-DELETE splicer.begin(scijump.Subscription._implementation)
     std::string subscriptionName;
-    SCIJumpFramework sjf;
+    ::sci::cca::AbstractFramework framework;
 
-    typedef std::map<std::string, scijump::EventListener> EventListenerMap;
+    typedef std::map<std::string, ::sci::cca::EventListener> EventListenerMap;
     EventListenerMap eventListenerMap;
     // DO-NOT-DELETE splicer.end(scijump.Subscription._implementation)
 
@@ -116,7 +115,7 @@ namespace scijump {
     void
     initialize_impl (
       /* in */const ::std::string& subscriptionName,
-      /* in */::scijump::SCIJumpFramework& sjf
+      /* in */::sci::cca::AbstractFramework& framework
     )
     ;
 

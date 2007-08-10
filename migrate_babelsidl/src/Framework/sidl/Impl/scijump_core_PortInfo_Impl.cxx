@@ -13,6 +13,9 @@
 // 
 // Includes for all method dependencies.
 // 
+#ifndef included_gov_cca_CCAException_hxx
+#include "gov_cca_CCAException.hxx"
+#endif
 #ifndef included_gov_cca_Port_hxx
 #include "gov_cca_Port.hxx"
 #endif
@@ -41,6 +44,10 @@
 #include "sidl_NotImplementedException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo._includes)
+
+#include "scijump_CCAException.hxx"
+#include "scijump_TypeMap.hxx"
+
 // Insert-Code-Here {scijump.core.PortInfo._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(scijump.core.PortInfo._includes)
 
@@ -88,16 +95,6 @@ scijump::core::PortInfo_impl::initialize_impl (
   /* in */const ::std::string& className ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.initialize)
-  // Insert-Code-Here {scijump.core.PortInfo.initialize} (initialize method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.initialize)
-//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-//   ex.setNote("This method has not been implemented");
-//   ex.add(__FILE__, __LINE__, "initialize");
-//   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.initialize)
 
   // check for initialize?
 
@@ -105,6 +102,7 @@ scijump::core::PortInfo_impl::initialize_impl (
   this->portType = portType;
   this->name = name;
   this->className = className;
+  this->useCount = 0;
 
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.initialize)
 }
@@ -114,19 +112,21 @@ scijump::core::PortInfo_impl::initialize_impl (
  */
 bool
 scijump::core::PortInfo_impl::connect_impl (
-  /* in */::sci::cca::core::PortInfo& portInfo ) 
+  /* in */::sci::cca::core::PortInfo& to ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.connect)
-  // Insert-Code-Here {scijump.core.PortInfo.connect} (connect method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.connect)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "connect");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.connect)
+  if ( to._is_nil() ) return false;
+  if ( !canConnectTo(to) ) return false;
+
+  if (portType == ::sci::cca::core::PortType_UsesPort
+      && to.getPortType() == ::sci::cca::core::PortType_ProvidesPort) {
+    //Guard guard(&lock);
+    // lock this code!
+    connections.push_back(to);
+  } else {
+    return to.connect(*this);
+  }
+  return true;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.connect)
 }
 
@@ -135,7 +135,7 @@ scijump::core::PortInfo_impl::connect_impl (
  */
 bool
 scijump::core::PortInfo_impl::disconnect_impl (
-  /* in */::sci::cca::core::PortInfo& portInfo ) 
+  /* in */::sci::cca::core::PortInfo& peer ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.disconnect)
   // Insert-Code-Here {scijump.core.PortInfo.disconnect} (disconnect method)
@@ -143,11 +143,32 @@ scijump::core::PortInfo_impl::disconnect_impl (
   // This method has not been implemented
   // 
   // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.disconnect)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "disconnect");
-  throw ex;
+//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+//   ex.setNote("This method has not been implemented");
+//   ex.add(__FILE__, __LINE__, "disconnect");
+//   throw ex;
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.disconnect)
+
+    if (peer._is_nil()) return false;
+
+    if (portType != ::sci::cca::core::PortType_UsesPort) {
+      // warn?
+      //std::cerr << "disconnect can be called only by user" << std::endl;
+      return false;
+    }
+
+    //Guard guard(&lock);
+    // lock this code!
+
+    std::vector< ::sci::cca::core::PortInfo>::iterator iter;
+    for (iter = connections.begin(); iter < connections.end(); iter++) {
+      ::sci::cca::core::PortInfo cur = *iter;
+      if (peer.isSame(cur)) {
+        connections.erase(iter);
+        return true;
+      }
+    }
+    return false;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.disconnect)
 }
 
@@ -159,16 +180,9 @@ scijump::core::PortInfo_impl::available_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.available)
-  // Insert-Code-Here {scijump.core.PortInfo.available} (available method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.available)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "available");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.available)
+
+  return portType == ::sci::cca::core::PortType_ProvidesPort || connections.size() == 0;
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.available)
 }
 
@@ -177,19 +191,16 @@ scijump::core::PortInfo_impl::available_impl ()
  */
 bool
 scijump::core::PortInfo_impl::canConnectTo_impl (
-  /* in */::sci::cca::core::PortInfo& portInfo ) 
+  /* in */::sci::cca::core::PortInfo& toPortInfo ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.canConnectTo)
-  // Insert-Code-Here {scijump.core.PortInfo.canConnectTo} (canConnectTo method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.canConnectTo)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "canConnectTo");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.canConnectTo)
+
+  return toPortInfo._not_nil()
+    && available()
+    && toPortInfo.available()
+    && className == toPortInfo.getClass()
+    && portType == toPortInfo.getPortType();
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.canConnectTo)
 }
 
@@ -201,16 +212,7 @@ scijump::core::PortInfo_impl::isConnected_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.isConnected)
-  // Insert-Code-Here {scijump.core.PortInfo.isConnected} (isConnected method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.isConnected)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "isConnected");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.isConnected)
+  return connections.size() > 0;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.isConnected)
 }
 
@@ -222,16 +224,9 @@ scijump::core::PortInfo_impl::inUse_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.inUse)
-  // Insert-Code-Here {scijump.core.PortInfo.inUse} (inUse method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.inUse)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "inUse");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.inUse)
+
+  return useCount > 0;
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.inUse)
 }
 
@@ -243,16 +238,9 @@ scijump::core::PortInfo_impl::numOfConnections_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.numOfConnections)
-  // Insert-Code-Here {scijump.core.PortInfo.numOfConnections} (numOfConnections method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.numOfConnections)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "numOfConnections");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.numOfConnections)
+
+  return connections.size();
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.numOfConnections)
 }
 
@@ -264,16 +252,11 @@ scijump::core::PortInfo_impl::getProperties_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getProperties)
-  // Insert-Code-Here {scijump.core.PortInfo.getProperties} (getProperties method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.getProperties)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getProperties");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.getProperties)
+  if (properties._is_nil())
+    properties = scijump::TypeMap::_create();
+
+  return properties;
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getProperties)
 }
 
@@ -288,16 +271,13 @@ scijump::core::PortInfo_impl::getPort_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getPort)
-  // Insert-Code-Here {scijump.core.PortInfo.getPort} (getPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.getPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.getPort)
+  if (port._is_nil()) {
+    ::sci::cca::core::NotInitializedException ex = ::sci::cca::core::NotInitializedException::_create();
+    ex.setNote("port has not been initialized");
+    ex.add(__FILE__, __LINE__, "getPort");
+    throw ex;
+  }
+  return port;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getPort)
 }
 
@@ -306,19 +286,22 @@ scijump::core::PortInfo_impl::getPort_impl ()
  */
 ::sci::cca::core::PortInfo
 scijump::core::PortInfo_impl::getPeer_impl () 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getPeer)
-  // Insert-Code-Here {scijump.core.PortInfo.getPeer} (getPeer method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.getPeer)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getPeer");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.getPeer)
+
+  if ( portType == ::sci::cca::core::PortType_ProvidesPort || connections.size() == 0 ) {
+    //throw CCAException::create("Port ["+name+"] Not Connected");
+    ::gov::cca::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Port [" + name + "] is not connected");
+    ex.add(__FILE__, __LINE__, "getPort");
+    throw ex;
+  }
+  return connections[0];
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getPeer)
 }
 
@@ -327,22 +310,10 @@ scijump::core::PortInfo_impl::getPeer_impl ()
  */
 ::sci::cca::core::PortType
 scijump::core::PortInfo_impl::getPortType_impl () 
-// throws:
-//     ::sci::cca::core::NotInitializedException
-//     ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getPortType)
-  // Insert-Code-Here {scijump.core.PortInfo.getPortType} (getPortType method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.getPortType)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getPortType");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.getPortType)
+  return portType;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getPortType)
 }
 
@@ -354,16 +325,7 @@ scijump::core::PortInfo_impl::getName_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getName)
-  // Insert-Code-Here {scijump.core.PortInfo.getName} (getName method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.getName)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getName");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.getName)
+  return name;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getName)
 }
 
@@ -375,16 +337,7 @@ scijump::core::PortInfo_impl::getClass_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getClass)
-  // Insert-Code-Here {scijump.core.PortInfo.getClass} (getClass method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.getClass)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getClass");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.getClass)
+  return className;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getClass)
 }
 
@@ -396,16 +349,10 @@ scijump::core::PortInfo_impl::incrementUseCount_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.incrementUseCount)
-  // Insert-Code-Here {scijump.core.PortInfo.incrementUseCount} (incrementUseCount method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.incrementUseCount)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "incrementUseCount");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.incrementUseCount)
+
+  // lock this!
+  ++useCount;
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.incrementUseCount)
 }
 
@@ -417,16 +364,13 @@ scijump::core::PortInfo_impl::decrementUseCount_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.decrementUseCount)
-  // Insert-Code-Here {scijump.core.PortInfo.decrementUseCount} (decrementUseCount method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.core.PortInfo.decrementUseCount)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "decrementUseCount");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.core.PortInfo.decrementUseCount)
+
+  // lock this!
+  if (useCount == 0) return false;
+
+  --useCount;
+  return true;
+
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.decrementUseCount)
 }
 

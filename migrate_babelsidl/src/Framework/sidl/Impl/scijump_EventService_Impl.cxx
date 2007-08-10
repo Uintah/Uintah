@@ -13,6 +13,9 @@
 // 
 // Includes for all method dependencies.
 // 
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
 #ifndef included_sci_cca_EventServiceException_hxx
 #include "sci_cca_EventServiceException.hxx"
 #endif
@@ -22,8 +25,8 @@
 #ifndef included_sci_cca_Topic_hxx
 #include "sci_cca_Topic.hxx"
 #endif
-#ifndef included_scijump_SCIJumpFramework_hxx
-#include "scijump_SCIJumpFramework.hxx"
+#ifndef included_sci_cca_core_FrameworkService_hxx
+#include "sci_cca_core_FrameworkService.hxx"
 #endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
@@ -71,7 +74,33 @@ void scijump::EventService_impl::_load() {
   // DO-NOT-DELETE splicer.end(scijump.EventService._load)
 }
 
-// user defined static methods: (none)
+// user defined static methods:
+/**
+ * Method:  create[]
+ */
+::sci::cca::core::FrameworkService
+scijump::EventService_impl::create_impl (
+  /* in */::sci::cca::AbstractFramework& framework ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.EventService.create)
+  // Insert-Code-Here {scijump.EventService.create} (create method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.EventService.create)
+//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+//   ex.setNote("This method has not been implemented");
+//   ex.add(__FILE__, __LINE__, "create");
+//   throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.EventService.create)
+
+  scijump::EventService es = scijump::EventService::_create();
+  es.initialize(framework);
+  return es;
+
+  // DO-NOT-DELETE splicer.end(scijump.EventService.create)
+}
+
 
 // user defined non-static methods:
 /**
@@ -79,10 +108,10 @@ void scijump::EventService_impl::_load() {
  */
 void
 scijump::EventService_impl::initialize_impl (
-  /* in */::scijump::SCIJumpFramework& sjf ) 
+  /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.EventService.initialize)
-  this->sjf = sjf;
+  this->framework = framework;
   // DO-NOT-DELETE splicer.end(scijump.EventService.initialize)
 }
 
@@ -121,7 +150,7 @@ scijump::EventService_impl::getTopic_impl (
   TopicMap::iterator iter = topicMap.find(topicName);
   if (iter == topicMap.end()) { // new Topic
     topicPtr = Topic::_create();
-    topicPtr.initialize(topicName,sjf);
+    topicPtr.initialize(topicName, framework);
     topicMap[topicName] = topicPtr;
   } else { // Topic already present
     topicPtr = iter->second;
@@ -191,7 +220,7 @@ scijump::EventService_impl::getSubscription_impl (
   SubscriptionMap::iterator iter = subscriptionMap.find(subscriptionName);
   if (iter == subscriptionMap.end()) { // new Subscription
     subscriptionPtr = Subscription::_create(); 
-    subscriptionPtr.initialize(subscriptionName,sjf);
+    subscriptionPtr.initialize(subscriptionName, framework);
     subscriptionMap[subscriptionName] = subscriptionPtr;
   } else { // Subscription already present
     subscriptionPtr = iter->second;

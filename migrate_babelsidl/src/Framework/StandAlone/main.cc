@@ -217,6 +217,8 @@ main(int argc, char *argv[], char **environment) {
 
     // test, although should be in cleanup code
     sj.releaseServices(mainServices);
+    sj.shutdownFramework();
+    // test, although should be in cleanup code
   }
   catch (sidl::RuntimeException& e) {
     std::cerr << "Caught a SIDL runtime exception with note: " << e.getNote() << std::endl;

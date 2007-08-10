@@ -13,6 +13,9 @@
 // 
 // Includes for all method dependencies.
 // 
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
 #ifndef included_sci_cca_Event_hxx
 #include "sci_cca_Event.hxx"
 #endif
@@ -21,9 +24,6 @@
 #endif
 #ifndef included_sci_cca_EventServiceException_hxx
 #include "sci_cca_EventServiceException.hxx"
-#endif
-#ifndef included_scijump_SCIJumpFramework_hxx
-#include "scijump_SCIJumpFramework.hxx"
 #endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
@@ -80,11 +80,11 @@ void scijump::Subscription_impl::_load() {
 void
 scijump::Subscription_impl::initialize_impl (
   /* in */const ::std::string& subscriptionName,
-  /* in */::scijump::SCIJumpFramework& sjf ) 
+  /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Subscription.initialize)
   this->subscriptionName = subscriptionName;
-  this->sjf = sjf;
+  this->framework = framework;
   // DO-NOT-DELETE splicer.end(scijump.Subscription.initialize)
 }
 
@@ -151,7 +151,7 @@ scijump::Subscription_impl::registerEventListener_impl (
     throw ex; 
   }
 
-  eventListenerMap[listenerKey] = babel_cast< scijump::EventListener>(theListener);
+  eventListenerMap[listenerKey] = theListener;
   // DO-NOT-DELETE splicer.end(scijump.Subscription.registerEventListener)
 }
 

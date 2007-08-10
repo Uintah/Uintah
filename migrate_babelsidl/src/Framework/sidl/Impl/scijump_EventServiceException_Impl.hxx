@@ -27,14 +27,14 @@
 #ifndef included_scijump_EventServiceException_hxx
 #include "scijump_EventServiceException.hxx"
 #endif
-#ifndef included_sidl_BaseClass_hxx
-#include "sidl_BaseClass.hxx"
-#endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
 #endif
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
+#endif
+#ifndef included_sidl_SIDLException_hxx
+#include "sidl_SIDLException.hxx"
 #endif
 #ifndef included_sidl_io_Deserializer_hxx
 #include "sidl_io_Deserializer.hxx"
@@ -80,9 +80,9 @@ namespace scijump {
       EventServiceException_impl( struct scijump_EventServiceException__object 
         * ior ) : StubBase(ior,true), 
       ::sidl::io::Serializable((ior==NULL) ? NULL : &((
-        *ior).d_sidl_io_serializable)),
+        *ior).d_sidl_sidlexception.d_sidl_io_serializable)),
       ::sidl::BaseException((ior==NULL) ? NULL : &((
-        *ior).d_sidl_baseexception)),
+        *ior).d_sidl_sidlexception.d_sidl_baseexception)),
       ::gov::cca::CCAException((ior==NULL) ? NULL : &((
         *ior).d_gov_cca_ccaexception)),
     ::sci::cca::EventServiceException((ior==NULL) ? NULL : &((
@@ -110,63 +110,8 @@ namespace scijump {
      * user defined non-static method.
      */
     void
-    packObj_impl (
-      /* in */::sidl::io::Serializer& ser
-    )
-    ;
-
-    /**
-     * user defined non-static method.
-     */
-    void
-    unpackObj_impl (
-      /* in */::sidl::io::Deserializer& des
-    )
-    ;
-
-
-    /**
-     * Return the message associated with the exception.
-     */
-    ::std::string
-    getNote_impl() ;
-
-    /**
-     * Set the message associated with the exception.
-     */
-    void
-    setNote_impl (
-      /* in */const ::std::string& message
-    )
-    ;
-
-
-    /**
-     * Returns formatted string containing the concatenation of all 
-     * tracelines.
-     */
-    ::std::string
-    getTrace_impl() ;
-
-    /**
-     * Adds a stringified entry/line to the stack trace.
-     */
-    void
-    add_impl (
-      /* in */const ::std::string& traceline
-    )
-    ;
-
-
-    /**
-     * Formats and adds an entry to the stack trace based on the 
-     * file name, line number, and method name.
-     */
-    void
-    add_impl (
-      /* in */const ::std::string& filename,
-      /* in */int32_t lineno,
-      /* in */const ::std::string& methodname
+    initialize_impl (
+      /* in */::gov::cca::CCAExceptionType type
     )
     ;
 

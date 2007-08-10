@@ -28,11 +28,11 @@
 #ifndef included_sci_cca_AbstractFramework_hxx
 #include "sci_cca_AbstractFramework.hxx"
 #endif
+#ifndef included_sci_cca_Event_hxx
+#include "sci_cca_Event.hxx"
+#endif
 #ifndef included_sci_cca_core_FrameworkService_hxx
 #include "sci_cca_core_FrameworkService.hxx"
-#endif
-#ifndef included_sci_cca_core_ServiceInfo_hxx
-#include "sci_cca_core_ServiceInfo.hxx"
 #endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
@@ -723,59 +723,45 @@ scijump::BuilderService_impl::disconnectAll_impl (
 }
 
 /**
- * Method:  getServiceInfo[]
+ *  This is where event processing by a listener takes place. This
+ * is a call-back method that a topic subscriber implements and 
+ * gets called for each new event.
+ * 
+ * @topicName - The topic for which the Event was created and sent.
+ * @theEvent - The payload.
  */
-::sci::cca::core::ServiceInfo
-scijump::BuilderService_impl::getServiceInfo_impl () 
-
+void
+scijump::BuilderService_impl::processEvent_impl (
+  /* in */const ::std::string& topicName,
+  /* in */::sci::cca::Event& theEvent ) 
 {
-  // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getServiceInfo)
-  // Insert-Code-Here {scijump.BuilderService.getServiceInfo} (getServiceInfo method)
+  // DO-NOT-DELETE splicer.begin(scijump.BuilderService.processEvent)
+  // Insert-Code-Here {scijump.BuilderService.processEvent} (processEvent method)
   // 
   // This method has not been implemented
   // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.getServiceInfo)
-  //::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  //ex.setNote("This method has not been implemented");
-  //ex.add(__FILE__, __LINE__, "getServiceInfo");
-  //throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.getServiceInfo)
-
-  if (serviceInfo._is_nil()) {
-    ::sci::cca::core::NotInitializedException ex = ::sci::cca::core::NotInitializedException::_create();
-    ex.setNote("scijump::BuilderService_impl::ServiceInfo member is nil");
-    ex.add(__FILE__, __LINE__, "getServiceInfo");
-    throw ex;
-  }
-
-  return ::sidl::babel_cast< ::sci::cca::core::ServiceInfo>(serviceInfo);
-
-  // DO-NOT-DELETE splicer.end(scijump.BuilderService.getServiceInfo)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.processEvent)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "processEvent");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.processEvent)
+  // DO-NOT-DELETE splicer.end(scijump.BuilderService.processEvent)
 }
 
 
 // DO-NOT-DELETE splicer.begin(scijump.BuilderService._misc)
 
 #if 0
+  // Insert-Code-Here {scijump.BuilderService.getServiceInfo} (getServiceInfo method)
+//   if (serviceInfo._is_nil()) {
+//     ::sci::cca::core::NotInitializedException ex = ::sci::cca::core::NotInitializedException::_create();
+//     ex.setNote("scijump::BuilderService_impl::ServiceInfo member is nil");
+//     ex.add(__FILE__, __LINE__, "getServiceInfo");
+//     throw ex;
+//   }
 
-/**
- * ================= BEGIN UNREFERENCED METHOD(S) ================
- * The following code segment(s) belong to unreferenced method(s).
- * This can result from a method rename/removal in the sidl file.
- * Move or remove the code in order to compile cleanly.
- */
-
-//   std::cerr << "scijump::BuilderService_impl::create_impl(..)" << std::endl;
-
-//   scijump::BuilderService bs = scijump::BuilderService::_create();
-//   bs.initialize(framework);
-
-//   std::cerr << "scijump::BuilderService_impl::create_impl(..) done" << std::endl;
-
-//   return bs;
-
-// ================== END UNREFERENCED METHOD(S) =================
-
+//   return ::sidl::babel_cast< ::sci::cca::core::ServiceInfo>(serviceInfo);
 #endif
 
 // Insert-Code-Here {scijump.BuilderService._misc} (miscellaneous code)

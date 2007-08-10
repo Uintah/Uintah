@@ -19,11 +19,20 @@
 #ifndef included_gov_cca_CCAException_hxx
 #include "gov_cca_CCAException.hxx"
 #endif
+#ifndef included_gov_cca_ComponentID_hxx
+#include "gov_cca_ComponentID.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
+#endif
+#ifndef included_sci_cca_core_PortInfo_hxx
+#include "sci_cca_core_PortInfo.hxx"
+#endif
+#ifndef included_sci_cca_core_ServiceInfo_hxx
+#include "sci_cca_core_ServiceInfo.hxx"
 #endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
@@ -132,6 +141,71 @@ scijump::SCIJumpFramework_impl::unregisterLoader_impl (
   throw ex;
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.unregisterLoader)
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.unregisterLoader)
+}
+
+/**
+ *  This one is in test for distributed computing
+ */
+bool
+scijump::SCIJumpFramework_impl::isFrameworkService_impl (
+  /* in */const ::std::string& name ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.isFrameworkService)
+  // Insert-Code-Here {scijump.SCIJumpFramework.isFrameworkService} (isFrameworkService method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.isFrameworkService)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "isFrameworkService");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.isFrameworkService)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.isFrameworkService)
+}
+
+/**
+ * Method:  getFrameworkService[]
+ */
+::sci::cca::core::ServiceInfo
+scijump::SCIJumpFramework_impl::getFrameworkService_impl (
+  /* in */const ::std::string& serviceName,
+  /* in */::sci::cca::core::PortInfo& requesterPort,
+  /* in */::gov::cca::ComponentID& requester ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getFrameworkService)
+  // Insert-Code-Here {scijump.SCIJumpFramework.getFrameworkService} (getFrameworkService method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getFrameworkService)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "getFrameworkService");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getFrameworkService)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getFrameworkService)
+}
+
+/**
+ * Method:  releaseFrameworkService[]
+ */
+void
+scijump::SCIJumpFramework_impl::releaseFrameworkService_impl (
+  /* in */::sci::cca::core::ServiceInfo& info ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.releaseFrameworkService)
+  // Insert-Code-Here {scijump.SCIJumpFramework.releaseFrameworkService} (releaseFrameworkService method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.releaseFrameworkService)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "releaseFrameworkService");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.releaseFrameworkService)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.releaseFrameworkService)
 }
 
 /**
@@ -266,7 +340,7 @@ scijump::SCIJumpFramework_impl::releaseServices_impl (
     // warn?
     return;
   }
-  // destroy associated component etc.
+  // TODO: destroy associated component etc.
   this->services.erase(pos);
 
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.releaseServices)
@@ -290,11 +364,14 @@ scijump::SCIJumpFramework_impl::shutdownFramework_impl ()
   // This method has not been implemented
   // 
   // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.shutdownFramework)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "shutdownFramework");
-  throw ex;
+//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+//   ex.setNote("This method has not been implemented");
+//   ex.add(__FILE__, __LINE__, "shutdownFramework");
+//   throw ex;
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.shutdownFramework)
+
+  services.clear();
+
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.shutdownFramework)
 }
 
@@ -337,13 +414,9 @@ scijump::SCIJumpFramework_impl::initFrameworkServices()
   bsf.initialize( new scijump::core::SingletonServiceFactory<scijump::BuilderService>(*this, "cca.BuilderService") );
   addFrameworkService(bsf, this->frameworkServices);
 
-  scijump::core::FrameworkServiceFactory psf = scijump::core::FrameworkServiceFactory::_create();
-  psf.initialize( new scijump::core::SingletonServiceFactory<scijump::PublisherEventService>(*this, "cca.PublisherEventService") );
-  addFrameworkService(psf, this->frameworkServices);
-
-  scijump::core::FrameworkServiceFactory ssf = scijump::core::FrameworkServiceFactory::_create();
-  psf.initialize( new scijump::core::SingletonServiceFactory<scijump::SubscriberEventService>(*this, "cca.SubscriberEventService") );
-  addFrameworkService(psf, this->frameworkServices);
+  scijump::core::FrameworkServiceFactory esf = scijump::core::FrameworkServiceFactory::_create();
+  esf.initialize( new scijump::core::SingletonServiceFactory<scijump::EventService>(*this, "cca.EventService") );
+  addFrameworkService(esf, this->frameworkServices);
 }
 
 void

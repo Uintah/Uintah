@@ -18,6 +18,9 @@
 #ifndef included_scijump_core_PortInfo_IOR_h
 #include "scijump_core_PortInfo_IOR.h"
 #endif
+#ifndef included_gov_cca_CCAException_hxx
+#include "gov_cca_CCAException.hxx"
+#endif
 #ifndef included_gov_cca_Port_hxx
 #include "gov_cca_Port.hxx"
 #endif
@@ -51,6 +54,9 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo._hincludes)
+
+#include <vector>
+
 // Insert-Code-Here {scijump.core.PortInfo._hincludes} (includes or arbitrary code)
 // DO-NOT-DELETE splicer.end(scijump.core.PortInfo._hincludes)
 
@@ -79,6 +85,13 @@ namespace scijump {
       ::sci::cca::core::PortType portType;
       std::string name;
       std::string className;
+
+    private:
+      std::vector< ::sci::cca::core::PortInfo> connections;
+
+      ::gov::cca::TypeMap properties;
+      int useCount;
+      //SCIRun::Mutex lock;
 
       // Insert-Code-Here {scijump.core.PortInfo._implementation} (additional details)
       // DO-NOT-DELETE splicer.end(scijump.core.PortInfo._implementation)
@@ -129,7 +142,7 @@ namespace scijump {
        */
       bool
       connect_impl (
-        /* in */::sci::cca::core::PortInfo& portInfo
+        /* in */::sci::cca::core::PortInfo& to
       )
       ;
 
@@ -138,7 +151,7 @@ namespace scijump {
        */
       bool
       disconnect_impl (
-        /* in */::sci::cca::core::PortInfo& portInfo
+        /* in */::sci::cca::core::PortInfo& peer
       )
       ;
 
@@ -152,7 +165,7 @@ namespace scijump {
        */
       bool
       canConnectTo_impl (
-        /* in */::sci::cca::core::PortInfo& portInfo
+        /* in */::sci::cca::core::PortInfo& toPortInfo
       )
       ;
 
@@ -188,15 +201,15 @@ namespace scijump {
        * user defined non-static method.
        */
       ::sci::cca::core::PortInfo
-      getPeer_impl() ;
+      getPeer_impl() // throws:
+      //     ::gov::cca::CCAException
+      //     ::sidl::RuntimeException
+      ;
       /**
        * user defined non-static method.
        */
       ::sci::cca::core::PortType
-      getPortType_impl() // throws:
-      //     ::sci::cca::core::NotInitializedException
-      //     ::sidl::RuntimeException
-      ;
+      getPortType_impl() ;
       /**
        * user defined non-static method.
        */
