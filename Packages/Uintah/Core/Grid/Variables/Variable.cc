@@ -234,18 +234,20 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
   data.resize(datasize);
   // casting from const char* -- use caution
-#ifdef _WIN32
-  ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-#else
-  ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-#endif
-  if(s != datasize) {
-    cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
-    SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
-  }
+  if(datasize>0)
+  {
+  #ifdef _WIN32
+    ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+  #else
+    ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+  #endif
+    if(s != datasize) {
+      cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
+      SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
+    }
   
-  ic.cur += datasize;
-
+    ic.cur += datasize;
+  }
   if (use_gzip) {
 #if defined( REDSTORM )
     printf("Error: compression not supported on RedStorm\n");
