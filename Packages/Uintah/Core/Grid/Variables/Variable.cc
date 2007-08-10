@@ -127,20 +127,23 @@ Variable::emit( OutputContext& oc, const IntVector& l,
 
   const char* writebuffer = (*writeoutString).c_str();
   unsigned long writebufferSize = (*writeoutString).size();
-#ifdef _WIN32
-  ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
-#else
-  ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
-#endif
+  if(writebufferSize>0)
+  {
+  #ifdef _WIN32
+    ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
+  #else
+    ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
+  #endif
 
-  if(s != (long)writebufferSize) {
-    cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
+    if(s != (long)writebufferSize) {
+      cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
          << " with errno " << errno << ": " << strerror(errno) <<  endl;
-    cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
+      cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
 
-    SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
+      SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
+    }
+    oc.cur += writebufferSize;
   }
-  oc.cur += writebufferSize;
 
   string compressionMode = compressionModeHint;
   if (try_all || (used_gzip != use_gzip) || (used_rle != use_rle)) {
