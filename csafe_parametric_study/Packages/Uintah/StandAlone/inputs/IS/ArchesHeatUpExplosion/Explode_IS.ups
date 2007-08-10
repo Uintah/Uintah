@@ -29,7 +29,6 @@
     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
     <doSpaceCurve>         true            </doSpaceCurve>
     <timestepInterval>     100             </timestepInterval>
-    <outputNthProc>         8              </outputNthProc>
   </LoadBalancer>
 
   <!--____________________________________________________________________-->
