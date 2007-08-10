@@ -51,7 +51,12 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._hincludes)
-#include <Core/Thread/Mutex.h>
+
+#include "scijump_core_FrameworkServiceFactory.hxx"
+
+#include <map>
+
+// Insert-Code-Here {scijump.SCIJumpFramework._hincludes} (includes or arbitrary code)
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._hincludes)
 
 namespace scijump { 
@@ -73,7 +78,18 @@ namespace scijump {
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._implementation)
-    SCIRun::Mutex* lockCompIDs;
+
+    typedef std::map<std::string, ::scijump::core::FrameworkServiceFactory> FrameworkServiceMap;
+    FrameworkServiceMap frameworkServices;
+
+    typedef std::map<std::string, ::gov::cca::Services> ServicesMap;
+    ServicesMap services;
+
+    void initFrameworkServices();
+    void destroyFrameworkServices();
+    bool addFrameworkService(::scijump::core::FrameworkServiceFactory& factory, FrameworkServiceMap& frameworkServices);
+
+    // Insert-Code-Here {scijump.SCIJumpFramework._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._implementation)
 
   public:

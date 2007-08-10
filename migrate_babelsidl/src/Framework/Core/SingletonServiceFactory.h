@@ -36,7 +36,11 @@
  *   University of Utah
  *   Sept 2005
  *
- * (from the Plume framework implementation)
+ * Adapted from the Plume framework implementation by:
+ *   Ayla Khan
+ *   SCI Institute
+ *   University of Utah
+ *   July 2007
  *
  */
 
@@ -98,11 +102,15 @@ namespace scijump {
           service = scijump::core::PortInfo::_create();
           sci::cca::core::FrameworkService fs = Service::create(framework);
           gov::cca::Port port = sidl::babel_cast<gov::cca::Port>(fs);
+  
+          // Although we probably should not have asserts in production code,
+          // a babel_cast failure here would indicate a fairly serious problem.
           ASSERT(port._not_nil());
-          service.initialize(port , sci::cca::core::PortType_ProvidesPort, serviceName, serviceName );
+  
+          service.initialize(port, sci::cca::core::PortType_ProvidesPort, serviceName, serviceName );
         }
         uses++;
-        return sidl::babel_cast<sci::cca::core::PortInfo>(service);
+        return service;
       }
 
       virtual void release(const std::string &portName) {
