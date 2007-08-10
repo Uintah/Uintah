@@ -105,7 +105,6 @@ SET(SCIRUN_LIBRARIES
   Core_Algorithms_Fields
   Core_Algorithms_Geometry
   Core_Algorithms_Math
-  Core_Algorithms_Util
   Core_Algorithms_Visualization
 )
 

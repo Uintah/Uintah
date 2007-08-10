@@ -1401,6 +1401,24 @@ IF(ITK_DIR OR FIND_ITK)
   ENDIF(ITK_FOUND)
 ENDIF(ITK_DIR OR FIND_ITK)
 
+# Set which components of wx we need, as there can be different parts
+# compiled.
+OPTION(WITH_WXWIDGETS "Compile Seg3D with WX Widgets support" ON)
+MARK_AS_ADVANCED(WITH_WXWIDGETS)
+IF(WITH_WXWIDGETS)
+  SET(wxWidgets_USE_LIBS core base gl adv html xml xrc)
+  FIND_PACKAGE(wxWidgets)
+
+  IF(wxWidgets_FOUND)
+    # Without this magic line wxWidgets fails to compile on OSX.  It dies
+    # with a bad template error on wxString.
+    SET(wxWidgets_INCLUDE_DIRS_NO_SYSTEM 1)
+
+    SET(DEF_WX "#define HAVE_WX 1" CACHE INTERNAL "Have WX")
+    INCLUDE(${wxWidgets_USE_FILE})
+  ENDIF(wxWidgets_FOUND)
+ENDIF(WITH_WXWIDGETS)
+
 #----------------------------------------------------------------------------
 # Search for HDF5 (http://www.hdfgroup.org)
 
@@ -1535,6 +1553,7 @@ INCLUDE (${SCIRUN_CORE_SOURCE_DIR}/sciGenerateSCIRUNConfig.cmake)
 INSTALL_FILES(/lib/SCIRun .cmake UseSCIRUN SCIRUNLibraryDepends)
 
 OPTION(MINIMAL_CORE "Build only a small subset of Core" OFF)
+MARK_AS_ADVANCED(MINIMAL_CORE) #shouldn't be exposed to most users.
 
 # Build the external include library 
 SET(SCI_GLEW_LIBRARY sci_glew)
@@ -1596,13 +1615,8 @@ MARK_AS_ADVANCED(BUILD_DATAFLOW)
 # Option for building scirun python interface
 OPTION(BUILD_SR_PY "Build SCIRun Python interface" OFF)
 IF(BUILD_SR_PY)
-   FIND_LIBRARY(PYTHON_LIBRARY python2.5 
-			/usr/lib
-                        /usr/lib32
-                        /usr/lib64)
-   FIND_PATH(PYTHON_INCLUDE Python.h 
-			/usr/include/python2.5)
-   ADD_SUBDIRECTORY(sr_py)
+  FIND_PACKAGE(PythonLibs)
+  ADD_SUBDIRECTORY(sr_py)
 ENDIF(BUILD_SR_PY)
 MARK_AS_ADVANCED(BUILD_SR_PY)
 
