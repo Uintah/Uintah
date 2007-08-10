@@ -26,7 +26,7 @@ SteadyBurnCriteria::SteadyBurnCriteria(ProblemSpecP& ps)
   ps->require("ThresholdTemperature",d_temperature);
   ps->require("BoundaryParticles",   d_BP);
   
-  if (0&&Parallel::getMPIRank() == 0) {
+  if (Parallel::getMPIRank() == 0) {
     cout << "Switching criteria:  \tSteadyBurn, reactant matl: " 
          << d_material << " Threshold tempterature " << d_temperature 
          << ", Boundary Particles " << d_BP<< endl;
@@ -194,11 +194,11 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
                    
                     if(vol_frac_mpm[m][cell] > 0.2 && 
                         temp_CC_mpm[m][cell] > d_temperature){
-                      //cout << " The switching criteria satisfied in cell "<<cell
-                      //     << " vol_frac_mpm " << vol_frac_mpm[m][cell]
-                      //     << " temp_CC_mpm " << temp_CC_mpm[m][cell] 
-                      //     << " matl " << m 
-                      //     << " main cell " << c << endl;
+                      cout << " The switching criteria satisfied in cell "<<cell
+                         << " vol_frac_mpm " << vol_frac_mpm[m][cell]
+                         << " temp_CC_mpm " << temp_CC_mpm[m][cell] 
+                         << " matl " << m 
+                         << " main cell " << c << endl;
                       timeToSwitch = 1;
                       break;
                     }
