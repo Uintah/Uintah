@@ -45,7 +45,7 @@ SRCDIR := Framework/StandAlone
 #  PSELIBS := Core/CCA
 #else
   PSELIBS := \
-             Framework/sidl \
+             Framework \
              Core/Containers Core/Exceptions Core/Thread Core/Util
 #  ifeq ($(HAVE_GLOBUS),yes)
 #	  PSELIBS += Core/globus_threads

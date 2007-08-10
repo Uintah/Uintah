@@ -25,33 +25,61 @@
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
 */
+
 require gov.cca version 0.8.1;
 require sci.cca version 0.2.1;
 
 package scijump version 0.2.1 {
-  class SCIJumpFramework implements-all sci.cca.AbstractFramework {}
+  package core {
+    class FrameworkServiceFactory implements-all sci.cca.core.FrameworkServiceFactory {
+      void initialize(in opaque internalFactoryImpl);
+
+      // initializes all framework services
+      // this is the place to add new framework services
+      //static void initializeServices(in scijump.SCIJumpFramework framework);
+
+      string getName();
+    }
+
+    // (from the Plume framework)
+    class PortInfo implements-all sci.cca.core.PortInfo {
+      void initialize(in gov.cca.Port port, in sci.cca.core.PortType portType, in string name, in string className);
+    }
+
+    // (from the Plume framework)
+    class ServiceInfo implements-all sci.cca.core.ServiceInfo {
+      void initialize(in gov.cca.Port port, in sci.cca.core.PortInfo portInfo, in string name);
+    }
+  } // package core
 
   class Services implements-all gov.cca.Services {
-    opaque getData();
+    //opaque getData();
+  }
+
+  class ComponentID implements-all gov.cca.ComponentID {}
+  class CCAException implements-all gov.cca.CCAException {}
+
+  class TypeMismatchException implements-all gov.cca.TypeMismatchException {
+    void initialize(in gov.cca.Type requestedType, in gov.cca.Type actualType);
+  }
+
+  class TypeMap implements-all gov.cca.TypeMap {}
+
+  class SCIJumpFramework implements-all sci.cca.AbstractFramework {
+    // from Plume framework
+    //bool isFrameworkService(in string name);
+    //core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort, in ComponentInfo requester);
+    //core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort, in ComponentID requester);
+    //void releaseFrameworkService(in sci.cca.core.ServiceInfo info);
   }
 
   class ComponentClassDescription implements-all sci.cca.ComponentClassDescription {}
 
-  //class Component implements-all gov.cca.Component {}
+  class BuilderService implements-all sci.cca.ports.BuilderService, sci.cca.core.FrameworkService {
+    static sci.cca.core.FrameworkService create(in sci.cca.AbstractFramework framework);
 
-  //class Port implements-all gov.cca.Port {}
-
-  class TypeMap implements-all gov.cca.TypeMap {
-    // use to set internal SCI::TypeMap data for now
-    //void setInternalData(in opaque data);
-    //opaque getInternalData();
+    void initialize(in sci.cca.AbstractFramework framework);
   }
-
-  class ComponentID implements-all gov.cca.ComponentID {}
-
-  class CCAException implements-all gov.cca.CCAException {}
-
-  class BuilderService implements-all sci.cca.ports.BuilderService {}
 
   // EventService classes
   class EventServiceException implements-all sci.cca.EventServiceException {}
@@ -70,11 +98,10 @@ package scijump version 0.2.1 {
     void setBody(in gov.cca.TypeMap b);
   }
   class EventService implements-all sci.cca.ports.PublisherEventService,
-                                    sci.cca.ports.SubscriberEventService {
-
+                                                         sci.cca.ports.SubscriberEventService,
+                                                         sci.cca.core.FrameworkService {
     void initialize(in SCIJumpFramework sjf);
   }
-
   // EventService classes
 
   package ui {

@@ -156,10 +156,10 @@ main(int argc, char *argv[], char **environment) {
       std::cerr << "Not finished: pass url to existing framework" << std::endl;
     }
 
-    //gov::cca::TypeMap mainProperties = sj.createTypeMap();
-    //mainProperties.putBool("internal component", true);
-
-    //gov::cca::Services mainServices = sj.getServices("SCIJump main", "main", mainProperties);
+    gov::cca::TypeMap mainProperties = sj.createTypeMap();
+    // TODO: Is this property still needed?
+    mainProperties.putBool("internal component", true);
+    gov::cca::Services mainServices = sj.getServices("SCIJump main", "main", mainProperties);
 
     /*
     gov::cca::ports::FrameworkProperties fwkProperties = mainServices.getPort("cca.FrameworkProperties");
@@ -215,6 +215,8 @@ main(int argc, char *argv[], char **environment) {
     //broadcast, listen to URL periodically
     //sr->share(mainServices);
 
+    // test, although should be in cleanup code
+    sj.releaseServices(mainServices);
   }
   catch (sidl::RuntimeException& e) {
     std::cerr << "Caught a SIDL runtime exception with note: " << e.getNote() << std::endl;

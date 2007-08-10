@@ -290,6 +290,66 @@ package sci {
         void saveApplication();
         void saveApplication[As](in string fileName);
       }
-    }
+    } // package ui
+
+    package core {
+      // (from the Plume framework)
+      enum PortType {
+        ProvidesPort = 0,
+        UsesPort     = 1,
+      }
+
+      /**
+       * Exception is thrown when an implementation class member is nil
+       * and the failure needs to be communicated up the call stack.
+       */
+      class NotInitializedException extends sidl.SIDLException implements sidl.RuntimeException {}
+  
+      interface FrameworkService {
+        //static gov.cca.Port create(in sci.cca.AbstractFramework framework);
+        static FrameworkService create(in sci.cca.AbstractFramework framework);
+
+        ServiceInfo getServiceInfo();
+      }
+
+      // (from the Plume framework)
+      interface PortInfo {
+        bool connect(in PortInfo portInfo);
+        bool disconnect(in PortInfo portInfo);
+        bool available();
+        bool canConnectTo(in PortInfo portInfo);
+        bool isConnected();
+        bool inUse();
+        int  numOfConnections();
+
+        gov.cca.TypeMap getProperties();
+        gov.cca.Port getPort() throws NotInitializedException;
+        PortInfo getPeer();
+        PortType getPortType() throws NotInitializedException;
+        string getName();
+        string getClass();
+
+        void incrementUseCount();
+        bool decrementUseCount();
+      }
+
+      // framework services (based on the Plume framework)
+      interface FrameworkServiceFactory {
+        //PortInfo getService(in string serviceName, in ComponentInfo requester);
+
+        PortInfo getService(in string serviceName, in gov.cca.ComponentID requester);
+        void releaseService(in string portName);
+      }
+
+      interface ServiceInfo {
+        string getServiceName();
+        string getServicePortName();
+        PortInfo getServicePort() throws NotInitializedException;
+
+        string getRequesterPortName();
+        //ComponentInfo getRequester();
+        gov.cca.ComponentID getRequester();
+      }
+    } // package core
   } // package cca
 } // package sci

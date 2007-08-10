@@ -61,7 +61,7 @@ $(GLUEDIR_ABS)/serverbabel.make: $(SIDL) Core/Babel/timestamp
 $(GLUEDIR_ABS)/clientbabel.make: $(CCASIDL)
 	$(BABEL) --client=C++ --hide-glue --make-prefix=client --output-directory=$(IMPLDIR_ABS) $<
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 serverIORSRCS :=
 serverSTUBSRCS :=
@@ -77,8 +77,9 @@ serverIMPLSRCS :=
 include $(IMPLDIR_ABS)/serverbabel.make
 SRCS += $(patsubst %,$(IMPLDIR)/%,$(serverIMPLSRCS))
 
-PSELIBS := Core/Thread Framework/Core
-LIBS := $(BABEL_LIBRARY)
+#PSELIBS := Core/Thread Core/Exceptions Framework/Core
+#LIBS := $(BABEL_LIBRARY)
+
 INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
