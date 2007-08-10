@@ -29,7 +29,7 @@
 #ifndef Framework_StandAlone_scijump_version_h
 #define Framework_StandAlone_scijump_version_h
 
-#define SCIJUMP_VERSION "0.1.1"
+#define SCIJUMP_VERSION "0.2.1"
 // add a release candidate number when necessary
 
 #endif
