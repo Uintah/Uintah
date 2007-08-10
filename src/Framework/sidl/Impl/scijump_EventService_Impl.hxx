@@ -18,6 +18,9 @@
 #ifndef included_scijump_EventService_IOR_h
 #include "scijump_EventService_IOR.h"
 #endif
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
 #ifndef included_sci_cca_EventServiceException_hxx
 #include "sci_cca_EventServiceException.hxx"
 #endif
@@ -27,6 +30,9 @@
 #ifndef included_sci_cca_Topic_hxx
 #include "sci_cca_Topic.hxx"
 #endif
+#ifndef included_sci_cca_core_FrameworkService_hxx
+#include "sci_cca_core_FrameworkService.hxx"
+#endif
 #ifndef included_sci_cca_ports_PublisherEventService_hxx
 #include "sci_cca_ports_PublisherEventService.hxx"
 #endif
@@ -35,9 +41,6 @@
 #endif
 #ifndef included_scijump_EventService_hxx
 #include "scijump_EventService.hxx"
-#endif
-#ifndef included_scijump_SCIJumpFramework_hxx
-#include "scijump_SCIJumpFramework.hxx"
 #endif
 #ifndef included_sidl_BaseClass_hxx
 #include "sidl_BaseClass.hxx"
@@ -54,9 +57,12 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.EventService._hincludes)
+
 #include <map>
-#include <scijump_Subscription.hxx>
-#include <scijump_Topic.hxx>
+
+#include "scijump_Subscription.hxx"
+#include "scijump_Topic.hxx"
+
 // DO-NOT-DELETE splicer.end(scijump.EventService._hincludes)
 
 namespace scijump { 
@@ -83,7 +89,7 @@ namespace scijump {
 
     TopicMap topicMap;
     SubscriptionMap subscriptionMap;
-    SCIJumpFramework sjf;
+    ::sci::cca::AbstractFramework framework;
 
     bool isMatch(const std::string& topicName, 
 		 const std::string& subscriptionName);
@@ -97,6 +103,8 @@ namespace scijump {
     // (fixes bug #275)
       EventService_impl( struct scijump_EventService__object * ior ) : StubBase(
         ior,true), 
+      ::sci::cca::core::FrameworkService((ior==NULL) ? NULL : &((
+        *ior).d_sci_cca_core_frameworkservice)),
       ::gov::cca::Port((ior==NULL) ? NULL : &((*ior).d_gov_cca_port)),
       ::sci::cca::ports::PublisherEventService((ior==NULL) ? NULL : &((
         *ior).d_sci_cca_ports_publishereventservice)),
@@ -121,13 +129,22 @@ namespace scijump {
     static void _load();
 
   public:
+    /**
+     * user defined static method
+     */
+    static ::sci::cca::core::FrameworkService
+    create_impl (
+      /* in */::sci::cca::AbstractFramework& framework
+    )
+    ;
+
 
     /**
      * user defined non-static method.
      */
     void
     initialize_impl (
-      /* in */::scijump::SCIJumpFramework& sjf
+      /* in */::sci::cca::AbstractFramework& framework
     )
     ;
 

@@ -33,11 +33,14 @@
 #ifndef included_sci_cca_AbstractFramework_hxx
 #include "sci_cca_AbstractFramework.hxx"
 #endif
+#ifndef included_sci_cca_Event_hxx
+#include "sci_cca_Event.hxx"
+#endif
+#ifndef included_sci_cca_EventListener_hxx
+#include "sci_cca_EventListener.hxx"
+#endif
 #ifndef included_sci_cca_core_FrameworkService_hxx
 #include "sci_cca_core_FrameworkService.hxx"
-#endif
-#ifndef included_sci_cca_core_ServiceInfo_hxx
-#include "sci_cca_core_ServiceInfo.hxx"
 #endif
 #ifndef included_sci_cca_ports_BuilderService_hxx
 #include "sci_cca_ports_BuilderService.hxx"
@@ -99,6 +102,8 @@ namespace scijump {
     // (fixes bug #275)
       BuilderService_impl( struct scijump_BuilderService__object * ior ) : 
         StubBase(ior,true), 
+      ::sci::cca::EventListener((ior==NULL) ? NULL : &((
+        *ior).d_sci_cca_eventlistener)),
       ::sci::cca::core::FrameworkService((ior==NULL) ? NULL : &((
         *ior).d_sci_cca_core_frameworkservice)),
       ::gov::cca::Port((ior==NULL) ? NULL : &((*ior).d_gov_cca_port)),
@@ -501,11 +506,22 @@ namespace scijump {
     //     ::sidl::RuntimeException
     ;
 
+
     /**
-     * user defined non-static method.
+     *  This is where event processing by a listener takes place. This
+     * is a call-back method that a topic subscriber implements and 
+     * gets called for each new event.
+     * 
+     * @topicName - The topic for which the Event was created and sent.
+     * @theEvent - The payload.
      */
-    ::sci::cca::core::ServiceInfo
-    getServiceInfo_impl() ;
+    void
+    processEvent_impl (
+      /* in */const ::std::string& topicName,
+      /* in */::sci::cca::Event& theEvent
+    )
+    ;
+
   };  // end class BuilderService_impl
 
 } // end namespace scijump

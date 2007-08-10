@@ -107,7 +107,7 @@ namespace scijump {
           // a babel_cast failure here would indicate a fairly serious problem.
           ASSERT(port._not_nil());
   
-          service.initialize(port, sci::cca::core::PortType_ProvidesPort, serviceName, serviceName );
+          service.initialize(port, sci::cca::core::PortType_ProvidesPort, serviceName, serviceName);
         }
         uses++;
         return service;

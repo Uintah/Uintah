@@ -24,6 +24,9 @@
 #ifndef included_gov_cca_CCAException_hxx
 #include "gov_cca_CCAException.hxx"
 #endif
+#ifndef included_gov_cca_ComponentID_hxx
+#include "gov_cca_ComponentID.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -32,6 +35,12 @@
 #endif
 #ifndef included_sci_cca_AbstractFramework_hxx
 #include "sci_cca_AbstractFramework.hxx"
+#endif
+#ifndef included_sci_cca_core_PortInfo_hxx
+#include "sci_cca_core_PortInfo.hxx"
+#endif
+#ifndef included_sci_cca_core_ServiceInfo_hxx
+#include "sci_cca_core_ServiceInfo.hxx"
 #endif
 #ifndef included_scijump_SCIJumpFramework_hxx
 #include "scijump_SCIJumpFramework.hxx"
@@ -146,6 +155,36 @@ namespace scijump {
     int32_t
     unregisterLoader_impl (
       /* in */const ::std::string& slaveName
+    )
+    ;
+
+
+    /**
+     *  This one is in test for distributed computing
+     */
+    bool
+    isFrameworkService_impl (
+      /* in */const ::std::string& name
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    ::sci::cca::core::ServiceInfo
+    getFrameworkService_impl (
+      /* in */const ::std::string& serviceName,
+      /* in */::sci::cca::core::PortInfo& requesterPort,
+      /* in */::gov::cca::ComponentID& requester
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    releaseFrameworkService_impl (
+      /* in */::sci::cca::core::ServiceInfo& info
     )
     ;
 

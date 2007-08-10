@@ -16,11 +16,11 @@
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
 #endif
+#ifndef included_sci_cca_AbstractFramework_hxx
+#include "sci_cca_AbstractFramework.hxx"
+#endif
 #ifndef included_sci_cca_EventServiceException_hxx
 #include "sci_cca_EventServiceException.hxx"
-#endif
-#ifndef included_scijump_SCIJumpFramework_hxx
-#include "scijump_SCIJumpFramework.hxx"
 #endif
 #ifndef included_scijump_Subscription_hxx
 #include "scijump_Subscription.hxx"
@@ -80,11 +80,11 @@ void scijump::Topic_impl::_load() {
 void
 scijump::Topic_impl::initialize_impl (
   /* in */const ::std::string& topicName,
-  /* in */::scijump::SCIJumpFramework& sjf ) 
+  /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Topic.initialize)
   this->topicName = topicName;
-  this->sjf = sjf;
+  this->framework = framework;
   // DO-NOT-DELETE splicer.end(scijump.Topic.initialize)
 }
 
@@ -205,7 +205,7 @@ scijump::Topic_impl::sendEvent_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.Topic.sendEvent)
   scijump::Event event = scijump::Event::_create();
-  gov::cca::TypeMap eventHeader = sjf.createTypeMap();
+  gov::cca::TypeMap eventHeader = framework.createTypeMap();
   eventHeader.putString("eventName",eventName);
 
   //TODO: framework should put other info in event header

@@ -57,50 +57,58 @@ package scijump version 0.2.1 {
   }
 
   class ComponentID implements-all gov.cca.ComponentID {}
-  class CCAException implements-all gov.cca.CCAException {}
 
-  class TypeMismatchException implements-all gov.cca.TypeMismatchException {
+  class CCAException extends sidl.SIDLException implements-all gov.cca.CCAException {
+    void initialize(in gov.cca.CCAExceptionType type);
+  }
+
+  class TypeMismatchException extends sidl.SIDLException implements-all gov.cca.TypeMismatchException {
     void initialize(in gov.cca.Type requestedType, in gov.cca.Type actualType);
+    void initialize[Full](in gov.cca.CCAExceptionType type, in gov.cca.Type requestedType, in gov.cca.Type actualType);
   }
 
   class TypeMap implements-all gov.cca.TypeMap {}
 
   class SCIJumpFramework implements-all sci.cca.AbstractFramework {
-    // from Plume framework
-    //bool isFrameworkService(in string name);
-    //core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort, in ComponentInfo requester);
-    //core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort, in ComponentID requester);
-    //void releaseFrameworkService(in sci.cca.core.ServiceInfo info);
   }
 
   class ComponentClassDescription implements-all sci.cca.ComponentClassDescription {}
 
-  class BuilderService implements-all sci.cca.ports.BuilderService, sci.cca.core.FrameworkService {
+  class BuilderService implements-all sci.cca.ports.BuilderService,
+                                                           sci.cca.core.FrameworkService,
+                                                           sci.cca.EventListener {
     static sci.cca.core.FrameworkService create(in sci.cca.AbstractFramework framework);
 
     void initialize(in sci.cca.AbstractFramework framework);
   }
 
   // EventService classes
-  class EventServiceException implements-all sci.cca.EventServiceException {}
+  class EventServiceException extends sidl.SIDLException implements-all sci.cca.EventServiceException {
+    void initialize(in gov.cca.CCAExceptionType type);
+  }
+
   class Topic implements-all sci.cca.Topic {
-    void initialize(in string topicName, in SCIJumpFramework sjf);
+    void initialize(in string topicName, in sci.cca.AbstractFramework framework);
     void addSubscription(in string topicName, in Subscription theSubscription);
     void removeSubscription(in string topicName);
     void processEvents();
   }
+
   class Subscription implements-all sci.cca.Subscription {
-    void initialize(in string subscriptionName, in SCIJumpFramework sjf);
+    void initialize(in string subscriptionName, in sci.cca.AbstractFramework framework);
     void processEvents(in array<sci.cca.Event,1> eventList);
   }
+
   class Event implements-all sci.cca.Event {
     void setHeader(in gov.cca.TypeMap h);
     void setBody(in gov.cca.TypeMap b);
   }
+
   class EventService implements-all sci.cca.ports.PublisherEventService,
                                                          sci.cca.ports.SubscriberEventService,
                                                          sci.cca.core.FrameworkService {
-    void initialize(in SCIJumpFramework sjf);
+    static sci.cca.core.FrameworkService create(in sci.cca.AbstractFramework framework);
+    void initialize(in sci.cca.AbstractFramework framework);
   }
   // EventService classes
 
