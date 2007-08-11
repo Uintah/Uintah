@@ -68,7 +68,7 @@ namespace scijump {
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(scijump.EventServiceException._implementation)
-    // Insert-Code-Here {scijump.EventServiceException._implementation} (additional details)
+    ::gov::cca::CCAExceptionType type;
     // DO-NOT-DELETE splicer.end(scijump.EventServiceException._implementation)
 
   public:

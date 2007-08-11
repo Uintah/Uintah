@@ -18,9 +18,6 @@
 #ifndef included_scijump_core_FrameworkServiceFactory_IOR_h
 #include "scijump_core_FrameworkServiceFactory_IOR.h"
 #endif
-#ifndef included_gov_cca_ComponentID_hxx
-#include "gov_cca_ComponentID.hxx"
-#endif
 #ifndef included_sci_cca_core_FrameworkServiceFactory_hxx
 #include "sci_cca_core_FrameworkServiceFactory.hxx"
 #endif
@@ -139,8 +136,7 @@ namespace scijump {
        */
       ::sci::cca::core::PortInfo
       getService_impl (
-        /* in */const ::std::string& serviceName,
-        /* in */::gov::cca::ComponentID& requester
+        /* in */const ::std::string& serviceName
       )
       ;
 

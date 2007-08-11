@@ -28,6 +28,9 @@
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
 #endif
+#ifndef included_scijump_SCIJumpFramework_hxx
+#include "scijump_SCIJumpFramework.hxx"
+#endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
 #endif
@@ -41,6 +44,9 @@
 #include "sidl_NotImplementedException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.Services._includes)
+
+#include "scijump.hxx"
+
 // Insert-Code-Here {scijump.Services._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(scijump.Services._includes)
 
@@ -78,6 +84,24 @@ void scijump::Services_impl::_load() {
 
 // user defined non-static methods:
 /**
+ * Method:  initialize[]
+ */
+void
+scijump::Services_impl::initialize_impl (
+  /* in */::scijump::SCIJumpFramework& framework,
+  /* in */const ::std::string& selfInstanceName,
+  /* in */const ::std::string& selfClassName,
+  /* in */::gov::cca::TypeMap& selfProperties ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.Services.initialize)
+  this->framework = framework;
+  this->selfInstanceName = selfInstanceName;
+  this->selfClassName = selfClassName;
+  this->selfProperties = selfProperties;
+  // DO-NOT-DELETE splicer.end(scijump.Services.initialize)
+}
+
+/**
  *  
  * Fetch a previously registered Port (defined by either 
  * addProvidePort or (more typically) registerUsesPort).  
@@ -113,16 +137,46 @@ scijump::Services_impl::getPort_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.getPort)
-  // Insert-Code-Here {scijump.Services.getPort} (getPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.getPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.getPort)
+
+  // lock this code!
+  //Guard guard(&ports_lock);
+
+  PortMap::iterator iter = ports.find(portName);
+  if ( iter == ports.end() ) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_PortNotDefined);
+    ex.setNote("Port [" + portName + "] does not exist");
+    ex.add(__FILE__, __LINE__, "getPort");
+    throw ex;
+  }
+  ::sci::cca::core::PortInfo pi = iter->second;
+  if (pi.getPortType() == ::sci::cca::core::PortType_ProvidesPort) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_BadPortName);
+    ex.setNote("cannot call getPort on a provides port");
+    ex.add(__FILE__, __LINE__, "getPort");
+    throw ex;
+  }
+
+  // scijump framework connects framework services to uses ports
+  if (! pi.isConnected() ) {
+    if ( ! framework.isFrameworkService( pi.getClass() ) ) {
+      scijump::CCAException ex = scijump::CCAException::_create();
+      ex.initialize(::gov::cca::CCAExceptionType_PortNotConnected);
+      ex.setNote("Port [" + portName + "] is not connected");
+      ex.add(__FILE__, __LINE__, "getPort");
+      throw ex;
+    }
+    // (from Plume) ask for the service: the framework will also make the connection
+    ::sci::cca::core::ServiceInfo service = framework.getFrameworkService(pi.getClass(), pi);
+    //Guard guard(&service_lock);
+    servicePorts[portName] = service;
+  }
+
+  // port is connected
+  pi.incrementUseCount();
+  return pi.getPeer().getPort();
+
   // DO-NOT-DELETE splicer.end(scijump.Services.getPort)
 }
 
@@ -183,16 +237,49 @@ scijump::Services_impl::releasePort_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.releasePort)
-  // Insert-Code-Here {scijump.Services.releasePort} (releasePort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.releasePort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "releasePort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.releasePort)
+  ::sci::cca::core::PortInfo pi;
+  {
+    //Guard guard(&ports_lock);
+    PortMap::iterator iter = ports.find(portName);
+    if ( iter == ports.end() ) {
+      scijump::CCAException ex = scijump::CCAException::_create();
+      ex.initialize(::gov::cca::CCAExceptionType_PortNotDefined);
+      ex.setNote("Port [" + portName + "] does not exist");
+      ex.add(__FILE__, __LINE__, "releasePort");
+      throw ex;
+    }
+    pi = iter->second;
+
+    if ( pi.getPortType() == ::sci::cca::core::PortType_ProvidesPort ) {
+      scijump::CCAException ex = scijump::CCAException::_create();
+      ex.initialize(::gov::cca::CCAExceptionType_PortNotDefined);
+      ex.setNote("Cannot release a provides port");
+      ex.add(__FILE__, __LINE__, "releasePort");
+      throw ex;
+    }
+
+    if ( ! pi.decrementUseCount()) {
+      scijump::CCAException ex = scijump::CCAException::_create();
+      ex.initialize(::gov::cca::CCAExceptionType_PortNotInUse);
+      ex.setNote("Port [" + portName + "] released without corresponding get");
+      ex.add(__FILE__, __LINE__, "releasePort");
+      throw ex;
+    }
+  }
+  // release the ports_lock as we may need it if we
+  // also release a framework service
+  {
+    //Guard guard(&service_lock);
+
+    if ( ! pi.inUse() ) {
+      ServicePortMap::iterator iter = servicePorts.find(portName);
+      if ( iter != servicePorts.end() ) {
+        ::sci::cca::core::ServiceInfo si = iter->second;
+        servicePorts.erase(iter);
+        framework.releaseFrameworkService(si);
+      }
+    }
+  }
   // DO-NOT-DELETE splicer.end(scijump.Services.releasePort)
 }
 
@@ -208,16 +295,7 @@ scijump::Services_impl::createTypeMap_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.createTypeMap)
-  // Insert-Code-Here {scijump.Services.createTypeMap} (createTypeMap method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.createTypeMap)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "createTypeMap");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.createTypeMap)
+  return scijump::TypeMap::_create();
   // DO-NOT-DELETE splicer.end(scijump.Services.createTypeMap)
 }
 
@@ -263,16 +341,22 @@ scijump::Services_impl::registerUsesPort_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.registerUsesPort)
-  // Insert-Code-Here {scijump.Services.registerUsesPort} (registerUsesPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.registerUsesPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "registerUsesPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.registerUsesPort)
+
+  // lock this code!
+  //Guard guard(&ports_lock);
+
+  if ( ports.find(portName) != ports.end() ) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_PortAlreadyDefined);
+    ex.setNote("Port [" + portName + "] already exists");
+    ex.add(__FILE__, __LINE__, "registerUsesPort");
+    throw ex;
+  }
+
+  scijump::core::PortInfo pi = scijump::core::PortInfo::_create();
+  pi.initialize(portName, type, ::sci::cca::core::PortType_UsesPort, properties);
+  ports[portName] = pi;
+
   // DO-NOT-DELETE splicer.end(scijump.Services.registerUsesPort)
 }
 
@@ -294,16 +378,29 @@ scijump::Services_impl::unregisterUsesPort_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.unregisterUsesPort)
-  // Insert-Code-Here {scijump.Services.unregisterUsesPort} (unregisterUsesPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.unregisterUsesPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "unregisterUsesPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.unregisterUsesPort)
+
+  // lock this code!
+  //Guard guard(&ports_lock);
+
+  PortMap::iterator iter = ports.find(portName);
+  if ( iter == ports.end() ) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_PortNotDefined);
+    ex.setNote("Port [" + portName + "] does not exist");
+    ex.add(__FILE__, __LINE__, "unregisterUsesPort");
+    throw ex;
+  }
+
+  ::sci::cca::core::PortInfo pi = iter->second;
+  if (pi.isConnected()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_UsesPortNotReleased);
+    ex.setNote("Can not release port [" + portName + "]: port in use");
+    ex.add(__FILE__, __LINE__, "unregisterUsesPort");
+    throw ex;
+  }
+
+  ports.erase(iter);
   // DO-NOT-DELETE splicer.end(scijump.Services.unregisterUsesPort)
 }
 
@@ -357,16 +454,22 @@ scijump::Services_impl::addProvidesPort_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.addProvidesPort)
-  // Insert-Code-Here {scijump.Services.addProvidesPort} (addProvidesPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.addProvidesPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "addProvidesPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.addProvidesPort)
+
+  // lock this code!
+  //Guard guard(&ports_lock);
+
+  if ( ports.find(portName) != ports.end() ) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_PortAlreadyDefined);
+    ex.setNote("Port [" + portName + "] already exists");
+    ex.add(__FILE__, __LINE__, "registerUsesPort");
+    throw ex;
+  }
+
+  scijump::core::PortInfo pi = scijump::core::PortInfo::_create();
+  pi.initialize(inPort, portName, type, ::sci::cca::core::PortType_ProvidesPort, properties);
+  ports[portName] = pi;
+
   // DO-NOT-DELETE splicer.end(scijump.Services.addProvidesPort)
 }
 
@@ -414,16 +517,22 @@ scijump::Services_impl::removeProvidesPort_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.Services.removeProvidesPort)
-  // Insert-Code-Here {scijump.Services.removeProvidesPort} (removeProvidesPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.removeProvidesPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "removeProvidesPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.removeProvidesPort)
+
+  // lock this code!
+  //Guard guard(&ports_lock);
+
+  PortMap::iterator iter = ports.find(portName);
+  if ( iter == ports.end() ) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_PortNotDefined);
+    ex.setNote("Port [" + portName + "] does not exist");
+    ex.add(__FILE__, __LINE__, "unregisterUsesPort");
+    throw ex;
+  }
+
+  // disconnect users or should user port do that only?
+  ports.erase(iter);
+
   // DO-NOT-DELETE splicer.end(scijump.Services.removeProvidesPort)
 }
 

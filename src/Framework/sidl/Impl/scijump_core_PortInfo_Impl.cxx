@@ -48,6 +48,8 @@
 #include "scijump_CCAException.hxx"
 #include "scijump_TypeMap.hxx"
 
+#include <iostream>
+
 // Insert-Code-Here {scijump.core.PortInfo._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(scijump.core.PortInfo._includes)
 
@@ -63,7 +65,7 @@ scijump::core::PortInfo_impl::PortInfo_impl() : StubBase(reinterpret_cast<
 // user defined constructor
 void scijump::core::PortInfo_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo._ctor)
-  // Insert-Code-Here {scijump.core.PortInfo._ctor} (constructor)
+  portType = ::sci::cca::core::PortType_UsesPort;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo._ctor)
 }
 
@@ -90,9 +92,10 @@ void scijump::core::PortInfo_impl::_load() {
 void
 scijump::core::PortInfo_impl::initialize_impl (
   /* in */::gov::cca::Port& port,
-  /* in */::sci::cca::core::PortType portType,
   /* in */const ::std::string& name,
-  /* in */const ::std::string& className ) 
+  /* in */const ::std::string& className,
+  /* in */::sci::cca::core::PortType portType,
+  /* in */::gov::cca::TypeMap& properties ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.initialize)
 
@@ -108,6 +111,24 @@ scijump::core::PortInfo_impl::initialize_impl (
 }
 
 /**
+ * Method:  initialize[Uses]
+ */
+void
+scijump::core::PortInfo_impl::initialize_impl (
+  /* in */const ::std::string& name,
+  /* in */const ::std::string& className,
+  /* in */::sci::cca::core::PortType portType,
+  /* in */::gov::cca::TypeMap& properties ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.initializeUses)
+  this->portType = portType;
+  this->name = name;
+  this->className = className;
+  this->useCount = 0;
+  // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.initializeUses)
+}
+
+/**
  * Method:  connect[]
  */
 bool
@@ -115,8 +136,17 @@ scijump::core::PortInfo_impl::connect_impl (
   /* in */::sci::cca::core::PortInfo& to ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.connect)
-  if ( to._is_nil() ) return false;
-  if ( !canConnectTo(to) ) return false;
+
+  // TODO: document connect functions
+
+  if ( to._is_nil() ) {
+    std::cerr << "Attempting to connect to null port." << std::endl;
+    return false;
+  }
+  if ( !canConnectTo(to) ) {
+    std::cerr << "Connect test failed." << std::endl;
+    return false;
+  }
 
   if (portType == ::sci::cca::core::PortType_UsesPort
       && to.getPortType() == ::sci::cca::core::PortType_ProvidesPort) {
@@ -199,7 +229,7 @@ scijump::core::PortInfo_impl::canConnectTo_impl (
     && available()
     && toPortInfo.available()
     && className == toPortInfo.getClass()
-    && portType == toPortInfo.getPortType();
+    && portType != toPortInfo.getPortType();
 
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.canConnectTo)
 }
@@ -271,12 +301,15 @@ scijump::core::PortInfo_impl::getPort_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.PortInfo.getPort)
-  if (port._is_nil()) {
+  if (portType == ::sci::cca::core::PortType_ProvidesPort && port._is_nil()) {
     ::sci::cca::core::NotInitializedException ex = ::sci::cca::core::NotInitializedException::_create();
     ex.setNote("port has not been initialized");
     ex.add(__FILE__, __LINE__, "getPort");
     throw ex;
   }
+
+  // throw exception for UsesPort or just allow null port?
+
   return port;
   // DO-NOT-DELETE splicer.end(scijump.core.PortInfo.getPort)
 }

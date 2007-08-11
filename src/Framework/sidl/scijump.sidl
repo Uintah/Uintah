@@ -43,22 +43,24 @@ package scijump version 0.2.1 {
 
     // (from the Plume framework)
     class PortInfo implements-all sci.cca.core.PortInfo {
-      void initialize(in gov.cca.Port port, in sci.cca.core.PortType portType, in string name, in string className);
+      void initialize(in gov.cca.Port port, in string name, in string className, in sci.cca.core.PortType portType, in gov.cca.TypeMap properties);
+      void initialize[Uses](in string name, in string className, in sci.cca.core.PortType portType, in gov.cca.TypeMap properties);
     }
 
     // (from the Plume framework)
     class ServiceInfo implements-all sci.cca.core.ServiceInfo {
-      void initialize(in gov.cca.Port port, in sci.cca.core.PortInfo portInfo, in string name);
+      void initialize(in string serviceName, in sci.cca.core.PortInfo servicePort, in sci.cca.core.PortInfo requesterPort);
     }
   } // package core
 
   class Services implements-all gov.cca.Services {
-    //opaque getData();
+    void initialize(in scijump.SCIJumpFramework framework, in string selfInstanceName, in string selfClassName, in gov.cca.TypeMap selfProperties);
   }
 
   class ComponentID implements-all gov.cca.ComponentID {}
 
   class CCAException extends sidl.SIDLException implements-all gov.cca.CCAException {
+    // could add note and a line to initialize...
     void initialize(in gov.cca.CCAExceptionType type);
   }
 
@@ -70,6 +72,10 @@ package scijump version 0.2.1 {
   class TypeMap implements-all gov.cca.TypeMap {}
 
   class SCIJumpFramework implements-all sci.cca.AbstractFramework {
+      // from Plume framework
+      bool isFrameworkService(in string name);
+      core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort);
+      void releaseFrameworkService(in sci.cca.core.ServiceInfo info);
   }
 
   class ComponentClassDescription implements-all sci.cca.ComponentClassDescription {}

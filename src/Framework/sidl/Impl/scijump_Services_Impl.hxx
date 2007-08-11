@@ -36,6 +36,9 @@
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
 #endif
+#ifndef included_scijump_SCIJumpFramework_hxx
+#include "scijump_SCIJumpFramework.hxx"
+#endif
 #ifndef included_scijump_Services_hxx
 #include "scijump_Services.hxx"
 #endif
@@ -54,6 +57,9 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.Services._hincludes)
+
+#include <map>
+
 // Insert-Code-Here {scijump.Services._hincludes} (includes or arbitrary code)
 // DO-NOT-DELETE splicer.end(scijump.Services._hincludes)
 
@@ -76,7 +82,17 @@ namespace scijump {
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(scijump.Services._implementation)
-    // Insert-Code-Here {scijump.Services._implementation} (additional details)
+    typedef std::map<std::string, ::sci::cca::core::PortInfo> PortMap;
+    PortMap ports;
+
+    // from the Plume framework: keep track of Service ports
+    typedef std::map<std::string, ::sci::cca::core::ServiceInfo> ServicePortMap;
+    ServicePortMap servicePorts;
+
+    ::scijump::SCIJumpFramework framework;
+    std::string selfInstanceName;
+    std::string selfClassName;
+    ::gov::cca::TypeMap selfProperties;
     // DO-NOT-DELETE splicer.end(scijump.Services._implementation)
 
   public:
@@ -107,6 +123,18 @@ namespace scijump {
     static void _load();
 
   public:
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    initialize_impl (
+      /* in */::scijump::SCIJumpFramework& framework,
+      /* in */const ::std::string& selfInstanceName,
+      /* in */const ::std::string& selfClassName,
+      /* in */::gov::cca::TypeMap& selfProperties
+    )
+    ;
 
 
     /**

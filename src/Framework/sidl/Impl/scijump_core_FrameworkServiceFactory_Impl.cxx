@@ -13,9 +13,6 @@
 // 
 // Includes for all method dependencies.
 // 
-#ifndef included_gov_cca_ComponentID_hxx
-#include "gov_cca_ComponentID.hxx"
-#endif
 #ifndef included_sci_cca_core_PortInfo_hxx
 #include "sci_cca_core_PortInfo.hxx"
 #endif
@@ -121,8 +118,7 @@ scijump::core::FrameworkServiceFactory_impl::getName_impl ()
  */
 ::sci::cca::core::PortInfo
 scijump::core::FrameworkServiceFactory_impl::getService_impl (
-  /* in */const ::std::string& serviceName,
-  /* in */::gov::cca::ComponentID& requester ) 
+  /* in */const ::std::string& serviceName ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.core.FrameworkServiceFactory.getService)
   // Insert-Code-Here {scijump.core.FrameworkServiceFactory.getService} (getService method)
@@ -134,7 +130,7 @@ scijump::core::FrameworkServiceFactory_impl::getService_impl (
     throw ex;
   }
 
-  return factory->get(serviceName, requester);
+  return factory->get(serviceName);
   // DO-NOT-DELETE splicer.end(scijump.core.FrameworkServiceFactory.getService)
 }
 
