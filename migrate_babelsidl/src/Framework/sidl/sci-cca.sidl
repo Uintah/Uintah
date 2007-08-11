@@ -53,11 +53,6 @@ package sci {
 
       */
       //string createComponent(in string name, in string type);
-
-      // from Plume framework
-      bool isFrameworkService(in string name);
-      core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort, in gov.cca.ComponentID requester);
-      void releaseFrameworkService(in sci.cca.core.ServiceInfo info);
     }
 
     interface ComponentClassDescription extends gov.cca.ComponentClassDescription {
@@ -340,7 +335,7 @@ package sci {
       interface FrameworkServiceFactory {
         //PortInfo getService(in string serviceName, in ComponentInfo requester);
 
-        PortInfo getService(in string serviceName, in gov.cca.ComponentID requester);
+        PortInfo getService(in string serviceName);
         void releaseService(in string portName);
       }
 
@@ -351,7 +346,7 @@ package sci {
 
         string getRequesterPortName();
         //ComponentInfo getRequester();
-        gov.cca.ComponentID getRequester();
+        PortInfo getRequesterPort() throws NotInitializedException;
       }
     } // package core
   } // package cca

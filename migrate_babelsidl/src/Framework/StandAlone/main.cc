@@ -40,6 +40,7 @@
 
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/Assert.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 
@@ -160,17 +161,20 @@ main(int argc, char *argv[], char **environment) {
     // TODO: Is this property still needed?
     mainProperties.putBool("internal component", true);
     gov::cca::Services mainServices = sj.getServices("SCIJump main", "main", mainProperties);
+    mainServices.registerUsesPort("mainBuilder", "cca.BuilderService", mainServices.createTypeMap());
+
+    ::gov::cca::Port bsp = mainServices.getPort("mainBuilder");
+    ASSERT(bsp._not_nil());
+//     if (bsp._is_nil()) {
+//       std::cerr << "mainServices could not find cca.BuilderService port" << std::endl;
+//       abort();
+//     }
+    mainServices.releasePort("mainBuilder");
 
     /*
     gov::cca::ports::FrameworkProperties fwkProperties = mainServices.getPort("cca.FrameworkProperties");
     if(fwkProperties._is_nil()) {
       std::cerr << "Fatal Error: Cannot find framework properties service\n";
-      exit(1);
-    }
-
-    BuilderService builder = mainServices.getPort("cca.BuilderService");
-    if(builder._is_nil()) {
-      std::cerr << "Fatal Error: Cannot find builder service\n";
       exit(1);
     }
 
@@ -222,6 +226,11 @@ main(int argc, char *argv[], char **environment) {
   }
   catch (sidl::RuntimeException& e) {
     std::cerr << "Caught a SIDL runtime exception with note: " << e.getNote() << std::endl;
+    std::cerr << e.getTrace() << std::endl;
+    abort();
+  }
+  catch (gov::cca::CCAException& e) {
+    std::cerr << "Caught a CCA exception with note: " << e.getNote() << std::endl;
     std::cerr << e.getTrace() << std::endl;
     abort();
   }

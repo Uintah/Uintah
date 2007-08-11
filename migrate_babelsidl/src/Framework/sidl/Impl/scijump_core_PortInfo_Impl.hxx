@@ -131,9 +131,22 @@ namespace scijump {
       void
       initialize_impl (
         /* in */::gov::cca::Port& port,
-        /* in */::sci::cca::core::PortType portType,
         /* in */const ::std::string& name,
-        /* in */const ::std::string& className
+        /* in */const ::std::string& className,
+        /* in */::sci::cca::core::PortType portType,
+        /* in */::gov::cca::TypeMap& properties
+      )
+      ;
+
+      /**
+       * user defined non-static method.
+       */
+      void
+      initialize_impl (
+        /* in */const ::std::string& name,
+        /* in */const ::std::string& className,
+        /* in */::sci::cca::core::PortType portType,
+        /* in */::gov::cca::TypeMap& properties
       )
       ;
 

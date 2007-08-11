@@ -70,7 +70,7 @@ namespace scijump {
     class ServiceFactory {
     public:
       virtual std::string getName() = 0;
-      virtual sci::cca::core::PortInfo get(const std::string &serviceName, const gov::cca::ComponentID &requester) = 0;
+      virtual sci::cca::core::PortInfo get(const std::string &serviceName) = 0;
       virtual void release(const std::string &portName) = 0;
     };
 
@@ -95,7 +95,7 @@ namespace scijump {
 
       std::string getName() { return serviceName; }
       //virtual PortInfo::pointer getService(const std::string &serviceName, const ComponentInfo::pointer &requester);
-      virtual sci::cca::core::PortInfo get(const std::string &serviceName, const gov::cca::ComponentID &requester) {
+      virtual sci::cca::core::PortInfo get(const std::string &serviceName) {
         Guard guard(&lock);
         if ( service._is_nil() ) {
         //service = PortInfo::pointer( new PortInfoImpl( serviceName, serviceName, TypeMap::pointer(0), Service::create(framework), ProvidePort));
@@ -107,7 +107,7 @@ namespace scijump {
           // a babel_cast failure here would indicate a fairly serious problem.
           ASSERT(port._not_nil());
   
-          service.initialize(port, sci::cca::core::PortType_ProvidesPort, serviceName, serviceName);
+          service.initialize(port, serviceName, serviceName, sci::cca::core::PortType_ProvidesPort, scijump::TypeMap::_create());
         }
         uses++;
         return service;

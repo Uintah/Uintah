@@ -47,7 +47,7 @@ scijump::EventServiceException_impl::EventServiceException_impl() : StubBase(
 // user defined constructor
 void scijump::EventServiceException_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.EventServiceException._ctor)
-  // Insert-Code-Here {scijump.EventServiceException._ctor} (constructor)
+  type = ::gov::cca::CCAExceptionType_Unexpected;
   // DO-NOT-DELETE splicer.end(scijump.EventServiceException._ctor)
 }
 
@@ -76,16 +76,7 @@ scijump::EventServiceException_impl::initialize_impl (
   /* in */::gov::cca::CCAExceptionType type ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.EventServiceException.initialize)
-  // Insert-Code-Here {scijump.EventServiceException.initialize} (initialize method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.EventServiceException.initialize)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "initialize");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.EventServiceException.initialize)
+  this->type = type;
   // DO-NOT-DELETE splicer.end(scijump.EventServiceException.initialize)
 }
 
@@ -97,16 +88,7 @@ scijump::EventServiceException_impl::getCCAExceptionType_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.EventServiceException.getCCAExceptionType)
-  // Insert-Code-Here {scijump.EventServiceException.getCCAExceptionType} (getCCAExceptionType method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.EventServiceException.getCCAExceptionType)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getCCAExceptionType");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.EventServiceException.getCCAExceptionType)
+  return type;
   // DO-NOT-DELETE splicer.end(scijump.EventServiceException.getCCAExceptionType)
 }
 

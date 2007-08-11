@@ -19,9 +19,6 @@
 #ifndef included_gov_cca_CCAException_hxx
 #include "gov_cca_CCAException.hxx"
 #endif
-#ifndef included_gov_cca_ComponentID_hxx
-#include "gov_cca_ComponentID.hxx"
-#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -33,6 +30,9 @@
 #endif
 #ifndef included_sci_cca_core_ServiceInfo_hxx
 #include "sci_cca_core_ServiceInfo.hxx"
+#endif
+#ifndef included_scijump_core_ServiceInfo_hxx
+#include "scijump_core_ServiceInfo.hxx"
 #endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
@@ -78,9 +78,7 @@ void scijump::SCIJumpFramework_impl::_ctor() {
 // user defined destructor
 void scijump::SCIJumpFramework_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._dtor)
-
-  destroyFrameworkServices();
-
+  frameworkServices.clear();
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._dtor)
 }
 
@@ -94,6 +92,91 @@ void scijump::SCIJumpFramework_impl::_load() {
 // user defined static methods: (none)
 
 // user defined non-static methods:
+/**
+ * Method:  isFrameworkService[]
+ */
+bool
+scijump::SCIJumpFramework_impl::isFrameworkService_impl (
+  /* in */const ::std::string& name ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.isFrameworkService)
+
+  // from the Plume framework
+
+  FrameworkServiceMap::const_iterator iter = frameworkServices.find(name);
+  std::cerr << "scijump::SCIJumpFramework_impl::isFrameworkService_impl(..) service=" << iter->first << std::endl;
+
+  return iter != frameworkServices.end();
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.isFrameworkService)
+}
+
+/**
+ * Method:  getFrameworkService[]
+ */
+::scijump::core::ServiceInfo
+scijump::SCIJumpFramework_impl::getFrameworkService_impl (
+  /* in */const ::std::string& serviceName,
+  /* in */::sci::cca::core::PortInfo& requesterPort ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getFrameworkService)
+
+  // from the Plume framework
+
+  // lock this code!
+  //Guard guard(&service_lock);
+
+  FrameworkServiceMap::const_iterator iter = frameworkServices.find(serviceName);
+  if ( iter == frameworkServices.end() )
+    return scijump::core::ServiceInfo::_create();
+
+  std::cerr << "scijump::SCIJumpFramework_impl::getFrameworkService_impl(..) service=" << iter->first << std::endl;
+
+  // get a port from the service
+  ::sci::cca::core::FrameworkServiceFactory f = iter->second;
+  ::sci::cca::core::PortInfo servicePort = f.getService(serviceName);
+
+  // connect the requester port and the service ports (service port is always the provider)
+  if (! requesterPort.connect(servicePort)) {
+    // TODO: throw exception?
+    std::cerr << "Could not connect " << serviceName << " service." << std::endl;
+  }
+
+  // do we need to maintain a reference to this connection ?
+  scijump::core::ServiceInfo si = scijump::core::ServiceInfo::_create();
+  si.initialize(serviceName, servicePort, requesterPort);
+  return si;
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getFrameworkService)
+}
+
+/**
+ * Method:  releaseFrameworkService[]
+ */
+void
+scijump::SCIJumpFramework_impl::releaseFrameworkService_impl (
+  /* in */::sci::cca::core::ServiceInfo& info ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.releaseFrameworkService)
+
+  // from the Plume framework
+
+  // lock this code!
+  //Guard guard(&service_lock);
+
+  // disconnect
+  ::sci::cca::core::PortInfo servicePort = info.getServicePort();
+  ::sci::cca::core::PortInfo requesterPort = info.getRequesterPort();
+  requesterPort.disconnect(servicePort);
+
+  // release service
+  FrameworkServiceMap::const_iterator iter = frameworkServices.find(info.getServiceName());
+  //if ( iter == frameworkServices.end() )
+  //  return;
+
+  ::sci::cca::core::FrameworkServiceFactory f = iter->second;
+  f.releaseService( info.getServicePortName() );
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.releaseFrameworkService)
+}
+
 /**
  * Registers the slave framework with the master framework. Intended to be called
  * only by the representative slave framework process.
@@ -141,71 +224,6 @@ scijump::SCIJumpFramework_impl::unregisterLoader_impl (
   throw ex;
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.unregisterLoader)
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.unregisterLoader)
-}
-
-/**
- *  This one is in test for distributed computing
- */
-bool
-scijump::SCIJumpFramework_impl::isFrameworkService_impl (
-  /* in */const ::std::string& name ) 
-{
-  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.isFrameworkService)
-  // Insert-Code-Here {scijump.SCIJumpFramework.isFrameworkService} (isFrameworkService method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.isFrameworkService)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "isFrameworkService");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.isFrameworkService)
-  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.isFrameworkService)
-}
-
-/**
- * Method:  getFrameworkService[]
- */
-::sci::cca::core::ServiceInfo
-scijump::SCIJumpFramework_impl::getFrameworkService_impl (
-  /* in */const ::std::string& serviceName,
-  /* in */::sci::cca::core::PortInfo& requesterPort,
-  /* in */::gov::cca::ComponentID& requester ) 
-{
-  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getFrameworkService)
-  // Insert-Code-Here {scijump.SCIJumpFramework.getFrameworkService} (getFrameworkService method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getFrameworkService)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getFrameworkService");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getFrameworkService)
-  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getFrameworkService)
-}
-
-/**
- * Method:  releaseFrameworkService[]
- */
-void
-scijump::SCIJumpFramework_impl::releaseFrameworkService_impl (
-  /* in */::sci::cca::core::ServiceInfo& info ) 
-{
-  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.releaseFrameworkService)
-  // Insert-Code-Here {scijump.SCIJumpFramework.releaseFrameworkService} (releaseFrameworkService method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.releaseFrameworkService)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "releaseFrameworkService");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.releaseFrameworkService)
-  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.releaseFrameworkService)
 }
 
 /**
@@ -265,16 +283,6 @@ scijump::SCIJumpFramework_impl::getServices_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getServices)
-  // Insert-Code-Here {scijump.SCIJumpFramework.getServices} (getServices method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getServices)
-//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-//   ex.setNote("This method has not been implemented");
-//   ex.add(__FILE__, __LINE__, "getServices");
-//   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getServices)
 
   if (services.find(selfInstanceName) != services.end()) {
     // throw CCAException: selfInstanceName is already in use by another component
@@ -285,7 +293,10 @@ scijump::SCIJumpFramework_impl::getServices_impl (
     throw ex;
   }
   scijump::Services s = scijump::Services::_create();
-  // TODO: need to create a component for the caller...
+  s.initialize(*this, selfInstanceName, selfClassName, selfProperties);
+
+  // TODO: need to create a (CCA) component for the caller...
+
   services[selfInstanceName] = s;
   return s;
 
@@ -419,12 +430,6 @@ scijump::SCIJumpFramework_impl::initFrameworkServices()
   addFrameworkService(esf, this->frameworkServices);
 }
 
-void
-scijump::SCIJumpFramework_impl::destroyFrameworkServices()
-{
-  frameworkServices.clear();
-}
-
 bool
 scijump::SCIJumpFramework_impl::addFrameworkService(
                                                     ::scijump::core::FrameworkServiceFactory& factory,
@@ -438,6 +443,14 @@ scijump::SCIJumpFramework_impl::addFrameworkService(
   frameworkServices[n] = factory;
   //std::cerr << "addFrameworkService(..) " << n << " done" << std::endl;
   return true;
+}
+
+bool
+scijump::SCIJumpFramework_impl::removeFrameworkService(const std::string& serviceName, FrameworkServiceMap& frameworkServices)
+{
+  FrameworkServiceMap::iterator iter = frameworkServices.find(serviceName);
+  if (iter != frameworkServices.end())
+    frameworkServices.erase(iter);
 }
 
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._misc)
