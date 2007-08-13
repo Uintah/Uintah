@@ -78,7 +78,10 @@ const int ALIGN=16;
 #endif
 
 /* we use UCONV to avoid compiler warnings. */
-#ifdef SCI_64BITS
+// NOTE(boulos): On Darwin systems, even if it's not a 64-bit build
+// the compiler will generate warnings (so we use %ld for that case as
+// well)
+#if defined(SCI_64BITS) || defined(__APPLE__)
 #define UCONV "%ld"
 #else
 #define UCONV "%d"
@@ -132,12 +135,12 @@ Allocator* default_allocator=0;
 
 static bool do_shutdown=false;
 static int mallocStatsAppendNum = -1;
-  
+
 void AllocatorMallocStatsAppendNumber(int num)
 {
   mallocStatsAppendNum = num;
 }
-  
+
 inline size_t Allocator::obj_maxsize(Tag* t)
 {
     return (t->bin == &big_bin)?(t->hunk->len-OVERHEAD):t->bin->maxsize;
@@ -160,11 +163,11 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
         bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
         if(out){
 #ifdef USE_TAG_LINENUM
-            fprintf(out, "%p: "UCONV" bytes (%s:%d)\n", 
+            fprintf(out, "%p: "UCONV" bytes (%s:%d)\n",
                     (char*)p+sizeof(Tag)+sizeof(Sentinel),
                     p->reqsize, p->tag, p->linenum);
 #else
-            fprintf(out, "%p: "UCONV" bytes (%s)\n", 
+            fprintf(out, "%p: "UCONV" bytes (%s)\n",
                     (char*)p+sizeof(Tag)+sizeof(Sentinel),
                     p->reqsize, p->tag);
 #endif
@@ -172,7 +175,7 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
     }
 }
 
-static 
+static
 void
 shutdown()
 {
@@ -195,7 +198,7 @@ shutdown()
       a->stats_out=0;
     }
   }
-    
+
   if(a->stats_out){
     if(do_shutdown){
       // We have already done this once, but we got called again,
@@ -250,7 +253,7 @@ shutdown()
     fprintf(a->stats_out, "highwater mmap:\t\t"UCONV" bytes\n",
             a->highwater_mmap);
     fprintf(a->stats_out, "\n");
-    fprintf(a->stats_out, "breakdown of total bytes:\n");   
+    fprintf(a->stats_out, "breakdown of total bytes:\n");
     fprintf(a->stats_out, "in use:\t\t\t"UCONV" bytes\n", bytes_inuse);
     fprintf(a->stats_out, "free:\t\t\t"UCONV" bytes\n", bytes_free);
     fprintf(a->stats_out, "fragmentation:\t\t"UCONV" bytes\n",
@@ -302,7 +305,7 @@ void LockAllocator(Allocator * /*a*/)
 void UnLockAllocator(Allocator * /*a*/)
 {
 }
-#else 
+#else
 #  ifdef SCI_PTHREAD
 
 // This is code taken from Core/Thread/RecursiveMutex_default.cc
@@ -320,7 +323,7 @@ void Allocator::initlock()
   lock_count = 0;
   owner = 0;
   owner_initialized = false;
-  
+
   static pthread_mutex_t init = PTHREAD_MUTEX_INITIALIZER;
   the_lock=init;
 }
@@ -652,7 +655,7 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
   // end of the chunk.
   if(strict){
     unsigned int i = 0xffff5a5a;
-    unsigned int start = 
+    unsigned int start =
       (unsigned int)((obj->reqsize+sizeof(int))/sizeof(int));
     for(unsigned int* p=(unsigned int*)d+start;
         p<(unsigned int*)sent2;p++)
@@ -750,7 +753,7 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
     char* d=(char*)data;
     data+=obj_maxsize(obj);
     Sentinel* sent2=(Sentinel*)data;
-            
+
     sent1->first_word=sent1->second_word=
       sent2->first_word=sent2->second_word=SENT_VAL_FREE;
     if(strict){
@@ -813,7 +816,7 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
   // end of the chunk.
   if(strict){
     unsigned int i = 0xffff5a5a;
-    unsigned int start = 
+    unsigned int start =
       (unsigned int)((obj->reqsize+sizeof(int))/sizeof(int));
     for(unsigned int* p=(unsigned int*)d+start;
         p<(unsigned int*)sent2;p++)
@@ -826,7 +829,7 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
 #else
   fprintf(trace_out, "A %p "UCONV" (%s)\n",d, size, tag);
 #endif
-        
+
   if(do_shutdown)
     shutdown();
   return (void*)d;
@@ -864,7 +867,7 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     // end of the chunk.
     if(strict){
       unsigned int i = 0xffff5a5a;
-      unsigned int start = 
+      unsigned int start =
         (unsigned int)((oldobj->reqsize+sizeof(int))/sizeof(int));
       for(unsigned int* p=(unsigned int*)d+start;
           p<(unsigned int*)sent2;p++)
@@ -1006,7 +1009,7 @@ void Allocator::free(void* dobj)
 
     sent1->first_word=sent1->second_word=
       sent2->first_word=sent2->second_word=SENT_VAL_FREE;
-      
+
     if(strict){
       // Fill in the data region with markers.
       unsigned int i = 0xffff5a5a;
@@ -1055,7 +1058,7 @@ void Allocator::fill_bin(AllocBin* bin)
       char* d=(char*)data;
       data+=t->bin->maxsize;
       Sentinel* sent2=(Sentinel*)data;
-            
+
       sent1->first_word=sent1->second_word=
         sent2->first_word=sent2->second_word=SENT_VAL_FREE;
       if(strict){
@@ -1170,7 +1173,7 @@ void Allocator::audit(Tag* obj, int what)
   // Check the space between the end of the allocation and the sentinel...
   if(strict && (what == OBJFREEING || what == OBJINUSE)){
     unsigned int i = 0xffff5a5a;
-    unsigned int start = 
+    unsigned int start =
       (unsigned int)((obj->reqsize+sizeof(int))/sizeof(int));
     for(unsigned int* p=(unsigned int*)d+start;
         p<(unsigned int*)sent2;p++){
@@ -1294,7 +1297,7 @@ void GetGlobalStats(Allocator* a,
   sizemunmap=a->sizemunmap;
   highwater_alloc=a->highwater_alloc;
   highwater_mmap=a->highwater_mmap;
-    
+
   // Full accounting - go through each bin...
   bytes_overhead=bytes_free=bytes_fragmented=bytes_inuse=bytes_inhunks=0;
   int i;
@@ -1350,7 +1353,7 @@ void GetGlobalStats(Allocator* a,
   sizemunmap=a->sizemunmap;
   highwater_alloc=a->highwater_alloc;
   highwater_mmap=a->highwater_mmap;
-    
+
   a->unlock();
 }
 
@@ -1443,7 +1446,7 @@ void DumpAllocator(Allocator* a, const char* filename)
     }
   if( fp == NULL )
     {
-      perror("DumpAllocator fopen");  
+      perror("DumpAllocator fopen");
       exit( 1 );
     }
   fprintf(fp, "\n");
