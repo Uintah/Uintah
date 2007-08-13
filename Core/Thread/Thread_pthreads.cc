@@ -113,7 +113,7 @@ extern "C" {
 #  define SEM_LOCK(sem)              msem_lock(*(sem),0)
 #  define SEM_TRYLOCK(sem)           msem_lock(*(sem), MSEM_IF_NOWAIT)
 #  define SEM_INIT(sem, shared, val) msem_init(*(sem), \
-					 ((val)==0)?MSEM_UNLOCKED:MSEM_LOCKED)
+                                         ((val)==0)?MSEM_UNLOCKED:MSEM_LOCKED)
 #  define SEM_INIT_SUCCESS(val)      (((val)!= 0)?true:false)
 #  define SEM_DESTROY(sem)           msem_remove(*(sem))
 
@@ -126,12 +126,17 @@ extern "C" {
 #  define SEM_INIT_SUCCESS(val)      (((val)== 0)?true:false)
 #  define SEM_DESTROY(sem)           sem_destroy((sem))
 
+// NOTE(boulos): This code is not currently used if __APPLE__ is
+// defined, so defining this function produces a "defined but not used
+// warning"
+#ifndef __APPLE__
 static int SEM_LOCK(sem_type* sem)
 {
   int returnValue = 0;
   while ( (returnValue = sem_wait(sem)) == -1 && (errno == EINTR) );
   return returnValue;
 }
+#endif
 
 #endif
 
@@ -412,19 +417,19 @@ Thread::numProcessors()
 
   if (np == 0) {
 #ifdef __APPLE__
-    size_t len = sizeof(np); 
-    sysctl((int[2]) {CTL_HW, HW_NCPU}, 2, &np, &len, NULL, 0); 
+    size_t len = sizeof(np);
+    sysctl((int[2]) {CTL_HW, HW_NCPU}, 2, &np, &len, NULL, 0);
 #else
     // Linux
     std::ifstream cpuinfo("/proc/cpuinfo");
     if (cpuinfo) {
       int count = 0;
       while (!cpuinfo.eof()) {
-	std::string str;
-	cpuinfo >> str;
-	if (str == "processor") {
-	  ++count;
-	} 
+        std::string str;
+        cpuinfo >> str;
+        if (str == "processor") {
+          ++count;
+        }
       }
       np = count;
     }
@@ -486,7 +491,7 @@ Thread::os_start(bool stopped)
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setstacksize(&attr, stacksize_);
-		
+
   lock_scheduler();
   active[numActive]=priv_;
   numActive++;
@@ -572,35 +577,35 @@ Thread::exitAll(int code)
       // threads are using...
       Thread* me = Thread::self();
       for (int i = 0;i<numActive;i++){
-	Thread_private* t = active[i];
-	if (t->thread != me){
-	  pthread_kill(t->threadid, SIGUSR2);
-	}
+        Thread_private* t = active[i];
+        if (t->thread != me){
+          pthread_kill(t->threadid, SIGUSR2);
+        }
       }
       // Wait for all threads to be in the signal handler
       int numtries = 100000;
       bool done = false;
       while(--numtries && !done){
-	done = true;
-	for (int i = 0;i<numActive;i++){
-	  Thread_private* t = active[i];
-	  if (t->thread != me){
-	    if (!t->is_blocked)
-	      done = false;
-	  }
-	}
-	sched_yield();
+        done = true;
+        for (int i = 0;i<numActive;i++){
+          Thread_private* t = active[i];
+          if (t->thread != me){
+            if (!t->is_blocked)
+              done = false;
+          }
+        }
+        sched_yield();
         //sleep(1);
       }
       if (!numtries){
-	for (int i = 0;i<numActive;i++){
-	  Thread_private* t = active[i];
-	  if (t->thread != me && !t->is_blocked) {
-	    fprintf(stderr, "Thread: %s is slow to stop, giving up\n",
-		    t->thread->getThreadName());
+        for (int i = 0;i<numActive;i++){
+          Thread_private* t = active[i];
+          if (t->thread != me && !t->is_blocked) {
+            fprintf(stderr, "Thread: %s is slow to stop, giving up\n",
+                    t->thread->getThreadName());
             //sleep(1000);
-	  }
-	}
+          }
+        }
       }
     }
 
@@ -682,7 +687,12 @@ Thread::print_threads()
   {
     Thread_private* p = active[i];
     const char* tname = p->thread?p->thread->getThreadName():"???";
-    fprintf(fp, " %lu: %s (", p->threadid, tname);
+    // NOTE(boulos): On Darwin, pthread_t is an opaque type and so
+    // using it as a thread_id (despite the man page) is a bad idea.
+    // For this purpose (printing out some unique identifier) it
+    // should be fine but requires a C-style cast.
+    long unsigned int tid = (long unsigned int)(p->threadid);
+    fprintf(fp, " %lu: %s (", tid, tname);
     if (p->thread)
     {
       if (p->thread->isDaemon())
@@ -749,7 +759,7 @@ handle_siguser2(int)
     // the opportunity to call setspecific for the thread id yet
     for (int i = 0;i<numActive;i++)
       if (pthread_self() == active[i]->threadid)
-	self = active[i]->thread;
+        self = active[i]->thread;
   }
   self->priv_->is_blocked = true;
   self->priv_->block_sema.down();
@@ -922,8 +932,8 @@ Mutex::~Mutex()
   if (pthread_mutex_destroy(&priv_->mutex) != 0)
   {
     // EBUSY
-    fprintf(stderr,"Mutex::~Mutex: Warning: Mutex \"%s\" currently locked.\n", 
-	    name_);
+    fprintf(stderr,"Mutex::~Mutex: Warning: Mutex \"%s\" currently locked.\n",
+            name_);
     priv_ = 0;
     return;
     // EBUSY
@@ -996,7 +1006,7 @@ Mutex::lock()
       throw ThreadError("pthread_mutex_lock:  Unknown error.");
     }
   }
-		
+
   if (t)
   {
     Thread::pop_bstack(p, oldstate);
@@ -1219,8 +1229,8 @@ Semaphore::Semaphore(const char* name, int value)
 #if defined(_AIX)
   priv_->sem =
     (msemaphore*) mmap(NULL,sizeof(msemaphore),
-		       PROT_READ | PROT_WRITE,
-		       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
+                       PROT_READ | PROT_WRITE,
+                       MAP_SHARED | MAP_ANONYMOUS | MAP_VARIABLE, -1, 0 );
 #endif
 
   if ( !SEM_INIT_SUCCESS( SEM_INIT(&(priv_->sem), 0, value) ) )
@@ -1242,7 +1252,7 @@ Semaphore::~Semaphore()
   if (SEM_DESTROY(&priv_->sem) != 0)
   {
     throw ThreadError(std::string("sem_destroy: ")
-		      +strerror(errno));
+                      +strerror(errno));
     perror("Sem destroy" );
   }
   delete priv_;
@@ -1359,9 +1369,9 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
     int err = pthread_cond_timedwait(&priv_->cond, &m.priv_->mutex, abstime);
     if (err != 0){
       if (err == ETIMEDOUT)
-	success = false;
+        success = false;
       else
-	throw ThreadError("pthread_cond_timedwait:  Interrupted by a signal.");
+        throw ThreadError("pthread_cond_timedwait:  Interrupted by a signal.");
     } else {
       success = true;
     }
