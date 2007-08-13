@@ -129,32 +129,32 @@ void Exception::sci_throw(const Exception& exc)
       cerr << "\nthrow(t)/dbx(d)/cvd(c)/abort(a)? ";
       emode=0;
       while(!emode){
-	char action;
-	char buf[100];
-	while(read(fileno(stdin), buf, 100) <= 0){
-	  if(errno != EINTR){
-	    cerr <<  "\nCould not read response, throwing exception\n";
-	    emode = "throw";
-	    break;
-	  }
-	}
-	action=buf[0];
-	switch(action){
-	case 't': case 'T':
-	  emode="throw";
-	  break;
-	case 'd': case 'D':
-	  emode="dbx";
-	  break;
-	case 'c': case 'C':
-	  emode="cvd";
-	  break;
-	case 'a': case 'A':
-	  emode="abort";
-	  break;
-	default:
-	  break;
-	}
+        char action;
+        char buf[100];
+        while(read(fileno(stdin), buf, 100) <= 0){
+          if(errno != EINTR){
+            cerr <<  "\nCould not read response, throwing exception\n";
+            emode = "throw";
+            break;
+          }
+        }
+        action=buf[0];
+        switch(action){
+        case 't': case 'T':
+          emode="throw";
+          break;
+        case 'd': case 'D':
+          emode="dbx";
+          break;
+        case 'c': case 'C':
+          emode="cvd";
+          break;
+        case 'a': case 'A':
+          emode="abort";
+          break;
+        default:
+          break;
+        }
       }
     }
 
@@ -169,13 +169,13 @@ void Exception::sci_throw(const Exception& exc)
       // Fire up the debugger
       char command[100];
       if(getenv("SCI_DBXCOMMAND")){
-	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
+        sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
       } else {
       cout << "Error: running debugger at exception is not supported on RedStorm\n";
 #ifdef HAVE_EXC
-	sprintf(command, "winterm -c dbx -p %d &", getpid());
+        sprintf(command, "winterm -c dbx -p %d &", getpid());
 #else
-	sprintf(command, "xterm -e gdb %d&", getpid());
+        sprintf(command, "xterm -e gdb %d&", getpid());
 #endif
       }
       cerr << "Starting: " << command << '\n';
@@ -208,7 +208,9 @@ void Exception::sci_throw(const Exception& exc)
 string getStackTrace(void* context /*=0*/)
 {
   ostringstream stacktrace;
+#if defined(HAVE_EXC) || (defined(__GNUC__) && defined(__linux))
   static const int MAXSTACK = 100;
+#endif
 
 #ifdef HAVE_EXC
   // Use -lexc to print out a stack trace
