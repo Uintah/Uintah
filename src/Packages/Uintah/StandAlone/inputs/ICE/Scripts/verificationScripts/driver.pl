@@ -73,6 +73,7 @@ for($i = 0; $i<=$#testFiles; $i++)
     {
       print "cleaning the temp files \n";
       system("rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
+      
       print "Launching driver.pl $testFileName  clean & \n";
       @args = ("driver.pl","$testFileName clean &");
       system("@args")==0 or die("ERROR(driver.pl): @args failed");      
@@ -88,8 +89,9 @@ for($i = 0; $i<=$#testFiles; $i++)
   {
     if ($clean == 1)
     {
-      print "cleaning the temp files \n";
+      print "cleaning the temporary files \n";
       system("rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
+      print "Press Return to exit \n";
     }
     else 
     {
