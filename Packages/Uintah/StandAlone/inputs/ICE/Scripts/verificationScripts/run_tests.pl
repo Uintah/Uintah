@@ -6,7 +6,6 @@ use Data::Dumper;
 use Cwd;
 # create object
 $xml = new XML::Simple(forcearray => 1);
-#$xml = new XML::Simple;
 
 #print $ARGV[0];
 
@@ -47,8 +46,9 @@ foreach $e (@{$data->{Test}})
 $num_of_tests=$i;
 
 #__________________________________
-# Extracting info out of the config file
-my $i=0;
+# Read in all of the replacement patterns 
+# and store them in an array 
+my $nTest=0;
 my $line;
 my $tmpline;
 #my @reqired_lines;
@@ -57,15 +57,17 @@ open(MYDATA, "$ARGV[0]") or die("ERROR(run_tests.pl): $ARGV[0], File not found")
 
 while ($line=<MYDATA>)
 {
+  $req_lines[$nTest][0] = 9;
+  
   if ($line=~ /\<content\>/)
   {
-    $j=0;
+    $nLine=0;
     while (($line=<MYDATA>) !~ /\<\/content\>/)
     {
-        $req_lines[$i][$j]=$line;  
-        $j++;
+      $req_lines[$nTest][$nLine]=$line;
+      $nLine++;
     }
-    $i++;
+    $nTest++;
   }
 }
 close(MYDATA);
@@ -113,29 +115,22 @@ for ($i=0;$i<$num_of_tests;$i++)
   
   $int = $int_command[$i];
 
-  open(outFile, ">$test_ups") or die("ERROR(run_tests.pl): $test_ups, File cannot be created\n");
-
-  while($line=<inpFile>)
-  {
-    if ($line =~ /\<filebase\>/)
-    {
-      $line= "<filebase>$udaFilename</filebase>\n";
-    }
-    
-    if ($line =~ /($required_lines[0])/)
-    {
-      print outFile @required_lines;
-      while(($line =<inpFile>) !~ /($required_lines[$#required_lines])/)
-      {
-          # Do nothing; we are basically skipping those lines (not including them in the out file)
-          # There has to be a better way, but this will work for now.
-      }
-      $line=<inpFile>;
-    }
-    print outFile $line;
+  # change the uda file name in each ups file
+  print "---------------------\n";
+  print "Now modifying $test_ups\n";
+  
+  system(" cp $base_filename[$i]'.ups' $test_ups.tmp");
+  system(" sed  s/'filebase.*<'/'filebase>$udaFilename<'/g <$test_ups.tmp >&$test_ups");
+  system("/bin/rm $test_ups.tmp");
+  
+  # make the changes to the ups files
+  @replacementPatterns = (@{$req_lines[$i]});
+  foreach $rp (@replacementPatterns){
+    chomp($rp);
+    system("replace_XML_line", "$rp", "$test_ups");
+    print "     $rp\n"
   }
-  close(inpFile);
-  close(outFile);
+  print "---------------------\n";
 
 #__________________________________
 # Modifying the pbs file 

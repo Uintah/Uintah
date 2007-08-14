@@ -43,17 +43,18 @@ foreach $e (@{$data->{start}->[0]->{Test}})
       `echo $tmp_err >.$output_file.tmp`;
     } 
     ############################
-    # Actual Comparison Begins
+    # Run the comparison utilities
     ############################
 
     print "$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]\n";
     `rm -f $uda_files[$k].tmp`;    # Deleting the tmp file (if it already exists)
+   
     @args = ("$int_command","-o","$uda_files[$k].tmp","-uda","$uda_files[$k]");
     system("@args")==0 or die("ERROR(analyze_results.pl): @args failed: $?");
     
-#   `$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]`;
-    $tmp = `cat $uda_files[$k].tmp`; # This is the output from the compare_mms utility
+    $tmp = `cat $uda_files[$k].tmp`; # This is the output from the comparison utility
     chomp($tmp);   # Removing the carriage return from the end
+    
     my $prev_line = "";
     if (-e "$output_file.dat")
     {
