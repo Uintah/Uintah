@@ -231,6 +231,12 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
   }
 
   long datasize = end - ic.cur;
+
+  // On older UDAs, all variables were saved, even if they had a size
+  // of 0.  So this allows us to skip reading 0 sized data.  (FYI, new
+  // UDAs should not have this problem.)
+  if( datasize == 0 ) return;
+
   string data;
   string bufferStr;
   string* uncompressedData = &data;
@@ -262,18 +268,23 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
     istringstream compressedStream(data);
     uint64_t uncompressed_size_64;    
     compressedStream.read((char*)&uncompressed_size_64, nByteMode);
-    unsigned long uncompressed_size =
-      convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
+
+    unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
     const char* compressed_data = data.c_str() + nByteMode;
+
     long compressed_datasize = datasize - (long)(nByteMode);
 
     // casting from const char* below to char* -- use caution
     bufferStr.resize(uncompressed_size);
     char* buffer = (char*)bufferStr.c_str();
 
-    if (uncompress((Bytef*)buffer, &uncompressed_size,
-		   (const Bytef*)compressed_data, compressed_datasize) != Z_OK)
+    int result = uncompress( (Bytef*)buffer, &uncompressed_size,
+		             (const Bytef*)compressed_data, compressed_datasize );
+
+    if (result != Z_OK) {
+      printf( "Uncompress error result is %d\n", result );
       throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
+    }
 
     uncompressedData = &bufferStr;
 #endif
