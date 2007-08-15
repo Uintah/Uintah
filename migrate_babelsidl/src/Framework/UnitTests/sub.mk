@@ -3,7 +3,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2007 Scientific Computing and Imaging Institute,
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
 #
 #  License for the specific language governing rights and limitations under
@@ -26,30 +26,23 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
 
-SRCDIR := Framework
+SRCDIR := Framework/UnitTests
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+PROGRAM := $(SRCDIR)/$(UNIT_TEST_EXE)
 
-SUBDIRS := \
-           $(SRCDIR)/sidl \
-           $(SRCDIR)/Core
+SRCS := \
+        $(SRCDIR)/AbstractFrameworkTest.cc \
+        $(SRCDIR)/main.cc
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+#$(SRCDIR)/TypeMapTest.cc
 
+PSELIBS := \
+            Framework \
+            Core/Thread Core/Exceptions Core/Util
 
-PSELIBS := Core/Thread Core/Util Core/Exceptions
-LIBS := $(BABEL_LIBRARY)
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+#cppunit libs
+LIBS := $(CPPUNIT_LIBRARY) $(BABEL_LIBRARY)
 
-SUBDIRS := \
-           $(SRCDIR)/StandAlone
-
-ifeq ($(BUILD_UNIT_TESTS),yes)
-  SUBDIRS += \
-             $(SRCDIR)/UnitTests
-endif
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
+include $(SCIRUN_SCRIPTS)/program.mk
