@@ -5382,11 +5382,13 @@ _sci_inc=
 _sci_optional=optional
 
 if test "$sci_required_cppunit" = "yes" ; then
-  _sci_optional=required
 
-  if test "$with_cppunit" ; then
+  if test "$with_cppunit" = "yes"; then
+    _sci_optional=required
+  elif test "$with_cppunit" ; then
     _sci_lib="$with_cppunit/lib"
     _sci_inc="$with_cppunit/include"
+    _sci_optional=required
     #_sci_optional=specific
   fi
 
