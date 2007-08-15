@@ -448,7 +448,7 @@ private:
   DataArchive *da;
   rtrt::Array1<SphereData> *sphere_data_all;
 
-  double time;
+  int time_index;
   vector<string> *vars;
   vector<string> *var_include;
   vector<const Uintah::TypeDescription*> *types;
@@ -458,13 +458,13 @@ private:
 public:
   SphereMaker(Mutex *amutex, Semaphore *sema, Patch *patch, DataArchive *da,
               rtrt::Array1<SphereData> *sda,
-              double time, vector<string> *vars, vector<string> *var_include,
+              int time_index, vector<string> *vars, vector<string> *var_include,
               vector<const Uintah::TypeDescription*> *types,
               bool do_PTvar_all, bool do_patch, bool do_material,
               bool do_verbose, bool compute_radius,
               double radius, double radius_factor):
     amutex(amutex), sema(sema), patch(patch), da(da), sphere_data_all(sda),
-    time(time), vars(vars), var_include(var_include), types(types),
+    time_index(time_index), vars(vars), var_include(var_include), types(types),
     do_PTvar_all(do_PTvar_all), do_patch(do_patch), do_material(do_material),
     do_verbose(do_verbose), compute_radius(compute_radius),
     radius(radius), radius_factor(radius_factor)
@@ -473,7 +473,7 @@ public:
 
   template<class PartT>
   void getParticleData(PatchData& patchdata, string& var,
-                       ConsecutiveRangeSet& matls, Patch* patch, double time) {
+                       ConsecutiveRangeSet& matls, Patch* patch) {
     if (!do_PTvar_all) return;
     bool do_radius_computation = false;
     if (compute_radius && var == "p.volume") do_radius_computation = true;
@@ -488,7 +488,7 @@ public:
       int matl = *matlIter;
                 
       ParticleVariable<PartT> value;
-      da->query(value, var, matl, patch, time);
+      da->query(value, var, matl, patch, time_index);
       ParticleSubset* pset = value.getParticleSubset();
       if (!pset) return;
       int numParticles = pset->numParticles();
@@ -545,8 +545,8 @@ public:
       }
       const Uintah::TypeDescription* td = (*types)[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
-      //---------int numMatls = da->queryNumMaterials(var, patch, time);
-      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+      //---------int numMatls = da->queryNumMaterials(var, patch, time_index);
+      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time_index);
       
       // now do something different depending on the type of the variable
       switch(td->getType()){
@@ -554,13 +554,13 @@ public:
         {
           switch(subtype->getType()){
           case Uintah::TypeDescription::double_type:
-            getParticleData<double>(patchdata, var, matls, patch, time);
+            getParticleData<double>(patchdata, var, matls, patch);
             break;
           case Uintah::TypeDescription::float_type:
-            getParticleData<float>(patchdata, var, matls, patch, time);
+            getParticleData<float>(patchdata, var, matls, patch);
             break;
           case Uintah::TypeDescription::int_type:
-            getParticleData<int>(patchdata, var, matls, patch, time);
+            getParticleData<int>(patchdata, var, matls, patch);
             break;
           case Uintah::TypeDescription::Point:
             {
@@ -585,7 +585,7 @@ public:
                 
                 if (debug) cerr << "matl = " << matl << endl;
                 ParticleVariable<SCIRun::Point> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, time_index);
                 ParticleSubset* pset = value.getParticleSubset();
                 if (!pset) break;
                 int numParticles = pset->numParticles();
@@ -640,7 +640,7 @@ public:
                 int matl = *matlIter;
                 
                 ParticleVariable<SCIRun::Vector> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, time_index);
                 ParticleSubset* pset = value.getParticleSubset();
                 if (!pset) break;
                 int numParticles = pset->numParticles();
@@ -675,7 +675,7 @@ public:
                 int matl = *matlIter;
                 
                 ParticleVariable<Matrix3> value;
-                da->query(value, var, matl, patch, time);
+                da->query(value, var, matl, patch, time_index);
                 ParticleSubset* pset = value.getParticleSubset();
                 if (!pset) break;
                 int numParticles = pset->numParticles();
@@ -930,7 +930,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       sphere_data.remove_all();
       int patch_count = non_empty_patches;
       
-      GridP grid = da->queryGrid(time);
+      GridP grid = da->queryGrid(t);
       if(do_verbose)
         cout << "time = " << time << "\n";
       cerr << "Creating new timeblock.\n";
@@ -954,7 +954,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
                                                           *iter,
                                                           da,
                                                           &sphere_data,
-                                                          time,
+                                                          t,
                                                           &vars,
                                                           &var_include,
                                                           &types,

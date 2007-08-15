@@ -175,8 +175,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     for(int t=time_step_lower;t<=time_step_upper;t++){
       if (debug) cerr << "Started timestep\n";
       
-      double time = times[t];
-      GridP grid = da->queryGrid(time);
+      GridP grid = da->queryGrid(t);
       if(do_verbose)
 	cout << "time = " << time << "\n";
       cerr << "Creating new timeblock.\n";
@@ -193,7 +192,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	  const Patch* patch = *iter;
 	  
 	  //	  std::string var = vars[v];
-	  ConsecutiveRangeSet matls = da->queryMaterials(var, patch, time);
+	  ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
 	  
 	  int mat_num;
 	  if (mat == -1) {
@@ -233,7 +232,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	      {
 		// get the data
 		CCVariable<double> value;
-		da->query(value, var, mat_num, patch, time);
+		da->query(value, var, mat_num, patch, t);
 		dim = IntVector(value.getHighIndex()-value.getLowIndex());
 		if(dim.x() && dim.y() && dim.z()){
 #ifdef USE_HVBRICK
@@ -334,7 +333,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	      {
 		// get the data
 		NCVariable<double> value;
-		da->query(value, var, mat_num, patch, time);
+		da->query(value, var, mat_num, patch, t);
 		dim = IntVector(value.getHighIndex()-value.getLowIndex());
 		if(dim.x() && dim.y() && dim.z()){
 #ifdef USE_HVBRICK
