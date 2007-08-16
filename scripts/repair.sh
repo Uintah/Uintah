@@ -108,6 +108,15 @@ if test "$be_quiet" != "true" -a $file_found = "no"; then
    echo "If you continue to have problems with this script, please contact"
    echo "J. Davison de St. Germain (dav@sci.utah.edu)."
    echo ""
+   if test `uname` == "AIX"; then
+      echo "NOTE: AIX probably uses .u files (instead of .d files).  If so, that is"
+      echo "the reason this script failed.  You could edit it and change this line:"
+      echo ""
+      echo "  files=\`find . -name \"*.d\" -o -name \"depend.mk\" | xargs grep -l \$bad_inc\`"
+      echo ""
+      echo "to have *.u (instead of *.d)."
+      echo ""
+   fi
 fi
 
 
