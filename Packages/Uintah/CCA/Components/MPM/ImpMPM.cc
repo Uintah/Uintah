@@ -121,6 +121,9 @@ ImpMPM::~ImpMPM()
   if(one_matl->removeReference())
     delete one_matl;
 
+  if(d_perproc_patches->removeReference())
+    delete d_perproc_patches;
+
   delete d_solver;
   delete heatConductionModel;
   delete thermalContactModel;
