@@ -115,7 +115,23 @@ Dir::removeDir( const char * dirName )
   while( file ) {
     if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") !=0) {
       string fullpath = string(dirName) + "/" + file->d_name;
+      bool   isDir = false;
+#if defined(_AIX)
+      // Have to use 'stat' under AIX
+      struct stat entryInfo;
+      if( lstat( fullpath.c_str(), &entryInfo ) == 0 ) {
+	if( S_ISDIR( entryInfo.st_mode ) ) {
+	  isDir = true;
+	}
+      } else {
+	printf( "Error statting %s: %s\n", fullpath, strerror( errno ) );
+      }
+#else
       if( file->d_type & DT_DIR ) {
+	isDir = true;
+      }
+#endif
+      if( isDir ) {
         removeDir( fullpath.c_str() );
       } else {
         int rc = ::remove( fullpath.c_str() );
