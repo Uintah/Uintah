@@ -63,8 +63,6 @@
 #include <libexc.h>
 #elif defined(__GNUC__) && defined(__linux)
 #include <execinfo.h>
-#include <cxxabi.h>
-#include <dlfcn.h>
 #endif
 
 
@@ -241,31 +239,8 @@ string getStackTrace(void* context /*=0*/)
     stacktrace << "Backtrace:\n";
     stacktrace.flags(ios::hex);
     char **names = backtrace_symbols( addresses, n );
-    for ( int i = 2; i < n; i++ ) {
-     Dl_info info;
-     char *demangled = NULL;
-
-     //Attempt to demangle this if possible
-     //Get the nearest symbol to feed to demangler
-     if(dladdr(addresses[i], &info) != 0) {
-      int stat;
-      // __cxa_demangle is a naughty obscure backend and no
-      // self-respecting person would ever call it directly. ;-)
-      // However it is a convenient glibc way to demangle syms.
-      demangled = abi::__cxa_demangle(info.dli_sname,0,0,&stat);
-     }
-     if (demangled != NULL) {
-      //Chop off the garbage from the raw symbol
-      char *loc = strchr(names[i], '(');
-      if (loc != NULL) *loc = '\0';
-      
-      stacktrace << i - 1 << ". " << names[i] << '\n';
-      stacktrace << "  in " << demangled << '\n';
-      delete demangled;
-     } else { // Just output the raw symbol
-      stacktrace << i - 1 << ". " << names[i] << '\n';
-     }
-    }
+    for ( int i = 2; i < n; i++ )
+      stacktrace << names[i] << '\n';
     free(names);
   }
 #elif defined(_WIN32)
