@@ -48,7 +48,7 @@ ifeq ($(IS_WIN),yes)
 endif
 
 PSELIBS := 
-LIBS := $(TRACEBACK_LIB)
+LIBS := $(TRACEBACK_LIB) -ldl
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
