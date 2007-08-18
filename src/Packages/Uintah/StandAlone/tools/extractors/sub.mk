@@ -2,18 +2,6 @@
 
 SRCDIR := Packages/Uintah/StandAlone/tools/extractors
 
-# The following variables are used by the Fake* scripts... please
-# do not modify...
-#
-COMPONENTS      = Packages/Uintah/CCA/Components
-CA              = Packages/Uintah/CCA/Components/Arches
-#DUMMY_LIB       = Packages/Uintah/CCA/Components/Dummy
-ARCHES_SUB_LIBS= $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
-ARCHES_LIBS    = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
-MPM_LIB         = Packages/Uintah/CCA/Components/MPM
-ICE_LIB         = Packages/Uintah/CCA/Components/ICE
-MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
-
 ifeq ($(IS_AIX),yes)
   AIX_LIBRARY := \
         Core/XMLUtil  \
@@ -27,15 +15,7 @@ ifeq ($(IS_AIX),yes)
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
 	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
-        Packages/Uintah/CCA/Components/Examples          \
-        $(DUMMY_LIB)                                     \
-        $(ARCHES_LIBS)                                   \
-        $(MPM_LIB)                                       \
-        $(ICE_LIB)                                       \
-        $(MPMICE_LIB)                                    \
-        Packages/Uintah/CCA/Components/PatchCombiner     \
-        $(DUMMY_LIB)                                     \
-        $(ARCHES_SUB_LIBS)
+        Packages/Uintah/CCA/Components/Examples          
 endif
 
 ifeq ($(LARGESOS),yes)
