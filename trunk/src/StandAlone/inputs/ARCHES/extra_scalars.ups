@@ -178,8 +178,12 @@
 	         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
                  <density_weighted>true</density_weighted>
                  <sources>
-                   <name>stest1</name>
-                   <name>stest2</name>
+                   <source>
+                     <name>zero_src</name>
+                   </source>
+                   <source>
+                     <name>zero_src</name>
+                   </source>
                  </sources>
                </scalar>
                <scalar>
@@ -189,8 +193,9 @@
                  <diffusion>false</diffusion>
                  <density_weighted>false</density_weighted>
                  <sources>
-                   <name>stest3</name>
-                   <name>stest4</name>
+                   <source>
+                     <name>zero_src</name>
+                   </source>
                  </sources>
                </scalar>
 	    </ExtraScalars>

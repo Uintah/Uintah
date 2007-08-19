@@ -41,6 +41,8 @@
 	 exit
       endif 
 
+      last = false;
+
       for i = 1:nargin
 	
 	%________________________________
@@ -80,7 +82,8 @@
       c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
       [status0, result0]=unix(c0);
       physicalTime  = load('tmp');
-      nDumps = length(physicalTime)
+      nDumps = length(physicalTime);
+      startVal = 1;
 
       if (last)
 	startVal = nDumps;
@@ -103,7 +106,7 @@
 	
 	%____________________________
 	%   scalar-F
-        c6 = sprintf('lineextract -v scalar-f -l 0 -cellCoords -timestep %i %s -o scalar-f.dat -m 0  -uda %s',ts,S_E,uda)
+        c6 = sprintf('lineextract -v scalar-f -l 0 -cellCoords -timestep %i %s -o scalar-f.dat -m 0  -uda %s',ts,S_E,uda);
         [s6, r6]=unix(c6);
         scalarArray = load('scalar-f.dat');
         xx     = scalarArray(:,1);
@@ -120,7 +123,7 @@
         x = xmin:uda_dx:xmax;
         exactSol=xx * 0;
         
-        length(xx)
+        length(xx);
 
         for( i = 1:length(xx))
           if(xx(i) >= xmin && xx(i) <= xmax)
@@ -155,10 +158,12 @@
             end
           end
         end
-
+        
+        
+        exactSol;
         difference = scalar - exactSol;
-        L2norm     = sqrt( sum(difference.^2)/length(difference) )
-        LInfinity  = max(difference)
+        L2norm     = sqrt( sum(difference.^2)/length(difference) );
+        LInfinity  = max(difference);
         
 
 

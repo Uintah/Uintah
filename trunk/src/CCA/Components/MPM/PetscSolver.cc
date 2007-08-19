@@ -97,6 +97,7 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-trmalloc_log", PETSC_NULL);
   PetscOptionsSetValue("-trdump", PETSC_NULL);
 #endif
+  PetscPopSignalHandler();
 }
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,

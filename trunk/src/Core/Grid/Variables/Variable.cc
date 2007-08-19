@@ -127,20 +127,23 @@ Variable::emit( OutputContext& oc, const IntVector& l,
 
   const char* writebuffer = (*writeoutString).c_str();
   unsigned long writebufferSize = (*writeoutString).size();
-#ifdef _WIN32
-  ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
-#else
-  ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
-#endif
+  if(writebufferSize>0)
+  {
+  #ifdef _WIN32
+    ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
+  #else
+    ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
+  #endif
 
-  if(s != (long)writebufferSize) {
-    cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
+    if(s != (long)writebufferSize) {
+      cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
          << " with errno " << errno << ": " << strerror(errno) <<  endl;
-    cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
+      cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
 
-    SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
+      SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
+    }
+    oc.cur += writebufferSize;
   }
-  oc.cur += writebufferSize;
 
   string compressionMode = compressionModeHint;
   if (try_all || (used_gzip != use_gzip) || (used_rle != use_rle)) {
@@ -228,24 +231,32 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
   }
 
   long datasize = end - ic.cur;
+
+  // On older UDAs, all variables were saved, even if they had a size
+  // of 0.  So this allows us to skip reading 0 sized data.  (FYI, new
+  // UDAs should not have this problem.)
+  if( datasize == 0 ) return;
+
   string data;
   string bufferStr;
   string* uncompressedData = &data;
 
   data.resize(datasize);
   // casting from const char* -- use caution
-#ifdef _WIN32
-  ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-#else
-  ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-#endif
-  if(s != datasize) {
-    cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
-    SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
-  }
+  if(datasize>0)
+  {
+  #ifdef _WIN32
+    ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+  #else
+    ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+  #endif
+    if(s != datasize) {
+      cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
+      SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
+    }
   
-  ic.cur += datasize;
-
+    ic.cur += datasize;
+  }
   if (use_gzip) {
 #if defined( REDSTORM )
     printf("Error: compression not supported on RedStorm\n");
@@ -257,18 +268,23 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
     istringstream compressedStream(data);
     uint64_t uncompressed_size_64;    
     compressedStream.read((char*)&uncompressed_size_64, nByteMode);
-    unsigned long uncompressed_size =
-      convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
+
+    unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
     const char* compressed_data = data.c_str() + nByteMode;
+
     long compressed_datasize = datasize - (long)(nByteMode);
 
     // casting from const char* below to char* -- use caution
     bufferStr.resize(uncompressed_size);
     char* buffer = (char*)bufferStr.c_str();
 
-    if (uncompress((Bytef*)buffer, &uncompressed_size,
-		   (const Bytef*)compressed_data, compressed_datasize) != Z_OK)
+    int result = uncompress( (Bytef*)buffer, &uncompressed_size,
+		             (const Bytef*)compressed_data, compressed_datasize );
+
+    if (result != Z_OK) {
+      printf( "Uncompress error result is %d\n", result );
       throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
+    }
 
     uncompressedData = &bufferStr;
 #endif

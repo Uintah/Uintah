@@ -120,6 +120,9 @@ ImpMPM::~ImpMPM()
   if(one_matl->removeReference())
     delete one_matl;
 
+  if(d_perproc_patches->removeReference())
+    delete d_perproc_patches;
+
   delete d_solver;
   delete heatConductionModel;
   delete thermalContactModel;
@@ -1156,12 +1159,10 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,     Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->dispNewLabel,           Ghost::AroundCells,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pAccelerationLabel,     Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
   t->requires(Task::OldDW, lb->pTempPreviousLabel,     Ghost::None);
@@ -1452,15 +1453,18 @@ void ImpMPM::iterate(const ProcessorGroup*,
     if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
       restart_nan=true;
-      cerr << "Restarting due to a nan residual" << endl;
+      if(UintahParallelComponent::d_myworld->myrank()==0)
+        cerr << "Restarting due to a nan residual" << endl;
     }
-    if (dispIncQNorm/dispIncQNorm0 < 0. ||dispIncNorm/dispIncNormMax < 0.){
+    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) < 0. ||dispIncNorm/(dispIncNormMax+1e-100) < 0.){
       restart_neg_residual=true;
-      cerr << "Restarting due to a negative residual" << endl;
+      if(UintahParallelComponent::d_myworld->myrank()==0)
+        cerr << "Restarting due to a negative residual" << endl;
     }
     if (count > flags->d_max_num_iterations){
       restart_num_iters=true;
-      cerr << "Restarting due to exceeding max number of iterations" << endl;
+      if(UintahParallelComponent::d_myworld->myrank()==0)
+        cerr << "Restarting due to exceeding max number of iterations" << endl;
     }
     if (restart_nan || restart_neg_residual || restart_num_iters) {
       new_dw->abortTimestep();
@@ -3084,9 +3088,9 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
-      constParticleVariable<Vector> pvelocity, pacceleration,pexternalForce;
+      constParticleVariable<Vector> pvelocity, pacceleration;
       constParticleVariable<Vector> pDispOld,psize;
-      ParticleVariable<Vector> pvelnew,pexternalForceNew,paccNew,pDisp,psizeNew;
+      ParticleVariable<Vector> pvelnew,paccNew,pDisp,psizeNew;
       constParticleVariable<double> pmass, pvolume,pTempOld,pEro;
       ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pEroNew;
       ParticleVariable<double> pTempPreNew;
@@ -3105,7 +3109,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
       new_dw->get(pvolume,               lb->pVolumeDeformedLabel,       pset);
-      old_dw->get(pexternalForce,        lb->pExternalForceLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,             pset);
       old_dw->get(pacceleration,         lb->pAccelerationLabel,         pset);
       old_dw->get(pTempOld,              lb->pTemperatureLabel,          pset);

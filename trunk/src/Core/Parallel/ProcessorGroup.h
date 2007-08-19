@@ -34,6 +34,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+   class Parallel;
 
    class UINTAHSHARE ProcessorGroup {
    public:

@@ -25,6 +25,7 @@ using std::cerr;
 static DebugStream doing("DynamicLoadBalancer_doing", false);
 static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
+static DebugStream stats("LBStats",false);
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
    : LoadBalancerCommon(myworld), sfc(myworld)
@@ -448,8 +449,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     int num_patches = level->numPatches();
     vector<int> order(num_patches);
     double total_cost = 0;
-    double avgCostPerProc = 0;
-
 
     for (unsigned i = 0; i < patch_costs[l].size(); i++)
       total_cost += patch_costs[l][i];
@@ -458,6 +457,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
+#if 0
+    double avgCostPerProc = 0;
     avgCostPerProc = total_cost / num_procs;
 
     int currentProc = 0;
@@ -500,6 +501,128 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
             << " PatchCost: " << patchCost << ", ProcCost: "
             << currentProcCost << " group cost " << total_cost << "  avg cost " << avgCostPerProc << endl;
     }
+#else
+    //partition patches recursivly into halves until I have my patchset
+    int remainingProcessors=num_procs;
+    int remainingPatches=num_patches;
+    int remainingCost=total_cost;
+    int startingPatch=0;
+    int startingProc=0;
+
+    while(remainingProcessors>1 && remainingPatches>0)
+    {
+      //compute a split point where both sides have approximatly the same cost
+      double cost=0;
+      double halfCost=remainingCost/2;
+      int p=startingPatch;
+      while(cost<halfCost)
+      {
+        cost+=patch_costs[l][order[p++]];
+      }
+      //check if subtracting off last patch gets us closer to an even split
+      if(fabs(halfCost-cost+patch_costs[l][order[p-1]])<fabs(halfCost-cost))
+      {
+        //subtract off last patch
+        cost-=patch_costs[l][order[--p]];
+      }
+
+      int halfProc;
+      //calculate mid point for patches
+      if(cost>halfCost)    //if the left side has more weight
+      {
+        //give the left side the potential extra proc
+        halfProc=remainingProcessors/2+remainingProcessors%2;
+      }
+      else  //the right side has more weight
+      {
+        //take the potentially smaller side 
+        halfProc=remainingProcessors/2;
+      }
+
+      if(lb.active() && d_myworld->myrank()==0)
+      {
+        
+        lb << d_myworld->myrank() << ": RemainingCost:" << remainingCost << " RemainingProcs:" << remainingProcessors << " cost:" << cost
+              << " halfCost:" << halfCost << " halfProc:" << halfProc << " startProc:" << startingProc << " startingPatch:" << startingPatch
+              << endl;
+      }
+      if(d_myworld->myrank()<startingProc+halfProc)
+      {
+        //continue on left side
+        remainingProcessors=halfProc;
+        remainingPatches=p-startingPatch;
+        remainingCost=cost;
+        //startingProc remains the same
+        //startingPatch remains the same
+      }
+      else
+      {
+        //continue on right side
+        remainingProcessors-=halfProc;
+        remainingPatches-=p-startingPatch;
+        remainingCost-=cost;
+        startingProc+=halfProc;
+        startingPatch=p;
+      }
+    }
+    
+    if(lb.active())
+      lb << d_myworld->myrank() << " Final Cost:" << remainingCost  << " startingPatch:" << startingPatch << endl;
+    
+    vector<int> startPatch(num_procs+1,-999999);
+    startPatch[num_procs]=num_patches;
+    
+    ASSERT(startingProc==d_myworld->myrank() && remainingProcessors==1);
+    //allgather patchsets
+    MPI_Allgather(&startingPatch,1,MPI_INT,&startPatch[0],1,MPI_INT,d_myworld->getComm());
+
+    //set d_tempAssignment array
+    int processor=0;
+    for(int p=0;p<num_patches;p++)
+    {
+      while(p>=startPatch[processor+1])
+         processor++;
+    
+      if(lb.active() && d_myworld->myrank()==0)
+        lb << "Patch:" << order[p] << " assigning to:" << processor << " cost:" << patch_costs[l][order[p]] << endl;
+      
+      d_tempAssignment[level_offset+order[p]] = processor;
+    }
+    
+#endif
+    
+    if(stats.active() && d_myworld->myrank()==0)
+    {
+      //calculate lb stats:
+      int totalCost=0;
+      vector<int> procCosts(num_procs,0);
+      for(int p=0;p<num_patches;p++)
+      {
+        totalCost+=patch_costs[l][p];
+        procCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
+      }
+      
+      double meanCost=totalCost/num_procs;
+      double minCost=procCosts[0];
+      double maxCost=procCosts[0];
+      for(int p=0;p<num_procs;p++)
+      {
+        if(minCost>procCosts[p])
+           minCost=procCosts[p];
+        else if(maxCost<procCosts[p])
+           maxCost=procCosts[p];
+      }
+      double stdCost=0;
+      double sumXsquared=0;
+      for(int p=0;p<num_procs;p++)
+      {
+        sumXsquared+=procCosts[p]*procCosts[p];
+      }
+      stdCost=sqrt(sumXsquared/num_procs-meanCost*meanCost);
+
+      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " relstdev:" << stdCost/meanCost << " Min:" << minCost << " Max:" << maxCost << endl;
+    }  
+    
     level_offset+=num_patches;
   }
 
