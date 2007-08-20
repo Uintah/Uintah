@@ -530,6 +530,13 @@ IF(UNIX)
 ENDIF(UNIX)
 
 #-----------------------------------------------------------------------------
+# dl library
+IF(UNIX)
+  FIND_LIBRARY(DL_LIBRARY dl)
+  MESSAGE("DL_LIBRARY: " ${DL_LIBRARY})
+ENDIF(UNIX)
+
+#-----------------------------------------------------------------------------
 # lapack library
 OPTION(WITH_LAPACK "Build with lapack library" OFF)
 MARK_AS_ADVANCED(WITH_LAPACK)		   
@@ -1584,10 +1591,10 @@ MARK_AS_ADVANCED(BLT_INCLUDE BLT_LIBRARY FREETYPE_INCLUDE FREETYPE_LIBRARY TCL_L
 # Option for building Seg3D
 SET(DEFAULT_SEG3D OFF)
 
-IF(ITK_FOUND)
-  MESSAGE(STATUS "Building Seg3D by default because ITK found.")
+IF(ITK_FOUND AND wxWidgets_FOUND)
+  MESSAGE(STATUS "Building Seg3D by default because ITK and WX found.")
   SET(DEFAULT_SEG3D ON)
-ENDIF(ITK_FOUND)
+ENDIF(ITK_FOUND AND wxWidgets_FOUND)
 
 OPTION(BUILD_SEG3D "Build Seg3D Application" ${DEFAULT_SEG3D})
 

@@ -20,10 +20,10 @@ is what's there, and <NEW_REVISION> is what you want it to be.
 
 To update each external file, do (from Uintah/src/SCIRun):
 
-svn merge -N -r <old-rev>:<new-rev> https://code.sci.utah.edu/svn/SCIRun/cibc/trunk/SCIRun/src@<OLD_REVISION> https://code.sci.utah.edu/svn/SCIRun/cibc/trunk/SCIRun/src@<NEW_REVISION> .
+svn merge -N -r <old-rev>:<new-rev> https://code.sci.utah.edu/svn/SCIRun/cibc/trunk/SCIRun/src .
 
 The current revision of the externals is HEAD.
 
-The current revision is 38365.  Update this when you update the SCIRun version.
+The current revision is 38434.  Update this when you update the SCIRun version.
 
 Then commit the changes.
