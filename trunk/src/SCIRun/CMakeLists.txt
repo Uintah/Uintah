@@ -533,7 +533,6 @@ ENDIF(UNIX)
 # dl library
 IF(UNIX)
   FIND_LIBRARY(DL_LIBRARY dl)
-  MESSAGE("DL_LIBRARY: " ${DL_LIBRARY})
 ENDIF(UNIX)
 
 #-----------------------------------------------------------------------------
