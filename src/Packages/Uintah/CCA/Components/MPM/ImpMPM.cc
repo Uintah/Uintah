@@ -360,7 +360,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->getPerProcessorPatchSet(level);
-  d_perproc_patches->addReference();
 
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
 
