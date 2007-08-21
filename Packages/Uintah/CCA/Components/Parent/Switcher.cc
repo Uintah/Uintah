@@ -285,10 +285,12 @@ void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   Task* t = scinew Task("Switcher::switchTest",
                         this, & Switcher::switchTest);
 
+  t->setType(Task::OncePerProc);
+  
   // the component is responsible to determine when it is to switch.
   t->requires(Task::NewDW,d_sharedState->get_switch_label());
   //t->computes(d_switchLabel, level.get_rep(), d_sharedState->refineFlagMaterials());
-  sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t,sched->getLoadBalancer()->getPerProcessorPatchSet(level),d_sharedState->allMaterials());
 }
 
 void Switcher::scheduleInitNewVars(const LevelP& level, SchedulerP& sched)
