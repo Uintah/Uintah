@@ -18,8 +18,6 @@ using namespace Uintah;
 #include <iomanip>
 using namespace std;
 
-static DebugStream dbgstats("BNRStats",false);
-
 bool BNRRegridder::getTags(int &tag1, int &tag2)
 {
 
@@ -322,9 +320,9 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
 
 void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* newGrid)
 {
-  if (dbgstats.active() && d_myworld->myrank() == 0) 
+  if (d_myworld->myrank() == 0) 
   {
-    dbgstats << " Grid Statistics:\n";
+    cout << " Grid Statistics:\n";
     for (unsigned int l = 0; l < patch_sets.size(); l++) 
     {
       if(patch_sets[l].empty())
@@ -349,7 +347,7 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
       //calculate mean
       double mean = total_cells /(double) n;
       double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells/(double)n)/(double)n);
-      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Total Cells: " << setw(8) << total_cells << " Mean Cells: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
+      cout << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Total Cells: " << setw(8) << total_cells << " Mean Cells: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
     }
   }
 }
