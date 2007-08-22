@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
@@ -109,7 +110,6 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   return ice_ps;
 }
 
-
 EquationOfState * ICEMaterial::getEOS() const
 {
   // Return the pointer to the constitutive model 
@@ -174,17 +174,60 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
    GeometryPieceP piece = d_geom_objs[obj]->getPiece();
    // Box b1 = piece->getBoundingBox();
    // Box b2 = patch->getBox();
-    
-   IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
-   Vector dxpp = patch->dCell()/ppc;
-   Vector dcorner = dxpp*0.5;
-   double totalppc = ppc.x()*ppc.y()*ppc.z();
 
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
- 
-     Point lower = patch->nodePosition(*iter) + dcorner;
-     int count = 0;
-     for(int ix=0;ix < ppc.x(); ix++){
+   FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+
+   if(fgp){
+    // For some reason, if I call readPoints here, I get two copies of the
+    // points, so evidently the fgp is being carried over from MPMMaterial
+//    fgp->readPoints(patch->getID());
+    int numPts = fgp->returnPointCount();
+    vector<Point>* points = fgp->getPoints();
+    if(numMatls > 2)  {
+      cerr << "ERROR!!!\n";
+      cerr << "File Geometry Piece with ICE only supported for one ice matl.\n";
+      exit(1);
+    }
+
+    // First initialize all variables everywhere.
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      vol_frac_CC[*iter]= 1.0;
+      press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
+      vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+      rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+      rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
+      temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+      IveBeenHere[*iter]= 1;
+    }
+
+    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+    double ppc_tot = ppc.x()*ppc.y()*ppc.z();
+    cout << "ppc_tot = " << ppc_tot << endl;
+    cout << "numPts = " << numPts << endl;
+    IntVector cell_idx;
+    for (int ii = 0; ii < numPts; ++ii) {
+      Point p = points->at(ii);
+      patch->findCell(p,cell_idx);
+      vol_frac_CC[cell_idx] -= 1./ppc_tot;
+      IveBeenHere[cell_idx]= obj;
+    }
+
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
+                          d_TINY_RHO*rho_micro[*iter];
+    }
+
+   } else {
+
+    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+    Vector dxpp = patch->dCell()/ppc;
+    Vector dcorner = dxpp*0.5;
+    double totalppc = ppc.x()*ppc.y()*ppc.z();
+
+    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      Point lower = patch->nodePosition(*iter) + dcorner;
+      int count = 0;
+      for(int ix=0;ix < ppc.x(); ix++){
        for(int iy=0;iy < ppc.y(); iy++){
         for(int iz=0;iz < ppc.z(); iz++){
           IntVector idx(ix, iy, iz);
@@ -193,9 +236,9 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
             count++;
         }
        }
-     }
-  //__________________________________
-  // For single materials with more than one object 
+      }
+      //__________________________________
+      // For single materials with more than one object 
       if(numMatls == 1)  {
         if ( count > 0 ) {
           vol_frac_CC[*iter]= 1.0;
@@ -238,6 +281,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         }
       }    
     }  // Loop over domain
+   }
   }  // Loop over geom_objects
 }
 
