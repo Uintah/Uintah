@@ -457,7 +457,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
-#if 0
+#if 1
     double avgCostPerProc = 0;
     avgCostPerProc = total_cost / num_procs;
 
@@ -512,37 +512,33 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     while(remainingProcessors>1 && remainingPatches>0)
     {
       //compute a split point where both sides have approximatly the same cost
-      double cost=0;
+      int halfProc=remainingProcessors/2+remainingProcessors%2;
       double halfCost=remainingCost/2;
-      int p=startingPatch;
-      while(cost<halfCost)
-      {
-        cost+=patch_costs[l][order[p++]];
-      }
-      //check if subtracting off last patch gets us closer to an even split
-      if(fabs(halfCost-cost+patch_costs[l][order[p-1]])<fabs(halfCost-cost))
-      {
-        //subtract off last patch
-        cost-=patch_costs[l][order[--p]];
-      }
+      double cost=0;
+      int p=0;
+      double takeimb=fabs(cost+patch_costs[l][order[startingProc+p]]-halfCost);
+      double notakeimb=fabs(cost-halfCost);
 
-      int halfProc;
-      //calculate mid point for patches
-      if(cost>halfCost)    //if the left side has more weight
+      //if we do not have enough patches on the left side for all processors 
+      //  or if there is enough patches for the right side
+      //     and taking the patch causes less imbalance than not taking it
+      while(p<halfProc || remainingPatches-p>remainingProcessors-halfProc && notakeimb>takeimb)
       {
-        //give the left side the potential extra proc
-        halfProc=remainingProcessors/2+remainingProcessors%2;
-      }
-      else  //the right side has more weight
-      {
-        //take the potentially smaller side 
-        halfProc=remainingProcessors/2;
-      }
-
-      if(lb.active() && d_myworld->myrank()==0)
-      {
+        //assign this patch to left side
+        cost+=patch_costs[l][order[startingProc+p++]];
         
-        lb << d_myworld->myrank() << ": RemainingCost:" << remainingCost << " RemainingProcs:" << remainingProcessors << " cost:" << cost
+        //break out if there are no more patches
+        if(p==remainingPatches)
+           break;
+        
+        //update imbalance
+        takeimb=fabs(cost+patch_costs[l][order[startingProc+p]]-halfCost);
+        notakeimb=fabs(cost-halfCost);
+      }
+
+      if(lb.active())
+      {
+        lb << d_myworld->myrank() << "  RemainingPatches:" << remainingPatches << " RemainingCost:" << remainingCost << " RemainingProcs:" << remainingProcessors << " cost:" << cost
               << " halfCost:" << halfCost << " halfProc:" << halfProc << " startProc:" << startingProc << " startingPatch:" << startingPatch
               << endl;
       }
@@ -550,7 +546,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       {
         //continue on left side
         remainingProcessors=halfProc;
-        remainingPatches=p-startingPatch;
+        remainingPatches=p;
         remainingCost=cost;
         //startingProc remains the same
         //startingPatch remains the same
@@ -559,20 +555,20 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       {
         //continue on right side
         remainingProcessors-=halfProc;
-        remainingPatches-=p-startingPatch;
+        remainingPatches-=p;
         remainingCost-=cost;
         startingProc+=halfProc;
-        startingPatch=p;
+        startingPatch+=p;
       }
     }
     
-    if(lb.active())
-      lb << d_myworld->myrank() << " Final Cost:" << remainingCost  << " startingPatch:" << startingPatch << endl;
+    if(lb.active() )
+      lb << d_myworld->myrank() << " Level:" << l << " Final Cost:" << remainingCost  << " startingPatch:" << startingPatch << endl;
     
     vector<int> startPatch(num_procs+1,-999999);
     startPatch[num_procs]=num_patches;
     
-    ASSERT(startingProc==d_myworld->myrank() && remainingProcessors==1);
+    ASSERT((startingProc==d_myworld->myrank() && remainingProcessors==1) || remainingPatches==0);
     //allgather patchsets
     MPI_Allgather(&startingPatch,1,MPI_INT,&startPatch[0],1,MPI_INT,d_myworld->getComm());
 
@@ -583,8 +579,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       while(p>=startPatch[processor+1])
          processor++;
     
-      if(lb.active() && d_myworld->myrank()==0)
-        lb << "Patch:" << order[p] << " assigning to:" << processor << " cost:" << patch_costs[l][order[p]] << endl;
+      if(lb.active() && d_myworld->myrank()==0 )
+        lb << "On Level:" << l << " Patch:" << order[p] << " assigning to:" << processor << " cost:" << patch_costs[l][order[p]] << endl;
       
       d_tempAssignment[level_offset+order[p]] = processor;
     }
@@ -616,9 +612,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double sumXsquared=0;
       for(int p=0;p<num_procs;p++)
       {
-        sumXsquared+=procCosts[p]*procCosts[p];
+        double diffSquared=procCosts[p]-meanCost;
+        diffSquared*=diffSquared;
+        sumXsquared+=diffSquared;
       }
-      stdCost=sqrt(sumXsquared/num_procs-meanCost*meanCost);
+      stdCost=sqrt(sumXsquared/num_procs);
 
       stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " relstdev:" << stdCost/meanCost << " Min:" << minCost << " Max:" << maxCost << endl;
     }  
@@ -1304,19 +1302,14 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
           LevelP curLevel = grid->getLevel(0);
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
-          vector<int> costs(num_procs);
           for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
             lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
             IntVector range = ((*iter)->getHighIndex() - (*iter)->getLowIndex());
-            costs[d_processorAssignment[i]] += range.x() * range.y() * range.z();
             iter++;
             if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
               curLevel = curLevel->getFinerLevel();
               iter = curLevel->patchesBegin();
             }
-          }
-          for (int i = 0; i < num_procs; i++) {
-            lb << myrank << " proc " << i << "  has cost: " << costs[i] << endl;
           }
         }
       }
