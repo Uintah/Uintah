@@ -1,9 +1,9 @@
 
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrcFactory.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Arches/ExtraScalarSrcFactory.h>
+#include <CCA/Components/Arches/ExtraScalarSrc.h>
+#include <CCA/Components/Arches/ZeroExtraScalarSrc.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace std;
