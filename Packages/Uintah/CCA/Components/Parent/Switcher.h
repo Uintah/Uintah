@@ -119,9 +119,8 @@ namespace Uintah {
     vector<string> d_carryOverVars;
     vector<VarLabel*> d_carryOverVarLabels;
     vector<MaterialSubset*> d_carryOverVarMatls;
-
-    typedef map<VarLabel*, MaterialSubset*> matlVarsType;
-    vector<matlVarsType> d_matlVarsDB; // size to numlevels
+    vector<bool> d_carryOverFinestLevelOnly; // either all levels or finest only
+    vector<vector<bool> > d_doCarryOverVarPerLevel; // size to numlevels
 
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);
