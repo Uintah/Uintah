@@ -54,13 +54,13 @@
             <input_file> Explode_IS.ups</input_file>
         </subcomponent>
 
-        <carry_over var="press_CC" />
+        <carry_over var="press_CC" matls="0" />
         <carry_over var="temp_CC" />
         <carry_over var="rho_CC" />
         <carry_over var="sp_vol_CC" />
         <carry_over var="vel_CC" />
         <carry_over var="NC_CCweight" />
-        <carry_over var="heatRate_CC" />
+        <carry_over var="heatRate_CC" matls="0,1" level="finest" />
         <carry_over var="vol_frac_CC"/>     <!-- needed by steady burn-->
 
   </SimulationComponent>
