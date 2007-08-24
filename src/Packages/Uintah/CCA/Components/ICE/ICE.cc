@@ -1846,7 +1846,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double delX = dx.x();
     double delY = dx.y();
     double delZ = dx.z();
-    double delt_CFL = 1e3, delt_cond = 1e3, delt;
+    double delt_CFL;
+    double delt_diff;
+    double delt;
     double inv_sum_invDelx_sqr = 1.0/( 1.0/(delX * delX) 
                                      + 1.0/(delY * delY) 
                                      + 1.0/(delZ * delZ) );
@@ -1858,7 +1860,9 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
     IntVector badCell(0,0,0);
     double dCFL = d_CFL;
-    delt_CFL = 1000.0; 
+    delt_CFL  = 1000.0; 
+    delt_diff = 1000;
+    delt      = 1000;
 
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
       Material* matl = d_sharedState->getICEMaterial(m);
@@ -1893,7 +1897,30 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           }
         }
 //      cout << " Aggressive delT Based on currant number "<< delt_CFL << endl;
-      } 
+        //__________________________________
+        // stability constraint due to diffusion
+        //  I C E  O N L Y
+        double thermalCond_test = ice_matl->getThermalConductivity();
+        double viscosity_test   = ice_matl->getViscosity();
+        if (thermalCond_test !=0 || viscosity_test !=0) {
+
+          for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            double cp = cv[c] * gamma[c];
+            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
+            
+            double inv_diffusionCoeff = min(inv_thermalDiffusivity, 1.0/viscosity[c]);
+            double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_diffusionCoeff;
+            delt_diff = std::min(A, delt_diff);
+            if (delt_diff < 1e-20 && badCell == IntVector(0,0,0)) {
+              badCell = c;
+            }
+          }
+        }  //
+//      cout << "delT based on diffusion  "<< delt_diff<<endl;
+        delt = std::min(delt_CFL, delt_diff);
+      } // aggressive Timestep 
+
 
       if (d_delT_scheme == "conservative") {  //      C O N S E R V A T I V E
         //__________________________________
@@ -1964,35 +1991,15 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           } // dir loop
           
           double delt_tmp = d_CFL *vol/(sumSwept_Vol + d_SMALL_NUM);
-          delt_CFL = std::min(delt_CFL, delt_tmp);
-          if (delt_CFL < 1e-20 && badCell == IntVector(0,0,0)) {
+          delt = std::min(delt, delt_tmp);
+
+          if (delt < 1e-20 && badCell == IntVector(0,0,0)) {
             badCell = c;
           }
         }  // iter loop
-//      cout << " Conservative delT based on swept volumes "<< delt_CFL<<endl;
+//      cout << " Conservative delT based on swept volumes "<< delt<<endl;
       }  
-
-      //__________________________________
-      // stability constraint due to heat conduction
-      //  I C E  O N L Y
-      double thermalCond_test = ice_matl->getThermalConductivity();
-      if (thermalCond_test !=0) {
-
-        for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-          IntVector c = *iter;
-          double cp = cv[c] * gamma[c];
-          double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
-          double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_thermalDiffusivity;
-          delt_cond = std::min(A, delt_cond);
-          if (delt_cond < 1e-20 && badCell == IntVector(0,0,0)) {
-            badCell = c;
-          }
-        }
-      }  //
     }  // matl loop   
-//    cout << "delT based on conduction "<< delt_cond<<endl;
-
-    delt = std::min(delt_CFL, delt_cond);
 
     const Level* level = getLevel(patches);
     //__________________________________
@@ -3894,9 +3901,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch,gac, 2);
           new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch,gac, 2);
           new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch,gac, 2);
-
+          double Time= dataArchiver->getCurrentTime();
+         
           computeTauX(patch, vol_fracX_FC, vel_CC,viscosity,dx, tau_X_FC);
-          computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);
+          computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,rho_CC, dx, tau_Y_FC, Time, delT);
           computeTauZ(patch, vol_fracZ_FC, vel_CC,viscosity,dx, tau_Z_FC);
         }
         if(viscosity_test == 0.0 && d_turbulence){
