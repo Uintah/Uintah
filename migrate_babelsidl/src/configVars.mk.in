@@ -319,7 +319,7 @@ ifeq ($(BUILD_SCIJUMP),yes)
   #endif
   # see also Framework/StandAlone/scijump_version.h
   FWK_VERSION := 0.1.1
-  SUBDIRS := $(SUBDIRS) Framework CCA
+  SUBDIRS := $(SUBDIRS) Framework CCA Components
 
   ## tests (experimental)
   HAVE_CPPUNIT := @HAVE_CPPUNIT@

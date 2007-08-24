@@ -1,0 +1,11 @@
+package HelloServer version 1.0 {
+
+  class Component implements-all gov.cca.Component {
+    /**
+     * Method <code>setServices</code> is called by the framework.
+     */
+    void setServices(in gov.cca.Services services) throws gov.cca.CCAException;
+  }
+
+}
+
