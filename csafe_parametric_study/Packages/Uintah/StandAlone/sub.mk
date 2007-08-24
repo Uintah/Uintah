@@ -360,7 +360,15 @@ noFortran:
 fake_arches:
 	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
-sus: prereqs Packages/Uintah/StandAlone/sus
+sus: prereqs Packages/Uintah/StandAlone/sus \
+	scpSus
+       
+scpSus:
+	@( if test $(IS_REDSTORM); then \
+	    echo "---------------------------";\
+	    echo "scp sus redstorm:~/.";\
+	    /usr/local/bin/scp Packages/Uintah/StandAlone/sus redstorm:. ;\
+	   fi )
 
 tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract
 	;
