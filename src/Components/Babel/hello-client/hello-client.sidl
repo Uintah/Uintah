@@ -1,0 +1,16 @@
+package HelloClient version 1.0 {
+  /**
+   * The component uses the hello port and provides a go port.
+   */
+  class Component implements gov.cca.ports.GoPort, gov.cca.Component {
+    /**
+     * The following method starts the component.
+     */
+    int go();
+
+    /**
+     * Method <code>setServices</code> is called by the framework.
+     */
+    void setServices(in gov.cca.Services services) throws gov.cca.CCAException;
+  }
+}
