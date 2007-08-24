@@ -3904,7 +3904,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           double Time= dataArchiver->getCurrentTime();
          
           computeTauX(patch, vol_fracX_FC, vel_CC,viscosity,dx, tau_X_FC);
-          computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,rho_CC, dx, tau_Y_FC, Time, delT);
+          computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);
           computeTauZ(patch, vol_fracZ_FC, vel_CC,viscosity,dx, tau_Z_FC);
         }
         if(viscosity_test == 0.0 && d_turbulence){
