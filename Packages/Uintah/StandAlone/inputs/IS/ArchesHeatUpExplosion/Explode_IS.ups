@@ -29,13 +29,12 @@
     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
     <doSpaceCurve>         true            </doSpaceCurve>
     <timestepInterval>     100             </timestepInterval>
-    <outputNthProc>         8              </outputNthProc>
   </LoadBalancer>
 
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <include href="inputs/IS/ArchesHeatUpExplosion/Grid.xml"/>
+  <include href="Grid.xml"/>
 
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
@@ -57,7 +56,7 @@
     <save label="p.particleID"          levels="-1"/>
     <save label="p.mass"                levels="-1"/>
     <save label="p.temperature"         levels="-1"/>
-    <save label="p.volume"              levels="-1"/>
+    <save label="p.velocity"            levels="-1"/>
 <!--
     <save label="p.stress"              levels="-1"/>
     <save label="p.plasticStrain"       levels="-1"/>
@@ -114,7 +113,7 @@
   <!--____________________________________________________________________-->
   <!--     A M R                                                          -->
   <!--____________________________________________________________________-->
-  <doAMR>false</doAMR>
+  <doAMR>true</doAMR>
   <AMR>
     <ICE>
       <do_Refluxing>        false </do_Refluxing>
