@@ -27,6 +27,7 @@
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/OS/Dir.h>
 #include <sstream>
 
@@ -133,9 +134,24 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     map<string,string> attributes;
     var->getAttributes(attributes);
     string name = attributes["var"];
+    string matls = attributes["matls"];
+    string level = attributes["level"];
     if (name != "") {
       d_carryOverVars.push_back(name);
     }
+    MaterialSubset* carry_over_matls = 0;
+    if (matls != "") {
+      carry_over_matls = scinew MaterialSubset;
+      ConsecutiveRangeSet crs = matls;
+      ConsecutiveRangeSet::iterator iter = crs.begin();
+      for (; iter != crs.end(); iter++)
+        carry_over_matls->add(*iter);
+    }
+    d_carryOverVarMatls.push_back(carry_over_matls);
+    if (level == "finest")
+      d_carryOverFinestLevelOnly.push_back(true);
+    else
+      d_carryOverFinestLevelOnly.push_back(false);
   }
   d_numComponents = num_components;
   d_computedVars.clear();
@@ -203,6 +219,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
       VarLabel* label = VarLabel::find(names[j]);
       if (label) {
         labels.push_back(label);
+        sched->overrideVariableBehavior(names[j], false, false, true);
       }
       else
         throw ProblemSetupException("Cannot find VarLabel", __FILE__, __LINE__);
@@ -312,59 +329,43 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
 
   if (d_doSwitching[level->getIndex()] || d_restarting) {
     // clear and reset carry-over db
-    if (level->getIndex() >= (int) d_matlVarsDB.size()) {
-      d_matlVarsDB.resize(level->getIndex()+1);
+    if (level->getIndex() >= (int) d_doCarryOverVarPerLevel.size()) {
+      d_doCarryOverVarPerLevel.resize(level->getIndex()+1);
     }
-    for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); iter != d_matlVarsDB[level->getIndex()].end(); iter++) {
-      if (iter->second && iter->second->removeReference()) {
-        delete iter->second;
-      }
-    }
-    d_matlVarsDB[level->getIndex()].clear();
+    d_doCarryOverVarPerLevel[level->getIndex()].clear();
+
     const PatchSet* procset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
     // rebuild carry-over db
 
-    // intersect the variables specified with the variables not marked to be computed
+    // mark each var as carry over if it's not in the computed list
     for (unsigned i = 0; i < d_carryOverVarLabels.size(); i++) {
-      if (!d_carryOverVarLabels[i])
-        continue;
-
-      if (d_computedVars.find(d_carryOverVarLabels[i]) != d_computedVars.end()) {
-        //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
-        continue;
-      }
-      MaterialSubset* matls = scinew MaterialSubset;
-      matls->addReference();
-      if (procset->getSubset(d_myworld->myrank())->size() > 0) {
-        for (int j = 0; j < d_sharedState->getMaxMatlIndex(); j++) {
-          // if it exists in the old DW for this level (iff it is 
-          // on the level, it will be in the procSet's patches)
-          if (sched->get_dw(0)->exists(d_carryOverVarLabels[i], j, procset->getSubset(d_myworld->myrank())->get(0))) {
-            matls->add(j);
-          }
-        }
-      }
-      d_matlVarsDB[level->getIndex()][d_carryOverVarLabels[i]] = matls;
+      bool do_on_this_level = !d_carryOverFinestLevelOnly[i] || level->getIndex() == level->getGrid()->numLevels()-1;
+      bool no_computes = d_computedVars.find(d_carryOverVarLabels[i]) == d_computedVars.end();
+      d_doCarryOverVarPerLevel[level->getIndex()].push_back(do_on_this_level && no_computes);
     }
   }
 
   Task* t = scinew Task("Switcher::carryOverVars",
                         this, & Switcher::carryOverVars);
   // schedule the vars for carrying over (if this happens before a switch, don't do it)
-  if (level->getIndex() < (int) d_matlVarsDB.size()) {
-    for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); 
-         iter != d_matlVarsDB[level->getIndex()].end();
-         iter++) {
-      t->requires(Task::OldDW, iter->first, iter->second, Task::OutOfDomain, Ghost::None, 0);
-      t->computes(iter->first, iter->second, Task::OutOfDomain);
+  if (level->getIndex() < (int) d_doCarryOverVarPerLevel.size()) {
+    for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
+      if (d_doCarryOverVarPerLevel[level->getIndex()][i]) {
+        VarLabel* var = d_carryOverVarLabels[i];
+        MaterialSubset* matls = d_carryOverVarMatls[i];
+        t->requires(Task::OldDW, var, matls, Ghost::None, 0);
+        t->computes(var, matls);
       
-      if(UintahParallelComponent::d_myworld->myrank() == 0){
-        cout << d_myworld->myrank() << "  Carry over " << *iter->first 
-             << "     \t matl " << *iter->second << "       \t level " << level->getIndex() << endl;
+        //        if(UintahParallelComponent::d_myworld->myrank() == 8 || UintahParallelComponent::d_myworld->myrank() == 9){
+          if (matls)
+            cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << level->getIndex() << endl;
+          else
+            cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tAll matls on level " << level->getIndex() << "\n";
+          //        }
       }
     }  
   }
-  sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
+  sched->addTask(t,level->eachPatch(),d_sharedState->originalAllMaterials());
 }
 
 void Switcher::switchTest(const ProcessorGroup*,
@@ -396,7 +397,6 @@ void Switcher::initNewVars(const ProcessorGroup*,
 
   for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
     VarLabel* l = d_initVarLabels[d_componentIndex+1][i];
-
     const MaterialSubset* matls;
     if (d_initMatls[d_componentIndex+1][i] == "ice_matls")
       matls = d_sharedState->allICEMaterials()->getSubset(0);
@@ -541,11 +541,13 @@ void Switcher::carryOverVars(const ProcessorGroup*,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-  if (level->getIndex() < (int) d_matlVarsDB.size()) {
-    for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); 
-         iter != d_matlVarsDB[level->getIndex()].end();
-         iter++) {
-      new_dw->transferFrom(old_dw, iter->first, patches, iter->second);
+  if (level->getIndex() < (int) d_doCarryOverVarPerLevel.size()) {
+    for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
+      if (d_doCarryOverVarPerLevel[level->getIndex()][i]) {
+        VarLabel* var = d_carryOverVarLabels[i];
+        const MaterialSubset* xfer_matls = d_carryOverVarMatls[i] == 0 ? matls : d_carryOverVarMatls[i];
+        new_dw->transferFrom(old_dw, var, patches, xfer_matls);
+      }
     }  
   }
 }

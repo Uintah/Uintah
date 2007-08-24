@@ -138,6 +138,7 @@ public:
   const MaterialSet* allArchesMaterials() const;
   const MaterialSet* allICEMaterials() const;
   const MaterialSet* allMaterials() const;
+  const MaterialSet* originalAllMaterials() const;
   const MaterialSubset* refineFlagMaterials() const;
 
   double getRefPress() const {
@@ -242,6 +243,9 @@ private:
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_arches_matls;
   MaterialSet    * all_matls;
+
+  // keep track of the original materials if you switch
+  MaterialSet    * orig_all_matls;
   MaterialSubset * refine_flag_matls;
   MaterialSubset * allInOneMatl;
 
