@@ -26,6 +26,5 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-BABEL_LANGUAGE := UC++
-include $(SCIRUN_SCRIPTS)/babel_component_generic.mk
+BABEL_LANGUAGE := C++
+#include $(SCIRUN_SCRIPTS)/babel_component_generic.mk

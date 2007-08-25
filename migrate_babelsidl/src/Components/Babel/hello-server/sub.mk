@@ -28,57 +28,18 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Components/Babel/hello-server
+include $(SCIRUN_SCRIPTS)/babel_prologue.mk
 
-SRCDIR_ABS := 
-IMPLDIR_ABS := 
-IMPLDIR := 
-GLUEDIR_ABS := 
-GLUEDIR := 
-SRCDIR_ABS :=  $(SRCTOP_ABS)/$(SRCDIR)
-IMPLDIR_ABS := $(SRCDIR_ABS)
-IMPLDIR := $(SRCDIR)
-GLUEDIR_ABS := $(IMPLDIR_ABS)/glue
-GLUEDIR := $(IMPLDIR)/glue
+#
+# For languages other than C++, include a babel language makefile fragement here.
+# Ex. $(SCIRUN_SCRIPTS)/babel_component_f77.mk for a Fortran 77 component
+#
+
+SRCDIR := Components/Babel/hello-server
+COMPONENT := hello-server
 
 SERVER_SIDL := \
-               $(SRCDIR_ABS)/hello-server.sidl \
-               $(SRCDIR_ABS)/msgport.sidl
+         hello-server.sidl \
+         msgport.sidl
 
-OUTPUTDIR_ABS := 
-OUTIMPLDIR_ABS := 
-OUTGLUEDIR_ABS := 
-OUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
-OUTIMPLDIR_ABS := $(OUTPUTDIR_ABS)
-OUTGLUEDIR_ABS := $(OUTIMPLDIR_ABS)/glue
-
-$(IMPLDIR_ABS)/serverbabel.make: $(GLUEDIR_ABS)/serverbabel.make
-
-#--generate-subdirs
-$(GLUEDIR_ABS)/serverbabel.make: $(SERVER_SIDL) Core/Babel/timestamp
-	if ! test -d $(OUTGLUEDIR_ABS); then mkdir -p $(OUTGLUEDIR_ABS); fi
-	$(BABEL) --server=C++ \
-           --output-directory=$(IMPLDIR_ABS) \
-           --make-prefix=server \
-           --hide-glue \
-           --repository-path=$(BABEL_REPOSITORY) \
-           --vpath=$(IMPLDIR_ABS) $(SERVER_SIDL)
-
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
-serverIORSRCS :=
-serverSTUBSRCS :=
-serverSKELSRCS :=
-include $(GLUEDIR_ABS)/serverbabel.make
-SRCS += $(patsubst %,$(GLUEDIR)/%,$(serverIORSRCS) $(serverSTUBSRCS) $(serverSKELSRCS))
-
-serverIMPLSRCS :=
-include $(IMPLDIR_ABS)/serverbabel.make
-SRCS += $(patsubst %,$(IMPLDIR)/%,$(serverIMPLSRCS))
-
-PSELIBS := Framework
-LIBS := $(BABEL_LIBRARY)
-
-INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/babel_epilogue.mk
