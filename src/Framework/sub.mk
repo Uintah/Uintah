@@ -29,13 +29,13 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Framework
-
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+SRCDIR := Framework
+
 SUBDIRS := \
-           $(SRCDIR)/sidl \
-           $(SRCDIR)/Core
+           $(SRCDIR)/sidl
+#$(SRCDIR)/Core
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
