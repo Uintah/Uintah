@@ -30,5 +30,4 @@
 # Makefile fragment for this subdirectory
 
 Core/Babel/timestamp: $(CCASIDL)
-	$(BABEL) --text=xml --output-directory=$(BABEL_REPOSITORY) $< && touch $@
-#$(BABEL) -x -o$(BABEL_REPOSITORY) $< && touch $@
+	$(BABEL) --text=xml --output-directory=$(BABEL_REPOSITORY) --timestamp $< && touch $@
