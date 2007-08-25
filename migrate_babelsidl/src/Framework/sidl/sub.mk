@@ -29,57 +29,56 @@
 
 # Makefile fragment for this subdirectory
 
+#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
 SRCDIR := Framework/sidl
 
-SRCDIR_ABS :=  $(SRCTOP_ABS)/$(SRCDIR)
-IMPLDIR_ABS := $(SRCDIR_ABS)/Impl
-IMPLDIR := $(SRCDIR)/Impl
-GLUEDIR_ABS := $(IMPLDIR_ABS)/glue
-GLUEDIR := $(IMPLDIR)/glue
+FWKSRCDIR_ABS :=  $(SRCTOP_ABS)/$(SRCDIR)
+FWKIMPLDIR_ABS := $(SRCTOP_ABS)/$(SRCDIR)/Impl
+FWKIMPLDIR := $(SRCDIR)/Impl
+FWKGLUEDIR_ABS := $(SRCTOP_ABS)/$(SRCDIR)/Impl/glue
+FWKGLUEDIR := $(SRCDIR)/Impl/glue
 
-SIDL := \
-        $(SRCDIR_ABS)/sci-cca.sidl \
-        $(SRCDIR_ABS)/scijump.sidl
+FWKSIDL := \
+        $(FWKSRCDIR_ABS)/sci-cca.sidl \
+        $(FWKSRCDIR_ABS)/scijump.sidl
 
+FWKOUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
+FWKOUTIMPLDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)/Impl
+FWKOUTGLUEDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)/Impl/glue
 
-OUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
-OUTIMPLDIR_ABS := $(OUTPUTDIR_ABS)/Impl
-OUTGLUEDIR_ABS := $(OUTIMPLDIR_ABS)/glue
-
-$(IMPLDIR_ABS)/serverbabel.make: $(GLUEDIR_ABS)/serverbabel.make
+$(FWKIMPLDIR_ABS)/serverbabel.make: $(FWKGLUEDIR_ABS)/serverbabel.make
 
 #--generate-subdirs
-$(GLUEDIR_ABS)/serverbabel.make: $(SIDL) Core/Babel/timestamp
-	if ! test -d $(OUTGLUEDIR_ABS); then mkdir -p $(OUTGLUEDIR_ABS); fi
+$(FWKGLUEDIR_ABS)/serverbabel.make: $(FWKSIDL) Core/Babel/timestamp
+	if ! test -d $(FWKOUTGLUEDIR_ABS); then mkdir -p $(FWKOUTGLUEDIR_ABS); fi
 	$(BABEL) --server=C++ \
-           --output-directory=$(IMPLDIR_ABS) \
+           --output-directory=$(FWKIMPLDIR_ABS) \
            --make-prefix=server \
            --hide-glue \
            --repository-path=$(BABEL_REPOSITORY) \
-           --vpath=$(IMPLDIR_ABS) $(filter %.sidl, $+)
+           --vpath=$(FWKIMPLDIR_ABS) $(filter %.sidl, $+)
 
-$(GLUEDIR_ABS)/clientbabel.make: $(CCASIDL)
-	$(BABEL) --client=C++ --hide-glue --make-prefix=client --output-directory=$(IMPLDIR_ABS) $<
-
-#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+$(FWKGLUEDIR_ABS)/clientbabel.make: $(CCASIDL)
+	$(BABEL) --client=C++ --hide-glue --make-prefix=client --output-directory=$(FWKIMPLDIR_ABS) $<
 
 serverIORSRCS :=
 serverSTUBSRCS :=
 serverSKELSRCS :=
-include $(GLUEDIR_ABS)/serverbabel.make
-SRCS += $(patsubst %,$(GLUEDIR)/%,$(serverIORSRCS) $(serverSTUBSRCS) $(serverSKELSRCS))
+include $(FWKGLUEDIR_ABS)/serverbabel.make
+SRCS += $(patsubst %,$(FWKGLUEDIR)/%,$(serverIORSRCS) $(serverSTUBSRCS) $(serverSKELSRCS))
 
 clientSTUBSRCS :=
-include $(GLUEDIR_ABS)/clientbabel.make
-SRCS += $(patsubst %,$(GLUEDIR)/%,$(clientSTUBSRCS))
+include $(FWKGLUEDIR_ABS)/clientbabel.make
+SRCS += $(patsubst %,$(FWKGLUEDIR)/%,$(clientSTUBSRCS))
 
 serverIMPLSRCS :=
-include $(IMPLDIR_ABS)/serverbabel.make
-SRCS += $(patsubst %,$(IMPLDIR)/%,$(serverIMPLSRCS))
+include $(FWKIMPLDIR_ABS)/serverbabel.make
+SRCS += $(patsubst %,$(FWKIMPLDIR)/%,$(serverIMPLSRCS))
 
 #PSELIBS := Core/Thread Core/Exceptions Framework/Core
 #LIBS := $(BABEL_LIBRARY)
 
-INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
+INCLUDES += -I$(FWKIMPLDIR_ABS) -I$(FWKGLUEDIR_ABS) $(BABEL_INCLUDE)
 
 #include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
