@@ -30,61 +30,32 @@
 
 SRCDIR := Components/Babel/hello-client
 
-SRCDIR_ABS := $(SRCTOP_ABS)/$(SRCDIR)
-IMPLDIR_ABS := $(SRCDIR_ABS)
-IMPLDIR := $(SRCDIR)
-GLUEDIR_ABS := $(IMPLDIR_ABS)/glue
-GLUEDIR := $(IMPLDIR)/glue
+include $(SCIRUN_SCRIPTS)/babel_prologue.mk
+
+#
+# For languages other than C++, include a babel language makefile fragement here.
+# Ex. $(SCIRUN_SCRIPTS)/babel_component_f77.mk for a Fortran 77 server
+#
+
+COMPONENT := hello-client
 
 SERVER_SIDL := \
                $(SRCDIR_ABS)/hello-client.sidl
 
+include $(SCIRUN_SCRIPTS)/babel_server.mk
+
+#
+# For languages other than C++, include a babel language makefile fragement here.
+# Ex. $(SCIRUN_SCRIPTS)/babel_component_f77.mk for a Fortran 77 client
+#
+
 CLIENT_SIDL := \
                Components/Babel/hello-server/msgport.sidl
 
+include $(SCIRUN_SCRIPTS)/babel_client.mk
 
-OUTPUTDIR_ABS := $(OBJTOP_ABS)/$(SRCDIR)
-OUTIMPLDIR_ABS := $(OUTPUTDIR_ABS)
-OUTGLUEDIR_ABS := $(OUTIMPLDIR_ABS)/glue
+PSELIBS :=
+LIBS :=
+INCLUDES := -I$(SRCTOP_ABS)/Framework/sidl/Impl/glue
 
-$(IMPLDIR_ABS)/hello-clientserverbabel.make: $(GLUEDIR_ABS)/hello-clientserverbabel.make
-
-#--generate-subdirs
-$(GLUEDIR_ABS)/hello-clientserverbabel.make: $(SERVER_SIDL) Core/Babel/timestamp
-	if ! test -d $(OUTGLUEDIR_ABS); then mkdir -p $(OUTGLUEDIR_ABS); fi
-	$(BABEL) --server=C++ \
-           --output-directory=$(IMPLDIR_ABS) \
-           --make-prefix=hello-clientserver \
-           --hide-glue \
-           --repository-path=$(BABEL_REPOSITORY) \
-           --vpath=$(IMPLDIR_ABS) $(filter %.sidl, $+)
-
-$(GLUEDIR_ABS)/hello-clientbabel.make: $(CLIENT_SIDL) $(CCASIDL)
-	$(BABEL) --client=C++ \
-           --hide-glue \
-           --make-prefix=hello-client \
-           --repository-path=$(BABEL_REPOSITORY) \
-           --output-directory=$(IMPLDIR_ABS) $<
-
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
-hello-clientserverIORSRCS :=
-hello-clientserverSTUBSRCS :=
-hello-clientserverSKELSRCS :=
-include $(GLUEDIR_ABS)/hello-clientserverbabel.make
-SRCS += $(patsubst %,$(GLUEDIR)/%,$(hello-clientserverIORSRCS) $(hello-clientserverSTUBSRCS) $(hello-clientserverSKELSRCS))
-
-hello-clientserverIMPLSRCS :=
-include $(IMPLDIR_ABS)/hello-clientserverbabel.make
-SRCS += $(patsubst %,$(IMPLDIR)/%,$(hello-clientserverIMPLSRCS))
-
-hello-clientSTUBSRCS :=
-include $(GLUEDIR_ABS)/hello-clientbabel.make
-SRCS += $(patsubst %,$(GLUEDIR)/%,$(hello-clientSTUBSRCS))
-
-PSELIBS := Framework
-LIBS := $(BABEL_LIBRARY)
-
-INCLUDES += -I$(SRCTOP_ABS)/Framework/sidl/Impl/glue -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/babel_epilogue.mk

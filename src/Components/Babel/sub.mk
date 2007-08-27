@@ -32,9 +32,8 @@
 SRCDIR := Components/Babel
 
 SUBDIRS := \
-           $(SRCDIR)/hello-server
-
-#$(SRCDIR)/hello-client
+           $(SRCDIR)/hello-server \
+           $(SRCDIR)/hello-client
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
