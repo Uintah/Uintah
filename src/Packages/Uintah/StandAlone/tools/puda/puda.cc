@@ -175,7 +175,7 @@ main(int argc, char** argv)
 
   CommandLineFlags clf;
 
-  // set defaults for cout
+  // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(8);
   /*
@@ -331,6 +331,12 @@ main(int argc, char** argv)
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
+      
+      // Please don't change this.  We need 16
+      // significant digits for detailed comparative studies. -Todd
+      cout.setf(ios::scientific,ios::floatfield);
+      cout.precision(16);
+      
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
     }
