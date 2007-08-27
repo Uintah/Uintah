@@ -1093,7 +1093,6 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       }
       else {
         ASSERTRANGE(patchid-basePatch, 0, (int)d_patchInfo[levelNum].size());
-        cout << "  doing patch " << patchid << " from file " << urlIt << endl;
 
         PatchData& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
         if (!patchinfo.parsed) {
@@ -1127,7 +1126,7 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
   if (!patch) return;
 
   const Patch* real_patch = patch->getRealPatch();
-  cout << "  Parsing patch " << real_patch->getID() << endl;
+  
   // make sure the data for this patch has been processed.
   // Return straightaway if we have parsed this patch
   int levelIndex = real_patch->getLevel()->getIndex(); 
