@@ -28,18 +28,24 @@
 
 # Makefile fragment for this subdirectory
 
+SRCDIR := Components/Babel/hello-server
+
 include $(SCIRUN_SCRIPTS)/babel_prologue.mk
 
 #
 # For languages other than C++, include a babel language makefile fragement here.
 # Ex. $(SCIRUN_SCRIPTS)/babel_component_f77.mk for a Fortran 77 component
 #
-
-SRCDIR := Components/Babel/hello-server
 COMPONENT := hello-server
 
 SERVER_SIDL := \
-         hello-server.sidl \
-         msgport.sidl
+         $(SRCDIR_ABS)/hello-server.sidl \
+         $(SRCDIR_ABS)/msgport.sidl
+
+include $(SCIRUN_SCRIPTS)/babel_server.mk
+
+PSELIBS :=
+LIBS :=
+INCLUDES :=
 
 include $(SCIRUN_SCRIPTS)/babel_epilogue.mk

@@ -1,11 +1,11 @@
 #
 #  For more information, please see: http://software.sci.utah.edu
-# 
+#
 #  The MIT License
-# 
+#
 #  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
-# 
+#
 #  License for the specific language governing rights and limitations under
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included
 #  in all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -26,9 +26,20 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-PSELIBS += Framework Core/Exceptions
-LIBS += $(BABEL_LIBRARY)
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
+SERVER_SIDL := INVALID_SERVER_SIDL variable, please specify one in sub.mk!
+CLIENT_SIDL := INVALID_CLIENT_SIDL variable, please specify one in sub.mk!
+COMPONENT := INVALID_COMPONENT variable, please specify one in sub.mk!
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+SRCS :=
+
+SRCDIR_ABS :=  ${SRCTOP_ABS}/${SRCDIR}
+IMPLDIR_ABS := ${SRCTOP_ABS}/${SRCDIR}
+IMPLDIR := ${SRCDIR}
+GLUEDIR_ABS := ${SRCTOP_ABS}/${SRCDIR}/glue
+GLUEDIR := ${SRCDIR}/glue
+
+OUTPUTDIR_ABS := ${OBJTOP_ABS}/${SRCDIR}
+OUTIMPLDIR_ABS := ${OBJTOP_ABS}/${SRCDIR}
+OUTGLUEDIR_ABS := ${OBJTOP_ABS}/${SRCDIR}/glue
