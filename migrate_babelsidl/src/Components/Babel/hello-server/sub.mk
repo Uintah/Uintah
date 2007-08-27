@@ -44,6 +44,11 @@ SERVER_SIDL := \
 
 include $(SCIRUN_SCRIPTS)/babel_server.mk
 
+#
+# Put component-specific SCIRun libraries (PSELIBS), third-party libraries
+# (LIBS) and includes here.
+#
+
 PSELIBS :=
 LIBS :=
 INCLUDES :=

@@ -29,6 +29,6 @@
 PSELIBS += Framework Core/Exceptions
 LIBS += $(BABEL_LIBRARY)
 
-INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE)
+INCLUDES += -I$(IMPLDIR_ABS) -I$(GLUEDIR_ABS) $(BABEL_INCLUDE) -I$(SRCTOP_ABS)/Framework/sidl/Impl/glue
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -54,8 +54,13 @@ CLIENT_SIDL := \
 
 include $(SCIRUN_SCRIPTS)/babel_client.mk
 
+#
+# Put component-specific SCIRun libraries (PSELIBS), third-party libraries
+# (LIBS) and includes here.
+#
+
 PSELIBS :=
 LIBS :=
-INCLUDES := -I$(SRCTOP_ABS)/Framework/sidl/Impl/glue
+INCLUDES :=
 
 include $(SCIRUN_SCRIPTS)/babel_epilogue.mk
