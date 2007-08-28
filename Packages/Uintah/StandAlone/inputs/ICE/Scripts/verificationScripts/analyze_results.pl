@@ -43,7 +43,7 @@ foreach $e (@{$data->{start}->[0]->{Test}})
       `echo $tmp_err >.$output_file.tmp`;
     } 
     ############################
-    # Run the comparison utilities
+    # Run the comparison tests
     ############################
 
     print "$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]\n";
@@ -65,8 +65,15 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     if ($prev_line != "")  # Checking if the prev_line is empty (if the file is created for the first time this can happen)
     {
       @values = split(/ /,$prev_line);
-      $order_of_accuracy = log($values[1]/$tmp)/log($x[$k]/$values[0]);
-      print "echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat\n";
+      
+      
+      $R = $x[$k]/$values[0];
+      $errorRatio = $values[1]/$tmp;
+      
+      $order_of_accuracy = log($errorRatio)/log($R);
+      
+      print "Analyze Results:\t Error ratio: $errorRatio, R: $R,\t L2Norm: $tmp \tOrder-of-accuracy: $order_of_accuracy \n\n";
+      
       `echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat`;
     } 
     else
