@@ -30,11 +30,18 @@
     printf('  -slope <num>        - slope of the linear profile\n')
     printf('  -L                  - Compute L2 error for last timestep only (useful for testing framework)\n')
     printf('  -o <fname>          - Dump the output (L2Error) to a file\n')
+    printf('  -plot <true, false> - produce a plot \n') 
+    printf('  -pDir <1,2,3>       - principal direction \n')
     end 
 %      argv = {"-uda";"advectCubic__r100v10.uda.001";"-type"; "cubic";"-vel";"10";"-min";"-0.1";"-max";"0.1";"-cells";"-istart 0 0 0 -iend 99 0 0";"-coeff";"10";"-L";"-o";"test_out.txt"}
 
  %     nargin = length(argv)
-
+      
+      %__________________________________
+      % default user inputs
+      makePlot = false;
+      pDir = 1;
+      startEnd = "";
 
       if (nargin == 0)
          Usage
@@ -71,6 +78,10 @@
 	  last = true
 	elseif strcmp(sprintf("%s",argv(i,:)),"-o")
 	  output_file = sprintf("%s",argv(++i,:))
+	elseif strcmp(sprintf("%s",argv(i,:)),"-plot")
+	  makePlot = sprintf("%s",argv(++i,:))
+       elseif strcmp( sprintf("%s",argv(i,:)),"-pDir")
+         pDir = str2num("%s",argv(++i,:)) 
 	endif
 
       endfor
@@ -98,82 +109,116 @@
 	
 	time = sprintf('%e sec',physicalTime(n));
 	
+       if( strcmp(startEnd,"") )
+         if(pDir == 1)
+           S_E = sprintf('-istart 0 0 0 -iend 1000000000 0 0')
+         end
+         if(pDir == 2)
+           S_E = sprintf('-istart 0 0 0 -iend 0 1000000000 0')
+         end
+         if(pDir == 3)
+           S_E = sprintf('-istart 0 0 0 -iend 0 0 1000000000')
+         end
+         oneZero = 1;
+       else
+         S_E = startEnd;
+         oneZero = 0;
+       end
 	
-	S_E = startEnd;
 	unix('/bin/rm -f scalar-f.dat');
 
-
-	
 	%____________________________
 	%   scalar-F
-        c6 = sprintf('lineextract -v scalar-f -l 0 -cellCoords -timestep %i %s -o scalar-f.dat -m 0  -uda %s',ts,S_E,uda);
+        c6 = sprintf('lineextract -v scalar-f -l 0 -cellCoords -timestep %i %s -o scalar-f.dat -m 0  -uda %s',ts,S_E,uda)
+
         [s6, r6]=unix(c6);
         scalarArray = load('scalar-f.dat');
-        xx     = scalarArray(:,1);
-        scalar = scalarArray(:,4);
-
-
+        
+        % ignore the ghost cells
+        len    = length(scalarArray(:,1))
+        xx     = scalarArray(1:len-oneZero,1);
+        scalar = scalarArray(1:len-oneZero,4);
         %_________________________________
         % Exact Solution on each level
         dist   = exactSolMax - exactSolMin;
-        offset = physicalTime(n) * velocity;
-        xmin   = exactSolMin + offset;
-        xmax   = exactSolMax + offset;
-        uda_dx = xx(2) - xx(1);
-        x = xmin:uda_dx:xmax;
+        offset = physicalTime(n) * velocity
+        xmin   = exactSolMin + offset
+        xmax   = exactSolMax + offset
+        d = xx * 0;
         exactSol=xx * 0;
-        
-        length(xx);
 
         for( i = 1:length(xx))
           if(xx(i) >= xmin && xx(i) <= xmax)
-            d = (xx(i) - xmin )/dist;
+            d(i) = (xx(i) - xmin )/dist;
+            
+            if (d(i) < 0 )
+              display('Warning something has gone wrong')
+              i
+              xx(i)
+              xmin
+              dist
+              xx(i) - xmin
+            end
             
             if( strcmp(exactSolution,'linear'))
-              exactSol(i) = exactSol(i) + slope .* d;
+              exactSol(i) = exactSol(i) + slope .* d(i);
             end
 
             if(strcmp(exactSolution,'sine'))
-              exactSol(i) = exactSol(i) + sin( 2.0 * freq * pi .* d);
+              exactSol(i) = exactSol(i) + sin( 2.0 * freq * pi .* d(i));
             end
             
             if(strcmp(exactSolution,'cubic'))
               if(d <= 0.5)
-                exactSol(i) =  ( (-4/3)*d + 1 )* d^2;
+                exactSol(i) =  ( (-4/3)*d(i) + 1 )* d(i)^2;
               else
-                exactSol(i) = ( (-(4/3)*(1.0 - d)) + 1) *(1.0 - d)^2;
+                exactSol(i) = ( (-(4/3)*(1.0 - d(i))) + 1) *(1.0 - d(i))^2;
               end
             end
 
             if(strcmp(exactSolution,'quad'))
               if(d <= 0.5)
-                exactSol(i) = (d-1) *d;
+                exactSol(i) = (d(i)-1) *d(i);
               else
-                exactSol(i) = ( (1.0 - d)-1)* (1.0 - d);
+                exactSol(i) = ( (1.0 - d(i))-1)* (1.0 - d(i));
               end
             end
 
             if(strcmp(exactSolution,'exp'))
-              exactSol(i) = coeff * exp(-1.0/( d * ( 1.0 - d ) + 1e-100) );
+              exactSol(i) = coeff * exp(-1.0/( d(i) * ( 1.0 - d(i) ) + 1e-100) );
             end
           end
         end
         
+        for( i = 1:length(xx))
+          difference(i) = scalar(i) - exactSol(i);
+        end
         
-        exactSol;
-        difference = scalar - exactSol;
-        L2norm     = sqrt( sum(difference.^2)/length(difference) );
-        LInfinity  = max(difference);
-        
-
+        lenExactXol= length(exactSol)
+        N          = length(difference)
+        L2norm     = sqrt( sum(difference.^2)/N)
+        LInfinity  = max(difference)
 
         fprintf(fid,'%g\n',L2norm);
-%        plot(difference)
-%	figure(1)
-%	plot(exactSol,'k-')
-%	hold on
-%	plot(scalar,'b*')
-%	pause;
+        
+        if (strcmp(makePlot,"true"))
+          
+          plot(xx,difference,'bo;difference;')
+          xlabel('Position')
+          grid on
+          
+          figure(1)
+          plot(d,exactSol,'k-;exactSol;',d,scalar,'b*;Simulation Results;')
+          xlabel('non-dimensional Position')
+          grid on
+          
+          figure(2)
+          plot(xx,exactSol,'k-;exactSol;', xx,scalar,'b*;Simulation Results;')
+          xlabel('Position')
+          grid on
+          
+          pause
+       endif
         
       end  % timestep loop
 
