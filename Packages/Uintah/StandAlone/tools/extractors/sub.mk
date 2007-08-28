@@ -39,16 +39,8 @@ else
         Packages/Uintah/Core/Disclosure  \
         Packages/Uintah/Core/Exceptions  \
         Packages/Uintah/CCA/Ports        \
-        Packages/Uintah/CCA/Components/Parent \
-        Packages/Uintah/CCA/Components/Models \
-        Packages/Uintah/CCA/Components/DataArchiver  \
-        Packages/Uintah/CCA/Components/LoadBalancers \
-        Packages/Uintah/CCA/Components/Regridder     \
         Packages/Uintah/Core/ProblemSpec             \
-        Packages/Uintah/CCA/Components/SimulationController \
-        Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Packages/Uintah/CCA/Components/Solvers              \
         $(AIX_LIBRARY)
 endif
 
