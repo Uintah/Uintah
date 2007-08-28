@@ -185,6 +185,7 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
         // query all the data up front
         vector<Variable*> vars(patches.size());
         for (int p = 0; p < patches.size(); p++) {
+          if (patches[p]->isVirtual()) continue;
           switch (variable_type->getType()) {
           case Uintah::TypeDescription::CCVariable:
             vars[p] = scinew CCVariable<T>;
@@ -224,10 +225,7 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
           // alternatively, we could just iterate through the patches)
           int p = 0;
           for (; p < patches.size(); p++) {
-            IntVector low = patches[p]->getLowIndex();
-            IntVector high = patches[p]->getHighIndex();
-            if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
-                c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+            if (!patches[p]->isVirtual() && patches[p]->containsCell(c))
               break;
           }
           if (p == patches.size()) {
