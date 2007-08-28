@@ -26,30 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-## C++ is the default
-ifndef BABEL_LANGUAGE
-  include $(SCIRUN_SCRIPTS)/babel_component_cxx.mk
-endif
 
-$(SRCTOP_ABS)/$(SRCDIR)/$(COMPONENT)babel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(SERVER_SIDL)) Core/Babel/timestamp $(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)babel.make
-	$(BABEL) --server=$(BABEL_LANGUAGE) \
-           --output-directory=$(dir $@) \
-           --make-prefix=$(subst babel.make,,$(notdir $@)) \
-           --hide-glue \
-           --repository-path=$(BABEL_REPOSITORY) \
-           --vpath=$(dir $@) $(filter %.sidl, $+)
-
-$(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)babel.make: $(OBJTOP_ABS)/$(SRCDIR)/glue
-
-$(OBJTOP_ABS)/$(SRCDIR)/glue:
-	if ! test -d $@; then mkdir -p $@; fi
-
-$(COMPONENT)IMPLSRCS :=
-include $(SRCTOP_ABS)/$(SRCDIR)/$(COMPONENT)babel.make
-SRCS += $(patsubst %,$(SRCDIR)/%,$($(COMPONENT)IMPLSRCS))
-
-$(COMPONENT)IORSRCS :=
-$(COMPONENT)STUBSRCS :=
-$(COMPONENT)SKELSRCS :=
-include $(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)babel.make
-SRCS += $(patsubst %,$(SRCDIR)/glue/%,$($(COMPONENT)IORSRCS) $($(COMPONENT)STUBSRCS) $($(COMPONENT)SKELSRCS))
+BABEL_LANGUAGE := Java
+#include $(SCIRUN_SCRIPTS)/babel_component_generic.mk

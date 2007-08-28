@@ -31,13 +31,13 @@ ifndef BABEL_LANGUAGE
   include $(SCIRUN_SCRIPTS)/babel_component_cxx.mk
 endif
 
-$(GLUEDIR_ABS)/$(COMPONENT)clientbabel.make: $(CLIENT_SIDL) $(CCASIDL)
+$(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)clientbabel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(CLIENT_SIDL)) $(CCASIDL)
 	$(BABEL) --client=$(BABEL_LANGUAGE) \
            --hide-glue \
-           --make-prefix=$(COMPONENT)client \
+           --make-prefix=$(subst clientbabel.make,,$(notdir $@))client \
            --repository-path=$(BABEL_REPOSITORY) \
-           --output-directory=$(IMPLDIR_ABS) $<
+           --output-directory=$(subst glue/,,$(dir $@)) $<
 
 $(COMPONENT)clientSTUBSRCS :=
-include $(GLUEDIR_ABS)/$(COMPONENT)clientbabel.make
-SRCS += $(patsubst %,$(GLUEDIR)/%,$($(COMPONENT)clientSTUBSRCS))
+include $(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)clientbabel.make
+SRCS += $(patsubst %,$(SRCDIR)/glue/%,$($(COMPONENT)clientSTUBSRCS))
