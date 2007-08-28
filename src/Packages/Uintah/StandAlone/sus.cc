@@ -148,6 +148,7 @@ usage( const std::string & message,
       cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
       cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
+      cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
@@ -195,6 +196,7 @@ main( int argc, char** argv )
   bool   combine_patches=false;
   bool   reduce_uda=false;
   bool   do_svnDiff = false;
+  bool   do_svnStat = false;
   int    restartTimestep = -1;
   int    udaSuffix = -1;
   string udaDir; // for restart or combine_patches
@@ -290,6 +292,8 @@ main( int argc, char** argv )
       layout = IntVector(ii,jj,kk);
     } else if(s == "-svnDiff") {
       do_svnDiff = true;
+    } else if(s == "-svnStat") {
+      do_svnStat = true;
     }else if (s[0] == '-') {
       // component name - must be the only remaining option with a hyphen
       if (component.length() > 0) {
@@ -374,16 +378,24 @@ main( int argc, char** argv )
     cerr << "Date:    " << time_string; // has its own newline
     cerr << "Machine: " << name << endl;
 
-    // Run svn diff on Packages/Uintah 
-    if (do_svnDiff){
+    // Run svn commands on Packages/Uintah 
+    if (do_svnDiff || do_svnStat){
 #if defined(REDSTORM)
       cerr << "WARNING:  SVN DIFF is disabled.\n";
 #else
       cerr << "____SVN_____________________________________________________________\n";
       create_sci_environment( NULL, 0 );
       string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
-      string cmd = "svn diff " + sdir;
-      system(cmd.c_str());
+      if(do_svnDiff){
+        string cmd = "svn diff " + sdir;
+        system(cmd.c_str());
+      }
+      if(do_svnStat){
+        string cmd = "svn info " + sdir;
+        system(cmd.c_str());
+        cmd = "svn stat -u " + sdir;
+        system(cmd.c_str());
+      }
       cerr << "____SVN_______________________________________________________________\n";
 #endif
     }
