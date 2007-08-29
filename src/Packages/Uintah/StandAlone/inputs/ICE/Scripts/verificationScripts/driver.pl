@@ -18,7 +18,7 @@ my $clean = 0;
 
 chomp($ARGV[1]);
 
-if ($ARGV[1] eq "clean")
+if ($ARGV[1] eq "clean") 
 {
   $clean = 1;
 }
@@ -90,15 +90,21 @@ for($i = 0; $i<=$#testFiles; $i++)
     if ($clean == 1)
     {
       print "cleaning the temporary files \n";
-      system("rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
+      system("/bin/rm -f *.tmp *.stat *.results *.DONE .*.tmp *.dat");
       print "Press Return to exit \n";
     }
     else 
     {
-      print "Launching run_tests.pl $testFileName\n";
-#     `run_tests.pl $testFileName`;
-      @args = ("run_tests.pl","$testFileName");
+      # clean out any section of the configuration file that is commented out
+      system("/bin/rm -f $testFileName.clean");
+      $cmd = "sed  /'<!--'/,/'-->'/d < $testFileName > $testFileName.clean \n";
+      system("$cmd");
+      
+      print "Launching run_tests.pl $testFileName.clean\n";
+      @args = ("run_tests.pl","$testFileName.clean");
       system("@args")==0  or die("ERROR(driver.pl): @args failed");
+      
+      system("/bin/rm -f $testFileName.clean");
     }
   }
   
