@@ -90,7 +90,7 @@
 
       %________________________________
       %  extract the physical time
-      c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
+      c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
       [status0, result0]=unix(c0);
       physicalTime  = load('tmp');
       nDumps = length(physicalTime);
@@ -101,6 +101,11 @@
       end
 
 
+      %_______________________________
+      % is the domain periodic
+      c1 = sprintf('puda -gridstats %s | grep -m 1 Periodic | tr -d "[:alpha:][:punct:]" >& tmp',uda);
+      [status1, result1]=unix(c1);
+      periodic = load('tmp');
       %_________________________________
       % Loop over all the timesteps
       for(n = startVal:nDumps )
@@ -119,7 +124,7 @@
          if(pDir == 3)
            S_E = sprintf('-istart 0 0 0 -iend 0 0 1000000000')
          end
-         oneZero = 1;
+         oneZero = 1 - periodic(pDir);
        else
          S_E = startEnd;
          oneZero = 0;
