@@ -15,6 +15,7 @@ $data = $xml->XMLin("$ARGV[0]", KeepRoot => 1);
 
 my $i = 0;
 my $j = 0;
+my $tmp_err = -1;
 
 foreach $e (@{$data->{start}->[0]->{Test}})
 {
@@ -122,7 +123,7 @@ foreach $e (@{$data->{start}->[0]->{Test}})
   `gnuplot $output_file.gp`;
 
   # The DONE file has the basic info about the results - The two plots will be included and the test title will be added to the file
-  if ($tmp_err<=0)
+  if ($tmp_err==0)
   {
     `echo \"Title: $test_title\" >> $launcher.DONE`;
     `echo \"Results\/err_$output_file.png\" >> $launcher.DONE`;
@@ -134,4 +135,9 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     `mv $output_file.gp $output_file.dat err_$output_file.png order_$output_file.png Results/.`;
     `rm -f .$output_file.tmp`;
   }  
+}
+if($tmp_err==-1)
+{
+  `mkdir -p Results1`;
+  `mv $output_file.gp $output_file.dat err_$output_file.png order_$output_file.png Results1/.`;
 }
