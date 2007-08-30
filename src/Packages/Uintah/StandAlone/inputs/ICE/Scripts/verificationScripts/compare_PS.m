@@ -146,7 +146,7 @@
         %_________________________________
         % Exact Solution on each level
         dist   = exactSolMax - exactSolMin;
-        offset = physicalTime(n) * velocity
+        offset = (physicalTime(n)) * velocity
         xmin   = exactSolMin + offset
         xmax   = exactSolMax + offset
         d = xx * 0;
@@ -204,7 +204,7 @@
         L2norm     = sqrt( sum(difference.^2)/N)
         LInfinity  = max(difference)
 
-        fprintf(fid,'%g\n',L2norm);
+        fprintf(fid,'%16.16g\n',L2norm);
         
         if (strcmp(makePlot,"true"))
           

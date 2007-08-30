@@ -43,6 +43,9 @@ foreach $e (@{$data->{Test}})
    $i++;     
 }
 
+`rm -f one_big_comp.xml`;
+`echo \\<start\\> \| tee -a one_big_comp.xml`;
+
 $num_of_tests=$i;
 
 #__________________________________
@@ -112,6 +115,7 @@ for ($i=0;$i<$num_of_tests;$i++)
   $udaFilename  = $base_filename[$i]."_$test_title[$i]".".uda";
   $test_pbs     = $base_filename[$i]."_$test_title[$i]".".pbs";
   $compFilename = $base_filename[$i]."_$test_title[$i]"."_comp".".xml";
+
   
   $int = $int_command[$i];
 
@@ -191,17 +195,17 @@ for ($i=0;$i<$num_of_tests;$i++)
   {
     `rm -fr $compFilename`;
     
-    `echo \\<start\\> >> $compFilename`;
-    `echo \\<Test\\>  >> $compFilename`;
-    `echo \\<Meta\\>  >> $compFilename`;
-    `echo \\<Title\\>$study[$i]\\</Title\\>  >> $compFilename`;
-    `echo \\<Interactive\\>$compCommand[$i]\\</Interactive\\>  >> $compFilename`;
-    `echo \\<Launcher\\>$ARGV[0]\\</Launcher\\> >> $compFilename`;
-    `echo \\</Meta\\>  >> $compFilename`;
-    `echo \\<x\\>$x[$i]\\</x\\>  >> $compFilename`;
-    `echo \\<udaFile\\>$udaFilename\\</udaFile\\>  >> $compFilename`;
-    `echo \\</Test\\>  >> $compFilename`;
-    `echo \\</start\\> >> $compFilename`;
+    `echo \\<start\\> \|  tee -a $compFilename`;
+    `echo \\<Test\\>  \|  tee -a $compFilename one_big_comp.xml`;
+    `echo \\<Meta\\>  \|  tee -a $compFilename one_big_comp.xml`;
+    `echo \\<Title\\>$study[$i]\\</Title\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\<Interactive\\>$compCommand[$i]\\</Interactive\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\<Launcher\\>$ARGV[0]\\</Launcher\\> \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\</Meta\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\<x\\>$x[$i]\\</x\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\<udaFile\\>$udaFilename\\</udaFile\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\</Test\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\</start\\> \| tee -a $compFilename`;
   }
 
   print statsFile "Test Name : "."$test_title[$i]"."\n";
@@ -240,20 +244,4 @@ for ($i=0;$i<$num_of_tests;$i++)
 close(statsFile);
 
 
-
-
-# Extract only unique compare conf file names 
-
-#my %hash = map { $_ => 1 } @compare_conf;
-#my @array2 = sort keys %hash;
-
-# Loop through the array of unique compare conf files and add the footer to them
-
-#foreach $compFile (@array2)
-#{
-#    `echo \\</Test\\>  >> $compFile`;
-#    `echo \\</start\\> >> $compFile`;
-#}
-
-#print Dumper(keys %hash);
-
+`echo \\</start\\> \| tee -a one_big_comp.xml`;
