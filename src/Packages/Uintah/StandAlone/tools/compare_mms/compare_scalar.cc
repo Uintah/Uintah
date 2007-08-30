@@ -165,6 +165,8 @@ main( int argc, char *argv[] )
   
   try {
     DataArchive* da1 = scinew DataArchive(udaFileName);
+    cout.setf(ios::scientific,ios::floatfield);
+    cout.precision(16);
 
     // Sample of how to read data from the DA xml file.
     ProblemSpecReader psr( udaFileName + "/input.xml" );
@@ -262,7 +264,7 @@ main( int argc, char *argv[] )
     // Iterate over TIME
     //
     for( unsigned int timeIndex = loopLowerBound; timeIndex < index.size(); timeIndex++ ) {
-      printf( "Time Step: %d Phy Time: %lf\n", index[timeIndex], times[timeIndex] );
+      printf( "Time Step: %d Phy Time: %16.16lf\n", index[timeIndex], times[timeIndex] );
 
       GridP grid = da1->queryGrid( timeIndex );
 
@@ -378,14 +380,14 @@ main( int argc, char *argv[] )
                 
                 i=i+1;
               }
-	      printf( "Max diff: %le, Min diff %le\n", maxDiff, minDiff );
+	      printf( "Max diff: %16.16le, Min diff %16.16le\n", maxDiff, minDiff );
             } // end materials iteration
           } // end patch iteration
           
 	  cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
 
 	  if (!initialize_analytical_values)
-	    fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
+	    fprintf(outFile, "%16.16le\n",sqrt(total_error/i)) ;
 	  
         } // end variable iteration
       } // end levels iteration
