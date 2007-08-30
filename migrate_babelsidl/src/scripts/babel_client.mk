@@ -31,13 +31,27 @@ ifndef BABEL_LANGUAGE
   include $(SCIRUN_SCRIPTS)/babel_component_cxx.mk
 endif
 
-$(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)clientbabel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(CLIENT_SIDL)) $(CCASIDL)
+TMPSRCDIR := $(SRCDIR)
+COMPONENT := $(notdir $(TMPSRCDIR))
+
+.PHONY: $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)clientbabel.make.package
+
+$(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)clientbabel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(CLIENT_SIDL)) $(CCASIDL)
 	$(BABEL) --client=$(BABEL_LANGUAGE) \
            --hide-glue \
            --make-prefix=$(subst clientbabel.make,,$(notdir $@))client \
            --repository-path=$(BABEL_REPOSITORY) \
            --output-directory=$(subst glue/,,$(dir $@)) $<
 
+$(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)clientbabel.make.package: $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)clientbabel.make
+#@echo "$(subst babel.make.package,,$(notdir $@)) CLIENT package in $(dir $@)!!!"
+
+$(COMPONENT)clientSTUB_SRC_DIRS :=
+include $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)clientbabel.make.package
+INCLUDES := $(INCLUDES) -I$($(COMPONENT)clientSTUB_SRC_DIRS)
+
 $(COMPONENT)clientSTUBSRCS :=
-include $(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)clientbabel.make
-SRCS += $(patsubst %,$(SRCDIR)/glue/%,$($(COMPONENT)clientSTUBSRCS))
+include $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)clientbabel.make
+SRCS := $(SRCS) $(patsubst %,$(TMPSRCDIR)/glue/%,$($(COMPONENT)clientSTUBSRCS))
+
+

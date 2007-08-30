@@ -29,9 +29,16 @@
 
 # Makefile fragment for this subdirectory
 
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+
 SRCDIR  := Components
 
 SUBDIRS := \
-           $(SRCDIR)/Babel
+            $(SRCDIR)/Babel
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
+PSELIBS :=
+LIBS := $(BABEL_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk

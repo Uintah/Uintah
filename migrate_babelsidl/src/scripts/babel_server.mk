@@ -31,25 +31,38 @@ ifndef BABEL_LANGUAGE
   include $(SCIRUN_SCRIPTS)/babel_component_cxx.mk
 endif
 
-$(SRCTOP_ABS)/$(SRCDIR)/$(COMPONENT)babel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(SERVER_SIDL)) Core/Babel/timestamp $(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)babel.make
+TMPSRCDIR := $(SRCDIR)
+COMPONENT := $(notdir $(TMPSRCDIR))
+
+.PHONY: $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make.package $(OBJTOP_ABS)/$(TMPSRCDIR)/glue
+
+$(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make.package: $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make
+#@echo "$(subst babel.make.package,,$(notdir $@)) SERVER package in $(dir $@)!!!"
+
+$(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make: $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)babel.make
+
+$(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)babel.make: $(OBJTOP_ABS)/$(TMPSRCDIR)/glue $(patsubst %, $(SRCTOP_ABS)/%,$(SERVER_SIDL)) Core/Babel/timestamp
 	$(BABEL) --server=$(BABEL_LANGUAGE) \
-           --output-directory=$(dir $@) \
+           --output-directory=$(subst glue/,,$(dir $@)) \
            --make-prefix=$(subst babel.make,,$(notdir $@)) \
            --hide-glue \
            --repository-path=$(BABEL_REPOSITORY) \
-           --vpath=$(dir $@) $(filter %.sidl, $+)
+           --vpath=$(subst glue/,,$(dir $@)) $(filter %.sidl, $+)
 
-$(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)babel.make: $(OBJTOP_ABS)/$(SRCDIR)/glue
-
-$(OBJTOP_ABS)/$(SRCDIR)/glue:
+$(OBJTOP_ABS)/$(TMPSRCDIR)/glue:
 	if ! test -d $@; then mkdir -p $@; fi
 
+$(COMPONENT)IMPL_SRC_DIRS :=
+$(COMPONENT)IOR_SRC_DIRS :=
+include $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make.package
+INCLUDES := $(INCLUDES) -I$($(COMPONENT)IMPL_SRC_DIRS) -I$($(COMPONENT)IOR_SRC_DIRS)
+
 $(COMPONENT)IMPLSRCS :=
-include $(SRCTOP_ABS)/$(SRCDIR)/$(COMPONENT)babel.make
-SRCS += $(patsubst %,$(SRCDIR)/%,$($(COMPONENT)IMPLSRCS))
+include $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make
+SRCS := $(SRCS) $(patsubst %,$(TMPSRCDIR)/%,$($(COMPONENT)IMPLSRCS))
 
 $(COMPONENT)IORSRCS :=
 $(COMPONENT)STUBSRCS :=
 $(COMPONENT)SKELSRCS :=
-include $(SRCTOP_ABS)/$(SRCDIR)/glue/$(COMPONENT)babel.make
-SRCS += $(patsubst %,$(SRCDIR)/glue/%,$($(COMPONENT)IORSRCS) $($(COMPONENT)STUBSRCS) $($(COMPONENT)SKELSRCS))
+include $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)babel.make
+SRCS := $(SRCS) $(patsubst %,$(TMPSRCDIR)/glue/%,$($(COMPONENT)IORSRCS) $($(COMPONENT)STUBSRCS) $($(COMPONENT)SKELSRCS))

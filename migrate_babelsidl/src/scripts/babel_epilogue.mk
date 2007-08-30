@@ -26,8 +26,8 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-PSELIBS += Framework Core/Exceptions
-LIBS += $(BABEL_LIBRARY)
-INCLUDES += -I$(SRCTOP_ABS)/$(SRCDIR) -I$(SRCTOP_ABS)/$(SRCDIR)/glue $(BABEL_INCLUDE) -I$(SRCTOP_ABS)/Framework/sidl/Impl/glue
+PSELIBS := $(PSELIBS) Framework Core/Exceptions
+LIBS := $(LIBS) $(BABEL_LIBRARY)
+INCLUDES := $(INCLUDES) $(BABEL_INCLUDE) -I$(SRCTOP_ABS)/Framework/sidl/Impl/glue
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
