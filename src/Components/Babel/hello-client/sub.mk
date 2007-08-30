@@ -28,16 +28,14 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/babel_prologue.mk
-
 SRCDIR := Components/Babel/hello-client
+
+include $(SCIRUN_SCRIPTS)/babel_prologue.mk
 
 #
 # For languages other than C++, include a babel language makefile fragement here.
 # Ex. $(SCIRUN_SCRIPTS)/babel_component_f77.mk for a Fortran 77 server
 #
-
-COMPONENT := hello-client
 
 SERVER_SIDL := $(SRCDIR)/hello-client.sidl
 
@@ -54,11 +52,10 @@ include $(SCIRUN_SCRIPTS)/babel_client.mk
 
 #
 # Put component-specific SCIRun libraries (PSELIBS), third-party libraries
-# (LIBS) and includes (INCLUDES) here.
+# (LIBS) and append to includes (INCLUDES) here.
 #
 
 PSELIBS := Components/Babel/hello-server
 LIBS :=
-INCLUDES :=
 
 include $(SCIRUN_SCRIPTS)/babel_epilogue.mk
