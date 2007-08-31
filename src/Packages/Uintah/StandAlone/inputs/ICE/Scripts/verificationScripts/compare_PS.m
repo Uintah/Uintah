@@ -20,14 +20,14 @@
     printf('compare_PS.m <options>\n')
     printf('options:\n')
     printf('  -uda  <udaFileName> - name of the uda file \n')
-    printf('  -type  <type>       - type of passive scalar [linear|quad|cubic|exp|sine]\n')
+    printf('  -type  <type>       - type of passive scalar [linear|quad|cubic|exp|sine|triangular]\n')
     printf('  -vel   <num>        - Velocity of advection in m/s\n')
     printf('  -min   <num>        - minimum X value of the exact solution\n')
     printf('  -max   <num>        - maximum X value of the exact solution\n')
     printf('  -cells <\'string\'>   - This cells option is an input to the lineextract eg: \'-istart 0 0 0 -iend 99 0 0\'\n')
     printf('  -freq  <num>        - Frequency used by the sine profile\n')
     printf('  -coeff <num>        - coeff used by the quad or exp profile\n')
-    printf('  -slope <num>        - slope of the linear profile\n')
+    printf('  -slope <num>        - slope of the linear/triangular profile\n')
     printf('  -L                  - Compute L2 error for last timestep only (useful for testing framework)\n')
     printf('  -o <fname>          - Dump the output (L2Error) to a file\n')
     printf('  -plot <true, false> - produce a plot \n') 
@@ -168,6 +168,15 @@
             if( strcmp(exactSolution,'linear'))
               exactSol(i) = exactSol(i) + slope .* d(i);
             end
+
+            if( strcmp(exactSolution,'triangular'))
+	      if (d(i) <= 0.5)
+                exactSol(i) = exactSol(i) + slope .* d(i);
+              else
+                exactSol(i) = exactSol(i) + slope .* (1.0-d(i));
+              end
+            end
+
 
             if(strcmp(exactSolution,'sine'))
               exactSol(i) = exactSol(i) + sin( 2.0 * freq * pi .* d(i));
