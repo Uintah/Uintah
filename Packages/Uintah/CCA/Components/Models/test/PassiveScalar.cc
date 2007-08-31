@@ -81,11 +81,12 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   ps->getWithDefault("quadraticInitialize",    quadraticInitialize,   false);
   ps->getWithDefault("exponentialInitialize_1D",  exponentialInitialize_1D, false);
   ps->getWithDefault("exponentialInitialize_2D",  exponentialInitialize_2D, false);
+  ps->getWithDefault("triangularInitialize",      triangularInitialize,      false);
   
   if(sinusoidalInitialize){
     ps->getWithDefault("freq",freq,IntVector(0,0,0));
   }
-  if(linearInitialize){
+  if(linearInitialize || triangularInitialize){
     ps->getWithDefault("slope",slope,Vector(0,0,0));
   }
   if(quadraticInitialize || exponentialInitialize_1D || exponentialInitialize_2D){
@@ -94,7 +95,7 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   }
   
   uniformInitialize = true;
-  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize || exponentialInitialize_1D|| exponentialInitialize_2D){
+  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize || exponentialInitialize_1D|| exponentialInitialize_2D || triangularInitialize){
     uniformInitialize = false;
   }
 }
@@ -308,6 +309,9 @@ void PassiveScalar::initialize(const ProcessorGroup*,
           }
         } // Over cells
       }
+
+      // come back and check this. (a little fishy, why do we init the region only if its unifor or linear initialize?)
+      // Todd any ideas why you wrote this for loop ???
       
       if(region->linearInitialize){
       
@@ -332,7 +336,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
         
         Vector slope = region->slope;
-        if(region->linearInitialize && slope.x()==0 && slope.y()==0 && slope.z()==0){
+        if((region->linearInitialize || region->triangularInitialize) && slope.x()==0 && slope.y()==0 && slope.z()==0){
           throw ProblemSetupException("PassiveScalar: you need to specify a <slope> whenever you use linearInitialize", __FILE__, __LINE__);
         }
         
@@ -371,6 +375,12 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             if(region->linearInitialize){
               f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
             }
+	    if(region->triangularInitialize){
+	      if(d.x() <= 0.5)
+		f[c] = slope.x()*d.x();
+	      else
+		f[c] = slope.x()*(1.0-d.x());
+	    }
             if(region->quadraticInitialize){
               if(d.x() <= 0.5)
                 f[c] = pow(d.x(),2) - d.x();

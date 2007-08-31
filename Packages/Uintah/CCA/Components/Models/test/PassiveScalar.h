@@ -144,6 +144,7 @@ WARNING
       Vector coeff;
       bool exponentialInitialize_1D;
       bool exponentialInitialize_2D;
+      bool triangularInitialize;
       
       bool  uniformInitialize;
     };
