@@ -41,25 +41,24 @@
 #ifndef Framework_Core_ComponentModel_h
 #define Framework_Core_ComponentModel_h
 
-/*
-#include <Framework/resourceReference.h>
-#include <Framework/CCA/CCAComponentDescription.h>
-#include <Core/CCA/spec/cca_sidl.h>
+
+//#include <Framework/resourceReference.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/soloader.h>
-
 #include <libxml/xmlreader.h>
-*/
+
 
 #include <string>
 #include <vector>
 #include <map>
+#include <Framework/sidl/Impl/glue/scijump.hxx>
+
+using namespace scijump;
 
 namespace SCIRun {
 
-//class ComponentDescription;
-//class ComponentInstance;
-//class SCIRunFramework;
+class ComponentDescription;
+class ComponentInstance;
 
 typedef std::vector<std::string> StringVector;
 typedef std::map<std::string, std::string> StringMap;
@@ -78,7 +77,7 @@ class ComponentModel
 {
 public:
   ComponentModel() {}
-  //ComponentModel(const std::string& prefixName, SCIRunFramework* framework);
+  ComponentModel(const std::string& prefixName, SCIJumpFramework* framework);
   virtual ~ComponentModel();
 
   /** Returns true if component type \em type has been registered with this
@@ -90,26 +89,23 @@ public:
       \em name is assigned as the unique name of the newly created instance.
       Returns a smart pointer to the newly created instance, or a null pointer
       on failure. */
-  /*
   virtual ComponentInstance*
   createInstance(const std::string &name,
 		 const std::string &type,
-		 const sci::cca::TypeMap::pointer &tm) = 0;
-  */
+		 const gov::cca::TypeMap &tm) = 0;
+  
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  /*
   virtual bool destroyInstance(ComponentInstance* ci) = 0;
-  */
+  
   /** Returns the name (as a string) of this component model. */
   virtual const std::string getName() const = 0;
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
-  /*
   virtual void
   listAllComponentTypes(std::vector<ComponentDescription*>&, bool) = 0;
-  */
+  
   /** ? */
   virtual void destroyComponentList() = 0;
 
@@ -120,7 +116,7 @@ public:
 
   virtual void setComponentDescription(const std::string& type, const std::string& library) = 0;
 
-  //const std::string getPrefixName() const { return prefixName; }
+  const std::string getPrefixName() const { return prefixName; }
 
   /**
    * Get/set the directory path to component DLLs.
@@ -132,10 +128,12 @@ public:
   //const StringVector& getSidlDLLPaths() const { return sidlDLLPaths; }
 
 protected:
-  //std::string prefixName;
+  std::string prefixName;
+
   // not the most efficient data structure for lookups...
   //StringVector sidlDLLPaths;
-  //SCIRunFramework* framework;
+
+  SCIJumpFramework* framework;
 
   //void setSidlDLLPath(const std::string& s);
   //void* getMakerAddress(const std::string& type, const ComponentDescription& desc);
@@ -156,8 +154,8 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 // convenience functions
 
-//bool parseComponentModelXML(const std::string& filexml, ComponentModel* model);
-//bool getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths);
+bool parseComponentModelXML(const std::string& filexml, ComponentModel* model);
+bool getXMLPaths(SCIJumpFramework* fwk, StringVector& xmlPaths);
 
 
 } // end namespace SCIRun

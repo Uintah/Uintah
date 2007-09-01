@@ -115,6 +115,18 @@ parse_args( int argc, char *argv[])
   return load;
 }
 
+void 
+component_instantiate_test(scijump::BuilderService& builder)
+{
+  gov::cca::ComponentID hello = builder.createInstance("HelloClient",
+                                                       "HelloClient.Component",
+                                                       NULL);
+  if(hello._is_nil()) {
+    std::cerr << "Cannot create component: babel:Hello\n";
+    return;
+  }
+}
+
 int 
 orbStart(sidlx::rmi::SimpleOrb& echo, int port_number) 
 {
@@ -165,10 +177,9 @@ main(int argc, char *argv[], char **environment) {
 
     ::gov::cca::Port bsp = mainServices.getPort("mainBuilder");
     ASSERT(bsp._not_nil());
-//     if (bsp._is_nil()) {
-//       std::cerr << "mainServices could not find cca.BuilderService port" << std::endl;
-//       abort();
-//     }
+    scijump::BuilderService builder = babel_cast<scijump::BuilderService>(bsp);
+    ASSERT(builder._not_nil()); 
+    //component_instantiate_test(builder);
     mainServices.releasePort("mainBuilder");
 
     /*

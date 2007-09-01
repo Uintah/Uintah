@@ -76,6 +76,48 @@ package scijump version 0.2.1 {
       bool isFrameworkService(in string name);
       core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort);
       void releaseFrameworkService(in sci.cca.core.ServiceInfo info);
+
+      /** Eliminates the component instance ``cid'' from the scope of the
+      	  framework.  The ``timeout'' parameter specifies the maximum allowable
+      	  wait time for this operation.  A timeout of 0 leaves the wait time up to
+      	  the framework.  If the destroy operation is not completed in the maximum
+      	  allowed number of seconds, or the referenced component does not exist,
+      	  then a CCAException is thrown.
+
+      	  Like createComponentInstance, this method is only intended to be called
+      	  by the BuilderService class.  It searches the list of registered
+      	  components (compIDs) for the matching component ID, unregisters it, finds
+      	  the correct ComponentModel for the type, then calls
+      	  ComponentModel::destroyInstance to properly destroy the component. */
+       void destroyComponentInstance(in gov.cca.ComponentID cid, in float timeout);
+
+       /** Creates an instance of the component defined by the string ``type'',
+       	   which must uniquely define the type of the component.  The component
+      	   instance is given the name ``name''.   If the instance name is not
+      	   specified (i.e. the method is passed an empty string), then the component
+     	    will be assigned a unique name automatically.
+
+      	    This method is ``semi-private'' and intended to be called only by the
+      	    BuilderService class.  It works by searching the list of ComponentModels
+      	    (the ivar \em models) for a matching registered type, and then calling
+      	    the createInstance method on the appropriate ComponentModel object. */
+      gov.cca.ComponentID createComponentInstance(in string name,
+                                                  in string className,
+                          			  in gov.cca.TypeMap tm);
+       
+      /** Adds a description of a component instance (class ComponentInstance) to
+          the list of active components.  The component instance description
+          includes the component type name, the instance name, and the pointer to
+     	  the allocated component.  When a \em name conflicts with an existing
+      	  registered component instance name, this method will automatically append
+      	  an integer to create a new, unique instance name.*/
+      //gov.cca.ComponentID registerComponent(in ComponentInstance ci, in string name);
+
+      /** Removes a component instance description from the list of active
+      	  framework components.  Returns the pointer to the component description
+      	  that was successfully unregistered. */
+      //ComponentInstance unregisterComponent(in string instanceName);
+
   }
 
   class ComponentClassDescription implements-all sci.cca.ComponentClassDescription {}

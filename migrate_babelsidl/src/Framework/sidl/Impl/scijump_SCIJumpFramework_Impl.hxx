@@ -24,6 +24,9 @@
 #ifndef included_gov_cca_CCAException_hxx
 #include "gov_cca_CCAException.hxx"
 #endif
+#ifndef included_gov_cca_ComponentID_hxx
+#include "gov_cca_ComponentID.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -60,11 +63,15 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._hincludes)
-
 #include "scijump_core_FrameworkServiceFactory.hxx"
+#include <Framework/Core/ComponentModel.h>
+#include <Framework/Core/Babel/BabelComponentModel.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 
 #include <map>
 
+using namespace SCIRun;
 // Insert-Code-Here {scijump.SCIJumpFramework._hincludes} (includes or arbitrary code)
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._hincludes)
 
@@ -98,6 +105,19 @@ namespace scijump {
     bool addFrameworkService(::scijump::core::FrameworkServiceFactory& factory, FrameworkServiceMap& frameworkServices);
     bool removeFrameworkService(const std::string& serviceName, FrameworkServiceMap& frameworkServices);
 
+    std::vector<gov::cca::ComponentID> compIDs;
+    SCIRun::Mutex* lock_compIDs;
+  
+    /** The set of registered components available in the framework, 
+	indexed by their instance names. */
+    typedef std::map<std::string, ComponentInstance*> ComponentInstanceMap;
+    ComponentInstanceMap activeInstances;
+    SCIRun::Mutex* lock_activeInstances;
+
+    gov::cca::ComponentID registerComponent(ComponentInstance *ci, const std::string& name);
+    ComponentInstance* unregisterComponent(const std::string& instanceName);
+
+    BabelComponentModel* bcm;
     // Insert-Code-Here {scijump.SCIJumpFramework._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._implementation)
 
@@ -157,6 +177,49 @@ namespace scijump {
     void
     releaseFrameworkService_impl (
       /* in */::sci::cca::core::ServiceInfo& info
+    )
+    ;
+
+
+    /**
+     *  Eliminates the component instance ``cid'' from the scope of the
+     * framework.  The ``timeout'' parameter specifies the maximum allowable
+     * wait time for this operation.  A timeout of 0 leaves the wait time up to
+     * the framework.  If the destroy operation is not completed in the maximum
+     * allowed number of seconds, or the referenced component does not exist,
+     * then a CCAException is thrown.
+     * 
+     * Like createComponentInstance, this method is only intended to be called
+     * by the BuilderService class.  It searches the list of registered
+     * components (compIDs) for the matching component ID, unregisters it, finds
+     * the correct ComponentModel for the type, then calls
+     * ComponentModel::destroyInstance to properly destroy the component. 
+     */
+    void
+    destroyComponentInstance_impl (
+      /* in */::gov::cca::ComponentID& cid,
+      /* in */float timeout
+    )
+    ;
+
+
+    /**
+     *  Creates an instance of the component defined by the string ``type'',
+     * which must uniquely define the type of the component.  The component
+     * instance is given the name ``name''.   If the instance name is not
+     * specified (i.e. the method is passed an empty string), then the component
+     * will be assigned a unique name automatically.
+     * 
+     * This method is ``semi-private'' and intended to be called only by the
+     * BuilderService class.  It works by searching the list of ComponentModels
+     * (the ivar \em models) for a matching registered type, and then calling
+     * the createInstance method on the appropriate ComponentModel object. 
+     */
+    ::gov::cca::ComponentID
+    createComponentInstance_impl (
+      /* in */const ::std::string& name,
+      /* in */const ::std::string& className,
+      /* in */::gov::cca::TypeMap& tm
     )
     ;
 
