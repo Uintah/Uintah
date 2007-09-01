@@ -38,24 +38,25 @@
  *
  */
 
-//#include <sci_defs/framework_defs.h>
+#include <sci_defs/framework_defs.h>
 #include <Framework/Core/ComponentModel.h>
-//#include <Framework/SCIRunFramework.h>
-//#include <Core/OS/Dir.h>
-//#include <Core/Thread/Guard.h>
-//#include <Core/XMLUtil/XMLUtil.h>
-//#include <Core/Util/Environment.h>
-//#include <Core/Util/Assert.h>
 
-//#include <iostream>
+#include <Core/OS/Dir.h>
+#include <Core/Thread/Guard.h>
+#include <Core/XMLUtil/XMLUtil.h>
+#include <Core/Util/Environment.h>
+#include <Core/Util/Assert.h>
+
+#include <iostream>
 
 namespace SCIRun {
 
-/*
 static Mutex parserLock("parser lock");
-ComponentModel::ComponentModel(const std::string& prefixName, SCIRunFramework* framework)
-  : prefixName(prefixName), framework(framework), pathsLock("sidl paths lock")
+
+ComponentModel::ComponentModel(const std::string& prefixName, SCIJumpFramework* framework)
+  : prefixName(prefixName), framework(framework)
 {
+  /*
   // TODO: move to framework properties?
   // Record the path containing DLLs for components.
   const char *dll_path = getenv("SIDL_DLL_PATH");
@@ -64,38 +65,12 @@ ComponentModel::ComponentModel(const std::string& prefixName, SCIRunFramework* f
   } else {
     setSidlDLLPath(std::string());
   }
+  */
 }
-*/
+
 ComponentModel::~ComponentModel()
 {
 }
-
-#if 0
-// bool ComponentModel::haveComponent(const std::string& type)
-// {
-//   std::cerr << "Error: this component model does not implement haveComponent, name="
-//             << type << std::endl;
-//   return false;
-// }
-
-// ComponentInstance*
-// ComponentModel::createInstance(const std::string& name,
-//                                const std::string& type,
-//                                const sci::cca::TypeMap::pointer &tm)
-// {
-//   std::cerr << "Error: this component model does not implement createInstance"
-//             << std::endl;
-//   return 0;
-// }
-
-// bool
-// ComponentModel::destroyInstance(ComponentInstance* ic)
-// {
-//   std::cerr << "Error: this component model does not implement destroyInstance"
-//             << std::endl;
-//   return false;
-// }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // protected and private member functions
@@ -182,9 +157,10 @@ ComponentModel::splitPathString(const std::string& path)
 ///////////////////////////////////////////////////////////////////////////
 // convenience functions for reading XML component description files
 
-/*
+
 bool parseComponentModelXML(const std::string& file, ComponentModel* model)
 {
+  /*
   Guard g(&parserLock);
   static bool initialized = false;
 
@@ -270,18 +246,21 @@ bool parseComponentModelXML(const std::string& file, ComponentModel* model)
   xmlFreeParserCtxt(ctxt);
   xmlCleanupParser();
   return true;
+  */  
 }
 
 bool
-getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
+getXMLPaths(SCIJumpFramework* fwk, StringVector& xmlPaths)
 {
-  sci::cca::TypeMap::pointer tm;
-  SSIDL::array1<std::string> sArray;
+  
+  gov::cca::TypeMap tm;
+  sidl::array<std::string> sArray;
 
-  sci::cca::ports::FrameworkProperties::pointer fwkProperties =
-    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+  /*
+  gov::cca::ports::FrameworkProperties fwkProperties =
+    babel_cast<sci::cca::ports::FrameworkProperties>(
       fwk->getFrameworkService("cca.FrameworkProperties", ""));
-  if (fwkProperties.isNull()) {
+  if (fwkProperties._is_nil()) {
       std::cerr << "Error: Cannot find framework properties" << std::endl;
     return false;
   } else {
@@ -290,7 +269,7 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
   }
   fwk->releaseFrameworkService("cca.FrameworkProperties", "");
 
-  for (SSIDL::array1<std::string>::iterator dirIter = sArray.begin();
+  for (sidl::array<std::string>::iterator dirIter = sArray.begin();
        dirIter != sArray.end(); dirIter++) {
     StringVector files;
     Dir d(*dirIter);
@@ -301,9 +280,9 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
       xmlPaths.push_back(*dirIter + "/" + *fileIter);
     }
   }
-
+  */
   return true;
 }
-*/
+
 
 } // end namespace SCIRun

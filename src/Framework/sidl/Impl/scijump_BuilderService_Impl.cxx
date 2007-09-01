@@ -119,23 +119,10 @@ scijump::BuilderService_impl::initialize_impl (
   /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.initialize)
-  // Insert-Code-Here {scijump.BuilderService.initialize} (initialize method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.initialize)
-//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-//   ex.setNote("This method has not been implemented");
-//   ex.add(__FILE__, __LINE__, "initialize");
-//   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.initialize)
-
-
   this->framework = framework;
   serviceInfo = ::scijump::core::ServiceInfo::_create();
 
   ::scijump::core::PortInfo pi = ::scijump::core::PortInfo::_create();
-
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.initialize)
 }
 
@@ -236,16 +223,11 @@ scijump::BuilderService_impl::createInstance_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.createInstance)
-  // Insert-Code-Here {scijump.BuilderService.createInstance} (createInstance method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.createInstance)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "createInstance");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.createInstance)
+  SCIJumpFramework sjf = sidl::babel_cast<scijump::SCIJumpFramework>(framework);
+  if(sjf._is_nil()) {
+    throw new sidl::RuntimeException;
+  }
+  return sjf.createComponentInstance(instanceName,className,properties);
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.createInstance)
 }
 

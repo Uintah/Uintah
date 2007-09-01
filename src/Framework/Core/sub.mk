@@ -34,7 +34,17 @@ SRCDIR   := Framework/Core
 #include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCS     += \
-            $(SRCDIR)/ComponentModel.cc
+            $(SRCDIR)/ComponentModel.cc \
+            $(SRCDIR)/ComponentDescription.cc \
+            $(SRCDIR)/ComponentInstance.cc \
+            $(SRCDIR)/PortDescription.cc \
+            $(SRCDIR)/PortInstance.cc \
+            $(SRCDIR)/PortInstanceIterator.cc
+
+SUBDIRS := \
+           $(SRCDIR)/Babel
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 #PSELIBS := Core/Thread Core/Util Core/Exceptions
 

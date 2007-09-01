@@ -19,6 +19,9 @@
 #ifndef included_gov_cca_CCAException_hxx
 #include "gov_cca_CCAException.hxx"
 #endif
+#ifndef included_gov_cca_ComponentID_hxx
+#include "gov_cca_ComponentID.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -47,14 +50,10 @@
 #include "sidl_NotImplementedException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._includes)
-
 #include "scijump.hxx"
-
 #include <Framework/Core/SingletonServiceFactory.h>
 
 #include <iostream>
-
-// Insert-Code-Here {scijump.SCIJumpFramework._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
@@ -69,9 +68,11 @@ scijump::SCIJumpFramework_impl::SCIJumpFramework_impl() : StubBase(
 // user defined constructor
 void scijump::SCIJumpFramework_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._ctor)
+  lock_compIDs = new SCIRun::Mutex("SCIRunFramework::compIDs lock");
+  lock_activeInstances = new SCIRun::Mutex("SCIRunFramework::activeInstances lock");
 
   initFrameworkServices();
-
+  bcm = new BabelComponentModel(this);
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._ctor)
 }
 
@@ -175,6 +176,119 @@ scijump::SCIJumpFramework_impl::releaseFrameworkService_impl (
   ::sci::cca::core::FrameworkServiceFactory f = iter->second;
   f.releaseService( info.getServicePortName() );
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.releaseFrameworkService)
+}
+
+/**
+ *  Eliminates the component instance ``cid'' from the scope of the
+ * framework.  The ``timeout'' parameter specifies the maximum allowable
+ * wait time for this operation.  A timeout of 0 leaves the wait time up to
+ * the framework.  If the destroy operation is not completed in the maximum
+ * allowed number of seconds, or the referenced component does not exist,
+ * then a CCAException is thrown.
+ * 
+ * Like createComponentInstance, this method is only intended to be called
+ * by the BuilderService class.  It searches the list of registered
+ * components (compIDs) for the matching component ID, unregisters it, finds
+ * the correct ComponentModel for the type, then calls
+ * ComponentModel::destroyInstance to properly destroy the component. 
+ */
+void
+scijump::SCIJumpFramework_impl::destroyComponentInstance_impl (
+  /* in */::gov::cca::ComponentID& cid,
+  /* in */float timeout ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.destroyComponentInstance)
+  // Insert-Code-Here {scijump.SCIJumpFramework.destroyComponentInstance} (destroyComponentInstance method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.destroyComponentInstance)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "destroyComponentInstance");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.destroyComponentInstance)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.destroyComponentInstance)
+}
+
+/**
+ *  Creates an instance of the component defined by the string ``type'',
+ * which must uniquely define the type of the component.  The component
+ * instance is given the name ``name''.   If the instance name is not
+ * specified (i.e. the method is passed an empty string), then the component
+ * will be assigned a unique name automatically.
+ * 
+ * This method is ``semi-private'' and intended to be called only by the
+ * BuilderService class.  It works by searching the list of ComponentModels
+ * (the ivar \em models) for a matching registered type, and then calling
+ * the createInstance method on the appropriate ComponentModel object. 
+ */
+::gov::cca::ComponentID
+scijump::SCIJumpFramework_impl::createComponentInstance_impl (
+  /* in */const ::std::string& name,
+  /* in */const ::std::string& className,
+  /* in */::gov::cca::TypeMap& tm ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.createComponentInstance)
+  gov::cca::TypeMap properties;
+  if (tm._is_nil()) {
+    properties = createTypeMap();
+  } else {
+    properties = tm;
+  }
+
+  // See if the type is of the form:
+  //   model:name
+  // If so, extract the model and look up that component specifically.
+  // Otherwise, look at all models for that component
+  
+  std::string type = className;
+  ComponentModel* mod = bcm;
+  /*
+  unsigned int firstColon = type.find(':');
+  if (firstColon < type.size()) {
+    std::string modelName = type.substr(0, firstColon);
+    type = type.substr(firstColon+1);
+
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
+         iter != models.end(); iter++) {
+      ComponentModel* model = *iter;
+      if (model->getPrefixName() == modelName) {
+        mod = model;
+        break;
+      }
+    }
+  } else {
+    int count = 0;
+    for (std::vector<ComponentModel*>::iterator iter = models.begin();
+         iter != models.end(); iter++) {
+      ComponentModel* model = *iter;
+      if (model->haveComponent(type)) {
+        count++;
+        mod = model;
+      }
+    }
+    if (count > 1) {
+      throw sci::cca::CCAException::pointer(
+        new CCAException("More than one component model wants to build " + type));
+    }
+  }
+  if (!mod) {
+    throw sci::cca::CCAException::pointer(
+      new CCAException("Unknown class name for " + name));
+  }
+  */
+
+  ComponentInstance* ci = ((BabelComponentModel*) mod)->createInstance(name, type, properties);
+  if(!ci) {
+    std::cerr << "Error: failed to create BabelComponentInstance"
+	      << std::endl;
+    return NULL; 
+  }
+
+  gov::cca::ComponentID cid = registerComponent(ci, name);
+  return cid;
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.createComponentInstance)
 }
 
 /**
@@ -325,17 +439,6 @@ scijump::SCIJumpFramework_impl::releaseServices_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.releaseServices)
-  // Insert-Code-Here {scijump.SCIJumpFramework.releaseServices} (releaseServices method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.releaseServices)
-//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-//   ex.setNote("This method has not been implemented");
-//   ex.add(__FILE__, __LINE__, "releaseServices");
-//   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.releaseServices)
-
   ServicesMap::iterator pos = this->services.end();
   std::string instanceName;
   for (ServicesMap::iterator iter = this->services.begin(); iter != this->services.end(); iter++) {
@@ -353,7 +456,6 @@ scijump::SCIJumpFramework_impl::releaseServices_impl (
   }
   // TODO: destroy associated component etc.
   this->services.erase(pos);
-
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.releaseServices)
 }
 
@@ -370,19 +472,9 @@ scijump::SCIJumpFramework_impl::shutdownFramework_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.shutdownFramework)
-  // Insert-Code-Here {scijump.SCIJumpFramework.shutdownFramework} (shutdownFramework method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.shutdownFramework)
-//   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-//   ex.setNote("This method has not been implemented");
-//   ex.add(__FILE__, __LINE__, "shutdownFramework");
-//   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.shutdownFramework)
-
   services.clear();
-
+  activeInstances.clear();
+  compIDs.clear();
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.shutdownFramework)
 }
 
@@ -408,9 +500,7 @@ scijump::SCIJumpFramework_impl::createEmptyFramework_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.createEmptyFramework)
-
   return scijump::SCIJumpFramework::_create();
-
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.createEmptyFramework)
 }
 
@@ -453,5 +543,47 @@ scijump::SCIJumpFramework_impl::removeFrameworkService(const std::string& servic
     frameworkServices.erase(iter);
 }
 
+/** Adds a description of a component instance (class ComponentInstance) to
+    the list of active components.  The component instance description
+    includes the component type name, the instance name, and the pointer to
+    the allocated component.  When a \em name conflicts with an existing
+    registered component instance name, this method will automatically append
+    an integer to create a new, unique instance name.*/
+gov::cca::ComponentID 
+scijump::SCIJumpFramework_impl::registerComponent(ComponentInstance *ci, const std::string& name)
+{
+  scijump::ComponentID cid = scijump::ComponentID::_create();
+
+  lock_compIDs->lock();
+  compIDs.push_back(cid);
+  lock_compIDs->unlock();
+
+  ci->framework = this;
+
+  lock_activeInstances->lock();
+  activeInstances[name] = ci;
+  lock_activeInstances->unlock();
+  return cid;
+}
+
+
+/** Removes a component instance description from the list of active
+    framework components.  Returns the pointer to the component description
+    that was successfully unregistered. */
+ComponentInstance* 
+scijump::SCIJumpFramework_impl::unregisterComponent(const std::string& instanceName) 
+{
+  SCIRun::Guard g1(lock_activeInstances);
+
+  ComponentInstanceMap::iterator found = activeInstances.find(instanceName);
+  if (found != activeInstances.end()) {
+    ComponentInstance *ci = found->second;
+    activeInstances.erase(found);
+    return ci;
+  } else {
+    std::cerr << "Error: component instance " << instanceName << " not found!" << std::endl;;
+    return 0;
+  }
+}
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._misc)
 
