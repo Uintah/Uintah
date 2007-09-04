@@ -75,7 +75,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
-  mymatls = new MaterialSet();
+  mymatls = scinew MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();   
 

@@ -110,7 +110,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = new MaterialSet();
+  d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
@@ -707,7 +707,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   if(d_matl->getDWIndex() != 0){
     m.push_back(d_matl->getDWIndex());
   }
-  matl_set = new MaterialSet();
+  matl_set = scinew MaterialSet();
   matl_set->addAll(m);
   matl_set->addReference();
     

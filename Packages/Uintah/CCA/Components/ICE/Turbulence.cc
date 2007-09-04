@@ -27,7 +27,7 @@ Turbulence::Turbulence(ProblemSpecP& ps, SimulationStateP& sharedState)
     s->matl = sharedState->parseAndLookupMaterial(child, "material");
     vector<int> m(1);
     m[0] = s->matl->getDWIndex();
-    s->matl_set = new MaterialSet();
+    s->matl_set = scinew MaterialSet();
     s->matl_set->addAll(m);
     s->matl_set->addReference();
 
