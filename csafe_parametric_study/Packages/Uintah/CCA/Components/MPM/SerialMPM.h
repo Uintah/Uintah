@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 // put here to avoid template problems
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h>
@@ -507,12 +508,12 @@ protected:
   bool             d_fracture;
   bool             d_recompile;
   IntegratorType d_integrator;
-
+  MaterialSubset*  d_loadCurveIndex;
 private:
 
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);
-	 
+  	 
 };
       
 } // end namespace Uintah
