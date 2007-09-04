@@ -59,7 +59,7 @@
 	if strcmp(sprintf("%s",argv(i,:)),"-uda")
 	  uda = sprintf("%s",argv(++i,:))
 	elseif strcmp(sprintf("%s",argv(i,:)),"-type")
-	  exactSolution = sprintf("%s",argv(++i,:)) %'exp' %'linear' %'sinusoidal'; %linear; %cubic; %quad
+	  exactSolution = sprintf("%s",argv(++i,:))
 	elseif strcmp(sprintf("%s",argv(i,:)),"-vel")
 	  velocity  = str2num(sprintf("%s",argv(++i,:)))
 	elseif strcmp(sprintf("%s",argv(i,:)),"-min")
@@ -85,8 +85,13 @@
 	endif
 
       endfor
-
-      fid = fopen(output_file, 'w');
+      
+      %________________________________
+      % open data files
+      datFile = strrep(uda,"uda","dat");
+      fid     = fopen(output_file, 'w');
+      fid2    = fopen(datFile,'w');
+      
 
       %________________________________
       %  extract the physical time
@@ -112,7 +117,7 @@
 	%  n = input('input timestep') 
 	ts = n-1;
 	
-	time = sprintf('%e sec',physicalTime(n));
+	time = sprintf('%16.15E sec',physicalTime(n))
 	
        if( strcmp(startEnd,"") )
          if(pDir == 1)
@@ -140,7 +145,7 @@
         scalarArray = load('scalar-f.dat');
         
         % ignore the ghost cells
-        len    = length(scalarArray(:,1))
+        len    = length(scalarArray(:,1));
         xx     = scalarArray(1:len-oneZero,1);
         scalar = scalarArray(1:len-oneZero,4);
         %_________________________________
@@ -149,15 +154,23 @@
         offset = (physicalTime(n)) * velocity
         xmin   = exactSolMin + offset
         xmax   = exactSolMax + offset
+                
+        fuzz_min = abs(xmin * 2.22e-16);
+        fuzz_max = abs(xmax * 2.22e-16);
+        xmin_fuzz = xmin - fuzz_min;
+        xmax_fuzz = xmax + fuzz_max;
+        
         d = xx * 0;
         exactSol=xx * 0;
 
         for( i = 1:length(xx))
-          if(xx(i) >= xmin && xx(i) <= xmax)
+          
+          if( xx(i) >= (xmin-fuzz_min) && xx(i)  <= (xmax+fuzz_max))
+          
             d(i) = (xx(i) - xmin )/dist;
             
-            if (d(i) < 0 )
-              display('Warning something has gone wrong')
+            if (d(i) < -fuzz_min || d(i) > (1.0+fuzz_max) )
+              disp('Warning something has gone wrong')
               i
               xx(i)
               xmin
@@ -206,6 +219,7 @@
         
         for( i = 1:length(xx))
           difference(i) = scalar(i) - exactSol(i);
+          fprintf(fid2,'%16.15E %16.15E %16.15E %16.15E\n',xx(i),difference(i),scalar(i), exactSol(i));
         end
         
         lenExactXol= length(exactSol)
@@ -236,4 +250,6 @@
         
       end  % timestep loop
 
+      % clean up 
       fclose(fid);
+      fclose(fid2);
