@@ -65,14 +65,20 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     string no_solver_specified("");
     SolverInterface* solver = SolverFactory::create(child,myworld,
                                                     no_solver_specified);
-
+    
+    //Attaching to switcher so that the switcher can delete it
+    attachPort("sub_solver", solver);
     comp->attachPort("solver", solver);
 
     SwitchingCriteria* switch_criteria = 
       SwitchingCriteriaFactory::create(child,myworld);
 
     if (switch_criteria)
+    {
+      //Attaching to switcher so that the switcher can delete it
+      attachPort("switch_criteria",switch_criteria);
       comp->attachPort("switch_criteria",switch_criteria);
+    }
                                                                          
 
     // get the vars that will need to be initialized by this component
@@ -164,6 +170,19 @@ Switcher::~Switcher()
     if (d_carryOverVarMatls[i] && d_carryOverVarMatls[i]->removeReference())
       delete d_carryOverVarMatls[i];
   d_carryOverVarMatls.clear();
+
+  for (unsigned i = 0; i < numConnections("sim"); i++)
+    delete getPort("sim",i);
+  
+  for (unsigned i = 0; i < numConnections("switch_criteria"); i++)
+    delete getPort("switch_criteria",i);
+  
+  for (unsigned i = 0; i < numConnections("sub_solver"); i++)
+    delete getPort("sub_solver",i);
+  
+  for (unsigned i = 0; i < numConnections("problem spec"); i++)
+    delete getPort("problem spec",i);
+
   //VarLabel::destroy(d_switchLabel);
 }
 
