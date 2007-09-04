@@ -110,7 +110,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();            
+  mymatls = scinew MaterialSet();            
   
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
