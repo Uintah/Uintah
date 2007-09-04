@@ -111,6 +111,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
   d_customBC_var_basket->mms_var_basket =  scinew mms_variable_basket();
+
+  d_press_matl=0;
 }
 
 ICE::~ICE()
@@ -132,42 +134,42 @@ ICE::~ICE()
   if(d_analysisModule){
     delete d_analysisModule;
   }   
-  if (d_press_matl->removeReference()){
+  if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
   }
   
   //__________________________________
   // MODELS
   cout_doing << d_myworld->myrank() << " Doing: destorying Model Machinery " << endl;
-  // delete transported Lagrangian variables
-  vector<TransportedVariable*>::iterator t_iter;
-  for( t_iter  = d_modelSetup->tvars.begin();
-       t_iter != d_modelSetup->tvars.end(); t_iter++){
-       TransportedVariable* tvar = *t_iter;
-    VarLabel::destroy(tvar->var_Lagrangian);
-    VarLabel::destroy(tvar->var_adv);
-    delete tvar;
+  if(d_modelSetup){
+    // delete transported Lagrangian variables
+    vector<TransportedVariable*>::iterator t_iter;
+    for( t_iter  = d_modelSetup->tvars.begin();
+        t_iter != d_modelSetup->tvars.end(); t_iter++){
+        TransportedVariable* tvar = *t_iter;
+        VarLabel::destroy(tvar->var_Lagrangian);
+        VarLabel::destroy(tvar->var_adv);
+        delete tvar;
+    }
+    cout_doing << d_myworld->myrank() << " Doing: destorying refluxing variables " << endl;
+    // delete refluxing variables
+    vector<AMR_refluxVariable*>::iterator iter;
+    for( iter  = d_modelSetup->d_reflux_vars.begin();
+         iter != d_modelSetup->d_reflux_vars.end(); iter++){
+         AMR_refluxVariable* rvar = *iter;
+      VarLabel::destroy(rvar->var_X_FC_flux);
+      VarLabel::destroy(rvar->var_Y_FC_flux);
+      VarLabel::destroy(rvar->var_Z_FC_flux);
+      VarLabel::destroy(rvar->var_X_FC_corr);
+      VarLabel::destroy(rvar->var_Y_FC_corr);
+      VarLabel::destroy(rvar->var_Z_FC_corr);
+    } 
+    delete d_modelSetup;
   }
-  cout_doing << d_myworld->myrank() << " Doing: destorying refluxing variables " << endl;
-  // delete refluxing variables
-  vector<AMR_refluxVariable*>::iterator iter;
-  for( iter  = d_modelSetup->d_reflux_vars.begin();
-       iter != d_modelSetup->d_reflux_vars.end(); iter++){
-       AMR_refluxVariable* rvar = *iter;
-    VarLabel::destroy(rvar->var_X_FC_flux);
-    VarLabel::destroy(rvar->var_Y_FC_flux);
-    VarLabel::destroy(rvar->var_Z_FC_flux);
-    VarLabel::destroy(rvar->var_X_FC_corr);
-    VarLabel::destroy(rvar->var_Y_FC_corr);
-    VarLabel::destroy(rvar->var_Z_FC_corr);
-  } 
   
   // delete models
   if(d_modelInfo){
     delete d_modelInfo;
-  }
-  if(d_modelSetup){
-    delete d_modelSetup;
   }
   releasePort("solver");
   
