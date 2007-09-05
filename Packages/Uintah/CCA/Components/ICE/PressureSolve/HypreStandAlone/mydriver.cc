@@ -196,10 +196,10 @@ main(int argc, char *argv[]) {
   Solver*               solver = 0;      // Solver data structure
   switch (param->solverType) {
   case Param::AMG:
-    solver = new SolverAMG(param);
+    solver = scinew SolverAMG(param);
     break;
   case Param::FAC:
-    solver = new SolverFAC(param);
+    solver = scinew SolverFAC(param);
     break;
   default:
     cerr << "\n\nError: unknown solver type" << "\n";

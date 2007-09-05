@@ -1479,7 +1479,7 @@ void
 Crack::ResetCrackFrontNodes(const int& m, const int& n1, const int& n2)
 {
    int num=(int)cfSegNodes[m].size();
-   int* tmp = new int[num];
+   int* tmp = scinew int[num];
    for(int i=0; i<num; i++) tmp[i]=cfSegNodes[m][i];
 
    for(int i=0; i<num; i++) {

@@ -594,7 +594,7 @@ Solver::makeUnderlyingIdentity(const Counter level,
   dbg << "Putting identity on underlying coarse data" << "\n"
       << "coarseUnderFine " << coarseUnderFine << "\n";
   Counter stencilSize = hypre_SStructStencilSize(stencil);
-  int* entries = new int[stencilSize];
+  int* entries = scinew int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) {
     entries[entry] = entry;
   }
@@ -661,7 +661,7 @@ Solver::makeInteriorEquations(const Counter level,
   linePrint("=",50);
   const Counter& numDims   = _param->numDims;
   Counter stencilSize = hypre_SStructStencilSize(stencil);
-  int* entries = new int[stencilSize];
+  int* entries = scinew int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) {
     entries[entry] = entry;
   }

@@ -389,7 +389,7 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
         //if (d_myworld->myrank() == 43 && dest == 40)
         particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl;
 
-        ParticleSend* data = new ParticleSend;
+        ParticleSend* data = scinew ParticleSend;
         data->numParticles = numParticles;
         data->addReference();
 
@@ -516,7 +516,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch, const VarLabel* pos_var,
             ASSERTEQ(numParticles, psubset->numParticles());
           }
         }
-        ParticleSubset* recvset = new ParticleSubset(psubset->getParticleSet(),
+        ParticleSubset* recvset = scinew ParticleSubset(psubset->getParticleSet(),
                                                      true, matlIndex, patch, 
                                                      low, high, 0);
         old_dw->rs_.add_sendset(recvset, from, patch, matlIndex, low, high, old_dw->d_generation);
