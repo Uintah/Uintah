@@ -94,7 +94,7 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
           throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
         
         // open the file, read it, and replace the index node
-        ProblemSpecReader *psr = new ProblemSpecReader(href);
+        ProblemSpecReader *psr = scinew ProblemSpecReader(href);
         ProblemSpecP include = psr->readInputFile();
         delete psr;
         // nodes to be substituted must be enclosed in a 

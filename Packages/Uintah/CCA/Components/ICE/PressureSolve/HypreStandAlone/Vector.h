@@ -69,7 +69,7 @@ class Vector : public Error {
     {
       if (_len > 0) {
         if (fillPtr) _data = fillPtr;
-        else _data = new VAR [_len];               // Allocate data array
+        else _data = scinew VAR [_len];               // Allocate data array
       }
       if (!fillPtr) {
         for (Counter i = 0; i < _len; i++)
@@ -103,7 +103,7 @@ class Vector : public Error {
       _data(0),
       _width(other._width)
     {
-      _data = new VAR [_len];
+      _data = scinew VAR [_len];
       iterator otherIter = other.begin();
       for (iterator iter = begin(); iter != end(); ++iter, ++otherIter) {
         *iter = *otherIter;
@@ -131,8 +131,8 @@ class Vector : public Error {
      VAR* fillPtr = 0,
      const std::string& name = "")
     /*
-      Resizes the Vector to a new size.
-      Creates a new data pointer if length is changed.
+      Resizes the Vector to a scinew size.
+      Creates a scinew data pointer if length is changed.
       Then previous data is destroyed.
     */
     {
@@ -145,7 +145,7 @@ class Vector : public Error {
         if (_data) {
           DELETE_BRACKET(_data);
         }
-        _data	= new VAR [_len];
+        _data	= scinew VAR [_len];
       }
       if (fillPtr) _data = fillPtr;
     }
@@ -223,7 +223,7 @@ class Vector : public Error {
       if (_len != other._len) {
         _len  = other._len;
         DELETE_BRACKET(_data);
-        _data = new VAR [_len];
+        _data = scinew VAR [_len];
       }
       if (_data != other._data) {
         for (Counter i = 0; i < _len; i++) _data[i] = other._data[i];
@@ -314,7 +314,7 @@ class Vector : public Error {
   Vector operator + (const VAR& b) const
     /* Vector + scalar */
     {
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] + b;
       std::ostringstream newName;
       newName << _name << " + " << b;
@@ -324,7 +324,7 @@ class Vector : public Error {
   Vector operator - (const VAR& b) const
     /* Vector - scalar */
     {
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] - b;
       std::ostringstream newName;
       newName << _name << " - " << b;
@@ -334,7 +334,7 @@ class Vector : public Error {
   Vector operator * (const VAR& b) const
     /* Vector * scalar */
     {
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] * b;
       std::ostringstream newName;
       newName << _name << " * " << b;
@@ -349,7 +349,7 @@ class Vector : public Error {
         msg << "Vector / VAR: division by 0";
         error(msg);
       }
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] / b;
       std::ostringstream newName;
       newName << _name << " / " << b;
@@ -397,7 +397,7 @@ class Vector : public Error {
     /* Vector + Vector */
     {
       assertSize(b._start,b._len);
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] + b._data[i];
       std::ostringstream newName;
       newName << _name << " + " << b._name;
@@ -408,7 +408,7 @@ class Vector : public Error {
     /* Vector - Vector */
     {
       assertSize(b._start,b._len);
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] - b._data[i];
       std::ostringstream newName;
       newName << _name << " - " << b._name;
@@ -419,7 +419,7 @@ class Vector : public Error {
     /* Vector * Vector */
     {
       assertSize(b._start,b._len);
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = _data[i] * b._data[i];
       std::ostringstream newName;
       newName << _name << " * " << b._name;
@@ -431,7 +431,7 @@ class Vector : public Error {
     /* Vector / Vector */
     {
       assertSize(b._start,b._len);
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) {
         if (b._data[i] == VAR(0)) {
           std::ostringstream msg;
@@ -500,7 +500,7 @@ class Vector : public Error {
   Vector operator - (void) const
     /* Negative of a Vector. */
     {
-      VAR* news = new VAR [_len];
+      VAR* news = scinew VAR [_len];
       for (Counter i = 0; i < _len; i++) news[i] = -_data[i];
       return Vector(_start, _len, news, std::string("-" + _name));
     }
@@ -667,7 +667,7 @@ template <class VAR>
 Vector<VAR>
 abs(const Vector<VAR>& a)/* Absolute value of a Vector. */     
 {
-  VAR* news = new VAR [a.getLen()];
+  VAR* news = scinew VAR [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = abs(_data[i]);
   return Vector<VAR>(a.getStart(), a.getSize(), news,
                      std::string("abs(" + a.getName() + ")"));

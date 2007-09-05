@@ -694,7 +694,7 @@ SchedulerCommon::logMemoryUse()
   if(!memlogfile){
     ostringstream fname;
     fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank();
-    memlogfile = new ofstream(fname.str().c_str());
+    memlogfile = scinew ofstream(fname.str().c_str());
     if(!*memlogfile){
       cerr << "Error opening file: " << fname.str() << '\n';
     }
