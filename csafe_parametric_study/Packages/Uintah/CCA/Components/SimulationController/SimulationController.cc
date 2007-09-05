@@ -461,9 +461,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       char filename[256];
       sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
       if ( timestep == 0 ) {
-        mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
+        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
       } else {
-        mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
+        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
       }
       if ( !mallocPerProcStream ) {
         delete mallocPerProcStream;

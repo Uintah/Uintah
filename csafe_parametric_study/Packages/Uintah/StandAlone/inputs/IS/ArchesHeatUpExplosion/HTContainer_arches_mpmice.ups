@@ -85,7 +85,7 @@
     <delt_max>           1.0         </delt_max>
     <delt_init>          0.01        </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <!--<max_iterations>         800         </max_iterations> -->
+    <max_iterations>         5         </max_iterations>
   </Time>
 
   <!--____________________________________________________________________-->

@@ -6,7 +6,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -28,14 +28,14 @@ ArchesHeatFluxBC::ArchesHeatFluxBC(ProblemSpecP& ps)
   std::string go_type = child->getNodeName();
   //std::cerr << "ArchesHeatFluxBC::go_type = " << go_type << endl;
   if (go_type == "box") {
-    d_surface = new BoxGeometryPiece(child);
+    d_surface = scinew BoxGeometryPiece(child);
     //Box box = d_surface->getBoundingBox();
     d_surfaceType = "box";
   } else if (go_type == "sphere") {
-    d_surface = new SphereGeometryPiece(child);
+    d_surface = scinew SphereGeometryPiece(child);
     d_surfaceType = "sphere";
   } else if (go_type == "cylinder") {
-    d_surface = new CylinderGeometryPiece(child);
+    d_surface = scinew CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
   } else {
     throw ParameterNotFound("** ERROR ** No surface specified for heatflux BC.",
@@ -44,14 +44,14 @@ ArchesHeatFluxBC::ArchesHeatFluxBC(ProblemSpecP& ps)
   d_numMaterialPoints = 0;
 
   // Read and save the load curve information
-  d_loadCurve = new LoadCurve<double>(ps); 
+  d_loadCurve = scinew LoadCurve<double>(ps); 
 
   if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* cgp = 
       dynamic_cast<CylinderGeometryPiece*>(d_surface);
     Point bottom = cgp->bottom();
     Point top = cgp->top();
-    d_polyData = new PolynomialData(ps,bottom,top);
+    d_polyData = scinew PolynomialData(ps,bottom,top);
   }
 
 }
@@ -95,7 +95,7 @@ ArchesHeatFluxBC::flagMaterialPoint(const Point& p,
   if (d_surfaceType == "box") {
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
-    GeometryPiece* volume = new BoxGeometryPiece(box.lower()-dxpp, 
+    GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
                                                  box.upper()+dxpp);
     if (volume->inside(p)) flag = true;
     delete volume;
@@ -115,13 +115,13 @@ ArchesHeatFluxBC::flagMaterialPoint(const Point& p,
       off_minus = -cgp_u_vec*tol;
     }
 
-    GeometryPiece* outer = new CylinderGeometryPiece(cgp->top() + off_plus, 
+    GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top() + off_plus, 
                                                      cgp->bottom() + off_minus, 
                                                      cgp->radius()+tol);
-    GeometryPiece* inner = new CylinderGeometryPiece(cgp->top() + off_minus, 
+    GeometryPiece* inner = scinew CylinderGeometryPiece(cgp->top() + off_minus, 
                                                      cgp->bottom() + off_plus, 
                                                      cgp->radius()-tol);
-    GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
+    GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
     delete volume;
 
@@ -129,11 +129,11 @@ ArchesHeatFluxBC::flagMaterialPoint(const Point& p,
     // Create a spherical shell with radius-|dxpp|, radius+|dxpp|
     double tol = dxpp.length();
     SphereGeometryPiece* sgp = dynamic_cast<SphereGeometryPiece*>(d_surface);
-    GeometryPiece* outer = new SphereGeometryPiece(sgp->origin(), 
+    GeometryPiece* outer = scinew SphereGeometryPiece(sgp->origin(), 
                                                    sgp->radius()+tol);
-    GeometryPiece* inner = new SphereGeometryPiece(sgp->origin(), 
+    GeometryPiece* inner = scinew SphereGeometryPiece(sgp->origin(), 
                                                    sgp->radius()-tol);
-    GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
+    GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
     delete volume;
 

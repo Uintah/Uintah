@@ -62,10 +62,10 @@ class StaticObjectArray
 {
 public:
   StaticObjectArray(unsigned int size)
-    : data_(new T[size]), size_(size) {}
+    : data_(scinew T[size]), size_(size) {}
 
   StaticObjectArray(const StaticObjectArray& array)
-    : data_(new T[array.size_]), size_(array.size_)
+    : data_(scinew T[array.size_]), size_(array.size_)
   {
     for (unsigned int i = 0; i < size_; i++)
       data_[i] = array.data_[i];
@@ -74,7 +74,7 @@ public:
   StaticObjectArray& operator=(const StaticObjectArray& array)
   {
     delete[] data_;
-    data_ = new T[array.size_];
+    data_ = scinew T[array.size_];
     size_ = array.size_;
     for (unsigned int i = 0; i < size_; i++)
       data_[i] = array.data_[i];

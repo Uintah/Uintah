@@ -499,7 +499,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
 
     d_HC_solver->copyL2G(l2g,patch);
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -591,7 +591,7 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);                                                                                
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);                                                                                
     d_HC_solver->copyL2G(l2g,patch);
 
     constNCVariable<double> temperature;

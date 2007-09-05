@@ -89,7 +89,7 @@ void Wave::problemSetup(const ProblemSpecP& params,
   wave->require("integration", integration);
   if(integration != "Euler" && integration != "RK4")
     throw ProblemSetupException("Unknown integration method for Wave", __FILE__, __LINE__);
-  mymat_ = new SimpleMaterial();
+  mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 
 }

@@ -270,7 +270,7 @@ namespace Uintah {
     }
     template<class T>
       void setupCondition(const std::string& name, const IntVector& offset) {
-      setupCondition(name, new Condition<T>(offset, false));
+      setupCondition(name, scinew Condition<T>(offset, false));
     }
 
     InitialConditions();
@@ -296,15 +296,15 @@ namespace Uintah {
     }
     template<class T>
       void setupCondition(const std::string& name, const IntVector& offset) {
-      setupCondition(name, new Condition<T>(offset, offset==IntVector(0,0,0)),
+      setupCondition(name, scinew Condition<T>(offset, offset==IntVector(0,0,0)),
 		     Patch::CellBased);
-      setupCondition(name, new Condition<T>(offset, offset==IntVector(1,1,1)),
+      setupCondition(name, scinew Condition<T>(offset, offset==IntVector(1,1,1)),
 		     Patch::NodeBased);
-      setupCondition(name, new Condition<T>(offset, offset==IntVector(1,0,0)),
+      setupCondition(name, scinew Condition<T>(offset, offset==IntVector(1,0,0)),
 		     Patch::XFaceBased);
-      setupCondition(name, new Condition<T>(offset, offset==IntVector(0,1,0)),
+      setupCondition(name, scinew Condition<T>(offset, offset==IntVector(0,1,0)),
 		     Patch::YFaceBased);
-      setupCondition(name, new Condition<T>(offset, offset==IntVector(0,0,1)),
+      setupCondition(name, scinew Condition<T>(offset, offset==IntVector(0,0,1)),
 		     Patch::ZFaceBased);
     }
     BoundaryConditions();

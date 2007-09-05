@@ -135,7 +135,7 @@
               <upper>        [0.5,  0.5, 0.025]    </upper>
               <extraCells>   [1,1,1]               </extraCells>
               <patches>      [2,2,1]               </patches>
-              <resolution>   [50,50,1]             </resolution>
+              <resolution>   [64,64,1]             </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -144,7 +144,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>AMR_HotBlob.uda</filebase>
-      <outputTimestepInterval>10</outputTimestepInterval>
+      <outputTimestepInterval>0</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
@@ -158,7 +158,7 @@
       <save label="mag_grad_temp_CC"/>
       <save label="mag_grad_press_CC"/>
       <save label="refineFlag"/> 
-      <checkpoint timestepInterval="15" cycle="2"/>
+      <checkpoint timestepInterval="0" cycle="2"/>
    </DataArchiver>
    
    <Debug>
@@ -208,8 +208,8 @@
       </ICE>
 
       <Regridder>
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+        <max_levels>3</max_levels>
+        <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
         <cell_stability_dilation>   [2,2,0]    </cell_stability_dilation>   
         <cell_deletion_dilation>   [1,1,0]    </cell_deletion_dilation>   
         <min_boundary_cells>       [1,1,0]    </min_boundary_cells>
@@ -217,7 +217,7 @@
 
         <type>BNR</type>
         
-        <min_patch_size>           [[10,10,1]] </min_patch_size>
+        <min_patch_size>           [[8,8,1]] </min_patch_size>
         <patch_split_tolerance>     1        </patch_split_tolerance>
         <patch_combine_tolerance>   1        </patch_combine_tolerance>
         <patches_per_level_per_proc> 8       </patches_per_level_per_proc>
