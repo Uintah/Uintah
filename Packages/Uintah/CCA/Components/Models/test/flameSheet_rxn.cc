@@ -93,7 +93,7 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
     d_cp = ice_matl->getSpecificHeat();
   }   
   
-  d_scalar = new Scalar();
+  d_scalar = scinew Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   
