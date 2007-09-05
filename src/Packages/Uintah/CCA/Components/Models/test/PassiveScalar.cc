@@ -118,7 +118,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   //__________________________________
   // - create Label names
   // - register the scalar to be transported
-  d_scalar = new Scalar();
+  d_scalar = scinew Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   

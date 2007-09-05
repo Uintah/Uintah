@@ -187,7 +187,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   // - Let ICE know that this model computes the 
   //   thermoTransportProperties.
   // - register the scalar to be transported
-  d_scalar = new Scalar();
+  d_scalar = scinew Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   
