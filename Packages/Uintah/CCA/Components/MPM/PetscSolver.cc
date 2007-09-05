@@ -77,7 +77,7 @@ void MPMPetscSolver::initialize()
 
   // copy the vector to argv, as I think petsc wants to store it around -- bjw
   if (argc > 0) {
-    argv = new char*[argc];
+    argv = scinew char*[argc];
     for (int i = 0; i < argc; i++) {
       argv[i] = args[i];
     }
@@ -607,8 +607,8 @@ void MPMPetscSolver::removeFixedDOFHeat()
 
   //do vector modifications
   
-  PetscScalar* y = new PetscScalar[d_DOF.size()];
-  PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
+  PetscScalar* y = scinew PetscScalar[d_DOF.size()];
+  PetscScalar* y_flux = scinew PetscScalar[d_DOFFlux.size()];
 
   assembleFluxVector();
 #if (PETSC_VERSION_MINOR == 3)
