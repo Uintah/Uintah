@@ -127,6 +127,9 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     dynamic_cast<UintahParallelComponent*>(getPort("sim",num_components-1));
 
   SwitchingCriteria* none_switch_criteria = scinew None();
+  
+  //Attaching to switcher so that the switcher can delete it
+  attachPort("switch_criteria",none_switch_criteria);
   last_comp->attachPort("switch_criteria",none_switch_criteria);
   
   if (num_switch_criteria != num_components-1) {
