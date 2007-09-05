@@ -352,8 +352,8 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       StaticArray<constCCVariable<double> > mf(numSpecies);
       StaticArray<CCVariable<double> > mfsource(numSpecies);
       int index = 0;
-      double* tmp_mf = new double[numSpecies];
-      double* new_mf = new double[numSpecies];
+      double* tmp_mf =scinew double[numSpecies];
+      double* new_mf =scinew double[numSpecies];
       for(vector<Stream*>::iterator iter = streams.begin();
 	  iter != streams.end(); iter++, index++){
 	Stream* stream = *iter;
