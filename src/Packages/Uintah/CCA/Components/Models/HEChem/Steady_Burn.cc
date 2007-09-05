@@ -186,11 +186,12 @@ void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, cons
 void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, 
                                               const LevelP& level, 
                                               const ModelInfo* mi){
-  Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
-                        &Steady_Burn::computeModelSources, mi);
   
   if (level->hasFinerLevel())
     return;  
+  
+  Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
+                        &Steady_Burn::computeModelSources, mi);
   
   printSchedule(level,"Steady_Burn::scheduleComputeModelSources\t\t\t");  
   t->requires( Task::OldDW, mi->delT_Label);
