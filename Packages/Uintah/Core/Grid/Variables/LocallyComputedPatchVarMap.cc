@@ -113,7 +113,7 @@ LocallyComputedPatchVarMap::addComputedPatchSet(const PatchSubset* patches)
 
   LocallyComputedPatchSet* lcpatches = sets_[level->getIndex()];
   if(lcpatches == 0){
-    lcpatches = scinew LocallyComputedPatchSet();
+    lcpatches = new LocallyComputedPatchSet();
     sets_[level->getIndex()] = lcpatches;
   }
   lcpatches->addPatches(patches);

@@ -66,7 +66,7 @@ Filter::problemSetup(const ProblemSpecP& params)
 {
   int argc = 4;
   char** argv;
-  argv = scinew char*[argc];
+  argv = new char*[argc];
   argv[0] = "Filter::problemSetup";
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";

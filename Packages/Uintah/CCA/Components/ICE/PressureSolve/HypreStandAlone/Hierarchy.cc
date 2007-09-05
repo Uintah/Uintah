@@ -124,7 +124,7 @@ Hierarchy::make()
           << "\n";
       // Create patch object from the geometry parameters above and
       // add it to the level's appropriate list of patches.
-      Patch* patch = scinew Patch(owner,level,Box(lower,upper));
+      Patch* patch = new Patch(owner,level,Box(lower,upper));
       dbg.setLevel(10);
       dbg << "box = " << patch->_box << "\n"
           << "box.get(Left ) = " << patch->_box.get(Left) << "\n"

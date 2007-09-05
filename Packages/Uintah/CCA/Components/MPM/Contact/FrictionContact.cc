@@ -726,7 +726,7 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                           const PatchSet* patches,
                                                           const MaterialSet* ms)
 {
-  Task * t = scinew Task("Friction::exMomInterpolated", 
+  Task * t = new Task("Friction::exMomInterpolated", 
                       this, &FrictionContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
@@ -750,7 +750,7 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* ms) 
 {
-  Task * t = scinew Task("Friction::exMomIntegrated", 
+  Task * t = new Task("Friction::exMomIntegrated", 
                       this, &FrictionContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();

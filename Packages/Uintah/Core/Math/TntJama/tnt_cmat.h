@@ -73,9 +73,9 @@ class Matrix
         m_ = M;
         n_ = N;
 
-        v_ = scinew T[mn_]; 
-        row_ = scinew T*[M];
-        rowm1_ = scinew T*[M];
+        v_ = new T[mn_]; 
+        row_ = new T*[M];
+        rowm1_ = new T*[M];
 
         assert(v_  != NULL);
         assert(row_  != NULL);

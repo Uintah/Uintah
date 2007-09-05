@@ -37,7 +37,6 @@
 #include <vector>
 #include <stdlib.h>
 
-#include <time.h>
 #if defined(_WIN32) || defined(REDSTORM)
 #  include <time.h>
 #endif
@@ -695,7 +694,7 @@ SchedulerCommon::logMemoryUse()
   if(!memlogfile){
     ostringstream fname;
     fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank();
-    memlogfile = scinew ofstream(fname.str().c_str());
+    memlogfile = new ofstream(fname.str().c_str());
     if(!*memlogfile){
       cerr << "Error opening file: " << fname.str() << '\n';
     }

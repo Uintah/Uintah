@@ -25,7 +25,7 @@ class IntMatrix {
     if (mat) delete[] mat;
     rows = r;
     cols = c;
-    mat = scinew int[rows*cols];
+    mat = new int[rows*cols];
     zero();
   }
 

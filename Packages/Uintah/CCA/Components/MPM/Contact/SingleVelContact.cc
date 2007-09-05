@@ -174,7 +174,7 @@ void SingleVelContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 						  const PatchSet* patches,
 				     		  const MaterialSet* ms)
 {
-  Task * t = scinew Task("SingleVelContact::exMomInterpolated", 
+  Task * t = new Task("SingleVelContact::exMomInterpolated", 
                       this, &SingleVelContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
@@ -189,7 +189,7 @@ void SingleVelContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const PatchSet* patches,
 					     const MaterialSet* ms) 
 {
-  Task * t = scinew Task("SingleVelContact::exMomIntegrated", 
+  Task * t = new Task("SingleVelContact::exMomIntegrated", 
                       this, &SingleVelContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();

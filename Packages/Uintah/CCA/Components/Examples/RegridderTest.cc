@@ -50,7 +50,7 @@ namespace Uintah
                                    GridP& grid, SimulationStateP& state )
   {
     d_sharedState = state;
-    d_material = scinew SimpleMaterial();
+    d_material = new SimpleMaterial();
     d_sharedState->registerSimpleMaterial( d_material );
 
     ProblemSpecP spec = params->findBlock("RegridderTest");

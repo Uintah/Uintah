@@ -70,7 +70,7 @@ StandardTable::problemSetup(const ProblemSpecP& params)
   h2o_index = -1;
   for (ProblemSpecP child = db->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
-    TableValue* tv = scinew TableValue;
+    TableValue* tv = new TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
     if(tv->name == "density")

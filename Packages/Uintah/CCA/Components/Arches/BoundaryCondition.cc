@@ -799,7 +799,7 @@ void
 BoundaryCondition::sched_calculateArea(SchedulerP& sched, const PatchSet* patches,
 				       const MaterialSet* matls)
 {
-  Task* tsk = scinew Task("BoundaryCondition::calculateArea",
+  Task* tsk = new Task("BoundaryCondition::calculateArea",
 		       this,
 		       &BoundaryCondition::computeInletFlowArea);
 
@@ -816,7 +816,7 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched, const PatchSet* patche
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
     {
-      Task* tsk = scinew Task("BoundaryCondition::calculateArea",
+      Task* tsk = new Task("BoundaryCondition::calculateArea",
 			   patch, old_dw, new_dw, this,
 			   &BoundaryCondition::computeInletFlowArea);
       int matlIndex = 0;

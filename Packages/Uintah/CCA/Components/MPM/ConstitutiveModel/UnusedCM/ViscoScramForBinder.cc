@@ -45,7 +45,7 @@ ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps,
   int nn = d_initialData.numMaxwellElements;
   d_initialData.shearModulus = scinew double[nn];
   for (int ii = 0; ii < nn; ++ii) {
-    char* buf = scinew char[16];
+    char* buf = new char[16];
     sprintf(buf,"shear_modulus%.2d",(ii+1));
     string shear(buf);
     ps->require(shear, d_initialData.shearModulus[ii]); 
@@ -177,7 +177,7 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
   for(;iter != pset->end();iter++){
     // Initialize state data
     //pStatedata[*iter].numElements = d_initialData.numMaxwellElements;
-    //pStatedata[*iter].sigDev = scinew Matrix3[d_initialData.numMaxwellElements];
+    //pStatedata[*iter].sigDev = new Matrix3[d_initialData.numMaxwellElements];
     for(int ii = 0; ii < d_initialData.numMaxwellElements; ii++){
       pStatedata[*iter].sigDev[ii] = zero;
     }
@@ -241,7 +241,7 @@ ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     // Initialize state data
     //pStatedata[*iter].numElements = d_initialData.numMaxwellElements;
-    //pStatedata[*iter].sigDev = scinew Matrix3[d_initialData.numMaxwellElements];
+    //pStatedata[*iter].sigDev = new Matrix3[d_initialData.numMaxwellElements];
     for(int ii = 0; ii < d_initialData.numMaxwellElements; ii++){
       pStatedata[*n].sigDev[ii] = o_Statedata[*o].sigDev[ii];
     }

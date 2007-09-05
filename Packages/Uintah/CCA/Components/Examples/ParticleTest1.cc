@@ -40,7 +40,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
   pt1->getWithDefault("doOutput", doOutput_, 0);
   pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
   
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState_->registerSimpleMaterial(mymat_);
 
 }

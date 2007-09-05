@@ -42,7 +42,7 @@ void Poisson3::problemSetup(const ProblemSpecP& params,
   sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
   poisson->require("delt", delt_);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  

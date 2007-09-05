@@ -594,13 +594,13 @@ Solver::makeUnderlyingIdentity(const Counter level,
   dbg << "Putting identity on underlying coarse data" << "\n"
       << "coarseUnderFine " << coarseUnderFine << "\n";
   Counter stencilSize = hypre_SStructStencilSize(stencil);
-  int* entries = scinew int[stencilSize];
+  int* entries = new int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) {
     entries[entry] = entry;
   }
   const Counter numCoarseCells = coarseUnderFine.volume();
-  double* values    =scinew double[stencilSize * numCoarseCells];
-  double* rhsValues =scinew double[numCoarseCells];
+  double* values    = new double[stencilSize * numCoarseCells];
+  double* rhsValues = new double[numCoarseCells];
 
   dbg.setLevel(3);
   dbg << "Looping over cells in coarse underlying box:" 
@@ -661,7 +661,7 @@ Solver::makeInteriorEquations(const Counter level,
   linePrint("=",50);
   const Counter& numDims   = _param->numDims;
   Counter stencilSize = hypre_SStructStencilSize(stencil);
-  int* entries = scinew int[stencilSize];
+  int* entries = new int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) {
     entries[entry] = entry;
   }
@@ -675,9 +675,9 @@ Solver::makeInteriorEquations(const Counter level,
     dbg0 << "At patch = " << i << "\n";
     // Add equations of interior cells of this patch to A
     Patch* patch = lev->_patchList[MYID][i];
-    double* values    =scinew double[stencilSize * patch->_numCells];
-    double* rhsValues =scinew double[patch->_numCells];
-    double* solutionValues =scinew double[patch->_numCells];
+    double* values    = new double[stencilSize * patch->_numCells];
+    double* rhsValues = new double[patch->_numCells];
+    double* solutionValues = new double[patch->_numCells];
     dbg.setLevel(3);
     dbg << "Adding interior equations at Patch " << i
         << ", Extents = " << patch->_box << "\n";

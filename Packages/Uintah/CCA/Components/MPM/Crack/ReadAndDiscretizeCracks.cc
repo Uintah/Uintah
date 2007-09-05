@@ -820,8 +820,8 @@ Crack::DiscretizeCurvedQuadCracks(const int& m,int& nnode0)
       num=(ni+1)*(nj+1)+ni*nj;
 
       // Flag if node i is on edge j, initialized by NO 
-      short** nodeOnEdge = scinew short*[num];
-      for(i=0; i<num; i++) nodeOnEdge[i] = scinew short[4];
+      short** nodeOnEdge = new short*[num];
+      for(i=0; i<num; i++) nodeOnEdge[i] = new short[4];
       for(i=0; i<num; i++) {
         for(j=0; j<4; j++) nodeOnEdge[i][j]=NO;
       }
@@ -931,8 +931,8 @@ Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
       num=(ni+1)*(nj+1)+ni*nj; 
 
       // Flag if node i is on edge j, initialized by NO 
-      short** nodeOnEdge = scinew short*[num];
-      for(i=0; i<num; i++) nodeOnEdge[i] = scinew short[4];  
+      short** nodeOnEdge = new short*[num];
+      for(i=0; i<num; i++) nodeOnEdge[i] = new short[4];  
       for(i=0; i<num; i++) {
         for(j=0; j<4; j++) nodeOnEdge[i][j]=NO;
       }     
@@ -1057,8 +1057,8 @@ Crack::DiscretizeTriangularCracks(const int&m, int& nnode0)
       num=(neq+1)*(neq+2)/2; 
 
       // Flag if node 'i' is on edge 'j', initialized by NO 
-      short** nodeOnEdge = scinew short*[num];
-      for(i=0; i<num; i++) nodeOnEdge[i] = scinew short[3];  
+      short** nodeOnEdge = new short*[num];
+      for(i=0; i<num; i++) nodeOnEdge[i] = new short[3];  
       for(i=0; i<num; i++) {
         for(j=0; j<3; j++) nodeOnEdge[i][j]=NO;
       }     
@@ -1433,7 +1433,7 @@ Crack::ResetCrackNodes(const int& m, const int& n1, const int& /*n2*/)
   // If cx[m][n1]=cx[m][n2], drop node n1
                 
   int num=(int)cx[m].size();
-  Point* tmp = scinew Point[num];    
+  Point* tmp = new Point[num];    
   for(int i=0; i<num; i++) tmp[i]=cx[m][i];
 
   cx[m].clear();
@@ -1451,7 +1451,7 @@ void
 Crack::ResetCrackElements(const int& m, const int& n1, const int& n2)
 {
    int num=(int)ce[m].size();
-   IntVector* tmp = scinew IntVector[num];
+   IntVector* tmp = new IntVector[num];
    for(int i=0; i<num; i++) tmp[i]=ce[m][i]; 
 
    for(int i=0; i<num; i++) { 
@@ -1479,7 +1479,7 @@ void
 Crack::ResetCrackFrontNodes(const int& m, const int& n1, const int& n2)
 {
    int num=(int)cfSegNodes[m].size();
-   int* tmp = scinew int[num];
+   int* tmp = new int[num];
    for(int i=0; i<num; i++) tmp[i]=cfSegNodes[m][i];
 
    for(int i=0; i<num; i++) {
