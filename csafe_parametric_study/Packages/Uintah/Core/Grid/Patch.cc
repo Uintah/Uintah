@@ -39,7 +39,7 @@ Patch::Patch(const Level* level,
   if(!ids){
     ids_init.lock();
     if(!ids){
-      ids = scinew AtomicCounter("Patch ID counter", 0);
+      ids = new AtomicCounter("Patch ID counter", 0);
     }
     ids_init.unlock();
     

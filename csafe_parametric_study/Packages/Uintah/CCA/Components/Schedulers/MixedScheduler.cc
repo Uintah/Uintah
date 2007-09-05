@@ -44,7 +44,7 @@ MixedScheduler::~MixedScheduler()
 SchedulerP
 MixedScheduler::createSubScheduler()
 {
-  MixedScheduler* newsched = scinew MixedScheduler(d_myworld, m_outPort);
+  MixedScheduler* newsched = new MixedScheduler(d_myworld, m_outPort);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   return newsched;

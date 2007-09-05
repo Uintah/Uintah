@@ -33,7 +33,7 @@ void Burger::problemSetup(const ProblemSpecP& params,
   sharedState_ = sharedState;
   ProblemSpecP burger = params->findBlock("Burger");
   burger->require("delt", delt_);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  

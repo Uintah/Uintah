@@ -63,7 +63,7 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
   if(!ids){
     ids_init.lock();
     if(!ids){
-      ids = scinew AtomicCounter("Patch ID counter", 0);
+      ids = new AtomicCounter("Patch ID counter", 0);
     }
     ids_init.unlock();
     

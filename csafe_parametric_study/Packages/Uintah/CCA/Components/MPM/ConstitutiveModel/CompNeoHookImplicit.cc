@@ -174,7 +174,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
     Identity.Identity();
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
     
@@ -433,7 +433,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
-     LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+     LinearInterpolator* interpolator = new LinearInterpolator(patch);
      Ghost::GhostType  gac   = Ghost::AroundCells;
      if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;

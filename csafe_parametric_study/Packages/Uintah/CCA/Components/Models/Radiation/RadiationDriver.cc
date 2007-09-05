@@ -371,7 +371,7 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
   
  
   int m = d_matl_G->getDWIndex();
-  MaterialSet* matl_set = scinew MaterialSet();
+  MaterialSet* matl_set = new MaterialSet();
   matl_set->add(m);
   matl_set->addReference();
   
@@ -506,8 +506,8 @@ RadiationDriver::scheduleComputeModelSources(SchedulerP& sched,
 
   // compute the material set and subset
   int m  = d_matl_G->getDWIndex();
-  MaterialSet* matl_set_G  = scinew MaterialSet();
-  MaterialSet* matl_set_GS = scinew MaterialSet();
+  MaterialSet* matl_set_G  = new MaterialSet();
+  MaterialSet* matl_set_GS = new MaterialSet();
   const MaterialSubset* mss_G = d_matl_G->thisMaterial();
   const MaterialSubset* mss_S = NULL; 
   

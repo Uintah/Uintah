@@ -188,7 +188,7 @@ void SimpleCFD::problemSetup(const ProblemSpecP& params,
     random_initial_velocities=Vector(0,0,0);
   if(buoyancy_ > 0 || thermal_conduction_ > 0)
     do_thermal=true;
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 
   regiondb.problemSetup(cfd, grid);

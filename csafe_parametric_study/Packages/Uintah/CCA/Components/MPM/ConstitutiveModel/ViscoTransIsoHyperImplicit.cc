@@ -385,7 +385,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     Matrix3 shear;
     Vector deformed_fiber_vector;
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(8);
     vector<Vector> d_S(8);
 
@@ -878,7 +878,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      double dWdI4tilde;
      Vector deformed_fiber_vector;
 
-     LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+     LinearInterpolator* interpolator = new LinearInterpolator(patch);
      vector<IntVector> ni(interpolator->size());
      vector<Vector> d_S(interpolator->size());
 

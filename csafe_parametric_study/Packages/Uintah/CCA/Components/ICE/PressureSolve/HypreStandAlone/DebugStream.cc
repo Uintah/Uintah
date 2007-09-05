@@ -84,7 +84,7 @@ DebugBuf::xsputn(const char* s,
 DebugStream::DebugStream(const string& iname, bool active) :
   ostream(0), _verboseLevel(0), _level(0), _indent(0), _stickyLevel(false)
 {
-  _dbgbuf = scinew DebugBuf();
+  _dbgbuf = new DebugBuf();
   init(_dbgbuf);
   _name = iname;
   _dbgbuf->owner = this;

@@ -82,7 +82,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();  
 
@@ -92,7 +92,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
   string id;
   params->get("id", id);
   try {
-    gas = scinew IdealGasMix(fname, id);
+    gas = new IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
     if(d_myworld->myrank() == 0){
 #if 0
@@ -103,7 +103,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
 #endif
     }
     for (int k = 0; k < nsp; k++) {
-      Stream* stream = scinew Stream();
+      Stream* stream = new Stream();
       stream->index = k;
       stream->name = gas->speciesName(k);
       string mfname = "massFraction-"+stream->name;
@@ -307,10 +307,10 @@ double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
   if(!r){
     nmiss++;
     double approx_dt = exp(idt/dtfactor);
-    int* imfcopy = scinew int[nsp];
+    int* imfcopy = new int[nsp];
     for(int i=0;i<nsp;i++)
       imfcopy[i] = imf[i];
-    double* newmf =scinew double[nsp];
+    double* newmf = new double[nsp];
     for(int i=0;i<nsp;i++)
       newmf[i] = imf[i]*dmf;
     double temp = itemp*dtemp;
@@ -344,7 +344,7 @@ double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
 	cerr << " " << gas->speciesName(i) << ":" << newmf[i];
     }
 
-    r = scinew M3Key(nsp, idt, itemp, ipress, imfcopy, dtemp, newmf);
+    r = new M3Key(nsp, idt, itemp, ipress, imfcopy, dtemp, newmf);
     table.insert(r);
     double hitrate = (double)nmiss/(double)nlook;
     cerr << "temp: " << temp << " += " << dtemp << ", hitrate=" << hitrate*100 << "%\n";
@@ -390,9 +390,9 @@ void Mixing3::computeModelSources(const ProcessorGroup*,
       StaticArray<constCCVariable<double> > mf(numSpecies);
       StaticArray<CCVariable<double> > mfsource(numSpecies);
       int index = 0;
-      int* imf = scinew int[numSpecies];
-      double* tmp_mf =scinew double[numSpecies];
-      double* new_mf =scinew double[numSpecies];
+      int* imf = new int[numSpecies];
+      double* tmp_mf = new double[numSpecies];
+      double* new_mf = new double[numSpecies];
       for(vector<Stream*>::iterator iter = streams.begin();
 	  iter != streams.end(); iter++, index++){
 	Stream* stream = *iter;

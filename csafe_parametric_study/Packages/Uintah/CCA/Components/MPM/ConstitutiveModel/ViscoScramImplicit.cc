@@ -385,7 +385,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -577,7 +577,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     double Jinc;
     double onethird = (1.0/3.0);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 

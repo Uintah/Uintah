@@ -54,7 +54,6 @@
 #  include <unistd.h>
 #endif
 
-#include <time.h>
 #if defined(REDSTORM)
 #  include <time.h>
 #endif

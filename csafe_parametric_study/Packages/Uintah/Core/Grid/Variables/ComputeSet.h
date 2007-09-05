@@ -284,7 +284,7 @@ WARNING
   template<class T>
   const ComputeSubset<T>* ComputeSet<T>::getUnion() const {
     if(!un){
-      un = scinew ComputeSubset<T>;
+      un = new ComputeSubset<T>;
       un->addReference();
       for(int i=0;i<(int)set.size();i++){
 	ComputeSubset<T>* ss = set[i];

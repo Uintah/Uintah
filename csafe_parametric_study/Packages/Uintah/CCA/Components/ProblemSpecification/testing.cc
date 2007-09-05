@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
 
   string xmlFile = argv[1];
 
-  XercesDOMParser* parser = scinew XercesDOMParser;
+  XercesDOMParser* parser = new XercesDOMParser;
 
   parser->parse(xmlFile.c_str());
 

@@ -104,7 +104,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
@@ -123,7 +123,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
-    TableValue* tv = scinew TableValue;
+    TableValue* tv = new TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
     string labelname = tv->name;
@@ -187,7 +187,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   // - Let ICE know that this model computes the 
   //   thermoTransportProperties.
   // - register the scalar to be transported
-  d_scalar = scinew Scalar();
+  d_scalar = new Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   

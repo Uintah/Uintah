@@ -91,7 +91,7 @@ WARNING
       Stencil<T>*
       Stencil<T>::clone() const
       {
-	 return scinew Stencil<T>(*this);
+	 return new Stencil<T>(*this);
       }
    
    template<class T>

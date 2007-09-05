@@ -72,7 +72,7 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   if (!x_laplacian && !y_laplacian && !z_laplacian)
     throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  
