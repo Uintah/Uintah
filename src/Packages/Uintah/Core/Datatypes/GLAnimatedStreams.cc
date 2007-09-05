@@ -130,9 +130,9 @@ void GLAnimatedStreams::ResetStreams() {
   if( head )
     delete [] head;
   
-  fx = new Point[NUMSOLS];
-  tail = new streamerNode*[NUMSOLS];
-  head = new streamerNode*[NUMSOLS];
+  fx = scinew Point[NUMSOLS];
+  tail = scinew streamerNode*[NUMSOLS];
+  head = scinew streamerNode*[NUMSOLS];
 
   cerr << "GLAnimatedStreams::ResetStreams:end\n";
 
@@ -363,7 +363,7 @@ GLAnimatedStreams::newStreamer(int whichStreamer)
   }
   fx[whichStreamer] = loc;
   
-  tempNode = new streamerNode;
+  tempNode = scinew streamerNode;
   tempNode->position = fx[whichStreamer];
 
   tempNode->normal = Vector(0,0,0);
@@ -477,7 +477,7 @@ void GLAnimatedStreams::AdvanceStreams(int start, int end) {
       
       streamerNode* tempNode;
       if( head[i]->counter < MAX_ITERS) {
-	head[i]->next = new streamerNode;
+	head[i]->next = scinew streamerNode;
 	head[i]->next->counter = head[i]->counter+1;
 	tempNode = head[i];
 	head[i] = head[i]->next;
