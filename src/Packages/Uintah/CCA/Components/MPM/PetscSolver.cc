@@ -98,6 +98,9 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-trdump", PETSC_NULL);
 #endif
   PetscPopSignalHandler();
+
+  if(argc>0)
+    delete argv;
 }
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
