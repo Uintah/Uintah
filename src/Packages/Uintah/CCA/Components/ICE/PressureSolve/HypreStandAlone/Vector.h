@@ -680,7 +680,7 @@ min (const Vector<T>& a,
      // Pointwise min of two vectors
 {
   assert( a.getLen() == b.getLen() );
-  T* news = new T [a.getLen()];
+  T* news = scinew T [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) {
     news[i] = min(a.getData()[i],b.getData()[i]);
   }
@@ -696,7 +696,7 @@ max (const Vector<T>& a,
      // Pointwise max of two vectors
 {
   assert( a.getLen() == b.getLen() );
-  T* news = new T [a.getLen()];
+  T* news = scinew T [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) {
     news[i] = max(a.getData()[i],b.getData()[i]);
   }
@@ -717,7 +717,7 @@ operator + (const Vector<S>& a,   /* Vector<S> = Vector<T> + Vector<S> */
             const Vector<T>& b)
 {
   assert( a.getLen() == b.getLen() );
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] + b.getData()[i];
   std::ostringstream newName;
   newName << b.getName() << " + " << a.getName();
@@ -730,7 +730,7 @@ operator - (const Vector<S>& a,   /* Vector<S> = Vector<T> - Vector<S> */
             const Vector<T>& b)
 {
   assert( a.getLen() == b.getLen() );
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] - b.getData()[i];
   std::ostringstream newName;
   newName << b.getName() << " - " << a.getName();
@@ -743,7 +743,7 @@ operator * (const Vector<S>& a,   /* Vector<S> = Vector<T> * Vector<S> */
             const Vector<T>& b)
 {
   assert( a.getLen() == b.getLen() );
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] * b.getData()[i];
   std::ostringstream newName;
   newName << b.getName() << " * " << a.getName();
@@ -757,7 +757,7 @@ operator / (const Vector<S>& a,   /* Vector<S> = Vector<T> / Vector<S> */
 {
   assert( a.getLen() == b.getLen() );
 
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) {
     if (b.getData()[i] == S(0)) {
       std::ostringstream msg;
@@ -780,7 +780,7 @@ Vector<S>
 operator + (const Vector<T>& a,   /* Vector<S> = Vector<T> + scalar<S> */
             const S& b)
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] + b;
   std::ostringstream newName;
   newName << b << " + " << a.getName();
@@ -792,7 +792,7 @@ Vector<S>
 operator - (const Vector<T>& a,   /* Vector<S> = Vector<T> - scalar<S> */
             const S& b)
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] - b;
   std::ostringstream newName;
   newName << b << " - " << a.getName();
@@ -804,7 +804,7 @@ Vector<S>
 operator * (const Vector<T>& a,   /* Vector<S> = Vector<T> * scalar<S> */
             const S& b)
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] * b;
   std::ostringstream newName;
   newName << b << " * " << a.getName();
@@ -821,7 +821,7 @@ operator / (const Vector<T>& a,   /* Vector<S> = Vector<T> / scalar<S> */
     msg << "Vector / VAR: division by 0";
     a.error(msg);
   }
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = a.getData()[i] / b;
   std::ostringstream newName;
   newName << b << " / " << a.getName();
@@ -835,7 +835,7 @@ Vector<S>
 operator + (const S& b,
             const Vector<T>& a)   /* Vector<S> = scalar<S> + Vector<T> */
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = b + a.getData()[i];
   std::ostringstream newName;
   newName << b << " + " << a.getName();
@@ -847,7 +847,7 @@ Vector<S>
 operator - (const S& b,
             const Vector<T>& a)   /* Vector<S> = scalar<S> - Vector<T> */
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = b - a.getData()[i];
   std::ostringstream newName;
   newName << b << " - " << a.getName();
@@ -860,7 +860,7 @@ Vector<S>
 operator * (const S& b,
             const Vector<T>& a)   /* Vector<S> = scalar<S> * Vector<T> */
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) news[i] = b * a.getData()[i];
   std::ostringstream newName;
   newName << b << " * " << a.getName();
@@ -872,7 +872,7 @@ Vector<S>
 operator / (const S& b,
             const Vector<T>& a)   /* Vector<S> = scalar<S> / Vector<T> */
 {
-  S* news = new S [a.getLen()];
+  S* news = scinew S [a.getLen()];
   for (Counter i = 0; i < a.getLen(); i++) {
     if (a.getData()[i] == T(0)) {
       std::ostringstream msg;

@@ -97,10 +97,10 @@ AcousticTensorCheck::isLocalized(const TangentModulusTensor& C,
   //             each increment
   // localMin  : Array pointing to local minima : 1 for local minimum, 0 if not
   double** detA =scinew double*[d_numTheta];
-  int** localMin = new int*[d_numTheta]; 
+  int** localMin = scinew int*[d_numTheta]; 
   for (int ii = 0; ii < d_numTheta; ++ii) {
     detA[ii] =scinew double[d_numPhi];  
-    localMin[ii] = new int[d_numPhi];
+    localMin[ii] = scinew int[d_numPhi];
     for (int jj = 0; jj < d_numPhi; jj++) {
       detA[ii][jj] = 0.0;
       localMin[ii][jj] = 0;

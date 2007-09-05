@@ -123,7 +123,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
-    TableValue* tv = new TableValue;
+    TableValue* tv = scinew TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
     string labelname = tv->name;
