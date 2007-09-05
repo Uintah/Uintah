@@ -435,13 +435,13 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   int nSegs=16;
                   double xprime,yprime,x,y,z;
                   double PI=3.141592654;
-                  Point*   X  = new Point[nSegs+1];   // Integration points
+                  Point*   X  = scinew Point[nSegs+1];   // Integration points
                   double*  W  =scinew double[nSegs+1];  // Strain energy density
                   double*  K  =scinew double[nSegs+1];  // Kinetic energy density
-                  Matrix3* ST = new Matrix3[nSegs+1]; // Stresses in global coordinates
-                  Matrix3* DG = new Matrix3[nSegs+1]; // Disp grads in global coordinates
-                  Matrix3* st = new Matrix3[nSegs+1]; // Stresses in local coordinates
-                  Matrix3* dg = new Matrix3[nSegs+1]; // Disp grads in local coordinates
+                  Matrix3* ST = scinew Matrix3[nSegs+1]; // Stresses in global coordinates
+                  Matrix3* DG = scinew Matrix3[nSegs+1]; // Disp grads in global coordinates
+                  Matrix3* st = scinew Matrix3[nSegs+1]; // Stresses in local coordinates
+                  Matrix3* dg = scinew Matrix3[nSegs+1]; // Disp grads in local coordinates
 
                   for(int j=0; j<=nSegs; j++) {       // Loop over points on the circle
                     double angle,cosTheta,sinTheta;
@@ -618,8 +618,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                     // Get the solution at the integral points in local system
                     Vector* acc=new Vector[count];      // accelerations
                     Vector* vel=new Vector[count];      // velocities
-                    Matrix3* dg = new Matrix3[count];   // displacement gradients
-                    Matrix3* vg = new Matrix3[count];   // velocity gradients
+                    Matrix3* dg = scinew Matrix3[count];   // displacement gradients
+                    Matrix3* vg = scinew Matrix3[count];   // velocity gradients
 
                     for(int j=0; j<count; j++) {
                       // Get the solutions in global system

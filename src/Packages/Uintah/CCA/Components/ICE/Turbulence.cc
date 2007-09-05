@@ -21,7 +21,7 @@ Turbulence::Turbulence(ProblemSpecP& ps, SimulationStateP& sharedState)
 {
   for (ProblemSpecP child = ps->findBlock("FilterScalar"); child != 0;
        child = child->findNextBlock("FilterScalar")) {
-    FilterScalar* s = new FilterScalar;
+    FilterScalar* s = scinew FilterScalar;
     child->get("name", s->name);
 
     s->matl = sharedState->parseAndLookupMaterial(child, "material");

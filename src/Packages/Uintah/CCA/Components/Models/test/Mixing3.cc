@@ -92,7 +92,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
   string id;
   params->get("id", id);
   try {
-    gas = new IdealGasMix(fname, id);
+    gas = scinew IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
     if(d_myworld->myrank() == 0){
 #if 0
@@ -103,7 +103,7 @@ void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
 #endif
     }
     for (int k = 0; k < nsp; k++) {
-      Stream* stream = new Stream();
+      Stream* stream = scinew Stream();
       stream->index = k;
       stream->name = gas->speciesName(k);
       string mfname = "massFraction-"+stream->name;
@@ -344,7 +344,7 @@ double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
 	cerr << " " << gas->speciesName(i) << ":" << newmf[i];
     }
 
-    r = new M3Key(nsp, idt, itemp, ipress, imfcopy, dtemp, newmf);
+    r = scinew M3Key(nsp, idt, itemp, ipress, imfcopy, dtemp, newmf);
     table.insert(r);
     double hitrate = (double)nmiss/(double)nlook;
     cerr << "temp: " << temp << " += " << dtemp << ", hitrate=" << hitrate*100 << "%\n";

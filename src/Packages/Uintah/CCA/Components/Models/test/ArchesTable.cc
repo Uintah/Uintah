@@ -398,7 +398,7 @@ void ArchesTable::setup(const bool cerrSwitch)
   // Down-slice the table if necessary
   int dim_diff = in_inds.size()-inds.size();
   long interp_size = 1<<dim_diff;
-  long* idx = new long[interp_size];
+  long* idx = scinew long[interp_size];
   double* w =scinew double[interp_size];
 
   for(int idep=0;idep<static_cast<int>(deps.size());idep++){
