@@ -285,7 +285,7 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
-  Task * t = new Task("SpecifiedBodyContact::exMomInterpolated",
+  Task * t = scinew Task("SpecifiedBodyContact::exMomInterpolated",
                       this, &SpecifiedBodyContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
@@ -299,7 +299,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
-  Task * t = new Task("SpecifiedBodyContact::exMomIntegrated", 
+  Task * t = scinew Task("SpecifiedBodyContact::exMomIntegrated", 
                       this, &SpecifiedBodyContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();

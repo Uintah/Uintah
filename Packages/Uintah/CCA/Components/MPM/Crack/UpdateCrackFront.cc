@@ -254,7 +254,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
        
         // Store crack-front parameters in temporary arraies
         int old_size=(int)cfSegNodes[m].size();
-        int*  copyData = new int[old_size];
+        int*  copyData = scinew int[old_size];
 
         for(int i=0; i<old_size; i++) copyData[i]=cfSegNodes[m][i];
         cfSegNodes[m].clear();

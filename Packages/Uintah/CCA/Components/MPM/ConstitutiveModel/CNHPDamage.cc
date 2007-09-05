@@ -404,7 +404,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -607,7 +607,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 

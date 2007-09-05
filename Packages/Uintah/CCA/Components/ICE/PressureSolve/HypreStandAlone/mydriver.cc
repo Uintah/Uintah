@@ -181,7 +181,7 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Set test cast parameters */
   Param*                param;
-  param = new TestLinear(3,8); // numDims, baseResolution
+  param = scinew TestLinear(3,8); // numDims, baseResolution
   param->solverType    = Param::FAC; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
   param->printSystem   = true;
@@ -196,10 +196,10 @@ main(int argc, char *argv[]) {
   Solver*               solver = 0;      // Solver data structure
   switch (param->solverType) {
   case Param::AMG:
-    solver = new SolverAMG(param);
+    solver = scinew SolverAMG(param);
     break;
   case Param::FAC:
-    solver = new SolverFAC(param);
+    solver = scinew SolverFAC(param);
     break;
   default:
     cerr << "\n\nError: unknown solver type" << "\n";
@@ -312,7 +312,7 @@ main(int argc, char *argv[]) {
   /*
     A = the original composite grid operator.
     Residual norms in any solver are measured as ||b-A*x||. 
-    If FAC solver is used, it creates a new matrix fac_A from A, and uses
+    If FAC solver is used, it creates a scinew matrix fac_A from A, and uses
     Galerkin coarsening to replace the equations in a coarse patch underlying
     a fine patch.
   */

@@ -36,7 +36,7 @@ void Poisson2::problemSetup(const ProblemSpecP& params,
   ProblemSpecP poisson = params->findBlock("Poisson");
   poisson->require("delt", delt_);
   poisson->require("maxresidual", maxresidual_);
-  mymat_ = new SimpleMaterial();
+  mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  

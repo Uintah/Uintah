@@ -89,7 +89,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
-  mymatls = new MaterialSet();
+  mymatls = scinew MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();
 
@@ -97,7 +97,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
   int index = 0;
   for (ProblemSpecP child = params->findBlock("stream"); child != 0;
        child = child->findNextBlock("stream")) {
-    Stream* stream = new Stream();
+    Stream* stream = scinew Stream();
     stream->index = index++;
     child->getAttribute("name", stream->name);
     string mfname = "massFraction-"+stream->name;
@@ -140,7 +140,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
   for (ProblemSpecP child = params->findBlock("reaction"); child != 0;
        child = child->findNextBlock("reaction")) {
-    Reaction* rxn = new Reaction();
+    Reaction* rxn = scinew Reaction();
     string from;
     child->require("from", from);
     vector<Stream*>::iterator iter = streams.begin();
