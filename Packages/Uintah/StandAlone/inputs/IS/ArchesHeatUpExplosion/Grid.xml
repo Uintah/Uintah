@@ -147,7 +147,7 @@
            </Box>
     </Level>
         
-    <!--   
+   
     <Level>
            <Box label = "1mm res.">
               <lower>        [-0.06,-0.06,-0.072]   </lower>
@@ -157,7 +157,6 @@
               <patches>      [10,10,6]                </patches>
               <resolution>   [120,120,144]          </resolution>
            </Box>
-   </Level>
-   -->
+    </Level>
   </Grid>
 </Uintah_Include>
