@@ -91,9 +91,6 @@ WARNING
                                           const PatchSet* patches,
                                           const ModelInfo* mi);
     
-    virtual void setMPMLabel(MPMLabel* MLB);    
-    
-    
   private:    
     void computeModelSources(const ProcessorGroup*, const PatchSubset*,
                              const MaterialSubset*, DataWarehouse*, 

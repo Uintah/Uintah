@@ -51,7 +51,7 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld,
 
 Steady_Burn::~Steady_Burn(){
   delete Ilb;
-  //delete Mlb; /* don't delete it here, or complain "double free or corruption" */ 
+  delete Mlb; 
   delete MIlb;
   delete d_saveConservedVars;
   
@@ -541,12 +541,6 @@ void Steady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
 void Steady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
   // Not implemented yet
 }
-
-void Steady_Burn::setMPMLabel(MPMLabel* MLB){
-  Mlb = MLB;
-}
-
-
 
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/
