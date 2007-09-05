@@ -599,8 +599,8 @@ Solver::makeUnderlyingIdentity(const Counter level,
     entries[entry] = entry;
   }
   const Counter numCoarseCells = coarseUnderFine.volume();
-  double* values    = new double[stencilSize * numCoarseCells];
-  double* rhsValues = new double[numCoarseCells];
+  double* values    =scinew double[stencilSize * numCoarseCells];
+  double* rhsValues =scinew double[numCoarseCells];
 
   dbg.setLevel(3);
   dbg << "Looping over cells in coarse underlying box:" 
@@ -675,9 +675,9 @@ Solver::makeInteriorEquations(const Counter level,
     dbg0 << "At patch = " << i << "\n";
     // Add equations of interior cells of this patch to A
     Patch* patch = lev->_patchList[MYID][i];
-    double* values    = new double[stencilSize * patch->_numCells];
-    double* rhsValues = new double[patch->_numCells];
-    double* solutionValues = new double[patch->_numCells];
+    double* values    =scinew double[stencilSize * patch->_numCells];
+    double* rhsValues =scinew double[patch->_numCells];
+    double* solutionValues =scinew double[patch->_numCells];
     dbg.setLevel(3);
     dbg << "Adding interior equations at Patch " << i
         << ", Extents = " << patch->_box << "\n";

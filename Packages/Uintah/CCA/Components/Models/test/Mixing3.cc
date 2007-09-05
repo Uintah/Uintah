@@ -310,7 +310,7 @@ double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
     int* imfcopy = new int[nsp];
     for(int i=0;i<nsp;i++)
       imfcopy[i] = imf[i];
-    double* newmf = new double[nsp];
+    double* newmf =scinew double[nsp];
     for(int i=0;i<nsp;i++)
       newmf[i] = imf[i]*dmf;
     double temp = itemp*dtemp;
@@ -391,8 +391,8 @@ void Mixing3::computeModelSources(const ProcessorGroup*,
       StaticArray<CCVariable<double> > mfsource(numSpecies);
       int index = 0;
       int* imf = new int[numSpecies];
-      double* tmp_mf = new double[numSpecies];
-      double* new_mf = new double[numSpecies];
+      double* tmp_mf =scinew double[numSpecies];
+      double* new_mf =scinew double[numSpecies];
       for(vector<Stream*>::iterator iter = streams.begin();
 	  iter != streams.end(); iter++, index++){
 	Stream* stream = *iter;

@@ -399,7 +399,7 @@ void ArchesTable::setup(const bool cerrSwitch)
   int dim_diff = in_inds.size()-inds.size();
   long interp_size = 1<<dim_diff;
   long* idx = new long[interp_size];
-  double* w = new double[interp_size];
+  double* w =scinew double[interp_size];
 
   for(int idep=0;idep<static_cast<int>(deps.size());idep++){
     Dep* dep = deps[idep];
@@ -415,7 +415,7 @@ void ArchesTable::setup(const bool cerrSwitch)
     if(!inputdep)
       throw InternalError(string("Dependent variable: ")+dep->name+" not found", __FILE__, __LINE__);
     cerr_dbg << "Downslicing: " << dep->name << '\n';
-    dep->data = new double[newsize];
+    dep->data =scinew double[newsize];
 
     // Build the axes
     for(int i=0;i<static_cast<int>(inds.size());i++){
@@ -551,7 +551,7 @@ void ArchesTable::setup(const bool cerrSwitch)
       continue;
 
     cerr_dbg << "Evaluating: " << dep->name << '\n';
-    dep->data = new double[newsize];
+    dep->data =scinew double[newsize];
     vector<InterpAxis*> axes;
     evaluate(dep->expression, axes, dep->data, newsize);
     for(int i=0;i<static_cast<int>(axes.size());i++)
@@ -597,8 +597,8 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 = new double[size];
-      double* data2 = new double[size];
+      double* data1 =scinew double[size];
+      double* data2 =scinew double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);
@@ -612,8 +612,8 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 = new double[size];
-      double* data2 = new double[size];
+      double* data1 =scinew double[size];
+      double* data2 =scinew double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);
@@ -627,8 +627,8 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 = new double[size];
-      double* data2 = new double[size];
+      double* data1 =scinew double[size];
+      double* data2 =scinew double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);
@@ -642,8 +642,8 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     {
       vector<InterpAxis*> axes1;
       vector<InterpAxis*> axes2;
-      double* data1 = new double[size];
-      double* data2 = new double[size];
+      double* data1 =scinew double[size];
+      double* data2 =scinew double[size];
       evaluate(expr->child1, axes1, data1, size);
       evaluate(expr->child2, axes2, data2, size);
       checkAxes(axes1, axes2, out_axes);

@@ -436,8 +436,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   double xprime,yprime,x,y,z;
                   double PI=3.141592654;
                   Point*   X  = new Point[nSegs+1];   // Integration points
-                  double*  W  = new double[nSegs+1];  // Strain energy density
-                  double*  K  = new double[nSegs+1];  // Kinetic energy density
+                  double*  W  =scinew double[nSegs+1];  // Strain energy density
+                  double*  K  =scinew double[nSegs+1];  // Kinetic energy density
                   Matrix3* ST = new Matrix3[nSegs+1]; // Stresses in global coordinates
                   Matrix3* DG = new Matrix3[nSegs+1]; // Disp grads in global coordinates
                   Matrix3* st = new Matrix3[nSegs+1]; // Stresses in local coordinates
@@ -546,8 +546,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 		  
                   // Step 7: Compute integrand values at integration points
                  
-                  double* f1ForJx = new double[nSegs+1];
-                  double* f1ForJy = new double[nSegs+1];
+                  double* f1ForJx =scinew double[nSegs+1];
+                  double* f1ForJy =scinew double[nSegs+1];
                   for(int j=0; j<=nSegs; j++) {
                     double angle,cosTheta,sinTheta;
 
