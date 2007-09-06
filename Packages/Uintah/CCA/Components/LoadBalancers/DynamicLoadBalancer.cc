@@ -536,14 +536,12 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         notakeimb=fabs(cost-halfCost);
       }
 
-      /*
       if(lb.active())
       {
         lb << d_myworld->myrank() << "  RemainingPatches:" << remainingPatches << " RemainingCost:" << remainingCost << " RemainingProcs:" << remainingProcessors << " cost:" << cost
               << " halfCost:" << halfCost << " halfProc:" << halfProc << " startProc:" << startingProc << " startingPatch:" << startingPatch
               << endl;
       }
-      */
       if(d_myworld->myrank()<startingProc+halfProc)
       {
         //continue on left side
