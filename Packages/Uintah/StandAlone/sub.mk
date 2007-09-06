@@ -362,8 +362,7 @@ fake_arches:
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
-tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract
-	;
+tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar
 
 puda: prereqs Packages/Uintah/StandAlone/tools/puda/puda
 
@@ -402,3 +401,8 @@ timeextract: Packages/Uintah/StandAlone/tools/extractors/timeextract
 faceextract: Packages/Uintah/StandAlone/tools/extractors/faceextract
 
 lineextract: Packages/Uintah/StandAlone/tools/extractors/lineextract
+
+compare_mms: Packages/Uintah/StandAlone/tools/compare_mms/compare_mms
+
+compare_scalar: Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar
+
