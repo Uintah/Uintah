@@ -536,12 +536,14 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         notakeimb=fabs(cost-halfCost);
       }
 
+      /*
       if(lb.active())
       {
         lb << d_myworld->myrank() << "  RemainingPatches:" << remainingPatches << " RemainingCost:" << remainingCost << " RemainingProcs:" << remainingProcessors << " cost:" << cost
               << " halfCost:" << halfCost << " halfProc:" << halfProc << " startProc:" << startingProc << " startingPatch:" << startingPatch
               << endl;
       }
+      */
       if(d_myworld->myrank()<startingProc+halfProc)
       {
         //continue on left side
@@ -580,7 +582,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
          processor++;
     
       if(lb.active() && d_myworld->myrank()==0 )
-        lb << "On Level:" << l << " Patch:" << order[p] << " assigning to:" << processor << " cost:" << patch_costs[l][order[p]] << endl;
+        lb << "On Level:" << l << " Patch:" << level_offset+order[p] << " assigning to:" << processor << " cost:" << patch_costs[l][order[p]] << endl;
       
       d_tempAssignment[level_offset+order[p]] = processor;
     }
