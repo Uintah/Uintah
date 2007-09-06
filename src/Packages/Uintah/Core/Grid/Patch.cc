@@ -24,7 +24,7 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-static AtomicCounter* ids = 0;
+static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 
 Patch::Patch(const Level* level,
@@ -36,20 +36,13 @@ Patch::Patch(const Level* level,
       d_id( id )
 {
   have_layout=false;
-  if(!ids){
-    ids_init.lock();
-    if(!ids){
-      ids = scinew AtomicCounter("Patch ID counter", 0);
-    }
-    ids_init.unlock();
-    
-  }
+  
   if(d_id == -1){
-    d_id = (*ids)++;
+    d_id = ids++;
 
   } else {
-    if(d_id >= *ids)
-      ids->set(d_id+1);
+    if(d_id >= ids)
+      ids.set(d_id+1);
   }
    
   d_hasCoarsefineInterfaceFace = false;

@@ -41,7 +41,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-static AtomicCounter* ids = 0;
+static AtomicCounter ids("Level ID counter",0);
 static Mutex ids_init("ID init");
 
 static DebugStream bcout("BCTypes", false);
@@ -60,18 +60,11 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
 #endif
   d_finalized=false;
   d_extraCells = IntVector(0,0,0);
-  if(!ids){
-    ids_init.lock();
-    if(!ids){
-      ids = scinew AtomicCounter("Patch ID counter", 0);
-    }
-    ids_init.unlock();
-    
-  }
+  
   if(d_id == -1)
-    d_id = (*ids)++;
-  else if(d_id >= *ids)
-    ids->set(d_id+1);
+    d_id = ids++;
+  else if(d_id >= ids)
+    ids.set(d_id+1);
 }
 
 Level::~Level()
