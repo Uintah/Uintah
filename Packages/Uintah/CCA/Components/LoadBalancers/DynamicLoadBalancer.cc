@@ -522,7 +522,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //if we do not have enough patches on the left side for all processors 
       //  or if there is enough patches for the right side
       //     and taking the patch causes less imbalance than not taking it
-      while(p<halfProc || remainingPatches-p>remainingProcessors-halfProc && notakeimb>takeimb)
+      while(p<halfProc || (remainingPatches-p>remainingProcessors-halfProc && notakeimb>takeimb) )
       {
         //assign this patch to left side
         cost+=patch_costs[l][order[startingProc+p++]];
@@ -571,6 +571,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     ASSERT((startingProc==d_myworld->myrank() && remainingProcessors==1) || remainingPatches==0);
     //allgather patchsets
     MPI_Allgather(&startingPatch,1,MPI_INT,&startPatch[0],1,MPI_INT,d_myworld->getComm());
+    
+    if(l==grid->numLevels()-1 && startPatch[d_myworld->myrank()]==startPatch[d_myworld->myrank()+1])
+    {
+      cout << "WARNING rank:" << d_myworld->myrank() << " does not have any patches on the finest level\n";
+    }
 
     //set d_tempAssignment array
     int processor=0;
@@ -585,8 +590,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       d_tempAssignment[level_offset+order[p]] = processor;
     }
     
-#endif
     
+#endif
     if(stats.active() && d_myworld->myrank()==0)
     {
       //calculate lb stats:
