@@ -14,7 +14,7 @@ find HT* -name "out.*" -maxdepth 2|sort
 touch .procs .date .elapsedTime
 
 foreach X ($f[*]:q)
- grep Date $X | cut -d":" -f2-4 >> .date
+ grep Date $X -m 1| cut -d":" -f2-4 >> .date
  grep processors $X | cut -d" " -f 2 >> .procs
  grep Time= $X |tail -n 1  | cut -d"=" -f4 | cut -d"," -f1 >> .elapsedTime
 end

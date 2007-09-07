@@ -123,6 +123,7 @@ if($hardcopy == "y" || $hardcopy == "Y") then
 endif
 #__________________________________
 # clean up
+chmod g+rw gp .data
 rm -f gp .data
 
 exit(1)

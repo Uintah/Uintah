@@ -64,5 +64,5 @@ if($hardcopy == "y" || $hardcopy == "Y") then
   mogrify -rotate 90 plotMassBurned.jpg
 endif
 
-/bin/rm $out.tmp1
+/bin/rm gp $out.tmp1
 exit(1)

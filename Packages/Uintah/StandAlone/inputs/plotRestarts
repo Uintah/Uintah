@@ -57,7 +57,7 @@ echo "Generating the postscript file plotRestarts.ps"
 /bin/rm gp
 cat > gp << fin
 set terminal x11 1
-set terminal postscript color solid "Times-Roman" 9
+set terminal postscript color solid "Times-Roman" 12
 set output "plotRestarts.ps"
 fin
 endif
