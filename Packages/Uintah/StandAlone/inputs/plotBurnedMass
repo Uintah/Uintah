@@ -19,6 +19,10 @@ if ( $#argv == 1 ) then
   set hardcopy = $argv
 endif 
 
+
+grep -v "inf\|e+308" $out > $out.tmp
+mv $out.tmp $out
+
 #__________________________________
 echo "computing cumulative sum"
 awk 'NR==1 {sum=$2; print $1,$2,sum} ; NR>1 {sum=sum + $2; print $1, $2, sum}' < $out >& $out.tmp
