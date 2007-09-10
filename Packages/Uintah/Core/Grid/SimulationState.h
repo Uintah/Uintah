@@ -141,6 +141,8 @@ public:
   const MaterialSet* originalAllMaterials() const;
   const MaterialSubset* refineFlagMaterials() const;
 
+  void setOriginalMatlsFromRestart(MaterialSet* matls);
+  
   double getRefPress() const {
     return d_ref_press;
   }
