@@ -1010,6 +1010,8 @@ Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
         }
       } // End of loop over j
       nnode0+=num;
+      for(int i=0;i<num;i++)
+        delete nodeOnEdge[i];
       delete [] nodeOnEdge;
     }  
   } // End of loop over quads
