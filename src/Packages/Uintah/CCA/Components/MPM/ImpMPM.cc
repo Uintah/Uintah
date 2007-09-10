@@ -676,6 +676,7 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
     t->computes(             lb->pLoadCurveIDLabel_preReloc);
   }
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
                                                                                 
 }
@@ -728,6 +729,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalHeatFluxLabel);
   t->computes(lb->NC_CCweightLabel, one_matl);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -748,6 +750,7 @@ void ImpMPM::scheduleProjectCCHeatSourceToNodes(SchedulerP& sched,
   t->computes(lb->heatRate_CCLabel);
   t->modifies(lb->gExternalHeatRateLabel);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -765,6 +768,7 @@ void ImpMPM::scheduleComputeCCVolume(SchedulerP& sched,
 
   t->computes(lb->cVolumeLabel);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -785,6 +789,7 @@ void ImpMPM::scheduleComputeHeatExchange(SchedulerP& sched,
                         &ThermalContact::computeHeatExchange);
 
   thermalContactModel->addComputesAndRequires(t, patches, matls);
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -798,6 +803,7 @@ void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix,
                          recursion);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -818,6 +824,7 @@ void ImpMPM::scheduleCreateMatrix(SchedulerP& sched,
 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -840,6 +847,7 @@ void ImpMPM::scheduleApplyBoundaryConditions(SchedulerP& sched,
   t->modifies(lb->gVelocityOldLabel);
   t->modifies(lb->gAccelerationLabel);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -871,6 +879,7 @@ void ImpMPM::scheduleComputeContact(SchedulerP& sched,
   }
   t->computes(lb->gContactLabel);  
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -885,6 +894,7 @@ void ImpMPM::scheduleFindFixedDOF(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassAllLabel, Ghost::None, 0);
   t->requires(Task::NewDW, lb->gContactLabel, Ghost::None, 0);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -911,6 +921,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches,recursion);
   }
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -925,6 +936,7 @@ void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
   t->requires(Task::ParentNewDW,lb->gMassAllLabel, Ghost::None);
   t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -950,6 +962,7 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   t->computes(lb->gInternalForceLabel);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -970,6 +983,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
   t->requires(Task::ParentNewDW,lb->gAccelerationLabel, gnone,0);
   t->requires(Task::ParentNewDW,lb->gMassAllLabel,      gnone,0);
   
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -996,6 +1010,7 @@ void ImpMPM::scheduleSolveForDuCG(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::solveForDuCG", this, 
                         &ImpMPM::solveForDuCG);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1017,6 +1032,7 @@ void ImpMPM::scheduleGetDisplacementIncrement(SchedulerP& sched,
 
   t->computes(lb->dispIncLabel);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1048,6 +1064,7 @@ void ImpMPM::scheduleUpdateGridKinematics(SchedulerP& sched,
     t->computes(lb->gDisplacementLabel);
   }
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1069,6 +1086,7 @@ void ImpMPM::scheduleCheckConvergence(SchedulerP& sched,
   t->computes(lb->dispIncNorm);
   t->computes(lb->dispIncQNorm);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t,patches,matls);
 }
 
@@ -1101,6 +1119,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 
   task->requires(Task::OldDW,d_sharedState->get_delt_label());
 
+  task->setType(Task::OncePerProc);
   sched->addTask(task,d_perproc_patches,d_sharedState->allMaterials());
 }
 
@@ -1118,6 +1137,7 @@ void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
   }
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1133,6 +1153,7 @@ void ImpMPM::scheduleUpdateTotalDisplacement(SchedulerP& sched,
     t->requires(Task::OldDW, lb->gDisplacementLabel, Ghost::None);
     t->modifies(lb->gDisplacementLabel);
 
+    t->setType(Task::OncePerProc);
     sched->addTask(t, patches, matls);
   }
 }
@@ -1155,6 +1176,7 @@ void ImpMPM::scheduleComputeAcceleration(SchedulerP& sched,
     t->modifies(lb->gDisplacementLabel);
   }
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1204,6 +1226,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
   t->computes(lb->ThermalEnergyLabel);
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1330,6 +1353,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
     }
                                                                                 
   }
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
 }
 
@@ -1365,16 +1389,16 @@ void ImpMPM::iterate(const ProcessorGroup*,
     scheduleDestroyMatrix(           d_subsched,d_perproc_patches,matls,true);
     
     if (flags->d_doMechanics) {
-      scheduleComputeStressTensor(   d_subsched,level->eachPatch(),matls,true);
-      scheduleFormStiffnessMatrix(   d_subsched,level->eachPatch(),matls);
-      scheduleComputeInternalForce(  d_subsched,level->eachPatch(),matls);
-      scheduleFormQ(                 d_subsched,level->eachPatch(),matls);
+      scheduleComputeStressTensor(   d_subsched,d_perproc_patches,matls,true);
+      scheduleFormStiffnessMatrix(   d_subsched,d_perproc_patches,matls);
+      scheduleComputeInternalForce(  d_subsched,d_perproc_patches,matls);
+      scheduleFormQ(                 d_subsched,d_perproc_patches,matls);
       scheduleSolveForDuCG(          d_subsched,d_perproc_patches, matls);
     }
     
-    scheduleGetDisplacementIncrement(d_subsched,      level->eachPatch(),matls);
-    scheduleUpdateGridKinematics(    d_subsched,      level->eachPatch(),matls);
-    scheduleCheckConvergence(        d_subsched,level,level->eachPatch(),matls);
+    scheduleGetDisplacementIncrement(d_subsched,      d_perproc_patches,matls);
+    scheduleUpdateGridKinematics(    d_subsched,      d_perproc_patches,matls);
+    scheduleCheckConvergence(        d_subsched,level,d_perproc_patches,matls);
     
     d_subsched->compile();
     d_recompileSubsched = false;  

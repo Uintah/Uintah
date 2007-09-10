@@ -84,6 +84,7 @@ void ImplicitHeatConduction::scheduleDestroyHCMatrix(SchedulerP& sched,
  if(do_IHC){
    Task* t = scinew Task("ImpMPM::destroyHCMatrix",this,
                          &ImplicitHeatConduction::destroyHCMatrix);                                                                                
+   t->setType(Task::OncePerProc);
    sched->addTask(t, patches, matls);
  }
 }
@@ -101,6 +102,7 @@ void ImplicitHeatConduction::scheduleCreateHCMatrix(SchedulerP& sched,
   d_perproc_patches=patches;
   d_perproc_patches->addReference();
   
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
 }
@@ -115,7 +117,8 @@ void ImplicitHeatConduction::scheduleApplyHCBoundaryConditions(SchedulerP& schd,
                                                                                 
   t->computes(lb->gTemperatureStarLabel,one_matl);
   t->requires(Task::NewDW, lb->gExternalHeatFluxLabel, Ghost::None, 0);
-                                                                                
+                                                                                 
+  t->setType(Task::OncePerProc);
   schd->addTask(t, patches, matls);
  }
 }
@@ -131,6 +134,7 @@ void ImplicitHeatConduction::scheduleFindFixedHCDOF(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None, 0);
 
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
 }
@@ -147,6 +151,7 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,                    Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pVolumeLabel,               Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pTemperatureLabel,          Ghost::AroundNodes,1);
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
 }
@@ -165,6 +170,7 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,                    Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pVolumeLabel,               Ghost::AroundNodes,1);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
 }
@@ -181,6 +187,7 @@ void ImplicitHeatConduction::scheduleAdjustHCQAndHCKForBCs(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->gTemperatureStarLabel,one_matl,gnone,0);
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
 }
@@ -196,6 +203,7 @@ void ImplicitHeatConduction::scheduleSolveForTemp(SchedulerP& sched,
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,gnone,0); 
 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
 }
@@ -213,6 +221,7 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   t->modifies(lb->gTemperatureLabel,one_matl);
   t->computes(lb->gTemperatureRateLabel,one_matl);
                                                                                 
+  t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
  }
  else{

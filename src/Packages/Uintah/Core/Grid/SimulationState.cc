@@ -322,6 +322,14 @@ const MaterialSet* SimulationState::originalAllMaterials() const
   return orig_all_matls;
 }
 
+void SimulationState::setOriginalMatlsFromRestart(MaterialSet* matls)
+{
+  if (orig_all_matls && orig_all_matls->removeReference())
+    delete orig_all_matls;
+  orig_all_matls = matls;
+}
+  
+
 const MaterialSubset* SimulationState::refineFlagMaterials() const
 {
   ASSERT(refine_flag_matls != 0);
