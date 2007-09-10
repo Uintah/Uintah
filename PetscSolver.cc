@@ -83,6 +83,7 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 //  ierr = PetscOptionsSetValue("-log_exclude_objects", "");
 //  if(ierr)
 //    throw PetscError(ierr, "PetscExcludeObjects");
+  delete argv;
 }
 
 
