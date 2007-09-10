@@ -121,7 +121,7 @@ WARNING
        {};
 
      virtual void addToTimestepXML(ProblemSpecP&) {};
-     virtual void readFromTimestepXML(const ProblemSpecP&) {};
+     virtual void readFromTimestepXML(const ProblemSpecP&,SimulationStateP& state) {};
  
    private:
      SimulationInterface(const SimulationInterface&);

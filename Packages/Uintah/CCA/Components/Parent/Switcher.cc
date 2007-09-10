@@ -377,17 +377,18 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
         MaterialSubset* matls = d_carryOverVarMatls[i];
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
-      
-        //        if(UintahParallelComponent::d_myworld->myrank() == 8 || UintahParallelComponent::d_myworld->myrank() == 9){
+     
+        if(UintahParallelComponent::d_myworld->myrank() == 0){
           if (matls)
             cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << level->getIndex() << endl;
           else
             cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tAll matls on level " << level->getIndex() << "\n";
-          //        }
+        }
       }
     }  
   }
   sched->addTask(t,level->eachPatch(),d_sharedState->originalAllMaterials());
+  
 }
 
 void Switcher::switchTest(const ProcessorGroup*,
@@ -685,9 +686,10 @@ void Switcher::addToTimestepXML(ProblemSpecP& spec)
 {
   spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );
   spec->appendElement( "switcherState", (int) d_switchState );
+  spec->appendElement( "switcherCarryOverMatls", d_sharedState->originalAllMaterials()->getUnion()->size());
 }
 
-void Switcher::readFromTimestepXML(const ProblemSpecP& spec)
+void Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
 {
   // problemSpec doesn't handle unsigned
   ProblemSpecP ps = (ProblemSpecP) spec;
@@ -696,6 +698,19 @@ void Switcher::readFromTimestepXML(const ProblemSpecP& spec)
   d_componentIndex = tmp; 
   ps->get("switcherState", tmp);
   d_switchState = (switchState) tmp;
+  
+  int numMatls = 0;
+  ps->get("switcherCarryOverMatls",numMatls);
+
+  if (numMatls != 0) {
+    MaterialSet* new_matls = scinew MaterialSet;
+    new_matls->addReference();
+    new_matls->createEmptySubsets(1);
+    for (unsigned int i = 0; i < numMatls; i++)
+      new_matls->getSubset(0)->add(i);
+    state->setOriginalMatlsFromRestart(new_matls);
+  }
+  
   if (d_myworld->myrank() == 0)
     cout << "  Switcher RESTART: component index = " << d_componentIndex << endl;
 }
