@@ -677,25 +677,25 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       so3.initialize(0.0);
       sulfur.initialize(0.0);
 
-      s2.initalize(0.0);
-      sh.initalize(0.0);
-      so.initalize(0.0);
-      hso2.initalize(0.0);
+      s2.initialize(0.0);
+      sh.initialize(0.0);
+      so.initialize(0.0);
+      hso2.initialize(0.0);
 
-      hoso.initalize(0.0);
-      hoso2.initalize(0.0);
-      sn.initalize(0.0);
-      cs.initalize(0.0);
+      hoso.initialize(0.0);
+      hoso2.initialize(0.0);
+      sn.initialize(0.0);
+      cs.initialize(0.0);
 
-      ocs.initalize(0.0);
-      hso.initalize(0.0);
-      hos.initalize(0.0);
-      hsoh.initalize(0.0);
+      ocs.initialize(0.0);
+      hso.initialize(0.0);
+      hos.initialize(0.0);
+      hsoh.initialize(0.0);
 
-      h2so.initalize(0.0);
-      hosho.initalize(0.0);
-      hs2.initalize(0.0);
-      h2s2.initalize(0.0);
+      h2so.initialize(0.0);
+      hosho.initialize(0.0);
+      hs2.initialize(0.0);
+      h2s2.initialize(0.0);
     }
     if (d_soot_precursors) {
       c2h2.initialize(0.0);
