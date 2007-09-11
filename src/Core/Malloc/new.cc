@@ -65,6 +65,9 @@ namespace SCIRun {
   }
 
   void AllocatorResetDefaultTag() {}
+  int AllocatorSetDefaultTagLineNumber(int line_number) {}
+  void AllocatorResetDefaultTagLineNumber() {}
+
 }
 
 void* operator new(size_t size, Allocator*, char*, int)
@@ -81,6 +84,10 @@ void* operator new[](size_t size, Allocator*, char*, int)
 
 static const char* default_new_tag = "Unknown - operator new";
 static const char* default_new_array_tag = "Unknown - operator new[]";
+
+// the line number us an optional tag (on if configured with --enable-scinew-line-numbers)
+// that can also show some information (like an interation or timestep) for each tag
+int default_tag_line_number = 0;
 
 namespace SCIRun {
   const char* AllocatorSetDefaultTagNew(const char* tag)
@@ -108,6 +115,16 @@ namespace SCIRun {
     AllocatorResetDefaultTagMalloc();
     AllocatorResetDefaultTagNew();
   }
+  int AllocatorSetDefaultTagLineNumber(int line_number)
+  {
+    int old_num = default_tag_line_number;
+    default_tag_line_number = line_number;
+    return old_num;
+  }
+  void AllocatorResetDefaultTagLineNumber() 
+  {
+    default_tag_line_number = 0;
+  }
 }
 
 #ifdef __sgi
@@ -120,14 +137,14 @@ extern "C" {
     {
 	if(!default_allocator)
 	    MakeDefaultAllocator();
-	return default_allocator->alloc(size, "unknown - operator new", 0);
+	return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
     }
 
     void* __nwa__GUi(size_t size)
     {
 	if(!default_allocator)
 	    MakeDefaultAllocator();
-	return default_allocator->alloc(size, "unknown - operator new", 0);
+	return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
     }
 }
 #endif
@@ -136,28 +153,28 @@ void* operator new(size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_new_tag, 0);
+    return default_allocator->alloc(size, default_new_tag, default_tag_line_number);
 }
 
 void* operator new[](size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_new_array_tag, 0);
+    return default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
 }
 
 void* operator new(size_t size, const std::nothrow_t&) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - nothrow operator new", 0);
+    return default_allocator->alloc(size, "unknown - nothrow operator new", default_tag_line_number);
 }
 
 void* operator new[](size_t size, const std::nothrow_t&) throw()
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - nothrow operator new[]", 0);
+    return default_allocator->alloc(size, "unknown - nothrow operator new[]", default_tag_line_number);
 }
 
 void operator delete(void* ptr) throw()
