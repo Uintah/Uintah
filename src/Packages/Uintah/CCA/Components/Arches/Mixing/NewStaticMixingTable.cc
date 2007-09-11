@@ -148,11 +148,32 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);  
 
   if (d_sulfur_chem) {
-    outStream.d_h2s=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s_index);  
+    outStream.d_h2s=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s_index);
     outStream.d_so2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2_index);
-    outStream.d_so3=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so3_index);  
-    outStream.d_sulfur=tableLookUp(mixFrac, mixFracVars, current_heat_loss, sulfur_index);  
+    outStream.d_so3=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so3_index);
+    outStream.d_sulfur=tableLookUp(mixFrac, mixFracVars, current_heat_loss, sulfur_index);
+
+    outStream.d_s2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, s2_index);
+    outStream.d_sh=tableLookUp(mixFrac, mixFracVars, current_heat_loss, sh_index);
+    outStream.d_so=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so_index);
+    outStream.d_hso2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hso2_index);
+
+    outStream.d_hoso=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hoso_index);
+    outStream.d_hoso2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hoso2_index);
+    outStream.d_sn=tableLookUp(mixFrac, mixFracVars, current_heat_loss, sn_index);
+    outStream.d_cs=tableLookUp(mixFrac, mixFracVars, current_heat_loss, cs_index);
+
+    outStream.d_ocs=tableLookUp(mixFrac, mixFracVars, current_heat_loss, ocs_index);
+    outStream.d_hso=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hso_index);
+    outStream.d_hos=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hos_index);
+    outStream.d_hsoh=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hsoh_index);
+
+    outStream.d_h2so=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2so_index);
+    outStream.d_hosho=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hosho_index);
+    outStream.d_hs2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, hs2_index);
+    outStream.d_h2s2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s2_index);
   }
+
   if (d_co_output)
     outStream.d_co=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co_index);  
   if (d_soot_precursors) {
@@ -347,10 +368,32 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   Hs_index = -1;
   co2_index = -1;
   h2o_index = -1;
-  h2s_index = -1;
-  so2_index = -1;
-  so3_index = -1;
-  sulfur_index = -1;
+  
+  h2s_index     = -1;
+  so2_index     = -1;
+  so3_index     = -1;
+  sulfur_index  = -1;
+
+  s2_index      = -1;
+  sh_index      = -1;
+  so_index      = -1;
+  hso2_index    = -1;
+
+  hoso_index    = -1;
+  hoso2_index   = -1;
+  sn_index      = -1;
+  cs_index      = -1;
+
+  ocs_index     = -1;
+  hso_index     = -1;
+  hos_index     = -1;
+  hsoh_index    = -1;
+
+  h2so_index    = -1;
+  hosho_index   = -1;
+  hs2_index     = -1;
+  h2s2_index    = -1;
+  
   co_index = -1;
   c2h2_index = -1;
   ch4_index = -1;
@@ -369,6 +412,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    co2_index = ii;
     else if(vars_names[ii]== "H2O")
 	    h2o_index = ii;
+
     else if(vars_names[ii]== "H2S")
 	    h2s_index = ii;
     else if(vars_names[ii]== "SO2")
@@ -377,6 +421,29 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	    so3_index = ii;
     else if(vars_names[ii]== "SULFUR")
 	    sulfur_index = ii;
+
+    else if(vars_names[ii]== "S2")	s2_index 	 = ii;
+    else if(vars_names[ii]== "SH")	sh_index 	 = ii;
+    else if(vars_names[ii]== "SO")	so_index 	 = ii;
+    else if(vars_names[ii]== "HSO2")	hso2_index 	 = ii;
+
+    else if(vars_names[ii]== "HOSO")	hoso_index 	 = ii;
+    else if(vars_names[ii]== "HOSO2")	hoso2_index 	 = ii;
+    else if(vars_names[ii]== "SN")	sn_index 	 = ii;
+    else if(vars_names[ii]== "CS")	cs_index 	 = ii;
+
+    else if(vars_names[ii]== "OCS")	ocs_index 	 = ii;
+    else if(vars_names[ii]== "HSO")	hso_index 	 = ii;
+    else if(vars_names[ii]== "HOS")	hos_index 	 = ii;
+    else if(vars_names[ii]== "HSOH")	hsoh_index 	 = ii;
+
+    else if(vars_names[ii]== "H2SO")	h2so_index 	 = ii;
+    else if(vars_names[ii]== "HOSHO")	hosho_index 	 = ii;
+    else if(vars_names[ii]== "HS2")	hs2_index 	 = ii;
+    else if(vars_names[ii]== "H2S2")	h2s2_index	 = ii;
+
+
+
     else if(vars_names[ii]== "CO")
 	    co_index = ii;
     else if(vars_names[ii]== "C2H2")
@@ -403,8 +470,49 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     throw InvalidValue("No temperature or Cp or CO2 or H2O found in table "
                        + inputfile, __FILE__, __LINE__);
   if ((d_sulfur_chem)&&
-      ((h2s_index == -1)||(so2_index == -1)||(so3_index == -1)||(sulfur_index == -1))) 
+      ( (h2s_index == -1)||
+ 	(so2_index == -1)||
+	(so3_index == -1)||
+	(sulfur_index == -1)
+      )) 
     throw InvalidValue("No H2S, SO2, S or SO3 for sulfur chemistry found in table "
+                       + inputfile, __FILE__, __LINE__);
+
+  if ((d_sulfur_chem)&&
+      ( (s2_index == -1) || 
+	(sh_index == -1) || 
+	(so_index == -1) || 
+	(hso2_index == -1)
+      )) 
+    throw InvalidValue("No s2, sh, so, or hso2 for sulfur chemistry found in table "
+                       + inputfile, __FILE__, __LINE__);
+
+  if ((d_sulfur_chem)&&
+      ( (hoso_index == -1) || 
+	(hoso2_index == -1) || 
+	(sn_index == -1) || 
+	(cs_index == -1)
+      ))
+    throw InvalidValue("No hoso, hoso2, sn, or cs for sulfur chemistry found in table "
+                       + inputfile, __FILE__, __LINE__);
+	
+
+  if ((d_sulfur_chem)&&
+      ( (ocs_index == -1) || 
+	(hso_index == -1) || 
+	(hos_index == -1) || 
+	(hsoh_index == -1)
+      ))
+    throw InvalidValue("No ocs, hso, hos, or hsoh for sulfur chemistry found in table "
+                       + inputfile, __FILE__, __LINE__);
+
+  if ((d_sulfur_chem)&&
+      (	(h2so_index == -1) || 
+	(hosho_index == -1) || 
+	(hs2_index == -1) || 
+	(h2s2_index == -1)
+      ))
+    throw InvalidValue("No h2so, hosho, hs2, or h2s2 for sulfur chemistry found in table "
                        + inputfile, __FILE__, __LINE__);
 
   if ((d_co_output)&&(co_index == -1))
@@ -421,10 +529,30 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 
   cout << "CO2 index is "  << co2_index  << endl;
   cout << "H2O index is "  << h2o_index  << endl;
-  cout << "H2S index is "  << h2s_index  << endl;
-  cout << "SO2 index is "  << so2_index  << endl;
-  cout << "SO3 index is "  << so3_index  << endl;
-  cout << "S index is "  << sulfur_index  << endl;
+  
+ if (d_sulfur_chem) {
+  cout	<< "h2s index is " 	<< h2s_index	<< endl; 
+  cout	<< "so2 index is " 	<< so2_index	<< endl;
+  cout	<< "so3 index is " 	<< so3_index	<< endl;
+  cout	<< "sulfur index is " 	<< sulfur_index	<< endl;
+  cout	<< "s2 index is " 	<< s2_index	<< endl;
+  cout	<< "sh index is " 	<< sh_index	<< endl;
+  cout	<< "so index is " 	<< so_index	<< endl;
+  cout	<< "hso2 index is " 	<< hso2_index	<< endl;
+  cout	<< "hoso index is " 	<< hoso_index	<< endl;
+  cout	<< "hoso2 index is " 	<< hoso2_index	<< endl;
+  cout	<< "sn index is " 	<< sn_index	<< endl;
+  cout	<< "cs index is " 	<< cs_index	<< endl;
+  cout	<< "ocs index is " 	<< ocs_index	<< endl;
+  cout	<< "hso index is " 	<< hso_index	<< endl;
+  cout	<< "hos index is " 	<< hos_index	<< endl;
+  cout	<< "hsoh index is " 	<< hsoh_index	<< endl;
+  cout	<< "h2so index is " 	<< h2so_index	<< endl;
+  cout	<< "hosho index is " 	<< hosho_index	<< endl;
+  cout	<< "hs2 index is " 	<< hs2_index	<< endl;
+  cout	<< "h2s2 index is "	<< h2s2_index	<< endl;
+ }
+
   cout << "CO index is "   << co_index   << endl;
   cout << "C2H2 index is " << c2h2_index << endl;
   cout << "CH4 index is "  << ch4_index  << endl;
