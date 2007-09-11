@@ -144,7 +144,13 @@ private:
       int d_heatlosscount, d_mixfraccount, d_mixvarcount, d_varscount;
       int co2_index, h2o_index;
 
-      int h2s_index, so2_index, so3_index, sulfur_index, co_index, ch4_index, c2h2_index;
+      int h2s_index, so2_index, so3_index, sulfur_index;
+      int s2_index, sh_index, so_index, hso2_index;
+      int hoso_index, hoso2_index, sn_index, cs_index;
+      int ocs_index, hso_index, hos_index, hsoh_index;
+      int h2so_index, hosho_index, hs2_index, h2s2_index;
+
+      int co_index, ch4_index, c2h2_index;
       bool d_co_output;
       bool d_sulfur_chem;
       bool d_soot_precursors;
