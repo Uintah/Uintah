@@ -67,8 +67,10 @@ void PrintTag(void*);
 //   the specified tag
 const char* AllocatorSetDefaultTagMalloc(const char* tag);
 const char* AllocatorSetDefaultTagNew(const char* tag);
+int AllocatorSetDefaultTagLineNumber(int line_number);
 void AllocatorResetDefaultTagMalloc();
 void AllocatorResetDefaultTagNew();
+void AllocatorResetDefaultTagLineNumber();
 const char* AllocatorSetDefaultTag(const char* tag);
 void AllocatorResetDefaultTag();
 

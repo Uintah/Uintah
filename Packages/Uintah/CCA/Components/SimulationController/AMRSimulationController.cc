@@ -110,6 +110,7 @@ void AMRSimulationController::run()
 
    setStartSimTime(t);
    initSimulationStatsVars();
+   AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
 
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
@@ -237,6 +238,7 @@ void AMRSimulationController::run()
      // number so components can tell what timestep they are on. 
      d_sharedState->setElapsedTime(t);
      d_sharedState->incrementCurrentTopLevelTimeStep();
+     AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
 
      // Each component has their own init_delt specified.  On a switch
      // from one component to the next, we need to adjust the delt to
