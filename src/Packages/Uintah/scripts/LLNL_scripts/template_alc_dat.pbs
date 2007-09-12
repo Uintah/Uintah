@@ -1,0 +1,70 @@
+#!/bin/bash
+# Some semblance of a working psub script
+#  --Blame goes to Steve Brown, April 2006
+#
+# To make this work,
+# 1) Specify filesystem lscratch{a,b,c} etc. 
+# 2) Change project name in two places (Psub and Bash parts)
+# 3) Change required processors/nodes in two places
+# 4) Understand what's happening so you can fix it when it breaks.
+#
+#PSUB -r project # sets job name (limit of 7 characters)
+#PSUB -ln 256 -g 512 # -ln NODES -g PROCS 
+#
+#
+#PSUB -tW 999h
+#PSUB -tM 999h
+#PSUB -b utahdat # use the correct pool
+#PSUB -pool utahdat
+#PSUB -expedite
+#PSUB -c alc
+#PSUB -cpn 2 	#2 cpu's/node, just because
+#
+#PSUB -x          # export current env var settings
+#PSUB -eo         # send stdout and stderr to the same file
+#PSUB -mb         # send email at execution start
+#PSUB -me         # send email at execution finish
+#PSUB # no more psub commands
+
+# job commands start here
+# srun -N<#nodes> -n<#procs> <sus-command + agrs> >& output.${PSUB_JOBID}
+PROJNAME=project
+MACHINE=alc
+FILESYSTEM=lscratcha
+LOGNAME=${PROJNAME}.DAT.${PSUB_JOBID}
+
+NODES=256
+PROCS=512
+
+#Copy our input files and tables to the parallel FS.
+mkdir -p /p/${FILESYSTEM}/`whoami`/${PROJNAME}/logs
+cd /p/${FILESYSTEM}/`whoami`/${PROJNAME}
+cp ~/${PROJNAME}/${PROJNAME}.ups .
+cp ~/${PROJNAME}/*.mxn .
+cp ~/input.dtd .
+
+#Find a workable restart directory (if any) and use it.
+dir=none
+for dir in `ls -rd $PROJNAME.uda.*`
+do
+echo testing $dir
+  if [ `ls -d $dir/checkpoints/t*|wc -l` -ge 1 ]
+  then
+        break
+  else  
+        dir=none
+  fi
+done
+echo found $dir
+
+rm -f current.log
+ln -s logs/${LOGNAME} current.log
+if [ -e ${PROJNAME}.uda -a ${dir} != "none" ]
+then
+  srun -n${PROCS} -N${NODES} ~/SCIRun/${MAHINE}/Packages/Uintah/StandAlone/sus -mpi \
+   -restart $dir >& logs/${LOGNAME}
+else
+  srun -n${PROCS} -N${NODES} ~/SCIRun/${MACHINE}/Packages/Uintah/StandAlone/sus -mpi \
+   ${PROJNAME}.ups >& logs/${LOGNAME}  
+fi
+
