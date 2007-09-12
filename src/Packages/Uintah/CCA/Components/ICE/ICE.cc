@@ -172,6 +172,9 @@ ICE::~ICE()
     delete d_modelInfo;
   }
   releasePort("solver");
+
+  if (solver_parameters)
+    delete solver_parameters;
   
 }
 
