@@ -546,7 +546,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     statLabels.push_back("Output");
     
     if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
+    {
       toReduce.push_back(highwater);
+      toReduceMax.push_back(double_int(highwater,rank));
+    }
     avgReduce.resize(toReduce.size());
     maxReduce.resize(toReduce.size());
     
