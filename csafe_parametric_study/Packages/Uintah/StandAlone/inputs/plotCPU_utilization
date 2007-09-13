@@ -53,6 +53,11 @@ endif
 #__________________________________
 # generate the  plot script
 cat >> gp << fin
+
+set multiplot
+set size 1.0,0.66 # for three plots
+set origin 0.0,0.33
+
 set grid xtics ytics 
 set y2tics
 set xdata time
@@ -64,6 +69,12 @@ set xlabel 'Date
 
 plot '.data' using 1:4 lw 3 t           'CPU hrs' with impulse,\
      '.data' using 1:5 axis x1y2 t 'Cum. CPU hrs' with step
+#__________________________________
+set size 1.0,0.33 
+set origin 0.0,0.0
+set ylabel 'Processors' textcolor lt 1
+plot '.data' using 1:2 lw 3 t           'CPUs' with impulse
+set nomultiplot
 
 pause -1 "Hit return to exit"
 fin

@@ -54,6 +54,7 @@ grep delT .plotStats_tmp | cut -d"=" -f3 | cut -d"," -f1 >& .delT
 grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2  > .memAve
 grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4  > .memMax
 
+set procs = `grep processors $out| cut -d" " -f 2`
 
 awk 'NR==1 {init_time=$1; print 0} ; NR>1 {time=$1 - init_time; print time}' < .physicalTime > .physicalTime2
 
@@ -98,6 +99,7 @@ set size 1.0,0.33
 set origin 0.0,0.66
 set ylabel 'Delt'
 set y2label 'Physical Time'
+set title '$procs Processors'
 
 plot '.data' using 1:4           t 'Delt' with lines, \
      '.data' using 1:3 axes x1y2 t 'Physical Time' with lines
@@ -108,6 +110,8 @@ set origin 0.0,0.0
 set xlabel "ElapsedTime"
 set ylabel "Ave Memory useage [MB]"
 set y2label 'Max Memory useage [MB]'
+unset title
+
 plot '.data' using 1:5 axes x1y1 t 'ave' with lines, \
      '.data' using 1:6 axes x1y2 t 'max' with lines
 set nomultiplot
