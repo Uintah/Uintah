@@ -36,7 +36,7 @@ COMPONENT := $(notdir $(TMPSRCDIR))
 
 .PHONY: $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)clientbabel.make.package
 
-$(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)clientbabel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(CLIENT_SIDL)) $(CCASIDL)
+$(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)clientbabel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(CLIENT_SIDL)) $(CCASIDL) Core/Babel/timestamp
 	$(BABEL) --client=$(BABEL_LANGUAGE) \
            --hide-glue \
            --make-prefix=$(subst clientbabel.make,,$(notdir $@))client \
