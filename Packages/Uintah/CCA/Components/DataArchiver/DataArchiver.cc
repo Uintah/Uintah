@@ -1790,7 +1790,8 @@ DataArchiver::output(const ProcessorGroup*,
             memset(zero, 0, pad);
             int err = (int)write(fd, zero, pad);
             if (err != pad) {
-              cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
+              cout << "Error writing to file: " << filename << ", errno=" << errno << '\n';
+              cout << "DEBUG INFO: fd:" << fd << " zero:" << zero << " pad:" << pad  << " PADSIZE:" << PADSIZE << endl;
               SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
             }
             cur+=pad;
