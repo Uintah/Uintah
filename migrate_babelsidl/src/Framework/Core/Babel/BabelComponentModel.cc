@@ -226,12 +226,12 @@ BabelComponentModel::createInstance(const std::string& name,
    * sidl.Loader.findLibrary params:
    *  server-side binding: use "ior/impl" to find class implementation
    *  client-side binding: use language name
-   *  Scope and Resolve from SCIRun/src/CCA/Components/BabelTest/xml/BabelTest.scl
+   *  Scope and Resolve from scl files
    *
    * Note for *nix: make sure library path is in LD_LIBRARY_PATH
    */
   ::sidl::DLL library = ::sidl::Loader::findLibrary(type, "ior/impl",
-                                                    ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
+    ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
 #if DEBUG
   std::cerr << "sidl::Loader::getSearchPath=" << ::sidl::Loader::getSearchPath() << std::endl;
   // get default finder and report search path

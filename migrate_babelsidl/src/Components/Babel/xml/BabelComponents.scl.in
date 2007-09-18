@@ -1,0 +1,10 @@
+<?xml version="1.0" ?> 
+<scl>
+  <library uri="BUILDDIR/lib/libComponents_Babel_hello-server.so" scope="global" resolution="now" > 
+    <class name="HelloServer.Component" desc="ior/impl" />
+    <class name="HelloServer.MsgPort" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_hello-client.so" scope="global" resolution="now" > 
+    <class name="HelloClient.Component" desc="C++" />
+  </library>
+</scl>
