@@ -65,7 +65,7 @@ namespace SCIRun {
   }
 
   void AllocatorResetDefaultTag() {}
-  int AllocatorSetDefaultTagLineNumber(int line_number) {}
+  int AllocatorSetDefaultTagLineNumber(int line_number) { return line_number; }
   void AllocatorResetDefaultTagLineNumber() {}
 
 }
