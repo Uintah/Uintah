@@ -156,13 +156,13 @@ namespace scijump {
     getTopicName_impl() ;
 
     /**
-     *  Publish an event. 
+     *  Publish an event.
      * 
      * @eventName - The name of this event. It is perhaps not a crucial
      * piece of information. Can be inserted into the
      * header or the body of the event by the event
      * service.
-     * @eventBody - A typemap containing all the information to be 
+     * @eventBody - A typemap containing all the information to be
      * sent out.
      */
     void

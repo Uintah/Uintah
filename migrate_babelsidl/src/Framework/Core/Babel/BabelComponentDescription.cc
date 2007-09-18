@@ -41,7 +41,7 @@
 #include <Framework/Core/Babel/BabelComponentDescription.h>
 #include <Framework/Core/Babel/BabelComponentModel.h>
 
-namespace SCIRun {
+namespace scijump {
 
 BabelComponentDescription::BabelComponentDescription(BabelComponentModel* model, const std::string& type, const std::string& library)
   : ComponentDescription(model, type, library)
@@ -62,4 +62,4 @@ const ComponentModel* BabelComponentDescription::getModel() const
   return model;
 }
 
-} // end namespace SCIRun
+} // end namespace scijump

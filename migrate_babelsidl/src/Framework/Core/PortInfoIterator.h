@@ -28,7 +28,7 @@
 
 
 /*
- *  PortInstanceIterator.h: 
+ *  PortInfoIterator.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -41,24 +41,24 @@
 #ifndef Framework_Framework_PortInstanceIterator_h
 #define Framework_Framework_PortInstanceIterator_h
 
-namespace SCIRun
-{
-class PortInstance;
+namespace scijump {
+  namespace core {
+    class PortInfo;
 
 /**
- * \class PortInstanceIterator
+ * \class PortInfoIterator
  *
  *
  */
-class PortInstanceIterator
-{
+class PortInfoIterator {
 public:
-  virtual ~PortInstanceIterator();
-  virtual PortInstance* get() = 0;
+  virtual ~PortInfoIterator() {}
+  virtual ::sci::cca::core::PortInfo get() = 0;
   virtual bool done() = 0;
   virtual void next() = 0;
 };
 
-} // end namespace SCIRun
+  } // end namespace core
+} // end namespace scijump
   
 #endif

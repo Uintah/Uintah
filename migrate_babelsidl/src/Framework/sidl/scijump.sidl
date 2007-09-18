@@ -57,8 +57,6 @@ package scijump version 0.2.1 {
     void initialize(in scijump.SCIJumpFramework framework, in string selfInstanceName, in string selfClassName, in gov.cca.TypeMap selfProperties);
   }
 
-  class ComponentID implements-all gov.cca.ComponentID {}
-
   class CCAException extends sidl.SIDLException implements-all gov.cca.CCAException {
     // could add note and a line to initialize...
     void initialize(in gov.cca.CCAExceptionType type);
@@ -104,7 +102,7 @@ package scijump version 0.2.1 {
       gov.cca.ComponentID createComponentInstance(in string name,
                                                   in string className,
                           			  in gov.cca.TypeMap tm);
-       
+
       /** Adds a description of a component instance (class ComponentInstance) to
           the list of active components.  The component instance description
           includes the component type name, the instance name, and the pointer to
@@ -159,6 +157,17 @@ package scijump version 0.2.1 {
     void initialize(in sci.cca.AbstractFramework framework);
   }
   // EventService classes
+
+  // Component model classes
+  class BabelComponentInfo implements-all sci.cca.core.ComponentInfo {
+    void initialize(in string instanceName, in string className, in sci.cca.AbstractFramework framework, in gov.cca.Component component, in gov.cca.Services services, in gov.cca.TypeMap properties);
+    void initialize[Full](in string instanceName, in string className, in sci.cca.AbstractFramework framework, in gov.cca.Component component, in gov.cca.Services services, in gov.cca.TypeMap properties, in string serialization);
+
+    void setSerialization(in string serialization);
+
+    void setComponentRelease(in gov.cca.ComponentRelease callBack);
+  }
+  // Component model classes
 
   package ui {
     class GUIBuilder implements-all sci.cca.ui.Builder, sci.cca.EventListener {

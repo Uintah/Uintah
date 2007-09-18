@@ -79,7 +79,7 @@ package sci {
       */
       gov.cca.TypeMap getHeader();
 
-      /** Returs the event's body. The body is the information the 
+      /** Returs the event's body. The body is the information the
           publisher is sending to the subscribers
       */
       gov.cca.TypeMap getBody();
@@ -89,7 +89,7 @@ package sci {
     interface EventListener {
 
       /** This is where event processing by a listener takes place. This
-          is a call-back method that a topic subscriber implements and 
+          is a call-back method that a topic subscriber implements and
           gets called for each new event.
 
           @topicName - The topic for which the Event was created and sent.
@@ -98,22 +98,22 @@ package sci {
       void processEvent(in string topicName, copy in Event theEvent);
     }
 
-    /** Interface through which events are sent by publishers. */  
+    /** Interface through which events are sent by publishers. */
     interface Topic {
 
       /** Returns the topic name associated with this object */
       string getTopicName();
 
-      /** Publish an event. 
-	  
+      /** Publish an event.
+	
           @eventName - The name of this event. It is perhaps not a crucial
                        piece of information. Can be inserted into the
                        header or the body of the event by the event
                        service.
-          @eventBody - A typemap containing all the information to be 
+          @eventBody - A typemap containing all the information to be
                        sent out.
       */
-      void sendEvent(in string eventName, in gov.cca.TypeMap eventBody) 
+      void sendEvent(in string eventName, in gov.cca.TypeMap eventBody)
 	    throws EventServiceException;
     }
 
@@ -123,7 +123,7 @@ package sci {
     interface Subscription {
 
       /** Adds a listener to the collection of listeners for this Subscription.
-      
+
           @listenerKey - It is used as an index to the collection (STL
                          map) and the parameter \em theListener is a
                          pointer to the /em Listener class.
@@ -189,7 +189,7 @@ package sci {
                          on which to publish. Wildcard characters are not
                          allowed for a topicName.
         */
-        sci.cca.Topic getTopic(in string topicName) 
+        sci.cca.Topic getTopic(in string topicName)
           throws sci.cca.EventServiceException;
 
         /** Returns true if topic already exists, false otherwise */
@@ -203,14 +203,14 @@ package sci {
           may call processEvents() */
       interface SubscriberEventService extends gov.cca.Port {
 
-        /** Subscribe to one or more topics. 
+        /** Subscribe to one or more topics.
 
             @subscriptionName - A dot delimited hierarchical name selecting
-                                the list of topics to get events from. Wildcard 
-                                characters (*,?)  are allowed for a subscriptionName 
+                                the list of topics to get events from. Wildcard
+                                characters (*,?)  are allowed for a subscriptionName
                                 to denote more than one topic.
         */
-        sci.cca.Subscription getSubscription(in string subscriptionName) 
+        sci.cca.Subscription getSubscription(in string subscriptionName)
 	      throws sci.cca.EventServiceException;
 
         /** Process published events. When the subscriber calls this method,
@@ -304,7 +304,7 @@ package sci {
        * and the failure needs to be communicated up the call stack.
        */
       class NotInitializedException extends sidl.SIDLException implements sidl.RuntimeException {}
-  
+
       interface FrameworkService {
         //static gov.cca.Port create(in sci.cca.AbstractFramework framework);
         static FrameworkService create(in sci.cca.AbstractFramework framework);
@@ -347,6 +347,21 @@ package sci {
         string getRequesterPortName();
         //ComponentInfo getRequester();
         PortInfo getRequesterPort() throws NotInitializedException;
+      }
+
+      interface ComponentInfo extends gov.cca.ComponentID {
+        AbstractFramework getFramework();
+        gov.cca.Component getComponent();
+
+        array<PortInfo,1> getPorts();
+        PortInfo getPortInfo( in string portName );
+        void disconnectPort( in string portName, in PortInfo fromPort );
+
+        string getClassName();
+        gov.cca.TypeMap getProperties();
+        void setProperties( in gov.cca.TypeMap properties);
+
+        void destroyComponent();
       }
     } // package core
   } // package cca

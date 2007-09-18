@@ -43,7 +43,8 @@
 
 #include <Framework/Core/ComponentDescription.h>
 
-namespace SCIRun {
+namespace scijump {
+
 class BabelComponentModel;
 
 /**
@@ -57,10 +58,11 @@ class BabelComponentModel;
  *
  * \sa ComponentDescription
  */
-class BabelComponentDescription : public ComponentDescription
-{
+class BabelComponentDescription : public ComponentDescription {
 public:
-  BabelComponentDescription(BabelComponentModel* model, const std::string& type, const std::string& library);
+  BabelComponentDescription(BabelComponentModel* model,
+                            const std::string& type,
+                            const std::string& library);
   virtual ~BabelComponentDescription();
 
   /** Returns the type name (a string) the component described by this class. */
@@ -79,7 +81,7 @@ private:
   BabelComponentDescription& operator=(const BabelComponentDescription&);
 };
 
-} //namespace SCIRun
+} //namespace scijump
 
 #endif
 

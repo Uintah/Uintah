@@ -53,12 +53,12 @@
 #include <map>
 #include <Framework/sidl/Impl/glue/scijump.hxx>
 
-using namespace scijump;
+namespace scijump {
 
-namespace SCIRun {
+using namespace SCIRun;
 
 class ComponentDescription;
-class ComponentInstance;
+class ComponentInfo;
 
 typedef std::vector<std::string> StringVector;
 typedef std::map<std::string, std::string> StringMap;
@@ -73,11 +73,10 @@ typedef std::map<std::string, std::string> StringMap;
  *
  * \sa CCAComponentModel BabelComponentModel VtkComponentModel InternalComponentModel
  */
-class ComponentModel
-{
+class ComponentModel {
 public:
   ComponentModel() {}
-  ComponentModel(const std::string& prefixName, SCIJumpFramework* framework);
+  ComponentModel(const std::string& prefixName, const SCIJumpFramework& framework);
   virtual ~ComponentModel();
 
   /** Returns true if component type \em type has been registered with this
@@ -89,14 +88,14 @@ public:
       \em name is assigned as the unique name of the newly created instance.
       Returns a smart pointer to the newly created instance, or a null pointer
       on failure. */
-  virtual ComponentInstance*
+  virtual ::sci::cca::core::ComponentInfo
   createInstance(const std::string &name,
-		 const std::string &type,
-		 const gov::cca::TypeMap &tm) = 0;
+                 const std::string &type,
+                 const gov::cca::TypeMap &tm) = 0;
   
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  virtual bool destroyInstance(ComponentInstance* ci) = 0;
+  //virtual bool destroyInstance(ComponentInstance* ci) = 0;
   
   /** Returns the name (as a string) of this component model. */
   virtual const std::string getName() const = 0;
@@ -133,7 +132,7 @@ protected:
   // not the most efficient data structure for lookups...
   //StringVector sidlDLLPaths;
 
-  SCIJumpFramework* framework;
+  SCIJumpFramework framework;
 
   //void setSidlDLLPath(const std::string& s);
   //void* getMakerAddress(const std::string& type, const ComponentDescription& desc);
@@ -154,10 +153,10 @@ private:
 ///////////////////////////////////////////////////////////////////////////
 // convenience functions
 
-bool parseComponentModelXML(const std::string& filexml, ComponentModel* model);
-bool getXMLPaths(SCIJumpFramework* fwk, StringVector& xmlPaths);
+bool parseComponentModelXML(const std::string& filexml, ComponentModel& model);
+bool getXMLPaths(const SCIJumpFramework& fwk, StringVector& xmlPaths);
 
 
-} // end namespace SCIRun
+} // end namespace scijump
 
 #endif

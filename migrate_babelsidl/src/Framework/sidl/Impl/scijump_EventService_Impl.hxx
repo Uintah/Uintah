@@ -178,11 +178,11 @@ namespace scijump {
 
 
     /**
-     *  Subscribe to one or more topics. 
+     *  Subscribe to one or more topics.
      * 
      * @subscriptionName - A dot delimited hierarchical name selecting
-     * the list of topics to get events from. Wildcard 
-     * characters (,?)  are allowed for a subscriptionName 
+     * the list of topics to get events from. Wildcard
+     * characters (,?)  are allowed for a subscriptionName
      * to denote more than one topic.
      */
     ::sci::cca::Subscription

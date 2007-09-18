@@ -42,29 +42,27 @@
 
 #include <Framework/Core/Babel/BabelComponentModel.h>
 #include <Framework/Core/Babel/BabelComponentDescription.h>
-#include <Framework/Core/Babel/BabelComponentInstance.h>
 
 #include <Framework/sidl/Impl/glue/scijump.hxx>
+#include <Framework/sidl/Impl/glue/sci.hxx>
+
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/NotFinished.h>
 
 extern "C" {
-#include <string.h>
-#include <stdlib.h>
+# include <string.h>
+# include <stdlib.h>
 }
 
 #include <iostream>
 
-using namespace scijump;
-
-namespace SCIRun {
+namespace scijump {
 
 const std::string BabelComponentModel::DEFAULT_XML_PATH("/CCA/Components/BabelTest/xml");
 
 
-BabelComponentModel::BabelComponentModel(SCIJumpFramework* framework,
-                                         const StringVector& xmlPaths)
+BabelComponentModel::BabelComponentModel(const SCIJumpFramework& framework, const StringVector& xmlPaths)
   : ComponentModel("babel", framework),
     lock_components("BabelComponentModel::components lock")
 {
@@ -79,10 +77,12 @@ BabelComponentModel::~BabelComponentModel()
 void BabelComponentModel::destroyComponentList()
 {
   SCIRun::Guard g1(&lock_components);
+  /*
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
   }
+  */
   components.clear();
 }
 
@@ -169,9 +169,10 @@ bool BabelComponentModel::haveComponent(const std::string& type)
   return components.find(type) != components.end();
 }
 
-ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
-                                                       const std::string& type,
-                                                       const gov::cca::TypeMap&)
+::sci::cca::core::ComponentInfo
+BabelComponentModel::createInstance(const std::string& name,
+                                    const std::string& type,
+                                    const gov::cca::TypeMap&)
 {
 #if DEBUG
   std::cerr << "BabelComponentModel::createInstance: attempt to create "
@@ -229,7 +230,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
    *
    * Note for *nix: make sure library path is in LD_LIBRARY_PATH
    */
-  ::sidl::DLL library = ::sidl::Loader::findLibrary(type, "ior/impl", ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
+  ::sidl::DLL library = ::sidl::Loader::findLibrary(type, "ior/impl",
+                                                    ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
 #if DEBUG
   std::cerr << "sidl::Loader::getSearchPath=" << ::sidl::Loader::getSearchPath() << std::endl;
   // get default finder and report search path
@@ -253,25 +255,29 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
     return 0;
   }
   ::scijump::Services svc = ::scijump::Services::_create();
+  // there's an argument for calling this after adding the component info to the framework...
   component.setServices(svc);
   ::gov::cca::TypeMap nullMap;
 
-  BabelComponentInstance* ci =
-    new BabelComponentInstance(framework, name, type, nullMap, component, svc);
-  //ci->addReference();
-  return ci;
+  scijump::BabelComponentInfo bci = scijump::BabelComponentInfo::_create();
+  bci.initialize(name, type, framework, component, svc, nullMap);
+  return bci;
 }
 
-bool BabelComponentModel::destroyInstance(ComponentInstance *ci)
+#if 0
+/*
+bool BabelComponentModel::destroyInstance(const ComponentInfo& ci)
 {
-  NOT_FINISHED("bool BabelComponentModel::destroyInstance(ComponentInstance *ci)");
+  NOT_FINISHED("bool BabelComponentModel::destroyInstance(const ComponentInfo& ci)");
   // make sure why ci->addReference() is called in createInstance(); -- removed (AK)
 
   // not sure if deleteReference() is appropriate here
   // TODO: need to support release component callback
-  delete ci;
+  //delete ci;
   return false;
 }
+*/
+#endif
 
 void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
                                                 bool /*listInternal*/)
@@ -327,4 +333,4 @@ std::string BabelComponentModel::createComponent(const std::string& name, const 
   return std::string();
 }
 
-} // end namespace SCIRun
+} // end namespace scijump

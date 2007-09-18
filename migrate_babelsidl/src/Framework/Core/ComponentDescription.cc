@@ -42,9 +42,12 @@
 #include <Framework/Core/ComponentDescription.h>
 #include <iostream> // test
 
-namespace SCIRun {
+namespace scijump {
 
-ComponentDescription::ComponentDescription(ComponentModel* model, const std::string& type, const std::string& libName, const std::string& loader)
+ComponentDescription::ComponentDescription(ComponentModel* model,
+                                           const std::string& type,
+                                           const std::string& libName,
+                                           const std::string& loader)
   : model(model), type(type), library(libName), loaderName(loader)
 {
   if (! library.empty()) {
@@ -69,4 +72,4 @@ ComponentDescription::getLibrary() const
   return library;
 }
 
-} // end namespace SCIRun
+} // end namespace scijump
