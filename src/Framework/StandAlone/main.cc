@@ -115,20 +115,24 @@ parse_args( int argc, char *argv[])
   return load;
 }
 
-void 
+void
 component_instantiate_test(scijump::BuilderService& builder)
 {
-  gov::cca::ComponentID hello = builder.createInstance("HelloClient",
-                                                       "HelloClient.Component",
-                                                       NULL);
+  gov::cca::ComponentID helloServer = builder.createInstance("HelloServer", "HelloServer.Component", NULL);
+  if(helloServer._is_nil()) {
+    std::cerr << "Cannot create component: babel:HelloServer\n";
+    return;
+  }
+
+  gov::cca::ComponentID hello = builder.createInstance("HelloClient", "HelloClient.Component", NULL);
   if(hello._is_nil()) {
     std::cerr << "Cannot create component: babel:Hello\n";
     return;
   }
 }
 
-int 
-orbStart(sidlx::rmi::SimpleOrb& echo, int port_number) 
+int
+orbStart(sidlx::rmi::SimpleOrb& echo, int port_number)
 {
   sidl::rmi::ProtocolFactory pf;
   if(!pf.addProtocol("simhandle","sidlx.rmi.SimHandle")) {
@@ -178,8 +182,8 @@ main(int argc, char *argv[], char **environment) {
     ::gov::cca::Port bsp = mainServices.getPort("mainBuilder");
     ASSERT(bsp._not_nil());
     scijump::BuilderService builder = babel_cast<scijump::BuilderService>(bsp);
-    ASSERT(builder._not_nil()); 
-    //component_instantiate_test(builder);
+    ASSERT(builder._not_nil());
+    component_instantiate_test(builder);
     mainServices.releasePort("mainBuilder");
 
     /*
@@ -189,7 +193,7 @@ main(int argc, char *argv[], char **environment) {
       exit(1);
     }
 
-    
+
     if (loadNet) {
       TypeMap map = fwkProperties.getProperties();
       map.putString("network file", fileName);
@@ -205,8 +209,8 @@ main(int argc, char *argv[], char **environment) {
     if (defaultBuilder == "gui") {
       TypeMap guiProperties = sj.createTypeMap();
       guiProperties.putBool("internal component", true);
-      ComponentID gui_id = builder.createInstance("SCIRun.GUIBuilder", 
-                                                  "cca:SCIRun.GUIBuilder", 
+      ComponentID gui_id = builder.createInstance("SCIRun.GUIBuilder",
+                                                  "cca:SCIRun.GUIBuilder",
                                                   guiProperties);
       if (gui_id._is_nil()) {
         std::cerr << "Cannot create component: cca:SCIRun.GUIBuilder\n";
@@ -219,7 +223,7 @@ main(int argc, char *argv[], char **environment) {
         std::cerr << "Cannot create component: cca:SCIRun.TxtBuilder\n";
         Thread::exitAll(1);
       }
-      
+
     }
     mainServices.releasePort("cca.FrameworkProperties");
     mainServices.releasePort("cca.BuilderService");

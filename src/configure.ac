@@ -4323,6 +4323,8 @@ _sci_optional=optional
 if test "$sci_required_babel" = "yes" ; then
 
   if test "$with_babel"; then
+    ## this will cause problems if path to babel isn't specified!
+    ## e.g. --with-babel
     if test "$with_babel" != "yes"; then
       _sci_lib="$with_babel/lib"
       _sci_inc="$with_babel/include $with_babel/include/cxx"
