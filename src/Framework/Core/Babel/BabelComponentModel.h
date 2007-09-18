@@ -46,7 +46,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <Framework/Core/ComponentModel.h>
-#include <Framework/Core/ComponentInstance.h>
 
 #include <string>
 #include <map>
@@ -55,12 +54,11 @@
 #define DEBUG 1
 #endif
 
-using namespace scijump;
+namespace scijump {
 
-namespace SCIRun {
+using namespace SCIRun;
 
 class BabelComponentDescription;
-class BabelComponentInstance;
 
 /**
  * \class BabelComponentModel
@@ -73,17 +71,16 @@ class BabelComponentInstance;
  * \sa ComponentModel CCAComponentModel InternalComponentModel VtkComponentModel
  *
  */
-class BabelComponentModel : public ComponentModel
-{
+class BabelComponentModel : public ComponentModel {
 public:
-  BabelComponentModel(SCIJumpFramework* framework,
+  BabelComponentModel(const SCIJumpFramework& framework,
                       const StringVector& xmlPaths=StringVector());
   virtual ~BabelComponentModel();
 
   /** ? */
   UCXX ::gov::cca::Services createServices(const std::string& instanceName,
-                                    const std::string& className,
-                                    const UCXX ::gov::cca::TypeMap& properties);
+                                           const std::string& className,
+                                           const UCXX ::gov::cca::TypeMap& properties);
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
@@ -97,9 +94,10 @@ public:
    * instance, or a null pointer on failure.
    * Remote components are currently NOT supported.
    */
-  virtual ComponentInstance* createInstance(const std::string& name,
-                                            const std::string& type,
-                                            const gov::cca::TypeMap& tm);
+  virtual ::sci::cca::core::ComponentInfo
+  createInstance(const std::string& name,
+                 const std::string& type,
+                 const gov::cca::TypeMap& tm);
 
   /** ? */
   virtual std::string createComponent(const std::string& name,
@@ -107,7 +105,7 @@ public:
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  virtual bool destroyInstance(ComponentInstance *ci);
+  //virtual bool destroyInstance(const ComponentInfo &ci);
 
   /**  Returns the name (as a string) of this component model. */
   virtual const std::string getName() const { return "babel"; }
@@ -130,12 +128,12 @@ public:
 private:
   typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
   componentDB_type components;
-  SCIRun::Mutex lock_components;
+  Mutex lock_components;
 
   BabelComponentModel(const BabelComponentModel&);
   BabelComponentModel& operator=(const BabelComponentModel&);
 };
 
-} //namespace SCIRun
+} //namespace scijump
 
 #endif

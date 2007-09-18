@@ -43,8 +43,7 @@
 
 #include <string>
 
-namespace SCIRun
-{
+namespace scijump {
 
 class ComponentModel;
 class SCIRunFramework;
@@ -68,7 +67,10 @@ class SCIRunFramework;
  */
 class ComponentDescription {
 public:
-  ComponentDescription(ComponentModel* model, const std::string& type, const std::string& libName="", const std::string& loader = "");
+  ComponentDescription(ComponentModel* model,
+                       const std::string& type,
+                       const std::string& libName="",
+                       const std::string& loader = "");
 
   virtual ~ComponentDescription();
 
@@ -97,6 +99,6 @@ private:
   ComponentDescription& operator=(const ComponentDescription&);
 };
 
-} // end namespace SCIRun
+} // end namespace scijump
 
 #endif

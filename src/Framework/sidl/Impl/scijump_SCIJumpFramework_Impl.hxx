@@ -101,21 +101,17 @@ namespace scijump {
     typedef std::map<std::string, ::gov::cca::Services> ServicesMap;
     ServicesMap services;
 
+    /** The set of registered components available in the framework, indexed by their instance names. */
+    typedef std::map<std::string, ::sci::cca::core::ComponentInfo> ComponentInstanceMap;
+    ComponentInstanceMap components;
+    SCIRun::Mutex* lock_components;
+
     void initFrameworkServices();
     bool addFrameworkService(::scijump::core::FrameworkServiceFactory& factory, FrameworkServiceMap& frameworkServices);
     bool removeFrameworkService(const std::string& serviceName, FrameworkServiceMap& frameworkServices);
 
-    std::vector<gov::cca::ComponentID> compIDs;
-    SCIRun::Mutex* lock_compIDs;
-  
-    /** The set of registered components available in the framework, 
-	indexed by their instance names. */
-    typedef std::map<std::string, ComponentInstance*> ComponentInstanceMap;
-    ComponentInstanceMap activeInstances;
-    SCIRun::Mutex* lock_activeInstances;
-
-    gov::cca::ComponentID registerComponent(ComponentInstance *ci, const std::string& name);
-    ComponentInstance* unregisterComponent(const std::string& instanceName);
+    //gov::cca::ComponentID registerComponent(ComponentInstance *ci, const std::string& name);
+    //ComponentInstance* unregisterComponent(const std::string& instanceName);
 
     BabelComponentModel* bcm;
     // Insert-Code-Here {scijump.SCIJumpFramework._implementation} (additional details)

@@ -706,7 +706,7 @@ scijump::BuilderService_impl::disconnectAll_impl (
 
 /**
  *  This is where event processing by a listener takes place. This
- * is a call-back method that a topic subscriber implements and 
+ * is a call-back method that a topic subscriber implements and
  * gets called for each new event.
  * 
  * @topicName - The topic for which the Event was created and sent.

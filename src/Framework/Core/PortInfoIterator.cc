@@ -28,7 +28,7 @@
 
 
 /*
- *  PortInstanceIterator.cc:
+ *  PortInfoIterator.cc:
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,12 +38,12 @@
  *
  */
 
-#include <Framework/Core/PortInstanceIterator.h>
+#include <Framework/Core/PortInfoIterator.h>
 
-namespace SCIRun {
+namespace scijump {
+  namespace core {
 
-PortInstanceIterator::~PortInstanceIterator()
-{
-}
+  PortInfoIterator::~PortInfoIterator() {}
 
-} // end namespace SCIRun
+  } // end namespace core
+} // end namespace scijump

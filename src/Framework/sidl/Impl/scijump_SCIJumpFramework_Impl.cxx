@@ -68,11 +68,11 @@ scijump::SCIJumpFramework_impl::SCIJumpFramework_impl() : StubBase(
 // user defined constructor
 void scijump::SCIJumpFramework_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._ctor)
-  lock_compIDs = new SCIRun::Mutex("SCIRunFramework::compIDs lock");
-  lock_activeInstances = new SCIRun::Mutex("SCIRunFramework::activeInstances lock");
+  lock_components = new SCIRun::Mutex("SCIRunFramework::compIDs lock");
 
   initFrameworkServices();
-  bcm = new BabelComponentModel(this);
+  // replace with component model factories - see Plume
+  bcm = new BabelComponentModel(*this);
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._ctor)
 }
 
@@ -279,15 +279,63 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
   }
   */
 
-  ComponentInstance* ci = ((BabelComponentModel*) mod)->createInstance(name, type, properties);
-  if(!ci) {
-    std::cerr << "Error: failed to create BabelComponentInstance"
-	      << std::endl;
+  //ComponentInstance* ci = ((BabelComponentModel*) mod)->createInstance(name, type, properties);
+  ::sci::cca::core::ComponentInfo ci = ((BabelComponentModel*) mod)->createInstance(name, type, properties);
+  if (ci._is_nil()) {
+    std::cerr << "Error: failed to create BabelComponentInfo" << std::endl;
     return NULL; 
   }
 
-  gov::cca::ComponentID cid = registerComponent(ci, name);
-  return cid;
+  {
+    Guard guard(lock_components);
+
+    if ( components.find(name) != components.end() ) {
+      scijump::CCAException ex = scijump::CCAException::_create();
+      ex.initialize(gov::cca::CCAExceptionType_Nonstandard);
+      ex.setNote("can not create component [" + name + "]: name in use");
+      ex.add(__FILE__, __LINE__, "registerComponent");
+      throw ex;
+    }
+
+#if 0 // code from Plume for component class factories
+    /*
+    {
+      Guard guard(&factory_lock);
+      ComponentClassFactoryMap::iterator factory = factories.find(className);
+      if ( factory == factories.end() )
+        throw CCAException::create("Can not create a component of type ["+className+"]: no factory");
+
+      // this may throw a cca exception.
+      // do not catch it.
+
+      services = factory->second->create( pointer(this), instanceName, properties);
+    }
+    */
+#endif
+
+    components[name] = ci;
+  }
+
+#if 0 // from Plume
+  /*
+  // we should not init the component until the CoreServices is in the component array
+  // otherwise we might get a race condition.
+  try {
+    if ( !services->getComponent().isNull() )
+      services->getComponent()->setServices(services);
+  } catch (...) {
+    std::cerr << "component crashed during set services\n";
+    Guard guard(&component_lock);
+    ComponentMap::iterator iter = components.find(instanceName);
+    components.erase(iter);
+    services = 0;
+  }
+
+  return services;
+  */
+#endif
+
+  return ci;
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.createComponentInstance)
 }
 
@@ -473,8 +521,7 @@ scijump::SCIJumpFramework_impl::shutdownFramework_impl ()
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.shutdownFramework)
   services.clear();
-  activeInstances.clear();
-  compIDs.clear();
+  components.clear();
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.shutdownFramework)
 }
 
@@ -543,33 +590,22 @@ scijump::SCIJumpFramework_impl::removeFrameworkService(const std::string& servic
     frameworkServices.erase(iter);
 }
 
+#if 0
 /** Adds a description of a component instance (class ComponentInstance) to
     the list of active components.  The component instance description
     includes the component type name, the instance name, and the pointer to
     the allocated component.  When a \em name conflicts with an existing
     registered component instance name, this method will automatically append
     an integer to create a new, unique instance name.*/
-gov::cca::ComponentID 
-scijump::SCIJumpFramework_impl::registerComponent(ComponentInstance *ci, const std::string& name)
-{
-  scijump::ComponentID cid = scijump::ComponentID::_create();
-
-  lock_compIDs->lock();
-  compIDs.push_back(cid);
-  lock_compIDs->unlock();
-
-  ci->framework = this;
-
-  lock_activeInstances->lock();
-  activeInstances[name] = ci;
-  lock_activeInstances->unlock();
-  return cid;
-}
-
+//gov::cca::ComponentID 
+//scijump::SCIJumpFramework_impl::registerComponent(ComponentInstance *ci, const std::string& name)
+//{
+//}
 
 /** Removes a component instance description from the list of active
     framework components.  Returns the pointer to the component description
     that was successfully unregistered. */
+/*
 ComponentInstance* 
 scijump::SCIJumpFramework_impl::unregisterComponent(const std::string& instanceName) 
 {
@@ -585,5 +621,7 @@ scijump::SCIJumpFramework_impl::unregisterComponent(const std::string& instanceN
     return 0;
   }
 }
+*/
+#endif
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._misc)
 

@@ -133,7 +133,7 @@ scijump::Event_impl::getHeader_impl ()
 }
 
 /**
- *  Returs the event's body. The body is the information the 
+ *  Returs the event's body. The body is the information the
  * publisher is sending to the subscribers
  */
 ::gov::cca::TypeMap

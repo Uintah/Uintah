@@ -41,6 +41,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 
 PSELIBS := Core/Thread Core/Util Core/Exceptions
+INCLUDES += ${BABEL_INCLUDE}
 LIBS := $(BABEL_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

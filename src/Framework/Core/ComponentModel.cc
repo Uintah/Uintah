@@ -49,11 +49,11 @@
 
 #include <iostream>
 
-namespace SCIRun {
+namespace scijump {
 
 static Mutex parserLock("parser lock");
 
-ComponentModel::ComponentModel(const std::string& prefixName, SCIJumpFramework* framework)
+ComponentModel::ComponentModel(const std::string& prefixName, const SCIJumpFramework& framework)
   : prefixName(prefixName), framework(framework)
 {
   /*
@@ -158,7 +158,7 @@ ComponentModel::splitPathString(const std::string& path)
 // convenience functions for reading XML component description files
 
 
-bool parseComponentModelXML(const std::string& file, ComponentModel* model)
+bool parseComponentModelXML(const std::string& file, ComponentModel& model)
 {
   /*
   Guard g(&parserLock);
@@ -250,7 +250,7 @@ bool parseComponentModelXML(const std::string& file, ComponentModel* model)
 }
 
 bool
-getXMLPaths(SCIJumpFramework* fwk, StringVector& xmlPaths)
+getXMLPaths(const SCIJumpFramework& fwk, StringVector& xmlPaths)
 {
   
   gov::cca::TypeMap tm;
