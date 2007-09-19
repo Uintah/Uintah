@@ -195,7 +195,8 @@ namespace Uintah {
     // DetailedTasks::mpiCompletedTasks list.
     void clearExternalDepCount() { externalDependencyCount_ = 0; }
     void incrementExternalDepCount() { externalDependencyCount_++; }
-    void decrementExternalDepCount();
+    void decrementExternalDepCount() { externalDependencyCount_--; }
+    void checkExternalDepCount();
     int getExternalDepCount() { return externalDependencyCount_; }
 
     bool areInternalDependenciesSatisfied()
