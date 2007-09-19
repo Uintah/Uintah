@@ -532,6 +532,31 @@ main( int argc, char** argv )
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
     cerrLock.unlock();
     thrownException = true;
+  } catch (std::bad_alloc e) {
+    cerrLock.lock();
+    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
+    cerrLock.unlock();
+    thrownException = true;
+  } catch (std::bad_cast e) {
+    cerrLock.lock();
+    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_cast': " << e.what() << '\n';
+    cerrLock.unlock();
+    thrownException = true;
+  } catch (std::bad_exception e) {
+    cerrLock.lock();
+    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
+    cerrLock.unlock();
+    thrownException = true;
+  } catch (std::bad_typeid e) {
+    cerrLock.lock();
+    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_typeid': " << e.what() << '\n';
+    cerrLock.unlock();
+    thrownException = true;
+  } catch (std::ios_base::failure e) {
+    cerrLock.lock();
+    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
+    cerrLock.unlock();
+    thrownException = true;
   } catch (std::exception e){
     
     cerrLock.lock();
