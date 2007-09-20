@@ -738,9 +738,9 @@ PFEThread::run()
       archive->query(pvi, pfe->particleIDs, matl, patch, pfe->timestep);
     }
 
+
     if( !have_subset ){
-      sema->up();
-      return;
+      continue;
     }
 
     string elems;
@@ -801,6 +801,14 @@ PFEThread::run()
       positions[dest]= ((pvp[*iter]).asVector() * scale_).asPoint();
     }
   }
+
+  if( !(have_sp || have_vp || have_tp) ){
+    sema->up();
+    return;
+  }
+
+
+
   imutex->lock();
   pseth->AddParticles( positions, ids, patch);
   imutex->unlock();
