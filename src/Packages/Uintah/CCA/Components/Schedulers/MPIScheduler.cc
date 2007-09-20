@@ -181,65 +181,10 @@ void
 MPIScheduler::initiateTask( DetailedTask          * task,
 			    bool only_old_recvs, int abort_point, int iteration )
 {
+  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
   long long start_total_comm_flops = mpi_info_.totalcommflops;
   long long start_total_exec_flops = mpi_info_.totalexecflops;
 
-#ifdef USE_TAU_PROFILING
-  int id;
-  const PatchSubset* patches = task->getPatches();
-  id = create_tau_mapping( task->getTask()->getName(), patches );
-  
-  string phase_name = "no patches";
-  if (patches && patches->size() > 0) {
-    phase_name = "level";
-    for(int i=0;i<patches->size();i++) {
-      
-      ostringstream patch_num;
-      patch_num << patches->get(i)->getLevel()->getIndex();
-      
-      if (i == 0) {
-        phase_name = phase_name + " " + patch_num.str();
-      } else {
-        phase_name = phase_name + ", " + patch_num.str();
-      }
-    }
-  }
-
-  static map<string,int> phase_map;
-  static int unique_id = 99999;
-  int phase_id;
-  map<string,int>::iterator iter = phase_map.find( phase_name );
-  if( iter != phase_map.end() ) {
-    phase_id = (*iter).second;
-  } else {
-    TAU_MAPPING_CREATE( phase_name, "",
-			(TauGroup_t) unique_id, "TAU_USER", 0 );
-    phase_map[ phase_name ] = unique_id;
-    phase_id = unique_id++;
-  }
-
-  
-
-#endif
-
-
-
-  TAU_PROFILE_TIMER(doittimer, "Task execution", 
-		    "[MPIScheduler::initiateTask()] ", TAU_USER); 
-  TAU_PROFILE_START(doittimer);
-
-
-  // Task name
-  TAU_MAPPING_OBJECT(tautimer)
-  TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
-  TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-  TAU_MAPPING_PROFILE_START(doitprofiler,0);
-
-//   // Patch levels
-//   TAU_MAPPING_OBJECT(phasetimer)
-//   TAU_MAPPING_LINK(phasetimer, (TauGroup_t)phase_id);  // EXTERNAL ASSOCIATION
-//   TAU_MAPPING_PROFILE_TIMER(phaseprofiler, phasetimer, 0)
-//   TAU_MAPPING_PROFILE_START(phaseprofiler,0);
 
 
 #ifdef USE_PERFEX_COUNTERS
@@ -254,16 +199,13 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   mpi_info_.totalcommflops += recv_flops;
 #endif
 
-//   TAU_MAPPING_PROFILE_STOP(0);
-  TAU_MAPPING_PROFILE_STOP(0);
-
-  TAU_PROFILE_STOP(doittimer);
 
 } // end initiateTask()
 
 void
 MPIScheduler::initiateReduction( DetailedTask          * task )
 {
+  TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
 #ifdef USE_PERFEX_COUNTERS
     start_counters(0, 19);
@@ -783,6 +725,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   int i = 0;
 
+  TAU_PROFILE_TIMER(doittimer, "Task execution", 
+		    "[MPIScheduler::execute() loop] ", TAU_USER); 
+  TAU_PROFILE_START(doittimer);
+
   set<DetailedTask*> pending_tasks;
 
   while( numTasksDone < ntasks) {
@@ -797,6 +743,47 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       numTasksDone++;
       taskdbg << me << " Initiating task:  \t"; printTask(taskdbg, task); taskdbg << '\n';
 
+#ifdef USE_TAU_PROFILING
+      int id;
+      const PatchSubset* patches = task->getPatches();
+      id = create_tau_mapping( task->getTask()->getName(), patches );
+  
+      string phase_name = "no patches";
+      if (patches && patches->size() > 0) {
+        phase_name = "level";
+        for(int i=0;i<patches->size();i++) {
+      
+          ostringstream patch_num;
+          patch_num << patches->get(i)->getLevel()->getIndex();
+      
+          if (i == 0) {
+            phase_name = phase_name + " " + patch_num.str();
+          } else {
+            phase_name = phase_name + ", " + patch_num.str();
+          }
+        }
+      }
+
+      static map<string,int> phase_map;
+      static int unique_id = 99999;
+      int phase_id;
+      map<string,int>::iterator iter = phase_map.find( phase_name );
+      if( iter != phase_map.end() ) {
+        phase_id = (*iter).second;
+      } else {
+        TAU_MAPPING_CREATE( phase_name, "",
+			    (TauGroup_t) unique_id, "TAU_USER", 0 );
+        phase_map[ phase_name ] = unique_id;
+        phase_id = unique_id++;
+      }
+      // Task name
+      TAU_MAPPING_OBJECT(tautimer)
+      TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
+      TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
+      TAU_MAPPING_PROFILE_START(doitprofiler,0);
+#endif
+
+
       if (task->getTask()->getType() == Task::Reduction){
         if(!abort)
           initiateReduction(task);
@@ -809,6 +796,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         taskdbg << d_myworld->myrank() << " Completed task:  \t";
         printTask(taskdbg, task); taskdbg << '\n';
       }
+  
+      TAU_MAPPING_PROFILE_STOP(0);
+
     }
     else {
       // using queued task receiving structure
@@ -859,6 +849,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
     }
   } // end while( numTasksDone < ntasks )
+  TAU_PROFILE_STOP(doittimer);
 
   // wait for all tasks to finish -- i.e. MixedScheduler
   // MPIScheduler will just continue.
