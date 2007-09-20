@@ -124,8 +124,12 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
    
     //Calcualte coarsening factor
     int coarsen_factor=d_minPatchSize[l+1][0]*d_minPatchSize[l+1][1]*d_minPatchSize[l+1][2]/d_cellRefinementRatio[l][0]/d_cellRefinementRatio[l][1]/d_cellRefinementRatio[l][2];
+      
+    TAU_PROFILE_TIMER(combinetimer, "BNRRegridder::consolidate flags", "", TAU_USER);
+    TAU_PROFILE_START(combinetimer);
+            
     //Calculate the number of stages to reduce
-      //this is a guess based on the coarsening factor and the number of processors
+    //this is a guess based on the coarsening factor and the number of processors
     int stages=log((float)coarsen_factor)/log(2.0) + log((float)procs)/log(2.0)/4;
     int stride=1;
     MPI_Status status;
@@ -191,6 +195,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
         MPI_Recv(&coarse_flag_vector[0],numReceive*sizeof(IntVector),MPI_BYTE,from,0,comm,&status);
       }
     }
+    TAU_PROFILE_STOP(combinetimer);
     //Parallel BR over coarse flags
       //flags on level l are used to create patches on level l+1
    
@@ -237,6 +242,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   }
 
   //finalize the grid
+  TAU_PROFILE_TIMER(finalizetimer, "BNRRegridder::finalize grid", "", TAU_USER);
+  TAU_PROFILE_START(finalizetimer);
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
   for(int l=0;l<newGrid->numLevels();l++)
   {
@@ -244,13 +251,16 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     level->assignBCS(grid_ps_);
   }
+  TAU_PROFILE_STOP(finalizetimer);
   
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   OutputGridStats(patch_sets, newGrid);
 
+#if SCI_ASSERTION_LEVEL > 0
   newGrid->performConsistencyCheck();
+#endif
   return newGrid;
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
