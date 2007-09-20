@@ -284,6 +284,7 @@ main(int argc, char** argv)
       clf.do_patch = true;
     } else if (s == "-material" ||
                s == "-matl") {
+      clf.matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
     } else if (s == "-verbose") {
       clf.do_verbose = true;
@@ -301,8 +302,6 @@ main(int argc, char** argv)
                s == "-timestepInc" ||
                s == "-timestep_inc") {
       clf.time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-    } else if (s == "-matl") {
-      clf.matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else if( clf.filebase == "") {
