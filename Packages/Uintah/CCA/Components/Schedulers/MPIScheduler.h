@@ -80,7 +80,7 @@ WARNING
 
     virtual SchedulerP createSubScheduler();
     
-    virtual bool useInternalDeps() { return true;}//return useExternalQueue_; }
+    virtual bool useInternalDeps() { return useExternalQueue_; }
 
 
 
