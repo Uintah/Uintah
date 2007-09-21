@@ -866,7 +866,7 @@ private:
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& varname)
 {
 
-  CGSolverParams* p = new CGSolverParams();
+  CGSolverParams* p = scinew CGSolverParams();
   if(params){
     for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
         param = param->findNextBlock("Parameters")) {
@@ -934,7 +934,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCXVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCXTypes>* that = new CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCXTypes>* that = scinew CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<SFCXTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &CGStencil7<SFCXTypes>::solve, handle);
     }
@@ -942,7 +942,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCYVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCYTypes>* that = new CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCYTypes>* that = scinew CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<SFCYTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &CGStencil7<SFCYTypes>::solve, handle);
     }
@@ -950,7 +950,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::SFCZVariable:
     {
       Around = Ghost::AroundFaces;
-      CGStencil7<SFCZTypes>* that = new CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<SFCZTypes>* that = scinew CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<SFCZTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &CGStencil7<SFCZTypes>::solve, handle);
     }
@@ -958,7 +958,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::CCVariable:
     {
       Around = Ghost::AroundCells;
-      CGStencil7<CCTypes>* that = new CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<CCTypes>* that = scinew CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<CCTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &CGStencil7<CCTypes>::solve, handle);
     }
@@ -966,7 +966,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   case TypeDescription::NCVariable:
     {
       Around = Ghost::AroundNodes;
-      CGStencil7<NCTypes>* that = new CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
+      CGStencil7<NCTypes>* that = scinew CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<NCTypes> > handle = that;
       task = scinew Task("Matrix solve", that, &CGStencil7<NCTypes>::solve, handle);
     }

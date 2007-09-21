@@ -47,6 +47,13 @@ static DebugStream istats("IndividualComponentTimings",false);
 extern DebugStream amrout;
 
 namespace Uintah {
+  struct double_int
+  {
+     double val;
+     int loc;
+     double_int(double val, int loc): val(val), loc(loc) {}
+     double_int(): val(0), loc(-1) {}
+  };
 
   // for calculating memory usage when sci-malloc is disabled.
   char* SimulationController::start_addr = NULL;
@@ -233,7 +240,7 @@ namespace Uintah {
     if (d_restarting) {
       // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
       restart_prob_spec = d_archive->getTimestepDoc(d_restartIndex);
-      d_sim->readFromTimestepXML(restart_prob_spec);
+      d_sim->readFromTimestepXML(restart_prob_spec, d_sharedState);
     }
 
     // Pass the restart_prob_spec to the problemSetup.  For restarting, 
@@ -461,9 +468,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       char filename[256];
       sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
       if ( timestep == 0 ) {
-        mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
+        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
       } else {
-        mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
+        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
       }
       if ( !mallocPerProcStream ) {
         delete mallocPerProcStream;
@@ -487,50 +494,77 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
   }
   
+  
   // with the sum reduces, use double, since with memory it is possible that
   // it will overflow
   double avg_memuse = memuse;
   unsigned long max_memuse = memuse;
+  int max_memuse_loc = -1;
   double avg_highwater = highwater;
   unsigned long max_highwater = highwater;
-
+  
   // a little ugly, but do it anyway so we only have to do one reduce for sum and
   // one reduce for max
-  std::vector<double> toReduce, avgReduce, maxReduce;
+  std::vector<double> toReduce, avgReduce;
+  std::vector<double_int> toReduceMax;
+  std::vector<double_int> maxReduce;
   std::vector<const char*> statLabels;
+  int rank=d_myworld->myrank();
+  double total_time=0, overhead_time=0, percent_overhead=0;
   if (d_myworld->size() > 1) {
     toReduce.push_back(memuse);
+    toReduceMax.push_back(double_int(memuse,rank));
+    toReduce.push_back(d_sharedState->compilationTime);
+    toReduceMax.push_back(double_int(d_sharedState->compilationTime,rank));
+    toReduce.push_back(d_sharedState->regriddingTime);
+    toReduceMax.push_back(double_int(d_sharedState->regriddingTime,rank));
+    toReduce.push_back(d_sharedState->regriddingCompilationTime);
+    toReduceMax.push_back(double_int(d_sharedState->regriddingCompilationTime,rank));
+    toReduce.push_back(d_sharedState->regriddingCopyDataTime);
+    toReduceMax.push_back(double_int(d_sharedState->regriddingCopyDataTime,rank));
+    toReduce.push_back(d_sharedState->loadbalancerTime);
+    toReduceMax.push_back(double_int(d_sharedState->loadbalancerTime,rank));
+    toReduce.push_back(d_sharedState->taskExecTime);
+    toReduceMax.push_back(double_int(d_sharedState->taskExecTime,rank));
+    toReduce.push_back(d_sharedState->taskGlobalCommTime);
+    toReduceMax.push_back(double_int(d_sharedState->taskGlobalCommTime,rank));
+    toReduce.push_back(d_sharedState->taskLocalCommTime);
+    toReduceMax.push_back(double_int(d_sharedState->taskLocalCommTime,rank));
+    toReduce.push_back(d_sharedState->taskWaitCommTime);
+    toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
+    toReduce.push_back(d_sharedState->outputTime);
+    toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
     statLabels.push_back("Mem usage");
-    if (stats.active()) {
-      toReduce.push_back(d_sharedState->compilationTime);
-      toReduce.push_back(d_sharedState->regriddingTime);
-      toReduce.push_back(d_sharedState->regriddingCompilationTime);
-      toReduce.push_back(d_sharedState->regriddingCopyDataTime);
-      toReduce.push_back(d_sharedState->loadbalancerTime);
-      toReduce.push_back(d_sharedState->taskExecTime);
-      toReduce.push_back(d_sharedState->taskGlobalCommTime);
-      toReduce.push_back(d_sharedState->taskLocalCommTime);
-      toReduce.push_back(d_sharedState->taskWaitCommTime);
-      toReduce.push_back(d_sharedState->outputTime);
-      statLabels.push_back("Recompile");
-      statLabels.push_back("Regridding");
-      statLabels.push_back("Regrid-schedule");
-      statLabels.push_back("Regrid-copydata");
-      statLabels.push_back("LoadBalance");
-      statLabels.push_back("TaskExec");
-      statLabels.push_back("TaskGlobalComm");
-      statLabels.push_back("TaskLocalComm");
-      statLabels.push_back("TaskWaitCommTime");
-      statLabels.push_back("Output");
-    }
+    statLabels.push_back("Recompile");
+    statLabels.push_back("Regridding");
+    statLabels.push_back("Regrid-schedule");
+    statLabels.push_back("Regrid-copydata");
+    statLabels.push_back("LoadBalance");
+    statLabels.push_back("TaskExec");
+    statLabels.push_back("TaskGlobalComm");
+    statLabels.push_back("TaskLocalComm");
+    statLabels.push_back("TaskWaitCommTime");
+    statLabels.push_back("Output");
+
     if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
       toReduce.push_back(highwater);
     avgReduce.resize(toReduce.size());
     maxReduce.resize(toReduce.size());
-    MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
-               d_myworld->getComm());
-    MPI_Reduce(&toReduce[0], &maxReduce[0], toReduce.size(), MPI_DOUBLE, MPI_MAX, 0,
-               d_myworld->getComm());
+    
+    
+    //if AMR and using dynamic dilation use an allreduce
+    if(d_regridder && d_regridder->useDynamicDilation())
+    {
+      MPI_Allreduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, d_myworld->getComm());
+      MPI_Allreduce(&toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm());
+    }
+    else
+    {
+      MPI_Reduce(&toReduce[0], &avgReduce[0], toReduce.size(), MPI_DOUBLE, MPI_SUM, 0,
+                 d_myworld->getComm());
+      MPI_Reduce(&toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0,
+                 d_myworld->getComm());
+    }
 
     // make sums averages
     for (unsigned i = 0; i < avgReduce.size(); i++) {
@@ -539,10 +573,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     // get specific values - pop front since we don't know if there is a highwater
     avg_memuse = avgReduce[0];
-    max_memuse = maxReduce[0];
+    max_memuse = maxReduce[0].val;
+    max_memuse_loc = maxReduce[0].loc;
+    
     if(highwater){
       avg_highwater = avgReduce[avgReduce.size()-1];
-      max_highwater = maxReduce[maxReduce.size()-1];
+      max_highwater = maxReduce[maxReduce.size()-1].val;
     }
   }
   d_sharedState->clearStats();
@@ -614,7 +650,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       if(max_highwater) {
         message << "/" << toHumanUnits(max_highwater);
       }
-      message << " (max)";
+      message << " (max on rank:" << max_memuse_loc << ")";
     }
     
 #endif
@@ -622,11 +658,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     dbg.flush();
     cout.flush();
 
-    if (stats.active() && d_myworld->size() > 1) {
-      for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-        if (maxReduce[i] > 0)
-          stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i]
-                << " LIB%: " << 1-(avgReduce[i]/maxReduce[i]) << endl;
+    if (stats.active()) {
+      if(d_myworld->size()>1)
+      {
+        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+          if (maxReduce[i].val > 0)
+            stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i].val << " maxloc:" << maxReduce[i].loc
+                  << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << endl;
+        }
       }
     } 
 

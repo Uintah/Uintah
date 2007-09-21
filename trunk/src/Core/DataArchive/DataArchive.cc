@@ -410,7 +410,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
   }
   
   d_lock.unlock();
-  grid->performConsistencyCheck();
+  //grid->performConsistencyCheck();
 
   timedata.d_grid = grid;
 
@@ -503,6 +503,10 @@ void
 DataArchive::query( Variable& var, const std::string& name, int matlIndex, 
                     const Patch* patch, int index, DataFileInfo* dfi /* = 0 */)
 {
+  // don't handle data for virtual patches
+  if (patch->isVirtual()) {
+
+  }
   double tstart = Time::currentSeconds();
   string url;
 
@@ -524,9 +528,12 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   string dataurl;
   int patchid;
   if (patch) {
-    PatchData& patchinfo = timedata.d_patchInfo[patch->getLevel()->getIndex()][patch->getLevelIndex()];
+    // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
+    // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
+    const Patch* real_patch = patch->getRealPatch();
+    PatchData& patchinfo = timedata.d_patchInfo[real_patch->getLevel()->getIndex()][real_patch->getLevelIndex()];
     ASSERT(patchinfo.parsed);
-    patchid = patch->getRealPatch()->getID();
+    patchid = real_patch->getID();
 
     ostringstream ostr;
     // append l#/datafilename to the directory
@@ -623,6 +630,11 @@ void DataArchive::query( Variable& var, const string& name, int matlIndex,
                          const Patch* patch, int timeIndex,
                          Ghost::GhostType gt, int ngc)
 {
+  // don't handle data for virtual patches
+  if (patch->isVirtual()) {
+
+  }
+
   if (ngc == 0)
     query(var, name, matlIndex, patch, timeIndex, 0);
   else {
@@ -775,7 +787,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   *pTime = times[index];
 
   if (lb)
-    lb->restartInitialize(timedata.d_tstop, timedata.d_tsurl, grid);
+    lb->restartInitialize(this, index, timedata.d_tstop, timedata.d_tsurl, grid);
 
   // set here instead of the SimCont because we need the DW ID to be set 
   // before saving particle subsets
@@ -1090,6 +1102,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       }
       else {
         ASSERTRANGE(patchid-basePatch, 0, (int)d_patchInfo[levelNum].size());
+
         PatchData& patchinfo = d_patchInfo[levelNum][patchid-basePatch];
         if (!patchinfo.parsed) {
           patchinfo.parsed = true;
@@ -1118,13 +1131,21 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
 void
 DataArchive::TimeData::parsePatch(const Patch* patch)
 {
+  // don't handle data for virtual patches
+  if (patch->isVirtual()) {
+
+  }
+
   ASSERT(d_grid != 0);
   if (!patch) return;
+
+  const Patch* real_patch = patch->getRealPatch();
+  
   // make sure the data for this patch has been processed.
   // Return straightaway if we have parsed this patch
-  int levelIndex = patch->getLevel()->getIndex(); 
-  int levelBasePatchID = patch->getLevel()->getPatch(0)->getID();
-  int patchIndex = patch->getLevelIndex();
+  int levelIndex = real_patch->getLevel()->getIndex(); 
+  int levelBasePatchID = real_patch->getLevel()->getPatch(0)->getID();
+  int patchIndex = real_patch->getLevelIndex();
 
   PatchData& patchinfo = d_patchInfo[levelIndex][patchIndex];
   if (patchinfo.parsed)
@@ -1133,7 +1154,7 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
   //If this is a newer uda, the patch info in the grid will store the processor where the data is
   if (patchinfo.proc != -1) {
     ostringstream file;
-    file << d_tsurldir << "l" << (int) patch->getLevel()->getIndex() << "/p" << setw(5) << setfill('0') << (int) patchinfo.proc << ".xml";
+    file << d_tsurldir << "l" << (int) real_patch->getLevel()->getIndex() << "/p" << setw(5) << setfill('0') << (int) patchinfo.proc << ".xml";
     parseFile(file.str(), levelIndex, levelBasePatchID);
   }
 
@@ -1172,7 +1193,7 @@ DataArchive::queryMaterials( const string& varname,
 
   for (unsigned i = 0; i < timedata.d_matlInfo[patch->getLevel()->getIndex()].size(); i++) {
     // i-1, since the matlInfo is adjusted to allow -1 as entries
-    VarnameMatlPatch vmp(varname, i-1, patch->getID());
+    VarnameMatlPatch vmp(varname, i-1, patch->getRealPatch()->getID());
     DataFileInfo dummy;
 
     if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1)

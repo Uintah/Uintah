@@ -66,7 +66,7 @@ VorticityConfinement::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = new MaterialSet();
+  d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 

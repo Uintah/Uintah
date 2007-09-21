@@ -15,6 +15,7 @@ $data = $xml->XMLin("$ARGV[0]", KeepRoot => 1);
 
 my $i = 0;
 my $j = 0;
+my $tmp_err = -1;
 
 foreach $e (@{$data->{start}->[0]->{Test}})
 {
@@ -43,7 +44,7 @@ foreach $e (@{$data->{start}->[0]->{Test}})
       `echo $tmp_err >.$output_file.tmp`;
     } 
     ############################
-    # Run the comparison utilities
+    # Run the comparison tests
     ############################
 
     print "$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]\n";
@@ -65,8 +66,15 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     if ($prev_line != "")  # Checking if the prev_line is empty (if the file is created for the first time this can happen)
     {
       @values = split(/ /,$prev_line);
-      $order_of_accuracy = log($values[1]/$tmp)/log($x[$k]/$values[0]);
-      print "echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat\n";
+      
+      
+      $R = $x[$k]/$values[0];
+      $errorRatio = $values[1]/$tmp;
+      
+      $order_of_accuracy = log($errorRatio)/log($R);
+      
+      print "Analyze Results:\t Error ratio: $errorRatio, R: $R,\t L2Norm: $tmp \tOrder-of-accuracy: $order_of_accuracy \n\n";
+      
       `echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat`;
     } 
     else
@@ -115,7 +123,7 @@ foreach $e (@{$data->{start}->[0]->{Test}})
   `gnuplot $output_file.gp`;
 
   # The DONE file has the basic info about the results - The two plots will be included and the test title will be added to the file
-  if ($tmp_err<=0)
+  if ($tmp_err==0)
   {
     `echo \"Title: $test_title\" >> $launcher.DONE`;
     `echo \"Results\/err_$output_file.png\" >> $launcher.DONE`;
@@ -127,4 +135,9 @@ foreach $e (@{$data->{start}->[0]->{Test}})
     `mv $output_file.gp $output_file.dat err_$output_file.png order_$output_file.png Results/.`;
     `rm -f .$output_file.tmp`;
   }  
+}
+if($tmp_err==-1)
+{
+  `mkdir -p Results1`;
+  `mv $output_file.gp $output_file.dat err_$output_file.png order_$output_file.png Results1/.`;
 }

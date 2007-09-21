@@ -21,13 +21,13 @@ Turbulence::Turbulence(ProblemSpecP& ps, SimulationStateP& sharedState)
 {
   for (ProblemSpecP child = ps->findBlock("FilterScalar"); child != 0;
        child = child->findNextBlock("FilterScalar")) {
-    FilterScalar* s = new FilterScalar;
+    FilterScalar* s = scinew FilterScalar;
     child->get("name", s->name);
 
     s->matl = sharedState->parseAndLookupMaterial(child, "material");
     vector<int> m(1);
     m[0] = s->matl->getDWIndex();
-    s->matl_set = new MaterialSet();
+    s->matl_set = scinew MaterialSet();
     s->matl_set->addAll(m);
     s->matl_set->addReference();
 

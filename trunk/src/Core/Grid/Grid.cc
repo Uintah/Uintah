@@ -7,6 +7,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Primes.h>
+#include <TauProfilerForSCIRun.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Math/MiscMath.h>
@@ -167,6 +168,7 @@ Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 
 void Grid::performConsistencyCheck() const
 {
+  TAU_PROFILE("Grid::performConsistencyCheck()", " ", TAU_USER);
   // Verify that patches on a single level do not overlap
   for(int i=0;i<(int)d_levels.size();i++)
     d_levels[i]->performConsistencyCheck();

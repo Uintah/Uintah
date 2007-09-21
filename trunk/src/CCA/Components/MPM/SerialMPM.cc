@@ -100,6 +100,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGN     = 1;
   d_recompile = false;
   dataArchiver = 0;
+  d_loadCurveIndex=0;
 }
 
 SerialMPM::~SerialMPM()
@@ -110,6 +111,8 @@ SerialMPM::~SerialMPM()
   delete thermalContactModel;
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
+  if(d_loadCurveIndex)
+    delete d_loadCurveIndex;
 
 }
 
@@ -391,11 +394,11 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
-  MaterialSubset* loadCurveIndex = scinew MaterialSubset();
+  d_loadCurveIndex = scinew MaterialSubset();
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") loadCurveIndex->add(nofPressureBCs++);
+    if (bcs_type == "Pressure") d_loadCurveIndex->add(nofPressureBCs++);
   }
   if (nofPressureBCs > 0) {
 
@@ -404,7 +407,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     Task* t = scinew Task("MPM::countMaterialPointsPerLoadCurve",
                           this, &SerialMPM::countMaterialPointsPerLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
+    t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
                 Task::OutOfDomain);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
@@ -414,7 +417,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                     this, &SerialMPM::initializePressureBC);
     t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
-    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, loadCurveIndex, Task::OutOfDomain, Ghost::None);
+    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifies(lb->pExternalForceLabel);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
   }

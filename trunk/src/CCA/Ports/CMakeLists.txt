@@ -50,6 +50,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Ports
   Packages_Uintah_Core_Util
   Packages_Uintah_Core_Grid
   Packages_Uintah_Core_Disclosure
+  Packages_Uintah_Core_DataArchive
   Packages_Uintah_Core_Exceptions
   Packages_Uintah_Core_ProblemSpec
   Core_Thread

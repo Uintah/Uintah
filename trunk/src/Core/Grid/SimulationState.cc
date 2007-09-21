@@ -72,6 +72,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_ice_matls = 0;
   all_arches_matls = 0;
   all_matls = 0;
+  orig_all_matls = 0;
   allInOneMatl = 0;
   max_matl_index = 0;
   refine_flag_matls = 0;
@@ -193,6 +194,12 @@ void SimulationState::finalizeMaterials()
   }
   all_matls->addAll(tmp_matls);
 
+  if (orig_all_matls == 0) {
+    orig_all_matls = scinew MaterialSet();
+    orig_all_matls->addReference();
+    orig_all_matls->addAll(tmp_matls);
+  }
+
   if (allInOneMatl && allInOneMatl->removeReference())
     delete allInOneMatl;
   allInOneMatl = scinew MaterialSubset();
@@ -269,6 +276,9 @@ SimulationState::~SimulationState()
   if(refine_flag_matls && refine_flag_matls->removeReference())
     delete refine_flag_matls;
 
+  if(orig_all_matls && orig_all_matls->removeReference())
+    delete orig_all_matls;
+  
 
 }
 
@@ -295,6 +305,20 @@ const MaterialSet* SimulationState::allMaterials() const
   ASSERT(all_matls != 0);
   return all_matls;
 }
+
+const MaterialSet* SimulationState::originalAllMaterials() const
+{
+  ASSERT(orig_all_matls != 0);
+  return orig_all_matls;
+}
+
+void SimulationState::setOriginalMatlsFromRestart(MaterialSet* matls)
+{
+  if (orig_all_matls && orig_all_matls->removeReference())
+    delete orig_all_matls;
+  orig_all_matls = matls;
+}
+  
 
 const MaterialSubset* SimulationState::refineFlagMaterials() const
 {

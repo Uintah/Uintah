@@ -41,6 +41,7 @@ SteadyBurnCriteria::~SteadyBurnCriteria()
 {
   delete Mlb;
   delete MIlb;
+  delete Ilb;
 }
 //__________________________________
 //

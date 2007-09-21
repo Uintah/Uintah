@@ -26,6 +26,18 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+###############################################################################
+# Don't allow the user to build in the src directory...
+#
+IF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+  MESSAGE( "" )
+  MESSAGE( "Building SCIRun in the source directory is not allowed." )
+  MESSAGE( "(In order to clean up, you now need to run: rm -rf CMakeFiles CMakeCache.txt" )
+  MESSAGE( "" )
+  MESSAGE( FATAL_ERROR "Goodbye." )
+ENDIF(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+
+###############################################################################
 # This is the root SCIRun CMakeLists file.
 IF(WIN32)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.4.4)
@@ -119,6 +131,13 @@ IF(${SCIRUN_ENABLE_64BIT})
   SET(NBITS 64 CACHE INTERNAL "64 bit build")
 ENDIF(${SCIRUN_ENABLE_64BIT})
 MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
+
+################################################################################################
+# Under OSX, use single_module (as opposed to multiple_module) linking.
+
+if(APPLE)
+  set(CMAKE_SHARED_LINKER_FLAGS "-single_module" CACHE STRING "Flags used to link a shared library." FORCE)
+endif(APPLE)
 
 ################################################################################################
 # SCIRun Thirdparty Location/Validation Check
@@ -240,6 +259,8 @@ IF(WIN32)
   IF(NOT BUILD_SHARED_LIBS)
     ADD_DEFINITIONS(-DBUILD_CORE_STATIC)
     ADD_DEFINITIONS(-DGLEW_STATIC)
+    # builds against static teem
+    ADD_DEFINITIONS(-DTEEM_STATIC)
   ENDIF(NOT BUILD_SHARED_LIBS)
   #  This defines M_PI for windows
   ADD_DEFINITIONS(-D_USE_MATH_DEFINES)

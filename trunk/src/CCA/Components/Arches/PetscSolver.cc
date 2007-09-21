@@ -68,7 +68,7 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 //  int argc = 2;
   int argc = 4;
   char** argv;
-  argv = new char*[argc];
+  argv = scinew char*[argc];
   argv[0] = "PetscSolver::problemSetup";
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";
@@ -83,6 +83,7 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 //  ierr = PetscOptionsSetValue("-log_exclude_objects", "");
 //  if(ierr)
 //    throw PetscError(ierr, "PetscExcludeObjects");
+  delete argv;
 }
 
 

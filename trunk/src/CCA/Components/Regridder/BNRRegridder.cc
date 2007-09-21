@@ -18,8 +18,6 @@ using namespace Uintah;
 #include <iomanip>
 using namespace std;
 
-static DebugStream dbgstats("BNRStats",false);
-
 bool BNRRegridder::getTags(int &tag1, int &tag2)
 {
 
@@ -126,8 +124,12 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
    
     //Calcualte coarsening factor
     int coarsen_factor=d_minPatchSize[l+1][0]*d_minPatchSize[l+1][1]*d_minPatchSize[l+1][2]/d_cellRefinementRatio[l][0]/d_cellRefinementRatio[l][1]/d_cellRefinementRatio[l][2];
+      
+    TAU_PROFILE_TIMER(combinetimer, "BNRRegridder::consolidate flags", "", TAU_USER);
+    TAU_PROFILE_START(combinetimer);
+            
     //Calculate the number of stages to reduce
-      //this is a guess based on the coarsening factor and the number of processors
+    //this is a guess based on the coarsening factor and the number of processors
     int stages=log((double)coarsen_factor)/log(2.0) + log((double)procs)/log(2.0)/4;
     int stride=1;
     MPI_Status status;
@@ -193,6 +195,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
         MPI_Recv(&coarse_flag_vector[0],numReceive*sizeof(IntVector),MPI_BYTE,from,0,comm,&status);
       }
     }
+    TAU_PROFILE_STOP(combinetimer);
     //Parallel BR over coarse flags
       //flags on level l are used to create patches on level l+1
    
@@ -239,6 +242,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   }
 
   //finalize the grid
+  TAU_PROFILE_TIMER(finalizetimer, "BNRRegridder::finalize grid", "", TAU_USER);
+  TAU_PROFILE_START(finalizetimer);
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
   for(int l=0;l<newGrid->numLevels();l++)
   {
@@ -246,13 +251,16 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     level->assignBCS(grid_ps_);
   }
+  TAU_PROFILE_STOP(finalizetimer);
   
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   
   OutputGridStats(patch_sets, newGrid);
 
+#if SCI_ASSERTION_LEVEL > 0
   newGrid->performConsistencyCheck();
+#endif
   return newGrid;
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
@@ -322,9 +330,9 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
 
 void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* newGrid)
 {
-  if (dbgstats.active() && d_myworld->myrank() == 0) 
+  if (d_myworld->myrank() == 0) 
   {
-    dbgstats << " Grid Statistics:\n";
+    cout << " Grid Statistics:\n";
     for (unsigned int l = 0; l < patch_sets.size(); l++) 
     {
       if(patch_sets[l].empty())
@@ -349,7 +357,7 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
       //calculate mean
       double mean = total_cells /(double) n;
       double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells/(double)n)/(double)n);
-      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Total Cells: " << setw(8) << total_cells << " Mean Cells: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
+      cout << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Total Cells: " << setw(8) << total_cells << " Mean Cells: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << " Volume: " << setw(8) << total_cells*factor << endl;
     }
   }
 }

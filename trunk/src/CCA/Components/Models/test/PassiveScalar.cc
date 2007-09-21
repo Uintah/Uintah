@@ -79,20 +79,23 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   ps->getWithDefault("linearInitialize",       linearInitialize,      false);
   ps->getWithDefault("cubicInitialize",        cubicInitialize,       false);
   ps->getWithDefault("quadraticInitialize",    quadraticInitialize,   false);
-  ps->getWithDefault("exponentialInitialize",  exponentialInitialize, false);
+  ps->getWithDefault("exponentialInitialize_1D",  exponentialInitialize_1D, false);
+  ps->getWithDefault("exponentialInitialize_2D",  exponentialInitialize_2D, false);
+  ps->getWithDefault("triangularInitialize",      triangularInitialize,      false);
   
   if(sinusoidalInitialize){
     ps->getWithDefault("freq",freq,IntVector(0,0,0));
   }
-  if(linearInitialize){
+  if(linearInitialize || triangularInitialize){
     ps->getWithDefault("slope",slope,Vector(0,0,0));
   }
-  if(quadraticInitialize || exponentialInitialize){
+  if(quadraticInitialize || exponentialInitialize_1D || exponentialInitialize_2D){
     ps->getWithDefault("coeff",coeff,Vector(0,0,0));
+    cerr<<"coeff:"<<coeff<<endl;
   }
   
   uniformInitialize = true;
-  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize || exponentialInitialize){
+  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize || exponentialInitialize_1D|| exponentialInitialize_2D || triangularInitialize){
     uniformInitialize = false;
   }
 }
@@ -107,7 +110,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = new MaterialSet();
+  d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
@@ -115,7 +118,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   //__________________________________
   // - create Label names
   // - register the scalar to be transported
-  d_scalar = new Scalar();
+  d_scalar = scinew Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   
@@ -306,6 +309,9 @@ void PassiveScalar::initialize(const ProcessorGroup*,
           }
         } // Over cells
       }
+
+      // come back and check this. (a little fishy, why do we init the region only if its unifor or linear initialize?)
+      // Todd any ideas why you wrote this for loop ???
       
       if(region->linearInitialize){
       
@@ -330,16 +336,27 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
         
         Vector slope = region->slope;
-        if(region->linearInitialize && slope.x()==0 && slope.y()==0 && slope.z()==0){
+        if((region->linearInitialize || region->triangularInitialize) && slope.x()==0 && slope.y()==0 && slope.z()==0){
           throw ProblemSetupException("PassiveScalar: you need to specify a <slope> whenever you use linearInitialize", __FILE__, __LINE__);
         }
         
         Vector coeff = region->coeff;
-        if(region->quadraticInitialize || region->exponentialInitialize
-           && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
+	cerr<<"coeff"<<region->coeff<<endl;
+        if( (region->quadraticInitialize || region->exponentialInitialize_1D ||  region->exponentialInitialize_2D)
+	   && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
+	  cerr<<"coeff"<<coeff<<endl;
           throw ProblemSetupException("PassiveScalar: you need to specify a <coeff> for this initialization", __FILE__, __LINE__);
         }
 
+	if(region->exponentialInitialize_1D &&  ( (coeff.x()*coeff.y()!=0) || (coeff.y()*coeff.z()!=0) || (coeff.x()*coeff.z()!=0) )  ) {
+	  throw ProblemSetupException("PassiveScalar: 1D Exponential Initialize. This profile is designed for 1D problems only. Try exponentialInitialize_2D instead",__FILE__, __LINE__);
+	}
+	  
+
+	if(region->exponentialInitialize_2D && (coeff.x()!=0) && (coeff.y()!=0) && (coeff.z()!=0) ) {
+	    throw ProblemSetupException("PassiveScalar: 2D Exponential Initialize. This profile is designed for 2D problems only, one <coeff> must equal zero",__FILE__, __LINE__);
+	}
+	
         Point lo = region->piece->getBoundingBox().lower();
         Point hi = region->piece->getBoundingBox().upper();
         Vector dist = hi.asVector() - lo.asVector();
@@ -358,6 +375,12 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             if(region->linearInitialize){
               f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
             }
+	    if(region->triangularInitialize){
+	      if(d.x() <= 0.5)
+		f[c] = slope.x()*d.x();
+	      else
+		f[c] = slope.x()*(1.0-d.x());
+	    }
             if(region->quadraticInitialize){
               if(d.x() <= 0.5)
                 f[c] = pow(d.x(),2) - d.x();
@@ -372,18 +395,43 @@ void PassiveScalar::initialize(const ProcessorGroup*,
                 f[c] = -1.3333333*pow( (1.0 - d.x()),3) + pow( (1.0 - d.x()),2);
               } 
             }
-            if(region->exponentialInitialize){    
-               f[c] = coeff.x() * exp(-1.0/( d.x() * ( 1.0 - d.x() ) + 1e-100) )
-                    + coeff.y() * exp(-1.0/( d.y() * ( 1.0 - d.y() ) + 1e-100) )
-                    + coeff.z() * exp(-1.0/( d.z() * ( 1.0 - d.z() ) + 1e-100) );
+	    
+
+	    
+	    // This is a 2-D profile	    
+	    
+            if(region->exponentialInitialize_2D) {
+	      double coeff1, coeff2, d1, d2;
+	      if (coeff.x()==0) {
+		coeff1 = coeff.y();
+		coeff2 = coeff.z();
+		d1 = d.y();
+		d2 = d.z();
+	      }
+      	      else if (coeff.y()==0) {
+		coeff1 = coeff.x();
+		coeff2 = coeff.z();
+		d1 = d.x();
+		d2 = d.z();
+	      }
+	      else if (coeff.z()==0) {
+		coeff1 = coeff.y();
+		coeff2 = coeff.x();
+		d1 = d.y();
+		d2 = d.x();
+	      }
+	      f[c] = coeff1 * exp(-1.0/( d1 * ( 1.0 - d1 ) + 1e-100) )
+		 * coeff2 * exp(-1.0/( d2 * ( 1.0 - d2 ) + 1e-100) );
             }
-#if 0            
-            if(region->quadraticInitialize){
-              f[c] = coeff.x() * d.x() * d.x() 
-                   + coeff.y() * d.y() * d.y() 
-                   + coeff.z() * d.z() * d.z();
-            }
-#endif
+
+	    // This is a 1-D profile - Donot use it for 2-D
+	    
+	    if (region->exponentialInitialize_1D ){
+	      f[c] = coeff.x() * exp(-1.0/( d.x() * ( 1.0 - d.x() ) + 1e-100) )
+		+ coeff.y() * exp(-1.0/( d.y() * ( 1.0 - d.y() ) + 1e-100) )
+                 + coeff.z() * exp(-1.0/( d.z() * ( 1.0 - d.z() ) + 1e-100) );
+	    }
+
           }
         }
       }  // sinusoidal Initialize  
@@ -659,7 +707,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   if(d_matl->getDWIndex() != 0){
     m.push_back(d_matl->getDWIndex());
   }
-  matl_set = new MaterialSet();
+  matl_set = scinew MaterialSet();
   matl_set->addAll(m);
   matl_set->addReference();
     

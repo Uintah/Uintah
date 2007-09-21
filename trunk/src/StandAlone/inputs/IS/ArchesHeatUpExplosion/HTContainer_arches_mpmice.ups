@@ -54,16 +54,26 @@
             <input_file> Explode_IS.ups</input_file>
         </subcomponent>
 
-        <carry_over var="press_CC" />
+        <carry_over var="press_CC" matls="0" />
         <carry_over var="temp_CC" />
         <carry_over var="rho_CC" />
         <carry_over var="sp_vol_CC" />
         <carry_over var="vel_CC" />
         <carry_over var="NC_CCweight" />
-        <carry_over var="heatRate_CC" />
+        <carry_over var="heatRate_CC" matls="0,1" level="finest" />
         <carry_over var="vol_frac_CC"/>     <!-- needed by steady burn-->
 
   </SimulationComponent>
+   
+  <!--____________________________________________________________________-->
+  <!--      LOAD BALANCER (only turn this on during the explosion phase)  -->
+  <!--____________________________________________________________________-->   
+  <LoadBalancer>
+    <type>DLB</type>
+    <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
+    <doSpaceCurve>         true            </doSpaceCurve>
+    <timestepInterval>     100             </timestepInterval>
+  </LoadBalancer> 
    
   <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -81,7 +91,7 @@
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <include href="inputs/IS/ArchesHeatUpExplosion/Grid.xml"/>
+  <include href="Grid.xml"/>
 
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
@@ -116,7 +126,7 @@
   <!--____________________________________________________________________-->
   <!--     A M R                                                          -->
   <!--____________________________________________________________________--> 
-  <doAMR>false</doAMR>
+  <doAMR>true</doAMR>
   <AMR>
     <ICE>
       <do_Refluxing>        false </do_Refluxing>

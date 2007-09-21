@@ -47,7 +47,7 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
   vector<int> m(2);
   m[0] = matl0->getDWIndex();
   m[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();
+  mymatls = scinew MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();
  

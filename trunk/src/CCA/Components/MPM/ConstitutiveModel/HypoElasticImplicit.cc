@@ -154,7 +154,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -346,7 +346,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     double Jinc;
     double onethird = (1.0/3.0);
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 

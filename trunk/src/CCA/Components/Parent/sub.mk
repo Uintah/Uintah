@@ -22,6 +22,7 @@ MPMICE = $(COMPONENTS)/MPMICE
 #DUMMY = $(COMPONENTS)/Dummy
 
 PSELIBS := \
+	Core/Containers \
 	Core/Exceptions \
 	Core/Util \
 	Core/Geometry \

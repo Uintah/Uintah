@@ -23,9 +23,9 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
 
 
     if(regridder == "Hierarchical") {
-      regrid = new HierarchicalRegridder(world);
+      regrid = scinew HierarchicalRegridder(world);
     } else if(regridder == "BNR") {
-      regrid = new BNRRegridder(world);
+      regrid = scinew BNRRegridder(world);
     } else
       regrid = 0;
   }

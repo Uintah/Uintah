@@ -501,10 +501,10 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
     maxIdx = Max( maxIdx, patch->getCellHighIndex() );
   }
 
-  d_flaggedCells[levelIdx] = new CCVariable<int>;
-  d_dilatedCellsStability[levelIdx] = new CCVariable<int>;
-  d_dilatedCellsRegrid[levelIdx] = new CCVariable<int>;
-  d_dilatedCellsDeleted[levelIdx] = new CCVariable<int>;
+  d_flaggedCells[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsStability[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsRegrid[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsDeleted[levelIdx] = scinew CCVariable<int>;
   
   d_flaggedCells[levelIdx]->rewindow( minIdx, maxIdx );
   d_dilatedCellsStability[levelIdx]->rewindow( minIdx, maxIdx );

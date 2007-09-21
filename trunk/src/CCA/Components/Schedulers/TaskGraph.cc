@@ -625,6 +625,9 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
   if (doDetailed) {
     TAU_PROFILE_START(ddtimer);
     createDetailedDependencies();
+    if (dts_->getExtraCommunication() > 0 && d_myworld->myrank() == 0)
+      cout << d_myworld->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about " << dts_->getExtraCommunication() 
+           << " cells\n";
     TAU_PROFILE_STOP(ddtimer);
   }
 
@@ -750,7 +753,7 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
       const Patch* patch = patches->get(p);
       for(int m=0;m<matls->size();m++){
 	int matl = matls->get(m);
-	Data* newData = new Data(task, comp, patch, matl);
+	Data* newData = scinew Data(task, comp, patch, matl);
 	remembercomp(newData, pg);
       }
     }
@@ -758,19 +761,19 @@ void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
   else if (matls) {
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
-      Data* newData = new Data(task, comp, 0, matl);      
+      Data* newData = scinew Data(task, comp, 0, matl);      
       remembercomp(newData, pg);
     }
   }
   else if (patches) {
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      Data* newData = new Data(task, comp, patch, 0);
+      Data* newData = scinew Data(task, comp, patch, 0);
       remembercomp(newData, pg);
     }
   }
   else {
-    Data* newData = new Data(task, comp, 0, 0);
+    Data* newData = scinew Data(task, comp, 0, 0);
     remembercomp(newData, pg);
   }
 }

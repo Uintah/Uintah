@@ -31,6 +31,5 @@ void ModelInterface::scheduleCheckNeedAddMaterial(SchedulerP&,
 
 void ModelInterface::setMPMLabel(MPMLabel*)
 {
-  // Currently only need to do this in the SteadyBurn model
 }
 

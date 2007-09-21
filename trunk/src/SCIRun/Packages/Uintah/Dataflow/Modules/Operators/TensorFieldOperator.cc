@@ -137,7 +137,7 @@ TensorFieldOperatorAlgo::get_compile_info(const SCIRun::TypeDescription *ftd)
   rval->add_include(include_path);
   // New compilers need include files ordered.  Sometimes we
   // have to add them here so they are included in the right order.
-  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("Core/Basis/Constant.h");
   // add namespace
   rval->add_namespace("Uintah");
   ftd->fill_compile_info(rval);

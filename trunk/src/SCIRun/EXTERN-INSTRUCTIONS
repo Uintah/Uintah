@@ -24,6 +24,6 @@ svn merge -N -r <old-rev>:<new-rev> https://code.sci.utah.edu/svn/SCIRun/cibc/tr
 
 The current revision of the externals is HEAD.
 
-The current revision of CMakeLists.txt is 38437.  Update this when you update the SCIRun version.
+The current revision of CMakeLists.txt is 38665.  Update this when you update the SCIRun version.
 
 Then commit the changes.

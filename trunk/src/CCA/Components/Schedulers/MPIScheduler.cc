@@ -177,65 +177,10 @@ void
 MPIScheduler::initiateTask( DetailedTask          * task,
 			    bool only_old_recvs, int abort_point, int iteration )
 {
+  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
   long long start_total_comm_flops = mpi_info_.totalcommflops;
   long long start_total_exec_flops = mpi_info_.totalexecflops;
 
-#ifdef USE_TAU_PROFILING
-  int id;
-  const PatchSubset* patches = task->getPatches();
-  id = create_tau_mapping( task->getTask()->getName(), patches );
-  
-  string phase_name = "no patches";
-  if (patches && patches->size() > 0) {
-    phase_name = "level";
-    for(int i=0;i<patches->size();i++) {
-      
-      ostringstream patch_num;
-      patch_num << patches->get(i)->getLevel()->getIndex();
-      
-      if (i == 0) {
-        phase_name = phase_name + " " + patch_num.str();
-      } else {
-        phase_name = phase_name + ", " + patch_num.str();
-      }
-    }
-  }
-
-  static map<string,int> phase_map;
-  static int unique_id = 99999;
-  int phase_id;
-  map<string,int>::iterator iter = phase_map.find( phase_name );
-  if( iter != phase_map.end() ) {
-    phase_id = (*iter).second;
-  } else {
-    TAU_MAPPING_CREATE( phase_name, "",
-			(TauGroup_t) unique_id, "TAU_USER", 0 );
-    phase_map[ phase_name ] = unique_id;
-    phase_id = unique_id++;
-  }
-
-  
-
-#endif
-
-
-
-  TAU_PROFILE_TIMER(doittimer, "Task execution", 
-		    "[MPIScheduler::initiateTask()] ", TAU_USER); 
-  TAU_PROFILE_START(doittimer);
-
-
-  // Task name
-  TAU_MAPPING_OBJECT(tautimer)
-  TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
-  TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-  TAU_MAPPING_PROFILE_START(doitprofiler,0);
-
-//   // Patch levels
-//   TAU_MAPPING_OBJECT(phasetimer)
-//   TAU_MAPPING_LINK(phasetimer, (TauGroup_t)phase_id);  // EXTERNAL ASSOCIATION
-//   TAU_MAPPING_PROFILE_TIMER(phaseprofiler, phasetimer, 0)
-//   TAU_MAPPING_PROFILE_START(phaseprofiler,0);
 
 
 #ifdef USE_PERFEX_COUNTERS
@@ -250,16 +195,13 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   mpi_info_.totalcommflops += recv_flops;
 #endif
 
-//   TAU_MAPPING_PROFILE_STOP(0);
-  TAU_MAPPING_PROFILE_STOP(0);
-
-  TAU_PROFILE_STOP(doittimer);
 
 } // end initiateTask()
 
 void
 MPIScheduler::initiateReduction( DetailedTask          * task )
 {
+  TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
 #ifdef USE_PERFEX_COUNTERS
     start_counters(0, 19);
@@ -445,7 +387,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
         //dbg.setActive(false);
       }
       //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
+      mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
@@ -506,7 +448,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
     // that first thread to receive the data.
 
     task->incrementExternalDepCount();
-    //cout << d_myworld->myrank() << "  Add dep count to task " << *task << " for ext: " << *batch->fromTask << ": " << task->getExternalDepCount() << endl;
+    //cout << d_myworld->myrank() << " Add dep count to task " << *task << " for ext: " << *batch->fromTask << ": " << task->getExternalDepCount() << endl;
     if( !batch->makeMPIRequest() ) {
       //externalRecvs.push_back( batch ); // no longer necessary
 
@@ -672,22 +614,22 @@ MPIScheduler::processMPIRecvs(int how_much)
       recvs_.testsome(d_myworld);
     break;
   case WAIT_ONCE:
-    mpidbg << d_myworld->myrank() << " Start waiting...\n";
     if(recvs_.numRequests() > 0) {
+      mpidbg << d_myworld->myrank() << " Start waiting once...\n";
       recvs_.waitsome(d_myworld);
+      mpidbg << d_myworld->myrank() << " Done  waiting once...\n";
     }
-    mpidbg << d_myworld->myrank() << " Done  waiting...\n";
-
+    break;
   case WAIT_ALL:
     // This will allow some receives to be "handled" by their
     // AfterCommincationHandler while waiting for others.  
-    mpidbg << d_myworld->myrank() << " Start waiting...\n";
+    mpidbg << d_myworld->myrank() << "  Start waiting...\n";
     while( (recvs_.numRequests() > 0)) {
       bool keep_waiting = recvs_.waitsome(d_myworld);
       if (!keep_waiting)
         break;
     }
-    mpidbg << d_myworld->myrank() << " Done  waiting...\n";
+    mpidbg << d_myworld->myrank() << "  Done  waiting...\n";
   }
   mpi_info_.totalwaitmpi+=Time::currentSeconds()-start;
 
@@ -779,8 +721,13 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   int i = 0;
 
+  TAU_PROFILE_TIMER(doittimer, "Task execution", 
+		    "[MPIScheduler::execute() loop] ", TAU_USER); 
+  TAU_PROFILE_START(doittimer);
+
+  set<DetailedTask*> pending_tasks;
+
   while( numTasksDone < ntasks) {
-    //cout << d_myworld->myrank() << "  looping " << ntasks << " ntd " << numTasksDone << endl;
     i++;
 
     DetailedTask * task = 0;
@@ -791,6 +738,47 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
       numTasksDone++;
       taskdbg << me << " Initiating task:  \t"; printTask(taskdbg, task); taskdbg << '\n';
+
+#ifdef USE_TAU_PROFILING
+      int id;
+      const PatchSubset* patches = task->getPatches();
+      id = create_tau_mapping( task->getTask()->getName(), patches );
+  
+      string phase_name = "no patches";
+      if (patches && patches->size() > 0) {
+        phase_name = "level";
+        for(int i=0;i<patches->size();i++) {
+      
+          ostringstream patch_num;
+          patch_num << patches->get(i)->getLevel()->getIndex();
+      
+          if (i == 0) {
+            phase_name = phase_name + " " + patch_num.str();
+          } else {
+            phase_name = phase_name + ", " + patch_num.str();
+          }
+        }
+      }
+
+      static map<string,int> phase_map;
+      static int unique_id = 99999;
+      int phase_id;
+      map<string,int>::iterator iter = phase_map.find( phase_name );
+      if( iter != phase_map.end() ) {
+        phase_id = (*iter).second;
+      } else {
+        TAU_MAPPING_CREATE( phase_name, "",
+			    (TauGroup_t) unique_id, "TAU_USER", 0 );
+        phase_map[ phase_name ] = unique_id;
+        phase_id = unique_id++;
+      }
+      // Task name
+      TAU_MAPPING_OBJECT(tautimer)
+      TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
+      TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
+      TAU_MAPPING_PROFILE_START(doitprofiler,0);
+#endif
+
 
       if (task->getTask()->getType() == Task::Reduction){
         if(!abort)
@@ -804,46 +792,48 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         taskdbg << d_myworld->myrank() << " Completed task:  \t";
         printTask(taskdbg, task); taskdbg << '\n';
       }
+  
+      TAU_MAPPING_PROFILE_STOP(0);
+
     }
     else {
       // using queued task receiving structure
 
-      // if we have an internally-ready task, initiate its recvs
-      if (dts->numInternalReadyTasks() > 0) {
+      // run a task that has its communication complete
+      // tasks get in this queue automatically when their receive count hits 0
+      //   in DependencyBatch::received, which is called when a message is delivered.
+      if (dts->numExternalReadyTasks() > 0) {
+        DetailedTask * task = dts->getNextExternalReadyTask();
+        taskdbg << d_myworld->myrank() << " Running task " << *task << endl;
+        pending_tasks.erase(pending_tasks.find(task));
+        ASSERT(task->getExternalDepCount() == 0);
+        runTask(task, iteration);
+        numTasksDone++;
+      }
+      // otherwise, if we have an internally-ready task, initiate its recvs
+      else if (dts->numInternalReadyTasks() > 0) {
         DetailedTask * task = dts->getNextInternalReadyTask();
         
         if (task->getTask()->getType() == Task::Reduction){
           if(!abort) {
-            taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
+            taskdbg << d_myworld->myrank() << " Running task " << task->getTask()->getName() << endl;
             initiateReduction(task);
           }
           numTasksDone++;
         }
         else {
           initiateTask( task, abort, abort_point, iteration );
-          if (task->getExternalDepCount() > 0) {
-            taskdbg << d_myworld->myrank() << "  Initiating task " << task->getTask()->getName() << endl;
-            processMPIRecvs(TEST);
-          }
-          else {
-            taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
-            runTask(task, iteration);
-            numTasksDone++;
-          }
+          task->checkExternalDepCount();
+          // if MPI has completed, it will run on the next iteration
+          taskdbg << d_myworld->myrank() << " Initiating task " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          pending_tasks.insert(task);
         }
-      }
-      // otherwise, run a task that has its communication complete
-      // tasks get in this queue automatically when their receive count hits 0
-      //   in DependencyBatch::received, which is called when a message is delivered.
-      else if (dts->numExternalReadyTasks() > 0) {
-        DetailedTask * task = dts->getNextExternalReadyTask();
-        taskdbg << d_myworld->myrank() << "  Running task " << task->getTask()->getName() << endl;
-        ASSERT(task->getExternalDepCount() == 0);
-        runTask(task, iteration);
-        numTasksDone++;
       }
       else {
         // we have nothing to do, so wait until we get something
+        //taskdbg << d_myworld->myrank() << " Waiting .... "  << endl;
+        for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
+          taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
         processMPIRecvs(WAIT_ONCE);
       }
     }
@@ -855,6 +845,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
     }
   } // end while( numTasksDone < ntasks )
+  TAU_PROFILE_STOP(doittimer);
 
   // wait for all tasks to finish -- i.e. MixedScheduler
   // MPIScheduler will just continue.

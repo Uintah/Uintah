@@ -142,7 +142,9 @@ WARNING
       Vector direction;
       bool quadraticInitialize;
       Vector coeff;
-      bool exponentialInitialize;
+      bool exponentialInitialize_1D;
+      bool exponentialInitialize_2D;
+      bool triangularInitialize;
       
       bool  uniformInitialize;
     };

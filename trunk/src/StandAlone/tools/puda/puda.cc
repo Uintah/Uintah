@@ -167,7 +167,7 @@ main(int argc, char** argv)
 
   CommandLineFlags clf;
 
-  // set defaults for cout
+  // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(8);
   /*
@@ -276,6 +276,7 @@ main(int argc, char** argv)
       clf.do_patch = true;
     } else if (s == "-material" ||
                s == "-matl") {
+      clf.matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
     } else if (s == "-verbose") {
       clf.do_verbose = true;
@@ -293,8 +294,6 @@ main(int argc, char** argv)
                s == "-timestepInc" ||
                s == "-timestep_inc") {
       clf.time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-    } else if (s == "-matl") {
-      clf.matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else if( clf.filebase == "") {
@@ -323,6 +322,12 @@ main(int argc, char** argv)
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
+      
+      // Please don't change this.  We need 16
+      // significant digits for detailed comparative studies. -Todd
+      cout.setf(ios::scientific,ios::floatfield);
+      cout.precision(16);
+      
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
     }

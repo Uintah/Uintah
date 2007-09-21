@@ -44,6 +44,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_CCA_Components_LoadBalancers
   Packages_Uintah_CCA_Components_ProblemSpecification
   Packages_Uintah_Core_Grid
   Packages_Uintah_Core_Util
+  Packages_Uintah_Core_DataArchive
   Packages_Uintah_Core_Disclosure
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_CCA_Ports

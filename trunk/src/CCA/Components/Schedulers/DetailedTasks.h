@@ -195,7 +195,8 @@ namespace Uintah {
     // DetailedTasks::mpiCompletedTasks list.
     void clearExternalDepCount() { externalDependencyCount_ = 0; }
     void incrementExternalDepCount() { externalDependencyCount_++; }
-    void decrementExternalDepCount();
+    void decrementExternalDepCount() { externalDependencyCount_--; }
+    void checkExternalDepCount();
     int getExternalDepCount() { return externalDependencyCount_; }
 
     bool areInternalDependenciesSatisfied()
@@ -303,6 +304,8 @@ namespace Uintah {
     void setScrubCount(const Task::Dependency* req, int matl, const Patch* patch,
                        vector<OnDemandDataWarehouseP>& dws);
 
+    int getExtraCommunication() { return extraCommunication_; }
+
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
 
@@ -313,7 +316,6 @@ namespace Uintah {
     SchedulerCommon* getSchedulerCommon() {
       return sc_;
     }
-
   private:
     void initializeBatches();
 
@@ -358,6 +360,9 @@ namespace Uintah {
     // links have been satisfied in the current timestep and avoids the
     // need to traverse all InternalDependency links to reset values.
     unsigned long currentDependencyGeneration_;
+
+    // for logging purposes - how much extra comm is going on
+    int extraCommunication_;
     Mutex readyQueueMutex_;
     Semaphore readyQueueSemaphore_;
 

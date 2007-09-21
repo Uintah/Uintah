@@ -1562,7 +1562,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -1937,7 +1937,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     // Get interpolation functions
-    LinearInterpolator* interpolator = new LinearInterpolator(patch);
+    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 

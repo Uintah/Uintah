@@ -16,7 +16,7 @@ TableInterface* TableFactory::readTable(const ProblemSpecP& params,
       if(!child->getAttribute("type", type))
 	throw ProblemSetupException("Cannot read table type from table", __FILE__, __LINE__);
       if(type == "Arches")
-	return new ArchesTable(child);
+	return scinew ArchesTable(child);
       else
 	throw ProblemSetupException("Unknown table type: "+type, __FILE__, __LINE__);
     }

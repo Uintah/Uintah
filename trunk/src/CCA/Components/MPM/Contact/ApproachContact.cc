@@ -712,7 +712,7 @@ void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 					     const PatchSet* patches,
 					     const MaterialSet* ms) 
 {
-  Task * t = new Task("ApproachContact::exMomInterpolated", 
+  Task * t = scinew Task("ApproachContact::exMomInterpolated", 
                       this, &ApproachContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
@@ -737,7 +737,7 @@ void ApproachContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const PatchSet* patches,
 					     const MaterialSet* ms) 
 {
-  Task * t = new Task("ApproachContact::exMomIntegrated", 
+  Task * t = scinew Task("ApproachContact::exMomIntegrated", 
                       this, &ApproachContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();

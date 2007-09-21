@@ -54,12 +54,32 @@ grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
 grep mean .plotStats_tmp | cut -d":" -f2 | cut -d" " -f2 >> .meanTime
 grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
 
+#__________________________________
+# parse the total number cells per level
+@ nLevels = `grep levels .tmpClean | cut -d: -f2`
+@ count = 0
+set levels 
+
+foreach L ( $count < $nLevels)
+  @ count +=1
+  set level = "L-$count"
+  set levels = ($levels $level)
+  echo "Extracting number of cells for: "$levels
+  grep "L$count" $out | awk '{print $7}'>& $level
+end
+
+
+#__________________________________
+# glue the data together
+paste -d " " .elapsedTimeRegrid $levels >& .L-all
 
 paste -d "  " .elapsedTime .meanTime .physicalTime>& .data
 paste -d "  " .physicalTimeRegrid .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile >& .regridData
 
 rm -f .elapsedTime .meanTime .physicalTime .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile
 rm -f .plotStats_tmp .plotStats_tmp1 .tmpDirty .tmpClean
+rm -f $levels
+
 echo "Done extracting data"
 
 echo "" > gp
@@ -70,7 +90,7 @@ echo "Generating the postscript file plotRegriddingStats.ps"
 /bin/rm gp
 cat > gp << fin
 set terminal x11 1
-set terminal postscript color solid "Times-Roman" 9
+set terminal postscript color solid "Times-Roman" 12
 set output "plotRegriddingStats.ps"
 fin
 endif
@@ -79,8 +99,8 @@ endif
 # generate the  plot script
 cat >> gp << fin
 set multiplot
-set size 1.0,0.5
-set origin 0.0,0.5
+set size 1.0,0.3
+set origin 0.0,0.3
 set autoscale
 #set xdata time
 #set timefmt "%s"             ------- try turning these on
@@ -88,15 +108,14 @@ set grid xtics ytics
 set y2tics
 set ylabel 'Physical Time'
 set y2label 'Mean Time/timestep'
-
 plot '.data'       using 1:3           t 'Physical Time' with lines,\
      '.data'       using 1:2 axes x1y2 t 'meanTime/timestep' with lines,\
      '.regridData' using 2:5 axes x1y2 t 'regridding Time ',\
      '.regridData' using 2:6 axes x1y2 t 'Task graph recompile'
      
     #----------second plot-------------
-set size 1.0,0.5       
-set origin 0.0,0.0
+set size 1.0,0.3       
+set origin 0.0,0.6
 set ylabel 'Time [sec.]'
 set y2label
 
@@ -105,6 +124,28 @@ plot '.regridData' using 2:5           t 'Regridding total',\
      '.regridData' using 2:3           t 'Schedule and copy regridData'
      
 
+
+#----------Third plot-------------
+set size 1.0,0.3       
+set origin 0.0,0.0
+set ylabel 'Number of Cells'
+
+fin
+# loop over all the levels and build the gnuplot command
+@ count = 1
+foreach L ( $count < $nLevels)
+  if($L == "1") then
+    echo -n "plot '.L-all' using 1:2 t 'L-1' with step " >> gp
+  else 
+    @ c = $count + 1
+    echo -n ",'.L-all' using 1:$c t 'L-$count' with step " >> gp
+  endif
+  @ count +=1
+end
+echo "" >> gp 
+
+# finish up 
+cat >> gp << fin
 set nomultiplot
 pause -1 "Hit return to exit"
 fin
@@ -112,9 +153,13 @@ fin
 # plot it up
 gnuplot gp
 
+if($hardcopy == "y" || $hardcopy == "Y") then
+  convert plotRegriddingStats.ps plotRegriddingStats.jpg
+  mogrify -rotate 90 plotRegriddingStats.jpg
+endif
 
 #__________________________________
 # clean up
-rm -f gp .data .regridData
+rm -f gp .data .regridData .L-all
 
 exit(1)

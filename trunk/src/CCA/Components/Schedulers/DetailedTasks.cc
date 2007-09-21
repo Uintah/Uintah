@@ -32,6 +32,7 @@ extern DebugStream brydbg;
 static DebugStream dbg("TaskGraph", false);
 static DebugStream scrubout("Scrubbing", false);
 static DebugStream messagedbg("MessageTags", false);
+static DebugStream internaldbg("InternalDeps", false);
 
 // for debugging - set the var name to watch one in the scrubout
 static string dbgScrubVar = "";
@@ -44,7 +45,8 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
     currentDependencyGeneration_(1),
     readyQueueMutex_("DetailedTasks Ready Queue"),
-    readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
+    readyQueueSemaphore_("Number of Ready DetailedTasks", 0),
+    extraCommunication_(0)
 {
   int nproc = pg->size();
   stasks_.resize(nproc);
@@ -660,8 +662,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if(v1 > v2+v3){
       // If we get this, perhaps we should allow multiple deps so
       // that we do not communicate more of the patch than necessary
-      static ProgressiveWarning warn("WARNING: Possible extra communication between patches!", 10);
-      warn.invoke();
+      extraCommunication_ += (v1 - (v2+v3));
     }
     if(dbg.active()){
       dbg << d_myworld->myrank() << "            EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
@@ -701,10 +702,9 @@ DetailedTask::addRequires(DependencyBatch* req)
   return reqs.insert(make_pair(req, req)).second;
 }
 
-void DetailedTask::decrementExternalDepCount()
+void DetailedTask::checkExternalDepCount()
 {
   //cout << "Task " << this->getTask()->getName() << " dec " << externalDependencyCount_-1 << endl;
-  externalDependencyCount_--;
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps())
     taskGroup->mpiCompletedTasks_.push(this);
 }
@@ -724,6 +724,10 @@ DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
       prerequisiteTask->
 	internalDependents[this] = &internalDependencies.back();
       numPendingInternalDependencies = internalDependencies.size();
+      if(internaldbg.active() ) {
+        internaldbg << Parallel::getMPIRank() << " Adding dependency between " << *this << " and " << *prerequisiteTask << "\n";
+      }
+
     }
     else {
       foundIt->second->addVarLabel(var);
@@ -751,11 +755,11 @@ DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
   for (iter = internalDependents.begin(); iter != internalDependents.end(); 
        iter++) {
     InternalDependency* dep = (*iter).second;
-    if( mixedDebug.active() ) {
-      cerrLock.lock();
-      mixedDebug << cnt << ": " << *(dep->dependentTask->task) << "\n";
-      cerrLock.unlock();
+
+    if(internaldbg.active() ) {
+      internaldbg << Parallel::getMPIRank() << " Depend satisfied between " << *dep->dependentTask << " and " << *this << "\n";
     }
+
     dep->dependentTask->dependencySatisfied(dep);
     cnt++;
   }
@@ -763,13 +767,6 @@ DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
 
 void DetailedTask::dependencySatisfied(InternalDependency* dep)
 {
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    mixedDebug << "Depend satisfied for " << *(dep->dependentTask->getTask()) 
-	       << "\n";
-    cerrLock.unlock();
-  }
-
  internalDependencyLock.lock();
   ASSERT(numPendingInternalDependencies > 0);
   unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
@@ -990,6 +987,8 @@ void DependencyBatch::received(const ProcessorGroup * pg)
     // if the count is 0, the task will add itself to the external ready queue
     //cout << pg->myrank() << "  Dec: " << *fromTask << " for " << *(*iter) << endl;
     (*iter)->decrementExternalDepCount();
+    //cout << Parallel::getMPIRank() << "   task " << **(iter) << " received a message, remaining count " << (*iter)->getExternalDepCount() << endl;
+    (*iter)->checkExternalDepCount();
   }
 
 #if 0

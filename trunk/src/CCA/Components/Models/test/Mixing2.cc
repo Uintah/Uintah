@@ -75,7 +75,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
-  mymatls = new MaterialSet();
+  mymatls = scinew MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();   
 
@@ -85,7 +85,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   string id;
   params->get("id", id);
   try {
-    gas = new IdealGasMix(fname, id);
+    gas = scinew IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
 #if 0
     cerr << "refPressure=" << gas->refPressure() << '\n';
@@ -107,7 +107,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
 #endif
     }
     for (int k = 0; k < nsp; k++) {
-      Stream* stream = new Stream();
+      Stream* stream = scinew Stream();
       stream->index = k;
       stream->name = gas->speciesName(k);
       string mfname = "massFraction-"+stream->name;
@@ -165,8 +165,8 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   }
 #if 0
   try {
-    IdealGasMix* gas = new IdealGasMix("gri30.xml", "gri30");
-    IdealGasMix* gas2 = new IdealGasMix("gri30.xml", "gri30");
+    IdealGasMix* gas = scinew IdealGasMix("gri30.xml", "gri30");
+    IdealGasMix* gas2 = scinew IdealGasMix("gri30.xml", "gri30");
     gas->setState_TPY(1300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
     gas2->setState_TPY(1300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
     cerr << *gas;
@@ -352,8 +352,8 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       StaticArray<constCCVariable<double> > mf(numSpecies);
       StaticArray<CCVariable<double> > mfsource(numSpecies);
       int index = 0;
-      double* tmp_mf = new double[numSpecies];
-      double* new_mf = new double[numSpecies];
+      double* tmp_mf =scinew double[numSpecies];
+      double* new_mf =scinew double[numSpecies];
       for(vector<Stream*>::iterator iter = streams.begin();
 	  iter != streams.end(); iter++, index++){
 	Stream* stream = *iter;

@@ -125,6 +125,28 @@ namespace Uintah {
       inline double getSULFUR() const {
         return d_sulfur;
       }
+
+      inline double getS2()      const { return d_s2;   }
+      inline double getSH()      const { return d_sh;   }
+      inline double getSO()      const { return d_so;   }
+      inline double getHSO2()    const { return d_hso2; }
+
+      inline double getHOSO()    const { return d_hoso; }
+      inline double getHOSO2()   const { return d_hoso2;}
+      inline double getSN()      const { return d_sn;   }
+      inline double getCS()      const { return d_cs;   }
+
+      inline double getOCS()     const { return d_ocs;  }
+      inline double getHSO()     const { return d_hso;  }
+      inline double getHOS()     const { return d_hos;  }
+      inline double getHSOH()    const { return d_hsoh; }
+
+      inline double getH2SO()    const { return d_h2so; }
+      inline double getHOSHO()   const { return d_hosho;}
+      inline double getHS2()     const { return d_hs2;  }
+      inline double getH2S2()    const { return d_h2s2; }
+
+
       inline double getCO() const {
         return d_co;
       }
@@ -201,6 +223,28 @@ namespace Uintah {
       double d_so2;
       double d_so3;
       double d_sulfur;
+      
+      double d_s2;
+      double d_sh;
+      double d_so;
+      double d_hso2;
+
+      double d_hoso;
+      double d_hoso2;
+      double d_sn;
+      double d_cs;
+
+      double d_ocs;
+      double d_hso;
+      double d_hos;
+      double d_hsoh;
+
+      double d_h2so;
+      double d_hosho;
+      double d_hs2;
+      double d_h2s2;
+
+
       double d_co;
 
       double d_c2h2;

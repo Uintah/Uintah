@@ -51,7 +51,7 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld,
 
 Steady_Burn::~Steady_Burn(){
   delete Ilb;
-  //delete Mlb; /* don't delete it here, or complain "double free or corruption" */ 
+  delete Mlb; 
   delete MIlb;
   delete d_saveConservedVars;
   
@@ -110,7 +110,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();            
+  mymatls = scinew MaterialSet();            
   
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
@@ -186,11 +186,12 @@ void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, cons
 void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, 
                                               const LevelP& level, 
                                               const ModelInfo* mi){
-  Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
-                        &Steady_Burn::computeModelSources, mi);
   
   if (level->hasFinerLevel())
     return;  
+  
+  Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
+                        &Steady_Burn::computeModelSources, mi);
   
   printSchedule(level,"Steady_Burn::scheduleComputeModelSources\t\t\t");  
   t->requires( Task::OldDW, mi->delT_Label);
@@ -541,12 +542,6 @@ void Steady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
 void Steady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
   // Not implemented yet
 }
-
-void Steady_Burn::setMPMLabel(MPMLabel* MLB){
-  Mlb = MLB;
-}
-
-
 
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/

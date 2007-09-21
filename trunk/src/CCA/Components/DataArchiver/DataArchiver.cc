@@ -775,6 +775,7 @@ void
 DataArchiver::createIndexXML(Dir& dir)
 {
    ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_DataArchive");
+   rootElem->setAttribute("version", "1.1");
 
    rootElem->appendElement("numberOfProcessors", d_myworld->size());
 

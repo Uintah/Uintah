@@ -77,7 +77,7 @@ void MPMPetscSolver::initialize()
 
   // copy the vector to argv, as I think petsc wants to store it around -- bjw
   if (argc > 0) {
-    argv = new char*[argc];
+    argv = scinew char*[argc];
     for (int i = 0; i < argc; i++) {
       argv[i] = args[i];
     }
@@ -98,6 +98,9 @@ void MPMPetscSolver::initialize()
   PetscOptionsSetValue("-trdump", PETSC_NULL);
 #endif
   PetscPopSignalHandler();
+
+  if(argc>0)
+    delete argv;
 }
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
@@ -239,8 +242,8 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   int globalcolumns = (int)d_totalNodes; 
 
   int *diag, *onnz;
-  diag = new int[numlrows];
-  onnz = new int[numlrows];
+  diag = scinew int[numlrows];
+  onnz = scinew int[numlrows];
   for (int i = 0; i < numlrows; i++) 
     diag[i] = 1;
 
@@ -457,7 +460,7 @@ void MPMPetscSolver::removeFixedDOF()
   IS is;
   int* indices;
   int in=0;
-  indices = new int[d_DOF.size()];
+  indices = scinew int[d_DOF.size()];
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
     indices[in++] = *iter;
@@ -554,7 +557,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
   
   // Zero the rows/columns that contain the node numbers with BCs.
 
-  int* indices = new int[d_DOF.size()];  
+  int* indices = scinew int[d_DOF.size()];  
   int in = 0;
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
@@ -597,8 +600,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
     ISDestroy(is);
   }
 
-
-  int* indices_flux = new int[d_DOFFlux.size()];
+  int* indices_flux = scinew int[d_DOFFlux.size()];
   in = 0;
   for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end(); 
        iter++) {
@@ -608,8 +610,8 @@ void MPMPetscSolver::removeFixedDOFHeat()
 
   //do vector modifications
   
-  PetscScalar* y = new PetscScalar[d_DOF.size()];
-  PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
+  PetscScalar* y = scinew PetscScalar[d_DOF.size()];
+  PetscScalar* y_flux = scinew PetscScalar[d_DOFFlux.size()];
 
   assembleFluxVector();
 #if (PETSC_VERSION_MINOR == 3)

@@ -281,6 +281,27 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_so2INLabel);
       tsk->computes(d_lab->d_so3INLabel);
       tsk->computes(d_lab->d_sulfurINLabel);
+
+      tsk->computes(d_lab->d_s2INLabel);
+      tsk->computes(d_lab->d_shINLabel);
+      tsk->computes(d_lab->d_soINLabel);
+      tsk->computes(d_lab->d_hso2INLabel);
+
+      tsk->computes(d_lab->d_hosoINLabel);
+      tsk->computes(d_lab->d_hoso2INLabel);
+      tsk->computes(d_lab->d_snINLabel);
+      tsk->computes(d_lab->d_csINLabel);
+
+      tsk->computes(d_lab->d_ocsINLabel);
+      tsk->computes(d_lab->d_hsoINLabel);
+      tsk->computes(d_lab->d_hosINLabel);
+      tsk->computes(d_lab->d_hsohINLabel);
+
+      tsk->computes(d_lab->d_h2soINLabel);
+      tsk->computes(d_lab->d_hoshoINLabel);
+      tsk->computes(d_lab->d_hs2INLabel);
+      tsk->computes(d_lab->d_h2s2INLabel);
+
     }
     if (d_soot_precursors) {
       tsk->computes(d_lab->d_c2h2INLabel);
@@ -313,6 +334,26 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_so2INLabel);
       tsk->modifies(d_lab->d_so3INLabel);
       tsk->modifies(d_lab->d_sulfurINLabel);
+
+      tsk->modifies(d_lab->d_s2INLabel);
+      tsk->modifies(d_lab->d_shINLabel);
+      tsk->modifies(d_lab->d_soINLabel);
+      tsk->modifies(d_lab->d_hso2INLabel);
+
+      tsk->modifies(d_lab->d_hosoINLabel);
+      tsk->modifies(d_lab->d_hoso2INLabel);
+      tsk->modifies(d_lab->d_snINLabel);
+      tsk->modifies(d_lab->d_csINLabel);
+
+      tsk->modifies(d_lab->d_ocsINLabel);
+      tsk->modifies(d_lab->d_hsoINLabel);
+      tsk->modifies(d_lab->d_hosINLabel);
+      tsk->modifies(d_lab->d_hsohINLabel);
+
+      tsk->modifies(d_lab->d_h2soINLabel);
+      tsk->modifies(d_lab->d_hoshoINLabel);
+      tsk->modifies(d_lab->d_hs2INLabel);
+      tsk->modifies(d_lab->d_h2s2INLabel);
     }
     if (d_soot_precursors) {
       tsk->modifies(d_lab->d_c2h2INLabel);
@@ -398,10 +439,32 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> enthalpy;
 
     CCVariable<double> co;
+
     CCVariable<double> h2s;
     CCVariable<double> so2;
     CCVariable<double> so3;
     CCVariable<double> sulfur;
+
+    CCVariable<double> s2;
+    CCVariable<double> sh;
+    CCVariable<double> so;
+    CCVariable<double> hso2;
+
+    CCVariable<double> hoso;
+    CCVariable<double> hoso2;
+    CCVariable<double> sn;
+    CCVariable<double> cs;
+
+    CCVariable<double> ocs;
+    CCVariable<double> hso;
+    CCVariable<double> hos;
+    CCVariable<double> hsoh;
+
+    CCVariable<double> h2so;
+    CCVariable<double> hosho;
+    CCVariable<double> hs2;
+    CCVariable<double> h2s2;
+
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
 
@@ -492,6 +555,26 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			       matlIndex, patch);
 	new_dw->allocateAndPut(sulfur, d_lab->d_sulfurINLabel,
 			       matlIndex, patch);
+
+        new_dw->allocateAndPut(s2, d_lab->d_s2INLabel, matlIndex, patch);
+        new_dw->allocateAndPut(sh, d_lab->d_shINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(so, d_lab->d_soINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hso2, d_lab->d_hso2INLabel, matlIndex, patch);
+
+        new_dw->allocateAndPut(hoso, d_lab->d_hosoINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hoso2, d_lab->d_hoso2INLabel, matlIndex, patch);
+        new_dw->allocateAndPut(sn, d_lab->d_snINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(cs, d_lab->d_csINLabel, matlIndex, patch);
+
+        new_dw->allocateAndPut(ocs, d_lab->d_ocsINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hso, d_lab->d_hsoINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hos, d_lab->d_hosINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hsoh, d_lab->d_hsohINLabel, matlIndex, patch);
+
+        new_dw->allocateAndPut(h2so, d_lab->d_h2soINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hosho, d_lab->d_hoshoINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(hs2, d_lab->d_hs2INLabel, matlIndex, patch);
+        new_dw->allocateAndPut(h2s2, d_lab->d_h2s2INLabel, matlIndex, patch);
       }
       if (d_soot_precursors) {
         new_dw->allocateAndPut(c2h2, d_lab->d_c2h2INLabel,
@@ -536,6 +619,27 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			      matlIndex, patch);
 	new_dw->getModifiable(sulfur, d_lab->d_sulfurINLabel,
 			      matlIndex, patch);
+
+        new_dw->getModifiable(s2, d_lab->d_s2INLabel, matlIndex, patch);
+        new_dw->getModifiable(sh, d_lab->d_shINLabel, matlIndex, patch);
+        new_dw->getModifiable(so, d_lab->d_soINLabel, matlIndex, patch);
+        new_dw->getModifiable(hso2, d_lab->d_hso2INLabel, matlIndex, patch);
+
+        new_dw->getModifiable(hoso, d_lab->d_hosoINLabel, matlIndex, patch);
+        new_dw->getModifiable(hoso2, d_lab->d_hoso2INLabel, matlIndex, patch);
+        new_dw->getModifiable(sn, d_lab->d_snINLabel, matlIndex, patch);
+        new_dw->getModifiable(cs, d_lab->d_csINLabel, matlIndex, patch);
+
+        new_dw->getModifiable(ocs, d_lab->d_ocsINLabel, matlIndex, patch);
+        new_dw->getModifiable(hso, d_lab->d_hsoINLabel, matlIndex, patch);
+        new_dw->getModifiable(hos, d_lab->d_hosINLabel, matlIndex, patch);
+        new_dw->getModifiable(hsoh, d_lab->d_hsohINLabel, matlIndex, patch);
+
+        new_dw->getModifiable(h2so, d_lab->d_h2soINLabel, matlIndex, patch);
+        new_dw->getModifiable(hosho, d_lab->d_hoshoINLabel, matlIndex, patch);
+        new_dw->getModifiable(hs2, d_lab->d_hs2INLabel, matlIndex, patch);
+        new_dw->getModifiable(h2s2, d_lab->d_h2s2INLabel, matlIndex, patch);
+
       }
       if (d_soot_precursors) {
         new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel,
@@ -572,6 +676,26 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       so2.initialize(0.0);
       so3.initialize(0.0);
       sulfur.initialize(0.0);
+
+      s2.initialize(0.0);
+      sh.initialize(0.0);
+      so.initialize(0.0);
+      hso2.initialize(0.0);
+
+      hoso.initialize(0.0);
+      hoso2.initialize(0.0);
+      sn.initialize(0.0);
+      cs.initialize(0.0);
+
+      ocs.initialize(0.0);
+      hso.initialize(0.0);
+      hos.initialize(0.0);
+      hsoh.initialize(0.0);
+
+      h2so.initialize(0.0);
+      hosho.initialize(0.0);
+      hs2.initialize(0.0);
+      h2s2.initialize(0.0);
     }
     if (d_soot_precursors) {
       c2h2.initialize(0.0);
@@ -669,6 +793,26 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    so2[currCell] = outStream.getSO2();
 	    so3[currCell] = outStream.getSO3();
 	    sulfur[currCell] = outStream.getSULFUR();
+
+            s2[currCell]        = outStream.getS2();
+            sh[currCell]        = outStream.getSH();
+            so[currCell]        = outStream.getSO();
+            hso2[currCell]      = outStream.getHSO2();
+
+            hoso[currCell]      = outStream.getHOSO();
+            hoso2[currCell]     = outStream.getHOSO2();
+            sn[currCell]        = outStream.getSN();
+            cs[currCell]        = outStream.getCS();
+
+            ocs[currCell]       = outStream.getOCS();
+            hso[currCell]       = outStream.getHSO();
+            hos[currCell]       = outStream.getHOS();
+            hsoh[currCell]      = outStream.getHSOH();
+
+            h2so[currCell]      = outStream.getH2SO();
+            hosho[currCell]     = outStream.getHOSHO();
+            hs2[currCell]       = outStream.getHS2();
+            h2s2[currCell]      = outStream.getH2S2();
 	  }
           if (d_soot_precursors) {
             c2h2[currCell] = outStream.getC2H2();
@@ -882,10 +1026,53 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->requires(Task::OldDW, d_lab->d_sulfurINLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
+    tsk->requires(Task::OldDW, d_lab->d_s2INLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_shINLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_soINLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hso2INLabel,    Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    tsk->requires(Task::OldDW, d_lab->d_hosoINLabel,    Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hoso2INLabel,   Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_snINLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_csINLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    tsk->requires(Task::OldDW, d_lab->d_ocsINLabel,     Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hsoINLabel,     Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hosINLabel,     Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hsohINLabel,    Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    tsk->requires(Task::OldDW, d_lab->d_h2soINLabel,    Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hoshoINLabel,   Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_hs2INLabel,     Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_h2s2INLabel,    Ghost::None, Arches::ZEROGHOSTCELLS);
+
+
+
     tsk->computes(d_lab->d_h2sINLabel);
     tsk->computes(d_lab->d_so2INLabel);
     tsk->computes(d_lab->d_so3INLabel);
     tsk->computes(d_lab->d_sulfurINLabel);
+
+    tsk->computes(d_lab->d_s2INLabel);
+    tsk->computes(d_lab->d_shINLabel);
+    tsk->computes(d_lab->d_soINLabel);
+    tsk->computes(d_lab->d_hso2INLabel);
+
+    tsk->computes(d_lab->d_hosoINLabel);
+    tsk->computes(d_lab->d_hoso2INLabel);
+    tsk->computes(d_lab->d_snINLabel);
+    tsk->computes(d_lab->d_csINLabel);
+
+    tsk->computes(d_lab->d_ocsINLabel);
+    tsk->computes(d_lab->d_hsoINLabel);
+    tsk->computes(d_lab->d_hosINLabel);
+    tsk->computes(d_lab->d_hsohINLabel);
+
+    tsk->computes(d_lab->d_h2soINLabel);
+    tsk->computes(d_lab->d_hoshoINLabel);
+    tsk->computes(d_lab->d_hs2INLabel);
+    tsk->computes(d_lab->d_h2s2INLabel);
+
   }
 
   if (d_soot_precursors) {
@@ -951,18 +1138,63 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> heatLoss;
 
     constCCVariable<double> coIN;
+
     constCCVariable<double> h2sIN;
     constCCVariable<double> so2IN;
     constCCVariable<double> so3IN;
     constCCVariable<double> sulfurIN;
+
+    constCCVariable<double> s2IN;
+    constCCVariable<double> shIN;
+    constCCVariable<double> soIN;
+    constCCVariable<double> hso2IN;
+
+    constCCVariable<double> hosoIN;
+    constCCVariable<double> hoso2IN;
+    constCCVariable<double> snIN;
+    constCCVariable<double> csIN;
+
+    constCCVariable<double> ocsIN;
+    constCCVariable<double> hsoIN;
+    constCCVariable<double> hosIN;
+    constCCVariable<double> hsohIN;
+
+    constCCVariable<double> h2soIN;
+    constCCVariable<double> hoshoIN;
+    constCCVariable<double> hs2IN;
+    constCCVariable<double> h2s2IN;
+
+
     constCCVariable<double> c2h2IN;
     constCCVariable<double> ch4IN;
 
     CCVariable<double> coIN_new;
+
     CCVariable<double> h2sIN_new;
     CCVariable<double> so2IN_new;
     CCVariable<double> so3IN_new;
     CCVariable<double> sulfurIN_new;
+
+    CCVariable<double> s2IN_new;
+    CCVariable<double> shIN_new;
+    CCVariable<double> soIN_new;
+    CCVariable<double> hso2IN_new;
+
+    CCVariable<double> hosoIN_new;
+    CCVariable<double> hoso2IN_new;
+    CCVariable<double> snIN_new;
+    CCVariable<double> csIN_new;
+
+    CCVariable<double> ocsIN_new;
+    CCVariable<double> hsoIN_new;
+    CCVariable<double> hosIN_new;
+    CCVariable<double> hsohIN_new;
+
+    CCVariable<double> h2soIN_new;
+    CCVariable<double> hoshoIN_new;
+    CCVariable<double> hs2IN_new;
+    CCVariable<double> h2s2IN_new;
+
     CCVariable<double> c2h2IN_new;
     CCVariable<double> ch4IN_new;
 
@@ -1158,11 +1390,77 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 			     matlIndex, patch);
       so3IN_new.copyData(so3IN);
       
-	  old_dw->get(sulfurIN, d_lab->d_sulfurINLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->allocateAndPut(sulfurIN_new, d_lab->d_sulfurINLabel,
-			     matlIndex, patch);
+      old_dw->get(sulfurIN, d_lab->d_sulfurINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(sulfurIN_new, d_lab->d_sulfurINLabel, matlIndex, patch);
       sulfurIN_new.copyData(sulfurIN);
+
+//
+      old_dw->get(s2IN, d_lab->d_s2INLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(s2IN_new, d_lab->d_s2INLabel, matlIndex, patch);
+      s2IN_new.copyData(s2IN);
+
+      old_dw->get(shIN, d_lab->d_shINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(shIN_new, d_lab->d_shINLabel, matlIndex, patch);
+      shIN_new.copyData(shIN);
+
+      old_dw->get(soIN, d_lab->d_soINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(soIN_new, d_lab->d_soINLabel, matlIndex, patch);
+      soIN_new.copyData(soIN);
+
+      old_dw->get(hso2IN, d_lab->d_hso2INLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hso2IN_new, d_lab->d_hso2INLabel, matlIndex, patch);
+      hso2IN_new.copyData(hso2IN);
+
+//
+      old_dw->get(hosoIN, d_lab->d_hosoINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hosoIN_new, d_lab->d_hosoINLabel, matlIndex, patch);
+      hosoIN_new.copyData(hosoIN);
+
+      old_dw->get(hoso2IN, d_lab->d_hoso2INLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hoso2IN_new, d_lab->d_hoso2INLabel, matlIndex, patch);
+      hoso2IN_new.copyData(hoso2IN);
+
+      old_dw->get(snIN, d_lab->d_snINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(snIN_new, d_lab->d_snINLabel, matlIndex, patch);
+      snIN_new.copyData(snIN);
+
+      old_dw->get(csIN, d_lab->d_csINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(csIN_new, d_lab->d_csINLabel, matlIndex, patch);
+      csIN_new.copyData(csIN);
+
+//
+      old_dw->get(ocsIN, d_lab->d_ocsINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(ocsIN_new, d_lab->d_ocsINLabel, matlIndex, patch);
+      ocsIN_new.copyData(ocsIN);
+
+      old_dw->get(hsoIN, d_lab->d_hsoINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hsoIN_new, d_lab->d_hsoINLabel, matlIndex, patch);
+      hsoIN_new.copyData(hsoIN);
+
+      old_dw->get(hosIN, d_lab->d_hosINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hosIN_new, d_lab->d_hosINLabel, matlIndex, patch);
+      hosIN_new.copyData(hosIN);
+
+      old_dw->get(hsohIN, d_lab->d_hsohINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hsohIN_new, d_lab->d_hsohINLabel, matlIndex, patch);
+      hsohIN_new.copyData(hsohIN);
+
+//
+      old_dw->get(h2soIN, d_lab->d_h2soINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(h2soIN_new, d_lab->d_h2soINLabel, matlIndex, patch);
+      h2soIN_new.copyData(h2soIN);
+
+      old_dw->get(hoshoIN, d_lab->d_hoshoINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hoshoIN_new, d_lab->d_hoshoINLabel, matlIndex, patch);
+      hoshoIN_new.copyData(hoshoIN);
+
+      old_dw->get(hs2IN, d_lab->d_hs2INLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(hs2IN_new, d_lab->d_hs2INLabel, matlIndex, patch);
+      hs2IN_new.copyData(hs2IN);
+
+      old_dw->get(h2s2IN, d_lab->d_h2s2INLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->allocateAndPut(h2s2IN_new, d_lab->d_h2s2INLabel, matlIndex, patch);
+      h2s2IN_new.copyData(h2s2IN);
     }
     
     if (d_soot_precursors) {

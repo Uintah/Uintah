@@ -45,7 +45,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       void resize(int newSize) {
-	T* newdata = new T[newSize];
+	T* newdata = scinew T[newSize];
 	if(data){
 	  int smaller = ((newSize < size ) ? newSize:size);
 	  for(int i = 0; i < smaller; i++)
@@ -77,7 +77,7 @@ WARNING
      ParticleData<T>::ParticleData(particleIndex size)
      : size(size)
       {
-	data = new T[size];
+	data = scinew T[size];
       }
       
    template<class T>

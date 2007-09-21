@@ -91,7 +91,7 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
     vector<int> m_tmp(2);
     m_tmp[0] = matl0->getDWIndex();
     m_tmp[1] = matl1->getDWIndex();
-    mymatls = new MaterialSet();            
+    mymatls = scinew MaterialSet();            
  
     if( m_tmp[0] != 0 && m_tmp[1] != 0){
       vector<int> m(3);
@@ -109,7 +109,7 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
   }
   else{
     int matl0_DWI = matl0->getDWIndex();
-    mymatls = new MaterialSet();            
+    mymatls = scinew MaterialSet();            
     if( matl0_DWI != 0){
       vector<int> m(2);
       m[0] = 0;    // needed for the pressure and NC_CCWeight 
@@ -173,7 +173,7 @@ void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
   vector<int> m_tmp(2);
   m_tmp[0] = matl0->getDWIndex();
   m_tmp[1] = matl1->getDWIndex();
-  mymatls = new MaterialSet();            
+  mymatls = scinew MaterialSet();            
 
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);

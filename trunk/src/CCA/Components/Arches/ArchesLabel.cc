@@ -219,6 +219,7 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_h2oINLabel = VarLabel::create("h2oIN",
 				  CCVariable<double>::getTypeDescription() );
+
   d_h2sINLabel = VarLabel::create("h2sIN",
 				  CCVariable<double>::getTypeDescription() );
   d_so2INLabel = VarLabel::create("so2IN",
@@ -227,6 +228,27 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_sulfurINLabel = VarLabel::create("sulfurIN",
 				  CCVariable<double>::getTypeDescription() );
+
+  d_s2INLabel = VarLabel::create("s2IN",        CCVariable<double>::getTypeDescription() );
+  d_shINLabel = VarLabel::create("shIN",        CCVariable<double>::getTypeDescription() );
+  d_soINLabel = VarLabel::create("soIN",        CCVariable<double>::getTypeDescription() );
+  d_hso2INLabel = VarLabel::create("hso2IN",    CCVariable<double>::getTypeDescription() );
+
+  d_hosoINLabel = VarLabel::create("hosoIN",    CCVariable<double>::getTypeDescription() );
+  d_hoso2INLabel = VarLabel::create("hoso2IN",  CCVariable<double>::getTypeDescription() );
+  d_snINLabel = VarLabel::create("snIN",        CCVariable<double>::getTypeDescription() );
+  d_csINLabel = VarLabel::create("csIN",        CCVariable<double>::getTypeDescription() );
+
+  d_ocsINLabel = VarLabel::create("ocsIN",      CCVariable<double>::getTypeDescription() );
+  d_hsoINLabel = VarLabel::create("hsoIN",      CCVariable<double>::getTypeDescription() );
+  d_hosINLabel = VarLabel::create("hosIN",      CCVariable<double>::getTypeDescription() );
+  d_hsohINLabel = VarLabel::create("hsohIN",    CCVariable<double>::getTypeDescription() );
+
+  d_h2soINLabel = VarLabel::create("h2soIN",    CCVariable<double>::getTypeDescription() );
+  d_hoshoINLabel = VarLabel::create("hoshoIN",  CCVariable<double>::getTypeDescription() );
+  d_hs2INLabel = VarLabel::create("hs2IN",      CCVariable<double>::getTypeDescription() );
+  d_h2s2INLabel = VarLabel::create("h2s2IN",    CCVariable<double>::getTypeDescription() );
+
   d_coINLabel = VarLabel::create("coIN",
 				  CCVariable<double>::getTypeDescription() );
   d_c2h2INLabel = VarLabel::create("c2h2IN",
@@ -788,10 +810,32 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_h2oINLabel);
   VarLabel::destroy(d_normalizedScalarVarLabel);
   VarLabel::destroy(d_heatLossLabel);
+
   VarLabel::destroy(d_h2sINLabel);
   VarLabel::destroy(d_so2INLabel);
   VarLabel::destroy(d_so3INLabel);
   VarLabel::destroy(d_sulfurINLabel);
+
+  VarLabel::destroy(d_s2INLabel);
+  VarLabel::destroy(d_shINLabel);
+  VarLabel::destroy(d_soINLabel);
+  VarLabel::destroy(d_hso2INLabel);
+
+  VarLabel::destroy(d_hosoINLabel);
+  VarLabel::destroy(d_hoso2INLabel);
+  VarLabel::destroy(d_snINLabel);
+  VarLabel::destroy(d_csINLabel);
+
+  VarLabel::destroy(d_ocsINLabel);
+  VarLabel::destroy(d_hsoINLabel);
+  VarLabel::destroy(d_hosINLabel);
+  VarLabel::destroy(d_hsohINLabel);
+
+  VarLabel::destroy(d_h2soINLabel);
+  VarLabel::destroy(d_hoshoINLabel);
+  VarLabel::destroy(d_hs2INLabel);
+  VarLabel::destroy(d_h2s2INLabel);
+
   VarLabel::destroy(d_coINLabel);
   VarLabel::destroy(d_c2h2INLabel);
   VarLabel::destroy(d_ch4INLabel);

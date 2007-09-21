@@ -66,7 +66,7 @@ Filter::problemSetup(const ProblemSpecP& params)
 {
   int argc = 4;
   char** argv;
-  argv = new char*[argc];
+  argv = scinew char*[argc];
   argv[0] = "Filter::problemSetup";
   //argv[1] = "-on_error_attach_debugger";
   argv[1] = "-no_signal_handler";
@@ -75,7 +75,7 @@ Filter::problemSetup(const ProblemSpecP& params)
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
     throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
-
+  delete argv;
 }
 
 void
