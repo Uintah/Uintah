@@ -3883,7 +3883,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //  compute the shear stress terms
         double viscosity_test = ice_matl->getViscosity();
         if(viscosity_test != 0.0){
-          if(numMatls > 1){
+          if(numMatls > 1 && (d_myworld->myrank() == 0)){
             cout << "ICE:Compute viscous ShearStress:  currently the shear stress" 
             " calculation doesn't work for multiple materials. Set the dynamic viscosity to 0.0 --Todd"<< endl;
           }
