@@ -43,4 +43,4 @@ all : $(LOCAL_FILES)
 
 $(LOCAL_FILES) :
 	@echo "Fetching $(patsubst $(LOCALDIR)/%,%,$@)..."
-	@ssh -x $(LOGIN) "cd $(REMOTEDIR) && tar zcBf - $(patsubst $(LOCALDIR)/%,%,$@)" | (cd $(LOCALDIR); tar zxBf -)
+	@$(SSH) -x $(LOGIN) "cd $(REMOTEDIR) && tar zcBf - $(patsubst $(LOCALDIR)/%,%,$@)" | (cd $(LOCALDIR); tar zxBf -)
