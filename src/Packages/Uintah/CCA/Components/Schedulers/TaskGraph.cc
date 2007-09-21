@@ -625,6 +625,9 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
   if (doDetailed) {
     TAU_PROFILE_START(ddtimer);
     createDetailedDependencies();
+    if (dts_->getExtraCommunication() > 0 && d_myworld->myrank() == 0)
+      cout << d_myworld->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about " << dts_->getExtraCommunication() 
+           << " cells\n";
     TAU_PROFILE_STOP(ddtimer);
   }
 
