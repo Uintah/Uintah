@@ -1,0 +1,17 @@
+package integrators version 1.0 {
+
+  class MonteCarlo implements integrator.IntegratorPort, 
+                              gov.cca.Component,
+			      gov.cca.ComponentRelease
+  {
+	// integrator.IntegratorPort methods:
+	double integrate(in double lowBound, in double upBound, in int count);
+
+	// gov.cca.Component methods:
+	void setServices(in gov.cca.Services services) throws gov.cca.CCAException;
+
+	// gov.cca.ComponentRelease methods:
+	void releaseServices(in gov.cca.Services services) throws gov.cca.CCAException;
+  }
+
+}

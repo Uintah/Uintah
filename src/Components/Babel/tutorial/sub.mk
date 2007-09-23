@@ -29,13 +29,13 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Components/Babel
+SRCDIR := Components/Babel/tutorial
 
 SUBDIRS := \
-           $(SRCDIR)/xml \
-           $(SRCDIR)/hello-server \
-           $(SRCDIR)/hello-client \
-           $(SRCDIR)/tutorial
+           $(SRCDIR)/randomgens \
+           $(SRCDIR)/integrators \
+           $(SRCDIR)/drivers \
+           $(SRCDIR)/functions
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

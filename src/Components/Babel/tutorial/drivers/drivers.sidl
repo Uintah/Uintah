@@ -1,0 +1,9 @@
+package drivers version 1.0 {
+
+  class CXXDriver implements gov.cca.ports.GoPort,
+                                 gov.cca.Component
+  {
+     int go();
+     void setServices(in gov.cca.Services services) throws gov.cca.CCAException;
+  }
+}

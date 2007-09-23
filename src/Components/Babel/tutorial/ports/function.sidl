@@ -1,0 +1,10 @@
+package function version 1.0 {
+
+  interface FunctionPort extends gov.cca.Port 
+  {
+    //void   init(in array<double,1> params);
+    	void init(in array<string,1> params);
+	double evaluate(in double x);
+  }
+
+}
