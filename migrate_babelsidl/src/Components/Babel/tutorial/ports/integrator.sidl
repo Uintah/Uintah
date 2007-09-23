@@ -1,0 +1,8 @@
+package integrator version 1.0 {
+
+  interface IntegratorPort extends gov.cca.Port
+  {
+    double integrate(in double lowBound, in double upBound, in int count);
+  }
+  
+}
