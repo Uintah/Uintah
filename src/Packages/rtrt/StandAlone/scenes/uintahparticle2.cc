@@ -341,7 +341,7 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
   data_group.add(sphere_data);
   AuditDefaultAllocator();
   if (debug) cerr << "End of append_spheres\n";
-}
+} // end append_spheres()
 
 GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
                                 int colordata, int gridcellsize,
@@ -364,7 +364,8 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
     if (debug) cerr << "data_group[" << i << "].numvars = " << data_group[i].numvars << endl;
     total_spheres += data_group[i].nspheres;
     if (numvars != data_group[i].numvars) {
-      cerr << "numvars does not match: numvars = " << numvars << ", data_group[i].numvars = " << data_group[i].numvars << " Goodbye!\n";
+      cerr << "numvars does not match: numvars = " << numvars << ", data_group[i].numvars = " 
+           << data_group[i].numvars << " Goodbye!\n";
       abort();
     }
     radius += data_group[i].radius;
@@ -525,7 +526,6 @@ public:
   
   void run() {
     PatchData patchdata;
-    rtrt::Array1<SphereData> sphere_data;
     Matrix3 one; one.Identity();
     
     // for all vars in one timestep in one patch
@@ -561,6 +561,9 @@ public:
             break;
           case Uintah::TypeDescription::int_type:
             getParticleData<int>(patchdata, var, matls, patch);
+            break;
+          case Uintah::TypeDescription::long64_type:
+            getParticleData<long64>(patchdata, var, matls, patch);
             break;
           case Uintah::TypeDescription::Point:
             {
@@ -722,12 +725,15 @@ public:
         break;
       } // end switch(td->getType())
       if (debug) cerr << "Finished var " << var << "\n";
-    }
+    } // end for v
     AuditDefaultAllocator();
+
+    rtrt::Array1<SphereData> sphere_data;
     append_spheres(sphere_data, patchdata, patch,
                    do_PTvar_all, do_patch, do_material,
                    do_verbose, radius, radius_factor);
     patchdata.deleteme();
+
     amutex->lock();
     for(int i = 0; i < sphere_data.size(); i++) {
       sphere_data_all->add(sphere_data[i]);
