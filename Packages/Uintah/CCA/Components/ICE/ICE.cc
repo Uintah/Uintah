@@ -1725,9 +1725,10 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   //---------------------------  
   cout_doing << d_myworld->myrank() << " ICE::scheduleConservedtoPrimitive_Vars" 
              << "\t\t\tL-"<< levelIndex << endl;
-             
-  Task* task = scinew Task("ICE::conservedtoPrimitive_Vars",
-                     this, &ICE::conservedtoPrimitive_Vars);
+
+  string name = "ICE::conservedtoPrimitive_Vars:" + where;
+
+  Task* task = scinew Task(name, this, &ICE::conservedtoPrimitive_Vars);
 //  task->requires(Task::OldDW, lb->delTLabel);     for AMR
   Ghost::GhostType  gn   = Ghost::None;
   task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
@@ -2879,7 +2880,16 @@ template<class T> void ICE::computeVelFace(int dir,
     IntVector L = R + adj_offset; 
 
     double rho_FC = rho_CC[L] + rho_CC[R];
+#if SCI_ASSERTION_LEVEL >=2
+    if (rho_FC <= 0.0) {
+      cout << d_myworld->myrank() << " rho_fc <= 0: " << rho_FC << " with L= " << L << " (" 
+           << rho_CC[L] << ") R= " << R << " (" << rho_CC[R]<< ")\n";
+    }
+#endif
     ASSERT(rho_FC > 0.0);
+
+    if (L == IntVector(64, 56, 48) && R == IntVector(65, 56, 48))
+      cout << d_myworld->myrank() << " correct rho_fc: " << rho_FC << " with L= " << L << " (" << rho_CC[L] << ") R= " << R << " (" << rho_CC[R]<< ")\n";      
     //__________________________________
     // interpolation to the face
     double term1 = (rho_CC[L] * vel_CC[L][dir] +
