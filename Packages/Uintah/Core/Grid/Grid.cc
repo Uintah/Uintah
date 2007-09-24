@@ -872,46 +872,30 @@ bool Grid::operator==(const Grid& othergrid) const
   if (numLevels() != othergrid.numLevels())
     return false;
   for (int i = 0; i < numLevels(); i++) {
-    
-    list<Region> region1, region2, difference;
     const Level* level = getLevel(i).get_rep();
     const Level* otherlevel = othergrid.getLevel(i).get_rep();
-
-    //create lists of regions
+    if (level->numPatches() != otherlevel->numPatches())
+      return false;
     Level::const_patchIterator iter = level->patchesBegin();
-    for (; iter != level->patchesEnd(); iter++) {
+    Level::const_patchIterator otheriter = otherlevel->patchesBegin();
+    for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
-      region1.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
+      const Patch* otherpatch = *otheriter;
+      if (patch->getInteriorCellLowIndex() != otherpatch->getInteriorCellLowIndex() ||
+          patch->getInteriorCellHighIndex() != otherpatch->getInteriorCellHighIndex())
+        return false;
     }
-    iter = otherlevel->patchesBegin();
-    for (; iter != otherlevel->patchesEnd(); iter++) {
-      const Patch* patch = *iter;
-      region2.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
-    }
-       
-    //compute r1-r2
-    Region::difference(region1,region2,difference);
-    
-    if(difference.size()>0)
-      return false;
-    
-    //compute r2-r1
-    Region::difference(region2,region1,difference);
-
-    if(difference.size()>0)
-      return false;
+      
   }
   return true;
 
 }
-
-
 bool Grid::isSimilar(const Grid& othergrid) const
 {
   if(numLevels() != othergrid.numLevels())
      return false;
 
-  deque<Region> r1, r2, difference;
+  list<Region> r1, r2, difference;
  
   for(int i=numLevels()-1;i>=0;i--)
   {
@@ -936,10 +920,10 @@ bool Grid::isSimilar(const Grid& othergrid) const
     }
 
     //compare regions
-    difference=Region::difference(r1,r2);
+    Region::difference(r1,r2,difference);
     if(!difference.empty())  //if region in r1 that is not in r2
       return false;
-    difference=Region::difference(r2,r1);
+    Region::difference(r2,r1,difference);
     if(!difference.empty())  //if region in r1 that is not in r2
       return false;
   }
