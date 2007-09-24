@@ -737,7 +737,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     DetailedTask * task = 0;
     // normal case - NOT using the queued task-receiving structure
     // run the task right after initiating the receives
-    if (!useExternalQueue_) {
+    if (!useExternalQueue_ || d_sharedState->isCopyDataTimestep()) {
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
