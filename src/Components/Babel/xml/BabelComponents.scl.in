@@ -5,6 +5,6 @@
     <class name="HelloServer.MsgPort" desc="ior/impl" />
   </library>
   <library uri="BUILDDIR/lib/libComponents_Babel_hello-client.LIBEXT" scope="global" resolution="now" > 
-    <class name="HelloClient.Component" desc="C++" />
+    <class name="HelloClient.Component" desc="ior/impl" />
   </library>
 </scl>
