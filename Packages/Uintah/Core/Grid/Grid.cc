@@ -893,7 +893,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
   if(numLevels() != othergrid.numLevels())
      return false;
 
-  deque<Region> r1, r2, difference;
+  list<Region> r1, r2, difference;
  
   for(int i=numLevels()-1;i>=0;i--)
   {
@@ -918,10 +918,10 @@ bool Grid::isSimilar(const Grid& othergrid) const
     }
 
     //compare regions
-    difference=Region::difference(r1,r2);
+    Region::difference(r1,r2,difference);
     if(!difference.empty())  //if region in r1 that is not in r2
       return false;
-    difference=Region::difference(r2,r1);
+    Region::difference(r2,r1,difference);
     if(!difference.empty())  //if region in r1 that is not in r2
       return false;
   }
