@@ -31,7 +31,7 @@
 SRCDIR := Components/Babel/xml
 
 $(OBJTOP_ABS)/$(SRCDIR)/BabelComponents.scl: $(SRCDIR)/BabelComponents.scl.in
-	sed -e "s%BUILDDIR%$(OBJTOP_ABS)%g" \
+	sed -e "s%BUILDDIR%$(OBJTOP_ABS)%g" -e "s%LIBEXT%$(SO_OR_A_FILE)%g"\
           $< > $@
 
 ALLTARGETS := $(OBJTOP_ABS)/$(SRCDIR)/BabelComponents.scl $(ALLTARGETS)
