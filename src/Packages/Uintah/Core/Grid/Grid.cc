@@ -872,24 +872,40 @@ bool Grid::operator==(const Grid& othergrid) const
   if (numLevels() != othergrid.numLevels())
     return false;
   for (int i = 0; i < numLevels(); i++) {
+    
+    list<Region> region1, region2, difference;
     const Level* level = getLevel(i).get_rep();
     const Level* otherlevel = othergrid.getLevel(i).get_rep();
-    if (level->numPatches() != otherlevel->numPatches())
-      return false;
+
+    //create lists of regions
     Level::const_patchIterator iter = level->patchesBegin();
-    Level::const_patchIterator otheriter = otherlevel->patchesBegin();
-    for (; iter != level->patchesEnd(); iter++, otheriter++) {
+    for (; iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
-      const Patch* otherpatch = *otheriter;
-      if (patch->getInteriorCellLowIndex() != otherpatch->getInteriorCellLowIndex() ||
-          patch->getInteriorCellHighIndex() != otherpatch->getInteriorCellHighIndex())
-        return false;
+      region1.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
     }
-      
+    iter = otherlevel->patchesBegin();
+    for (; iter != otherlevel->patchesEnd(); iter++) {
+      const Patch* patch = *iter;
+      region2.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
+    }
+       
+    //compute r1-r2
+    Region::difference(region1,region2,difference);
+    
+    if(difference.size()>0)
+      return false;
+    
+    //compute r2-r1
+    Region::difference(region2,region1,difference);
+
+    if(difference.size()>0)
+      return false;
   }
   return true;
 
 }
+
+
 bool Grid::isSimilar(const Grid& othergrid) const
 {
   if(numLevels() != othergrid.numLevels())
