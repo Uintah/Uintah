@@ -235,7 +235,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
  
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,patch_sets);
-  if (*newGrid == *oldGrid) 
+  if (newGrid->isSimilar(*oldGrid)) 
   {
     delete newGrid;
     return oldGrid;
