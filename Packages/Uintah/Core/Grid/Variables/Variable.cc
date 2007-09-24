@@ -288,18 +288,18 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
 
     uncompressedData = &bufferStr;
 #endif
-  }
 
-  istringstream instream(*uncompressedData);
+    istringstream instream(*uncompressedData);
   
-  if (use_rle)
-    readRLE(instream, swapBytes, nByteMode);
-  else
-    readNormal(instream, swapBytes);
-  ASSERT(instream.fail() == 0);
+    if (use_rle)
+      readRLE(instream, swapBytes, nByteMode);
+    else
+      readNormal(instream, swapBytes);
+    ASSERT(instream.fail() == 0);
 #ifdef __sgi // should be removed when we get gcc-3.0+ working
-  ASSERTEQ((ssize_t)instream.tellg(), uncompressedData->size());
+    ASSERTEQ((ssize_t)instream.tellg(), uncompressedData->size());
 #endif
+  }
 }
 
 bool
