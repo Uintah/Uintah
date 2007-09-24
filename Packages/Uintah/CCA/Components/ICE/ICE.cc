@@ -2888,8 +2888,6 @@ template<class T> void ICE::computeVelFace(int dir,
 #endif
     ASSERT(rho_FC > 0.0);
 
-    if (L == IntVector(64, 56, 48) && R == IntVector(65, 56, 48))
-      cout << d_myworld->myrank() << " correct rho_fc: " << rho_FC << " with L= " << L << " (" << rho_CC[L] << ") R= " << R << " (" << rho_CC[R]<< ")\n";      
     //__________________________________
     // interpolation to the face
     double term1 = (rho_CC[L] * vel_CC[L][dir] +
