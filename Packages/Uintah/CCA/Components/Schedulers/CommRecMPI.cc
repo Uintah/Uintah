@@ -238,6 +238,7 @@ void CommRecMPI::waitall(const ProcessorGroup * pg)
     }
   }
   ids.clear();
+  groupIDs.clear();
   handlers.clear();
   byteCounts.clear();
   messageNums.clear();
