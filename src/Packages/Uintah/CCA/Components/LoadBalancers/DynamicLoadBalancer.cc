@@ -516,7 +516,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double halfCost=remainingCost/2;
       double cost=0;
       int p=0;
-      double takeimb=fabs(cost+patch_costs[l][order[startingProc+p]]-halfCost);
+      double takeimb=fabs(cost+patch_costs[l][order[startingPatch+p]]-halfCost);
       double notakeimb=fabs(cost-halfCost);
 
       //if we do not have enough patches on the left side for all processors 
@@ -525,14 +525,14 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       while(p<halfProc || remainingPatches-p>remainingProcessors-halfProc && notakeimb>takeimb)
       {
         //assign this patch to left side
-        cost+=patch_costs[l][order[startingProc+p++]];
+        cost+=patch_costs[l][order[startingPatch+p++]];
         
         //break out if there are no more patches
         if(p==remainingPatches)
            break;
         
         //update imbalance
-        takeimb=fabs(cost+patch_costs[l][order[startingProc+p]]-halfCost);
+        takeimb=fabs(cost+patch_costs[l][order[startingPatch+p]]-halfCost);
         notakeimb=fabs(cost-halfCost);
       }
 
