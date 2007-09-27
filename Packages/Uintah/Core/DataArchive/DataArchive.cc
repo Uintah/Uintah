@@ -1087,6 +1087,21 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
         varinfo.compression = compressionMode;
         varinfo.boundaryLayer = boundary;
       }
+      else if (compressionMode != "") {
+        // For particles variables of size 0, the uda doesn't say it
+        // has a compressionMode...  (FYI, why is this?  Because it is
+        // ambiguous... if there is no data, is it compressed?)
+        //
+        // To the best of my understanding, we only look at the variables stats
+        // the first time we encounter it... even if there are multiple materials.
+        // So we run into a problem is the variable has 0 data the first time it
+        // is looked at... The problem there is that it doesn't mark it as being
+        // compressed, and therefore the next time we see that variable (eg, in
+        // another material) we (used to) assume it was not compressed... the 
+        // following lines compenstate for this problem:
+        VarData& varinfo = d_varInfo[varname];
+        varinfo.compression = compressionMode;
+      }
 
       if (levelNum == -1) { // global file (reduction vars)
         d_globaldata = filename;
