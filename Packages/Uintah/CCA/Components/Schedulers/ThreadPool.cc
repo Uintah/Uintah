@@ -209,22 +209,10 @@ Worker::run()
 	   << ": Caught std exception 'std::bad_alloc': " << e.what() << '\n';
       cerrLock.unlock();
       //      Thread::exitAll(1);
-    } catch (std::bad_cast e) {
-      cerrLock.lock();
-      cerr << "Worker " << proc_group_ << "-" << d_id 
-	   << ": Caught std exception 'std::bad_cast': " << e.what() << '\n';
-      cerrLock.unlock();
-      //      Thread::exitAll(1);
     } catch (std::bad_exception e) {
       cerrLock.lock();
       cerr << "Worker " << proc_group_ << "-" << d_id 
 	   << ": Caught std exception 'std::bad_exception: " << e.what() << '\n';
-      cerrLock.unlock();
-      //      Thread::exitAll(1);
-    } catch (std::bad_typeid e) {
-      cerrLock.lock();
-      cerr << "Worker " << proc_group_ << "-" << d_id 
-	   << ": Caught std exception 'std::bad_typeid': " << e.what() << '\n';
       cerrLock.unlock();
       //      Thread::exitAll(1);
     } catch (std::ios_base::failure e) {
