@@ -41,7 +41,7 @@
 #ifndef Framework_Babel_BabelComponentModel_h
 #define Framework_Babel_BabelComponentModel_h
 
-#include <Framework/sidl/Impl/glue/scijump.hxx>
+#include "scijump.hxx"
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
@@ -51,7 +51,7 @@
 #include <map>
 
 #ifndef DEBUG
-#define DEBUG 1
+# define DEBUG 1
 #endif
 
 namespace scijump {
@@ -59,6 +59,7 @@ namespace scijump {
 using namespace SCIRun;
 
 class BabelComponentDescription;
+class BabelComponentInfo;
 
 /**
  * \class BabelComponentModel
@@ -78,9 +79,9 @@ public:
   virtual ~BabelComponentModel();
 
   /** ? */
-  UCXX ::gov::cca::Services createServices(const std::string& instanceName,
+  ::gov::cca::Services createServices(const std::string& instanceName,
                                            const std::string& className,
-                                           const UCXX ::gov::cca::TypeMap& properties);
+                                           const ::gov::cca::TypeMap& properties);
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
@@ -94,14 +95,14 @@ public:
    * instance, or a null pointer on failure.
    * Remote components are currently NOT supported.
    */
-  virtual ::sci::cca::core::ComponentInfo
-  createInstance(const std::string& name,
+  virtual void
+  createInstance(::sci::cca::core::ComponentInfo& ci,
+                 const std::string& name,
                  const std::string& type,
                  const gov::cca::TypeMap& tm);
 
   /** ? */
-  virtual std::string createComponent(const std::string& name,
-                                      const std::string& type);
+  //virtual std::string createComponent(const std::string& name, const std::string& type);
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
@@ -126,7 +127,7 @@ public:
   static const std::string DEFAULT_XML_PATH;
 
 private:
-  typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
+  typedef std::map<std::string, BabelComponentDescription* > componentDB_type;
   componentDB_type components;
   Mutex lock_components;
 

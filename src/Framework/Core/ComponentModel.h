@@ -76,8 +76,8 @@ typedef std::map<std::string, std::string> StringMap;
 class ComponentModel {
 public:
   ComponentModel() {}
-  ComponentModel(const std::string& prefixName, const SCIJumpFramework& framework);
-  virtual ~ComponentModel();
+  ComponentModel(const std::string& prefixName, const SCIJumpFramework& framework) {}
+  virtual ~ComponentModel() {}
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
@@ -88,8 +88,9 @@ public:
       \em name is assigned as the unique name of the newly created instance.
       Returns a smart pointer to the newly created instance, or a null pointer
       on failure. */
-  virtual ::sci::cca::core::ComponentInfo
-  createInstance(const std::string &name,
+  virtual void
+  createInstance(::sci::cca::core::ComponentInfo& ci,
+                 const std::string &name,
                  const std::string &type,
                  const gov::cca::TypeMap &tm) = 0;
   

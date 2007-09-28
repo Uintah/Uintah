@@ -45,6 +45,9 @@
 #ifndef included_scijump_BabelComponentInfo_hxx
 #include "scijump_BabelComponentInfo.hxx"
 #endif
+#ifndef included_scijump_BabelServices_hxx
+#include "scijump_BabelServices.hxx"
+#endif
 #ifndef included_sidl_BaseClass_hxx
 #include "sidl_BaseClass.hxx"
 #endif
@@ -93,28 +96,29 @@ namespace scijump {
 
     ::sci::cca::AbstractFramework framework;
     ::gov::cca::TypeMap properties;
-    ::gov::cca::Services services;
     ::gov::cca::Component component;
+
+    scijump::BabelServices services;
 
     /** See interface ComponentRelease */
     ::gov::cca::ComponentRelease releaseCallback;
 
-  private:
-    typedef std::map<std::string, ::sci::cca::core::PortInfo> PortInfoMap;
-    /** ? */
-    class Iterator : public scijump::core::PortInfoIterator {
-      PortInfoMap ports;
-      PortInfoMap::iterator iter;
-    public:
-      Iterator(BabelComponentInfo&);
-      virtual ~Iterator();
-      virtual ::sci::cca::core::PortInfo get();
-      virtual bool done();
-      virtual void next();
-    private:
-      Iterator(const Iterator&);
-      Iterator& operator=(const Iterator&);
-    };
+//   private:
+//     typedef std::map<std::string, ::sci::cca::core::PortInfo> PortInfoMap;
+//     /** ? */
+//     class Iterator : public scijump::core::PortInfoIterator {
+//       PortInfoMap ports;
+//       PortInfoMap::iterator iter;
+//     public:
+//       Iterator(BabelComponentInfo&);
+//       virtual ~Iterator();
+//       virtual ::sci::cca::core::PortInfo get();
+//       virtual bool done();
+//       virtual void next();
+//     private:
+//       Iterator(const Iterator&);
+//       Iterator& operator=(const Iterator&);
+//     };
     // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo._implementation)
 
   public:
@@ -157,7 +161,7 @@ namespace scijump {
       /* in */const ::std::string& className,
       /* in */::sci::cca::AbstractFramework& framework,
       /* in */::gov::cca::Component& component,
-      /* in */::gov::cca::Services& services,
+      /* in */::scijump::BabelServices& services,
       /* in */::gov::cca::TypeMap& properties
     )
     ;
@@ -171,9 +175,22 @@ namespace scijump {
       /* in */const ::std::string& className,
       /* in */::sci::cca::AbstractFramework& framework,
       /* in */::gov::cca::Component& component,
-      /* in */::gov::cca::Services& services,
+      /* in */::scijump::BabelServices& services,
       /* in */::gov::cca::TypeMap& properties,
       /* in */const ::std::string& serialization
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    void
+    initialize_impl (
+      /* in */const ::std::string& instanceName,
+      /* in */const ::std::string& className,
+      /* in */::sci::cca::AbstractFramework& framework,
+      /* in */::scijump::BabelServices& services,
+      /* in */::gov::cca::TypeMap& properties
     )
     ;
 
@@ -205,6 +222,11 @@ namespace scijump {
      */
     ::gov::cca::Component
     getComponent_impl() ;
+    /**
+     * user defined non-static method.
+     */
+    ::gov::cca::Services
+    getServices_impl() ;
     /**
      * user defined non-static method.
      */

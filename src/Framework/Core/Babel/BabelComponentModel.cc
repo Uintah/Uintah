@@ -43,12 +43,10 @@
 #include <Framework/Core/Babel/BabelComponentModel.h>
 #include <Framework/Core/Babel/BabelComponentDescription.h>
 
-#include <Framework/sidl/Impl/glue/scijump.hxx>
-#include <Framework/sidl/Impl/glue/sci.hxx>
-
+//#include <Core/Util/soloader.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Util/soloader.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Assert.h>
 
 extern "C" {
 # include <string.h>
@@ -62,8 +60,9 @@ namespace scijump {
 const std::string BabelComponentModel::DEFAULT_XML_PATH("/CCA/Components/BabelTest/xml");
 
 
-BabelComponentModel::BabelComponentModel(const SCIJumpFramework& framework, const StringVector& xmlPaths)
-  : ComponentModel("babel", framework),
+BabelComponentModel::BabelComponentModel(const SCIJumpFramework& framework,
+                                         const StringVector& xmlPaths)
+  : ComponentModel(std::string("babel"), framework),
     lock_components("BabelComponentModel::components lock")
 {
   buildComponentList(xmlPaths);
@@ -74,7 +73,8 @@ BabelComponentModel::~BabelComponentModel()
   destroyComponentList();
 }
 
-void BabelComponentModel::destroyComponentList()
+void
+BabelComponentModel::destroyComponentList()
 {
   SCIRun::Guard g1(&lock_components);
   /*
@@ -86,7 +86,8 @@ void BabelComponentModel::destroyComponentList()
   components.clear();
 }
 
-void BabelComponentModel::buildComponentList(const StringVector& files)
+void
+BabelComponentModel::buildComponentList(const StringVector& files)
 {
   destroyComponentList();
 
@@ -163,23 +164,25 @@ BabelComponentModel::createServices(const std::string& instanceName,
   return svc;
 }
 
-bool BabelComponentModel::haveComponent(const std::string& type)
+bool
+BabelComponentModel::haveComponent(const std::string& type)
 {
   SCIRun::Guard g1(&lock_components);
   return components.find(type) != components.end();
 }
 
-::sci::cca::core::ComponentInfo
-BabelComponentModel::createInstance(const std::string& name,
+void
+BabelComponentModel::createInstance(::sci::cca::core::ComponentInfo& ci,
+                                    const std::string& name,
                                     const std::string& type,
-                                    const gov::cca::TypeMap&)
+                                    const gov::cca::TypeMap& tm)
 {
 #if DEBUG
   std::cerr << "BabelComponentModel::createInstance: attempt to create "
             << name << " type " << type << std::endl;
 #endif
 
-  /* 
+  /*
   Guard g1(&lock_components);
   componentDB_type::iterator iter = components.find(type);
 
@@ -237,31 +240,42 @@ BabelComponentModel::createInstance(const std::string& name,
   // get default finder and report search path
   ::sidl::Finder f = ::sidl::Loader::getFinder();
   std::cerr << "sidl::Finder::getSearchPath=" << f.getSearchPath() << std::endl;
-#endif
+
+  ASSERT(library._not_nil());
+
+#else
   if (library._is_nil()) {
     std::cerr << "Could not find library for type " << type << ". "
               << "Check your environment settings as described in the Babel and SCIJump usage instructions."
               << std::endl;
-    return 0;
+    return;
   }
+#endif
 
   ::sidl::BaseClass sidl_class = library.createClass(type);
   // cast BaseClass instance to Component
   // babel_cast<>() introduced in UC++ bindings, returns nil pointer on bad cast
   ::gov::cca::Component component = ::sidl::babel_cast< ::gov::cca::Component>(sidl_class);
-  if ( component._is_nil() ) {
+
+#if DEBUG
+  ASSERT(component._not_nil());
+#else
+  if ( component._is_nil() ) { // TODO: throw exception?
     std::cerr << "Cannot load babel component of type " << type
               << ". Babel component not created." << std::endl;
-    return 0;
+    return;
   }
-  ::scijump::Services svc = ::scijump::Services::_create();
-  // there's an argument for calling this after adding the component info to the framework...
+#endif
+
+  BabelServices svc = BabelServices::_create();
+  ::gov::cca::TypeMap svc_props = scijump::TypeMap::_create();
+  svc.initialize(framework, name, type, svc_props);
   component.setServices(svc);
-  ::gov::cca::TypeMap nullMap;
 
   scijump::BabelComponentInfo bci = scijump::BabelComponentInfo::_create();
-  bci.initialize(name, type, framework, component, svc, nullMap);
-  return bci;
+  bci.initialize(name, type, framework, component, svc, tm);
+  ci = bci;
+  return;
 }
 
 #if 0
@@ -279,8 +293,8 @@ bool BabelComponentModel::destroyInstance(const ComponentInfo& ci)
 */
 #endif
 
-void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-                                                bool /*listInternal*/)
+void
+BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool)
 {
   SCIRun::Guard g1(&lock_components);
   for (componentDB_type::iterator iter=components.begin();
@@ -289,48 +303,51 @@ void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription
   }
 }
 
+#if 0
 // TODO: This returns an empty string only - should this return a URI???
-std::string BabelComponentModel::createComponent(const std::string& name, const std::string& type)
-{
-#if DEBUG
-  std::cerr << "BabelComponentModel::createComponent: attempt to create " << name << " type " << type << std::endl;
+// std::string
+// BabelComponentModel::createComponent(const std::string& name, const std::string& type)
+// {
+// #if DEBUG
+//   std::cerr << "BabelComponentModel::createComponent: attempt to create " << name << " type " << type << std::endl;
+// #endif
+//   gov::cca::Component component;
+//   lock_components.lock();
+//   componentDB_type::iterator iter = components.find(type);
+//   lock_components.unlock();
+//   if (iter == components.end()) {
+//     return std::string();
+//   }
+
+//   std::string lastname=type.substr(type.find('.')+1);
+//   std::string so_name("lib/libBabel_Components_");
+//   so_name = so_name + lastname + ".so";
+// #if DEBUG
+//   std::cerr << "type=" << type << " soname=" << so_name << std::endl;
+// #endif
+//   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
+//   if (!handle) {
+//     std::cerr << "Cannot load component " << type << std::endl;
+//     std::cerr << SOError() << std::endl;
+//     return std::string();
+//   }
+
+//   std::string makername = "make_" + type;
+//   for (int i = 0; i < (int)makername.size(); i++) {
+//     if (makername[i] == '.') {
+//       makername[i] = '_';
+//     }
+//   }
+
+//   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
+//   if (!maker_v) {
+//     std::cerr << "Cannot load component " << type << std::endl;
+//     std::cerr << SOError() << std::endl;
+//     return std::string();
+//   }
+
+//   return std::string();
+// }
 #endif
-  gov::cca::Component component;
-  lock_components.lock();
-  componentDB_type::iterator iter = components.find(type);
-  lock_components.unlock();
-  if (iter == components.end()) {
-    return std::string();
-  }
-
-  std::string lastname=type.substr(type.find('.')+1);
-  std::string so_name("lib/libBabel_Components_");
-  so_name = so_name + lastname + ".so";
-#if DEBUG
-  std::cerr << "type=" << type << " soname=" << so_name << std::endl;
-#endif
-  LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());
-  if (!handle) {
-    std::cerr << "Cannot load component " << type << std::endl;
-    std::cerr << SOError() << std::endl;
-    return std::string();
-  }
-
-  std::string makername = "make_" + type;
-  for (int i = 0; i < (int)makername.size(); i++) {
-    if (makername[i] == '.') {
-      makername[i] = '_';
-    }
-  }
-
-  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if (!maker_v) {
-    std::cerr << "Cannot load component " << type << std::endl;
-    std::cerr << SOError() << std::endl;
-    return std::string();
-  }
-
-  return std::string();
-}
 
 } // end namespace scijump

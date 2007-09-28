@@ -39,14 +39,15 @@
  */
 
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 
-#include <scijump.hxx>
-#include <sidl.hxx>
-#include <sidlx.hxx>
+#include "scijump.hxx"
+#include "gov_cca.hxx"
+#include "sidl.hxx"
+#include "sidlx.hxx"
 
 #include <sci_defs/mpi_defs.h>
 #include <sci_mpi.h>
@@ -116,19 +117,30 @@ parse_args( int argc, char *argv[])
 }
 
 void
-component_instantiate_test(scijump::BuilderService& builder)
+component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
 {
+  // instantiate
   gov::cca::ComponentID helloServer = builder.createInstance("HelloServer", "HelloServer.Component", NULL);
-  if(helloServer._is_nil()) {
+  if (helloServer._is_nil()) {
     std::cerr << "Cannot create component: babel:HelloServer\n";
     return;
   }
 
   gov::cca::ComponentID hello = builder.createInstance("HelloClient", "HelloClient.Component", NULL);
-  if(hello._is_nil()) {
+  if (hello._is_nil()) {
     std::cerr << "Cannot create component: babel:Hello\n";
     return;
   }
+
+  // connect
+  builder.connect(hello, "msgport-up", helloServer, "msgport-pp");
+  svc.registerUsesPort("goport-up", "gov.cca.ports.GoPort", 0);
+  builder.connect(svc.getComponentID(), "goport-up", hello, "goport");
+  ::gov::cca::Port port = svc.getPort("goport-up");
+  ::gov::cca::ports::GoPort goPort = ::sidl::babel_cast< ::gov::cca::ports::GoPort>(port);
+  goPort.go();
+
+  // TODO: add disconnect and release ports etc.
 }
 
 int
@@ -151,7 +163,19 @@ int
 main(int argc, char *argv[], char **environment) {
   bool startFramework = true;
   bool loadNet = parse_args(argc, argv);
+  // doesn't work!
   //create_sci_environment(environment, 0);
+  //std::string o(sci_getenv("SCIRUN_OBJDIR"));
+//#if DEBUG
+//  ASSERT(! o.empty());
+//#endif
+  //std::string p = o + "/Components/Babel/xml/BabelComponents.scl";
+  //if (sci_getenv_p("SIDL_DLL_PATH")) {
+  //  sci_putenv("SIDL_DLL_PATH", p + ";$SIDL_DLL_PATH");
+  //} else {
+  //  sci_putenv("SIDL_DLL_PATH", p);
+  //}
+  //std::cerr << "env check: " << sci_getenv("SIDL_DLL_PATH") << std::endl;
 
   int orb_port_num = 22222;
 
@@ -183,7 +207,9 @@ main(int argc, char *argv[], char **environment) {
     ASSERT(bsp._not_nil());
     scijump::BuilderService builder = babel_cast<scijump::BuilderService>(bsp);
     ASSERT(builder._not_nil());
-    component_instantiate_test(builder);
+
+    // test instantiation and connection
+    component_test(builder, mainServices);
     mainServices.releasePort("mainBuilder");
 
     /*

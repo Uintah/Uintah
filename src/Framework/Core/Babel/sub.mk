@@ -32,7 +32,7 @@ SRCDIR   := Framework/Core/Babel
 
 SRCS += \
         $(SRCDIR)/BabelComponentModel.cc \
-				$(SRCDIR)/BabelComponentDescription.cc
+        $(SRCDIR)/BabelComponentDescription.cc
 
 #$(SRCDIR)/BabelComponentInstance.cc
 #$(SRCDIR)/BabelPortInstance.cc

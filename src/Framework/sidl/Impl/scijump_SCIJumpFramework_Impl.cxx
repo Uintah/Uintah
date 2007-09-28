@@ -22,11 +22,17 @@
 #ifndef included_gov_cca_ComponentID_hxx
 #include "gov_cca_ComponentID.hxx"
 #endif
+#ifndef included_gov_cca_ConnectionID_hxx
+#include "gov_cca_ConnectionID.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
+#endif
+#ifndef included_sci_cca_core_ComponentInfo_hxx
+#include "sci_cca_core_ComponentInfo.hxx"
 #endif
 #ifndef included_sci_cca_core_PortInfo_hxx
 #include "sci_cca_core_PortInfo.hxx"
@@ -51,7 +57,10 @@
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._includes)
 #include "scijump.hxx"
+
+#include <sci_defs/framework_defs.h>
 #include <Framework/Core/SingletonServiceFactory.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._includes)
@@ -68,7 +77,8 @@ scijump::SCIJumpFramework_impl::SCIJumpFramework_impl() : StubBase(
 // user defined constructor
 void scijump::SCIJumpFramework_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._ctor)
-  lock_components = new SCIRun::Mutex("SCIRunFramework::compIDs lock");
+  lock_components = new SCIRun::Mutex("SCIRunFramework::components lock");
+  lock_connections = new SCIRun::Mutex("SCIRunFramework::connections lock");
 
   initFrameworkServices();
   // replace with component model factories - see Plume
@@ -80,6 +90,10 @@ void scijump::SCIJumpFramework_impl::_ctor() {
 void scijump::SCIJumpFramework_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework._dtor)
   frameworkServices.clear();
+
+  delete lock_components;
+  delete lock_connections;
+  delete bcm;
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._dtor)
 }
 
@@ -230,20 +244,14 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
   /* in */::gov::cca::TypeMap& tm ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.createComponentInstance)
-  gov::cca::TypeMap properties;
-  if (tm._is_nil()) {
-    properties = createTypeMap();
-  } else {
-    properties = tm;
-  }
 
   // See if the type is of the form:
   //   model:name
   // If so, extract the model and look up that component specifically.
   // Otherwise, look at all models for that component
-  
+
   std::string type = className;
-  ComponentModel* mod = bcm;
+
   /*
   unsigned int firstColon = type.find(':');
   if (firstColon < type.size()) {
@@ -279,13 +287,17 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
   }
   */
 
-  //ComponentInstance* ci = ((BabelComponentModel*) mod)->createInstance(name, type, properties);
-  ::sci::cca::core::ComponentInfo ci = ((BabelComponentModel*) mod)->createInstance(name, type, properties);
-  if (ci._is_nil()) {
+  scijump::BabelComponentInfo bci;
+  bcm->createInstance(bci, name, type, tm);
+#if FWK_DEBUG
+  ASSERT(bci._not_nil());
+#else
+  if (bci._is_nil()) {
+    // throw exception?
     std::cerr << "Error: failed to create BabelComponentInfo" << std::endl;
-    return NULL; 
+    return NULL;
   }
-
+#endif
   {
     Guard guard(lock_components);
 
@@ -293,7 +305,7 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
       scijump::CCAException ex = scijump::CCAException::_create();
       ex.initialize(gov::cca::CCAExceptionType_Nonstandard);
       ex.setNote("can not create component [" + name + "]: name in use");
-      ex.add(__FILE__, __LINE__, "registerComponent");
+      ex.add(__FILE__, __LINE__, "createComponentInstance");
       throw ex;
     }
 
@@ -313,7 +325,8 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
     */
 #endif
 
-    components[name] = ci;
+    components[name] = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(bci);
+    //bci.getComponent().setServices(bci.getServices());
   }
 
 #if 0 // from Plume
@@ -335,8 +348,59 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
   */
 #endif
 
-  return ci;
+  return bci;
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.createComponentInstance)
+}
+
+/**
+ * Method:  createConnectionInstance[]
+ */
+::gov::cca::ConnectionID
+scijump::SCIJumpFramework_impl::createConnectionInstance_impl (
+  /* in */::sci::cca::core::ComponentInfo& user,
+  /* in */::sci::cca::core::ComponentInfo& provider,
+  /* in */const ::std::string& userPortName,
+  /* in */const ::std::string& providerPortName,
+  /* in */::gov::cca::TypeMap& tm ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.createConnectionInstance)
+  Guard g(lock_connections);
+
+  scijump::BabelConnectionInfo ci = scijump::BabelConnectionInfo::_create();
+  ci.initialize(user, provider, userPortName, providerPortName, tm);
+
+  if (find_if(connections.begin(), connections.end(), ConnectionInfo_eq(ci)) != connections.end()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Connection already created");
+    ex.add(__FILE__, __LINE__, "createConnectionInstance");
+    throw ex;
+  }
+
+  connections.push_back(ci);
+  return ci;
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.createConnectionInstance)
+}
+
+/**
+ * Method:  destroyConnectionInstance[]
+ */
+::gov::cca::ConnectionID
+scijump::SCIJumpFramework_impl::destroyConnectionInstance_impl (
+  /* in */::gov::cca::ConnectionID& connID ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.destroyConnectionInstance)
+  // Insert-Code-Here {scijump.SCIJumpFramework.destroyConnectionInstance} (destroyConnectionInstance method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.destroyConnectionInstance)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "destroyConnectionInstance");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.destroyConnectionInstance)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.destroyConnectionInstance)
 }
 
 /**
@@ -454,7 +518,7 @@ scijump::SCIJumpFramework_impl::getServices_impl (
     ex.add(__FILE__, __LINE__, "getServices");
     throw ex;
   }
-  scijump::Services s = scijump::Services::_create();
+  scijump::BabelServices s = scijump::BabelServices::_create();
   s.initialize(*this, selfInstanceName, selfClassName, selfProperties);
 
   // TODO: need to create a (CCA) component for the caller...
@@ -522,6 +586,7 @@ scijump::SCIJumpFramework_impl::shutdownFramework_impl ()
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.shutdownFramework)
   services.clear();
   components.clear();
+  connections.clear();
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.shutdownFramework)
 }
 
@@ -572,6 +637,7 @@ scijump::SCIJumpFramework_impl::addFrameworkService(
                                                     ::scijump::core::FrameworkServiceFactory& factory,
                                                     FrameworkServiceMap& frameworkServices)
 {
+  // lock
   std::string n = factory.getName();
   FrameworkServiceMap::iterator iter = frameworkServices.find(n);
   if (iter != frameworkServices.end())
@@ -585,9 +651,14 @@ scijump::SCIJumpFramework_impl::addFrameworkService(
 bool
 scijump::SCIJumpFramework_impl::removeFrameworkService(const std::string& serviceName, FrameworkServiceMap& frameworkServices)
 {
+  // lock
   FrameworkServiceMap::iterator iter = frameworkServices.find(serviceName);
-  if (iter != frameworkServices.end())
+  if (iter != frameworkServices.end()) {
     frameworkServices.erase(iter);
+    return true;
+  }
+
+  return false;
 }
 
 #if 0

@@ -311,6 +311,12 @@ package sci {
       }
 
       // (from the Plume framework)
+      interface ConnectionInfo extends gov.cca.ConnectionID {
+        gov.cca.TypeMap getProperties();
+        void setProperties( in gov.cca.TypeMap properties);
+      }
+
+      // (from the Plume framework)
       interface PortInfo {
         bool connect(in PortInfo to);
         bool disconnect(in PortInfo peer);
@@ -321,6 +327,8 @@ package sci {
         int  numOfConnections();
 
         gov.cca.TypeMap getProperties();
+        void setProperties( in gov.cca.TypeMap properties);
+
         gov.cca.Port getPort() throws NotInitializedException;
         PortInfo getPeer() throws gov.cca.CCAException;
         PortType getPortType();
@@ -352,6 +360,7 @@ package sci {
       interface ComponentInfo extends gov.cca.ComponentID {
         AbstractFramework getFramework();
         gov.cca.Component getComponent();
+        gov.cca.Services getServices();
 
         array<PortInfo,1> getPorts();
         PortInfo getPortInfo( in string portName );

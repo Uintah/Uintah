@@ -52,6 +52,9 @@
 #include "scijump.hxx"
 #include "sci_cca.hxx"
 
+#include <sci_defs/framework_defs.h>
+#include <Core/Util/Assert.h>
+
 #include <iostream>
 
 // Insert-Code-Here {scijump.BuilderService._includes} (additional includes or code)
@@ -119,10 +122,10 @@ scijump::BuilderService_impl::initialize_impl (
   /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.initialize)
-  this->framework = framework;
+  this->framework = ::sidl::babel_cast<scijump::SCIJumpFramework>(framework);
   serviceInfo = ::scijump::core::ServiceInfo::_create();
 
-  ::scijump::core::PortInfo pi = ::scijump::core::PortInfo::_create();
+  ::scijump::BabelPortInfo pi = ::scijump::BabelPortInfo::_create();
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.initialize)
 }
 
@@ -223,11 +226,7 @@ scijump::BuilderService_impl::createInstance_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.createInstance)
-  SCIJumpFramework sjf = sidl::babel_cast<scijump::SCIJumpFramework>(framework);
-  if(sjf._is_nil()) {
-    throw new sidl::RuntimeException;
-  }
-  return sjf.createComponentInstance(instanceName,className,properties);
+  return framework.createComponentInstance(instanceName,className,properties);
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.createInstance)
 }
 
@@ -538,16 +537,55 @@ scijump::BuilderService_impl::connect_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.connect)
-  // Insert-Code-Here {scijump.BuilderService.connect} (connect method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.connect)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "connect");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.connect)
+  ::sci::cca::core::ComponentInfo ciUser = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(user);
+  if (ciUser._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Cannot connect: invalid user componentID");
+    ex.add(__FILE__, __LINE__, "connect");
+    throw ex;
+  }
+  ::sci::cca::core::PortInfo piUser = ciUser.getPortInfo(usingPortName);
+  if (piUser._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_BadPortName);
+    ex.setNote("Unknown port " + usingPortName);
+    ex.add(__FILE__, __LINE__, "connect");
+    throw ex;
+  }
+
+  ::sci::cca::core::ComponentInfo ciProvider = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(provider);
+  if (ciProvider._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Cannot connect: invalid provider componentID");
+    ex.add(__FILE__, __LINE__, "connect");
+    throw ex;
+  }
+  ::sci::cca::core::PortInfo piProvider = ciProvider.getPortInfo(providingPortName);
+  if (piProvider._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_BadPortName);
+    ex.setNote("Unknown port " + providingPortName);
+    ex.add(__FILE__, __LINE__, "connect");
+    throw ex;
+  }
+
+  if (! piUser.connect(piProvider)) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Cannot connect " + usingPortName + " with " + providingPortName);
+    ex.add(__FILE__, __LINE__, "connect");
+    throw ex;
+  }
+
+  ::gov::cca::TypeMap properties = scijump::TypeMap::_create();
+  properties.putString("user", ciUser.getInstanceName());
+  properties.putString("provider", ciUser.getInstanceName());
+  properties.putString("uses port", usingPortName);
+  properties.putString("provides port", providingPortName);
+  // not bridging at the moment
+  //properties.putBool("bridge", isBridge);
+
+  ::gov::cca::ConnectionID cid = framework.createConnectionInstance(ciUser, ciProvider, usingPortName, providingPortName, properties);
+  return cid;
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.connect)
 }
 
