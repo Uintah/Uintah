@@ -120,7 +120,9 @@ void Time::initialize() {
 }
 
 double Time::secondsPerTick() {
-
+  if (!initialized)
+    initialize();
+  
 	return mmtimer_scale;
 }
 
