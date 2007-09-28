@@ -28,7 +28,7 @@
 
 
 /*
- *  SingletonServiceInfo.h: 
+ *  SingletonServiceInfo.h:
  *
  *  Written by:
  *   Yarden Livnat
@@ -69,6 +69,7 @@ namespace scijump {
 
     class ServiceFactory {
     public:
+      virtual ~ServiceFactory() {}
       virtual std::string getName() = 0;
       virtual sci::cca::core::PortInfo get(const std::string &serviceName) = 0;
       virtual void release(const std::string &portName) = 0;
@@ -98,15 +99,16 @@ namespace scijump {
       virtual sci::cca::core::PortInfo get(const std::string &serviceName) {
         Guard guard(&lock);
         if ( service._is_nil() ) {
-        //service = PortInfo::pointer( new PortInfoImpl( serviceName, serviceName, TypeMap::pointer(0), Service::create(framework), ProvidePort));
-          service = scijump::core::PortInfo::_create();
+          //service = PortInfo::pointer( new PortInfoImpl( serviceName, serviceName, TypeMap::pointer(0), Service::create(framework), ProvidePort));
+
+          service = scijump::BabelPortInfo::_create();
           sci::cca::core::FrameworkService fs = Service::create(framework);
           gov::cca::Port port = sidl::babel_cast<gov::cca::Port>(fs);
-  
+
           // Although we probably should not have asserts in production code,
           // a babel_cast failure here would indicate a fairly serious problem.
           ASSERT(port._not_nil());
-  
+
           service.initialize(port, serviceName, serviceName, sci::cca::core::PortType_ProvidesPort, scijump::TypeMap::_create());
         }
         uses++;
@@ -120,7 +122,7 @@ namespace scijump {
 
     protected:
       scijump::SCIJumpFramework framework; // Babelized framework
-      scijump::core::PortInfo service;
+      scijump::BabelPortInfo service;
 
       std::string serviceName;
       int uses;

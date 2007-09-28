@@ -35,10 +35,12 @@ SRCDIR   := Framework/Core
 
 SRCS     += \
             $(SRCDIR)/ComponentModel.cc \
-            $(SRCDIR)/ComponentDescription.cc \
-            $(SRCDIR)/PortDescription.cc
+            $(SRCDIR)/ComponentDescription.cc
 
+# not currently used:
+#$(SRCDIR)/PortDescription.cc
 #$(SRCDIR)/PortInfoIterator.cc
+
 SUBDIRS := \
            $(SRCDIR)/Babel
 

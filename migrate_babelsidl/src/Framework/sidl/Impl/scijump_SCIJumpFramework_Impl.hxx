@@ -27,6 +27,9 @@
 #ifndef included_gov_cca_ComponentID_hxx
 #include "gov_cca_ComponentID.hxx"
 #endif
+#ifndef included_gov_cca_ConnectionID_hxx
+#include "gov_cca_ConnectionID.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -35,6 +38,9 @@
 #endif
 #ifndef included_sci_cca_AbstractFramework_hxx
 #include "sci_cca_AbstractFramework.hxx"
+#endif
+#ifndef included_sci_cca_core_ComponentInfo_hxx
+#include "sci_cca_core_ComponentInfo.hxx"
 #endif
 #ifndef included_sci_cca_core_PortInfo_hxx
 #include "sci_cca_core_PortInfo.hxx"
@@ -69,10 +75,12 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 
+#include <algorithm>
+#include <list>
 #include <map>
 
 using namespace SCIRun;
-// Insert-Code-Here {scijump.SCIJumpFramework._hincludes} (includes or arbitrary code)
+
 // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._hincludes)
 
 namespace scijump { 
@@ -102,19 +110,37 @@ namespace scijump {
     ServicesMap services;
 
     /** The set of registered components available in the framework, indexed by their instance names. */
+    //typedef std::map<std::string, ::sci::cca::core::ComponentInfo*> ComponentInstanceMap;
     typedef std::map<std::string, ::sci::cca::core::ComponentInfo> ComponentInstanceMap;
     ComponentInstanceMap components;
     SCIRun::Mutex* lock_components;
+
+    typedef std::list< ::sci::cca::core::ConnectionInfo> ConnectionList;
+    ConnectionList connections;
+    SCIRun::Mutex* lock_connections;
 
     void initFrameworkServices();
     bool addFrameworkService(::scijump::core::FrameworkServiceFactory& factory, FrameworkServiceMap& frameworkServices);
     bool removeFrameworkService(const std::string& serviceName, FrameworkServiceMap& frameworkServices);
 
-    //gov::cca::ComponentID registerComponent(ComponentInstance *ci, const std::string& name);
-    //ComponentInstance* unregisterComponent(const std::string& instanceName);
+    //bool addComponent(const std::string& name, ::sci::cca::core::ComponentInfo& ci, ComponentInstanceMap& components);
+    //bool removeComponent(const std::string& name, ComponentInstanceMap& components);
 
     BabelComponentModel* bcm;
-    // Insert-Code-Here {scijump.SCIJumpFramework._implementation} (additional details)
+
+  private:
+    class ConnectionInfo_eq : public std::unary_function< ::sci::cca::core::ConnectionInfo, bool> {
+      ::sci::cca::core::ConnectionInfo ci;
+    public:
+      explicit ConnectionInfo_eq(::sci::cca::core::ConnectionInfo& c) : ci(c) {}
+      bool operator() (::sci::cca::core::ConnectionInfo& c) {
+        return ci.getUserPortName() == c.getUserPortName() &&
+               ci.getProviderPortName() == c.getProviderPortName() &&
+               ci.getUser().getInstanceName() == c.getUser().getInstanceName() &&
+               ci.getProvider().getInstanceName() == c.getProvider().getInstanceName();
+      }
+    };
+
     // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework._implementation)
 
   public:
@@ -216,6 +242,28 @@ namespace scijump {
       /* in */const ::std::string& name,
       /* in */const ::std::string& className,
       /* in */::gov::cca::TypeMap& tm
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    ::gov::cca::ConnectionID
+    createConnectionInstance_impl (
+      /* in */::sci::cca::core::ComponentInfo& user,
+      /* in */::sci::cca::core::ComponentInfo& provider,
+      /* in */const ::std::string& userPortName,
+      /* in */const ::std::string& providerPortName,
+      /* in */::gov::cca::TypeMap& tm
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    ::gov::cca::ConnectionID
+    destroyConnectionInstance_impl (
+      /* in */::gov::cca::ConnectionID& connID
     )
     ;
 

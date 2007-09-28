@@ -53,24 +53,26 @@ namespace scijump {
 
 static Mutex parserLock("parser lock");
 
+#if 0
+/*
 ComponentModel::ComponentModel(const std::string& prefixName, const SCIJumpFramework& framework)
   : prefixName(prefixName), framework(framework)
 {
-  /*
-  // TODO: move to framework properties?
+  // TODO: move to framework properties
   // Record the path containing DLLs for components.
-  const char *dll_path = getenv("SIDL_DLL_PATH");
-  if (dll_path != 0) {
-    setSidlDLLPath(std::string(dll_path));
-  } else {
-    setSidlDLLPath(std::string());
-  }
-  */
+  //const char *dll_path = getenv("SIDL_DLL_PATH");
+  //if (dll_path != 0) {
+  //  setSidlDLLPath(std::string(dll_path));
+  //} else {
+  //  setSidlDLLPath(std::string());
+  //}
 }
 
 ComponentModel::~ComponentModel()
 {
 }
+*/
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // protected and private member functions

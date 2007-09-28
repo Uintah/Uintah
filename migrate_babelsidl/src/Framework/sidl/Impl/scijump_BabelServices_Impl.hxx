@@ -1,22 +1,22 @@
 // 
-// File:          scijump_Services_Impl.hxx
-// Symbol:        scijump.Services-v0.2.1
+// File:          scijump_BabelServices_Impl.hxx
+// Symbol:        scijump.BabelServices-v0.2.1
 // Symbol Type:   class
 // Babel Version: 1.1.0
-// Description:   Server-side implementation for scijump.Services
+// Description:   Server-side implementation for scijump.BabelServices
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // 
 
-#ifndef included_scijump_Services_Impl_hxx
-#define included_scijump_Services_Impl_hxx
+#ifndef included_scijump_BabelServices_Impl_hxx
+#define included_scijump_BabelServices_Impl_hxx
 
 #ifndef included_sidl_cxx_hxx
 #include "sidl_cxx.hxx"
 #endif
-#ifndef included_scijump_Services_IOR_h
-#include "scijump_Services_IOR.h"
+#ifndef included_scijump_BabelServices_IOR_h
+#include "scijump_BabelServices_IOR.h"
 #endif
 #ifndef included_gov_cca_CCAException_hxx
 #include "gov_cca_CCAException.hxx"
@@ -36,11 +36,14 @@
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
 #endif
+#ifndef included_sci_cca_core_PortInfo_hxx
+#include "sci_cca_core_PortInfo.hxx"
+#endif
+#ifndef included_scijump_BabelServices_hxx
+#include "scijump_BabelServices.hxx"
+#endif
 #ifndef included_scijump_SCIJumpFramework_hxx
 #include "scijump_SCIJumpFramework.hxx"
-#endif
-#ifndef included_scijump_Services_hxx
-#include "scijump_Services.hxx"
 #endif
 #ifndef included_sidl_BaseClass_hxx
 #include "sidl_BaseClass.hxx"
@@ -56,22 +59,24 @@
 #endif
 
 
-// DO-NOT-DELETE splicer.begin(scijump.Services._hincludes)
+// DO-NOT-DELETE splicer.begin(scijump.BabelServices._hincludes)
+#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Guard.h>
 
 #include <map>
 
-// Insert-Code-Here {scijump.Services._hincludes} (includes or arbitrary code)
-// DO-NOT-DELETE splicer.end(scijump.Services._hincludes)
+// Insert-Code-Here {scijump.BabelServices._hincludes} (includes or arbitrary code)
+// DO-NOT-DELETE splicer.end(scijump.BabelServices._hincludes)
 
 namespace scijump { 
 
   /**
-   * Symbol "scijump.Services" (version 0.2.1)
+   * Symbol "scijump.BabelServices" (version 0.2.1)
    */
-  class Services_impl : public virtual ::scijump::Services 
-  // DO-NOT-DELETE splicer.begin(scijump.Services._inherits)
-  // Insert-Code-Here {scijump.Services._inherits} (optional inheritance here)
-  // DO-NOT-DELETE splicer.end(scijump.Services._inherits)
+  class BabelServices_impl : public virtual ::scijump::BabelServices 
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices._inherits)
+  // Insert-Code-Here {scijump.BabelServices._inherits} (optional inheritance here)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices._inherits)
 
   {
 
@@ -81,7 +86,7 @@ namespace scijump {
 
     bool _wrapped;
 
-    // DO-NOT-DELETE splicer.begin(scijump.Services._implementation)
+    // DO-NOT-DELETE splicer.begin(scijump.BabelServices._implementation)
     typedef std::map<std::string, ::sci::cca::core::PortInfo> PortMap;
     PortMap ports;
 
@@ -93,16 +98,19 @@ namespace scijump {
     std::string selfInstanceName;
     std::string selfClassName;
     ::gov::cca::TypeMap selfProperties;
-    // DO-NOT-DELETE splicer.end(scijump.Services._implementation)
+
+    SCIRun::Mutex* lock_ports;
+    SCIRun::Mutex* lock_services;
+    // DO-NOT-DELETE splicer.end(scijump.BabelServices._implementation)
 
   public:
     // default constructor, used for data wrapping(required)
-    Services_impl();
+    BabelServices_impl();
     // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
-      Services_impl( struct scijump_Services__object * ior ) : StubBase(ior,
-        true), 
+      BabelServices_impl( struct scijump_BabelServices__object * ior ) : 
+        StubBase(ior,true), 
     ::gov::cca::Services((ior==NULL) ? NULL : &((*ior).d_gov_cca_services)) , 
       _wrapped(false) {_ctor();}
 
@@ -111,7 +119,7 @@ namespace scijump {
     void _ctor();
 
     // virtual destructor (required)
-    virtual ~Services_impl() { _dtor(); }
+    virtual ~BabelServices_impl() { _dtor(); }
 
     // user defined destruction
     void _dtor();
@@ -136,6 +144,20 @@ namespace scijump {
     )
     ;
 
+    /**
+     * user defined non-static method.
+     */
+    ::sci::cca::core::PortInfo
+    getPortInfo_impl (
+      /* in */const ::std::string& name
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    ::sidl::array< ::sci::cca::core::PortInfo>
+    getPorts_impl() ;
 
     /**
      *  
@@ -412,12 +434,12 @@ namespace scijump {
     //     ::sidl::RuntimeException
     ;
 
-  };  // end class Services_impl
+  };  // end class BabelServices_impl
 
 } // end namespace scijump
 
-// DO-NOT-DELETE splicer.begin(scijump.Services._hmisc)
-// Insert-Code-Here {scijump.Services._hmisc} (miscellaneous things)
-// DO-NOT-DELETE splicer.end(scijump.Services._hmisc)
+// DO-NOT-DELETE splicer.begin(scijump.BabelServices._hmisc)
+// Insert-Code-Here {scijump.BabelServices._hmisc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(scijump.BabelServices._hmisc)
 
 #endif

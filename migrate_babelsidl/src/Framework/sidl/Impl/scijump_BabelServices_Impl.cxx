@@ -1,14 +1,14 @@
 // 
-// File:          scijump_Services_Impl.cxx
-// Symbol:        scijump.Services-v0.2.1
+// File:          scijump_BabelServices_Impl.cxx
+// Symbol:        scijump.BabelServices-v0.2.1
 // Symbol Type:   class
 // Babel Version: 1.1.0
-// Description:   Server-side implementation for scijump.Services
+// Description:   Server-side implementation for scijump.BabelServices
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // 
-#include "scijump_Services_Impl.hxx"
+#include "scijump_BabelServices_Impl.hxx"
 
 // 
 // Includes for all method dependencies.
@@ -28,6 +28,9 @@
 #ifndef included_gov_cca_TypeMap_hxx
 #include "gov_cca_TypeMap.hxx"
 #endif
+#ifndef included_sci_cca_core_PortInfo_hxx
+#include "sci_cca_core_PortInfo.hxx"
+#endif
 #ifndef included_scijump_SCIJumpFramework_hxx
 #include "scijump_SCIJumpFramework.hxx"
 #endif
@@ -43,41 +46,51 @@
 #ifndef included_sidl_NotImplementedException_hxx
 #include "sidl_NotImplementedException.hxx"
 #endif
-// DO-NOT-DELETE splicer.begin(scijump.Services._includes)
+// DO-NOT-DELETE splicer.begin(scijump.BabelServices._includes)
 
 #include "scijump.hxx"
 
-// Insert-Code-Here {scijump.Services._includes} (additional includes or code)
-// DO-NOT-DELETE splicer.end(scijump.Services._includes)
+#include <iostream>
+
+using namespace SCIRun;
+
+// Insert-Code-Here {scijump.BabelServices._includes} (additional includes or code)
+// DO-NOT-DELETE splicer.end(scijump.BabelServices._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
-scijump::Services_impl::Services_impl() : StubBase(reinterpret_cast< void*>(
-  ::scijump::Services::_wrapObj(reinterpret_cast< void*>(this))),false) , 
-  _wrapped(true){ 
-  // DO-NOT-DELETE splicer.begin(scijump.Services._ctor2)
-  // Insert-Code-Here {scijump.Services._ctor2} (ctor2)
-  // DO-NOT-DELETE splicer.end(scijump.Services._ctor2)
+scijump::BabelServices_impl::BabelServices_impl() : StubBase(reinterpret_cast< 
+  void*>(::scijump::BabelServices::_wrapObj(reinterpret_cast< void*>(this))),
+  false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices._ctor2)
+  // Insert-Code-Here {scijump.BabelServices._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices._ctor2)
 }
 
 // user defined constructor
-void scijump::Services_impl::_ctor() {
-  // DO-NOT-DELETE splicer.begin(scijump.Services._ctor)
-  // Insert-Code-Here {scijump.Services._ctor} (constructor)
-  // DO-NOT-DELETE splicer.end(scijump.Services._ctor)
+void scijump::BabelServices_impl::_ctor() {
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices._ctor)
+
+  lock_ports = new SCIRun::Mutex("BabelServices::ports lock");
+  lock_services = new SCIRun::Mutex("BabelServices::services lock");
+
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices._ctor)
 }
 
 // user defined destructor
-void scijump::Services_impl::_dtor() {
-  // DO-NOT-DELETE splicer.begin(scijump.Services._dtor)
-  // Insert-Code-Here {scijump.Services._dtor} (destructor)
-  // DO-NOT-DELETE splicer.end(scijump.Services._dtor)
+void scijump::BabelServices_impl::_dtor() {
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices._dtor)
+
+  delete lock_ports;
+  delete lock_services;
+
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices._dtor)
 }
 
 // static class initializer
-void scijump::Services_impl::_load() {
-  // DO-NOT-DELETE splicer.begin(scijump.Services._load)
-  // Insert-Code-Here {scijump.Services._load} (class initialization)
-  // DO-NOT-DELETE splicer.end(scijump.Services._load)
+void scijump::BabelServices_impl::_load() {
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices._load)
+  // Insert-Code-Here {scijump.BabelServices._load} (class initialization)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices._load)
 }
 
 // user defined static methods: (none)
@@ -87,18 +100,59 @@ void scijump::Services_impl::_load() {
  * Method:  initialize[]
  */
 void
-scijump::Services_impl::initialize_impl (
+scijump::BabelServices_impl::initialize_impl (
   /* in */::scijump::SCIJumpFramework& framework,
   /* in */const ::std::string& selfInstanceName,
   /* in */const ::std::string& selfClassName,
   /* in */::gov::cca::TypeMap& selfProperties ) 
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.initialize)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.initialize)
   this->framework = framework;
   this->selfInstanceName = selfInstanceName;
   this->selfClassName = selfClassName;
-  this->selfProperties = selfProperties;
-  // DO-NOT-DELETE splicer.end(scijump.Services.initialize)
+  if (selfProperties._is_nil()) {
+    this->selfProperties = scijump::TypeMap::_create();
+  } else {
+    this->selfProperties = selfProperties;
+  }
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.initialize)
+}
+
+/**
+ * Method:  getPortInfo[]
+ */
+::sci::cca::core::PortInfo
+scijump::BabelServices_impl::getPortInfo_impl (
+  /* in */const ::std::string& name ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPortInfo)
+  PortMap::iterator iter = ports.find(name);
+  if ( iter == ports.end() ) {
+    return NULL;
+  }
+  return iter->second;
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.getPortInfo)
+}
+
+/**
+ * Method:  getPorts[]
+ */
+::sidl::array< ::sci::cca::core::PortInfo>
+scijump::BabelServices_impl::getPorts_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPorts)
+  // Insert-Code-Here {scijump.BabelServices.getPorts} (getPorts method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelServices.getPorts)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "getPorts");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelServices.getPorts)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.getPorts)
 }
 
 /**
@@ -130,16 +184,15 @@ scijump::Services_impl::initialize_impl (
  * NetworkError, OutOfMemory.
  */
 ::gov::cca::Port
-scijump::Services_impl::getPort_impl (
+scijump::BabelServices_impl::getPort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.getPort)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPort)
 
-  // lock this code!
-  //Guard guard(&ports_lock);
+  Guard guard(lock_ports);
 
   PortMap::iterator iter = ports.find(portName);
   if ( iter == ports.end() ) {
@@ -169,7 +222,7 @@ scijump::Services_impl::getPort_impl (
     }
     // (from Plume) ask for the service: the framework will also make the connection
     ::sci::cca::core::ServiceInfo service = framework.getFrameworkService(pi.getClass(), pi);
-    //Guard guard(&service_lock);
+    Guard guard(lock_services);
     servicePorts[portName] = service;
   }
 
@@ -177,7 +230,7 @@ scijump::Services_impl::getPort_impl (
   pi.incrementUseCount();
   return pi.getPeer().getPort();
 
-  // DO-NOT-DELETE splicer.end(scijump.Services.getPort)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.getPort)
 }
 
 /**
@@ -197,24 +250,24 @@ scijump::Services_impl::getPort_impl (
  * @exception CCAException with the following types: PortNotDefined, OutOfMemory.
  */
 ::gov::cca::Port
-scijump::Services_impl::getPortNonblocking_impl (
+scijump::BabelServices_impl::getPortNonblocking_impl (
   /* in */const ::std::string& portName ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.getPortNonblocking)
-  // Insert-Code-Here {scijump.Services.getPortNonblocking} (getPortNonblocking method)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPortNonblocking)
+  // Insert-Code-Here {scijump.BabelServices.getPortNonblocking} (getPortNonblocking method)
   // 
   // This method has not been implemented
   // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.getPortNonblocking)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelServices.getPortNonblocking)
   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
   ex.setNote("This method has not been implemented");
   ex.add(__FILE__, __LINE__, "getPortNonblocking");
   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.getPortNonblocking)
-  // DO-NOT-DELETE splicer.end(scijump.Services.getPortNonblocking)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelServices.getPortNonblocking)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.getPortNonblocking)
 }
 
 /**
@@ -230,16 +283,16 @@ scijump::Services_impl::getPortNonblocking_impl (
  * @exception CCAException with the following types: PortNotDefined, PortNotInUse.
  */
 void
-scijump::Services_impl::releasePort_impl (
+scijump::BabelServices_impl::releasePort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.releasePort)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.releasePort)
   ::sci::cca::core::PortInfo pi;
   {
-    //Guard guard(&ports_lock);
+    Guard guard(lock_ports);
     PortMap::iterator iter = ports.find(portName);
     if ( iter == ports.end() ) {
       scijump::CCAException ex = scijump::CCAException::_create();
@@ -266,10 +319,10 @@ scijump::Services_impl::releasePort_impl (
       throw ex;
     }
   }
-  // release the ports_lock as we may need it if we
+  // release the lock_ports as we may need it if we
   // also release a framework service
   {
-    //Guard guard(&service_lock);
+    Guard guard(lock_services);
 
     if ( ! pi.inUse() ) {
       ServicePortMap::iterator iter = servicePorts.find(portName);
@@ -280,7 +333,7 @@ scijump::Services_impl::releasePort_impl (
       }
     }
   }
-  // DO-NOT-DELETE splicer.end(scijump.Services.releasePort)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.releasePort)
 }
 
 /**
@@ -288,15 +341,15 @@ scijump::Services_impl::releasePort_impl (
  * calls to describe a Port.  Initially, this map is empty.
  */
 ::gov::cca::TypeMap
-scijump::Services_impl::createTypeMap_impl () 
+scijump::BabelServices_impl::createTypeMap_impl () 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.createTypeMap)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.createTypeMap)
   return scijump::TypeMap::_create();
-  // DO-NOT-DELETE splicer.end(scijump.Services.createTypeMap)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.createTypeMap)
 }
 
 /**
@@ -332,7 +385,7 @@ scijump::Services_impl::createTypeMap_impl ()
  * @exception CCAException with the following types: PortAlreadyDefined, OutOfMemory.
  */
 void
-scijump::Services_impl::registerUsesPort_impl (
+scijump::BabelServices_impl::registerUsesPort_impl (
   /* in */const ::std::string& portName,
   /* in */const ::std::string& type,
   /* in */::gov::cca::TypeMap& properties ) 
@@ -340,10 +393,9 @@ scijump::Services_impl::registerUsesPort_impl (
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.registerUsesPort)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.registerUsesPort)
 
-  // lock this code!
-  //Guard guard(&ports_lock);
+  Guard guard(lock_ports);
 
   if ( ports.find(portName) != ports.end() ) {
     scijump::CCAException ex = scijump::CCAException::_create();
@@ -353,11 +405,13 @@ scijump::Services_impl::registerUsesPort_impl (
     throw ex;
   }
 
-  scijump::core::PortInfo pi = scijump::core::PortInfo::_create();
+  scijump::BabelPortInfo pi = scijump::BabelPortInfo::_create();
   pi.initialize(portName, type, ::sci::cca::core::PortType_UsesPort, properties);
   ports[portName] = pi;
 
-  // DO-NOT-DELETE splicer.end(scijump.Services.registerUsesPort)
+  std::cerr << "scijump::Services_impl::registerUsesPort_impl: " << portName << std::endl;
+
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.registerUsesPort)
 }
 
 /**
@@ -371,16 +425,15 @@ scijump::Services_impl::registerUsesPort_impl (
  * @exception CCAException with the following types: UsesPortNotReleased, PortNotDefined.
  */
 void
-scijump::Services_impl::unregisterUsesPort_impl (
+scijump::BabelServices_impl::unregisterUsesPort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.unregisterUsesPort)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.unregisterUsesPort)
 
-  // lock this code!
-  //Guard guard(&ports_lock);
+  Guard guard(lock_ports);
 
   PortMap::iterator iter = ports.find(portName);
   if ( iter == ports.end() ) {
@@ -401,7 +454,7 @@ scijump::Services_impl::unregisterUsesPort_impl (
   }
 
   ports.erase(iter);
-  // DO-NOT-DELETE splicer.end(scijump.Services.unregisterUsesPort)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.unregisterUsesPort)
 }
 
 /**
@@ -444,7 +497,7 @@ scijump::Services_impl::unregisterUsesPort_impl (
  * @exception CCAException with the following types: PortAlreadyDefined, OutOfMemory.
  */
 void
-scijump::Services_impl::addProvidesPort_impl (
+scijump::BabelServices_impl::addProvidesPort_impl (
   /* in */::gov::cca::Port& inPort,
   /* in */const ::std::string& portName,
   /* in */const ::std::string& type,
@@ -453,10 +506,9 @@ scijump::Services_impl::addProvidesPort_impl (
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.addProvidesPort)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.addProvidesPort)
 
-  // lock this code!
-  //Guard guard(&ports_lock);
+  Guard guard(lock_ports);
 
   if ( ports.find(portName) != ports.end() ) {
     scijump::CCAException ex = scijump::CCAException::_create();
@@ -466,11 +518,12 @@ scijump::Services_impl::addProvidesPort_impl (
     throw ex;
   }
 
-  scijump::core::PortInfo pi = scijump::core::PortInfo::_create();
+  scijump::BabelPortInfo pi = scijump::BabelPortInfo::_create();
   pi.initialize(inPort, portName, type, ::sci::cca::core::PortType_ProvidesPort, properties);
   ports[portName] = pi;
 
-  // DO-NOT-DELETE splicer.end(scijump.Services.addProvidesPort)
+  std::cerr << "scijump::Services_impl::addProvidesPort_impl: " << portName << std::endl;
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.addProvidesPort)
 }
 
 /**
@@ -484,21 +537,21 @@ scijump::Services_impl::addProvidesPort_impl (
  * will honor.      
  */
 ::gov::cca::TypeMap
-scijump::Services_impl::getPortProperties_impl (
+scijump::BabelServices_impl::getPortProperties_impl (
   /* in */const ::std::string& name ) 
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.getPortProperties)
-  // Insert-Code-Here {scijump.Services.getPortProperties} (getPortProperties method)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPortProperties)
+  // Insert-Code-Here {scijump.BabelServices.getPortProperties} (getPortProperties method)
   // 
   // This method has not been implemented
   // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.getPortProperties)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelServices.getPortProperties)
   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
   ex.setNote("This method has not been implemented");
   ex.add(__FILE__, __LINE__, "getPortProperties");
   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.getPortProperties)
-  // DO-NOT-DELETE splicer.end(scijump.Services.getPortProperties)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelServices.getPortProperties)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.getPortProperties)
 }
 
 /**
@@ -510,16 +563,15 @@ scijump::Services_impl::getPortProperties_impl (
  * when the component chooses to stop offering services.
  */
 void
-scijump::Services_impl::removeProvidesPort_impl (
+scijump::BabelServices_impl::removeProvidesPort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.removeProvidesPort)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.removeProvidesPort)
 
-  // lock this code!
-  //Guard guard(&ports_lock);
+  Guard guard(lock_ports);
 
   PortMap::iterator iter = ports.find(portName);
   if ( iter == ports.end() ) {
@@ -533,7 +585,7 @@ scijump::Services_impl::removeProvidesPort_impl (
   // disconnect users or should user port do that only?
   ports.erase(iter);
 
-  // DO-NOT-DELETE splicer.end(scijump.Services.removeProvidesPort)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.removeProvidesPort)
 }
 
 /**
@@ -542,21 +594,17 @@ scijump::Services_impl::removeProvidesPort_impl (
  * Services object belongs. 
  */
 ::gov::cca::ComponentID
-scijump::Services_impl::getComponentID_impl () 
+scijump::BabelServices_impl::getComponentID_impl () 
 
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.getComponentID)
-  // Insert-Code-Here {scijump.Services.getComponentID} (getComponentID method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.getComponentID)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getComponentID");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.getComponentID)
-  // DO-NOT-DELETE splicer.end(scijump.Services.getComponentID)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getComponentID)
+
+  // maybe this should be in a separate class?
+  scijump::BabelComponentInfo ci = scijump::BabelComponentInfo::_create();
+  ci.initialize(selfInstanceName, selfClassName, framework, *this, selfProperties);
+  return ::sidl::babel_cast< ::gov::cca::ComponentID>(ci);
+
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.getComponentID)
 }
 
 /**
@@ -571,28 +619,28 @@ scijump::Services_impl::getComponentID_impl ()
  * of the Services object is not allowed/is undefined.
  */
 void
-scijump::Services_impl::registerForRelease_impl (
+scijump::BabelServices_impl::registerForRelease_impl (
   /* in */::gov::cca::ComponentRelease& callBack ) 
 // throws:
 //     ::gov::cca::CCAException
 //     ::sidl::RuntimeException
 {
-  // DO-NOT-DELETE splicer.begin(scijump.Services.registerForRelease)
-  // Insert-Code-Here {scijump.Services.registerForRelease} (registerForRelease method)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.registerForRelease)
+  // Insert-Code-Here {scijump.BabelServices.registerForRelease} (registerForRelease method)
   // 
   // This method has not been implemented
   // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Services.registerForRelease)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelServices.registerForRelease)
   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
   ex.setNote("This method has not been implemented");
   ex.add(__FILE__, __LINE__, "registerForRelease");
   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Services.registerForRelease)
-  // DO-NOT-DELETE splicer.end(scijump.Services.registerForRelease)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelServices.registerForRelease)
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.registerForRelease)
 }
 
 
-// DO-NOT-DELETE splicer.begin(scijump.Services._misc)
-// Insert-Code-Here {scijump.Services._misc} (miscellaneous code)
-// DO-NOT-DELETE splicer.end(scijump.Services._misc)
+// DO-NOT-DELETE splicer.begin(scijump.BabelServices._misc)
+// Insert-Code-Here {scijump.BabelServices._misc} (miscellaneous code)
+// DO-NOT-DELETE splicer.end(scijump.BabelServices._misc)
 

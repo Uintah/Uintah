@@ -42,20 +42,10 @@ package scijump version 0.2.1 {
     }
 
     // (from the Plume framework)
-    class PortInfo implements-all sci.cca.core.PortInfo {
-      void initialize(in gov.cca.Port port, in string name, in string className, in sci.cca.core.PortType portType, in gov.cca.TypeMap properties);
-      void initialize[Uses](in string name, in string className, in sci.cca.core.PortType portType, in gov.cca.TypeMap properties);
-    }
-
-    // (from the Plume framework)
     class ServiceInfo implements-all sci.cca.core.ServiceInfo {
       void initialize(in string serviceName, in sci.cca.core.PortInfo servicePort, in sci.cca.core.PortInfo requesterPort);
     }
   } // package core
-
-  class Services implements-all gov.cca.Services {
-    void initialize(in scijump.SCIJumpFramework framework, in string selfInstanceName, in string selfClassName, in gov.cca.TypeMap selfProperties);
-  }
 
   class CCAException extends sidl.SIDLException implements-all gov.cca.CCAException {
     // could add note and a line to initialize...
@@ -87,7 +77,7 @@ package scijump version 0.2.1 {
       	  components (compIDs) for the matching component ID, unregisters it, finds
       	  the correct ComponentModel for the type, then calls
       	  ComponentModel::destroyInstance to properly destroy the component. */
-       void destroyComponentInstance(in gov.cca.ComponentID cid, in float timeout);
+        void destroyComponentInstance(in gov.cca.ComponentID cid, in float timeout);
 
        /** Creates an instance of the component defined by the string ``type'',
        	   which must uniquely define the type of the component.  The component
@@ -99,9 +89,14 @@ package scijump version 0.2.1 {
       	    BuilderService class.  It works by searching the list of ComponentModels
       	    (the ivar \em models) for a matching registered type, and then calling
       	    the createInstance method on the appropriate ComponentModel object. */
-      gov.cca.ComponentID createComponentInstance(in string name,
-                                                  in string className,
-                          			  in gov.cca.TypeMap tm);
+      gov.cca.ComponentID createComponentInstance(in string name, in string className, in gov.cca.TypeMap tm);
+
+      // doc.
+      gov.cca.ConnectionID createConnectionInstance(in sci.cca.core.ComponentInfo user, in sci.cca.core.ComponentInfo provider, in string userPortName, in string providerPortName, in gov.cca.TypeMap tm);
+
+      // doc.
+      gov.cca.ConnectionID destroyConnectionInstance(in gov.cca.ConnectionID connID);
+
 
       /** Adds a description of a component instance (class ComponentInstance) to
           the list of active components.  The component instance description
@@ -158,16 +153,36 @@ package scijump version 0.2.1 {
   }
   // EventService classes
 
-  // Component model classes
+  // Babel Component model classes
+  // Babel component model classes (BabelServices, BabelPortInfo) are used by Framework services.
+
+  class BabelConnectionInfo implements-all sci.cca.core.ConnectionInfo {
+    void initialize(in sci.cca.core.ComponentInfo user, in sci.cca.core.ComponentInfo provider, in string userPortName, in string providerPortName, in gov.cca.TypeMap properties);
+  }
+
+  // (from the Plume framework)
+  class BabelPortInfo implements-all sci.cca.core.PortInfo {
+    void initialize(in gov.cca.Port port, in string name, in string className, in sci.cca.core.PortType portType, in gov.cca.TypeMap properties);
+    void initialize[Uses](in string name, in string className, in sci.cca.core.PortType portType, in gov.cca.TypeMap properties);
+  }
+
+  class BabelServices implements-all gov.cca.Services {
+    void initialize(in scijump.SCIJumpFramework framework, in string selfInstanceName, in string selfClassName, in gov.cca.TypeMap selfProperties);
+
+    // ComponentInfo acts as public interface for these methods
+    sci.cca.core.PortInfo getPortInfo(in string name);
+    array<sci.cca.core.PortInfo,1> getPorts();
+  }
+
   class BabelComponentInfo implements-all sci.cca.core.ComponentInfo {
-    void initialize(in string instanceName, in string className, in sci.cca.AbstractFramework framework, in gov.cca.Component component, in gov.cca.Services services, in gov.cca.TypeMap properties);
-    void initialize[Full](in string instanceName, in string className, in sci.cca.AbstractFramework framework, in gov.cca.Component component, in gov.cca.Services services, in gov.cca.TypeMap properties, in string serialization);
+    void initialize(in string instanceName, in string className, in sci.cca.AbstractFramework framework, in gov.cca.Component component, in scijump.BabelServices services, in gov.cca.TypeMap properties);
+    void initialize[Full](in string instanceName, in string className, in sci.cca.AbstractFramework framework, in gov.cca.Component component, in scijump.BabelServices services, in gov.cca.TypeMap properties, in string serialization);
+    void initialize[ComponentImage](in string instanceName, in string className, in sci.cca.AbstractFramework framework, in scijump.BabelServices services, in gov.cca.TypeMap properties);
 
     void setSerialization(in string serialization);
-
     void setComponentRelease(in gov.cca.ComponentRelease callBack);
   }
-  // Component model classes
+  // Babel Component model classes
 
   package ui {
     class GUIBuilder implements-all sci.cca.ui.Builder, sci.cca.EventListener {

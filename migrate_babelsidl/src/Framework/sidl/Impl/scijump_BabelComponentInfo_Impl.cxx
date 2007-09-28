@@ -34,6 +34,9 @@
 #ifndef included_sci_cca_core_PortInfo_hxx
 #include "sci_cca_core_PortInfo.hxx"
 #endif
+#ifndef included_scijump_BabelServices_hxx
+#include "scijump_BabelServices.hxx"
+#endif
 #ifndef included_sidl_BaseInterface_hxx
 #include "sidl_BaseInterface.hxx"
 #endif
@@ -92,7 +95,7 @@ scijump::BabelComponentInfo_impl::initialize_impl (
   /* in */const ::std::string& className,
   /* in */::sci::cca::AbstractFramework& framework,
   /* in */::gov::cca::Component& component,
-  /* in */::gov::cca::Services& services,
+  /* in */::scijump::BabelServices& services,
   /* in */::gov::cca::TypeMap& properties ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.initialize)
@@ -120,7 +123,7 @@ scijump::BabelComponentInfo_impl::initialize_impl (
   /* in */const ::std::string& className,
   /* in */::sci::cca::AbstractFramework& framework,
   /* in */::gov::cca::Component& component,
-  /* in */::gov::cca::Services& services,
+  /* in */::scijump::BabelServices& services,
   /* in */::gov::cca::TypeMap& properties,
   /* in */const ::std::string& serialization ) 
 {
@@ -136,6 +139,28 @@ scijump::BabelComponentInfo_impl::initialize_impl (
   // set serialization
 
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.initializeFull)
+}
+
+/**
+ * Method:  initialize[ComponentImage]
+ */
+void
+scijump::BabelComponentInfo_impl::initialize_impl (
+  /* in */const ::std::string& instanceName,
+  /* in */const ::std::string& className,
+  /* in */::sci::cca::AbstractFramework& framework,
+  /* in */::scijump::BabelServices& services,
+  /* in */::gov::cca::TypeMap& properties ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.initializeComponentImage)
+
+  this->instanceName = instanceName;
+  this->className = className;
+  this->framework = framework;
+  this->services = services;
+  this->properties = properties;
+
+  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.initializeComponentImage)
 }
 
 /**
@@ -198,6 +223,27 @@ scijump::BabelComponentInfo_impl::getComponent_impl ()
 }
 
 /**
+ * Method:  getServices[]
+ */
+::gov::cca::Services
+scijump::BabelComponentInfo_impl::getServices_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getServices)
+  // Insert-Code-Here {scijump.BabelComponentInfo.getServices} (getServices method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelComponentInfo.getServices)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "getServices");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelComponentInfo.getServices)
+  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.getServices)
+}
+
+/**
  * Method:  getPorts[]
  */
 ::sidl::array< ::sci::cca::core::PortInfo>
@@ -226,16 +272,7 @@ scijump::BabelComponentInfo_impl::getPortInfo_impl (
   /* in */const ::std::string& portName ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getPortInfo)
-  // Insert-Code-Here {scijump.BabelComponentInfo.getPortInfo} (getPortInfo method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelComponentInfo.getPortInfo)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getPortInfo");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelComponentInfo.getPortInfo)
+  return services.getPortInfo(portName);
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.getPortInfo)
 }
 
@@ -336,16 +373,7 @@ scijump::BabelComponentInfo_impl::getInstanceName_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getInstanceName)
-  // Insert-Code-Here {scijump.BabelComponentInfo.getInstanceName} (getInstanceName method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelComponentInfo.getInstanceName)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getInstanceName");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelComponentInfo.getInstanceName)
+    return instanceName;
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.getInstanceName)
 }
 
