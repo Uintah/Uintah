@@ -42,7 +42,7 @@
 // SCI_DEBUG = ([name]:[-|+|+FILENAME])(,[name]:[-|+|+FILENAME])*
 // The + or - specifies whether the named object is on or off.  If a file is 
 // specified it is opened in ios::out mode.  If no file is specified,
-// the stream is directed to cerr.  The : and , characters are
+// the stream is directed to cout.  The : and , characters are
 // restricted to deliminators.
 // Example:
 // SCI_DEBUG = modules.meshgen.warning:+meshgen.out,util.debugstream.error:-
@@ -92,7 +92,7 @@ DebugStream::DebugStream(const string& iname, bool defaulton):
   // set default values
   isactive = defaulton;
   if(isactive){
-    outstream = &cerr;
+    outstream = &cout;
   } else {
     outstream = 0;
   }
@@ -103,7 +103,7 @@ DebugStream::DebugStream(const string& iname, bool defaulton):
 
 DebugStream::~DebugStream()
 {
-  if(outstream && outstream != &cerr){
+  if(outstream && outstream != &cout){
     delete(outstream);
   }
   delete dbgbuf;
@@ -136,9 +136,9 @@ void DebugStream::checkenv(string iname)
 	}
 	else if(file[0] == '+'){
 	  isactive = true;
-	  // if no output file was specified, set to cerr
+	  // if no output file was specified, set to cout
 	  if(file.length() == 1){ 
-	    outstream = &cerr;
+	    outstream = &cout;
 	  }
 	  else{
 	    outstream = new ofstream(file.substr(1, file.size()-1).c_str());
