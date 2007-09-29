@@ -60,6 +60,7 @@
 
 #include <sci_defs/framework_defs.h>
 #include <Framework/Core/SingletonServiceFactory.h>
+#include <Core/Thread/Guard.h>
 #include <Core/Util/Assert.h>
 
 #include <iostream>
@@ -119,8 +120,9 @@ scijump::SCIJumpFramework_impl::isFrameworkService_impl (
   // from the Plume framework
 
   FrameworkServiceMap::const_iterator iter = frameworkServices.find(name);
+#if FWK_DEBUG
   std::cerr << "scijump::SCIJumpFramework_impl::isFrameworkService_impl(..) service=" << iter->first << std::endl;
-
+#endif
   return iter != frameworkServices.end();
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.isFrameworkService)
 }
@@ -143,9 +145,9 @@ scijump::SCIJumpFramework_impl::getFrameworkService_impl (
   FrameworkServiceMap::const_iterator iter = frameworkServices.find(serviceName);
   if ( iter == frameworkServices.end() )
     return scijump::core::ServiceInfo::_create();
-
+#if FWK_DEBUG
   std::cerr << "scijump::SCIJumpFramework_impl::getFrameworkService_impl(..) service=" << iter->first << std::endl;
-
+#endif
   // get a port from the service
   ::sci::cca::core::FrameworkServiceFactory f = iter->second;
   ::sci::cca::core::PortInfo servicePort = f.getService(serviceName);
@@ -212,16 +214,24 @@ scijump::SCIJumpFramework_impl::destroyComponentInstance_impl (
   /* in */float timeout ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.destroyComponentInstance)
-  // Insert-Code-Here {scijump.SCIJumpFramework.destroyComponentInstance} (destroyComponentInstance method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.destroyComponentInstance)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "destroyComponentInstance");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.destroyComponentInstance)
+
+  if (timeout != 0) {
+    std::cerr << "WARNING: timeout ignored for now." << std::endl;
+  }
+
+  ::sci::cca::core::ComponentInfo ci = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(cid);
+  if (ci._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "destroyComponentInstance");
+    throw ex;
+  }
+  ComponentInstanceMap::iterator iter = components.find(ci.getInstanceName());
+  if (iter != components.end()) {
+    (iter->second).invalidate();
+    components.erase(iter);
+  }
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.destroyComponentInstance)
 }
 
@@ -301,14 +311,6 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
   {
     Guard guard(lock_components);
 
-    if ( components.find(name) != components.end() ) {
-      scijump::CCAException ex = scijump::CCAException::_create();
-      ex.initialize(gov::cca::CCAExceptionType_Nonstandard);
-      ex.setNote("can not create component [" + name + "]: name in use");
-      ex.add(__FILE__, __LINE__, "createComponentInstance");
-      throw ex;
-    }
-
 #if 0 // code from Plume for component class factories
     /*
     {
@@ -326,7 +328,6 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
 #endif
 
     components[name] = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(bci);
-    //bci.getComponent().setServices(bci.getServices());
   }
 
 #if 0 // from Plume
@@ -350,6 +351,51 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
 
   return bci;
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.createComponentInstance)
+}
+
+/**
+ * Method:  getComponentInstance[]
+ */
+::gov::cca::ComponentID
+scijump::SCIJumpFramework_impl::getComponentInstance_impl (
+  /* in */const ::std::string& name ) 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getComponentInstance)
+  Guard g(lock_components);
+  ComponentInstanceMap::iterator iter = components.find(name);
+  if ( iter == components.end() )
+    return 0;
+
+  ::sci::cca::core::ComponentInfo ci = iter->second;
+  return ::sidl::babel_cast< ::gov::cca::ComponentID>(ci);
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getComponentInstance)
+}
+
+/**
+ * Method:  getComponentInstances[]
+ */
+::sidl::array< ::gov::cca::ComponentID>
+scijump::SCIJumpFramework_impl::getComponentInstances_impl () 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getComponentInstances)
+  // Insert-Code-Here {scijump.SCIJumpFramework.getComponentInstances} (getComponentInstances method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getComponentInstances)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "getComponentInstances");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getComponentInstances)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getComponentInstances)
 }
 
 /**
@@ -385,22 +431,76 @@ scijump::SCIJumpFramework_impl::createConnectionInstance_impl (
 /**
  * Method:  destroyConnectionInstance[]
  */
-::gov::cca::ConnectionID
+void
 scijump::SCIJumpFramework_impl::destroyConnectionInstance_impl (
   /* in */::gov::cca::ConnectionID& connID ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.destroyConnectionInstance)
-  // Insert-Code-Here {scijump.SCIJumpFramework.destroyConnectionInstance} (destroyConnectionInstance method)
+  ::sci::cca::core::ConnectionInfo ci = ::sidl::babel_cast< ::sci::cca::core::ConnectionInfo>(connID);
+  if (ci._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid connection object");
+    ex.add(__FILE__, __LINE__, "destroyConnectionInstance");
+    throw ex;
+  }
+
+  ConnectionList::iterator iter = find_if(connections.begin(), connections.end(), ConnectionInfo_eq(ci));
+  if (iter != connections.end()) {
+    iter->invalidate();
+    connections.erase(iter);
+  }
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.destroyConnectionInstance)
+}
+
+/**
+ * Method:  getConnectionInstances[]
+ */
+::sidl::array< ::gov::cca::ComponentID>
+scijump::SCIJumpFramework_impl::getConnectionInstances_impl (
+  /* in array<gov.cca.ComponentID> */::sidl::array< ::gov::cca::ComponentID>& 
+    componentList ) 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getConnectionInstances)
+  // Insert-Code-Here {scijump.SCIJumpFramework.getConnectionInstances} (getConnectionInstances method)
   // 
   // This method has not been implemented
   // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.destroyConnectionInstance)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getConnectionInstances)
   ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
   ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "destroyConnectionInstance");
+  ex.add(__FILE__, __LINE__, "getConnectionInstances");
   throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.destroyConnectionInstance)
-  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.destroyConnectionInstance)
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getConnectionInstances)
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getConnectionInstances)
+}
+
+/**
+ *  Adds a description of a component instance (class ComponentInstance) to
+ * the list of active components.  The component instance description
+ * includes the component type name, the instance name, and the pointer to
+ * the allocated component.  When a \em name conflicts with an existing
+ * registered component instance name, this method will automatically append
+ * an integer to create a new, unique instance name.
+ */
+::std::string
+scijump::SCIJumpFramework_impl::getUniqueName_impl (
+  /* in */const ::std::string& name ) 
+{
+  // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getUniqueName)
+  std::string goodname = name;
+  int count = 0;
+  Guard g(lock_components);
+  while (components.find(goodname) != components.end()) {
+    std::ostringstream newname;
+    newname << name << "_" << count++;
+    goodname = newname.str();
+  }
+  return goodname;
+  // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getUniqueName)
 }
 
 /**

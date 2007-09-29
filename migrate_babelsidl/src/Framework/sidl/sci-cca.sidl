@@ -56,9 +56,7 @@ package sci {
     }
 
     interface ComponentClassDescription extends gov.cca.ComponentClassDescription {
-      // non-official interfaces
       string getComponentModelName() throws gov.cca.CCAException;
-
       string getLoaderName() throws gov.cca.CCAException;
     }
 
@@ -311,12 +309,17 @@ package sci {
       }
 
       // (from the Plume framework)
+      // TODO: check to see what methods should throw an exception
       interface ConnectionInfo extends gov.cca.ConnectionID {
         gov.cca.TypeMap getProperties();
         void setProperties( in gov.cca.TypeMap properties);
+
+      // make connection invalid
+        void invalidate();
       }
 
       // (from the Plume framework)
+      // TODO: check to see what methods should throw an exception
       interface PortInfo {
         bool connect(in PortInfo to);
         bool disconnect(in PortInfo peer);
@@ -337,6 +340,9 @@ package sci {
 
         void incrementUseCount();
         bool decrementUseCount();
+
+      // make port invalid
+        void invalidate();
       }
 
       // framework services (based on the Plume framework)
@@ -347,6 +353,7 @@ package sci {
         void releaseService(in string portName);
       }
 
+      // TODO: check to see what methods should throw an exception
       interface ServiceInfo {
         string getServiceName();
         string getServicePortName();
@@ -357,6 +364,7 @@ package sci {
         PortInfo getRequesterPort() throws NotInitializedException;
       }
 
+      // TODO: check to see what methods should throw an exception
       interface ComponentInfo extends gov.cca.ComponentID {
         AbstractFramework getFramework();
         gov.cca.Component getComponent();
@@ -364,13 +372,13 @@ package sci {
 
         array<PortInfo,1> getPorts();
         PortInfo getPortInfo( in string portName );
-        void disconnectPort( in string portName, in PortInfo fromPort );
 
         string getClassName();
         gov.cca.TypeMap getProperties();
         void setProperties( in gov.cca.TypeMap properties);
 
-        void destroyComponent();
+      // make component invalid
+        void invalidate();
       }
     } // package core
   } // package cca

@@ -41,6 +41,10 @@
 
 #include "scijump.hxx"
 
+#include <Core/Thread/Guard.h>
+
+using namespace SCIRun;
+
 // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
@@ -55,14 +59,15 @@ scijump::BabelConnectionInfo_impl::BabelConnectionInfo_impl() : StubBase(
 // user defined constructor
 void scijump::BabelConnectionInfo_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo._ctor)
-  // Insert-Code-Here {scijump.BabelConnectionInfo._ctor} (constructor)
+  valid = false;
+  lock = new Mutex("BabelConnectionInfo lock");
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo._ctor)
 }
 
 // user defined destructor
 void scijump::BabelConnectionInfo_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo._dtor)
-  // Insert-Code-Here {scijump.BabelConnectionInfo._dtor} (destructor)
+  delete lock;
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo._dtor)
 }
 
@@ -89,6 +94,7 @@ scijump::BabelConnectionInfo_impl::initialize_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.initialize)
 
+  Guard g(lock);
   this->user = user;
   this->provider = provider;
   this->userPortName = userPortName;
@@ -98,6 +104,7 @@ scijump::BabelConnectionInfo_impl::initialize_impl (
   } else {
     this->properties = properties;
   }
+  valid = true;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.initialize)
 }
@@ -123,12 +130,33 @@ scijump::BabelConnectionInfo_impl::setProperties_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.setProperties)
 
+  Guard g(lock);
   // allow null properties?
   if (properties._not_nil()) {
     this->properties = properties;
   }
 
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.setProperties)
+}
+
+/**
+ * Method:  invalidate[]
+ */
+void
+scijump::BabelConnectionInfo_impl::invalidate_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.invalidate)
+
+  Guard g(lock);
+  user = 0;
+  provider = 0;
+  userPortName.clear();
+  providerPortName.clear();
+  properties = 0;
+  valid = false;
+
+  // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.invalidate)
 }
 
 /**
@@ -148,7 +176,13 @@ scijump::BabelConnectionInfo_impl::getProvider_impl ()
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getProvider)
 
-  // should throw exception!
+  if (provider._is_nil() || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "getProvider");
+    throw ex;
+  } 
   return provider;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.getProvider)
@@ -169,7 +203,13 @@ scijump::BabelConnectionInfo_impl::getUser_impl ()
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getUser)
 
-  // should throw exception!
+  if (user._is_nil() || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "getUser");
+    throw ex;
+  } 
   return user;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.getUser)
@@ -190,7 +230,13 @@ scijump::BabelConnectionInfo_impl::getProviderPortName_impl ()
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getProviderPortName)
 
-  // should throw exception!
+  if (providerPortName.size() < 1 || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "getProviderPortName");
+    throw ex;
+  } 
   return providerPortName;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.getProviderPortName)
@@ -212,7 +258,13 @@ scijump::BabelConnectionInfo_impl::getUserPortName_impl ()
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getUserPortName)
 
-  // should throw exception!
+  if (userPortName.size() < 1 || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "getUserPortName");
+    throw ex;
+  } 
   return userPortName;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo.getUserPortName)

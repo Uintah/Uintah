@@ -91,12 +91,16 @@ package scijump version 0.2.1 {
       	    the createInstance method on the appropriate ComponentModel object. */
       gov.cca.ComponentID createComponentInstance(in string name, in string className, in gov.cca.TypeMap tm);
 
+      gov.cca.ComponentID getComponentInstance(in string name) throws gov.cca.CCAException ;
+	    array<gov.cca.ComponentID> getComponentInstances() throws gov.cca.CCAException; 
+
       // doc.
       gov.cca.ConnectionID createConnectionInstance(in sci.cca.core.ComponentInfo user, in sci.cca.core.ComponentInfo provider, in string userPortName, in string providerPortName, in gov.cca.TypeMap tm);
 
       // doc.
-      gov.cca.ConnectionID destroyConnectionInstance(in gov.cca.ConnectionID connID);
+      void destroyConnectionInstance(in gov.cca.ConnectionID connID);
 
+	    array<gov.cca.ComponentID> getConnectionInstances(in array<gov.cca.ComponentID> componentList) throws gov.cca.CCAException; 
 
       /** Adds a description of a component instance (class ComponentInstance) to
           the list of active components.  The component instance description
@@ -105,6 +109,8 @@ package scijump version 0.2.1 {
       	  registered component instance name, this method will automatically append
       	  an integer to create a new, unique instance name.*/
       //gov.cca.ComponentID registerComponent(in ComponentInstance ci, in string name);
+
+      string getUniqueName(in string name);
 
       /** Removes a component instance description from the list of active
       	  framework components.  Returns the pointer to the component description

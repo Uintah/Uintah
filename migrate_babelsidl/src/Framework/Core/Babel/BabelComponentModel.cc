@@ -38,15 +38,17 @@
  *
  */
 
-#include <sidl.hxx>
+#include "sidl.hxx"
 
+#include <sci_defs/framework_defs.h>
 #include <Framework/Core/Babel/BabelComponentModel.h>
 #include <Framework/Core/Babel/BabelComponentDescription.h>
 
 //#include <Core/Util/soloader.h>
+
 #include <Core/Containers/StringUtil.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/NotFinished.h>
 
 extern "C" {
 # include <string.h>
@@ -177,7 +179,7 @@ BabelComponentModel::createInstance(::sci::cca::core::ComponentInfo& ci,
                                     const std::string& type,
                                     const gov::cca::TypeMap& tm)
 {
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "BabelComponentModel::createInstance: attempt to create "
             << name << " type " << type << std::endl;
 #endif
@@ -235,7 +237,7 @@ BabelComponentModel::createInstance(::sci::cca::core::ComponentInfo& ci,
    */
   ::sidl::DLL library = ::sidl::Loader::findLibrary(type, "ior/impl",
     ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
-#if DEBUG
+#if FWK_DEBUG
   std::cerr << "sidl::Loader::getSearchPath=" << ::sidl::Loader::getSearchPath() << std::endl;
   // get default finder and report search path
   ::sidl::Finder f = ::sidl::Loader::getFinder();
@@ -257,7 +259,7 @@ BabelComponentModel::createInstance(::sci::cca::core::ComponentInfo& ci,
   // babel_cast<>() introduced in UC++ bindings, returns nil pointer on bad cast
   ::gov::cca::Component component = ::sidl::babel_cast< ::gov::cca::Component>(sidl_class);
 
-#if DEBUG
+#if FWK_DEBUG
   ASSERT(component._not_nil());
 #else
   if ( component._is_nil() ) { // TODO: throw exception?
@@ -308,7 +310,7 @@ BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& l
 // std::string
 // BabelComponentModel::createComponent(const std::string& name, const std::string& type)
 // {
-// #if DEBUG
+// #if FWK_DEBUG
 //   std::cerr << "BabelComponentModel::createComponent: attempt to create " << name << " type " << type << std::endl;
 // #endif
 //   gov::cca::Component component;
@@ -322,7 +324,7 @@ BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& l
 //   std::string lastname=type.substr(type.find('.')+1);
 //   std::string so_name("lib/libBabel_Components_");
 //   so_name = so_name + lastname + ".so";
-// #if DEBUG
+// #if FWK_DEBUG
 //   std::cerr << "type=" << type << " soname=" << so_name << std::endl;
 // #endif
 //   LIBRARY_HANDLE handle = GetLibraryHandle(so_name.c_str());

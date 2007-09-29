@@ -119,28 +119,31 @@ parse_args( int argc, char *argv[])
 void
 component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
 {
-  // instantiate
-  gov::cca::ComponentID helloServer = builder.createInstance("HelloServer", "HelloServer.Component", NULL);
+  // test framework's unique name function
+  gov::cca::ComponentID helloServer = builder.createInstance("", "HelloServer.Component", NULL);
   if (helloServer._is_nil()) {
     std::cerr << "Cannot create component: babel:HelloServer\n";
     return;
   }
-
   gov::cca::ComponentID hello = builder.createInstance("HelloClient", "HelloClient.Component", NULL);
   if (hello._is_nil()) {
     std::cerr << "Cannot create component: babel:Hello\n";
     return;
   }
 
-  // connect
-  builder.connect(hello, "msgport-up", helloServer, "msgport-pp");
+  ::gov::cca::ConnectionID msgConnID = builder.connect(hello, "msgport-up", helloServer, "msgport-pp");
+
   svc.registerUsesPort("goport-up", "gov.cca.ports.GoPort", 0);
-  builder.connect(svc.getComponentID(), "goport-up", hello, "goport");
+  ::gov::cca::ConnectionID goConnID = builder.connect(svc.getComponentID(), "goport-up", hello, "goport");
   ::gov::cca::Port port = svc.getPort("goport-up");
   ::gov::cca::ports::GoPort goPort = ::sidl::babel_cast< ::gov::cca::ports::GoPort>(port);
   goPort.go();
 
-  // TODO: add disconnect and release ports etc.
+  svc.releasePort("goport-up");
+  builder.disconnect(goConnID, 0);
+  builder.disconnect(msgConnID, 0);
+  builder.destroyInstance(hello, 0);
+  builder.destroyInstance(helloServer, 0);
 }
 
 int
@@ -163,19 +166,14 @@ int
 main(int argc, char *argv[], char **environment) {
   bool startFramework = true;
   bool loadNet = parse_args(argc, argv);
-  // doesn't work!
-  //create_sci_environment(environment, 0);
-  //std::string o(sci_getenv("SCIRUN_OBJDIR"));
-//#if DEBUG
-//  ASSERT(! o.empty());
-//#endif
-  //std::string p = o + "/Components/Babel/xml/BabelComponents.scl";
-  //if (sci_getenv_p("SIDL_DLL_PATH")) {
-  //  sci_putenv("SIDL_DLL_PATH", p + ";$SIDL_DLL_PATH");
-  //} else {
-  //  sci_putenv("SIDL_DLL_PATH", p);
-  //}
-  //std::cerr << "env check: " << sci_getenv("SIDL_DLL_PATH") << std::endl;
+  
+  // Set up a default environment for Babel.
+  // This should be moved to a framework properties service.
+  create_sci_environment(environment, 0);
+  std::string o(sci_getenv("SCIRUN_OBJDIR"));
+  ASSERT(! o.empty());
+  std::string p = o + "/Components/Babel/xml/BabelComponents.scl";
+  ::sidl::Loader::addSearchPath(p);
 
   int orb_port_num = 22222;
 
@@ -207,10 +205,6 @@ main(int argc, char *argv[], char **environment) {
     ASSERT(bsp._not_nil());
     scijump::BuilderService builder = babel_cast<scijump::BuilderService>(bsp);
     ASSERT(builder._not_nil());
-
-    // test instantiation and connection
-    component_test(builder, mainServices);
-    mainServices.releasePort("mainBuilder");
 
     /*
     gov::cca::ports::FrameworkProperties fwkProperties = mainServices.getPort("cca.FrameworkProperties");
@@ -256,6 +250,10 @@ main(int argc, char *argv[], char **environment) {
     */
 
     std::cout << "\nSCIJump " << SCIJUMP_VERSION << " started..." << std::endl;
+
+    // test instantiation and connection
+    component_test(builder, mainServices);
+    mainServices.releasePort("mainBuilder");
 
     //broadcast, listen to URL periodically
     //sr->share(mainServices);

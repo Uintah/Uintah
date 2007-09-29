@@ -50,10 +50,6 @@
 #include <string>
 #include <map>
 
-#ifndef DEBUG
-# define DEBUG 1
-#endif
-
 namespace scijump {
 
 using namespace SCIRun;

@@ -415,6 +415,27 @@ scijump::BabelPortInfo_impl::decrementUseCount_impl ()
   // DO-NOT-DELETE splicer.end(scijump.BabelPortInfo.decrementUseCount)
 }
 
+/**
+ * Method:  invalidate[]
+ */
+void
+scijump::BabelPortInfo_impl::invalidate_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelPortInfo.invalidate)
+  // Insert-Code-Here {scijump.BabelPortInfo.invalidate} (invalidate method)
+  // 
+  // This method has not been implemented
+  // 
+  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelPortInfo.invalidate)
+  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
+  ex.setNote("This method has not been implemented");
+  ex.add(__FILE__, __LINE__, "invalidate");
+  throw ex;
+  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelPortInfo.invalidate)
+  // DO-NOT-DELETE splicer.end(scijump.BabelPortInfo.invalidate)
+}
+
 
 // DO-NOT-DELETE splicer.begin(scijump.BabelPortInfo._misc)
 // Insert-Code-Here {scijump.BabelPortInfo._misc} (miscellaneous code)

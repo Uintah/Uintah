@@ -251,6 +251,11 @@ namespace scijump {
      */
     bool
     decrementUseCount_impl() ;
+    /**
+     * user defined non-static method.
+     */
+    void
+    invalidate_impl() ;
   };  // end class BabelPortInfo_impl
 
 } // end namespace scijump
