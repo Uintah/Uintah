@@ -51,7 +51,7 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo._hincludes)
-// Insert-Code-Here {scijump.BabelConnectionInfo._hincludes} (includes or arbitrary code)
+#include <Core/Thread/Mutex.h>
 // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo._hincludes)
 
 namespace scijump { 
@@ -79,6 +79,10 @@ namespace scijump {
     ::std::string userPortName;
     ::std::string providerPortName;
     ::gov::cca::TypeMap properties;
+    SCIRun::Mutex* lock;
+
+  private:
+    bool valid;
     // DO-NOT-DELETE splicer.end(scijump.BabelConnectionInfo._implementation)
 
   public:
@@ -139,6 +143,11 @@ namespace scijump {
     )
     ;
 
+    /**
+     * user defined non-static method.
+     */
+    void
+    invalidate_impl() ;
 
     /**
      *  

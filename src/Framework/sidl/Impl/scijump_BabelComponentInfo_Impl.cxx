@@ -51,6 +51,10 @@
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo._includes)
 #include "scijump.hxx"
+
+#include <Core/Thread/Guard.h>
+
+using namespace SCIRun;
 // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
@@ -65,14 +69,15 @@ scijump::BabelComponentInfo_impl::BabelComponentInfo_impl() : StubBase(
 // user defined constructor
 void scijump::BabelComponentInfo_impl::_ctor() {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo._ctor)
-  // Insert-Code-Here {scijump.BabelComponentInfo._ctor} (constructor)
+  valid = false;
+  lock = new Mutex("BabelComponentInfo lock");
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo._ctor)
 }
 
 // user defined destructor
 void scijump::BabelComponentInfo_impl::_dtor() {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo._dtor)
-  // Insert-Code-Here {scijump.BabelComponentInfo._dtor} (destructor)
+  delete lock;
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo._dtor)
 }
 
@@ -100,6 +105,7 @@ scijump::BabelComponentInfo_impl::initialize_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.initialize)
 
+  Guard g(lock);
   this->instanceName = instanceName;
   this->className = className;
   this->component = component;
@@ -110,6 +116,7 @@ scijump::BabelComponentInfo_impl::initialize_impl (
   } else {
     this->properties = properties;
   }
+  this->valid = true;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.initialize)
 }
@@ -129,12 +136,14 @@ scijump::BabelComponentInfo_impl::initialize_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.initializeFull)
 
+  Guard g(lock);
   this->instanceName = instanceName;
   this->className = className;
   this->component = component;
   this->services = services;
   this->framework = framework;
   this->properties = properties;
+  this->valid = true;
 
   // set serialization
 
@@ -154,11 +163,13 @@ scijump::BabelComponentInfo_impl::initialize_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.initializeComponentImage)
 
+  Guard g(lock);
   this->instanceName = instanceName;
   this->className = className;
   this->framework = framework;
   this->services = services;
   this->properties = properties;
+  this->valid = true;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.initializeComponentImage)
 }
@@ -230,16 +241,7 @@ scijump::BabelComponentInfo_impl::getServices_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getServices)
-  // Insert-Code-Here {scijump.BabelComponentInfo.getServices} (getServices method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelComponentInfo.getServices)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getServices");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelComponentInfo.getServices)
+  return services;
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.getServices)
 }
 
@@ -277,28 +279,6 @@ scijump::BabelComponentInfo_impl::getPortInfo_impl (
 }
 
 /**
- * Method:  disconnectPort[]
- */
-void
-scijump::BabelComponentInfo_impl::disconnectPort_impl (
-  /* in */const ::std::string& portName,
-  /* in */::sci::cca::core::PortInfo& fromPort ) 
-{
-  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.disconnectPort)
-  // Insert-Code-Here {scijump.BabelComponentInfo.disconnectPort} (disconnectPort method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelComponentInfo.disconnectPort)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "disconnectPort");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelComponentInfo.disconnectPort)
-  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.disconnectPort)
-}
-
-/**
  * Method:  getClassName[]
  */
 ::std::string
@@ -306,6 +286,13 @@ scijump::BabelComponentInfo_impl::getClassName_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getClassName)
+  if (className.size() < 1 || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "getClassName");
+    throw ex;
+  } 
   return className;
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.getClassName)
 }
@@ -330,6 +317,7 @@ scijump::BabelComponentInfo_impl::setProperties_impl (
   /* in */::gov::cca::TypeMap& properties ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.setProperties)
+  Guard g(lock);
   if (properties._not_nil()) {
     this->properties = properties;
   }
@@ -337,24 +325,22 @@ scijump::BabelComponentInfo_impl::setProperties_impl (
 }
 
 /**
- * Method:  destroyComponent[]
+ * Method:  invalidate[]
  */
 void
-scijump::BabelComponentInfo_impl::destroyComponent_impl () 
+scijump::BabelComponentInfo_impl::invalidate_impl () 
 
 {
-  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.destroyComponent)
-  // Insert-Code-Here {scijump.BabelComponentInfo.destroyComponent} (destroyComponent method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelComponentInfo.destroyComponent)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "destroyComponent");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelComponentInfo.destroyComponent)
-  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.destroyComponent)
+  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.invalidate)
+  Guard g(lock);
+  component = 0;
+  properties = 0;
+  services = 0;
+  framework = 0;
+  instanceName.clear();
+  className.clear();
+  valid = false;
+  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.invalidate)
 }
 
 /**
@@ -373,7 +359,14 @@ scijump::BabelComponentInfo_impl::getInstanceName_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getInstanceName)
-    return instanceName;
+  if (instanceName.size() < 1 || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "getInstanceName");
+    throw ex;
+  } 
+  return instanceName;
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.getInstanceName)
 }
 

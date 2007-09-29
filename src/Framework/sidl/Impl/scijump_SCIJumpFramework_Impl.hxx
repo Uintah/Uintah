@@ -73,7 +73,6 @@
 #include <Framework/Core/ComponentModel.h>
 #include <Framework/Core/Babel/BabelComponentModel.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Thread/Guard.h>
 
 #include <algorithm>
 #include <list>
@@ -110,7 +109,6 @@ namespace scijump {
     ServicesMap services;
 
     /** The set of registered components available in the framework, indexed by their instance names. */
-    //typedef std::map<std::string, ::sci::cca::core::ComponentInfo*> ComponentInstanceMap;
     typedef std::map<std::string, ::sci::cca::core::ComponentInfo> ComponentInstanceMap;
     ComponentInstanceMap components;
     SCIRun::Mutex* lock_components;
@@ -123,13 +121,11 @@ namespace scijump {
     bool addFrameworkService(::scijump::core::FrameworkServiceFactory& factory, FrameworkServiceMap& frameworkServices);
     bool removeFrameworkService(const std::string& serviceName, FrameworkServiceMap& frameworkServices);
 
-    //bool addComponent(const std::string& name, ::sci::cca::core::ComponentInfo& ci, ComponentInstanceMap& components);
-    //bool removeComponent(const std::string& name, ComponentInstanceMap& components);
-
     BabelComponentModel* bcm;
 
   private:
-    class ConnectionInfo_eq : public std::unary_function< ::sci::cca::core::ConnectionInfo, bool> {
+    class ConnectionInfo_eq
+      : public std::unary_function< ::sci::cca::core::ConnectionInfo, bool> {
       ::sci::cca::core::ConnectionInfo ci;
     public:
       explicit ConnectionInfo_eq(::sci::cca::core::ConnectionInfo& c) : ci(c) {}
@@ -248,6 +244,26 @@ namespace scijump {
     /**
      * user defined non-static method.
      */
+    ::gov::cca::ComponentID
+    getComponentInstance_impl (
+      /* in */const ::std::string& name
+    )
+    // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    ::sidl::array< ::gov::cca::ComponentID>
+    getComponentInstances_impl() // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+    /**
+     * user defined non-static method.
+     */
     ::gov::cca::ConnectionID
     createConnectionInstance_impl (
       /* in */::sci::cca::core::ComponentInfo& user,
@@ -261,9 +277,37 @@ namespace scijump {
     /**
      * user defined non-static method.
      */
-    ::gov::cca::ConnectionID
+    void
     destroyConnectionInstance_impl (
       /* in */::gov::cca::ConnectionID& connID
+    )
+    ;
+
+    /**
+     * user defined non-static method.
+     */
+    ::sidl::array< ::gov::cca::ComponentID>
+    getConnectionInstances_impl (
+      /* in array<gov.cca.ComponentID> */::sidl::array< 
+        ::gov::cca::ComponentID>& componentList
+    )
+    // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  Adds a description of a component instance (class ComponentInstance) to
+     * the list of active components.  The component instance description
+     * includes the component type name, the instance name, and the pointer to
+     * the allocated component.  When a \em name conflicts with an existing
+     * registered component instance name, this method will automatically append
+     * an integer to create a new, unique instance name.
+     */
+    ::std::string
+    getUniqueName_impl (
+      /* in */const ::std::string& name
     )
     ;
 

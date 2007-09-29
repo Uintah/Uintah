@@ -99,16 +99,10 @@ scijump::BuilderService_impl::create_impl (
   /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.create)
-
-  std::cerr << "scijump::BuilderService_impl::create_impl(..)" << std::endl;
-
   scijump::BuilderService bs = scijump::BuilderService::_create();
   bs.initialize(framework);
 
-  std::cerr << "scijump::BuilderService_impl::create_impl(..) done" << std::endl;
-
   return bs;
-
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.create)
 }
 
@@ -226,7 +220,17 @@ scijump::BuilderService_impl::createInstance_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.createInstance)
-  return framework.createComponentInstance(instanceName,className,properties);
+  if (instanceName.size()) {
+    if (framework.getComponentInstance(instanceName)._not_nil()) {
+      scijump::CCAException ex = scijump::CCAException::_create();
+      ex.setNote("Component instance name " + instanceName + " is not unique");
+      ex.add(__FILE__, __LINE__, "createInstance");
+      throw ex;
+    }
+    return framework.createComponentInstance(instanceName,className,properties);
+  }
+
+  return framework.createComponentInstance(framework.getUniqueName(className),className,properties);
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.createInstance)
 }
 
@@ -355,16 +359,7 @@ scijump::BuilderService_impl::getComponentID_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getComponentID)
-  // Insert-Code-Here {scijump.BuilderService.getComponentID} (getComponentID method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.getComponentID)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getComponentID");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.getComponentID)
+  return framework.getComponentInstance(componentInstanceName);
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.getComponentID)
 }
 
@@ -385,16 +380,16 @@ scijump::BuilderService_impl::destroyInstance_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.destroyInstance)
-  // Insert-Code-Here {scijump.BuilderService.destroyInstance} (destroyInstance method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.destroyInstance)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "destroyInstance");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.destroyInstance)
+
+  // TODO: Need some sort of timer here, but a blocking wait is not a good thing.
+  // Use a worker thread to do disconnect???
+
+  if (timeout != 0) {
+    std::cerr << "WARNING: timeout ignored for now." << std::endl;
+  }
+
+  framework.destroyComponentInstance(toDie, timeout);
+
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.destroyInstance)
 }
 
@@ -697,16 +692,59 @@ scijump::BuilderService_impl::disconnect_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.disconnect)
-  // Insert-Code-Here {scijump.BuilderService.disconnect} (disconnect method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.disconnect)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "disconnect");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.disconnect)
+
+  // TODO: Need some sort of timer here, but a blocking wait is not a good thing.
+  // Use a worker thread to do disconnect???
+
+  if (timeout != 0) {
+    std::cerr << "WARNING: timeout ignored for now." << std::endl;
+  }
+
+  ::gov::cca::ComponentID user = connID.getUser();
+  ::gov::cca::ComponentID provider = connID.getProvider();
+  std::string usingPortName = connID.getUserPortName();
+  std::string providingPortName = connID.getProviderPortName();
+
+  ::sci::cca::core::ComponentInfo ciUser = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(user);
+  if (ciUser._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Cannot connect: invalid user componentID");
+    ex.add(__FILE__, __LINE__, "disconnect");
+    throw ex;
+  }
+  ::sci::cca::core::PortInfo piUser = ciUser.getPortInfo(usingPortName);
+  if (piUser._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_BadPortName);
+    ex.setNote("Unknown port " + usingPortName);
+    ex.add(__FILE__, __LINE__, "disconnect");
+    throw ex;
+  }
+
+  ::sci::cca::core::ComponentInfo ciProvider = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(provider);
+  if (ciProvider._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Cannot connect: invalid provider componentID");
+    ex.add(__FILE__, __LINE__, "disconnect");
+    throw ex;
+  }
+  ::sci::cca::core::PortInfo piProvider = ciProvider.getPortInfo(providingPortName);
+  if (piProvider._is_nil()) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_BadPortName);
+    ex.setNote("Unknown port " + providingPortName);
+    ex.add(__FILE__, __LINE__, "disconnect");
+    throw ex;
+  }
+
+  if (! piUser.disconnect(piProvider)) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.setNote("Cannot connect " + usingPortName + " with " + providingPortName);
+    ex.add(__FILE__, __LINE__, "disconnect");
+    throw ex;
+  }
+
+  framework.destroyConnectionInstance(connID);
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.disconnect)
 }
 

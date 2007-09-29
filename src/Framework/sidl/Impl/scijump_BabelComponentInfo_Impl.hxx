@@ -63,7 +63,9 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo._hincludes)
-#include <Framework/Core/PortInfoIterator.h>
+//#include <Framework/Core/PortInfoIterator.h>
+
+#include <Core/Thread/Mutex.h>
 
 #include <map>
 // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo._hincludes)
@@ -99,11 +101,14 @@ namespace scijump {
     ::gov::cca::Component component;
 
     scijump::BabelServices services;
+    SCIRun::Mutex* lock;
 
     /** See interface ComponentRelease */
     ::gov::cca::ComponentRelease releaseCallback;
 
-//   private:
+  private:
+    bool valid;
+
 //     typedef std::map<std::string, ::sci::cca::core::PortInfo> PortInfoMap;
 //     /** ? */
 //     class Iterator : public scijump::core::PortInfoIterator {
@@ -244,16 +249,6 @@ namespace scijump {
     /**
      * user defined non-static method.
      */
-    void
-    disconnectPort_impl (
-      /* in */const ::std::string& portName,
-      /* in */::sci::cca::core::PortInfo& fromPort
-    )
-    ;
-
-    /**
-     * user defined non-static method.
-     */
     ::std::string
     getClassName_impl() ;
     /**
@@ -274,7 +269,7 @@ namespace scijump {
      * user defined non-static method.
      */
     void
-    destroyComponent_impl() ;
+    invalidate_impl() ;
 
     /**
      *  

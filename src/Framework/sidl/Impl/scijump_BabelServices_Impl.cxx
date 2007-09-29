@@ -409,8 +409,6 @@ scijump::BabelServices_impl::registerUsesPort_impl (
   pi.initialize(portName, type, ::sci::cca::core::PortType_UsesPort, properties);
   ports[portName] = pi;
 
-  std::cerr << "scijump::Services_impl::registerUsesPort_impl: " << portName << std::endl;
-
   // DO-NOT-DELETE splicer.end(scijump.BabelServices.registerUsesPort)
 }
 
@@ -522,7 +520,6 @@ scijump::BabelServices_impl::addProvidesPort_impl (
   pi.initialize(inPort, portName, type, ::sci::cca::core::PortType_ProvidesPort, properties);
   ports[portName] = pi;
 
-  std::cerr << "scijump::Services_impl::addProvidesPort_impl: " << portName << std::endl;
   // DO-NOT-DELETE splicer.end(scijump.BabelServices.addProvidesPort)
 }
 
