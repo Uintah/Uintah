@@ -200,11 +200,13 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
   {
     const string istr = to_string(i+1);
     ctx_->subVar("clip-visible-" + istr);
+    ctx_->subVar("clip-normal-reverse-" + istr);
     ctx_->subVar("clip-normal-x-" + istr);
     ctx_->subVar("clip-normal-y-" + istr);
     ctx_->subVar("clip-normal-z-" + istr);
     ctx_->subVar("clip-normal-d-" + istr);
   }
+
 
   // Lighting Variables, declare them so that they are saved out
   ctx_->subVar("global-light0");
@@ -315,6 +317,7 @@ ViewWindow::get_bounds(BBox& bbox)
     bbox.extend(Point(-1.0, -1.0, -1.0));
     bbox.extend(Point(1.0, 1.0, 1.0));
   }
+  
 }
 
 
@@ -2124,6 +2127,9 @@ ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 void
 ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 {
+  BBox bbox;
+  get_bounds(bbox);
+  Vector diag(bbox.diagonal());
   gui_->lock();
   GuiString visible(ctx_->subVar("clip-visible",false));
   if (visible.valid()) {
@@ -2131,18 +2137,30 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
     for (int i = 0; i < 6; ++i) {
       const string istr = to_string(i+1);
       GuiInt visible(ctx_->subVar("clip-visible-"+ istr,false));
+      GuiInt reverse(ctx_->subVar("clip-normal-reverse-"+ istr,false));
       GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
       GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
       GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
       GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
       if (!(visible.valid() && x.valid() && 
-            y.valid() && z.valid() && d.valid()))
+            y.valid() && z.valid() && d.valid() && reverse.valid()))
         continue;
       
       if (visible.get() != 0)
         drawinfo->clip_planes_ |= 1 << i;
       
-      drawinfo->planes_[i] = Plane(x.get(), y.get(), z.get(), d.get());
+      if( reverse.get() == 0) {
+        drawinfo->planes_[i] = Plane(x.get(),
+                                     y.get(),
+                                     z.get(),
+                                     (diag.length() * d.get()/2.0) );
+      } else {
+        drawinfo->planes_[i] = Plane(-x.get(),
+                                     -y.get(),
+                                     -z.get(),
+                                     -(diag.length() * d.get()/2.0) );
+      }        
+      // drawinfo->planes_[i] = Plane(x.get(), y.get(), z.get(), d.get());
     }
   }
   drawinfo->init_clip();

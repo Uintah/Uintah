@@ -404,7 +404,8 @@ itcl_class BaseViewWindow {
 	initGlobal $this-clip-selected 1
 	for {set i 1} {$i <= 6} {incr i 1} {
 	    initGlobal $this-clip-visible-$i 0
-	    initGlobal $this-clip-normal-d-$i 0.0
+            initGlobal $this-clip-normal-reverse-$i 0
+	    initGlobal $this-clip-normal-d-$i 1.0
 	    initGlobal $this-clip-normal-x-$i 1.0
 	    initGlobal $this-clip-normal-y-$i 0.0
 	    initGlobal $this-clip-normal-z-$i 0.0
@@ -433,11 +434,13 @@ itcl_class BaseViewWindow {
 	upvar \#0 $this-clip-selected cs
 	upvar \#0 $this-clip-normal-x-$cs x $this-clip-normal-y-$cs y
 	upvar \#0 $this-clip-normal-z-$cs z $this-clip-normal-d-$cs d
+        upvar \#0 $this-clip-normal-reverse-$cs reverse
  	upvar \#0 $this-clip-visible-$cs visible
 	
 	setGlobal $this-clip-normal-x $x
 	setGlobal $this-clip-normal-y $y
 	setGlobal $this-clip-normal-z $z
+        setGlobal $this-clip-normal-reverse $reverse
 	setGlobal $this-clip-visible  $visible
 	.clip[modname].normal.e newvalue $d
     }
@@ -446,12 +449,14 @@ itcl_class BaseViewWindow {
 	upvar \#0 $this-clip-selected cs
 	upvar \#0 $this-clip-normal-x x $this-clip-normal-y y
 	upvar \#0 $this-clip-normal-z z $this-clip-normal-d d
+        upvar \#0 $this-clip-normal-reverse reverse
  	upvar \#0 $this-clip-visible visible
 
 	setGlobal $this-clip-normal-x-$cs $x
 	setGlobal $this-clip-normal-y-$cs $y
 	setGlobal $this-clip-normal-z-$cs $z
 	setGlobal $this-clip-normal-d-$cs $d
+        setGlobal $this-clip-normal-reverse-$cs  $reverse
 	setGlobal $this-clip-visible-$cs  $visible
     }
 
