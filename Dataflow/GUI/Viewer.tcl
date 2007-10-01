@@ -442,7 +442,8 @@ itcl_class BaseViewWindow {
 	setGlobal $this-clip-normal-z $z
         setGlobal $this-clip-normal-reverse $reverse
 	setGlobal $this-clip-visible  $visible
-	.clip[modname].normal.e newvalue $d
+        setGlobal $this-clip-normal-d $d
+#	.clip[modname].normal.e newvalue $d
     }
 
     method setClip {} {
