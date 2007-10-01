@@ -118,7 +118,7 @@ proc makePlane {w title name command} {
    checkbutton $w.f.reverse -text "Reverse Normal" \
             -variable $name-reverse -command $command
    scale $w.f.d -orient horizontal -variable $name-d \
-	    -from 1.0 -to -1.0 -label "Move Plane" \
+	    -from -0.01 -to 1.01 -label "Move Plane" \
 	    -showvalue false \
 	    -resolution 0.01 -digits 3 \
 	    -command $command

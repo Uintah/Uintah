@@ -2149,18 +2149,14 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
       if (visible.get() != 0)
         drawinfo->clip_planes_ |= 1 << i;
       
+      Point p(bbox.min() + diag * d.get());
       if( reverse.get() == 0) {
-        drawinfo->planes_[i] = Plane(x.get(),
-                                     y.get(),
-                                     z.get(),
-                                     (diag.length() * d.get()/2.0) );
+        Vector n(-x.get(), -y.get(), -z.get());
+        drawinfo->planes_[i] = Plane(p,n);
       } else {
-        drawinfo->planes_[i] = Plane(-x.get(),
-                                     -y.get(),
-                                     -z.get(),
-                                     -(diag.length() * d.get()/2.0) );
-      }        
-      // drawinfo->planes_[i] = Plane(x.get(), y.get(), z.get(), d.get());
+        Vector n(x.get(), y.get(), z.get());
+        drawinfo->planes_[i] = Plane(p,n);
+      }
     }
   }
   drawinfo->init_clip();
@@ -2173,6 +2169,12 @@ ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
 {
   drawinfo->mouse_action_ = mouse_action_;
 }
+
+
+
+
+
+
 
 
 void
