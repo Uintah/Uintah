@@ -146,6 +146,54 @@ component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
   builder.destroyInstance(helloServer, 0);
 }
 
+void
+local_framework_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
+{
+  gov::cca::ComponentID dvr = builder.createInstance("DriverInstance", "drivers.CXXDriver", 0);
+  if(dvr._is_nil()) {
+    std::cerr << "Cannot create component: babel:DriverInstance\n";
+    return;
+  }
+
+  gov::cca::ComponentID intg = builder.createInstance("IntegratorInstance", "integrators.MonteCarlo", 0);
+  if(intg._is_nil()) {
+    std::cerr << "Cannot create component: babel:IntegratorInstance\n";
+    return;
+  }
+
+  gov::cca::ComponentID func = builder.createInstance("FunctionInstance", "functions.PiFunction", 0);
+  if(func._is_nil()) {
+    std::cerr << "Cannot create component: babel:FunctionInstance\n";
+    return;
+  }
+
+  gov::cca::ComponentID rand = builder.createInstance("RandomNumGeneratorInstance", "randomgens.RandNumGenerator", 0);
+  if(rand._is_nil()) {
+    std::cerr << "Cannot create component: babel:RandonNumGeneratorInstance\n";
+    return;
+  }
+
+  builder.connect(dvr,"IntegratorPort-up",intg,"IntegratorPort-pp");
+  builder.connect(intg,"FunctionPort-up",func,"FunctionPort-pp");
+  builder.connect(intg,"RandomGeneratorPort-up",rand,"RandomGeneratorPort-pp");
+
+
+  svc.registerUsesPort("goport-up1", "gov.cca.ports.GoPort", 0);
+  ::gov::cca::ConnectionID goConnID = builder.connect(svc.getComponentID(), "goport-up1", dvr, "GoPort");
+  ::gov::cca::Port port = svc.getPort("goport-up1");
+  ::gov::cca::ports::GoPort goPort = ::sidl::babel_cast< ::gov::cca::ports::GoPort>(port);
+  if(goPort._not_nil()) {
+    goPort.go();
+  }
+
+  svc.releasePort("goport-up1");
+  builder.destroyInstance(dvr, 0);
+  builder.destroyInstance(intg, 0);
+  builder.destroyInstance(func, 0);
+  builder.destroyInstance(rand, 0);
+}
+
+
 int
 orbStart(sidlx::rmi::SimpleOrb& echo, int port_number)
 {
@@ -253,6 +301,7 @@ main(int argc, char *argv[], char **environment) {
 
     // test instantiation and connection
     component_test(builder, mainServices);
+    local_framework_test(builder, mainServices);
     mainServices.releasePort("mainBuilder");
 
     //broadcast, listen to URL periodically
