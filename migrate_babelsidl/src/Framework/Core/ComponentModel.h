@@ -82,7 +82,7 @@ public:
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
       knows how to instantiate component \em type. */
-  virtual bool haveComponent(const std::string& type) = 0;
+  virtual bool haveComponentType(const std::string& type) = 0;
 
   /** Allocates an instance of the component of type \em type.  The parameter
       \em name is assigned as the unique name of the newly created instance.
@@ -96,7 +96,7 @@ public:
   
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  //virtual bool destroyInstance(ComponentInstance* ci) = 0;
+  virtual bool destroyInstance(::sci::cca::core::ComponentInfo& ci) = 0;
   
   /** Returns the name (as a string) of this component model. */
   virtual const std::string getName() const = 0;

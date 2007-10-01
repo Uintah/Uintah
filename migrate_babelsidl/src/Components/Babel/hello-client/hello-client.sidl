@@ -2,7 +2,9 @@ package HelloClient version 1.0 {
   /**
    * The component uses the hello port and provides a go port.
    */
-  class Component implements gov.cca.ports.GoPort, gov.cca.Component {
+  class Component implements gov.cca.ports.GoPort,
+                                                  gov.cca.Component,
+                                                  gov.cca.ComponentRelease {
     /**
      * The following method starts the component.
      */
@@ -12,5 +14,10 @@ package HelloClient version 1.0 {
      * Method <code>setServices</code> is called by the framework.
      */
     void setServices(in gov.cca.Services services) throws gov.cca.CCAException;
+
+   /**
+     * Method <code>releaseServices</code> is called by the framework.
+     */
+    void releaseServices(in gov.cca.Services services) throws gov.cca.CCAException;
   }
 }

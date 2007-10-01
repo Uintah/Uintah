@@ -178,6 +178,7 @@ package scijump version 0.2.1 {
     // ComponentInfo acts as public interface for these methods
     sci.cca.core.PortInfo getPortInfo(in string name);
     array<sci.cca.core.PortInfo,1> getPorts();
+    bool callReleaseCallback();
   }
 
   class BabelComponentInfo implements-all sci.cca.core.ComponentInfo {
@@ -186,7 +187,6 @@ package scijump version 0.2.1 {
     void initialize[ComponentImage](in string instanceName, in string className, in sci.cca.AbstractFramework framework, in scijump.BabelServices services, in gov.cca.TypeMap properties);
 
     void setSerialization(in string serialization);
-    void setComponentRelease(in gov.cca.ComponentRelease callBack);
   }
   // Babel Component model classes
 

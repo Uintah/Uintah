@@ -72,6 +72,7 @@ void scijump::BabelServices_impl::_ctor() {
 
   lock_ports = new SCIRun::Mutex("BabelServices::ports lock");
   lock_services = new SCIRun::Mutex("BabelServices::services lock");
+  callback = 0;
 
   // DO-NOT-DELETE splicer.end(scijump.BabelServices._ctor)
 }
@@ -153,6 +154,24 @@ scijump::BabelServices_impl::getPorts_impl ()
   throw ex;
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelServices.getPorts)
   // DO-NOT-DELETE splicer.end(scijump.BabelServices.getPorts)
+}
+
+/**
+ * Method:  callReleaseCallback[]
+ */
+bool
+scijump::BabelServices_impl::callReleaseCallback_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelServices.callReleaseCallback)
+  if (callback._is_nil())
+    return false;
+
+  // the release callback may only be called once
+  callback.releaseServices(*this);
+  callback = 0;
+  return true;
+  // DO-NOT-DELETE splicer.end(scijump.BabelServices.callReleaseCallback)
 }
 
 /**
@@ -623,16 +642,7 @@ scijump::BabelServices_impl::registerForRelease_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.registerForRelease)
-  // Insert-Code-Here {scijump.BabelServices.registerForRelease} (registerForRelease method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BabelServices.registerForRelease)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "registerForRelease");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BabelServices.registerForRelease)
+  this->callback = callBack;
   // DO-NOT-DELETE splicer.end(scijump.BabelServices.registerForRelease)
 }
 

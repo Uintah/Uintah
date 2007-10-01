@@ -229,7 +229,8 @@ scijump::SCIJumpFramework_impl::destroyComponentInstance_impl (
   }
   ComponentInstanceMap::iterator iter = components.find(ci.getInstanceName());
   if (iter != components.end()) {
-    (iter->second).invalidate();
+    // just BabelComponentModel for now
+    bcm->destroyInstance(iter->second);
     components.erase(iter);
   }
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.destroyComponentInstance)

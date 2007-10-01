@@ -101,6 +101,8 @@ namespace scijump {
 
     SCIRun::Mutex* lock_ports;
     SCIRun::Mutex* lock_services;
+
+    ::gov::cca::ComponentRelease callback;
     // DO-NOT-DELETE splicer.end(scijump.BabelServices._implementation)
 
   public:
@@ -158,6 +160,11 @@ namespace scijump {
      */
     ::sidl::array< ::sci::cca::core::PortInfo>
     getPorts_impl() ;
+    /**
+     * user defined non-static method.
+     */
+    bool
+    callReleaseCallback_impl() ;
 
     /**
      *  

@@ -377,7 +377,9 @@ package sci {
         gov.cca.TypeMap getProperties();
         void setProperties( in gov.cca.TypeMap properties);
 
-      // make component invalid
+        bool callReleaseCallback();
+
+       // make component invalid
         void invalidate();
       }
     } // package core

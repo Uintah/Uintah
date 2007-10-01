@@ -75,14 +75,12 @@ public:
   virtual ~BabelComponentModel();
 
   /** ? */
-  ::gov::cca::Services createServices(const std::string& instanceName,
-                                           const std::string& className,
-                                           const ::gov::cca::TypeMap& properties);
+  //::gov::cca::Services createServices(const std::string& instanceName, const std::string& className, const ::gov::cca::TypeMap& properties);
 
   /** Returns true if component type \em type has been registered with this
       component model.  In other words, returns true if this ComponentModel
       knows how to instantiate component \em type. */
-  virtual bool haveComponent(const std::string& type);
+  virtual bool haveComponentType(const std::string& type);
 
   /**
    * Allocates an instance of the component of type \em type.
@@ -102,7 +100,7 @@ public:
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
-  //virtual bool destroyInstance(const ComponentInfo &ci);
+  virtual bool destroyInstance(::sci::cca::core::ComponentInfo& ci);
 
   /**  Returns the name (as a string) of this component model. */
   virtual const std::string getName() const { return "babel"; }
