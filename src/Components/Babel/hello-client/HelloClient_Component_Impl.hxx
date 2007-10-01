@@ -27,6 +27,9 @@
 #ifndef included_gov_cca_Component_hxx
 #include "gov_cca_Component.hxx"
 #endif
+#ifndef included_gov_cca_ComponentRelease_hxx
+#include "gov_cca_ComponentRelease.hxx"
+#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -85,6 +88,8 @@ namespace HelloClient {
       Component_impl( struct HelloClient_Component__object * ior ) : StubBase(
         ior,true), 
       ::gov::cca::Component((ior==NULL) ? NULL : &((*ior).d_gov_cca_component)),
+      ::gov::cca::ComponentRelease((ior==NULL) ? NULL : &((
+        *ior).d_gov_cca_componentrelease)),
       ::gov::cca::Port((ior==NULL) ? NULL : &((*ior).d_gov_cca_port)),
     ::gov::cca::ports::GoPort((ior==NULL) ? NULL : &((
       *ior).d_gov_cca_ports_goport)) , _wrapped(false) {_ctor();}
@@ -119,6 +124,19 @@ namespace HelloClient {
      */
     void
     setServices_impl (
+      /* in */::gov::cca::Services& services
+    )
+    // throws:
+    //     ::gov::cca::CCAException
+    //     ::sidl::RuntimeException
+    ;
+
+
+    /**
+     * Method <code>releaseServices</code> is called by the framework.
+     */
+    void
+    releaseServices_impl (
       /* in */::gov::cca::Services& services
     )
     // throws:

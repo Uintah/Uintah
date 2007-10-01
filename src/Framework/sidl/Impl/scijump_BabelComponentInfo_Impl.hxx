@@ -24,9 +24,6 @@
 #ifndef included_gov_cca_Component_hxx
 #include "gov_cca_Component.hxx"
 #endif
-#ifndef included_gov_cca_ComponentRelease_hxx
-#include "gov_cca_ComponentRelease.hxx"
-#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -102,9 +99,6 @@ namespace scijump {
 
     scijump::BabelServices services;
     SCIRun::Mutex* lock;
-
-    /** See interface ComponentRelease */
-    ::gov::cca::ComponentRelease releaseCallback;
 
   private:
     bool valid;
@@ -211,15 +205,6 @@ namespace scijump {
     /**
      * user defined non-static method.
      */
-    void
-    setComponentRelease_impl (
-      /* in */::gov::cca::ComponentRelease& callBack
-    )
-    ;
-
-    /**
-     * user defined non-static method.
-     */
     ::sci::cca::AbstractFramework
     getFramework_impl() ;
     /**
@@ -265,6 +250,11 @@ namespace scijump {
     )
     ;
 
+    /**
+     * user defined non-static method.
+     */
+    bool
+    callReleaseCallback_impl() ;
     /**
      * user defined non-static method.
      */

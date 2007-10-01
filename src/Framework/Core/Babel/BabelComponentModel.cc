@@ -141,33 +141,35 @@ BabelComponentModel::setComponentDescription(const std::string& type, const std:
   }
 }
 
-::gov::cca::Services
-BabelComponentModel::createServices(const std::string& instanceName,
-                                    const std::string& className,
-                                    const ::gov::cca::TypeMap& properties)
-{
-  /*
-    ::gov::cca::Component nullCom;
-    ::gov::cca::Services svc;
-    cerr<<"need associate svc with ci in createServices!"<<endl;
-    BabelComponentInstance* ci = new BabelComponentInstance(framework,
-    instanceName, className,
-    properties,
-    nullCom,
-    svc);
-    framework->registerComponent(ci, instanceName);
+#if 0
+// ::gov::cca::Services
+// BabelComponentModel::createServices(const std::string& instanceName,
+//                                     const std::string& className,
+//                                     const ::gov::cca::TypeMap& properties)
+// {
+//   /*
+//     ::gov::cca::Component nullCom;
+//     ::gov::cca::Services svc;
+//     cerr<<"need associate svc with ci in createServices!"<<endl;
+//     BabelComponentInstance* ci = new BabelComponentInstance(framework,
+//     instanceName, className,
+//     properties,
+//     nullCom,
+//     svc);
+//     framework->registerComponent(ci, instanceName);
 
-    //ci->addReference();
+//     //ci->addReference();
 
-  */
-  // is this supposed to be called by AbstractFramework.getServices???
-  NOT_FINISHED("gov::cca::Services BabelComponentModel::createServices(const std::string& instanceName, const std::string& className, const ::gov::cca::TypeMap& properties)");
-  ::gov::cca::Services svc;
-  return svc;
-}
+//   */
+//   // is this supposed to be called by AbstractFramework.getServices???
+//   NOT_FINISHED("gov::cca::Services BabelComponentModel::createServices(const std::string& instanceName, const std::string& className, const ::gov::cca::TypeMap& properties)");
+//   ::gov::cca::Services svc;
+//   return svc;
+// }
+#endif
 
 bool
-BabelComponentModel::haveComponent(const std::string& type)
+BabelComponentModel::haveComponentType(const std::string& type)
 {
   SCIRun::Guard g1(&lock_components);
   return components.find(type) != components.end();
@@ -280,20 +282,16 @@ BabelComponentModel::createInstance(::sci::cca::core::ComponentInfo& ci,
   return;
 }
 
-#if 0
-/*
-bool BabelComponentModel::destroyInstance(const ComponentInfo& ci)
+bool BabelComponentModel::destroyInstance(::sci::cca::core::ComponentInfo& ci)
 {
-  NOT_FINISHED("bool BabelComponentModel::destroyInstance(const ComponentInfo& ci)");
-  // make sure why ci->addReference() is called in createInstance(); -- removed (AK)
-
-  // not sure if deleteReference() is appropriate here
-  // TODO: need to support release component callback
-  //delete ci;
-  return false;
-}
-*/
+#if FWK_DEBUG
+  std::cerr << "BabelComponentModel::destroyInstance: attempt to destroy "
+            << ci.getInstanceName() << " type " << ci.getClassName() << std::endl;
 #endif
+  ci.callReleaseCallback();
+  ci.invalidate();
+  return true;
+}
 
 void
 BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool)

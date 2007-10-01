@@ -32,6 +32,7 @@
 #include "sidl_NotImplementedException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(HelloClient.Component._includes)
+#include <iostream>
 // Insert-Code-Here {HelloClient.Component._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(HelloClient.Component._includes)
 
@@ -101,7 +102,24 @@ HelloClient::Component_impl::setServices_impl (
   svc = services;
   services.registerUsesPort("msgport-up", "HelloServer.MsgPort", 0);
   services.addProvidesPort(*this, "goport", "gov.cca.ports.GoPort", 0);
+  services.registerForRelease(*this);
   // DO-NOT-DELETE splicer.end(HelloClient.Component.setServices)
+}
+
+/**
+ * Method <code>releaseServices</code> is called by the framework.
+ */
+void
+HelloClient::Component_impl::releaseServices_impl (
+  /* in */::gov::cca::Services& services ) 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
+  // DO-NOT-DELETE splicer.begin(HelloClient.Component.releaseServices)
+  services.unregisterUsesPort("msgport-up");
+  services.removeProvidesPort("goport");
+  // DO-NOT-DELETE splicer.end(HelloClient.Component.releaseServices)
 }
 
 

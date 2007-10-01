@@ -19,9 +19,6 @@
 #ifndef included_gov_cca_Component_hxx
 #include "gov_cca_Component.hxx"
 #endif
-#ifndef included_gov_cca_ComponentRelease_hxx
-#include "gov_cca_ComponentRelease.hxx"
-#endif
 #ifndef included_gov_cca_Services_hxx
 #include "gov_cca_Services.hxx"
 #endif
@@ -196,20 +193,6 @@ scijump::BabelComponentInfo_impl::setSerialization_impl (
 }
 
 /**
- * Method:  setComponentRelease[]
- */
-void
-scijump::BabelComponentInfo_impl::setComponentRelease_impl (
-  /* in */::gov::cca::ComponentRelease& callBack ) 
-{
-  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.setComponentRelease)
-
-  releaseCallback = callBack;
-
-  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.setComponentRelease)
-}
-
-/**
  * Method:  getFramework[]
  */
 ::sci::cca::AbstractFramework
@@ -322,6 +305,27 @@ scijump::BabelComponentInfo_impl::setProperties_impl (
     this->properties = properties;
   }
   // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.setProperties)
+}
+
+/**
+ * Method:  callReleaseCallback[]
+ */
+bool
+scijump::BabelComponentInfo_impl::callReleaseCallback_impl () 
+
+{
+  // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.callReleaseCallback)
+  Guard g(lock);
+  if (services._is_nil() || ! valid) {
+    scijump::CCAException ex = scijump::CCAException::_create();
+    ex.initialize(::gov::cca::CCAExceptionType_Unexpected);
+    ex.setNote("Invalid component object");
+    ex.add(__FILE__, __LINE__, "callReleaseCallback");
+    throw ex;
+  }
+  bool ret = services.callReleaseCallback();
+  return ret;
+  // DO-NOT-DELETE splicer.end(scijump.BabelComponentInfo.callReleaseCallback)
 }
 
 /**

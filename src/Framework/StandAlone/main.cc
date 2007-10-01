@@ -139,9 +139,12 @@ component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
   ::gov::cca::ports::GoPort goPort = ::sidl::babel_cast< ::gov::cca::ports::GoPort>(port);
   goPort.go();
 
-  svc.releasePort("goport-up");
   builder.disconnect(goConnID, 0);
   builder.disconnect(msgConnID, 0);
+
+  svc.releasePort("goport-up");
+  svc.unregisterUsesPort("goport-up");
+
   builder.destroyInstance(hello, 0);
   builder.destroyInstance(helloServer, 0);
 }
@@ -173,20 +176,27 @@ local_framework_test(scijump::BuilderService& builder, ::gov::cca::Services& svc
     return;
   }
 
-  builder.connect(dvr,"IntegratorPort-up",intg,"IntegratorPort-pp");
-  builder.connect(intg,"FunctionPort-up",func,"FunctionPort-pp");
-  builder.connect(intg,"RandomGeneratorPort-up",rand,"RandomGeneratorPort-pp");
+  ::gov::cca::ConnectionID intgConnID = builder.connect(dvr,"IntegratorPort-up",intg,"IntegratorPort-pp");
+  ::gov::cca::ConnectionID funcConnID = builder.connect(intg,"FunctionPort-up",func,"FunctionPort-pp");
+  ::gov::cca::ConnectionID randConnID = builder.connect(intg,"RandomGeneratorPort-up",rand,"RandomGeneratorPort-pp");
 
 
-  svc.registerUsesPort("goport-up1", "gov.cca.ports.GoPort", 0);
-  ::gov::cca::ConnectionID goConnID = builder.connect(svc.getComponentID(), "goport-up1", dvr, "GoPort");
-  ::gov::cca::Port port = svc.getPort("goport-up1");
+  svc.registerUsesPort("goport-up", "gov.cca.ports.GoPort", 0);
+  ::gov::cca::ConnectionID goConnID = builder.connect(svc.getComponentID(), "goport-up", dvr, "GoPort");
+  ::gov::cca::Port port = svc.getPort("goport-up");
   ::gov::cca::ports::GoPort goPort = ::sidl::babel_cast< ::gov::cca::ports::GoPort>(port);
   if(goPort._not_nil()) {
     goPort.go();
   }
 
-  svc.releasePort("goport-up1");
+  builder.disconnect(goConnID, 0);
+  builder.disconnect(intgConnID, 0);
+  builder.disconnect(funcConnID, 0);
+  builder.disconnect(randConnID, 0);
+
+  svc.releasePort("goport-up");
+  svc.unregisterUsesPort("goport-up");
+
   builder.destroyInstance(dvr, 0);
   builder.destroyInstance(intg, 0);
   builder.destroyInstance(func, 0);
