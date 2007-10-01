@@ -7,4 +7,16 @@
   <library uri="BUILDDIR/lib/libComponents_Babel_hello-client.LIBEXT" scope="global" resolution="now" > 
     <class name="HelloClient.Component" desc="ior/impl" />
   </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_tutorial_drivers.LIBEXT" scope="global" resolution="now" >
+    <class name="drivers.CXXDriver" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_tutorial_integrators.LIBEXT" scope="global" resolution="now" >
+    <class name="integrators.MonteCarlo" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_tutorial_functions.LIBEXT" scope="global" resolution="now" >
+    <class name="functions.PiFunction" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_tutorial_randomgens.LIBEXT" scope="global" resolution="now" >
+    <class name="randomgens.RandNumGenerator" desc="ior/impl" />
+  </library>
 </scl>
