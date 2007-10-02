@@ -363,8 +363,7 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      if(!d_matls.present(gmass, c)) continue;
-      
+
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 

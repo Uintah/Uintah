@@ -80,28 +80,24 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      if(d_matls.present(gmass, c)) {
-        
-        Vector centerOfMassMom(0,0,0);
-        double centerOfMassMass=0.0;
-        
-        for(int n = 0; n < numMatls; n++){
-          if(d_matls.requested(n)) {
-            centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
-            centerOfMassMass+=gmass[n][c]; 
-          }
-        }
-        
-        // Set each field's velocity equal to the center of mass velocity
-        centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-        for(int n = 0; n < numMatls; n++) {
-          if(d_matls.requested(n)) {
-            gvelocity[n][c] = centerOfMassVelocity;
-          }
-        }
 
+      Vector centerOfMassMom(0,0,0);
+      double centerOfMassMass=0.0;
+
+      for(int n = 0; n < numMatls; n++){
+        if(d_matls.requested(n)) {
+          centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
+          centerOfMassMass+=gmass[n][c]; 
+        }
       }
-      
+
+      // Set each field's velocity equal to the center of mass velocity
+      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+      for(int n = 0; n < numMatls; n++) {
+        if(d_matls.requested(n)) {
+          gvelocity[n][c] = centerOfMassVelocity;
+        }
+      }
     }
   }
 }
@@ -143,30 +139,27 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      if(d_matls.present(gmass, c)) {
 
-        centerOfMassMom=zero;
-        centerOfMassMass=0.0; 
-        for(int  n = 0; n < numMatls; n++){
-          if(d_matls.requested(n)) {
-            centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
-            centerOfMassMass+=gmass[n][c]; 
-          }
+      centerOfMassMom=zero;
+      centerOfMassMass=0.0; 
+      for(int  n = 0; n < numMatls; n++){
+        if(d_matls.requested(n)) {
+          centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
+          centerOfMassMass+=gmass[n][c]; 
         }
-        
-        // Set each field's velocity equal to the center of mass velocity
-        // and adjust the acceleration of each field to account for this
-        centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-        for(int  n = 0; n < numMatls; n++){
-          if(d_matls.requested(n)) {
-            Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
-            gvelocity_star[n][c] = centerOfMassVelocity;
-            gacceleration[n][c]+=Dvdt;
-          }
+      }
+
+      // Set each field's velocity equal to the center of mass velocity
+      // and adjust the acceleration of each field to account for this
+      centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
+      for(int  n = 0; n < numMatls; n++){
+        if(d_matls.requested(n)) {
+          Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
+          gvelocity_star[n][c] = centerOfMassVelocity;
+          gacceleration[n][c]+=Dvdt;
         }
       }
     }
-    
   }
 }
 
