@@ -188,23 +188,22 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     // Set each field's velocity equal to the requested velocity
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      
-      if(d_matls.present(gmass, c)) { // only update if shares cell with all requested materials
 
-        for(int n = 0; n < numMatls; n++){ // update rigid body here
-          Vector rigid_vel = requested_velocity;
-          if(rigid_velocity) {
-            rigid_vel = gvelocity[d_material][c];
-            if(n==d_material) continue; // compatibility with old mode, where rigid velocity doesnt change material 0
-          }
-          
-          // set each velocity component being modified to a new velocity
-          Vector new_vel( gvelocity[n][c] );
-          if(d_direction[0]) new_vel.x( rigid_vel.x() );
-          if(d_direction[1]) new_vel.y( rigid_vel.y() );
-          if(d_direction[2]) new_vel.z( rigid_vel.z() );
-          
-          // this is the updated velocity
+      for(int n = 0; n < numMatls; n++){ // update rigid body here
+        Vector rigid_vel = requested_velocity;
+        if(rigid_velocity) {
+          rigid_vel = gvelocity[d_material][c];
+          if(n==d_material) continue; // compatibility with old mode, where rigid velocity doesnt change material 0
+        }
+
+       // set each velocity component being modified to a new velocity
+        Vector new_vel( gvelocity[n][c] );
+        if(d_direction[0]) new_vel.x( rigid_vel.x() );
+        if(d_direction[1]) new_vel.y( rigid_vel.y() );
+        if(d_direction[2]) new_vel.z( rigid_vel.z() );
+        
+        // this is the updated velocity
+        if(d_matls.requested(n)) {
           gvelocity[n][c] = new_vel;
         }
       }
@@ -259,20 +258,19 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
       
-      if(d_matls.present(gmass, c)) { // only update if shares cell with all requested materials
-        
-        for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
-          Vector rigid_vel = requested_velocity;
-          if(rigid_velocity) {
-            rigid_vel = gvelocity_star[d_material][c];
-            if(n==d_material) continue; // compatibility with rigid motion, doesnt affect matl 0
-          }
-          
-          Vector new_vel( gvelocity_star[n][c] );
-          if(n==d_material || d_direction[0]) new_vel.x( rigid_vel.x() );
-          if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
-          if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
-          
+      for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
+        Vector rigid_vel = requested_velocity;
+        if(rigid_velocity) {
+          rigid_vel = gvelocity_star[d_material][c];
+          if(n==d_material) continue; // compatibility with rigid motion, doesnt affect matl 0
+        }
+
+        Vector new_vel( gvelocity_star[n][c] );
+        if(n==d_material || d_direction[0]) new_vel.x( rigid_vel.x() );
+        if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
+        if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
+
+        if(d_matls.requested(n)) {
           gvelocity_star[n][c] =  new_vel;
           gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
         }
