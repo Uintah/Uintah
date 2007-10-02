@@ -91,6 +91,7 @@ WARNING
 
     virtual void addTaskGraph(tgType type) = 0;
     virtual int getNumTaskGraphs() = 0;
+    virtual bool useSmallMessages() = 0;
     
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
     
@@ -111,9 +112,9 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void advanceDataWarehouse(const GridP& grid) = 0;
+    virtual void advanceDataWarehouse(const GridP& grid, bool initialization=false) = 0;
     virtual void fillDataWarehouses(const GridP& grid) = 0;
-    virtual void replaceDataWarehouse(int index, const GridP& grid) = 0;
+    virtual void replaceDataWarehouse(int index, const GridP& grid, bool initialization=false) = 0;
     virtual void setRestartable(bool restartable) = 0;
 
     //    protected:

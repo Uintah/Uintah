@@ -65,6 +65,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   numOldDWs = 0;
 
   emit_taskgraph = false;
+  d_useSmallMessages = false;
   memlogfile = 0;
   restartable = false;
   for(int i=0;i<Task::TotalDWs;i++)
@@ -192,8 +193,12 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
   // so that we do not crash when running MALLOC_STRICT.
   trackingStartTime_ = 1;
   trackingEndTime_ = 0;
+  trackingVarsPrintLocation_ = PRINT_AFTER_EXEC;
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if(params){
+    params->getWithDefault("small_messages", d_useSmallMessages, false);
+    if (d_useSmallMessages && d_myworld->myrank() == 0)
+      cout << "   Using theoretical scheduler\n";
     ProblemSpecP track = params->findBlock("VarTracker");
     if (track) {
       track->require("start_time", trackingStartTime_);
@@ -202,6 +207,16 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
       track->getWithDefault("start_index", trackingStartIndex_, IntVector(-9,-9,-9));
       track->getWithDefault("end_index", trackingEndIndex_, IntVector(-9,-9,-9));
       track->getWithDefault("patchid", trackingPatchID_, -1);
+
+      ProblemSpecP location = track->findBlock("locations");
+      if (location) {
+        trackingVarsPrintLocation_ = 0;
+        map<string,string> attributes;
+        location->getAttributes(attributes);
+        if (attributes["before_comm"] == "true") trackingVarsPrintLocation_ |= PRINT_BEFORE_COMM;
+        if (attributes["before_exec"] == "true") trackingVarsPrintLocation_ |= PRINT_BEFORE_EXEC;
+        if (attributes["after_exec"] == "true") trackingVarsPrintLocation_ |= PRINT_AFTER_EXEC;
+      }
 
       for (ProblemSpecP var=track->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
         map<string,string> attributes;
@@ -230,7 +245,7 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
 }
 
 void
-SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
+SchedulerCommon::printTrackedVars(DetailedTask* dt, int when)
 {
   bool printedHeader = false;
   LoadBalancer* lb = getLoadBalancer();
@@ -337,8 +352,13 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
           continue;
 
         if (!printedHeader) {
-          cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
-               << *dt << endl;
+          string location;
+          switch (when) {
+          case PRINT_BEFORE_COMM: location = " before communication of "; break;
+          case PRINT_BEFORE_EXEC: location = " before execution of "; break;
+          case PRINT_AFTER_EXEC: location = " after execution of "; break;
+          }
+          cout << d_myworld->myrank() << location << *dt << endl;
           printedHeader = true;
         }
         if (!printedVarName) {
@@ -606,7 +626,7 @@ SchedulerCommon::getLastDW(void)
 }
 
 void 
-SchedulerCommon::advanceDataWarehouse(const GridP& grid)
+SchedulerCommon::advanceDataWarehouse(const GridP& grid, bool initialization /*=false*/)
 {
   dbg << "advanceDataWarehouse, numDWs = " << dws.size() << '\n';
   ASSERT(dws.size() >= 2);
@@ -619,7 +639,8 @@ SchedulerCommon::advanceDataWarehouse(const GridP& grid)
 					  true /* initialization dw */);
   } else {
     for(int i=numOldDWs;i<(int)dws.size();i++) {
-      replaceDataWarehouse(i, grid);
+      // in AMR initial cases, you can still be in initialization when you advance again
+      replaceDataWarehouse(i, grid, initialization);
     }
   }
 }
@@ -631,9 +652,9 @@ void SchedulerCommon::fillDataWarehouses(const GridP& grid)
       replaceDataWarehouse(i, grid);
 }
 
-void SchedulerCommon::replaceDataWarehouse(int index, const GridP& grid)
+void SchedulerCommon::replaceDataWarehouse(int index, const GridP& grid, bool initialization /*=false*/)
 {
-  dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, d_generation++, grid);
+  dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, d_generation++, grid, initialization);
 }
 
 void SchedulerCommon::setRestartable(bool restartable)
@@ -902,8 +923,6 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   this->mapDataWarehouse(Task::CoarseNewDW, 1);
   
   DataWarehouse* oldDataWarehouse = this->get_dw(0);
-
-
   DataWarehouse* newDataWarehouse = this->getLastDW();
 
   oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
@@ -916,7 +935,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   d_sharedState->setCopyDataTimestep(true);
 
   for (int i = 0; i < grid->numLevels(); i++) {
-    LevelP newLevel = newDataWarehouse->getGrid()->getLevel(i);
+    LevelP newLevel = grid->getLevel(i);
 
     if (i > 0) {
       if (i >= oldGrid->numLevels()) {
@@ -926,7 +945,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       // find patches with new space - but temporarily, refine everywhere... 
       else if (i < oldGrid->numLevels()) {
         refineSets[i] = scinew PatchSet;
-        LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
+        LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(i);
         
         // go through the patches, and find if there are patches that weren't entirely 
         // covered by patches on the old grid, and interpolate them.  
@@ -1044,6 +1063,9 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     const Level* oldLevel = currentReductionVar.domain_;
     const Level* newLevel = NULL;
     if (oldLevel && oldLevel->getIndex() < grid->numLevels() ) {
+      if (oldLevel->getIndex() >= grid->numLevels())
+        // the new grid no longer has this level
+        continue;
       newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
     }
    

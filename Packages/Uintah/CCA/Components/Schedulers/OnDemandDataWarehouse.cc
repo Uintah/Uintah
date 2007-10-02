@@ -565,14 +565,16 @@ OnDemandDataWarehouse::recvMPIGridVar(BufferInfo& buffer,
     var->setForeign();
   }
   d_lock.readUnlock();
+  
+    
 
   if (var == 0 || var->getBasePointer() == 0 ||
-      Min(var->getLow(), dep->low) != var->getLow() ||
-      Max(var->getHigh(), dep->high) != var->getHigh()) {
+      Min(var->getLow(), dep->patchLow) != var->getLow() ||
+      Max(var->getHigh(), dep->patchHigh) != var->getHigh()) {
     // There was no place reserved to recv the data yet,
     // so it must create the space now.
     GridVariable* v = dynamic_cast<GridVariable*>(label->typeDescription()->createInstance());
-    v->allocate(dep->low, dep->high);
+    v->allocate(dep->patchLow, dep->patchHigh);
     var = dynamic_cast<GridVariable*>(v);
     var->setForeign();
     d_lock.writeLock();
@@ -580,8 +582,8 @@ OnDemandDataWarehouse::recvMPIGridVar(BufferInfo& buffer,
     d_lock.writeUnlock();
   }
 
-  ASSERTEQ(Min(var->getLow(), dep->low), var->getLow());
-  ASSERTEQ(Max(var->getHigh(), dep->high), var->getHigh());
+  ASSERTEQ(Min(var->getLow(), dep->patchLow), var->getLow());
+  ASSERTEQ(Max(var->getHigh(), dep->patchHigh), var->getHigh());
 
   var->getMPIBuffer(buffer, dep->low, dep->high);
 }
@@ -603,8 +605,8 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   // Count the number of data elements in the reduction array
   int nmatls = matls->size();
   int count=0;
-  MPI_Op op;
-  MPI_Datatype datatype;
+  MPI_Op op = MPI_OP_NULL;
+  MPI_Datatype datatype = NULL;
 
   d_lock.readLock();
   for(int m=0;m<nmatls;m++){
@@ -1913,7 +1915,7 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
   ASSERTEQ(basis,Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
   if(!d_varDB.exists(label, matlIndex, patch)) {
-    print();
+    //print();
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
   }
   if(patch->isVirtual()){
@@ -1954,6 +1956,7 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
       patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
     else
       neighbors.push_back(patch);
+    IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
     if (!var.rewindow(lowIndex, highIndex)) {
       // reallocation needed
       // Ignore this if this is the initialization dw in its old state.
@@ -1964,19 +1967,19 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
       static bool warned = false;
       bool ignore = d_isInitializationDW && d_finalized;
       if (!ignore && !warned ) {
-	warned = true;
-        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5);
+	//warned = true;
+        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
         if (rw.invoke()) {
           // print out this message if the ProgressiveWarning does
-          ostringstream errmsg;
-          /*          errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
+          /*ostringstream errmsg;
+                    errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
           if (patch)
             errmsg << " on patch " << patch->getID();
           errmsg << " for material " << matlIndex;
 
-          errmsg << "You may ignore this under normal circumstances";
-          warn << errmsg.str() << '\n';
-          */
+          errmsg << ".  Old range: " << oldLow << " " << oldHigh << " - new range " << lowIndex << " " << highIndex << " NGC " << numGhostCells;
+          warn << errmsg.str() << '\n';*/
+          
         }
       }
     }
@@ -2002,6 +2005,7 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
 
         GridVariable* srcvar = var.cloneType();
 	d_varDB.get(label, matlIndex, neighbor, *srcvar);
+
 	if(neighbor->isVirtual())
 	  srcvar->offsetGrid(neighbor->getVirtualOffset());
 	
@@ -2009,17 +2013,20 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
 	    || ( high.z() < low.z() ) ) {
 	  //SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));
         }
-
+        
         try {
+          //          if (var.getLow().x() > low.x() || var.getLow().y() > low.y() || var.getLow().z() > low.z() || 
+          //    var.getHigh().x() < high.x() || var.getHigh().y() < high.y() || var.getHigh().z() < low.z())
           var.copyPatch(srcvar, low, high);
         } catch (InternalError& e) {
           cout << "  Can't copy patch " << neighbor->getID() << " on matl " << matlIndex << " for var " << *label << " " << low << " " << high << endl;
           cout << e.message() << endl;
           throw;
         }
-	dn = high-low;
-	total+=dn.x()*dn.y()*dn.z();
-	delete srcvar;
+        dn = high-low;
+        total+=dn.x()*dn.y()*dn.z();
+        delete srcvar;
+        
       }
     }
     
@@ -2145,7 +2152,7 @@ allocateAndPutGridVar(GridVariable& var, const VarLabel* label, int matlIndex, c
   IntVector extraCells = patch->getLevel()->getExtraCells();
 
   // use the max extra cells for now
-  int ec = Max(Max(extraCells[0], extraCells[1]), extraCells[2]);
+  //int ec = Max(Max(extraCells[0], extraCells[1]), extraCells[2]);
   if (1) { // numGhostCells > ec) { (numGhostCells is 0, query it from the superLowIndex...
     deque<Box> b1, b2, difference;
     b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 

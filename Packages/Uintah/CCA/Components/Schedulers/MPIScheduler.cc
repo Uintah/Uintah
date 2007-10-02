@@ -241,7 +241,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   start_counters(0, 19);
 #endif
 
-  printTrackedVars(task, true);
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
 
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
@@ -251,8 +252,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   task->doit(d_myworld, dws, plain_old_dws);
   //AllocatorSetDefaultTag(tag);
 
-
-  printTrackedVars(task, false);
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
+    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &exec_flops);
@@ -431,6 +432,9 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM)
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_COMM);
 
   // sort the requires, so in case there is a particle send we receive it with
   // the right message tag
