@@ -75,7 +75,8 @@ namespace SCIRun {
 
   template <class T>
   IllegalValue<T>::IllegalValue(const IllegalValue& copy)
-    : message_(copy.message_)
+    : Exception(),
+      message_(copy.message_)
   {
   }
 
