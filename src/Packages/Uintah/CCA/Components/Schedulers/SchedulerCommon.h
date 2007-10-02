@@ -80,6 +80,8 @@ WARNING
     virtual int getNumTaskGraphs() { return graphs.size(); }
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*);
 
+    virtual bool useSmallMessages() { return d_useSmallMessages; }
+
     /// Get all of the requires needed from the old data warehouse
     /// (carried forward).
     virtual const vector<const Task::Dependency*>& getInitialRequires()
@@ -99,9 +101,9 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void advanceDataWarehouse(const GridP& grid);
+    virtual void advanceDataWarehouse(const GridP& grid, bool initialization=false);
     virtual void fillDataWarehouses(const GridP& grid);
-    virtual void replaceDataWarehouse(int index, const GridP& grid);
+    virtual void replaceDataWarehouse(int index, const GridP& grid, bool initialization=false);
     virtual void setRestartable(bool restartable);
 
     // Get the expected extents that may be needed for a particular variable
@@ -179,7 +181,8 @@ WARNING
 		  double communication_flops = 0);
     void finalizeNodes(int process=0);
 
-    void printTrackedVars(DetailedTask* dt, bool before);
+    enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4};
+    void printTrackedVars(DetailedTask* dt, int when);
     
     virtual void verifyChecksum() = 0;
 
@@ -205,6 +208,7 @@ WARNING
     vector<string> trackingVars_;
     vector<string> trackingTasks_;
     vector<Task::WhichDW> trackingDWs_;
+    int trackingVarsPrintLocation_;
     int trackingPatchID_;
     double trackingStartTime_;
     double trackingEndTime_;
@@ -234,6 +238,9 @@ WARNING
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
     Relocate         reloc_;
 
+    // whether or not to send a small message (takes more work to organize)
+    // or a larger one (more communication time)
+    bool d_useSmallMessages;
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.

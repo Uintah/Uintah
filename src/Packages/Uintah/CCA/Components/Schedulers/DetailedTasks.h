@@ -40,7 +40,7 @@ namespace Uintah {
 		const Patch* fromPatch, int matl,
 		const IntVector& low, const IntVector& high, CommCondition cond)
       : next(next), comp(comp), req(req),                  
-        fromPatch(fromPatch), low(low), high(high), matl(matl), condition(cond)
+      fromPatch(fromPatch), low(low), high(high), matl(matl), condition(cond), patchLow(low), patchHigh(high)
     {
       ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
 
@@ -74,6 +74,9 @@ namespace Uintah {
     // to avoid a costly second recompile on the next timestep, we add a comm condition which will send/recv data based
     // on whether some condition is met at run time - in this case whether it is the first execution or not.
     CommCondition condition;
+
+    // for SmallMessages - if we don't copy the complete patch, we need to know the range so we can store all segments properly
+    IntVector patchLow, patchHigh; 
   };
 
   class DependencyBatch {
@@ -320,6 +323,12 @@ namespace Uintah {
     void initializeBatches();
 
     void incrementDependencyGeneration();
+
+    // helper of possiblyCreateDependency
+    DetailedDep* findMatchingDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req, 
+                                         const Patch* fromPatch, int matl, IntVector low, IntVector high,
+                                         IntVector& totalLow, IntVector& totalHigh);
+
 
     void addScrubCount(const VarLabel* var, int matlindex,
                             const Patch* patch, int dw);
