@@ -230,8 +230,6 @@ void ParticleVis::execute()
   
   bool have_particle = false;
 
-
-  
   // Check to see if we are dealing with a new dataset
   // if so, check the generation number and update the particlesize
   // and vectorsize based on the cell size of the data.
@@ -282,9 +280,13 @@ void ParticleVis::execute()
       p_it = points.begin();
       v_it = vect->get().begin();
     }
-  }
+  } // end if( auto_radius.get() )
 
+  double count = 0;
   for(; p_it != p_it_end; p_it++, s_it++, id_it++){
+
+    update_progress( count++ / points.size() );
+
     ParticleSubset *ps = (*p_it).getParticleSubset();
     GeomGroup *obj = scinew GeomGroup;
     
@@ -299,7 +301,8 @@ void ParticleVis::execute()
     }  
     
     //--------------------------------------
-    if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles()) {
+    if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles() > 0 ) {
+
       float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
       int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
       int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
@@ -311,8 +314,8 @@ void ParticleVis::execute()
 				   shaft_rad.get());
       }
       int count = 0;
-      for(ParticleSubset::iterator iter = ps->begin();
-	  iter != ps->end(); iter++){
+      for(ParticleSubset::iterator iter = ps->begin(); iter != ps->end(); iter++) {
+
 	count++;
 	if (count == show_nth.get() ){ 
 	  have_particle = true;
@@ -425,7 +428,7 @@ void ParticleVis::execute()
 	    }
 	  }
 	  count = 0;
-	}
+	} // end if count == show_nth
       }
       
       if(have_particle ){
@@ -482,7 +485,7 @@ void ParticleVis::execute()
     if(hasVectors) v_it++;
     if(hasTensors) t_it++;
     if(hasScale) scale_it++;
-  }
+  } // end for( p_it )
 }
 
 
