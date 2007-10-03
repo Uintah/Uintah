@@ -11,17 +11,19 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR	:= Packages/Uintah/CCA/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
-	$(SRCDIR)/RigidMPM.cc \
 	$(SRCDIR)/MPMCommon.cc \
-	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
-	$(SRCDIR)/ShellMPM.cc \
-	$(SRCDIR)/AMRMPM.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/Solver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
 	$(SRCDIR)/MPMFlags.cc	\
 	$(SRCDIR)/ImpMPMFlags.cc
+
+UNUSED = $(SRCDIR)/RigidMPM.cc \
+	$(SRCDIR)/FractureMPM.cc \
+	$(SRCDIR)/ShellMPM.cc \
+	$(SRCDIR)/AMRMPM.cc 
+
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc 
@@ -35,8 +37,9 @@ SUBDIRS := \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/PhysicalBC \
 	$(SRCDIR)/ParticleCreator \
-	$(SRCDIR)/Crack		\
 	$(SRCDIR)/HeatConduction
+
+UNUSED_DIRS = Crack
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

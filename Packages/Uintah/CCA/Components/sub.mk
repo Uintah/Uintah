@@ -22,7 +22,6 @@ DUMMY_LIB      = $(SRCDIR)/Dummy
 
 SUBDIRS := \
         $(SRCDIR)/DataArchiver \
-        $(SRCDIR)/Examples \
         $(SRCDIR)/Models \
         $(SRCDIR)/LoadBalancers \
         $(SRCDIR)/Schedulers \
@@ -40,6 +39,8 @@ SUBDIRS := \
         $(SRCDIR)/SwitchingCriteria \
         $(SRCDIR)/OnTheFlyAnalysis \
         $(SRCDIR)/Parent
+
+UNUSED = $(SRCDIR)/Examples
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
