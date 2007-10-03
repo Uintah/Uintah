@@ -46,9 +46,8 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
-//#include <Packages/Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Include after Patch.h
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Include after Patch.h
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <vector>
 #include <sstream>
@@ -75,7 +74,7 @@ public:
   virtual void geom_pick(GeomPickHandle pick, void* userdata, GeomHandle picked);
   
 protected:
-  void addBoxGeometry(GeomLines* edges, const Box& box);
+  void addBoxGeometry(GeomTranspLines * edges, const Box & box);
   void setupColors();
   MaterialHandle getColor(string color, int type);
 
@@ -107,13 +106,14 @@ protected:
   GuiString level4_node_color;
   GuiString level5_node_color;
   GuiString level6_node_color;
-  GuiInt plane_on; // the selection plane
-  GuiInt node_select_on; // the nodes
-  GuiInt show_boundary_values;
-  GuiInt use_default_radius;
+  GuiInt    plane_on; // the selection plane
+  GuiInt    node_select_on; // the nodes
+  GuiInt    show_boundary_values;
+  GuiInt    use_default_radius;
   GuiDouble default_radius;
   GuiDouble radius;
-  GuiInt polygons;
+  GuiDouble grid_alpha;
+  GuiInt    polygons;
 
   CrowdMonitor widget_lock;
   FrameWidget *widget2d;
@@ -159,6 +159,7 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   use_default_radius(get_ctx()->subVar("use_default_radius")),
   default_radius(get_ctx()->subVar("default_radius")),
   radius(get_ctx()->subVar("radius")),
+  grid_alpha(get_ctx()->subVar("grid_alpha")),
   polygons(get_ctx()->subVar("polygons")),
   widget_lock("GridVusualizer widget lock"),
   init(1),
@@ -393,8 +394,9 @@ GridVisualizer::execute()
   initialize_ports();
   
   // clean out ogeom
-  for (unsigned int i = 0; i < id_list.size(); i++)
-    ogeom->delObj(id_list[i]);
+  for (unsigned int i = 0; i < id_list.size(); i++) {
+    ogeom->delObj( id_list[i] );
+  }
   id_list.clear();
 
   switch (initialize_grid()) {
@@ -440,11 +442,12 @@ GridVisualizer::execute()
 
     // there can be up to 6 colors only
     int color_index = l;
-    if (color_index >= 6)
+    if (color_index >= 6) {
       color_index = 5;
+    }
     
     // edges is all the edges made up all the patches in the level
-    GeomLines* edges = scinew GeomLines();
+    GeomTranspLines * edges = scinew GeomTranspLines();
 
     // nodes consists of the nodes in all the patches in the level
     GeomPoints* nodes = scinew GeomPoints();
@@ -468,14 +471,11 @@ GridVisualizer::execute()
           for(NodeIterator iter = NodeIterator( patch->getNodeLowIndex(),
                                                 patch->getNodeHighIndex());
               !iter.done(); iter++){
-            nodes->add(patch->nodePosition(*iter),
-                       node_color[color_index].get_rep());
+            nodes->add(patch->nodePosition(*iter), node_color[color_index].get_rep());
           }
         } else {
-          for(NodeIterator iter = patch->getNodeIterator();
-              !iter.done(); iter++){
-            nodes->add(patch->nodePosition(*iter),
-                       node_color[color_index].get_rep());
+          for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+            nodes->add(patch->nodePosition(*iter), node_color[color_index].get_rep());
           }
         }
         //------------------------------------
@@ -531,7 +531,8 @@ GridVisualizer::execute()
     // add all the edges for the level
     ostringstream name_edges;
     name_edges << "Patches - level " << l;
-    id_list.push_back(ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()));
+
+    id_list.push_back( ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()) );
 
     // add the spheres for the nodes
     pick_nodes->add(scinew GeomMaterial(spheres, node_color[color_index]));
@@ -617,24 +618,24 @@ GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
 
 // adds the lines to edges that make up the box defined by box 
 void
-GridVisualizer::addBoxGeometry(GeomLines* edges, const Box& box)
+GridVisualizer::addBoxGeometry(GeomTranspLines * edges, const Box& box)
 {
   Point min = box.lower();
   Point max = box.upper();
   
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), max.y(), min.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(max.x(), min.y(), min.z()));
-  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), max.y(), min.z()));
-  edges->add(Point(max.x(), min.y(), min.z()), Point(max.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), max.y(), min.z()), Point(max.x(), max.y(), min.z()));
-  edges->add(Point(min.x(), max.y(), min.z()), Point(min.x(), max.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), max.z()), Point(max.x(), min.y(), max.z()));
-  edges->add(Point(min.x(), min.y(), max.z()), Point(min.x(), max.y(), max.z()));
-  edges->add(Point(max.x(), max.y(), min.z()), Point(max.x(), max.y(), max.z()));
-  edges->add(Point(max.x(), min.y(), max.z()), Point(max.x(), max.y(), max.z()));
-  edges->add(Point(min.x(), max.y(), max.z()), Point(max.x(), max.y(), max.z()));
+  edges->add( Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()) );
+  edges->add( Point(min.x(), min.y(), min.z()), Point(min.x(), max.y(), min.z()) );
+  edges->add( Point(min.x(), min.y(), min.z()), Point(max.x(), min.y(), min.z()) );
+  edges->add( Point(max.x(), min.y(), min.z()), Point(max.x(), max.y(), min.z()) );
+  edges->add( Point(max.x(), min.y(), min.z()), Point(max.x(), min.y(), max.z()) );
+  edges->add( Point(min.x(), max.y(), min.z()), Point(max.x(), max.y(), min.z()) );
+  edges->add( Point(min.x(), max.y(), min.z()), Point(min.x(), max.y(), max.z()) );
+  edges->add( Point(min.x(), min.y(), min.z()), Point(min.x(), min.y(), max.z()) );
+  edges->add( Point(min.x(), min.y(), max.z()), Point(max.x(), min.y(), max.z()) );
+  edges->add( Point(min.x(), min.y(), max.z()), Point(min.x(), max.y(), max.z()) );
+  edges->add( Point(max.x(), max.y(), min.z()), Point(max.x(), max.y(), max.z()) );
+  edges->add( Point(max.x(), min.y(), max.z()), Point(max.x(), max.y(), max.z()) );
+  edges->add( Point(min.x(), max.y(), max.z()), Point(max.x(), max.y(), max.z()) );
 }
 
 // grabs the colors form the UI and assigns them to the local colors
@@ -664,30 +665,35 @@ void GridVisualizer::setupColors() {
 MaterialHandle
 GridVisualizer::getColor(string color, int type)
 {
+  Material * material = NULL;
   float i;
   if (type == GRID_COLOR)
     i = 1.0;
   else
     i = 0.7;
-  if (color == "red")
-    return scinew Material(Color(0,0,0), Color(i,0,0),
-                           Color(.5,.5,.5), 20);
-  else if (color == "green")
-    return scinew Material(Color(0,0,0), Color(0,i,0),
-                           Color(.5,.5,.5), 20);
-  else if (color == "yellow")
-    return scinew Material(Color(0,0,0), Color(i,i,0),
-                           Color(.5,.5,.5), 20);
-  else if (color == "magenta")
-    return scinew Material(Color(0,0,0), Color(i,0,i),
-                           Color(.5,.5,.5), 20);
-  else if (color == "cyan")
-    return scinew Material(Color(0,0,0), Color(0,i,i),
-                           Color(.5,.5,.5), 20);
-  else if (color == "blue")
-    return scinew Material(Color(0,0,0), Color(0,0,i),
-                           Color(.5,.5,.5), 20);
-  else
-    return scinew Material(Color(0,0,0), Color(i,i,i),
-                           Color(.5,.5,.5), 20);
+
+  if (color == "red") {
+    material = scinew Material(Color(0,0,0), Color(i,0,0), Color(.5,.5,.5), 20);
+  }
+  else if (color == "green") {
+    material = scinew Material(Color(0,0,0), Color(0,i,0), Color(.5,.5,.5), 20);
+  }
+  else if (color == "yellow") {
+    material = scinew Material(Color(0,0,0), Color(i,i,0), Color(.5,.5,.5), 20);
+  }
+  else if (color == "magenta") {
+    material = scinew Material(Color(0,0,0), Color(i,0,i), Color(.5,.5,.5), 20);
+  }
+  else if (color == "cyan") {
+    material = scinew Material(Color(0,0,0), Color(0,i,i), Color(.5,.5,.5), 20);
+  }
+  else if (color == "blue") {
+    material = scinew Material(Color(0,0,0), Color(0,0,i), Color(.5,.5,.5), 20);
+  }
+  else {
+    material = scinew Material(Color(0,0,0), Color(i,i,i), Color(.5,.5,.5), 20);
+  }
+  material->transparency = grid_alpha.get();
+
+  return material;
 }

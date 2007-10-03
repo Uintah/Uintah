@@ -21,7 +21,11 @@ itcl_class Uintah_Visualization_GridVisualizer {
 
     method set_defaults {} {
 	
-	#the grid colors
+        # Grid Alpha:
+        global $this-grid_alpha
+        set $this-grid_alpha 1.0
+
+	# Grid colors:
 	global $this-level1_grid_color
 	set $this-level1_grid_color red
 	global $this-level2_grid_color
@@ -35,7 +39,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	global $this-level6_grid_color
 	set $this-level6_grid_color blue
 	
-	#the node colors
+	# Node colors:
 	global $this-level1_node_color
 	set $this-level1_node_color red
 	global $this-level2_node_color
@@ -146,10 +150,21 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	set n "$this-c needexecute"
 # 	puts "GridVisualizer.tcl::buildColorMenus:w = $w"
 	if {[set $this-nl] > 0} {
+
 	    # color menu stuff
 	    frame $w.colormenus -borderwidth 3 -relief ridge
 	    pack $w.colormenus -side top -fill x -padx 2 -pady 2
 	    
+            # alpha value
+            frame $w.colormenus.alphaFrame
+            pack  $w.colormenus.alphaFrame -anchor w -padx 2 -pady 2
+            label $w.colormenus.alphaFrame.label -text "Grid Line Alpha:"
+            entry $w.colormenus.alphaFrame.entry -textvariable $this-grid_alpha -width 5
+            pack  $w.colormenus.alphaFrame.label $w.colormenus.alphaFrame.entry -side left
+            TooltipMultiWidget "$w.colormenus.alphaFrame.entry $w.colormenus.alphaFrame.label" \
+                   "Sets the transparency of the grid lines.  (1 = opaque, 0 = invisible)"
+            bind $w.colormenus.alphaFrame.entry <Return> "$this-c needexecute"
+
 	    # set up the stuff for the grid colors
 	    frame $w.colormenus.gridcolor
 	    pack $w.colormenus.gridcolor -side left -fill y -padx 2 -pady 2
@@ -171,7 +186,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	}
 	Uintah_Visualization_VariablePlotter::ui
 #	toplevel $w
-	wm minsize $w 300 190
+	wm minsize $w 350 300
 	set n "$this-c needexecute "
 
 	#selection stuff
