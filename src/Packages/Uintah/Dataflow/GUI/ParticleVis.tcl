@@ -229,7 +229,7 @@ itcl_class Uintah_Visualization_ParticleVis {
             -title "ParticleVis Warning" \
             -text "WARNING: Particle ordering is not maintained across patch boundaries.\nVisual artifacts may appear if every particle is not shown."  
         $w.md hide Cancel
-        $w.md buttonconfigure OK -text OK -command { .md deactivate }
+        $w.md buttonconfigure OK -text OK -command "$w.md deactivate"
         set md $w.md
     }
 
