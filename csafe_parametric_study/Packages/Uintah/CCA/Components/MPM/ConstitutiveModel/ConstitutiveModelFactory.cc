@@ -55,6 +55,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }   
 
+#if 0 // only using elastic plastic and viscoscram
   if (mat_type == "rigid")
     return(scinew RigidMaterial(child,flags));
 
@@ -98,15 +99,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_neo_hook_plastic")
     return(scinew CompNeoHookPlas(child,flags));
-   
-  else if (mat_type ==  "visco_scram"){
-    if (flags->d_integrator_type == "explicit" || 
-        flags->d_integrator_type == "fracture")
-      return(scinew ViscoScram(child,flags));
-    else if (flags->d_integrator_type == "implicit")
-      return(scinew ViscoScramImplicit(child,flags));
-  }
-   
   else if (mat_type ==  "viscoSCRAM_hs")
     return(scinew ViscoSCRAMHotSpot(child,flags));
    
@@ -130,11 +122,20 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "hypoelastic_plastic")
     return(scinew HypoElasticPlastic(child,flags));
 
+  else if (mat_type ==  "soil_foam")
+    return(scinew SoilFoam(child,flags));
+#endif
+  if (mat_type ==  "visco_scram"){
+    if (flags->d_integrator_type == "explicit" || 
+        flags->d_integrator_type == "fracture")
+      return(scinew ViscoScram(child,flags));
+    else if (flags->d_integrator_type == "implicit")
+      return(scinew ViscoScramImplicit(child,flags));
+  }
+   
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlastic(child,flags));
 
-  else if (mat_type ==  "soil_foam")
-    return(scinew SoilFoam(child,flags));
 
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

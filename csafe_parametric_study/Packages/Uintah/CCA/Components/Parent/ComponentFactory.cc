@@ -47,6 +47,7 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
 
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
+#if 0 // not using specialized mpm components
   } else if (sim_comp == "mpmf" || sim_comp == "fracturempm" || sim_comp == "FRACTUREMPM") {
     return scinew FractureMPM(world);
   } else if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
@@ -55,6 +56,13 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     return scinew AMRMPM(world);
   } else if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
     return scinew ShellMPM(world);
+  } else if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
+    return scinew MPMICE(world,SHELL_MPMICE, doAMR);
+  } else if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
+    return scinew MPMICE(world,RIGID_MPMICE, doAMR);
+  } else if (sim_comp == "fmpmice" || sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
+    return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
+#endif
   } else if (sim_comp == "impm" || sim_comp == "IMPM") {
     return scinew ImpMPM(world);
   } else if (sim_comp == "ice" || sim_comp == "ICE") {
@@ -64,18 +72,13 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
       return scinew ICE(world);
   } else if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
     return scinew MPMICE(world,STAND_MPMICE, doAMR);
-  } else if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
-    return scinew MPMICE(world,SHELL_MPMICE, doAMR);
-  } else if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
-    return scinew MPMICE(world,RIGID_MPMICE, doAMR);
-  } else if (sim_comp == "fmpmice" || sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
-    return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
 #ifndef _WIN32
   } else if (sim_comp == "arches" || sim_comp == "ARCHES") {
     return scinew Arches(world);
   } else if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world);
 #endif
+#if 0 //- not using example components
   } else if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
   } else if (sim_comp == "wave" || sim_comp == "WAVE") {
@@ -100,6 +103,7 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
       return scinew AMRSimpleCFD(world);
     else
       return scinew SimpleCFD(world);
+#endif
   } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR);
   } else if (sim_comp == "combine_patches") {

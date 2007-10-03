@@ -58,6 +58,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   d_testForNegTemps_mpm = true;
   
   switch(mpmtype) {
+#if 0 // only using serial
   case RIGID_MPMICE:
     d_mpm = scinew RigidMPM(myworld);
     d_rigidMPM = true;
@@ -68,6 +69,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   case FRACTURE_MPMICE:
     d_mpm = scinew FractureMPM(myworld);
     break;
+#endif
   default:
     d_mpm = scinew SerialMPM(myworld);
   }
