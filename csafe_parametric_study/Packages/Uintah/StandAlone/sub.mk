@@ -51,7 +51,6 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Solvers              \
-        Packages/Uintah/CCA/Components/Examples          \
         $(DUMMY_LIB)                                     \
         $(ARCHES_LIBS)                                   \
         $(MPM_LIB)                                       \
