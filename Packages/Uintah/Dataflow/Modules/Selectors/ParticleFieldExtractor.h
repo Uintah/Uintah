@@ -96,6 +96,7 @@ protected:
 private:
 
   static Mutex module_lock;
+  Mutex progress_lock;
 
   GuiString tcl_status;
   int generation;
@@ -165,6 +166,9 @@ private:
   int num_materials;
   int num_selected_materials;
 
+  int progress_steps;
+  int current_progress_step;
+
   string vector_to_string(vector< int > data);
   string vector_to_string(vector< string > data);
   string vector_to_string(vector< double > data);
@@ -185,6 +189,8 @@ private:
                     vector<string> type_list, string particleID);
   void graph(string, string);
 
+  void update_progress( const string * location = NULL );
+  void update_progress_max( int size );
  
 };
 

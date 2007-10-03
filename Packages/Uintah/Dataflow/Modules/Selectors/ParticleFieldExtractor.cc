@@ -82,7 +82,8 @@ ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx) :
   onMaterials(get_ctx()->subVar("onMaterials")),
   pNMaterials(get_ctx()->subVar("pNMaterials")),
   positionName(""), particleIDs(""), archiveH(0),
-  num_materials(0), num_selected_materials(0)
+  num_materials(0), num_selected_materials(0),
+  progress_lock("PFE Progress Lock")
 { 
 } 
 
@@ -114,8 +115,8 @@ ParticleFieldExtractor::add_type(string &type_list,
 }  
 
 bool
-ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
-                                bool archive_dirty )
+ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
+                                 bool archive_dirty )
 {
   string command;
 
@@ -129,22 +130,61 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
   GridP grid = archive->queryGrid(timestep);
   int levels = grid->numLevels();
   int guilevel = level_.get();
+
+  if( guilevel >= levels ) {
+    warning( "Gui level specification was greater than the number of actual levels... adjusting." ); 
+    guilevel = levels - 1;
+    level_.set( guilevel );
+  }
+
   LevelP level = grid->getLevel( (guilevel == levels ? levels-1 : guilevel) );
-  if( guilevel == levels )  level_.set( levels - 1 );
+  if( guilevel == levels ) { level_.set( levels - 1 ); }
   
   // get the number of materials for the particle Variables
   ConsecutiveRangeSet matls;
   int nm = 0;
+
+  bool sample = false;
+  int  numPatchesToSkip = 20;
+  int  samplingThreshold = 50;  // patches
+
   for( int i = 0; i < (int)names.size(); i++ ){
     for(int j = 0; j < levels; j++){
+
       level = grid->getLevel( j );
-      for (Level::patchIterator iter = level->patchesBegin();
-           (iter != level->patchesEnd()); ++iter){
-        matls = archive->queryMaterials(names[i], *iter, timestep);
-//         cerr<<"name: "<<names[i]<<", patch: "<<&(*iter)<<", matl_size: "<<matls.size()<<"\n";
-        nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
+
+      int  count = 0;
+      if( level->numPatches() > samplingThreshold ) {
+
+        update_progress_max( level->numPatches() / numPatchesToSkip );
+        char msg[1024];
+        sprintf( msg,
+                 "Sampling small subset (every %dth patch) of patches to find number of materials.\n"
+                 "This will save a lot of time as there are %d patches on this level\n"
+                 "However, this could cause the number of materials to be calculated incorrectly...", 
+                 numPatchesToSkip, level->numPatches() );
+        warning( msg );
+        sample = true;
+      } else {
+        update_progress_max( level->numPatches() );
+      }
+
+      for( Level::patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); ++iter ) {
+        // Sample every numPatchesToSkip'th patch...
+        if( !sample || ( sample && (count++ % numPatchesToSkip == 0) ) ) {
+          matls = archive->queryMaterials(names[i], *iter, timestep);
+          //cerr<<"name: "<<names[i]<<", patch: "<<&(*iter)<<", matl_size: "<<matls.size()<<"\n";
+          string msg = "setVars - find number of materials";
+          update_progress( &msg );
+          nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
+        }
       }
     }
+  }
+  if( sample ) {
+    char msg[1024];
+    sprintf( msg, "Found %d materials...", nm );
+    warning( msg );
   }
   ostringstream level_os;
 
@@ -159,37 +199,30 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     bool found_particles = false;
     for( int j = 0; j < (int)names.size(); j++ ){
       if( names[j] == "p.x" ){
-        for(int i = 0; i < levels; i++){
-          level = grid->getLevel( i );
-          for (Level::patchIterator iter = level->patchesBegin();
-               (iter != level->patchesEnd()); ++iter){
+        for( int lev = levels-1; !found_particles && lev >= 0; lev-- ){
+          level = grid->getLevel( lev );
+          for( Level::patchIterator iter = level->patchesBegin(); 
+               !found_particles && iter != level->patchesEnd(); ++iter ) {
+
             ParticleVariable<Point> var;
             matls = archive->queryMaterials(names[j], *iter, timestep);
             ConsecutiveRangeSet::iterator it = matls.begin();
-            while( it != matls.end() ){
+            while( !found_particles && it != matls.end() ){
               archive->query( var, names[j], *it, *iter, timestep); 
               if(var.getParticleSet()->numParticles() > 0){
-                level_os << i <<" ";
+                level_os << lev << " ";
                 if( !found_particles ) {
                   found_particles = true; //we have found particles
                 }
-                break;                  // break out while
-              } else {
               }
               ++it;
-            }
-            if( found_particles )
-              break;  //break out patches loop
-          }
-          // don't break out of levels loop
-        }
-        if( found_particles ){
-          break;
-        }
-      }
-    }
+            } // end while
+          } // end if patchIterator
+        } // end for level
+      } // end if p.x
+    } // end for j
 
-    Patch* r = *(level->patchesBegin());
+    Patch * patch = *(level->patchesBegin());
 
 
     //string type_list("");
@@ -220,11 +253,15 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     const TypeDescription *td;
     bool found = false;
     for( int i = 0; i < (int)names.size(); i++ ){
+
       td = types[i];
-      if(td->getType() ==  TypeDescription::ParticleVariable){
+
+      if( td->getType() ==  TypeDescription::ParticleVariable ) {
         const TypeDescription* subtype = td->getSubType();
-        matls = archive->queryMaterials(names[i], r, timestep);
-        if(matls.size() == 0) continue;
+        matls = archive->queryMaterials( names[i], patch, timestep );
+
+        if( matls.size() == 0 ) continue;
+
         switch ( subtype->getType() ) {
         case TypeDescription::double_type:
         case TypeDescription::float_type:
@@ -276,9 +313,9 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
           found = true;
           break;
         default:
-          cerr<<"Unknown particle type\n";
+          cerr << "Unknown particle type\n";
           found = false;
-        }// else { Tensor,Other}
+        } // else { Tensor,Other}
       }
     }
   
@@ -317,7 +354,7 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 
     return found;
   }
-}
+} // end setVars()
 
 
 bool
@@ -509,6 +546,9 @@ ParticleFieldExtractor::graph(string idx, string var)
 void
 ParticleFieldExtractor::execute() 
 { 
+  // Set the progress counter to 0...
+  update_progress_max( 0 );
+
   //  const char* old_tag1 = AllocatorSetDefaultTag("ParticleFieldExtractor::execute");
   tcl_status.set("Calling ParticleFieldExtractor!"); 
   //  bool newarchive; RNJ - Not used???
@@ -517,66 +557,96 @@ ParticleFieldExtractor::execute()
   pvout = (VectorParticlesOPort *) get_oport("Vector Particles");
   ptout = (TensorParticlesOPort *) get_oport("Tensor Particles");
   ArchiveHandle handle;
-   if(!(in->get(handle) && handle.get_rep())){
+
+  if(!(in->get(handle) && handle.get_rep())){
     warning("ParticleFieldExtractor::execute() Didn't get a handle.");
-     //     AllocatorSetDefaultTag(old_tag1);
-     return;
-   }
+    //     AllocatorSetDefaultTag(old_tag1);
+    return;
+  }
    
-   DataArchiveHandle archive = handle->getDataArchive();
+  DataArchiveHandle archive = handle->getDataArchive();
 
-   int new_generation = handle->generation;
-   bool archive_dirty = new_generation != generation;
-   if( archive_dirty ){
-     generation = new_generation;
-     // we have a different archive
-//      cerr<<"new DataArchive ... \n";
-     // empty the cache of stored variables
-     material_data_list.clear();
+  int new_generation = handle->generation;
+  bool archive_dirty = new_generation != generation;
+  if( archive_dirty ){
+    generation = new_generation;
+    // we have a different archive
+    //      cerr<<"new DataArchive ... \n";
+    // empty the cache of stored variables
+    material_data_list.clear();
      
-     if (archiveH.get_rep()  == 0 ){
-       string visible;
-       get_gui()->eval(get_id() + " isVisible", visible);
-       if( visible == "0" ){
-         get_gui()->execute(get_id() + " buildTopLevel");
-       }
-
-     }
+    if (archiveH.get_rep()  == 0 ){
+      string visible;
+      get_gui()->eval(get_id() + " isVisible", visible);
+      if( visible == "0" ){
+        get_gui()->execute(get_id() + " buildTopLevel");
+      }
+    }
+    archiveH = handle;
+  } // end if( archive_dirty )
      
-     archiveH = handle;
-   }
+  if( !setVars( archive, archiveH->timestep(), archive_dirty )){
+    error( "Cannot find any ParticleVariables, no action." );
+    //     AllocatorSetDefaultTag(old_tag1);
+    return;
+  }
+
+  if( !showVarsForMatls() ) return;
      
-   if( !setVars( archive, archiveH->timestep(), archive_dirty )){
-     warning("Cannot read any ParticleVariables, no action.");
-     //     AllocatorSetDefaultTag(old_tag1);
-     return;
-   }
-
-   if( !showVarsForMatls() ) return;
-     
-   ScalarParticles* sp = 0;
-   VectorParticles* vp = 0;
-   TensorParticles* tp = 0;
-
-   // what time is it?
-   times.clear();
-   indices.clear();
-   archive->queryTimesteps( indices, times );
-   timestep = handle->timestep();
-   time = times[timestep];
-
-   buildData( archive, timestep, sp, vp, tp );
-   if( sp != 0 ) psout->send( sp );
-   if( vp != 0 ) pvout->send( vp );
-   if( tp != 0 ) ptout->send( tp );     
-
-   if( sp == 0 && vp == 0 && tp == 0 ){
-     warning("ParticleField Extractor did not find particle data.");
-   }
-   tcl_status.set("Done");
-   //   AllocatorSetDefaultTag(old_tag1);
+  ScalarParticles* sp = 0;
+  VectorParticles* vp = 0;
+  TensorParticles* tp = 0;
+  
+  // what time is it?
+  times.clear();
+  indices.clear();
+  archive->queryTimesteps( indices, times );
+  timestep = handle->timestep();
+  time = times[timestep];
+  
+  buildData( archive, timestep, sp, vp, tp );
+  if( sp != 0 ) psout->send( sp );
+  if( vp != 0 ) pvout->send( vp );
+  if( tp != 0 ) ptout->send( tp );     
+  
+  if( sp == 0 && vp == 0 && tp == 0 ){
+    warning("ParticleField Extractor did not find particle data.");
+  }
+  tcl_status.set("Done");
+  //   AllocatorSetDefaultTag(old_tag1);
 }
 
+///////////////////////////////////////////////////////////////////////////
+
+void
+ParticleFieldExtractor::update_progress_max( int size )
+{
+  if( size == 0 ) {
+    progress_steps = 0;
+    current_progress_step = 0;
+  } else {
+    progress_steps += size;
+  }
+}
+
+void
+ParticleFieldExtractor::update_progress( const string * location /* = NULL */ )
+{
+  progress_lock.lock();
+  double percent = 0.0;
+  if( progress_steps > 0 ) {
+    percent = current_progress_step / (double)progress_steps;
+  }
+
+  // Uncomment the following two lines if you are debugging...
+  //if( location != NULL ) cout << *location << " - ";
+  //cout << "progress: " << percent << "\n";
+  current_progress_step++;
+  Module::update_progress( percent );
+  progress_lock.unlock();
+}
+
+///////////////////////////////////////////////////////////////////////////
 
 void 
 ParticleFieldExtractor::buildData(DataArchiveHandle& archive, int index,
@@ -584,11 +654,13 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, int index,
                                   VectorParticles*& vp,
                                   TensorParticles*& tp)
 {
+  // Set the progress counter to 0...
+  update_progress_max( 0 );
+
   GridP grid = archive->queryGrid( index );
   int levels = grid->numLevels();
   int guilevel = level_.get();
   LevelP level = grid->getLevel( (guilevel == levels ? levels-1 : guilevel) );
-
  
   PSetHandle pseth = scinew PSet();
   pseth->SetLevel( level );
@@ -617,12 +689,14 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, int index,
   Vector scale = archive->getCellScale();
 //   WallClockTimer my_timer;
 //   my_timer.start();
-//  double size = level->numPatches();  RNJ - Commented to get rid of unused warning.
-//  int count = 0; RNJ - Commented to get rid of unused warning.
-  // iterate over patches
-  for(Level::const_patchIterator patch = level->patchesBegin();
-      patch != level->patchesEnd(); patch++ ){
-//     update_progress(count++/size, my_timer);
+  
+  double numPatches = level->numPatches();
+  int count = 0;
+
+  // Iterate over patches
+  update_progress_max( level->numPatches() );
+  for(Level::const_patchIterator patch = level->patchesBegin(); patch != level->patchesEnd(); patch++ ) {
+
 //     sema->down();
 //     Thread *thrd =
 //       new Thread( scinew PFEThread( this, archive,
@@ -768,8 +842,7 @@ PFEThread::run()
     scalars.resync();
     tensors.resync();
 
-    for(ParticleSubset::iterator iter = source_subset->begin();
-        iter != source_subset->end(); iter++, dest++){
+    for(ParticleSubset::iterator iter = source_subset->begin(); iter != source_subset->end(); iter++, dest++) {
       if(have_vp)
         vectors[dest]=pvv[*iter];
       else
@@ -800,52 +873,51 @@ PFEThread::run()
       
       positions[dest]= ((pvp[*iter]).asVector() * scale_).asPoint();
     }
-  }
+  } // end for( matl )
 
   if( !(have_sp || have_vp || have_tp) ){
     sema->up();
-    return;
+  } else {
+    imutex->lock();
+    pseth->AddParticles( positions, ids, patch);
+    imutex->unlock();
+    if(have_sp) {
+      smutex->lock();
+      if( sp == 0 ){
+        sp = scinew ScalarParticles();
+        sp->Set( pseth );
+      }
+      sp->AddVar( scalars );
+      smutex->unlock();
+    } else 
+      sp = 0;
+    if(have_vp) {
+      vmutex->lock();
+      if( vp == 0 ){
+        vp = scinew VectorParticles();
+        vp->Set( pseth );
+      }
+      vp->AddVar( vectors );
+      vmutex->unlock();
+    } else 
+      vp = 0;
+    
+    if(have_tp){
+      tmutex->lock();
+      if( tp == 0 ){
+        tp = scinew TensorParticles();
+        tp->Set( pseth );
+      }
+      tp->AddVar( tensors);
+      tmutex->unlock();
+    } else
+      tp = 0;
   }
-
-
-
-  imutex->lock();
-  pseth->AddParticles( positions, ids, patch);
-  imutex->unlock();
-  if(have_sp) {
-    smutex->lock();
-    if( sp == 0 ){
-      sp = scinew ScalarParticles();
-      sp->Set( pseth );
-    }
-    sp->AddVar( scalars );
-    smutex->unlock();
-  } else 
-    sp = 0;
-  if(have_vp) {
-    vmutex->lock();
-    if( vp == 0 ){
-      vp = scinew VectorParticles();
-      vp->Set( pseth );
-    }
-    vp->AddVar( vectors );
-    vmutex->unlock();
-  } else 
-    vp = 0;
-
-  if(have_tp){
-    tmutex->lock();
-    if( tp == 0 ){
-      tp = scinew TensorParticles();
-      tp->Set( pseth );
-    }
-    tp->AddVar( tensors);
-    tmutex->unlock();
-  } else
-    tp = 0;
-
+  string location = "PFEThread Run()";
+  pfe->update_progress( &location );
   sema->up();
-}
+
+} // end run()
 
 
 void
