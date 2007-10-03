@@ -298,6 +298,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	pack $parent.m.m  -side top -expand yes -fill both
 	
 	set selected 0;
+
 	for {set i 0} { $i < $ns} {incr i} {
 
 	    $buttontype $parent.m.m.p$i -text $i \
@@ -317,7 +318,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
             }
         }
 	
-        if { !$selected } { 
+        if { !$selected && $ns > 0 } { 
             $parent.m.m.p0 select 
             if { [llength [set $this-onMaterials]] == 0 } {
                 lappend $this-onMaterials 0
