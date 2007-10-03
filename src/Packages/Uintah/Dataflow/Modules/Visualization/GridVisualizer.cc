@@ -530,8 +530,11 @@ GridVisualizer::execute()
 
     // add all the edges for the level
     ostringstream name_edges;
-    name_edges << "Patches - level " << l;
-
+    if( grid_alpha.get() != 1.0) {
+      name_edges << "Patches - level " << l <<" Transparent";
+    } else {
+      name_edges << "Patches - level " << l;
+    }
     id_list.push_back( ogeom->addObj(scinew GeomMaterial(edges, level_color[color_index]), name_edges.str().c_str()) );
 
     // add the spheres for the nodes
