@@ -575,8 +575,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     if (psubset == 0 || psubset->numParticles() != dfi->numParticles)
     {
      d_psetDB[key] = psubset =
-       scinew ParticleSubset(scinew ParticleSet(dfi->numParticles), true,
-                             matlIndex, patch, 0);
+       scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
     }
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
@@ -713,7 +712,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
     ParticleVariable<long64> var;
     query(var, "p.particleID", matlIndex, patch, index);
     //  cerr<<"var["<<idx<<"] = "<<var[idx]<<endl;
-    if( idx < var.getParticleSet()->numParticles() && var[idx] == particleID )
+    if( idx < var.getParticleSubset()->numParticles() && var[idx] == particleID )
       return;
     else {
       ParticleSubset* subset = var.getParticleSubset();

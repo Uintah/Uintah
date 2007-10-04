@@ -1240,9 +1240,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             oldDataWarehouse->get(*var, label, oldsub);
 
             // reset the bounds of the old var's data so copyData doesn't complain
-            ParticleSet* pset = scinew ParticleSet(oldsub->numParticles());
-            ParticleSubset* tempset = scinew ParticleSubset(pset, true, matl, newPatch, newPatch->getLowIndex(),
-                                                            newPatch->getHighIndex(), 0);
+            ParticleSubset* tempset = scinew ParticleSubset(oldsub->numParticles(), matl, newPatch,
+                                                            newPatch->getLowIndex(), newPatch->getHighIndex());
             const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
             newv->copyData(&var->getBaseRep());
             delete var; //pset and tempset are deleted with it.

@@ -18,8 +18,6 @@ using namespace std;
 
 ParticleSubset::~ParticleSubset()
 {
-  if(d_pset && d_pset->removeReference())
-    delete d_pset;
   for(int i=0;i<(int)neighbor_subsets.size();i++)
     if(neighbor_subsets[i]->removeReference())
       delete neighbor_subsets[i];
@@ -27,17 +25,13 @@ ParticleSubset::~ParticleSubset()
     delete[] d_particles;
 }
 
-ParticleSubset::ParticleSubset()
- : d_pset( scinew ParticleSet )
+ParticleSubset::ParticleSubset() : d_numParticles(0)
 {
   init();
-  d_pset->addReference();
 }
 
-ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
-			       int matlIndex, const Patch* patch,
-			       particleIndex sizeHint)
-    : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch)
+ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch)
+    : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch)
 {
   init();
 
@@ -50,56 +44,43 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
     d_low = IntVector(0,0,0);
     d_high = IntVector(0,0,0);
   }
-  if(sizeHint != 0){
-    d_allocatedSize = sizeHint;
-    d_particles = scinew particleIndex[d_allocatedSize];
-  }
-  d_pset->addReference();
-  if(fill)
-    fillset();
+  fillset();
 }
 
-ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
-			       int matlIndex, const Patch* patch,
+ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch,
                                IntVector low, IntVector high,
 			       const vector<const Patch*>& neighbors,
 			       const vector<ParticleSubset*>& neighbor_subsets)
-  : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
+  : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch),
     d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
 {
   init();
-  d_pset->addReference();
   for(int i=0;i<(int)neighbor_subsets.size();i++)
     neighbor_subsets[i]->addReference();
-  if(fill)
-    fillset();
+  fillset();
 }
 
-ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
-                               int matlIndex, const Patch* patch,
-                               IntVector low, IntVector high,
-                               particleIndex /*sizeHint*/)
-  : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
+ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* patch,
+                               IntVector low, IntVector high)
+  : d_numParticles(num_particles), d_matlIndex(matlIndex), d_patch(patch),
     d_low(low), d_high(high)
 {
   init();
-  d_pset->addReference();
   for(int i=0;i<(int)neighbor_subsets.size();i++)
     neighbor_subsets[i]->addReference();
-  if(fill)
-    fillset();
+  fillset();
 }
 
 void
 ParticleSubset::fillset()
 {
-  if(d_particles)
-    delete[] d_particles;
-  int np = d_numParticles = d_pset->numParticles();
-  d_particles = scinew particleIndex[d_numParticles];
-  for(int i=0;i<np;i++)
-    d_particles[i]=i;
+  if (d_numParticles > 0) {
+    d_particles = scinew particleIndex[d_numParticles];
+    for(int i=0;i<d_numParticles;i++)
+      d_particles[i]=i;
+    d_allocatedSize = d_numParticles;
+  }
 }
 
 
@@ -133,7 +114,6 @@ void
 ParticleSubset::init()
 {
   d_particles = 0;
-  d_numParticles = 0;
   d_allocatedSize = 0;
   d_numExpansions = 0;
 }
@@ -175,23 +155,15 @@ ParticleSubset::expand(particleIndex amount)
 
 particleIndex ParticleSubset::addParticles(particleIndex count)
 {
-  particleIndex oldsize = d_pset->addParticles(count);
-  particleIndex newsize = oldsize+count;
-  ASSERTEQ(oldsize, d_numParticles);
-  particleIndex start = oldsize;
+  if(d_numParticles + count > d_allocatedSize)
+    expand(count);
 
-  d_allocatedSize = newsize;
-  particleIndex* newparticles = scinew particleIndex[d_allocatedSize];
-  if(d_particles){
-    for(particleIndex i = 0; i < oldsize; i++)
-      newparticles[i] = d_particles[i];
-    delete[] d_particles;
-  }
-  d_particles = newparticles;
-  d_numParticles = newsize;
 
-  for(particleIndex idx = oldsize; idx < newsize; idx++, start++)
-    d_particles[start] = idx;
+  particleIndex oldsize = d_numParticles;
+  d_numParticles += count;
+
+  for(particleIndex idx = oldsize; idx < d_numParticles; idx++)
+    d_particles[idx] = idx;
   return oldsize;  // The beginning of the new index range
 }
 

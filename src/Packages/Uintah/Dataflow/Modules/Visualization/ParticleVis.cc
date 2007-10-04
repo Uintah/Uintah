@@ -301,8 +301,7 @@ void ParticleVis::execute()
     }  
     
     //--------------------------------------
-    if( drawspheres.get() == 1 && ps->getParticleSet()->numParticles() > 0 ) {
-
+    if( drawspheres.get() == 1 && ps->numParticles() > 0) {
       float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
       int nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
       int nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
@@ -440,7 +439,7 @@ void ParticleVis::execute()
 	GeomPick *pick = scinew GeomPick( obj, this);
 	ogeom->addObj(pick, "Particles");      
       }
-    } else if( ps->getParticleSet()->numParticles() ) { // Particles
+    } else if( ps->numParticles() ) { // Particles
       GeomGroup *obj = scinew GeomGroup;
       GeomPoints *pts= scinew GeomPoints();
       int count = 0;

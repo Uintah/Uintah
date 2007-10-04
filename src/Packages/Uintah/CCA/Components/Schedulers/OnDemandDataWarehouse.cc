@@ -357,8 +357,7 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
 
         ParticleSubset* pset = var->getParticleSubset();
         ssLock.lock();  // Dd: ??
-        sendset = scinew ParticleSubset(pset->getParticleSet(),
-                                        false, matlIndex, patch, low, high, 0);
+        sendset = scinew ParticleSubset(0, matlIndex, patch, low, high);
         ssLock.unlock();  // Dd: ??
         constParticleVariable<Point> pos;
         old_dw->get(pos, pos_var, pset);
@@ -516,9 +515,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch, const VarLabel* pos_var,
             ASSERTEQ(numParticles, psubset->numParticles());
           }
         }
-        ParticleSubset* recvset = scinew ParticleSubset(psubset->getParticleSet(),
-                                                     true, matlIndex, patch, 
-                                                     low, high, 0);
+        ParticleSubset* recvset = scinew ParticleSubset(psubset->numParticles(), matlIndex, patch, low, high);
         old_dw->rs_.add_sendset(recvset, from, patch, matlIndex, low, high, old_dw->d_generation);
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex,patch,low, high);
@@ -802,9 +799,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 
   ASSERT(!patch->isVirtual());
 
-  ParticleSet* pset = scinew ParticleSet(numParticles);
   ParticleSubset* psubset = 
-    scinew ParticleSubset(pset, true, matlIndex, patch, low, high, 0);
+    scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
   
   psetDBType::key_type key(patch, matlIndex, low, high, getID());
   if(d_psetDB.find(key) != d_psetDB.end())
@@ -893,7 +889,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       printParticleSubsets();
       d_lock.readUnlock();
       ostringstream s;
-      s << "ParticleSet, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
+      s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
       SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
                                 "Cannot find particle set on patch", __FILE__, __LINE__));
     }
@@ -1052,7 +1048,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
 
       particleIndex sizeHint = (relPatch && realNeighbor == relPatch) ? pset->numParticles():0;
       ParticleSubset* subset = 
-        scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, sizeHint);
+        scinew ParticleSubset(0, -1, 0);
+      subset->expand(sizeHint);
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1068,11 +1065,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   }
 
   
-  ParticleSet* newset = scinew ParticleSet(totalParticles);
-  ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
-                                                    matlIndex, relPatch,
-                                                    lowIndex, highIndex,
-                                                    vneighbors, subsets);
+  ParticleSubset* newsubset = scinew ParticleSubset(totalParticles, matlIndex, relPatch,
+                                                    lowIndex, highIndex, vneighbors, subsets);
 
   return newsubset;
 }

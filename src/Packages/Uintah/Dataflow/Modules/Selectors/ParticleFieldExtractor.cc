@@ -209,7 +209,7 @@ ParticleFieldExtractor::setVars( DataArchiveHandle& archive, int timestep,
             ConsecutiveRangeSet::iterator it = matls.begin();
             while( !found_particles && it != matls.end() ){
               archive->query( var, names[j], *it, *iter, timestep); 
-              if(var.getParticleSet()->numParticles() > 0){
+              if(var.getParticleSubset()->numParticles() > 0){
                 level_os << lev << " ";
                 if( !found_particles ) {
                   found_particles = true; //we have found particles
@@ -752,7 +752,7 @@ PFEThread::run()
       archive->query(pvv, pfe->pvVar.get(), matl, patch, pfe->timestep);    
       if( !have_subset){
         source_subset = pvv.getParticleSubset();
-        if( source_subset->getParticleSet()->numParticles() != 0 ){
+        if( source_subset->numParticles() != 0 ){
           have_subset = true;
         }
       }
@@ -764,7 +764,7 @@ PFEThread::run()
         archive->query(pvs, pfe->psVar.get(), matl, patch, pfe->timestep);
         if( !have_subset){
           source_subset = pvs.getParticleSubset();
-          if( source_subset->getParticleSet()->numParticles() != 0 ){
+          if( source_subset->numParticles() != 0 ){
             have_subset = true;
           }
         }
@@ -774,7 +774,7 @@ PFEThread::run()
         archive->query(pvfloat, pfe->psVar.get(), matl, patch, pfe->timestep);
         if( !have_subset){
           source_subset = pvfloat.getParticleSubset();
-          if( source_subset->getParticleSet()->numParticles() != 0 ){
+          if( source_subset->numParticles() != 0 ){
             have_subset = true;
           }
         }
@@ -785,7 +785,7 @@ PFEThread::run()
         archive->query(pvint, pfe->psVar.get(), matl, patch, pfe->timestep);
         if( !have_subset){
           source_subset = pvint.getParticleSubset();
-          if( source_subset->getParticleSet()->numParticles() != 0 ){
+          if( source_subset->numParticles() != 0 ){
             have_subset = true;
           }
         }
@@ -798,7 +798,7 @@ PFEThread::run()
       archive->query(pvt, pfe->ptVar.get(), matl, patch, pfe->timestep);
       if( !have_subset){
         source_subset = pvt.getParticleSubset();
-          if( source_subset->getParticleSet()->numParticles() != 0 ){
+          if( source_subset->numParticles() != 0 ){
             have_subset = true;
           }
       }
