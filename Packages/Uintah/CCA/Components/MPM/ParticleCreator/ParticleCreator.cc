@@ -4,7 +4,6 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
@@ -285,6 +284,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
                                    DataWarehouse* new_dw)
 {
 
+  cout << "  Creating " << numParticles << " on patch " << patch->getID() << endl;
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
   new_dw->allocateAndPut(position,       d_lb->pXLabel,             subset);

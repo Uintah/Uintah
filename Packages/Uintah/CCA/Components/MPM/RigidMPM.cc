@@ -12,7 +12,6 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
@@ -409,8 +408,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pColor_new.copyData(pColor);
       }    
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
       new_dw->deleteParticles(delset);      
     }
 

@@ -83,7 +83,7 @@ public:
   //////////
   // Insert Documentation Here:
   void resync() {
-    d_pdata->resize(getParticleSet()->numParticles());
+    d_pdata->resize(getParticleSubset()->numParticles());
   }
       
   //////////
@@ -162,9 +162,9 @@ public:
   virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
 			   void*& ptr) const {
     std::ostringstream str;
-    str << getParticleSet()->numParticles();
+    str << getParticleSubset()->numParticles();
     elems=str.str();
-    totsize = getParticleSet()->numParticles()*sizeof(T);
+    totsize = getParticleSubset()->numParticles()*sizeof(T);
     ptr = getBasePointer();
   }
 protected:
@@ -222,7 +222,7 @@ private:
   ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
     : ParticleVariableBase(pset)
   {
-    d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
+    d_pdata=scinew ParticleData<T>(pset->numParticles());
     d_pdata->addReference();
   }
    
@@ -247,7 +247,7 @@ private:
     TAU_PROFILE_STOP(t2);
 
     TAU_PROFILE_START(t3);
-    d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
+    d_pdata=scinew ParticleData<T>(pset->numParticles());
     TAU_PROFILE_STOP(t3);
 
     TAU_PROFILE_START(t4);
@@ -362,7 +362,7 @@ template<class T>
       delete d_pset;
     d_pset = pset;
     pset->addReference();
-    d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
+    d_pdata=scinew ParticleData<T>(pset->numParticles());
     d_pdata->addReference();
     ASSERTEQ(subsets.size(), srcs.size());
     ParticleSubset::iterator dstiter = pset->begin();
@@ -593,10 +593,6 @@ template<class T>
     ParticleSubset* getParticleSubset() const {
       return this->rep_.getParticleSubset();
     }
-
-    ParticleSet* getParticleSet() const {
-      return this->rep_.getParticleSet();
-    }    
   };
 
 } // End namespace Uintah

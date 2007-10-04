@@ -30,7 +30,6 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
@@ -3257,8 +3256,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
 
-      ParticleSubset* delete_particles = scinew ParticleSubset
-        (pset->getParticleSet(),false,dwindex,patch, 0);
+      ParticleSubset* delete_particles = scinew ParticleSubset(0, dwindex, patch);
     
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);

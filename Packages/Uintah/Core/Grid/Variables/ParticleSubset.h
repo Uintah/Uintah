@@ -1,7 +1,6 @@
 #ifndef PARTICLESUBSET_H
 #define PARTICLESUBSET_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Core/Geometry/IntVector.h>
@@ -17,6 +16,8 @@ using SCIRun::IntVector;
 
 #include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
+  typedef int particleIndex;
+  typedef int particleId;
   class Patch;
 /**************************************
 
@@ -38,7 +39,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   Particle, ParticleSet, ParticleSubset
+   Particle, ParticleSubset
 
 DESCRIPTION
    Long description...
@@ -51,15 +52,10 @@ WARNING
 
   class SCISHARE ParticleSubset : public RefCounted {
   public:
-    ParticleSubset(ParticleSet* pset, bool fill,
-		   int matlIndex, const Patch*,
-		   particleIndex sizeHint);
-    ParticleSubset(ParticleSet* pset, bool fill,
-		   int matlIndex, const Patch*,
-                   IntVector low, IntVector high,
-		   particleIndex sizeHint);
-    ParticleSubset(ParticleSet* pset, bool fill,
-		   int matlIndex, const Patch*,
+    ParticleSubset(int num_particles, int matlIndex, const Patch*);
+    ParticleSubset(int num_particles, int matlIndex, const Patch*,
+                   IntVector low, IntVector high);
+    ParticleSubset(int num_particles, int matlIndex, const Patch*,
 		   IntVector low, IntVector high,
                    const std::vector<const Patch*>& neighbors,
 		   const std::vector<ParticleSubset*>& subsets);
@@ -68,10 +64,6 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    ParticleSet* getParticleSet() const {
-      return d_pset;
-    }
-
     bool operator==(const ParticleSubset& ps) const {
       return d_numParticles == ps.d_numParticles && 
         // a null patch means that there is no patch center for the pset
@@ -143,6 +135,8 @@ WARNING
       return d_matlIndex;
     }
 
+    void expand(particleIndex minSizeIncrement);
+
     // sort the set by particle IDs
     void sort(ParticleVariableBase* particleIDs);
 
@@ -158,8 +152,6 @@ WARNING
    private:
     //////////
     // Insert Documentation Here:
-     
-    ParticleSet*               d_pset;
     particleIndex* d_particles;
     particleIndex d_numParticles;
     particleIndex d_allocatedSize;
@@ -175,8 +167,6 @@ WARNING
     void fillset();
 
     void init();
-    void expand(particleIndex minSizeIncrement);
-
     ParticleSubset(const ParticleSubset& copy);
     ParticleSubset& operator=(const ParticleSubset&);
   };

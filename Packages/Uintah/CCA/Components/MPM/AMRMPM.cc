@@ -10,7 +10,6 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -1754,8 +1753,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0,dwi,patch);
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);

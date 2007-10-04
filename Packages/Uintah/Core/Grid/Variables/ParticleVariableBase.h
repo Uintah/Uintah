@@ -15,7 +15,6 @@ namespace Uintah {
   class BufferInfo;
   class OutputContext;
   class ParticleSubset;
-  class ParticleSet;
   class Patch;
   class ProcessorGroup;
   class TypeDescription;
@@ -104,12 +103,6 @@ WARNING
 	 return d_pset;
       }
 
-      //////////
-      // Insert Documentation Here:
-      ParticleSet* getParticleSet() const {
-	 return d_pset->getParticleSet();
-      }
-      
       virtual void* getBasePointer() const = 0;
       void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
