@@ -57,32 +57,10 @@ void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
       throw ProblemSetupException("Model does not specify type=\"name\"", __FILE__, __LINE__);
     }
     
-    if(type == "SimpleRxn")
-      d_models.push_back(scinew SimpleRxn(d_myworld, model_ps));
-    else if(type == "AdiabaticTable")
-      d_models.push_back(scinew AdiabaticTable(d_myworld, model_ps,doAMR));
-    else if(type == "Test")
-      d_models.push_back(scinew TestModel(d_myworld, model_ps));
-    else if(type == "Mixing")
-      d_models.push_back(scinew Mixing(d_myworld, model_ps));
-    else if(type == "Simple_Burn")
+    if(type == "Simple_Burn")
       d_models.push_back(scinew Simple_Burn(d_myworld, model_ps, prob_spec));
     else if(type == "Steady_Burn")
       d_models.push_back(scinew Steady_Burn(d_myworld, model_ps, prob_spec));
-    else if(type == "Unsteady_Burn")
-      d_models.push_back(scinew Unsteady_Burn(d_myworld, model_ps, prob_spec));
-    else if(type == "IandG")
-      d_models.push_back(scinew IandG(d_myworld, model_ps));
-    else if(type == "JWLpp")
-      d_models.push_back(scinew JWLpp(d_myworld, model_ps));
-    else if(type == "LightTime")
-      d_models.push_back(scinew LightTime(d_myworld, model_ps));
-    else if(type == "flameSheet_rxn")
-      d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
-    else if(type == "PassiveScalar")
-      d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
-    else if(type == "VorticityConfinement")
-      d_models.push_back(scinew VorticityConfinement(d_myworld, model_ps));
     else
       throw ProblemSetupException("Unknown model: "+type, __FILE__, __LINE__);
   }

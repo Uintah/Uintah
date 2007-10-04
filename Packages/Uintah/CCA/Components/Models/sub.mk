@@ -10,8 +10,7 @@ SRCS    += \
 RADIATION :=
 
 
-SUBDIRS := $(SRCDIR)/test \
-           $(SRCDIR)/HEChem \
+SUBDIRS := $(SRCDIR)/HEChem \
             $(RADIATION)
        
 include $(SCIRUN_SCRIPTS)/recurse.mk
