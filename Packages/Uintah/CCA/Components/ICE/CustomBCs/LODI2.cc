@@ -139,7 +139,7 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::ParentOldDW, lb->vel_CCLabel,        ice_matls, gn);
     t->requires(Task::ParentNewDW, lb->speedSound_CCLabel, ice_matls, gn);
     t->requires(Task::ParentNewDW, lb->rho_CCLabel,        ice_matls, gn);
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
+    //t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
   }
   if(where == "CC_Exchange"){
     setLODI_bcs = true;
@@ -208,13 +208,21 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     // require(maxMach_face_varlabel);
   }
   //__________________________________
-  //    update pressure
+  //    update pressure (explicit and implicit)
   if(where == "update_press_CC"){ 
     setLodiBcs = true;
     old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
+  }
+    if(where == "imp_update_press_CC"){ 
+    setLodiBcs = true;
+    DataWarehouse* sub_new_dw = new_dw->getOtherDataWarehouse(Task::NewDW);
+    old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0); 
+    new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
+    new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
+    sub_new_dw->get(lv->press_CC,lb->press_CCLabel,      0,  patch,gn,0);
   }
   //__________________________________
   //    cc_ Exchange
