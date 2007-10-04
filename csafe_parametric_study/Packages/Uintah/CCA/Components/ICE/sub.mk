@@ -5,15 +5,10 @@ SRCDIR   := Packages/Uintah/CCA/Components/ICE
 
 SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/AMRICE.cc \
-       $(SRCDIR)/ICERF.cc \
        $(SRCDIR)/ICEDebug.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
-       $(SRCDIR)/Turbulence.cc \
-       $(SRCDIR)/SmagorinskyModel.cc \
-       $(SRCDIR)/DynamicModel.cc \
-       $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc \
        $(SRCDIR)/impAMRICE.cc \
        $(SRCDIR)/customInitialize.cc   \
@@ -25,7 +20,6 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
        Packages/Uintah/CCA/Components/MPM              \
-       Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
        Packages/Uintah/CCA/Ports                       \
        Packages/Uintah/Core/Grid                       \
        Packages/Uintah/Core/Util                       \

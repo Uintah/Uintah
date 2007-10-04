@@ -127,13 +127,14 @@ ICE::~ICE()
   delete lb;
   delete d_advector;
   delete d_exchCoeff;
-
+#if 0
   if(d_turbulence){
     delete d_turbulence;
   }
   if(d_analysisModule){
     delete d_analysisModule;
-  }   
+  }  
+#endif 
   if (d_press_matl && d_press_matl->removeReference()){
     delete d_press_matl;
   }
@@ -391,8 +392,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   // Set up turbulence models - needs to be done after materials are initialized
+#if 0
   d_turbulence = TurbulenceFactory::create(cfd_ice_ps, sharedState);
-
+#endif
   //__________________________________
   //  conservationTest
   ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
@@ -844,12 +846,13 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
-
+#if 0
   if(d_turbulence){
     // The turblence model is also called directly from
     // accumlateMomentumSourceSinks.  
     d_turbulence->scheduleComputeVariance(sched, patches, ice_matls);
   }
+#endif
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
   scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
                                                           maxMach_PSS);
@@ -1351,12 +1354,14 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
 
+#if 0
   if(d_turbulence){
     t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls, gac, 3);
     t->requires(Task::NewDW,lb->vvel_FCMELabel,   ice_matls, gac, 3);
     t->requires(Task::NewDW,lb->wvel_FCMELabel,   ice_matls, gac, 3);
     t->computes(lb->turb_viscosity_CCLabel,   ice_matls);
   } 
+#endif
 
   t->computes(lb->mom_source_CCLabel);
   sched->addTask(t, patches, matls);
@@ -3889,11 +3894,12 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           CCVariable<double> viscosity;  // don't alter the original value
           new_dw->allocateTemporary(viscosity, patch, gac, 2);
           viscosity.copyData(viscosity_org);
-        
+#if 0        
           if(d_turbulence){ 
             d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
                                    d_sharedState, viscosity);
           }//turb
+#endif
           constSFCXVariable<double> vol_fracX_FC;
           constSFCYVariable<double> vol_fracY_FC;
           constSFCZVariable<double> vol_fracZ_FC;
