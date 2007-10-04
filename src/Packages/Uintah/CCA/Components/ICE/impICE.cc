@@ -844,7 +844,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     }   
     //__________________________________
     //  set boundary conditions   
-    preprocess_CustomBCs("update_press_CC",parent_old_dw,parent_new_dw, 
+    preprocess_CustomBCs("imp_update_press_CC",parent_old_dw,parent_new_dw, 
                             lb,  patch, 999,d_customBC_var_basket);
 
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
