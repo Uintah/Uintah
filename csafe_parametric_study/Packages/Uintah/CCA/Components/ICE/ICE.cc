@@ -482,13 +482,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
                                lb->specific_heatLabel,
                                lb->gammaLabel);
   }
-  
+#if 0  
   //__________________________________
   //  Set up data analysis modules
   d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
   if(d_analysisModule){
     d_analysisModule->problemSetup(prob_spec, grid, sharedState);
   }
+#endif
 
 }
 /*______________________________________________________________________
@@ -709,9 +710,11 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   
   //__________________________________
   // dataAnalysis 
+#if 0
   if(d_analysisModule){
     d_analysisModule->scheduleInitialize( sched, level);
   }
+#endif
  
   //__________________________________
   // Make adjustments to the hydrostatic pressure
@@ -745,10 +748,11 @@ _____________________________________________________________________*/
 void ICE::restartInitialize()
 {
   cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t ICE" << endl;
-  
+#if 0  
   if(d_analysisModule){
     d_analysisModule->restartInitialize();
   }
+#endif
   //__________________________________
   // Models Initialization
   if(d_models.size() != 0){
@@ -958,10 +962,11 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
                                                           all_matls,
                                                           "finalizeTimestep");
-                                                          
+#if 0                                                          
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis( sched, level);
-  }                                                          
+  }
+#endif                                                          
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                           all_matls);
