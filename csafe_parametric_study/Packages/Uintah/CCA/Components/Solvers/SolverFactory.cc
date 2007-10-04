@@ -26,24 +26,6 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
   SolverInterface* solve = 0;
   if(solver == "CGSolver") {
     solve = scinew CGSolver(world);
-  } else if (solver == "direct" || solver == "DirectSolver") {
-    solve = scinew DirectSolve(world);
-  } else if (solver == "HypreSolver" || solver == "hypre") {
-#if HAVE_HYPRE
-    solve = scinew HypreSolver2(world);
-#else
-    ostringstream msg;
-    msg << "Hypre solver not available, hypre not configured\n";
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-#endif
-  } else if (solver == "AMRSolver" || solver == "hypreamr") {
-#if HAVE_HYPRE
-    solve = scinew AMRSolver(world);
-#else
-    ostringstream msg;
-    msg << "Hypre 1.9.0b solver not available, hypre not configured\n";
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-#endif
   } else {
     ostringstream msg;
     msg << "\nERROR: Unknown solver (" << solver
