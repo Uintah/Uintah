@@ -126,7 +126,7 @@ WARNING
     }
 
     //O(p log p)
-    static void difference(list<Region> &l1, list<Region> &l2, list<Region> &diff1);
+    static void difference(list<Region> l1, list<Region> l2, list<Region> &diff1);
     static void difference(list<Region> &l1, const list<Region>::iterator &l1_begin, const list<Region>::iterator &l1_end,
                     list<Region> &l2, const list<Region>::iterator &l2_begin, const list<Region>::iterator &l2_end,
                     const Region &bounds, list<Region> &diff);
