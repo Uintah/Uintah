@@ -170,9 +170,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       //fine patch deque
       for(int p=0;p<cp->size();p++)
       {
-        //#define CONTAINER deque
-        #define CONTAINER list
-        CONTAINER<Region> cpq, fpq, difference;  
+        list<Region> cpq, fpq, difference;  
         const Patch *patch=cp->get(p);
 
         Patch::selectType fp;
@@ -195,15 +193,14 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         }
 
         //compute region of coarse patches that do not contain fine patches
-        //difference=Region::difference(cpq,fpq);
-        Region::difference(cpq,fpq,difference);
+        difference=Region::difference(cpq,fpq);
       
         //get flags for coarse patch
         constCCVariable<int> flags;
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(CONTAINER<Region>::iterator region=difference.begin();region!=difference.end();region++)
+        for(list<Region>::iterator region=difference.begin();region!=difference.end();region++)
         {
           for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
