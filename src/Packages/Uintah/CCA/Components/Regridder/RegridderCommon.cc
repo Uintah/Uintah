@@ -170,7 +170,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       //fine patch deque
       for(int p=0;p<cp->size();p++)
       {
-        list<Region> cpq, fpq, difference;  
+        deque<Region> cpq, fpq, difference;  
         const Patch *patch=cp->get(p);
 
         Patch::selectType fp;
@@ -200,7 +200,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(list<Region>::iterator region=difference.begin();region!=difference.end();region++)
+        for(deque<Region>::iterator region=difference.begin();region!=difference.end();region++)
         {
           for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
