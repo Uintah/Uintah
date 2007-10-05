@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <Packages/Uintah/Core/Parallel/share.h>
 using namespace Uintah;
@@ -102,7 +103,7 @@ Sendlist::~Sendlist()
 void BufferInfo::addSendlist(RefCounted* obj)
 {
   obj->addReference();
-  sendlist=new Sendlist(sendlist, obj);
+  sendlist=scinew Sendlist(sendlist, obj);
 }
 
 Sendlist* BufferInfo::takeSendlist()
