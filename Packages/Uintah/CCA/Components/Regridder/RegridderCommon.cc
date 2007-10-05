@@ -70,7 +70,7 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
  
   if(d_dynamicDilation)
   {
-    if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>10) //make sure a semi-decent sample has been taken
+    if(d_sharedState->getCurrentTopLevelTimeStep()-d_dilationTimestep>5) //make sure a semi-decent sample has been taken
     {
       //compute the average overhead
 
@@ -86,7 +86,9 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           int dim=activeDims[d];
           //do not exceed maximum dilation
           if(d_cellRegridDilation[dim]+d_cellStabilityDilation[dim]<d_maxDilation[dim])
-          newDilation[dim]=d_cellRegridDilation[dim]+1;
+            newDilation[dim]=d_cellRegridDilation[dim]+1;
+          else
+            newDilation[dim]=d_cellRegridDilation[dim];
         }
         if(newDilation!=d_cellRegridDilation)
         {
@@ -111,6 +113,8 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
           //do not lower dilation to be less than 0
           if(d_cellRegridDilation[dim]>0)
             newDilation[dim]=d_cellRegridDilation[dim]-1;
+          else
+            newDilation[dim]=d_cellRegridDilation[dim];
         }
         if(newDilation!=d_cellRegridDilation)
         {
@@ -166,9 +170,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       //fine patch deque
       for(int p=0;p<cp->size();p++)
       {
-        //#define CONTAINER deque
-        #define CONTAINER list
-        CONTAINER<Region> cpq, fpq, difference;  
+        deque<Region> cpq, fpq, difference;  
         const Patch *patch=cp->get(p);
 
         Patch::selectType fp;
@@ -191,15 +193,14 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         }
 
         //compute region of coarse patches that do not contain fine patches
-        //difference=Region::difference(cpq,fpq);
-        Region::difference(cpq,fpq,difference);
+        difference=Region::difference(cpq,fpq);
       
         //get flags for coarse patch
         constCCVariable<int> flags;
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(CONTAINER<Region>::iterator region=difference.begin();region!=difference.end();region++)
+        for(deque<Region>::iterator region=difference.begin();region!=difference.end();region++)
         {
           for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
@@ -497,10 +498,10 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
     maxIdx = Max( maxIdx, patch->getCellHighIndex() );
   }
 
-  d_flaggedCells[levelIdx] = new CCVariable<int>;
-  d_dilatedCellsStability[levelIdx] = new CCVariable<int>;
-  d_dilatedCellsRegrid[levelIdx] = new CCVariable<int>;
-  d_dilatedCellsDeleted[levelIdx] = new CCVariable<int>;
+  d_flaggedCells[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsStability[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsRegrid[levelIdx] = scinew CCVariable<int>;
+  d_dilatedCellsDeleted[levelIdx] = scinew CCVariable<int>;
   
   d_flaggedCells[levelIdx]->rewindow( minIdx, maxIdx );
   d_dilatedCellsStability[levelIdx]->rewindow( minIdx, maxIdx );
