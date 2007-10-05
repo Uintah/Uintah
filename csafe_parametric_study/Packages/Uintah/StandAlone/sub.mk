@@ -47,7 +47,6 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/Core/GeometryPiece               \
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
-	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
         Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Solvers              \
@@ -359,15 +358,8 @@ noFortran:
 fake_arches:
 	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
-sus: prereqs Packages/Uintah/StandAlone/sus \
-	scpSus
+sus: prereqs Packages/Uintah/StandAlone/sus
        
-scpSus:
-	@( if test $(IS_REDSTORM); then \
-	    echo "---------------------------";\
-	    echo "scp sus redstorm:~/.";\
-	    /usr/local/bin/scp Packages/Uintah/StandAlone/sus redstorm:. ;\
-	   fi )
 
 tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract
 	;
