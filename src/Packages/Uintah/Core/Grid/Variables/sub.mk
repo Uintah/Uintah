@@ -10,7 +10,6 @@ SRCS     += \
 	$(SRCDIR)/GridIterator.cc               \
 	$(SRCDIR)/LocallyComputedPatchVarMap.cc \
 	$(SRCDIR)/NCVariableBase.cc             \
-	$(SRCDIR)/ParticleSet.cc                \
 	$(SRCDIR)/ParticleSubset.cc             \
 	$(SRCDIR)/ParticleVariableBase.cc       \
 	$(SRCDIR)/ParticleVariable_special.cc   \
