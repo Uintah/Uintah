@@ -203,7 +203,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
         if(d_direction[2]) new_vel.z( rigid_vel.z() );
         
         // this is the updated velocity
-        if(d_matls.requested(n)) {
+        if(!compare(gmass[d_material][c],0.)){
           gvelocity[n][c] = new_vel;
         }
       }
@@ -270,7 +270,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
         if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
 
-        if(d_matls.requested(n)) {
+        if(!compare(gmass[d_material][c],0.)){
           gvelocity_star[n][c] =  new_vel;
           gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
         }

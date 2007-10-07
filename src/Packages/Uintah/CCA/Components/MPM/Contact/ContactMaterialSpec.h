@@ -82,21 +82,20 @@ WARNING
          //  does this cell have the requested materials
          bool present(const StaticArray<constNCVariable<double> > & gmass,
                       IntVector c) const
-           {
+         {
              static const double EPSILON=1.e-14;
              
              size_t numMats = gmass.size();
              if(numMats>d_matls.size()) numMats = d_matls.size();
              
-             for(unsigned int imat=0;imat<numMats;imat++) 
-               {
+             for(unsigned int imat=0;imat<numMats;imat++) {
                  if(d_matls[imat] && fabs(gmass[imat][c])<EPSILON ) {
-                   return false; // required material not present, dont apply this bc
+                   // required material not present, dont apply this bc
+                   return false;
                  }
-               }
-             
+             }
              return true;
-           }
+         }
          
       private: 
          ContactMaterialSpec(const ContactMaterialSpec &);
