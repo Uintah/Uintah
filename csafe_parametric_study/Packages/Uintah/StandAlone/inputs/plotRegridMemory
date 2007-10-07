@@ -1,0 +1,151 @@
+#!/bin/csh
+#__________________________________
+#  This script pulls out data from sus 
+#   output and plot it using gnuplot.
+#  Usage:
+#     plotRegridder <sus output file> <dump postScript File (y/Y), default is no>
+#__________________________________
+
+if( $#argv == 0 ) then
+  echo "plotRegridder <sus output file> <dump postScript File (y/Y), default is no>"
+  exit(1)
+endif
+set out = $argv[1]
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 2 ) then
+  set hardcopy = $argv[2]
+endif 
+
+unalias rm
+#__________________________________
+# remove your droppings and make a copy of the output file
+rm -f gp .data .regridData .plotStats_tmp .tmp
+cp $out .tmpDirty
+echo "Cleaning out the excess spew from the output file"
+grep "regridding\|timestep\|DONE\|Compile\|REGRIDDING:" .tmpDirty |grep -v "Mass gained" >& .tmpClean 
+grep Time= .tmpClean |grep Mem >& .plotStats_tmp1
+
+#__________________________________
+# extract the data
+echo "Now extracting the data"
+
+# When running on frost, the mpirun utility will prepend all text output with "   n:" 
+# where n is the processor rank.  This extra colon screws up the grepping below. 
+# Check for this pattern of "  0:" and remove it from the .plotStats_tmp file.
+sed -e 's/^   0://' .plotStats_tmp1 >& .plotStats_tmp
+
+echo "?">&.meanTime
+echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
+echo "?">>.meanTime
+echo "?">>.meanTim
+
+grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
+grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f2  > .memAve
+grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4  > .memMax
+
+#__________________________________
+# parse the total number cells per level
+@ nLevels = `grep levels .tmpClean | cut -d: -f2`
+@ count = 0
+set levels 
+
+foreach L ( $count < $nLevels)
+  @ count +=1
+  set level = "L-$count"
+  set levels = ($levels $level)
+  echo "Extracting number of cells for: "$levels
+  grep "L$count" $out | awk '{print $7}'>& $level
+end
+
+
+#__________________________________
+# glue the data together
+paste -d " " .elapsedTimeRegrid $levels >& .L-all
+
+paste -d "  " .elapsedTime .memAve .memMax>& .data
+
+rm -f .elapsedTime .memAve .memMax
+rm -f .plotStats_tmp .plotStats_tmp1 .tmpDirty .tmpClean
+rm -f $levels
+
+echo "Done extracting data"
+
+echo "" > gp
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotRegriddingStats.ps"
+/bin/rm gp
+cat > gp << fin
+set terminal x11 1
+set terminal postscript color solid "Times-Roman" 12
+set output "plotRegridMemory.ps"
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set multiplot
+
+set autoscale
+#set xdata time
+#set timefmt "%s"             ------- try turning these on
+set grid xtics ytics
+#set y2tics
+    #----------second plot-------------
+set size 1.0,0.7       
+set origin 0.0,0.3
+set ylabel 'Memory'
+set y2label 'ignore'
+
+plot '.data' using 1:2           t 'Mem Ave' with lines,\
+     '.data' using 1:3           t 'Mem Max' with lines,\
+     '.elapsedTimeRegrid' using 1:(1.0)    axes x1y2        t 'regrid'
+     
+
+
+#----------Third plot-------------
+set size 1.0,0.3       
+set origin 0.0,0.0
+set ylabel 'Number of Cells'
+
+fin
+# loop over all the levels and build the gnuplot command
+@ count = 1
+foreach L ( $count < $nLevels)
+  if($L == "1") then
+    echo -n "plot '.L-all' using 1:2 t 'L-1' with step " >> gp
+  else 
+    @ c = $count + 1
+    echo -n ",'.L-all' using 1:$c t 'L-$count' with step " >> gp
+  endif
+  @ count +=1
+end
+echo "" >> gp 
+
+# finish up 
+cat >> gp << fin
+set nomultiplot
+pause -1 "Hit return to exit"
+fin
+#__________________________________
+# plot it up
+gnuplot gp
+
+if($hardcopy == "y" || $hardcopy == "Y") then
+  convert plotRegridMemory.ps plotRegridMemory.jpg
+  mogrify -rotate 90 plotRegridMemory.jpg
+endif
+
+#__________________________________
+# clean up
+rm -f gp .data .regridData .L-all
+
+exit(1)
