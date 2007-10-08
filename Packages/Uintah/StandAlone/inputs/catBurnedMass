@@ -14,11 +14,12 @@ endif
 
 /bin/rm TMB.dat
 
-cp totalMassBurned.dat  TMB.dat
+if( -e $uda/totalMassBurned.dat ) then
+  cp totalMassBurned.dat  TMB.dat
 
-cat $uda/totalMassBurned.dat >> TMB.dat 
+  cat $uda/totalMassBurned.dat >> TMB.dat 
 
-sort TMB.dat | uniq > totalMassBurned.dat
-
+  sort TMB.dat | uniq > totalMassBurned.dat
+endif
 
 exit
