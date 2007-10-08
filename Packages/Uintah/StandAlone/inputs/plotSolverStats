@@ -96,8 +96,13 @@ set y2label
 plot '.data' using 1:5           t 'solver iterations' with lines
 
 set nomultiplot
-pause -1 "Hit return to exit"
+
 fin
+
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
 #__________________________________
 # plot it up
 gnuplot gp

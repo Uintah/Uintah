@@ -74,8 +74,12 @@ set xlabel "ElapsedTime"
 plot '.data' using 1:2 t 'dt' with lines,\
      '.data' using 1:( \$4==\$3? \$2 :0  ) t 'restarted'
       
-pause -1 "Hit return to exit"
 fin
+
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
 gnuplot gp
 
 #__________________________________

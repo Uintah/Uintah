@@ -76,8 +76,10 @@ set ylabel 'Processors' textcolor lt 1
 plot '.data' using 1:2 lw 3 t           'CPUs' with impulse
 set nomultiplot
 
-pause -1 "Hit return to exit"
 fin
+if( $hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
 #__________________________________
 # plot it up
 gnuplot gp
