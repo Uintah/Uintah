@@ -380,9 +380,7 @@ main( int argc, char** argv )
 
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
-#if defined(REDSTORM)
       cerr << "WARNING:  SVN DIFF is disabled.\n";
-#else
       cerr << "____SVN_____________________________________________________________\n";
       create_sci_environment( NULL, 0 );
       string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
@@ -397,7 +395,6 @@ main( int argc, char** argv )
         system(cmd.c_str());
       }
       cerr << "____SVN_______________________________________________________________\n";
-#endif
     }
   }
   
