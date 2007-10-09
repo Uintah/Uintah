@@ -314,7 +314,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     // for thermal stress
-    constParticleVariable<double> pTempPrevious, pTempCurrent; 
+    constParticleVariable<double> pTempPrevious; 
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 

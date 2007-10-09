@@ -591,7 +591,6 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     // Placeholder stuff for viscoscram goes here
     constParticleVariable<double>    pCrackRadius;
     constParticleVariable<Vector>    pVelocity;
-    constParticleVariable<double>    pTempPrev, pTempCur;
     ParticleVariable<Matrix3>   pStrainRate_new;
     ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
     ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
@@ -599,9 +598,6 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<StateData> pStatedata;
 
     old_dw->get(pCrackRadius,        pCrackRadiusLabel,            pset);
-//    old_dw->get(pTempPrev,           lb->pTempPreviousLabel,       pset);
-//    new_dw->get(pTempCur,            lb->pTempCurrentLabel,        pset);
-
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVolHeatRate_new,
@@ -760,8 +756,6 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);
-//  task->requires(Task::OldDW, lb->pTempPreviousLabel,      matlset,gnone);
-//  task->requires(Task::NewDW, lb->pTempCurrentLabel,       matlset,gnone);
   task->requires(Task::OldDW, pCrackRadiusLabel,           matlset,gnone);
   task->requires(Task::OldDW, pStatedataLabel,             matlset,gnone);
   task->requires(Task::OldDW, pRandLabel,                  matlset,gnone);
