@@ -1822,7 +1822,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
     t->computes(lb->mom_exch_errorLabel);
     t->computes(lb->eng_exch_errorLabel);
     t->computes(lb->TotalMassLabel);
-    t->computes(lb->KineticEnergyLabel);
+//    t->computes(lb->KineticEnergyLabel);
     t->computes(lb->TotalIntEngLabel);
     t->computes(lb->CenterOfMassVelocityLabel); //momentum
 
@@ -5607,7 +5607,7 @@ void ICE::TestConservation(const ProcessorGroup*,
     new_dw->put(sum_vartype(total_mass),        lb->TotalMassLabel);
     new_dw->put(sumvec_vartype(total_mom),      lb->CenterOfMassVelocityLabel);
     new_dw->put(sum_vartype(total_int_eng),     lb->TotalIntEngLabel);
-    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);
+//    new_dw->put(sum_vartype(total_KE),          lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(mom_exch_error), lb->mom_exch_errorLabel);
     new_dw->put(sum_vartype(eng_exch_error),    lb->eng_exch_errorLabel);
   }  // patch loop
