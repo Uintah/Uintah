@@ -377,7 +377,6 @@ ViscoScram::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
 
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::NewDW, lb->pTempCurrentLabel,  matlset, gnone); 
 
   task->requires(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
   task->requires(Task::OldDW, pStatedataLabel,   matlset, gnone);
@@ -447,7 +446,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Vector>    pVelocity, pSize;
   constParticleVariable<Matrix3>   pDefGrad, pStress;
   constNCVariable<Vector>          gVelocity, Gvelocity;
-  constParticleVariable<double>    pTempPrev, pTempCur;
+  constParticleVariable<double>    pTempPrev;
 
   ParticleVariable<double>    pVol_new, pIntHeatRate_new;
   ParticleVariable<Matrix3>   pDefGrad_new, pStress_new, pStrainRate_new;
@@ -496,7 +495,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gVelocity,           lb->gVelocityLabel, dwi, patch, gac, NGN);
 
     old_dw->get(pTempPrev,           lb->pTempPreviousLabel,       pset); 
-    new_dw->get(pTempCur,            lb->pTempCurrentLabel,        pset); 
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVol_new,         
@@ -632,7 +630,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       }
      
       // Subtract the thermal expansion to get D_e + D_p
-      double dT_dt = (pTempCur[idx] - pTempPrev[idx])/delT;
+      double dT_dt = (pTemperature[idx] - pTempPrev[idx])/delT;
       D -= Identity*(alpha*dT_dt);
 
       // Compute deviatoric rate DPrime

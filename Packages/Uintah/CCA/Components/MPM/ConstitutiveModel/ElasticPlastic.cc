@@ -601,7 +601,6 @@ ElasticPlastic::addComputesAndRequires(Task* task,
     addSharedCRForImplicit(task, matlset, patches);
   } else {
     addSharedCRForHypoExplicit(task, matlset, patches);
-    //task->requires(Task::NewDW, lb->pTempCurrentLabel, matlset, gnone); 
   }
 
   // Other constitutive model and input dependent computes and requires
@@ -721,10 +720,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress;
     constParticleVariable<double> pTempPrev, pTemperature;
-    //constParticleVariable<double> pTempCur;
     old_dw->get(pStress, lb->pStressLabel, pset);
     old_dw->get(pTempPrev,    lb->pTempPreviousLabel, pset); 
-    //new_dw->get(pTempCur,     lb->pTempCurrentLabel,  pset); 
     old_dw->get(pTemperature, lb->pTemperatureLabel,  pset);
 
     constParticleVariable<double> pErosion;
@@ -884,7 +881,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Subtract the thermal expansion to get D_e + D_p
       double temperature = pTemperature[idx];
-      //double dT_dt = (pTempCur[idx] - pTempPrev[idx])/delT;
       double dT_dt = (temperature - pTempPrev[idx])/delT;
       //cout << getpid() << " idx = " << idx << " D(e,p,t) = " << tensorD 
       //     << " T = " << temperature << " Told = " << pTempPrev[idx]
