@@ -3144,7 +3144,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvolumeNew[idx]      = pmassNew[idx]/rho;
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
-        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+	if(m==0){
+          ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+	}
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelocitynew[idx]*pmass[idx];
       }
