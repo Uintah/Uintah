@@ -17,9 +17,9 @@
 
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream> 
-#include <sstream>
-#include <string>
+#include   <iostream> 
+#include   <sstream>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -181,8 +181,8 @@ TimestepSelector::execute()
   double hour, min, sec, microseconds;
 
   current_time =  times[idx];
-#ifdef _WIN32
-#define trunc (int)
+#if defined(_WIN32) || defined(__PGI)
+#  define trunc (int)
 #endif
   hour = trunc( current_time/3600.0);
   min = trunc( current_time/60.0 - (hour * 60));
