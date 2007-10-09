@@ -46,6 +46,7 @@
 
 #include <Packages/Uintah/StandAlone/tools/puda/asci.h>
 #include <Packages/Uintah/StandAlone/tools/puda/jim1.h>
+#include <Packages/Uintah/StandAlone/tools/puda/jim2.h>
 #include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
 #include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
 #include <Packages/Uintah/StandAlone/tools/puda/util.h>
@@ -93,6 +94,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -listvariables\n";
   cerr << "  -varsummary\n";
   cerr << "  -jim1\n";
+  cerr << "  -jim2\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
@@ -109,7 +111,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -verbose            (prints status of output)\n";
   cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
-  cerr << "  -matl <int>         (only outputs data for matl (for -jim1 only))\n";
+  cerr << "  -matl <int>         (only outputs data for matl (for -jim1 and -jim2 only))\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -175,7 +177,7 @@ main(int argc, char** argv)
 
   CommandLineFlags clf;
 
-  // set defaults for cout
+  // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(8);
   /*
@@ -221,6 +223,8 @@ main(int argc, char** argv)
       clf.do_varsummary=true;
     } else if(s == "-jim1"){
       clf.do_jim1=true;
+    } else if(s == "-jim2"){
+      clf.do_jim2=true;
     } else if(s == "-partvar"){
       clf.do_partvar=true;
       clf.particleVariable = argv[++i]; 
@@ -284,6 +288,7 @@ main(int argc, char** argv)
       clf.do_patch = true;
     } else if (s == "-material" ||
                s == "-matl") {
+      clf.matl_jim = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
     } else if (s == "-verbose") {
       clf.do_verbose = true;
@@ -301,8 +306,6 @@ main(int argc, char** argv)
                s == "-timestepInc" ||
                s == "-timestep_inc") {
       clf.time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-    } else if (s == "-matl") {
-      clf.matl_jim1 = strtoul(argv[++i],(char**)NULL,10);
     } else if( (s == "-help") || (s == "-h") ) {
       usage( "", argv[0] );
     } else if( clf.filebase == "") {
@@ -331,6 +334,12 @@ main(int argc, char** argv)
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
+      
+      // Please don't change this.  We need 16
+      // significant digits for detailed comparative studies. -Todd
+      cout.setf(ios::scientific,ios::floatfield);
+      cout.precision(16);
+      
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
     }
@@ -387,6 +396,10 @@ main(int argc, char** argv)
 
     if( clf.do_jim1 ){
       jim1( da, clf );
+    }
+
+    if( clf.do_jim2 ){
+      jim2( da, clf );
     }
 
     if (clf.do_asci){
