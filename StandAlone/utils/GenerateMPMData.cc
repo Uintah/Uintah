@@ -38,13 +38,15 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Geometry/BBox.h>
+
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <map>
 #include <sstream>
+
+#include <stdlib.h>
+#include <sys/stat.h>
 
 using std::cerr;
 using std::ifstream;
@@ -60,10 +62,6 @@ vector<string> prename;
 
 const unsigned int max_lines = 25000000;
 double part_per_mm = 4.;
-
-#ifdef _WIN32
-#define round(x) (int) (x+.5)
-#endif
 
 template<class Fld>
 void
@@ -93,10 +91,6 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
   string aux_nm = nm1 + ".elems";
   files->push_back(new ofstream(nm1.c_str(), ios_base::out));
   aux_files->push_back(new ofstream(aux_nm.c_str(), ios_base::out));
-
-#if defined(__sgi)
-#  define round(var) ((var)>=0?(int)((var)+0.5):(int)((var)-0.5))
-#endif
 
   mesh->synchronize(Mesh::NODES_E | Mesh::EDGES_E | 
 		    Mesh::FACES_E | Mesh::CELLS_E);
@@ -130,9 +124,9 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 
     double vol = dx * dy * dz; 
 
-    const int div_per_x = (int)round(part_per_mm * dx);
-    const int div_per_y = (int)round(part_per_mm * dy);
-    const int div_per_z = (int)round(part_per_mm * dz);
+    const int div_per_x = RoundDown(part_per_mm * dx);
+    const int div_per_y = RoundDown(part_per_mm * dy);
+    const int div_per_z = RoundDown(part_per_mm * dz);
 
     const double part_vol = vol / (div_per_x * div_per_y * div_per_z);
     
@@ -251,13 +245,9 @@ write_MPM(FieldHandle& field_h, const string &outdir)
   minb = bbox.min();
   maxb = bbox.max();
 
-#if defined(__sgi)
-#  define round(var) ((var)>=0?(int)((var)+0.5):(int)((var)-0.5))
-#endif
-
-  int sizex = (int)(round(maxb.x() - minb.x()) / max_vol_s);
-  int sizey = (int)(round(maxb.y() - minb.y()) / max_vol_s);
-  int sizez = (int)(round(maxb.z() - minb.z()) / max_vol_s);
+  int sizex = (int)(RoundDown(maxb.x() - minb.x()) / max_vol_s);
+  int sizey = (int)(RoundDown(maxb.y() - minb.y()) / max_vol_s);
+  int sizez = (int)(RoundDown(maxb.z() - minb.z()) / max_vol_s);
   
   typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
