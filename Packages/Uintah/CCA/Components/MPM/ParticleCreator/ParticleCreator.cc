@@ -376,7 +376,6 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pLoadCurveID,   addset); 
   new_dw->allocateTemporary(perosion,       addset); 
   new_dw->allocateTemporary(ptempPrevious,  addset);
-  new_dw->allocateTemporary(pcolor,         addset); 
 
   old_dw->get(o_disp,           d_lb->pDispLabel,             delset);
   old_dw->get(o_position,       d_lb->pXLabel,                delset);
@@ -391,12 +390,12 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   new_dw->get(o_erosion,        d_lb->pErosionLabel_preReloc, delset);
   old_dw->get(o_size,           d_lb->pSizeLabel,             delset);
   old_dw->get(o_tempPrevious,   d_lb->pTempPreviousLabel,     delset);
-  old_dw->get(o_color,          d_lb->pColorLabel,            delset);
   
   if (d_useLoadCurves){ 
     old_dw->get(o_loadcurve,    d_lb->pLoadCurveIDLabel,      delset);
   }
   if(d_with_color){
+    new_dw->allocateTemporary(pcolor,         addset); 
     old_dw->get(o_color,        d_lb->pColorLabel,            delset);
   }
    
