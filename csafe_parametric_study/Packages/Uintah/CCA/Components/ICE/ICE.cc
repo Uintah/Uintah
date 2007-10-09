@@ -409,8 +409,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
       d_conservationTest->momentum = true;
       d_conservationTest->onOff    = true;
     }
-    if (var_attr["label"] == "TotalIntEng"   || 
-        var_attr["label"] == "KineticEnergy"){
+//    if (var_attr["label"] == "TotalIntEng"   || 
+//        var_attr["label"] == "KineticEnergy"){
+// IGNORE THE KE OF THE GASES IN THE BRANCH
+    if (var_attr["label"] == "TotalIntEng"){  
       d_conservationTest->energy   = true;
       d_conservationTest->onOff    = true;
     }
