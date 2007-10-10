@@ -3914,10 +3914,12 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);
           computeTauZ(patch, vol_fracZ_FC, vel_CC,viscosity,dx, tau_Z_FC);
         }
+#if 0
         if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
           throw ProblemSetupException(warn, __FILE__, __LINE__);
         }
+#endif
       }  // ice_matl
       
       // only include term if it's an ice matl
