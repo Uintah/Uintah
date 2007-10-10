@@ -438,12 +438,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
                   // Calculate velocity change needed to enforce contact
                   Dv=-normal_normaldV;
-                  
-                  // Calculate work done by frictional force
-                  if (flag->d_fracture)
-                    frictionWork[n][c] += 0.;
-                  else
-                    frictionWork[n][c] = 0.;
                 }
 
                 // General algorithm, including frictional slip.  The
@@ -635,9 +629,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
                   // Calculate velocity change needed to enforce contact
                   Dv=-normal_normaldV;
-                  
-                  // Calculate work done by frictional force
-                  frictionWork[n][c] += 0.;
                 }
 
                 // General algorithm, including frictional slip.  The
