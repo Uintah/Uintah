@@ -100,7 +100,7 @@ package scijump version 0.2.1 {
       // doc.
       void destroyConnectionInstance(in gov.cca.ConnectionID connID);
 
-	    array<gov.cca.ComponentID> getConnectionInstances(in array<gov.cca.ComponentID> componentList) throws gov.cca.CCAException; 
+      array<gov.cca.ConnectionID> getConnectionInstances(in array<gov.cca.ComponentID> componentList) throws gov.cca.CCAException; 
 
       /** Adds a description of a component instance (class ComponentInstance) to
           the list of active components.  The component instance description
@@ -126,6 +126,13 @@ package scijump version 0.2.1 {
                                                            sci.cca.EventListener {
     static sci.cca.core.FrameworkService create(in sci.cca.AbstractFramework framework);
 
+    void initialize(in sci.cca.AbstractFramework framework);
+  }
+
+  // Should part of an extended builder service.
+  class ApplicationLoaderService implements-all sci.cca.ports.ApplicationLoaderService, 
+                                                sci.cca.core.FrameworkService {
+    static sci.cca.core.FrameworkService create(in sci.cca.AbstractFramework framework);
     void initialize(in sci.cca.AbstractFramework framework);
   }
 
@@ -189,6 +196,8 @@ package scijump version 0.2.1 {
     void setSerialization(in string serialization);
   }
   // Babel Component model classes
+
+
 
   package ui {
     class GUIBuilder implements-all sci.cca.ui.Builder, sci.cca.EventListener {

@@ -173,7 +173,17 @@ package sci {
           */
           void addComponentClass(in string componentClassName) throws gov.cca.CCAException;
       }
-
+  
+      interface ApplicationLoaderService extends gov.cca.Port { 
+        string getFileName();
+        void setFileName(in string filename);
+ 
+        void loadFile(out array<gov.cca.ComponentID,1> cidList, out array<gov.cca.ConnectionID,1> connList);
+        void loadFile[As](in string filename, out array<gov.cca.ComponentID,1> cidList, out array<gov.cca.ConnectionID,1> connList);
+ 
+        void saveFile();
+        void saveFile[As](in string filename);
+      }
 
       //EVENT SPEC:
       /** Interface to Event Service for a event publisher. A publisher can

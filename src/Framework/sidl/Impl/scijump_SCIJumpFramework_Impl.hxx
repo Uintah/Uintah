@@ -286,7 +286,7 @@ namespace scijump {
     /**
      * user defined non-static method.
      */
-    ::sidl::array< ::gov::cca::ComponentID>
+    ::sidl::array< ::gov::cca::ConnectionID>
     getConnectionInstances_impl (
       /* in array<gov.cca.ComponentID> */::sidl::array< 
         ::gov::cca::ComponentID>& componentList
