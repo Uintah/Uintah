@@ -76,8 +76,8 @@ serverIMPLSRCS :=
 include $(FWKIMPLDIR_ABS)/serverbabel.make
 SRCS += $(patsubst %,$(FWKIMPLDIR)/%,$(serverIMPLSRCS))
 
-#PSELIBS := Core/Thread Core/Exceptions Framework/Core
-#LIBS := $(BABEL_LIBRARY)
+#PSELIBS := Core/Thread Core/Exceptions Framework/Core Core/XMLUtil
+#LIBS := $(XML_LIBRARY) $(BABEL_LIBRARY)
 
 INCLUDES += -I$(FWKIMPLDIR_ABS) -I$(FWKGLUEDIR_ABS) $(BABEL_INCLUDE)
 

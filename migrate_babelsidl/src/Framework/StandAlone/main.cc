@@ -150,7 +150,7 @@ component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
 }
 
 void
-local_framework_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
+local_framework_test(scijump::BuilderService& builder, ::gov::cca::Services& svc, scijump::ApplicationLoaderService& als)
 {
   gov::cca::ComponentID dvr = builder.createInstance("DriverInstance", "drivers.CXXDriver", 0);
   if(dvr._is_nil()) {
@@ -188,6 +188,8 @@ local_framework_test(scijump::BuilderService& builder, ::gov::cca::Services& svc
   if(goPort._not_nil()) {
     goPort.go();
   }
+
+  als.saveFile("tutorial.net");
 
   builder.disconnect(goConnID, 0);
   builder.disconnect(intgConnID, 0);
@@ -257,13 +259,19 @@ main(int argc, char *argv[], char **environment) {
     // TODO: Is this property still needed?
     mainProperties.putBool("internal component", true);
     gov::cca::Services mainServices = sj.getServices("SCIJump main", "main", mainProperties);
+ 
     mainServices.registerUsesPort("mainBuilder", "cca.BuilderService", mainServices.createTypeMap());
-
     ::gov::cca::Port bsp = mainServices.getPort("mainBuilder");
     ASSERT(bsp._not_nil());
     scijump::BuilderService builder = babel_cast<scijump::BuilderService>(bsp);
     ASSERT(builder._not_nil());
 
+    mainServices.registerUsesPort("mainAppLoader", "cca.ApplicationLoaderService", mainServices.createTypeMap());
+    ::gov::cca::Port als_ = mainServices.getPort("mainAppLoader");
+    ASSERT(als_._not_nil());
+    scijump::ApplicationLoaderService als = babel_cast<scijump::ApplicationLoaderService>(als_);
+    ASSERT(als._not_nil());
+    
     /*
     gov::cca::ports::FrameworkProperties fwkProperties = mainServices.getPort("cca.FrameworkProperties");
     if(fwkProperties._is_nil()) {
@@ -311,7 +319,7 @@ main(int argc, char *argv[], char **environment) {
 
     // test instantiation and connection
     component_test(builder, mainServices);
-    local_framework_test(builder, mainServices);
+    local_framework_test(builder, mainServices, als);
     mainServices.releasePort("mainBuilder");
 
     //broadcast, listen to URL periodically

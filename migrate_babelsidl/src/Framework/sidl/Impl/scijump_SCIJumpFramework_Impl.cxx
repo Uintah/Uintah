@@ -386,16 +386,16 @@ scijump::SCIJumpFramework_impl::getComponentInstances_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getComponentInstances)
-  // Insert-Code-Here {scijump.SCIJumpFramework.getComponentInstances} (getComponentInstances method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getComponentInstances)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getComponentInstances");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getComponentInstances)
+  Guard g(lock_components);
+  int num_components = components.size();
+  ::sidl::array< ::gov::cca::ComponentID> cids = 
+      ::sidl::array< ::gov::cca::ComponentID>::create1d(num_components);
+  ComponentInstanceMap::iterator iter = components.begin();
+  for(int i=0; i < num_components; i++,iter++) {
+    cids.set(i,babel_cast< ::gov::cca::ComponentID>(iter->second));
+  }
+
+  return cids;
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getComponentInstances)
 }
 
@@ -457,7 +457,7 @@ scijump::SCIJumpFramework_impl::destroyConnectionInstance_impl (
 /**
  * Method:  getConnectionInstances[]
  */
-::sidl::array< ::gov::cca::ComponentID>
+::sidl::array< ::gov::cca::ConnectionID>
 scijump::SCIJumpFramework_impl::getConnectionInstances_impl (
   /* in array<gov.cca.ComponentID> */::sidl::array< ::gov::cca::ComponentID>& 
     componentList ) 
@@ -466,16 +466,33 @@ scijump::SCIJumpFramework_impl::getConnectionInstances_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getConnectionInstances)
-  // Insert-Code-Here {scijump.SCIJumpFramework.getConnectionInstances} (getConnectionInstances method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.SCIJumpFramework.getConnectionInstances)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getConnectionInstances");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.SCIJumpFramework.getConnectionInstances)
+  Guard g(lock_connections);
+  ::sidl::array< ::gov::cca::ConnectionID> connids = 
+      ::sidl::array< ::gov::cca::ConnectionID>::create1d(connections.size());
+  int conn_ctr = 0;
+  ConnectionList::iterator iter = connections.begin();
+  for(; iter != connections.end(); iter++) {
+    gov::cca::ComponentID provider = iter->getProvider();
+    gov::cca::ComponentID user = iter->getUser();
+    for(int j=0; j<componentList.length(); j++) {
+      if((user.getInstanceName() == componentList.get(j).getInstanceName()) ||
+	 (provider.getInstanceName() ==  componentList.get(j).getInstanceName())) {
+
+	connids.set(conn_ctr,::sidl::babel_cast< ::gov::cca::ConnectionID>(*iter));
+	conn_ctr++;
+	break;
+      }
+    }
+  }
+
+  //Copying the array in order to reduce its size... Better way?
+  ::sidl::array< ::gov::cca::ConnectionID> n_connids = 
+      ::sidl::array< ::gov::cca::ConnectionID>::create1d(conn_ctr);
+  for(int i=0; i< conn_ctr; i++) {
+    n_connids.set(i,connids.get(i));
+  }
+
+  return n_connids;
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getConnectionInstances)
 }
 
@@ -731,6 +748,10 @@ scijump::SCIJumpFramework_impl::initFrameworkServices()
   scijump::core::FrameworkServiceFactory esf = scijump::core::FrameworkServiceFactory::_create();
   esf.initialize( new scijump::core::SingletonServiceFactory<scijump::EventService>(*this, "cca.EventService") );
   addFrameworkService(esf, this->frameworkServices);
+
+  scijump::core::FrameworkServiceFactory alf = scijump::core::FrameworkServiceFactory::_create();
+  alf.initialize( new scijump::core::SingletonServiceFactory<scijump::ApplicationLoaderService>(*this, "cca.ApplicationLoaderService") );
+  addFrameworkService(alf, this->frameworkServices);
 }
 
 bool

@@ -247,16 +247,7 @@ scijump::BuilderService_impl::getComponentIDs_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getComponentIDs)
-  // Insert-Code-Here {scijump.BuilderService.getComponentIDs} (getComponentIDs method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.getComponentIDs)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getComponentIDs");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.getComponentIDs)
+  return framework.getComponentInstances();
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.getComponentIDs)
 }
 
@@ -275,16 +266,8 @@ scijump::BuilderService_impl::getComponentProperties_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getComponentProperties)
-  // Insert-Code-Here {scijump.BuilderService.getComponentProperties} (getComponentProperties method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.getComponentProperties)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getComponentProperties");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.getComponentProperties)
+  std::cerr << "BuilderService::getComponentProperties is not implemented\n";
+  return scijump::TypeMap::_create();
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.getComponentProperties)
 }
 
@@ -602,16 +585,7 @@ scijump::BuilderService_impl::getConnectionIDs_impl (
 //     ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getConnectionIDs)
-  // Insert-Code-Here {scijump.BuilderService.getConnectionIDs} (getConnectionIDs method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.BuilderService.getConnectionIDs)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getConnectionIDs");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.getConnectionIDs)
+  return framework.getConnectionInstances(componentList);
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.getConnectionIDs)
 }
 
