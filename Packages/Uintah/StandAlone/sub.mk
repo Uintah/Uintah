@@ -337,6 +337,7 @@ uintah: sus \
         timeextract \
         faceextract \
         link_inputs \
+        link_tools \
         link_regression_tester
 
 ###############################################
@@ -346,7 +347,14 @@ link_inputs:
                echo "Creating link to inputs directory." ; \
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs; \
 	   fi )
-
+          
+link_tools:
+	@( if ! test -L Packages/Uintah/StandAlone/puda; then \
+               echo "Creating link to all the tools." ; \
+	       ln -sf $(OBJTOP_ABS)/Packages/Uintah/StandAlone/tools/puda/puda $(OBJTOP_ABS)/Packages/Uintah/StandAlone/puda; \
+              ln -sf $(OBJTOP_ABS)/Packages/Uintah/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/Packages/Uintah/StandAlone/lineextract; \
+              ln -sf $(OBJTOP_ABS)/Packages/Uintah/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/Packages/Uintah/StandAlone/timeextract; \
+	   fi )
 link_regression_tester:
 	@( if ! test -L Packages/Uintah/StandAlone/run_RT; then \
                echo "Creating link to regression_tester script." ; \
