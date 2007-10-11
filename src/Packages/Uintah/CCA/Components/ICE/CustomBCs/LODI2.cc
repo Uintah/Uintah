@@ -613,23 +613,24 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   L[5][c][n_dir] = L5;
 
   
-#if 0
-   //__________________________________
-   //  debugging 
-   vector<IntVector> dbgCells;
-   dbgCells.push_back(IntVector(100,0,0));
-   dbgCells.push_back(IntVector(99,0,0));
-   dbgCells.push_back(IntVector(0,0,0));
-   dbgCells.push_back(IntVector(-1,0,0));
+
+  if( cout_dbg.active() ) {
+    //__________________________________
+    //  debugging 
+    vector<IntVector> dbgCells;
+    dbgCells.push_back(IntVector(100,0,0));
+    dbgCells.push_back(IntVector(99,0,0));
+    dbgCells.push_back(IntVector(0,0,0));
+    dbgCells.push_back(IntVector(-1,0,0));
            
-   for (int i = 0; i<(int) dbgCells.size(); i++) {
-     if (c == dbgCells[i]) {
-      debugging_Li(c, s, dir, face, speedSound, vel_CC, L1, L2, L3, L4, L5 );
-      cout << " press " << press << " p_infinity " << p_infinity
+    for (int i = 0; i<(int) dbgCells.size(); i++) {
+      if (c == dbgCells[i]) {
+        debugging_Li(c, s, dir, face, speedSound, vel_CC, L1, L2, L3, L4, L5 );
+        cout << " press " << press << " p_infinity " << p_infinity
            << " gradient " << (press - p_infinity)/domainLength[n_dir] << endl;
-     }  // if(dbgCells)
-   }  // dbgCells loop
- #endif
+      }  // if(dbgCells)
+    }  // dbgCells loop
+  }
 } 
 
 /*__________________________________________________________________
@@ -717,7 +718,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
 
         double drho_dx = (rho[r]   - rho[l])/delta; 
         double dp_dx   = (press[r] - press[l])/delta;
-        Vector dVel_dx = (vel[r]   - vel[l])/delta;
+        Vector dVel_dx = (vel[r]   - vel[l])/delta;        
 
         vector<double> s(6);
         characteristic_source_terms(dir, P_dir, grav, rho[c], speedSound[c], s);
