@@ -254,14 +254,18 @@ scijump::ApplicationLoaderService_impl::loadFile_impl (
         if(libNode->type == XML_ELEMENT_NODE &&
            std::string(to_char_ptr(libNode->name)) == std::string("connection")) {
 
-          connList.set(conn_ctr,readConnectionNode(bs,&libNode));
-	  conn_ctr++;
-	  if(conn_ctr >= MAX_CONNECTIONS) {
-	    scijump::CCAException ex = scijump::CCAException::_create();
-	    ex.setNote("Max number of connections exceeded");
-	    ex.add(__FILE__, __LINE__, "loadFile");
-	    throw ex;
+	  gov::cca::ConnectionID c_;
+	  if((c_ = readConnectionNode(bs,&libNode))._not_nil()) {
+	    connList.set(conn_ctr,c_);
+	    conn_ctr++;
+	    if(conn_ctr >= MAX_CONNECTIONS) {
+	      scijump::CCAException ex = scijump::CCAException::_create();
+	      ex.setNote("Max number of connections exceeded");
+	      ex.add(__FILE__, __LINE__, "loadFile");
+	      throw ex;
+	    }
 	  }
+
         }
       }
 
@@ -478,6 +482,11 @@ scijump::ApplicationLoaderService_impl::readConnectionNode(sci::cca::ports::Buil
 
     gov::cca::ComponentID user_cid = bs.getComponentID(user);
     gov::cca::ComponentID provider_cid = bs.getComponentID(provider);
+    if(user_cid._is_nil() || provider_cid._is_nil()) {
+      //it's possible to have a faulty connection that requests connections
+      //for services that are no longer in the system
+      return 0;
+    }
 
     return bs.connect(user_cid,usesport,provider_cid,providesport);
   }

@@ -367,11 +367,11 @@ scijump::SCIJumpFramework_impl::getComponentInstance_impl (
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getComponentInstance)
   Guard g(lock_components);
   ComponentInstanceMap::iterator iter = components.find(name);
-  if ( iter == components.end() )
-    return 0;
-
-  ::sci::cca::core::ComponentInfo ci = iter->second;
-  return ::sidl::babel_cast< ::gov::cca::ComponentID>(ci);
+  if( iter != components.end() ) {
+    ::sci::cca::core::ComponentInfo ci = iter->second;
+    return ::sidl::babel_cast< ::gov::cca::ComponentID>(ci);
+  }
+  return 0; 
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.getComponentInstance)
 }
 

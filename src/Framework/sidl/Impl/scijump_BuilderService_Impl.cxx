@@ -530,7 +530,6 @@ scijump::BuilderService_impl::connect_impl (
     ex.add(__FILE__, __LINE__, "connect");
     throw ex;
   }
-
   ::sci::cca::core::ComponentInfo ciProvider = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(provider);
   if (ciProvider._is_nil()) {
     scijump::CCAException ex = scijump::CCAException::_create();
