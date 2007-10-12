@@ -76,7 +76,8 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
            bc_kind == "symmetric" ||bc_kind == "MMS_1"){
           one_or_zero = 1.0;      // subtract from A.p
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom" ){
+
+        if(bc_kind == "Dirichlet" || bc_kind == "LODI" ){
           one_or_zero = 0.0;      // leave A.p Alone
         }                                 
         //__________________________________
@@ -241,7 +242,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
            bc_kind == "symmetric" || bc_kind == "MMS_1"){
           one_or_zero = 1.0;     
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom"){
+        if(bc_kind == "Dirichlet" || bc_kind == "LODI"){
           one_or_zero = 0.0;
         }                                 
         //__________________________________
