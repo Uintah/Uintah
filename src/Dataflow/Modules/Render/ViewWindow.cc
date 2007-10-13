@@ -47,6 +47,7 @@
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
 #include <Dataflow/Network/Network.h>
+#include <Dataflow/Widgets/FrameWidget.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Timer.h>
@@ -69,6 +70,8 @@
 #include <Core/Geom/GeomGroup.h>     
 #include <Core/Geom/GeomSticky.h>     
 #include <Core/Geom/Material.h>
+#include <Core/Geom/GeomQuads.h>
+#include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/GeomViewerItem.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
@@ -159,6 +162,8 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
     pick_obj_(0),
     viewwindow_objs_(),
     viewwindow_objs_draw_(),
+    viewwindow_clip_frames_(),
+    viewwindow_clip_frames_draw_(),
     dolly_total_(0.0),
     dolly_vector_(0.0, 0.0, 0.0),
     dolly_throttle_(0.0),
@@ -192,6 +197,8 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
   viewwindow_objs_.push_back(scinew GeomMaterial(focus_sphere_, focus_color));
   viewwindow_objs_draw_.push_back(false);
 
+
+
   // Clip plane variables, declare them so that they are saved out
   ctx_->subVar("clip-num");
   ctx_->subVar("clip-visible");
@@ -200,11 +207,18 @@ ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
   {
     const string istr = to_string(i+1);
     ctx_->subVar("clip-visible-" + istr);
+    ctx_->subVar("clip-widget-" + istr);
     ctx_->subVar("clip-normal-reverse-" + istr);
     ctx_->subVar("clip-normal-x-" + istr);
     ctx_->subVar("clip-normal-y-" + istr);
     ctx_->subVar("clip-normal-z-" + istr);
     ctx_->subVar("clip-normal-d-" + istr);
+    // 0-5 - Interactive Clipping plane widgets, not visible by default.
+    viewwindow_clip_frames_.push_back(
+           scinew GeomViewerItem(createClipFrame(),
+                                 "Clip Frame " + istr + " Transparent", 0));
+
+    viewwindow_clip_frames_draw_.push_back(false);
   }
 
 
@@ -350,6 +364,16 @@ ViewWindow::get_bounds_all(BBox& bbox)
       viewwindow_objs_[i]->get_bounds(bbox);
   }
   // XXX - END   - ASF ADDED FOR UNICAM
+
+  // add in the clipping plane widgets
+  const unsigned int clip_widgets_size = viewwindow_clip_frames_.size();
+  const unsigned int clip_widgets_draw_size = 
+    viewwindow_clip_frames_draw_.size();
+  for(unsigned int i = 0; i < clip_widgets_size; i++) {
+    if (i < clip_widgets_draw_size && viewwindow_clip_frames_draw_[i])
+      viewwindow_clip_frames_[i]->get_bounds(bbox);
+  }
+  
 
   // If the bounding box is empty, make it default to sane view.
   if (!bbox.valid())
@@ -1605,9 +1629,68 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia
     viewwindow_objs_draw_[0] = gui_caxes_.get();
-  }else
+  } else if(args[1] == "clipWidget"){
+    if(args.count() != 3){
+      args.error("clipWidget wants clipping plane  number");
+      return;
+    }
+    int idx; 
+    string_to_int( args[2], idx );
+    idx -= 1;
+    GuiInt widget(ctx_->subVar("clip-widget-"+ args[2],false));
+    //clip widgets run from 1-6, corresponding viewwindow_objs are 2-7.
+    //So add 2, since we subtracted 1
+    if( widget.get() != 0 ) {
+      viewwindow_clip_frames_draw_[idx] = true;
+      //      GuiInt visible(ctx_->subVar("clip-visible-"+ args[2],false));
+      GuiInt reverse(ctx_->subVar("clip-normal-reverse-"+ args[2],false));
+      GuiDouble x(ctx_->subVar("clip-normal-x-"+ args[2],false));
+      GuiDouble y(ctx_->subVar("clip-normal-y-"+ args[2],false));
+      GuiDouble z(ctx_->subVar("clip-normal-z-"+ args[2],false));
+      GuiDouble d(ctx_->subVar("clip-normal-d-"+ args[2],false));
+
+      BBox bbox;
+      get_bounds(bbox);
+      Vector diag(bbox.diagonal());
+      // compute the point and normal of the plane for the clip frame
+      Point c(bbox.min() + diag * 0.5);
+      Vector n(x.get(), y.get(), z.get());
+      n.normalize();
+      Point p(c + (n * diag.length()/2.0) * d.get());
+      if( reverse.get() == 0) {
+        n = -n;
+      }
+
+      // compute width, height, and scale of the clip frame
+      double w,h;
+      Vector axis1, axis2, right, down;
+      Point intersect;
+      n.find_orthogonal(axis1, axis2);
+      if( bbox.intersect(c,axis1, intersect) ){
+        w = 2.1* (intersect - c).length();
+      } else {
+        w = diag.length();
+      }
+
+      if( bbox.intersect(c,axis2, intersect) ){
+        h = 2.1*(intersect - c).length();
+      } else {
+        h = diag.length();
+      }
+
+
+      ViewerMessage *msg = 
+        scinew ViewerMessage(MessageTypes::ViewWindowUpdateClipFrame,
+                             id_, idx, p, n, w, h, 0.01*diag.length());
+      viewer_->mailbox_.send(msg);
+    } else {
+      viewwindow_clip_frames_draw_[idx] = false;
+    }
+    
+  } else
     args.error("Unknown minor command '" + args[1] + "' for ViewWindow");
 }
+
 
 void
 ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
@@ -1721,7 +1804,16 @@ ViewWindow::redraw()
   //  it's needed here (can't check it in the constructor since the variable
   //  might not exist on the tcl side yet)
   viewwindow_objs_draw_[0] = gui_caxes_.get();
-
+  
+  // Same is true for ClipPlane Widgets
+//   for(int i = 0; i < 6; i++){
+//     const string istr = to_string(i+1);
+//     GuiInt widget(ctx_->subVar("clip-widget-"+ istr,false));
+//     if( widget.valid() ){
+//       //clip widgets are entered 2-7
+//       viewwindow_objs_draw[i+2] = widget.get();
+//     }
+//   }
   renderer_->redraw(ct, ct, 1, 0);
 }
 
@@ -1827,6 +1919,13 @@ ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
       }
     }
   }
+
+  for (i = 0; i < viewwindow_clip_frames_.size(); i++){
+    if (viewwindow_clip_frames_draw_[i] == 1) {
+      // now draw the clip plane widgets
+           (r->*pmf)(viewer_, this, viewwindow_clip_frames_[i].get_rep());
+    }
+  }
 }
 
 void
@@ -1878,6 +1977,17 @@ void
 ViewWindow::setView(View newView) {
   gui_view_.set(newView);
   viewer_->mailbox_.send(scinew ViewerMessage(id_)); // Redraw
+}
+
+GeomHandle
+ViewWindow::createClipFrame(){
+  ViewWindowClipFrame *frame = scinew ViewWindowClipFrame;
+  clip_frames_.push_back( frame );
+  MaterialHandle clip_frame_color = 
+    scinew Material(Color(0.0, 0.0, 0.0),
+                    Color(.54, .60, .86),
+                    Color(.5,.5,.5), 20);
+  return scinew GeomMaterial(frame, clip_frame_color);
 }
 
 GeomHandle
@@ -2137,26 +2247,28 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
     for (int i = 0; i < 6; ++i) {
       const string istr = to_string(i+1);
       GuiInt visible(ctx_->subVar("clip-visible-"+ istr,false));
+      GuiInt widget(ctx_->subVar("clip-widget-"+ istr,false));
       GuiInt reverse(ctx_->subVar("clip-normal-reverse-"+ istr,false));
       GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
       GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
       GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
       GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
-      if (!(visible.valid() && x.valid() && 
+      if (!(visible.valid() && widget.valid() && x.valid() && 
             y.valid() && z.valid() && d.valid() && reverse.valid()))
         continue;
       
       if (visible.get() != 0)
         drawinfo->clip_planes_ |= 1 << i;
-      
-      Point p(bbox.min() + diag * d.get());
+
+      Point c(bbox.min() + diag * 0.5);
+      Vector n(x.get(), y.get(), z.get());
+      n.normalize();
+      Point p(c + (n * diag.length()/2.0)*d.get());
+
       if( reverse.get() == 0) {
-        Vector n(-x.get(), -y.get(), -z.get());
-        drawinfo->planes_[i] = Plane(p,n);
-      } else {
-        Vector n(x.get(), y.get(), z.get());
-        drawinfo->planes_[i] = Plane(p,n);
+        n = -n;
       }
+      drawinfo->planes_[i] = Plane(p,n);
     }
   }
   drawinfo->init_clip();
@@ -2169,10 +2281,6 @@ ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
 {
   drawinfo->mouse_action_ = mouse_action_;
 }
-
-
-
-
 
 
 
@@ -2193,6 +2301,8 @@ ViewWindow::maybeSaveMovieFrame()
     redraw();
   }
 }
+
+
 
 
 } // End namespace SCIRun

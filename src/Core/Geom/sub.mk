@@ -39,6 +39,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/ColorMappedNrrdTextureObj.cc          \
 	$(SRCDIR)/DirectionalLight.cc	                \
 	$(SRCDIR)/DrawInfoOpenGL.cc	                \
+	$(SRCDIR)/Fbuffer.cc		                \
 	$(SRCDIR)/FreeType.cc		                \
 	$(SRCDIR)/FreeTypeTextTexture.cc                \
 	$(SRCDIR)/GeomArrows.cc		                \
@@ -103,6 +104,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/TkOpenGLContext.cc	    		\
 	$(SRCDIR)/View.cc		    		\
+	$(SRCDIR)/ViewWindowClipFrame.cc                \
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
 

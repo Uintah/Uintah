@@ -402,10 +402,11 @@ itcl_class BaseViewWindow {
 
 	initGlobal $this-clip-num 6
 	initGlobal $this-clip-selected 1
-	for {set i 1} {$i <= 6} {incr i 1} {
+	for {set i 1} {$i <= 6} {incr i} {
 	    initGlobal $this-clip-visible-$i 0
+            initGlobal $this-clip-widget-$i 0
             initGlobal $this-clip-normal-reverse-$i 0
-	    initGlobal $this-clip-normal-d-$i 1.0
+	    initGlobal $this-clip-normal-d-$i 0.0
 	    initGlobal $this-clip-normal-x-$i 1.0
 	    initGlobal $this-clip-normal-y-$i 0.0
 	    initGlobal $this-clip-normal-z-$i 0.0
@@ -418,8 +419,14 @@ itcl_class BaseViewWindow {
 	
 	pack $w.which
 	checkbutton $w.visibile -text "Visible" -variable $this-clip-visible \
-	    -relief flat -command "$this setClip;$this-c redraw"
+	    -relief flat \
+            -command "$this setClip; $this-c redraw"
 	pack $w.visibile
+
+        checkbutton $w.widget -text "Show clipping plane widget" \
+            -variable $this-clip-widget -relief flat \
+            -command "$this setClip; $this-c redraw" -state disabled
+        pack $w.widget
 
 	makePlane $w.normal "Plane Normal" $this-clip-normal \
 	    "$this setClip ; $this-c redraw"
@@ -430,28 +437,46 @@ itcl_class BaseViewWindow {
 	useClip
     }
 
+    method updateClipWidget {} {
+        upvar \#0 $this-clip-selected cs
+        $this-c clipWidget $cs
+    }
+
     method useClip {} {
 	upvar \#0 $this-clip-selected cs
 	upvar \#0 $this-clip-normal-x-$cs x $this-clip-normal-y-$cs y
 	upvar \#0 $this-clip-normal-z-$cs z $this-clip-normal-d-$cs d
         upvar \#0 $this-clip-normal-reverse-$cs reverse
  	upvar \#0 $this-clip-visible-$cs visible
-	
+        upvar \#0 $this-clip-widget-$cs widget
+
 	setGlobal $this-clip-normal-x $x
 	setGlobal $this-clip-normal-y $y
 	setGlobal $this-clip-normal-z $z
+        setGlobal $this-clip-normal-d $d
         setGlobal $this-clip-normal-reverse $reverse
 	setGlobal $this-clip-visible  $visible
-        setGlobal $this-clip-normal-d $d
+	setGlobal $this-clip-widget  $widget
+
 #	.clip[modname].normal.e newvalue $d
     }
 
     method setClip {} {
+	set w .clip[modname]
 	upvar \#0 $this-clip-selected cs
 	upvar \#0 $this-clip-normal-x x $this-clip-normal-y y
 	upvar \#0 $this-clip-normal-z z $this-clip-normal-d d
         upvar \#0 $this-clip-normal-reverse reverse
  	upvar \#0 $this-clip-visible visible
+        upvar \#0 $this-clip-widget widget
+
+
+        if { $visible == 1 } {
+            $w.widget configure -state normal
+        } else {
+            $w.widget configure -state disabled
+            set widget 0
+        }            
 
 	setGlobal $this-clip-normal-x-$cs $x
 	setGlobal $this-clip-normal-y-$cs $y
@@ -459,6 +484,9 @@ itcl_class BaseViewWindow {
 	setGlobal $this-clip-normal-d-$cs $d
         setGlobal $this-clip-normal-reverse-$cs  $reverse
 	setGlobal $this-clip-visible-$cs  $visible
+	setGlobal $this-clip-widget-$cs  $widget
+
+        $this updateClipWidget
     }
 
 

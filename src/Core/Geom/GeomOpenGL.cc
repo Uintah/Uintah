@@ -101,6 +101,7 @@
 #include <Core/Geom/GeomTriStrip.h>
 #include <Core/Geom/View.h>
 #include <Core/Geom/GeomSticky.h>
+#include <Core/Geom/ViewWindowClipFrame.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
@@ -6693,5 +6694,56 @@ GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
   post_draw(di);
 }
 
+
+
+void 
+ViewWindowClipFrame::draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  unsigned int i, ii;
+
+  // turn clip planes off
+  vector<bool> cliplist(6, false);
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (glIsEnabled((GLenum)(GL_CLIP_PLANE0+ii)))
+    {
+      glDisable((GLenum)(GL_CLIP_PLANE0+ii));
+      cliplist[ii] = true;
+    }
+  }
+  for(i = 0; i < edges_.size(); i++){
+    corners_[i]->draw(di, matl, time);
+    edges_[i]->draw(di, matl,time);
+  }
+
+  // Add some transparent Polys
+  GeomTranspQuads *quads = scinew GeomTranspQuads;
+  const Color black(0,0,0), gray(0.3,0.3,0.3);
+  Material *screen = scinew Material(black, gray, gray, 5);
+  screen->transparency = 0.8;
+  quads->add(verts_[0],  screen,
+            verts_[1],  screen, 
+            verts_[2],  screen,
+            verts_[3],  screen);
+  GeomStippleOccluded *gso = scinew GeomStippleOccluded( quads );
+  // turn on back face cullin
+  bool cull_enabled = false;
+  if( !glIsEnabled((GLenum) GL_CULL_FACE) ) {
+    glEnable(GL_CULL_FACE);
+    cull_enabled = true;
+  }
+  gso->draw(di, screen, time);
+  if( cull_enabled ){
+    glDisable(GL_CULL_FACE);
+  }
+      // turn clip planes back on   
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (cliplist[ii])
+    {
+      glEnable((GLenum)(GL_CLIP_PLANE0+ii));
+    }
+  }
+}
 
 } // End namespace SCIRun

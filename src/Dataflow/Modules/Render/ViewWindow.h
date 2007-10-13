@@ -52,9 +52,12 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomPick.h>
+#include <Core/Geom/GeomCylinder.h>
+#include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GuiGeom.h>
 #include <Core/Geom/GuiView.h>
 #include <Core/Geom/View.h>
+#include <Core/Geom/ViewWindowClipFrame.h>
 #include <map>
 
 // define 'the_time()' function for UniCam
@@ -85,10 +88,10 @@ class GeomSphere;
 class Light;
 class Vector;
 class Transform;
-class OpenGL;
 class Viewer;
 class GeomViewerItem;
 class BallData;
+class FrameWidget;
 class OpenGL;
 class ViewWindow;
 
@@ -129,7 +132,7 @@ public:
   void			setView(View view);
   void			getData(int mask, FutureValue<GeometryData*>* result);
   GeomHandle		createGenAxes();   
-
+  GeomHandle            createClipFrame();
   ////////////////
   // Set movie recording values.
   //   - stops recording a movie
@@ -208,7 +211,6 @@ private:
   void			redraw();
   void			redraw(double tbeg, double tend, 
 			       int nframes, double framerate);
-
   // Private Member variables
   Viewer*		viewer_;
   OpenGL*		renderer_;
@@ -236,6 +238,11 @@ private:
   GeomHandle		pick_obj_;
   vector<GeomHandle>	viewwindow_objs_;
   vector<bool>		viewwindow_objs_draw_;   
+  vector<GeomHandle>    viewwindow_clip_widgets_;
+  vector<bool>          viewwindow_clip_widgets_draw_;
+  vector<GeomHandle>    viewwindow_clip_frames_;
+  vector<bool>          viewwindow_clip_frames_draw_;
+  
   // Variables for mouse_dolly method (dollying into/outof a view)
   double		dolly_total_;
   Vector		dolly_vector_;
@@ -262,6 +269,9 @@ private:
   GuiInt		gui_autoav_;
   GuiInt		gui_caxes_;
   GuiString		gui_pos_;
+
+  // Clipping Plane Widgets
+  vector<ViewWindowClipFrame*> clip_frames_;
 };
 
 class ViewWindowMouseMessage : public MessageBase {
@@ -279,6 +289,7 @@ public:
                          int time);
   virtual ~ViewWindowMouseMessage();
 };
+
 
 } // End namespace SCIRun
 
