@@ -70,6 +70,7 @@ public:
   virtual ~Viewer();
   virtual void			do_execute();
   virtual void			execute();
+  virtual void                  widget_moved(bool last, BaseWidget *widget);
 
   MaterialHandle		default_material_;
   Lighting			lighting_;
@@ -123,9 +124,10 @@ public:
   double			tend;
   int				nframes;
   double			framerate;
-  Vector			lightDir;
-  Color				lightColor;
-  int				lightNo;
+  Vector			dir;
+  Point                         loc;
+  Color				color;
+  int				index;
   bool				on;
 
   ViewerMessage(const string& rid);
@@ -134,6 +136,10 @@ public:
   ViewerMessage(MessageTypes::MessageType,
 		const string& rid, int lightNo, bool on, 
 		const Vector& dir, const Color& color);
+  ViewerMessage(MessageTypes::MessageType,
+		const string& rid, int clip_no, 
+                const Point& center, const Vector& normal,
+                double width, double height,double scale);
   ViewerMessage(MessageTypes::MessageType,
 		const string& rid, const string& filename);
   ViewerMessage(MessageTypes::MessageType,

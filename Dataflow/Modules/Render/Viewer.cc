@@ -48,6 +48,7 @@
 #include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
+#include <Dataflow/Widgets/FrameWidget.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geom/DirectionalLight.h>
 #include <Core/Geom/GeomObj.h>
@@ -196,6 +197,7 @@ Viewer::process_event()
 {
   MessageBase* msg=mailbox_.receive();
   GeometryComm* gmsg=(GeometryComm*)msg;
+  
   switch(msg->type)
   {
   case MessageTypes::GoAway:
@@ -264,20 +266,38 @@ Viewer::process_event()
 	ViewWindow* r=view_window_[i];
 	if(r->id_ == rmsg->rid)
 	{
-	  ((lighting_.lights)[rmsg->lightNo])->on = rmsg->on;
+	  ((lighting_.lights)[rmsg->index])->on = rmsg->on;
 	  if( rmsg->on ){
 	    if(DirectionalLight *dl = dynamic_cast<DirectionalLight *>
-	       (((lighting_.lights)[rmsg->lightNo]).get_rep())) {
-	      dl->move( rmsg->lightDir );
-	      dl->setColor( rmsg->lightColor );
+	       (((lighting_.lights)[rmsg->index]).get_rep())) {
+	      dl->move( rmsg->dir );
+	      dl->setColor( rmsg->color );
 	    } else if( HeadLight *hl = dynamic_cast<HeadLight *>
-		       (((lighting_.lights)[rmsg->lightNo]).get_rep())) {
-	      hl->setColor( rmsg->lightColor );
+		       (((lighting_.lights)[rmsg->index]).get_rep())) {
+	      hl->setColor( rmsg->color );
 	    }
 	  }
 	  r->need_redraw_ = 1;
 	  break;
 	}
+      }
+    }
+    break;
+
+  case MessageTypes::ViewWindowUpdateClipFrame:
+    {
+      ViewerMessage* rmsg =(ViewerMessage*)msg;
+      for(unsigned int i=0;i<view_window_.size();i++)
+      {
+	ViewWindow* r=view_window_[i];
+	if(r->id_ == rmsg->rid){
+          double scale = rmsg->framerate; //framerate used to store scale
+          double width = rmsg->tbeg; // tbeg stores width
+          double height = rmsg->tend; // tend stors height
+          r->clip_frames_[rmsg->index]->Set(rmsg->loc, rmsg->dir,
+                                            width, height, scale);
+          break;
+        }
       }
     }
     break;
@@ -697,6 +717,22 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
 
 }
 //----------------------------------------------------------------------
+void 
+Viewer::widget_moved(bool, BaseWidget *widget)
+{
+//   for(unsigned int i=0;i<view_window_.size();i++)
+//   {
+//     ViewWindow *vw = (ViewWindow *)(widget->userdata);
+//     if (view_window_[i] == vw) {
+//       if( FrameWidget *fw = dynamic_cast<FrameWidget *>(widget) ){
+//         vw->clip_widget_moved(fw);
+//       }
+//       return;
+//     }
+//   } 
+//   cerr<<" Widget moved, viewwindow not found!\n";
+}
+//----------------------------------------------------------------------
 void
 Viewer::execute()
 {
@@ -748,12 +784,25 @@ ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
 }
 
 ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
-			     const string& rid, int lightNo, 
-			     bool on, const Vector& dir,
-			     const Color& color)
-  : MessageBase(type), rid(rid), lightDir(dir), lightColor(color), 
-    lightNo(lightNo), on(on)
+			     const string& rid, int light_no, 
+			     bool on, const Vector& light_dir,
+			     const Color& light_color)
+  : MessageBase(type), rid(rid), dir(light_dir), color(light_color), 
+    index(light_no), on(on)
 {}
+
+ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
+                             const string& rid, int clip_no, 
+                             const Point& center, const Vector& normal,
+                             double width, double height, double scale) 
+  : MessageBase(type), rid(rid), 
+    tbeg(width), // tbeg stores width
+    tend(height), // tend store height
+    framerate( scale ), //use framerate to store scale
+    dir( normal ), loc(center), 
+    index( clip_no ) 
+{}
+
 
 
 //----------------------------------------------------------------------
