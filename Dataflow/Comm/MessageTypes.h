@@ -83,6 +83,7 @@ public:
 	ViewWindowDumpImage,
 	ViewWindowDumpObjects,
 	ViewWindowEditLight,
+        ViewWindowUpdateClipFrame,
 
 	AttachDialbox,
 	DialMoved,
