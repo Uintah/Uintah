@@ -723,7 +723,6 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gInternalForceLabel);
   t->computes(lb->TotalMassLabel);
   t->computes(lb->gTemperatureLabel,one_matl);
-  t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gExternalHeatFluxLabel);
   t->computes(lb->NC_CCweightLabel, one_matl);
@@ -1204,9 +1203,6 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,one_matl,
               Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl, 
-              Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  Ghost::AroundCells,1);
 
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pAccelerationLabel_preReloc);
@@ -1861,7 +1857,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     NCVariable<double> gTemperature;
     StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
       gExternalHeatRate(numMatls),gExternalHeatFlux(numMatls),
-      gTemperatureNoBC(numMatls),gmassall(numMatls);
+      gmassall(numMatls);
     StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
     StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
     StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
@@ -1926,9 +1922,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gvolume[m],    lb->gVolumeLabel,       matl,patch);
       new_dw->allocateAndPut(gvel_old[m],   lb->gVelocityOldLabel,  matl,patch);
       new_dw->allocateAndPut(gvelocity[m],  lb->gVelocityLabel,     matl,patch);
-     
-      new_dw->allocateAndPut(gTemperatureNoBC[m],lb->gTemperatureNoBCLabel,
-                                                                    matl,patch);
       new_dw->allocateAndPut(dispNew[m],    lb->dispNewLabel,       matl,patch);
       new_dw->allocateAndPut(gacc[m],       lb->gAccelerationLabel, matl,patch);
       new_dw->allocateAndPut(gextforce[m],  lb->gExternalForceLabel,matl,patch);
@@ -1956,7 +1949,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvelocity[m].initialize(Vector(0,0,0));
       gintforce[m].initialize(Vector(0,0,0));
 
-      gTemperatureNoBC[m].initialize(0.0);
       gExternalHeatRate[m].initialize(0.0);
       gExternalHeatFlux[m].initialize(0.0);
 
@@ -2002,7 +1994,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           IntVector c = *iter;
           gvel_old[m][c] /= gmass[m][c];
           gacc[m][c]     /= gmass[m][c];
-          gTemperatureNoBC[m][c] = gTemperature[c];
         }
       }
 
@@ -2234,7 +2225,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       }
     }
-    if (flags->d_temp_solve == false) {
+    if (flags->d_interpolateParticleTempToGridEveryStep == false) {
       if(timestep>0){
         for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
@@ -2248,7 +2239,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       if(!mpm_matl->getIsRigid()){
         for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
-          gTemperatureNoBC[m][c] = gTemperature[c];
           gmassall[m][c]=GMASS[c];
           gvolume[m][c]=GVOLUME[c];
           gextforce[m][c]=GEXTFORCE[c];
@@ -3209,7 +3199,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
-
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and displacement to the particles to update their
     // velocity and position respectively
@@ -3221,7 +3210,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMV(0.0,0.0,0.0);
     double ke=0;
     double thermal_energy = 0.0;
-    double thermal_energy2 = 0.0;
+    //double thermal_energy2 = 0.0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     double move_particles=1.;
@@ -3229,11 +3218,9 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       move_particles=0.;
     }
 
-    constNCVariable<double> gTemperature,gTemperatureRate;
+    constNCVariable<double> gTemperatureRate;
     
-    new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,0,patch,gac, 1);
-
-    new_dw->get(gTemperature,lb->gTemperatureLabel, 0,patch,gac,1);
+    new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,0, patch,gac, 1);
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -3250,13 +3237,13 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> dispNew, gacceleration;
-      constNCVariable<double> dTdt;
+      //constNCVariable<double> dTdt;
 
       delt_vartype delT;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
 
-      ParticleSubset* delete_particles = scinew ParticleSubset(0, dwindex, patch);
+      ParticleSubset* delete_particles = scinew ParticleSubset(0,dwindex,patch);
     
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
@@ -3277,7 +3264,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(dispNew,        lb->dispNewLabel,      dwindex,patch,gac, 1);
       new_dw->get(gacceleration,  lb->gAccelerationLabel,dwindex,patch,gac, 1);
 
-
       old_dw->get(psize,                 lb->pSizeLabel,                 pset);
       old_dw->get(pEro,                  lb->pErosionLabel,              pset);
       new_dw->allocateAndPut(psizeNew,   lb->pSizeLabel_preReloc,        pset);
@@ -3287,14 +3273,14 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       pEroNew.copyData(pEro);
       pTempPreNew.copyData(pTempOld);
      
-      NCVariable<double> dTdt_create, massBurnFraction_create;  
-      new_dw->allocateTemporary(dTdt_create, patch,Ghost::AroundCells,1);
-      dTdt_create.initialize(0.);
-      dTdt = dTdt_create; // reference created data
+      //NCVariable<double> dTdt_create, massBurnFraction_create;  
+      //new_dw->allocateTemporary(dTdt_create, patch,Ghost::AroundCells,1);
+      //dTdt_create.initialize(0.);
+      //dTdt = dTdt_create; // reference created data
 
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
       double Cp=mpm_matl->getSpecificHeat();
-      double K  = mpm_matl->getThermalConductivity();
+      //double K  = mpm_matl->getThermalConductivity();
 
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -3306,18 +3292,16 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
         double tempRate = 0.;
-        double potential_energy = 0.;
-        //double ptemp = 0.;
-        
+        //double potential_energy = 0.;
+
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
           disp      += dispNew[ni[k]]       * S[k];
           acc       += gacceleration[ni[k]] * S[k];
-          tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
-          //tempRate +=  dTdt[ni[k]]* S[k];
-          //ptemp += gTemperature[ni[k]] * S[k];
-          for (int dir=0;dir<3;dir++)
-            potential_energy += d_S[k][dir]*d_S[k][dir]*K;
+          //tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
+          tempRate += gTemperatureRate[ni[k]]* S[k];
+          //for (int dir=0;dir<3;dir++)
+            //potential_energy += d_S[k][dir]*d_S[k][dir]*K;
         }
 
         // Update the particle's position and velocity
@@ -3333,8 +3317,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
         pTemp[idx]           = pTempOld[idx] + tempRate*delT;
-        //pTemp[idx]           = ptemp + tempRate*delT;
-        //        cout << "pTemp[" << idx << "]= " << pTemp[idx] << endl;
 
         if(pmassNew[idx] <= 0.0){
           delete_particles->addParticle(idx);
@@ -3345,7 +3327,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         thermal_energy += pTemp[idx] * pmass[idx] * Cp;
         //thermal_energy += tempRate * pmass[idx] * Cp;
         // Thermal energy due to temperature flux (spatially varying part).
-        thermal_energy2 += potential_energy* pvolume[idx];
+        //thermal_energy2 += potential_energy* pvolume[idx];
         ke += .5*pmass[idx]*pvelnew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelnew[idx]*pmass[idx];
@@ -3369,7 +3351,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pids, lb->pParticleIDLabel, pset);
       new_dw->allocateAndPut(pids_new, lb->pParticleIDLabel_preReloc, pset);
       pids_new.copyData(pids);
-
     }
 
     // DON'T MOVE THESE!!!
