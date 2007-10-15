@@ -56,7 +56,6 @@ SRCS     += \
 	$(SRCDIR)/ClipByFunction.cc\
 	$(SRCDIR)/ClipField.cc\
 	$(SRCDIR)/ClipLattice.cc\
-	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/CreateMesh.cc\
 	$(SRCDIR)/CubitInterface.cc\
