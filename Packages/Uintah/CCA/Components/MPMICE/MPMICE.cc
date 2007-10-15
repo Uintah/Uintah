@@ -330,8 +330,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
  // Scheduling
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
-    //const PatchSet* ice_patches = ice_level->eachPatch();
     d_ice->scheduleComputeThermoTransportProperties(sched, ice_level,ice_matls);
+    
+    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, ice_level,ice_matls);
   }
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
@@ -529,13 +530,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleMoveCracks(                 sched, mpm_patches, mpm_matls);
   d_mpm->scheduleUpdateCrackFront(           sched, mpm_patches, mpm_matls);
 
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
+
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
-    
-    d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,
-                                                             maxMach_PSS);
                                    
     d_ice->scheduleAdvectAndAdvanceInTime(   sched, ice_patches,ice_matls_sub,
                                                                 ice_matls);
@@ -588,8 +586,6 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
-
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
                                                           
   d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
                                                               ice_matls,
@@ -605,16 +601,6 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                   d_sharedState->d_particleState_preReloc,
                                   Mlb->pXLabel, d_sharedState->d_particleState,
                                   Mlb->pParticleIDLabel, mpm_matls);
-
-   //__________________________________
-  // clean up memory
-  if(d_ice->d_customBC_var_basket->usingLodi){
-    for(int f=0;f<Patch::numFaces;f++){
-      if(maxMach_PSS[f]->removeReference()){
-        delete maxMach_PSS[f];
-      }
-    }
-  }
   cout_doing << "---------------------------------------------------------"<<endl;
 }
 

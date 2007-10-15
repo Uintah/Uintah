@@ -79,9 +79,9 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-
-    lodi->require("press_infinity",vb->press_infinity);
-    lodi->getWithDefault("sigma",  vb->sigma, 0.27);
+    lodi->require("ice_material_index", vb->iceMatl_indx);
+    lodi->require("press_infinity",     vb->press_infinity);
+    lodi->getWithDefault("sigma",       vb->sigma, 0.27);
   }
   
   if (usingLODI) {
@@ -187,8 +187,16 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
 /*`==========TESTING==========*/
-  int indx = 0;                 // ICE MATL IS HARD CODED TO 0
+  int indx = var_basket->iceMatl_indx;    
 /*===========TESTING==========`*/
+
+  //__________________________________
+  // bulletproofing
+  int numICEMatls  = sharedState->getNumICEMatls();
+  if(numICEMatls > 1){
+      string warn="ERROR:\n LODI boundary conditions only works with 1 ICE material\n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
   //__________________________________
   //    Equilibration pressure
   if(where == "EqPress"){

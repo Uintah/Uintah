@@ -56,9 +56,8 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
       // accumlateMomentumSourceSinks.  
       d_turbulence->scheduleComputeVariance(sched, patches, ice_matls);
     }
-    vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
-    scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
-                                                            maxMach_PSS);
+
+    scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls);
 
     scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
 
