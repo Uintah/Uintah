@@ -136,7 +136,7 @@ ParticleSubset::expand(particleIndex amount)
     minAmount = 10;
   if(amount < minAmount)
     amount = minAmount;
-  d_allocatedSize += minAmount;
+  d_allocatedSize += amount;
 #if 0
   if(d_numExpansions++ > 18){
     static ProgressiveWarning warn("Performance warning in ParticleSubset",10);
