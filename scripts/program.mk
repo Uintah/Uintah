@@ -64,7 +64,16 @@ $(PROGRAM)_LIBS := $(LIBS)
 # to lib/libCore_Thread.so.  The second transforms it from
 # lib/libCore_Thread.so to -lCore_Thread.  This is so that
 # we can use the -l syntax to link, but still express the dependicies.
-$(PROGRAM): prereqs $(OBJS) $(patsubst %,$(LIBDIR)/lib%.$(SO_OR_A_FILE),$(PSELIBS))
+#
+# These dependencies:
+#    $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)       
+# listed below for $(PROGRAM) are actually 'prereqs'... however, if I put 'prereqs'
+# directly, then it seems to build programs over and over... Not sure why.
+# The prereqs are necessary so that if someone types "make scirun" the very
+# first time (instead of just "make"), the directories, etc, will be properly
+# created.
+
+$(PROGRAM) : $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)       $(OBJS) $(patsubst %,$(LIBDIR)/lib%.$(SO_OR_A_FILE),$(PSELIBS))
 ifeq ($(IS_WIN),yes)
 	$(CXX) $(filter %.$(OBJEXT),$^) -o $@ $(LDFLAGS) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(patsubst $(LIBDIR)/%.$(SO_OR_A_FILE),%.lib,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
 else
