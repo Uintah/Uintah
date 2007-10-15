@@ -200,8 +200,10 @@ void ImplicitHeatConduction::scheduleSolveForTemp(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::solveForTemp", this,
                         &ImplicitHeatConduction::solveForTemp);
   
+#if 0
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,gnone,0); 
+#endif
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -216,9 +218,7 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::getTemperatureIncrement", this,
                         &ImplicitHeatConduction::getTemperatureIncrement);
                                                                                 
-
-  //t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,Ghost::None);
-  t->modifies(lb->gTemperatureLabel,one_matl);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,Ghost::None,0);
   t->computes(lb->gTemperatureRateLabel,one_matl);
                                                                                 
   t->setType(Task::OncePerProc);
@@ -434,8 +434,6 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       }  
 
     }
-
-
   }      // patches
 }
 
@@ -578,7 +576,6 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
     delete interpolator;
 
   }
-//  d_HC_solver->finalizeMatrix();
 
 }
 
@@ -604,8 +601,7 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     d_HC_solver->copyL2G(l2g,patch);
 
     constNCVariable<double> temperature;
-    new_dw->get(temperature, lb->gTemperatureLabel, 0,patch,Ghost::AroundCells,
-                1);
+    new_dw->get(temperature,lb->gTemperatureLabel,0,patch,Ghost::AroundCells,1);
 
 #if 0
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
@@ -748,9 +744,7 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
     
   }
 
-
   d_HC_solver->solve(guess);
-
 
 }
 
@@ -774,15 +768,13 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
-    NCVariable<double>  tempRate;
-    NCVariable<double> temp;
+    NCVariable<double> tempRate;
+    constNCVariable<double> temp;
 
     int dwi = 0;
 
     new_dw->allocateAndPut(tempRate,lb->gTemperatureRateLabel,dwi,patch);
-    //new_dw->get(temp,lb->gTemperatureLabel, dwi,patch,Ghost::None,0);
-    new_dw->getModifiable(temp,lb->gTemperatureLabel, dwi,patch);
-
+    new_dw->get(temp, lb->gTemperatureLabel, dwi,patch,Ghost::None,0);
 
     tempRate.initialize(0.0);
 
@@ -795,10 +787,6 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
       IntVector n = *iter;
       int dof = l2g[n] - begin;
       tempRate[n] = (x[dof] - temp[n])/dt;
-      temp[n] = x[dof];
-#if 0
-      cout << "temp[" << n << "]= " << temp[n] << endl;
-#endif
     }
   }
 
@@ -821,6 +809,5 @@ void ImplicitHeatConduction::fillgTemperatureRate(const ProcessorGroup*,
     NCVariable<double> tempRate;
     new_dw->allocateAndPut(tempRate,lb->gTemperatureRateLabel,dwi,patch);
     tempRate.initialize(0.0);
-
   }
 }
