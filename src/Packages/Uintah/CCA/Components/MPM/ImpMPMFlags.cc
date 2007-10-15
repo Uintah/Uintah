@@ -20,7 +20,7 @@ ImpMPMFlags::ImpMPMFlags() : MPMFlags()
   d_projectHeatSource = false;
 
   d_temp_solve = false;
-
+  d_interpolateParticleTempToGridEveryStep = true;
 }
 
 ImpMPMFlags::~ImpMPMFlags()
@@ -58,6 +58,8 @@ ImpMPMFlags::readMPMFlags(ProblemSpecP& ps)
   
   mpm_flag_ps->get("solver",d_solver_type);
   mpm_flag_ps->get("temperature_solve",d_temp_solve);
+  mpm_flag_ps->get("interpolateParticleTempToGridEveryStep",
+                  d_interpolateParticleTempToGridEveryStep);
 
 }
 
@@ -80,6 +82,8 @@ ImpMPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   ps->appendElement("solver",d_solver_type);
   ps->appendElement("temperature_solve",d_temp_solve);
+  ps->appendElement("interpolateParticleTempToGridEveryStep",
+                  d_interpolateParticleTempToGridEveryStep);
 
 }
 
