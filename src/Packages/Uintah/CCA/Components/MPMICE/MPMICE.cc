@@ -961,7 +961,10 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   if(d_mpm->flags->doMPMOnLevel(L_indx,level->getGrid()->numLevels())) {
     t->computes(MIlb->NC_CCweightLabel,   press_matl);
   }
-
+  
+  computesRequires_CustomBCs(t, "EqPress", Ilb, ice_matls,
+                            d_ice->d_customBC_var_basket);
+                            
   sched->addTask(t, patches, all_matls);
 }
 

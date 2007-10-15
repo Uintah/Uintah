@@ -39,6 +39,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
  
   bool usingLODI = false;
+  vector<int> matl_index;
   
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
@@ -50,6 +51,18 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
                      bc_iter = bc_iter->findNextBlock("BCType")){
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
+      
+      //__________________________________
+      //  bulletproofing
+      if (bc_type["var"] == "LODI"){
+        if (bc_type["label"] == "Pressure" && bc_type["id"] != "0"){
+          string warn="ERROR:\n Inputs:LODI Boundary Conditions: the pressure material index must = 0";
+          throw ProblemSetupException(warn, __FILE__, __LINE__);
+        } 
+        if (bc_type["label"] != "Pressure"){
+          matl_index.push_back(atoi(bc_type["id"].c_str()));
+        }
+      }
       
 
       if (bc_type["var"] == "LODI" && !is_a_Lodi_face) {
@@ -72,7 +85,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     }
   }
   //__________________________________
-  //  read in variables
+  //  read in master LODI variables
   if(usingLODI ){
     ProblemSpecP lodi = bc_ps->findBlock("LODI");
     if (!lodi) {
@@ -82,6 +95,16 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     lodi->require("ice_material_index", vb->iceMatl_indx);
     lodi->require("press_infinity",     vb->press_infinity);
     lodi->getWithDefault("sigma",       vb->sigma, 0.27);
+    
+    //__________________________________
+    //  bulletproofing
+    vector<int>::iterator iter;
+    for( iter  = matl_index.begin();iter != matl_index.end(); iter++){
+      if(*iter != vb->iceMatl_indx){
+        string warn="ERROR:\n Inputs: LODI Boundary Conditions: One of the material indices is not <ice_material_index>";
+        throw ProblemSetupException(warn, __FILE__, __LINE__);
+      }
+    }
   }
   
   if (usingLODI) {
