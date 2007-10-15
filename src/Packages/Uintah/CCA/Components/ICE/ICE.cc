@@ -846,9 +846,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     // accumlateMomentumSourceSinks.  
     d_turbulence->scheduleComputeVariance(sched, patches, ice_matls);
   }
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
-  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
-                                                          maxMach_PSS);
+
+  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls);
                                                           
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
   
@@ -1579,8 +1578,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched, 
                                      const LevelP& level,
-                                     const MaterialSet* matls,
-                                     vector<PatchSubset*> & /*maxMach_PSS*/)
+                                     const MaterialSet* matls)
 { 
   if(d_customBC_var_basket->usingLodi) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
@@ -1590,9 +1588,6 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
     Ghost::GhostType  gn = Ghost::None;  
     task->requires( Task::OldDW, lb->vel_CCLabel,        gn);   
     task->requires( Task::OldDW, lb->speedSound_CCLabel, gn);
-    
-    // Reduction variables with patch subsets don't work with mpi.
-    //Lodi_maxMach_patchSubset(level, d_sharedState, maxMach_PSS);
                              
     //__________________________________
     // loop over the Lodi face
