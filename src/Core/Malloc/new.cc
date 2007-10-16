@@ -70,12 +70,12 @@ namespace SCIRun {
 
 }
 
-void* operator new(size_t size, Allocator*, char*, int)
+void* operator new(size_t size, Allocator*, const char*, int)
 {
     return new char[size];
 }
 
-void* operator new[](size_t size, Allocator*, char*, int)
+void* operator new[](size_t size, Allocator*, const char*, int)
 {
     return new char[size];
 }
@@ -191,7 +191,7 @@ void operator delete[](void* ptr) throw()
     default_allocator->free(ptr);
 }
 
-void* operator new(size_t size, Allocator* a, char* tag, int linenum)
+void* operator new(size_t size, Allocator* a, const char* tag, int linenum)
 {
     if(!a){
 	if(!default_allocator)
@@ -201,7 +201,7 @@ void* operator new(size_t size, Allocator* a, char* tag, int linenum)
     return a->alloc(size, tag, linenum);
 }
 
-void* operator new[](size_t size, Allocator* a, char* tag, int linenum)
+void* operator new[](size_t size, Allocator* a, const char* tag, int linenum)
 {
     if(!a){
 	if(!default_allocator)

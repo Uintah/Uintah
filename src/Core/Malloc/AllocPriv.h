@@ -173,7 +173,7 @@ struct Allocator {
   bool dieing;
 };
 
-void AllocError(char*);
+void AllocError(const char*);
 
 } // End namespace SCIRun
 
