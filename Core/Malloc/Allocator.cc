@@ -457,7 +457,7 @@ void MakeDefaultAllocator()
   }
 }
 
-void AllocError(char* msg)
+void AllocError(const char* msg)
 {
   fprintf(stderr, "Allocator error: %s\n", msg);
   abort();
