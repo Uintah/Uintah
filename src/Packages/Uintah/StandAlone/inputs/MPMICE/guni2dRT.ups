@@ -215,11 +215,11 @@
           <frac_nucleation>               0.1   </frac_nucleation>
           <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
           <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
-          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+          <initial_porosity_distrib>      constant </initial_porosity_distrib>
           <initial_mean_scalar_damage>    0.01  </initial_mean_scalar_damage>
           <initial_std_scalar_damage>     0.005 </initial_std_scalar_damage>
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
-          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+          <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
                </constitutive_model>
                 <geom_object>
                    <difference>
