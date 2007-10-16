@@ -51,11 +51,13 @@ setenv LOGIN              $user_test@$remote_machine
 setenv REMOTEDIR_TMP      `echo $string |cut -d\: -f2`
 setenv LOCALDIR           $localDir
 setenv REMOTEDIR          $REMOTEDIR_TMP/$LOCALDIR/
+setenv PSCP_FILES         "/tmp/pscp_$localDir"
 
 echo "login:       $LOGIN"
 echo "nprocessors: $nproc"
 echo "localDir:    $localDir"
 echo "remoteDir:   $REMOTEDIR"
+echo "pscp_files:  $PSCP_FILES"
 
 #------------------
 # Bulletproofing
@@ -103,11 +105,15 @@ cd $localDir
 #-------------------------------
 # make a sorted list of files / directories to test
 # let the user edit that file with vi
-/bin/rm -f /tmp/pscp_files
+/bin/rm -f $PSCP_FILES
 
-find . -maxdepth 1 -type f             -exec basename {} \; > /tmp/pscp_files
-find . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >>/tmp/pscp_files
-find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> /tmp/pscp_files
+find . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
+find . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >>$PSCP_FILES
+find -path './checkpoints/*' -maxdepth 2 >>$PSCP_FILES
+# remove ./ in front of ./checkpoints/....
+cp $PSCP_FILES $PSCP_FILES.2
+sed s/"\.\/"/""/g < $PSCP_FILES.2 >& $PSCP_FILES
+/bin/rm $PSCP_FILES.2
 
 echo "Now starting vi in a separate xterm:  Add/remove the files or directories you want verified to the following list"
 xterm -bg "DarkSlateGray" -fg "orange" -e "vi /tmp/pscp_files" 

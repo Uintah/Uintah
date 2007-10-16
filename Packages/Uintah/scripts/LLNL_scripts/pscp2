@@ -90,7 +90,7 @@ cd $localDir
 
 find . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
 find . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>$PSCP_FILES
-find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> $PSCP_FILES
+find -path './checkpoints/*' -maxdepth 2 >>$PSCP_FILES
 
 echo "Now starting vi in a separate xterm:  Remove the files you don't want transfered"
 xterm -bg "DarkSlateGray" -fg "orange" -e "vi $PSCP_FILES"
