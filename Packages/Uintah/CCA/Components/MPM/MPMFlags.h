@@ -70,6 +70,7 @@ namespace Uintah {
     int         d_extraSolverFlushes;  // Have PETSc do more flushes to save memory
     bool        d_doImplicitHeatConduction;
     bool        d_doTransientImplicitHeatConduction;
+    bool        d_doExplicitHeatConduction;
     bool        d_doGridReset;   // Default is true, standard MPM
     double      d_min_part_mass; // Minimum particle mass before deletion  
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
