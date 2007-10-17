@@ -47,10 +47,11 @@ MPMFlags::MPMFlags()
   d_canAddMPMMaterial = false;
   d_interpolator = scinew LinearInterpolator(); 
   d_do_contact_friction = true;
-  d_addFrictionWork = 1.0;  // do frictional heating by default
+  d_addFrictionWork = 1.0;  // don't do frictional heating by default
 
   d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction = false;
+  d_doExplicitHeatConduction = true;
   d_doTransientImplicitHeatConduction = true;
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
@@ -111,6 +112,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
   mpm_flag_ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   mpm_flag_ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
+  mpm_flag_ps->get("DoExplicitHeatConduction", d_doExplicitHeatConduction);
   mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
   mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);
@@ -194,6 +196,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("CanAddMPMMaterial", d_canAddMPMMaterial);
   ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
+  ps->appendElement("DoExplicitHeatConduction", d_doExplicitHeatConduction);
   ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);

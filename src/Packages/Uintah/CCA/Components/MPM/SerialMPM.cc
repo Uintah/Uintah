@@ -442,17 +442,22 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-  scheduleComputeHeatExchange(            sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeHeatExchange(          sched, patches, matls);
+  }
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleSetBCsInterpolated(             sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
-  scheduleComputeInternalHeatRate(        sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleSolveHeatEquations(           sched, patches, matls);
+    scheduleIntegrateTemperatureRate(     sched, patches, matls);
+  }
+
   scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleSolveHeatEquations(             sched, patches, matls);
   scheduleIntegrateAcceleration(          sched, patches, matls);
-  scheduleIntegrateTemperatureRate(       sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
@@ -554,6 +559,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
+  t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
@@ -1090,8 +1096,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,               gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
@@ -1554,6 +1558,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperature;
       NCVariable<double> gSp_vol;
       NCVariable<double> gTemperatureNoBC;
+      NCVariable<double> gTemperatureRate;
       NCVariable<double> gnumnearparticles;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
@@ -1564,6 +1569,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                                                      dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+                             dwi,patch);
+      new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
                              dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,
                              dwi,patch);
@@ -1578,6 +1585,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
       gTemperatureNoBC.initialize(0);
+      gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
@@ -2921,7 +2929,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
-      constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
+      constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -2957,8 +2965,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      new_dw->get(gTemperature,    lb->gTemperatureLabel,    dwi,patch,gac,NGP);
-      new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
