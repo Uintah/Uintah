@@ -243,6 +243,7 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
+  thermalContactModel->outputProblemSpec(mpm_ps);
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,

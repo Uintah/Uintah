@@ -24,6 +24,11 @@ STThermalContact::~STThermalContact()
 {
 }
 
+void STThermalContact::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP thermal_ps = ps->appendChild("thermal_contact");
+}
+
 void STThermalContact::computeHeatExchange(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset*,

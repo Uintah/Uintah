@@ -69,6 +69,8 @@ WARNING
                               const PatchSet* patches,
 			      const MaterialSet* matls) const = 0;
 
+    virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
+
   protected:
     MPMFlags* flag;
   private:
