@@ -100,7 +100,7 @@ ifeq ($(IS_AIX),yes)
         $(LAPACK_LIBRARY) \
         $(MPI_LIBRARY) \
         $(X_LIBRARY) \
-        -lld $(M_LIBRARY)
+        -lld $(M_LIBRARY) 
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
@@ -116,31 +116,59 @@ SRCS := $(SRCDIR)/puda.cc
 PROGRAM := Packages/Uintah/StandAlone/puda
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Packages/Uintah
 else
+
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/CCA/Ports          \
+        Core/Exceptions   \
+        Core/Thread       \
+        Core/Geometry     \
+        Core/Util         \
+        Core/Math         \
+        Core/Persistent   \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/CCA/Components/Parent \
+        Packages/Uintah/CCA/Components/Models \
+        Packages/Uintah/CCA/Components/DataArchiver  \
+        Packages/Uintah/CCA/Components/LoadBalancers \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Core/XMLUtil \
-        Core/Exceptions  \
-        Core/Persistent  \
-        Core/Geometry    \
-        Core/Thread      \
-        Core/Util        \
-        Core/OS          \
-        Core/Containers
+        Packages/Uintah/CCA/Components/Solvers              \
+        $(AIX_LIBRARY)
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
+ifeq ($(IS_AIX),yes)
+  LIBS := \
+        $(TCL_LIBRARY) \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        -lld $(M_LIBRARY) 
+else
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
+#LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -182,6 +210,60 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCS := $(SRCDIR)/partextract.cc
 PROGRAM := Packages/Uintah/StandAlone/partextract
 
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Packages/Uintah
+else
+
+  PSELIBS := \
+        Core/Exceptions   \
+        Core/Thread       \
+        Core/Geometry     \
+        Core/Util         \
+        Core/Math         \
+        Core/Persistent   \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/CCA/Components/Parent \
+        Packages/Uintah/CCA/Components/Models \
+        Packages/Uintah/CCA/Components/DataArchiver  \
+        Packages/Uintah/CCA/Components/LoadBalancers \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/Solvers              \
+        $(AIX_LIBRARY)
+endif
+
+ifeq ($(IS_AIX),yes)
+  LIBS := \
+        $(TCL_LIBRARY) \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        -lld $(M_LIBRARY) 
+else
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
@@ -189,6 +271,60 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/partconvert.cc
 PROGRAM := Packages/Uintah/StandAlone/partconvert
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Packages/Uintah
+else
+
+  PSELIBS := \
+        Core/Exceptions   \
+        Core/Thread       \
+        Core/Geometry     \
+        Core/Util         \
+        Core/Math         \
+	Core/Persistent   \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/CCA/Components/Parent \
+        Packages/Uintah/CCA/Components/Models \
+        Packages/Uintah/CCA/Components/DataArchiver  \
+        Packages/Uintah/CCA/Components/LoadBalancers \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/Solvers              \
+        $(AIX_LIBRARY)
+endif
+
+ifeq ($(IS_AIX),yes)
+  LIBS := \
+        $(TCL_LIBRARY) \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        -lld $(M_LIBRARY) 
+else
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -241,6 +377,60 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCS := $(SRCDIR)/lineextract.cc
 PROGRAM := Packages/Uintah/StandAlone/lineextract
 
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Packages/Uintah
+else
+
+  PSELIBS := \
+        Core/Exceptions   \
+        Core/Thread       \
+        Core/Geometry     \
+        Core/Util         \
+        Core/Math         \
+	Core/Persistent   \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/CCA/Components/Parent \
+        Packages/Uintah/CCA/Components/Models \
+        Packages/Uintah/CCA/Components/DataArchiver  \
+        Packages/Uintah/CCA/Components/LoadBalancers \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/Solvers              \
+        $(AIX_LIBRARY)
+endif
+
+ifeq ($(IS_AIX),yes)
+  LIBS := \
+        $(TCL_LIBRARY) \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        -lld $(M_LIBRARY) 
+else
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
@@ -248,6 +438,124 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/ice2vtk.cc
 PROGRAM := Packages/Uintah/StandAlone/ice2vtk
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Packages/Uintah
+else
+
+  PSELIBS := \
+        Core/Exceptions   \
+        Core/Thread       \
+        Core/Geometry     \
+        Core/Util         \
+        Core/Math         \
+	Core/Persistent   \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/CCA/Components/Parent \
+        Packages/Uintah/CCA/Components/Models \
+        Packages/Uintah/CCA/Components/DataArchiver  \
+        Packages/Uintah/CCA/Components/LoadBalancers \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/Solvers              \
+        $(AIX_LIBRARY)
+endif
+
+ifeq ($(IS_AIX),yes)
+  LIBS := \
+        $(TCL_LIBRARY) \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        -lld $(M_LIBRARY) 
+else
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
+# loadextract
+
+SRCS := $(SRCDIR)/loadextract.cc \
+	$(SRCDIR)/KInpReader.cc \
+	$(SRCDIR)/loadextractmain.cc
+PROGRAM := Packages/Uintah/StandAlone/loadextract
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Packages/Uintah
+else
+
+  PSELIBS := \
+        Core/Exceptions   \
+        Core/Thread       \
+        Core/Geometry     \
+        Core/Util         \
+        Core/Math         \
+	Core/Persistent   \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+        Packages/Uintah/CCA/Components/Parent \
+        Packages/Uintah/CCA/Components/Models \
+        Packages/Uintah/CCA/Components/DataArchiver  \
+        Packages/Uintah/CCA/Components/LoadBalancers \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/Solvers              \
+        $(AIX_LIBRARY)
+endif
+
+ifeq ($(IS_AIX),yes)
+  LIBS := \
+        $(TCL_LIBRARY) \
+        $(TEEM_LIBRARY) \
+        $(XML2_LIBRARY) \
+        $(Z_LIBRARY) \
+        $(THREAD_LIBRARY) \
+        $(F_LIBRARY) \
+        $(PETSC_LIBRARY) \
+        $(HYPRE_LIBRARY) \
+        $(BLAS_LIBRARY) \
+        $(LAPACK_LIBRARY) \
+        $(MPI_LIBRARY) \
+        $(X_LIBRARY) \
+        -lld $(M_LIBRARY) 
+else
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
+          $(CANTERA_LIBRARY) \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -424,6 +732,7 @@ uintah: sus \
         gambitFileReader \
         lineextract \
         ice2vtk \
+        loadextract \
         timeextract \
         link_inputs \
         link_regression_tester
@@ -540,4 +849,6 @@ timeextract: Packages/Uintah/StandAlone/timeextract
 lineextract: Packages/Uintah/StandAlone/lineextract
 
 ice2vtk: Packages/Uintah/StandAlone/ice2vtk
+
+loadextract: Packages/Uintah/StandAlone/loadextract
 
