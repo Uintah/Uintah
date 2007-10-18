@@ -48,8 +48,8 @@
 
 
 // DO-NOT-DELETE splicer.begin(scijump.ApplicationLoaderService._hincludes)
-#include <sci_cca_ports.hxx>
-#include <scijump.hxx>
+#include "sci_cca_ports.hxx"
+#include "scijump.hxx"
 
 #include <libxml/xmlreader.h>
 #include <string>
@@ -91,7 +91,7 @@ namespace scijump {
 						xmlNode** node);
 			      
     std::string fileName;
-    ::sci::cca::AbstractFramework framework;
+    scijump::SCIJumpFramework framework;
 
     std::stack<xmlNodePtr> nodeStack;
     xmlDocPtr xmlDoc;

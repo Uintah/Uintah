@@ -107,7 +107,7 @@ scijump::ApplicationLoaderService_impl::initialize_impl (
   /* in */::sci::cca::AbstractFramework& framework ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.ApplicationLoaderService.initialize)
-  this->framework = framework;
+  this->framework = ::sidl::babel_cast<scijump::SCIJumpFramework>(framework);
   // DO-NOT-DELETE splicer.end(scijump.ApplicationLoaderService.initialize)
 }
 
@@ -199,14 +199,14 @@ scijump::ApplicationLoaderService_impl::loadFile_impl (
     }
   }
 
-  scijump::SCIJumpFramework sj = babel_cast<scijump::SCIJumpFramework>(framework);
-  if(sj._is_nil()) {
-    scijump::CCAException ex = scijump::CCAException::_create();
-    ex.setNote("Cannot cast framework pointer");
-    ex.add(__FILE__, __LINE__, "loadFile");
-    throw ex;
-  }
-  gov::cca::Services mainServices = sj.getServices("app svc", "main", 0);
+  //scijump::SCIJumpFramework sj = babel_cast<scijump::SCIJumpFramework>(framework);
+  //if(sj._is_nil()) {
+  //  scijump::CCAException ex = scijump::CCAException::_create();
+  //  ex.setNote("Cannot cast framework pointer");
+  //  ex.add(__FILE__, __LINE__, "loadFile");
+  //  throw ex;
+  //}
+  gov::cca::Services mainServices = framework.getServices("app svc", "main", 0);
   mainServices.registerUsesPort("mainBuilder", "cca.BuilderService", mainServices.createTypeMap());
   ::gov::cca::Port bsp = mainServices.getPort("mainBuilder");
   if (bsp._is_nil()) {
@@ -273,7 +273,7 @@ scijump::ApplicationLoaderService_impl::loadFile_impl (
   }
 
   mainServices.releasePort("mainBuilder");
-  sj.releaseServices(mainServices);
+  framework.releaseServices(mainServices);
   // DO-NOT-DELETE splicer.end(scijump.ApplicationLoaderService.loadFile)
 }
 
@@ -335,15 +335,15 @@ scijump::ApplicationLoaderService_impl::saveFile_impl ()
    */
   //xmlNewProp(rootNode, BAD_CAST "version", BAD_CAST SCIJUMP_VERSION);
 
-  scijump::SCIJumpFramework sj = babel_cast<scijump::SCIJumpFramework>(framework);
-  if(sj._is_nil()) {
-    scijump::CCAException ex = scijump::CCAException::_create();
-    ex.setNote("Cannot cast framework pointer");
-    ex.add(__FILE__, __LINE__, "loadFile");
-    throw ex;
-  }
+  //scijump::SCIJumpFramework sj = babel_cast<scijump::SCIJumpFramework>(framework);
+  //if(sj._is_nil()) {
+  //  scijump::CCAException ex = scijump::CCAException::_create();
+  //  ex.setNote("Cannot cast framework pointer");
+  //  ex.add(__FILE__, __LINE__, "loadFile");
+  //  throw ex;
+  //}
 
-  gov::cca::Services mainServices = sj.getServices("app svc", "main", sj.createTypeMap());
+  gov::cca::Services mainServices = framework.getServices("app svc", "main", framework.createTypeMap());
   mainServices.registerUsesPort("mainBuilder", "cca.BuilderService", mainServices.createTypeMap());
   ::gov::cca::Port bsp = mainServices.getPort("mainBuilder");
   if (bsp._is_nil()) {
@@ -383,7 +383,7 @@ scijump::ApplicationLoaderService_impl::saveFile_impl ()
   }
 
   mainServices.releasePort("mainBuilder");
-  sj.releaseServices(mainServices);
+  framework.releaseServices(mainServices);
 
   xmlSaveFormatFileEnc(fileName.c_str(), xmlDoc, "UTF-8", 1);
   // free the document
