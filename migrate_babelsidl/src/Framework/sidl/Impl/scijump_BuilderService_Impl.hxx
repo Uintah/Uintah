@@ -90,7 +90,6 @@ namespace scijump {
     // DO-NOT-DELETE splicer.begin(scijump.BuilderService._implementation)
 
     scijump::SCIJumpFramework framework;
-    ::scijump::core::ServiceInfo serviceInfo;
 
     // DO-NOT-DELETE splicer.end(scijump.BuilderService._implementation)
 

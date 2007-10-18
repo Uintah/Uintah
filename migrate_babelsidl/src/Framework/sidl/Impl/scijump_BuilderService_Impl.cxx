@@ -49,8 +49,6 @@
 // DO-NOT-DELETE splicer.begin(scijump.BuilderService._includes)
 
 #include "sidl.hxx"
-#include "scijump.hxx"
-#include "sci_cca.hxx"
 
 #include <sci_defs/framework_defs.h>
 #include <Core/Util/Assert.h>
@@ -117,9 +115,9 @@ scijump::BuilderService_impl::initialize_impl (
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.initialize)
   this->framework = ::sidl::babel_cast<scijump::SCIJumpFramework>(framework);
-  serviceInfo = ::scijump::core::ServiceInfo::_create();
 
-  ::scijump::BabelPortInfo pi = ::scijump::BabelPortInfo::_create();
+  // what was this used for?
+  //::scijump::BabelPortInfo pi = ::scijump::BabelPortInfo::_create();
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.initialize)
 }
 
@@ -780,21 +778,7 @@ scijump::BuilderService_impl::processEvent_impl (
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.processEvent)
 }
 
-
 // DO-NOT-DELETE splicer.begin(scijump.BuilderService._misc)
-
-#if 0
-  // Insert-Code-Here {scijump.BuilderService.getServiceInfo} (getServiceInfo method)
-//   if (serviceInfo._is_nil()) {
-//     ::sci::cca::core::NotInitializedException ex = ::sci::cca::core::NotInitializedException::_create();
-//     ex.setNote("scijump::BuilderService_impl::ServiceInfo member is nil");
-//     ex.add(__FILE__, __LINE__, "getServiceInfo");
-//     throw ex;
-//   }
-
-//   return ::sidl::babel_cast< ::sci::cca::core::ServiceInfo>(serviceInfo);
-#endif
-
 // Insert-Code-Here {scijump.BuilderService._misc} (miscellaneous code)
 // DO-NOT-DELETE splicer.end(scijump.BuilderService._misc)
 
