@@ -31,7 +31,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   makePlanes();
   makeTriBoxes();
   
-  cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
+  // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
   list<Tri> tri_list;
   Tri tri;
