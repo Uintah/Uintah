@@ -407,11 +407,13 @@ main( int argc, char** argv )
 
 #if !defined(REDSTORM)
     char * st = getenv( "INITIAL_SLEEP_TIME" );
-    if( st != 0 ){
+    if( st != 0 ){    
+      char name[256];
+      gethostname(name, 256);
       int sleepTime = atoi( st );
       cout << "SLEEPING FOR " << sleepTime 
            << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
-      cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " is " << getpid() << "\n";
+      cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
       Time::waitFor( (double)sleepTime );
     }
 #endif
