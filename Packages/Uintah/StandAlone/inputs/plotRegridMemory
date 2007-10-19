@@ -42,7 +42,7 @@ sed -e 's/^   0://' .plotStats_tmp1 >& .plotStats_tmp
 echo "?">&.meanTime
 echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
 echo "?">>.meanTime
-echo "?">>.meanTim
+echo "?">>.meanTime
 
 grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
 grep elap .plotStats_tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
@@ -51,11 +51,11 @@ grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4  > .memMax
 
 #__________________________________
 # parse the total number cells per level
-@ nLevels = `grep levels .tmpClean | cut -d: -f2`
+@ nLevels = `grep levels .tmpDirty | cut -d: -f2`
 @ count = 0
 set levels 
 
-foreach L ( $count < $nLevels)
+while ( $count < $nLevels)
   @ count +=1
   set level = "L-$count"
   set levels = ($levels $level)
@@ -119,8 +119,8 @@ set ylabel 'Number of Cells'
 fin
 # loop over all the levels and build the gnuplot command
 @ count = 1
-foreach L ( $count < $nLevels)
-  if($L == "1") then
+while ( $count <= $nLevels)
+  if($count == "1") then
     echo -n "plot '.L-all' using 1:2 t 'L-1' with step " >> gp
   else 
     @ c = $count + 1
@@ -151,6 +151,6 @@ endif
 
 #__________________________________
 # clean up
-rm -f gp .data .regridData .L-all
+rm -f gp .data .regridData .meanTime .L-all
 
 exit(1)
