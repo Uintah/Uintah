@@ -34,14 +34,15 @@ endif
 setenv LOGIN              $user_test@$remote_machine
 setenv REMOTEDIR_TMP      `echo $string |cut -d\: -f2`
 setenv LOCALDIR           $localDir
-setenv REMOTEDIR          $REMOTEDIR_TMP/$LOCALDIR
-setenv PSCP_FILES         /tmp/pscp_files_$localDir
+setenv REMOTEDIR          $REMOTEDIR_TMP/`basename $LOCALDIR`
+setenv PSCP_FILES         /tmp/pscp_files_`basename $localDir`_`whoami`
 
 echo "login:       $LOGIN"
 echo "nprocessors: $nproc"
 echo "localDir:    $localDir"
 echo "remoteDir:   $REMOTEDIR"
 echo "removing the remote directory: " $rmDir
+echo "pscp_files:  $PSCP_FILES"
 
 #------------------
 # Bulletproofing
@@ -78,7 +79,8 @@ if( $rmDir == "y" || $rmDir == "Y" ) then
   echo "Now removing $localDir from $remote_machine if it exists"
   ssh -x $LOGIN "cd $REMOTEDIR_TMP; /bin/rm -rf $localDir; mkdir $localDir"
 else
-  ssh -x $LOGIN "cd $REMOTEDIR_TMP; mkdir $localDir"
+  echo "ssh -x $LOGIN 'cd $REMOTEDIR_TMP; mkdir `basename $localDir`'"
+  ssh -x $LOGIN "cd $REMOTEDIR_TMP; mkdir `basename $localDir`"
 endif
 
 cd $localDir
@@ -96,7 +98,7 @@ echo "Now starting vi in a separate xterm:  Remove the files you don't want tran
 xterm -bg "DarkSlateGray" -fg "orange" -e "vi $PSCP_FILES"
 chmod ug+rw $PSCP_FILES
  
-/usr/bin/time -p gmake TAR=tar -f /usr/gapps/uintah/scripts/pscp2_driver_$OS -j $nproc
+/usr/bin/time -p gmake TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc
 
 cd ..
 exit(1)
