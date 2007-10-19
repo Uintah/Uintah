@@ -99,6 +99,3 @@ xterm -bg "DarkSlateGray" -fg "orange" -e "vi $PSCP_FILES"
 chmod ug+rw $PSCP_FILES
  
 /usr/bin/time -p gmake TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc
-
-cd ..
-exit(1)
