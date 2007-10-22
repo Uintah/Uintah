@@ -96,6 +96,11 @@ namespace SCIRun {
     return (int)sqrt((double)i);
   }
 
+  inline long double Sqrt(long double d)
+  {
+    return sqrtl(d);
+  }
+
   inline double Sqrt(double d)
   {
     return sqrt(d);
@@ -111,10 +116,20 @@ namespace SCIRun {
   {
     return pow(d, 1./3.);
   }
+
+  inline long double Cbrt(long double d)
+  {
+    return powl(d, 1./3.);
+  }
 #else
   inline double Cbrt(double d)
   {
     return cbrt(d);
+  }
+
+  inline long double Cbrt(long double d)
+  {
+    return cbrtl(d);
   }
 #endif
 
