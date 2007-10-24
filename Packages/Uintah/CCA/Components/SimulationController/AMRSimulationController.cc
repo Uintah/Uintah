@@ -338,7 +338,7 @@ void AMRSimulationController::run()
    calcWallTime();
    printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep(),delt,t);
 
-   d_ups->releaseDocument();
+   //d_ups->releaseDocument();
 }
 
 //______________________________________________________________________
