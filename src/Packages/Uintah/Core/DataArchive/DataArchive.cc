@@ -64,7 +64,7 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
-  d_indexDoc->releaseDocument();
+  //d_indexDoc->releaseDocument();
 }
 
 // static, so can be called from either DataArchive or TimeData
@@ -1128,7 +1128,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       cerr << "WARNING: Unknown element in Variables section: " << vnode->getNodeName() << '\n';
     }
   }
-  top->releaseDocument();
+  //top->releaseDocument();
 }
 
 

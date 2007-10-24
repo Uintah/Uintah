@@ -219,6 +219,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
     ProblemSpecP ups = psi->readInputFile();
     sim->problemSetup(ups,restart_prob_spec,grid,sharedState);
     sharedState->clearMaterials();
+    //ups->releaseDocument();
   }
   
   // clear it out and do the first one again
@@ -677,7 +678,7 @@ void Switcher::outputPS(Dir& dir)
     
   }
   inputDoc->output(inputname.c_str());
-  inputDoc->releaseDocument();
+  //inputDoc->releaseDocument();
 
     
 
