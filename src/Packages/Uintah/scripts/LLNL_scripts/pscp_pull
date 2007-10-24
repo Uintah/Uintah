@@ -19,13 +19,15 @@ unalias cd
 
 #------------------
 # error checking
-if ($#argv != 3 && $#argv != 4) then
+if ($#argv != 3 && $#argv != 4 && $#argv != 5 ) then
   echo ""
   echo "Error: Wrong number of args..."
   echo ""
-  echo "Usage: pscp [-v] <# of Processors> <login@Remote Machine>:<remote dir> <local dir>"
+  echo "Usage: pscp [-v] [-verify] <# of Processors> <login@Remote Machine>:<remote dir> <local dir>"
   echo ""
   echo "             -v - optional verbose flag"
+  echo ""
+  echo "             -verify  verify data that has already been received"
   echo ""
   echo "       [Note, you can setenv SSH to use a specific 'ssh' if necessary."
   echo ""
@@ -35,6 +37,12 @@ endif
 set beVerbose = false
 if ($argv[1] == "-v") then
   set beVerbose = true
+  shift
+endif
+
+set verifyData = false
+if ($argv[1] == "-verify") then
+  set verifyData = true
   shift
 endif
 
@@ -63,6 +71,9 @@ if( $beVerbose == "true" ) then
   echo "localDir:    $localDir"
   echo "remoteDir:   $REMOTEDIR"
   echo ""
+  if( $verifyData == "true") then
+    echo "Data will be verified"
+  endif
 endif
 
 #------------------
@@ -83,6 +94,18 @@ if( ! -e $PSCP_PULL_DRIVER ) then
   echo ""
   exit 1
 endif
+
+if( $beVerbose == "true" && $verifyData == "true") then
+  set DATAVERIFY_PULL_DRIVER = `dirname $0`/dataVerify_pull_driver
+  if( ! -e $PSCP_PULL_DRIVER ) then
+    echo ""
+    echo "ERROR: dataVerify_pull_driver ('$DATAVERIFY_PULL_DRIVER') not found... Goodbye."
+    echo ""
+    exit 1
+  endif
+endif
+
+
 
 if( $beVerbose == "true" ) then
   echo "Verify local directory..."
@@ -143,8 +166,11 @@ echo ""
 echo "Fetch the data..."
 echo ""
 
-/usr/bin/time -p gmake -f $PSCP_PULL_DRIVER -j $nproc
-
+if( $verifyData == "true") then
+  /usr/bin/time -p gmake -f $DATAVERIFY_PULL_DRIVER -j $nproc
+else
+  /usr/bin/time -p gmake -f $PSCP_PULL_DRIVER -j $nproc
+endif
 echo ""
 echo "Done..."
 echo ""
