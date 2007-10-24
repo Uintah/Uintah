@@ -1,4 +1,4 @@
-#!/bin/csh
+#! /bin/csh
 #
 #.......................................................................
 # verifyDataTransfer <num Processors> < localDirectory> <login@Machine>:<remote dir>
@@ -34,9 +34,11 @@ if ($#argv != 3) then
   echo " WARNING:"
   echo "      This script assumes that the local data is 'good' and the remote data is 'suspect'"
   echo "      If you've modified the index.xml or some other file on the remote machine it will replace it with the local copy" 
-  exit(0)
+  echo ""
+  exit
 endif
 
+set verifierDir   = `dirname $0`
 set nproc         = $argv[1]
 set localDir      = $argv[2]
 set string        = $argv[3]
@@ -51,7 +53,7 @@ setenv LOGIN              $user_test@$remote_machine
 setenv REMOTEDIR_TMP      `echo $string |cut -d\: -f2`
 setenv LOCALDIR           $localDir
 setenv REMOTEDIR          $REMOTEDIR_TMP/$LOCALDIR/
-setenv PSCP_FILES         "/tmp/pscp_$localDir"
+setenv PSCP_FILES         /tmp/pscp_files_`basename $localDir`_`whoami`
 
 echo "login:       $LOGIN"
 echo "nprocessors: $nproc"
@@ -67,7 +69,7 @@ echo "Bullet proof tests"
 echo "  Test: does the local folder ($localDir) exist"
 if ( ! -e $localDir ) then
   echo " ERROR: local directory $localDir doesn't exist"
-  exit(1)
+  exit
 endif
 
 echo "  Test: passwordless access."
@@ -75,14 +77,14 @@ set test = `ssh -x $LOGIN "echo 'password_access_works'"`
 if ( $test != "password_access_works" ) then
   echo " ERROR:  passwordless access is not working."
   echo "         You must be able to login into the $remote_machine without a password for this script to work"
-  exit(1)
+  exit
 endif
 
 echo "  Test: Do we know about the remote operating system"
 set OS = `ssh -x $LOGIN uname`
 if ( $OS == "IRIX64" ) then
   echo " ERROR: this script only works on Linux machines"
-  exit(1)
+  exit
 endif
 
 
@@ -91,7 +93,7 @@ set test = `ssh -x $LOGIN "if(-e $REMOTEDIR_TMP/$localDir) echo true"`
 if ( $test != "true") then
   echo " ERROR:  the remote directory $REMOTEDIR_TMP/$localDir does not exist"
   echo "         Are you sure you typed it in correctly?"
-  exit(1)
+  exit
 endif
 
 echo "_____________________________________"
@@ -107,19 +109,28 @@ cd $localDir
 # let the user edit that file with vi
 /bin/rm -f $PSCP_FILES
 
-find . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
-find . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >>$PSCP_FILES
-find -path './checkpoints/*' -maxdepth 2 >>$PSCP_FILES
+set FIND = find
+if( `uname` == "AIX" ) then
+   set FIND = /usr/local/gnu/bin/find
+endif
+
+$FIND . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
+$FIND . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >> $PSCP_FILES
+$FIND -path './checkpoints/*' -maxdepth 2 >> $PSCP_FILES
 # remove ./ in front of ./checkpoints/....
 cp $PSCP_FILES $PSCP_FILES.2
 sed s/"\.\/"/""/g < $PSCP_FILES.2 >& $PSCP_FILES
 /bin/rm $PSCP_FILES.2
 
-echo "Now starting vi in a separate xterm:  Add/remove the files or directories you want verified to the following list"
-xterm -bg "DarkSlateGray" -fg "orange" -e "vi /tmp/pscp_files" 
-chmod ug+rw /tmp/pscp_files
+if ( ! $?EDITOR ) then
+  echo
+  echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
+  echo "And 'vi' sometimes doesn't work well..."
+  set EDITOR = vi
+endif
 
-/usr/bin/time -p gmake -f /usr/gapps/uintah/scripts/dataVerify_driver -j $nproc
+echo "Now starting an editor in a separate xterm:  Add/remove the files or directories you want verified to the following list"
+xterm -bg "DarkSlateGray" -fg "orange" -e $EDITOR $PSCP_FILES
+chmod ug+rw $PSCP_FILES
 
-cd ..
-exit(1)
+/usr/bin/time -p gmake -f $verifierDir/dataVerify_driver -j $nproc

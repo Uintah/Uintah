@@ -22,11 +22,27 @@ SRCS =   $(shell for i in $(FILES) ; do \
           
 DESTS := $(patsubst %,../stamp/%,$(SRCS))
 
+##############################################################
+# Set things up to use the proper programs on LLNL's uP machine:
+SSH = $(shell if test `uname` == AIX; then \
+                      echo "/usr/local/bin/ssh" ;\
+                    else \
+                      echo "/usr/bin/ssh" ;\
+                    fi \
+             )
+RSYNC = $(shell if test `uname` == AIX; then \
+                      echo "/usr/bin/rsync" ;\
+                    else \
+                      echo "rsync" ;\
+                    fi \
+             )
+##############################################################
+
 all: $(DESTS)
 
 ../stamp:
 	mkdir $@
 
 ../stamp/%: % ../stamp
-	@echo "verifying $<"
-	@rsync -rRl --size-only --log-format="missing file %f bytes transferred %b" --rsh='/usr/bin/ssh -x' $< $(LOGIN):$(REMOTEDIR)/
+	@echo "verifying $<)"
+	@$(RSYNC) -rRl --size-only --log-format="missing file %f bytes transferred %b" --rsh='$(SSH) -x' $< $(LOGIN):$(REMOTEDIR)/
