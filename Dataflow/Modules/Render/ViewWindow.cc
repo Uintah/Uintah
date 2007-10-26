@@ -1794,7 +1794,7 @@ ViewWindow::autoview(const BBox& bbox)
 void
 ViewWindow::redraw()
 {
-  need_redraw_=0;
+  need_redraw_ = 0;
   gui_->lock();
   ctx_->reset(); // Get animation variables
   gui_->unlock();
