@@ -22,6 +22,7 @@ namespace Uintah {
   class DetailedTasks;
   class Scheduler;
   class VarLabel;
+  class DataArchive;
 
   typedef vector<SCIRun::IntVector> SizeList;
 /****************************************
@@ -121,7 +122,7 @@ WARNING
     virtual int getOutputProc(const Patch* patch) = 0;
 
     //! Tells the load balancer on which procs data was output.
-    virtual void restartInitialize(ProblemSpecP&, std::string file /*tsurl*/, const GridP&) {}
+    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string, const GridP& grid) {}
     
     // state variables
     enum {

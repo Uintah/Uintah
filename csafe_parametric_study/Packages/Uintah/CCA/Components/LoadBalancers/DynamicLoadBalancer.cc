@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -824,12 +825,13 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 } 
 
 void
-DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const GridP& grid)
+DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string tsurl, const GridP& grid)
 {
-  // here we need to grab the uda data to reassign patch data to the 
+  // here we need to grab the uda data to reassign patch dat  a to the 
   // processor that will get the data
   int num_patches = 0;
-  int startingID = (*(grid->getLevel(0)->patchesBegin()))->getID();
+  const Patch* first_patch = *(grid->getLevel(0)->patchesBegin());
+  int startingID = first_patch->getID();
   int prevNumProcs = 0;
 
   for(int l=0;l<grid->numLevels();l++){
@@ -842,50 +844,62 @@ DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const 
   for (unsigned i = 0; i < d_processorAssignment.size(); i++)
     d_processorAssignment[i]= -1;
 
-  // strip off the timestep.xml
-  string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
-
-  ASSERT(pspec != 0);
-  ProblemSpecP datanode = pspec->findBlock("Data");
-  if(datanode == 0)
-    throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
-  for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
-      n=n->getNextSibling()){
-    if(n->getNodeName() == "Datafile") {
-      map<string,string> attributes;
-      n->getAttributes(attributes);
-      string proc = attributes["proc"];
-      if (proc != "") {
-        int procnum = atoi(proc.c_str());
-        if (procnum+1 > prevNumProcs)
-          prevNumProcs = procnum+1;
-         string datafile = attributes["href"];
-        if(datafile == "")
-          throw InternalError("timestep href not found", __FILE__, __LINE__);
-        
-        string dataxml = dir + datafile;
-        // open the datafiles
-        ProblemSpecReader psr(dataxml);
-
-        ProblemSpecP dataDoc = psr.readInputFile();
-        if (!dataDoc)
-          throw InternalError("Cannot open data file", __FILE__, __LINE__);
-        for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
-          if(r->getNodeName() == "Variable") {
-            int patchid;
-            if(!r->get("patch", patchid) && !r->get("region", patchid))
-              throw InternalError("Cannot get patch id", __FILE__, __LINE__);
-            if (d_processorAssignment[patchid-startingID] == -1) {
-              // assign the patch to the processor
-              // use the grid index
-              d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
-            }
-          }
-        }            
-        
+  if (archive->queryPatchwiseProcessor(first_patch, time_index) != -1) {
+    // for uda 1.1 - if proc is saved with the patches
+    for(int l=0;l<grid->numLevels();l++){
+      const LevelP& level = grid->getLevel(l);
+      for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
       }
     }
-  }
+  } // end queryPatchwiseProcessor
+  else {
+    // before uda 1.1
+    // strip off the timestep.xml
+    string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
+
+    ASSERT(pspec != 0);
+    ProblemSpecP datanode = pspec->findBlock("Data");
+    if(datanode == 0)
+      throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
+    for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
+        n=n->getNextSibling()){
+      if(n->getNodeName() == "Datafile") {
+        map<string,string> attributes;
+        n->getAttributes(attributes);
+        string proc = attributes["proc"];
+        if (proc != "") {
+          int procnum = atoi(proc.c_str());
+          if (procnum+1 > prevNumProcs)
+            prevNumProcs = procnum+1;
+          string datafile = attributes["href"];
+          if(datafile == "")
+            throw InternalError("timestep href not found", __FILE__, __LINE__);
+          
+          string dataxml = dir + datafile;
+          // open the datafiles
+          ProblemSpecReader psr(dataxml);
+
+          ProblemSpecP dataDoc = psr.readInputFile();
+          if (!dataDoc)
+            throw InternalError("Cannot open data file", __FILE__, __LINE__);
+          for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
+            if(r->getNodeName() == "Variable") {
+              int patchid;
+              if(!r->get("patch", patchid) && !r->get("region", patchid))
+                throw InternalError("Cannot get patch id", __FILE__, __LINE__);
+              if (d_processorAssignment[patchid-startingID] == -1) {
+                // assign the patch to the processor
+                // use the grid index
+                d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
+              }
+            }
+          }            
+          
+        }
+      }
+    }
+  } // end else...
   for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
     if (d_processorAssignment[i] == -1)
       cout << "index " << i << " == -1\n";

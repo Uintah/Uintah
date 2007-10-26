@@ -512,7 +512,7 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
        addRestartStamp(indexDoc, restartFromDir, timestep);
 
      indexDoc->output(iname.c_str());
-     indexDoc->releaseDocument();
+     //indexDoc->releaseDocument();
    }
    
    // set time and timestep variables appropriately
@@ -584,7 +584,7 @@ DataArchiver::combinePatchSetup(Dir& fromDir)
    d_outputInterval = 0.0;
    d_outputTimestepInterval = 1;
 
-   indexDoc->releaseDocument();
+   //indexDoc->releaseDocument();
 }
 
 void
@@ -613,8 +613,8 @@ DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
   
   myIndexDoc->output(iname.c_str());
 
-  indexDoc->releaseDocument();
-  myIndexDoc->releaseDocument();
+  //indexDoc->releaseDocument();
+  //myIndexDoc->releaseDocument();
 }
 
 void
@@ -709,10 +709,10 @@ DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 
    // re-output index.xml
    indexDoc->output(iname.c_str());
-   indexDoc->releaseDocument();
+   //indexDoc->releaseDocument();
 
    // we don't need the old document anymore...
-   oldIndexDoc->releaseDocument();
+   //oldIndexDoc->releaseDocument();
 
 }
 
@@ -768,7 +768,7 @@ DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
          variable = variable->findNextBlock("variable");
       }
    }
-   indexDoc->releaseDocument();
+   //indexDoc->releaseDocument();
 }
 
 void
@@ -798,7 +798,7 @@ DataArchiver::createIndexXML(Dir& dir)
    
    string iname = dir.getName()+"/index.xml";
    rootElem->output(iname.c_str());
-   rootElem->releaseDocument();
+   //rootElem->releaseDocument();
 }
 
 void
@@ -1006,8 +1006,8 @@ DataArchiver::beginOutputTimestep( double time, double delt,
       }
       d_checkpointTimestepDirs.pop_front();
     }
-    if (d_writeMeta)
-      index->releaseDocument();
+    //if (d_writeMeta)
+    //index->releaseDocument();
   } else {
     d_isCheckpointTimestep=false;
   }
@@ -1238,7 +1238,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       }
       
       indexDoc->output(iname.c_str());
-      indexDoc->releaseDocument();
+      //indexDoc->releaseDocument();
 
       // make a timestep.xml file for this timestep 
       // we need to do it here in case there is a timestesp restart
@@ -1391,9 +1391,9 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           }
         }
         inputDoc->output(inputname.c_str());
-        inputDoc->releaseDocument();
+        //inputDoc->releaseDocument();
       }
-      rootElem->releaseDocument();
+      //rootElem->releaseDocument();
 
 
     }
@@ -1496,7 +1496,7 @@ DataArchiver::indexAddGlobals()
     }
 
     indexDoc->output(iname.c_str());
-    indexDoc->releaseDocument();
+    //indexDoc->releaseDocument();
   }
   dbg << "end indexAddGlobals()\n";
 } // end indexAddGlobals()
@@ -1829,7 +1829,7 @@ DataArchiver::output(const ProcessorGroup*,
     }
     
     doc->output(xmlFilename.c_str());
-    doc->releaseDocument();
+    //doc->releaseDocument();
   }
   d_outputLock.unlock(); 
   d_sharedState->outputTime += Time::currentSeconds()-start;

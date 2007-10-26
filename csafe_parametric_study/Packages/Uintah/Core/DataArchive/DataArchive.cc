@@ -64,7 +64,7 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
-  d_indexDoc->releaseDocument();
+  //d_indexDoc->releaseDocument();
 }
 
 // static, so can be called from either DataArchive or TimeData
@@ -775,7 +775,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
   *pTime = times[index];
 
   if (lb)
-    lb->restartInitialize(timedata.d_tstop, timedata.d_tsurl, grid);
+    lb->restartInitialize(this, index, timedata.d_tstop, timedata.d_tsurl, grid);
 
   // set here instead of the SimCont because we need the DW ID to be set 
   // before saving particle subsets
@@ -1110,7 +1110,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       cerr << "WARNING: Unknown element in Variables section: " << vnode->getNodeName() << '\n';
     }
   }
-  top->releaseDocument();
+  //top->releaseDocument();
 }
 
 
