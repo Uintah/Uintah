@@ -7,10 +7,11 @@
 #include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <vector>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Grid/share.h>
+
 namespace Uintah {
   class BufferInfo;
   class OutputContext;
