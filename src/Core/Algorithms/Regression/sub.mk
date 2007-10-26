@@ -43,7 +43,7 @@ PSELIBS := Core/Containers Core/Exceptions Core/Thread \
      Core/Algorithms/Util Core/Bundle Core/Geometry \
      Core/Algorithms/DataIO Core/OS
 
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(INSIGHT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
