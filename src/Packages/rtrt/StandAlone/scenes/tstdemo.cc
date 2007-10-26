@@ -1040,14 +1040,15 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->select_shadow_mode( No_Shadows );
 
   // Clean up memory
-  for(map<string, VolumeVisCache*>::iterator lv_iter = loaded_volumes.begin();
-      lv_iter != loaded_volumes.end(); lv_iter++)
-    if (lv_iter->second) delete lv_iter->second;
+  map<string, VolumeVisCache*>::iterator lv_iter;
+  for( lv_iter = loaded_volumes.begin(); lv_iter != loaded_volumes.end(); lv_iter++ ) {
+    if (lv_iter->second) {
+      delete lv_iter->second;
+    }
+  }
   loaded_volumes.clear();
   loaded_spheres.clear();
     
   return scene;
-}
 
-
-
+} // end make_scene()
