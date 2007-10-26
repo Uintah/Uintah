@@ -163,13 +163,14 @@ Viewer::do_execute()
 	did_some=0;
 	for(unsigned int i=0;i<view_window_.size();i++)
 	{
-	  if (view_window_[i]) {
-	    if (view_window_[i]->need_redraw_)
-	    {
-	      did_some++;
-	      view_window_[i]->redraw_if_needed();
-	    }
-	  }
+	  if (view_window_[i]) 
+          {
+            if (view_window_[i]->need_redraw_)
+            {
+              did_some++;
+              view_window_[i]->redraw_if_needed();
+            }
+          }
 	}
       }
     }
@@ -195,8 +196,9 @@ Viewer::do_execute()
 int 
 Viewer::process_event()
 {
-  MessageBase* msg=mailbox_.receive();
-  GeometryComm* gmsg=(GeometryComm*)msg;
+  MessageBase  * msg  = mailbox_.receive();
+  GeometryComm * gmsg = (GeometryComm*)msg;
+
   
   switch(msg->type)
   {
