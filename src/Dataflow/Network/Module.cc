@@ -1013,14 +1013,13 @@ Module::do_execute()
   // Also used in the various execute functions to note gui_vars changing.
   inputs_changed_ = false;
 
-  // Call the User's execute function.
   update_msg_state(Reset);
   update_state(JustStarted);
   timer_.clear();
   timer_.start();
 
   try {
-    execute();
+    execute(); // Call the User's execute function.
   }
   catch (const Exception &e)
   {
