@@ -55,7 +55,7 @@ ProblemSpecReader::readInputFile()
     
   // you must free doc when you are done.
   // Add the parser contents to the ProblemSpecP
-  prob_spec = scinew ProblemSpec(xmlDocGetRootElement(doc));
+  prob_spec = scinew ProblemSpec(xmlDocGetRootElement(doc), true);
 
   resolveIncludes(prob_spec);
   d_xmlData = prob_spec;

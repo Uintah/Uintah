@@ -123,7 +123,7 @@ int main(int argc, char** argv)
     // pass in an arbitrary '1' for time, so it can copy the checkpoints.
     out_uda.restartSetup(restartFromDir, prevTimestep, -1, 1, false, move);
 
-    ups->releaseDocument();
+    //ups->releaseDocument();
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
