@@ -51,18 +51,13 @@
 
 namespace SCIRun {
 
-
-class SCISHARE View {
-protected:
-    Point eyep_;
-    Point lookat_;
-    Vector up_;
-    double fov_;
-
+class SCISHARE View
+{
 public:
     View();
-    View(const Point&, const Point&, const Vector&, double);
-    View(const View&);
+
+    View( const Point & eyep, const Point & lookat, const Vector & up, double fov );
+    View( const View& );
     ~View();
     View& operator=(const View&);
 
@@ -84,15 +79,24 @@ public:
     double depth(const Point& p);
 
     Point eyep() const;
-    void eyep(const Point&);
+    void  eyep(const Point&);
+
     Point lookat() const;
-    void lookat(const Point&);
+    void  lookat(const Point&);
+
     Vector up() const;
-    void up(const Vector&);
+    void   up(const Vector&);
+
     double fov() const;	
-    void fov(double);
+    void   fov(double);
 
     friend void Pio (Piostream&, View&);
+
+protected:
+    Point eyep_;
+    Point lookat_;
+    Vector up_;
+    double fov_;
 };
 
 
