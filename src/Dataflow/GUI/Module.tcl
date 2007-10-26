@@ -669,6 +669,10 @@ itcl_class Module {
 	$this-c needexecute
     }
     
+    method doNotSave { varName } {
+        return 0
+    }
+
     method is_subnet {} {
 	return $isSubnetModule
     }
@@ -829,7 +833,7 @@ itcl_class Module {
 	if { [info exists ModuleSavedVars($module)] } {
 	    set classname [join [modulePath $module] _]
 	    foreach var $ModuleSavedVars($module) {
-		if { ![isaDefaultValue $module $var $classname] } {
+		if { ![isaDefaultValue $module $var $classname] && ![$module doNotSave $var] } {
 		    lappend write_vars $var
 		}
 	    }
