@@ -1361,9 +1361,12 @@ OpenGL::redraw_frame()
         }
         string fullpath = string(fname) + timestr.str() + "." + movie_frame_extension_;
         
-        string message = "Dumping " + fullpath;
+        string message = "Saving " + fullpath;
         view_window_->setMovieMessage( message );
         dump_image(fullpath, movie_frame_extension_);
+
+        message = "Saved Image: " + fullpath;
+        view_window_->setMovieMessage( message );
 
         current_movie_frame_++;
         view_window_->setMovieFrame(current_movie_frame_);
