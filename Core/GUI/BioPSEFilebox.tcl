@@ -60,7 +60,7 @@
 #       makeSaveFilebox \
 #               -parent $w \
 #               -filevar $this-saveFile \
-#               -setcmd "wm withdraw $w" \ 
+#               -setcmd "wm withdraw $w" \
 #               -command "$this doSaveImage; wm withdraw $w" \
 #               -commandname "execute" \
 #               -cancel "wm withdraw $w" \
@@ -1222,7 +1222,7 @@ proc biopseFDialog_Create {w} {
             $data(formatMenu) add command -label $f \
                 -command "biopseFDialog_SetFormat $w $f"
 
-            if { [string compare [set $data(-formatvar)] $f] == 0} {
+            if { [string compare $data(-formatvar) $f] == 0} {
                 biopseFDialog_SetFormat $w $f
             }
         }
@@ -1281,7 +1281,7 @@ proc biopseFDialog_Create {w} {
         }
 
         $data(formatMenuBtn) config -takefocus 1 -highlightthickness 2 \
-        -relief raised -bd 2 -anchor w
+                                    -relief raised -bd 2 -anchor w
         set data(splitBtn) [checkbutton $f4.split -text Split -disabledforeground "" \
                 -onvalue 1 -offvalue 0 -width 5 -pady 2]
         pack $data(splitBtn) -side right -padx 4 -anchor w
