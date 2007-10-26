@@ -43,6 +43,7 @@
 #                                         the standard buttons).  Each button needs to be
 #                                         self contained as a single arg.  Eg:
 #                                         "Doit \"$this doit\" \"This is a tool tip\""
+#                                         { "separator" "" "" } <- will create a verticle separator
 #   -force_bottom   <- Forces the buttonPanel to be packed against the bottom
 #
 #   NOTE: This function also overrides the "close_window"s destruction
@@ -124,16 +125,24 @@ proc makeSciButtonPanel { parent close_window this args } {
       set command [lindex $argName 1]
       set tip     [lindex $argName 2]
       
-      set size [string length $name]
-      if { $size < 10 } { set size 10 }
-      
-      button $parent.btnBox.btn$btnId -width $size \
-	  -text $name -command $command
-      pack $parent.btnBox.btn$btnId \
-	  -padx $outside_pad -pady $outside_pad -side left
+      if { $name == "separator" && $command == "" && $tip == "" } {
+          # Vertical separator
+          frame $parent.btnBox.autogen_separator$btnId -width 2 -relief sunken -borderwidth 2
+          pack  $parent.btnBox.autogen_separator$btnId \
+              -fill y -padx $outside_pad -pady $outside_pad -side left
+      } else {
 
-      if { "$tip" != "" } {
-	  Tooltip $parent.btnBox.btn$btnId $tip
+          set size [string length $name]
+          if { $size < 10 } { set size 10 }
+      
+          button $parent.btnBox.btn$btnId -width $size \
+              -text $name -command $command
+          pack $parent.btnBox.btn$btnId \
+              -padx $outside_pad -pady $outside_pad -side left
+
+          if { "$tip" != "" } {
+              Tooltip $parent.btnBox.btn$btnId $tip
+          }
       }
       incr btnId
   }
@@ -156,8 +165,8 @@ proc makeSciButtonPanel { parent close_window this args } {
       bind $close_window <Escape> "wm withdraw $close_window"
   }
 
-  # Vertical separator
   if { $make_find_btn } {
+      # Vertical separator
       frame $parent.btnBox.separator -width 2 -relief sunken -borderwidth 2
       pack  $parent.btnBox.separator \
 	  -fill y -padx $outside_pad -pady $outside_pad -side left
