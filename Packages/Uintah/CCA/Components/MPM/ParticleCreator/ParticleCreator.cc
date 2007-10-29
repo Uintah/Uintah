@@ -284,7 +284,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
                                    DataWarehouse* new_dw)
 {
 
-  cout << "  Creating " << numParticles << " on patch " << patch->getID() << endl;
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
   new_dw->allocateAndPut(position,       d_lb->pXLabel,             subset);
