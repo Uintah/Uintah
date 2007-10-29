@@ -1261,10 +1261,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	int matl = matls->get(m);
 	vector<DetailedTask*> creators;
 
+#if 0
         if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG && sc->isNewDW(req->mapDataWarehouse())) {
           continue; // will we need to fix for mixed scheduling?
         }
-
+#endif
 	ct.findReductionComps(req, 0, matl, creators, d_myworld);
         // if the size is 0, that's fine.  It means that there are more procs than patches on this level,
         // so the reducer will pick a benign value that won't affect the reduction
