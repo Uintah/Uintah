@@ -424,6 +424,7 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
+  t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
@@ -1400,6 +1401,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperature;
       NCVariable<double> gSp_vol;
       NCVariable<double> gTemperatureNoBC;
+      NCVariable<double> gTemperatureRate;
       NCVariable<double> gnumnearparticles;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
@@ -1411,6 +1413,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
 			     dwi,patch);
+      new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
+                             dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,
 			     dwi,patch);
       new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
@@ -1424,6 +1428,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
       gTemperatureNoBC.initialize(0);
+      gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
