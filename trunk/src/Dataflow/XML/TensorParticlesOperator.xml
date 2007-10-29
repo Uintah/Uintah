@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="TensorParticlesOperator" category="Operators">
+  <overview>
+    <authors>
+      <author>Wayne Witzel</author>
+    </authors>
+    <summary>Create a scalar particle field from a tensor particle
+    field.</summary> 
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Tensor Particles</name>
+        <datatype>Uintah::TensorParticles</datatype>
+      </port>
+     </inputs>
+    <outputs>
+      <port>
+	<name>Scalar Particles</name>
+	<datatype>Uintah::ScalarParticles</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

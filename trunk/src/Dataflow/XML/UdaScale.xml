@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="UdaScale" category="Operators" optional="false">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>
+      Scale the geometric size of the uda data
+
+    </summary>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

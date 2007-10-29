@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="UTextureBuilder" category="Visualization" optional="false">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>
+      Texture Builder for use with Volume/SlicerVisualizer.
+
+    </summary>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Value Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Gradient Magnitude Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Texture</name>
+        <datatype>SCIRun::Texture</datatype>
+      </port>
+      <port>
+        <name>JointHistoGram</name>
+        <datatype>SCIRun::Nrrd</datatype>      
+      </port>
+      <port>
+        <name>ColorMap</name>
+        <datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
