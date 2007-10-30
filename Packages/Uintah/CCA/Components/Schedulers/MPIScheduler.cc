@@ -689,9 +689,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initTimestep();
 
   for (int i = 0; i < ntasks; i++)
-    dts->localTask(i)->clearExternalDepCount();
-
-
+    dts->localTask(i)->resetDependencyCounts();
 
   if(timeout.active()){
     d_labels.clear();
@@ -807,21 +805,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     else {
       // using queued task receiving structure
 
-      // run a task that has its communication complete
-      // tasks get in this queue automatically when their receive count hits 0
-      //   in DependencyBatch::received, which is called when a message is delivered.
-      if (dts->numExternalReadyTasks() > 0) {
-        DetailedTask * task = dts->getNextExternalReadyTask();
-        taskdbg << d_myworld->myrank() << " Running task " << *task << endl;
-        pending_tasks.erase(pending_tasks.find(task));
-        ASSERT(task->getExternalDepCount() == 0);
-        runTask(task, iteration);
-        numTasksDone++;
-      }
-      // otherwise, if we have an internally-ready task, initiate its recvs
-      else if (dts->numInternalReadyTasks() > 0) {
+      if (dts->numInternalReadyTasks() > 0) {
+        // if we have an internally-ready task, initiate its recvs (or run it if reduction)
         DetailedTask * task = dts->getNextInternalReadyTask();
-        
+
         if (task->getTask()->getType() == Task::Reduction){
           if(!abort) {
             taskdbg << d_myworld->myrank() << " Running task " << task->getTask()->getName() << endl;
@@ -830,18 +817,30 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
           numTasksDone++;
         }
         else {
+          taskdbg << d_myworld->myrank() << " Initiating task " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           initiateTask( task, abort, abort_point, iteration );
+          task->markInitiated();
           task->checkExternalDepCount();
           // if MPI has completed, it will run on the next iteration
-          taskdbg << d_myworld->myrank() << " Initiating task " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           pending_tasks.insert(task);
         }
+      }
+      else if (dts->numExternalReadyTasks() > 0) {
+        // run a task that has its communication complete
+        // tasks get in this queue automatically when their receive count hits 0
+        //   in DependencyBatch::received, which is called when a message is delivered.
+        DetailedTask * task = dts->getNextExternalReadyTask();
+        taskdbg << d_myworld->myrank() << " Running task " << *task << endl;
+        pending_tasks.erase(pending_tasks.find(task));
+        ASSERTEQ(task->getExternalDepCount(), 0);
+        runTask(task, iteration);
+        numTasksDone++;
       }
       else {
         // we have nothing to do, so wait until we get something
         //taskdbg << d_myworld->myrank() << " Waiting .... "  << endl;
         for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
-          taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
+          ;//taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
         processMPIRecvs(WAIT_ONCE);
       }
     }
