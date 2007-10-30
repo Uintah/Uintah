@@ -127,8 +127,8 @@ SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
 
-.PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
+	@echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
