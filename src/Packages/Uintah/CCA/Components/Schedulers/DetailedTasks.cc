@@ -748,11 +748,22 @@ DetailedTask::addRequires(DependencyBatch* req)
   return reqs.insert(make_pair(req, req)).second;
 }
 
+// can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
 void DetailedTask::checkExternalDepCount()
 {
-  //cout << "Task " << this->getTask()->getName() << " dec " << externalDependencyCount_-1 << endl;
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps())
+  //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false) {
+    //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
     taskGroup->mpiCompletedTasks_.push(this);
+    externallyReady_ = true;
+  }
+}
+
+void DetailedTask::resetDependencyCounts()
+{
+  externalDependencyCount_ = 0;
+  externallyReady_ = false;
+  initiated_ = false;
 }
 
 void
