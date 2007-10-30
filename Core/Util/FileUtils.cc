@@ -175,7 +175,7 @@ GetFilenamesEndingWith(char* d, char* ext)
 }
 
 bool
-validFile( string filename ) 
+validFile( const string & filename )
 {
   struct stat buf;
   if (stat(filename.c_str(), &buf) == 0)
@@ -187,7 +187,7 @@ validFile( string filename )
 }
 
 bool
-validDir( string dirname ) 
+validDir( const string & dirname )
 {
   struct stat buf;
   if (stat(dirname.c_str(), &buf) == 0)
@@ -199,7 +199,7 @@ validDir( string dirname )
 }
     
 bool
-isSymLink( string filename ) 
+isSymLink( const string & filename )
 {
   struct stat buf;
   if( lstat(filename.c_str(), &buf) == 0 )
