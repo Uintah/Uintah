@@ -61,9 +61,9 @@ SCISHARE void InsertStringInFile( char* filename, char* match, char* insert );
 
 SCISHARE std::map<int,char*>* GetFilenamesEndingWith( char* dir, char* ext );
 
-SCISHARE bool validFile( std::string filename );
-SCISHARE bool validDir( std::string filename );
-SCISHARE bool isSymLink( std::string filename );
+SCISHARE bool validFile( const std::string & filename );
+SCISHARE bool validDir(  const std::string & filename );
+SCISHARE bool isSymLink( const std::string & filename );
 
 // Creates a temp file (in directoryPath), writes to it, checks the resulting files size, and then deletes it...
 SCISHARE bool testFilesystem( std::string directoryPath );
