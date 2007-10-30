@@ -705,7 +705,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 		    -xdata $time_list -ydata $mat_vals
 	}
 	
-	pack $w.graph
+	pack $w.graph -expand yes -fill both
     }
     method table_data { id var pointname args } {
 	set w .table[modname]$display_data_id
