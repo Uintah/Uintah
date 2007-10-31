@@ -23,7 +23,10 @@ void computesRequires_CustomBCs(Task* t,
   }
   if(C_BC_basket->using_MMS_BCs){         // method of manufactured solutions         
     addRequires_MMS( t, where,  lb, ice_matls);
-  }         
+  }
+  if(C_BC_basket->using_Sine_BCs){         // method of manufactured solutions         
+    addRequires_Sine( t, where,  lb, ice_matls);
+  }      
 }
 //______________________________________________________________________
 // Function:  preprocess_CustomBCs
@@ -74,6 +77,16 @@ void preprocess_CustomBCs(const string& where,
     preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
                         C_BC_basket->set_MMS_BCs, 
                         C_BC_basket->mms_v);        
+  }
+  //__________________________________
+  //  Sine boundary conditions
+  if(C_BC_basket->using_Sine_BCs){  
+    C_BC_basket->sine_v = scinew sine_vars();
+    C_BC_basket->sine_v->delT = (double)delT;
+    C_BC_basket->sine_var_basket->delT= (double)delT;
+    preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
+                        C_BC_basket->set_Sine_BCs, 
+                        C_BC_basket->sine_v);        
   }         
 }
 
@@ -95,6 +108,11 @@ void delete_CustomBCs(customBC_var_basket* C_BC_basket)
   if(C_BC_basket->using_MMS_BCs){
     if(C_BC_basket->mms_v) {
       delete C_BC_basket->mms_v;
+    } 
+  }
+  if(C_BC_basket->using_Sine_BCs){
+    if(C_BC_basket->sine_v) {
+      delete C_BC_basket->sine_v;
     } 
   }
 }

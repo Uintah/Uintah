@@ -110,8 +110,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_customBC_var_basket  = scinew customBC_var_basket();
   d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
-  d_customBC_var_basket->mms_var_basket =  scinew mms_variable_basket();
-
+  d_customBC_var_basket->mms_var_basket  =  scinew mms_variable_basket();
+  d_customBC_var_basket->sine_var_basket =  scinew sine_variable_basket();
   d_press_matl=0;
 }
 
@@ -122,6 +122,7 @@ ICE::~ICE()
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
   delete d_customBC_var_basket->mms_var_basket;
+  delete d_customBC_var_basket->sine_var_basket;  
   delete d_customBC_var_basket;
   delete d_conservationTest;
   delete lb;
@@ -222,7 +223,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_customBC_var_basket->usingMicroSlipBCs =
         read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
   d_customBC_var_basket->using_MMS_BCs =
-        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);    
+        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);
+  d_customBC_var_basket->using_Sine_BCs =
+        read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);  
   d_customBC_var_basket->sharedState    = sharedState;
 
   //__________________________________
