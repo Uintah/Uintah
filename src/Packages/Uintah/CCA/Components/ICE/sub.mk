@@ -39,6 +39,10 @@ PSELIBS := \
        Core/Exceptions Core/Geometry                   \
        Core/Thread Core/Util Core/OS
 
+ifeq ($(OS_NAME),Darwin)
+  PSELIBS += Packages/Uintah/CCA/Components/MPM
+endif
+
 LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
