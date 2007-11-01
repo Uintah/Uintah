@@ -1009,6 +1009,7 @@ void setBC(CCVariable<double>& var,
   basket->setLodiBcs      = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
+  basket->set_Sine_BCs    = false;
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
         mat_id, new_dw,basket);
@@ -1031,6 +1032,7 @@ void setBC(CCVariable<double>& press_CC,
   basket->setLodiBcs      = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
+  basket->set_Sine_BCs    = false;
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
         whichVar, kind, p, sharedState, mat_id, new_dw, basket); 
@@ -1049,6 +1051,7 @@ void setBC(CCVariable<Vector>& variable,
   basket->setLodiBcs      = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
+  basket->set_Sine_BCs    = false;
    
   setBC( variable, type, p, sharedState, mat_id, new_dw,basket);
   
