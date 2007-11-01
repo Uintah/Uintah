@@ -46,7 +46,7 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
     cout << "time = " << time << endl;
     GridP grid = da->queryGrid(t);
 
-    double mean_vel=0.;
+    Vector mean_vel(0.,0.,0.);
     double KE = 0.;
     double total_mass=0.;
       LevelP level = grid->getLevel(grid->numLevels()-1);
@@ -69,16 +69,18 @@ Uintah::jim2( DataArchive * da, CommandLineFlags & clf )
           ParticleSubset::iterator piter = pset->begin();
           for(;piter != pset->end(); piter++){
             double vel_mag = value_vel[*piter].length();
-            mean_vel+=vel_mag*value_mass[*piter];
-            KE+=0.5*value_mass[*piter]*vel_mag*vel_mag;
+            mean_vel+=value_vel[*piter]*value_mass[*piter];
+            KE+=value_mass[*piter]*vel_mag*vel_mag;
             total_mass+=value_mass[*piter];
           } // for
         }  //if
       }  // for patches
     mean_vel/=total_mass;
+    double mean_vel_mag = mean_vel.length();
+    KE*=.5;
 
    outfile.precision(15);
-   outfile << time << " " << mean_vel << " " << KE << endl; 
+   outfile << time << " " << mean_vel_mag << " " << total_mass << " " << KE << endl; 
 
   }
 } // end jim2()
