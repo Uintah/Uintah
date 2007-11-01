@@ -95,6 +95,20 @@ extern "C" {
 #  include <sys/sysctl.h>
 #endif
 
+#ifdef __APPLE__
+  #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1050
+      #define SigContext ucontext_t
+    #else
+      #define SigContext struct sigcontext
+    #endif
+  #else
+    #define SigContext struct sigcontext
+  #endif
+#else
+  #define SigContext struct sigcontext
+#endif
+
 #include <TauProfilerForSCIRun.h>
 
 //#define __ia64__
@@ -626,11 +640,11 @@ Thread::exitAll(int code)
 static
 void
 #if defined(__sgi)
-handle_abort_signals(int sig, int, struct sigcontext* ctx)
+handle_abort_signals(int sig, int, SigContext* ctx)
 #elif defined (__CYGWIN__)
 handle_abort_signals(int sig)
 #else
-handle_abort_signals(int sig, struct sigcontext ctx)
+handle_abort_signals(int sig, SigContext ctx)
 #endif
 {
 struct sigaction action;
@@ -719,7 +733,7 @@ void
 // Cygwin's version doesn't take a sigcontext
 handle_quit(int sig)
 #else
-handle_quit(int sig, struct sigcontext /*ctx*/)
+handle_quit(int sig, SigContext /*ctx*/)
 #endif
 {
   // Try to acquire a lock.  If we can't, then assume that somebody
