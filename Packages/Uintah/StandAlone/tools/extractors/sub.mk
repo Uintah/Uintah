@@ -2,34 +2,6 @@
 
 SRCDIR := Packages/Uintah/StandAlone/tools/extractors
 
-ifeq ($(IS_AIX),yes)
-  AIX_LIBRARY := \
-        Core/XMLUtil  \
-        Core/Malloc       \
-        Core/Math         \
-        Core/Containers   \
-        Core/Persistent   \
-        Core/OS           \
-        Packages/Uintah/CCA/Components/Arches            \
-        Packages/Uintah/CCA/Components/Arches/fortran    \
-        Packages/Uintah/CCA/Components/Arches/Mixing     \
-        Packages/Uintah/CCA/Components/Arches/Radiation  \
-        Packages/Uintah/CCA/Components/Arches/Radiation/fortran  \
-        Packages/Uintah/CCA/Components/Examples          \
-        Packages/Uintah/CCA/Components/ICE               \
-        Packages/Uintah/CCA/Components/Models            \
-        Packages/Uintah/CCA/Components/MPM               \
-        Packages/Uintah/CCA/Components/MPMArches         \
-        Packages/Uintah/CCA/Components/MPMICE            \
-        Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
-        Packages/Uintah/CCA/Components/Parent            \
-        Packages/Uintah/CCA/Components/PatchCombiner     \
-        Packages/Uintah/CCA/Components/Solvers \
-        Packages/Uintah/CCA/Components/SwitchingCriteria \
-        Packages/Uintah/Core/GeometryPiece               \
-        Packages/Uintah/Core/Math                        
-endif
-
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
@@ -52,8 +24,7 @@ else
         Packages/Uintah/Core/Exceptions  \
         Packages/Uintah/CCA/Ports        \
         Packages/Uintah/Core/ProblemSpec             \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        $(AIX_LIBRARY)
+        Packages/Uintah/CCA/Components/ProblemSpecification
 endif
 
 ifeq ($(IS_AIX),yes)
