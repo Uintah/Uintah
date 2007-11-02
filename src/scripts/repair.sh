@@ -71,7 +71,12 @@ fi
 
 bad_inc=$1
 
-files=`find . -name "*.d" -o -name "depend.mk" | xargs grep -l $bad_inc`
+extension=d
+if test `uname` == "AIX"; then
+  extension=u
+fi
+
+files=`find . -name "*".$extension -o -name "depend.mk" | xargs grep -l $bad_inc`
 
 file_found=no
 
@@ -87,12 +92,12 @@ for file in $files; do
    fi
 
    for cfile in $c_files; do
-     base=`echo $cfile | sed "s%\.d%%" | sed "s%\.o%%"`
+     base=`echo $cfile | sed "s%\.$extension%%" | sed "s%\.o%%"`
      echo "rm -rf $base.o"
            rm -rf $base.o
      if test "$filename" != "depend.mk"; then
-        echo "rm -rf $base.d"
-              rm -rf $base.d
+        echo "rm -rf $base.$extension"
+              rm -rf $base.$extension
      else
         # remove the individual bad line from the __depend.mk__ file.
         rm -rf $file.temp
@@ -108,15 +113,6 @@ if test "$be_quiet" != "true" -a $file_found = "no"; then
    echo "If you continue to have problems with this script, please contact"
    echo "J. Davison de St. Germain (dav@sci.utah.edu)."
    echo ""
-   if test `uname` == "AIX"; then
-      echo "NOTE: AIX probably uses .u files (instead of .d files).  If so, that is"
-      echo "the reason this script failed.  You could edit it and change this line:"
-      echo ""
-      echo "  files=\`find . -name \"*.d\" -o -name \"depend.mk\" | xargs grep -l \$bad_inc\`"
-      echo ""
-      echo "to have *.u (instead of *.d)."
-      echo ""
-   fi
 fi
 
 
