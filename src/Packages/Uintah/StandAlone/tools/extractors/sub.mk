@@ -10,12 +10,24 @@ ifeq ($(IS_AIX),yes)
         Core/Containers   \
         Core/Persistent   \
         Core/OS           \
-        Packages/Uintah/Core/Math                        \
-        Packages/Uintah/Core/GeometryPiece               \
+        Packages/Uintah/CCA/Components/Arches            \
+        Packages/Uintah/CCA/Components/Arches/fortran    \
+        Packages/Uintah/CCA/Components/Arches/Mixing     \
+        Packages/Uintah/CCA/Components/Arches/Radiation  \
+        Packages/Uintah/CCA/Components/Arches/Radiation/fortran  \
+        Packages/Uintah/CCA/Components/Examples          \
+        Packages/Uintah/CCA/Components/ICE               \
+        Packages/Uintah/CCA/Components/Models            \
+        Packages/Uintah/CCA/Components/MPM               \
+        Packages/Uintah/CCA/Components/MPMArches         \
+        Packages/Uintah/CCA/Components/MPMICE            \
+        Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
         Packages/Uintah/CCA/Components/Parent            \
+        Packages/Uintah/CCA/Components/PatchCombiner     \
+        Packages/Uintah/CCA/Components/Solvers \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
-	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
-        Packages/Uintah/CCA/Components/Examples          
+        Packages/Uintah/Core/GeometryPiece               \
+        Packages/Uintah/Core/Math                        
 endif
 
 ifeq ($(LARGESOS),yes)
