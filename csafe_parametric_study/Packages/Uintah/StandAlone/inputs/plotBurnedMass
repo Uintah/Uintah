@@ -19,7 +19,6 @@ if ( $#argv == 1 ) then
   set hardcopy = $argv
 endif 
 
-
 grep -v "inf\|e+308" $out > $out.tmp
 mv $out.tmp $out
 
@@ -49,7 +48,7 @@ endif
 cat >> gp << fin
 set grid xtics ytics 
 set y2tics
-
+set timestamp "%m/%d/%y %H:%M" offset 80,-2
 set ylabel 'Mass Burned /timestep  [Kg]' textcolor lt 1
 set y2label 'Total Mass Burned [Kg]'     textcolor lt 2
 set xlabel 'Physical Time[sec]
