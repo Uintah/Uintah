@@ -3,13 +3,12 @@
 SRCDIR   := Packages/Uintah/Core/Grid/Variables
 
 SRCS     += \
-	$(SRCDIR)/CCVariableBase.cc             \
 	$(SRCDIR)/CellIterator.cc               \
 	$(SRCDIR)/ComputeSet.cc                 \
 	$(SRCDIR)/ComputeSet_special.cc         \
 	$(SRCDIR)/GridIterator.cc               \
+	$(SRCDIR)/GridVariableBase.cc           \
 	$(SRCDIR)/LocallyComputedPatchVarMap.cc \
-	$(SRCDIR)/NCVariableBase.cc             \
 	$(SRCDIR)/ParticleSubset.cc             \
 	$(SRCDIR)/ParticleVariableBase.cc       \
 	$(SRCDIR)/ParticleVariable_special.cc   \
@@ -18,9 +17,6 @@ SRCS     += \
 	$(SRCDIR)/ReductionVariableBase.cc      \
 	$(SRCDIR)/ReductionVariable_special.cc  \
 	$(SRCDIR)/ScrubItem.cc                  \
-	$(SRCDIR)/SFCXVariableBase.cc           \
-	$(SRCDIR)/SFCYVariableBase.cc           \
-	$(SRCDIR)/SFCZVariableBase.cc           \
 	$(SRCDIR)/SoleVariableBase.cc           \
 	$(SRCDIR)/SoleVariable_special.cc       \
 	$(SRCDIR)/Stencil7.cc                   \

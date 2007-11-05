@@ -248,21 +248,15 @@ void PatchCombiner::setGridVars(const ProcessorGroup*,
 	      
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    for(int m=0;m<matls->size();m++){
-      int matl = matls->get(m);
-      Variable* var = label->typeDescription()->createInstance();
-      new_dw->allocateAndPutGridVar(var, label, matl, patch);
-
-      // fill in the new patch with each of the old patches that made it up.
-      list<const Patch*>& oldPatches = new2OldPatchMap_[patch];
-      for (list<const Patch*>::iterator iter = oldPatches.begin();
-	   iter != oldPatches.end(); iter++) {
-	d_subsched->get_dw(1)->copyOutGridData(var, label, matl, *iter); 
-      }
-
-      delete var; // a clone should have been put in the dw
-      //new_dw->put(var, label, matl, patch);	
+    // fill in the new patch with each of the old patches that made it up.
+    list<const Patch*>& oldPatches = new2OldPatchMap_[patch];
+    PatchSubset* sub = scinew PatchSubset;
+    for (list<const Patch*>::iterator iter = oldPatches.begin(); iter != oldPatches.end(); iter++) {
+      sub->add(*iter);
     }
+    new_dw->transferFrom(d_subsched->get_dw(1), label, sub, matls); 
+
+    delete sub; 
   }
 }
 

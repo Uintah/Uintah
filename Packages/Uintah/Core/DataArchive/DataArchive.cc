@@ -653,7 +653,7 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
 {
   // NOTE - this is not going to do error checking like making sure the entire volume is filled.  
   //   We'll assume that if there were bad regions, they would have been caught in the simulation.
-  GridVariable* gridvar = dynamic_cast<GridVariable*>(&var);
+  GridVariableBase* gridvar = dynamic_cast<GridVariableBase*>(&var);
   ASSERT(gridvar);
   gridvar->allocate(low, high);
 
@@ -680,7 +680,7 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
     h = Min(patch->getInteriorHighIndex(basis), high);
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
-    GridVariable* tmpVar = gridvar->cloneType();
+    GridVariableBase* tmpVar = gridvar->cloneType();
     query(*tmpVar, name, matlIndex, patch, timeIndex);
 
     if (patch->isVirtual()) {
