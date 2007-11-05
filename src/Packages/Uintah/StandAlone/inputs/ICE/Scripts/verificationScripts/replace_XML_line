@@ -14,8 +14,8 @@ if ( $#argv != 2) then
   exit
 endif
 
-if (! -e $f) then  
-  echo " file not found"
+if (! -e $f || ! -f $f) then  
+  echo " file ($f) not found"
   echo "Usage:  replace_XML_Line <replacement Pattern> < filename>"
   exit
 endif
