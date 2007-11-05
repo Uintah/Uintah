@@ -826,7 +826,7 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
         }
       }
       dw->put(var, label, matl, patch); 
-      delete var; // should have been cloned when it was put
+      //delete var; // should have been cloned when it was put
     }
   }
 }
