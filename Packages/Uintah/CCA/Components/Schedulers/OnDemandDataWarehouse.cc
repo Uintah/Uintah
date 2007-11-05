@@ -1577,7 +1577,7 @@ OnDemandDataWarehouse::put(GridVariableBase& var,
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
-   d_varDB.put(label, matlIndex, patch, &var, true);
+   d_varDB.put(label, matlIndex, patch, var.clone(), true);
   d_lock.writeUnlock();
 }
 
