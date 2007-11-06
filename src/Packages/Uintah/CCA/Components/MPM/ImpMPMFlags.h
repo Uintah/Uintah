@@ -17,7 +17,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
 
-  class SCISHARE ImpMPMFlags : public MPMFlags {
+  class UINTAHSHARE ImpMPMFlags : public MPMFlags {
 
   public:
 

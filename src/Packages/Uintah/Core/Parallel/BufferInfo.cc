@@ -5,10 +5,10 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Parallel/share.h>
+#include <Packages/Uintah/Core/Parallel/uintahshare.h>
 using namespace Uintah;
 
-SCISHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );
+UINTAHSHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );
 
 BufferInfo::BufferInfo()
 {

@@ -11,7 +11,7 @@
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ namespace Uintah {
   using std::string;
   using std::list;
 
-  class SCISHARE FileGeometryPiece : public SmoothGeomPiece {
+  class UINTAHSHARE FileGeometryPiece : public SmoothGeomPiece {
     
   public:
     //////////////////////////////////////////////////////////////////////

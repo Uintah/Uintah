@@ -16,7 +16,7 @@
 #include <sci_gl.h>
 #include <sci_glu.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
 
 using SCIRun::Point;
@@ -52,7 +52,7 @@ struct streamerNode {
 #define STREAM_LIGHT_WIRE 0
 #define STREAM_LIGHT_CURVE 1
   
-class SCISHARE GLAnimatedStreams : public GeomObj
+class UINTAHSHARE GLAnimatedStreams : public GeomObj
 {
 public:
 

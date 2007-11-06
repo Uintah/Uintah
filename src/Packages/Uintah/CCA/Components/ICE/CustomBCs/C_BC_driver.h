@@ -6,7 +6,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/share.h>
+#include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
   class DataWarehouse;
 
@@ -49,13 +49,13 @@ namespace Uintah {
   };
   
   
-  SCISHARE void computesRequires_CustomBCs(Task* t, 
+  UINTAHSHARE void computesRequires_CustomBCs(Task* t, 
                                            const string& where,
                                            ICELabel* lb,
                                            const MaterialSubset* ice_matls,
                                            customBC_var_basket* C_BC_basket);
  
-  SCISHARE void preprocess_CustomBCs(const string& where,
+  UINTAHSHARE void preprocess_CustomBCs(const string& where,
                                      DataWarehouse* old_dw, 
                                      DataWarehouse* new_dw,
                                      ICELabel* lb,
@@ -63,7 +63,7 @@ namespace Uintah {
                                      const int indx,
                                      customBC_var_basket* C_BC_basket);
                             
-  SCISHARE void delete_CustomBCs(customBC_var_basket* C_BC_basket);
+  UINTAHSHARE void delete_CustomBCs(customBC_var_basket* C_BC_basket);
   
 } // End namespace Uintah  
 #endif

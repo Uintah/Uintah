@@ -9,14 +9,14 @@
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <vector>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
   using namespace SCIRun;
   using std::vector;
 
-  class SCISHARE LinearInterpolator : public ParticleInterpolator {
+  class UINTAHSHARE LinearInterpolator : public ParticleInterpolator {
     
   public:
     

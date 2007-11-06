@@ -18,10 +18,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/share.h>
+#include <Packages/Uintah/Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
-   class SCISHARE ParameterNotFound : public ProblemSetupException {
+   class UINTAHSHARE ParameterNotFound : public ProblemSetupException {
    public:
       ParameterNotFound(const std::string&, const char* file, int line);
       ParameterNotFound(const ParameterNotFound&);

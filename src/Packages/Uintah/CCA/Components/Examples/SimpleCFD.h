@@ -16,7 +16,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -52,7 +52,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE SimpleCFD : public UintahParallelComponent, public SimulationInterface {
+  class UINTAHSHARE SimpleCFD : public UintahParallelComponent, public SimulationInterface {
   public:
     SimpleCFD(const ProcessorGroup* myworld);
     virtual ~SimpleCFD();

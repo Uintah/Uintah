@@ -9,7 +9,7 @@
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -47,7 +47,7 @@ namespace Uintah {
       
       ****************************************/
     
-  class SCISHARE VarLabel : public RefCounted {
+  class UINTAHSHARE VarLabel : public RefCounted {
   public:
     enum VarType {
       Normal,
@@ -123,7 +123,7 @@ namespace Uintah {
      
     string                 d_name;
 
-    SCISHARE friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
+    UINTAHSHARE friend std::ostream & operator<<( std::ostream & out, const Uintah::VarLabel & vl );
 
   private:
     // You must use VarLabel::create.

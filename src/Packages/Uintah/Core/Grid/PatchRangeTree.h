@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -51,7 +51,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE PatchRangeTree
+class UINTAHSHARE PatchRangeTree
 {
 public:
   PatchRangeTree(const std::vector<Patch*>& patches);

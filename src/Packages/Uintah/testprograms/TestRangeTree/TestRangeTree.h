@@ -1,5 +1,5 @@
 #include "../TestSuite/SuiteTree.h"
-#include <Packages/Uintah/testprograms/TestRangeTree/share.h>
+#include <Packages/Uintah/testprograms/TestRangeTree/uintahshare.h>
 
-SCISHARE SuiteTree* RangeTreeTestTree(bool verbose = false, int n = 100000,
+UINTAHSHARE SuiteTree* RangeTreeTestTree(bool verbose = false, int n = 100000,
 			     int seed = 0);

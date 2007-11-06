@@ -26,7 +26,7 @@
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -67,7 +67,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE ImpMPM : public MPMCommon, public UintahParallelComponent, 
+class UINTAHSHARE ImpMPM : public MPMCommon, public UintahParallelComponent, 
   public SimulationInterface {
 public:
   ImpMPM(const ProcessorGroup* myworld);

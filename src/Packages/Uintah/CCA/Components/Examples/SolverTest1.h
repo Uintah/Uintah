@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/share.h>
+#include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -41,7 +41,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE SolverTest1 : public UintahParallelComponent, public SimulationInterface {
+  class UINTAHSHARE SolverTest1 : public UintahParallelComponent, public SimulationInterface {
   public:
     SolverTest1(const ProcessorGroup* myworld);
     virtual ~SolverTest1();

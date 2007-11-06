@@ -9,7 +9,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
-#include <Packages/Uintah/CCA/Components/PatchCombiner/share.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/uintahshare.h>
 
 #include <vector>
 
@@ -45,7 +45,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE UdaReducer : public SimulationInterface, public UintahParallelComponent {
+   class UINTAHSHARE UdaReducer : public SimulationInterface, public UintahParallelComponent {
    public:
      UdaReducer(const ProcessorGroup* myworld, string udaDir);
      

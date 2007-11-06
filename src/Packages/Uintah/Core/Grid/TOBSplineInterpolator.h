@@ -3,12 +3,12 @@
 
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Patch;
 
-  class SCISHARE TOBSplineInterpolator : public ParticleInterpolator {
+  class UINTAHSHARE TOBSplineInterpolator : public ParticleInterpolator {
 
   //TO = ThirdOrder B Splines 
 

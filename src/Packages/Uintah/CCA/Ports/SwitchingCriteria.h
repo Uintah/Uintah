@@ -7,11 +7,11 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <Packages/Uintah/CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
-  class SCISHARE SwitchingCriteria : public UintahParallelPort {
+  class UINTAHSHARE SwitchingCriteria : public UintahParallelPort {
     
   public:
     

@@ -3,11 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
-#include <Packages/Uintah/Core/Labels/share.h>
+#include <Packages/Uintah/Core/Labels/uintahshare.h>
 
 namespace Uintah {
 
-    class SCISHARE MPMICELabel {
+    class UINTAHSHARE MPMICELabel {
     public:
 
       MPMICELabel();

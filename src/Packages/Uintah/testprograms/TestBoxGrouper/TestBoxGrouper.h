@@ -1,6 +1,6 @@
 #include "../TestSuite/SuiteTree.h"
-#include <Packages/Uintah/testprograms/TestBoxGrouper/share.h>
+#include <Packages/Uintah/testprograms/TestBoxGrouper/uintahshare.h>
 
 namespace Uintah {
-SCISHARE SuiteTree* BoxGrouperTestTree(bool verbose);
+UINTAHSHARE SuiteTree* BoxGrouperTestTree(bool verbose);
 }

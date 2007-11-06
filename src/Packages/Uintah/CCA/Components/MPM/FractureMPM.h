@@ -20,7 +20,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -58,7 +58,7 @@ WARNING
   
 ****************************************/
 
-class SCISHARE FractureMPM : public SerialMPM {
+class UINTAHSHARE FractureMPM : public SerialMPM {
 public:
   FractureMPM(const ProcessorGroup* myworld);
    virtual ~FractureMPM();

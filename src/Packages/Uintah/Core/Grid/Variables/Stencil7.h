@@ -6,10 +6,10 @@
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
   class TypeDescription;
-  struct SCISHARE Stencil7 {
+  struct UINTAHSHARE Stencil7 {
     // The order of this is designed to match the order of faces in Patch
     // Do not change it!
     //     -x +x -y +y -z +z
@@ -26,12 +26,12 @@ namespace Uintah {
     }
   };
 
-  SCISHARE std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
+  UINTAHSHARE std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
 
 }
 
 namespace SCIRun {
-  SCISHARE void swapbytes( Uintah::Stencil7& );
+  UINTAHSHARE void swapbytes( Uintah::Stencil7& );
 } // namespace SCIRun
 
 #endif

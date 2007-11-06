@@ -5,7 +5,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Parallel/share.h>
+#include <Packages/Uintah/Core/Parallel/uintahshare.h>
 namespace Uintah {
 
 class ProcessorGroup;
@@ -39,7 +39,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE Parallel {
+   class UINTAHSHARE Parallel {
    public:
       enum Circumstances {
 	 NormalShutdown,

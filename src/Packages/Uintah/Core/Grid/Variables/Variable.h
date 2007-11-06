@@ -8,7 +8,7 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace SCIRun {
   class IntVector;
 }
@@ -51,7 +51,7 @@ namespace Uintah {
       
   ****************************************/
     
-class SCISHARE Variable {
+class UINTAHSHARE Variable {
 
 public:
   virtual ~Variable();

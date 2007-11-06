@@ -18,7 +18,7 @@ namespace SCIRun {
   class Vector;
 }
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
@@ -53,7 +53,7 @@ WARNING
   
 ****************************************/
 
-  class SCISHARE Grid : public RefCounted {
+  class UINTAHSHARE Grid : public RefCounted {
   public:
     Grid();
     virtual ~Grid();
@@ -101,7 +101,7 @@ WARNING
     // Returns true if the two grids cover the exact same region.  Patch structure can be different.
     bool isSimilar(const Grid& othergrid) const;
     
-    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+    UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     // Used in Level and Patch for stretched grids
     enum Axis {

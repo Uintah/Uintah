@@ -61,7 +61,7 @@ LOG
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/share.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/uintahshare.h>
 namespace Uintah {
 using namespace SCIRun;
 
@@ -101,7 +101,7 @@ public:
   double dt;
 };
 
-class SCISHARE FieldExtractor : public Module { 
+class UINTAHSHARE FieldExtractor : public Module { 
   
 public: 
   
@@ -164,7 +164,7 @@ protected:
 }; //class 
 
 
-class SCISHARE FieldExtractorAlgo: public DynamicAlgoBase
+class UINTAHSHARE FieldExtractorAlgo: public DynamicAlgoBase
 {
 public:
   virtual FieldHandle  execute(QueryInfo& quinfo, IntVector& offset,

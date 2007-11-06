@@ -4,12 +4,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/share.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class SCISHARE LoadBalancerFactory
+  class UINTAHSHARE LoadBalancerFactory
   {
   public:
     // this function has a switch for all known load balancers
