@@ -73,11 +73,11 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-#undef SCISHARE
-#ifdef _WIN32
-#  define SCISHARE __declspec(dllimport)
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
+#  define UINTAHSHARE __declspec(dllimport)
 #else
-#  define SCISHARE
+#  define UINTAHSHARE
 #endif
 
 // Debug: Used to sync cerr so it is readable (when output by
@@ -86,9 +86,9 @@ using namespace std;
 // DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 // DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
-extern SCISHARE Mutex cerrLock;
-extern SCISHARE DebugStream mixedDebug;
-extern SCISHARE DebugStream fullDebug;
+extern UINTAHSHARE Mutex cerrLock;
+extern UINTAHSHARE DebugStream mixedDebug;
+extern UINTAHSHARE DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
 
 static

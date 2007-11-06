@@ -2,7 +2,7 @@
 #define Packages_Uintah_Core_Grid_SimpleMaterial_h
 
 #include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -35,7 +35,7 @@ WARNING
 
 ****************************************/
 
-      class SCISHARE SimpleMaterial : public Material {
+      class UINTAHSHARE SimpleMaterial : public Material {
       public:
 	 SimpleMaterial();
 	 

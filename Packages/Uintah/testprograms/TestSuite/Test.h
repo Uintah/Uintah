@@ -14,10 +14,10 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/testprograms/TestSuite/share.h>
+#include <Packages/Uintah/testprograms/TestSuite/uintahshare.h>
 using namespace std;
 
-class SCISHARE Test
+class UINTAHSHARE Test
 {
 public:
   Test(const string name);

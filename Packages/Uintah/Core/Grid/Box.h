@@ -8,7 +8,7 @@
 #include   <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using std::deque;
@@ -63,8 +63,8 @@ using namespace SCIRun;
 	 return *this;
       }
 
-      SCISHARE bool overlaps(const Box&, double epsilon=1.e-6) const;
-      SCISHARE bool contains(const Point& p) const {
+      UINTAHSHARE bool overlaps(const Box&, double epsilon=1.e-6) const;
+      UINTAHSHARE bool contains(const Point& p) const {
 	 return p.x() >= d_lower.x() && p.y() >= d_lower.y()
 	    && p.z() >= d_lower.z() && p.x() < d_upper.x()
 	    && p.y() < d_upper.y() && p.z() < d_upper.z();
@@ -84,10 +84,10 @@ using namespace SCIRun;
 	 return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
       }
 
-      SCISHARE static deque<Box> difference(const Box& b1, const Box& b2);
-      SCISHARE static deque<Box> difference(deque<Box>& boxSet1, deque<Box>& boxSet2);
+      UINTAHSHARE static deque<Box> difference(const Box& b1, const Box& b2);
+      UINTAHSHARE static deque<Box> difference(deque<Box>& boxSet1, deque<Box>& boxSet2);
 
-      SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
+      UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
    private:
       Point d_lower;

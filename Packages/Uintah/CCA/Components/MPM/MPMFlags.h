@@ -8,7 +8,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
 
-  class SCISHARE MPMFlags {
+  class UINTAHSHARE MPMFlags {
 
   public:
 

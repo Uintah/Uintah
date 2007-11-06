@@ -14,7 +14,7 @@
 #include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -50,7 +50,7 @@ WARNING
      
 ****************************************/
     
-  class SCISHARE Region {
+  class UINTAHSHARE Region {
     public:
     
    inline Region()

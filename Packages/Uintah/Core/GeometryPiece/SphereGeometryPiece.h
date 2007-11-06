@@ -9,7 +9,7 @@
 #endif
 
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -51,7 +51,7 @@ WARNING
 ****************************************/
 
 
-class SCISHARE SphereGeometryPiece : public GeometryPiece {
+class UINTAHSHARE SphereGeometryPiece : public GeometryPiece {
          
 public:
   //////////

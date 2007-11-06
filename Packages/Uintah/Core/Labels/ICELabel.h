@@ -3,11 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
-#include <Packages/Uintah/Core/Labels/share.h>
+#include <Packages/Uintah/Core/Labels/uintahshare.h>
 
 namespace Uintah {
 
-  class SCISHARE ICELabel {
+  class UINTAHSHARE ICELabel {
     public:
 
       ICELabel();

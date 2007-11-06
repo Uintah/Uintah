@@ -15,7 +15,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 
 #define OVERHEAD_WINDOW 40
 namespace Uintah {
@@ -60,7 +60,7 @@ class Level;
       
 ****************************************/
 
-class SCISHARE SimulationState : public RefCounted {
+class UINTAHSHARE SimulationState : public RefCounted {
 public:
   SimulationState(ProblemSpecP &ps);
   ~SimulationState();

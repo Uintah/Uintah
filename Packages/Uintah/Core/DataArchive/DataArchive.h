@@ -32,7 +32,7 @@
 #include <unistd.h>
 #endif
 
-#include <Packages/Uintah/Core/DataArchive/share.h>
+#include <Packages/Uintah/Core/DataArchive/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -73,7 +73,7 @@ class LoadBalancer;
      ****************************************/
    
 //! Container to hold UCF data when read in from disk.
-class SCISHARE DataArchive {
+class UINTAHSHARE DataArchive {
 private:
 
    // what we need to store on a per-variable basis

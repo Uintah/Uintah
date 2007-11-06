@@ -18,12 +18,12 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/share.h>
+#include <Packages/Uintah/Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
    using namespace SCIRun;
 
-   class SCISHARE ProblemSetupException : public Exception {
+   class UINTAHSHARE ProblemSetupException : public Exception {
    public:
       ProblemSetupException(const std::string& msg, const char* file, int line);
       ProblemSetupException(const ProblemSetupException&);

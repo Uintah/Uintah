@@ -4,7 +4,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/share.h>
+#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -20,7 +20,7 @@ using namespace SCIRun;
   */
   /////////////////////////////////////////////////////////////////////////////
 
-class SCISHARE ShellMPM : public SerialMPM {
+class UINTAHSHARE ShellMPM : public SerialMPM {
 
 public:
 

@@ -5,12 +5,12 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/share.h>
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/uintahshare.h>
 
 namespace Uintah {
   class AnalysisModule;
   
-  class SCISHARE AnalysisModuleFactory{
+  class UINTAHSHARE AnalysisModuleFactory{
     public:
       AnalysisModuleFactory();
       ~AnalysisModuleFactory();

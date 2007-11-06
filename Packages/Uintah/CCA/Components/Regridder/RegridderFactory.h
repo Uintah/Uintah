@@ -4,12 +4,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
 
-#include <Packages/Uintah/CCA/Components/Regridder/share.h>
+#include <Packages/Uintah/CCA/Components/Regridder/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class SCISHARE RegridderFactory
+  class UINTAHSHARE RegridderFactory
   {
   public:
     // this function has a switch for all known regridders

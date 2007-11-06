@@ -13,7 +13,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 namespace Uintah {
 
-  class SCISHARE GeometryPieceFactory
+  class UINTAHSHARE GeometryPieceFactory
   {
   public:
     // this function has a switch for all known go_types

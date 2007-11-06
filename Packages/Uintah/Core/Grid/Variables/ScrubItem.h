@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/TrivialAllocator.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -32,7 +32,7 @@ struct ScrubItem {
     return label == d.label && matl == d.matl && patch == d.patch && dw == d.dw;
   }
 
-  SCISHARE static TrivialAllocator scrub_alloc;
+  UINTAHSHARE static TrivialAllocator scrub_alloc;
 
   void* operator new(size_t)
   {

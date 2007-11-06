@@ -20,7 +20,7 @@ namespace SCIRun {
   class Point;
 }
 
-#include <Packages/Uintah/Core/ProblemSpec/share.h>
+#include <Packages/Uintah/Core/ProblemSpec/uintahshare.h>
 namespace Uintah {
 
 class TypeDescription;
@@ -69,7 +69,7 @@ WARNING
 
 /// A Problem Spec class.
 /// This really is a problem Spec class.
-   class SCISHARE ProblemSpec : public RefCounted {
+   class UINTAHSHARE ProblemSpec : public RefCounted {
    public:
      
       enum NodeType {

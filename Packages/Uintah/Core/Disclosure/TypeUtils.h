@@ -14,7 +14,7 @@ namespace SCIRun {
   class Vector;
 }
 
-#include <Packages/Uintah/Core/Disclosure/share.h>
+#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
 namespace Uintah {
 
 using SCIRun::Point;
@@ -28,16 +28,16 @@ class TypeDescription;
 
 typedef int64_t long64;
 
-SCISHARE const TypeDescription* fun_getTypeDescription(bool*);
-SCISHARE const TypeDescription* fun_getTypeDescription(unsigned char*);
-SCISHARE const TypeDescription* fun_getTypeDescription(int*);
-SCISHARE const TypeDescription* fun_getTypeDescription(short int*);
-//SCISHARE const TypeDescription* fun_getTypeDescription(long*);
-SCISHARE const TypeDescription* fun_getTypeDescription(long64*);
-SCISHARE const TypeDescription* fun_getTypeDescription(double*);
-SCISHARE const TypeDescription* fun_getTypeDescription(float*);
-SCISHARE const TypeDescription* fun_getTypeDescription(Point*);
-SCISHARE const TypeDescription* fun_getTypeDescription(Vector*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(bool*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(unsigned char*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(int*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(short int*);
+//UINTAHSHARE const TypeDescription* fun_getTypeDescription(long*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(long64*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(double*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(float*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(Point*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(Vector*);
 
 // THIS IS A GUESS -> Because of the order of instantiation of
 // templates by the IBM xlC compiler, we can not declare the
@@ -46,38 +46,38 @@ SCISHARE const TypeDescription* fun_getTypeDescription(Vector*);
 // true for Matrix3 too.  However, both the fun_getTypeDescription of
 // Matrix3 and Stencil7 are inplemented in their respective .cc files.
 
-#include <Packages/Uintah/Core/Math/share.h>
+#include <Packages/Uintah/Core/Math/uintahshare.h>
 // since these are defined in Math/Grid, and declared here, we need to export them correctly
-SCISHARE const TypeDescription* fun_getTypeDescription(Matrix3*);
-SCISHARE const TypeDescription* fun_getTypeDescription(Short27*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(Matrix3*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(Short27*);
 
-#include <Packages/Uintah/Core/Grid/share.h>
-SCISHARE const TypeDescription* fun_getTypeDescription(Stencil7*);
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(Stencil7*);
 
 // Added by Oren for implicit ICE AMR pressure solver type that
 // appears in ICELabel.cc.
-SCISHARE const TypeDescription* fun_getTypeDescription(ConnectionList*);
+UINTAHSHARE const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
-#include <Packages/Uintah/Core/Disclosure/share.h>
+#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
 
 // these functions are for getting safe values of types
 // return back the value in the argument (so we don't have to include
 // Vector.h here)
-SCISHARE void fun_getLargeValue(double*);
-SCISHARE void fun_getSmallValue(double*);
-SCISHARE void fun_getZeroValue(double*);
-SCISHARE void fun_getZeroValue(bool*);
-SCISHARE void fun_getZeroValue(long64*);
-SCISHARE void fun_getZeroValue(Vector*);
+UINTAHSHARE void fun_getLargeValue(double*);
+UINTAHSHARE void fun_getSmallValue(double*);
+UINTAHSHARE void fun_getZeroValue(double*);
+UINTAHSHARE void fun_getZeroValue(bool*);
+UINTAHSHARE void fun_getZeroValue(long64*);
+UINTAHSHARE void fun_getZeroValue(Vector*);
 
 // these functions should never get called - they just exist for
 // template completeness
-SCISHARE void fun_getLargeValue(bool*);
-SCISHARE void fun_getSmallValue(bool*);
-SCISHARE void fun_getLargeValue(long64*);
-SCISHARE void fun_getSmallValue(long64*);
-SCISHARE void fun_getLargeValue(Vector*);
-SCISHARE void fun_getSmallValue(Vector*);
+UINTAHSHARE void fun_getLargeValue(bool*);
+UINTAHSHARE void fun_getSmallValue(bool*);
+UINTAHSHARE void fun_getLargeValue(long64*);
+UINTAHSHARE void fun_getSmallValue(long64*);
+UINTAHSHARE void fun_getLargeValue(Vector*);
+UINTAHSHARE void fun_getSmallValue(Vector*);
 
 } // End namespace Uintah
    
@@ -87,15 +87,15 @@ SCISHARE void fun_getSmallValue(Vector*);
 #include <sgi_stl_warnings_on.h>
 
 #if !defined( REDSTORM )
-// typename.h redefines SCISHARE
-#include <Packages/Uintah/Core/Disclosure/share.h>
+// typename.h redefines UINTAHSHARE
+#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
 namespace SCIRun {
   using std::string;
   using Uintah::long64;
 
-  template<> SCISHARE const string find_type_name(long64*);
+  template<> UINTAHSHARE const string find_type_name(long64*);
 
-  SCISHARE const TypeDescription* get_type_description(long64*);
+  UINTAHSHARE const TypeDescription* get_type_description(long64*);
 
 } // namespace SCIRun 
 #endif // REDSTORM

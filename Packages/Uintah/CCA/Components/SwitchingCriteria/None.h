@@ -6,13 +6,13 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/share.h>
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
   class DataWarehouse;
 
-  class SCISHARE None : public SwitchingCriteria
+  class UINTAHSHARE None : public SwitchingCriteria
     {
     public:
       // this function has a switch for all known SwitchingCriteria

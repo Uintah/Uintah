@@ -19,11 +19,11 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/testprograms/TestSuite/share.h>
+#include <Packages/Uintah/testprograms/TestSuite/uintahshare.h>
 
 using namespace std;
 
-class SCISHARE SuiteTree
+class UINTAHSHARE SuiteTree
 {
 public:
   SuiteTree() {}
@@ -42,7 +42,7 @@ public:
   { bool dummy; return composeSummary("", expandAll, dummy); }
 };
 
-class SCISHARE SuiteTreeNode : public SuiteTree
+class UINTAHSHARE SuiteTreeNode : public SuiteTree
 {
 public:
   SuiteTreeNode(string name)
@@ -77,7 +77,7 @@ private:
   list<SuiteTree*> mySubTrees;
 };
 
-class SCISHARE SuiteTreeLeaf : public SuiteTree
+class UINTAHSHARE SuiteTreeLeaf : public SuiteTree
 {
 public:
   SuiteTreeLeaf(Suite* suite)

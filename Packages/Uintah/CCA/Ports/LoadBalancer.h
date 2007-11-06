@@ -12,7 +12,7 @@
 #include <Packages/Uintah/Core/Grid/Region.h>
 #include <string>
 
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <Packages/Uintah/CCA/Ports/uintahshare.h>
 
 
 namespace Uintah {
@@ -56,7 +56,7 @@ WARNING
 
   //! The Load Balancer is responsible for assigning tasks to do their work
   //! on specified processors.  Different subclasses differ in the way this is done.
-  class SCISHARE LoadBalancer : public UintahParallelPort {
+  class UINTAHSHARE LoadBalancer : public UintahParallelPort {
   public:
     LoadBalancer();
     virtual ~LoadBalancer();

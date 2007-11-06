@@ -9,7 +9,7 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using std::ostream;
@@ -43,7 +43,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE SoleVariableBase : public Variable {
+   class UINTAHSHARE SoleVariableBase : public Variable {
    public:
       
       virtual ~SoleVariableBase();

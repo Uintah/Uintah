@@ -7,7 +7,7 @@
 
 #include <Core/Geometry/Point.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************
@@ -53,7 +53,7 @@ WARNING
         
 ****************************************/
 
-class SCISHARE SphereMembraneGeometryPiece : public GeometryPiece {
+class UINTAHSHARE SphereMembraneGeometryPiece : public GeometryPiece {
          
 public:
   //////////

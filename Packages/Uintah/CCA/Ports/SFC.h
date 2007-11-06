@@ -10,7 +10,7 @@ using namespace std;
 
 #include<Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include<Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Ports/share.h>
+#include <Packages/Uintah/CCA/Ports/uintahshare.h>
 #include <Core/Exceptions/InternalError.h>
 using namespace SCIRun;
 using namespace Uintah;
@@ -86,34 +86,34 @@ inline bool operator>(const History<BITS> &a, const History<BITS> &b)
 {
   return a.bits>b.bits;
 }
-extern SCISHARE int dir3[][3];
-extern SCISHARE int dir2[][3];
-extern SCISHARE int dir1[][3];
+extern UINTAHSHARE int dir3[][3];
+extern UINTAHSHARE int dir2[][3];
+extern UINTAHSHARE int dir1[][3];
 
-extern SCISHARE int hinv3[][8];
-extern SCISHARE int ginv3[][8];
-extern SCISHARE int minv3[][8];
-extern SCISHARE int hinv2[][8];
-extern SCISHARE int ginv2[][8];
-extern SCISHARE int minv2[][8];
+extern UINTAHSHARE int hinv3[][8];
+extern UINTAHSHARE int ginv3[][8];
+extern UINTAHSHARE int minv3[][8];
+extern UINTAHSHARE int hinv2[][8];
+extern UINTAHSHARE int ginv2[][8];
+extern UINTAHSHARE int minv2[][8];
 
-extern SCISHARE int horder3[][8];
-extern SCISHARE int gorder3[][8];
-extern SCISHARE int morder3[][8];
-extern SCISHARE int horder2[][8];
-extern SCISHARE int gorder2[][8];
-extern SCISHARE int morder2[][8];
+extern UINTAHSHARE int horder3[][8];
+extern UINTAHSHARE int gorder3[][8];
+extern UINTAHSHARE int morder3[][8];
+extern UINTAHSHARE int horder2[][8];
+extern UINTAHSHARE int gorder2[][8];
+extern UINTAHSHARE int morder2[][8];
 
-extern SCISHARE int horient3[][8];
-extern SCISHARE int gorient3[][8];
-extern SCISHARE int morient3[][8];
-extern SCISHARE int horient2[][8];
-extern SCISHARE int gorient2[][8];
-extern SCISHARE int morient2[][8];
+extern UINTAHSHARE int horient3[][8];
+extern UINTAHSHARE int gorient3[][8];
+extern UINTAHSHARE int morient3[][8];
+extern UINTAHSHARE int horient2[][8];
+extern UINTAHSHARE int gorient2[][8];
+extern UINTAHSHARE int morient2[][8];
 
-extern SCISHARE int orient1[][8];
-extern SCISHARE int order1[][8];
-extern SCISHARE int inv1[][8];
+extern UINTAHSHARE int orient1[][8];
+extern UINTAHSHARE int order1[][8];
+extern UINTAHSHARE int inv1[][8];
 
 #define EPSILON 1e-6
 #define BINS (1<<DIM)

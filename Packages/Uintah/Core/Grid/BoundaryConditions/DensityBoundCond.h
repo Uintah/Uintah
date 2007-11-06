@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/Core/Grid/share.h>
+#include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
    
 /**************************************
@@ -35,7 +35,7 @@ WARNING
   
 ****************************************/
 
-   class SCISHARE DensityBoundCond : public BoundCond<double>  {
+   class UINTAHSHARE DensityBoundCond : public BoundCond<double>  {
    public:
      DensityBoundCond(ProblemSpecP& ps,std::string& kind);
      virtual ~DensityBoundCond();

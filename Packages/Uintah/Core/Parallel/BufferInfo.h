@@ -8,19 +8,19 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Parallel/share.h>
+#include <Packages/Uintah/Core/Parallel/uintahshare.h>
 namespace Uintah {
   using namespace std;
   class RefCounted;
   class ProcessorGroup;
 
-  class SCISHARE AfterCommunicationHandler {
+  class UINTAHSHARE AfterCommunicationHandler {
   public:
     virtual ~AfterCommunicationHandler() {}
     virtual void finishedCommunication(const ProcessorGroup*) = 0;
   };
 
-  class SCISHARE Sendlist : public AfterCommunicationHandler {
+  class UINTAHSHARE Sendlist : public AfterCommunicationHandler {
   public:
     Sendlist(Sendlist* next, RefCounted* obj)
       : next(next), obj(obj)
@@ -36,7 +36,7 @@ namespace Uintah {
 
   };
 
-  class SCISHARE BufferInfo {
+  class UINTAHSHARE BufferInfo {
   public:
     BufferInfo();
     virtual ~BufferInfo();

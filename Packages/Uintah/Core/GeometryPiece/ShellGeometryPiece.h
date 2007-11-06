@@ -8,7 +8,7 @@
 
 #include <math.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/share.h>
+#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class SCISHARE ShellGeometryPiece : public GeometryPiece {
+  class UINTAHSHARE ShellGeometryPiece : public GeometryPiece {
 	 
   public:
     //////////////////////////////////////////////////////////////////////

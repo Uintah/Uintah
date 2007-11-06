@@ -26,14 +26,14 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/share.h>
+#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
   using std::vector;
   using std::string;
   using std::map;
   using namespace SCIRun;
 
-class SCISHARE VariableCache: public Datatype {
+class UINTAHSHARE VariableCache: public Datatype {
 protected:
   map< string, string > data_cache;
 public:
