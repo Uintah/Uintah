@@ -64,16 +64,21 @@
         <carry_over var="vol_frac_CC"/>     <!-- needed by steady burn-->
 
   </SimulationComponent>
-   
-  <!--____________________________________________________________________-->
-  <!--      LOAD BALANCER (only turn this on during the explosion phase)  -->
-  <!--____________________________________________________________________-->   
+ 
+<!--____________________________________________________________________-->
+<!--      LOAD BALANCER (only turn this on during the explosion phase)  -->
+<!--____________________________________________________________________-->
   <LoadBalancer>
     <type>DLB</type>
     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
     <doSpaceCurve>         true            </doSpaceCurve>
     <timestepInterval>     100             </timestepInterval>
-  </LoadBalancer> 
+    <outputNthProc>        1               </outputNthProc>
+    <cellCost>             1               </cellCost>
+    <particleCost>         1.25            </particleCost>
+    <patchCost>            10              </patchCost>
+    <gainThreshold>        0               </gainThreshold>
+  </LoadBalancer>
    
   <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
