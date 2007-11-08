@@ -60,10 +60,6 @@ POSSIBLE REVISIONS
 
 namespace SCIRun {
 
-#define PI 3.14159265358979323846
-#define MSG(m) std::cout << m << std::endl; 
-
-
 static Persistent* make_Path()
 {
     return scinew Path;
@@ -74,23 +70,28 @@ PersistentTypeID Path::type_id("Path", "Datatype", make_Path);
 //-----------------------------------------------------------------------------
 // Constructor/Destructor
 
-Path::Path(): sint(30)
+#define NUM_SIN_VALUES 30
+
+Path::Path() :
+  sin_values( NUM_SIN_VALUES )
 {
-  upV=scinew Cubic3DPWI<Vector>();
-  lookatP=scinew Cubic3DPWI<Point>();
-  fov=scinew CubicPWI();
-  speed=scinew CubicPWI();
-  eyeP=NULL;
+  upV     = scinew Cubic3DPWI<Vector>();
+  lookatP = scinew Cubic3DPWI<Point>();
+  fov     = scinew CubicPWI();
+  speed   = scinew CubicPWI();
+  eyeP    = NULL;
   
   reset();
 
-  set_path_t(CUBIC);
-  acc_t=SMOOTH;
-  sin_series=0;
+  set_path_t( CUBIC );
 
-  // lookup table for first quadrant of sin(x)
-  for (int i=0; i<30; i++)
-    sint[i]=sin((i+1)*PI/60);
+  acc_t      = SMOOTH;
+  sin_series = 0;
+
+  // Lookup table for first quadrant of sin(x).
+  for( int i=0; i < NUM_SIN_VALUES; i++ ) {
+    sin_values[i] = sin((i+1)*M_PI/60);
+  }
 }
 
 Path::~Path()
@@ -104,32 +105,37 @@ Path::~Path()
 
 //-----------------------------------------------------------------------------
 
-void Path::reset(){
- 
+void
+Path::reset()
+{
   keyViews.remove_all();
   speedVal.remove_all();
   accPatt.remove_all();
-  is_built=is_back=is_loop=0;
-  step_size=0.01;
-  keyF=0;
-  pathP=0;
-  path_dist=0;
-  is_acc=is_run=false;
+  is_built   = 0;
+  is_reverse = 0;
+  is_loop    = 0;
+  step_size  = 0.01;
+  keyF       = 0;
+  pathP      = 0;
+  path_dist  = 0;
+  is_acc     = false;
+  is_run     = false;
 }
 
-Path* Path::clone()
+Path*
+Path::clone()
 {
-    return scinew Path(*this);
+  return scinew Path(*this);
 }
 
 //-----------------------------------------------------------------------------
 
 #define Path_VERSION 4
 
-void Path::io(Piostream& stream)
+void
+Path::io(Piostream& stream)
 {
-    
-    int oldpath=path_t;
+    Path_E oldpath = path_t;
 
     int version=stream.begin_class("Path", Path_VERSION);
 
@@ -139,10 +145,10 @@ void Path::io(Piostream& stream)
     }
 
     Pio(stream, is_loop);
-    Pio(stream, is_back);
+    Pio(stream, is_reverse);
     
-    Pio(stream, path_t);
-    Pio(stream, acc_t);
+    Pio(stream, (int&)path_t);
+    Pio(stream, (int&)acc_t);
     
     Pio(stream, step_size);
     
@@ -150,16 +156,16 @@ void Path::io(Piostream& stream)
     Pio(stream, speedVal);
     Pio(stream, accPatt);
 
-    Pio(stream, sint);
+    Pio(stream, sin_values);
     Pio(stream, count);
     Pio(stream, sin_series);    
 
     if (stream.reading()){
-      is_built=false;
-      count=100;
-      int newpath=path_t;
-      path_t=oldpath;
-      set_path_t(newpath);  // to initialize interpolation classes to new type
+      is_built       = false;
+      count          = 100;
+      Path_E newpath = path_t;
+      path_t         = oldpath;
+      set_path_t( newpath );  // to initialize interpolation classes to new type
       if (version<3){
 	for (int i=0; i<speedVal.size();i++)
 	  speedVal[i]=1;
@@ -171,7 +177,9 @@ void Path::io(Piostream& stream)
 
 //-----------------------------------------------------------------------------
 
-void Path::del_keyF(int i){
+void
+Path::del_keyF(int i)
+{
   ASSERT(i>=0 && i<keyViews.size());
   keyViews.remove(i);
   speedVal.remove(i);
@@ -180,11 +188,15 @@ void Path::del_keyF(int i){
 }
 
 // helper function to see if points are the same in respect to numerical zero
-bool cmp_pts(const Point& p1, const Point& p2){
-  return Abs(((Vector)(p1-p2)).length())<10e-6;
+bool
+cmp_pts(const Point& p1, const Point& p2)
+{
+  return Abs(((Vector)(p1-p2)).length()) < 10e-6;
 }
 
-bool Path::ins_keyF(int i, const View& v, double speed, int acc_patt){
+bool
+Path::ins_keyF(int i, const View& v, double speed, Acc_E acc_patt)
+{
   int sz=keyViews.size();
 
   if(sz>0 && i<sz){
@@ -210,47 +222,62 @@ bool Path::ins_keyF(int i, const View& v, double speed, int acc_patt){
   return true;
 }
 
-bool Path::add_keyF(const View& v, double speed, int acc_patt){
-  int sz=keyViews.size();
-  if (sz>0){
-    View tmp=keyViews[sz-1];
-    if (cmp_pts(tmp.eyep(), v.eyep())){
+bool
+Path::add_keyF( const View & view, double speed, Acc_E acc_patt )
+{
+  int sz = keyViews.size();
+  if( sz > 0 ) {
+    View tmp=keyViews[ sz-1 ];
+    if (cmp_pts(tmp.eyep(), view.eyep())){
       // the same point
       return false;
     }
   }
-  keyViews.add(v);
-  speedVal.add(speed);
-  accPatt.add(acc_patt);
-  is_built=0;
+  keyViews.add( view );
+  speedVal.add( speed );
+  accPatt.add( acc_patt );
+  is_built = 0;
   return true;
 }
 
 //-----------------------------------------------------------------------------
 
-int  Path::get_num_views() const{
+int
+Path::get_num_views() const
+{
   return keyViews.size();
 }
 
-void Path::seek_start() {
+void
+Path::seek_start()
+{
   pathP=0;
   keyF=0;
-  is_acc=is_run=0;
+  is_acc = false;
+  is_run = false;
 }
 
-void Path::seek_end() {
-  pathP=path_dist;
-  keyF=keyViews.size()-1;
-  is_acc=is_run=0;
+void
+Path::seek_end()
+{
+  pathP  = path_dist;
+  keyF   = keyViews.size()-1;
+  is_acc = false;
+  is_run = false;
 }
 
-void Path::stop(){
-  is_acc=is_run=0;
+void
+Path::stop()
+{
+  is_acc = false;
+  is_run = false;
 }
 
-bool Path::set_back(bool bck){
-  if (is_back ^ bck){
-    is_back=bck;
+bool
+Path::set_back(bool bck)
+{
+  if (is_reverse ^ bck){
+    is_reverse = bck;
     return true;
   }
   else {
@@ -258,7 +285,9 @@ bool Path::set_back(bool bck){
   }
 }
 
-bool Path::set_loop(bool st){
+bool
+Path::set_loop(bool st)
+{
   if (is_loop ^ st){
     is_loop=st;
     return true;
@@ -267,30 +296,51 @@ bool Path::set_loop(bool st){
     return false;
   }   
 }
-bool Path::set_acc_t(int t){
-  if (acc_t!=t){
-    acc_t=t;
+
+bool
+Path::set_acc_t( Acc_E value )
+{
+  if( acc_t != value ) {
+    acc_t = value;
     return true;
   }
   return false;
 }
 
-int Path::get_acc_t(int) const{
+Path::Acc_E
+Path::get_acc_t() const
+{
   return acc_t;
 }
 
 
 //-----------------------------------------------------------------------------
 
-double Path::get_speed_val(int n) const {
-  return (n<speedVal.size() && n>=0)? speedVal[n]:-1;
+double
+Path::get_speed_val( int keyFrame ) const
+{
+  return( keyFrame < speedVal.size() && keyFrame >= 0 ) ? speedVal[ keyFrame ] : -1;
+}
+
+bool
+Path::set_speed_val( int keyFrame, double speed )
+{
+  if( keyFrame < speedVal.size() && keyFrame >= 0 ) {
+    speedVal[keyFrame] = speed;
+    return true;
+  }
+  else {
+    return false;
+  }
 }
    
-bool Path::get_keyF(int i, View& v, double& sp){
+bool
+Path::get_keyF(int i, View& v, double& sp)
+{
   if (i>=0 && i<keyViews.size()){
-    v=keyViews[i];
-    keyF=i;
-    sp=speedVal[i];
+    v    = keyViews[i];
+    keyF = i;
+    sp   = speedVal[i];
     return true;
   }
   return false;
@@ -298,11 +348,13 @@ bool Path::get_keyF(int i, View& v, double& sp){
 
 //-----------------------------------------------------------------------------
 
-bool Path::build_path(){
-  if (!is_built){
+bool
+Path::build_path()
+{
+  if( !is_built ) {
 
-    if(path_t==KEYFRAMED)
-    {
+    if( path_t == KEYFRAMED ) {
+      printf("keyframed\n");
       is_built = 1;
       return true;
     }
@@ -354,7 +406,7 @@ bool Path::build_path(){
       q_param.add(sum);
     }
     
-    if (path_t==CUBIC && param.size()<2)
+    if (path_t == CUBIC && param.size() < 2 )
     {
       is_built = 0;
       return false;
@@ -370,7 +422,7 @@ bool Path::build_path(){
       upV->reset();
       fov->reset();
       speed->reset();
-      msg ("Path not built");
+      //msg ("Path not built");
       is_built=0;
     }
   }
@@ -401,7 +453,7 @@ bool Path::resample_path(){
     tmp1=tmp2;
   }
   
-  path_dist=pathPoints[ns-1];
+  path_dist = pathPoints[ns-1];
   
   dist_prm.remove_all();
   dist_prm.resize(ns);
@@ -423,18 +475,20 @@ bool Path::resample_path(){
 //-----------------------------------------------------------------------------
 
 // return keyframe number right behind the view
-int Path::calc_view(double w, View& v){
-
+int
+Path::calc_view( double w, View & view )
+{
 #undef QUATERNIONS
 
-  int p=eyeP->get_interval(w);
+  int p = eyeP->get_interval( w );
   
-  ASSERT(p>=0 && p<q_param.size()-1);
+  ASSERT( p >= 0 && p < q_param.size()-1 );
 
   Point ep;
   double fv;
-  eyeP->get_value(w, ep);
-  fov->get_value(w, fv);
+  if( !eyeP->get_value(w, ep) || !fov->get_value(w, fv) ) {
+    printf( "Warning, get_value failed for eyeP or fov...\n" );
+  }
 
 #ifdef QUATERNIONS 
 
@@ -452,7 +506,7 @@ int Path::calc_view(double w, View& v){
   lookatP->get_value(w, lp);
   upV->get_value(w, uv);
   
-  v=View(ep, lp, uv,  fv);
+  view = View(ep, lp, uv,  fv);
 #endif
 
   return p;
@@ -460,9 +514,11 @@ int Path::calc_view(double w, View& v){
 
 //-----------------------------------------------------------------------------
 
-bool Path::set_step(double s){ 
-  if (s!=step_size) {
-    step_size=s;
+bool
+Path::set_step( double newStep )
+{
+  if( newStep != step_size ) {
+    step_size = newStep;
     return true;
   }
   else {
@@ -470,15 +526,22 @@ bool Path::set_step(double s){
   }
 }
     
-double Path::get_step() const { 
+double
+Path::get_step() const
+{
   return step_size;
 }
 
-bool Path::set_path_t(int t){
-  if (t!=path_t || !eyeP ){
-    path_t=t;
-    is_run=is_built=0;
-    if (path_t!=KEYFRAMED){
+bool
+Path::set_path_t( Path_E t )
+{
+  if( t != path_t || !eyeP ) {
+
+    path_t = t;
+    is_run   = false;
+    is_built = false;
+
+    if (path_t != KEYFRAMED) {
       delete eyeP;                          // safe on NULL pointers
       //      delete lookatP;
 
@@ -500,18 +563,22 @@ bool Path::set_path_t(int t){
   return false;
 }
 
-int Path::get_path_t() const{
+Path::Path_E
+Path::get_path_t() const
+{
   return path_t;
 }
 
-bool Path::get_nextKF(View& v, int& kf_num, double& kf_speed, double& kf_acc_patt){
-  keyF+=(is_back)?-1:1;
+bool
+Path::get_nextKF(View& v, int& kf_num, double& kf_speed, double& kf_acc_patt)
+{
+  keyF+=(is_reverse)?-1:1;
   bool is_valid=true;
   int sz=keyViews.size();
   if (sz==0)
     return false;
   if (keyF>=sz || keyF<0){
-    keyF=(is_back)?(sz-1):0;
+    keyF=(is_reverse)?(sz-1):0;
     if (is_loop){
       is_valid=true;
     }
@@ -531,24 +598,27 @@ bool Path::get_nextKF(View& v, int& kf_num, double& kf_speed, double& kf_acc_pat
 //-----------------------------------------------------------------------------
 
 // function providing acceleration patterns support
-double Path::get_delta(){
- 
+double
+Path::get_delta()
+{
   double step;
-  speed->get_value(path_prm, step);
-  double s=step_size*path_dist;
-  step=step*s;
+  speed->get_value( path_prm, step );
+
+  double s = step_size * path_dist;
+
+  step = step * s;
 
   switch (acc_t){
   case SMOOTH: {
-    double ps=s*60/PI;
+    double ps=s*60/M_PI;
     int d=1;
     if (ps>path_dist/2){  // ensuring the path point not in first and last acc zones at a time
       ps=path_dist/2;
-      d=(int)(2*ps*PI/s);
+      d=(int)(2*ps*M_PI/s);
     }
     
-    bool is_fzone=(is_back)?(pathP>(path_dist-ps)):(pathP<ps);
-    bool is_lzone=(!is_back)?(pathP>(path_dist-ps)):(pathP<ps);	     
+    bool is_fzone=(is_reverse)?(pathP>(path_dist-ps)):(pathP<ps);
+    bool is_lzone=(!is_reverse)?(pathP>(path_dist-ps)):(pathP<ps);	     
     is_fzone=((!is_run || is_acc)&& is_fzone)?true:false;
     is_lzone=(!is_loop && is_lzone)?true:false;
       
@@ -558,9 +628,9 @@ double Path::get_delta(){
       is_acc=1;
     }
     
-    if (count>=0 && count<30){
-      step=s*sint[count];
-      if ((pathP>ps && !is_back) || (is_back && pathP<ps)) 
+    if( count>=0 && count<30 ) {
+      step = s * sin_values[count];
+      if ((pathP>ps && !is_reverse) || (is_reverse && pathP<ps)) 
 	count-=d;
       else
 	count+=d;
@@ -581,57 +651,73 @@ double Path::get_delta(){
     step=s;
   }
   
-  is_run=1;
+  is_run = true;
   return step;
 }
 
-bool Path::get_nextPP(View& v, int& curr_view, double& curr_speed, double& curr_acc){
-  if (!is_built && !build_path()){
+bool
+Path::get_nextPP(View& view, int& curr_view, double& curr_speed, double& curr_acc)
+{
+  if (!is_built && !build_path()) {
     return false;
   }
   else {
-    if (path_t==KEYFRAMED){
-      is_run=1;
-      return get_nextKF(v, curr_view, curr_speed, curr_acc);
+    if( path_t == KEYFRAMED ) {
+      printf("keyframed\n");
+      is_run = 1;
+      return get_nextKF(view, curr_view, curr_speed, curr_acc);
     }
     else {
-      if (!is_run){
+      if( !is_run ){
+        printf("!is_run\n");
 	// setting path point to the current key frame
-	path_prm=param[keyF];
+	path_prm = param[keyF];
 	set_arc_param();
-	is_acc=0;
+	is_acc = 0;
       }
 
-      double step=get_delta();
+      double step = get_delta();
       
-      pathP+=(is_back)?-step:step;
-      bool is_valid=true;
+      pathP += (is_reverse)?-step:step;
+      bool is_valid = true;
       
-      if (pathP>path_dist || pathP<0){
-	pathP=(is_back)?(pathP+path_dist):(pathP-path_dist);
-	if (is_loop){
-	  is_valid=true;
-	}
-	else {
-	  is_valid=false;
+      if( pathP > path_dist || pathP < 0 ) {
+	pathP = (is_reverse)?(pathP+path_dist):(pathP-path_dist);
+	if( !is_loop ) {
+	  is_valid = false;
 	}
       }
-      
-      if (is_valid){
+
+      printf("step, path: %lf, %lf,    %d\n", step, pathP, is_valid);
+
+      if( is_valid ) {
+
 	// syncronzing pathP with actual parameter
+
+        printf("was prm: %lf\n", path_prm);
 	set_param();
-	keyF=curr_view=calc_view(path_prm, v);
-	curr_speed=step/(step_size*path_dist);
-	curr_acc=path_prm;      // not used
+        printf("is  PRM: %lf\n", path_prm);
+
+	keyF = calc_view( path_prm, view );
+
+        printf("keyF:  %d\n",keyF);
+
+        curr_view = keyF;
+
+	curr_speed = step / (step_size*path_dist);
+	curr_acc = path_prm;      // not used
 	return true;
       }
       else {
+        printf("not valid\n");
 	curr_speed=0;
 	curr_acc=0;
-	keyF=curr_view=(is_back)?0:keyViews.size()-1;
+        curr_view = (is_reverse) ? 0 : keyViews.size()-1;
+	keyF = curr_view;
 	count=0;
-	if (keyViews.size())
-	  v=keyViews[curr_view];
+	if (keyViews.size()) {
+	  view = keyViews[curr_view];
+        }
 	return false;
       }
     }
