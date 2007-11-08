@@ -49,25 +49,28 @@ namespace SCIRun {
 
 
 template<class T>
-class CatmullRomSpline {
-   Array1<T> d;
-   int nintervals;
-   int nset;
-   int mx;
-
+class CatmullRomSpline
+{
 public:
-   CatmullRomSpline();
-   CatmullRomSpline( const Array1<T>& );
-   CatmullRomSpline( const int );
-   CatmullRomSpline( const CatmullRomSpline<T>& );
+  CatmullRomSpline();
+  CatmullRomSpline( const Array1<T>& );
+  CatmullRomSpline( const int );
+  CatmullRomSpline( const CatmullRomSpline<T>& );
 
-   void setData( const Array1<T>& );
-   void add( const T& );
-   void insertData( const int, const T& );
-   void removeData( const int );
+  void setData( const Array1<T>& );
+  void add( const T& );
+  void insertData( const int, const T& );
+  void removeData( const int );
+
+  void clear();
    
-   T operator()( double ) const; // 0-1
-   T& operator[]( const int );
+  T operator()( double ) const; // 0-1
+  T& operator[]( const int );
+
+private:
+  
+  Array1<T> d;
+  
 };
 
 } // End namespace SCIRun
@@ -80,86 +83,101 @@ public:
 namespace SCIRun {
 
 template<class T>
-CatmullRomSpline<T>::CatmullRomSpline()
-: d(0), nset(0), nintervals(0), mx(0)
+CatmullRomSpline<T>::CatmullRomSpline() :
+  d(0)
 {
 }
 
 template<class T>
-CatmullRomSpline<T>::CatmullRomSpline( const Array1<T>& data )
-: d(data), nset(data.size()),
-  nintervals(data.size()-3), mx(data.size()-4)
+CatmullRomSpline<T>::CatmullRomSpline( const Array1<T>& data ) :
+  d(data)
 {
 }
 
 template<class T>
-CatmullRomSpline<T>::CatmullRomSpline( const int n )
-: d(n), nset(n), nintervals(n-3), mx(n-4)
+CatmullRomSpline<T>::CatmullRomSpline( const int n ) :
+  d(n)
 {
 }
 
 template<class T>
-CatmullRomSpline<T>::CatmullRomSpline( const CatmullRomSpline& s )
-: d(s.d), nset(s.nset), nintervals(s.nintervals), mx(s.mx)
+CatmullRomSpline<T>::CatmullRomSpline( const CatmullRomSpline& s ) :
+  d(s.d)
 {
 }
 
 template<class T>
-void CatmullRomSpline<T>::setData( const Array1<T>& data )
+void
+CatmullRomSpline<T>::setData( const Array1<T>& data )
 {
    d = data;
-   nset = data.size();
-   nintervals = nset-3;
-   mx = nset-4;
 }
 
 template<class T>
-void CatmullRomSpline<T>::add( const T& obj )
+void
+CatmullRomSpline<T>::clear()
 {
-   d.add(obj);
-   nset++;
-   nintervals++;
-   mx++;
+  d.remove_all();
 }
 
 template<class T>
-void CatmullRomSpline<T>::insertData( const int idx, const T& obj )
+void
+CatmullRomSpline<T>::add( const T& obj )
 {
-   d.insert(idx, obj);
-   nset++;
-   nintervals++;
-   mx++;
+  d.add(obj);
 }
 
 template<class T>
-void CatmullRomSpline<T>::removeData( const int idx )
+void
+CatmullRomSpline<T>::insertData( const int idx, const T& obj )
 {
-   d.remove(idx);
-   nset--;
-   nintervals--;
-   mx--;
+  d.insert(idx, obj);
 }
 
 template<class T>
-T CatmullRomSpline<T>::operator()( double x ) const
+void
+CatmullRomSpline<T>::removeData( const int idx )
 {
-   ASSERT(nset >= 4);
-   double xs(x*nintervals);
-   int idx((int)xs);
-   double t(xs-idx);
-   if(idx<0){idx=0;t=0;}
-   if(idx>mx){idx=mx;t=1;}
-   double t2(t*t);
-   double t3(t*t*t);
-   
-   return ((d[idx]*-1 + d[idx+1]*3  + d[idx+2]*-3 + d[idx+3])   *(t3*0.5)+
-	   (d[idx]*2  + d[idx+1]*-5 + d[idx+2]*4  + d[idx+3]*-1)*(t2*0.5)+
-	   (d[idx]*-1               + d[idx+2]                 )*(t*0.5)+
-	   (            d[idx+1]                               ));
+  d.remove(idx);
 }
 
 template<class T>
-T& CatmullRomSpline<T>::operator[]( const int idx )
+T
+CatmullRomSpline<T>::operator()( double x ) const
+{
+   int    idx = (int)x;
+   double t   = x - idx;
+
+   double t2  = t * t;
+   double t3  = t2 * t;
+
+   int size = d.size();
+
+   int idx1 = (idx-1+size) % size;
+   int idx2 = (idx  +size) % size;
+   int idx3 = (idx+1+size) % size;
+   int idx4 = (idx+2+size) % size;
+
+   T p0 = d[ idx1 ];
+   T p1 = d[ idx2 ];
+   T p2 = d[ idx3 ];
+   T p3 = d[ idx4 ];
+
+   //printf("x=%lf, idx=%d, t=%lf         (dsize = %d)    %d, %d, %d, %d\n", x, idx, t, size, idx1, idx2, idx3, idx4 );
+
+   T result = ( (p0*-1 + p1*3  + p2*-3 + p3   ) * (t3 * 0.5)+
+                (p0*2  + p1*-5 + p2*4  + p3*-1) * (t2 * 0.5)+
+                (p0*-1         + p2           ) * (t  * 0.5)+
+                (        p1                   ) );
+
+   //cout << "result: " << result << "\n";
+
+   return result;
+}
+
+template<class T>
+T&
+CatmullRomSpline<T>::operator[]( const int idx )
 {
    return d[idx];
 }
