@@ -28,7 +28,7 @@
 
 
 /*
- *  LinearPWI.cc: linear piecewise interpolation
+ *  CubicPWI.cc: linear piecewise interpolation
  *
  *  Written by:
  *   Alexei Samsonov
@@ -41,7 +41,6 @@
 
 #include <Core/Math/CubicPWI.h>
 #include <Core/Containers/Array1.h>
-//#include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
@@ -53,9 +52,11 @@ CubicPWI::CubicPWI()
 CubicPWI::CubicPWI(const Array1<double>& pts, const Array1<double>& vals) {
   set_data(pts, vals);
 }
-  // function calculates tangents at pts[i] that is adhere to C2 continuity of splines in pts[i]
-  // in case of clamped ends, the function should get end tangents as two last elements of vals-array
-bool set_tangents(const Array1<double>& pts, const Array1<double>& vals, Array1<double>& r, EndCondition end_conds){
+
+// Function calculates tangents at pts[i] that is adhere to C2 continuity of splines in pts[i]
+// in case of clamped ends, the function should get end tangents as two last elements of vals-array
+bool
+set_tangents( const Array1<double>& pts, const Array1<double>& vals, Array1<double>& r, EndCondition end_conds ) {
  
   int psz=pts.size();
   int vsz=vals.size();
@@ -63,8 +64,9 @@ bool set_tangents(const Array1<double>& pts, const Array1<double>& vals, Array1<
   if (end_conds==clamped_ends){
     ASSERT(psz==(vsz-2) && psz>=2);
   }
-  else
+  else {
     ASSERT(psz==vsz && psz>=2);
+  }
 
   // tridiagonal system
   r.resize(psz);
@@ -127,10 +129,10 @@ bool set_tangents(const Array1<double>& pts, const Array1<double>& vals, Array1<
     return false;
   }
 
-  cout << "Low-diag before solving: " << lrow << endl; 
-  cout << "Diag-diag before solving: " << diag << endl;
-  cout << "High-diag before solving: " << hrow << endl;
-  cout << "Res before solving : " << r << endl;
+  // cout << "Low-diag before solving: " << lrow << endl; 
+  // cout << "Diag-diag before solving: " << diag << endl;
+  // cout << "High-diag before solving: " << hrow << endl;
+  // cout << "Res before solving : " << r << endl;
   
   // ---------------------------------------------------------------------------
   // solving the tridiagonal system:
@@ -144,28 +146,30 @@ bool set_tangents(const Array1<double>& pts, const Array1<double>& vals, Array1<
   for(i=psz-2;i>=0;i--){
     r[i] = (r[i]-hrow[i]*r[i+1])/diag[i];
   }
-  cout << "Low-diag after solving: " << lrow << endl; 
-  cout << "Diag-diag after solving: " << diag << endl;
-  cout << "High-diag after solving: " << hrow << endl;
-  cout << "Res after solving : " << r << endl;
+  // cout << "Low-diag after solving: " << lrow << endl; 
+  // cout << "Diag-diag after solving: " << diag << endl;
+  // cout << "High-diag after solving: " << hrow << endl;
+  // cout << "Res after solving : " << r << endl;
   
   return true;
 }
 
 // takes sorted array of points
-bool CubicPWI::set_data(const Array1<double>& pts, const Array1<double>& vals){
-  cout << "About to fill in data in set_data (1D)!!!" << endl;
-  cout << "pts-array:" << endl;
-  cout << pts;
+bool
+CubicPWI::set_data( const Array1<double>& pts, const Array1<double>& vals ) {
 
-  cout << "vals-array:" << endl;
-  cout << pts;
+  // cout << "About to fill in data in set_data (1D)!!!" << endl;
+  // cout << "pts-array:" << endl;
+  // cout << pts;
+
+  // cout << "vals-array:" << endl;
+  // cout << pts;
 
   reset();
   int sz;
 
-  if (fill_data(pts) && (sz=points.size())>1 && sz==vals.size()){
-    cout << "Inside set_data!!!" << endl;
+  if( fill_data(pts) && (sz = points.size()) > 1 && sz == vals.size()){
+    // cout << "Inside set_data!!!" << endl;
 
     p.resize(sz);
     Array1<double> ders;
@@ -190,8 +194,8 @@ bool CubicPWI::set_data(const Array1<double>& pts, const Array1<double>& vals){
 	  p[i].b=b;
 	  p[i].c=c;
 	  p[i].d=d;
-	  cout << "Interval: " << points[i] << ", " << points[i+1] << endl;
-	  cout << "Coeff. are: " << p[i].a << endl << p[i].b << endl << p[i].c << endl << p[i].d << endl;	  
+	  // cout << "Interval: " << points[i] << ", " << points[i+1] << endl;
+	  // cout << "Coeff. are: " << p[i].a << endl << p[i].b << endl << p[i].c << endl << p[i].d << endl;	  
 	}
 	else {
 	  reset();
