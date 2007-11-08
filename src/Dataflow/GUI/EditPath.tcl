@@ -39,42 +39,38 @@
 itcl_class SCIRun_Render_EditPath {
     inherit Module
    
-    constructor {config} {
+    constructor { config } {
         set name EditPath
         set_defaults
     }
     method set_defaults {} {
-        global $this-tcl_is_new
-	global $this-tcl_rate
-	global $this-tcl_curr_view
-	global $this-tcl_num_views
-	global $this-tcl_intrp_type
-	global $this-tcl_acc_mode
-	global $this-tcl_is_looped
-	global $this-tcl_msg_box
-	global $this-tcl_curr_viewwindow
-	global $this-tcl_step_size
-	global $this-tcl_speed_val
-	global $this-tcl_acc_val
-	global $this-tcl_stop
-	global $this-tcl_widget_show
 
-        set $this-tcl_is_new 1
-	set $this-tcl_rate 1
-	set $this-tcl_curr_view 0
-	set $this-tcl_num_views 0
-	set $this-tcl_intrp_type 2
-	set $this-tcl_acc_mode 1
-	set $this-tcl_is_looped 0
-	set $this-tcl_msg_box 0
-	set $this-tcl_curr_viewwindow 0
-	set $this-tcl_step_size 0.01
-	set $this-tcl_speed_val 0
-	set $this-tcl_acc_val 0
-	set $this-tcl_stop 0
-	set $this-tcl_widget_show 0
-	
+        set $this-numKeyFrames 0
+        set $this-currentFrame 0
+        set $this-uiInitialized 0
+        set $this-updateOnExecute 0
+        set $this-delay 0.1
+        set $this-loop 0
+        set $this-reverse 0
+        set $this-showCircleWidget 0
+        set $this-showPathWidgets 0
+        set $this-circleNumPoints 20
+        set $this-numSubKeyFrames 1.0
+
+        set $this-pathFilename ""
     }
+
+    method doNotSave { varName } {
+        if { $varName == "numKeyFrames" ||      \
+             $varName == "currentFrame" ||      \
+             $varName == "showCircleWidget" ||  \
+             $varName == "showPathWidgets"  ||  \
+             $varName == "uiInitialized" } {
+            return 1
+        }
+        return 0
+    }
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -85,165 +81,293 @@ itcl_class SCIRun_Render_EditPath {
 	# created/moved to the mouse location.
         toplevel $w; wm withdraw $w
 	wm title $w "Edit Camera Path"
-        wm minsize $w 300 80
+        wm minsize $w 500 205
 
-        set  df  [frame $w.drv -relief groove]
-	set  ef  [frame $w.editor -relief groove]
-	pack $df $ef -side top -fill both -padx 5 -pady 5
-	
-	#**************************************************************
-	# editor frame
+        puts "here: set w $w"
 
-	frame $ef.fsb
-	frame $ef.btn
-	frame $ef.sw
-	frame $ef.mkc
-	pack  $ef.btn $ef.fsb $ef.mkc $ef.sw -side top -fill both -pady 3
-	scale $ef.fsb.fr -variable $this-tcl_curr_view -from 0 -to [set $this-tcl_num_views] \
-		-orient horizontal -width 15 -command "$this-c get_to_view" -label "Current View:"
-	scale $ef.fsb.fsm -variable $this-tcl_step_size -digits 6 -from 0.0001 -to 0.1 \
-		-resolution 0.0001 -orient horizontal -width 7 -label "Path Step:"
-	scale $ef.fsb.sp -variable $this-tcl_speed_val -digits 4 -from 0.1 -to 10 \
-		-resolution 0.01 -orient horizontal -width 7 -label "Speed:"
-	pack $ef.fsb.fr $ef.fsb.fsm $ef.fsb.sp -side top -fill x -padx 2
+        frame $w.status 
+        frame $w.status.frameNum -bd 2 -relief ridge
+        label $w.status.frameNum.label -text "Number of Frames:"
+        label $w.status.frameNum.num   -textvar $this-numKeyFrames
+        pack  $w.status.frameNum.label $w.status.frameNum.num -padx 5 -pady 2 -side left
 
-	button $ef.btn.add -text "Add View" -command "$this-c add_vp" -anchor w
-	button $ef.btn.del -text "Del View" -command "$this-c rem_vp" -anchor w
-	button $ef.btn.ins -text "Ins View" -command "$this-c ins_vp" -anchor w
-	button $ef.btn.rpl -text "Rpl View" -command "$this-c rpl_vp" -anchor w
-	button $ef.btn.prev -text "Prev View" -command "$this-c prev_view" -anchor w
-	button $ef.btn.next -text "Next View" -command "$this-c next_view" -anchor w	
-	pack  $ef.btn.add $ef.btn.del $ef.btn.ins $ef.btn.rpl $ef.btn.prev $ef.btn.next -side left -fill both -padx 2
+        frame $w.status.curFrame -bd 2 -relief ridge
+        label $w.status.curFrame.label -text "Current Frame:"
+        label $w.status.curFrame.num   -textvar $this-currentFrame
+        pack  $w.status.curFrame.label $w.status.curFrame.num -padx 5 -pady 2 -side left
 
-	button $ef.mkc.make -text "Make Circle" -command "$this-c mk_circle_path" -anchor w
-	checkbutton $ef.mkc.ws -text "Center-Widget" -command "$this-c w_show" -variable $this-tcl_widg_show -onvalue 1 -offvalue 0 -padx 5
-	pack $ef.mkc.make $ef.mkc.ws -side left -fill both -padx 4 -pady 4
-	
-	frame $ef.sw.int -relief ridge
-	frame $ef.sw.spd -relief ridge
-	frame $ef.sw.info -relief ridge
-	pack $ef.sw.int $ef.sw.spd $ef.sw.info -side left -padx 10 -anchor n
+        pack  $w.status.frameNum -side left -padx 5
+        pack  $w.status.curFrame -side right -padx 5
 
-	
-	label $ef.sw.spd.lb -text "Acceleration:" -anchor w
-	radiobutton $ef.sw.spd.sm -text "Smooth Start/End" -variable $this-tcl_acc_mode  -anchor w -value 1 
-	radiobutton $ef.sw.spd.no -text "No acceleration " -variable $this-tcl_acc_mode  -anchor w -value 0
-	radiobutton $ef.sw.spd.us -text "User Speeds Only" -variable $this-tcl_acc_mode  -anchor w -value 2
-	pack $ef.sw.spd.lb $ef.sw.spd.no $ef.sw.spd.sm $ef.sw.spd.us -side top -pady 3 -padx 2 -anchor w
-	
-	label $ef.sw.int.lb -text "Interpolation Type:" -anchor w
-	radiobutton $ef.sw.int.lin -text "Linear" -variable $this-tcl_intrp_type  -anchor w -value 1
-	radiobutton $ef.sw.int.kf -text "None" -variable $this-tcl_intrp_type  -anchor w -value 0
-	radiobutton $ef.sw.int.cub -text "Cubic" -variable $this-tcl_intrp_type  -anchor w -value 2
-	pack $ef.sw.int.lb $ef.sw.int.kf $ef.sw.int.lin $ef.sw.int.cub -side top -pady 3 -padx 2 -anchor w
-	
+        #### Edit Frame ####
+        frame  $w.edit
+        frame  $w.edit.buttons
+        button $w.edit.buttons.addView    -text " Add View "    -command "$this-c add_vp;    $this updateButtons"
+        button $w.edit.buttons.removeView -text " Delete View " -command "$this-c remove_vp; $this updateButtons"
+        button $w.edit.buttons.next       -text " Next "        -command "$this-c next_view"
+        button $w.edit.buttons.prev       -text " Prev "        -command "$this-c prev_view"
+        button $w.edit.buttons.deletePath -text " Delete Path " -command "$this-c delete_path; $this updateButtons"
+        # Vertical separators
+        frame  $w.edit.buttons.sep1 -width 2 -relief sunken -borderwidth 2
+        frame  $w.edit.buttons.sep2 -width 2 -relief sunken -borderwidth 2
 
-	#***************************************************************
-	# driver frame
-	frame $df.ftest
-	frame $df.info -relief sunken
-	frame $df.modes
-	frame $df.sw
-	frame $df.out
-	pack  $df.ftest $df.info $df.modes $df.out $df.sw -side top -fill both -pady 3 -padx 3
+        pack $w.edit.buttons.addView $w.edit.buttons.removeView -padx 5 -pady 2 -side left
+        pack $w.edit.buttons.sep1 -fill y -padx 5 -pady 2 -side left
+        pack $w.edit.buttons.prev $w.edit.buttons.next -padx 5 -pady 2 -side left
+        pack $w.edit.buttons.sep2 -fill y -padx 5 -pady 2 -side left
+        pack $w.edit.buttons.deletePath -padx 5 -pady 2 -side left
+        pack $w.edit.buttons -pady 4
 
-#	button $df.ftest.runviews -text "Test Views" -command "$this-c test_views" -anchor w
-	button $df.ftest.run -text "Run" -command "$this-c test_path" -anchor w
-	button $df.ftest.stop -text "Stop" -command "set $this-tcl_stop 1"  -anchor w
-	button $df.ftest.save -text "Save" -command "$this-c save_path" -anchor w
-	
-	scale  $df.ftest.sbrate -variable $this-tcl_rate -digits 4 -from 0.05 -to 25 \
-		-resolution 0.05 -orient horizontal -width 7 -length 300
-	
-	label  $df.ftest.sblabel -text "Rate: " -anchor s
-	pack   $df.ftest.run $df.ftest.stop $df.ftest.save \
-	       $df.ftest.sblabel $df.ftest.sbrate -side left -padx 2
+        frame  $w.edit.circle
+        button $w.edit.circle.make  -text " Make Circle " -command "$this-c make_circle; $this updateButtons"
+        checkbutton $w.edit.circle.showTarget -text " Show Widget " -variable "$this-showCircleWidget" \
+            -command "$this-c toggleCircleWidget"
+        checkbutton $w.edit.circle.showPath   -text " Show Path "   -variable "$this-showPathWidgets" \
+            -command "$this-c togglePathPoints"
+        label  $w.edit.circle.numPointsLab -text "Number of Points:"
+        entry  $w.edit.circle.numPoints    -textvariable $this-circleNumPoints -width 5
+        Tooltip $w.edit.circle.numPoints "Number of points to use in creating circular path."
+        Tooltip $w.edit.circle.showTarget "Shows a widget that specifies the 'lookat' location when a circular path is created."
 
-	frame $df.info.speed 
-	frame $df.info.acc
-	frame $df.info.nv
-	frame $df.info.msg -relief raised
-	pack $df.info.speed $df.info.acc  $df.info.nv $df.info.msg -side top -anchor w -fill x -pady 1
-	
-	#label $df.info.speed.head -text "Speed:\t"
-	#label $df.info.speed.val -textvariable $this-tcl_speed_val
-	#pack $df.info.speed.head $df.info.speed.val -side left -anchor w -padx 2
-	
-	label $df.info.acc.head -text "Acceleration:\t"
-	label $df.info.acc.val -textvariable $this-tcl_acc_val
-	pack $df.info.acc.head $df.info.acc.val -side left -anchor w -padx 2
-	
-	label $df.info.nv.a -text "# of key frames:"  -anchor w
-	label $df.info.nv.b -textvariable $this-tcl_num_views  -anchor w
-	pack $df.info.nv.a $df.info.nv.b -side left -padx 2
+        pack $w.edit.circle.make $w.edit.circle.showTarget $w.edit.circle.showPath \
+            $w.edit.circle.numPointsLab $w.edit.circle.numPoints \
+            -padx 5 -pady 2 -side left
+        pack $w.edit.circle -pady 4
 
-	label $df.info.msg.h -text "--\t" -anchor w
-	label $df.info.msg.b -textvariable $this-tcl_info -anchor w
-	pack $df.info.msg.h $df.info.msg.b -side left -padx 2 -pady 2
+        frame  $w.edit.speed
+        label  $w.edit.speed.label     -text "Sub Key Frames:"
+        button $w.edit.speed.updateAll -text " Update All " -command "$this-c update_all_num_key_frames"
+        entry  $w.edit.speed.speed     -textvariable $this-numSubKeyFrames -width 5
+        bind   $w.edit.speed.speed <Return> "$this-c update_num_key_frames"
+        pack   $w.edit.speed.label $w.edit.speed.speed $w.edit.speed.updateAll -padx 5 -pady 2 -side left
+        pack   $w.edit.speed -pady 4
 
-	label $df.modes.head -text "Modes: "
-	radiobutton $df.modes.new -text "New Path" -variable $this-tcl_is_new -value 1 -command "$this-c init_new"
-	radiobutton $df.modes.exist -text "Existing Path" -variable $this-tcl_is_new -value 0 -command "$this-c init_exist"
-	pack $df.modes.head $df.modes.new $df.modes.exist -side left -padx 2
-	
-	label $df.out.head -text "Output: "
-	radiobutton $df.out.ogeom -text "Geometry Port" -variable $this-tcl_send_dir -value 0
-	radiobutton $df.out.oview -text "CameraView Port" -variable $this-tcl_send_dir -value 1
-	pack  $df.out.head $df.out.ogeom  $df.out.oview -side left -padx 2
-	
-	checkbutton $df.sw.lp -text "Looped" -variable $this-tcl_is_looped  -anchor w
-	checkbutton $df.sw.bk -text "Reversed" -variable $this-tcl_is_backed  -anchor w
-	pack $df.sw.lp $df.sw.bk -side left -anchor w
-	
-	refresh
-	set $this-UI_Init 1
+        Tooltip          $w.edit.speed.updateAll "Update the speed for all keyframes."
+        TooltipMultiline $w.edit.speed.speed "0 (the minimum) sub key frames will result in jumping from one\n" \
+                                             "key frame to the next.  Press 'Return' to save this value."
 
-	makeSciButtonPanel $w $w $this
+        #### Run Frame ####
+        frame  $w.run -bd 2 -relief groove
+        frame  $w.run.buttons
+        button $w.run.buttons.run  -text " Run "    -command "$this run"
+        button $w.run.buttons.stop -text " Stop "   -command "$this-c stop"
+        checkbutton $w.run.buttons.loop    -text " Loop Path " -variable $this-loop
+        checkbutton $w.run.buttons.reverse -text " Reverse " -variable $this-reverse
+
+        iwidgets::spinner $w.run.buttons.delay -labeltext "Delay: " \
+		-width 5 -fixed 10 \
+		-validate "$this spin_in %P $this-delay" \
+		-decrement "$this spin_update -0.1 $w.run.buttons.delay $this-delay" \
+		-increment "$this spin_update  0.1 $w.run.buttons.delay $this-delay" \
+                -repeatinterval 50
+
+	$w.run.buttons.delay insert 0 [set $this-delay]
+        Tooltip $w.run.buttons.delay "Delay in seconds between each update when 'Run'ning."
+
+        frame  $w.run.buttons2
+        checkbutton $w.run.buttons2.updateOnExec -text " Sync With Execute " -variable $this-updateOnExecute \
+                  -command "$this turnOnLoop"
+        Tooltip $w.run.buttons2.updateOnExec "If selected, then when _ANY_ other modules execute,\nthis module will send down a new view."
+
+        pack $w.run.buttons.run $w.run.buttons.stop $w.run.buttons.loop $w.run.buttons.reverse \
+                -padx 5 -pady 2 -side left
+        pack $w.run.buttons2.updateOnExec  -padx 5 -pady 2 -side left
+        pack $w.run.buttons.delay -side left
+
+        pack $w.run.buttons -pady 5
+        pack $w.run.buttons2
+
+        #### Set State on Buttons and do Final Packing ####
+        updateButtons
+        pack $w.status -anchor w -pady 5 -fill x
+        pack $w.run    -anchor w -fill x
+        pack $w.edit   -anchor w
+
+	makeSciButtonPanel $w $w $this "\"Save\" \"$this saveToFile\"   \"Save path to file.\""    \
+                                       "\"Load\" \"$this loadFromFile\" \"Load path from file.\""  \
+                                       { "separator" "" "" }
 	moveToCursor $w
+        set $this-uiInitialized 1
     }
 
-    method EraseWarn {t m} {
-	set w .ui[modname]
+    # Used, during 'sync with execute', to show that this module is actually doing something.
+    method highlight {} {
+        fadeinIcon [modname]
+    }
 
-	set temp [tk_messageBox -title $t -parent $w -message $m -type okcancel -icon question]
-	case $temp {
-	    ok {set $this-tcl_msg_box 1}
-	    cancel {set $this-tcl_msg_box 0}
+    method turnOnLoop {} {
+        if { [set $this-updateOnExecute] } {
+            set $this-loop 1
+        }
+    }
+
+    method spin_in { newValue varToSet } {
+
+	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $newValue] } {
+            # If it is not a number, it is not valid.
+	    return 0
+	} elseif { $newValue <= 0.0 || $newValue > 10.0 } {
+	    return 0
+	} 
+	set $varToSet $newValue
+	return 1
+    }
+
+    method spin_update { step widget var } {
+	set newValue [expr [set $var] + $step]
+
+        if { [spin_in $newValue $var] } {
+            $widget delete 0 end
+            $widget insert 0 [set newValue]
+        }
+    }
+
+    method saveToFile {} {
+       set w .pathSaveDialog
+
+       if {[winfo exists $w]} {
+           if { [winfo ismapped $w] == 1} {
+               raise $w
+           } else {
+               wm deiconify $w
+           }
+           return
+        }
+
+	# file types to appers in filter box
+	set types {
+	    { {Path Files}  {.path} }
+	    { {All Files}   {.*}    }
 	}
-    }
-    
-    method refresh {} {
-	update
-	set w .ui[modname]
-	set nv [expr [set $this-tcl_num_views]]
-	set len [$w.editor.fsb.fr cget -length]
-	if { $nv > 0} {
-	    $w.editor.fsb.fr configure -state normal -from 0 -to [expr $nv-1] -showvalue 1 
-	} else {
-	    $w.editor.fsb.fr configure -state disabled -from 0 -to 0  -showvalue 0
-	}
-	update_tcl
+
+       toplevel $w
+       makeSaveFilebox \
+               -parent $w \
+               -filevar $this-pathFilename \
+               -filetypes $types \
+               -command "$this-c doSavePath; wm withdraw $w" \
+               -commandname "Save" \
+               -cancel "wm withdraw $w" \
+               -title "Save Path" \
+               -formats { "None" } \
+               -defaultextension ".path"
+
+       moveToCursor $w
+       wm deiconify $w
     }
 
-    method update_tcl {} {
-	set w .ui[modname]
-	set df $w.drv
-	set ef $w.editor
-	
-	# brute force fixes of GUI update problem ( didn't figure it out yet)
-	
-	$df.modes.new configure -variable $this-tcl_is_new
-	$df.modes.exist configure -variable $this-tcl_is_new
-	$ef.sw.int.lin configure -variable $this-tcl_intrp_type
-	$ef.sw.int.kf configure -variable $this-tcl_intrp_type
-	$ef.sw.int.cub configure -variable $this-tcl_intrp_type
-	$ef.sw.spd.sm configure -variable $this-tcl_acc_mode
-	$ef.sw.spd.no configure -variable $this-tcl_acc_mode
-	$ef.sw.spd.us configure -variable $this-tcl_acc_mode
-	$df.out.ogeom configure -variable $this-tcl_send_dir
-	$df.out.oview configure -variable $this-tcl_send_dir
-	$ef.fsb.sp configure -variable $this-tcl_speed_val
-	update
+    method loadFromFile {} {
+       set w .pathLoadDialog
+
+       if {[winfo exists $w]} {
+           if { [winfo ismapped $w] == 1} {
+               raise $w
+           } else {
+               wm deiconify $w
+           }
+           return
+        }
+
+	# file types to appers in filter box
+	set types {
+	    { {Path Files}  {.path} }
+	    { {All Files}   {.*}    }
+	}
+
+       toplevel $w
+       makeOpenFilebox                                                        \
+           -parent $w                                                         \
+           -filevar $this-pathFilename                                        \
+           -filetypes $types                                                  \
+           -command "$this-c doLoadPath; wm withdraw $w; $this updateButtons" \
+           -commandname "Load"                                                \
+           -cancel "wm withdraw $w"                                           \
+           -title "Load Path"                                                 \
+           -defaultextension ".path"
+
+       $this-c stop
+
+       moveToCursor $w
+       wm deiconify $w
+    }
+
+    method stop {} {
+        if { [set $this-numKeyFrames] >= 1 } {
+            set w .ui[modname]
+            $w.run.buttons.run          configure -state normal
+            $w.run.buttons.stop         configure -state disabled
+            $w.run.buttons2.updateOnExec configure -state normal
+
+            $w.edit.circle.make          configure -state normal
+            $w.edit.speed.label          configure -state normal
+            $w.edit.speed.updateAll      configure -state normal
+            $w.edit.speed.speed          configure -state normal
+        }
+    }
+
+    method run {} {
+        if { [set $this-numKeyFrames] >= 1 } {
+            set w .ui[modname]
+
+            $w.run.buttons.run           configure -state disabled
+            $w.run.buttons.stop          configure -state normal
+            $w.run.buttons2.updateOnExec configure -state disabled
+
+            $w.edit.circle.make          configure -state disabled
+            $w.edit.speed.label          configure -state disabled
+            $w.edit.speed.updateAll      configure -state disabled
+            $w.edit.speed.speed          configure -state disabled
+
+            set $this-updateOnExecute 0
+
+            $this-c run
+        }
+    }
+
+    method updateButtons {} {
+
+        set w .ui[modname]
+        if { [set $this-numKeyFrames] >= 2 } {
+            $w.run.buttons.run          configure -state normal
+            $w.run.buttons.stop         configure -state disabled
+            $w.run.buttons2.updateOnExec configure -state normal
+
+            $w.edit.buttons.next        configure -state normal
+            $w.edit.buttons.prev        configure -state normal
+            $w.edit.buttons.removeView  configure -state normal
+            $w.edit.buttons.deletePath  configure -state normal
+
+            $w.status.curFrame.label configure -state normal
+            $w.status.curFrame.num   configure -state normal
+
+        } elseif { [set $this-numKeyFrames] == 1 } {
+
+            $w.run.buttons.run          configure -state disabled
+            $w.run.buttons.stop         configure -state disabled
+            $w.run.buttons2.updateOnExec configure -state normal
+
+            $w.edit.buttons.next        configure -state disabled
+            $w.edit.buttons.prev        configure -state disabled
+            $w.edit.buttons.removeView  configure -state normal
+            $w.edit.buttons.deletePath  configure -state normal
+
+            $w.status.curFrame.label configure -state normal
+            $w.status.curFrame.num   configure -state normal
+
+        } else {
+
+            $w.run.buttons.run          configure -state disabled
+            $w.run.buttons.stop         configure -state disabled
+            $w.run.buttons2.updateOnExec configure -state disabled
+
+            $w.edit.buttons.next        configure -state disabled
+            $w.edit.buttons.prev        configure -state disabled
+            $w.edit.buttons.removeView  configure -state disabled
+            $w.edit.buttons.deletePath  configure -state disabled
+
+            $w.status.curFrame.label configure -state disabled
+            $w.status.curFrame.num   configure -state disabled
+        }
     }
 }
 

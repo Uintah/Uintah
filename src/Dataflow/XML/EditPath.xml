@@ -48,10 +48,6 @@ of the modules are as follows:</p>
       <p>- Interactive adding/inserting/deleting of key frames of
 current camera position in edited path</p>
       <p> - Navigation through existing key frames</p>
-      <p>- Three interpolation modes - Linear, Cubic and no
-interpolation (key frames only playback)</p>
-      <p>- Two acceleration modes - smooth start/end(in interpolated
-mode) and no acceleration</p>
       <p>- Path step(smoothness) and sampling rate specification for
 current path</p>
       <p>- Automatic generation of circle path based on current camera
@@ -61,23 +57,11 @@ position and position of reference widget</p>
   </overview>
   <io>
     <inputs lastportdynamic="no">
-      <port>
-        <name>Path</name>
-	<datatype>SCIRun::Path</datatype>
-      </port>
     </inputs>
     <outputs>
       <port>
-        <name>Path</name>
-	<datatype>SCIRun::Path</datatype>
-      </port>
-      <port>
         <name>Geometry</name>
 	<datatype>SCIRun::Geometry</datatype>
-      </port>
-      <port>
-        <name>Camera View</name>
-	<datatype>SCIRun::Path</datatype>
       </port>
     </outputs>
   </io>
