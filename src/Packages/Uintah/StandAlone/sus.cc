@@ -42,6 +42,7 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
+#include <sci_defs/uintah_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
@@ -469,10 +470,12 @@ main( int argc, char** argv )
     comp->attachPort("solver", solve);
     comp->attachPort("regridder", reg);
     
+#ifndef NO_ICE
     //__________________________________
     //  Model
     ModelMaker* modelmaker = scinew ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
+#endif
 
     //__________________________________
     // Load balancer
@@ -525,7 +528,9 @@ main( int argc, char** argv )
     delete solve;
     delete output;
     delete reader;
+#ifndef NO_ICE
     delete modelmaker;
+#endif
   } catch (Exception& e) {
     
     cerrLock.lock();

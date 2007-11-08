@@ -1153,7 +1153,40 @@ fi
 if test "$IS_WIN" = "yes"; then
   # don't require fortran on windows yet 
   # (Uintah disables fortran compilation on windows for the moment...)
-  sci_required_fortran="no"
+  with_fortran="no"
+fi
+
+if test "$pkg_Uintah" = "yes"; then
+  # enable/disable certain Uintah components
+  BUILD_ARCHES=yes
+  BUILD_ICE=yes
+  BUILD_MPM=yes
+  BUILD_RADIATION=yes
+  DEF_ARCHES=""
+  DEF_ICE=""
+  DEF_MPM=""
+  DEF_RADIATION=""
+  if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
+  if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
+  if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
+  if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
+  if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
+                                     DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+  fi
+
+  AC_SUBST(BUILD_ARCHES)
+  AC_SUBST(BUILD_ICE)
+  AC_SUBST(BUILD_MPM)
+  AC_SUBST(BUILD_RADIATION)
+  AC_SUBST(DEF_ARCHES)
+  AC_SUBST(DEF_ICE)
+  AC_SUBST(DEF_MPM)
+  AC_SUBST(DEF_RADIATION)
+
+  if test "$BUILD_ARCHES" = no -a test "$BUILD_RADIATION" = no; then
+    sci_required_fortran=no
+  fi
+  sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 fi
 
 if test $sci_required_fortran = "yes"; then
@@ -2949,7 +2982,7 @@ fi
 
 if test "$with_fortran" = "yes"; then
   _sci_optional=required
-elif test "$with_fortran"; then
+elif test "$with_fortran" -a "$with_fortran" != "no"; then
   _sci_lib="$with_fortran/lib"
   _sci_inc="$with_fortran/include"
   _sci_optional=specific

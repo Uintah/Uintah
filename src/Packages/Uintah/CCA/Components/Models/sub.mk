@@ -9,14 +9,14 @@ SRCS    += \
 
 RADIATION :=
 
-# containsFortran
-RADIATION += $(SRCDIR)/Radiation   
-# containsFortran
+ifeq ($(BUILD_RADIATION),yes)
+  RADIATION += $(SRCDIR)/Radiation   
+endif
 
 SUBDIRS := $(SRCDIR)/test \
            $(SRCDIR)/HEChem \
             $(RADIATION)
-       
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \

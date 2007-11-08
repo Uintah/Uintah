@@ -9,16 +9,22 @@ ADIR = $(SRCDIR)/Arches
 # The following variables are used by the Fake* scripts... please
 # do not modify...
 #
-MPM            = $(SRCDIR)/MPM
-MPMICE         = $(SRCDIR)/MPMICE
-ICE            = $(SRCDIR)/ICE
-ifneq ($(IS_WIN),yes)
-# disable ARCHES on windows for now, as we don't know what to do about fortran yet..
-# don't indent these, or fake* will probably fail 
-ARCHES         = $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
-MPMARCHES      = $(SRCDIR)/MPMArches
+
+ifeq ($(BUILD_MPM),yes)
+  MPM            = $(SRCDIR)/MPM
+  ifeq ($(BUILD_ICE),yes)
+    MPMICE         = $(SRCDIR)/MPMICE
+  endif
 endif
-#DUMMY_LIB     = $(SRCDIR)/Dummy
+ifeq ($(BUILD_ICE),yes)
+  ICE            = $(SRCDIR)/ICE
+endif
+ifeq ($(ARCHES),yes)
+  ARCHES         = $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
+  ifeq ($(BUILD_MPM),yes)
+    MPMARCHES      = $(SRCDIR)/MPMArches
+  endif
+endif
 
 SUBDIRS := \
         $(SRCDIR)/DataArchiver \
@@ -28,7 +34,6 @@ SUBDIRS := \
         $(SRCDIR)/Schedulers \
         $(SRCDIR)/Regridder \
         $(SRCDIR)/SimulationController \
-        $(DUMMY_LIB)      \
         $(MPM)            \
         $(ICE)            \
         $(MPMICE)         \
