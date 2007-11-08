@@ -126,18 +126,6 @@ private:
 #ifdef _WIN32
 #  define MKDIR(dir, perm) mkdir(dir)       // windows mkdir doesn't take permissions
 #  define LSTAT(file, buf) stat(file, buf)  // windows doesn't have lstat
-// windows doesn't have dirent... make them here
-   struct dirent
-   {
-      char *d_name;
-   };
-   struct DIR;
-
-   SCISHARE DIR *opendir(const char *);
-   SCISHARE int closedir(DIR *);
-   SCISHARE dirent *readdir(DIR *);
-
-   SCISHARE void rewinddir(DIR *); // not implemented yet...
 #else
 #  define MKDIR(dir, perm) mkdir(dir, perm)
 #  define LSTAT(file, buf) lstat(file, buf)

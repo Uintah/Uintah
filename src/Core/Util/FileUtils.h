@@ -6,7 +6,7 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   License for the specific language governing rights and limitations under
+   
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -41,6 +41,10 @@
 
 #include <map>
 #include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
 
 #include <Core/Util/share.h>
 
@@ -51,7 +55,8 @@ namespace SCIRun {
 // Inserts "insert" in front of all occurrances of 
 // "match" within the file named "filename"
 
-SCISHARE void InsertStringInFile( char* filename, char* match, char* insert );
+SCISHARE void InsertStringInFile(char* filename, const char* match, const char* insert);
+
 
 ////////////////////////////////////
 // GetFilenamesEndingWith()
@@ -59,16 +64,61 @@ SCISHARE void InsertStringInFile( char* filename, char* match, char* insert );
 // all the files with extension "ext" inside
 // the directory named "dir"
 
-SCISHARE std::map<int,char*>* GetFilenamesEndingWith( char* dir, char* ext );
+SCISHARE std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
+
+SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
+                                                 const string & prefix);
+
+SCISHARE std::pair<string, string> split_filename(string fname);
+
+SCISHARE std::string findFileInPath(const std::string &filename, 
+                                    const std::string &path);
 
 SCISHARE bool validFile( const std::string & filename );
-SCISHARE bool validDir(  const std::string & filename );
-SCISHARE bool isSymLink( const std::string & filename );
+SCISHARE bool validDir( const std::string & filename );
+SCISHARE bool isSymLink( std::string filename );
 
 // Creates a temp file (in directoryPath), writes to it, checks the resulting files size, and then deletes it...
 SCISHARE bool testFilesystem( std::string directoryPath );
 
+SCISHARE string autocomplete(const string &);
+SCISHARE string canonicalize(string);
+SCISHARE string substituteTilde(const string &dirstr);
+
+// Replaces '/' with '\' or vice-versa between unix and windows paths
+SCISHARE void convertToWindowsPath( string & unixPath );
+SCISHARE void convertToUnixPath( string & winPath );
+
+// System copy, move, and delete commands.  The strings are not
+// references since windows has to convert '/' to '\\', and we do that
+// in the same string
+SCISHARE int copyFile(string src, string dest);
+SCISHARE int moveFile(string src, string dest);
+SCISHARE int deleteFile(string filename);
+SCISHARE int copyDir(string src, string dest);
+SCISHARE int deleteDir(string filename);
+
+// Replaces the existing extension of the filename with the value of ext
+SCISHARE string changeExtension(string filename, const string &ext);
+
 } // End namespace SCIRun
+
+#ifdef _WIN32
+// windows doesn't have dirent... make them here
+struct dirent
+{
+    char *d_name;
+};
+
+struct DIR;
+
+SCISHARE DIR *opendir(const char *);
+SCISHARE int closedir(DIR *);
+SCISHARE dirent *readdir(DIR *);
+
+// not implemented yet...
+SCISHARE void rewinddir(DIR *);
+#endif
 
 #endif
 

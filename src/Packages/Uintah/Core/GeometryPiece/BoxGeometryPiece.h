@@ -4,10 +4,6 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 
-namespace SCIRun {
-  class Point;
-}
-
 #include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 

@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h> // for MKDIR
 #include <iostream>
 #include <fstream>

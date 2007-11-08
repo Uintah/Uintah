@@ -9,10 +9,8 @@
 
 #include <float.h>
 
-namespace SCIRun {
-  class Point;
-  class Vector;
-}
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 #include <Packages/Uintah/Core/Disclosure/uintahshare.h>
 namespace Uintah {

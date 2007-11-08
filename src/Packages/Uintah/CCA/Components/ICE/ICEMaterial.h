@@ -9,14 +9,11 @@
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 
+#include <Core/Geometry/Vector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-
-namespace SCIRun {
-  class Point;
-  class Vector;
-}
 
 #include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
 namespace Uintah {

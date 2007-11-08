@@ -14,7 +14,6 @@
 #include <Core/Geom/GeomObj.h>
 
 #include <sci_gl.h>
-#include <sci_glu.h>
 
 #include <Packages/Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
