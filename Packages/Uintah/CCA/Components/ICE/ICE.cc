@@ -35,6 +35,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Math/Expon.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -1964,7 +1965,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
             double c_L = speedSound[L];  
             double c_R = speedSound[R];                    
-            double speedSound = max(c_L,c_R );      
+            double speedSound = std::max(c_L,c_R );      
 
             double relative_vel       = fabs(vel_R - vel_L);
 

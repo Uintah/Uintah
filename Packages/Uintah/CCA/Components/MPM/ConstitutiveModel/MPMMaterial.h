@@ -12,14 +12,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-
-namespace SCIRun {
-  class Point;
-  class Vector;
-}
 
 #include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {

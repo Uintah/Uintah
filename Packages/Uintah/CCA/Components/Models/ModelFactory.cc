@@ -19,6 +19,8 @@
 #include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
 #include <Core/Malloc/Allocator.h>
+#include <sci_defs/uintah_defs.h>
+
 #include <iostream>
 
 using namespace Uintah;

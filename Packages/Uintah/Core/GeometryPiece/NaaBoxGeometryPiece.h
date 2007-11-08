@@ -7,10 +7,6 @@
 
 #include <Core/Geometry/Vector.h>
 
-namespace SCIRun {
-  class Point;
-}
-
 namespace Uintah {
 
 /**************************************

@@ -34,9 +34,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-namespace SCIRun {
-  class Vector;
-}
+#include <Core/Geometry/Vector.h>
 
 #include <Packages/Uintah/Core/Math/uintahshare.h>
 namespace Uintah {

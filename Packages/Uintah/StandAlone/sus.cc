@@ -44,7 +44,6 @@
 
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/mpi_defs.h>
-#include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
 
 #ifdef USE_VAMPIR
@@ -60,6 +59,7 @@
 
 #ifdef _WIN32
 #  include <process.h>
+#  include <winsock2.h>
 #endif
 
 #include <iostream>

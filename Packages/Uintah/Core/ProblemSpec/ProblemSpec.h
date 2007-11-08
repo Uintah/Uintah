@@ -5,6 +5,10 @@
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
@@ -13,12 +17,6 @@
 #include <sgi_stl_warnings_on.h>
 
 typedef struct _xmlNode xmlNode;
-
-namespace SCIRun {
-  class IntVector;
-  class Vector;
-  class Point;
-}
 
 #include <Packages/Uintah/Core/ProblemSpec/uintahshare.h>
 namespace Uintah {

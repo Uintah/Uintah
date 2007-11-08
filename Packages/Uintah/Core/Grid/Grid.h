@@ -7,16 +7,14 @@
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Geometry/Point.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
 #include <sgi_stl_warnings_on.h>
-
-namespace SCIRun {
-  class BBox;
-  class Point;
-  class Vector;
-}
 
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
