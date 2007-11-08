@@ -97,9 +97,17 @@ INCLUDES := $(TP_INCLUDES) $(OTHER_INCLUDES)
 
 
 ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
+
 MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
 MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
+
 SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+
+# Don't use the list of dirs directly because the timestamp on the directly changes
+# when files are modified inside of it... by using a '.created' file, the MAKEFILEDIRS
+# dependency is not invoked accept as needed.
+MAKEFILEDIRSTAG := $(addsuffix /.created, $(MAKEFILEDIRS)) 
+
 CREATETCLINDEX := $(OBJTOP)/createTclIndex
 TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
 TCL_VERSION    := @TCL_VERSION@
@@ -127,12 +135,14 @@ SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
 
-prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
+prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 	@echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs
 
-$(MAKEFILEDIRS):
-	@echo creating directory $@
-	@mkdir -p $@
+$(MAKEFILEDIRSTAG) :
+	@echo creating directory `dirname $@`
+	@mkdir -p `dirname $@`
+	@echo "Dummy file indicating that $@ has been created..." > $@
+	@touch `dirname $@`
 
 $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	@echo creating createTclIndex
