@@ -19,7 +19,7 @@ endif
 ifeq ($(BUILD_ICE),yes)
   ICE            = $(SRCDIR)/ICE
 endif
-ifeq ($(ARCHES),yes)
+ifeq ($(BUILD_ARCHES),yes)
   ARCHES         = $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES      = $(SRCDIR)/MPMArches
