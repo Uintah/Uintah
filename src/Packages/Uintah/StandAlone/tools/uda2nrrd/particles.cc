@@ -49,8 +49,8 @@ handleParticleData<Point>( QueryInfo & qinfo )
   float * floatArrayY = (float*)malloc(sizeof(float)*dataX.size());
   float * floatArrayZ = (float*)malloc(sizeof(float)*dataX.size());
     
-  float min[3] = {  9999999999,  9999999999,  9999999999 };
-  float max[3] = { -9999999999, -9999999999, -9999999999 };
+  float min[3] = {  FLT_MAX,  FLT_MAX,  FLT_MAX };
+  float max[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
   for( unsigned int pos = 0; pos < dataX.size(); pos++ ) {
     floatArrayX[ pos ] = dataX[ pos ];
@@ -116,8 +116,8 @@ handleParticleData<Vector>( QueryInfo & qinfo )
 
   float * floatArray = (float*)malloc(sizeof(float)*data.size());
 
-  float min =  9999999999;
-  float max = -9999999999;
+  float min =  FLT_MAX;
+  float max = -FLT_MAX;
 
   for( unsigned int pos = 0; pos < data.size(); pos++ ) {
     floatArray[ pos ] = data[ pos ];
@@ -174,8 +174,8 @@ handleParticleData<Matrix3>( QueryInfo & qinfo )
 
   float * floatArray = (float*)malloc(sizeof(float)*data.size());
 
-  float min =  9999999999;
-  float max = -9999999999;
+  float min =  FLT_MAX;
+  float max = -FLT_MAX;
 
   for( unsigned int pos = 0; pos < data.size(); pos++ ) {
 
@@ -260,8 +260,8 @@ handleParticleData( QueryInfo & qinfo )
 
   float * floatArray = (float*)malloc(sizeof(float)*data.size());
 
-  float min =  9999999999;
-  float max = -9999999999;
+  float min =  FLT_MAX;
+  float max = -FLT_MAX;
   for( unsigned int pos = 0; pos < data.size(); pos++ ) {
     floatArray[ pos ] = data[ pos ];
     if( data[ pos ] > max ) { max = data[ pos ]; }
