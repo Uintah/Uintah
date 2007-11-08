@@ -6,9 +6,10 @@ SUBDIRS := \
 	$(SRCDIR)/compare_mms \
 	$(SRCDIR)/dumpfields  \
 	$(SRCDIR)/extractors  \
+        $(SRCDIR)/graphview   \
 	$(SRCDIR)/pfs         \
 	$(SRCDIR)/puda        \
-        $(SRCDIR)/graphview
+	$(SRCDIR)/radiusMaker \
+        $(SRCDIR)/uda2nrrd
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
-
