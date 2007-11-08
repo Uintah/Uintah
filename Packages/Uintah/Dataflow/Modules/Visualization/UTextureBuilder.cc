@@ -29,14 +29,14 @@
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 00:11:18 2004
 
-#include <Dataflow/Modules/Visualization/ConvertFieldsToTexture.h>
+#include <Dataflow/Modules/Visualization/TextureBuilder.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 
 
 namespace Uintah {
 using namespace SCIRun;
 
-class UTextureBuilder : public ConvertFieldsToTexture
+class UTextureBuilder : public TextureBuilder
 {
 public:
   UTextureBuilder(GuiContext*);
@@ -52,14 +52,14 @@ using namespace Uintah;
 using SCIRun::ColorMapIPort;
 using SCIRun::ColorMapOPort;
 using SCIRun::ColorMapHandle;
-using SCIRun::ConvertFieldsToTexture;
+using SCIRun::TextureBuilder;
 using SCIRun::Module;
 
 
 DECLARE_MAKER(UTextureBuilder)
 
-UTextureBuilder::UTextureBuilder(GuiContext* ctx)
-  : ConvertFieldsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
+UTextureBuilder::UTextureBuilder(GuiContext* ctx) :
+  TextureBuilder(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
 {}
 
 UTextureBuilder::~UTextureBuilder()
@@ -75,7 +75,7 @@ UTextureBuilder::execute()
   ColorMapHandle cmap_h;
 
   if( !cmap_iport->get( cmap_h ) || !(cmap_h.get_rep()) ) {
-    ConvertFieldsToTexture::execute();
+    TextureBuilder::execute();
     return;
   }
 
@@ -95,9 +95,7 @@ UTextureBuilder::execute()
       return;
     }
 
-  ConvertFieldsToTexture::execute();
+  TextureBuilder::execute();
   cmap_oport->send(cmap_h);
 }
-
-
 
