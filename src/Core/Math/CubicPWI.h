@@ -51,7 +51,7 @@
 #include <Core/Geometry/Vector.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
+#include   <iostream>
 #include <sgi_stl_warnings_off.h>
 
 #include <Core/Math/share.h>
@@ -60,26 +60,10 @@ namespace SCIRun {
 
 enum EndCondition {natural_ends, clamped_ends, bessel_ends, quadratic_ends};
 
+template <class T> class Cubic3DPWI;
 
-using std::cout;
-using std::endl;
-
-template <class T> std::ostream& 
-operator<<(std::ostream& out, Array1<T> a){
-  for (int i=0; i<a.size(); i++){
-    std::cout << a[i] << std::endl;
-  }
-  return out;
-}
-
-typedef struct Quat {
-  double a;
-  double b;
-  double c;
-  double d;
-} QUAT;
-
-class SCISHARE CubicPWI: public PiecewiseInterp<double> {
+class SCISHARE CubicPWI: public PiecewiseInterp<double>
+{
 public:
   CubicPWI();
   CubicPWI(const Array1<double>&, const Array1<double>&);
@@ -88,14 +72,25 @@ public:
   inline bool get_value(double, double&);
 
 private:
-  Array1<QUAT> p;
+  
+  friend class Cubic3DPWI<class T>;
+
+  struct Quat {
+    double a;
+    double b;
+    double c;
+    double d;
+  };
+  
+  Array1<Quat> p;
 };
 
-inline bool CubicPWI::get_value(double w, double& res){
-  int i;
-  if (data_valid && (i=get_interval(w))>=0){
-    w-=points[i];
-    res=p[i].a+w*(p[i].b+w*(p[i].c+p[i].d*w));
+inline bool CubicPWI::get_value(double w, double& res)
+{
+  int i = get_interval(w);
+  if( data_valid && i >= 0 ) {
+    w -= points[i];
+    res = p[i].a + w * (p[i].b+w*(p[i].c+p[i].d*w));
     return true;
   }
   else
@@ -113,9 +108,9 @@ public:
   inline bool get_value(double, T&);
   
 private:
-  Array1<QUAT> X;
-  Array1<QUAT> Y;
-  Array1<QUAT> Z;
+  Array1<CubicPWI::Quat> X;
+  Array1<CubicPWI::Quat> Y;
+  Array1<CubicPWI::Quat> Z;
 };
 
 template <class T> Cubic3DPWI<T>::Cubic3DPWI(const Array1<double>& pts, 
@@ -156,9 +151,9 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals){
   }
 
   if (set_tangents(pts, vx, drvX, natural_ends) && 
-      set_tangents(pts, vy, drvY, natural_ends) 
-      && set_tangents(pts, vz, drvZ, natural_ends)) {
-    cout << "Derivatives are done!!!" << endl;
+      set_tangents(pts, vy, drvY, natural_ends) &&
+      set_tangents(pts, vz, drvZ, natural_ends)) {
+    // cout << "Derivatives are done!!!" << "\n";
     Array1<Vector> drvs;
     drvs.resize(sz);
     for (int i=0; i<sz; i++)
@@ -177,9 +172,9 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
   int sz=0;
   this->reset();
 
-  if (this->fill_data(pts) && (sz = this->points.size())>1 && 
-      sz==vals.size() && sz==drvs.size()){
-    cout << "Inside set_data!!!" << endl;
+  if( this->fill_data(pts) && (sz = this->points.size()) > 1 && 
+      sz == vals.size() && sz == drvs.size() ) {
+    // cout << "Inside set_data!!!" << "\n";
     X.resize(sz);
     Y.resize(sz);
     Z.resize(sz);
@@ -218,9 +213,9 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
 	X[i].c=c;
 	X[i].d=d;
 	
-	cout << "Interval: " << this->points[i] << ", " << this->points[i+1] << endl;
-	cout << "Coeff. are for X: " << X[i].a << endl << X[i].b 
-	     << endl << X[i].c << endl << X[i].d << endl;
+	// cout << "Interval: " << this->points[i] << ", " << this->points[i+1] << "\n";
+	// cout << "Coeff. are for X: " << X[i].a << "\n" << X[i].b 
+	//      << "\n" << X[i].c << "\n" << X[i].d << "\n";
 	
 	a=vy[i];
 	b=drvY[i];
@@ -232,9 +227,9 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
 	Y[i].c=c;
 	Y[i].d=d;
 
-	cout << "Interval: " << this->points[i] << ", " << this->points[i+1] << endl;
-	cout << "Coeff. are for Y: " << Y[i].a << endl << Y[i].b 
-	     << endl << Y[i].c << endl << Y[i].d << endl;
+	// cout << "Interval: " << this->points[i] << ", " << this->points[i+1] << "\n";
+	// cout << "Coeff. are for Y: " << Y[i].a << "\n" << Y[i].b 
+	//      << "\n" << Y[i].c << "\n" << Y[i].d << "\n";
 	
 	a=vz[i];
 	b=drvZ[i];
@@ -247,7 +242,7 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
 	Z[i].d=d;
       }
       else {
-	cout << "Delta is small!!! " << endl;
+	std::cout << "Delta is small!!!\n";
 	this->reset();
 	break;
       }
@@ -255,21 +250,17 @@ Cubic3DPWI<T>::set_data(const Array1<double>& pts, const Array1<T>& vals,
   return this->data_valid;
 }
 
+template <class T> std::ostream& 
+operator<<(std::ostream& out, Array1<T> a){
+  for (int i=0; i<a.size(); i++){
+    std::cout << a[i] << "\n";
+  }
+  return out;
+}
+
+
 } // End namespace SCIRun
 
 #endif //SCI_CUBICPWI_H__
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
