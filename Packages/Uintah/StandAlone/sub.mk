@@ -16,12 +16,22 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 #
 COMPONENTS      = Packages/Uintah/CCA/Components
 CA              = Packages/Uintah/CCA/Components/Arches
-#DUMMY_LIB      = Packages/Uintah/CCA/Components/Dummy
-ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
-ARCHES_LIBS     = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
-MPM_LIB         = Packages/Uintah/CCA/Components/MPM
-ICE_LIB         = Packages/Uintah/CCA/Components/ICE
-MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
+ifeq ($(BUILD_ARCHES),yes)
+  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
+  ifeq ($(BUILD_MPM),yes)
+    MPMARCHES_LIBS     = $(COMPONENTS)/MPMArches
+  endif
+  ARCHES_LIBS     = $(COMPONENTS)/Arches 
+endif
+ifeq ($(BUILD_MPM),yes)
+  MPM_LIB         = Packages/Uintah/CCA/Components/MPM
+  ifeq ($(BUILD_ICE),yes)
+    MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
+  endif
+endif
+ifeq ($(BUILD_ICE),yes)
+  ICE_LIB         = Packages/Uintah/CCA/Components/ICE
+endif
 
 
 SRCS := $(SRCDIR)/sus.cc
