@@ -50,12 +50,10 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#define msg(m) std::cout << m << std::endl;
-
 namespace SCIRun {
 
-
-template <class T> class PiecewiseInterp {
+template <class T> class PiecewiseInterp
+{
 protected:
   bool data_valid;			// set to true in an interpolation specific cases
   int  curr_intrv;			// number of last interval used
@@ -129,7 +127,7 @@ template<class T> inline bool PiecewiseInterp<T>::fill_data(const Array1<double>
 
   points.resize(pts.size());
   points=pts;
-  msg ("Filled!!!");
+
   return true;
 }
 
