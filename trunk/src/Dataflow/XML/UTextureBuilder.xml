@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<!DOCTYPE component PUBLIC '-//SCIRun/Component DTD' 'component.dtd'>
 <component name="UTextureBuilder" category="Visualization" optional="false">
   <overview>
     <authors>
