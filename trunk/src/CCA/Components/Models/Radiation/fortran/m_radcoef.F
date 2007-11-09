@@ -74,9 +74,9 @@ C       on a combination of a Hottel chart curve fit (originally done
 C       by Phil Smith and students) and a curve fit of high temperature
 C       exponential wide band spectral predictions by Coppalle and 
 C       Vervisch (Combustion and Flame, Vol 49, pp. 101-108, 1983).
-C       If the gas temperature is less than 1200 K, use PJS model;
-C       if the temperature is greater than 2100 K use C & V model;  
-C       if the temperature is 1200-2100 K use linear interpolation
+C       If the gas temperature is less than 1200 K, work with PJS model;
+C       if the temperature is greater than 2100 K work with C & V model;  
+C       if the temperature is 1200-2100 K wotk with linear interpolation
 C       between the Hottel chart point at 1200 K and the C & V point
 C       at 2100 K. This makes the routine run a little slower, but it
 C       is still much faster than Modak's model and just as accurate 
@@ -84,7 +84,7 @@ C       (over a wider temperature range, i.e., 300-3000 K).
 C
 C       Note: Since most temperatures will be 1200-2100 K, do both
 C             models for all temperatures and determine appropriate
-C             emissivity to use at end. This improves run time by
+C             emissivity at end. This improves run time by
 C             eliminating a nested IF statement. Also, run times can be
 C             cut almost in half if only one IF option is used with the
 C             C & V model, e.g., only Pw/Pc = 1 or TG < 2500 K is used.
@@ -108,7 +108,7 @@ C----------------------------------------------------------------------
                     AEK(3) = 99.54d0 * PML
                   END IF
 C
-C       EICO2 and EIH2O use Hottel charts to calculate (curve-fit)
+C       EICO2 and EIH2O exploit Hottel charts to calculate (curve-fit)
 C       emissivities for carbon dioxide and water vapor, respectively;
 C       PLA units are atm-ft, Pc and Pw are in atm, TGI is in K
 C
@@ -142,7 +142,7 @@ C
                   END IF
                   EMGI = CCO2 * ECO2 + CH2O * EH2O - DELE
 
-C       Use Coppalle and Vervisch model to calculate CO2-H2O mixture 
+C       Work with Coppalle and Vervisch model to calculate CO2-H2O mixture 
 C       total emissivity by summing 3 gray gases (plus one clear).
 C       Compute emissivity weighting factors for CO2-H2O mixture
 C       based on linear fit of temperature (for Ptot = 1 atm, TGF in K).
