@@ -1,11 +1,11 @@
 #ifndef __OPERATORS_TENSORPARTICLESOPERATOR_H__
 #define __OPERATORS_TENSORPARTICLESOPERATOR_H__
 
-#include <Uintah/Dataflow/Modules/Operators/TensorOperatorFunctors.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/TensorOperatorFunctors.h>
 
-#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>

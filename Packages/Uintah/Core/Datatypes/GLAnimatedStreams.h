@@ -84,10 +84,7 @@ public:
   GLAnimatedStreams(const GLAnimatedStreams&);
   ~GLAnimatedStreams();
 
-
-#ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
-#endif
   
   virtual GeomObj* clone();
   virtual void get_bounds(BBox& bb){

@@ -170,7 +170,6 @@ GLAnimatedStreams::clone()
   return scinew GLAnimatedStreams( *this );
 }
 
-#ifdef SCI_OPENGL
 void 
 GLAnimatedStreams::draw(DrawInfoOpenGL* di, Material* mat, double)
 {
@@ -202,7 +201,6 @@ GLAnimatedStreams::draw(DrawInfoOpenGL* di, Material* mat, double)
   mutex.unlock();
 
 }
-#endif
 
 void
 GLAnimatedStreams::drawWireFrame()
