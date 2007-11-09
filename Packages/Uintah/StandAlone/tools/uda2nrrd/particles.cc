@@ -7,6 +7,19 @@ using namespace SCIRun;
 
 //////////////////////////////////////////////////////////////////////////////////
 
+static bool
+machineIsBigEndian()
+{
+  short i = 0x4321;
+  if((*(char *)&i) != 0x21 ){
+    return true;
+  } else {
+    return false;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
 template<>
 ParticleDataContainer
 handleParticleData<Point>( QueryInfo & qinfo )
@@ -312,6 +325,8 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
     }
   }
 
+  string endianness = machineIsBigEndian() ? "big" : "little";
+
   //////////////////////
   // Write NRRD Header:
 
@@ -321,10 +336,10 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
                 "type: float\n"
                 "dimension: 2\n"
                 "sizes: %d %d\n"
-                "endian: little\n"
+                "endian: %s\n"
                 "encoding: raw\n"
                 "# Num Particles: %d\n"
-                "# Variables (%d):\n", numVars, numParticles*4, numParticles, numVars );
+                "# Variables (%d):\n", numVars, numParticles*4, endianness.c_str(), numParticles, numVars );
 
   int pos = 0;
   for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
