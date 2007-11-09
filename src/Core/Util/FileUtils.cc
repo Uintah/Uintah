@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/stat.h>
+
 #ifndef _WIN32
 #  include <unistd.h>
 #  include <dirent.h>
@@ -41,15 +43,17 @@
    typedef unsigned short mode_t;
 #  define MAXPATHLEN 256
 #endif
-#include <sys/stat.h>
-#include <Core/Util/FileUtils.h>
+
 #include <Core/OS/Dir.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <iostream>
+
+using namespace std;
 
 namespace SCIRun {
 
@@ -141,10 +145,10 @@ InsertStringInFile(char* filename, const char* match, const char* add_text)
   } 
 }
 
-std::map<int,char*>*
+map<int,char*>*
 GetFilenamesEndingWith(char* d, char* ext)
 {
-  std::map<int,char*>* newmap = 0;
+  map<int,char*>* newmap = 0;
   dirent* file = 0;
   DIR* dir = opendir(d);
   char* newstring = 0;
@@ -152,7 +156,7 @@ GetFilenamesEndingWith(char* d, char* ext)
   if (!dir) 
     return 0;
 
-  newmap = new std::map<int,char*>;
+  newmap = new map<int,char*>;
 
   file = readdir(dir);
   while (file) {
@@ -160,7 +164,7 @@ GetFilenamesEndingWith(char* d, char* ext)
         (strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext)]),ext)==0)) {
       newstring = new char[strlen(file->d_name)+1];
       sprintf(newstring,"%s",file->d_name);
-      newmap->insert(std::pair<int,char*>(newmap->size(),newstring));
+      newmap->insert(pair<int,char*>(newmap->size(),newstring));
     }
     file = readdir(dir);
   }
@@ -208,27 +212,30 @@ GetFilenamesStartingWith(const string &dirstr,
 }
 
 
-std::pair<string, string>
-split_filename(string fname) {
+pair<string, string>
+split_filename( const string & fname )
+{
+  string filename = fname;
+
   if (fname[fname.size()-1] == '/' || fname[fname.size()-1] == '\\') {
-    fname = fname.substr(0, fname.size()-1);
+    filename = fname.substr(0, fname.size()-1);
   }
   
   if (validDir(fname)) {
-    return make_pair(fname, string(""));
+    return make_pair(filename, string(""));
   }
     
-  string::size_type pos = fname.find_last_of("/");
-  if (pos == string::npos)
-    pos = fname.find_last_of("\\");
-  std::pair<string, string> dirfile = std::make_pair
-    (fname.substr(0, pos+1), fname.substr(pos+1, fname.length()-pos-1));
+  string::size_type pos = filename.find_last_of("/");
+  if (pos == string::npos) {
+    pos = filename.find_last_of("\\");
+  }
+  pair<string, string> dirfile = make_pair( filename.substr(0, pos+1), filename.substr(pos+1, filename.length()-pos-1));
 
   return dirfile;
 }
 
 bool
-validFile( const std::string & filename ) 
+validFile( const string & filename ) 
 {
   struct stat buf;
   string updatedFilename = substituteTilde(filename);
@@ -244,7 +251,7 @@ validFile( const std::string & filename )
 }
 
 bool
-validDir( const std::string & dirname )
+validDir( const string & dirname )
 {
   struct stat buf;
   string updatedDirname = substituteTilde(dirname);
@@ -257,7 +264,7 @@ validDir( const std::string & dirname )
 }
 
 bool
-isSymLink( string filename )
+isSymLink( const string & filename )
 {
 #ifndef _WIN32
   struct stat buf;
@@ -272,7 +279,7 @@ isSymLink( string filename )
 
 // Creates a temp file (in directoryPath), writes to it, and then deletes it...
 bool
-testFilesystem( string directoryPath )
+testFilesystem( const string & directoryPath )
 {
   FILE * fp;
 
@@ -307,9 +314,8 @@ testFilesystem( string directoryPath )
 
   // Check the files size
   struct stat buf;
-  if( stat(fileName.c_str(), &buf) == 0 )
-  {
-    printf( "FILESYSTEM CHECK: Test file size is: %d\n", buf.st_size );
+  if( stat(fileName.c_str(), &buf) == 0 ) {
+    printf( "FILESYSTEM CHECK: Test file size is: %d\n", (int)buf.st_size );
   } else {
     printf( "WARNING: stat() failed while testing filesystem.\n" );
     printf( "         errno is %d\n", errno );
@@ -337,8 +343,8 @@ testFilesystem( string directoryPath )
 //
 // If the file is found in multiple directories in the 'path', only
 // the first matching directory is returned
-std::string
-findFileInPath(const std::string &file, const std::string &path)
+string
+findFileInPath(const string &file, const string &path)
 {
   string::size_type beg = 0;
   string::size_type end = 0;
@@ -369,9 +375,9 @@ findFileInPath(const std::string &file, const std::string &path)
 }
     
 string
-autocomplete(const string &instr) {
+autocomplete(const string & instr) {
   string str = instr;
-  std::pair<string, string> dirfile = split_filename(str);
+  pair<string, string> dirfile = split_filename(str);
   string dir = dirfile.first;
   if (!validDir(dir)) {
 #ifdef _WIN32
@@ -422,9 +428,9 @@ autocomplete(const string &instr) {
 
 
 string 
-canonicalize(string filename)
+canonicalize(const string & fname )
 {
-  filename = substituteTilde(filename);
+  string filename = substituteTilde( fname );
 
   // use unix paths internally to keep things simpler
   convertToUnixPath(filename);
@@ -482,7 +488,8 @@ convertToUnixPath( string & unixPath )
   }
 }    
 
-int copyFile(string src, string dest)
+int
+copyFile( const string & src, const string & dest)
 {
 #ifdef _WIN32
   string cpCmd = "copy /Y ";
@@ -496,12 +503,13 @@ int copyFile(string src, string dest)
   int code = sci_system(cmd.c_str());
   if (code)
   {
-    std::cerr << "Error executing: " << cmd << "\n";
+    cerr << "Error executing: " << cmd << "\n";
   }
   return code;
 }
 
-int moveFile(string src, string dest)
+int
+moveFile( const string & src, const string & dest )
 {
 #ifdef _WIN32
   string mvCmd = "move /Y ";
@@ -515,12 +523,13 @@ int moveFile(string src, string dest)
   int code = sci_system(cmd.c_str());
   if (code)
   {
-    std::cerr << "Error executing: " << cmd << "\n";
+    cerr << "Error executing: " << cmd << "\n";
   }
   return code;
 }
 
-int deleteFile(string filename)
+int
+deleteFile( const string & filename )
 {
 #ifdef _WIN32
   string rmCmd = "del /Y ";
@@ -533,12 +542,13 @@ int deleteFile(string filename)
   int code = sci_system(cmd.c_str());
   if (code)
   {
-    std::cerr << "Error executing: " << cmd << "\n";
+    cerr << "Error executing: " << cmd << "\n";
   }
   return code;
 }
 
-int copyDir(string src, string dest)
+int
+copyDir( const string & src, const string & dest )
 {
 #ifdef _WIN32
   string cpCmd = "xcopy /Y ";
@@ -552,7 +562,7 @@ int copyDir(string src, string dest)
   int code = sci_system(cmd.c_str());
   if (code)
   {
-    std::cerr << "Error executing: " << cmd << "\n";
+    cerr << "Error executing: " << cmd << "\n";
   }
   return code;
 }
@@ -570,24 +580,27 @@ int deleteDir(string filename)
   int code = sci_system(cmd.c_str());
   if (code)
   {
-    std::cerr << "Error executing: " << cmd << "\n";
+    cerr << "Error executing: " << cmd << "\n";
   }
   return code;
 }
 
 
 string
-changeExtension(string filename, const string &extension) {
-  std::pair<string,string> dirfile = split_filename(filename);
+changeExtension( const string & filename, const string &extension)
+{
+  string fname = filename;
+
+  pair<string,string> dirfile = split_filename(filename);
   if (dirfile.second.size()) {
-    std::vector<string> fileext = split_string(dirfile.second, '.');
-    filename = dirfile.first;
+    vector<string> fileext = split_string(dirfile.second, '.');
+    fname = dirfile.first;
     for (size_t i = 0; i < fileext.size()-1; ++i) {
-      filename = filename+fileext[i]+".";
+      fname = fname + fileext[i] + ".";
     }
-    filename = filename+extension;
+    fname = fname + extension;
   }
-  return filename;
+  return fname;
 }
 
 

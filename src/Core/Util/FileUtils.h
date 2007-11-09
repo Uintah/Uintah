@@ -69,20 +69,20 @@ SCISHARE std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
 SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
                                                  const string & prefix);
 
-SCISHARE std::pair<string, string> split_filename(string fname);
+SCISHARE std::pair<string, string> split_filename( const string & fname );
 
-SCISHARE std::string findFileInPath(const std::string &filename, 
-                                    const std::string &path);
+SCISHARE string findFileInPath( const string &filename, 
+                                const string &path );
 
-SCISHARE bool validFile( const std::string & filename );
-SCISHARE bool validDir( const std::string & filename );
-SCISHARE bool isSymLink( std::string filename );
+SCISHARE bool validFile( const string & filename );
+SCISHARE bool validDir( const string & filename );
+SCISHARE bool isSymLink( const string & filename );
 
 // Creates a temp file (in directoryPath), writes to it, checks the resulting files size, and then deletes it...
-SCISHARE bool testFilesystem( std::string directoryPath );
+SCISHARE bool testFilesystem( const string & directoryPath );
 
-SCISHARE string autocomplete(const string &);
-SCISHARE string canonicalize(string);
+SCISHARE string autocomplete( const string & instr );
+SCISHARE string canonicalize( const string & filename );
 SCISHARE string substituteTilde(const string &dirstr);
 
 // Replaces '/' with '\' or vice-versa between unix and windows paths
@@ -92,14 +92,14 @@ SCISHARE void convertToUnixPath( string & winPath );
 // System copy, move, and delete commands.  The strings are not
 // references since windows has to convert '/' to '\\', and we do that
 // in the same string
-SCISHARE int copyFile(string src, string dest);
-SCISHARE int moveFile(string src, string dest);
-SCISHARE int deleteFile(string filename);
-SCISHARE int copyDir(string src, string dest);
-SCISHARE int deleteDir(string filename);
+SCISHARE int copyFile( const string & src, const string & dest );
+SCISHARE int moveFile( const string & src, const string & dest );
+SCISHARE int deleteFile( const string & filename);
+SCISHARE int copyDir( const string & src, const string & dest);
+SCISHARE int deleteDir( const string & filename);
 
 // Replaces the existing extension of the filename with the value of ext
-SCISHARE string changeExtension(string filename, const string &ext);
+SCISHARE string changeExtension( const string & filename, const string &ext );
 
 } // End namespace SCIRun
 
