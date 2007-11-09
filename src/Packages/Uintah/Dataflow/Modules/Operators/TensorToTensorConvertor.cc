@@ -1,5 +1,5 @@
 #include "TensorToTensorConvertor.h"
-#include <Uintah/Core/Datatypes/TensorParticles.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
 
 //#include <SCICore/Math/Mat.h>
 

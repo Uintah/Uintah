@@ -10,6 +10,8 @@
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 
+using namespace SCIRun;
+
 #define d_SMALL_NUM 1e-100
 //#define DUMP_LIMITER
 namespace Uintah {
@@ -211,20 +213,20 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
     IntVector bk= c + IntVector( 0, 0,-1); 
 
     T max_tmp, min_tmp;
-    max_tmp = SCIRun::Max(q_CC[r], q_CC[l]);
-    min_tmp = SCIRun::Min(q_CC[r], q_CC[l]);
+    max_tmp = Max(q_CC[r], q_CC[l]);
+    min_tmp = Min(q_CC[r], q_CC[l]);
 
-    max_tmp = SCIRun::Max(max_tmp, q_CC[t]);
-    min_tmp = SCIRun::Min(min_tmp, q_CC[t]);
+    max_tmp = Max(max_tmp, q_CC[t]);
+    min_tmp = Min(min_tmp, q_CC[t]);
 
-    max_tmp = SCIRun::Max(max_tmp, q_CC[b]);
-    min_tmp = SCIRun::Min(min_tmp, q_CC[b]);
+    max_tmp = Max(max_tmp, q_CC[b]);
+    min_tmp = Min(min_tmp, q_CC[b]);
 
-    max_tmp = SCIRun::Max(max_tmp, q_CC[f]);
-    min_tmp = SCIRun::Min(min_tmp, q_CC[f]);
+    max_tmp = Max(max_tmp, q_CC[f]);
+    min_tmp = Min(min_tmp, q_CC[f]);
 
-    max_tmp = SCIRun::Max(max_tmp, q_CC[bk]);
-    min_tmp = SCIRun::Min(min_tmp, q_CC[bk]);
+    max_tmp = Max(max_tmp, q_CC[bk]);
+    min_tmp = Min(min_tmp, q_CC[bk]);
 
     q_CC_max[c] = max_tmp;
     q_CC_min[c] = min_tmp;
@@ -256,11 +258,11 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
         L[dir] -= 1;
         
         // intersection with the patch boundary
-        L[dir] = SCIRun::Max(cl[dir], L[dir]);
-        R[dir] = SCIRun::Min(ch[dir], R[dir]);
+        L[dir] = Max(cl[dir], L[dir]);
+        R[dir] = Min(ch[dir], R[dir]);
          
-        max_tmp = SCIRun::Max(max_tmp, q_CC[R]);
-        min_tmp = SCIRun::Min(min_tmp, q_CC[L]);
+        max_tmp = Max(max_tmp, q_CC[R]);
+        min_tmp = Min(min_tmp, q_CC[L]);
       }
       q_CC_max[c] = max_tmp;
       q_CC_min[c] = min_tmp;
@@ -426,20 +428,20 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
     q_vrtx_min = q_vertex[c].d_vrtx[0];
     
     for (int i=1;i<8;i++){
-      q_vrtx_max = SCIRun::Max(q_vrtx_max,q_vertex[c].d_vrtx[i]);
-      q_vrtx_min = SCIRun::Min(q_vrtx_min,q_vertex[c].d_vrtx[i]);
+      q_vrtx_max = Max(q_vrtx_max,q_vertex[c].d_vrtx[i]);
+      q_vrtx_min = Min(q_vrtx_min,q_vertex[c].d_vrtx[i]);
     }
     
     //__________________________________
     // gradient limiter
     frac = (q_CC_max[c] - Q_CC + SN)/(q_vrtx_max - Q_CC + SN);
-    gradLim_max = SCIRun::Max(zero, frac);
+    gradLim_max = Max(zero, frac);
 
     frac = (q_CC_min[c] - Q_CC + SN)/(q_vrtx_min - Q_CC + SN);
-    gradLim_min = SCIRun::Max(zero, frac);
+    gradLim_min = Max(zero, frac);
 
-    temp = SCIRun::Min(unit, gradLim_max);
-    temp = SCIRun::Min(temp, gradLim_min);
+    temp = Min(unit, gradLim_max);
+    temp = Min(temp, gradLim_min);
     T gradLim = temp;
 #ifdef DUMP_LIMITER    
     if(d_smokeOnOff && c.y() == 0 && c.z() == 0){
