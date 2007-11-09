@@ -1,6 +1,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/XMLUtil/XMLUtil.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
@@ -45,7 +47,7 @@ ProblemSpec::findBlock() const
   if (child == NULL)
      return 0;
   else 
-     return scinew ProblemSpec(child, d_write);
+     return scinew ProblemSpec(child, false, d_write);
 }
 
 ProblemSpecP 
@@ -61,7 +63,7 @@ ProblemSpec::findBlock(const string& name) const
       while (dbl_child != 0) {
         dbl_child = dbl_child->next;
       }
-      return scinew ProblemSpec(child, d_write);
+      return scinew ProblemSpec(child, false, d_write);
     }
     child = child->next;
   }
@@ -82,7 +84,7 @@ ProblemSpecP ProblemSpec::findNextBlock() const
      return 0;
   }
   else {
-     return scinew ProblemSpec(found_node, d_write);
+     return scinew ProblemSpec(found_node, false, d_write);
   }
 }
 
@@ -106,7 +108,7 @@ ProblemSpec::findNextBlock(const string& name) const
      return 0;
   }
   else {
-     return scinew ProblemSpec(found_node, d_write);
+     return scinew ProblemSpec(found_node, false, d_write);
   }
 }
 
@@ -116,7 +118,7 @@ ProblemSpec::findTextBlock()
    for (xmlNode* child = d_node->children; child != 0;
         child = child->next) {
      if (child->type == XML_TEXT_NODE) {
-       return scinew ProblemSpec(child, d_write);
+       return scinew ProblemSpec(child, false, d_write);
       }
    }
    return NULL;
@@ -139,7 +141,7 @@ ProblemSpec::importNode(ProblemSpecP src, bool deep)
 {
   xmlNode* d = xmlDocCopyNode(src->d_node, d_node->doc, deep ? 1 : 0);
   if (d)
-    return scinew ProblemSpec(d, d_write);
+    return scinew ProblemSpec(d, false, d_write);
   else
     return 0;
 }
@@ -155,7 +157,7 @@ ProblemSpecP
 ProblemSpec::makeComment(std::string comment)
 {
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
-  return scinew ProblemSpec(commentNode, d_write);
+  return scinew ProblemSpec(commentNode, false, d_write);
 }
 
 
@@ -834,7 +836,7 @@ ProblemSpecP
 ProblemSpec::appendElement(const char* name, const string& value)
 {
   xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
-  return scinew ProblemSpec(newnode, d_write);
+  return scinew ProblemSpec(newnode, false, d_write);
 }
 
 //basically to make sure correct overloaded function is called
@@ -1118,7 +1120,7 @@ ProblemSpec::getFirstChild()
 {
   xmlNode* d = d_node->children;
   if (d)
-    return scinew ProblemSpec(d, d_write);
+    return scinew ProblemSpec(d, false, d_write);
   else
     return 0;
 }
@@ -1128,7 +1130,7 @@ ProblemSpec::getNextSibling()
 {
   xmlNode* d = d_node->next;
   if (d)
-    return scinew ProblemSpec(d, d_write);
+    return scinew ProblemSpec(d, false, d_write);
   else
     return 0;
 }
@@ -1153,7 +1155,7 @@ ProblemSpec::appendChild( const char *str )
 {
   xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
   
-  return scinew ProblemSpec(elt, d_write);
+  return scinew ProblemSpec(elt, false, d_write);
 }
 
 void
@@ -1184,7 +1186,7 @@ ProblemSpecP
 ProblemSpec::getRootNode()
 {
   xmlNode* root_node = xmlDocGetRootElement(d_node->doc);
-  return scinew ProblemSpec(root_node,d_write);
+  return scinew ProblemSpec(root_node,false,d_write); // don't mark as toplevel as this is just a copy
 }
 
 const Uintah::TypeDescription*
@@ -1203,6 +1205,6 @@ ProblemSpec::createDocument(const string& name)
 
   xmlDocSetRootElement(doc, node);
 
-  return scinew ProblemSpec(node);
+  return scinew ProblemSpec(node, true);
 }
 

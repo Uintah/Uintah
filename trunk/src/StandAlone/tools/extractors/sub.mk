@@ -2,22 +2,6 @@
 
 SRCDIR := Packages/Uintah/StandAlone/tools/extractors
 
-ifeq ($(IS_AIX),yes)
-  AIX_LIBRARY := \
-        Core/XMLUtil  \
-        Core/Malloc       \
-        Core/Math         \
-        Core/Containers   \
-        Core/Persistent   \
-        Core/OS           \
-        Packages/Uintah/Core/Math                        \
-        Packages/Uintah/Core/GeometryPiece               \
-        Packages/Uintah/CCA/Components/Parent            \
-        Packages/Uintah/CCA/Components/SwitchingCriteria \
-	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
-        Packages/Uintah/CCA/Components/Examples          
-endif
-
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
@@ -40,8 +24,7 @@ else
         Packages/Uintah/Core/Exceptions  \
         Packages/Uintah/CCA/Ports        \
         Packages/Uintah/Core/ProblemSpec             \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        $(AIX_LIBRARY)
+        Packages/Uintah/CCA/Components/ProblemSpecification
 endif
 
 ifeq ($(IS_AIX),yes)

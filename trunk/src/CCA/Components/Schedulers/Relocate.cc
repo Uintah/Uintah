@@ -28,7 +28,8 @@
 using namespace std;
 using namespace Uintah;
 
-#ifdef _WIN32
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE
@@ -253,7 +254,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
   }
   if(pr.first == pr.second){
     ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
-    rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, 0);
+    rec->sendset = scinew ParticleSubset(0, -1, 0);
     records.insert(maptype::value_type(make_pair(realTo, matl), rec));
     return rec;
   } else {
@@ -616,9 +617,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         constParticleVariable<Point> px;
         new_dw->get(px, reloc_old_posLabel, pset);
 
-        ParticleSubset* keepset = scinew ParticleSubset(pset->getParticleSet(),
-                    false, -1, 0,
-                    pset->numParticles());
+        ParticleSubset* keepset = scinew ParticleSubset(0, -1, 0);
+        keepset->expand(pset->numParticles());
         ParticleSubset* delset = new_dw->getDeleteSubset(matl, patch);
         // Look for particles that left the patch, 
         // and if they are not in the delete set, put them in relocset
@@ -825,8 +825,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           particleIndex idx = totalParticles-numRemote;
           for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
             int position=0;
-            ParticleSubset* unpackset = scinew ParticleSubset(newsubset->getParticleSet(),
-                    false, matl, patch, 0);
+            ParticleSubset* unpackset = scinew ParticleSubset(0, matl, patch);
             unpackset->resize(buf->numParticles);
             for(int p=0;p<buf->numParticles;p++,idx++)
               unpackset->set(p, idx);

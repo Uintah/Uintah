@@ -9,7 +9,6 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>

@@ -316,7 +316,7 @@ main( int argc, char *argv[] )
     }
 
 //   When done, free up problem spec:
-    docTop->releaseDocument();
+    //docTop->releaseDocument();
 
 
     vector<int> index;

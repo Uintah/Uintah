@@ -92,7 +92,7 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
   t->requires(Task::NewDW, d_lb->gExternalHeatRateLabel,               gnone);
   t->modifies(             d_lb->gdTdtLabel,                           mss);
   t->requires(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel, gnone);
-  t->computes(d_lb->gTemperatureRateLabel);
+  t->modifies(d_lb->gTemperatureRateLabel);
 
   if(d_flag->d_fracture) { // for FractureMPM
     t->requires(Task::NewDW, d_lb->GMassLabel,                         gnone);
@@ -429,8 +429,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
 
       // Create variables for the results
       NCVariable<double> tempRate, GtempRate;
-      new_dw->allocateAndPut(tempRate, d_lb->gTemperatureRateLabel,dwi,patch);
-      tempRate.initialize(0.0);
+      new_dw->getModifiable(tempRate, d_lb->gTemperatureRateLabel,dwi,patch);
       if(d_flag->d_fracture) { // for FractureMPM
         new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel,dwi,patch);
 	GtempRate.initialize(0.0);

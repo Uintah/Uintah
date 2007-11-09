@@ -38,7 +38,8 @@ using namespace std;
 static DebugStream dbg("TaskGraph", false);
 static DebugStream compdbg("FindComp", false);
 
-#ifdef _WIN32
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE
@@ -735,7 +736,7 @@ void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
       cout << "It was originally computed by the following task(s):\n";
       for(Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)){
         cout << *old->task << endl;
-	old->comp->task->displayAll(cout);
+	//old->comp->task->displayAll(cout);
       }
       SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));
     }
@@ -932,7 +933,7 @@ TaskGraph::remapTaskDWs(int dwmap[])
     // we need to adjust based on which level they are on, but first 
     // we need to find the coarsest level.  The NewDW is relative to the coarsest
     // level executing in this taskgraph.
-    if (type_ == Scheduler::IntermediateTaskGraph) {
+    if (type_ == Scheduler::IntermediateTaskGraph && (d_tasks[i]->getType() != Task::Output && d_tasks[i]->getType() != Task::OncePerProc)) {
       if (d_tasks[i]->getType() == Task::OncePerProc || d_tasks[i]->getType() == Task::Output) {
         levelmin = 0;
         continue;
@@ -951,11 +952,13 @@ TaskGraph::remapTaskDWs(int dwmap[])
     // on the level it was originally mapped, so leave it as it is
     dwmap[Task::CoarseNewDW] = dwmap[Task::NewDW];
     for (unsigned i = 0; i < d_tasks.size(); i++) {
-      const PatchSet* ps = d_tasks[i]->getPatchSet();
-      if (!ps) continue;
-      if (levelmin == 0 || getLevel(ps)->getIndex() > levelmin) {
-        d_tasks[i]->setMapping(dwmap);
-        //cout << d_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")" << endl;
+      if (d_tasks[i]->getType() != Task::Output && d_tasks[i]->getType() != Task::OncePerProc) {
+        const PatchSet* ps = d_tasks[i]->getPatchSet();
+        if (!ps) continue;
+        if (getLevel(ps)->getIndex() > levelmin) {
+          d_tasks[i]->setMapping(dwmap);
+          //cout << d_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")" << endl;
+        }
       }
     }
     
@@ -1259,10 +1262,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	int matl = matls->get(m);
 	vector<DetailedTask*> creators;
 
+#if 0
         if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG && sc->isNewDW(req->mapDataWarehouse())) {
           continue; // will we need to fix for mixed scheduling?
         }
-
+#endif
 	ct.findReductionComps(req, 0, matl, creators, d_myworld);
         // if the size is 0, that's fine.  It means that there are more procs than patches on this level,
         // so the reducer will pick a benign value that won't affect the reduction

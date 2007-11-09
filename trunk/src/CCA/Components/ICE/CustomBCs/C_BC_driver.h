@@ -1,6 +1,6 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
-
+#include <CCA/Components/ICE/CustomBCs/sine.h>
 #include <CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <CCA/Components/ICE/CustomBCs/LODI2.h>
@@ -38,6 +38,11 @@ namespace Uintah {
     bool set_MMS_BCs;
     mms_vars* mms_v;
     mms_variable_basket* mms_var_basket;
+
+    bool using_Sine_BCs;
+    bool set_Sine_BCs;
+    sine_vars* sine_v;
+    sine_variable_basket* sine_var_basket;
     
     SimulationStateP sharedState;
 

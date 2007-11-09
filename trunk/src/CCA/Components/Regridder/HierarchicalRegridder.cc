@@ -16,6 +16,7 @@
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 using namespace Uintah;
@@ -137,7 +138,7 @@ void HierarchicalRegridder::problemSetup(const ProblemSpecP& params,
     d_patchActive[k]->initialize(0);
     d_patchCreated[k]->initialize(0);
     d_patchDeleted[k]->initialize(0);
-    if (k < (d_maxLevels-1)) {
+    if (k < (d_maxLevels)) {
       problemSetup_BulletProofing(k);
     }
   }

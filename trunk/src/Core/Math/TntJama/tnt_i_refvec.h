@@ -34,7 +34,7 @@
 #ifndef NULL
 #define NULL 0
 #endif
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 namespace TNT
 {

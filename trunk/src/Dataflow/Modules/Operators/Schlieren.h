@@ -1,8 +1,8 @@
 #ifndef __OPERATORS_Schlieren_H__
 #define __OPERATORS_Schlieren_H__
 
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/FieldPort.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>

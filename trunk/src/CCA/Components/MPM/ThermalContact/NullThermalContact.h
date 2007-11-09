@@ -73,6 +73,8 @@ WARNING
                               const PatchSet* patches,
 			      const MaterialSet* matls) const;
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
     private:
       SimulationStateP d_sharedState;
       MPMLabel* lb;

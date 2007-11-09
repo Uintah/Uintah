@@ -55,7 +55,6 @@ SET(Packages_Uintah_Core_Grid_SRCS
   Variables/GridIterator.cc               
   Variables/GridVariableBase.cc             
   Variables/LocallyComputedPatchVarMap.cc 
-  Variables/ParticleSet.cc                
   Variables/ParticleSubset.cc             
   Variables/ParticleVariableBase.cc       
   Variables/ParticleVariable_special.cc   

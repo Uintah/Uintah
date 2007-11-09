@@ -15,7 +15,7 @@
 
 #include <Core/Datatypes/Archive.h>
 
-#include <Dataflow/Network/Ports/SimplePort.h>
+#include <SCIRun/Dataflow/Network/Ports/SimplePort.h>
 
 namespace Uintah {
 

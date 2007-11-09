@@ -1,4 +1,4 @@
-#!/bin/csh
+#! /bin/csh
 #
 #.......................................................................
 # pscp2 <num Processors> < remove remote directory> < localDirectory> <login@Machine>:<remote dir>
@@ -20,6 +20,7 @@ if ($#argv != 4) then
   exit(0)
 endif
 
+set pscp2dir      = `dirname $0`
 set nproc         = $argv[1]
 set rmDir         = $argv[2]
 set localDir      = $argv[3]
@@ -34,39 +35,65 @@ endif
 setenv LOGIN              $user_test@$remote_machine
 setenv REMOTEDIR_TMP      `echo $string |cut -d\: -f2`
 setenv LOCALDIR           $localDir
-setenv REMOTEDIR          $REMOTEDIR_TMP/$LOCALDIR
-setenv PSCP_FILES         /tmp/pscp_files_$localDir
+setenv REMOTEDIR          $REMOTEDIR_TMP/`basename $LOCALDIR`
+setenv PSCP_FILES         /tmp/pscp_files_`basename $localDir`_`whoami`
 
 echo "login:       $LOGIN"
 echo "nprocessors: $nproc"
 echo "localDir:    $localDir"
 echo "remoteDir:   $REMOTEDIR"
-echo "removing the remote directory: " $rmDir
+echo "remove the remote directory?: " $rmDir
+echo "pscp_files:  $PSCP_FILES"
+echo "pscp2dir:    $pscp2dir"
 
 #------------------
 # Bulletproofing
 echo "Bullet proof tests"
 
+if ( "$localDir" == "." ) then
+  echo ""
+  echo "  ERROR: You can't set the local dir to '.'"
+  echo ""
+  exit 1
+endif
+
 echo "  Test: does the local folder ($localDir) exist"
 if ( ! -e $localDir ) then
-  echo " ERROR: local directory $localDir doesn't exist"
-  exit(1)
+  echo ""
+  echo "  ERROR: Local directory $localDir doesn't exist"
+  echo ""
+  exit 1
 endif
 
-echo "  Test: passwordless access."
+echo "  Test: does $REMOTEDIR_TMP exists on the remote machine"
+set test = `ssh -x $LOGIN "if(-e $REMOTEDIR_TMP) echo true"`
+if ( $test != "true") then
+  echo ""
+  echo "  ERROR:  The destination remote directory '$REMOTEDIR_TMP' does not exist..."
+  echo "          Are you sure you typed it in correctly?"
+  echo ""
+  exit
+endif
+
+echo "  Test: passwordless access..."
 set test = `ssh -x $LOGIN "echo 'password_access_works'"`
 if ( $test != "password_access_works" ) then
-  echo " ERROR:  passwordless access is not working."
+  echo ""
+  echo "  ERROR: Passwordless access is not working."
   echo "         You must be able to login into the $remote_machine without a password for this script to work"
-  exit(1)
+  echo ""
+  exit
 endif
 
-echo "  Test: Do we know about the remote operating system"
+echo "  Test: Do we know about the remote operating system?"
 set OS = `ssh -x $LOGIN uname`
 if ( $OS != "Linux" && $OS != "IRIX64" ) then
-  echo " ERROR: there is no pscp_driver for this operating system: $OS"
-  exit(1)
+  echo ""
+  echo "  ERROR: There is no pscp_driver for this operating system: $OS"
+  echo ""
+  exit
 endif
+
 echo "_____________________________________"
 #--------------------------------------------------------------------------
 # Now do the work
@@ -78,7 +105,8 @@ if( $rmDir == "y" || $rmDir == "Y" ) then
   echo "Now removing $localDir from $remote_machine if it exists"
   ssh -x $LOGIN "cd $REMOTEDIR_TMP; /bin/rm -rf $localDir; mkdir $localDir"
 else
-  ssh -x $LOGIN "cd $REMOTEDIR_TMP; mkdir $localDir"
+  echo "ssh -x $LOGIN 'cd $REMOTEDIR_TMP; mkdir `basename $localDir`'"
+  ssh -x $LOGIN "cd $REMOTEDIR_TMP; mkdir `basename $localDir`"
 endif
 
 cd $localDir
@@ -88,15 +116,25 @@ cd $localDir
 # let the user edit that file with vi
 /bin/rm -f $PSCP_FILES
 
-find . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
-find . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>$PSCP_FILES
-find . -maxdepth 1 -name "checkpoints" -exec basename {} \; >> $PSCP_FILES
+set FIND = find
+if( `uname` == "AIX" ) then
+   set FIND = /usr/local/gnu/bin/find
+endif
 
-echo "Now starting vi in a separate xterm:  Remove the files you don't want transfered"
-xterm -bg "DarkSlateGray" -fg "orange" -e "vi $PSCP_FILES"
+$FIND . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
+$FIND . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>$PSCP_FILES
+$FIND -path './checkpoints/*' -maxdepth 2 >>$PSCP_FILES
+
+echo "Now starting an editor in a separate xterm:  Remove the files you don't want transfered"
+
+if ( ! $?EDITOR ) then
+  echo
+  echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
+  echo "And 'vi' sometimes doesn't work well..."
+  set EDITOR = vi
+endif
+
+xterm -bg "DarkSlateGray" -fg "orange" -e $EDITOR $PSCP_FILES
 chmod ug+rw $PSCP_FILES
  
-/usr/bin/time -p gmake TAR=tar -f /usr/gapps/uintah/scripts/pscp2_driver_$OS -j $nproc
-
-cd ..
-exit(1)
+/usr/bin/time -p gmake TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc

@@ -1,8 +1,8 @@
 #ifndef UINTAH_SECOND_ORDER_ADVECTOR_H
 #define UINTAH_SECOND_ORDER_ADVECTOR_H
 
-#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/ICE/Advection/SecondOrderBase.h>
 #include <Core/Disclosure/TypeDescription.h>
 

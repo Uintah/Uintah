@@ -254,29 +254,27 @@
                <useObjectiveRate>              false </useObjectiveRate>
                <useModifiedEOS>                true  </useModifiedEOS>
              </constitutive_model>
-                <geom_object>
-                  <difference>
-                    <cylinder label="inner steel cylinder 1"> </cylinder>
-                    <box label="hot chunk 1">
-                      <min>     [-0.01,  0.049,  -0.1]   </min>
-                      <max>     [0.01,  0.0508, 0.1]   </max>
-                    </box>
-                  </difference>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         300.0           </temperature>
-                </geom_object>
-
-                <geom_object>  <!-- hot HMX particles #1 -->
-                  <intersection>
-                    <cylinder label="inner steel cylinder 1"> </cylinder>
-                    <box label="hot chunk 1">                 </box>
-                  </intersection>
-                  <res>                 [2,2,2]         </res>
-                  <velocity>            [0.0,0.0,0.0]   </velocity>
-                  <temperature>         600.0           </temperature>
-                </geom_object>
-                      
+             <geom_object>  <!-- hot HMX particles -->
+               <intersection>
+                 <cylinder label="inner steel cylinder 1"> </cylinder>
+                  <box label="hot chunk 1">
+                   <min>     [-0.01,  0.049,  -0.1]   </min>
+                   <max>     [0.01,  0.0508, 0.1]   </max>
+                 </box>
+               </intersection>
+               <res>                 [2,2,2]         </res>
+               <velocity>            [0.0,0.0,0.0]   </velocity>
+               <temperature>         600.0           </temperature>
+             </geom_object>
+             <geom_object>
+               <difference>
+                 <cylinder label="inner steel cylinder 1"> </cylinder>
+                 <box label="hot chunk 1">           </box>
+               </difference>
+               <res>                 [2,2,2]         </res>
+               <velocity>            [0.0,0.0,0.0]   </velocity>
+               <temperature>         300.0           </temperature>
+             </geom_object>
          </material>
 
          <contact>                                               
@@ -342,6 +340,24 @@
     </MaterialProperties>
 
     <Models>
+      <Model type="Steady_Burn">
+        <fromMaterial>         reactant     </fromMaterial>
+        <toMaterial>           product      </toMaterial>
+        <IdealGasConst>        8.314        </IdealGasConst>
+        <PreExpCondPh>         1.637e15     </PreExpCondPh>
+        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>
+        <HeatConductCondPh>    0.2          </HeatConductCondPh>
+        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+        <BoundaryParticles>    3            </BoundaryParticles>
+        <ThresholdPressure>    50000        </ThresholdPressure>
+        <IgnitionTemp>         550.0        </IgnitionTemp>
+      </Model> 
+<!--      
       <Model type="Simple_Burn">
         <fromMaterial> reactant     </fromMaterial>
         <toMaterial>  product       </toMaterial>
@@ -350,7 +366,9 @@
         <Enthalpy>        2000000.0 </Enthalpy>
         <BurnCoeff>            75.3 </BurnCoeff>
         <refPressure>      101325.0 </refPressure>
-      <Active>true</Active></Model>
+        <Active>true</Active>
+      </Model>
+-->
     </Models>
 
     <PhysicalBC>

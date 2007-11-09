@@ -12,6 +12,7 @@
 #include <Core/Parallel/Vampir.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+
 #include <SCIRun/Core/Thread/Time.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Util/DebugStream.h>
@@ -28,7 +29,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #ifdef USE_PERFEX_COUNTERS
-#  include <Packages/Uintah/CCA/Components/Schedulers/counters.h>
+#  include <CCA/Components/Schedulers/counters.h>
 #endif
 
 // Pack data into a buffer before sending -- testing to see if this
@@ -40,7 +41,8 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#ifdef _WIN32
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE
@@ -69,8 +71,11 @@ printTask( ostream& out, DetailedTask* task )
 	out << ", ";
       out << patches->get(p)->getID();
     }
-    const Level* level = getLevel(patches);
-   out << "\t  L-"<< level->getIndex();
+    
+    if (task->getTask()->getType() != Task::OncePerProc) {
+      const Level* level = getLevel(patches);
+      out << "\t  L-"<< level->getIndex();
+    }
   }
 }
 
@@ -237,7 +242,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   start_counters(0, 19);
 #endif
 
-  printTrackedVars(task, true);
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
 
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
@@ -247,8 +253,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   task->doit(d_myworld, dws, plain_old_dws);
   //AllocatorSetDefaultTag(tag);
 
-
-  printTrackedVars(task, false);
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
+    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &exec_flops);
@@ -427,6 +433,9 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM)
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_COMM);
 
   // sort the requires, so in case there is a particle send we receive it with
   // the right message tag
@@ -681,9 +690,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initTimestep();
 
   for (int i = 0; i < ntasks; i++)
-    dts->localTask(i)->clearExternalDepCount();
-
-
+    dts->localTask(i)->resetDependencyCounts();
 
   if(timeout.active()){
     d_labels.clear();
@@ -733,7 +740,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     DetailedTask * task = 0;
     // normal case - NOT using the queued task-receiving structure
     // run the task right after initiating the receives
-    if (!useExternalQueue_) {
+    if (!useExternalQueue_ || d_sharedState->isCopyDataTimestep()) {
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       numTasksDone++;
@@ -799,21 +806,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     else {
       // using queued task receiving structure
 
-      // run a task that has its communication complete
-      // tasks get in this queue automatically when their receive count hits 0
-      //   in DependencyBatch::received, which is called when a message is delivered.
-      if (dts->numExternalReadyTasks() > 0) {
-        DetailedTask * task = dts->getNextExternalReadyTask();
-        taskdbg << d_myworld->myrank() << " Running task " << *task << endl;
-        pending_tasks.erase(pending_tasks.find(task));
-        ASSERT(task->getExternalDepCount() == 0);
-        runTask(task, iteration);
-        numTasksDone++;
-      }
-      // otherwise, if we have an internally-ready task, initiate its recvs
-      else if (dts->numInternalReadyTasks() > 0) {
+      if (dts->numInternalReadyTasks() > 0) {
+        // if we have an internally-ready task, initiate its recvs (or run it if reduction)
         DetailedTask * task = dts->getNextInternalReadyTask();
-        
+
         if (task->getTask()->getType() == Task::Reduction){
           if(!abort) {
             taskdbg << d_myworld->myrank() << " Running task " << task->getTask()->getName() << endl;
@@ -822,18 +818,30 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
           numTasksDone++;
         }
         else {
+          taskdbg << d_myworld->myrank() << " Initiating task " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           initiateTask( task, abort, abort_point, iteration );
+          task->markInitiated();
           task->checkExternalDepCount();
           // if MPI has completed, it will run on the next iteration
-          taskdbg << d_myworld->myrank() << " Initiating task " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           pending_tasks.insert(task);
         }
+      }
+      else if (dts->numExternalReadyTasks() > 0) {
+        // run a task that has its communication complete
+        // tasks get in this queue automatically when their receive count hits 0
+        //   in DependencyBatch::received, which is called when a message is delivered.
+        DetailedTask * task = dts->getNextExternalReadyTask();
+        taskdbg << d_myworld->myrank() << " Running task " << *task << endl;
+        pending_tasks.erase(pending_tasks.find(task));
+        ASSERTEQ(task->getExternalDepCount(), 0);
+        runTask(task, iteration);
+        numTasksDone++;
       }
       else {
         // we have nothing to do, so wait until we get something
         //taskdbg << d_myworld->myrank() << " Waiting .... "  << endl;
         for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
-          taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
+          ;//taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
         processMPIRecvs(WAIT_ONCE);
       }
     }

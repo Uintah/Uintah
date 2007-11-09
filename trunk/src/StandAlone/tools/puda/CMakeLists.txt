@@ -1,4 +1,4 @@
-ADD_EXECUTABLE(puda puda.cc asci.cc jim1.cc rtdata.cc tecplot.cc util.cc varsummary.cc)
+ADD_EXECUTABLE(puda puda.cc asci.cc jim1.cc jim2.cc rtdata.cc tecplot.cc util.cc varsummary.cc)
 
 TARGET_LINK_LIBRARIES(puda
   Core_Containers

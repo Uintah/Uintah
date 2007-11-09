@@ -3,9 +3,9 @@
 
 #include <Core/Util/Handle.h>
 #include <Core/Grid/GridP.h>
+#include <Core/Grid/Variables/constGridVariable.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Util/RefCounted.h>
-#include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/Grid/Variables/ReductionVariableBase.h>
 #include <Core/Grid/Variables/PerPatchBase.h>
@@ -16,6 +16,7 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
@@ -136,6 +137,10 @@ public:
 			     ParticleSubset*) = 0;
   virtual void put(ParticleVariableBase&, const VarLabel*,
 		   bool replace = false) = 0;
+
+
+  virtual void getCopy(ParticleVariableBase&, const VarLabel*, ParticleSubset*) = 0;
+  virtual void copyOut(ParticleVariableBase&, const VarLabel*, ParticleSubset*) = 0;
 
   virtual void print() = 0;
   virtual void clear() = 0;

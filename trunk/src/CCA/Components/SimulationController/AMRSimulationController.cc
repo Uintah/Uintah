@@ -77,7 +77,7 @@ void AMRSimulationController::run()
    GridP currentGrid = gridSetup();
 
    d_scheduler->initialize(1, 1);
-   d_scheduler->advanceDataWarehouse(currentGrid);
+   d_scheduler->advanceDataWarehouse(currentGrid, true);
     
    double t;
 
@@ -338,7 +338,7 @@ void AMRSimulationController::run()
    calcWallTime();
    printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep(),delt,t);
 
-   d_ups->releaseDocument();
+   //d_ups->releaseDocument();
 }
 
 //______________________________________________________________________
@@ -568,7 +568,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     do {
       if (needNewLevel) {
         d_scheduler->initialize(1, 1);
-        d_scheduler->advanceDataWarehouse(grid);
+        d_scheduler->advanceDataWarehouse(grid, true);
       }
 
       if(d_myworld->myrank() == 0){
@@ -602,8 +602,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
      
       needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
     } while (needNewLevel);
-    
-    
+
     if(d_output)
       d_output->executedTimestep(0, grid);
 

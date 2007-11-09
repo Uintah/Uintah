@@ -10,7 +10,6 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -507,9 +506,6 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   
   printSchedule(patches,cout_doing,"MPM::scheduleComputeStressTensor\t\t\t\t");
   
-  // for thermal stress analysis
-  scheduleComputeParticleTempFromGrid(sched, patches, matls); 
-
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::computeStressTensor",
                         this, &AMRMPM::computeStressTensor);
@@ -533,21 +529,6 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   if(flags->d_artificial_viscosity){
     scheduleComputeArtificialViscosity(   sched, patches, matls);
   }
-}
-
-// Compute particle temperature by interpolating grid temperature
-// for thermal stress analysis
-void AMRMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls)
-{
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeParticleTempFromGrid");
-
-  Task* t = scinew Task("MPM::computeParticleTempFromGrid",
-                        this, &AMRMPM::computeParticleTempFromGrid);
-  t->requires(Task::OldDW, lb->pTemperatureLabel, Ghost::None);
-  t->computes(lb->pTempCurrentLabel);
-  sched->addTask(t, patches, matls);
 }
 
 void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
@@ -1643,41 +1624,6 @@ void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
   }  // patch loop
 }
 
-// for thermal stress analysis
-void AMRMPM::computeParticleTempFromGrid(const ProcessorGroup*,
-                                            const PatchSubset* patches,
-                                            const MaterialSubset*,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing computeParticleTempFromGrid\t\t\t");
-                                                                                
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-                                                                                
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-                                                                                
-      constParticleVariable<double> pTemp;
-      old_dw->get(pTemp, lb->pTemperatureLabel, pset);
-                                                                                
-      ParticleVariable<double> pTempCur;
-      new_dw->allocateAndPut(pTempCur,lb->pTempCurrentLabel,pset);
-                                                                                
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter != pset->end(); iter++) {
-        particleIndex idx = *iter;
-        pTempCur[idx]=pTemp[idx];
-      } // End of loop over iter
-    } // End of loop over m
-  } // End of loop over p
-}
-
 void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* ,
@@ -1754,8 +1700,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0,dwi,patch);
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);

@@ -1,4 +1,4 @@
-//static char *id="@(#) $Id: Hedgehog.cc 37686 2007-06-01 18:29:23Z worthen $";
+//static char *id="@(#) $Id: Hedgehog.cc 33602 2006-03-23 03:32:13Z dav $";
 
 /*
  *  Hedgehog.cc:  
@@ -14,10 +14,10 @@
 
 #include <SCIRun/Core/Containers/Array1.h>
 #include <SCIRun/Core/Util/NotFinished.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/ColorMapPort.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>
+#include <SCIRun/Dataflow/Network/Ports/GeometryPort.h>
+#include <SCIRun/Dataflow/Network/Ports/FieldPort.h>
 #include <SCIRun/Core/Geom/GeomArrows.h>
 #include <SCIRun/Core/Geom/GeomGroup.h>
 #include <SCIRun/Core/Geom/GeomLine.h>
@@ -27,8 +27,8 @@
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Widgets/BoxWidget.h>
-#include <Dataflow/Widgets/FrameWidget.h>
+#include <SCIRun/Dataflow/Widgets/BoxWidget.h>
+#include <SCIRun/Dataflow/Widgets/FrameWidget.h>
 #include <SCIRun/Core/Basis/Constant.h>
 #include <SCIRun/Core/Basis/HexTrilinearLgn.h>
 #include <SCIRun/Core/Datatypes/LatVolMesh.h>

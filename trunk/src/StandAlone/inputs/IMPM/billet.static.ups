@@ -45,6 +45,7 @@
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
         <do_grid_reset>true</do_grid_reset>
         <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
+        <interpolateParticleTempToGridEveryStep>true</interpolateParticleTempToGridEveryStep>
     </MPM>
 
     <PhysicalConstants>

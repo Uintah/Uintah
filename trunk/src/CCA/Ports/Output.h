@@ -3,7 +3,6 @@
 
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/Grid/GridP.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <SCIRun/Core/OS/Dir.h>

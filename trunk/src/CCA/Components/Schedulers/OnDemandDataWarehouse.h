@@ -147,11 +147,13 @@ public:
    getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
    void printParticleSubsets();
 
-   void get(constGridVariableBase& var, const VarLabel* label, int matlIndex, 
-            const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
+   virtual void getCopy(ParticleVariableBase&, const VarLabel*, ParticleSubset*);
+   virtual void copyOut(ParticleVariableBase&, const VarLabel*, ParticleSubset*);
 
    virtual void print();
    virtual void clear();
+   void get(constGridVariableBase& var, const VarLabel* label, int matlIndex, 
+            const Patch* patch, Ghost::GhostType gtype, int numGhostCells);
 
    void getModifiable(GridVariableBase& var, const VarLabel* label, int matlIndex, 
                       const Patch* patch);

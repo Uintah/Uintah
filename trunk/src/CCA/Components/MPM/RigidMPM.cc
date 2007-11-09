@@ -12,7 +12,6 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -194,8 +193,6 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
-  // for thermal stress analysis
-  t->requires(Task::NewDW, lb->pTempCurrentLabel,      Ghost::None);  
 
   // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
   // it is determined by the damping rate if the artificial damping
@@ -302,7 +299,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Vector> pdispnew;
 
       // for thermal stress analysis
-      constParticleVariable<double> pTempCurrent;
       ParticleVariable<double> pTempPreNew;       
 
       // Get the arrays of grid data on which the new part. values depend
@@ -319,8 +315,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
-      // for thermal stress analysis
-      new_dw->get(pTempCurrent,          lb->pTempCurrentLabel,           pset);      
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
@@ -390,7 +384,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvolumeNew[idx]      = pvolume[idx];
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx];
-        pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
+        pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
 
         thermal_energy += pTempNew[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
@@ -409,8 +403,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pColor_new.copyData(pColor);
       }    
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
       new_dw->deleteParticles(delset);      
     }
 

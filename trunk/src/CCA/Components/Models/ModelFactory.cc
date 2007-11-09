@@ -17,10 +17,10 @@
 #include <CCA/Components/Models/HEChem/IandG.h>
 #include <CCA/Components/Models/HEChem/JWLpp.h>
 #include <CCA/Components/Models/HEChem/LightTime.h>
-// containsFortran
 #include <CCA/Components/Models/Radiation/RadiationDriver.h>
-// containsFortran
 #include <SCIRun/Core/Malloc/Allocator.h>
+#include <sci_defs/uintah_defs.h>
+
 #include <iostream>
 
 using namespace Uintah;

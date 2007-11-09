@@ -5,7 +5,6 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>

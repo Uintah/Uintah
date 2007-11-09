@@ -1,8 +1,8 @@
 
-#include <SCIRun/Core/Math/FastMatrix.h>
-#include <SCIRun/Core/Math/Rand48.h>
-#include <SCIRun/Core/Math/MiscMath.h>
-#include <SCIRun/Core/Thread/Time.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Math/Rand48.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Thread/Time.h>
 #include <math.h>
 #include <iostream>
 using namespace std;

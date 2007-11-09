@@ -18,29 +18,29 @@
  *  Copyright (C) 2007 U of U
  */
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar.h>
+#include <StandAlone/tools/compare_mms/compare_scalar.h>
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Exceptions/InvalidValue.h>
 
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Math/MinMax.h>
-#include <Core/OS/Dir.h>
-#include <Core/Thread/Thread.h>
+#include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/Vector.h>
+#include <SCIRun/Core/Math/MinMax.h>
+#include <SCIRun/Core/OS/Dir.h>
+#include <SCIRun/Core/Thread/Thread.h>
 
 #include <sci_values.h>
 
@@ -210,7 +210,7 @@ main( int argc, char *argv[] )
     }
 
 //   When done, free up problem spec:
-    docTop->releaseDocument();
+    //docTop->releaseDocument();
 
 
     vector<int> index;

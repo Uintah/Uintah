@@ -2,7 +2,6 @@
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Labels/MPMLabel.h>
@@ -315,7 +314,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     // for thermal stress
-    constParticleVariable<double> pTempPrevious, pTempCurrent; 
+    constParticleVariable<double> pTempPrevious; 
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 

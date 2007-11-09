@@ -5,8 +5,9 @@
 #include <Core/Util/RefCounted.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <SCIRun/Core/Geometry/Vector.h>
 #include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Geometry/IntVector.h>
+#include <SCIRun/Core/Geometry/Vector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <string>
@@ -16,10 +17,6 @@
 #include <sgi_stl_warnings_on.h>
 
 typedef struct _xmlNode xmlNode;
-
-namespace SCIRun {
-  class IntVector;
-}
 
 #include <Core/ProblemSpec/uintahshare.h>
 namespace Uintah {
@@ -79,13 +76,13 @@ WARNING
         COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
         DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
      
-      inline ProblemSpec(const xmlNode* node, bool doWrite=true){
+      inline ProblemSpec(const xmlNode* node, bool toplevel = false, bool doWrite=true){
         d_node = const_cast<xmlNode*>(node); 
+        d_documentNode = toplevel;
         d_write = doWrite; 
       }
 
-      // ProblemSpec allocates no memory...
-      inline virtual ~ProblemSpec() {}
+      inline virtual ~ProblemSpec() { if (d_documentNode) releaseDocument();}
 
       /****************
          Methods to find a particular Node
@@ -336,6 +333,7 @@ WARNING
       // the node
       xmlNode* d_node;
       bool d_write;
+      bool d_documentNode;
    };
 
 } // End namespace Uintah

@@ -8,7 +8,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
@@ -274,8 +273,6 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<double>  pHotSpotT1, pHotSpotT2;
   constParticleVariable<double>  pHotSpotPhi1, pHotSpotPhi2;
   constNCVariable<Vector>        gVel, GVel;
-  constParticleVariable<StateData> pStateOld;
-  constParticleVariable<double>    pRandOld;
 
   ParticleVariable<double>    pVol_new, pIntHeatRate_new;
   ParticleVariable<Matrix3>   pDefGrad_new, pSig_new;
@@ -367,13 +364,14 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
                            pHotSpotPhi1Label_preReloc,            pset);
     new_dw->allocateAndPut(pHotSpotPhi2_new, 
                            pHotSpotPhi2Label_preReloc,            pset);
-    // transfer rand and state data from old dw to new
-    old_dw->get(pRandOld,        pRandLabel,                   pset);
-    old_dw->get(pStateOld,       pStatedataLabel,              pset);
-    new_dw->allocateAndPut(pRand,           pRandLabel_preReloc,                   pset);
-    new_dw->allocateAndPut(pState,          pStatedataLabel_preReloc,              pset);
-    pRand.copyData(&pRandOld.getBaseRep());
-    pState.copyData(&pStateOld.getBaseRep());
+    new_dw->allocateAndPut(pRand,        
+                           pRandLabel_preReloc,                   pset);
+    new_dw->allocateAndPut(pState,   
+                           pStatedataLabel_preReloc,              pset);
+
+    old_dw->copyOut(pRand,  pRandLabel,      pset);
+    old_dw->copyOut(pState, pStatedataLabel, pset);
+    ASSERTEQ(pset, pState.getParticleSubset());
 
     // Loop thru particles
     ParticleSubset::iterator iter = pset->begin();
@@ -592,8 +590,6 @@ ViscoSCRAMHotSpot::carryForward(const PatchSubset* patches,
     ParticleVariable<double>    pHotSpotPhi1_new, pHotSpotPhi2_new;
     ParticleVariable<StateData> pState;
     ParticleVariable<double>    pRand;
-    constParticleVariable<StateData> pStateOld;
-    constParticleVariable<double>    pRandOld;
 
     new_dw->allocateAndPut(pVolHeatRate_new, 
                            pVolChangeHeatRateLabel_preReloc,      pset);
@@ -615,13 +611,12 @@ ViscoSCRAMHotSpot::carryForward(const PatchSubset* patches,
                            pHotSpotPhi1Label_preReloc,            pset);
     new_dw->allocateAndPut(pHotSpotPhi2_new, 
                            pHotSpotPhi2Label_preReloc,            pset);
-    // transfer rand and state data from old dw to new
-    old_dw->get(pRandOld,        pRandLabel,                   pset);
-    old_dw->get(pStateOld,       pStatedataLabel,              pset);
-    new_dw->allocateAndPut(pRand,           pRandLabel_preReloc,                   pset);
-    new_dw->allocateAndPut(pState,          pStatedataLabel_preReloc,              pset);
-    pRand.copyData(&pRandOld.getBaseRep());
-    pState.copyData(&pStateOld.getBaseRep());
+    new_dw->allocateAndPut(pState,  
+                           pStatedataLabel_preReloc,              pset);
+    new_dw->allocateAndPut(pRand,         
+                           pRandLabel_preReloc,                   pset);
+    old_dw->copyOut(pRand,      pRandLabel,      pset);
+    old_dw->copyOut(pState,     pStatedataLabel, pset);
 
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){

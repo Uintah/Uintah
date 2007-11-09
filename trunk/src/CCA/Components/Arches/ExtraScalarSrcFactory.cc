@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/ZeroExtraScalarSrc.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+#include <SCIRun/Core/Malloc/Allocator.h>
 
 using namespace std;
 using namespace Uintah;

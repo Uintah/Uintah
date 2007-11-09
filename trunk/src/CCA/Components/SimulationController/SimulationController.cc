@@ -229,6 +229,12 @@ namespace Uintah {
     d_lb = d_scheduler->getLoadBalancer();
     d_lb->problemSetup(d_ups, d_sharedState);
     
+    // set up regridder with initial information about grid.
+    // do before sim - so that Switcher (being a sim) can reset the state of the regridder
+    d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if (d_regridder) {
+      d_regridder->problemSetup(d_ups, grid, d_sharedState);
+    }
 
     // Initialize the CFD and/or MPM components
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
@@ -306,12 +312,6 @@ namespace Uintah {
       Dir dir(d_fromDir);
       d_output->restartSetup(dir, 0, d_restartTimestep, t,
                              d_restartFromScratch, d_restartRemoveOldDir);
-    }
-
-    // set up regridder with initial infor about grid
-    d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-    if (d_regridder) {
-      d_regridder->problemSetup(d_ups, grid, d_sharedState);
     }
 
   }
@@ -545,7 +545,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     statLabels.push_back("TaskLocalComm");
     statLabels.push_back("TaskWaitCommTime");
     statLabels.push_back("Output");
-
+    
     if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
       toReduce.push_back(highwater);
     avgReduce.resize(toReduce.size());
@@ -580,7 +580,63 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       avg_highwater = avgReduce[avgReduce.size()-1];
       max_highwater = maxReduce[maxReduce.size()-1].val;
     }
+    //sum up the average times for simulation components
+    total_time=0;
+    for(int i=1;i<10;i++)
+      total_time+=avgReduce[i];
+    //sum up the average time for overhead related components
+    for(int i=1;i<6;i++)
+      overhead_time+=avgReduce[i];
+    
+    //calculate percentage of time spent in overhead
+    percent_overhead=overhead_time/total_time;
   }
+  else
+  {
+    //sum up the times for simulation components
+    total_time=d_sharedState->compilationTime
+              +d_sharedState->regriddingTime
+              +d_sharedState->regriddingCompilationTime
+              +d_sharedState->regriddingCopyDataTime
+              +d_sharedState->loadbalancerTime
+              +d_sharedState->taskExecTime
+              +d_sharedState->taskGlobalCommTime
+              +d_sharedState->taskLocalCommTime
+              +d_sharedState->taskWaitCommTime;
+    
+    //sum up the average time for overhead related components
+    overhead_time=d_sharedState->compilationTime
+              +d_sharedState->regriddingTime
+              +d_sharedState->regriddingCompilationTime
+              +d_sharedState->regriddingCopyDataTime
+              +d_sharedState->loadbalancerTime;
+    
+    //calculate percentage of time spent in overhead
+    percent_overhead=overhead_time/total_time;
+    
+  }
+
+  //set the overhead sample
+  if(d_n>2)  //ignore the first 3 samples, they are not good samples
+  {
+    d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
+    //increment the overhead index
+      
+    double overhead=0;
+    double weight=0;
+
+    int t=min(d_n-2,OVERHEAD_WINDOW);
+    //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
+    for(int i=0;i<t;i++)
+    {
+      overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
+      weight+=d_sharedState->overheadWeights[i];
+    }
+    d_sharedState->overheadAvg=overhead/weight; 
+    
+    d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
+    //increase overhead size if needed
+  } 
   d_sharedState->clearStats();
 
   // calculate mean/std dev
@@ -667,6 +723,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
                   << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << endl;
         }
       }
+      if(d_n>2)
+        stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  endl;
     } 
 
 
@@ -712,8 +770,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
  
     d_prevWallTime = d_wallTime;
-    d_n++;
   }
+  d_n++;
 }
   
 } // namespace Uintah {

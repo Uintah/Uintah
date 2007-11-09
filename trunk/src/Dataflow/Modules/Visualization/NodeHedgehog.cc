@@ -31,12 +31,12 @@
 #include <SCIRun/Core/Thread/Semaphore.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/ColorMapPort.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Widgets/BoxWidget.h>
-#include <Dataflow/Widgets/FrameWidget.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>
+#include <SCIRun/Dataflow/Network/Ports/GeometryPort.h>
+#include <SCIRun/Dataflow/Network/Ports/FieldPort.h>
+#include <SCIRun/Dataflow/Widgets/BoxWidget.h>
+#include <SCIRun/Dataflow/Widgets/FrameWidget.h>
 
 #include <Core/Grid/Box.h>
 

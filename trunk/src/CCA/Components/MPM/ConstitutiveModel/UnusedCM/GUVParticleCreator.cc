@@ -6,7 +6,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Patch.h>
 #include <Core/GeometryPiece/GeometryPiece.h>

@@ -42,12 +42,12 @@
 #include <SCIRun/Core/Util/Environment.h>
 #include <SCIRun/Core/Util/FileUtils.h>
 
+#include <sci_defs/uintah_defs.h>
 #include <sci_defs/mpi_defs.h>
-//#include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
 
 #ifdef USE_VAMPIR
-#  include <Packages/Uintah/Core/Parallel/Vampir.h>
+#  include <Core/Parallel/Vampir.h>
 #endif
 
 #if HAVE_IEEEFP_H
@@ -59,6 +59,7 @@
 
 #ifdef _WIN32
 #  include <process.h>
+#  include <winsock2.h>
 #endif
 
 #include <iostream>
@@ -73,11 +74,11 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-#undef SCISHARE
-#ifdef _WIN32
-#  define SCISHARE __declspec(dllimport)
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
+#  define UINTAHSHARE __declspec(dllimport)
 #else
-#  define SCISHARE
+#  define UINTAHSHARE
 #endif
 
 // Debug: Used to sync cerr so it is readable (when output by
@@ -86,9 +87,9 @@ using namespace std;
 // DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 // DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
-extern SCISHARE Mutex cerrLock;
-extern SCISHARE DebugStream mixedDebug;
-extern SCISHARE DebugStream fullDebug;
+extern UINTAHSHARE Mutex cerrLock;
+extern UINTAHSHARE DebugStream mixedDebug;
+extern UINTAHSHARE DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
 
 static
@@ -332,7 +333,6 @@ main( int argc, char** argv )
     udaDir = filename;
     filename = filename + "/input.xml";
 
-#ifndef _WIN32
     // If restarting (etc), make sure that the uda specified is not a symbolic link to an Uda.
     // This is because the sym link can (will) be updated to point to a new uda, thus creating
     // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
@@ -342,7 +342,6 @@ main( int argc, char** argv )
       cout << "\n";
       exit( 1 );
     }
-#endif
   }
 
   if (!Uintah::Parallel::usingMPI()) {
@@ -373,14 +372,13 @@ main( int argc, char** argv )
   
  if( Uintah::Parallel::getMPIRank() == 0 ) {
     // helpful for cleaning out old stale udas
-#ifndef _WIN32
-   time_t t = time(NULL) ;
+    time_t t = time(NULL) ;
     string time_string(ctime(&t));
     char name[256];
     gethostname(name, 256);
     cerr << "Date:    " << time_string; // has its own newline
     cerr << "Machine: " << name << endl;
-#endif
+
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
 #if defined(REDSTORM)
@@ -410,11 +408,13 @@ main( int argc, char** argv )
 
 #if !defined(REDSTORM)
     char * st = getenv( "INITIAL_SLEEP_TIME" );
-    if( st != 0 ){
+    if( st != 0 ){    
+      char name[256];
+      gethostname(name, 256);
       int sleepTime = atoi( st );
       cout << "SLEEPING FOR " << sleepTime 
            << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
-      cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " is " << getpid() << "\n";
+      cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
       Time::waitFor( (double)sleepTime );
     }
 #endif
@@ -544,19 +544,9 @@ main( int argc, char** argv )
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::bad_cast e) {
-    cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_cast': " << e.what() << '\n';
-    cerrLock.unlock();
-    thrownException = true;
   } catch (std::bad_exception e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
-    cerrLock.unlock();
-    thrownException = true;
-  } catch (std::bad_typeid e) {
-    cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_typeid': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
   } catch (std::ios_base::failure e) {

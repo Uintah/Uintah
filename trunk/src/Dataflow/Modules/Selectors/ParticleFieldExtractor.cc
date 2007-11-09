@@ -557,14 +557,9 @@ ParticleFieldExtractor::execute()
   pvout = (VectorParticlesOPort *) get_oport("Vector Particles");
   ptout = (TensorParticlesOPort *) get_oport("Tensor Particles");
   ArchiveHandle handle;
-<<<<<<< .working
-   if(!in->get(handle)){
-     warning("ParticleFieldExtractor::execute() Didn't get a handle.");
-=======
 
   if(!(in->get(handle) && handle.get_rep())){
     warning("ParticleFieldExtractor::execute() Didn't get a handle.");
->>>>>>> .merge-right.r39171
     //     AllocatorSetDefaultTag(old_tag1);
     return;
   }
@@ -918,41 +913,9 @@ PFEThread::run()
     } else
       tp = 0;
   }
-<<<<<<< .working
-
-  if( !(have_sp || have_vp || have_tp) ){
-    sema->up();
-    return;
-  }
-
-  imutex->lock();
-  pseth->AddParticles( positions, ids, patch);
-  imutex->unlock();
-  if(have_sp) {
-    smutex->lock();
-    if( sp == 0 ){
-      sp = scinew ScalarParticles();
-      sp->Set( pseth );
-    }
-    sp->AddVar( scalars );
-    smutex->unlock();
-  } else 
-    sp = 0;
-  if(have_vp) {
-    vmutex->lock();
-    if( vp == 0 ){
-      vp = scinew VectorParticles();
-      vp->Set( pseth );
-    }
-    vp->AddVar( vectors );
-    vmutex->unlock();
-  } else 
-    vp = 0;
-=======
   string location = "PFEThread Run()";
   pfe->update_progress( &location );
   sema->up();
->>>>>>> .merge-right.r39171
 
 } // end run()
 

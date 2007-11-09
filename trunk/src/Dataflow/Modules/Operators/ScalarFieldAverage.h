@@ -4,8 +4,8 @@
 
 #include "ScalarOperatorFunctors.h"
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/FieldPort.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>
 #include <sgi_stl_warnings_off.h>

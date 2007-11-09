@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <unistd.h>
 #include <sys/wait.h>
 #include <stdio.h>
 #include <SCIRun/Core/Exceptions/ErrnoException.h>

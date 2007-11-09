@@ -7,15 +7,15 @@
 #include <Core/Grid/Variables/constVariable.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <vector>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
+
 namespace Uintah {
   class BufferInfo;
   class OutputContext;
   class ParticleSubset;
-  class ParticleSet;
   class Patch;
   class ProcessorGroup;
   class TypeDescription;
@@ -104,12 +104,6 @@ WARNING
 	 return d_pset;
       }
 
-      //////////
-      // Insert Documentation Here:
-      ParticleSet* getParticleSet() const {
-	 return d_pset->getParticleSet();
-      }
-      
       virtual void* getBasePointer() const = 0;
       void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;

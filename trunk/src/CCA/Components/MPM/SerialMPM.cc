@@ -18,7 +18,6 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -244,6 +243,7 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
+  thermalContactModel->outputProblemSpec(mpm_ps);
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -442,17 +442,22 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-  scheduleComputeHeatExchange(            sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeHeatExchange(          sched, patches, matls);
+  }
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleSetBCsInterpolated(             sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
-  scheduleComputeInternalHeatRate(        sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleSolveHeatEquations(           sched, patches, matls);
+    scheduleIntegrateTemperatureRate(     sched, patches, matls);
+  }
+
   scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleSolveHeatEquations(             sched, patches, matls);
   scheduleIntegrateAcceleration(          sched, patches, matls);
-  scheduleIntegrateTemperatureRate(       sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
@@ -554,6 +559,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
+  t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
@@ -631,9 +637,6 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   
   printSchedule(patches,cout_doing,"MPM::scheduleComputeStressTensor\t\t\t\t");
   
-  // for thermal stress analysis
-  scheduleComputeParticleTempFromGrid(sched, patches, matls); 
-
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::computeStressTensor",
                         this, &SerialMPM::computeStressTensor);
@@ -657,26 +660,6 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   if(flags->d_artificial_viscosity){
     scheduleComputeArtificialViscosity(   sched, patches, matls);
   }
-}
-
-// Compute particle temperature by interpolating grid temperature
-// for thermal stress analysis
-void SerialMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls)
-{
-  Ghost::GhostType gac = Ghost::AroundCells;
-  
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeParticleTempFromGrid\t\t\t");
-  
-  Task* t = scinew Task("MPM::computeParticleTempFromGrid",
-                        this, &SerialMPM::computeParticleTempFromGrid);
-
-  t->requires(Task::NewDW, lb->gTemperatureLabel, gac, NGN);
-  t->requires(Task::OldDW, lb->pXLabel,    Ghost::None);
-  t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
-  t->computes(lb->pTempCurrentLabel);
-  sched->addTask(t, patches, matls);
 }
 
 // Compute the accumulated strain energy
@@ -1113,8 +1096,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureLabel,               gac,NGN);
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                         gnone);
   t->requires(Task::OldDW, lb->pMassLabel,                      gnone);
@@ -1125,8 +1106,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,            gnone);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
-  // for thermal stress analysis
-  t->requires(Task::NewDW, lb->pTempCurrentLabel,               gnone);
     
 
   // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
@@ -1579,6 +1558,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperature;
       NCVariable<double> gSp_vol;
       NCVariable<double> gTemperatureNoBC;
+      NCVariable<double> gTemperatureRate;
       NCVariable<double> gnumnearparticles;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
@@ -1589,6 +1569,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                                                      dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
+                             dwi,patch);
+      new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
                              dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,
                              dwi,patch);
@@ -1603,6 +1585,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
       gTemperatureNoBC.initialize(0);
+      gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
@@ -2633,8 +2616,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
            iter++) 
         damage[*iter] = 0;
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
       
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch,damage,dwi,
                                                            old_dw,new_dw);
@@ -2666,14 +2648,11 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
           cout_dbg << "Deleted " << numparticles << " particles" << endl;
 
         ParticleCreator* particle_creator = null_matl->getParticleCreator();
-        ParticleSet* set_add = scinew ParticleSet(numparticles);
-        ParticleSubset* addset = scinew ParticleSubset(set_add,true,null_dwi,
-                                                       patch,numparticles);
+        ParticleSubset* addset = scinew ParticleSubset(numparticles,null_dwi,patch);
 
         if (cout_dbg.active()) {
           cout_dbg << "Address of delset = " << delset << endl;
           cout_dbg << "Address of pset = " << pset << endl;
-          cout_dbg << "Address of set_add = " << set_add << endl;
           cout_dbg << "Address of addset = " << addset << endl;
         }
 
@@ -2779,8 +2758,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
       ParticleSubset::iterator iter = pset->begin(); 
       for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false, dwi, patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
       
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
@@ -2824,10 +2802,7 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
         int conv_dwi = conv_matl->getDWIndex();
       
         ParticleCreator* particle_creator = conv_matl->getParticleCreator();
-        ParticleSet* set_add = scinew ParticleSet(numparticles);
-        ParticleSubset* addset = scinew ParticleSubset(set_add, true,
-                                                       conv_dwi, patch,
-                                                       numparticles);
+        ParticleSubset* addset = scinew ParticleSubset(numparticles, conv_dwi, patch);
         
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
@@ -2877,61 +2852,6 @@ void SerialMPM::convertLocalizedParticles(const ProcessorGroup*,
     cout_convert << "Completed convertLocalizedParticles " << endl;
 
   
-}
-
-// for thermal stress analysis
-void SerialMPM::computeParticleTempFromGrid(const ProcessorGroup*,
-                                            const PatchSubset* patches,
-                                            const MaterialSubset*,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
-{                                           
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing computeParticleTempFromGrid\t\t\t");
-
-    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<double> S(interpolator->size());
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();   
-
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      constNCVariable<double> gTemperature;
-      Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gTemperature, lb->gTemperatureLabel, dwi,patch, gac, NGP);
-
-      constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
-      old_dw->get(px,    lb->pXLabel,    pset);
-      old_dw->get(psize, lb->pSizeLabel, pset);
-      
-      ParticleVariable<double> pTempCur;
-      new_dw->allocateAndPut(pTempCur,lb->pTempCurrentLabel,pset);
-
-      // Loop over particles
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter != pset->end(); iter++) {
-        particleIndex idx = *iter;
-        double pTemp=0.0;
-
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx]);
-        // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < flags->d_8or27; k++) {
-          IntVector node = ni[k];
-          pTemp += gTemperature[node] * S[k];
-        }
-        pTempCur[idx]=pTemp;
-      } // End of loop over iter        
-    } // End of loop over m
-    delete interpolator;
-  } // End of loop over p 
 }
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -3005,12 +2925,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<double> pErosion;
       
       // for thermal stress analysis
-      constParticleVariable<double> pTempCurrent; 
       ParticleVariable<double> pTempPreNew; 
 
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
-      constNCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
+      constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, massBurnFrac, frictionTempRate;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -3023,8 +2942,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
-      // for thermal stress analysis
-      new_dw->get(pTempCurrent, lb->pTempCurrentLabel,               pset); 
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
@@ -3037,8 +2954,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
@@ -3049,8 +2965,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      new_dw->get(gTemperature,    lb->gTemperatureLabel,    dwi,patch,gac,NGP);
-      new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
@@ -3111,7 +3025,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
         pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
-        pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
+        pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
 
         if (cout_heat.active()) {
           cout_heat << "MPM::Particle = " << idx 

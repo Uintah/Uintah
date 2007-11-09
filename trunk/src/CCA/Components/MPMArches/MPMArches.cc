@@ -27,7 +27,6 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/ComputeSet.h>

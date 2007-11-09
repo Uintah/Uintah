@@ -17,7 +17,7 @@
         <levelIndependent>      true  </levelIndependent>
         <doSpaceCurve>          true  </doSpaceCurve>
         <outputNthProc>         8     </outputNthProc>
-        <timeRefinementWeight> false </timeRefinementWeight>
+        <timeRefinementWeight> false  </timeRefinementWeight>
    </LoadBalancer>
 
 
@@ -59,11 +59,11 @@
     </BoundaryConditions>
        <Level>
            <Box label="Level 0">
-              <lower>        [-.175, -.175, -.005 ]  </lower>
+              <lower>        [ -.175, -.175, -.005 ]   </lower>
               <upper>        [ .175,  .175,  .005]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [4,4,1]    </patches>
-              <resolution>   [32,32,1]  </resolution>
+              <extraCells>   [1,1,1]                  </extraCells>
+              <patches>      [4,4,1]                  </patches>
+              <resolution>   [32,32,1]                </resolution>
            </Box>
        </Level>
     </Grid>
@@ -120,9 +120,9 @@
         <orderOfInterpolation>1        </orderOfInterpolation>
         
         <Refinement_Criteria_Thresholds>         
-          <!--  
+          <!--   
+          examples
           <Variable name="press_CC" value="1e5" matl="0"/>
-            examples
           <Variable name = "vol_frac_CC"  value = "10"  matl = "1" />
           <Variable name = "rho_CC"       value = "1e3" matl = "all" />
           -->
@@ -143,7 +143,7 @@
         <cell_regrid_dilation>      [1,1,0]   </cell_regrid_dilation>
         <cell_deletion_dilation>    [1,1,0]   </cell_deletion_dilation>
         <min_boundary_cells>        [1,1,0]   </min_boundary_cells>
-        <max_timestep_interval>    10 </max_timestep_interval>
+        <max_timestep_interval>    10         </max_timestep_interval>
       </Regridder>
 
       <useLockStep>       true </useLockStep>
@@ -349,6 +349,25 @@
     </MaterialProperties>
 
     <Models>
+      <Model type="Steady_Burn">
+        <fromMaterial>         reactant     </fromMaterial>
+        <toMaterial>           product      </toMaterial>
+        <IdealGasConst>        8.314        </IdealGasConst>
+        <PreExpCondPh>         1.637e15     </PreExpCondPh>
+        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>
+        <HeatConductCondPh>    0.2          </HeatConductCondPh>
+        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+        <BoundaryParticles>    3            </BoundaryParticles>
+        <ThresholdPressure>    50000        </ThresholdPressure>
+        <IgnitionTemp>         550.0        </IgnitionTemp>
+      </Model>      
+
+<!--      
       <Model type="Simple_Burn">
         <fromMaterial> reactant     </fromMaterial>
         <toMaterial>  product       </toMaterial>
@@ -357,9 +376,12 @@
         <Enthalpy>        2000000.0 </Enthalpy>
         <BurnCoeff>            75.3 </BurnCoeff>
         <refPressure>      101325.0 </refPressure>
-      <Active>true</Active></Model>
+        
+        <Active>true</Active>
+      </Model>
+-->
     </Models>
-
+    
     <PhysicalBC>
        <MPM>
       </MPM>

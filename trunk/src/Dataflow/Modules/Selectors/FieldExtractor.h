@@ -29,10 +29,11 @@ LOG
 #ifndef FIELDEXTRACTOR_H
 #define FIELDEXTRACTOR_H 1
 
-#include <Core/Math/Matrix3.h>
+
 #include <SCIRun/Core/Basis/Constant.h>
 #include <SCIRun/Core/Basis/HexTrilinearLgn.h>
 #include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <Core/Math/Matrix3.h>
 #include <SCIRun/Core/Datatypes/MultiLevelField.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Geometry/Point.h>
@@ -60,7 +61,7 @@ LOG
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Dataflow/Modules/Selectors/share.h>
+#include <Dataflow/Modules/Selectors/uintahshare.h>
 namespace Uintah {
 using namespace SCIRun;
 
@@ -100,7 +101,7 @@ public:
   double dt;
 };
 
-class SCISHARE FieldExtractor : public Module { 
+class UINTAHSHARE FieldExtractor : public Module { 
   
 public: 
   
@@ -163,7 +164,7 @@ protected:
 }; //class 
 
 
-class SCISHARE FieldExtractorAlgo: public DynamicAlgoBase
+class UINTAHSHARE FieldExtractorAlgo: public DynamicAlgoBase
 {
 public:
   virtual FieldHandle  execute(QueryInfo& quinfo, IntVector& offset,
@@ -189,7 +190,7 @@ protected:
 
 };
 
-template<class T>
+template< class VarT, class T >
 class FieldExtractorAlgoT: public FieldExtractorAlgo
 {
 public:
@@ -200,8 +201,9 @@ protected:
   // This function makes a switch between building multi-level data or
   // single-level data.  Makes a call to either build_field or or
   // build_multi_level_field.  The basis_order pertains to whether the
-  // data is node or cell centerd.
-  //  template<class T>
+  // data is node or cell centerd.  Type Var should look something
+  // like CCVariable<T> or NCVariable<T>.
+  //  template<class Var, class T>
   FieldHandle getData(QueryInfo& qinfo, IntVector& offset,
                       LVMeshHandle mesh_handle,
                       int remove_boundary, int basis_order);
@@ -230,12 +232,12 @@ protected:
   
 };
 
-template<class T>
+template< class VarT, class T>
 FieldHandle
-FieldExtractorAlgoT<T>::execute(QueryInfo& qinfo,
-                                IntVector& offset,
-                                LVMeshHandle mh,
-                                int remove_boundary)
+FieldExtractorAlgoT<VarT, T>::execute(QueryInfo& qinfo,
+                                      IntVector& offset,
+                                      LVMeshHandle mh,
+                                      int remove_boundary)
 {
   FieldHandle f = 0;
 
@@ -253,18 +255,18 @@ FieldExtractorAlgoT<T>::execute(QueryInfo& qinfo,
 // This does the actuall work of getting the data from the
 // DataArchive for a single patch and filling the field.  This is
 //  called by both build_field and build_patch_field.
-template <class T>
+template <class Var, class T>
  template<class FIELD>
 void
-FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
-                                     FIELD* sfield, const Patch* patch,
-                                     int remove_boundary)
+FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
+                                         FIELD* sfield, const Patch* patch,
+                                          int remove_boundary)
 {
   IntVector patch_low, patch_high;
-  GridVariable<T>* patch_data = dynamic_cast<GridVariable<T>*>(qinfo.type->createInstance());
+  Var patch_data;
 
   try {
-    qinfo.archive->query(*patch_data, qinfo.varname, qinfo.mat, patch,
+    qinfo.archive->query(patch_data, qinfo.varname, qinfo.mat, patch,
                          qinfo.timestep);
   } catch (Exception& e) {
 //     error("query caused an exception: " + string(e.message()));
@@ -277,8 +279,8 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
   int vartype;
   if( remove_boundary == 1 ){
 #if 0
-      cerr<<"patch_data->getLowIndex() = "<<patch_data->getLowIndex()<<"\n";
-      cerr<<"patch_data->getHighIndex() = "<<patch_data->getHighIndex()<<"\n";
+      cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+      cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
       cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
       cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
       cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
@@ -317,14 +319,14 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 //       error("getPatchData::Problem with getting vartype from field");
       return;
     }
-    if( !patch_data->rewindow( patch_low, patch_high ) ) {
+    if( !patch_data.rewindow( patch_low, patch_high ) ) {
 //       warning("patch data thinks it needs reallocation, this will fail.");
     }
 
   } else {
 #if 0
-      cerr<<"patch_data->getLowIndex() = "<<patch_data->getLowIndex()<<"\n";
-      cerr<<"patch_data->getHighIndex() = "<<patch_data->getHighIndex()<<"\n";
+      cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
+      cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
       cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
       cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
       cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
@@ -379,22 +381,22 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       <<"x"<<lm->get_nk()<<"\n";
   cerr<<"offset = "<<offset<<"\n";
 #endif
-  PatchToFieldThread<T, FIELD> *ptft =
-    scinew PatchToFieldThread<T, FIELD>(sfield, *patch_data, offset,
+  PatchToFieldThread<Var, T, FIELD> *ptft =
+    scinew PatchToFieldThread<Var, T, FIELD>(sfield, patch_data, offset,
                                       patch_low, patch_high);
   ptft->run();
   delete ptft;
 }
 
 // // Similar to build_field, but is called from build_multi_level_field.
-template <class T>
+template <class Var, class T>
    template<class FIELD>
 void
-FieldExtractorAlgoT<T>::build_patch_field(QueryInfo& qinfo,
-                                          const Patch* patch,
-                                          IntVector& offset,
-                                          FIELD* field,
-                                          int remove_boundary)
+FieldExtractorAlgoT<Var, T>::build_patch_field(QueryInfo& qinfo,
+                                               const Patch* patch,
+                                               IntVector& offset,
+                                               FIELD* field,
+                                               int remove_boundary)
 {
   // Initialize the data
   field->fdata().initialize(T(0));
@@ -415,11 +417,11 @@ FieldExtractorAlgoT<T>::build_patch_field(QueryInfo& qinfo,
 }
 
 // Calls query for a single-level data set.
-template <class T>
+template <class Var, class T>
  template<class FIELD>
 void
-FieldExtractorAlgoT<T>::build_field(QueryInfo& qinfo, IntVector& offset,
-                                    FIELD* field, int remove_boundary)
+FieldExtractorAlgoT<Var, T>::build_field(QueryInfo& qinfo, IntVector& offset,
+                                        FIELD* field, int remove_boundary)
 {
 
   // Initialize the data
@@ -440,11 +442,11 @@ FieldExtractorAlgoT<T>::build_field(QueryInfo& qinfo, IntVector& offset,
 
 
 // // Creates an MultiLevelField.
-template <class T>
+template <class Var, class T>
 FieldHandle
-FieldExtractorAlgoT<T>::build_multi_level_field( QueryInfo& qinfo, 
-                                                 int basis_order,
-                                                 int remove_boundary)
+FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo, 
+                                                      int basis_order,
+                                                      int remove_boundary)
 {
     typedef GenericField<LVMesh, ConstantBasis<T>, 
                          FData3d<T, LVMesh> > LVFieldCB;
@@ -572,13 +574,13 @@ FieldExtractorAlgoT<T>::build_multi_level_field( QueryInfo& qinfo,
 // This function makes a switch between building multi-level data or
 // single-level data.  Makes a call to either build_field or or
 // build_multi_level_field.  The basis_order pertains to whether the
-// data is node or cell centerd.  The viariable this is called on should look something
+// data is node or cell centerd.  Type Var should look something
 // like CCVariable<T> or NCVariable<T>.
-template<class T>
+template<class Var, class T>
 FieldHandle
-FieldExtractorAlgoT<T>::getData(QueryInfo& qinfo, IntVector& offset,
-                                LVMeshHandle mesh_handle,
-                                int remove_boundary, int basis_order)
+FieldExtractorAlgoT<Var, T>::getData(QueryInfo& qinfo, IntVector& offset,
+                                     LVMeshHandle mesh_handle,
+                                     int remove_boundary, int basis_order)
 {
   if (qinfo.get_all_levels) {
     FieldHandle fh = build_multi_level_field(qinfo, 

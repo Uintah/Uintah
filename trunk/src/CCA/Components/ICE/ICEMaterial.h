@@ -10,15 +10,14 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/Geometry/Point.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
-  using SCIRun::Point;
-  using SCIRun::Vector;
+  using namespace SCIRun;
   class ICELabel;
   class EquationOfState;
   class GeometryObject;

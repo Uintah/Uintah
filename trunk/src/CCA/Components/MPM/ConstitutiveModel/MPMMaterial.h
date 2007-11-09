@@ -14,16 +14,15 @@
 
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Vector.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-
 #include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
-using SCIRun::Point;
-using SCIRun::Vector;
+using namespace SCIRun;
 
  class Patch;
  class DataWarehouse;

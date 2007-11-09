@@ -464,7 +464,15 @@ void setBC(T& vel_FC,
                                       cell_dx, P_dir, whichVel, sharedState,
                                       custom_BC_basket->mms_var_basket,
                                       custom_BC_basket->mms_v);
-        }        
+        }
+        //__________________________________
+        // Custom BCs
+        if(bc_kind == "Sine"){
+          IveSetBC= set_Sine_BCs_FC<T>(patch, face, vel_FC, bound_ptr, bc_kind,
+                                      cell_dx, P_dir, whichVel, sharedState,
+                                      custom_BC_basket->sine_var_basket,
+                                      custom_BC_basket->sine_v);
+        }         
         
         //__________________________________
         //  debugging

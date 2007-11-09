@@ -25,10 +25,9 @@
  */
 #include <Dataflow/Modules/Visualization/VariablePlotter.h>
 
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Widgets/FrameWidget.h>
-<<<<<<< .working
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/GeometryPort.h>
+#include <SCIRun/Dataflow/Widgets/FrameWidget.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Geom/GeomLine.h>
 #include <SCIRun/Core/Geom/GeomPick.h>
@@ -47,33 +46,9 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
-#include <Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
-//#include <Core/Grid/FaceIterator.h> // Includ after Patch.h
+#include <Core/Grid/Variables/NodeIterator.h> // Include after Patch.h
+#include <Core/Grid/Variables/CellIterator.h> // Include after Patch.h
 #include <Core/Disclosure/TypeDescription.h>
-=======
-#include <Core/Geometry/IntVector.h>
-#include <Core/Geom/GeomLine.h>
-#include <Core/Geom/GeomPick.h>
-#include <Core/Geom/GeomSphere.h>
-#include <Core/Geom/GeomPoint.h>
-#include <Core/Geom/Material.h>
-#include <Core/Geometry/BBox.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Include after Patch.h
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Include after Patch.h
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
->>>>>>> .merge-right.r39171
 #include <vector>
 #include <sstream>
 #include <iostream>

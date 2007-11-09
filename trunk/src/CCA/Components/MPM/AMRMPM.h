@@ -16,7 +16,6 @@
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/MPMFlags.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <CCA/Components/MPM/uintahshare.h>
@@ -173,14 +172,6 @@ protected:
 				   DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here: for thermal stress analysis
-  virtual void computeParticleTempFromGrid(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* matls,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here: for thermal stress analysis
   void updateErosionParameter(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* ,
@@ -264,8 +255,6 @@ protected:
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
 					   const MaterialSet*);
   
-  virtual void scheduleComputeParticleTempFromGrid(SchedulerP&, const PatchSet*,                                           const MaterialSet*);
-
   void scheduleUpdateErosionParameter(SchedulerP& sched,
 				      const PatchSet* patches,
 				      const MaterialSet* matls);

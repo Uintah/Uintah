@@ -168,8 +168,7 @@ namespace Uintah {
                                                   
       void scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP&, 
                                             const LevelP&,
-                                            const MaterialSet*,
-                                            vector<PatchSubset*> &);
+                                            const MaterialSet*);
       
       void computesRequires_AMR_Refluxing(Task* t, 
                                           const MaterialSet* ice_matls);                                                                                         

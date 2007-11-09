@@ -15,7 +15,7 @@
 #include <SCIRun/Core/Exceptions/InternalError.h>
 #include <SCIRun/Core/Containers/StaticArray.h>
 #include <SCIRun/Core/OS/Dir.h> // for MKDIR
-#include <SCIRun/Core/Util/FileUtils.h> // for DIR on windows
+#include <SCIRun/Core/Util/FileUtils.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <sys/stat.h>
 #ifndef _WIN32

@@ -16,8 +16,7 @@
 #include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
-using SCIRun::Point;
-using SCIRun::Vector;
+using namespace SCIRun;
 
 class Box;
 class GeometryPiece;

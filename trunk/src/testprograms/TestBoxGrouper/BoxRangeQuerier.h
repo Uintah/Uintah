@@ -1,7 +1,7 @@
 #ifndef SCIRUN_CORE_CONTAINERS_BOX_RANGE_QUERIER
 #define SCIRUN_CORE_CONTAINERS_BOX_RANGE_QUERIER
 
-#include <SCIRun/Core/Containers/RangeTree.h>
+#include <Core/Containers/RangeTree.h>
 #include <Packages/Uintah/testprograms/TestBoxGrouper/Box.h>
 #include <sgi_stl_warnings_off.h>
 #include <list>

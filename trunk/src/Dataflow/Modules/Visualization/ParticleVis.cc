@@ -31,9 +31,9 @@
 #include <SCIRun/Core/Datatypes/PropertyManager.h>
 #include <SCIRun/Core/Math/MinMax.h>
 #include <Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/GeometryPort.h>
+#include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Datatypes/PSet.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Grid/Variables/ShareAssignParticleVariable.h>

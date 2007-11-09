@@ -16,7 +16,6 @@
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -425,6 +424,7 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
+  t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
@@ -1401,6 +1401,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperature;
       NCVariable<double> gSp_vol;
       NCVariable<double> gTemperatureNoBC;
+      NCVariable<double> gTemperatureRate;
       NCVariable<double> gnumnearparticles;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
@@ -1412,6 +1413,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
 			     dwi,patch);
+      new_dw->allocateAndPut(gTemperatureRate, lb->gTemperatureRateLabel,
+                             dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,
 			     dwi,patch);
       new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
@@ -1425,6 +1428,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
       gTemperatureNoBC.initialize(0);
+      gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
       gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
@@ -2494,8 +2498,7 @@ void FractureMPM::addNewParticles(const ProcessorGroup*,
            iter++)
         damage[*iter] = 0;
 
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0,dwi,patch);
 
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch,damage,dwi,
                                                            old_dw,new_dw);
@@ -2527,14 +2530,11 @@ void FractureMPM::addNewParticles(const ProcessorGroup*,
           cout_dbg << "Deleted " << numparticles << " particles" << endl;
 
 	ParticleCreator* particle_creator = null_matl->getParticleCreator();
-	ParticleSet* set_add = scinew ParticleSet(numparticles);
-	ParticleSubset* addset = scinew ParticleSubset(set_add,true,null_dwi,
-	                                               patch,numparticles);
+	ParticleSubset* addset = scinew ParticleSubset(numparticles,null_dwi,patch);
 
 	if (cout_dbg.active()) {
 	  cout_dbg << "Address of delset = " << delset << endl;
 	  cout_dbg << "Address of pset = " << pset << endl;
-	  cout_dbg << "Address of set_add = " << set_add << endl;
 	  cout_dbg << "Address of addset = " << addset << endl;
 	}
 
@@ -2642,8 +2642,7 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
       ParticleSubset::iterator iter = pset->begin();
       for (; iter != pset->end(); iter++) isLocalized[*iter] = 0;
       
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false, dwi, patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
       
       mpm_matl->getConstitutiveModel()->getDamageParameter(patch, isLocalized,
                                                            dwi, old_dw,new_dw);
@@ -2687,10 +2686,7 @@ void FractureMPM::convertLocalizedParticles(const ProcessorGroup*,
         int conv_dwi = conv_matl->getDWIndex();
 
         ParticleCreator* particle_creator = conv_matl->getParticleCreator();
-        ParticleSet* set_add = scinew ParticleSet(numparticles);
-        ParticleSubset* addset = scinew ParticleSubset(set_add, true,
-		                                       conv_dwi, patch,
-					    	       numparticles);
+        ParticleSubset* addset = scinew ParticleSubset(numparticles, conv_dwi, patch);
 
         map<const VarLabel*, ParticleVariableBase*>* newState
           = scinew map<const VarLabel*, ParticleVariableBase*>;
@@ -2913,8 +2909,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
       
-      ParticleSubset* delset = scinew ParticleSubset
-	                            (pset->getParticleSet(),false,dwi,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);

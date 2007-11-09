@@ -76,7 +76,8 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
            bc_kind == "symmetric" ||bc_kind == "MMS_1"){
           one_or_zero = 1.0;      // subtract from A.p
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom" ){
+
+        if(bc_kind == "Dirichlet" || bc_kind == "LODI" || bc_kind == "Sine" ){
           one_or_zero = 0.0;      // leave A.p Alone
         }                                 
         //__________________________________
@@ -241,7 +242,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
            bc_kind == "symmetric" || bc_kind == "MMS_1"){
           one_or_zero = 1.0;     
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom"){
+        if(bc_kind == "Dirichlet" || bc_kind == "LODI" || bc_kind == "Sine"){
           one_or_zero = 0.0;
         }                                 
         //__________________________________
@@ -499,7 +500,14 @@ void setBC(CCVariable<double>& press_CC,
                            custom_BC_basket->mms_var_basket,
                            custom_BC_basket->mms_v);
         }                    
-
+        //__________________________________
+        //  Sine
+        if (bc_kind == "Sine" && custom_BC_basket->set_Sine_BCs) {
+          set_Sine_press_BC(patch, face, press_CC, bound_ptr,  bc_kind,
+                           sharedState, 
+                           custom_BC_basket->sine_var_basket,
+                           custom_BC_basket->sine_v);
+        }
         //__________________________________________________________
         // Tack on hydrostatic pressure correction after Dirichlet 
         // or Neumann BC have been applied.  Note, during the intializaton 
@@ -669,6 +677,12 @@ void setBC(CCVariable<double>& var_CC,
                               custom_BC_basket->mms_var_basket,
                               custom_BC_basket->mms_v);
         }
+        if ( desc == "Temperature" && custom_BC_basket->set_Sine_BCs) {
+          set_Sine_Temperature_BC(patch, face, var_CC, 
+                              desc, bound_ptr, bc_kind, 
+                              custom_BC_basket->sine_var_basket,
+                              custom_BC_basket->sine_v);
+        }
         //__________________________________
         // Temperature and Gravity and ICE Matls
         // -Ignore this during intialization phase,
@@ -773,6 +787,12 @@ void setBC(CCVariable<Vector>& var_CC,
                             bound_ptr, bc_kind, sharedState,
                             custom_BC_basket->mms_var_basket,
                             custom_BC_basket->mms_v);
+        }
+        if ( custom_BC_basket->set_Sine_BCs) {
+          set_Sine_Velocity_BC(patch, face, var_CC, desc,
+                            bound_ptr, bc_kind, sharedState,
+                            custom_BC_basket->sine_var_basket,
+                            custom_BC_basket->sine_v);
         }
          
         //__________________________________
@@ -989,6 +1009,7 @@ void setBC(CCVariable<double>& var,
   basket->setLodiBcs      = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
+  basket->set_Sine_BCs    = false;
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
         mat_id, new_dw,basket);
@@ -1011,6 +1032,7 @@ void setBC(CCVariable<double>& press_CC,
   basket->setLodiBcs      = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
+  basket->set_Sine_BCs    = false;
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
         whichVar, kind, p, sharedState, mat_id, new_dw, basket); 
@@ -1029,6 +1051,7 @@ void setBC(CCVariable<Vector>& variable,
   basket->setLodiBcs      = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
+  basket->set_Sine_BCs    = false;
    
   setBC( variable, type, p, sharedState, mat_id, new_dw,basket);
   

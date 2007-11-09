@@ -21,9 +21,12 @@ namespace Uintah {
   // This struct contains misc. variables that are carried around
   // press_infinity:  user input
   // sigma:           user input constant
+  // iceMatl_indx:    user input, ice material index.
+  
   struct Lodi_variable_basket{
     double press_infinity;  
     double sigma;
+    int iceMatl_indx;
     vector<Patch::FaceType> LodiFaces;
   };    
   //____________________________________________________________

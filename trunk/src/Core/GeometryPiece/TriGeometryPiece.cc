@@ -3,6 +3,8 @@
 #include <Core/Grid/Box.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
+#include <SCIRun/Core/Geometry/Plane.h>
+#include <SCIRun/Core/Geometry/Ray.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -29,7 +31,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   makePlanes();
   makeTriBoxes();
   
-  cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
+  // cout << "Triangulated surfaces read: \t" <<d_tri.size() <<endl;
 
   list<Tri> tri_list;
   Tri tri;

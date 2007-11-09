@@ -45,6 +45,7 @@
         <do_grid_reset>true</do_grid_reset>
         <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
 	<temperature_solve>false</temperature_solve>
+        <interpolateParticleTempToGridEveryStep>false</interpolateParticleTempToGridEveryStep>
    </MPM>
 
 

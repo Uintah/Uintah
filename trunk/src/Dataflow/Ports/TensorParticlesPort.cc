@@ -5,19 +5,19 @@
 using namespace SCIRun;
 using namespace Uintah;
 
-#undef SCISHARE
-#ifdef _WIN32
-#define SCISHARE __declspec(dllexport)
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
+#define UINTAHSHARE __declspec(dllexport)
 #else
-#define SCISHARE
+#define UINTAHSHARE
 #endif
 
 extern "C" {
-SCISHARE IPort* make_TensorParticlesIPort(Module* module,
+UINTAHSHARE IPort* make_TensorParticlesIPort(Module* module,
 					     const string& name) {
   return scinew SimpleIPort<TensorParticlesHandle>(module,name);
 }
-SCISHARE OPort* make_TensorParticlesOPort(Module* module,
+UINTAHSHARE OPort* make_TensorParticlesOPort(Module* module,
 					     const string& name) {
   return scinew SimpleOPort<TensorParticlesHandle>(module,name);
 }

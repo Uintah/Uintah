@@ -27,7 +27,7 @@ Region::overlaps(const Region& otherregion) const
 }
 
 //static
-void Region::difference(list<Region> &l1, list<Region> &l2, list<Region> &diff)
+void Region::difference(list<Region> l1, list<Region> l2, list<Region> &diff)
 {
   //bound the regions
   Region bounds(IntVector(INT_MAX,INT_MAX,INT_MAX),IntVector(INT_MIN,INT_MIN,INT_MIN));

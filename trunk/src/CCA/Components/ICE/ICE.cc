@@ -35,8 +35,8 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/FastMatrix.h>
 #include <SCIRun/Core/Containers/StaticArray.h>
-#include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Math/Expon.h>
+#include <SCIRun/Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
@@ -111,8 +111,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_customBC_var_basket  = scinew customBC_var_basket();
   d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
-  d_customBC_var_basket->mms_var_basket =  scinew mms_variable_basket();
-
+  d_customBC_var_basket->mms_var_basket  =  scinew mms_variable_basket();
+  d_customBC_var_basket->sine_var_basket =  scinew sine_variable_basket();
   d_press_matl=0;
 }
 
@@ -123,6 +123,7 @@ ICE::~ICE()
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
   delete d_customBC_var_basket->mms_var_basket;
+  delete d_customBC_var_basket->sine_var_basket;  
   delete d_customBC_var_basket;
   delete d_conservationTest;
   delete lb;
@@ -223,7 +224,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   d_customBC_var_basket->usingMicroSlipBCs =
         read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
   d_customBC_var_basket->using_MMS_BCs =
-        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);    
+        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);
+  d_customBC_var_basket->using_Sine_BCs =
+        read_Sine_BC_inputs(prob_spec,       d_customBC_var_basket->sine_var_basket);  
   d_customBC_var_basket->sharedState    = sharedState;
 
   //__________________________________
@@ -847,9 +850,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     // accumlateMomentumSourceSinks.  
     d_turbulence->scheduleComputeVariance(sched, patches, ice_matls);
   }
-  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
-  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls, 
-                                                          maxMach_PSS);
+
+  scheduleMaxMach_on_Lodi_BC_Faces(       sched, level,   ice_matls);
                                                           
   scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
   
@@ -1580,8 +1582,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched, 
                                      const LevelP& level,
-                                     const MaterialSet* matls,
-                                     vector<PatchSubset*> & /*maxMach_PSS*/)
+                                     const MaterialSet* matls)
 { 
   if(d_customBC_var_basket->usingLodi) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
@@ -1591,9 +1592,6 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
     Ghost::GhostType  gn = Ghost::None;  
     task->requires( Task::OldDW, lb->vel_CCLabel,        gn);   
     task->requires( Task::OldDW, lb->speedSound_CCLabel, gn);
-    
-    // Reduction variables with patch subsets don't work with mpi.
-    //Lodi_maxMach_patchSubset(level, d_sharedState, maxMach_PSS);
                              
     //__________________________________
     // loop over the Lodi face
@@ -1726,9 +1724,10 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   //---------------------------  
   cout_doing << d_myworld->myrank() << " ICE::scheduleConservedtoPrimitive_Vars" 
              << "\t\t\tL-"<< levelIndex << endl;
-             
-  Task* task = scinew Task("ICE::conservedtoPrimitive_Vars",
-                     this, &ICE::conservedtoPrimitive_Vars);
+
+  string name = "ICE::conservedtoPrimitive_Vars:" + where;
+
+  Task* task = scinew Task(name, this, &ICE::conservedtoPrimitive_Vars);
 //  task->requires(Task::OldDW, lb->delTLabel);     for AMR
   Ghost::GhostType  gn   = Ghost::None;
   task->requires(Task::NewDW, lb->mass_advLabel,      gn,0);
@@ -1966,7 +1965,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
             double c_L = speedSound[L];  
             double c_R = speedSound[R];                    
-            double speedSound = max(c_L,c_R );      
+            double speedSound = std::max(c_L,c_R );      
 
             double relative_vel       = fabs(vel_R - vel_L);
 
@@ -2880,7 +2879,14 @@ template<class T> void ICE::computeVelFace(int dir,
     IntVector L = R + adj_offset; 
 
     double rho_FC = rho_CC[L] + rho_CC[R];
+#if SCI_ASSERTION_LEVEL >=2
+    if (rho_FC <= 0.0) {
+      cout << d_myworld->myrank() << " rho_fc <= 0: " << rho_FC << " with L= " << L << " (" 
+           << rho_CC[L] << ") R= " << R << " (" << rho_CC[R]<< ")\n";
+    }
+#endif
     ASSERT(rho_FC > 0.0);
+
     //__________________________________
     // interpolation to the face
     double term1 = (rho_CC[L] * vel_CC[L][dir] +

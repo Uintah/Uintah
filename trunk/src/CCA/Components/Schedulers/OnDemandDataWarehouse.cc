@@ -57,7 +57,8 @@ using namespace SCIRun;
 
 using namespace Uintah;
 
-#ifdef _WIN32
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE
@@ -319,8 +320,7 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
 
         ParticleSubset* pset = var->getParticleSubset();
         ssLock.lock();  // Dd: ??
-        sendset = scinew ParticleSubset(pset->getParticleSet(),
-                                        false, matlIndex, patch, low, high, 0);
+        sendset = scinew ParticleSubset(0, matlIndex, patch, low, high);
         ssLock.unlock();  // Dd: ??
         constParticleVariable<Point> pos;
         old_dw->get(pos, pos_var, pset);
@@ -478,9 +478,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch, const VarLabel* pos_var,
             ASSERTEQ(numParticles, psubset->numParticles());
           }
         }
-        ParticleSubset* recvset = scinew ParticleSubset(psubset->getParticleSet(),
-                                                     true, matlIndex, patch, 
-                                                     low, high, 0);
+        ParticleSubset* recvset = scinew ParticleSubset(psubset->numParticles(), matlIndex, patch, low, high);
         old_dw->rs_.add_sendset(recvset, from, patch, matlIndex, low, high, old_dw->d_generation);
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex,patch,low, high);
@@ -527,14 +525,16 @@ OnDemandDataWarehouse::recvMPIGridVar(BufferInfo& buffer,
     var->setForeign();
   }
   d_lock.readUnlock();
+  
+    
 
   if (var == 0 || var->getBasePointer() == 0 ||
-      Min(var->getLow(), dep->low) != var->getLow() ||
-      Max(var->getHigh(), dep->high) != var->getHigh()) {
+      Min(var->getLow(), dep->patchLow) != var->getLow() ||
+      Max(var->getHigh(), dep->patchHigh) != var->getHigh()) {
     // There was no place reserved to recv the data yet,
     // so it must create the space now.
     GridVariableBase* v = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
-    v->allocate(dep->low, dep->high);
+    v->allocate(dep->patchLow, dep->patchHigh);
     var = dynamic_cast<GridVariableBase*>(v);
     var->setForeign();
     d_lock.writeLock();
@@ -542,8 +542,8 @@ OnDemandDataWarehouse::recvMPIGridVar(BufferInfo& buffer,
     d_lock.writeUnlock();
   }
 
-  ASSERTEQ(Min(var->getLow(), dep->low), var->getLow());
-  ASSERTEQ(Max(var->getHigh(), dep->high), var->getHigh());
+  ASSERTEQ(Min(var->getLow(), dep->patchLow), var->getLow());
+  ASSERTEQ(Max(var->getHigh(), dep->patchHigh), var->getHigh());
 
   var->getMPIBuffer(buffer, dep->low, dep->high);
 }
@@ -565,8 +565,8 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   // Count the number of data elements in the reduction array
   int nmatls = matls->size();
   int count=0;
-  MPI_Op op;
-  MPI_Datatype datatype;
+  MPI_Op op = MPI_OP_NULL;
+  MPI_Datatype datatype = NULL;
 
   d_lock.readLock();
   for(int m=0;m<nmatls;m++){
@@ -762,9 +762,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 
   ASSERT(!patch->isVirtual());
 
-  ParticleSet* pset = scinew ParticleSet(numParticles);
   ParticleSubset* psubset = 
-    scinew ParticleSubset(pset, true, matlIndex, patch, low, high, 0);
+    scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
   
   psetDBType::key_type key(patch, matlIndex, low, high, getID());
   if(d_psetDB.find(key) != d_psetDB.end())
@@ -853,7 +852,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       printParticleSubsets();
       d_lock.readUnlock();
       ostringstream s;
-      s << "ParticleSet, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
+      s << "ParticleSubset, (low: " << low << ", high: " << high <<  " DWID " << getID() << ')';
       SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
                                 "Cannot find particle set on patch", __FILE__, __LINE__));
     }
@@ -1012,7 +1011,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
 
       particleIndex sizeHint = (relPatch && realNeighbor == relPatch) ? pset->numParticles():0;
       ParticleSubset* subset = 
-        scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, sizeHint);
+        scinew ParticleSubset(0, -1, 0);
+      subset->expand(sizeHint);
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1028,11 +1028,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   }
 
   
-  ParticleSet* newset = scinew ParticleSet(totalParticles);
-  ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
-                                                    matlIndex, relPatch,
-                                                    lowIndex, highIndex,
-                                                    vneighbors, subsets);
+  ParticleSubset* newsubset = scinew ParticleSubset(totalParticles, matlIndex, relPatch,
+                                                    lowIndex, highIndex, vneighbors, subsets);
 
   return newsubset;
 }
@@ -1218,6 +1215,26 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   d_lock.writeUnlock();
 }
 
+void OnDemandDataWarehouse::copyOut(ParticleVariableBase& var, const VarLabel* label,
+                                    ParticleSubset* pset)
+{
+  constParticleVariableBase* constVar = var.cloneConstType();
+  this->get(*constVar, label, pset);
+  var.copyData(&constVar->getBaseRep());
+  delete constVar;
+}
+
+void OnDemandDataWarehouse::getCopy(ParticleVariableBase& var, const VarLabel* label,
+                                    ParticleSubset* pset)
+{
+  constParticleVariableBase* constVar = var.cloneConstType();
+  this->get(*constVar, label, pset);
+  var.allocate(pset);
+  var.copyData(&constVar->getBaseRep());
+  delete constVar;
+}
+
+
 void
 OnDemandDataWarehouse::get(constGridVariableBase& constVar,
                            const VarLabel* label,
@@ -1395,43 +1412,11 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
       Box b = difference[i];
       IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
       IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
-      if (NCVariable<double>* typedVar = dynamic_cast<NCVariable<double>*>(&var)) {
+      if (GridVariable<double>* typedVar = dynamic_cast<GridVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-      else if (NCVariable<Vector>* typedVar = dynamic_cast<NCVariable<Vector>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (CCVariable<double>* typedVar = dynamic_cast<CCVariable<double>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (CCVariable<Vector>* typedVar = dynamic_cast<CCVariable<Vector>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (SFCXVariable<double>* typedVar = dynamic_cast<SFCXVariable<double>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (SFCXVariable<Vector>* typedVar = dynamic_cast<SFCXVariable<Vector>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (SFCYVariable<double>* typedVar = dynamic_cast<SFCYVariable<double>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (SFCYVariable<Vector>* typedVar = dynamic_cast<SFCYVariable<Vector>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (SFCZVariable<double>* typedVar = dynamic_cast<SFCZVariable<double>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (SFCZVariable<Vector>* typedVar = dynamic_cast<SFCZVariable<Vector>*>(&var)) {
+      else if (GridVariable<Vector>* typedVar = dynamic_cast<GridVariable<Vector>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
@@ -1593,7 +1578,7 @@ OnDemandDataWarehouse::put(GridVariableBase& var,
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
-   d_varDB.put(label, matlIndex, patch, &var, true);
+   d_varDB.put(label, matlIndex, patch, var.clone(), true);
   d_lock.writeUnlock();
 }
 
@@ -1926,7 +1911,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
   ASSERTEQ(basis,Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
   if(!d_varDB.exists(label, matlIndex, patch)) {
-    print();
+    //print();
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
   }
   if(patch->isVirtual()){
@@ -1967,6 +1952,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
       patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
     else
       neighbors.push_back(patch);
+    IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
     if (!var.rewindow(lowIndex, highIndex)) {
       // reallocation needed
       // Ignore this if this is the initialization dw in its old state.
@@ -1977,19 +1963,19 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
       static bool warned = false;
       bool ignore = d_isInitializationDW && d_finalized;
       if (!ignore && !warned ) {
-	warned = true;
-        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5);
+	//warned = true;
+        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
         if (rw.invoke()) {
           // print out this message if the ProgressiveWarning does
-          ostringstream errmsg;
-          /*          errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
+          /*ostringstream errmsg;
+                    errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
           if (patch)
             errmsg << " on patch " << patch->getID();
           errmsg << " for material " << matlIndex;
 
-          errmsg << "You may ignore this under normal circumstances";
-          warn << errmsg.str() << '\n';
-          */
+          errmsg << ".  Old range: " << oldLow << " " << oldHigh << " - new range " << lowIndex << " " << highIndex << " NGC " << numGhostCells;
+          warn << errmsg.str() << '\n';*/
+          
         }
       }
     }
@@ -2015,6 +2001,7 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 
         GridVariableBase* srcvar = var.cloneType();
 	d_varDB.get(label, matlIndex, neighbor, *srcvar);
+
 	if(neighbor->isVirtual())
 	  srcvar->offsetGrid(neighbor->getVirtualOffset());
 	
@@ -2022,17 +2009,20 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 	    || ( high.z() < low.z() ) ) {
 	  //SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));
         }
-
+        
         try {
+          //          if (var.getLow().x() > low.x() || var.getLow().y() > low.y() || var.getLow().z() > low.z() || 
+          //    var.getHigh().x() < high.x() || var.getHigh().y() < high.y() || var.getHigh().z() < low.z())
           var.copyPatch(srcvar, low, high);
         } catch (InternalError& e) {
           cout << "  Can't copy patch " << neighbor->getID() << " on matl " << matlIndex << " for var " << *label << " " << low << " " << high << endl;
           cout << e.message() << endl;
           throw;
         }
-	dn = high-low;
-	total+=dn.x()*dn.y()*dn.z();
-	delete srcvar;
+        dn = high-low;
+        total+=dn.x()*dn.y()*dn.z();
+        delete srcvar;
+        
       }
     }
     

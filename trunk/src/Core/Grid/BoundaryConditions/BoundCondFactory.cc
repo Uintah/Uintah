@@ -68,6 +68,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
             bc_attr["var"]   == "creep" ||
             bc_attr["var"]   == "slip" ||
             bc_attr["var"]   == "MMS_1" ||
+            bc_attr["var"]   == "Sine" ||
             bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew VelocityBoundCond(child,bc_attr["var"]);
   }
@@ -78,6 +79,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
             bc_attr["var"]   == "Custom" ||
             bc_attr["var"]   == "slip" ||
             bc_attr["var"]   == "MMS_1" ||
+            bc_attr["var"]   == "Sine" ||
             bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
   }
@@ -87,6 +89,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
             bc_attr["var"]   == "LODI" ||
             bc_attr["var"]   == "Custom" ||
             bc_attr["var"]   == "MMS_1" ||
+            bc_attr["var"]   == "Sine" ||
             bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew PressureBoundCond(child,bc_attr["var"]);
   }

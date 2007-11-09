@@ -3,17 +3,7 @@
 
 #include <Core/Grid/Variables/GridVariable.h>
 #include <Core/Grid/Variables/constGridVariable.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Disclosure/TypeUtils.h>
 #include <Core/Grid/Patch.h>
-#include <CCA/Ports/InputContext.h>
-#include <CCA/Ports/OutputContext.h>
-#include <Core/IO/SpecializedRunLengthEncoder.h>
-#include <Core/Exceptions/TypeMismatchException.h>
-
-#include <SCIRun/Core/Exceptions/InternalError.h>
-#include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
 
 #ifndef _WIN32
 #include <unistd.h>

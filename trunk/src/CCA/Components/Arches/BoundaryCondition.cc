@@ -44,10 +44,10 @@
 #include <Core/Disclosure/TypeUtils.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Containers/StaticArray.h>
-#include <SCIRun/Core/Math/MiscMath.h>
-#include <SCIRun/Core/Math/MinMax.h>
 #include <iostream>
 #include <sstream>
+#include <SCIRun/Core/Math/MiscMath.h>
+#include <SCIRun/Core/Math/MinMax.h>
 
 using namespace std;
 using namespace Uintah;

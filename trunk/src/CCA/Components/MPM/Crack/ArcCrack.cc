@@ -1,13 +1,13 @@
 #include <CCA/Components/MPM/Crack/ArcCrack.h>
-#include <Core/Math/Matrix3.h>
 #include <SCIRun/Core/Geometry/Plane.h>
+#include <Core/Math/Matrix3.h>
 #include <iostream>
 
 using std::cout;
 using std::endl;
 
 using namespace Uintah;
-using SCIRun::Plane;
+using namespace SCIRun;
 
 
 ArcCrack::ArcCrack(ProblemSpecP& ps)

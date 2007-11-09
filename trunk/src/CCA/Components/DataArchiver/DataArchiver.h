@@ -13,7 +13,7 @@
 
 #include <CCA/Components/DataArchiver/uintahshare.h>
 namespace Uintah {
-
+class DataWarehouse;
 using SCIRun::ConsecutiveRangeSet;
 using SCIRun::Mutex;
 

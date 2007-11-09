@@ -13,11 +13,11 @@
 #include <SCIRun/Core/Malloc/Allocator.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/ColorMapPort.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Widgets/PointWidget.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>
+#include <SCIRun/Dataflow/Network/Ports/GeometryPort.h>
+#include <SCIRun/Dataflow/Network/Ports/FieldPort.h>
+#include <SCIRun/Dataflow/Widgets/PointWidget.h>
 
 #include <Core/Datatypes/GLAnimatedStreams.h>
 #include <sgi_stl_warnings_off.h>

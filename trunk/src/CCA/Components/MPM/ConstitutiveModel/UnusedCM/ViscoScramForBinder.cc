@@ -8,7 +8,6 @@
 #include <Core/Grid/Variables/NodeIterator.h> // just added
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarLabel.h>

@@ -25,12 +25,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//    File   : TextureBuilder.cc
+//    File   : ConvertFieldsToTexture.cc
 //    Author : Milan Ikits
 //    Date   : Fri Jul 16 00:11:18 2004
 
-#include <Dataflow/Modules/Visualization/ConvertFieldsToTexture.h>
-#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <SCIRun/Dataflow/Modules/Visualization/ConvertFieldsToTexture.h>
+#include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>
 
 
 namespace Uintah {
@@ -38,11 +38,6 @@ using namespace SCIRun;
 
 class UTextureBuilder : public ConvertFieldsToTexture
 {
-  double last_minf_;
-  double last_maxf_;
-  int last_nbits_;
-  int last_generation_;
-  NrrdDataHandle last_nrrdH_;
 public:
   UTextureBuilder(GuiContext*);
   virtual ~UTextureBuilder();
@@ -64,8 +59,7 @@ using SCIRun::Module;
 DECLARE_MAKER(UTextureBuilder)
 
 UTextureBuilder::UTextureBuilder(GuiContext* ctx)
-  : ConvertFieldsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah"),
-    last_minf_(1), last_maxf_(-1), last_generation_(-1), last_nbits_(0), last_nrrdH_(0)
+  : ConvertFieldsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
 {}
 
 UTextureBuilder::~UTextureBuilder()
@@ -76,7 +70,7 @@ void
 UTextureBuilder::execute()
 {
 
-  // Get a handle to the ColorMap port.
+    // Get a handle to the ColorMap port.
   ColorMapIPort* cmap_iport = ( ColorMapIPort *) get_iport("ColorMap");
   ColorMapHandle cmap_h;
 
@@ -94,7 +88,7 @@ UTextureBuilder::execute()
 
   // Get a handle to the output ColorMap port.
    ColorMapOPort* cmap_oport = ( ColorMapOPort *) get_oport("ColorMap");
-
+  
 
   if (!cmap_oport) {
      error("Unable to initialize oport 'ColorMap'.");
@@ -104,3 +98,6 @@ UTextureBuilder::execute()
   ConvertFieldsToTexture::execute();
   cmap_oport->send(cmap_h);
 }
+
+
+

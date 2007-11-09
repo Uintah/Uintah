@@ -3,7 +3,6 @@
 #include <SCIRun/Core/Util/DebugStream.h>
 
 using namespace Uintah;
-using SCIRun::DebugStream;
 using namespace std;
 
 static DebugStream dbg( "GeometryPiece", false );

@@ -15,18 +15,18 @@ SRCS += \
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/DataArchive \
+	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Core/Geometry                    \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Util        \
 	Core/Containers                  \
-	Core/Thread                      \
 	Core/Exceptions                  \
+	Core/Geometry                    \
+	Core/Thread                      \
 	Core/Util
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)

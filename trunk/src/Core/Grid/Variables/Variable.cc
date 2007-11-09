@@ -237,70 +237,71 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
   // UDAs should not have this problem.)
   if( datasize == 0 ) return;
 
-  string data;
-  string bufferStr;
-  string* uncompressedData = &data;
-
-  data.resize(datasize);
-  // casting from const char* -- use caution
   if(datasize>0)
   {
-  #ifdef _WIN32
+    string data;
+    string bufferStr;
+    string* uncompressedData = &data;
+
+    data.resize(datasize);
+#ifdef _WIN32
+    // casting from const char* -- use caution
     ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-  #else
+#else
     ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
-  #endif
+#endif
     if(s != datasize) {
       cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
       SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
     }
   
     ic.cur += datasize;
-  }
-  if (use_gzip) {
+
+    if (use_gzip) {
 #if defined( REDSTORM )
-    printf("Error: compression not supported on RedStorm\n");
-    exit(1);
+      printf("Error: compression not supported on RedStorm\n");
+      exit(1);
 #else
-    // use gzip compression
+      // use gzip compression
 
-    // first read the uncompressed data size
-    istringstream compressedStream(data);
-    uint64_t uncompressed_size_64;    
-    compressedStream.read((char*)&uncompressed_size_64, nByteMode);
+      // first read the uncompressed data size
+      istringstream compressedStream(data);
+      uint64_t uncompressed_size_64;    
+      compressedStream.read((char*)&uncompressed_size_64, nByteMode);
+      
+      unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
+      const char* compressed_data = data.c_str() + nByteMode;
+      
+      long compressed_datasize = datasize - (long)(nByteMode);
 
-    unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
-    const char* compressed_data = data.c_str() + nByteMode;
+      // casting from const char* below to char* -- use caution
+      bufferStr.resize(uncompressed_size);
+      char* buffer = (char*)bufferStr.c_str();
+      
+      int result = uncompress( (Bytef*)buffer, &uncompressed_size,
+                               (const Bytef*)compressed_data, compressed_datasize );
+      
+      if (result != Z_OK) {
+        printf( "Uncompress error result is %d\n", result );
+        throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
+      }
 
-    long compressed_datasize = datasize - (long)(nByteMode);
-
-    // casting from const char* below to char* -- use caution
-    bufferStr.resize(uncompressed_size);
-    char* buffer = (char*)bufferStr.c_str();
-
-    int result = uncompress( (Bytef*)buffer, &uncompressed_size,
-		             (const Bytef*)compressed_data, compressed_datasize );
-
-    if (result != Z_OK) {
-      printf( "Uncompress error result is %d\n", result );
-      throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
+      uncompressedData = &bufferStr;
+#endif
     }
 
-    uncompressedData = &bufferStr;
-#endif
-  }
-
-  istringstream instream(*uncompressedData);
+    istringstream instream(*uncompressedData);
   
-  if (use_rle)
-    readRLE(instream, swapBytes, nByteMode);
-  else
-    readNormal(instream, swapBytes);
-  ASSERT(instream.fail() == 0);
+    if (use_rle)
+      readRLE(instream, swapBytes, nByteMode);
+    else
+      readNormal(instream, swapBytes);
+    ASSERT(instream.fail() == 0);
 #ifdef __sgi // should be removed when we get gcc-3.0+ working
-  ASSERTEQ((ssize_t)instream.tellg(), uncompressedData->size());
+    ASSERTEQ((ssize_t)instream.tellg(), uncompressedData->size());
 #endif
-}
+  } // end if datasize > 0
+} // end read()
 
 bool
 Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,

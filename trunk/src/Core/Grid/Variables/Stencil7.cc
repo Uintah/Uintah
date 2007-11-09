@@ -4,6 +4,7 @@
 #include <SCIRun/Core/Util/Endian.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Malloc/Allocator.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 using namespace Uintah;

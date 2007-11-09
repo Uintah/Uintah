@@ -6,16 +6,17 @@
 #else
 #  include <SCIRun/Core/Util/Endian.h> // for long64 and the like
 #endif
+
 #include <float.h>
 
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 
-using SCIRun::Point;
-using SCIRun::Vector;
-
 #include <Core/Disclosure/uintahshare.h>
 namespace Uintah {
+
+using SCIRun::Point;
+using SCIRun::Vector;
 
 class Matrix3;
 class Stencil7;
@@ -91,6 +92,7 @@ namespace SCIRun {
   using Uintah::long64;
 
   template<> UINTAHSHARE const string find_type_name(long64*);
+
   UINTAHSHARE const TypeDescription* get_type_description(long64*);
 
 } // namespace SCIRun 

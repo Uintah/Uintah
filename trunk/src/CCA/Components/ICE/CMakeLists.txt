@@ -66,6 +66,7 @@ SET(Packages_Uintah_CCA_Components_ICE_SRCS
   CustomBCs/microSlipBCs.cc
   CustomBCs/LODI2.cc
   CustomBCs/MMS_BCs.cc
+  CustomBCs/sine.cc
 
 )
 

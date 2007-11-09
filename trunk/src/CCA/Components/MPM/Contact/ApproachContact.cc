@@ -88,7 +88,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
   StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
   StaticArray<NCVariable<double> >       frictionWork(numMatls);
   StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
-//  StaticArray<NCVariable<double> >       gnormtraction(numMatls);
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -161,7 +160,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
       new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
-//    new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
       gstress[m].initialize(Matrix3(0.0));
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
@@ -353,18 +351,11 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 	     gstress[m][ni[k]] += pstress[idx] * S[k];
          }
       }
-
-//      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-//        IntVector c = *iter;
-//	gnormtraction[m][c]=
-//		Dot(gsurfnorm[m][c]*gstress[m][c],gsurfnorm[m][c]);
-//      }
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
-      if(!d_matls.present(gmass, c)) continue;
-      
+
       Vector centerOfMassMom(0.,0.,0.);
       double centerOfMassMass=0.0; 
       double totalNodalVol=0.0; 
@@ -435,12 +426,6 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 
 		  // Calculate velocity change needed to enforce contact
                   Dv=-gsurfnorm[n][c]*normalDeltaVel;
-		  
-		  // Calculate work done by frictional force
-		  if (flag->d_fracture)
-		    frictionWork[n][c] += 0.;
-		  else
-		    frictionWork[n][c] = 0.;
 		}
 
                 // General algorithm, including frictional slip.  The
@@ -523,7 +508,6 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
   StaticArray<constNCVariable<double> > numnearparticles(numMatls);
   StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
   StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
-//StaticArray<constNCVariable<double> > normtraction(numMatls);
   StaticArray<NCVariable<double> >      frictionWork(numMatls);
   StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
 
@@ -536,7 +520,6 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
-//    new_dw->get(normtraction[m],lb->gNormTractionLabel,dwi, patch, gnone, 0);
       new_dw->get(gsurfnorm[m],   lb->gSurfNormLabel,    dwi, patch, gnone, 0);
       new_dw->get(gvolume[m],     lb->gVolumeLabel,      dwi, patch, gnone, 0);
       new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
@@ -626,9 +609,6 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 
 		// Calculate velocity change needed to enforce contact
 	        Dv=-gsurfnorm[n][c]*normalDeltaVel;
-		  
-		// Calculate work done by frictional force
-		frictionWork[n][c] += 0.;
 	      }
 
 	      // General algorithm, including frictional slip.  The

@@ -122,8 +122,7 @@ WARNING
     virtual int getOutputProc(const Patch* patch) = 0;
 
     //! Tells the load balancer on which procs data was output.
-    //! Needs to handle two udas - where the proc might be saved with the patch in the grid or might not
-    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP&, std::string file /*tsurl*/, const GridP&) {}
+    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string, const GridP& grid) {}
     
     // state variables
     enum {

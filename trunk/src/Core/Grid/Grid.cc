@@ -12,7 +12,6 @@
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Math/MiscMath.h>
 #include <iostream>
-#include <iomanip>
 #include <sci_values.h>
 
 using namespace Uintah;
@@ -233,7 +232,6 @@ void Grid::performConsistencyCheck() const
       if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
            integerTest_distance > smallNum){
         ostringstream desc;
-        desc << setprecision(20);
         desc << " The finer Level " << fineLevel->getIndex()
              << " "<< Fbox_min << " "<< Fbox_max
              << " upper or lower limits are not divisible by the cell spacing "
@@ -897,30 +895,34 @@ bool Grid::isSimilar(const Grid& othergrid) const
   if(numLevels() != othergrid.numLevels())
      return false;
 
-  deque<Region> r1, r2, difference;
  
   for(int i=numLevels()-1;i>=0;i--)
   {
+    deque<Region> r1, r2, difference;
     const Level* l1=getLevel(i).get_rep();
     const Level* l2=othergrid.getLevel(i).get_rep();
+    int a1=0,a2=0;
 
-    r1.clear();
-    r2.clear();
-                  
     //fill deques
     Level::const_patchIterator iter;
     for(iter=l1->patchesBegin(); iter!=l1->patchesEnd();iter++)
     {
       const Patch* patch=*iter;
+      a1+=Region::getVolume(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
       r1.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
     }
     
     for(iter=l2->patchesBegin(); iter!=l2->patchesEnd();iter++)
     {
       const Patch* patch=*iter;
+      a2+=Region::getVolume(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
       r2.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
     }
 
+    //if volumes are not the same the grids cannot be the same
+    if(a1!=a2)
+      return false;
+    
     //compare regions
     difference=Region::difference(r1,r2);
     if(!difference.empty())  //if region in r1 that is not in r2

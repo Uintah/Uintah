@@ -17,7 +17,7 @@
 namespace Uintah {
 
 using std::vector;
-using SCIRun::Plane;
+using namespace SCIRun;
 
 /**************************************
         

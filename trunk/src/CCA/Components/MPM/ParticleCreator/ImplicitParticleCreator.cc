@@ -6,7 +6,6 @@
 #include <Core/Grid/Box.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/FileGeometryPiece.h>

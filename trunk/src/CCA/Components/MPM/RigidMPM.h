@@ -11,7 +11,6 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 
 #include <CCA/Components/MPM/uintahshare.h>

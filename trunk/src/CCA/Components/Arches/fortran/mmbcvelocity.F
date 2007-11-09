@@ -15,8 +15,8 @@ c     The "usual" normal and tangential bcs involve severing
 c     connections to the cell under consideration.
 c     These usual bcs are the ones that are true if normalbc
 c     and tangentialbc are true in this routine.
-c     If not, we utilize implicit bcs.
-c     Currently (08/29) we utilize implicit bcs.
+c     If not, we use implicit bcs.
+c     Currently (08/29) we use implicit bcs.
 
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION

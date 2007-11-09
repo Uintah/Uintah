@@ -8,7 +8,8 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-#ifdef _WIN32
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE
@@ -238,6 +239,7 @@ void CommRecMPI::waitall(const ProcessorGroup * pg)
     }
   }
   ids.clear();
+  groupIDs.clear();
   handlers.clear();
   byteCounts.clear();
   messageNums.clear();

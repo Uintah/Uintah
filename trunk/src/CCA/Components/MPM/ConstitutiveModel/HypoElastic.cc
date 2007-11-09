@@ -3,7 +3,6 @@
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleSet.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
@@ -294,13 +293,11 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume, ptemperature;
+    constParticleVariable<double> pmass, pvolume, ptemperature, pTempPrevious;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    // for thermal stress
-    constParticleVariable<double> pTempPrevious, pTempCurrent; 
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
@@ -315,7 +312,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     // for thermal stress
     old_dw->get(pTempPrevious,       lb->pTempPreviousLabel,       pset); 
-    new_dw->get(pTempCurrent,        lb->pTempCurrentLabel,        pset); 
 
     new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
 
@@ -382,7 +378,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       }
 
       // Rate of particle temperature change for thermal stress
-      double ptempRate=(pTempCurrent[idx]-pTempPrevious[idx])/delT; 
+      double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT; 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
       Matrix3 D = (velGrad + velGrad.Transpose())*.5-Identity*alpha*ptempRate;
@@ -793,7 +789,6 @@ void HypoElastic::addComputesAndRequires(Task* task,
   Ghost::GhostType gnone = Ghost::None;
   // for thermal stress
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-  task->requires(Task::NewDW, lb->pTempCurrentLabel,  matlset, gnone); 
 
   // Other constitutive model and input dependent computes and requires
   if (flag->d_fracture) {

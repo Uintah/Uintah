@@ -20,17 +20,18 @@
   <DataArchiver>
     <filebase>adiCuJC01s296K.uda</filebase>
     <outputInterval>1.0e-1</outputInterval>
+    <!--
     <save label = "BndyForce_zminus"/>
     <save label = "BndyForce_zplus"/>
     <save label = "BndyContactArea_zminus"/>
     <save label = "BndyContactArea_zplus"/>
-    <!--
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
     <save label = "AccStrainEnergy"/>
     <save label = "CenterOfMassPosition"/>
     <save label = "CenterOfMassVelocity"/>
+    <save label = "g.stressFS"/>
     -->
     <save label = "p.particleID"/>
     <save label = "p.x"/>
@@ -39,7 +40,6 @@
     <save label = "p.mass"/>
     <save label = "p.stress"/>
     <save label = "g.mass"/>
-    <save label = "g.stressFS"/>
     <save label = "p.plasticStrain"/>
     <save label = "p.plasticStrainRate"/>
     <save label = "p.strainRate"/>

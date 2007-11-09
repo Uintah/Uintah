@@ -27,14 +27,12 @@ using std::map;
 using std::vector;
 using namespace std;
 
-#include <CCA/Components/MPM/uintahshare.h>
-
 namespace Uintah {
 
   class ProcessorGroup;
   class Patch;
 
-  class UINTAHSHARE MPMPetscSolver : public Solver {
+  class MPMPetscSolver : public Solver {
     
   public:
     MPMPetscSolver();

@@ -83,6 +83,16 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_simTime = 0;
   d_numDims = 0;
   d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
+  //initialize the overhead percentage
+  overheadIndex=0;
+  overheadAvg=0;
+  for(int i=0;i<OVERHEAD_WINDOW;i++)
+  {
+    double x=i/(OVERHEAD_WINDOW/2);
+    overheadWeights[i]=8-x*x*x;
+    overhead[i]=0;
+  }
+
   clearStats();  
 }
 

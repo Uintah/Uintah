@@ -19,7 +19,7 @@ using std::list;
 #include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
-using SCIRun::Plane;
+using namespace SCIRun;
 
 /**************************************
 	

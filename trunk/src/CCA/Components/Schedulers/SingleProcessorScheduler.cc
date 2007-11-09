@@ -125,9 +125,14 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     taskdbg << d_myworld->myrank() << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
-    printTrackedVars(task, true);
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
+      printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+
     task->doit(d_myworld, dws, plain_old_dws);
-    printTrackedVars(task, false);
+
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
+      printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+
     task->done(dws);
     
     taskdbg << d_myworld->myrank() << " Completed task: "; printTask(taskdbg, task); taskdbg << '\n';

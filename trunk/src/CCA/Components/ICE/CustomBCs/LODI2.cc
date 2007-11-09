@@ -39,6 +39,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
  
   bool usingLODI = false;
+  vector<int> matl_index;
   
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
@@ -50,6 +51,18 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
                      bc_iter = bc_iter->findNextBlock("BCType")){
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
+      
+      //__________________________________
+      //  bulletproofing
+      if (bc_type["var"] == "LODI"){
+        if (bc_type["label"] == "Pressure" && bc_type["id"] != "0"){
+          string warn="ERROR:\n Inputs:LODI Boundary Conditions: the pressure material index must = 0";
+          throw ProblemSetupException(warn, __FILE__, __LINE__);
+        } 
+        if (bc_type["label"] != "Pressure"){
+          matl_index.push_back(atoi(bc_type["id"].c_str()));
+        }
+      }
       
 
       if (bc_type["var"] == "LODI" && !is_a_Lodi_face) {
@@ -72,16 +85,26 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     }
   }
   //__________________________________
-  //  read in variables
+  //  read in master LODI variables
   if(usingLODI ){
     ProblemSpecP lodi = bc_ps->findBlock("LODI");
     if (!lodi) {
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
-
-    lodi->require("press_infinity",vb->press_infinity);
-    lodi->getWithDefault("sigma",  vb->sigma, 0.27);
+    lodi->require("ice_material_index", vb->iceMatl_indx);
+    lodi->require("press_infinity",     vb->press_infinity);
+    lodi->getWithDefault("sigma",       vb->sigma, 0.27);
+    
+    //__________________________________
+    //  bulletproofing
+    vector<int>::iterator iter;
+    for( iter  = matl_index.begin();iter != matl_index.end(); iter++){
+      if(*iter != vb->iceMatl_indx){
+        string warn="ERROR:\n Inputs: LODI Boundary Conditions: One of the material indices is not <ice_material_index>";
+        throw ProblemSetupException(warn, __FILE__, __LINE__);
+      }
+    }
   }
   
   if (usingLODI) {
@@ -139,7 +162,7 @@ void addRequires_Lodi(Task* t,
     t->requires(Task::ParentOldDW, lb->vel_CCLabel,        ice_matls, gn);
     t->requires(Task::ParentNewDW, lb->speedSound_CCLabel, ice_matls, gn);
     t->requires(Task::ParentNewDW, lb->rho_CCLabel,        ice_matls, gn);
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
+    //t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
   }
   if(where == "CC_Exchange"){
     setLODI_bcs = true;
@@ -187,8 +210,16 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
 /*`==========TESTING==========*/
-  int indx = 0;                 // ICE MATL IS HARD CODED TO 0
+  int indx = var_basket->iceMatl_indx;    
 /*===========TESTING==========`*/
+
+  //__________________________________
+  // bulletproofing
+  int numICEMatls  = sharedState->getNumICEMatls();
+  if(numICEMatls > 1){
+      string warn="ERROR:\n LODI boundary conditions only works with 1 ICE material\n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
   //__________________________________
   //    Equilibration pressure
   if(where == "EqPress"){
@@ -208,13 +239,21 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     // require(maxMach_face_varlabel);
   }
   //__________________________________
-  //    update pressure
+  //    update pressure (explicit and implicit)
   if(where == "update_press_CC"){ 
     setLodiBcs = true;
     old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
     new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
+  }
+    if(where == "imp_update_press_CC"){ 
+    setLodiBcs = true;
+    DataWarehouse* sub_new_dw = new_dw->getOtherDataWarehouse(Task::NewDW);
+    old_dw->get(lv->vel_CC,     lb->vel_CCLabel,        indx,patch,gn,0); 
+    new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
+    new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0); 
+    sub_new_dw->get(lv->press_CC,lb->press_CCLabel,      0,  patch,gn,0);
   }
   //__________________________________
   //    cc_ Exchange
@@ -605,23 +644,24 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   L[5][c][n_dir] = L5;
 
   
-#if 0
-   //__________________________________
-   //  debugging 
-   vector<IntVector> dbgCells;
-   dbgCells.push_back(IntVector(100,0,0));
-   dbgCells.push_back(IntVector(99,0,0));
-   dbgCells.push_back(IntVector(0,0,0));
-   dbgCells.push_back(IntVector(-1,0,0));
+
+  if( cout_dbg.active() ) {
+    //__________________________________
+    //  debugging 
+    vector<IntVector> dbgCells;
+    dbgCells.push_back(IntVector(100,0,0));
+    dbgCells.push_back(IntVector(99,0,0));
+    dbgCells.push_back(IntVector(0,0,0));
+    dbgCells.push_back(IntVector(-1,0,0));
            
-   for (int i = 0; i<(int) dbgCells.size(); i++) {
-     if (c == dbgCells[i]) {
-      debugging_Li(c, s, dir, face, speedSound, vel_CC, L1, L2, L3, L4, L5 );
-      cout << " press " << press << " p_infinity " << p_infinity
+    for (int i = 0; i<(int) dbgCells.size(); i++) {
+      if (c == dbgCells[i]) {
+        debugging_Li(c, s, dir, face, speedSound, vel_CC, L1, L2, L3, L4, L5 );
+        cout << " press " << press << " p_infinity " << p_infinity
            << " gradient " << (press - p_infinity)/domainLength[n_dir] << endl;
-     }  // if(dbgCells)
-   }  // dbgCells loop
- #endif
+      }  // if(dbgCells)
+    }  // dbgCells loop
+  }
 } 
 
 /*__________________________________________________________________
@@ -709,7 +749,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
 
         double drho_dx = (rho[r]   - rho[l])/delta; 
         double dp_dx   = (press[r] - press[l])/delta;
-        Vector dVel_dx = (vel[r]   - vel[l])/delta;
+        Vector dVel_dx = (vel[r]   - vel[l])/delta;        
 
         vector<double> s(6);
         characteristic_source_terms(dir, P_dir, grav, rho[c], speedSound[c], s);

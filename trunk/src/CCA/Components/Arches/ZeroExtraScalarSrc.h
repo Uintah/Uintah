@@ -3,7 +3,7 @@
 #ifndef Uintah_Component_Arches_ZeroExtraScalarSrc_h
 #define Uintah_Component_Arches_ZeroExtraScalarSrc_h
 
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
+#include <CCA/Components/Arches/ExtraScalarSrc.h>
 
 /**************************************
 CLASS

@@ -27,6 +27,8 @@
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
 #include <iosfwd>
 
+#include <sci_defs/uintah_defs.h>
+
 using std::cerr;
 using std::endl;
 
@@ -35,7 +37,6 @@ using namespace Uintah;
 UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const ProcessorGroup* world, 
                                                   bool doAMR, string sim_comp, string uda)
 {
-
   if (sim_comp == "") {
     ProblemSpecP sim_ps = ps->findBlock("SimulationComponent");
     if (sim_ps)

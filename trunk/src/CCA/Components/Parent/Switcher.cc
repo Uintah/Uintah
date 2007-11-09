@@ -219,6 +219,7 @@ void Switcher::problemSetup(const ProblemSpecP& params,
     ProblemSpecP ups = psi->readInputFile();
     sim->problemSetup(ups,restart_prob_spec,grid,sharedState);
     sharedState->clearMaterials();
+    //ups->releaseDocument();
   }
   
   // clear it out and do the first one again
@@ -265,6 +266,11 @@ void Switcher::problemSetup(const ProblemSpecP& params,
 
   // re-initialize the DataArchiver to output according the the new component's specs
   dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
+
+  // do this again, in case of a restart
+  Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+  if (regridder)
+    regridder->switchInitialize(ups);
 
   // re-initialize the time info
   d_sharedState->d_simTime->problemSetup(ups);
@@ -343,8 +349,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
     // var, we add to the compute list
     d_computedVars = sched->getComputedVars();
   }
-  Task* t = scinew Task("Switcher::carryOverVars",
-                        this, & Switcher::carryOverVars);
+
   if (d_doSwitching[level->getIndex()] || d_restarting) {
     // clear and reset carry-over db
     if (level->getIndex() >= (int) d_doCarryOverVarPerLevel.size()) {
@@ -363,6 +368,8 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
     }
   }
 
+  Task* t = scinew Task("Switcher::carryOverVars",
+                        this, & Switcher::carryOverVars);
   // schedule the vars for carrying over (if this happens before a switch, don't do it)
   if (level->getIndex() < (int) d_doCarryOverVarPerLevel.size()) {
     for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
@@ -671,7 +678,7 @@ void Switcher::outputPS(Dir& dir)
     
   }
   inputDoc->output(inputname.c_str());
-  inputDoc->releaseDocument();
+  //inputDoc->releaseDocument();
 
     
 

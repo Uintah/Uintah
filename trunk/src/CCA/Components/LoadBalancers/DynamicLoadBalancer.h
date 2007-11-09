@@ -37,7 +37,7 @@ namespace Uintah {
      WARNING
       
      ****************************************/
-    
+
   struct PatchInfo {
     PatchInfo(int i, int n) {id = i; numParticles = n;}
     PatchInfo() {}
@@ -95,7 +95,7 @@ namespace Uintah {
     virtual bool isDynamic() { return true; }
 
     //! Assigns the patches to the processors they ended up on in the previous
-    //! Simulation.  Changes state if we need to re-load balance (if we have a 
+    //! Simulation.  Returns true if we need to re-load balance (if we have a 
     //! different number of procs than were saved to disk
     virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string, const GridP& grid);
     

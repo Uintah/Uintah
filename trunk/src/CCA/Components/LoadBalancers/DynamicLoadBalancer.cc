@@ -8,10 +8,10 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/DataArchive/DataArchive.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Thread/Time.h>
@@ -517,7 +517,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double halfCost=remainingCost/2;
       double cost=0;
       int p=0;
-      double takeimb=fabs(cost+patch_costs[l][order[startingProc+p]]-halfCost);
+      double takeimb=fabs(cost+patch_costs[l][order[startingPatch+p]]-halfCost);
       double notakeimb=fabs(cost-halfCost);
 
       //if we do not have enough patches on the left side for all processors 
@@ -526,14 +526,14 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       while(p<halfProc || remainingPatches-p>remainingProcessors-halfProc && notakeimb>takeimb)
       {
         //assign this patch to left side
-        cost+=patch_costs[l][order[startingProc+p++]];
+        cost+=patch_costs[l][order[startingPatch+p++]];
         
         //break out if there are no more patches
         if(p==remainingPatches)
            break;
         
         //update imbalance
-        takeimb=fabs(cost+patch_costs[l][order[startingProc+p]]-halfCost);
+        takeimb=fabs(cost+patch_costs[l][order[startingPatch+p]]-halfCost);
         notakeimb=fabs(cost-halfCost);
       }
 
@@ -841,13 +841,12 @@ DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, Pro
   for (unsigned i = 0; i < d_processorAssignment.size(); i++)
     d_processorAssignment[i]= -1;
 
-  if (archive->queryPatchwiseProcessor(first_patch, time_index != -1)) {
+  if (archive->queryPatchwiseProcessor(first_patch, time_index) != -1) {
     // for uda 1.1 - if proc is saved with the patches
-
     for(int l=0;l<grid->numLevels();l++){
       const LevelP& level = grid->getLevel(l);
       for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
-        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index);
+        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
       }
     }
   } // end queryPatchwiseProcessor

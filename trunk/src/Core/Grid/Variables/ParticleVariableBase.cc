@@ -11,7 +11,7 @@ using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE

@@ -31,10 +31,10 @@
 #include <SCIRun/Core/Datatypes/GenericField.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Geom/Material.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/ColorMapPort.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <SCIRun/Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Ports/FieldPort.h>
+#include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>
+#include <SCIRun/Dataflow/Network/Ports/GeometryPort.h>
 #include <iostream>
 
 namespace Uintah {

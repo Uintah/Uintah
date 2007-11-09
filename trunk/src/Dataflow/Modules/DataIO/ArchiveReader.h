@@ -32,7 +32,7 @@ LOG
     
 #include <Dataflow/Ports/ArchivePort.h>
 #include <Core/Datatypes/Archive.h>
-#include <Dataflow/Network/Module.h> 
+#include <SCIRun/Dataflow/Network/Module.h> 
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 
 namespace Uintah {

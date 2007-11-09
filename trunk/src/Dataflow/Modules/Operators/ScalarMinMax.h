@@ -31,7 +31,7 @@
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>
 #include <SCIRun/Core/Util/ProgressReporter.h>
-#include <Dataflow/Network/Module.h>
+#include <SCIRun/Dataflow/Network/Module.h>
 #include <sci_values.h>
 
 namespace Uintah {

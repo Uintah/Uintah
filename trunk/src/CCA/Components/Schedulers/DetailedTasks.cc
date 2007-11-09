@@ -19,7 +19,8 @@
 using namespace Uintah;
 using namespace std;
 
-#ifdef _WIN32
+#undef UINTAHSHARE
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #define UINTAHSHARE __declspec(dllimport)
 #else
 #define UINTAHSHARE
@@ -44,9 +45,9 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   : sc_(sc), d_myworld(pg), first(first), taskgraph_(taskgraph),
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
     currentDependencyGeneration_(1),
+    extraCommunication_(0),
     readyQueueMutex_("DetailedTasks Ready Queue"),
-    readyQueueSemaphore_("Number of Ready DetailedTasks", 0),
-    extraCommunication_(0)
+    readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   int nproc = pg->size();
   stasks_.resize(nproc);
@@ -557,6 +558,66 @@ void DetailedTask::findRequiringTasks(const VarLabel* var,
   }
 }
 
+DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req, 
+                                                    const Patch* fromPatch, int matl, IntVector low, IntVector high,
+                                                    IntVector& totalLow, IntVector& totalHigh)
+{
+  totalLow = low;
+  totalHigh = high;
+  DetailedDep* dep = batch->head;
+  for(;dep != 0; dep = dep->next){
+    if(fromPatch == dep->fromPatch && matl == dep->matl
+       && (req == dep->req
+	   || (req->var->equals(dep->req->var)
+	       && req->mapDataWarehouse() == dep->req->mapDataWarehouse()))) {
+
+      // total range - the same var in each dep needs to have the same patchlow/high
+      dep->patchLow = totalLow = Min(totalLow, dep->patchLow);
+      dep->patchHigh = totalHigh = Max(totalHigh, dep->patchHigh);
+
+      int ngcDiff = req->numGhostCells > dep->req->numGhostCells ? (req->numGhostCells - dep->req->numGhostCells) : 0;
+      IntVector new_l = Min(low, dep->low);
+      IntVector new_h = Max(high, dep->high);
+      IntVector newRange = new_h-new_l;
+      IntVector requiredRange = high-low;
+      IntVector oldRange = dep->high-dep->low + IntVector(ngcDiff, ngcDiff, ngcDiff);
+      int newSize = newRange.x()*newRange.y()*newRange.z();
+      int requiredSize = requiredRange.x()*requiredRange.y()*requiredRange.z();
+      int oldSize = oldRange.x()*oldRange.y()*oldRange.z();
+      
+      bool extraComm = newSize > requiredSize+oldSize;
+
+      // not going to work for particle variables (until we can append Particledata instead of replace it in DW::recvMPI)
+      if (sc_->useSmallMessages() && req->var->typeDescription()->getType() != TypeDescription::ParticleVariable) {
+        // If two patches on the same processor want data from the same patch on a different
+        // processor, we can either pack them in one dependency and send the min and max of their range (which
+        // will frequently result in sending the entire patch), or we can use two dependencies (which will get packed into
+        // one message) and only send the resulting data.
+        
+        // We want to create a new dep in such cases.  However, we don't want to do this in cases where we simply add more
+        // ghost cells.
+        if (!extraComm)
+          break;
+        else if (dbg.active()) {
+          dbg << d_myworld->myrank() << "            Ignoring: " << dep->low << " " << dep->high << ", fromPatch = ";
+          if (fromPatch)
+            dbg << fromPatch->getID() << '\n';
+          else
+            dbg << "NULL\n";
+          dbg << d_myworld->myrank() << " TP: " << totalLow << " " << totalHigh << endl;
+        }
+
+      }
+      else {
+        if (extraComm) {
+          extraCommunication_ += newSize - (requiredSize+oldSize);
+        }
+        break;
+      }
+    }
+  }
+  return dep;
+}
 
 void
 DetailedTasks::possiblyCreateDependency(DetailedTask* from,
@@ -630,14 +691,10 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if(dbg.active())
       dbg << d_myworld->myrank() << "          USING PREVIOUSLY CREATED BATCH!\n";
   }
-  DetailedDep* dep = batch->head;
-  for(;dep != 0; dep = dep->next){
-    if(fromPatch == dep->fromPatch && matl == dep->matl
-       && (req == dep->req
-	   || (req->var->equals(dep->req->var)
-	       && req->mapDataWarehouse() == dep->req->mapDataWarehouse())))
-      break;
-  }
+  // the total region spanned by the dep(s)
+  IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
+  DetailedDep* dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, low, high, varRangeLow, varRangeHigh);
+
   if(!dep){
     dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, 
 			     low, high, cond);
@@ -649,36 +706,26 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       else
 	dbg << "NULL\n";	
     }
-  } else {
+  }
+  else {
+    IntVector l = Min(low, dep->low), h = Max(high, dep->high);
     dep->toTasks.push_back(to);
-    IntVector l = Min(low, dep->low);
-    IntVector h = Max(high, dep->high);
-    IntVector d1 = h-l;
-    IntVector d2 = high-low;
-    IntVector d3 = dep->high-dep->low;
-    int v1 = d1.x()*d1.y()*d1.z();
-    int v2 = d2.x()*d2.y()*d2.z();
-    int v3 = d3.x()*d3.y()*d3.z();
-    if(v1 > v2+v3){
-      // If we get this, perhaps we should allow multiple deps so
-      // that we do not communicate more of the patch than necessary
-      extraCommunication_ += (v1 - (v2+v3));
-    }
     if(dbg.active()){
       dbg << d_myworld->myrank() << "            EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
       dbg << *req->var << '\n';
       dbg << *dep->req->var << '\n';
       if(comp)
-	dbg << *comp->var << '\n';
+        dbg << *comp->var << '\n';
       if(dep->comp)
-	dbg << *dep->comp->var << '\n';
+        dbg << *dep->comp->var << '\n';
     }
     dep->low=l;
-    dep->high=h;
+    dep->high=h;  
   }
-  if (strcmp(from->getTask()->getName(),"send old data") == 0 && req->lookInOldTG) {
-    //cout << d_myworld->myrank() << "  Int TG dep: " << *dep << " dw " << req->whichdw << endl;
-  }
+  // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
+  // (to set the next one, which will be the head of the list, you only need to see the following one)
+  dep->patchLow = varRangeLow;
+  dep->patchHigh = varRangeHigh;
 }
 
 DetailedTask*
@@ -702,11 +749,22 @@ DetailedTask::addRequires(DependencyBatch* req)
   return reqs.insert(make_pair(req, req)).second;
 }
 
+// can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
 void DetailedTask::checkExternalDepCount()
 {
-  //cout << "Task " << this->getTask()->getName() << " dec " << externalDependencyCount_-1 << endl;
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps())
+  //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false) {
+    //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
     taskGroup->mpiCompletedTasks_.push(this);
+    externallyReady_ = true;
+  }
+}
+
+void DetailedTask::resetDependencyCounts()
+{
+  externalDependencyCount_ = 0;
+  externallyReady_ = false;
+  initiated_ = false;
 }
 
 void

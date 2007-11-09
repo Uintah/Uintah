@@ -59,7 +59,7 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-        int matl = clf.matl_jim1;
+        int matl = clf.matl_jim;
         //__________________________________
         //   P A R T I C L E   V A R I A B L E
         ParticleVariable<long64> value_pID;

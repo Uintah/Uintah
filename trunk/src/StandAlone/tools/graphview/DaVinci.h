@@ -6,9 +6,7 @@
 #include <vector>
 #include <list>
 #include <sgi_stl_warnings_on.h>
-#ifndef _WIN32
 #include <unistd.h>
-#endif
 
 class GV_TaskGraph;
 class GV_Task;

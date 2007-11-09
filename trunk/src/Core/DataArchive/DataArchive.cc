@@ -64,7 +64,7 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
-  d_indexDoc->releaseDocument();
+  //d_indexDoc->releaseDocument();
 }
 
 // static, so can be called from either DataArchive or TimeData
@@ -410,7 +410,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
   }
   
   d_lock.unlock();
-  //grid->performConsistencyCheck();
+  grid->performConsistencyCheck();
 
   timedata.d_grid = grid;
 
@@ -503,10 +503,6 @@ void
 DataArchive::query( Variable& var, const std::string& name, int matlIndex, 
                     const Patch* patch, int index, DataFileInfo* dfi /* = 0 */)
 {
-  // don't handle data for virtual patches
-  if (patch->isVirtual()) {
-
-  }
   double tstart = Time::currentSeconds();
   string url;
 
@@ -579,8 +575,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     if (psubset == 0 || psubset->numParticles() != dfi->numParticles)
     {
      d_psetDB[key] = psubset =
-       scinew ParticleSubset(scinew ParticleSet(dfi->numParticles), true,
-                             matlIndex, patch, 0);
+       scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
     }
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
@@ -630,11 +625,6 @@ void DataArchive::query( Variable& var, const string& name, int matlIndex,
                          const Patch* patch, int timeIndex,
                          Ghost::GhostType gt, int ngc)
 {
-  // don't handle data for virtual patches
-  if (patch->isVirtual()) {
-
-  }
-
   if (ngc == 0)
     query(var, name, matlIndex, patch, timeIndex, 0);
   else {
@@ -722,7 +712,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
     ParticleVariable<long64> var;
     query(var, "p.particleID", matlIndex, patch, index);
     //  cerr<<"var["<<idx<<"] = "<<var[idx]<<endl;
-    if( idx < var.getParticleSet()->numParticles() && var[idx] == particleID )
+    if( idx < var.getParticleSubset()->numParticles() && var[idx] == particleID )
       return;
     else {
       ParticleSubset* subset = var.getParticleSubset();
@@ -1096,6 +1086,21 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
         varinfo.compression = compressionMode;
         varinfo.boundaryLayer = boundary;
       }
+      else if (compressionMode != "") {
+        // For particles variables of size 0, the uda doesn't say it
+        // has a compressionMode...  (FYI, why is this?  Because it is
+        // ambiguous... if there is no data, is it compressed?)
+        //
+        // To the best of my understanding, we only look at the variables stats
+        // the first time we encounter it... even if there are multiple materials.
+        // So we run into a problem is the variable has 0 data the first time it
+        // is looked at... The problem there is that it doesn't mark it as being
+        // compressed, and therefore the next time we see that variable (eg, in
+        // another material) we (used to) assume it was not compressed... the 
+        // following lines compenstate for this problem:
+        VarData& varinfo = d_varInfo[varname];
+        varinfo.compression = compressionMode;
+      }
 
       if (levelNum == -1) { // global file (reduction vars)
         d_globaldata = filename;
@@ -1123,7 +1128,7 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
       cerr << "WARNING: Unknown element in Variables section: " << vnode->getNodeName() << '\n';
     }
   }
-  top->releaseDocument();
+  //top->releaseDocument();
 }
 
 
@@ -1131,11 +1136,6 @@ DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
 void
 DataArchive::TimeData::parsePatch(const Patch* patch)
 {
-  // don't handle data for virtual patches
-  if (patch->isVirtual()) {
-
-  }
-
   ASSERT(d_grid != 0);
   if (!patch) return;
 

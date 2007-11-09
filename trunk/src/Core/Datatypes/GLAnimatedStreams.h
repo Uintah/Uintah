@@ -84,7 +84,6 @@ public:
   GLAnimatedStreams(const GLAnimatedStreams&);
   ~GLAnimatedStreams();
 
-
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
   
   virtual GeomObj* clone();

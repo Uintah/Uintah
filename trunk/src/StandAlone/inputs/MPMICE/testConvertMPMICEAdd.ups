@@ -22,7 +22,6 @@
    <DataArchiver>
      <filebase>testConvertAddMPMICE.uda</filebase>
      <outputTimestepInterval>50</outputTimestepInterval>
-     <compression>gzip</compression>
      <outputDoubleAsFloat/>
      <save label = "p.x"/>
      <save label = "p.particleID"/>

@@ -56,7 +56,6 @@ WARNING
 
   template<class T> 
   class GridVariable : public GridVariableBase, public Array3<T> {
-    //friend class constVariable<CCVariableBase, CCVariable<T>, T, const IntVector&>;
   public:
     GridVariable() {}
     virtual ~GridVariable() {}

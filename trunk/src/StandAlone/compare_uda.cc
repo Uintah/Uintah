@@ -308,7 +308,7 @@ void MaterialParticleVarData::createPatchMap()
   patchMap_ = scinew map<long64, const Patch*>();
   for (unsigned int patch = 0; patch < particleVars_.size(); patch++) {
     particleIndex count =
-      particleVars_[patch]->getParticleSet()->numParticles();
+      particleVars_[patch]->getParticleSubset()->numParticles();
     ParticleVariable<long64>* particleID =
       dynamic_cast< ParticleVariable<long64>* >(particleVars_[patch]);
     if (particleID == 0) {
@@ -402,9 +402,8 @@ void MaterialParticleData::sort()
     subsetIndices[idIndices[i].second] = i;
   }
 
-  ParticleSet* set = scinew ParticleSet((particleIndex)subsetIndices.size());
-  ParticleSubset* subset = scinew ParticleSubset(set, false, matl_, 0,
-						 subsetIndices.size());
+  ParticleSubset* subset = scinew ParticleSubset(0, matl_, 0);
+  subset->expand(subsetIndices.size());
   for (unsigned int i = 0; i < subsetIndices.size(); i++) {
     subset->addParticle(subsetIndices[i]);
   }

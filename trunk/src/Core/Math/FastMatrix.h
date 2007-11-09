@@ -85,7 +85,7 @@ namespace Uintah {
     void big_destructiveInvert(FastMatrix& inverse);
     void big_destructiveSolve(double* b);
     void big_destructiveSolve(double* b1, double* b2);
-    void big_destructiveSolve(SLIVR::Vector* b);
+    void big_destructiveSolve(SCIRun::Vector* b);
 
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);

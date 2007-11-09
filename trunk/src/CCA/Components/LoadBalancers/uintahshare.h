@@ -1,6 +1,6 @@
 #undef UINTAHSHARE
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
 #ifdef BUILD_Packages_Uintah_CCA_Components_LoadBalancers
 #define UINTAHSHARE __declspec(dllexport)
 #else

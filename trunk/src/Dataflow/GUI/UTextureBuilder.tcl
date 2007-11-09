@@ -30,7 +30,7 @@
 catch {rename UTextureBuilder ""}
 
 itcl_class Uintah_Visualization_UTextureBuilder {
-    inherit SCIRun_Visualization_ConvertNrrdsToTexture
+    inherit SCIRun_Visualization_ConvertFieldsToTexture
  
     constructor {config} {
 	set name UTextureBuilder

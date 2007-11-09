@@ -175,8 +175,7 @@ void ParticleTest1::timeAdvance(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleSubset* delset = scinew ParticleSubset(pset->getParticleSet(),
-                                                     false,matl,patch, 0);
+      ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;

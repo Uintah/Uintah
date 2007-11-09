@@ -21,6 +21,11 @@ NullThermalContact::~NullThermalContact()
 {
 }
 
+void NullThermalContact::outputProblemSpec(ProblemSpecP& ps)
+{
+}
+
+
 void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
 					     const PatchSubset* patches,
 					     const MaterialSubset*,

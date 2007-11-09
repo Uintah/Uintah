@@ -1,9 +1,9 @@
 #include <iostream>
 using namespace std;
 
-#include <CCA/Ports/SFC.h>
-#include <SCIRun/Core/Parallel/Parallel.h>
-#include<SCIRun/Core/Thread/Time.h>
+#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include<Core/Thread/Time.h>
 using namespace Uintah;
 
 #define depth 1000.0f

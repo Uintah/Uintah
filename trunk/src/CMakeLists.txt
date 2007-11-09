@@ -100,11 +100,6 @@ IF(NOT RADIATION)
 ENDIF(NOT RADIATION)
 
 
-#-----------------------------------------------------------------------------
-# SCIRun Packages to enable (must enable packages when building core for now)
-# DV Fix need error checking to make sure SCIRun gets included
-SET(LOAD_PACKAGE "SCIRun,Teem,Uintah" CACHE STRING "Building SCIRun, Teem, and Uintah packages by default.")
-
 IF(ARCHES OR RADIATION)
   # fortran files
   ENABLE_LANGUAGE(Fortran)
@@ -176,17 +171,12 @@ ELSE(ARCHES OR RADIATION)
   ENDMACRO(FORTRAN_DEPENDENCY)
 ENDIF(ARCHES OR RADIATION)
 
-#  Create SCIRun/Packages/Dataflow and put an empty CMakeLists.txt there
-#    to satisfy SCIRun's want to build Packages/Uintah/Dataflow, but
-#    we will just build it here
-SET(PU_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SCIRun/Packages/Uintah)
-IF(NOT EXISTS ${PU_DIR})
-  FILE(MAKE_DIRECTORY ${PU_DIR})
-  FILE(WRITE ${PU_DIR}/CMakeLists.txt "")
-ENDIF(NOT EXISTS ${PU_DIR})
-
-
 SET(MPI_DIR "" CACHE PATH "Path to MPI")
+
+#-----------------------------------------------------------------------------
+# SCIRun Packages to enable (must enable packages when building core for now)
+SET(LOAD_PACKAGE "SCIRun,Teem,Uintah" CACHE STRING "Building SCIRun, Teem, and Uintah packages by default.")
+SET(HANDLED_PACKAGE_Uintah "YES")
 
 ADD_SUBDIRECTORY(SCIRun)
 
@@ -198,6 +188,12 @@ INCLUDE_DIRECTORIES(
 
 # grab the BUILD_DATAFLOW prop so we can use it to build Core_Datatypes
 GET_DIRECTORY_PROPERTY( ITK_FOUND DIRECTORY SCIRun DEFINITION ITK_FOUND)
+GET_DIRECTORY_PROPERTY( SCIRUN_CORE_SOURCE_DIR DIRECTORY SCIRun DEFINITION SCIRUN_CORE_SOURCE_DIR)
+GET_DIRECTORY_PROPERTY( SCIRUN_DATAFLOW_BINARY_DIR DIRECTORY SCIRun DEFINITION SCIRUN_DATAFLOW_BINARY_DIR)
+GET_DIRECTORY_PROPERTY( TCLSH DIRECTORY SCIRun/Dataflow DEFINITION TCLSH)
+GET_DIRECTORY_PROPERTY( TCL_INIT_DIR DIRECTORY SCIRun DEFINITION TCL_INIT_DIR)
+GET_DIRECTORY_PROPERTY( ITCL_INIT_DIR SCIRun DEFINITION ITCL_INIT_DIR)
+GET_DIRECTORY_PROPERTY( CREATE_TCL_INDEX DIRECTORY SCIRun/Dataflow DEFINITION CREATE_TCL_INDEX)
 
 IF(ITK_FOUND)
   GET_DIRECTORY_PROPERTY( ITK_USE_FILE DIRECTORY SCIRun DEFINITION ITK_USE_FILE)
@@ -239,7 +235,8 @@ ADD_SUBDIRECTORY(StandAlone)
 
 IF(BUILD_DATAFLOW)
   ADD_SUBDIRECTORY(Dataflow)
+
 ENDIF(BUILD_DATAFLOW)
 
 # look for tau
-# - REQUIRE MPI, disclude MPICXX
+

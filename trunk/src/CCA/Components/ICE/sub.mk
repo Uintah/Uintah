@@ -24,7 +24,6 @@ SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
-       Packages/Uintah/CCA/Components/MPM              \
        Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
        Packages/Uintah/CCA/Ports                       \
        Packages/Uintah/Core/Grid                       \
@@ -39,6 +38,10 @@ PSELIBS := \
        Packages/Uintah/Core/Labels                     \
        Core/Exceptions Core/Geometry                   \
        Core/Thread Core/Util Core/OS
+
+ifeq ($(OS_NAME),Darwin)
+  PSELIBS += Packages/Uintah/CCA/Components/MPM
+endif
 
 LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
