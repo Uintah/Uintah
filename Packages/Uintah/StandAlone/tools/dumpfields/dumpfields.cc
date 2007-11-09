@@ -24,7 +24,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include "Packages/Uintah/Core/Exceptions/ProblemSetupException.h"
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/Point.h>
