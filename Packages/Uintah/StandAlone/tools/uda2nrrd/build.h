@@ -10,7 +10,13 @@
 using namespace SCIRun;
 using namespace Uintah;
 
+// Force build_field() to NOT be inlined... so that the symbols will
+// actually be created so that they can be used during linking
+
+#define NO_INLINE __attribute__((noinline))
+
 template <class T, class VarT, class FIELD>
+NO_INLINE
 void
 build_field( QueryInfo &qinfo,
              IntVector& offset,
@@ -30,6 +36,7 @@ void build_patch_field( QueryInfo& qinfo,
                         const Args & args );
 
 template <class T, class VarT, class FIELD, class FLOC>
+NO_INLINE
 void
 build_combined_level_field( QueryInfo &qinfo,
                             IntVector& offset,
