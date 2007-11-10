@@ -19,9 +19,9 @@ CA              = Packages/Uintah/CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
   ifeq ($(BUILD_MPM),yes)
-    MPMARCHES_LIBS     = $(COMPONENTS)/MPMArches
+    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS     = $(COMPONENTS)/Arches 
+  ARCHES_LIBS     = $(COMPONENTS)/Arches
 endif
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB         = Packages/Uintah/CCA/Components/MPM
@@ -64,6 +64,7 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/CCA/Components/Examples          \
         $(DUMMY_LIB)                                     \
         $(ARCHES_LIBS)                                   \
+        $(MPMARCHES_LIB)                                 \
         $(MPM_LIB)                                       \
         $(ICE_LIB)                                       \
         $(MPMICE_LIB)                                    \
