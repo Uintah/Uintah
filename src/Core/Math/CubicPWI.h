@@ -71,16 +71,17 @@ public:
   bool set_data(const Array1<double>&, const Array1<double>&);
   inline bool get_value(double, double&);
 
-private:
-  
-  friend class Cubic3DPWI<class T>;
-
+  // Quat struct should be private to this class, but the gcc 3.2.3
+  // compiler then won't let friend classes use it... sigh... so
+  // making it public for now.
   struct Quat {
     double a;
     double b;
     double c;
     double d;
   };
+
+private:
   
   Array1<Quat> p;
 };
@@ -108,6 +109,9 @@ public:
   inline bool get_value(double, T&);
   
 private:
+  
+  CubicPWI p;
+
   Array1<CubicPWI::Quat> X;
   Array1<CubicPWI::Quat> Y;
   Array1<CubicPWI::Quat> Z;
