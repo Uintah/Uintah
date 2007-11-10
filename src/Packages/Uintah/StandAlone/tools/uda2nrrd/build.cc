@@ -23,6 +23,7 @@ using namespace Uintah;
 // contiguous volume.
 
 template <class T, class VarT, class FIELD>
+NO_INLINE
 void
 build_field( QueryInfo &qinfo,
              IntVector& offset,
@@ -199,6 +200,7 @@ build_multi_level_field( QueryInfo &qinfo, const Args & args )
 /////////////////////////////////////////////////////////////////////
 
 template <class T, class VarT, class FIELD, class FLOC>
+NO_INLINE
 void
 build_combined_level_field( QueryInfo &qinfo,
                             IntVector& offset,
@@ -275,7 +277,7 @@ build_combined_level_field( QueryInfo &qinfo,
         dst_mh->get_center(p, *itr);
         bool failed = true;
         const int nw = src_mh->get_weights(p, locs, weights);
-        typename FIELD::value_type val;
+        typename FIELD::value_type val(0);
     
         if (nw > 0)	{
           failed = false;
@@ -299,9 +301,9 @@ build_combined_level_field( QueryInfo &qinfo,
 } // end build_combined_level_field()
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instantiate some of the needed verisons of functions.  This
-// function is never called, but forces the instantiation of the
-// handleVariable<Vector> function that is needed.
+// Instantiate some of the needed verisons of functions.  The
+// following functions are never actually called, but force the
+// instantiation of the build* functions that are needed.
 
 template <class T>
 void
