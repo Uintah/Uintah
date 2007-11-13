@@ -62,7 +62,6 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Solvers              \
         Packages/Uintah/CCA/Components/Examples          \
-        $(DUMMY_LIB)                                     \
         $(ARCHES_LIBS)                                   \
         $(MPMARCHES_LIB)                                 \
         $(MPM_LIB)                                       \
@@ -331,13 +330,6 @@ link_regression_tester:
                echo "Creating link to regression_tester script." ; \
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
 	   fi )
-
-noFortran:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/noRadiation $(SRCTOP_ABS) ; \
-          $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
-
-fake_arches:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
