@@ -7,9 +7,6 @@ SRCDIR  := Packages/Uintah/CCA/Components/Parent
 SRCS    := $(SRCDIR)/Switcher.cc \
 	   $(SRCDIR)/ComponentFactory.cc 
 
-# The following variables are used by the Fake* scripts... please
-# do not modify...
-#
 COMPONENTS = Packages/Uintah/CCA/Components
 ifneq ($(IS_WIN),yes)
 # disable ARCHES on windows for now, as we don't know what to do about fortran yet..
@@ -19,7 +16,6 @@ endif
 ICE    = $(COMPONENTS)/ICE
 MPM    = $(COMPONENTS)/MPM
 MPMICE = $(COMPONENTS)/MPMICE
-#DUMMY = $(COMPONENTS)/Dummy
 
 PSELIBS := \
 	Core/Containers \
@@ -34,7 +30,6 @@ PSELIBS := \
         Packages/Uintah/Core/Parallel    \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
-        $(DUMMY)  \
         $(ARCHES) \
         $(ICE)    \
         $(MPM)    \
