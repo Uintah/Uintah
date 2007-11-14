@@ -3,20 +3,12 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR  := Packages/Uintah/CCA/Components/Parent
+COMPONENTS := Packages/Uintah/CCA/Components
 
 SRCS    := $(SRCDIR)/Switcher.cc \
 	   $(SRCDIR)/ComponentFactory.cc 
 
-COMPONENTS = Packages/Uintah/CCA/Components
-ifneq ($(IS_WIN),yes)
-# disable ARCHES on windows for now, as we don't know what to do about fortran yet..
-# don't indent these, or fake* will probably fail
-ARCHES = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
-endif
-ICE    = $(COMPONENTS)/ICE
-MPM    = $(COMPONENTS)/MPM
-MPMICE = $(COMPONENTS)/MPMICE
-
+# ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
 	Core/Containers \
 	Core/Exceptions \
@@ -31,6 +23,7 @@ PSELIBS := \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
         $(ARCHES) \
+        $(MPMARCHES) \
         $(ICE)    \
         $(MPM)    \
         $(MPMICE) \

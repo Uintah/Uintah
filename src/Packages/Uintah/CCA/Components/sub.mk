@@ -11,18 +11,18 @@ ADIR = $(SRCDIR)/Arches
 #
 
 ifeq ($(BUILD_MPM),yes)
-  MPM            = $(SRCDIR)/MPM
+  MPM         := $(SRCDIR)/MPM
   ifeq ($(BUILD_ICE),yes)
-    MPMICE         = $(SRCDIR)/MPMICE
+    MPMICE    := $(SRCDIR)/MPMICE
   endif
 endif
 ifeq ($(BUILD_ICE),yes)
-  ICE            = $(SRCDIR)/ICE
+  ICE         := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES         = $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
+  ARCHES      := $(SRCDIR)/Arches $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran
   ifeq ($(BUILD_MPM),yes)
-    MPMARCHES      = $(SRCDIR)/MPMArches
+    MPMARCHES := $(SRCDIR)/MPMArches
   endif
 endif
 
