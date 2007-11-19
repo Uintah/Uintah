@@ -30,10 +30,10 @@ LOG
 #define FIELDEXTRACTOR_H 1
 
 
+#include <Core/Math/Matrix3.h>
 #include <SCIRun/Core/Basis/Constant.h>
 #include <SCIRun/Core/Basis/HexTrilinearLgn.h>
 #include <SCIRun/Core/Datatypes/LatVolMesh.h>
-#include <Core/Math/Matrix3.h>
 #include <SCIRun/Core/Datatypes/MultiLevelField.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Geometry/Point.h>
