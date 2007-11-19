@@ -11,6 +11,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Grid/Variables/Variable.h>
+#include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
@@ -29,13 +30,13 @@ using SCIRun::Semaphore;
 using SCIRun::Runnable;
 using SCIRun::LatVolMesh;
 
-template <class Var, class Data, class FIELD>
+template <class Data, class FIELD>
 class PatchToFieldThread : public Runnable {
 public:
   typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
   PatchToFieldThread(FIELD *fld,
-                     Var& patchData,
+                     GridVariable<Data>* patchData,
                      IntVector offset,
                      IntVector min_i,
                      IntVector max_i,
@@ -44,9 +45,9 @@ public:
     offset_(offset),
     min_(min_i),
     max_(max_i),
-    sema_(sema)
+    sema_(sema),
+    var_(patchData) 
   {
-    var_.copyPointer(patchData);
   }
   void run()
   {
@@ -62,7 +63,7 @@ public:
                                   hi.x(), hi.y(), hi.z());
       // The end iterator is just a cell iterator
       LVMesh::Cell::iterator it_end; it.end(it_end);
-      typename Array3<Data>::iterator vit(&var_, min_);
+      typename Array3<Data>::iterator vit(var_, min_);
 
       for(;it != it_end; ++it){
         fld_->fdata()[*it] = *vit;
@@ -75,7 +76,7 @@ public:
                                   hi.x(), hi.y(), hi.z());
       // The end iterator is just a node iterator
       LVMesh::Node::iterator it_end; it.end(it_end);
-      typename Array3<Data>::iterator vit(&var_, min_);
+      typename Array3<Data>::iterator vit(var_, min_);
       for(;it != it_end; ++it){
         fld_->fdata()[*it] = *vit;
         ++vit;
@@ -87,7 +88,7 @@ private:
   PatchToFieldThread(){}
 
   FIELD *fld_;
-  Var var_;
+  GridVariable<Data>* var_;
   IntVector offset_;
   IntVector min_;
   IntVector max_;
