@@ -329,12 +329,13 @@ double IdealGasMP::computeRhoMicroCM(double press,
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
 
-  if(Temp > 10000){
-    cerr << "For this model you need to pass in the temperature in place " ;
-    cerr <<  "of the reference pressure" << endl;
-  }
+  //if(Temp > 10000){
+   // cerr << "For this model you need to pass in the temperature in place " ;
+    //cerr <<  "of the reference pressure" << endl;
+  //}
 
-  return  press/((gamma - 1.0)*cv*Temp);
+  double Temp1 = 300.0;
+  return  press/((gamma - 1.0)*cv*Temp1);
 }
 
 void IdealGasMP::computePressEOSCM(double rhoM,double& pressure, 
@@ -345,10 +346,11 @@ void IdealGasMP::computePressEOSCM(double rhoM,double& pressure,
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
 
-  if(Temp > 10000){
-    cerr << "For this model you need to pass in the temperature in place " ;
-    cerr <<  "of the reference pressure" << endl;
-  }
+  //if(Temp > 10000){
+    //cerr << "For this model you need to pass in the temperature in place " ;
+    //cerr <<  "of the reference pressure" << endl;
+  //}
+  Temp = 300.0;
 
   pressure   = (gamma - 1.0)*rhoM*cv*Temp;
   dp_drho = (gamma - 1.0)*cv*Temp;
