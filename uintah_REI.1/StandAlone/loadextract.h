@@ -52,6 +52,10 @@ class loadextract //this is a preprocessor for dyna
    void extract(int argc, char** argv);
    void output();
 
+   double presconv;
+   double lengthconv1;
+   double lengthconv2;
+
   protected:
 
   private:

@@ -79,7 +79,7 @@ loadextract::loadextract(std::string kfilename)
    int i, num = kreader.nodes.size(), k;
    for(i=0; i<num; i++){
      nodes_m[kreader.nodes[i]->nid] = kreader.nodes[i];
-     for(k=0; k<3; k++) kreader.nodes[i]->x[k] *= 1.0/1000.0;
+     for(k=0; k<3; k++) kreader.nodes[i]->x[k] *= lengthconv1;
    }
 
    // set solid element faces first
@@ -161,7 +161,7 @@ loadextract::loadextract(std::string kfilename)
    // now do shell elements
    num = kreader.secShells.size();
    for(i=0; i<num; i++){
-      for(j1=0; j1<4; j1++) kreader.secShells[i]->t[j1] *= 20.0/1000.0;
+      for(j1=0; j1<4; j1++) kreader.secShells[i]->t[j1] *= lengthconv2;
       kreader.secShells_m[kreader.secShells[i]->secid] = kreader.secShells[i];
    }
 
@@ -178,7 +178,7 @@ loadextract::loadextract(std::string kfilename)
    for(i=0; i<num; i++){
       for(j1=0; j1<4; j1++) 
 	{
-	  kreader.elemShells[i]->t[j1] *= 20.0/1000.0;
+	  kreader.elemShells[i]->t[j1] *= lengthconv2;
 	  //The check here to either put section thickness into elemShells' thickness
 	  
 	  if (fabs(kreader.elemShells[i]->t[j1])<1E-12)
@@ -470,8 +470,8 @@ void loadextract::printData(
 
           TIME_PRES t_p;
           t_p.time = times[time_step];
-	  double conv = 10.0; //1.0e-6; // 10.0;
-          t_p.pres = conv*(pres[0] - pres[1]);
+	  //presconv = 10.0; //1.0e-6; // 10.0;
+          t_p.pres = presconv*(pres[0] - pres[1]);
           load_curve[ifc].push_back(t_p);
 	  /*if(d_printCell_coords){
             Point point = level->getCellPosition(c);
@@ -539,7 +539,7 @@ void loadextract::output(){
 	      //write_curve[i] = write_curve[i]&&itn->second->x[1]>0.15;
 	    //}
 	  }
-          if(!write_curve[i]||maxpres<10000.0*10.0) //1.0e-6)
+          if(!write_curve[i]||maxpres<10000.0*presconv) //1.0e-6)
 	    write_curve[i] = false;
           else
 		fprintf(lcoutput,"%d, 1.0, 0.0, %d, %d, %d, %d\n",i+1, faces[i]->node_id[0],faces[i]->node_id[1],faces[i]->node_id[2],faces[i]->node_id[3]);
