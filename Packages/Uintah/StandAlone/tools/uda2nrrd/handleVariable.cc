@@ -271,9 +271,9 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
     // true iff no reallocation is needed.
   ASSERT(patch_data.rewindow( patch_low, patch_high ));
     
-  PatchToFieldThread<VarT, T, FIELD> *worker = 
-    scinew PatchToFieldThread<VarT, T, FIELD>(sfield, patch_data, offset,
-                                              patch_low, patch_high);
+  PatchToFieldThread<T, FIELD> *worker = 
+    scinew PatchToFieldThread<T, FIELD>(sfield, &patch_data, offset,
+                                        patch_low, patch_high);
   worker->run();
   delete worker;
 
