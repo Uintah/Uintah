@@ -235,6 +235,43 @@ split_filename( const string & fname )
 }
 
 bool
+getInfo( const string & filename )
+{
+  struct stat buf;
+  string updatedFilename = substituteTilde(filename);
+
+  int result = stat( updatedFilename.c_str(), &buf );
+  if( result == 0 ) {
+    printf( "Successful stat of file '%s'.\n", filename.c_str() );
+    mode_t &m = buf.st_mode;
+ 
+    if( m & S_IRUSR && S_ISREG(m) && !S_ISDIR(m) ) {
+      printf( "   File appears to be a regular file.\n" );
+    }
+    if( m & S_IRUSR && !S_ISREG(m) && S_ISDIR(m) ) {
+      printf( "   File appears to be a regular directory.\n" );
+    }
+    if( m & S_ISLNK(m) ) {
+      printf( "   File appears to be a symbolic link.\n" );
+    }
+    printf( "   File size: %d\n", (int)buf.st_size );
+
+    struct tm *tmptr;
+    tmptr = localtime( &buf.st_mtime );
+    char time_str[ 256 ];
+    strftime( time_str, 250, "%D %T", tmptr );
+
+    printf( "   Last file modification: %s\n", time_str );
+    return true;
+  }
+  else {
+    printf( "Error getting information on file '%s'.  Errno: %d.\n", filename.c_str(), errno );
+    perror( "   Reason" );
+    return false;
+  }
+}
+
+bool
 validFile( const string & filename ) 
 {
   struct stat buf;

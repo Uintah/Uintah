@@ -74,6 +74,7 @@ SCISHARE std::pair<string, string> split_filename( const string & fname );
 SCISHARE string findFileInPath( const string &filename, 
                                 const string &path );
 
+SCISHARE bool getInfo( const string & filename );  // prints out size, type, timestamp, etc about the file. Returns false if file does not exist.
 SCISHARE bool validFile( const string & filename );
 SCISHARE bool validDir( const string & filename );
 SCISHARE bool isSymLink( const string & filename );
