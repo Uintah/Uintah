@@ -13,7 +13,8 @@ PSELIBS := \
 	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Core/XMLUtil \
+	Core/Util                        \
+	Core/XMLUtil                     \
 	Core/Exceptions
 
 LIBS 	:= $(XML2_LIBRARY)
