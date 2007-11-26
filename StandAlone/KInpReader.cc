@@ -64,6 +64,13 @@ Part::~Part()
 k_inp_reader::k_inp_reader()
 {
 	errcnt = 0;
+        TCORRECTION = 1.0;
+        convert_length = 1.0;
+        convert_mass = 1.0;
+        convert_time = 1.0;
+        translate[0] = 0.0;
+        translate[1] = 0.0;
+        translate[2] = 0.0;
 }
 
 k_inp_reader::~k_inp_reader()

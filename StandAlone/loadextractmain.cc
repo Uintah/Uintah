@@ -3,6 +3,9 @@
 int main(int argc, char** argv)
 {
   FILE * fparam;
+  char kfilename[1024];
+  float pconv, lconv1, lconv2;
+
   fparam = fopen("loadParam.txt", "r"); //open the parameter file
 
 
@@ -12,13 +15,11 @@ int main(int argc, char** argv)
       exit(0);
     }
 
-  char kfilename[1024];
   fscanf(fparam, "%s\n", kfilename);
-  loadextract loadex(kfilename);
-  fscanf(fparam, "%lf, %lf, %lf\n",&(loadex.presconv),
-	 &(loadex.lengthconv1),
-	 &(loadex.lengthconv2));
+  fscanf(fparam, "%f %f %f", &pconv, &lconv1, &lconv2);
   fclose(fparam);
+
+  loadextract loadex(kfilename, pconv, lconv1, lconv2);
    //loadextract loadex("C2500pickup.k");
    loadex.extract(argc, argv);
 
