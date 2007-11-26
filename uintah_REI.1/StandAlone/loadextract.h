@@ -46,7 +46,8 @@ class loadextract //this is a preprocessor for dyna
 {
   public:
 
-   loadextract(std::string kfilename);
+   loadextract(std::string kfilename, double pconv,
+               double lconv1, double lconv2);
    ~loadextract(){};
 
    void extract(int argc, char** argv);

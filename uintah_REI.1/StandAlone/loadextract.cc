@@ -72,7 +72,9 @@ usage(const std::string& badarg, const std::string& progname)
     exit(1);
 }
 
-loadextract::loadextract(std::string kfilename)
+loadextract::loadextract(std::string kfilename, double pconv, 
+                         double lconv1, double lconv2):
+presconv(pconv), lengthconv1(lconv1), lengthconv2(lconv2), kreader()
 {
    kreader.parse_inp(kfilename.c_str());
 
