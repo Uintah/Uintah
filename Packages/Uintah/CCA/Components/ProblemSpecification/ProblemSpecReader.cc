@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
-//#include <Core/XMLUtil/SimpleErrorHandler.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/XMLUtil/XMLUtil.h>
 
 #include <Core/Exceptions/InternalError.h>
@@ -50,6 +50,18 @@ ProblemSpecReader::readInputFile()
   
   /* check if parsing suceeded */
   if (doc == 0) {
+    if ( !getInfo( d_filename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
+      // Find the directory this file is in...
+      string directory = d_filename;
+      int index;
+      for( index = (int)directory.length()-1; index >= 0; --index ) {
+        //strip off characters after last /
+        if (directory[index] == '/')
+          break;
+      }
+      directory = directory.substr(0,index+1);
+      testFilesystem( directory );
+    }
     throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
   }
     
