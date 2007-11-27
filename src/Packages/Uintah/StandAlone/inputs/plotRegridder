@@ -46,6 +46,7 @@ echo "?">>.meanTime
 
 grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTimeRegrid
 grep -b1 REGRIDDING .tmpClean | grep Time | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTimeRegrid
+grep     REGRIDDING .tmpClean | tr -d "[:alpha:].:" >& .patches
 grep regridding .tmpClean | cut -d " " -f12 | tr ")" " " >& .scheduleCopy
 grep regridding .tmpClean | cut -d " " -f7 | tr "," " " >& .regridder
 grep regridding .tmpClean | cut -d " " -f3 | tr "(" " " >& .regridTotal
@@ -72,13 +73,30 @@ end
 #__________________________________
 # glue the data together
 paste -d " " .elapsedTimeRegrid $levels >& .L-all
-
 paste -d "  " .elapsedTime .meanTime .physicalTime>& .data
 paste -d "  " .physicalTimeRegrid .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile >& .regridData
 
+#__________________________________
+# compute the total number of cells
+cat > .awk << +
+{
+  sum = 0
+  for (i=2; i<=NF; ++i)
+    sum += \$i
+  print \$1,sum
+}
++
+awk -f .awk .L-all > .L-sum
+
+#__________________________________
+# compute the total number of patches
+awk '{ sum = 0; for(i=2;i<=NF;i+=2) sum+=$i; print sum}' .patches >& .patchTmp
+paste -d " " .elapsedTimeRegrid .patchTmp >& .patchSum
+
+# remove all the temporary files
 rm -f .elapsedTime .meanTime .physicalTime .elapsedTimeRegrid .scheduleCopy .regridder .regridTotal .TG_recompile
 rm -f .plotStats_tmp .plotStats_tmp1 .tmpDirty .tmpClean
-rm -f $levels
+rm -f $levels .awk .patches .patchTmp
 
 echo "Done extracting data"
 
@@ -106,8 +124,8 @@ set autoscale
 #set timefmt "%s"             ------- try turning these on
 set grid xtics ytics
 set y2tics
-set ylabel 'Physical Time'
-set y2label 'Mean Time/timestep'
+set ylabel 'Physical Time'         textcolor lt 1
+set y2label 'Mean Time/timestep'   textcolor lt 2
 plot '.data'       using 1:3           t 'Physical Time' with lines,\
      '.data'       using 1:2 axes x1y2 t 'meanTime/timestep' with lines,\
      '.regridData' using 2:5 axes x1y2 t 'regridding Time ',\
@@ -128,24 +146,11 @@ plot '.regridData' using 2:5           t 'Regridding total',\
 #----------Third plot-------------
 set size 1.0,0.3       
 set origin 0.0,0.0
-set ylabel 'Number of Cells'
+set ylabel 'Cells'    textcolor lt 1
+set y2label 'Patches' textcolor lt 2
+plot '.L-sum'    using 1:2 t ' All Levels' with step,\
+     '.patchSum' using 1:2 t ' Patches' axis x1y2 with step
 
-fin
-# loop over all the levels and build the gnuplot command
-@ count = 1
-foreach L ( $count < $nLevels)
-  if($L == "1") then
-    echo -n "plot '.L-all' using 1:2 t 'L-1' with step " >> gp
-  else 
-    @ c = $count + 1
-    echo -n ",'.L-all' using 1:$c t 'L-$count' with step " >> gp
-  endif
-  @ count +=1
-end
-echo "" >> gp 
-
-# finish up 
-cat >> gp << fin
 set nomultiplot
 pause -1 "Hit return to exit"
 fin
@@ -160,6 +165,6 @@ endif
 
 #__________________________________
 # clean up
-rm -f gp .data .regridData .L-all
+rm -f gp .data .regridData .L-sum .patchSum
 
 exit(1)
