@@ -705,7 +705,7 @@ void BNRRegridder::PostFixup(vector<Region> &patches)
     volume+=patches[p].getVolume();
   }
 
-  double volume_threshold=volume/d_myworld->size()*d_patchRatioToTarget;
+  double volume_threshold=volume/(float)d_myworld->size()*d_patchRatioToTarget;
   
   //build a max heap
   make_heap(patches.begin(),patches.end(),Region::VolumeCompare());
