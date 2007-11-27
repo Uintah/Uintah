@@ -593,10 +593,10 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         pDefGrad_new[idx] = pDefGrad[idx];
         J = pDefGrad_new[idx].Determinant();
-        cerr << getpid() 
+        cout << getpid() 
              << "**WARNING** Negative Jacobian of deformation gradient" << endl;
-        cerr << "particle mass = " << pMass[idx]  << endl;
-        cerr << "Prev. step def. grad. will be used" << endl;
+        cout << "particle mass = " << pMass[idx]  << endl;
+        cout << "Prev. step def. grad. will be used" << endl;
       }
       double rho_cur = rho_0/J;
 
