@@ -44,14 +44,14 @@ rm -f gp .data .tmp .data.sed
 
 cp $out .tmp
 #__________________________________
-# extract the data
+# extract the average and maximum values data
 echo "Now extracting the data"
 
 grep elap           .tmp | cut -d"=" -f4 | cut -d"," -f1 >& .elapsedTime
-grep TaskExec       .tmp | awk '{print $3}' >& .exec
-grep TaskGlobalComm .tmp | awk '{print $3}' >& .global
-grep TaskLocalComm  .tmp | awk '{print $3}' >& .local
-grep TaskWaitComm   .tmp | awk '{print $3}' >& .wait
+grep TaskExec       .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .exec
+grep TaskGlobalComm .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .global
+grep TaskLocalComm  .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .local
+grep TaskWaitComm   .tmp | awk -F : '{print $2,$3}'| tr -d "[:alpha:]" >& .wait
 
 set procs   = `grep processors $out| cut -d" " -f 2`
 set machine = `grep Machine    $out | cut -d":" -f 2`
@@ -64,7 +64,7 @@ paste -d "  " .elapsedTime .exec .global .local .wait>& .data
 # - delete any lines with alphabetical letters
 # - delete any line without 5 columns
 sed '/[:alpha:]/d' .data >& .data.sed
-awk 'NF == 5 {print $1, " ", $2, " ", $3, " ", $4, " ", $5}' .data.sed >& .data
+awk 'NF == 9 {print $1, " ", $2, " ", $3, " ", $4, " ", $5, " ", $6, " ", $7, " ", $8, " ", $9}' .data.sed >& .data
 
 rm -f .elapsedTime .exec .global .local .wait .data.sed
 
@@ -87,19 +87,26 @@ endif
 # generate the  plot script
 cat >> gp << fin
 set multiplot
-set size 1.0,1.0 # for three plots
-set origin 0.0,0.0
+set size 1.0,0.5 # for three plots
+set origin 0.0,0.5
 set autoscale
 
 set grid xtics ytics
-set title '$date : $machine : $procs Processors'
+set title "$date : $machine : $procs Processors \n Averaged over all processors"
 set xlabel 'Elaspsed Time'
 set ylabel 'Time'
 
 plot '.data' using 1:2 t 'Task Execution' with lines,\
-     '.data' using 1:3 t 'Global Communication' with lines,\
-     '.data' using 1:4 t 'Local Communication' with lines,\
-     '.data' using 1:5 t 'Wait Communication' with lines   
+     '.data' using 1:4 t 'Global Communication' with lines,\
+     '.data' using 1:6 t 'Local Communication' with lines,\
+     '.data' using 1:8 t 'Waiting' with lines 
+     
+set origin 0.0,0.0
+set title 'Maximum'
+plot '.data' using 1:3 t 'Task Execution' with lines,\
+     '.data' using 1:5 t 'Global Communication' with lines,\
+     '.data' using 1:7 t 'Local Communication' with lines,\
+     '.data' using 1:9 t 'Waiting' with lines 
 set nomultiplot
 
 fin
