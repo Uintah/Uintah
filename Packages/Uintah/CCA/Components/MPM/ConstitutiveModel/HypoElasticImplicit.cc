@@ -222,8 +222,18 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-
+                                                                                
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        for(int k = 0; k < 8; k++) {
+          const Vector& disp = dispNew[ni[k]];
+                                                                                
+          for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
+            }
+          }
+        }
+
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
