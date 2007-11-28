@@ -123,7 +123,7 @@ CompareMMS::execute()
   IntVector includeExtraCells;
   Point spatial_min, spatial_max;
   IntVector field_offset;
-  vector<unsigned int> nCells;
+  vector<Persistent::index_type> nCells;
   includeExtraCells.x(gui_includeExtraCells_x.get());
   includeExtraCells.y(gui_includeExtraCells_y.get());
   includeExtraCells.z(gui_includeExtraCells_z.get()); 

@@ -35,6 +35,7 @@
 
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Geometry/Point.h>
+#include <SCIRun/Core/Persistent/Persistent.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/DynamicLoader.h>
 #include <SCIRun/Core/Util/ProgressReporter.h>
@@ -73,7 +74,7 @@ public:
   enum compare_field_type { PRESSURE, UVEL, VVEL, INVALID };
   
   virtual FieldHandle compare(FieldHandle fh, 
-                              const vector<unsigned int>& nCells,
+                              const vector<SCIRun::Persistent::index_type>& nCells,
                               const IntVector extraCells,
                               const Point spatial_min,
                               const Point spatial_max,
