@@ -123,20 +123,7 @@ TARGET_LINK_LIBRARIES(slb
   Packages_Uintah_Core_Grid
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_CCA_Components_ProblemSpecification
-)
-
-IF(TEEM_LIBRARY AND !MINIMAL_CORE)  
-  ADD_EXECUTABLE(uda2nrrd uda2nrrd.cc)
-  TARGET_LINK_LIBRARIES(uda2nrrd
-    Core_Exceptions
-    Core_Datatypes
-    Core_Geometry
-    Packages_Uintah_Core_DataArchive
-    Packages_Uintah_Core_Grid
-  )
-ENDIF(TEEM_LIBRARY AND !MINIMAL_CORE)  
-  
-  
+)  
 
 ADD_SUBDIRECTORY(tools)
 ADD_SUBDIRECTORY(Benchmarks)
