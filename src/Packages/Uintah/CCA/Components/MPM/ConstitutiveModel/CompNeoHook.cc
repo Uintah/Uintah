@@ -25,16 +25,16 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
+//#define Comer
+#undef Comer
+
 CompNeoHook::CompNeoHook(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->get("useModifiedEOS",d_useModifiedEOS); 
-
-
 }
 
 CompNeoHook::CompNeoHook(const CompNeoHook* cm) : ConstitutiveModel(cm)
@@ -47,7 +47,6 @@ CompNeoHook::CompNeoHook(const CompNeoHook* cm) : ConstitutiveModel(cm)
 CompNeoHook::~CompNeoHook()
 {
 }
-
 
 void CompNeoHook::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
@@ -175,7 +174,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,pvolume;
+    constParticleVariable<double> pmass,pvolume,pcolor;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
@@ -193,6 +192,9 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    if(flag->d_with_color) {
+      old_dw->get(pcolor,      lb->pColorLabel,  pset);
+    }
 
     new_dw->allocateAndPut(deformationGradient_new,
                      lb->pDeformationMeasureLabel_preReloc, pset);
@@ -228,6 +230,14 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+
+#ifdef Comer
+     // gcd change to set shear = pcolor for each particle
+     //
+     if(flag->d_with_color) {
+          shear = pcolor[idx];
+     }
+#endif
 
       // get the volumetric part of the deformation
       J = deformationGradient_new[idx].Determinant();
@@ -308,7 +318,9 @@ void CompNeoHook::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
-
+  if(flag->d_with_color) {
+    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
+  }
 }
 
 void 
@@ -318,7 +330,6 @@ CompNeoHook::addComputesAndRequires(Task* ,
                                    const bool ) const
 {
 }
-
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double CompNeoHook::computeRhoMicroCM(double pressure, 
