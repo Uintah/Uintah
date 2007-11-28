@@ -110,12 +110,11 @@ plot '.data' using 1:4           t 'Delt' with lines, \
 set size 1.0,0.33       
 set origin 0.0,0.0
 set xlabel "ElapsedTime"
-set ylabel "Ave Memory useage [MB]"
-set y2label 'Max Memory useage [MB]'
-unset title
+set ylabel "Memory useage [MB]"
+set y2label ""
 
-plot '.data' using 1:5 axes x1y1 t 'ave' with lines, \
-     '.data' using 1:6 axes x1y2 t 'max' with lines
+plot '.data' using 1:5   t 'max' with lines, \
+     '.data' using 1:6   t 'ave' with lines
 set nomultiplot
 
 fin
