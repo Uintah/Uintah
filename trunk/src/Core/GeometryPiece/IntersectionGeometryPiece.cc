@@ -1,7 +1,7 @@
 #include <Core/GeometryPiece/IntersectionGeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/Point.h>
 
 using namespace SCIRun;

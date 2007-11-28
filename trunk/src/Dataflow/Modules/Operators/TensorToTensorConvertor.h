@@ -6,7 +6,7 @@
 #include <Dataflow/Ports/TensorParticlesPort.h>
 #include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <SCIRun/Dataflow/Network/Module.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
 using namespace SCIRun;

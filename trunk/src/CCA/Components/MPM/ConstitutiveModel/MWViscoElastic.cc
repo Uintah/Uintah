@@ -1,5 +1,5 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -15,7 +15,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>

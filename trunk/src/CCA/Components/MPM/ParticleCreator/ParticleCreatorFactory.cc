@@ -8,7 +8,7 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>

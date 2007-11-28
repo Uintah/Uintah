@@ -5,7 +5,7 @@
 #include <Core/Grid/Grid.h>
 
 #include <SCIRun/Core/Util/NotFinished.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using std::vector;
 

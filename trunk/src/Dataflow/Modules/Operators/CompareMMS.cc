@@ -25,7 +25,7 @@
 
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Dataflow/Network/Module.h>

@@ -35,7 +35,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Math/MiscMath.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <sci_values.h>

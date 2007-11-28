@@ -42,7 +42,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Disclosure/TypeUtils.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Containers/StaticArray.h>
 #include <iostream>
 #include <sstream>

@@ -4,7 +4,7 @@
 #include <SCIRun/Core/Geometry/Vector.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/XMLUtil/XMLUtil.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <iterator>

@@ -6,7 +6,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/fixedvector.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 #include <SCIRun/Core/Geometry/IntVector.h>

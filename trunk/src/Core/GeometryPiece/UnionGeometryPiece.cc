@@ -2,7 +2,7 @@
 #include <SCIRun/Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace SCIRun;

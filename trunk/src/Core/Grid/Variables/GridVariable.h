@@ -13,7 +13,7 @@
 
 #include <SCIRun/Core/Exceptions/InternalError.h>
 #include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #ifndef _WIN32
 #include <unistd.h>

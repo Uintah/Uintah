@@ -4,7 +4,7 @@
 #include <Core/Grid/Patch.h>
 
 #include <SCIRun/Core/Geometry/IntVector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/Endian.h>
 #include <iostream>
 

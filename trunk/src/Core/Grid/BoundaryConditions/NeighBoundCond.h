@@ -3,7 +3,7 @@
 
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
    

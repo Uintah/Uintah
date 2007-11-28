@@ -36,7 +36,7 @@
 #include <Core/Parallel/BufferInfo.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <string>

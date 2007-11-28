@@ -4,7 +4,7 @@
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <math.h>
 

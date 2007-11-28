@@ -5,7 +5,7 @@
 #include <SCIRun/Core/Geom/ColorMapTex.h>
 #include <SCIRun/Core/Geom/GeomTransform.h>
 #include <SCIRun/Core/Geometry/Transform.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geom/GeomSticky.h>
 #include <stdio.h>
 #include <iostream>

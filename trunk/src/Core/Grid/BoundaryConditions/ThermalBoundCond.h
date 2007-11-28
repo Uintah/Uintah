@@ -2,7 +2,7 @@
 #define UINTAH_GRID_ThermalBoundCond_H
 
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
    

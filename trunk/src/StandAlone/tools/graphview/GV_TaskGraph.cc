@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "GV_TaskGraph.h"
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 

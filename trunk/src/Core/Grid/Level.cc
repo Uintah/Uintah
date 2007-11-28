@@ -11,7 +11,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 
 #include <SCIRun/Core/Geometry/BBox.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Math/MiscMath.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Util/DebugStream.h>

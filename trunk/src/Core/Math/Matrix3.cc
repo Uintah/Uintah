@@ -9,7 +9,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <SCIRun/Core/Util/TypeDescription.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/Assert.h>
 #include <SCIRun/Core/Util/Endian.h>
 #include <SCIRun/Core/Math/MinMax.h>

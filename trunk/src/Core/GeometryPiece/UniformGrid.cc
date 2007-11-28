@@ -1,5 +1,5 @@
 #include <Core/GeometryPiece/UniformGrid.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <map>
 

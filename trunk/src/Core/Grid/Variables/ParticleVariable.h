@@ -7,7 +7,7 @@
 #include <SCIRun/Core/Exceptions/InternalError.h>
 #include <SCIRun/Core/Util/Assert.h>
 #include <SCIRun/Core/Util/Endian.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/Grid/Variables/constGridVariable.h>
 #include <CCA/Ports/InputContext.h>

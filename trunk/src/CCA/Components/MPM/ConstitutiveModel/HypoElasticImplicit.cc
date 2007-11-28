@@ -1,6 +1,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <Core/Grid/LinearInterpolator.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -16,7 +16,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <SCIRun/Core/Math/MinMax.h>
 #include <Core/Math/FastMatrix.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>

@@ -37,7 +37,7 @@
 #include <SCIRun/Core/Geom/Material.h>
 #include <SCIRun/Core/Geom/HistogramTex.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <SCIRun/Dataflow/Network/Module.h>
 #include <SCIRun/Dataflow/Network/Ports/ColorMapPort.h>

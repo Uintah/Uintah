@@ -4,7 +4,7 @@
 #include <CCA/Components/ICE/DynamicModel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

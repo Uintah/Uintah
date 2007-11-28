@@ -33,7 +33,7 @@
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/Math/Short27.h> //for Fracture
 #include <Core/Grid/Variables/VarTypes.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <math.h>
 #include <sgi_stl_warnings_off.h>

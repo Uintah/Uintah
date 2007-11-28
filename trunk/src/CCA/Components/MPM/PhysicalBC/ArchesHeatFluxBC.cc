@@ -6,7 +6,7 @@
 #include <Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

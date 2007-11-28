@@ -1,6 +1,6 @@
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 

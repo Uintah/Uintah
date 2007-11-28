@@ -9,7 +9,7 @@
 #include <CCA/Components/ICE/EOS/Tillotson.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 #include <string>

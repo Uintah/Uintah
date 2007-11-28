@@ -10,7 +10,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;

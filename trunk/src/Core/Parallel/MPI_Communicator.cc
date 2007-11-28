@@ -13,7 +13,7 @@
 #include <SCIRun/Core/Thread/Runnable.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Thread/ConditionVariable.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sys/time.h>
 #include <Core/Parallel/MPI_Communicator.h>
 

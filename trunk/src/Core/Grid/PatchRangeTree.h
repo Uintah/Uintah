@@ -1,6 +1,6 @@
 #include <SCIRun/Core/Containers/RangeTree.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>

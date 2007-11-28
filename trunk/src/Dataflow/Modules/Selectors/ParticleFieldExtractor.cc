@@ -40,7 +40,7 @@ LOG
 #include <Core/Datatypes/TensorParticles.h>
 #include <Dataflow/Ports/TensorParticlesPort.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Thread/Thread.h>
 #include <SCIRun/Core/Thread/Runnable.h>

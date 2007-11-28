@@ -15,7 +15,7 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h> //for Fracture
 #include <Core/Grid/Variables/VarTypes.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>

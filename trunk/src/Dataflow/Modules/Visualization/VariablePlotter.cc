@@ -16,7 +16,7 @@
 
 #include <Dataflow/Modules/Visualization/VariablePlotter.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <SCIRun/Core/Containers/StringUtil.h>

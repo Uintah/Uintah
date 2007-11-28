@@ -7,7 +7,7 @@
 #include <Core/Grid/Patch.h>
 
 #include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <math.h>
 

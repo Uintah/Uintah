@@ -45,7 +45,7 @@
 #include <SCIRun/Core/Geom/GeomLine.h>
 #include <SCIRun/Core/Geom/Material.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Math/MinMax.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <SCIRun/Dataflow/Network/Module.h>

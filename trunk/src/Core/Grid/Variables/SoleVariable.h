@@ -7,7 +7,7 @@
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/Endian.h>
 
 #include <sgi_stl_warnings_off.h>

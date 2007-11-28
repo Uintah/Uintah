@@ -28,7 +28,7 @@
 #include <SCIRun/Core/Geom/Material.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Geometry/Point.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Math/Matrix3.h>
 #include <Dataflow/Ports/ArchivePort.h>

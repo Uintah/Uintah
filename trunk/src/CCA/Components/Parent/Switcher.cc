@@ -26,8 +26,8 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/OS/Dir.h>
 #include <sstream>
 

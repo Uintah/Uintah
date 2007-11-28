@@ -58,8 +58,8 @@ using SCIRun::Module;
 
 DECLARE_MAKER(UTextureBuilder)
 
-UTextureBuilder::UTextureBuilder(GuiContext* ctx)
-  : ConvertFieldsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
+UTextureBuilder::UTextureBuilder(GuiContext* ctx) :
+  ConvertFieldsToTexture(ctx, "UTextureBuilder", Source, "Visualization", "Uintah")
 {}
 
 UTextureBuilder::~UTextureBuilder()
@@ -98,6 +98,4 @@ UTextureBuilder::execute()
   ConvertFieldsToTexture::execute();
   cmap_oport->send(cmap_h);
 }
-
-
 

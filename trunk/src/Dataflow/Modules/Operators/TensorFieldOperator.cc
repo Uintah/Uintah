@@ -1,6 +1,6 @@
 #include "TensorFieldOperator.h"
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Dataflow/Network/Module.h>
 #include <SCIRun/Dataflow/Network/Ports/FieldPort.h>

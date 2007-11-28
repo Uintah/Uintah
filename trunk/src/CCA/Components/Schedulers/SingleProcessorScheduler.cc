@@ -8,7 +8,7 @@
 #include <SCIRun/Core/Thread/Time.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #ifdef USE_PERFEX_COUNTERS
 #include "counters.h"
 #endif

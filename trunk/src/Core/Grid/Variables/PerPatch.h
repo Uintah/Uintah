@@ -5,7 +5,7 @@
 #include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
 /**************************************

@@ -5,7 +5,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <math.h>

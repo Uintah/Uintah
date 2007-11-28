@@ -22,7 +22,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Parallel/Parallel.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Util/RWS.h>
 

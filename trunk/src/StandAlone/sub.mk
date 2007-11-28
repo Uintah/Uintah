@@ -19,9 +19,9 @@ CA              = Packages/Uintah/CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
   ifeq ($(BUILD_MPM),yes)
-    MPMARCHES_LIBS     = $(COMPONENTS)/MPMArches
+    MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS     = $(COMPONENTS)/Arches 
+  ARCHES_LIBS     = $(COMPONENTS)/Arches
 endif
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB         = Packages/Uintah/CCA/Components/MPM
@@ -62,8 +62,8 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Solvers              \
         Packages/Uintah/CCA/Components/Examples          \
-        $(DUMMY_LIB)                                     \
         $(ARCHES_LIBS)                                   \
+        $(MPMARCHES_LIB)                                 \
         $(MPM_LIB)                                       \
         $(ICE_LIB)                                       \
         $(MPMICE_LIB)                                    \
@@ -171,46 +171,6 @@ endif
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# uda2nrrd
-
-ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
-else
-  PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        Core/Basis        \
-        Core/Exceptions   \
-        Core/Containers   \
-        Core/Datatypes    \
-        Core/Geometry     \
-        Core/Math         \
-        Core/Persistent   \
-        Core/Thread       \
-        Core/Util         \
-        Core/XMLUtil
-endif
-
-LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
-
-SRCS := $(SRCDIR)/uda2nrrd.cc
-PROGRAM := Packages/Uintah/StandAlone/uda2nrrd
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-endif
 
 ##############################################
 # compare_uda
@@ -371,13 +331,6 @@ link_regression_tester:
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
 	   fi )
 
-noFortran:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/noRadiation $(SRCTOP_ABS) ; \
-          $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
-
-fake_arches:
-	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.sh $(OBJTOP_ABS) on)
-
 sus: prereqs Packages/Uintah/StandAlone/sus
 
 tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar
@@ -387,8 +340,6 @@ puda: prereqs Packages/Uintah/StandAlone/tools/puda/puda
 dumpfields: prereqs Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
 
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
-
-uda2nrrd: prereqs Packages/Uintah/StandAlone/uda2nrrd
 
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 

@@ -3,7 +3,7 @@
 #include <Dataflow/Modules/Selectors/TimestepSelector.h>
 #include <Core/DataArchive/DataArchive.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
 #include <SCIRun/Core/Datatypes/Color.h>

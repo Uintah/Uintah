@@ -9,7 +9,7 @@
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Thread/Time.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Util/FancyAssert.h>

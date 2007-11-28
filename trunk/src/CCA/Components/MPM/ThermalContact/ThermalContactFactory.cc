@@ -1,7 +1,7 @@
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <string>
 using std::cerr;
 

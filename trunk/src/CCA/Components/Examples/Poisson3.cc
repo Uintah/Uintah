@@ -11,7 +11,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
 #include <SCIRun/Core/Util/DebugStream.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iomanip>
 
 using namespace Uintah;

@@ -1,6 +1,6 @@
 
 #include <Core/Datatypes/TensorFieldPort.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
 using namespace Uintah;

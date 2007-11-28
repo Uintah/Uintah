@@ -181,13 +181,13 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	set w .ui[modname]
 
 	$this destroyFrames
-	$this makeFrames $w
+	$this makeFrames $w.colors
     }
 
     # destroys all archive specific stuff
     method destroyFrames {} {
 	set w .ui[modname]
-	destroy $w.colormenus
+	destroy $w.colors.colormenus
     }
 
     # creates all archive specific stuff
@@ -195,9 +195,68 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	$this buildColorMenus $w
     }
 
+    # creates widgets for manipulating axis aligned planes
+    method makeSliders {w} {
+        set n "$this-c needexecute"
+        frame $w.sliders -relief flat
+        pack $w.sliders -side top -fill both -expand yes
+        
+        checkbutton $w.sliders.on -variable "$this-show_slices" \
+            -text "Show grid slices" -command "$this buildSliders $w; $n"
+        pack $w.sliders.on -side top -anchor w
+        $this buildSliders $w
+    }
+
+    method buildSliders { w } {
+        if { [set $this-show_slices] == 1 } {
+            if { [winfo exists $w.sliders.f] } {
+                return
+            } else {
+                frame $w.sliders.f -relief sunken
+                pack $w.sliders.f -side top -fill both -expand yes   
+                buildSlider $w x
+                buildSlider $w y
+                buildSlider $w z
+            }
+        } else {
+             if { [winfo exists $w.sliders.f] } {
+                destroy $w.sliders.f
+             }
+        }    
+    }
+
+    method buildSlider { w v } {
+	set n "$this-c needexecute"
+        set frm $w.sliders.f 
+        frame $frm.$v -relief flat
+        checkbutton $frm.$v.on -text "$v" \
+            -command "$this enableSlider $w $v; $n" \
+            -variable "$this-show_$v"
+        checkbutton $frm.$v.cells -text "show cells" \
+            -variable "$this-show_$v\_cells" -command $n
+        scale $frm.$v.slider -showvalue false -from 0.0 -to 1.0 \
+            -resolution 0.001 -orient horizontal -variable "$this-$v\_loc" \
+            -command $n
+        pack $frm.$v.on $frm.$v.cells $frm.$v.slider -side left -anchor w
+        pack $frm.$v.slider -side left -anchor w -expand yes -fill x 
+        pack $frm.$v -side top -fill x -expand yes
+
+        enableSlider $w $v
+    }
+
+    method enableSlider { w v } {
+        if { [set $this-show_$v] == 1 } {
+            $w.sliders.f.$v.slider configure -state normal
+            $w.sliders.f.$v.cells configure -state normal
+         } else {
+            $w.sliders.f.$v.cells configure -state disabled
+            $w.sliders.f.$v.slider configure -state disabled
+        }            
+    }
+
     # creates the color selection stuff
     method buildColorMenus {w} {
-	set n "$this-c needexecute "
+	set n "$this-c needexecute"
 	if {[set $this-nl] > 0} {
 	    # color menu stuff
 	    frame $w.colormenus -borderwidth 3 -relief ridge
@@ -221,10 +280,11 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	}
 	toplevel $w
 	wm minsize $w 100 50
+        wm geometry $w ""
 	set n "$this-c needexecute "
 	
 	frame $w.options
-	pack $w.options  -side top -fill x -padx 2 -pady 2
+	pack $w.options  -side top -expand yes -fill both -padx 2 -pady 2
 
 	# add the Seperate Patches check button
 	checkbutton $w.options.seperate -text "Seperate Patches" -variable \
@@ -232,7 +292,12 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	pack $w.options.seperate -side top -anchor w -pady 2 -ipadx 3
 
 	# add the level specific stuff
-	makeFrames $w
+        frame $w.colors -relief flat
+        pack $w.colors -side top -expand yes -fill both
+	makeFrames $w.colors
+
+        # add patch slicing stuff
+        makeSliders $w
 
         # add frame for SCI Button Panel
         frame $w.control -relief flat

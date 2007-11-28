@@ -1,5 +1,5 @@
 #include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>

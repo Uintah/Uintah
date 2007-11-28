@@ -1,5 +1,5 @@
 #include <CCA/Components/MPM/Contact/Contact.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

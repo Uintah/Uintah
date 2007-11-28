@@ -18,7 +18,7 @@
 #include <CCA/Components/Models/HEChem/JWLpp.h>
 #include <CCA/Components/Models/HEChem/LightTime.h>
 #include <CCA/Components/Models/Radiation/RadiationDriver.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sci_defs/uintah_defs.h>
 
 #include <iostream>

@@ -9,7 +9,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 
 #include <sci_defs/bits_defs.h>
 

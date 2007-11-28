@@ -1,7 +1,7 @@
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Math/MiscMath.h>
 
 using namespace SCIRun;

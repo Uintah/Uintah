@@ -8,7 +8,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/SimpleMaterial.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

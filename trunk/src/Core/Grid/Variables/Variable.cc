@@ -7,7 +7,7 @@
 #include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Grid/Patch.h>
 #include <SCIRun/Core/Exceptions/ErrnoException.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Util/Endian.h>
 #include <SCIRun/Core/Util/SizeTypeConvert.h>

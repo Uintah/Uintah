@@ -8,7 +8,7 @@
  */
 
 #include <SCIRun/Dataflow/Network/Module.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/Vector.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 #include <Core/Datatypes/Archive.h>

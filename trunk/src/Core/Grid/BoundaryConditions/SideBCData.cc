@@ -2,7 +2,7 @@
 #include <SCIRun/Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace SCIRun;

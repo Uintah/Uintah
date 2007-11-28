@@ -4,11 +4,11 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-//#include <SCIRun/Core/XMLUtil/SimpleErrorHandler.h>
+#include <SCIRun/Core/Util/FileUtils.h>
 #include <SCIRun/Core/XMLUtil/XMLUtil.h>
 
 #include <SCIRun/Core/Exceptions/InternalError.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <string>
@@ -50,6 +50,18 @@ ProblemSpecReader::readInputFile()
   
   /* check if parsing suceeded */
   if (doc == 0) {
+    if (!getInfo( d_filename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
+      // Find the directory this file is in...
+      string directory = d_filename;
+      int index;
+      for( index = (int)directory.length()-1; index >= 0; --index ) {
+        //strip off characters after last /
+        if (directory[index] == '/')
+          break;
+      }
+      directory = directory.substr(0,index+1);
+      testFilesystem( directory );
+    }
     throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
   }
     

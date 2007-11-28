@@ -1,7 +1,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/LinearInterpolator.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h> //for Fracture
 #include <Core/Math/Rand48.h>
@@ -19,7 +19,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <SCIRun/Core/Math/MinMax.h>
 #include <Core/Math/FastMatrix.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>

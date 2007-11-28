@@ -38,7 +38,7 @@ LOG
 #include <Dataflow/Ports/TensorParticlesPort.h>
 #include <SCIRun/Dataflow/Network/Module.h> 
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Thread/Runnable.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>

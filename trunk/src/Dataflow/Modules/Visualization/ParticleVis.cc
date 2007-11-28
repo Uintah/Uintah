@@ -25,7 +25,7 @@
 #include <SCIRun/Core/Geom/GeomPoint.h> 
 #include <SCIRun/Core/Geom/GeomSphere.h>
 #include <SCIRun/Core/Geom/GeomEllipsoid.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Geom/ColorMap.h>
 #include <SCIRun/Core/Datatypes/PropertyManager.h>

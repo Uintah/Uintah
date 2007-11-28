@@ -3,7 +3,7 @@
 #include <SCIRun/Core/Datatypes/LatVolMesh.h>
 #include <SCIRun/Core/Containers/FData.h>
 #include <SCIRun/Core/Datatypes/GenericField.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 
 #include <Core/Disclosure/TypeUtils.h>

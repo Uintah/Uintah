@@ -30,13 +30,13 @@ LOG
 
 #include <Dataflow/Modules/Selectors/FieldExtractor.h>
 
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
 #include <SCIRun/Core/Datatypes/GenericField.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Geometry/Transform.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/Timer.h>
 
 #include <Core/Disclosure/TypeDescription.h>

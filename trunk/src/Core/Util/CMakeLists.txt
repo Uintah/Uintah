@@ -31,6 +31,8 @@
 SET(Packages_Uintah_Core_Util_SRCS
   RefCounted.cc
   Util.cc
+  TrivialAllocator.cc
+  ConsecutiveRangeSet.cc
 )
 
 ADD_LIBRARY(Packages_Uintah_Core_Util ${Packages_Uintah_Core_Util_SRCS})

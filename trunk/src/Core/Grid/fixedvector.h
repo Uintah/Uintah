@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_fixedvector_H
 #define UINTAH_HOMEBREW_fixedvector_H
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 namespace Uintah {
    /**************************************
      

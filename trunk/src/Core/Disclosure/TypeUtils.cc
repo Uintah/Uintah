@@ -5,7 +5,7 @@
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <float.h>
 #include <limits.h>

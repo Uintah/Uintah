@@ -15,7 +15,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/Primes.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <stdio.h>
 #include <sgi_stl_warnings_off.h>

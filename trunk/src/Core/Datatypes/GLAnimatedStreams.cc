@@ -2,7 +2,7 @@
 #include <SCIRun/Core/Datatypes/FieldInterface.h>
 #include <SCIRun/Core/Util/NotFinished.h>
 #include <SCIRun/Core/Geom/DrawInfoOpenGL.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sci_gl.h>
 #include <math.h>
 #include <float.h>

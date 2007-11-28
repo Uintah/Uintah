@@ -1,6 +1,6 @@
 #include <Dataflow/Modules/Operators/TensorParticlesOperator.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <Core/Datatypes/TensorParticles.h>
 #include <Core/Datatypes/ScalarParticles.h>

@@ -3,7 +3,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Thread/Thread.h>
 #include <SCIRun/Core/Thread/Time.h>
 

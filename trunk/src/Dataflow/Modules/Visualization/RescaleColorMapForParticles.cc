@@ -12,7 +12,7 @@
 
 #include "RescaleColorMapForParticles.h"
 #include <SCIRun/Core/Geom/ColorMap.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Datatypes/ScalarParticles.h>
 

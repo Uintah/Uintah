@@ -34,7 +34,7 @@
 
 #include <SCIRun/Core/Math/MinMax.h>
 #include <SCIRun/Core/Math/Gaussian.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 
 #include <math.h>

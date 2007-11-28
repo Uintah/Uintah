@@ -30,7 +30,7 @@ LOG
 #include <Core/Datatypes/Archive.h>
 #include <Core/Datatypes/ArchivePort.h>
 #include <SCIRun/Dataflow/Network/Module.h> 
-#include <SCIRun/Core/GuiInterface/GuiVar.h> 
+#include <SCIRun/Dataflow/GuiInterface/GuiVar.h> 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>

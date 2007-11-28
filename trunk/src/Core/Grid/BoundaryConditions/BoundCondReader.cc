@@ -12,7 +12,7 @@
 #include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 
 #include <sgi_stl_warnings_off.h>

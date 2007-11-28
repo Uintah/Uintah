@@ -16,7 +16,7 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/Endian.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Math/MinMax.h>

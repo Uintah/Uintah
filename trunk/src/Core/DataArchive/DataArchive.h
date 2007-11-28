@@ -17,7 +17,7 @@
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Thread/Time.h>
 #include <SCIRun/Core/Util/DebugStream.h>
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Containers/HashTable.h>
 
 #include <sgi_stl_warnings_off.h>

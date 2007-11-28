@@ -7,7 +7,7 @@
 //#include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
 #include <SCIRun/Core/Util/ProgressiveWarning.h>

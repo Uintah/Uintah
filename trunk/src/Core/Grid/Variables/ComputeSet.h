@@ -3,7 +3,7 @@
 #define Uintah_Core_Grid_ComputeSet_h
 
 #include <SCIRun/Core/Util/Assert.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/constHandle.h>

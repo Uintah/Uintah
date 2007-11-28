@@ -17,7 +17,7 @@
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 #include <SCIRun/Core/Util/FancyAssert.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>

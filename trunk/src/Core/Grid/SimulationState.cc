@@ -15,7 +15,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Grid/Variables/Reductions.h>
 #include <SCIRun/Core/Containers/StringUtil.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

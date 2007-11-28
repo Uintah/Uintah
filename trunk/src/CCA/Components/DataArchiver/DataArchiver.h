@@ -8,13 +8,12 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <SCIRun/Core/Util/Assert.h>
 #include <SCIRun/Core/OS/Dir.h>
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 
 #include <CCA/Components/DataArchiver/uintahshare.h>
 namespace Uintah {
 class DataWarehouse;
-using SCIRun::ConsecutiveRangeSet;
 using SCIRun::Mutex;
 
 using std::string;

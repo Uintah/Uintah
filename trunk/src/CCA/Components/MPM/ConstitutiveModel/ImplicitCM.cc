@@ -10,7 +10,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/FastMatrix.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

@@ -14,7 +14,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/Endian.h>
 #include <SCIRun/Core/Math/MinMax.h>
 

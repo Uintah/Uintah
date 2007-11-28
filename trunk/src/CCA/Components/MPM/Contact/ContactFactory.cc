@@ -7,7 +7,7 @@
 #include <CCA/Components/MPM/Contact/CompositeContact.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <string>

@@ -4,7 +4,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <set>
 #include <iostream>
 #include <algorithm>

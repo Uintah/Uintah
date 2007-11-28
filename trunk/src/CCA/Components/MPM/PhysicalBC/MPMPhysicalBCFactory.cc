@@ -7,7 +7,7 @@
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 using namespace std;

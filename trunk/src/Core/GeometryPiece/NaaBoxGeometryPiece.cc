@@ -5,7 +5,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <SCIRun/Core/Geometry/Point.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Util/DebugStream.h>
 
 #include <iostream>

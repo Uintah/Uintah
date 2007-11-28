@@ -23,7 +23,7 @@
 
 #include <Dataflow/Modules/Operators/ScalarMinMax.h>
 
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/BBox.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Dataflow/Network/Module.h>

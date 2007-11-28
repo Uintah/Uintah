@@ -15,7 +15,7 @@
 #include <Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <Core/Math/Matrix3.h>
 
-#include <SCIRun/Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Util/ConsecutiveRangeSet.h>
 #include <SCIRun/Core/Containers/Array3.h>
 #include <SCIRun/Core/Geometry/Point.h>
 #include <SCIRun/Core/Geometry/Vector.h>

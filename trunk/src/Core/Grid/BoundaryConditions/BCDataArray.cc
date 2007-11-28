@@ -8,7 +8,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Level.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <algorithm>

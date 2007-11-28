@@ -3,7 +3,7 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Core/Geometry/IntVector.h>
 #include <SCIRun/Core/Util/Endian.h>
 #include <iostream>

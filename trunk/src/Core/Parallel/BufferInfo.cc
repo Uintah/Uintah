@@ -3,7 +3,7 @@
 #include <Core/Util/RefCounted.h>
 #include <SCIRun/Core/Util/Assert.h>
 #include <SCIRun/Core/Thread/Mutex.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <Core/Parallel/uintahshare.h>
 using namespace Uintah;

@@ -1,6 +1,6 @@
 #include <CCA/Components/Arches/OdtData.h>
 #include <SCIRun/Core/Util/Endian.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 
 //__________________________________
   static MPI_Datatype makeMPI_odtData()

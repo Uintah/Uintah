@@ -10,7 +10,7 @@
 #include <SCIRun/Core/Datatypes/Field.h>
 #include <SCIRun/Core/Thread/Mutex.h>
 #include <SCIRun/Core/Geom/ColorMap.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <SCIRun/Dataflow/GuiInterface/GuiVar.h>
 #include <SCIRun/Core/Thread/CrowdMonitor.h>
 #include <SCIRun/Dataflow/Network/Module.h>

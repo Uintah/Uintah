@@ -2,13 +2,12 @@
 #define UINTAH_HOMEBREW_ScrubItem_H
 
 #include <Core/Grid/Patch.h>
-#include <SCIRun/Core/Containers/TrivialAllocator.h>
+#include <Core/Util/TrivialAllocator.h>
 
 #include <Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
-using SCIRun::TrivialAllocator;
 class VarLabel;
 
 struct ScrubItem {

@@ -5,7 +5,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Math/Matrix3.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;

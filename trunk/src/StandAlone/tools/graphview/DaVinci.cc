@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <SCIRun/Core/Exceptions/ErrnoException.h>
 #include <SCIRun/Core/Exceptions/InternalError.h>
-#include <SCIRun/Core/Malloc/Allocator.h>
+#include <Core/Malloc/Allocator.h>
 #include "DaVinci.h"
 #include "graphview.h"
 #include "GV_TaskGraph.h"
