@@ -6,7 +6,6 @@
    Copyright (c) 2004 Scientific Computing and Imaging Institute,
    University of Utah.
 
-   
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -55,8 +54,7 @@ namespace SCIRun {
 // Inserts "insert" in front of all occurrances of 
 // "match" within the file named "filename"
 
-SCISHARE void InsertStringInFile(char* filename, const char* match, const char* insert);
-
+SCISHARE void InsertStringInFile( char* filename, const char* match, const char* insert );
 
 ////////////////////////////////////
 // GetFilenamesEndingWith()
@@ -64,7 +62,7 @@ SCISHARE void InsertStringInFile(char* filename, const char* match, const char* 
 // all the files with extension "ext" inside
 // the directory named "dir"
 
-SCISHARE std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
+SCISHARE std::map<int,char*>* GetFilenamesEndingWith( char* dir, char* ext );
 
 SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
                                                  const string & prefix);
@@ -119,7 +117,7 @@ SCISHARE dirent *readdir(DIR *);
 
 // not implemented yet...
 SCISHARE void rewinddir(DIR *);
-#endif
+#endif // _WIN32
 
-#endif
+#endif // FILEUTILS_H
 
