@@ -80,6 +80,7 @@ TARGET_LINK_LIBRARIES(sus ${SUS_LIBS})
 TARGET_LINK_LIBRARIES(compare_uda
   Packages_Uintah_Core_DataArchive
   Packages_Uintah_Core_Grid
+  Packages_Uintah_Core_Malloc
   Core_Util
   Core_Thread
   Core_Math

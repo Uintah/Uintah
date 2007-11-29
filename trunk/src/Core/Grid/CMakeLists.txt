@@ -98,6 +98,7 @@ TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Grid
   Core_Thread
   Core_Util
   Core_Containers
+  Packages_Uintah_Core_Malloc
   Packages_Uintah_Core_Parallel
   Packages_Uintah_Core_ProblemSpec
   Packages_Uintah_Core_Exceptions

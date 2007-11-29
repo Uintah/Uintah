@@ -26,8 +26,9 @@ namespace SCIRun {
   // Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
   //
 #if !defined(SCI_64BITS) && !defined(REDSTORM) && !defined(_WIN32)
-  long64  Min( long64 l, long64 r) { return l < r ? l : r;  }
-  long64  Max( long64 l, long64 r) { return l > r ? l : r;  }
+  // are these defined on all systems in SCIRun/Core/Math/MinMax?
+  //long64  Min( long64 l, long64 r) { return l < r ? l : r;  }
+  //long64  Max( long64 l, long64 r) { return l > r ? l : r;  }
 #endif
   // The Matrix Min/Max functions are kind of arbitrary and should NOT
   // be propagated out of this file.  The only reason they are used
