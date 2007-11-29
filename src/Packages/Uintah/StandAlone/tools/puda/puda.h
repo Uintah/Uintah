@@ -56,6 +56,7 @@ namespace Uintah {
       do_listvars = false;
       do_varsummary = false;
       do_jim1 = false;
+      do_jim2 = false;
       do_partvar = false;
       do_asci = false;
       do_cell_stresses = false;
