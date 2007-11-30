@@ -207,10 +207,8 @@ public:
   void add_per_matl_light(Light*);
   void add_perm_per_matl_light(Light*);
 
-  inline void set_rtrt_engine(RTRT* _rtrt) {
-    rtrt_engine = _rtrt;
-  }
-
+  void set_rtrt_engine(RTRT* _rtrt);
+  
   inline RTRT* get_rtrt_engine() {
     return rtrt_engine;
   }

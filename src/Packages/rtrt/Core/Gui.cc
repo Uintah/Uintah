@@ -44,6 +44,11 @@
 #include <Core/Geometry/Transform.h>
 
 #include <GL/glut.h>
+// Include the freeglut extensions if available.  FREEGLUT comes from
+// including a freeglut provided glut.h.
+#ifdef FREEGLUT
+#  include <GL/freeglut_ext.h>
+#endif
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1430
 #pragma set woff 3201
@@ -275,6 +280,13 @@ void GGT::run() {
   opened = true;
 
   addSceneLights();
+
+#ifdef FREEGLUT
+  glutWMCloseFunc(closeRequested);
+
+  // Don't allow the windows to be closed
+  glutSetOption( GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
+#endif  // #ifdef FREEGLUT
   
   DpyBase::xunlock();
   printf("end glut inits\n");
@@ -344,6 +356,7 @@ GGT::handleMenuCB( int item )
       }
     break;
   case QUIT_MENU_ID:
+    cerr << "Quit event found\n";
     activeGGT->quit();
     break;
   }
@@ -390,6 +403,11 @@ GGT::idleFunc() {
 void
 GGT::displayCB() {
   // Do nothing
+}
+
+void
+GGT::closeRequested() {
+  cerr << "GGT::closeRequested called \n";
 }
 
 void
