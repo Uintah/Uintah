@@ -61,6 +61,7 @@ Scene::Scene() :
   display_sils(0),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
+  soundVolume_(50),
   obj(0),
   mainGroup_(0),
   mainGroupWithLights_(0),
@@ -69,17 +70,20 @@ Scene::Scene() :
   camera1(0),
   image0(0),
   image1(0),
-  orig_background(0), background(0),
+  orig_background(0),
+  background(0),
   ambient_environment_map(0),
   rtrt_engine(0)
-{ mainGroup_ = new Group(); }
+{
+  mainGroup_ = new Group();
+}
 
 Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
-	     const Plane& groundplane,
-	     double ambientscale,
-	     AmbientType ambient_mode) :     
+             const Plane& groundplane,
+             double ambientscale,
+             AmbientType ambient_mode) :     
   work("frame tiles"),
   maxdepth(-1),
   base_threshold(0),
@@ -95,21 +99,28 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   store_depth(0),
   display_depth(0),
   display_sils(0),
-  ambient_mode(ambient_mode),
-  ambientScale_(ambientscale),
   ref_cnt(0),
   lock("rtrt::Scene lock"),
   soundVolume_(50),
-  obj(ob), 
+  obj(ob),
   mainGroup_(0),
-  camera0(camera0), 
-  image0(0), 
+  mainGroupWithLights_(0),
+  lightsGroup_(0),
+  camera0(camera0),
+  camera1(0),
+  image0(0),
   image1(0),
-  origCup_(cup), 
+  orig_background(0),
+  background(0),
+  ambient_environment_map(0),
+  origCup_(cup),
   origCDown_(cdown),
-  cup(cup), 
-  cdown(cdown), 
-  groundplane(groundplane)
+  cup(cup),
+  cdown(cdown),
+  groundplane(groundplane),
+  ambient_mode(ambient_mode),
+  ambientScale_(ambientscale),
+  rtrt_engine(0)
 {
   mainGroup_ = new Group();
   mainGroup_->add( ob );
@@ -247,6 +258,12 @@ void Scene::add_perm_per_matl_light( Light* light )
   per_matl_lights.add(light);
 }
 
+void Scene::set_rtrt_engine(RTRT* _rtrt) {
+  rtrt_engine = _rtrt;
+  for(size_t i = 0; i < displays.size(); ++i)
+    displays[i]->set_scene(this);
+}
+
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 {
   char me[] = "Scene::preprocess";
@@ -292,9 +309,9 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 void Scene::copy_camera(int which)
 {
     if(which==0){
-	*camera1=*camera0;
+      *camera1=*camera0;
     } else {
-	*camera0=*camera1;
+      *camera0=*camera1;
     }
 }
 
@@ -316,7 +333,10 @@ void Scene::attach_display(DpyBase *dpy) {
   // Don't do null dpys
   if (dpy) {
     displays.add(dpy);
-    dpy->set_scene(this);
+    // Wait to set the scene pointer in the display until the engine
+    // ponter is set.
+    if (rtrt_engine)
+      dpy->set_scene(this);
   }
 }
 
@@ -360,18 +380,18 @@ Scene::turnOffAllLights( double left )
     if (left>0.0) {
 
       if( light->isMoodLight() ) {
-	float curI = light->get_intensity();
+        float curI = light->get_intensity();
 
-	light->updateIntensity( Min(1.0*(1-left) + curI,1.0) );
-	light->turnOn();
+        light->updateIntensity( Min(1.0*(1-left) + curI,1.0) );
+        light->turnOn();
       } else {
-	light->modifyCurrentIntensity( left );
+        light->modifyCurrentIntensity( left );
       }
     } else {
       if( light->isMoodLight() ){
-	light->updateIntensity( 1.0 );
+        light->updateIntensity( 1.0 );
       } else {
-	light->turnOff();
+        light->turnOff();
       }
     }
   }
@@ -498,7 +518,7 @@ void Scene::addGuiObject( Object* obj, bool animate) {
     int i = 0;
     for(; i < animateObjects_.size(); i++)
       if (animateObjects_[i] == obj)
-	break;
+        break;
     // obj was not found, so add it.
     if (i >= animateObjects_.size())
       animateObjects_.add(obj);
@@ -551,7 +571,7 @@ void Scene::addGuiMaterial( Material* mat, bool animate) {
     int i = 0;
     for(; i < animateMaterials_.size(); i++)
       if (animateMaterials_[i] == mat)
-	break;
+        break;
     // mat was not found, so add it.
     if (i >= animateMaterials_.size())
       animateMaterials_.add(mat);

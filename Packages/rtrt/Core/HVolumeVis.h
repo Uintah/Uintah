@@ -491,7 +491,7 @@ void HVolumeVis<DataT,MetaCT>::isect(int depth, double t_sample,
 	  // the point is contributing, so compute the color
 	  
 	  Light* light=isctx.cx->scene->light(0);
-          if (light->isOn()) {
+          if (0 && light->isOn()) {
           
             // compute the gradient
             Vector gradient;
@@ -943,7 +943,7 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
 	  //      if (true) {
 	  // the point is contributing, so compute the color
 	  Light* light=ctx->scene->light(0);
-          if (light->isOn()) {
+          if (0 && light->isOn()) {
 	  
             // compute the gradient
             Vector gradient;

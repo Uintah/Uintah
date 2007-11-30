@@ -96,6 +96,9 @@ public:
   // Used by GLUT
   static void idleFunc();
   static void displayCB(); // Stub function for Glut that wants it
+  static void closeRequested(); // when the 'x' in the window clicked,
+                                // only available for freeglut
+                                // versions of glut.
   
   static void redrawBackgroundCB();
   static void handleWindowResizeCB( int width, int height );
