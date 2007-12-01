@@ -3835,7 +3835,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
   _sci_lib_dir=
   _sci_inc=
 
-  for petsc_arch in "$PETSC_ARCH" linux-gnu; do
+  for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
     if test "$HAVE_PETSC" = "yes"; then
       break
     fi
