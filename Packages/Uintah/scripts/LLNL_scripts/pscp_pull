@@ -95,7 +95,7 @@ if( ! -e $PSCP_PULL_DRIVER ) then
   exit 1
 endif
 
-if( $beVerbose == "true" && $verifyData == "true") then
+if( $verifyData == "true") then
   set DATAVERIFY_PULL_DRIVER = `dirname $0`/dataVerify_pull_driver
   if( ! -e $PSCP_PULL_DRIVER ) then
     echo ""
