@@ -155,6 +155,7 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
       ConsecutiveRangeSet::iterator iter = crs.begin();
       for (; iter != crs.end(); iter++)
         carry_over_matls->add(*iter);
+      carry_over_matls->addReference();
     }
     d_carryOverVarMatls.push_back(carry_over_matls);
     if (level == "finest")
