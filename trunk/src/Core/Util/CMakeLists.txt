@@ -38,6 +38,7 @@ SET(Packages_Uintah_Core_Util_SRCS
 ADD_LIBRARY(Packages_Uintah_Core_Util ${Packages_Uintah_Core_Util_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Uintah_Core_Util
+  Packages_Uintah_Core_Malloc
   Core_Thread
   Core_Util
   Core_Exceptions
