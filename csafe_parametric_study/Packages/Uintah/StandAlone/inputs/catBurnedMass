@@ -22,4 +22,6 @@ if( -e $uda/totalMassBurned.dat ) then
   sort TMB.dat | uniq > totalMassBurned.dat
 endif
 
+/bin/rm TMB.dat
+
 exit
