@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Containers/StaticArray.h>
-
+#include <TauProfilerForSCIRun.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Math/MiscMath.h>
@@ -1575,6 +1575,7 @@ IntVector Patch::getInteriorHighIndexWithBoundary(VariableBasis basis) const
 
 void Patch::finalizePatch()
 {
+  TAU_PROFILE("Patch::finalizePatch()", " ", TAU_USER);
   //////////
   // Calculate with of this patche's cells are on the corner
   // of the domain and keep a list of these cells for each

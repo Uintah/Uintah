@@ -1,3 +1,4 @@
+#include <TauProfilerForSCIRun.h>
 
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
@@ -20,7 +21,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/ProgressiveWarning.h>
-
+#include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <algorithm>
 #include <map>
@@ -371,6 +372,7 @@ Point Level::positionToIndex(const Point& p) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors) const
 {
+ TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
 #ifdef BRYAN_SELECT_CACHE
     
   // look it up in the cache first
@@ -490,6 +492,7 @@ bool Level::containsPointInRealCells(const Point& p) const
 
 void Level::finalizeLevel()
 {
+  TAU_PROFILE("Level::finalizeLevel()", " ", TAU_USER);
   each_patch = scinew PatchSet();
   each_patch->addReference();
   
@@ -510,6 +513,7 @@ void Level::finalizeLevel()
 
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
+  TAU_PROFILE("Level::finalizeLevel(periodic)", " ", TAU_USER);
   // set each_patch and all_patches before creating virtual patches
   each_patch = scinew PatchSet();
   each_patch->addReference();
@@ -568,6 +572,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 }
 void Level::setBCTypes()
 {
+  TAU_PROFILE("Level::setBCTypes", " ", TAU_USER);
 #ifdef SELECT_GRID
    if(d_patchDistribution.x() >= 0 && d_patchDistribution.y() >= 0 &&
       d_patchDistribution.z() >= 0){
@@ -772,6 +777,7 @@ void Level::setBCTypes()
 
 void Level::assignBCS(const ProblemSpecP& grid_ps)
 {
+  TAU_PROFILE("Level::assignBCS()", " ", TAU_USER);
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0) {
     static ProgressiveWarning warn("No BoundaryConditions specified", -1);
