@@ -1,3 +1,5 @@
+#include <TauProfilerForSCIRun.h>
+
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -196,6 +198,7 @@ DetailedTask::doit(const ProcessorGroup* pg,
 		   vector<OnDemandDataWarehouseP>& oddws,
 		   vector<DataWarehouseP>& dws)
 {
+  TAU_PROFILE("DetailedTask::doit", " ", TAU_USER); 
   if( mixedDebug.active() ) {
     cerrLock.lock();
     mixedDebug << "DetailedTask " << this << " begin doit()\n";

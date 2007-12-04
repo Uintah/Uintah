@@ -1,3 +1,5 @@
+#include <TauProfilerForSCIRun.h>
+
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
 #include <list>
 
@@ -10,6 +12,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
      d_patchPoints(new PatchPoint[patches.size()]),
      d_numPatches((int)patches.size())
 {
+  TAU_PROFILE("PatchRangeTree::PatchRangeTree-a", " ", TAU_USER);
   list<PatchPoint*> pointList;
   IntVector dimensions;
   
@@ -35,6 +38,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
      d_patchPoints(new PatchPoint[patches.size()]),
      d_numPatches((int)patches.size())
 {
+  TAU_PROFILE("PatchRangeTree::PatchRangeTree-b", " ", TAU_USER);
   list<PatchPoint*> pointList;
   IntVector dimensions;
   

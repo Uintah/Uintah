@@ -821,6 +821,7 @@ ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
                                          IntVector low, IntVector high)
 {
+  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
   d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
@@ -953,6 +954,7 @@ ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntVector highIndex, 
                                          const Level* level, const Patch* relPatch, const VarLabel* pos_var)
 {
+  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
   if (relPatch && lowIndex == relPatch->getLowIndex() && highIndex == relPatch->getHighIndex())
@@ -1057,6 +1059,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
                            const VarLabel* label,
                            ParticleSubset* pset)
 {
+  TAU_PROFILE("OnDemandDataWarehouse::get(particle variable)", " ", TAU_USER);
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
@@ -1907,6 +1910,7 @@ void OnDemandDataWarehouse::
 getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
            Ghost::GhostType gtype, int numGhostCells)
 {
+  TAU_PROFILE("OnDemandDataWarehouse::getGridVar", " ", TAU_USER);
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis,Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));  
 
