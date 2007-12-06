@@ -261,7 +261,11 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 #endif
   
   double dtask = Time::currentSeconds()-taskstart;
-  mpi_info_.totaltask += dtask;
+  
+  //if i have a sub scheduler do not add my task time to the total time
+  if(!task->getTask()->getHasSubScheduler())
+    mpi_info_.totaltask += dtask;
+
 
   postMPISends( task, iteration );
   task->done(dws); // should this be timed with taskstart? - BJW
@@ -273,6 +277,17 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
+  
+ 
+  if(parentScheduler) //add my timings to the parent scheduler
+  {
+    parentScheduler->mpi_info_.totaltask+=mpi_info_.totaltask;
+    parentScheduler->mpi_info_.totaltestmpi+=mpi_info_.totaltestmpi;
+    parentScheduler->mpi_info_.totalrecv+=mpi_info_.totalrecv;
+    parentScheduler->mpi_info_.totalsend+=mpi_info_.totalsend;
+    parentScheduler->mpi_info_.totalwaitmpi+=mpi_info_.totalwaitmpi;
+    parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
+  }
 
 
 #ifdef USE_PERFEX_COUNTERS

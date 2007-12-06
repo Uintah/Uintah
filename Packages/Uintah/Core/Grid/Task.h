@@ -407,7 +407,7 @@ WARNING
     ~Task();
     
     void hasSubScheduler(bool state = true);
-    bool inline getHasSubScheduler() { return d_hasSubScheduler; }
+    bool inline getHasSubScheduler() const { return d_hasSubScheduler; }
     void usesMPI(bool state=true);
     void usesThreads(bool state);
     bool usesThreads() const {
