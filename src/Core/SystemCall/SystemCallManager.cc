@@ -38,6 +38,9 @@
 
 #include <Core/SystemCall/SystemCallManager.h> 
 #include <Core/OS/Dir.h>
+
+#include <signal.h> // for killpg
+
 namespace SCIRun {
 
 SystemCallProcess::SystemCallProcess(int processid) :

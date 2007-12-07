@@ -166,6 +166,12 @@ INIT_PACKAGE_CHECK_VARS()
 
 sci_pwd=""
 for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
+
+  if ! test -x $my_pwd; then
+      # This pwd isn't an executable (or doesn't exist)... skip it.
+      continue
+  fi
+
   mkdir -p pwd_test
   ln -s pwd_test pwd_temp
 
@@ -838,6 +844,7 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
+    SCI_CHECK_OS_VERSION(9,IS_LEOPARD=yes,IS_LEOPARD=no)
     SCI_CHECK_OS_VERSION(8,NEED_OSX_SYSTEMSTUBS=yes,NEED_OSX_SYSTEMSTUBS=no)
     if test "$NEED_OSX_SYSTEMSTUBS" = "no"; then
        SCI_CHECK_OS_VERSION(7.1,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
@@ -2222,7 +2229,7 @@ case $host in
 esac
 
 ##########
-##### This stuff was in the includes between gl.h and glu.hn
+##### This stuff was in the includes between gl.h and glu.h
 #####
 ##### #ifndef GLAPIENTRY
 #####   #define GLAPIENTRY
@@ -2238,8 +2245,19 @@ if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
                $_sci_inc,glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
 else
-  SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
-	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+  if test "$IS_LEOPARD" = "yes"; then
+     DEF_LEOPARD="#define IS_LEOPARD 1"
+     LEOPARD_GL_HACK="-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
+     AC_MSG_WARN( "Using Mac OSX Leopard OpenGL hack..." )
+
+     _sci_lib=/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries
+
+     SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
+	          $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+  else
+     SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
+	          $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+  fi
 fi
 
 if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
@@ -2248,6 +2266,7 @@ if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   GL_LIB_DIR_FLAG=""
 fi
 
+AC_SUBST(LEOPARD_GL_HACK)
 AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
 AC_SUBST(INC_GL_H)
@@ -2275,6 +2294,7 @@ else
   DEF_OGL_EXT_HDRS=""
 fi
 
+AC_SUBST(DEF_LEOPARD)
 AC_SUBST(DEF_OGL_EXT_HDRS)
 
 
