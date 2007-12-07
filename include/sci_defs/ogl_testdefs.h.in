@@ -33,6 +33,8 @@
 #define SCI_OPENGL
 #define SCI_NORM_OGL
 
+@DEF_LEOPARD@
+
 @DEF_OOGL@
 @DEF_GLEW@
 @DEF_FTGL@

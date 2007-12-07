@@ -120,7 +120,11 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
 #if defined(_WIN32)
   gluQuadricCallback(qobj_, /* FIX (GLenum)GLU_ERROR*/ 0, (void (__stdcall*)())quad_error);
 #elif defined(__APPLE__)
+#     if defined(IS_LEOPARD)
+  gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (void(*)())quad_error);
+#     else
   gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (GLvoid (*)(...))quad_error);
+#     endif
 #else
   gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (void(*)())quad_error);
 #endif
