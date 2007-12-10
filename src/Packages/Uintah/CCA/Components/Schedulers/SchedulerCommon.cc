@@ -368,109 +368,42 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, int when)
             cout << "  RHO: " << dw->getID() << " original input " << trackingDWs_[i] << endl;
         }
             
-        // now get it the way a normal task would get it
+
         switch (td->getSubType()->getType()) {
-        case TypeDescription::double_type: {
-          if (td->getType() == TypeDescription::CCVariable) {
-            constCCVariable<double> var;
-            dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            for (int z = start.z(); z < end.z(); z++) {
-              for (int y = start.y(); y < end.y(); y++) {
-                cout << d_myworld->myrank() << "  ";
-                for (int x = start.x(); x < end.x(); x++) {
-                  IntVector c(x,y,z);
-                  cout << " " << c << ": " << var[c];
-                }
-                cout << endl;
-              }
-              cout << endl;
-            }
-          }
-          else if (td->getType() == TypeDescription::NCVariable) {
-            constNCVariable<double> var;
-            dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            for (int z = start.z(); z < end.z(); z++) {
-              for (int y = start.y(); y < end.y(); y++) {
-                cout << d_myworld->myrank() << "  ";
-                for (int x = start.x(); x < end.x(); x++) {
-                  IntVector c(x,y,z);
-                  cout << " " << c << ": " << var[c];
-                }
-                cout << endl;
-              }
-              cout << endl;
-            }
-          }
-          
-          else if (td->getType() == TypeDescription::SFCXVariable) {
-            constSFCXVariable<double> var;
-            dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            for (int z = start.z(); z < end.z(); z++) {
-              for (int y = start.y(); y < end.y(); y++) {
-                cout << d_myworld->myrank() << "  ";
-                for (int x = start.x(); x < end.x(); x++) {
-                  IntVector c(x,y,z);
-                  cout << " " << c << ": " << var[c];
-                }
-                cout << endl;
-              }
-              cout << endl;
-            }
-          }
-          else if (td->getType() == TypeDescription::SFCYVariable) {
-            constSFCYVariable<double> var;
-            dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            for (int z = start.z(); z < end.z(); z++) {
-              for (int y = start.y(); y < end.y(); y++) {
-                cout << d_myworld->myrank() << "  ";
-                for (int x = start.x(); x < end.x(); x++) {
-                  IntVector c(x,y,z);
-                  cout << " " << c << ": " << var[c];
-                }
-                cout << endl;
-              }
-              cout << endl;
-            }
-          }
-          else if (td->getType() == TypeDescription::SFCZVariable) {
-            constSFCZVariable<double> var;
-            dw->get(var, label, m, patch, Ghost::None, 0);
-            
-            for (int z = start.z(); z < end.z(); z++) {
-              for (int y = start.y(); y < end.y(); y++) {
-                cout << d_myworld->myrank() << "  ";
-                for (int x = start.x(); x < end.x(); x++) {
-                  IntVector c(x,y,z);
-                  cout << " " << c << ": " << var[c];
-                }
-                cout << endl;
-              }
-              cout << endl;
-            }
-          }
-        }
-          break;
-        case TypeDescription::Vector: {
-          constCCVariable<Vector> var;
-          dw->get(var, label, m, patch, Ghost::None, 0);
+        case TypeDescription::double_type: 
+        {
+          GridVariable<double>* var = dynamic_cast<GridVariable<double>*>(v);
           
           for (int z = start.z(); z < end.z(); z++) {
             for (int y = start.y(); y < end.y(); y++) {
               cout << d_myworld->myrank() << "  ";
               for (int x = start.x(); x < end.x(); x++) {
                 IntVector c(x,y,z);
-                cout << " " << c << ": " << var[c];
+                cout << " " << c << ": " << (*var)[c];
               }
               cout << endl;
             }
             cout << endl;
           }
         }
-          break;
+        break;
+        case TypeDescription::Vector: 
+        {
+          GridVariable<Vector>* var = dynamic_cast<GridVariable<Vector>*>(v);
+          
+          for (int z = start.z(); z < end.z(); z++) {
+            for (int y = start.y(); y < end.y(); y++) {
+              cout << d_myworld->myrank() << "  ";
+              for (int x = start.x(); x < end.x(); x++) {
+                IntVector c(x,y,z);
+                cout << " " << c << ": " << (*var)[c];
+              }
+              cout << endl;
+            }
+            cout << endl;
+          }
+        }
+        break;
         default: break;
         }
       }
