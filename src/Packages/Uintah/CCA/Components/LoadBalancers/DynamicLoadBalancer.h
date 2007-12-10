@@ -116,7 +116,7 @@ namespace Uintah {
     bool thresholdExceeded(const std::vector<vector<double> >& patch_costs);
 
     //Assign costs to a list of patches
-    void getCosts(const Grid* grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs, bool during_regrid);
+    void getCosts(const Grid* grid, vector<vector<double> >&costs);
     void sortPatches(vector<Region> &patches, vector<double> &costs);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on

@@ -424,26 +424,9 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   int num_procs = d_myworld->size();
   DataWarehouse* olddw = d_scheduler->get_dw(0);
 
-  // treat as a 'regrid' setup (where we need to get particles from the old grid)
-  // IFF the old dw exists and the grids are unequal.
-  // Yes, this discounts the first initialization regrid, where there isn't an OLD DW, or particles on it yet.
-  bool on_regrid = olddw != 0 && grid.get_rep() != olddw->getGrid();
-  vector<vector<Region> > regions;
-  if (on_regrid) {
-    // prepare the list of regions so the getCosts can operate the same when called from here 
-    // or from dynamicallyLoadBalanceAndSplit.
-    for (int l = 0; l < grid->numLevels(); l++) {
-      regions.push_back(vector<Region>());
-      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
-        const Patch* patch = grid->getLevel(l)->getPatch(p);
-        regions[l].push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
-      }
-    }
-    getCosts(olddw->getGrid(), regions, patch_costs, on_regrid);
-  }
-  else {
-    getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
-  }
+  //get costs of the patches for load balancing
+  getCosts(grid.get_rep(), patch_costs);
+  
   int level_offset=0;
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
@@ -1013,29 +996,13 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches, vector<double> &c
 // 2) from possiblyDynamicallyReallocate, after regrid
 // 
 //    patches only matters during a regrid.  In this case, 'grid' is the old grid.
-void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs,
-                                   bool during_regrid)
+void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&costs)
 {
   costs.clear();
-  if (during_regrid) {
-    costs.resize(patches.size());
-    for (unsigned l = 0; l < patches.size(); l++) 
-    {
-      for(vector<Region>::const_iterator patch=patches[l].begin();patch!=patches[l].end();patch++)
-      {
-        costs[l].push_back(d_patchCost+patch->getVolume()*d_cellCost);
-      }
-    }
-    if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
-    {
-      collectParticlesForRegrid(grid, patches, costs);
-    }
-  }
-  else {
-    costs.resize(grid->numLevels());
-    for (int l = 0; l < grid->numLevels(); l++) 
-    {
-      for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
+  costs.resize(grid->numLevels());
+  for (int l = 0; l < grid->numLevels(); l++) 
+  {
+    for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
       {
         costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getVolume()*d_cellCost);
       }
@@ -1044,7 +1011,6 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
     {
       collectParticles(grid, costs);
     }
-  }
   
   if (dbg.active() && d_myworld->myrank() == 0) {
     for (unsigned l = 0; l < costs.size(); l++)
