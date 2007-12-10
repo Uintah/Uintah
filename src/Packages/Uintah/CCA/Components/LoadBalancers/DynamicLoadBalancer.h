@@ -85,12 +85,6 @@ namespace Uintah {
     /// threshold.
     virtual bool possiblyDynamicallyReallocate(const GridP& grid, int state);
 
-    //This function will create a load balance from the vectors in patches. The
-    //Patches in patches may be split up in order to improve performance and thus 
-    //the regridder should create the grid after calling this.  Using this option 
-    //negates the need to call "possiblyDynamicallyReallocate".
-    virtual void dynamicallyLoadBalanceAndSplit(const GridP&,SizeList,vector<vector<Region> >&, bool);
-
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
