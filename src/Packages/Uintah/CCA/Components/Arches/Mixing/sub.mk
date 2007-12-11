@@ -8,6 +8,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
 
 SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 		$(SRCDIR)/NewStaticMixingTable.cc \
+		$(SRCDIR)/MOMColdflowMixingModel.cc \
 		$(SRCDIR)/StandardTable.cc \
 		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc
 
