@@ -131,6 +131,12 @@ public:
       inline const bool isDensityWeighted() {
         return d_scalar_density_weighted;
       }
+      inline const bool useforDen(){
+	//if true, will use this scalar to compute rho
+	return d_scalar_useforden;
+	//warning!  This assumes (for now) that only one scalar
+	//           can be used from all Extrascalars.  
+      }
 protected:
 
 private:
@@ -202,6 +208,7 @@ private:
       double d_scalar_init_value;
       bool d_scalar_diffusion;
       bool d_scalar_density_weighted;
+      bool d_scalar_useforden;
       const VarLabel* d_scalar_label;
       const VarLabel* d_scalar_temp_label;
       const VarLabel* d_scalar_coef_label;
