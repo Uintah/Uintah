@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
@@ -84,6 +85,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_reactingFlow = true;
   // read type of mixing model
   string mixModel;
+
   db->require("mixing_model",mixModel);
   if (mixModel == "coldFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
@@ -99,6 +101,12 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel = scinew StandardTable(d_calcReactingScalar,
                                          d_calcEnthalpy,
                                          d_calcVariance);
+  else if (mixModel == "MOMcoldFlowMixingModel"){
+     d_mixingModel = scinew MOMColdflowMixingModel(d_calcReactingScalar,
+						  d_calcEnthalpy,
+						  d_calcVariance);
+     d_reactingFlow = false;
+  }
   
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
 	|| mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
@@ -107,6 +115,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   else
     throw InvalidValue("Mixing Model not supported" + mixModel, __FILE__, __LINE__);
   d_mixingModel->problemSetup(db);
+
   if (d_calcEnthalpy)
     d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
   if (d_reactingFlow) {
@@ -168,6 +177,9 @@ Properties::computeInletProperties(const InletStream& inStream,
 {
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
+  else if (dynamic_cast<const MOMColdflowMixingModel*>(d_mixingModel)){
+    d_mixingModel->computeProps(inStream, outStream);
+  }
   else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
@@ -374,6 +386,13 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     else
       tsk->modifies(d_lab->d_densityMicroLabel);
   }
+
+  if (d_calcExtraScalars)
+    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+      tsk->requires(Task::NewDW, d_extraScalars->at(i)->getScalarLabel(), 
+      		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    } 
+  
   sched->addTask(tsk, patches, matls);
 }
 
@@ -413,6 +432,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     constCCVariable<int> cellType;
     CCVariable<double> scalar;
+    CCVariable<double> extrascalar;
     constCCVariable<double> normalizedScalarVar;
     constCCVariable<double> reactScalar;
     constCCVariable<double> scalarDisp;
@@ -468,6 +488,13 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
 
+    bool foundExtrascalar = false;
+    bool usemeforden = false;
+    int indexforden = -1;
+
+    PerPatch<CellInformationP> cellInfoP;
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
@@ -484,12 +511,43 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    if (doing_EKT_now)
+    //WARNING!
+    //THIS is messy for extra scalars and will need to be fixed for EKT!!!!
+    if (doing_EKT_now) {
       new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, 
-		    matlIndex, patch);
-    else
-      new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
-		    matlIndex, patch);
+			    matlIndex, patch);
+      std::cout << "DANGER!  Extra scalars not supported for EKT yet" << endl;
+    }
+    //ExtraScalar for Density
+    else if (d_calcExtraScalars){     
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+	usemeforden = d_extraScalars->at(i)->useforDen();
+	if (usemeforden) {
+		indexforden = i;
+	        foundExtrascalar = true;
+	}
+      } 
+      
+
+      if (foundExtrascalar){
+	//found an extra scalar for density
+	const VarLabel* extrascalarlabel;
+	extrascalarlabel = d_extraScalars->at(indexforden)->getScalarLabel();
+	new_dw->getModifiable(extrascalar, extrascalarlabel,
+	  	    matlIndex, patch);
+      }
+      else { //Standard scalar
+	//Default to the standard scalar if no extrascalar 
+	// is found that is labeled to be used for density
+	new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
+			      matlIndex, patch);
+      }
+    }
+    else {
+	new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
+			      matlIndex, patch);
+    }
+
 
     if (d_calcVariance) {
       new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, 
@@ -753,10 +811,17 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  
 	  inStream.d_currentCell = currCell;
 	  
-	  inStream.d_mixVars[0] = scalar[currCell];
-
+	  //This is a bit messy, but we can make this more efficient later
+	  if (d_calcExtraScalars && foundExtrascalar){
+	    inStream.d_mixVars[0] = extrascalar[currCell];
+	  }
+	  else{
+	    //Mixture fraction 
+	    inStream.d_mixVars[0] = scalar[currCell];
+	  }
+	  
 	  if (d_calcVariance) {
-          // Variance passed in has already been normalized !!!
+	    // Variance passed in has already been normalized !!!
 	    inStream.d_mixVarVariance[0] = normalizedScalarVar[currCell];
 	  }
 
@@ -778,8 +843,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	   // during the initialization
            inStream.d_initEnthalpy = (initialize || local_enthalpy_init);
 
+	   inStream.cellvolume =  cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
   TAU_PROFILE_START(mixing);
-	  d_mixingModel->computeProps(inStream, outStream);
+           d_mixingModel->computeProps(inStream, outStream);
   TAU_PROFILE_STOP(mixing);
 
 	  double local_den = outStream.getDensity();
