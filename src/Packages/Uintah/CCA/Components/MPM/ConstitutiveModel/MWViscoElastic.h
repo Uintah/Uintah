@@ -38,6 +38,13 @@ namespace Uintah {
 
     CMData d_initialData;
     double d_se;
+    const VarLabel* pStress_veLabel;
+    const VarLabel* pStress_eLabel;
+    const VarLabel* pStress_ve_vLabel;
+    const VarLabel* pStress_ve_dLabel;
+    const VarLabel* pStress_e_vLabel;
+    const VarLabel* pStress_e_dLabel;
+
     // Prevent copying of this class
     // copy constructor
     //MWViscoElastic(const MWViscoElastic &cm);

@@ -185,7 +185,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume_deform;
+    ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity,psize;
     delt_vartype delT;
 
@@ -196,7 +196,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
     new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deform, lb->pVolumeDeformedLabel,     pset);
+    new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,          pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
@@ -218,7 +218,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromVelocity(gvelocity,
                                              pset, px, psize,
                                              deformationGradient,
@@ -227,7 +227,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
-      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromDisplacement(gdisplacement,
                                                  pset, px, psize,
                                                  deformationGradient_new,
@@ -259,15 +259,14 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       pstress[idx]=(B*C1pi1C2 - (B*B)*C2 + Identity*i3w3)*2.0/J;
       
       // Update particle volumes
-      pvolume_deform[idx]=(pmass[idx]/rho_orig)*J;
+      pvolume[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute wave speed + particle velocity at each particle, 
       // store the maximum
       c_dil = sqrt((4.*(C1+C2*invar2)/J
                     +8.*(2.*C3/(invar3*invar3*invar3)+C4*(2.*invar3-1.))
                     -Min((pstress[idx])(0,0),(pstress[idx])(1,1)
-                         ,(pstress[idx])(2,2))/J)
-                   *pvolume_deform[idx]/pmass[idx]);
+                         ,(pstress[idx])(2,2))/J)*pvolume[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -275,7 +274,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       double e = (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
-            C4*(invar3-1.0)*(invar3-1.0))*pvolume_deform[idx]/J;
+            C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
 
       se += e;
     }

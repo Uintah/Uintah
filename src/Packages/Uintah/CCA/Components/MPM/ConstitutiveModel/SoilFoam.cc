@@ -285,7 +285,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S(interpolator->size());
 
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double c_dil=0.0,Jinc;
+    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
 
@@ -308,8 +308,8 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume, ptemperature, sv_min, p_sv_min;
-    ParticleVariable<double> pvolume_deformed, sv_min_new, p_sv_min_new;
+    constParticleVariable<double> pmass, ptemperature, sv_min, p_sv_min;
+    ParticleVariable<double> pvolume, sv_min_new, p_sv_min_new;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
@@ -323,14 +323,13 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(sv_min,              sv_minLabel,                  pset);
     old_dw->get(p_sv_min,            p_sv_minLabel,                pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
+    new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -343,11 +342,11 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pstrainEnergyDensity_new;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pvolume,         lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(sv_min_new,   sv_minLabel_preReloc,           pset);
     new_dw->allocateAndPut(p_sv_min_new, p_sv_minLabel_preReloc,         pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc, pset);
+                           lb->pDeformationMeasureLabel_preReloc,        pset);
  
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
@@ -388,18 +387,16 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
 
-      Jinc = deformationGradientInc.Determinant();
-
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
                              deformationGradient[idx];
 
       // get the volumetric part of the deformation
       double J = deformationGradient[idx].Determinant();
-      pvolume_deformed[idx]=Jinc*pvolume[idx];
-      double vol_strain = log(pvolume_deformed[idx]/(pmass[idx]/rho_orig));
-      double pres;
       double rho_cur = rho_orig/J;
+      pvolume[idx]=pmass[idx]/rho_cur;
+      double vol_strain = log(pvolume[idx]/(pmass[idx]/rho_orig));
+      double pres;
 
       // Traditional method for mat5
       if(vol_strain>sv_min[idx]){
@@ -458,7 +455,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
                   D(2,2)*AvgStress(2,2) +
                2.*(D(0,1)*AvgStress(0,1) +
                    D(0,2)*AvgStress(0,2) +
-                   D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
+                   D(1,2)*AvgStress(1,2))) * pvolume[idx]*delT;
 
       se += e;
 

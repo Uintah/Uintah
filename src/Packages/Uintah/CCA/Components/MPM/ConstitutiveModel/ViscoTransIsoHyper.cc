@@ -415,13 +415,9 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
-    constParticleVariable<double> pmass,pvolume;
-    ParticleVariable<double> pvolume_deformed;
-    ParticleVariable<double> stretch;
-    ParticleVariable<double> fail;
-    constParticleVariable<double> fail_old;
-    constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Vector> pfiberdir;
+    constParticleVariable<double> pmass,fail_old;
+    ParticleVariable<double> pvolume,stretch,fail;
+    constParticleVariable<Vector> pvelocity, pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
     
     ParticleVariable<Matrix3> pstress,ElasticStress;//visco
@@ -452,7 +448,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(history6_old,        pHistory6Label,               pset);
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,  pset);
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
@@ -499,7 +495,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     Ghost::GhostType  gac   = Ghost::AroundCells;
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromVelocity(gvelocity,
                                              pset, px, psize,
                                              deformationGradient,
@@ -508,7 +504,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
-      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromDisplacement(gdisplacement,
                                                  pset, px, psize,
                                                  deformationGradient_new,
@@ -578,7 +574,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Compute deformed volume and local wave speed
       double rho_cur = rho_orig/J;
-      pvolume_deformed[idx]=pmass[idx]/rho_cur;
+      pvolume[idx]=pmass[idx]/rho_cur;
       c_dil = sqrt((Bulk+1./3.*shear)/rho_cur);
 
       //________________________________Failure and stress terms
@@ -748,7 +744,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
                                          c5*lambda_tilde+c6*log(lambda_tilde);
       }
 
-      double e = (U + W)*pvolume_deformed[idx]/J;
+      double e = (U + W)*pvolume[idx]/J;
       se += e;
 
       Vector pvelocity_idx = pvelocity[idx];
@@ -846,7 +842,6 @@ void ViscoTransIsoHyper::addInitialComputesAndRequires(Task* task,
   task->computes(pFailureLabel,              matlset);
   task->computes(pStretchLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,  matlset);
-  task->computes(lb->pVolumeDeformedLabel,   matlset);
 }
 
 void ViscoTransIsoHyper::addComputesAndRequires(Task* task,

@@ -22,10 +22,33 @@ MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,
   :  ParticleCreator(matl,flags)
 {
   registerPermanentParticleState(matl);
+  pTang1Label  = VarLabel::create( "p.tang1",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pTang2Label  = VarLabel::create( "p.tang2",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pNormLabel  = VarLabel::create( "p.norm",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pTang1Label_preReloc  = VarLabel::create( "p.tang1+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pTang2Label_preReloc  = VarLabel::create( "p.tang2+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pNormLabel_preReloc  = VarLabel::create( "p.norm+",
+                        ParticleVariable<Vector>::getTypeDescription() );
 }
 
 MembraneParticleCreator::~MembraneParticleCreator()
 {
+  VarLabel::destroy(pTang1Label);
+  VarLabel::destroy(pTang1Label_preReloc);
+  VarLabel::destroy(pTang2Label);
+  VarLabel::destroy(pTang2Label_preReloc);
+  VarLabel::destroy(pNormLabel);
+  VarLabel::destroy(pNormLabel_preReloc);
 }
 
 
@@ -183,9 +206,9 @@ MembraneParticleCreator::allocateVariables(particleIndex numParticles,
 							      dwi,patch,
 							      new_dw);
 
-  new_dw->allocateAndPut(pTang1, d_lb->pTang1Label, subset);
-  new_dw->allocateAndPut(pTang2, d_lb->pTang2Label, subset);
-  new_dw->allocateAndPut(pNorm, d_lb->pNormLabel,  subset);
+  new_dw->allocateAndPut(pTang1, pTang1Label, subset);
+  new_dw->allocateAndPut(pTang2, pTang2Label, subset);
+  new_dw->allocateAndPut(pNorm,  pNormLabel,  subset);
 
   return subset;
 
@@ -195,12 +218,12 @@ MembraneParticleCreator::allocateVariables(particleIndex numParticles,
 void 
 MembraneParticleCreator::registerPermanentParticleState(MPMMaterial*)
 {
-  particle_state.push_back(d_lb->pTang1Label);
-  particle_state_preReloc.push_back(d_lb->pTang1Label_preReloc);
+  particle_state.push_back(pTang1Label);
+  particle_state_preReloc.push_back(pTang1Label_preReloc);
 
-  particle_state.push_back(d_lb->pTang2Label);
-  particle_state_preReloc.push_back(d_lb->pTang2Label_preReloc);
+  particle_state.push_back(pTang2Label);
+  particle_state_preReloc.push_back(pTang2Label_preReloc);
 
-  particle_state.push_back(d_lb->pNormLabel);
-  particle_state_preReloc.push_back(d_lb->pNormLabel_preReloc);
+  particle_state.push_back(pNormLabel);
+  particle_state_preReloc.push_back(pNormLabel_preReloc);
 }

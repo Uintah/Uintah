@@ -271,7 +271,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<StateData> statedata_old;
     ParticleVariable<StateData> statedata;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity,psize;
     ParticleVariable<double> pdTdt;
     constNCVariable<Vector> gvelocity;
@@ -289,13 +289,12 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress,    lb->pStressLabel_preReloc,        pset);
     new_dw->allocateAndPut(bElBar_new, bElBarLabel_preReloc,             pset);
     new_dw->allocateAndPut(statedata,  p_statedata_label_preReloc,       pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pvolume,    lb->pVolumeLabel_preReloc,        pset);
     new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel_preReloc,          pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
     statedata.copyData(statedata_old);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel,getLevel(patches));
 
     double shear = d_initialData.Shear;
@@ -307,7 +306,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromVelocity(gvelocity,
                                              pset, px, psize,
                                              deformationGradient,
@@ -316,7 +315,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
-      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromDisplacement(gdisplacement,
                                                  pset, px, psize,
                                                  deformationGradient_new,
@@ -356,7 +355,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       // Compute the deformed volume and the local sound speed
       double rho_cur = rho_orig/J;
-      pvolume_deformed[idx]=pmass[idx]/rho_cur;
+      pvolume[idx]=pmass[idx]/rho_cur;
       c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
 
       // get the hydrostatic part of the stress
@@ -397,7 +396,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
-      double e = (U + W)*pvolume_deformed[idx]/J;
+      double e = (U + W)*pvolume[idx]/J;
       se += e;
 
       // Compute wave speed at each particle, store the maximum

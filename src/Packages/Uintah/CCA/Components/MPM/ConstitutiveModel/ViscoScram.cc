@@ -488,19 +488,18 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress,             lb->pStressLabel,             pset);
     old_dw->get(pCrackRadius,        pCrackRadiusLabel,            pset);
+    old_dw->get(pTempPrev,           lb->pTempPreviousLabel,       pset); 
     if (flag->d_fracture) {
       new_dw->get(pgCode,            lb->pgCodeLabel,              pset);
-      new_dw->get(Gvelocity,         lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(Gvelocity,         lb->GVelocityStarLabel,dwi,patch,gac,NGN);
     }
-    new_dw->get(gVelocity,           lb->gVelocityLabel, dwi, patch, gac, NGN);
-
-    old_dw->get(pTempPrev,           lb->pTempPreviousLabel,       pset); 
+    new_dw->get(gVelocity,           lb->gVelocityStarLabel,dwi,patch,gac,NGN);
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVol_new,         
-                           lb->pVolumeDeformedLabel,              pset);
+                           lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pIntHeatRate_new, 
-                           lb->pdTdtLabel_preReloc,   pset);
+                           lb->pdTdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDefGrad_new,     
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new,      
@@ -519,8 +518,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                            pRandLabel_preReloc,                   pset);
     new_dw->allocateAndPut(pStatedata,   
                            pStatedataLabel_preReloc,              pset);
-    old_dw->copyOut(pRand,           pRandLabel,                   pset);
-    old_dw->copyOut(pStatedata,      pStatedataLabel,              pset);
+    old_dw->copyOut(pRand,           pRandLabel,                  pset);
+    old_dw->copyOut(pStatedata,      pStatedataLabel,             pset);
     ASSERTEQ(pset, pStatedata.getParticleSubset());
 
     // Loop thru particles in the patch

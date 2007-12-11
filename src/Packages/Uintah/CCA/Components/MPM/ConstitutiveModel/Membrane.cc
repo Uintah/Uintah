@@ -37,6 +37,24 @@ Membrane::Membrane(ProblemSpecP& ps,MPMFlags* Mflag)
   defGradInPlaneLabel_preReloc  = VarLabel::create( "p.defgrad_in_plane+",
                         ParticleVariable<Matrix3>::getTypeDescription() );
 
+  pTang1Label  = VarLabel::create( "p.tang1",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pTang2Label  = VarLabel::create( "p.tang2",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pNormLabel  = VarLabel::create( "p.norm",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pTang1Label_preReloc  = VarLabel::create( "p.tang1+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pTang2Label_preReloc  = VarLabel::create( "p.tang2+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+                                                                                
+  pNormLabel_preReloc  = VarLabel::create( "p.norm+",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
 }
 
 Membrane::Membrane(const Membrane* cm) : ConstitutiveModel(cm)
@@ -57,8 +75,13 @@ Membrane::~Membrane()
   // Destructor
   VarLabel::destroy(defGradInPlaneLabel);
   VarLabel::destroy(defGradInPlaneLabel_preReloc);
+  VarLabel::destroy(pTang1Label);
+  VarLabel::destroy(pTang1Label_preReloc);
+  VarLabel::destroy(pTang2Label);
+  VarLabel::destroy(pTang2Label_preReloc);
+  VarLabel::destroy(pNormLabel);
+  VarLabel::destroy(pNormLabel_preReloc);
 }
-
 
 void Membrane::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
@@ -227,8 +250,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     constParticleVariable<Matrix3> pstress, defGradIPOld;
     ParticleVariable<Matrix3> pstress_new,defGradIP;
-    constParticleVariable<double> pmass,pvolume;
-    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity,psize;
     constParticleVariable<Vector> ptang1,ptang2,pnorm;
     ParticleVariable<Vector> T1,T2,T3;
@@ -248,27 +271,27 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pstress,                    lb->pStressLabel,             pset);
     old_dw->get(pvelocity,                  lb->pVelocityLabel,           pset);
     old_dw->get(defGradIPOld,               defGradInPlaneLabel,          pset);
-    old_dw->get(ptang1,                     lb->pTang1Label,              pset);
-    old_dw->get(ptang2,                     lb->pTang2Label,              pset);
-    old_dw->get(pnorm,                      lb->pNormLabel,               pset);
+    old_dw->get(ptang1,                     pTang1Label,              pset);
+    old_dw->get(ptang2,                     pTang2Label,              pset);
+    old_dw->get(pnorm,                      pNormLabel,               pset);
     old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,     pset);
-    new_dw->allocateAndPut(T1,              lb->pTang1Label_preReloc,     pset);
-    new_dw->allocateAndPut(T2,              lb->pTang2Label_preReloc,     pset);
-    new_dw->allocateAndPut(T3,              lb->pNormLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pvolume,         lb->pVolumeLabel_preReloc,    pset);
+    new_dw->allocateAndPut(T1,              pTang1Label_preReloc,     pset);
+    new_dw->allocateAndPut(T2,              pTang2Label_preReloc,     pset);
+    new_dw->allocateAndPut(T3,              pNormLabel_preReloc,      pset);
     new_dw->allocateAndPut(defGradIP,       defGradInPlaneLabel_preReloc, pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac,NGN);
+    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac,NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     constParticleVariable<Short27> pgCode;
     constNCVariable<Vector> Gvelocity;
     if (flag->d_fracture) {
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
 
     // Allocate variable to store internal heating rate
@@ -505,14 +528,14 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       U = .5*bulk*(.5*(jv*jv - 1.0) - log(jv));
       W = .5*shear*(bElBar_new.Trace() - 3.0);
 
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*jv;
+      pvolume[idx]=(pmass[idx]/rho_orig)*jv;
       
-      double e = (U + W)*pvolume_deformed[idx]/jv;
+      double e = (U + W)*pvolume[idx]/jv;
 
       se += e;
 
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
@@ -549,14 +572,14 @@ void Membrane::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
 
   task->requires(Task::OldDW,defGradInPlaneLabel,   matlset, gnone);
-  task->requires(Task::OldDW,lb->pTang1Label,       matlset, gnone);
-  task->requires(Task::OldDW,lb->pTang2Label,       matlset, gnone);
-  task->requires(Task::OldDW,lb->pNormLabel,        matlset, gnone);
+  task->requires(Task::OldDW,pTang1Label,       matlset, gnone);
+  task->requires(Task::OldDW,pTang2Label,       matlset, gnone);
+  task->requires(Task::OldDW,pNormLabel,        matlset, gnone);
 
   task->computes(defGradInPlaneLabel_preReloc,      matlset);
-  task->computes(lb->pTang1Label_preReloc,          matlset);
-  task->computes(lb->pTang2Label_preReloc,          matlset);
-  task->computes(lb->pNormLabel_preReloc,           matlset);
+  task->computes(pTang1Label_preReloc,          matlset);
+  task->computes(pTang2Label_preReloc,          matlset);
+  task->computes(pNormLabel_preReloc,           matlset);
 }
 
 void 

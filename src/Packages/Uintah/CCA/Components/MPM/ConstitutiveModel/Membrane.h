@@ -40,7 +40,7 @@ namespace Uintah {
     // constructors
     Membrane(ProblemSpecP& ps, MPMFlags* flag);
     Membrane(const Membrane* cm);
-       
+
     // destructor
     virtual ~Membrane();
 
@@ -108,9 +108,11 @@ namespace Uintah {
 
     const VarLabel* pTang1Label;
     const VarLabel* pTang2Label;
+    const VarLabel* pNormLabel;
     const VarLabel* defGradInPlaneLabel;
     const VarLabel* pTang1Label_preReloc;
     const VarLabel* pTang2Label_preReloc;
+    const VarLabel* pNormLabel_preReloc;
     const VarLabel* defGradInPlaneLabel_preReloc;
 
   };

@@ -303,8 +303,8 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,pvolume;
-    ParticleVariable<double> fail,pdTdt,stretch,pvolume_deformed;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> fail,pdTdt,stretch,pvolume_new;
     constParticleVariable<double> fail_old;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
@@ -323,7 +323,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pvolume_new,      lb->pVolumeLabel_preReloc,  pset);
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
@@ -346,7 +346,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromVelocity(gvelocity,
                                              pset, px, psize,
                                              deformationGradient,
@@ -355,7 +355,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
-      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromDisplacement(gdisplacement,
                                                  pset, px, psize,
                                                  deformationGradient_new,
@@ -398,7 +398,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       Matrix3 leftCauchyGreentilde_new = deformationGradient_new[idx]
         * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
 
-
       //________________________________left Cauchy Green (B) tilde
       LCG_tilde = deformationGradient_new[idx]
         * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
@@ -429,7 +428,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Compute deformed volume and local wave speed
       double rho_cur = rho_orig/J;
-      pvolume_deformed[idx]=pmass[idx]/rho_cur;
+      pvolume_new[idx]=pmass[idx]/rho_cur;
       c_dil = sqrt((Bulk+1./3.*shear)/rho_cur);
       p = Bulk*log(J)/J; // p -= qVisco;
       if (p >= -1.e-5 && p <= 1.e-5){
@@ -526,7 +525,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
         W =c1*(I1tilde-3.)+c2*(I2tilde-3.)+c5*lambda_tilde+c6*log(lambda_tilde);
       }
 
-      double e = (U + W)*pvolume_deformed[idx]/J;
+      double e = (U + W)*pvolume_new[idx]/J;
 
       se += e;
 
@@ -596,7 +595,6 @@ void TransIsoHyper::addInitialComputesAndRequires(Task* task,
   task->computes(pFailureLabel,              matlset);
   task->computes(pStretchLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,  matlset);
-  task->computes(lb->pVolumeDeformedLabel,   matlset);
 }
 
 void TransIsoHyper::addComputesAndRequires(Task* task,
