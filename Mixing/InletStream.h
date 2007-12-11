@@ -48,6 +48,7 @@ namespace Uintah {
       std::vector<double> d_rxnVars;
       int d_axialLoc;
       double d_scalarDisp;
+      double cellvolume;
     
       IntVector d_currentCell;
 
