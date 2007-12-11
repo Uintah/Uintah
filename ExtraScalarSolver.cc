@@ -94,6 +94,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
   db->require("initial_value",d_scalar_init_value);
   db->getWithDefault("diffusion",d_scalar_diffusion,true);
   db->getWithDefault("density_weighted",d_scalar_density_weighted,true);
+  db->getWithDefault("useforDensity",d_scalar_useforden,false);
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
