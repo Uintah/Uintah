@@ -173,8 +173,8 @@ void Water::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,pvolume;
-    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<double> pmass;
+    ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
     ParticleVariable<double> pdTdt;
@@ -184,12 +184,11 @@ void Water::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
     
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,  pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
 
     new_dw->allocateAndPut(deformationGradient_new,
@@ -204,7 +203,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
     double rho_orig = matl->getInitialDensity();
 
     constNCVariable<Vector> gvelocity;
-    new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+    new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
 
     if(flag->d_doGridReset){
       computeDeformationGradientFromVelocity(gvelocity,
@@ -228,22 +227,22 @@ void Water::computeStressTensor(const PatchSubset* patches,
 
       computeGrad(velGrad, ni, d_S, oodx, gvelocity);
                                                                                 
-      double Jinc = (velGrad * delT + Identity).Determinant();
+      double J = deformationGradient_new[idx].Determinant();
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
       // Get the deformed volume and current density
-      pvolume_deformed[idx]=pvolume[idx]*Jinc;
-      double rho_cur = pmass[idx]/pvolume_deformed[idx];
-      double vol_orig = pmass[idx]/rho_orig;
+      double rho_cur = rho_orig/J;
+      pvolume[idx] = pmass[idx]/rho_cur;
 
       // Viscous part of the stress
       Shear = DPrime*(2.*viscosity);
 
       // get the hydrostatic part of the stress
-      p = bulk*(pow(vol_orig/pvolume_deformed[idx],gamma) - 1.0);
+      //p = bulk*(pow(vol_orig/pvolume_deformed[idx],gamma) - 1.0);
+      p = bulk*(pow(J,-gamma) - 1.0);
 
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*(-p) + Shear;

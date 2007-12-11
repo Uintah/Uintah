@@ -52,9 +52,6 @@
 #include <process.h>
 #endif
 
-#undef KUMAR
-//#define KUMAR
-
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -295,6 +292,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->AccStrainEnergyLabel);
   }
 
+  if(flags->d_artificial_viscosity){
+    t->computes(lb->p_qLabel);
+  }
+
   // artificial damping coeff initialized to 0.0
   if (cout_dbg.active())
     cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
@@ -447,19 +448,19 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleSetBCsInterpolated(             sched, patches, matls);
-  scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
-  if(flags->d_doExplicitHeatConduction){
-    scheduleComputeInternalHeatRate(      sched, patches, matls);
-    scheduleSolveHeatEquations(           sched, patches, matls);
-    scheduleIntegrateTemperatureRate(     sched, patches, matls);
-  }
 
   scheduleSolveEquationsMotion(           sched, patches, matls);
   scheduleIntegrateAcceleration(          sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  scheduleComputeStressTensor(            sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleSolveHeatEquations(           sched, patches, matls);
+    scheduleIntegrateTemperatureRate(     sched, patches, matls);
+  }
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
@@ -720,10 +721,10 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,    Ghost::None);
-  t->requires(Task::OldDW,lb->pSizeLabel,             Ghost::None);
-  t->requires(Task::NewDW,lb->gVelocityLabel, gac, NGN);
-  t->computes(lb->p_qLabel);
+  t->requires(Task::NewDW, lb->pVolumeLabel_preReloc,   Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,      gac, NGN);
+  t->computes(lb->p_qLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -781,19 +782,18 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gVolumeLabel, gnone);
   t->requires(Task::NewDW,lb->gVolumeLabel, d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain, gnone);
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,      gan,NGP);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       gan,NGP);
+  t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
+  t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
-    
-  t->requires(Task::NewDW, lb->pErosionLabel_preReloc,    gan, NGP);
+  t->requires(Task::OldDW,lb->pErosionLabel,              gan,NGP);
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
   }
 
   if(flags->d_artificial_viscosity){
-    t->requires(Task::NewDW, lb->p_qLabel,                gan,NGP);
+    t->requires(Task::OldDW, lb->p_qLabel,                gan,NGP);
   }
 
   t->computes(lb->gInternalForceLabel);
@@ -1104,7 +1104,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,                  gnone);
   t->requires(Task::OldDW, lb->pDispLabel,                      gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,            gnone);
+  t->modifies(lb->pVolumeLabel_preReloc);
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
     
 
@@ -1129,7 +1129,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress 
   t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pXXLabel);
 
@@ -1154,6 +1153,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   Task* t = scinew Task("SerialMPM::refine", this, &SerialMPM::refine);
 
   t->computes(lb->pXLabel);
+  t->computes(lb->p_qLabel);
   t->computes(lb->pDispLabel);
   t->computes(lb->pMassLabel);
   t->computes(lb->pVolumeLabel);
@@ -1838,13 +1838,13 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
       ParticleVariable<double> p_q;
       constParticleVariable<Vector> psize;
       constParticleVariable<Point> px;
-      constParticleVariable<double> pmass,pvol_def;
+      constParticleVariable<double> pmass,pvol;
       new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
       old_dw->get(px,        lb->pXLabel,                      pset);
       old_dw->get(pmass,     lb->pMassLabel,                   pset);
-      new_dw->get(pvol_def,  lb->pVolumeDeformedLabel,         pset);
-      new_dw->allocateAndPut(p_q,    lb->p_qLabel,             pset);
-      old_dw->get(psize,   lb->pSizeLabel,                   pset);
+      new_dw->get(pvol,      lb->pVolumeLabel_preReloc,        pset);
+      old_dw->get(psize,     lb->pSizeLabel,                   pset);
+      new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,    pset);
 
       Matrix3 velGrad;
       Vector dx = patch->dCell();
@@ -1874,15 +1874,14 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 
         Matrix3 D = (velGrad + velGrad.Transpose())*.5;
 
-             double DTrace = D.Trace();
-             p_q[idx] = 0.0;
-             if(DTrace<0.){
-               c_dil = sqrt(K*pvol_def[idx]/pmass[idx]);
-               p_q[idx] = (C0*fabs(c_dil*DTrace*dx_ave) +
-                           C1*(DTrace*DTrace*dx_ave*dx_ave))*
-                           (pmass[idx]/pvol_def[idx]);
-             }
-
+        double DTrace = D.Trace();
+        p_q[idx] = 0.0;
+        if(DTrace<0.){
+          c_dil = sqrt(K*pvol[idx]/pmass[idx]);
+          p_q[idx] = (C0*fabs(c_dil*DTrace*dx_ave) +
+                      C1*(DTrace*DTrace*dx_ave*dx_ave))*
+                      (pmass[idx]/pvol[idx]);
+        }
       }
     }
     delete interpolator;
@@ -2028,10 +2027,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
                                                        lb->pXLabel);
 
       old_dw->get(px,      lb->pXLabel,                      pset);
-      new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
-      new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
+      old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
+      old_dw->get(pstress, lb->pStressLabel,                 pset);
       old_dw->get(psize,   lb->pSizeLabel,                   pset);
-      new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
+      old_dw->get(pErosion,lb->pErosionLabel,                pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
@@ -2051,7 +2050,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       }
 
       if(flags->d_artificial_viscosity){
-        new_dw->get(p_q,lb->p_qLabel, pset);
+        old_dw->get(p_q,lb->p_qLabel, pset);
       }
       else {
         ParticleVariable<double>  p_q_create;
@@ -2916,14 +2915,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, psize;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
-      constParticleVariable<double> pmass, pvolume, pTemperature;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
+      constParticleVariable<double> pmass, pTemperature;
+      ParticleVariable<double> pmassNew,pvolume,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
       constParticleVariable<double> pErosion;
-      
+
       // for thermal stress analysis
       ParticleVariable<double> pTempPreNew; 
 
@@ -2938,19 +2937,19 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,        lb->pDispLabel,                      pset);
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pids,         lb->pParticleIDLabel,                pset);
-      new_dw->get(pvolume,      lb->pVolumeDeformedLabel,            pset);
       old_dw->get(pvelocity,    lb->pVelocityLabel,                  pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
       new_dw->get(pErosion,     lb->pErosionLabel_preReloc,          pset);
+      new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,     pset);
 
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
+
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
 
@@ -2969,10 +2968,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
-//        NCVariable<double> massBurnFrac_create;
-//        new_dw->allocateTemporary(massBurnFrac_create,         patch,gac,NGP);
-//        massBurnFrac_create.initialize(0.);
-//        massBurnFrac = massBurnFrac_create;         // reference created data
       }
       else{
         NCVariable<double> dTdt_create,massBurnFrac_create;
@@ -3043,8 +3038,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         else{
           rho = rho_init;
         }
-        pmassNew[idx]        = Max(pmass[idx]*(1.    - burnFraction),0.);
-        pvolumeNew[idx]      = pmassNew[idx]/rho;
+        pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
+        pvolume[idx]      = pmassNew[idx]/rho;
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
@@ -3069,7 +3064,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //             << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
 //             << " tempold = " << pTemperature[idx] 
 //             << " tempnew = " << pTempNew[idx]
-//             << " volnew = " << pvolumeNew[idx] << endl;
+//             << " volnew = " << pvolume[idx] << endl;
         }
         if(pvelocitynew[idx].length() > flags->d_max_vel){
           pvelocitynew[idx]=pvelocity[idx];
@@ -3301,12 +3296,13 @@ SerialMPM::refine(const ProcessorGroup*,
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
-        ParticleVariable<double> pErosion, pTempPrev;
+        ParticleVariable<double> pErosion, pTempPrev,p_q;
         ParticleVariable<int>    pLoadCurve;
         ParticleVariable<long64> pID;
         ParticleVariable<Matrix3> pdeform, pstress;
         
         new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
+        new_dw->allocateAndPut(p_q,            lb->p_qLabel,            pset);
         new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);

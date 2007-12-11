@@ -25,6 +25,13 @@ namespace Uintah {
 
     virtual void registerPermanentParticleState(MPMMaterial* matl);
 
+    const VarLabel* pTang1Label;
+    const VarLabel* pTang2Label;
+    const VarLabel* pNormLabel;
+    const VarLabel* pTang1Label_preReloc;
+    const VarLabel* pTang2Label_preReloc;
+    const VarLabel* pNormLabel_preReloc;
+
 
   protected:
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,

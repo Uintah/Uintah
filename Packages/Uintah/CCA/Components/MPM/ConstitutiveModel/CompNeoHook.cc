@@ -59,7 +59,6 @@ void CompNeoHook::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("bulk_modulus",d_initialData.Bulk);
   cm_ps->appendElement("shear_modulus",d_initialData.Shear);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
-
 }
 
 CompNeoHook* CompNeoHook::clone()
@@ -174,8 +173,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,pvolume,pcolor;
-    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<double> pmass,pcolor;
+    ParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
     ParticleVariable<double> pdTdt;
@@ -186,18 +185,17 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     
-    old_dw->get(psize,             lb->pSizeLabel,              pset);
-    
-    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pstress,     lb->pStressLabel_preReloc, pset);
+    new_dw->allocateAndPut(pvolume_new, lb->pVolumeLabel_preReloc, pset);
+    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
     if(flag->d_with_color) {
       old_dw->get(pcolor,      lb->pColorLabel,  pset);
     }
 
     new_dw->allocateAndPut(deformationGradient_new,
-                     lb->pDeformationMeasureLabel_preReloc, pset);
+                                  lb->pDeformationMeasureLabel_preReloc, pset);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -208,7 +206,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
-      new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
+      new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromVelocity(gvelocity,
                                              pset, px, psize,
                                              deformationGradient,
@@ -217,7 +215,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
-      old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
+      new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,NGN);
       computeDeformationGradientFromDisplacement(gdisplacement,
                                                  pset, px, psize,
                                                  deformationGradient_new,
@@ -243,7 +241,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       J = deformationGradient_new[idx].Determinant();
 
       // Get the deformed volume
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
+      pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute local wave speed
       double rho_cur = rho_orig/J;
@@ -268,7 +266,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       W = .5*shear*(bElBar_new.Trace() - 3.0);
 
       
-      double e = (U + W)*pvolume_deformed[idx]/J;
+      double e = (U + W)*pvolume_new[idx]/J;
 
       se += e;
 
@@ -286,7 +284,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     delete interpolator;
   }
 }
-
 
 void CompNeoHook::carryForward(const PatchSubset* patches,
                                const MPMMaterial* matl,

@@ -39,12 +39,15 @@ MPMLabel::MPMLabel()
   pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  p_qLabel  = VarLabel::create( "p.q",
-			ParticleVariable<double>::getTypeDescription() );
-  
   pXXLabel  = VarLabel::create( "p.xx",
 			ParticleVariable<Point>::getTypeDescription() );
                      
+  p_qLabel  = VarLabel::create( "p.q",
+			ParticleVariable<double>::getTypeDescription() );
+  
+  p_qLabel_preReloc  = VarLabel::create( "p.q+",
+			ParticleVariable<double>::getTypeDescription() );
+  
   pColorLabel  = VarLabel::create( "p.color",
 			ParticleVariable<double>::getTypeDescription() );
                      
@@ -84,9 +87,6 @@ MPMLabel::MPMLabel()
   pTempPreviousLabel = VarLabel::create( "p.tempPrevious",
 		        ParticleVariable<double>::getTypeDescription() ); 
                      
-  pSp_volLabel      = VarLabel::create( "p.sp_vol",
-			ParticleVariable<double>::getTypeDescription() ); 
-  
   pdTdtLabel = VarLabel::create( "p.dTdt",
 			ParticleVariable<double>::getTypeDescription() );
   
@@ -105,24 +105,6 @@ MPMLabel::MPMLabel()
   pSizeLabel = VarLabel::create( "p.size",
 			ParticleVariable<Vector>::getTypeDescription());
   
-  pTang1Label  = VarLabel::create( "p.tang1",
-                        ParticleVariable<Vector>::getTypeDescription() );
-
-  pTang2Label  = VarLabel::create( "p.tang2",
-                        ParticleVariable<Vector>::getTypeDescription() );
-
-  pNormLabel  = VarLabel::create( "p.norm",
-                        ParticleVariable<Vector>::getTypeDescription() );
-
-  pTang1Label_preReloc  = VarLabel::create( "p.tang1+",
-                        ParticleVariable<Vector>::getTypeDescription() );
-
-  pTang2Label_preReloc  = VarLabel::create( "p.tang2+",
-                        ParticleVariable<Vector>::getTypeDescription() );
-
-  pNormLabel_preReloc  = VarLabel::create( "p.norm+",
-                        ParticleVariable<Vector>::getTypeDescription() );
-
   pSizeLabel_preReloc = VarLabel::create( "p.size+",
 			ParticleVariable<Vector>::getTypeDescription());
   
@@ -139,23 +121,6 @@ MPMLabel::MPMLabel()
   pStressLabel_preReloc = VarLabel::create( "p.stress+",
 			ParticleVariable<Matrix3>::getTypeDescription() );
 
-  pStress_eLabel = VarLabel::create( "p.stress_e",
-			ParticleVariable<Matrix3>::getTypeDescription() );
-  
-  pStress_veLabel = VarLabel::create( "p.stress_ve",
-			ParticleVariable<Matrix3>::getTypeDescription() );
-  
-  pStress_ve_vLabel = VarLabel::create( "p.stress_ve_v",
-			ParticleVariable<double>::getTypeDescription() );
-			
-  pStress_ve_dLabel = VarLabel::create( "p.stress_ve_d",
-			ParticleVariable<Matrix3>::getTypeDescription() );
-			
-  pStress_e_vLabel = VarLabel::create( "p.stress_e_v",
-			ParticleVariable<double>::getTypeDescription() );
-			
-  pStress_e_dLabel = VarLabel::create( "p.stress_e_d",
-			ParticleVariable<Matrix3>::getTypeDescription() );												
   pVolumeLabel_preReloc = VarLabel::create( "p.volume+",
 			ParticleVariable<double>::getTypeDescription());
   
@@ -180,9 +145,6 @@ MPMLabel::MPMLabel()
   pTempPreviousLabel_preReloc = VarLabel::create( "p.tempPrevious+",
                         ParticleVariable<double>::getTypeDescription() ); 
 
-  pSp_volLabel_preReloc = VarLabel::create( "p.Sp_vol+",
-			ParticleVariable<double>::getTypeDescription() );  
-                     
   pdTdtLabel_preReloc = VarLabel::create( "p.dTdt+",
 			ParticleVariable<double>::getTypeDescription() );
 
@@ -219,9 +181,6 @@ MPMLabel::MPMLabel()
 			NCVariable<Vector>::getTypeDescription() );
   
   gInternalForceLabel = VarLabel::create( "g.internalforce",
-			NCVariable<Vector>::getTypeDescription() );
-  
-  gContactForceLabel  = VarLabel::create( "g.contactforce",
 			NCVariable<Vector>::getTypeDescription() );
   
   gContactLabel       = VarLabel::create( "g.contact",
@@ -394,12 +353,6 @@ MPMLabel::MPMLabel()
 
   pAccelerationLabel_preReloc = VarLabel::create("p.acceleration+",
 				   ParticleVariable<Vector>::getTypeDescription()); 
-
-  bElBarLabel = VarLabel::create("bElBar",
-		       ParticleVariable<Matrix3>::getTypeDescription());
-
-  bElBarLabel_preReloc = VarLabel::create("bElBar+",
-			 ParticleVariable<Matrix3>::getTypeDescription());
 
   // for Fracture ----------------------------
   pDispLabel = VarLabel::create("p.displacement",
@@ -598,12 +551,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
   VarLabel::destroy(pStressLabel);
   VarLabel::destroy(pStressLabel_preReloc);
-  VarLabel::destroy(pStress_eLabel);
-  VarLabel::destroy(pStress_veLabel);
-  VarLabel::destroy(pStress_ve_vLabel);
-  VarLabel::destroy(pStress_ve_dLabel);
-  VarLabel::destroy(pStress_e_vLabel);
-  VarLabel::destroy(pStress_e_dLabel);
   VarLabel::destroy(pVolumeLabel);
   VarLabel::destroy(pVolumeLabel_preReloc);
   VarLabel::destroy(pMassLabel);
@@ -618,8 +565,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTemperatureLabel_preReloc);
   VarLabel::destroy(pTempPreviousLabel); // for thermal stress
   VarLabel::destroy(pTempPreviousLabel_preReloc); // for thermal stress
-  VarLabel::destroy(pSp_volLabel); 
-  VarLabel::destroy(pSp_volLabel_preReloc); 
   VarLabel::destroy(pdTdtLabel);
   VarLabel::destroy(pdTdtLabel_preReloc);
   VarLabel::destroy(pExternalHeatRateLabel);
@@ -633,12 +578,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
-  VarLabel::destroy(pTang1Label);
-  VarLabel::destroy(pTang1Label_preReloc);
-  VarLabel::destroy(pTang2Label);
-  VarLabel::destroy(pTang2Label_preReloc);
-  VarLabel::destroy(pNormLabel);
-  VarLabel::destroy(pNormLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel);
 
@@ -649,7 +588,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gVelocityInterpLabel);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);
-  VarLabel::destroy(gContactForceLabel);
   VarLabel::destroy(gContactLabel);
   VarLabel::destroy(gVelocityStarLabel);
   VarLabel::destroy(gNormTractionLabel);
@@ -708,8 +646,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(dispIncQNorm);
   VarLabel::destroy(dispIncNorm);
   VarLabel::destroy(pAccelerationLabel_preReloc);
-  VarLabel::destroy(bElBarLabel);
-  VarLabel::destroy(bElBarLabel_preReloc);
 
  // for Fracture --------------
   VarLabel::destroy(pDispLabel);

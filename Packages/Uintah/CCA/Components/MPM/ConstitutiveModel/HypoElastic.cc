@@ -294,7 +294,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pmass, pvolume, ptemperature, pTempPrevious;
-    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
@@ -313,7 +313,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     // for thermal stress
     old_dw->get(pTempPrevious,       lb->pTempPreviousLabel,       pset); 
 
-    new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
+    new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -325,26 +325,25 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
     if (flag->d_fracture) {
-      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
       new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
       old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
       old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
       new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
           
-      new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
+      new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc,pset);
       new_dw->allocateAndPut(pstrainEnergyDensity_new,
                              lb->pStrainEnergyDensityLabel_preReloc, pset);
     }
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pvolume_new,     lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc, pset);
+                           lb->pDeformationMeasureLabel_preReloc,        pset);
  
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
@@ -397,7 +396,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       // get the volumetric part of the deformation
       double J = deformationGradient[idx].Determinant();
-      pvolume_deformed[idx]=Jinc*pvolume[idx];
+      pvolume_new[idx]=Jinc*pvolume[idx];
 
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
@@ -407,16 +406,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       pstress_new[idx] = pstress[idx] + 
                          (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
 
-      // Add bulk viscosity
-      /*
-      if (flag->d_artificial_viscosity) {
-        double Dkk = D.Trace();
-        double c_bulk = sqrt(bulk/rho_cur);
-        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
-        pstress_new[idx] -= Identity*q;
-      }
-      */
-
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
@@ -425,7 +414,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
                   D(2,2)*AvgStress(2,2) +
                2.*(D(0,1)*AvgStress(0,1) +
                    D(0,2)*AvgStress(0,2) +
-                   D(1,2)*AvgStress(1,2))) * pvolume_deformed[idx]*delT;
+                   D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
       se += e;
 
@@ -434,7 +423,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
         pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
         // Update particle strain energy density 
         pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
-                                         e/pvolume_deformed[idx];
+                                         e/pvolume_new[idx];
       }
 
       // Compute wave speed at each particle, store the maximum

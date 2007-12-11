@@ -619,7 +619,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStress,     lb->pStressLabel,             pset);
     old_dw->get(pDefGrad,    lb->pDeformationMeasureLabel, pset);
     old_dw->get(delT,        lb->delTLabel, getLevel(patches));
-    new_dw->get(gVelocity,   lb->gVelocityLabel,      dwi, patch, gac, NGN);
+    new_dw->get(gVelocity,   lb->gVelocityStarLabel,    dwi, patch, gac, NGN);
     new_dw->get(gRotRate,    lb->gNormalRotRateLabel, dwi, patch, gac, NGN);
 
     // Allocate for updated variables in new_dw 
@@ -628,7 +628,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pDefGradTop_new, pDefGradBot_new, pDefGradCen_new,
                               pStressTop_new, pStressCen_new, pStressBot_new, 
                               pStress_new, pDefGrad_new;
-    new_dw->allocateAndPut(pVolume_new,    lb->pVolumeDeformedLabel,      pset);
+    new_dw->allocateAndPut(pVolume_new,    lb->pVolumeLabel_preReloc,     pset);
     new_dw->allocateAndPut(pThickTop_new,  lb->pThickTopLabel_preReloc,   pset);
     new_dw->allocateAndPut(pThickTop0_new, lb->pInitialThickTopLabel_preReloc,
                            pset);
@@ -1053,7 +1053,7 @@ ShellMaterial::addComputesRequiresRotRateUpdate(Task* task,
   task->requires(Task::OldDW, lb->pNormalLabel,            matlset, gnone);
   task->requires(Task::OldDW, lb->pInitialNormalLabel,     matlset, gnone);
   task->requires(Task::OldDW, pNormalRotRateLabel,         matlset, gnone);
-  task->requires(Task::NewDW, lb->pVolumeDeformedLabel,    matlset, gnone);
+  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset, gnone);
   task->requires(Task::NewDW, lb->pThickTopLabel_preReloc, matlset, gnone);
   task->requires(Task::NewDW, lb->pThickBotLabel_preReloc, matlset, gnone);
   task->requires(Task::NewDW, pNormalRotAccLabel,          matlset, gnone);
@@ -1099,7 +1099,7 @@ ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
     old_dw->get(pRotRate,  pNormalRotRateLabel,         pset);
     new_dw->get(pThickTop, lb->pThickTopLabel_preReloc, pset);
     new_dw->get(pThickBot, lb->pThickBotLabel_preReloc, pset);
-    new_dw->get(pVol,      lb->pVolumeDeformedLabel,    pset);
+    old_dw->get(pVol,      lb->pVolumeLabel,            pset);
     new_dw->get(pRotAcc,   pNormalRotAccLabel,          pset);
 
     // Allocate the updated particle variables

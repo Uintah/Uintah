@@ -186,8 +186,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pmass,ptemp,pvolume;
-    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<double> pmass,ptemp;
+    ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
@@ -196,25 +196,24 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(px,                          lb->pXLabel,                 pset);
     old_dw->get(pmass,                       lb->pMassLabel,              pset);
-    old_dw->get(pvolume,                     lb->pVolumeLabel,            pset);
     old_dw->get(ptemp,                       lb->pTemperatureLabel,       pset);
     old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
     old_dw->get(psize,                       lb->pSizeLabel,              pset);
     
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
+    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     constParticleVariable<Short27> pgCode;
     constNCVariable<Vector> Gvelocity;
     if (flag->d_fracture) {
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
     
     // Allocate variable to store internal heating rate
@@ -224,6 +223,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
 
     double gamma = d_initialData.gamma;
     double cv    = d_initialData.cv;
+    double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -251,14 +251,15 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
-      double Jinc = deformationGradientInc.Determinant();
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
                                      deformationGradient[idx];
 
-      pvolume_deformed[idx]=pvolume[idx]*Jinc;
-      double rhoM = pmass[idx]/pvolume_deformed[idx];
+      double J = deformationGradient[idx].Determinant();
+      double Jinc = deformationGradientInc.Determinant();
+      double rhoM = rho_orig/J;
+      pvolume[idx]=pmass[idx]/rhoM;
       double dp_drho = (gamma - 1.0)*cv*ptemp[idx];
       double dp_de   = (gamma - 1.0)*rhoM;
 

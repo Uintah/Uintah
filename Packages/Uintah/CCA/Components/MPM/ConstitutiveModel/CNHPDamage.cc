@@ -221,17 +221,17 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
 
     // Get Grid info
-    new_dw->get(gVelocity,   lb->gVelocityLabel, dwi, patch, gac, NGN);
+    new_dw->get(gVelocity,   lb->gVelocityStarLabel, dwi, patch, gac, NGN);
     if (flag->d_fracture) {
       new_dw->get(pgCode,    lb->pgCodeLabel, pset);
-      new_dw->get(GVelocity, lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(GVelocity, lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
     
     // Allocate space for updated particle variables
     new_dw->allocateAndPut(pVol_new, 
-                           lb->pVolumeDeformedLabel,              pset);
+                           lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pdTdt, 
-                           lb->pdTdtLabel_preReloc,   pset);
+                           lb->pdTdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pPlasticStrain_new, 
                            pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pDefGrad_new,
@@ -240,7 +240,6 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
                            bElBarLabel_preReloc,                  pset);
     new_dw->allocateAndPut(pStress_new,        
                            lb->pStressLabel_preReloc,             pset);
-
     new_dw->allocateAndPut(pFailed_new, 
                            pFailedLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pFailureStrain_new, 

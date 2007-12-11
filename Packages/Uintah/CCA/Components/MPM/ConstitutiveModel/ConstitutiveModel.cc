@@ -116,7 +116,6 @@ ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   addSharedCRForExplicit(task, matlset, p);
   task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
-
 }
 
 void 
@@ -134,20 +133,20 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
+  task->requires(Task::NewDW, lb->gVelocityStarLabel,       matlset, gac, NGN);
   if(!flag->d_doGridReset){
-    task->requires(Task::OldDW, lb->gDisplacementLabel,     matlset, gac, NGN);
+    task->requires(Task::NewDW, lb->gDisplacementLabel,     matlset, gac, NGN);
   }
   task->requires(Task::OldDW, lb->pSizeLabel,               matlset, gnone);
   task->requires(Task::OldDW, lb->pTempPreviousLabel,       matlset, gnone);
   if (flag->d_fracture) {
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
-    task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
+    task->requires(Task::NewDW, lb->GVelocityStarLabel,     matlset, gac, NGN);
   }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->computes(lb->pVolumeLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel_preReloc,   matlset);
 }
 
@@ -194,9 +193,8 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
 
   ParticleVariable<double>  pVol_new, pIntHeatRate_new;
   ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
-  new_dw->allocateAndPut(pVol_new,         lb->pVolumeDeformedLabel,  pset);
-  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,
-                         pset);
+  new_dw->allocateAndPut(pVol_new,         lb->pVolumeLabel_preReloc,  pset);
+  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,    pset);
   new_dw->allocateAndPut(pDefGrad_new,  lb->pDeformationMeasureLabel_preReloc, 
                          pset);
   new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc, pset);
@@ -1154,7 +1152,7 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
     vector<IntVector> ni(interp->size());
     vector<Vector> d_S(interp->size());
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-                                                                                
+
     for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
       particleIndex idx = *iter;

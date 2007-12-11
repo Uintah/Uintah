@@ -35,6 +35,23 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("ve_volumetric_viscosity",d_initialData.V_Viscosity);
   ps->require("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
   
+  pStress_eLabel = VarLabel::create( "p.stress_e",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+                                                                                
+  pStress_veLabel = VarLabel::create( "p.stress_ve",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+                                                                                
+  pStress_ve_vLabel = VarLabel::create( "p.stress_ve_v",
+                        ParticleVariable<double>::getTypeDescription() );
+                                                                                
+  pStress_ve_dLabel = VarLabel::create( "p.stress_ve_d",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+                                                                                
+  pStress_e_vLabel = VarLabel::create( "p.stress_e_v",
+                        ParticleVariable<double>::getTypeDescription() );
+                                                                                
+  pStress_e_dLabel = VarLabel::create( "p.stress_e_d",
+                        ParticleVariable<Matrix3>::getTypeDescription() ); 
 }
 
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
@@ -67,6 +84,13 @@ void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
   cm_ps->appendElement("ve_bulk_modulus",d_initialData.VE_Bulk);
   cm_ps->appendElement("ve_volumetric_viscosity",d_initialData.V_Viscosity);
   cm_ps->appendElement("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
+
+  VarLabel::destroy(pStress_eLabel);
+  VarLabel::destroy(pStress_veLabel);
+  VarLabel::destroy(pStress_ve_vLabel);
+  VarLabel::destroy(pStress_ve_dLabel);
+  VarLabel::destroy(pStress_e_vLabel);
+  VarLabel::destroy(pStress_e_dLabel);
 }
 
 
@@ -92,11 +116,11 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
 
   ParticleVariable<Matrix3> pstress_e,pstress_ve_d,pstress_e_d;
   ParticleVariable<double> pstress_ve_v,pstress_e_v;
-  new_dw->allocateAndPut(pstress_e,          lb->pStress_eLabel,          pset);
-  new_dw->allocateAndPut(pstress_ve_v,       lb->pStress_ve_vLabel,       pset);
-  new_dw->allocateAndPut(pstress_ve_d,       lb->pStress_ve_dLabel,       pset);
-  new_dw->allocateAndPut(pstress_e_v,        lb->pStress_e_vLabel,        pset);
-  new_dw->allocateAndPut(pstress_e_d,        lb->pStress_e_dLabel,        pset);
+  new_dw->allocateAndPut(pstress_e,          pStress_eLabel,          pset);
+  new_dw->allocateAndPut(pstress_ve_v,       pStress_ve_vLabel,       pset);
+  new_dw->allocateAndPut(pstress_ve_d,       pStress_ve_dLabel,       pset);
+  new_dw->allocateAndPut(pstress_e_v,        pStress_e_vLabel,        pset);
+  new_dw->allocateAndPut(pstress_e_d,        pStress_e_dLabel,        pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
       pstress_e[*iter] = zero;
@@ -124,10 +148,10 @@ void MWViscoElastic::allocateCMDataAddRequires(Task* task,
 
   // Add requires local to this model
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::NewDW, lb->pStress_ve_vLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->pStress_ve_dLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->pStress_e_vLabel,  matlset, gnone);
-  task->requires(Task::NewDW, lb->pStress_e_dLabel,  matlset, gnone);
+  task->requires(Task::NewDW, pStress_ve_vLabel, matlset, gnone);
+  task->requires(Task::NewDW, pStress_ve_dLabel, matlset, gnone);
+  task->requires(Task::NewDW, pStress_e_vLabel,  matlset, gnone);
+  task->requires(Task::NewDW, pStress_e_dLabel,  matlset, gnone);
 }
 
 
@@ -156,11 +180,11 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pstress_e_v,addset);
   new_dw->allocateTemporary(pstress_e_d,addset);
 
-  new_dw->get(o_stress_e,          lb->pStress_eLabel,          delset);
-  new_dw->get(o_stress_ve_v,       lb->pStress_ve_vLabel,       delset);
-  new_dw->get(o_stress_ve_d,       lb->pStress_ve_dLabel,       delset);
-  new_dw->get(o_stress_e_v,        lb->pStress_e_vLabel,        delset);
-  new_dw->get(o_stress_e_d,        lb->pStress_e_dLabel,        delset);
+  new_dw->get(o_stress_e,          pStress_eLabel,          delset);
+  new_dw->get(o_stress_ve_v,       pStress_ve_vLabel,       delset);
+  new_dw->get(o_stress_ve_d,       pStress_ve_dLabel,       delset);
+  new_dw->get(o_stress_e_v,        pStress_e_vLabel,        delset);
+  new_dw->get(o_stress_e_d,        pStress_e_dLabel,        delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -171,11 +195,11 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
     pstress_e_d[*n] = o_stress_e_d[*o];
   }
 
-  (*newState)[lb->pStress_eLabel]=pstress_e.clone();
-  (*newState)[lb->pStress_ve_vLabel]=pstress_ve_v.clone();
-  (*newState)[lb->pStress_ve_dLabel]=pstress_ve_d.clone();
-  (*newState)[lb->pStress_e_vLabel]=pstress_e_v.clone();
-  (*newState)[lb->pStress_e_dLabel]=pstress_e_d.clone();
+  (*newState)[pStress_eLabel]=pstress_e.clone();
+  (*newState)[pStress_ve_vLabel]=pstress_ve_v.clone();
+  (*newState)[pStress_ve_dLabel]=pstress_ve_d.clone();
+  (*newState)[pStress_e_vLabel]=pstress_e_v.clone();
+  (*newState)[pStress_e_dLabel]=pstress_e_d.clone();
 
 }
 
@@ -234,14 +258,13 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     double se = 0.0, ve = 0.0;
     const Patch* patch = patches->get(p);
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-    double c_dil=0.0,Jinc;
+    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-
 
     Identity.Identity();
 
@@ -257,9 +280,9 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress_e_new, pstress_ve_new;
     ParticleVariable<Matrix3> pstress_ve_d_new, pstress_e_d_new;
     ParticleVariable<Matrix3> pstress_new, deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume, ptemperature;
+    constParticleVariable<double> pmass, ptemperature;
     constParticleVariable<double> pstress_ve_v, pstress_e_v;
-    ParticleVariable<double> pvolume_deformed, pstress_ve_v_new,pstress_e_v_new;
+    ParticleVariable<double> pvolume_new, pstress_ve_v_new,pstress_e_v_new;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
@@ -268,30 +291,28 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateTemporary(pstress_ve_new,                             pset);
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pstress_e_new,    lb->pStress_eLabel,          pset);
-    new_dw->allocateAndPut(pstress_ve_v_new, lb->pStress_ve_vLabel,       pset);
-    new_dw->allocateAndPut(pstress_ve_d_new, lb->pStress_ve_dLabel,       pset);
-    new_dw->allocateAndPut(pstress_e_v_new,  lb->pStress_e_vLabel,        pset);
-    new_dw->allocateAndPut(pstress_e_d_new,  lb->pStress_e_dLabel,        pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,    pset);
+    new_dw->allocateAndPut(pstress_e_new,    pStress_eLabel,          pset);
+    new_dw->allocateAndPut(pstress_ve_v_new, pStress_ve_vLabel,       pset);
+    new_dw->allocateAndPut(pstress_ve_d_new, pStress_ve_dLabel,       pset);
+    new_dw->allocateAndPut(pstress_e_v_new,  pStress_e_vLabel,        pset);
+    new_dw->allocateAndPut(pstress_e_d_new,  pStress_e_dLabel,        pset);
+    new_dw->allocateAndPut(pvolume_new,      lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
     
-    old_dw->get(psize,             lb->pSizeLabel,               pset);
-    
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-    old_dw->get(pstress_e,           lb->pStress_eLabel,           pset);
-    old_dw->get(pstress_ve_v,        lb->pStress_ve_vLabel,        pset);
-    old_dw->get(pstress_ve_d,        lb->pStress_ve_dLabel,        pset);
-    old_dw->get(pstress_e_v,         lb->pStress_e_vLabel,         pset);
-    old_dw->get(pstress_e_d,         lb->pStress_e_dLabel,         pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(pstress_e,           pStress_eLabel,           pset);
+    old_dw->get(pstress_ve_v,        pStress_ve_vLabel,        pset);
+    old_dw->get(pstress_ve_d,        pStress_ve_dLabel,        pset);
+    old_dw->get(pstress_e_v,         pStress_e_vLabel,         pset);
+    old_dw->get(pstress_e_d,         pStress_e_dLabel,         pset);
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
+    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -299,7 +320,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> Gvelocity;
     if (flag->d_fracture) {
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
 
     // Allocate variable to store internal heating rate
@@ -315,6 +336,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     double d_viscosity = d_initialData.D_Viscosity;
     double bulk = e_bulk + ve_bulk;
     double shear = e_shear +ve_shear;
+    double rho_orig = matl->getInitialDensity();
     
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -354,7 +376,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       pstress_ve_d_new[idx] = (DPrime*d_viscosity + pstress_ve_d[idx]*(d_viscosity/2/ve_shear/delT))/
                               (1+d_viscosity/2/ve_shear/delT);
 
-      pstress_ve_new[idx] = pstress_ve_d_new[idx]-Identity*pstress_ve_v_new[idx];
+      pstress_ve_new[idx] =pstress_ve_d_new[idx]-Identity*pstress_ve_v_new[idx];
 
       pstress_new[idx] = pstress_e_new[idx] + pstress_ve_new[idx];
 
@@ -363,31 +385,28 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       // F_n^np1 = dudx * dt + Identity
       deformationGradientInc = velGrad * delT + Identity;
 
-      Jinc = deformationGradientInc.Determinant();
-
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
                              deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      // unused variable - Steve
-      // double J = deformationGradient[idx].Determinant();
+      double J = deformationGradient[idx].Determinant();
 
-      pvolume_deformed[idx]=Jinc*pvolume[idx];
+      pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute the strain energy for all the particles
       pstress_e_v_new[idx] = pstress_e_v[idx]-D.Trace()*e_bulk*delT;
       
-     pstress_e_d_new[idx] = pstress_e_d[idx]+DPrime*2*e_shear*delT;
+      pstress_e_d_new[idx] = pstress_e_d[idx]+DPrime*2*e_shear*delT;
      
-     double p = pstress_e_v_new[idx] + pstress_ve_v_new[idx];
+      double p = pstress_e_v_new[idx] + pstress_ve_v_new[idx];
      
-     double ee = (pstress_ve_d_new[idx].NormSquared()/4/ve_shear +
+      double ee = (pstress_ve_d_new[idx].NormSquared()/4/ve_shear +
                     pstress_e_d_new[idx].NormSquared()/4/e_shear +
-                    p*p/2/(ve_bulk + e_bulk))* pvolume_deformed[idx];
+                    p*p/2/(ve_bulk + e_bulk))* pvolume_new[idx];
                     
-           ve = ve +(pstress_ve_d_new[idx].NormSquared()/d_viscosity)
-                     * pvolume_deformed[idx]*delT;
+      ve = ve +(pstress_ve_d_new[idx].NormSquared()/d_viscosity)
+                     * pvolume_new[idx]*delT;
    
       double e = ee + ve; 
 
@@ -395,7 +414,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_new[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));

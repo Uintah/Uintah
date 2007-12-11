@@ -30,22 +30,15 @@ using std::vector;
       //non PermanentParticleState
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
-      const VarLabel* p_qLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
-      
+
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pDeformationMeasureLabel_preReloc;
       const VarLabel* pStressLabel;
       const VarLabel* pStressLabel_preReloc;
-      const VarLabel* pStress_veLabel;
-      const VarLabel* pStress_eLabel;
-      const VarLabel* pStress_ve_vLabel;
-      const VarLabel* pStress_ve_dLabel;
-      const VarLabel* pStress_e_vLabel;
-      const VarLabel* pStress_e_dLabel;
       const VarLabel* pVolumeLabel;
       const VarLabel* pVolumeLabel_preReloc;
       const VarLabel* pMassLabel;
@@ -63,8 +56,6 @@ using std::vector;
       const VarLabel* pTempCurrentLabel; //for thermal stress 
       const VarLabel* pTempPreviousLabel; //for thermal stress 
       const VarLabel* pTempPreviousLabel_preReloc; //for thermal stress  
-      const VarLabel* pSp_volLabel; 
-      const VarLabel* pSp_volLabel_preReloc;
       const VarLabel* pdTdtLabel; //for heat conduction
       const VarLabel* pdTdtLabel_preReloc; //for heat conduction
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
@@ -76,28 +67,18 @@ using std::vector;
       const VarLabel* pSizeLabel;
       const VarLabel* pSizeLabel_preReloc;
 
-      const VarLabel* pTang1Label;
-      const VarLabel* pTang1Label_preReloc;
-      const VarLabel* pTang2Label;
-      const VarLabel* pTang2Label_preReloc;
-      const VarLabel* pNormLabel;
-      const VarLabel* pNormLabel_preReloc;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
       
       const VarLabel* gMassLabel;
       const VarLabel* gMassAllLabel;
       const VarLabel* gAccelerationLabel;
-      const VarLabel* gMomExedAccelerationLabel;
       const VarLabel* gVelocityLabel;
       const VarLabel* gVelocityInterpLabel;
-      const VarLabel* gMomExedVelocityLabel;
       const VarLabel* gVelocityStarLabel;
-      const VarLabel* gMomExedVelocityStarLabel;
       const VarLabel* gExternalForceLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gInternalForceLabel;
-      const VarLabel* gContactForceLabel;
       const VarLabel* gContactLabel;
       const VarLabel* gTemperatureRateLabel; //for heat conduction
       const VarLabel* gTemperatureLabel; //for heat conduction
@@ -116,16 +97,12 @@ using std::vector;
       const VarLabel* gVolumeLabel;
       const VarLabel* gZOILabel;
       const VarLabel* cVolumeLabel;
-      const VarLabel* gWeightLabel; //for who knows what?
       const VarLabel* gradPAccNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
       const VarLabel* massBurnFractionLabel; //for burn modeling
       const VarLabel* frictionalWorkLabel;
       const VarLabel* gNumNearParticlesLabel;
       
-      const VarLabel* fVelocityLabel; //for interaction with ICE
-      const VarLabel* fMassLabel; //for interaction with ICE
-
       const VarLabel* AccArchesNCLabel; //for interaction with Arches, Fluid Mechanics
       const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer
 
@@ -154,8 +131,6 @@ using std::vector;
       const VarLabel* dispIncQNorm;
       const VarLabel* dispIncNorm;
 
-      const VarLabel* bElBarLabel;
-      const VarLabel* bElBarLabel_preReloc;
       const VarLabel* pAccelerationLabel_preReloc;
 
       // Labels for particle erosion
@@ -170,6 +145,8 @@ using std::vector;
       // MPM artificial damping labels (updated after each time step)
       const VarLabel* pDampingRateLabel; // Damping rate summed over particles
       const VarLabel* pDampingCoeffLabel; // Calculated damping coefficient
+      const VarLabel* p_qLabel;
+      const VarLabel* p_qLabel_preReloc;
 
       // for Fracture ----------
       const VarLabel* pDispLabel;

@@ -54,8 +54,8 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
   t->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
-  t->requires(Task::NewDW, d_lb->pVolumeDeformedLabel,            gan, NGP);
-  t->requires(Task::NewDW, d_lb->pdTdtLabel_preReloc,             gan, NGP);
+  t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
+  t->requires(Task::OldDW, d_lb->pdTdtLabel,                      gan, NGP);
 #ifdef EROSION  
   t->requires(Task::NewDW, d_lb->pErosionLabel_preReloc,          gan, NGP);
 #endif  
@@ -191,8 +191,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                                        d_lb->pXLabel);
 
       old_dw->get(px,           d_lb->pXLabel,                         pset);
-      new_dw->get(pvol,         d_lb->pVolumeDeformedLabel,            pset);
-      new_dw->get(pdTdt,        d_lb->pdTdtLabel_preReloc,             pset);
+      old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
+      old_dw->get(pdTdt,        d_lb->pdTdtLabel,                      pset);
       old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
       old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
 #ifdef EROSION      
@@ -214,7 +214,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         new_dw->get(pgCode,       d_lb->pgCodeLabel, pset);
         new_dw->get(GTemperature, d_lb->GTemperatureLabel, dwi,patch,gac,2*NGN);
         new_dw->get(GMass,        d_lb->GMassLabel,        dwi,patch,gnone, 0);
-        new_dw->allocateAndPut(GdTdt, d_lb->GdTdtLabel,    dwi,patch);	      
+        new_dw->allocateAndPut(GdTdt, d_lb->GdTdtLabel,    dwi,patch);     
         GdTdt.initialize(0.);
       }
 
@@ -226,7 +226,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       gpdTdt.initialize(0.);
       // for FractureMPM
       NCVariable<double> GpdTdt;
-      if(d_flag->d_fracture) { 	
+      if(d_flag->d_fracture) { 
         new_dw->allocateTemporary(GpdTdt, patch, gnone, 0);
         GpdTdt.initialize(0.);
       }
@@ -253,9 +253,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < d_flag->d_8or27; k++){
-#ifdef EROSION 	
+#ifdef EROSION 
           d_S[k] *= pErosion[idx];
-#endif	  
+#endif  
           for (int j = 0; j<3; j++) {
             if(d_flag->d_fracture) { // for FractureMPM
               if(pgCode[idx][k]==1) { // above crack
@@ -263,15 +263,15 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                     gTemperature[ni[k]] * d_S[k][j] * oodx[j];
               }
               else if(pgCode[idx][k]==2) { // below crack
-	        pTemperatureGradient[idx][j] +=
-	            GTemperature[ni[k]] * d_S[k][j] * oodx[j];
-	      }	      
+                pTemperatureGradient[idx][j] +=
+                    GTemperature[ni[k]] * d_S[k][j] * oodx[j];
+              }
             }
-            else { // for SerialMPM	    
+            else { // for SerialMPM    
               pTemperatureGradient[idx][j] += 
                     gTemperature[ni[k]] * d_S[k][j] * oodx[j];
             }
-	    
+    
             if (cout_heat.active()) {
               cout_heat << "   node = " << ni[k]
                         << " gTemp = " << gTemperature[ni[k]]
@@ -286,19 +286,19 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           if(patch->containsNode(ni[k])){
 #ifdef EROSION              
             S[k] *= pErosion[idx];
-#endif   	      
+#endif
             if(d_flag->d_fracture) { // for FractureMPM
-	      if(pgCode[idx][k]==1) { // above crack
+              if(pgCode[idx][k]==1) { // above crack
                 gpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
               }
-              else if(pgCode[idx][k]==2) { // below crack	      
-	        GpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
-	      }
+              else if(pgCode[idx][k]==2) { // below crack
+                GpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
+              }
             }
-            else { // for SerialMPM	     
+            else { // for SerialMPM     
               gpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
             }
-	     
+     
             if (cout_heat.active()) {
               cout_heat << "   k = " << k << " node = " << ni[k] 
                         << " gpdTdt = " << gpdTdt[ni[k]] << endl;
@@ -318,14 +318,14 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           cout_heat << " c = " << c << " gpdTdt = " << gpdTdt[c]
                     << " gMass = " << gMass[c] << endl;
         }
-	
+
         gpdTdt[c] /= gMass[c];
         gdTdt[c] = gpdTdt[c];
         if(d_flag->d_fracture) { // for FractureMPM
-	  // below crack
+          // below crack
           GpdTdt[c] /= GMass[c];
           GdTdt[c] = GpdTdt[c];
-	}
+        }
       }
 
       // Compute rate of temperature change at the grid due to conduction
@@ -348,17 +348,17 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           node = ni[k];
           if(patch->containsNode(node)){
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-	    if(d_flag->d_fracture) { // for FractureMPM
-	      if(pgCode[idx][k]==1) { // above crack    
+           if(d_flag->d_fracture) { // for FractureMPM
+              if(pgCode[idx][k]==1) { // above crack    
                 Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node])*d_f_aH;
-	        gdTdt[node] -= Tdot_cond;
-	      }
+                gdTdt[node] -= Tdot_cond;
+              }
               else if(pgCode[idx][k]==2) { // below crack
-	        Tdot_cond = Dot(div, dT_dx)*(alpha/GMass[node])*d_f_aH;
-	        GdTdt[node] -= Tdot_cond;
-              }		      		    
-	    }
-	    else { // for SerialMPM
+                Tdot_cond = Dot(div, dT_dx)*(alpha/GMass[node])*d_f_aH;
+                GdTdt[node] -= Tdot_cond;
+              }
+            }
+            else { // for SerialMPM
               Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node])*d_f_aH;
               gdTdt[node] -= Tdot_cond;
             }
@@ -432,19 +432,19 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       new_dw->getModifiable(tempRate, d_lb->gTemperatureRateLabel,dwi,patch);
       if(d_flag->d_fracture) { // for FractureMPM
         new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel,dwi,patch);
-	GtempRate.initialize(0.0);
+        GtempRate.initialize(0.0);
       }
 
       for(NodeIterator iter=patch->getNodeIterator(interp_type);
                        !iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = gdTdt[c]*((mass[c]-1.e-200)/mass[c]) +
-	   (externalHeatRate[c])/(mass[c]*Cv)+thermalContactTemperatureRate[c];
-	if(d_flag->d_fracture) { // for FractureMPM
-	  GtempRate[c]=GdTdt[c]*((Gmass[c]-1.e-200)/Gmass[c]) +
+           (externalHeatRate[c])/(mass[c]*Cv)+thermalContactTemperatureRate[c];
+        if(d_flag->d_fracture) { // for FractureMPM
+          GtempRate[c]=GdTdt[c]*((Gmass[c]-1.e-200)/Gmass[c]) +
            (GexternalHeatRate[c])/
                                (Gmass[c]*Cv)+GthermalContactTemperatureRate[c];
-	}  
+        }  
       } // End of loop over iter
     }
   }
@@ -494,14 +494,13 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
        GtempStar.initialize(0.0);
       }
       
-      int n8or27=d_flag->d_8or27;
       for(NodeIterator iter=patch->getNodeIterator(interp_type);
                        !iter.done();iter++){
         IntVector c = *iter;
         tempStar[c] = temp_old[c] + temp_rate[c] * delT;
-	if(d_flag->d_fracture) { // for FractureMPM
+        if(d_flag->d_fracture) { // for FractureMPM
           GtempStar[c]=Gtemp_old[c] +Gtemp_rate[c] * delT;
-	}
+        }
       }
 
       // Apply grid boundary conditions to the temperature 
@@ -517,9 +516,9 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
                        !iter.done();iter++){
         IntVector c = *iter;
         temp_rate[c] = (tempStar[c] - temp_oldNoBC[c]) / delT;
-	if(d_flag->d_fracture) { // for FractureMPM
-	  Gtemp_rate[c]= (GtempStar[c]-Gtemp_oldNoBC[c]) / delT;
-	}
+        if(d_flag->d_fracture) { // for FractureMPM
+          Gtemp_rate[c]= (GtempStar[c]-Gtemp_oldNoBC[c]) / delT;
+        }
       }
     }
   }

@@ -347,7 +347,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
@@ -519,6 +518,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   d_mpm->scheduleCalculateDampingRate(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleAddNewParticles(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleConvertLocalizedParticles(   sched, mpm_patches, mpm_matls);

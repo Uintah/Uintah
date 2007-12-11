@@ -331,15 +331,15 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pHotSpotPhi2,  pHotSpotPhi2Label,            pset);
     if (flag->d_fracture) {
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(GVel,  lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(GVel,  lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
-    new_dw->get(gVel,    lb->gVelocityLabel, dwi, patch, gac, NGN);
+    new_dw->get(gVel,    lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVol_new,         
-                           lb->pVolumeDeformedLabel,              pset);
+                           lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pIntHeatRate_new, 
-                           lb->pdTdtLabel_preReloc,   pset);
+                           lb->pdTdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDefGrad_new,     
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pSig_new,      

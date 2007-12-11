@@ -312,17 +312,19 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleAdjustCrackContactInterpolated( sched, patches, matls);//for FractureMPM
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleSetBCsInterpolated(             sched, patches, matls);
-  scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
-  scheduleComputeInternalHeatRate(        sched, patches, matls);
   scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleSolveHeatEquations(             sched, patches, matls);
   scheduleIntegrateAcceleration(          sched, patches, matls);
-  scheduleIntegrateTemperatureRate(       sched, patches, matls);
   scheduleAdjustCrackContactIntegrated(   sched, patches, matls);//for FractureMPM
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  scheduleComputeStressTensor(            sched, patches, matls);
+  if(flags->d_doExplicitHeatConduction){
+    scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleSolveHeatEquations(           sched, patches, matls);
+    scheduleIntegrateTemperatureRate(     sched, patches, matls);
+  }
   scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
@@ -564,10 +566,10 @@ void FractureMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,    Ghost::None);
-  t->requires(Task::OldDW,lb->pSizeLabel,             Ghost::None);
-  t->requires(Task::NewDW,lb->gVelocityLabel, gac, NGN);
-  t->requires(Task::NewDW,lb->GVelocityLabel, gac, NGN);  // for FractureMPM
+  t->requires(Task::NewDW, lb->pVolumeLabel,            Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityStarLabel,      gac, NGN);
+  t->requires(Task::NewDW, lb->GVelocityStarLabel,      gac, NGN);  // for FractureMPM
   t->computes(lb->p_qLabel);
 
   sched->addTask(t, patches, matls);
@@ -615,11 +617,11 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gMassLabel, gnone);
   t->requires(Task::NewDW,lb->gMassLabel, d_sharedState->getAllInOneMatl(),
   	      Task::OutOfDomain, gnone);
-  t->requires(Task::NewDW,lb->pStressLabel_preReloc,      gan,NGP);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       gan,NGP);
+  t->requires(Task::OldDW,lb->pStressLabel,               gan,NGP);
+  t->requires(Task::OldDW,lb->pVolumeLabel,               gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
   t->requires(Task::OldDW,lb->pMassLabel,                 gan,NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,                gan,NGP);
+  t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
  
   // for FractureMPM
   t->requires(Task::NewDW,lb->pgCodeLabel,                gan,NGP);
@@ -908,7 +910,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,         gnone);
   t->requires(Task::OldDW, lb->pDispLabel,             gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,             gnone);
-  t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   gnone);
+  t->modifies(lb->pVolumeLabel_preReloc);
   // for thermal stress analysis
   t->requires(Task::NewDW, lb->pTempCurrentLabel,      gnone);
 
@@ -941,7 +943,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); //for thermal stress
   t->computes(lb->pMassLabel_preReloc);
-  t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pXXLabel);
   t->computes(lb->pKineticEnergyDensityLabel); //for FractureMPM
@@ -1650,13 +1651,13 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
       ParticleVariable<double> p_q;
       constParticleVariable<Vector> psize;
       constParticleVariable<Point> px;
-      constParticleVariable<double> pmass,pvol_def;
+      constParticleVariable<double> pmass,pvol;
       new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
       old_dw->get(px,        lb->pXLabel,                      pset);
       old_dw->get(pmass,     lb->pMassLabel,                   pset);
-      new_dw->get(pvol_def,  lb->pVolumeDeformedLabel,         pset);
+      new_dw->get(pvol,      lb->pVolumeLabel,                 pset);
+      old_dw->get(psize,     lb->pSizeLabel,                   pset);
       new_dw->allocateAndPut(p_q,    lb->p_qLabel,             pset);
-      old_dw->get(psize,   lb->pSizeLabel,                   pset);
       
       // for FractureMPM
       constNCVariable<Vector> Gvelocity;
@@ -1698,10 +1699,10 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
 	double DTrace = D.Trace();
 	p_q[idx] = 0.0;
 	if(DTrace<0.){
-          c_dil = sqrt(K*pvol_def[idx]/pmass[idx]);
+          c_dil = sqrt(K*pvol[idx]/pmass[idx]);
           p_q[idx] = (C0*fabs(c_dil*DTrace*dx_ave) +
                       C1*(DTrace*DTrace*dx_ave*dx_ave))*
-                      (pmass[idx]/pvol_def[idx]);	       
+                      (pmass[idx]/pvol[idx]);	       
 	}
 
       }
@@ -1854,9 +1855,9 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 
       old_dw->get(px,      lb->pXLabel,                      pset);
       old_dw->get(pmass,   lb->pMassLabel,                   pset);
-      new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
-      new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
-      old_dw->get(psize, lb->pSizeLabel,                   pset);
+      old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
+      old_dw->get(pstress, lb->pStressLabel,                 pset);
+      old_dw->get(psize,   lb->pSizeLabel,                   pset);
       new_dw->get(gmass,   lb->gMassLabel, dwi, patch, Ghost::None, 0);
       
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
@@ -1884,7 +1885,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       }
 
       if(flags->d_artificial_viscosity){
-        new_dw->get(p_q,lb->p_qLabel, pset);
+        old_dw->get(p_q,lb->p_qLabel, pset);
       }
       else {
 	ParticleVariable<double>  p_q_create;
@@ -2868,14 +2869,14 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, psize;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
-      constParticleVariable<double> pmass, pvolume, pTemperature;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
+      constParticleVariable<double> pmass, pTemperature;
+      ParticleVariable<double> pmassNew,pvolume,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
       ParticleVariable<Vector> pdispnew;
       ParticleVariable<double> pkineticEnergyDensity;
-      
+
       // for thermal stress analysis
       constParticleVariable<double> pTempCurrent;
       ParticleVariable<double> pTempPreNew;
@@ -2891,24 +2892,23 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
-      new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
       // for thermal stress analysis
-      new_dw->get(pTempCurrent,          lb->pTempCurrentLabel,           pset);      
+      new_dw->get(pTempCurrent,          lb->pTempCurrentLabel,           pset);
+      new_dw->getModifiable(pvolume,     lb->pVolumeLabel,                pset);
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
       new_dw->allocateAndPut(pdispnew,     lb->pDispLabel_preReloc,       pset);
       new_dw->allocateAndPut(pmassNew,     lb->pMassLabel_preReloc,       pset);
-      new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
       new_dw->allocateAndPut(pkineticEnergyDensity,
                                           lb->pKineticEnergyDensityLabel, pset);
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
-      
+
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
       pids_new.copyData(pids);
@@ -3015,7 +3015,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	}
         pkineticEnergyDensity[idx]=0.5*rho*pvelocitynew[idx].length2();
 	pmassNew[idx]   = Max(pmass[idx]*(1.-burnFraction),0.);
-	pvolumeNew[idx] = pmassNew[idx]/rho;
+	pvolume[idx]    = pmassNew[idx]/rho;
 	    
 	thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
 	ke += .5*pmass[idx]*pvelocitynew[idx].length2();

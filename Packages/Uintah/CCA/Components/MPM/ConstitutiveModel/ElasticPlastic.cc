@@ -704,18 +704,17 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get the particle location, particle size, particle mass, particle volume
     constParticleVariable<Point> px;
     constParticleVariable<Vector> psize;
-    constParticleVariable<double> pMass, pVolume;
+    constParticleVariable<double> pMass;
     old_dw->get(px, lb->pXLabel, pset);
     old_dw->get(psize, lb->pSizeLabel, pset);
     old_dw->get(pMass, lb->pMassLabel, pset);
-    old_dw->get(pVolume, lb->pVolumeLabel, pset);
 
     // Get the velocity from the grid and particle velocity
     constParticleVariable<Vector> pVelocity;
     constNCVariable<Vector> gVelocity;
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, gac, NGN);
+    new_dw->get(gVelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress;
@@ -735,7 +734,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> GVelocity;
     if (flag->d_fracture) {
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+      new_dw->get(GVelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
 
     // GET LOCAL DATA 
@@ -766,7 +765,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolume_deformed, 
-                           lb->pVolumeDeformedLabel,              pset);
+                           lb->pVolumeLabel_preReloc,             pset);
 
     // LOCAL
     ParticleVariable<Matrix3> pRotation_new;

@@ -35,6 +35,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_ref_temp = flags->d_ref_temp; // for thermal stress 
+  d_artificial_viscosity = flags->d_artificial_viscosity; // for thermal stress 
 
   registerPermanentParticleState(matl);
 }
@@ -306,6 +307,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_with_color){
      new_dw->allocateAndPut(pcolor,      d_lb->pColorLabel,         subset);
   }
+  if(d_artificial_viscosity){
+     new_dw->allocateAndPut(p_q,      d_lb->p_qLabel,            subset);
+  }
   return subset;
 }
 
@@ -334,9 +338,11 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
     task->requires(Task::OldDW,d_lb->pLoadCurveIDLabel, gn);
   }
   if (d_with_color){
-    task->requires(Task::OldDW,d_lb->pColorLabel,     gn);
+    task->requires(Task::OldDW,d_lb->pColorLabel,       gn);
   }
-
+  if(d_artificial_viscosity){
+    task->requires(Task::OldDW,d_lb->p_qLabel,          gn);
+  }
 }
 
 
@@ -362,6 +368,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   constParticleVariable<double> o_erosion;
   constParticleVariable<double> o_tempPrevious; // for thermal stress
   constParticleVariable<double> o_color;
+  constParticleVariable<double> o_q;
   
   new_dw->allocateTemporary(pdisp,          addset);
   new_dw->allocateTemporary(position,       addset);
@@ -397,6 +404,10 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
     new_dw->allocateTemporary(pcolor,         addset); 
     old_dw->get(o_color,        d_lb->pColorLabel,            delset);
   }
+  if(d_artificial_viscosity){
+    new_dw->allocateTemporary(p_q,         addset); 
+    old_dw->get(o_q,        d_lb->p_qLabel,            delset);
+  }
    
 
   n = addset->begin();
@@ -418,6 +429,9 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
     if (d_with_color){
       pcolor[*n]      = o_color[*o];
     }
+    if(d_artificial_viscosity){
+      p_q[*n]      = o_q[*o];
+    }
 
   }
   
@@ -438,6 +452,9 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   }
   if(d_with_color){
     (*newState)[d_lb->pColorLabel]      =pcolor.clone();
+  }
+  if(d_artificial_viscosity){
+    (*newState)[d_lb->p_qLabel]         =p_q.clone();
   }
 }
 
@@ -517,10 +534,10 @@ ParticleCreator::initializeParticle(const Patch* patch,
   if(d_with_color){
     pcolor[i] = (*obj)->getInitialData("color");
   }
+  if(d_artificial_viscosity){
+    p_q[i] = 0.;
+  }
   
-  // for thermal stress
-  //ptempPrevious[i] = d_ref_temp; // This is incorrect T_n ~= T_ref
-                                   // T_n is the temperature at time t_n
   // Assume that the correct d_ref_temp is specified in the input file
   ptempPrevious[i]  = (d_ref_temp > 0.0) ? d_ref_temp : ptemperature[i];
 
@@ -691,10 +708,18 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   }
 
   particle_state.push_back(d_lb->pDeformationMeasureLabel);
-  particle_state.push_back(d_lb->pStressLabel);
-
   particle_state_preReloc.push_back(d_lb->pDeformationMeasureLabel_preReloc);
+
+  particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
+
+  particle_state.push_back(d_lb->pdTdtLabel);
+  particle_state_preReloc.push_back(d_lb->pdTdtLabel_preReloc);
+
+  if (d_artificial_viscosity) {
+    particle_state.push_back(d_lb->p_qLabel);
+    particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
+  }
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);
