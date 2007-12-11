@@ -458,7 +458,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
-#if 0
+#if 1
     double avgCostPerProc = 0;
     avgCostPerProc = total_cost / num_procs;
 
