@@ -148,7 +148,7 @@ InsertStringInFile(char* filename, const char* match, const char* add_text)
 }
 
 map<int,char*>*
-GetFilenamesEndingWith(char* d, char* ext)
+GetFilenamesEndingWith(const char* d, char* ext)
 {
   map<int,char*>* newmap = 0;
   dirent* file = 0;
