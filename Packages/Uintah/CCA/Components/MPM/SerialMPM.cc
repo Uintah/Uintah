@@ -1839,7 +1839,7 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
       constParticleVariable<Vector> psize;
       constParticleVariable<Point> px;
       constParticleVariable<double> pmass,pvol;
-      new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac, NGN);
+      new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
       old_dw->get(px,        lb->pXLabel,                      pset);
       old_dw->get(pmass,     lb->pMassLabel,                   pset);
       new_dw->get(pvol,      lb->pVolumeLabel_preReloc,        pset);
