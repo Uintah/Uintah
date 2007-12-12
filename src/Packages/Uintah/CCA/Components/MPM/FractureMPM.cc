@@ -2896,7 +2896,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
       // for thermal stress analysis
       new_dw->get(pTempCurrent,          lb->pTempCurrentLabel,           pset);
-      new_dw->getModifiable(pvolume,     lb->pVolumeLabel,                pset);
+      new_dw->getModifiable(pvolume,     lb->pVolumeLabel_preReloc,       pset);
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
