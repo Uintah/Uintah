@@ -30,7 +30,7 @@ my $i=0;
 $test_title = $data->{Meta}->[0]->{Title}->[0];
 @emails     = @{$data->{Meta}->[0]->{Email}};
 @testFiles  = @{$data->{testFile}};
-
+@newPath    = @{$data->{path}};
 
 $curr_dir = cwd;
 
@@ -81,6 +81,13 @@ for($i = 0; $i<=$#testFiles; $i++)
     else
     {
       print "Launching driver.pl $testFileName & \n";
+      #__________________________________
+      # update the path
+      $orgPath = $ENV{"PATH"};
+      $ENV{"PATH"} = "@newPath:$curr_dir/bin:$orgPath";
+      $Path = $ENV{"PATH"};
+      print "path $Path\n";
+      
       @args = ("driver.pl","$testFileName &");
       system("@args")==0 or die("ERROR(driver.pl): @args failed");
     }
@@ -96,11 +103,12 @@ for($i = 0; $i<=$#testFiles; $i++)
     else 
     {
       # clean out any section of the configuration file that is commented out
+      #WARNING this doesn't work for single lines that are commented out
       system("/bin/rm -f $testFileName.clean");
       $cmd = "sed  /'<!--'/,/'-->'/d < $testFileName > $testFileName.clean \n";
       system("$cmd");
       
-      print "Launching run_tests.pl $testFileName.clean\n";
+      print "\n\n Launching run_tests.pl $testFileName.clean\n\n";
       @args = ("run_tests.pl","$testFileName.clean");
       system("@args")==0  or die("ERROR(driver.pl): @args failed");
       
@@ -118,7 +126,7 @@ if ($clean == 1)
   exit(0);   #   No need to wait for jobs to complete, its a clean job. So exit the script
 }
 
-
+#__________________________________
 while(1)
 {
   # Number of tests scheduled by this script

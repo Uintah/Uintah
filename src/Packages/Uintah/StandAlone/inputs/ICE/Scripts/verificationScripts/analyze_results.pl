@@ -17,6 +17,9 @@ my $i = 0;
 my $j = 0;
 my $tmp_err = -1;
 
+$gnuplotFile = $data->{start}->[0]->{gnuplotFile}->[0];                # if a user provides a gnuplot file
+print "analyze_results:Using gnuplotFile: $gnuplotFile \n";
+
 foreach $e (@{$data->{start}->[0]->{Test}})
 {
   $test_title  = $e->{Meta}->[0]->{Title}->[0];
@@ -25,7 +28,6 @@ foreach $e (@{$data->{start}->[0]->{Test}})
   $output_file =~ tr/" "/"_"/;  # Replacing the spaces in the test title with underscores
   $launcher    = $e->{Meta}->[0]->{Launcher}->[0];
 
- #$e->{Meta}->[0]->{outFile}->[0];
   @x = @{$e->{x}};
   
   @uda_files = @{$e->{udaFile}};
@@ -71,57 +73,66 @@ foreach $e (@{$data->{start}->[0]->{Test}})
       $R = $x[$k]/$values[0];
       $errorRatio = $values[1]/$tmp;
       
-      $order_of_accuracy = log($errorRatio)/log($R);
-      
+     # $order_of_accuracy = log($errorRatio)/log($R);
+      $order_of_accuracy = 0;
       print "Analyze Results:\t Error ratio: $errorRatio, R: $R,\t L2Norm: $tmp \tOrder-of-accuracy: $order_of_accuracy \n\n";
       
       `echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat`;
     } 
     else
     {
-      print "echo $x[$k] $tmp $order_of_accuracy >> $output_file.dat\n";
+      print "$x[$k] $tmp $order_of_accuracy\n";
       `echo $x[$k] $tmp 0 >> $output_file.dat`;
     }
   }
 
 
   #______________________________________________________________________
-  # The gnuplot script creation
-  open(gpFile, ">$output_file.gp");
-  print gpFile "set term png \n";
+  # Create a default gnuplot script
+  if ( $gnuplotFile != "") {
   
-#  print gpFile "set ylabel \"Error\"\n";
-#  print gpFile "set xlabel \"Resolution\"\n";    # The problem is, x-axis can be anything (viscosity, resolution, timestep)
+    open(gpFile, ">$output_file.gp");
+    print gpFile "set term png \n";
+  
+#    print gpFile "set ylabel \"Error\"\n";
+#    print gpFile "set xlabel \"Resolution\"\n";    # The problem is, x-axis can be anything (viscosity, resolution, timestep)
 
-  print gpFile "set autoscale\n";
-  print gpFile "set grid xtics ytics\n";
-  print gpFile "set y2tics\n";
-  print gpFile "set title \"$test_title\"\n";
-  print gpFile "set output \"err_$output_file.png\"\n";
+    print gpFile "set autoscale\n";
+    print gpFile "set logscale y\n";
+    print gpFile "set grid xtics ytics\n";
+    print gpFile "set y2tics\n";
+    print gpFile "set title \"$test_title\"\n";
+    print gpFile "set output \"err_$output_file.png\"\n";
 
-  if (-e "baseLine/$output_file.dat")
-  {
-    print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints, \'baseLine/$output_file.dat\' using 1:2 t \'Base Line\' with linespoints\n";
-  }   
-  else
-  {
-    print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints\n"; 
+    # comparing against a baseline
+    if (-e "baseLine/$output_file.dat"){
+      print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints, \'baseLine/$output_file.dat\' using 1:2 t \'Base Line\' with linespoints\n";
+    }   
+    else{
+      print gpFile "plot \'$output_file.dat\' using 1:2 t \'Current test\' with linespoints\n"; 
+    }
+    print gpFile "unset logscale y\n";
+    print gpFile "set title \"Order of Accuracy - $test_title\"\n";
+    print gpFile "set output \"order_$output_file.png\"\n";
+
+    if (-e "baseLine/$output_file.dat"){
+      print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints,  \'baseLine/$output_file.dat\' using 1:3 t \'Base Line\' with linespoints\n";
+    }
+    else{
+      print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints\n";
+    }
+
+    close(gpFile);
+          
+    `gnuplot $output_file.gp`;
+  } else{
+    print "Now plotting results with $gnuplotFile \n";
+    `gnuplot $gnuplotFile`;
   }
-  print gpFile "set title \"Order of Accuracy - $test_title\"\n";
-  print gpFile "set output \"order_$output_file.png\"\n";
-
-  if (-e "baseLine/$output_file.dat")
-  {
-    print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints,  \'baseLine/$output_file.dat\' using 1:3 t \'Base Line\' with linespoints\n";
-  }
-  else
-  {
-    print gpFile "plot \'$output_file.dat\' using 1:3 t \'Current test\' with linespoints\n";
-  }
-
-  close(gpFile);
-  `gnuplot $output_file.gp`;
-
+  
+  
+  
+  #__________________________________
   # The DONE file has the basic info about the results - The two plots will be included and the test title will be added to the file
   if ($tmp_err==0)
   {
