@@ -62,7 +62,9 @@ SCISHARE void InsertStringInFile( char* filename, const char* match, const char*
 // all the files with extension "ext" inside
 // the directory named "dir"
 
-SCISHARE std::map<int,char*>* GetFilenamesEndingWith( char* dir, char* ext );
+
+SCISHARE std::map<int,char*>* GetFilenamesEndingWith(const char* dir, 
+                                                     char* ext);
 
 SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
                                                  const string & prefix);
