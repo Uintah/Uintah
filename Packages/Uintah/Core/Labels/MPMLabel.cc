@@ -543,7 +543,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTemperatureGradientLabel);
   VarLabel::destroy(pTempCurrentLabel); // for thermal stress
-  VarLabel::destroy(p_qLabel);
   VarLabel::destroy(pXXLabel);
 
   //PermanentParticleState
@@ -580,6 +579,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pSizeLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel);
+  VarLabel::destroy(p_qLabel);
+  VarLabel::destroy(p_qLabel_preReloc);
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gMassLabel);
