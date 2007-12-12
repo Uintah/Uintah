@@ -13,8 +13,13 @@ $xml = new XML::Simple(forcearray => 1);
 $data = $xml->XMLin("$ARGV[0]");
 
 #__________________________________
-# Reading the meta data and finding out the number of tests
+# Reading the meta data and find out the number of tests
 my $i=0;
+$Path = $ENV{"PATH"};
+print "run_tests.pl: path $Path\n";
+
+my $gnuplotFile = $data->{gnuplotFile}->[0];                # if a user provides a gnuplot file
+print "run_tests.pl:Using gnuplotFile: $gnuplotFile \n";
 
 foreach $e (@{$data->{Test}})
 {
@@ -36,6 +41,7 @@ foreach $e (@{$data->{Test}})
 
    $x[$i]=$e->{Meta}->[0]->{x}->[0];
    $compCommand[$i]=$e->{Meta}->[0]->{compCommand}->[0];
+   
    if($compCommand[$i])
    {
        `echo 0 > .$errFile[$i].tmp`;    # This is to create a tmp file that has the number of tests under the current genre
@@ -106,16 +112,16 @@ for ($i=0;$i<$num_of_tests;$i++)
   open(inpFile, $test_upsF[$i]) or die("ERROR(run_tests.pl): $test_upsF[$i], File Not Found");
 
   my $test_ups;
+  my $test_output;
   my $testI;
 
   @required_lines = (@{$req_lines[$i]});  # This is just assigning the first set of req_lines into the required_lines
 
-#  print $required_lines[0];
   $test_ups     = $base_filename[$i]."_$test_title[$i]".".ups";
   $udaFilename  = $base_filename[$i]."_$test_title[$i]".".uda";
   $test_pbs     = $base_filename[$i]."_$test_title[$i]".".pbs";
   $compFilename = $base_filename[$i]."_$test_title[$i]"."_comp".".xml";
-
+  $test_output  = "out.".$test_title[$i];
   
   $int = $int_command[$i];
 
@@ -187,15 +193,16 @@ for ($i=0;$i<$num_of_tests;$i++)
     }
     close(outFile);
 
-############
-# Creation of the compare config file
-############
+#__________________________________
+# Create a comparison config file _if_ the comparison command is specified
+# This is read in by analyze_results.pl
 
   if($compCommand[$i])
   {
     `rm -fr $compFilename`;
     
     `echo \\<start\\> \|  tee -a $compFilename`;
+    `echo \\<gnuplotFile\\>$gnuplotFile\\</gnuplotFile\\> \|tee -a $compFilename`;
     `echo \\<Test\\>  \|  tee -a $compFilename one_big_comp.xml`;
     `echo \\<Meta\\>  \|  tee -a $compFilename one_big_comp.xml`;
     `echo \\<Title\\>$study[$i]\\</Title\\>  \| tee -a $compFilename one_big_comp.xml`;
@@ -207,7 +214,8 @@ for ($i=0;$i<$num_of_tests;$i++)
     `echo \\</Test\\>  \| tee -a $compFilename one_big_comp.xml`;
     `echo \\</start\\> \| tee -a $compFilename`;
   }
-
+  
+  #__________________________________
   print statsFile "Test Name : "."$test_title[$i]"."\n";
   print statsFile "Input file(ups) : "."$test_ups"."\n";
   print statsFile "Ouput file(uda) : "."$udaFilename"."\n";
@@ -220,20 +228,20 @@ for ($i=0;$i<$num_of_tests;$i++)
   else 
   {
     print statsFile "Command Used (interactive) : "."$int $test_ups"."\n";
-    print "Launching sus\n";
+    print "Launching $int $test_ups\n";
     $now = time();
-#   $tmp=`$int $test_ups`;
-    @args = ("$int","$test_ups");
+
+    @args = ("$int","$test_ups",">& $test_output");
+
     system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
     
     #__________________________________
     # execute comparison
     if($compCommand[$i])
     {
-        print "Launching analyze_results.pl $compFilename\n";
-#       $tmp=`analyze_results.pl $compFilename`;
-        @args = ("analyze_results.pl","$compFilename");
-        system("@args")==0 or die("ERROR(run_tests.pl):@args failed: $?");
+      print "\n\nLaunching analyze_results.pl $compFilename\n\n";
+      @args = ("analyze_results.pl","$compFilename");
+      system("@args")==0 or die("ERROR(analyze.pl):@args failed: $?");
     }
     $fin = time()-$now;
     print  statsFile "Running Time : ".$fin."\n";
