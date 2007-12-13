@@ -104,6 +104,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("accumulate_strain_energy", d_accStrainEnergy);
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
 
+  if(d_artificial_viscosity && d_integrator_type == "implicit"){
+    d_artificial_viscosity = false;
+    cerr << "artificial viscosity is not implemented" << endl;
+    cerr << "with implicit time integration" << endl;
+  }
+
   mpm_flag_ps->get("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
   if (d_adiabaticHeatingOn) d_adiabaticHeating = 0.0;
   mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);

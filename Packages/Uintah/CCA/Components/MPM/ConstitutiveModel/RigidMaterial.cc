@@ -123,7 +123,7 @@ RigidMaterial::computeStressTensorImplicit(const PatchSubset* patches,
     // Carry forward the data common to all constitutive models 
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
-    carryForwardSharedData(pset, old_dw, new_dw, matl);
+    carryForwardSharedDataImplicit(pset, old_dw, new_dw, matl);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
@@ -172,7 +172,7 @@ RigidMaterial::computeStressTensor(const PatchSubset* patches,
   for (int pp = 0; pp < patches->size(); pp++) {
     const Patch* patch = patches->get(pp);
     ParticleSubset* pset = parent_dw->getParticleSubset(dwi, patch);
-    carryForwardSharedData(pset, parent_dw, new_dw, matl);
+    carryForwardSharedDataImplicit(pset, parent_dw, new_dw, matl);
   }
 }
 
