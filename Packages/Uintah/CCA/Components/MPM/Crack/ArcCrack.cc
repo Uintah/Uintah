@@ -15,7 +15,6 @@ ArcCrack::ArcCrack(ProblemSpecP& ps)
   readCrack(ps);
 }
 
-
 ArcCrack::~ArcCrack()
 {
   // Destructor
