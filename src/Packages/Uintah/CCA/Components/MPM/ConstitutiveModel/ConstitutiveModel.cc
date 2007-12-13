@@ -1193,12 +1193,14 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
                                            constParticleVariable<Point> px,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           LinearInterpolator* interp)
+                                           constParticleVariable<Vector> psize,
+                                           ParticleInterpolator* interp)
 {
   Matrix3 dispGrad,Identity;
   Identity.Identity();
-  vector<IntVector> ni(8);
-  vector<Vector> d_S(8);
+  vector<IntVector> ni(interp->size());
+  vector<double> S(interp->size());
+  vector<Vector> d_S(interp->size());
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
                                                                                 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -1206,7 +1208,7 @@ ConstitutiveModel::computeDeformationGradientFromTotalDisplacement(
     particleIndex idx = *iter;
                                                                                 
     // Get the node indices that surround the cell
-    interp->findCellAndShapeDerivatives(px[idx],ni,d_S);
+    interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                                 
     computeGrad(dispGrad, ni, d_S, oodx, gDisp);
                                                                                 
@@ -1224,12 +1226,15 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
                                            constParticleVariable<Matrix3> Fold,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           LinearInterpolator* interp)
+                                           constParticleVariable<Vector> psize,
+                                           ParticleInterpolator* interp)
 {
     Matrix3 IncDispGrad,deformationGradientInc, Identity;
     Identity.Identity();
-    vector<IntVector> ni(8);
-    vector<Vector> d_S(8);
+    vector<IntVector> ni(interp->size());
+    vector<double> S(interp->size());
+    vector<Vector> d_S(interp->size());
+
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
                                                                                 
     for(ParticleSubset::iterator iter = pset->begin();
@@ -1237,7 +1242,7 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
       particleIndex idx = *iter;
                                                                                 
       // Get the node indices that surround the cell
-      interp->findCellAndShapeDerivatives(px[idx],ni,d_S);
+      interp->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                                 
       computeGrad(IncDispGrad, ni, d_S, oodx, gDisp);
                                                                                 

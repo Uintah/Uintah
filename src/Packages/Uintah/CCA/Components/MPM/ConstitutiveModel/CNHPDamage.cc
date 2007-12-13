@@ -1,6 +1,5 @@
 #include "CNHPDamage.h"
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
@@ -211,7 +210,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pMass,                    lb->pMassLabel,               pset);
     old_dw->get(pPlasticStrain,           pPlasticStrainLabel,          pset);
     old_dw->get(pX,                       lb->pXLabel,                  pset);
-    old_dw->get(pSize, lb->pSizeLabel,               pset);
+    old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
@@ -386,6 +385,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<double>  pFailureStrain;
   constParticleVariable<double>  pMass, pPlasticStrain;
   constParticleVariable<Point>   pX;
+  constParticleVariable<Vector>  pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
   ParticleVariable<int>          pFailed_new;
@@ -402,7 +402,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -419,6 +419,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pMass,                    lb->pMassLabel,               pset);
     old_dw->get(pPlasticStrain,           pPlasticStrainLabel,          pset);
     old_dw->get(pX,                       lb->pXLabel,                  pset);
+    old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
@@ -457,7 +458,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // Compute the displacement gradient and the deformation gradient
-      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S);
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx]);
       computeGrad(dispGrad,ni,d_S,oodx,gDisp);
 
       defGradInc = dispGrad + Identity;         
@@ -583,6 +584,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   // Particle and grid data
   constParticleVariable<double>  pVol, pPlasticStrain, pmass;
   constParticleVariable<Point>   pX;
+  constParticleVariable<Vector>  pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
   ParticleVariable<double>       pVol_new, pPlasticStrain_new;
@@ -605,7 +607,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -620,6 +622,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     
     ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(pX,             lb->pXLabel,                  pset);
+    parent_old_dw->get(pSize,          lb->pSizeLabel,               pset);
     parent_old_dw->get(pmass,          lb->pMassLabel,               pset);
     parent_old_dw->get(pDefGrad,       lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pPlasticStrain, pPlasticStrainLabel,          pset);
@@ -640,7 +643,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Compute the displacement gradient and B matrices
-      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S);
+      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx]);
       
       computeGradAndBmats(dispGrad,ni,d_S, oodx,gDisp,l2g,B, Bnl, dof);
 

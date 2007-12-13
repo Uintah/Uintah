@@ -1,6 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
@@ -384,7 +383,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -407,6 +406,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
 
     ParticleSubset* pset;
     constParticleVariable<Point> px;
+    constParticleVariable<Vector> psize;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress_new;
@@ -419,6 +419,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
       new_dw->getOtherDataWarehouse(Task::ParentOldDW);
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                  lb->pXLabel,                  pset);
+    parent_old_dw->get(psize,               lb->pSizeLabel,               pset);
     parent_old_dw->get(pstress,             lb->pStressLabel,             pset);
     parent_old_dw->get(pmass,               lb->pMassLabel,               pset);
     parent_old_dw->get(pvolumeold,          lb->pVolumeLabel,             pset);
@@ -454,7 +455,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         dispGrad.set(0.0);
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
@@ -576,7 +577,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     double Jinc;
     double onethird = (1.0/3.0);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -619,6 +620,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     ASSERTEQ(pset, pStatedata.getParticleSubset());
 
     constParticleVariable<Point> px;
+    constParticleVariable<Vector> psize;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
@@ -629,6 +631,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -672,7 +675,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
           
@@ -731,6 +734,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pSizeLabel,      matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
@@ -751,6 +755,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,gnone);
+  task->requires(Task::OldDW, lb->pSizeLabel,              matlset,gnone);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset,gnone);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
   task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
