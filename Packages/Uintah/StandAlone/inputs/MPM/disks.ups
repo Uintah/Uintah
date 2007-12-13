@@ -117,6 +117,7 @@
               <upper>[1.0,1.0,.15]</upper>
               <resolution>[40,40,3]</resolution>
               <patches>[2,2,1]</patches>
+              <extraCells> [1,1,1]            </extraCells>
            </Box>
        </Level>
     </Grid>
