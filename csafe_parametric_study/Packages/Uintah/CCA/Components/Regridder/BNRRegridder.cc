@@ -201,11 +201,9 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     //Fixup patchlist:  this forces neighbor constraints
     patchfixer_.FixUp(patch_sets[l+1]);
 
-    if(!d_loadBalance)
-    {
-      //Post fixup patchlist: this creates more patches as specified in the input file in order to improve load balance
-      PostFixup(patch_sets[l+1]);
-    }
+    //Post fixup patchlist: this creates more patches as specified in the input file in order to improve load balance
+    PostFixup(patch_sets[l+1]);
+    
     //uncoarsen
     for(unsigned int p=0;p<patch_sets[l+1].size();p++)
     {
@@ -221,11 +219,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
         //(thus extending patches on level l)
       AddSafetyLayer(patch_sets[l+1], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
     }
-  }
-  //if lb
-  if(d_loadBalance)
-  {
-    lb_->dynamicallyLoadBalanceAndSplit(oldGrid,d_minPatchSize,patch_sets,true);
   }
  
   //Create the grid
@@ -588,7 +581,6 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   d_minPatchSize.insert(d_minPatchSize.begin(),min_size);
 
 
-  regrid_spec->getWithDefault("do_loadBalancing",d_loadBalance,false);
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
   regrid_spec->getWithDefault("patch_ratio_to_target",d_patchRatioToTarget,.125);
