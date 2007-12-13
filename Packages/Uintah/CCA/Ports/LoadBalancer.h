@@ -111,9 +111,6 @@ WARNING
     //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
     virtual bool possiblyDynamicallyReallocate(const GridP&, int state) = 0;
 
-    //! For dymanic load balancers, Load balance patch set and possibly split patches to improve load balance.
-    virtual void dynamicallyLoadBalanceAndSplit(const GridP&, SizeList, vector<vector<Region> >&, bool) = 0;
-
     //! Returns the value of n (every n procs it performs output tasks).
     virtual int getNthProc() { return 1; }
 
