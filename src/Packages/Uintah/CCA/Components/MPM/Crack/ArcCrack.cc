@@ -22,7 +22,6 @@ ArcCrack::~ArcCrack()
   // Do nothing
 }
 
-
 void ArcCrack::readCrack(ProblemSpecP& arc_ps)
 {
 
