@@ -500,7 +500,7 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
   if (flag->d_integrator == MPMFlags::Implicit) {
-    addSharedCRForImplicit(task, matlset, true);
+    addSharedCRForImplicitHypo(task, matlset, true);
   } else {
     addSharedCRForHypoExplicit(task, matlset, patches);
   }
@@ -1621,7 +1621,7 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
                                            const bool recurse) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForImplicit(task, matlset, true, recurse);
+  addSharedCRForImplicitHypo(task, matlset, true, recurse);
 
   // Local stuff
   Ghost::GhostType  gnone = Ghost::None;

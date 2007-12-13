@@ -90,7 +90,6 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
     task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset,gac,1);
   } else {
@@ -101,6 +100,16 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(d_lb->pVolumeDeformedLabel,              matlset);
   task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
+}
+
+void
+ImplicitCM::addSharedCRForImplicitHypo(Task* task,
+                                       const MaterialSubset* matlset,
+                                       const bool reset) const
+{
+
+  addSharedCRForImplicit(task,matlset,reset);
+  task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, Ghost::None);
 }
 
 void 
@@ -119,7 +128,6 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
                                                              matlset, gnone);
-  task->requires(Task::ParentOldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
     task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
   }else {
@@ -131,6 +139,16 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(d_lb->pVolumeDeformedLabel,              matlset);
   task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
+}
+
+void
+ImplicitCM::addSharedCRForImplicitHypo(Task* task,
+                                       const MaterialSubset* matlset,
+                                       const bool reset,
+                                       const bool ) const
+{
+  addSharedCRForImplicit(task,matlset,reset,true);
+  task->requires(Task::ParentOldDW, d_lb->pStressLabel,   matlset, Ghost::None);
 }
 
 void
