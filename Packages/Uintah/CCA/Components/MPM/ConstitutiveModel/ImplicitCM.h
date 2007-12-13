@@ -94,6 +94,10 @@ namespace Uintah {
                                 const MaterialSubset* matlset,
                                 const bool reset) const;
 
+    void addSharedCRForImplicitHypo(Task* task,
+                                    const MaterialSubset* matlset,
+                                    const bool reset) const;
+
     /////////////////////////////////////////////////////////////////
     /*! Computes and Requires common to all constitutive models that
      *  do implicit time stepping : called by addComputesAndRequires */
@@ -102,6 +106,11 @@ namespace Uintah {
                                 const MaterialSubset* matlset,
                                 const bool reset,
                                 const bool recurse) const;
+
+    void addSharedCRForImplicitHypo(Task* task,
+                                    const MaterialSubset* matlset,
+                                    const bool reset,
+                                    const bool recurse) const;
 
     MPMLabel* d_lb;
 

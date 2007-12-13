@@ -484,7 +484,7 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   bool reset = flag->d_doGridReset;
                                                                                 
-  addSharedCRForImplicit(task, matlset, reset, true);
+  addSharedCRForImplicitHypo(task, matlset, reset, true);
 }
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
@@ -494,7 +494,7 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   bool reset = flag->d_doGridReset;
                                                                                 
-  addSharedCRForImplicit(task, matlset, reset);
+  addSharedCRForImplicitHypo(task, matlset, reset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
