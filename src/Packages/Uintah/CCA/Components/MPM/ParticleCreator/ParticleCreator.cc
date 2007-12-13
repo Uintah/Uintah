@@ -327,7 +327,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   task->requires(Task::OldDW,d_lb->pVelocityLabel,    gn);
   task->requires(Task::NewDW,d_lb->pExtForceLabel_preReloc, gn);
   //task->requires(Task::OldDW,d_lb->pExternalForceLabel,   gn);
-  task->requires(Task::NewDW,d_lb->pVolumeDeformedLabel,    gn);
+  task->requires(Task::NewDW,d_lb->pVolumeLabel_preReloc,   gn);
   //task->requires(Task::OldDW,d_lb->pVolumeLabel,    gn);
   task->requires(Task::OldDW,d_lb->pErosionLabel,     gn);
   task->requires(Task::OldDW,d_lb->pSizeLabel,        gn);
@@ -391,7 +391,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   old_dw->get(o_velocity,       d_lb->pVelocityLabel,         delset);
   new_dw->get(o_external_force, d_lb->pExtForceLabel_preReloc,delset);
   //old_dw->get(o_external_force,d_lb->pExternalForceLabel,   delset);
-  new_dw->get(o_volume,         d_lb->pVolumeDeformedLabel,   delset);
+  new_dw->get(o_volume,         d_lb->pVolumeLabel_preReloc,  delset);
   //old_dw->get(o_volume,       d_lb->pVolumeLabel,           delset);
   new_dw->get(o_erosion,        d_lb->pErosionLabel_preReloc, delset);
   old_dw->get(o_size,           d_lb->pSizeLabel,             delset);
