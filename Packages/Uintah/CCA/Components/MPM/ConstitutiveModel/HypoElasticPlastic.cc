@@ -18,7 +18,6 @@
 
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
@@ -501,7 +500,7 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
   if (flag->d_integrator == MPMFlags::Implicit) {
-    addSharedCRForImplicit(task, matlset, patches);
+    addSharedCRForImplicit(task, matlset, true);
   } else {
     addSharedCRForHypoExplicit(task, matlset, patches);
   }
@@ -608,7 +607,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Point> px;
     constParticleVariable<Vector> psize;
     constParticleVariable<double> pMass;
-    old_dw->get(px, lb->pXLabel, pset);
+    old_dw->get(px,    lb->pXLabel,    pset);
     old_dw->get(psize, lb->pSizeLabel, pset);
     old_dw->get(pMass, lb->pMassLabel, pset);
 
@@ -699,8 +698,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
@@ -1293,6 +1291,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                                  pStrainRate;
 
   constParticleVariable<Point>   px;
+  constParticleVariable<Vector>  psize;
   constParticleVariable<Matrix3> pDeformGrad, pStress,
                                  pLeftStretch, pRotation;
   constNCVariable<Vector>        gDisp;
@@ -1323,7 +1322,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -1343,6 +1342,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 
     old_dw->get(px,           lb->pXLabel,                  pset);
+    old_dw->get(psize,        lb->pSizeLabel,               pset);
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress,      lb->pStressLabel,             pset);
 
@@ -1365,8 +1365,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolume_deformed, 
                            lb->pVolumeDeformedLabel,              pset);
-    new_dw->allocateAndPut(pdTdt, 
-                           lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
 
     // LOCAL
     new_dw->allocateAndPut(pLeftStretch_new, 
@@ -1428,7 +1427,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       computeGrad(DispGrad, ni, d_S, oodx, gDisp);
 
       // Compute the deformation gradient increment
@@ -1622,7 +1621,7 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
                                            const bool recurse) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForImplicit(task, matlset, patches, recurse);
+  addSharedCRForImplicit(task, matlset, true, recurse);
 
   // Local stuff
   Ghost::GhostType  gnone = Ghost::None;
@@ -1667,6 +1666,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                  pPlasticStrain, pPorosity;
 
   constParticleVariable<Point>   px;
+  constParticleVariable<Vector>  psize;
   constParticleVariable<Matrix3> pDeformGrad, pStress;
   constNCVariable<Vector>        gDisp;
 
@@ -1700,7 +1700,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     // Get interpolation functions
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -1723,6 +1723,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     parent_old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 
     parent_old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     parent_old_dw->get(px,           lb->pXLabel,                  pset);
+    parent_old_dw->get(psize,        lb->pSizeLabel,               pset);
     parent_old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pStress,      lb->pStressLabel,             pset);
 
@@ -1767,7 +1768,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //CSTir << " patch = " << patch << " particle = " << idx << endl;
 
       // Calculate the displacement gradient
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S);
+      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
       computeGradAndBmats(DispGrad,ni,d_S, oodx, gDisp, l2g,B, Bnl, dof);
 
       // Compute the deformation gradient increment

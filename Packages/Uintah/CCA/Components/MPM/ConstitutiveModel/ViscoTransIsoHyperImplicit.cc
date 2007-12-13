@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -384,9 +383,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     Matrix3 shear;
     Vector deformed_fiber_vector;
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
-    vector<IntVector> ni(8);
-    vector<Vector> d_S(8);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Matrix3 Identity,Zero(0.);
     Identity.Identity();
@@ -398,6 +397,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
     ParticleSubset* pset;
     constParticleVariable<Point> px;
+    constParticleVariable<Vector> psize;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     constParticleVariable<double> pmass,pvolumeold;
@@ -424,6 +424,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                 lb->pXLabel,                  pset);
     parent_old_dw->get(pmass,              lb->pMassLabel,               pset);
+    parent_old_dw->get(psize,              lb->pSizeLabel,               pset);
     parent_old_dw->get(pvolumeold,         lb->pVolumeLabel,             pset);
     parent_old_dw->get(deformationGradient,lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pfiberdir,          lb->pFiberDirLabel,           pset);
@@ -496,14 +497,15 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                                       dispNew, pset, px,
                                                       deformationGradient,
                                                       deformationGradient_new,
-                                                      dx, interpolator);
+                                                      dx, psize, interpolator);
       }
       else if(!flag->d_doGridReset){
         constNCVariable<Vector> gdisplacement;
         old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
-                                                        deformationGradient_new,                                                        dx, interpolator);
+                                                        deformationGradient_new,
+                                                        dx, psize,interpolator);
       }
 
       double time = d_sharedState->getElapsedTime();
@@ -512,7 +514,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
         int dof[24];
         loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
@@ -877,7 +879,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      double dWdI4tilde;
      Vector deformed_fiber_vector;
 
-     LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
      vector<IntVector> ni(interpolator->size());
      vector<Vector> d_S(interpolator->size());
 
@@ -886,6 +888,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      int dwi = matl->getDWIndex();
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
      constParticleVariable<Point> px;
+     constParticleVariable<Vector> psize;
      ParticleVariable<Matrix3> deformationGradient_new;
      constParticleVariable<Matrix3> deformationGradient;
      ParticleVariable<Matrix3> pstress;
@@ -910,6 +913,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      old_dw->get(delT,lb->delTLabel, getLevel(patches));
 
      old_dw->get(px,                  lb->pXLabel,                  pset);
+     old_dw->get(psize,               lb->pSizeLabel,               pset);
      old_dw->get(pvolumeold,          lb->pVolumeLabel,             pset);
      old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
      old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
@@ -981,14 +985,15 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                                       dispNew, pset, px,
                                                       deformationGradient,
                                                       deformationGradient_new,
-                                                      dx, interpolator);
+                                                      dx, psize, interpolator);
      }
      else if(!flag->d_doGridReset){
         constNCVariable<Vector> gdisplacement;
         new_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
                                                         pset, px,
-                                                        deformationGradient_new,                                                        dx, interpolator);
+                                                        deformationGradient_new,
+                                                        dx, psize,interpolator);
      }
      double time = d_sharedState->getElapsedTime();
      for(ParticleSubset::iterator iter = pset->begin();
@@ -1141,20 +1146,9 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
 //________________________________corresponds to the 1st ComputeStressTensor
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  Ghost::GhostType  gac   = Ghost::AroundCells;
-
-  task->requires(Task::ParentOldDW, lb->pXLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pMassLabel,   matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
-                                                      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->delTLabel);
-  if(flag->d_doGridReset){
-    task->requires(Task::OldDW,lb->dispNewLabel,        matlset,gac,1);
-  }
-  if(!flag->d_doGridReset){
-    task->requires(Task::OldDW, lb->gDisplacementLabel, matlset,gac,1);
-  }
+  bool reset = flag->d_doGridReset;
+                                                                                
+  addSharedCRForImplicit(task, matlset, reset, true);
 
   task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset,Ghost::None);
   task->requires(Task::ParentOldDW, pFailureLabel,      matlset,Ghost::None);
@@ -1166,8 +1160,6 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::ParentOldDW, pHistory5Label,     matlset,Ghost::None);
   task->requires(Task::ParentOldDW, pHistory6Label,     matlset,Ghost::None);
   //
-  task->computes(lb->pStressLabel_preReloc,  matlset);
-  task->computes(lb->pVolumeDeformedLabel,   matlset);
   task->computes(lb->pFiberDirLabel_preReloc,matlset);
   task->computes(pStretchLabel_preReloc,     matlset);
 }
@@ -1178,22 +1170,12 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
 //________________________________corresponds to the 2nd ComputeStressTensor
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  Ghost::GhostType  gac   = Ghost::AroundCells;
+  bool reset = flag->d_doGridReset;
+                                                                                
+  addSharedCRForImplicit(task, matlset, reset);
 
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pFiberDirLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, pFailureLabel,               matlset,Ghost::None);
-
-  if(flag->d_doGridReset){
-    task->requires(Task::NewDW,lb->dispNewLabel,           matlset,gac,1);
-  }
-  if(!flag->d_doGridReset){
-    task->requires(Task::NewDW,lb->gDisplacementLabel,     matlset,gac,1);
-  }
-  
+  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,Ghost::None);
+  task->requires(Task::OldDW, pFailureLabel,      matlset,Ghost::None);
   task->requires(Task::OldDW, pElasticStressLabel,matlset,Ghost::None);//visco
   task->requires(Task::OldDW, pHistory1Label,     matlset,Ghost::None);
   task->requires(Task::OldDW, pHistory2Label,     matlset,Ghost::None);
@@ -1202,9 +1184,6 @@ void ViscoTransIsoHyperImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pHistory5Label,     matlset,Ghost::None);
   task->requires(Task::OldDW, pHistory6Label,     matlset,Ghost::None);
   //
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
-  task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pFiberDirLabel_preReloc,           matlset);
   task->computes(pStretchLabel_preReloc,                matlset);
   task->computes(pFailureLabel_preReloc,                matlset);

@@ -89,7 +89,7 @@ namespace Uintah {
     /////////////////////////////////////////////////////////////////
     void addSharedCRForImplicit(Task* task,
                                 const MaterialSubset* matlset,
-                                const PatchSet* patches) const;
+                                const bool reset) const;
 
     /////////////////////////////////////////////////////////////////
     /*! Computes and Requires common to all constitutive models that
@@ -97,7 +97,7 @@ namespace Uintah {
     /////////////////////////////////////////////////////////////////
     void addSharedCRForImplicit(Task* task,
                                 const MaterialSubset* matlset,
-                                const PatchSet* patches,
+                                const bool reset,
                                 const bool recurse) const;
 
     MPMLabel* d_lb;

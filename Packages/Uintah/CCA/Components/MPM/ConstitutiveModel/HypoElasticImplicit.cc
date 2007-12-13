@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -153,7 +152,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
@@ -176,18 +175,20 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     ParticleSubset* pset;
     constParticleVariable<Point> px;
+    constParticleVariable<Vector> psize;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress_new;
     constParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> pvolume_deformed,pdTdt;
     constNCVariable<Vector> dispNew;
     
     DataWarehouse* parent_old_dw =
       new_dw->getOtherDataWarehouse(Task::ParentOldDW);
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                  lb->pXLabel,                  pset);
+    parent_old_dw->get(psize,               lb->pSizeLabel,               pset);
     parent_old_dw->get(pmass,               lb->pMassLabel,               pset);
     parent_old_dw->get(pstress,             lb->pStressLabel,             pset);
     parent_old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
@@ -195,6 +196,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,   pset);
     new_dw->allocateTemporary(deformationGradient_new,pset);
 
     double G = d_initialData.G;
@@ -212,6 +214,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
         pstress_new[idx] = Matrix3(0.0);
         pvolume_deformed[idx] = pmass[idx]/rho_orig;
+        pdTdt[idx] = 0.;
       }
     }
     else{
@@ -219,11 +222,12 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        pdTdt[idx] = 0.;
 
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
                                                                                 
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
                                                                                 
@@ -355,10 +359,9 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     double Jinc;
     double onethird = (1.0/3.0);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-
 
     Identity.Identity();
 
@@ -369,19 +372,19 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
+    constParticleVariable<Vector> psize;
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pvolume;
-    ParticleVariable<double> pvolume_deformed;
-    constParticleVariable<Vector> pvelocity;
+    ParticleVariable<double> pvolume_deformed,pdTdt;
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     new_dw->get(dispNew,lb->dispNewLabel,dwi,patch,Ghost::AroundCells,1);
@@ -390,6 +393,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
     new_dw->allocateAndPut(deformationGradient_new,
 			   lb->pDeformationMeasureLabel_preReloc,        pset);
  
@@ -403,6 +407,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolume[idx];
+        pdTdt[idx] = 0.;
       }
     }
     else{
@@ -410,10 +415,12 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 	
+        pdTdt[idx] = 0.;
+
         dispGrad.set(0.0);
 	// Get the node indices that surround the cell
 	
-	interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
+	interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
 	for(int k = 0; k < 8; k++) {
 	  const Vector& disp = dispNew[ni[k]];
 	  
@@ -467,7 +474,6 @@ void HypoElasticImplicit::addInitialComputesAndRequires(Task*,
                                                 const MPMMaterial*,
                                                 const PatchSet*) const
 {
-
 }
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
@@ -476,15 +482,9 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
 						 const bool ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-
-  task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
-                                                         matlset,Ghost::None);
-  task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
-
-  task->computes(lb->pStressLabel_preReloc,matlset);  
-  task->computes(lb->pVolumeDeformedLabel, matlset);
+  bool reset = flag->d_doGridReset;
+                                                                                
+  addSharedCRForImplicit(task, matlset, reset, true);
 }
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
@@ -492,17 +492,9 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
 						 const PatchSet*) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::NewDW, lb->dispNewLabel,   matlset,Ghost::AroundCells,1);
-
-  task->computes(lb->pStressLabel_preReloc,                matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
-  task->computes(lb->pVolumeDeformedLabel,                 matlset);
+  bool reset = flag->d_doGridReset;
+                                                                                
+  addSharedCRForImplicit(task, matlset, reset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

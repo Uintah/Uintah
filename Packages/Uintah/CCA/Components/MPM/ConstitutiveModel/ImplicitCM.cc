@@ -50,7 +50,7 @@ ImplicitCM::initSharedDataForImplicit(const Patch* patch,
   ParticleVariable<double>  pdTdt;
   ParticleVariable<Matrix3> pDefGrad, pStress;
 
-  new_dw->allocateAndPut(pdTdt,d_lb->pdTdtLabel,   pset);
+  new_dw->allocateAndPut(pdTdt,       d_lb->pdTdtLabel,               pset);
   new_dw->allocateAndPut(pDefGrad,    d_lb->pDeformationMeasureLabel, pset);
   new_dw->allocateAndPut(pStress,     d_lb->pStressLabel,             pset);
 
@@ -77,20 +77,25 @@ ImplicitCM::addComputesAndRequires(Task*,
 void 
 ImplicitCM::addSharedCRForImplicit(Task* task,
                                           const MaterialSubset* matlset,
-                                          const PatchSet* ) const
+                                          const bool reset) const
 {
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
   task->requires(Task::OldDW, d_lb->delTLabel);
   task->requires(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
-  task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset, gac, 1);
+  if(reset){
+    task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset,gac,1);
+  } else {
+    task->requires(Task::NewDW, d_lb->gDisplacementLabel,matlset,gac,1);
+  }
 
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
@@ -101,20 +106,26 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
 void 
 ImplicitCM::addSharedCRForImplicit(Task* task,
                                           const MaterialSubset* matlset,
-                                          const PatchSet* ,
+                                          const bool reset,
                                           const bool ) const
 {
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
   task->requires(Task::ParentOldDW, d_lb->pXLabel,           matlset, gnone);
+  task->requires(Task::ParentOldDW, d_lb->pSizeLabel,        matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pMassLabel,        matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pVolumeLabel,      matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pDeformationMeasureLabel,
                                                              matlset, gnone);
   task->requires(Task::ParentOldDW, d_lb->pStressLabel,      matlset, gnone);
-  task->requires(Task::OldDW,       d_lb->dispNewLabel,      matlset, gac, 1);
+  if(reset){
+    task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
+  }else {
+    task->requires(Task::OldDW,     d_lb->gDisplacementLabel,matlset, gac,1);
+  }
+
 
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);

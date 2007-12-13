@@ -211,7 +211,8 @@ namespace Uintah {
                                            constParticleVariable<Point> px,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           LinearInterpolator* interp);
+                                           constParticleVariable<Vector> psize,
+                                           ParticleInterpolator* interp);
                                                                                 
     void computeDeformationGradientFromIncrementalDisplacement(
                                            constNCVariable<Vector> IncDisp,
@@ -220,7 +221,8 @@ namespace Uintah {
                                            constParticleVariable<Matrix3> Fold,
                                            ParticleVariable<Matrix3> &Fnew,
                                            Vector dx,
-                                           LinearInterpolator* interp);
+                                           constParticleVariable<Vector> psize,
+                                           ParticleInterpolator* interp);
   protected:
 
     inline void computeVelocityGradient(Matrix3& velGrad,
