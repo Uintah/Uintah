@@ -133,6 +133,39 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
 }
 
+void
+ImplicitCM::carryForwardSharedDataImplicit(ParticleSubset* pset,
+                                           DataWarehouse*  old_dw,
+                                           DataWarehouse*  new_dw,
+                                           const MPMMaterial* matl)
+{
+  double rho_orig = matl->getInitialDensity();
+  Matrix3 Id, Zero(0.0); Id.Identity();
+                                                                                
+  constParticleVariable<double>  pMass;
+  constParticleVariable<Matrix3> pDefGrad_old;
+  old_dw->get(pMass,            d_lb->pMassLabel,               pset);
+  old_dw->get(pDefGrad_old,     d_lb->pDeformationMeasureLabel, pset);
+                                                                                
+  ParticleVariable<double>  pIntHeatRate_new, pVol_Def_new;
+  ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
+  new_dw->allocateAndPut(pVol_Def_new,     d_lb->pVolumeDeformedLabel,   pset);
+  new_dw->allocateAndPut(pIntHeatRate_new, d_lb->pdTdtLabel_preReloc,    pset);
+  new_dw->allocateAndPut(pDefGrad_new,  d_lb->pDeformationMeasureLabel_preReloc,
+                         pset);
+  new_dw->allocateAndPut(pStress_new,   d_lb->pStressLabel_preReloc, pset);
+                                                                                
+  ParticleSubset::iterator iter = pset->begin();
+  for(; iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+    pVol_Def_new[idx] = (pMass[idx]/rho_orig);
+    pIntHeatRate_new[idx] = 0.0;
+    pDefGrad_new[idx] = pDefGrad_old[idx];
+    //pDefGrad_new[idx] = Id;
+    pStress_new[idx] = Zero;
+  }
+}
+
 void 
 ImplicitCM::computeStressTensor(const PatchSubset*,
                                        const MPMMaterial*,

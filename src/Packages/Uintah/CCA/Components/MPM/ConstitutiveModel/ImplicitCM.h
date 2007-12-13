@@ -58,12 +58,15 @@ namespace Uintah {
                                      Solver* solver,
                                      const bool recursion);
          
-
-
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
                                         const bool recursion) const;
+
+    void carryForwardSharedDataImplicit(ParticleSubset* pset,
+                                        DataWarehouse*  old_dw,
+                                        DataWarehouse*  new_dw,
+                                        const MPMMaterial* matl);
 
   protected:
 
