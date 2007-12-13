@@ -65,6 +65,8 @@ public:
   // From Object
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
+  virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
+                               DepthStats* st, PerProcessorContext* ppc);
   virtual Vector normal(const Point&, const HitInfo&) {
     // There really isn't a normal suitable for this object
     return Vector(1,0,0);
@@ -225,24 +227,46 @@ void VolumeVis<DataType>::intersect(Ray& ray, HitInfo& hit, DepthStats* ds,
     // Child wasn't hit, so just go about life as if it wasn't there.
     if (box_hit && hit.hit(this, t1)) {
       float* tmax=(float*)hit.scratchpad;
+      tmax[29] = t1;
       tmax[30] = t2;
       tmax[31] = t2;
     }
   } else {
-    if (hit.hit(hitchild.hit_obj, hitchild.min_t))
+    bool child_hit = false; // whether the child hit
+    if (hit.hit(hitchild.hit_obj, hitchild.min_t)) {
       // If the child was hit, copy the HitInfo over, since there may
       // be scratch data that's needed.
       hit = hitchild;
+      child_hit = true;
+    }
 
     // The child was hit, let's see who was closer
     if (box_hit && t1 < hitchild.min_t) {
       if (hit.hit(this, t1)) {
         float* tmax=(float*)hit.scratchpad;
+        // NOTE(bigler): this will set the min_t to the object, so
+        // silhouettes will work.  It could break other stuff.
+        if (child_hit) {
+          hit.min_t = hitchild.min_t;
+        }
+        tmax[29] = t1;
         tmax[30] = t2;
         tmax[31] = hitchild.min_t;
       }
     }
   }
+}
+
+  // Ignore the volume for shadows
+template<class DataType>
+void VolumeVis<DataType>::light_intersect(Ray& ray,
+                                          HitInfo& hit,
+                                          Color& atten,
+                                          DepthStats* st,
+                                          PerProcessorContext* ppc)
+{
+  if (child)
+    child->light_intersect(ray, hit, atten, st, ppc);
 }
 
 // All incoming vectors should be normalized
@@ -348,8 +372,8 @@ void VolumeVis<DataType>::shade(Color& result, const Ray& ray,
 				const HitInfo& hit, int depth,
 				double atten, const Color& accumcolor,
 				Context* cx) {
-  float t_min = hit.min_t;
   float* t_maxp = (float*)hit.scratchpad;
+  float t_min = t_maxp[29];
   float t_max = t_maxp[30];
   float child_hit = t_maxp[31];
   if (t_max < t_maxp[1]) t_max = child_hit;

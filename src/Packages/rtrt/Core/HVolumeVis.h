@@ -742,8 +742,8 @@ void HVolumeVis<DataT,MetaCT>::shade(Color& result, const Ray& ray,
   float alpha = 0;
   Color total(0,0,0);
 
-  float t_min = hit.min_t;
   float* t_maxp = (float*)hit.scratchpad;
+  float t_min = t_maxp[29];
   float t_max = t_maxp[30];
   float child_hit = t_maxp[31];
   bool shade_child = false;
