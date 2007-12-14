@@ -23,7 +23,7 @@ if ($#argv != 3 && $#argv != 4 && $#argv != 5 ) then
   echo ""
   echo "Error: Wrong number of args..."
   echo ""
-  echo "Usage: pscp [-v] [-verify] <# of Processors> <login@Remote Machine>:<remote dir> <local dir>"
+  echo "Usage: pscp_pull [-v] [-verify] <# of Processors> <login@Remote Machine>:<remote dir> <local dir>"
   echo ""
   echo "             -v - optional verbose flag"
   echo ""
