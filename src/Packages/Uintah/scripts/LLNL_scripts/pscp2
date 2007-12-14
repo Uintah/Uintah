@@ -23,7 +23,7 @@ endif
 set pscp2dir      = `dirname $0`
 set nproc         = $argv[1]
 set rmDir         = $argv[2]
-set localDir      = $argv[3]
+set localDir      = `basename $argv[3]`
 set string        = $argv[4]
 set remote_machine = `echo $string |cut -d\@ -f2 | cut -d\: -f1`
 set user_test      = `echo $string |cut  -s -d\@ -f1`
