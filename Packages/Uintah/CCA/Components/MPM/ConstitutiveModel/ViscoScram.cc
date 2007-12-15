@@ -686,7 +686,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Stress intensity factor
       double crad   = pCrackRadius[idx];
-      ASSERT(crad != 0.0);
+      ASSERT(crad >= 0.0);
       double sqrtc  = sqrt(crad);
       double sif    = sqrtopf*sqrtPI*sqrtc*sigmae;
 
@@ -891,6 +891,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Update crack radius
       crad += onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
+
+      ASSERT(crad >= 0.0);
+
       pCrackRadius_new[idx] = crad;
       //if (dbgSig.active())
       //  dbgSig << " Crack Radius = " << crad << endl;
