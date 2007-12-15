@@ -32,6 +32,7 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
     </MPM>
 
     <PhysicalConstants>
@@ -113,8 +114,9 @@
            <Box label = "1">
               <lower>[0,0,0]</lower>
               <upper>[1.0,1.0,.15]</upper>
-               <resolution>[20,20,3]</resolution>
+              <resolution>[20,20,3]</resolution>
               <patches>[3,2,1]</patches>
+              <extraCells> [1,1,1]</extraCells>
            </Box>
            <periodic>[1,1,0]</periodic>
        </Level>
