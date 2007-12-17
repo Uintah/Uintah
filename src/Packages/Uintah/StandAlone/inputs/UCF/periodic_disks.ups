@@ -15,7 +15,7 @@
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>periodic_disks.uda</filebase>
@@ -57,7 +57,7 @@
                      <radius> .2 </radius>
                   </cylinder>
                   <res>[2,2,2]</res>
-                  <velocity>[-2.0,0,0]</velocity>
+                  <velocity>[-2.0,.0,0]</velocity>
                   <temperature>12</temperature>
                </geom_object>
 
@@ -116,7 +116,7 @@
               <upper>[1.0,1.0,.15]</upper>
               <resolution>[20,20,3]</resolution>
               <patches>[3,2,1]</patches>
-              <extraCells> [1,1,1]</extraCells>
+              <extraCells> [0,0,1]</extraCells>
            </Box>
            <periodic>[1,1,0]</periodic>
        </Level>
