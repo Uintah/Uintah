@@ -17,7 +17,7 @@
        <initTime>0.0</initTime>
        <delt_min>0.0001</delt_min>
        <delt_max>0.01</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -40,6 +40,7 @@
 
    <MPM>
        <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
    </MPM>
 
 
@@ -139,6 +140,7 @@
               <upper>[0.02,0.004,0.004]</upper>
                <resolution>[20,4,4]</resolution>
               <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
            </Box>
        </Level>
     </Grid>
