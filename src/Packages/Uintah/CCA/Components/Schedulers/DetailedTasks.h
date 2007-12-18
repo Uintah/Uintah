@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
+#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
@@ -31,6 +32,9 @@ namespace Uintah {
   class DetailedTasks;
   class TaskGraph;
   class SchedulerCommon;
+
+  typedef std::map<int, std::set<PSPatchMatlGhost> > ParticleExchangeVar;
+
   
   class DetailedDep {
   public:
@@ -315,6 +319,9 @@ namespace Uintah {
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedTask& task);
     friend std::ostream& operator<<(std::ostream& out, const Uintah::DetailedDep& task);
 
+    ParticleExchangeVar& getParticleSends() { return particleSends_; }
+    ParticleExchangeVar& getParticleRecvs() { return particleRecvs_;}
+
   protected:
     friend class DetailedTask;
 
@@ -323,6 +330,9 @@ namespace Uintah {
       return sc_;
     }
   private:
+    ParticleExchangeVar particleSends_;
+    ParticleExchangeVar particleRecvs_;
+
     void initializeBatches();
 
     void incrementDependencyGeneration();
