@@ -16,8 +16,11 @@ using namespace Uintah;
 MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("melting_temp_model");
-   if(!child)
-      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find melting temp model.", __FILE__, __LINE__);
+   if(!child) {
+      cerr << "**WARNING** Creating default (constant melting temperature) model" << endl;
+      return(scinew ConstantMeltTemp());
+      //throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find melting temp model.", __FILE__, __LINE__);
+   }
    string mat_type;
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("MPM::ConstitutiveModel:No type for melting temp model.", __FILE__, __LINE__);
@@ -28,9 +31,12 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
       return(scinew SCGMeltTemp(child));
    else if (mat_type == "bps_Tm")
       return(scinew BPSMeltTemp(child));
-   else 
-      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")",
-                                  __FILE__, __LINE__);
+   else {
+      cerr << "**WARNING** Creating default (constant melting temperature) model" << endl;
+      return(scinew ConstantMeltTemp(child));
+      //throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")",
+      //                            __FILE__, __LINE__);
+   }
 }
 
 MeltingTempModel* 
@@ -42,6 +48,9 @@ MeltingTempModelFactory::createCopy(const MeltingTempModel* mtm)
       return(scinew SCGMeltTemp(dynamic_cast<const SCGMeltTemp*>(mtm)));
    else if (dynamic_cast<const BPSMeltTemp*>(mtm))
       return(scinew BPSMeltTemp(dynamic_cast<const BPSMeltTemp*>(mtm)));
-   else 
-      throw ProblemSetupException("Cannot create copy of unknown melting temp model", __FILE__, __LINE__);
+   else {
+      cerr << "**WARNING** Creating copy of default (constant melting temperature) model" << endl;
+      return(scinew ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
+      //throw ProblemSetupException("Cannot create copy of unknown melting temp model", __FILE__, __LINE__);
+   }
 }

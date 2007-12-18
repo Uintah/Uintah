@@ -22,6 +22,7 @@ namespace Uintah {
   public:
 	 
     /*! Construct a constant melt temp model. */
+    ConstantMeltTemp();
     ConstantMeltTemp(ProblemSpecP& ps);
 
     /*! Construct a copy of constant melt temp model. */
