@@ -535,11 +535,9 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
         if (whole_patch_pset)
           var->allocate(recvset);
         else {
-          throw InternalError("Small Messages for Particles not implemented yet", __FILE__, __LINE__);
           // don't give this a pset as it could be a conatiner for several
-          //int allocated_particles = old_dw->d_foreignParticleQuantities[make_pair(matlIndex, patch)];
-          //ASSERTEQ(allocated_particles, recvset->numParticles()); // remove for small msgs
-          //var->allocate(allocated_particles);
+          int allocated_particles = old_dw->d_foreignParticleQuantities[make_pair(matlIndex, patch)];
+          var->allocate(allocated_particles);
         }
         d_lock.writeLock();
         d_varDB.put(label, matlIndex, patch, var, true);

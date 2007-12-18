@@ -121,8 +121,11 @@ public:
   virtual void copyPointer(ParticleVariable<T>&);
   virtual void copyPointer(Variable&);
   virtual void allocate(ParticleSubset*);
+  virtual void allocate(int totalParticles);
   virtual void allocate(const Patch*, const IntVector& /*boundary*/)
   { SCI_THROW(InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead.", __FILE__, __LINE__)); }
+
+  virtual int size() { return d_pdata->size; }
 
   // specialized for T=Point
   virtual void gather(ParticleSubset* dest,
@@ -227,12 +230,22 @@ private:
   }
    
   template<class T>
+  void ParticleVariable<T>::allocate(int totalParticles)
+  {
+    ASSERT(isForeign());
+    ASSERT(d_pset == 0);
+
+    // this is a pset-less storage as it could have several.  Should be used for
+    // foreign data only.  To iterate over particles in this pset, use gather
+    d_pdata=scinew ParticleData<T>(totalParticles);
+    d_pdata->addReference();
+  }
+
+  template<class T>
   void ParticleVariable<T>::allocate(ParticleSubset* pset)
   {
     TAU_PROFILE_TIMER(t1, "Release old ParticleVariable<T>::allocate()", "", TAU_USER3);
-    TAU_PROFILE_TIMER(t2, "Add Reference (pset) ParticleVariable<T>::allocate()", "", TAU_USER3);
-    TAU_PROFILE_TIMER(t3, "Allocate Data ParticleVariable<T>::allocate()", "", TAU_USER3);
-    TAU_PROFILE_TIMER(t4, "Add Reference (data) ParticleVariable<T>::allocate()", "", TAU_USER3);
+    TAU_PROFILE_TIMER(t2, "Allocate Data ParticleVariable<T>::allocate()", "", TAU_USER3);
 
     TAU_PROFILE_START(t1);
     if(d_pdata && d_pdata->removeReference())
@@ -241,18 +254,14 @@ private:
       delete d_pset;
     TAU_PROFILE_STOP(t1);
 
-    TAU_PROFILE_START(t2);
     d_pset=pset;
     d_pset->addReference();
+
+    TAU_PROFILE_START(t2);
+    d_pdata=scinew ParticleData<T>(pset->numParticles());
     TAU_PROFILE_STOP(t2);
 
-    TAU_PROFILE_START(t3);
-    d_pdata=scinew ParticleData<T>(pset->numParticles());
-    TAU_PROFILE_STOP(t3);
-
-    TAU_PROFILE_START(t4);
     d_pdata->addReference();
-    TAU_PROFILE_STOP(t4);
   }
    
   template<class T>
