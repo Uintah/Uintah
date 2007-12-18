@@ -3,6 +3,10 @@
 using namespace Uintah;
 	 
 // Construct a melt temp model.  
+ConstantMeltTemp::ConstantMeltTemp( )
+{
+}
+
 ConstantMeltTemp::ConstantMeltTemp(ProblemSpecP& )
 {
 }
