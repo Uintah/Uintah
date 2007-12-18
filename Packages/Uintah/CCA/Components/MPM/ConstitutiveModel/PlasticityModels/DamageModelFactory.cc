@@ -1,5 +1,6 @@
 
 #include "DamageModelFactory.h"
+#include "NullDamage.h"
 #include "JohnsonCookDamage.h"
 #include "HancockMacKenzieDamage.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -19,8 +20,11 @@ using namespace Uintah;
 DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("damage_model");
-   if(!child)
-      throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
+   if(!child) {
+      cerr << "**WARNING** Creating default null damage model" << endl;
+      return(scinew NullDamage());
+      //throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
+   }
    string mat_type;
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
@@ -29,8 +33,11 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
       return(scinew JohnsonCookDamage(child));
    else if (mat_type == "hancock_mackenzie")
       return(scinew HancockMacKenzieDamage(child));
-   else 
-      throw ProblemSetupException("Unknown Damage Model ("+mat_type+")", __FILE__, __LINE__);
+   else {
+      cerr << "**WARNING** Creating default null damage model" << endl;
+      return(scinew NullDamage(child));
+      //throw ProblemSetupException("Unknown Damage Model ("+mat_type+")", __FILE__, __LINE__);
+   }
 
    //return 0;
 }
@@ -43,8 +50,11 @@ DamageModel* DamageModelFactory::createCopy(const DamageModel* dm)
    else if (dynamic_cast<const HancockMacKenzieDamage*>(dm))
       return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
 
-   else 
-      throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
+   else {
+      cerr << "**WARNING** Creating copy of default null damage model" << endl;
+      return(scinew NullDamage(dynamic_cast<const NullDamage*>(dm)));
+      //throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
+   }
 
    //return 0;
 }
