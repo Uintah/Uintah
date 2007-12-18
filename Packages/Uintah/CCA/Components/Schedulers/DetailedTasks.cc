@@ -590,8 +590,7 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
       
       bool extraComm = newSize > requiredSize+oldSize;
 
-      // not going to work for particle variables (until we can append Particledata instead of replace it in DW::recvMPI)
-      if (sc_->useSmallMessages() && req->var->typeDescription()->getType() != TypeDescription::ParticleVariable) {
+      if (sc_->useSmallMessages()) {
         // If two patches on the same processor want data from the same patch on a different
         // processor, we can either pack them in one dependency and send the min and max of their range (which
         // will frequently result in sending the entire patch), or we can use two dependencies (which will get packed into

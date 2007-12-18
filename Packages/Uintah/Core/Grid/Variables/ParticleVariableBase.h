@@ -6,6 +6,8 @@
 #include <Packages/Uintah/Core/Grid/Variables/Variable.h>
 #include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
 
+#include <Core/Util/Assert.h>
+
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
@@ -76,6 +78,7 @@ WARNING
       
       virtual void allocate(const Patch*, const IntVector& boundary) = 0; // will throw an InternalError
       virtual void allocate(ParticleSubset*) = 0;
+      virtual void allocate(int totalParticles) = 0;
       virtual void gather(ParticleSubset* dest,
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs,
@@ -98,9 +101,12 @@ WARNING
 			       const ProcessorGroup* pg,
 			       ParticleSubset* pset) = 0;
 
+      virtual int size() = 0;
+
       //////////
       // Insert Documentation Here:
       ParticleSubset* getParticleSubset() const {
+        ASSERT(!isForeign());
 	 return d_pset;
       }
 
