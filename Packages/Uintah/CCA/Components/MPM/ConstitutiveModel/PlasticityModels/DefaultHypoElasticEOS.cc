@@ -5,6 +5,10 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+DefaultHypoElasticEOS::DefaultHypoElasticEOS()
+{
+} 
+
 DefaultHypoElasticEOS::DefaultHypoElasticEOS(ProblemSpecP&)
 {
 } 

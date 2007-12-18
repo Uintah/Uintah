@@ -40,6 +40,9 @@ namespace Uintah {
 
   public:
     // constructors
+    DefaultHypoElasticEOS(); // This constructor is used when there is
+                             // no equation_of_state tag in the input
+                             // file  ** WARNING **
     DefaultHypoElasticEOS(ProblemSpecP& ps); 
     DefaultHypoElasticEOS(const DefaultHypoElasticEOS* cm);
 	 
