@@ -3,6 +3,10 @@
 using namespace Uintah;
 	 
 // Construct a shear modulus model.  
+ConstantShear::ConstantShear()
+{
+}
+
 ConstantShear::ConstantShear(ProblemSpecP& )
 {
 }
