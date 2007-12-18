@@ -6,6 +6,7 @@ SRCS     += \
 	$(SRCDIR)/PlasticityState.cc \
 	$(SRCDIR)/DamageModel.cc \
 	$(SRCDIR)/DamageModelFactory.cc \
+	$(SRCDIR)/NullDamage.cc \
 	$(SRCDIR)/JohnsonCookDamage.cc \
 	$(SRCDIR)/HancockMacKenzieDamage.cc \
 	$(SRCDIR)/MPMEquationOfState.cc \
