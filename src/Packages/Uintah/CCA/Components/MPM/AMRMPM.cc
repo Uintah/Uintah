@@ -152,6 +152,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
 
+  d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
+
   ProblemSpecP p = prob_spec->findBlock("DataArchiver");
   if(!p->get("outputInterval", d_outputInterval))
     d_outputInterval = 1.0;

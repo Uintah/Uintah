@@ -197,8 +197,11 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires( Task::OldDW, mi->delT_Label);
   
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gan = Ghost::AroundNodes;  
   Ghost::GhostType  gn  = Ghost::None;
+
+  Ghost::GhostType  gp;
+  int ngc_p;
+  d_sharedState->getParticleGhostLayer(gp, ngc_p);
   
   // define material subsets  
   const MaterialSet* all_matls = d_sharedState->allMaterials();
@@ -219,7 +222,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
   t->requires(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
-  t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gan,1);
+  t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gp,ngc_p);
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
   t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
@@ -277,6 +280,12 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   double totalBurnedMass = 0;
   double totalHeatReleased = 0;
   
+  Ghost::GhostType  gn  = Ghost::None;    
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gp;
+  int ngc_p;
+  d_sharedState->getParticleGhostLayer(gp, ngc_p);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
@@ -301,9 +310,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     constNCVariable<double>   NC_CCweight, NCsolidMass;
     constCCVariable<Vector>   vel_CC;
 
-    Ghost::GhostType  gn  = Ghost::None;    
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gan = Ghost::AroundNodes;
     /* Reactant data */
     old_dw->get(solidTemp,       MIlb->temp_CCLabel,    m0, patch, gac, 1);
     new_dw->get(solidMass,       MIlb->cMassLabel,      m0, patch, gn,  0);
@@ -313,7 +319,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 
 
     constParticleVariable<Point>  px;
-    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gan,1, Mlb->pXLabel);
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gp,ngc_p, Mlb->pXLabel);
     old_dw->get(px, Mlb->pXLabel, pset);    
     /* Product Data */
        
@@ -329,7 +335,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 
     /* Indicating cells containing how many particles */
     CCVariable<double> pFlag;
-    new_dw->allocateTemporary(pFlag, patch, gac, 1);
+    new_dw->allocateTemporary(pFlag, patch, gac, ngc_p);
     pFlag.initialize(0.0);
 
     /* All Material Data */

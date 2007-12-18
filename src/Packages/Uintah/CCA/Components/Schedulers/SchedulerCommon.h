@@ -216,6 +216,9 @@ WARNING
     IntVector trackingStartIndex_;
     IntVector trackingEndIndex_;
 
+    int numParticleGhostCells_;
+    Ghost::GhostType particleGhostType_;
+
     // so we can manually copy vars between AMR levels
     set<string> copyDataVars_;
 

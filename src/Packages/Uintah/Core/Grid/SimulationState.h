@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/SimulationTime.h>
+#include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
@@ -129,6 +130,17 @@ public:
   int needAddMaterial() const {
     return d_needAddMaterial;
   }
+
+  inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
+    particle_ghost_type = type;
+    particle_ghost_layer = ngc;
+  }
+
+  inline void getParticleGhostLayer(Ghost::GhostType& type, int& ngc) {
+    type = particle_ghost_type;
+    ngc = particle_ghost_layer;
+  }
+
   void resetNeedAddMaterial() {
     d_needAddMaterial = 0;
   }
@@ -231,6 +243,10 @@ private:
 
   //! for carry over vars in Switcher
   int max_matl_index;
+
+  //! so all components can know how many particle ghost cells to ask for
+  Ghost::GhostType particle_ghost_type;
+  int particle_ghost_layer;
 
   //! in switcher we need to clear the materials, but don't 
   //! delete them yet or we might have VarLabel problems when 

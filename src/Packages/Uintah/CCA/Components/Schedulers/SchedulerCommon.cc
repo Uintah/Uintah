@@ -460,6 +460,20 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls.get_rep(), dep_patches.get_rep(),
 					 dep->gtype, dep->numGhostCells);
     }
+    if (dep->var->typeDescription()->getType() == TypeDescription::ParticleVariable && dep->numGhostCells != 0) {
+      if (numParticleGhostCells_ == 0) {
+        numParticleGhostCells_ = dep->numGhostCells;
+        particleGhostType_ = dep->gtype;
+      }
+      else if (numParticleGhostCells_ != dep->numGhostCells) {
+        ostringstream ostr;
+        ostr << "Invalid Particle Variable require: not consistent with previous particle requires:\n"
+             << "Previous: Ghost::" << Ghost::getGhostTypeName(particleGhostType_) << " with numGhostCells " << numParticleGhostCells_
+             << " Invalid: Ghost::" << Ghost::getGhostTypeName(dep->gtype) << " with numGhostCells " << dep->numGhostCells << endl;
+        throw InternalError(ostr.str(), __FILE__, __LINE__);
+      }
+    }
+    
   }
 
   // for the treat-as-old vars, go through the computes and add them.
@@ -506,6 +520,8 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   for (unsigned i = 0; i < graphs.size(); i++) {
     delete graphs[i];
   }
+
+  numParticleGhostCells_ = 0;
 
   graphs.clear();
 
