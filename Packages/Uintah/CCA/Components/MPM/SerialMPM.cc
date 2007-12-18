@@ -190,6 +190,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
 
+  d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
+
   MPMPhysicalBCFactory::create(restart_mat_ps);
 
   contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, restart_mat_ps,sharedState,lb,flags);
@@ -541,7 +543,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
   t->requires(Task::OldDW, lb->pErosionLabel,          gan,NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
-    
   //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
 
   t->computes(lb->gMassLabel);

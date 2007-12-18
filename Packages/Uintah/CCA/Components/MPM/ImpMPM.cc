@@ -228,6 +228,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
                                                   Vector(0,0,0));
    }
 
+   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, 1);
+
    MPMPhysicalBCFactory::create(restart_mat_ps);
    if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
      if(flags->d_useLoadCurves){
