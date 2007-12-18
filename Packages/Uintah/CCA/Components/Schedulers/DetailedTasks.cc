@@ -668,6 +668,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     return;
   }
 
+
   DependencyBatch* batch = from->getComputes();
   for(;batch != 0; batch = batch->comp_next){
     if(batch->to == toresource)
@@ -701,6 +702,18 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   if(!dep){
     dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, 
 			     low, high, cond);
+    // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
+    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
+      if (fromresource == d_myworld->myrank())
+        particleSends_[toresource].insert(PSPatchMatlGhost(fromPatch, matl, low, high, (int) cond));
+      else if (toresource == d_myworld->myrank())
+        particleRecvs_[fromresource].insert(PSPatchMatlGhost(fromPatch, matl, low, high, (int) cond));
+      if (req->var->getName() == "p.x") 
+        dbg << d_myworld->myrank() << " scheduling particles from " << fromresource << " to " << toresource 
+            << " on patch " << fromPatch->getID() << " matl " << matl << " range " << low << " " << high 
+            << " cond " << cond << " dw " << req->mapDataWarehouse() << endl;
+    }
+    
     batch->head = dep;
     if(dbg.active()) {
       dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
@@ -721,6 +734,31 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
         dbg << *comp->var << '\n';
       if(dep->comp)
         dbg << *dep->comp->var << '\n';
+    }
+    // extend these too
+    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
+      PSPatchMatlGhost pmg(fromPatch, matl, dep->low, dep->high, (int) cond);
+      PSPatchMatlGhost pmg_new(fromPatch, matl, l, h, (int) cond);
+      if (req->var->getName() == "p.x")
+        dbg << d_myworld->myrank() << " extending particles from " << fromresource << " to " << toresource 
+            << " var " << *req->var << " on patch " << fromPatch->getID() << " matl " << matl 
+            << " range " << dep->low << " " << dep->high << " cond " << cond 
+            << " dw " << req->mapDataWarehouse() << " extended to " << l << " " << h << endl;
+      if (fromresource == d_myworld->myrank()) {
+        set<PSPatchMatlGhost>::iterator iter= particleSends_[toresource].find(pmg);
+        // if it is not there, assume it already got extended
+        if (iter != particleSends_[toresource].end()) {
+          particleSends_[toresource].erase(pmg);
+          particleSends_[toresource].insert(pmg_new);
+        }
+      }
+      else if (toresource == d_myworld->myrank()) {
+        set<PSPatchMatlGhost>::iterator iter= particleRecvs_[fromresource].find(pmg);
+        if (iter != particleRecvs_[toresource].end()) {
+          particleRecvs_[fromresource].erase(pmg);
+          particleRecvs_[fromresource].insert(pmg_new);
+        }
+      }
     }
     dep->low=l;
     dep->high=h;  
@@ -956,6 +994,7 @@ DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = mpiCompletedTasks_.front();
   mpiCompletedTasks_.pop();
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << mpiCompletedTasks_.size() << endl;
   return nextTask;
 }
 

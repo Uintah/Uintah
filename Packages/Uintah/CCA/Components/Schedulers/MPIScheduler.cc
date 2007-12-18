@@ -129,6 +129,7 @@ SchedulerP
 MPIScheduler::createSubScheduler()
 {
   MPIScheduler* newsched = scinew MPIScheduler(d_myworld, m_outPort, this);
+  newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   return newsched;
@@ -529,7 +530,6 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       }
       if (dbg.active()) {
         ostr << *req << ' ';
-        //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && batch->fromTask->getAssignedResourceIndex() == 43) 
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
       }
       
@@ -556,7 +556,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       MPIScheduler* top = this;
       while(top->parentScheduler) top = top->parentScheduler;
 
-      dw->recvMPI(batch, posLabel, mpibuff, posDW, req, lb);
+      dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
       if (!req->isNonDataDependency()) {
 	graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
@@ -683,6 +683,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   tg->setIteration(iteration);
   currentTG_ = tgnum;
 
+  if (d_myworld->myrank() == 0 ) cout << " iteration " << iteration << endl;
   if (graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
@@ -743,9 +744,21 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   int i = 0;
 
+  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
+    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+
   TAU_PROFILE_TIMER(doittimer, "Task execution", 
 		    "[MPIScheduler::execute() loop] ", TAU_USER); 
   TAU_PROFILE_START(doittimer);
+
+#if 0
+  // hook to post all the messages up front
+  if (useExternalQueue_ && !d_sharedState->isCopyDataTimestep()) {
+    // post the receives in advance
+    for (int i = 0; i < ntasks; i++)
+      initiateTask( dts->localTask(i), abort, abort_point, iteration );
+  }
+#endif
 
   set<DetailedTask*> pending_tasks;
 
@@ -833,7 +846,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
           numTasksDone++;
         }
         else {
-          taskdbg << d_myworld->myrank() << " Initiating task " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          taskdbg << d_myworld->myrank() << " Task internall ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           initiateTask( task, abort, abort_point, iteration );
           task->markInitiated();
           task->checkExternalDepCount();
