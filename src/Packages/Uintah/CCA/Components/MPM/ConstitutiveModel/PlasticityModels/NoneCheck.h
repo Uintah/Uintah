@@ -9,23 +9,19 @@
 namespace Uintah {
 
   /*! \class NoneCheck
-   *  \brief Checks the loss of ellipticity/hyperbolicity using the 
-   *         the None stability postulate.
+   *  \brief Do not check for loss of ellipticity/hyperbolicity.
    *  \author  Biswajit Banerjee, \n
    *           C-SAFE and Department of Mechanical Engineering,\n
    *           University of Utah.\n
    *           Copyright (C) 2003 Container Dynamics Group\n
 
-   The material is assumed to become unstable when
-   \f[
-      \dot\sigma:D^p \le 0
-   \f]
   */
   class NoneCheck : public StabilityCheck {
 
   public:
 	 
     //! Construct an object that can be used to check stability
+    NoneCheck();
     NoneCheck(ProblemSpecP& ps);
     NoneCheck(const NoneCheck* cm);
 
