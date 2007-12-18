@@ -9,6 +9,10 @@
 using namespace Uintah;
 using namespace std;
 
+NoneCheck::NoneCheck()
+{
+}
+
 NoneCheck::NoneCheck(ProblemSpecP& )
 {
 }
@@ -30,8 +34,8 @@ void NoneCheck::outputProblemSpec(ProblemSpecP& ps)
 	 
 bool 
 NoneCheck::checkStability(const Matrix3& ,
-                          const Matrix3& deformRate ,
-                          const TangentModulusTensor& Cep ,
+                          const Matrix3& ,
+                          const TangentModulusTensor& ,
                           Vector& )
 {
   return true;
