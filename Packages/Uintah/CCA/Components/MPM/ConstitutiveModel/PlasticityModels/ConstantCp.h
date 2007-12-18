@@ -22,6 +22,7 @@ namespace Uintah {
   public:
 	 
     /*! Construct a constant specfic heat model. */
+    ConstantCp();
     ConstantCp(ProblemSpecP& ps);
 
     /*! Construct a copy of constant specfic heat model. */
