@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component PUBLIC '-//SCIRun/Component DTD' 'component.dtd'>
+<!DOCTYPE component PUBLIC '-//SCIRun/Component DTD' '../../SCIRun/Dataflow/XML/component.dtd'>
 
 <component name="AnimatedStreams" category="Visualization">
   <overview>
