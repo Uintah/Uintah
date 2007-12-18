@@ -22,6 +22,7 @@ namespace Uintah {
   public:
 	 
     /*! Construct a constant shear modulus model. */
+    ConstantShear();
     ConstantShear(ProblemSpecP& ps);
 
     /*! Construct a copy of constant shear modulus model. */

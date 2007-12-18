@@ -20,9 +20,12 @@ using namespace Uintah;
 ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("shear_modulus_model");
-   if(!child)
-      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find shear modulus model.",
-                                  __FILE__, __LINE__);
+   if(!child) {
+      cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
+      return(scinew ConstantShear());
+      //throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find shear modulus model.",
+      //                            __FILE__, __LINE__);
+   }
    string mat_type;
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("MPM::ConstitutiveModel:No type for shear modulus model.",
@@ -38,9 +41,12 @@ ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
       return(scinew PTWShear(child));
    else if (mat_type == "np_shear")
       return(scinew NPShear(child));
-   else 
-      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Shear Modulus Model ("+mat_type+")",
-                                  __FILE__, __LINE__);
+   else {
+      cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
+      return(scinew ConstantShear(child));
+      //throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Shear Modulus Model ("+mat_type+")",
+      //                            __FILE__, __LINE__);
+   }
 }
 
 ShearModulusModel* 
@@ -56,7 +62,10 @@ ShearModulusModelFactory::createCopy(const ShearModulusModel* smm)
       return(scinew PTWShear(dynamic_cast<const PTWShear*>(smm)));
    else if (dynamic_cast<const NPShear*>(smm))
       return(scinew NPShear(dynamic_cast<const NPShear*>(smm)));
-   else 
-      throw ProblemSetupException("Cannot create copy of unknown shear modulus model",
-                                  __FILE__, __LINE__);
+   else {
+      cerr << "**WARNING** Creating copy of default (constant shear modulus) model" << endl;
+      return(scinew ConstantShear(dynamic_cast<const ConstantShear*>(smm)));
+      //throw ProblemSetupException("Cannot create copy of unknown shear modulus model",
+      //                            __FILE__, __LINE__);
+   }
 }
