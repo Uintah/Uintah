@@ -34,6 +34,7 @@ namespace Uintah {
 
   class BufferInfo;
   class DependencyBatch;
+  class DetailedTasks;
   class DetailedDep;
   class TypeDescription;
   class Patch;
@@ -216,9 +217,11 @@ public:
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);
 
-   void sendMPI(DependencyBatch* batch,	const VarLabel* pos_var, BufferInfo& buffer, 
+   void exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, 
+                                   const VarLabel* pos_var, int iteration);
+   void sendMPI(DependencyBatch* batch, const VarLabel* pos_var, BufferInfo& buffer, 
                 OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
-   void recvMPI(DependencyBatch* batch, const VarLabel* pos_var, BufferInfo& buffer,
+   void recvMPI(DependencyBatch* batch, BufferInfo& buffer,
 	        OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void reduceMPI(const VarLabel* label, const Level* level,
 		  const MaterialSubset* matls);
@@ -294,9 +297,6 @@ private:
 
   void getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
            Ghost::GhostType gtype, int numGhostCells);
-  void recvMPIGridVar(BufferInfo& buffer, const DetailedDep* dep,
-           const VarLabel* label, int matlIndex, const Patch* patch);
-
 
 
   // These will throw an exception if access is not allowed for the
@@ -332,17 +332,18 @@ private:
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
    typedef map<PSPatchMatlGhost, ParticleSubset*> psetDBType;
    typedef map<pair<int, const Patch*>, map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
+   typedef map<pair<int, const Patch*>, int> particleQuantityType;
 
    DWDatabase<Patch>  d_varDB;
    DWDatabase<Level>  d_levelDB;
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
    psetAddDBType d_addsetDB;
+   particleQuantityType d_foreignParticleQuantities;
 
 
    // Keep track of when this DW sent some (and which) particle information to another processor
    SendState  ss_;
-   SendState  rs_;
 
    /*
    // On a timestep restart, sometimes (when an entire patch is sent) on the
