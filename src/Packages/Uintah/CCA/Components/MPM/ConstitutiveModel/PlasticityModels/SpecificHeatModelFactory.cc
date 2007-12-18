@@ -19,11 +19,13 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
 {
   ProblemSpecP child = ps->findBlock("specific_heat_model");
   if(!child) {
-    ostringstream desc;
-    desc << "**Error in Input UPS File: " 
-	 << "MPM:SpecificHeatModel:  "
-	 << "No specific_heat_model tag found in input file." << endl;
-    throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
+    cerr << "** WARNING ** Creating default (constant specific heat) model" << endl;
+    return(scinew ConstantCp());
+    //ostringstream desc;
+    //desc << "**Error in Input UPS File: " 
+	// << "MPM:SpecificHeatModel:  "
+	// << "No specific_heat_model tag found in input file." << endl;
+    //throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
   string mat_type;
   if(!child->getAttribute("type", mat_type)) {
@@ -42,14 +44,16 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
   else if (mat_type == "steel_Cp")
     return(scinew SteelCp(child));
   else {
-    ostringstream desc;
-    desc << "**Error in Input UPS File: " 
-	 << "MPM:SpecificHeatModel:  "
-	 << "Incorrect specific_heat_model type (" << mat_type 
-	 << ") found in input file. " << endl 
-	 << "Correct type tags include constant_Cp, copper_Cp, and steel_Cp." 
-	 << endl;
-    throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
+    cerr << "** WARNING ** Creating default (constant specific heat) model" << endl;
+    return(scinew ConstantCp(child));
+    //ostringstream desc;
+    //desc << "**Error in Input UPS File: " 
+	 //<< "MPM:SpecificHeatModel:  "
+	 //<< "Incorrect specific_heat_model type (" << mat_type 
+	 //<< ") found in input file. " << endl 
+	 //<< "Correct type tags include constant_Cp, copper_Cp, and steel_Cp." 
+	 //<< endl;
+    //throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
 }
 
@@ -63,11 +67,13 @@ SpecificHeatModelFactory::createCopy(const SpecificHeatModel* smm)
   else if (dynamic_cast<const SteelCp*>(smm))
     return(scinew SteelCp(dynamic_cast<const SteelCp*>(smm)));
   else {
-    ostringstream desc;
-    desc << "**Error in Material Copying: " 
-	 << "MPM:SpecificHeatModel:  "
-         << "Cannot create copy of unknown specific heat model"
-	 << endl;
-    throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
+    cerr << "** WARNING ** Creating copy of default (constant specific heat) model" << endl;
+    return(scinew ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
+    //ostringstream desc;
+    //desc << "**Error in Material Copying: " 
+	// << "MPM:SpecificHeatModel:  "
+        // << "Cannot create copy of unknown specific heat model"
+	// << endl;
+    //throw ProblemSetupException(desc.str(), __FILE__, __LINE__);
   }
 }

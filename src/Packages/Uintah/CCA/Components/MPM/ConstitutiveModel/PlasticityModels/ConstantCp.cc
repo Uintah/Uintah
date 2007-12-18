@@ -3,6 +3,10 @@
 using namespace Uintah;
 	 
 // Construct a specific heat model.  
+ConstantCp::ConstantCp()
+{
+}
+
 ConstantCp::ConstantCp(ProblemSpecP& )
 {
 }
