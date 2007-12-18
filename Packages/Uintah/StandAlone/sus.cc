@@ -412,8 +412,10 @@ main( int argc, char** argv )
       char name[256];
       gethostname(name, 256);
       int sleepTime = atoi( st );
-      cout << "SLEEPING FOR " << sleepTime 
-           << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
+      if (Uintah::Parallel::getMPIRank() == 0) {
+        cout << "SLEEPING FOR " << sleepTime 
+             << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
+      }
       cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
       Time::waitFor( (double)sleepTime );
     }

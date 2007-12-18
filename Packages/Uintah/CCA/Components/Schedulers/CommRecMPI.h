@@ -47,6 +47,8 @@ public:
 
   unsigned long numRequests() const
   { return ids.size(); }
+
+  void print(const ProcessorGroup * pg);
 private:  
   vector<MPI_Request> ids;
   vector<int> groupIDs;  

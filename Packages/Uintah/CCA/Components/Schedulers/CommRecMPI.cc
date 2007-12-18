@@ -37,6 +37,14 @@ void CommRecMPI::add(MPI_Request id, int bytes,
   else
     ++(countIter->second);
 }
+
+void CommRecMPI::print(const ProcessorGroup * pg)
+{
+  for (unsigned i = 0; i < ids.size(); i++) 
+  {
+    cout << pg->myrank() << " Message: " << byteCounts[i] << " vars: " << " num " << messageNums[i] << " Vars: " << vars[i] << endl;
+  }
+}
   
 bool CommRecMPI::waitsome(const ProcessorGroup * pg, 
 			  list<int>* finishedGroups /* = 0 */)
