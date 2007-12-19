@@ -433,7 +433,6 @@ ProblemSpec::get(const string& name, vector<double>& value)
   if(!this->get(name, string_values)) {
     return 0;
   }
-  
   for(vector<string>::const_iterator vit(string_values.begin());
       vit!=string_values.end();vit++) {
     const string v(*vit);
@@ -482,11 +481,16 @@ ProblemSpec::get(const string& name, vector<string>& value)
     string result;
     while (!in.eof()) {
       in >> c;
+      if(!in){
+        if(result.size() > 0)
+          value.push_back(result);
+        break;
+      }
       if (c == '[' || c == ',' || c == ' ' || c == ']')
         continue;
       next = in.peek();
       result += c;
-      if (next == ',' ||  next == ' ' || next == ']') {
+      if (next == ',' ||  next == ' ' || next == ']' || next == string::npos || in.eof()) {
         // push next string onto stack
         value.push_back(result);
         result.erase();
