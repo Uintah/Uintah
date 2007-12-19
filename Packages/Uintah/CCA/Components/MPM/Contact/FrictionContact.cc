@@ -324,9 +324,12 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       }
 
       // Create arrays for the particle stress and grid stress
+      Ghost::GhostType  gp;
+      int ngc_p;
+      d_sharedState->getParticleGhostLayer(gp, ngc_p);
+
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                                       Ghost::AroundNodes, NGP,
-                                                       lb->pXLabel);
+                                                       gp,ngc_p, lb->pXLabel);
       constParticleVariable<Matrix3> pstress;
       constParticleVariable<Point> px;
       old_dw->get(pstress, lb->pStressLabel, pset);
@@ -717,12 +720,16 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 {
   Task * t = scinew Task("Friction::exMomInterpolated", 
                       this, &FrictionContact::exMomInterpolated);
+
+  Ghost::GhostType  gp;
+  int ngc_p;
+  d_sharedState->getParticleGhostLayer(gp, ngc_p);
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);
-  t->requires(Task::OldDW, lb->pXLabel,           Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW, lb->pStressLabel,      Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pXLabel,           gp, ngc_p);
+  t->requires(Task::OldDW, lb->pStressLabel,      gp, ngc_p);
+  t->requires(Task::OldDW, lb->pSizeLabel,        gp, ngc_p);
   t->requires(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
