@@ -35,21 +35,22 @@
               <lower>[0,0,0]</lower>
               <upper>[1.0,1.0,1.0]</upper>
               <extraCells>   [1,1,1]    </extraCells>
+               <resolution>[20,20,20]</resolution>
               <patches>[2,1,1]</patches>
            </Box>
            <Stretch axis="x">
-             <linear to="0.2" fromSpacing="0.02" toSpacing="0.005"/>
-             <uniform to="0.3"/>
-             <linear to="0.5" toSpacing=".04"/>
-             <linear to="0.7" toSpacing=".005"/>
-             <uniform to="0.8"/>
-             <linear toSpacing="0.02"/>
+<!--             <coordinates>0.2 0.3 0.5 0.7 0.8</coordinates>  -->
+<!--             <density>  1 10  10  20  10  1   1</density> -->
+             <coordinates>0.3 0.7</coordinates>
+             <density>  1 3 3 1</density>
            </Stretch>
            <Stretch axis="y">
-             <linear fromSpacing="0.01" toSpacing="0.1"/>
+             <coordinates/>
+             <density>1 10</density>
            </Stretch>
            <Stretch axis="z">
-             <uniform spacing="0.1"/>
+             <coordinates/>
+             <density>1 1</density>
            </Stretch>
        </Level>
     </Grid>
