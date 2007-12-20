@@ -52,6 +52,8 @@ IF(WIN32)
   ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
   # turns off VS 2005 warnings about strcpy et.al. being unsafe
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
+  ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN) # makes sure things like rad1/grp1 don't get defined
+  ADD_DEFINITIONS(-DNOMINMAX) # makes sure min and max don't get defined
   
   # win32 l3 warnings are a little ridiculous
   SET(CMAKE_CXX_WARNING_LEVEL 1)
