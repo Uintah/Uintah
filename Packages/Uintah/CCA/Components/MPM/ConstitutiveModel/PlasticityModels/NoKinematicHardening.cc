@@ -39,26 +39,17 @@ void NoKinematicHardening::outputProblemSpec(ProblemSpecP& ps)
   plastic_ps->setAttribute("type","none");
 }
 
-double 
-NoKinematicHardening::computeKinematicHardeningModulus(const PlasticityState* state,
-                                                       const double& delT,
-                                                       const MPMMaterial* matl,
-                                                       const particleIndex idx)
-{
-  return 0.0;
-}
- 
 void 
 NoKinematicHardening::computeBackStress(const PlasticityState* state,
                                         const double& delT,
                                         const particleIndex idx,
-                                        const double& delGamma,
+                                        const double& delLambda,
                                         const Matrix3& df_dsigma_new,
+                                        const Matrix3& backStress_old,
                                         Matrix3& backStress_new)
 {
   Matrix3 Zero(0.0);
   backStress_new = Zero;
-  pBackStress_new[idx] = Zero;
   return;
 }
 

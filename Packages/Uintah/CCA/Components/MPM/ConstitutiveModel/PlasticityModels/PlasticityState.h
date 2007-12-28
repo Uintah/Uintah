@@ -1,6 +1,8 @@
 #ifndef __PLASTICITY_STATE_DATA_H__
 #define __PLASTICITY_STATE_DATA_H__
 
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -35,6 +37,8 @@ namespace Uintah {
     double meltingTemp;
     double initialMeltTemp;
     double specificHeat;
+    double porosity;
+    Matrix3 backStress;
 
     PlasticityState();
 

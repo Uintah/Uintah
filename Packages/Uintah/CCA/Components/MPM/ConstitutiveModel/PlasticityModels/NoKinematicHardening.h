@@ -40,21 +40,14 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
     //////////
-    /*! \brief Calculate the kinematic hardening modulus */
-    //////////
-    virtual double computeKinematicHardeningModulus(const PlasticityState* state,
-                                     const double& delT,
-                                     const MPMMaterial* matl,
-                                     const particleIndex idx);
- 
-    //////////
     /*! \brief Calculate the back stress */
     //////////
     virtual void computeBackStress(const PlasticityState* state,
                                    const double& delT,
                                    const particleIndex idx,
-                                   const double& delGamma,
+                                   const double& delLambda,
                                    const Matrix3& df_dsigma_new,
+                                   const Matrix3& backStress_old,
                                    Matrix3& backStress_new);
 
   };

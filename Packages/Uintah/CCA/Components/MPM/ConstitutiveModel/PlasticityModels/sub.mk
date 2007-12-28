@@ -47,7 +47,12 @@ SRCS     += \
 	$(SRCDIR)/MeltingTempModelFactory.cc \
 	$(SRCDIR)/ConstantMeltTemp.cc \
 	$(SRCDIR)/SCGMeltTemp.cc \
-	$(SRCDIR)/BPSMeltTemp.cc
+	$(SRCDIR)/BPSMeltTemp.cc \
+	$(SRCDIR)/KinematicHardeningModel.cc \
+	$(SRCDIR)/KinematicHardeningModelFactory.cc \
+	$(SRCDIR)/NoKinematicHardening.cc \
+	$(SRCDIR)/PragerKinematicHardening.cc \
+	$(SRCDIR)/ArmstrongFrederickKinematicHardening.cc 
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Disclosure \

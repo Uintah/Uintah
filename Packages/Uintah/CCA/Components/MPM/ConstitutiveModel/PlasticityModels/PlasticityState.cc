@@ -21,6 +21,8 @@ PlasticityState::PlasticityState()
   meltingTemp = 0.0;
   initialMeltTemp = 0.0;
   specificHeat = 0.0;
+  porosity = 0.0;
+  backStress = Matrix3(0.0);
 }
 
 PlasticityState::PlasticityState(const PlasticityState& state)
@@ -43,6 +45,8 @@ PlasticityState::PlasticityState(const PlasticityState& state)
   meltingTemp = state.meltingTemp ;
   initialMeltTemp = state.initialMeltTemp ;
   specificHeat = state.specificHeat;
+  porosity = state.porosity;
+  backStress = state.backStress;
 }
 
 PlasticityState::PlasticityState(const PlasticityState* state)
@@ -65,6 +69,8 @@ PlasticityState::PlasticityState(const PlasticityState* state)
   meltingTemp = state->meltingTemp ;
   initialMeltTemp = state->initialMeltTemp ;
   specificHeat = state->specificHeat;
+  porosity = state->porosity;
+  backStress = state->backStress;
 }
 
 PlasticityState::~PlasticityState()
@@ -93,6 +99,8 @@ PlasticityState::operator=(const PlasticityState& state)
   meltingTemp = state.meltingTemp ;
   initialMeltTemp = state.initialMeltTemp ;
   specificHeat = state.specificHeat;
+  porosity = state.porosity;
+  backStress = state.backStress;
   return *this;
 }
 
@@ -118,5 +126,7 @@ PlasticityState::operator=(const PlasticityState* state)
   meltingTemp = state->meltingTemp ;
   initialMeltTemp = state->initialMeltTemp ;
   specificHeat = state->specificHeat;
+  porosity = state->porosity;
+  backStress = state->backStress;
   return this;
 }
