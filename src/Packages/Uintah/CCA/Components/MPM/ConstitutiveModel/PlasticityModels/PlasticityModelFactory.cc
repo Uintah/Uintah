@@ -39,8 +39,11 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
       return(scinew SCGPlastic(child));
    else if (mat_type == "preston_tonks_wallace")
       return(scinew PTWPlastic(child));
-   else 
+   else {
+      //cerr << "**WARNING** Creating default isotropic hardening plasticity model" << endl;
+      //return(scinew IsoHardeningPlastic(child));
       throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")", __FILE__, __LINE__);
+   }
 }
 
 PlasticityModel* 
@@ -66,7 +69,11 @@ PlasticityModelFactory::createCopy(const PlasticityModel* pm)
    else if (dynamic_cast<const PTWPlastic*>(pm))
       return(scinew PTWPlastic(dynamic_cast<const PTWPlastic*>(pm)));
    
-   else 
+   else {
+      //cerr << "**WARNING** Creating copy of default isotropic hardening plasticity model" << endl;
+      //return(scinew IsoHardeningPlastic(dynamic_cast<const 
+      //                                  IsoHardeningPlastic*>(pm)));
       throw ProblemSetupException("Cannot create copy of unknown plasticity model", __FILE__, __LINE__);
+   }
 }
 

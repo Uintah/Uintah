@@ -25,27 +25,33 @@ namespace Uintah {
 
     For associative plasticity
     \f[
-      d_p = dot{\gamma}~\frac{\partial f}{\partial sigma}
+      d_p = dot{\lambda}~\frac{\partial f}{\partial sigma}
     \f]
-    For von Mises plasticity
+    For von Mises plasticity with the yield condition of the form
     \f[
-      \frac{\partial f}{\partial sigma} = \frac{\sigma-\beta}{||\sigma-\beta||} = n
+      f := \sqrt{\frac{3}{2} \xi:\xi} - \sigma_y \le 0
+    \f]
+    where \f$\xi = s - \beta\f$ and \f$s\f$ is the deviatoric part of the Cauchy 
+    stress, we have
+    \f[
+      \frac{\partial f}{\partial sigma} = \sqrt{\frac{3}{2}}\cfrac{\xi}{||\xi||} 
+       = \sqrt{\frac{3}{2}}~n ~;~~ ||n|| = 1
     \f]
     and
     \f[
-      ||d_p|| = dot{gamma}
+      d_p = \sqrt{\frac{3}{2}}~\dot{\lambda}~n; ||d_p|| = \sqrt{\frac{3}{2}}~\dot{\lambda}
     \f]
     Therefore, the evolution equation for beta can be written as
     \f[
-    \dot{\beta} = \frac{2}{3}~H_1~\dot{gamma}~n - H_2~\beta~\dot{gamma}
+    \dot{\beta} = \sqrt{\frac{2}{3}}~H_1~\dot{\lambda}~n - \sqrt{\frac{3}{2}}~H_2~\beta~\dot{\lambda}
     \f]
     A backward Euler discretization leads to
     \f[
-    \beta_{n+1} - \beta_n = \Delta\gamma(\frac{2}{3}~H_1~n_{n+1} - H_2~\beta_{n+1})
+    \beta_{n+1} - \beta_n = \Delta\lambda(\sqrt{\frac{2}{3}}~H_1~\n_{n+1} - \sqrt{\frac{3}{2}}~H_2~\beta_{n+1})
     \f]
     or
     \f[
-    \beta_{n+1} = \frac{1}{1 + H_2~\Delta\gamma}(\beta_n + \frac{2}{3}\Delta\gamma~H_1~n_{n+1})
+    \beta_{n+1} = \frac{1}{1 + \sqrt{\frac{3}{2}}~H_2~\Delta\lambda}(\beta_n + \sqrt{\frac{2}{3}}~\Delta\lambda~H_1~n_{n+1})
     \f]
   */
   /////////////////////////////////////////////////////////////////////////////
@@ -80,21 +86,14 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
     //////////
-    /*! \brief Calculate the kinematic hardening modulus */
-    //////////
-    virtual double computeKinematicHardeningModulus(const PlasticityState* state,
-                                     const double& delT,
-                                     const MPMMaterial* matl,
-                                     const particleIndex idx);
- 
-    //////////
     /*! \brief Calculate the back stress */
     //////////
     virtual void computeBackStress(const PlasticityState* state,
                                    const double& delT,
                                    const particleIndex idx,
-                                   const double& delGamma,
+                                   const double& delLambda,
                                    const Matrix3& df_dsigma_new,
+                                   const Matrix3& backStress_old,
                                    Matrix3& backStress_new);
 
   };

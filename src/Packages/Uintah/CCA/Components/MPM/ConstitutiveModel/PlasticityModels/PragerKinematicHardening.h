@@ -16,6 +16,39 @@ namespace Uintah {
     University of Utah
     Copyright (C) 2007 University of Utah
    
+    The kinematic hardening rule is given by
+    \f[
+    \dot{\beta} = \frac{2}{3}~H_prime~d_p
+    \f]
+    where \f$\beta\f$ is the back stress, \f$H_prime\f$ is the hardening 
+    modulus, and \f$ d_p\f$ is the plastic rate of deformation.
+
+    For associative plasticity
+    \f[
+      d_p = dot{\lambda}~\frac{\partial f}{\partial sigma}
+    \f]
+    For von Mises plasticity with the yield condition of the form
+    \f[
+      f := \sqrt{\frac{3}{2} \xi:\xi} - \sigma_y \le 0
+    \f]
+    where \f$\xi = s - \beta\f$ and \f$s\f$ is the deviatoric part of the Cauchy 
+    stress, we have
+    \f[
+      \frac{\partial f}{\partial sigma} = \sqrt{\frac{3}{2}}\cfrac{\xi}{||\xi||} 
+       = \sqrt{\frac{3}{2}}~n ~;~~ ||n|| = 1
+    \f]
+    and
+    \f[
+      d_p = \sqrt{\frac{3}{2}}~\dot{\lambda}~n
+    \f]
+    Therefore, the evolution equation for beta can be written as
+    \f[
+    \dot{\beta} = \sqrt{\frac{2}{3}}~H_1~\dot{\lambda}~n
+    \f]
+    A backward Euler discretization leads to
+    \f[
+    \beta_{n+1} = \beta_n + \sqrt{\frac{2}{3}}~H_1~\Delta\lambda~\n_{n+1}
+    \f]
   */
   /////////////////////////////////////////////////////////////////////////////
 
@@ -49,21 +82,14 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
     //////////
-    /*! \brief Calculate the kinematic hardening modulus */
-    //////////
-    virtual double computeKinematicHardeningModulus(const PlasticityState* state,
-                                     const double& delT,
-                                     const MPMMaterial* matl,
-                                     const particleIndex idx);
- 
-    //////////
     /*! \brief Calculate the back stress */
     //////////
     virtual void computeBackStress(const PlasticityState* state,
                                    const double& delT,
                                    const particleIndex idx,
-                                   const double& delGamma,
+                                   const double& delLambda,
                                    const Matrix3& df_dsigma_new,
+                                   const Matrix3& backStress_old,
                                    Matrix3& backStress_new);
 
   };

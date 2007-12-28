@@ -18,6 +18,22 @@ KinematicHardeningModel::~KinematicHardeningModel()
 }
 	 
 void 
+KinematicHardeningModel::getBackStress(const particleIndex idx,
+                                       Matrix3& backStress)
+{
+  backStress = pBackStress[idx];
+  return;
+}
+
+void 
+KinematicHardeningModel::updateBackStress(const particleIndex idx,
+                                          const Matrix3& backStress)
+{
+  pBackStress_new[idx] = backStress;
+  return;
+}
+
+void 
 KinematicHardeningModel::addInitialComputesAndRequires(Task* task,
                                                        const MPMMaterial* matl,
                                                        const PatchSet* patches) const

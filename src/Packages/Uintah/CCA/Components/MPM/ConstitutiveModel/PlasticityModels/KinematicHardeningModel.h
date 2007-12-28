@@ -9,7 +9,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include "PlasticityState.h"
 
@@ -47,23 +46,25 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
          
     //////////
-    /*! \brief Calculate the kinematic hardening modulus */
-    //////////
-    virtual double computeKinematicHardeningModulus(const PlasticityState* state,
-                                                    const double& delT,
-                                                    const MPMMaterial* matl,
-                                                    const particleIndex idx) = 0;
- 
-    //////////
     /*! \brief Calculate the back stress */
+    /* Note that df_dsigma_normal_new is the normalized value of df_dsigma */
     //////////
     virtual void computeBackStress(const PlasticityState* state,
                                    const double& delT,
                                    const particleIndex idx,
-                                   const double& delGamma,
-                                   const Matrix3& df_dsigma_new,
+                                   const double& delLambda,
+                                   const Matrix3& df_dsigma_normal_new,
+                                   const Matrix3& backStress_old,
                                    Matrix3& backStress_new) = 0;
  
+    /*! Get the back stress */
+    void getBackStress(const particleIndex idx,
+                       Matrix3& backStress);
+
+    /*! Update the back stress */
+    void updateBackStress(const particleIndex idx,
+                          const Matrix3& backStress);
+
     /*!  Data management apparatus */
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,

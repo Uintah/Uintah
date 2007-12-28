@@ -46,35 +46,25 @@ void ArmstrongFrederickKinematicHardening::outputProblemSpec(ProblemSpecP& ps)
   plastic_ps->appendElement("hardening_modulus_2", d_cm.hardening_modulus_2);
 }
 
-double 
-ArmstrongFrederickKinematicHardening::computeKinematicHardeningModulus(const PlasticityState* state,
-                                                       const double& delT,
-                                                       const MPMMaterial* matl,
-                                                       const particleIndex idx)
-{
-  return (d_cm.beta*d_cm.hardening_modulus_1);
-}
- 
 void 
 ArmstrongFrederickKinematicHardening::computeBackStress(const PlasticityState* state,
                                                         const double& delT,
                                                         const particleIndex idx,
-                                                        const double& delGamma,
-                                                        const Matrix3& df_dsigma_new,
+                                                        const double& delLambda,
+                                                        const Matrix3& df_dsigma_normal_new,
+                                                        const Matrix3& backStress_old,
                                                         Matrix3& backStress_new)
 {
-  // Get the backstress at the beginning of the time step
-  Matrix3 backStress_old = pBackStress[idx];
-
   // Get the hardening modulus 
   double H_1 = d_cm.beta*d_cm.hardening_modulus_1;
   double H_2 = d_cm.beta*d_cm.hardening_modulus_2;
-  double denom = 1.0/(1.0 + H_2*delGamma);
+  double stt = sqrt(3.0/2.0);
+  double o_stt = 1.0/stt;
+  double denom = 1.0/(1.0 + stt*H_2*delLambda);
 
   // Compute updated backstress
-  backStress_new = backStress_old + df_dsigma_new*(delGamma*H_1*2.0/3.0);
+  backStress_new = backStress_old + df_dsigma_normal_new*(delLambda*H_1*o_stt);
   backStress_new = backStress_new*denom;
-  pBackStress_new[idx] = backStress_new;
 
   return;
 }

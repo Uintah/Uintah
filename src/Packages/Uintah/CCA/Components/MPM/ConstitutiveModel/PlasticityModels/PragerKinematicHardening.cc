@@ -43,34 +43,23 @@ void PragerKinematicHardening::outputProblemSpec(ProblemSpecP& ps)
   plastic_ps->appendElement("hardening_modulus", d_cm.hardening_modulus);
 }
 
-double 
-PragerKinematicHardening::computeKinematicHardeningModulus(const PlasticityState* state,
-                                                           const double& delT,
-                                                           const MPMMaterial* matl,
-                                                           const particleIndex idx)
-{
-  return (d_cm.beta*d_cm.hardening_modulus);
-}
- 
 /* Assumes von Mises plasticity and an associated flow rule.  The back stress
 is given by the rate equation D/Dt(beta) = 2/3~gammadot~Hprime~df/dsigma */
 void 
 PragerKinematicHardening::computeBackStress(const PlasticityState* state,
                                             const double& delT,
                                             const particleIndex idx,
-                                            const double& delGamma,
-                                            const Matrix3& df_dsigma_new,
+                                            const double& delLambda,
+                                            const Matrix3& df_dsigma_normal_new,
+                                            const Matrix3& backStress_old,
                                             Matrix3& backStress_new) 
 {
-  // Get the backstress at the beginning of the time step
-  Matrix3 backStress_old = pBackStress[idx];
-
   // Get the hardening modulus (constant for Prager kinematic hardening)
   double H_prime = d_cm.beta*d_cm.hardening_modulus;
+  double stt = sqrt(2.0/3.0);
 
   // Compute updated backstress
-  backStress_new = backStress_old + df_dsigma_new*(delGamma*H_prime*2.0/3.0);
-  pBackStress_new[idx] = backStress_new;
+  backStress_new = backStress_old + df_dsigma_normal_new*(delLambda*H_prime*stt);
 
   return;
 }
