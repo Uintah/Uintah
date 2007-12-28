@@ -1,72 +1,38 @@
-%
-% Material models in Uintah
-% Biswajit Banerjee
-% 03/25/2003
-%
-
-\documentclass[10pt]{article}
-\usepackage[pdftex]{graphicx}
-\usepackage{times}
-\usepackage{amsfonts}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amstext}
-
-\topmargin 0.5in
-\headsep 0pt
-\headheight 0pt
-\oddsidemargin 0pt
-\evensidemargin 0pt
-\textheight 8.6in
-\textwidth 6.5in
-\columnsep 20pt
-\columnseprule 0.5pt
-\setlength{\parskip}{0.5em}
-\raggedright
-
+\input{latexmacros.tex}
 \title{Material Models and the Uintah Computational Framework}
-\author{
-\\
-Biswajit Banerjee \\
-Department of Mechanical Engineering \\
-University of Utah \\
-Salt Lake City, Utah 84112 \\
-\\
-}
-\date{}
 
 \begin{document}
-  \maketitle
-  \tableofcontents
+\maketitle
+\tableofcontents
 
-  \section{Introduction}
-  This document deals with some material models for solids that
-  have been implemented in the Uintah Computational Framework 
-  for use with the Material Point Method.  The approach taken
-  has been to separate the stress-strain relations from the 
-  numerical stress update algorithms as far as possible.  Two
-  stress update algorithms (hypoelastic-plastic and 
-  hyperelastic-plastic) are discussed and the manner in which 
-  plasticity flow rules, damage models and equations of state
-  fit into the stress update algorithms are shown.
+\section{Introduction}
+This document deals with some material models for solids that
+have been implemented in the Uintah Computational Framework 
+for use with the Material Point Method.  The approach taken
+has been to separate the stress-strain relations from the 
+numerical stress update algorithms as far as possible.  Two
+stress update algorithms (hypoelastic-plastic and 
+hyperelastic-plastic) are discussed and the manner in which 
+plasticity flow rules, damage models and equations of state
+fit into the stress update algorithms are shown.
   
-  \section{Stress Update Algorithms}
-  The hypoelastic-plastic stress update is based on an additive
-  decomposition of the rate of deformation tensor into elastic
-  and plastic parts while the hyperelastic-plastic stress update
-  is based on a multiplicative decomposition of the elastic and 
-  plastic deformation gradients.  Incompressibility is assumed
-  for plastic deformations.  The volumetric response is therefore
-  determined either by a bulk modulus and the trace of the rate
-  of deformation tensor or using an equation of state.  The 
-  deviatoric response is determined either by an elastic constitutive 
-  equation or using a plastic flow rule in combination with a 
-  yield condition. 
+\section{Stress Update Algorithms}
+The hypoelastic-plastic stress update is based on an additive
+decomposition of the rate of deformation tensor into elastic
+and plastic parts while the hyperelastic-plastic stress update
+is based on a multiplicative decomposition of the elastic and 
+plastic deformation gradients.  Incompressibility is assumed
+for plastic deformations.  The volumetric response is therefore
+determined either by a bulk modulus and the trace of the rate
+of deformation tensor or using an equation of state.  The 
+deviatoric response is determined either by an elastic constitutive 
+equation or using a plastic flow rule in combination with a 
+yield condition. 
   
-  The material models that can be varied in these stress update approaches
-  are (not all are applicable to both hypo- and hyperelastic formulations
-  nor is the list exhaustive):
-  \begin{enumerate}
+The material models that can be varied in these stress update approaches
+are (not all are applicable to both hypo- and hyperelastic formulations
+nor is the list exhaustive):
+\begin{enumerate}
     \item The elasticity model, for example, 
       \begin{itemize}
         \item Isotropic linear elastic model. 
@@ -104,109 +70,109 @@ Salt Lake City, Utah 84112 \\
       \begin{itemize}
         \item Mie-Gruneisen equation of state.
       \end{itemize}
-  \end{enumerate}
+\end{enumerate}
   
-  The currently implemented stress update algorithms in the Uintah
-  Computational Framework do not allow for arbitrary elasticity models,
-  kinematic hardening, arbitrary yield conditions and continuum or 
-  nonlocal damage (however the a damage parameter is updated and 
-  used in the erosion algorithm).  The models that can be varied
-  are the flow rule models, damage variable evolution models and the
-  equation of state models.
+The currently implemented stress update algorithms in the Uintah
+Computational Framework do not allow for arbitrary elasticity models,
+kinematic hardening, arbitrary yield conditions and continuum or 
+nonlocal damage (however the a damage parameter is updated and 
+used in the erosion algorithm).  The models that can be varied
+are the flow rule models, damage variable evolution models and the
+equation of state models.
 
-  Note that there are no checks in the Unitah Computational Framework
-  to prevent users from mixing and matching inappropriate models.
+Note that there are no checks in the Unitah Computational Framework
+to prevent users from mixing and matching inappropriate models.
 
-  \subsection{Hypoelastic-plastic Stress Update}
-  This section describes the current implementation of the hypoelastic-
-  plastic model.
+\subsection{Hypoelastic-plastic Stress Update}
+This section describes the current implementation of the hypoelastic-
+plastic model.
 
-  The elastic response is assumed to be isotropic.  The material
-  constants that are taken as input for the elastic response are the
-  bulk and shear modulus.  The flow rule is determined from the input
-  and the appropriate plasticity model is created using the 
-  \verb+PlasticityModelFactory+ class.  The damage evolution rule
-  is determined from the input and a damage model is created using
-  the \verb+DamageModelFactory+ class.  The equation of state 
-  that is used to determine the pressure is also determined from the
-  input.  The equation of state model is created using the 
-  \verb+MPMEquationOfStateFactory+ class.
+The elastic response is assumed to be isotropic.  The material
+constants that are taken as input for the elastic response are the
+bulk and shear modulus.  The flow rule is determined from the input
+and the appropriate plasticity model is created using the 
+\verb+PlasticityModelFactory+ class.  The damage evolution rule
+is determined from the input and a damage model is created using
+the \verb+DamageModelFactory+ class.  The equation of state 
+that is used to determine the pressure is also determined from the
+input.  The equation of state model is created using the 
+\verb+MPMEquationOfStateFactory+ class.
 
-  The evolution variables specific to the hypoelastic-plastic model
-  are the left stretch ($\mathbf{V}$) and the rotation ($\mathbf{R}$).
-  In addition, a damage evolution variable ($D$) is stored at each time 
-  step (this need not be the case and will be transfered to the 
-  damage models in the future).  The left stretch and rotation are 
-  updated incrementally at each
-  time step (instead of performing a polar decomposition) and the 
-  rotation tensor is used to rotate the Cauchy stress and rate of deformation
-  to the material coordinates at each time step (instead of using a 
-  objective stress rate formulation).  The stress update formula implemented
-  is one based on the approach taken by  Zocher et al. (2000)~\cite{Zocher2000}.  
+The evolution variables specific to the hypoelastic-plastic model
+are the left stretch ($\mathbf{V}$) and the rotation ($\mathbf{R}$).
+In addition, a damage evolution variable ($D$) is stored at each time 
+step (this need not be the case and will be transfered to the 
+damage models in the future).  The left stretch and rotation are 
+updated incrementally at each
+time step (instead of performing a polar decomposition) and the 
+rotation tensor is used to rotate the Cauchy stress and rate of deformation
+to the material coordinates at each time step (instead of using a 
+objective stress rate formulation).  The stress update formula implemented
+is one based on the approach taken by  Zocher et al. (2000)~\cite{Zocher00}.  
 
-  Any evolution variables for the plasticity model, damage model or the
-  equation of state are specified in the class that encapsulates the 
-  particular model.  
+Any evolution variables for the plasticity model, damage model or the
+equation of state are specified in the class that encapsulates the 
+particular model.  
 
-  The flow stress is calculated from the plasticity model using a 
-  function call of the form
-  \begin{verbatim}
+The flow stress is calculated from the plasticity model using a 
+function call of the form
+\begin{verbatim}
     double flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
                                                         pTemperature[idx],
                                                         delT, d_tol, matl, idx);
-  \end{verbatim}
-  A number of plasticity models can be evaluated using the inputs in the
-  \verb+computeFlowStress+ call.  The variable \verb+d_plasticity+ is
-  polymorphic and can represent any of the plasticity models that can be
-  created by the plasticity model factory.  The plastic evolution variables
-  are updated using a polymorphic function along the lines of
-   \verb+computeFlowStress+.
+\end{verbatim}
+A number of plasticity models can be evaluated using the inputs in the
+\verb+computeFlowStress+ call.  The variable \verb+d_plasticity+ is
+polymorphic and can represent any of the plasticity models that can be
+created by the plasticity model factory.  The plastic evolution variables
+are updated using a polymorphic function along the lines of
+\verb+computeFlowStress+.
 
-  The equation of state is used to calculate the hydrostatic stress using
-  a function call of the form
-  \begin{verbatim}
+The equation of state is used to calculate the hydrostatic stress using
+a function call of the form
+\begin{verbatim}
     Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, 
                                               tensorF_new, tensorD, 
                                               tensorP, pTemperature[idx], 
                                               rho_cur, delT);
-  \end{verbatim}
+\end{verbatim}
 
-  Similarly, the damage model is called using a function of the type
-  \begin{verbatim}
+Similarly, the damage model is called using a function of the type
+\begin{verbatim}
     double damage = d_damage->computeScalarDamage(tensorEta, tensorS, 
                                                   pTemperature[idx],
                                                   delT, matl, d_tol, 
                                                   pDamage[idx]);
-  \end{verbatim}
+\end{verbatim}
 
-  Therefore, the plasticity, damage and equation of state models are 
-  easily be inserted into any other type of stress update algorithm 
-  without any change being needed in them as can be seen in the 
-  hyperelastic-plastic stress update algorithm discussed below.
+Therefore, the plasticity, damage and equation of state models are 
+easily be inserted into any other type of stress update algorithm 
+without any change being needed in them as can be seen in the 
+hyperelastic-plastic stress update algorithm discussed below.
 
-  \subsection{Hyperelastic-plastic Stress Update}
-  The stress update used for the hyperelastic-plastic material is
-  a return mapping plasticity algorithm based on a multiplicative 
-  decomposition of the deformation gradient and the intermediate
-  configuration concept.  The algorithms has been taken from
-  Simo and Hughes (1998)~\cite{Simo1998}.
+\subsection{Hyperelastic-plastic Stress Update}
+The stress update used for the hyperelastic-plastic material is
+a return mapping plasticity algorithm based on a multiplicative 
+decomposition of the deformation gradient and the intermediate
+configuration concept.  The algorithms has been taken from
+Simo and Hughes (1998)~\cite{Simo1998}.
 
-  The variables that are evolved locally in the Hyperelastic-plastic 
-  stress update algorithm are the deviatoric part of the left Cauchy-Green
-  tensor and a scalar damage variable.  
+The variables that are evolved locally in the Hyperelastic-plastic 
+stress update algorithm are the deviatoric part of the left Cauchy-Green
+tensor and a scalar damage variable.  
 
-  The plasticity, damage and equation of state models are initialized
-  and called in exactly the same way as in the hypoelastic-plastic 
-  model.  Therefore, the stress update algorithm and the plasticity,
-  damage and equation of state models are encapsulated from each other
-  and no modifications of the latter are required.
+The plasticity, damage and equation of state models are initialized
+and called in exactly the same way as in the hypoelastic-plastic 
+model.  Therefore, the stress update algorithm and the plasticity,
+damage and equation of state models are encapsulated from each other
+and no modifications of the latter are required.
 
-  \section{Plasticity Model Framework}
-  Currently implemented plasticity models are isotropic hardening, 
-  Johnson-Cook and MTS.  Addition of a new model requires the 
-  following steps :
+\section{Plasticity Model Framework}
+Currently implemented plasticity models are isotropic hardening, 
+Johnson-Cook and MTS.  Addition of a new model requires the 
+following steps :
 
-  \begin{enumerate}
+\begin{enumerate}
     \item Creation of a new class that encapsulates the plasticity 
     model.  The template for this class can be copied from the
     existing plasticity models.  The data that is unique to 
@@ -228,19 +194,98 @@ Salt Lake City, Utah 84112 \\
     \end{itemize}
     \item The \verb+PlasticityModelFactory+ is then modified so that
           it recognizes the added plasticity model.
-  \end{enumerate}
+\end{enumerate}
 
-  \section{Damage and Equation of State Model Frameworks}
-  Only the Johnson-Cook damage evolution rule has been added to the 
-  DamageModelFactory so far.  The damage model framework is designed 
-  to be similar to the plasticity model framework.  New models can
-  be added using the approach described in the previous section.
+\section{Damage Models}
+Only the Johnson-Cook damage evolution rule has been added to the 
+DamageModelFactory so far.  The damage model framework is designed 
+to be similar to the plasticity model framework.  New models can
+be added using the approach described in the previous section.
 
-  The equation of state models include an isotropic hypoelastic 
-  model, an isotropic neo-Hookean model and a Mie-Gruneisen type
-  equation of state.  Once again the framework is designed to be
-  similar to the plasticity model framework.
-  
+\section{Equation of State Models}
+The elastic-plastic stress update assumes that the volumetric part of the 
+Cauchy stress can be calculated using an equation of state.  There are 
+three equations of state that are implemented in Uintah.  These are
+\begin{enumerate}
+    \item A default hypoelastic equation of state.
+    \item A neo-Hookean equation of state.    
+    \item A Mie-Gruneisen type equation of state.
+\end{enumerate}
+
+\subsection{Default hypoelastic equation of state}
+In this case we assume that the stress rate is given by
+\Beq
+    \dot{\Bsig} = \lambda~\Tr(\Bd^e)~\Bone + 2~\mu~\Bd^e
+\Eeq
+where $\Bsig$ is the Cauchy stress, $\Bd^e$ is the elastic part of
+the rate of deformation, and $\lambda, \mu$ are constants.
+
+If $\Beta^e$ is the deviatoric part of $\Bd^e$ then we can write
+\Beq
+    \dot{\Bsig} = \left(\lambda + \frac{2}{3}~\mu\right)~\Tr(\Bd^e)~\Bone + 
+        2~\mu~\Beta^e = 3~\kappa~\Tr(\Bd^e)~\Bone + 2~\mu~\Beta^e ~.
+\Eeq
+If we split $\Bsig$ into a volumetric and a deviatoric part, i.e.,
+$\Bsig = p~\Bone + \Bs$ and take the time derivative to get
+$\dot{\Bsig} = \dot{p}~\Bone + \dot{\Bs}$ then
+\Beq
+    \dot{p} = 3~\kappa~\Tr(\Bd^e) ~.
+\Eeq
+In addition we assume that $\Bd = \Bd^e + \Bd^p$.  If we also assume that 
+the plastic volume change is negligible, we can then write that
+\Beq
+    \dot{p} = 3~\kappa~\Tr(\Bd) ~.
+\Eeq
+This is the equation that is used to calculate the pressure $p$ in the 
+default hypoelastic equation of state, i.e.,
+\Beq
+    \boxed{
+    p_{n+1} = p_n + 3~\kappa~\Tr(\Bd_{n+1})~\Delta t ~.
+    }
+\Eeq
+To get the derivative of $p$ with respect to $J$, where $J = \det(\BF)$,
+we note that
+\Beq
+    \dot{p} = \Partial{p}{J}~\dot{J} = \Partial{p}{J}~J~\Tr(\Bd) ~.
+\Eeq
+Therefore,
+\Beq
+    \boxed{
+    \Partial{p}{J} = \cfrac{3~\kappa}{J} ~.
+    }
+\Eeq
+
+\subsection{Mie-Gruneisen equation of state}
+The pressure ($p$) is calculated using a Mie-Gr{\"u}neisen equation of state 
+of the form (\cite{Wilkins99,Zocher00})
+\begin{equation} \label{eq:EOSMG}
+  \boxed{
+  p_{n+1} =  - \frac{\rho_0~C_0^2~(1 - J^e_{n+1})
+           [1 - \Gamma_0 (1 - J^e_{n+1})]}
+           {[1 - S_{\alpha}(1 - J^e_{n+1})]^2} - 2~\Gamma_0~e_{n+1} 
+  ~;~~~ J^e := \det{\BF^e} 
+  }
+\end{equation}
+where $C_0$ is the bulk speed of sound, $\rho_0$ is the initial mass density,
+$2~\Gamma_0$ is the Gr{\"u}neisen's gamma at the reference state,
+$S_{\alpha} = dU_s/dU_p$ is a linear Hugoniot slope coefficient,
+$U_s$ is the shock wave velocity, $U_p$ is the particle velocity, and
+$e$ is the internal energy density (per unit reference volume), $\BF^e$ is
+the elastic part of the deformation gradient.  For isochoric plasticity,
+\begin{equation*}
+  J^e = J = \det(\BF) = \cfrac{\rho_0}{\rho} ~.
+\end{equation*}
+
+Also,
+\Beq
+  \boxed{
+  \Partial{p}{J^e} = 
+  \cfrac{\rho_0~C_0^2~[1 + (S_{\alpha}-2~\Gamma_0)~(1-J^e)]}
+        {[1-S_{\alpha}~(1-J^e)]^3} - 2~\Gamma_0~\Partial{e}{J^e}.
+  }
+\Eeq
+We neglect the $\Partial{e}{J^e}$ term in our calculations.
+
   \section{Example Input Files}
   \subsection{Hypoelastic-plastic Stress Update}
   An example of the portion of an input file that specifies a copper body
