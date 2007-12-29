@@ -69,5 +69,16 @@ ArmstrongFrederickKinematicHardening::computeBackStress(const PlasticityState* s
   return;
 }
 
-
+void 
+ArmstrongFrederickKinematicHardening::eval_h_beta(const Matrix3& df_dsigma,
+                                              const PlasticityState* state,
+                                              Matrix3& h_beta)
+{
+  double H_1 = d_cm.beta*d_cm.hardening_modulus_1;
+  double H_2 = d_cm.beta*d_cm.hardening_modulus_2;
+  Matrix3 beta = state->backStress;
+  double norm_r = df_dsigma.Norm();
+  h_beta = df_dsigma*(2.0/3.0*H_1) - beta*(H_2*norm_r);
+  return;
+}
 

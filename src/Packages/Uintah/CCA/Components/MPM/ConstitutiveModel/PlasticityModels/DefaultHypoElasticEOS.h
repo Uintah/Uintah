@@ -59,6 +59,9 @@ namespace Uintah {
 			   const Matrix3& rateOfDeformation,
 			   const double& delT);
   
+    double eval_dp_dJ(const MPMMaterial* matl,
+                      const double& detF,
+                      const PlasticityState* state);
   };
 
 } // End namespace Uintah

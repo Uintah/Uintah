@@ -57,6 +57,12 @@ namespace Uintah {
                                    const Matrix3& backStress_old,
                                    Matrix3& backStress_new) = 0;
  
+    /*! Compute the direction of back stress evolution (\f$h^beta\f$) 
+        for the equation \f$ d/dt(\beta) = d/dt(\gamma) h^beta \f$ */
+    virtual void eval_h_beta(const Matrix3& df_dsigma,
+                             const PlasticityState* state,
+                             Matrix3& h_beta) = 0;
+
     /*! Get the back stress */
     void getBackStress(const particleIndex idx,
                        Matrix3& backStress);
