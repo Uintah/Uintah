@@ -50,6 +50,9 @@ namespace Uintah {
                                    const Matrix3& backStress_old,
                                    Matrix3& backStress_new);
 
+    void eval_h_beta(const Matrix3& df_dsigma,
+                     const PlasticityState* state,
+                     Matrix3& h_beta);
   };
 
 } // End namespace Uintah

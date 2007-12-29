@@ -54,4 +54,14 @@ NoKinematicHardening::computeBackStress(const PlasticityState* state,
 }
 
 
+void 
+NoKinematicHardening::eval_h_beta(const Matrix3& df_dsigma,
+                                  const PlasticityState* ,
+                                  Matrix3& h_beta)
+{
+  Matrix3 Zero(0.0);
+  h_beta = Zero;
+  return;
+}
+
 

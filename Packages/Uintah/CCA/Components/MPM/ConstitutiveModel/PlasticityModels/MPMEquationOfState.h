@@ -39,6 +39,11 @@ namespace Uintah {
 				   const Matrix3& rateOfDeformation,
 				   const double& delT) = 0;
 
+   /*! Calculate the derivative of \f$p(J)\f$ wrt \f$J\f$ 
+       where \f$J = det(F) = rho_0/rho\f$ */
+   virtual double eval_dp_dJ(const MPMMaterial* matl,
+                             const double& delF,
+                             const PlasticityState* state) = 0;
   };
 } // End namespace Uintah
       

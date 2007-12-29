@@ -64,5 +64,14 @@ PragerKinematicHardening::computeBackStress(const PlasticityState* state,
   return;
 }
 
+void 
+PragerKinematicHardening::eval_h_beta(const Matrix3& df_dsigma,
+                                      const PlasticityState* ,
+                                      Matrix3& h_beta)
+{
+  double H_prime = d_cm.beta*d_cm.hardening_modulus;
+  h_beta = df_dsigma*(2.0/3.0*H_prime);
+  return;
+}
 
 

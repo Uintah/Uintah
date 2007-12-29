@@ -71,3 +71,26 @@ MieGruneisenEOS::computePressure(const MPMMaterial* matl,
   }
   return -p;
 }
+
+double 
+MieGruneisenEOS::eval_dp_dJ(const MPMMaterial* matl,
+                            const double& detF, 
+                            const PlasticityState* state)
+{
+  double rho_0 = matl->getInitialDensity();
+  double C_0 = d_const.C_0;
+  double S_alpha = d_const.S_alpha;
+  double Gamma_0 = d_const.Gamma_0;
+
+  double J = detF;
+  double numer = rho_0*C_0*C_0*(1.0 + (S_alpha - Gamma_0)*(1.0-J));
+  double denom = (1.0 - S_alpha*(1.0-J));
+  double denom3 = (denom*denom*denom);
+  if (denom3 == 0.0) {
+    cout << "rh0_0 = " << rho_0 << " J = " << J 
+           << " numer = " << numer << endl;
+    denom3 = 1.0e-5;
+  }
+
+  return (numer/denom);
+}
