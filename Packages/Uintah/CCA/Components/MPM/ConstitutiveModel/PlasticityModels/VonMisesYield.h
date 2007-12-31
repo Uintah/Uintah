@@ -99,6 +99,12 @@ namespace Uintah {
                      const PlasticityState* state,
                      Matrix3& df_xi);
 
+    /* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
+    void eval_df_ds_df_dbeta(const Matrix3& xi,
+                             const PlasticityState* state,
+                             Matrix3& df_ds,
+                             Matrix3& df_dbeta);
+
     /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
     double eval_df_dep(const Matrix3& xi,
                        const double& d_sigy_dep,

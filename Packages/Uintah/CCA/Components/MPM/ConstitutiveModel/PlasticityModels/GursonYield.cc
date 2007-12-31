@@ -258,6 +258,18 @@ GursonYield::eval_df_dxi(const Matrix3& xi,
   return;
 }
 
+/* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
+void 
+GursonYield::eval_df_ds_df_dbeta(const Matrix3& xi,
+                                 const PlasticityState* state,
+                                 Matrix3& df_ds,
+                                 Matrix3& df_dbeta)
+{
+  eval_df_dxi(xi, state, df_ds);
+  df_dbeta = df_ds*(-1.0); 
+  return;
+}
+
 /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
 double 
 GursonYield::eval_df_dep(const Matrix3& xi,
