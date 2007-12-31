@@ -67,6 +67,7 @@ VonMisesYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
   double trSig = sig.Trace();
   Matrix3 sigDev = sig - I*(trSig/3.0);
   derivative = sigDev*3.0;
+  return;
 }
 
 /*! Derivative with respect to the Cauchy stress (\f$\sigma \f$)
@@ -92,6 +93,18 @@ VonMisesYield::eval_df_dxi(const Matrix3& xi,
 {
   double xiNorm = xi.Norm();
   df_dxi = xi*(sqrt(1.5)/xiNorm);
+  return;
+}
+
+/* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
+void 
+VonMisesYield::eval_df_ds_df_dbeta(const Matrix3& xi,
+                                   const PlasticityState* state,
+                                   Matrix3& df_ds,
+                                   Matrix3& df_dbeta)
+{
+  eval_df_dxi(xi, state, df_ds);
+  df_dbeta = df_ds*(-1.0); 
   return;
 }
 

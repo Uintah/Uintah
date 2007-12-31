@@ -99,6 +99,12 @@ namespace Uintah {
                              const PlasticityState* state,
                              Matrix3& df_xi) = 0;
 
+    /* Derivative with respect to \f$ s \f$ and \f$ \beta \f$ */
+    virtual void eval_df_ds_df_dbeta(const Matrix3& xi,
+                                     const PlasticityState* state,
+                                     Matrix3& df_ds,
+                                     Matrix3& df_dbeta) = 0;
+
     /*! Derivative with respect to the plastic strain (\f$\epsilon^p \f$)*/
     virtual double eval_df_dep(const Matrix3& xi,
                                const double& d_sigy_dep,
@@ -129,6 +135,22 @@ namespace Uintah {
 					       double porosity,
 					       double voidNuclFac,
 					       TangentModulusTensor& Cep) = 0;
+
+    /*! Compute continuum elastic-plastic tangent modulus.
+       df_dsigma = r */ 
+    virtual void computeElasPlasTangentModulus(const Matrix3& r, 
+					       const Matrix3& df_ds, 
+                                               const Matrix3& h_beta,
+					       const Matrix3& df_dbeta, 
+                                               const double& h_alpha,             
+                                               const double& df_dep,
+                                               const double& h_phi,             
+                                               const double& df_phi,
+                                               const double& J,
+                                               const double& dp_dJ,
+                                               const PlasticityState* state,
+					       TangentModulusTensor& Cep);
+
   };
 } // End namespace Uintah
       
