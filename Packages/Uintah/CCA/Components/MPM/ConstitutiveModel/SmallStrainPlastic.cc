@@ -682,7 +682,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     constParticleVariable<Vector> pVelocity;
     constNCVariable<Vector>       gVelocity;
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
-    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, gac, NGN);
+    new_dw->get(gVelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress_old;
@@ -719,7 +719,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVol_new, 
-                           lb->pVolumeDeformedLabel,              pset);
+                           lb->pVolumeLabel_preReloc,             pset);
 
     // LOCAL
     ParticleVariable<double>  pPlasticStrain_new, pDamage_new, pPorosity_new, 
@@ -783,8 +783,15 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       // Check 1: Check for negative Jacobian (determinant of deformation gradient)
       if (!(J_new > 0.0)) {
         cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:SmallStrainPlastic", __FILE__, __LINE__);
+             << "**ERROR** Negative Jacobian of deformation gradient" 
+             << " in particle " << idx << endl;
+        cerr << "l = " << velGrad << endl;
+        cerr << "F_old = " << pDefGrad[idx] << endl;
+        cerr << "F_inc = " << defGradInc << endl;
+        cerr << "F_new = " << defGrad_new << endl;
+        cerr << "J_old = " << pDefGrad[idx].Determinant() << endl;
+        cerr << "J_new = " << J_new << endl;
+        throw ParameterNotFound("**ERROR**:InvalidValue: J < 0.0", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -919,22 +926,33 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
 
         } else {
 
-          // Compute r_n, h_n
           Matrix3 xi_n = sigma_dev_old - backStress_dev_old;
-          Matrix3 r_n(0.0);
-          d_yield->eval_df_dsigma(xi_n, state, r_n);
-          double h_alpha_n = d_yield->eval_h_alpha(xi_n, state);
-          double A = voidNucleationFactor(state->plasticStrain);
-          double h_phi_n = d_yield->eval_h_phi(xi_n, A, state);
-          Matrix3 h_beta_n(0.0);
-          d_kinematic->eval_h_beta(r_n, state, h_beta_n);
-          Matrix3 r_n_dev = r_n - one*(r_n.Trace()/3.0);
-          Matrix3 h_beta_n_dev = h_beta_n - one*(h_beta_n.Trace()/3.0);
-          Matrix3 term1 = r_n_dev*(2.0*mu_cur) + h_beta_n_dev;
+          if (!(xi_n.NormSquared() > 0.0)) {
+            cout << "Particle idx = " << idx
+                 << " has zero deviatoric stress.  Reduce initial time step size"
+                 << " and restart. " << endl;
+            throw InvalidValue("**ERROR**:SmallStrainPlastic: Lower time step", __FILE__, __LINE__);
+          }
  
+          // Get ep_n, phi_n
+          double ep_n = state->plasticStrain;
+          double phi_n = state->porosity;
+
+          // Compute r_k, h_k
+          Matrix3 xi_k = xi_trial;
+          Matrix3 r_k(0.0);
+          d_yield->eval_df_dsigma(xi_k, state, r_k);
+          double h_alpha_k = d_yield->eval_h_alpha(xi_k, state);
+          double A_k = voidNucleationFactor(state->plasticStrain);
+          double h_phi_k = d_yield->eval_h_phi(xi_k, A_k, state);
+          Matrix3 h_beta_k(0.0);
+          d_kinematic->eval_h_beta(r_k, state, h_beta_k);
+          Matrix3 r_k_dev = r_k - one*(r_k.Trace()/3.0);
+          Matrix3 h_beta_k_dev = h_beta_k - one*(h_beta_k.Trace()/3.0);
+          Matrix3 term1_k = r_k_dev*(2.0*mu_cur) + h_beta_k_dev;
+
           // Iterate to find DeltaGamma
           int count = 0;
-          Matrix3 xi_k = xi_trial;
           double Delta_gamma = 0.0;
           double f_k = f_0;
 
@@ -948,8 +966,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
             double df_dphi_k = d_yield->eval_df_dphi(xi_k, state);
             
             // compute delta gamma (k)
-            double denom = df_dxi_k.Contract(term1) - h_alpha_n*df_dep_k - h_phi_n*df_dphi_k;
-            ASSERT(denom != 0);
+            double denom = df_dxi_k.Contract(term1_k) - h_alpha_k*df_dep_k - h_phi_k*df_dphi_k;
             double delta_gamma_k = f_k/denom;
             if (isnan(f_k) || isnan(delta_gamma_k)) {
               cout << "idx = " << idx << " iter = " << count 
@@ -958,9 +975,55 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
                    << " dsigy_dep_k = " << dsigy_dep_k << " df_dep_k = " << df_dep_k
                    << " epdot = " << state->plasticStrainRate 
                    << " ep = " << state->plasticStrain << endl;
+              cout << "df_dxi = \n" << df_dxi_k << "\n term1 = " << term1_k
+                   << "\n h_alpha = " << h_alpha_k << " df_dep = " << df_dep_k
+                   << "\n h_phi = " << h_phi_k << " df_dphi = " << df_dphi_k 
+                   << " denom = " << denom << endl;
               throw InvalidValue("**ERROR**:SmallStrainPlastic: Found nan.", __FILE__, __LINE__);
             }
 
+            // Update Delta_gamma
+            double Delta_gamma_old = Delta_gamma;
+            Delta_gamma += delta_gamma_k;
+
+            if (Delta_gamma < 0.0) {
+              cout << "Delta_gamma = " << Delta_gamma << endl;
+              cout << "h_alpha = " << h_alpha_k << " delta_gamma = " << delta_gamma_k
+                   << " ep = " << state->plasticStrain << endl;
+              cout << "idx = " << idx << " iter = " << count 
+                   << " f_k = " << f_k << " delta_gamma_k = " << delta_gamma_k 
+                   << " sigy = " << state->yieldStress
+                   << " dsigy_dep_k = " << dsigy_dep_k << " df_dep_k = " << df_dep_k
+                   << " epdot = " << state->plasticStrainRate 
+                   << " ep = " << state->plasticStrain << endl;
+              cout << "xi = \n" << xi_k << "\n df_dxi:term1 = "<< df_dxi_k.Contract(term1_k)
+                   << "\n df_dxi = \n" << df_dxi_k << "\n term1 = " << term1_k 
+                   << "\n h_alpha = " << h_alpha_k << " df_dep = " << df_dep_k
+                   << "\n h_phi = " << h_phi_k << " df_dphi = " << df_dphi_k 
+                   << " denom = " << denom << endl;
+              cout << "r_n_dev = \n" <<  r_k_dev
+                   << "\n mu_cur = " << mu_cur 
+                   << "\n h_bet_n_dev = \n" << h_beta_k_dev << endl;
+            }
+
+            /* Updated algorithm - use value of xi_k */
+            // Compute r_k, h_k
+            d_yield->eval_df_dsigma(xi_k, state, r_k);
+            h_alpha_k = d_yield->eval_h_alpha(xi_k, state);
+            A_k = voidNucleationFactor(state->plasticStrain);
+            h_phi_k = d_yield->eval_h_phi(xi_k, A_k, state);
+            d_kinematic->eval_h_beta(r_k, state, h_beta_k);
+            r_k_dev = r_k - one*(r_k.Trace()/3.0);
+            h_beta_k_dev = h_beta_k - one*(h_beta_k.Trace()/3.0);
+            term1_k = r_k_dev*(2.0*mu_cur) + h_beta_k_dev;
+ 
+            // Update ep, phi, xi
+            state->plasticStrain = ep_n + Delta_gamma*h_alpha_k;
+            state->porosity = phi_n + Delta_gamma*h_phi_k;
+            xi_k = xi_trial - term1_k*Delta_gamma;
+       
+            /*  Original Algorithm */
+            /*
             // compute increments of xi, ep, phi
             Matrix3 Delta_xi_k = term1*(-delta_gamma_k);
             double Delta_ep_k = h_alpha_n*delta_gamma_k;
@@ -970,9 +1033,8 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
             state->plasticStrain += Delta_ep_k;
             state->porosity += Delta_phi_k;
             xi_k += Delta_xi_k;
+            */
 
-            double Delta_gamma_old = Delta_gamma;
-            Delta_gamma += delta_gamma_k;
             if (fabs(Delta_gamma-Delta_gamma_old) < d_tol || count > 100) break;
 
             // Update the flow stress 
@@ -1024,7 +1086,8 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       // Calculate the total stress
       double T_0 = state->initialTemperature;
       double kappa_new = d_eos->eval_dp_dJ(matl, J_new, state);
-      Matrix3 sigma_new = sigma_dev_new + one*(pressure_new - J_new*kappa_new*CTE*(T_new - T_0));
+      kappa_new *= J_new;
+      Matrix3 sigma_new = sigma_dev_new + one*(pressure_new - 3.0*kappa_new*CTE*(T_new - T_0));
 
       // If the particle has already failed, apply various erosion algorithms
       if (flag->d_doErosion) {

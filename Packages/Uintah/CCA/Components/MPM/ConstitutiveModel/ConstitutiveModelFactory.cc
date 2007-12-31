@@ -20,6 +20,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Water.h>
@@ -132,6 +133,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlastic(child,flags));
+
+  else if (mat_type ==  "small_strain_plastic")
+    return(scinew SmallStrainPlastic(child,flags));
 
   else if (mat_type ==  "soil_foam")
     return(scinew SoilFoam(child,flags));
