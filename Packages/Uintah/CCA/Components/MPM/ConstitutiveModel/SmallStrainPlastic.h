@@ -304,49 +304,6 @@ namespace Uintah {
   protected:
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute Stilde, epdot, ep, and delGamma using 
-               Simo's approach */
-    ////////////////////////////////////////////////////////////////////////
-    void computeStilde(const Matrix3& trialS,
-                       const double& delT,
-                       const MPMMaterial* matl,
-                       const particleIndex idx,
-                       Matrix3& Stilde,
-                       PlasticityState* state,
-                       double& delGamma);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute the quantity 
-               \f$d(\gamma)/dt * \Delta T = \Delta \gamma \f$ 
-               using Newton iterative root finder
-        where \f$ d_p = \dot\gamma d(sigma_y)/d(sigma) \f$ */
-    ////////////////////////////////////////////////////////////////////////
-    double computeDeltaGamma(const double& delT,
-                             const double& tolerance,
-                             const double& normTrialS,
-                             const MPMMaterial* matl,
-                             const particleIndex idx,
-                             PlasticityState* state);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! Compute the elastic tangent modulus tensor for isotropic
-        materials
-        Assume: [stress] = [s11 s22 s33 s23 s31 s12]
-                [strain] = [e11 e22 e33 2e23 2e31 2e12] */
-    ////////////////////////////////////////////////////////////////////////
-    void computeElasticTangentModulus(const double& K,
-                                      const double& mu,
-                                      double Ce[6][6]);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute the elastic tangent modulus tensor for isotropic
-      materials */
-    ////////////////////////////////////////////////////////////////////////
-    void computeElasticTangentModulus(double bulk,
-                                      double shear,
-                                      TangentModulusTensor& Ce);
-
-    ////////////////////////////////////////////////////////////////////////
     /*! Compute the elastic-plastic tangent modulus tensor for isotropic
         materials for use in the implicit stress update
         Assume: [stress] = [s11 s22 s33 s23 s31 s12]
@@ -395,41 +352,6 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     void BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
                     double Kgeo[24][24]) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute Porosity.
-      
-    The evolution of porosity is given by \n
-    \f$
-    \dot{f} = \dot{f}_{nucl} + \dot{f}_{grow}
-    \f$ \n
-    where
-    \f$
-    \dot{f}_{grow} = (1-f) D^p_{kk}
-    \f$ \n
-    \f$ D^p_{kk} = Tr(D^p) \f$, and \f$ D^p \f$ is the rate of plastic
-    deformation, and, \n
-    \f$
-    \dot{f}_{nucl} = A \dot{\epsilon}^p
-    \f$  \n
-    with 
-    \f$
-    A = f_n/(s_n \sqrt{2\pi}) \exp [-1/2 (\epsilon^p - \epsilon_n)^2/s_n^2]
-    \f$\n
-    \f$ f_n \f$ is the volume fraction of void nucleating particles , 
-    \f$ \epsilon_n \f$ is the mean of the normal distribution of nucleation
-    strains, and \f$ s_n \f$ is the standard deviation of the distribution.
-   
-    References:
-    1) Ramaswamy, S. and Aravas, N., 1998, Comput. Methods Appl. Mech. Engrg.,
-    163, 33-53.
-    2) Bernauer, G. and Brocks, W., 2002, Fatigue Fract. Engng. Mater. Struct.,
-    25, 363-384.
-    */
-    ////////////////////////////////////////////////////////////////////////
-    double updatePorosity(const Matrix3& rateOfDeform,
-                          double delT, double oldPorosity,
-                          double plasticStrain);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Calculate void nucleation factor */
