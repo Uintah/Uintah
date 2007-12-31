@@ -12,6 +12,7 @@ SRCS     += \
 	$(SRCDIR)/MPMEquationOfState.cc \
 	$(SRCDIR)/MPMEquationOfStateFactory.cc \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \
+	$(SRCDIR)/HyperElasticEOS.cc \
 	$(SRCDIR)/MieGruneisenEOS.cc \
 	$(SRCDIR)/PlasticityModel.cc \
 	$(SRCDIR)/PlasticityModelFactory.cc \
