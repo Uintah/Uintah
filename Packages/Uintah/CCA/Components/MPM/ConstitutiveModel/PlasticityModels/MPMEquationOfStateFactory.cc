@@ -1,6 +1,7 @@
 
 #include "MPMEquationOfStateFactory.h"
 #include "DefaultHypoElasticEOS.h"
+#include "HyperElasticEOS.h"
 #include "MieGruneisenEOS.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -32,9 +33,11 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
       return(scinew MieGruneisenEOS(child));
    else if (mat_type == "default_hypo")
       return(scinew DefaultHypoElasticEOS(child));
+   else if (mat_type == "default_hyper")
+      return(scinew HyperElasticEOS(child));
    else {
       cerr << "**WARNING** Creating default linear equation of state" << endl;
-      return(scinew DefaultHypoElasticEOS(child));
+      return(scinew HyperElasticEOS(child));
       //throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")", __FILE__, __LINE__);
    }
  
@@ -53,7 +56,7 @@ MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
 
    else {
       cerr << "**WARNING** Creating a copy of the default linear equation of state" << endl;
-      return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
+      return(scinew HyperElasticEOS(dynamic_cast<const HyperElasticEOS*>(eos)));
       //throw ProblemSetupException("Cannot create copy of unknown MPM EOS", __FILE__, __LINE__);
    }
 
