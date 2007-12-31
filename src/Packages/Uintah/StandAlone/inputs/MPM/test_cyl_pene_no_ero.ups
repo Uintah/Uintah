@@ -20,13 +20,14 @@
     <maxTime>2.1e-5</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1.0e-16</delt_min>
-    <delt_max>1.0e-6</delt_max>
-    <timestep_multiplier>0.8</timestep_multiplier>
+    <delt_max>1.0e-7</delt_max>
+    <delt_init>1.0e-9</delt_init>
+    <timestep_multiplier>0.5</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>test_cyl_pene_no_ero.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <!--
     <outputInterval>2.0e-5</outputInterval>
     -->
@@ -46,7 +47,9 @@
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "p.localized"/>
+    <!--
     <save label = "p.plasticTemp"/>
+    -->
     <save label = "p.temperature"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
@@ -84,14 +87,14 @@
     <MPM>
       <material name="Iron Target">
         <include href="inputs/MPM/MaterialData/MaterialConstArmcoIron.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="small_strain_plastic">
           <tolerance>5.0e-10</tolerance>
           <include href="inputs/MPM/MaterialData/IsotropicElasticArmcoIron.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookPlasticArmcoIron.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookDamageArmcoIron.xml"/>
-          <include href="inputs/MPM/MaterialData/DefaultHypoEOS.xml"/>
+          <include href="inputs/MPM/MaterialData/DefaultHyperEOS.xml"/>
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
           <initial_std_porosity>          0.001 </initial_std_porosity>
@@ -121,14 +124,14 @@
       <!--
       <material name = "Copper Coating">
         <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="small_strain_plastic">
           <tolerance>5.0e-10</tolerance>
           <damage_cutoff>0.7</damage_cutoff>
           <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticAnnCopper.xml"/>
           <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
-          <include href="../MaterialData/DefaultHypoEOS.xml"/>
+          <include href="../MaterialData/DefaultHyperEOS.xml"/>
         </constitutive_model>
         <geom_object>
           <difference>
@@ -167,7 +170,7 @@
       -->
       <material name="Hard Steel Core">
         <include href="inputs/MPM/MaterialData/MaterialConstS7ToolSteel.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
+        <constitutive_model type="small_strain_plastic">
           <tolerance>5.0e-10</tolerance>
           <damage_cutoff>0.7</damage_cutoff>
           <include href="inputs/MPM/MaterialData/IsotropicElasticS7ToolSteel.xml"/>
@@ -175,7 +178,7 @@
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookPlasticS7ToolSteel.xml"/>
           <include href="inputs/MPM/MaterialData/JohnsonCookDamageS7ToolSteel.xml"/>
-          <include href="inputs/MPM/MaterialData/DefaultHypoEOS.xml"/>
+          <include href="inputs/MPM/MaterialData/DefaultHyperEOS.xml"/>
           <initial_material_temperature>  294.0 </initial_material_temperature>
           <initial_mean_porosity>         0.001 </initial_mean_porosity>
           <initial_std_porosity>          0.0005 </initial_std_porosity>
