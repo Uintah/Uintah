@@ -223,24 +223,24 @@ the rate of deformation, and $\lambda, \mu$ are constants.
 If $\Beta^e$ is the deviatoric part of $\Bd^e$ then we can write
 \Beq
     \dot{\Bsig} = \left(\lambda + \frac{2}{3}~\mu\right)~\Tr(\Bd^e)~\Bone + 
-        2~\mu~\Beta^e = 3~\kappa~\Tr(\Bd^e)~\Bone + 2~\mu~\Beta^e ~.
+        2~\mu~\Beta^e = \kappa~\Tr(\Bd^e)~\Bone + 2~\mu~\Beta^e ~.
 \Eeq
 If we split $\Bsig$ into a volumetric and a deviatoric part, i.e.,
 $\Bsig = p~\Bone + \Bs$ and take the time derivative to get
 $\dot{\Bsig} = \dot{p}~\Bone + \dot{\Bs}$ then
 \Beq
-    \dot{p} = 3~\kappa~\Tr(\Bd^e) ~.
+    \dot{p} = \kappa~\Tr(\Bd^e) ~.
 \Eeq
 In addition we assume that $\Bd = \Bd^e + \Bd^p$.  If we also assume that 
 the plastic volume change is negligible, we can then write that
 \Beq
-    \dot{p} = 3~\kappa~\Tr(\Bd) ~.
+    \dot{p} = \kappa~\Tr(\Bd) ~.
 \Eeq
 This is the equation that is used to calculate the pressure $p$ in the 
 default hypoelastic equation of state, i.e.,
 \Beq
     \boxed{
-    p_{n+1} = p_n + 3~\kappa~\Tr(\Bd_{n+1})~\Delta t ~.
+    p_{n+1} = p_n + \kappa~\Tr(\Bd_{n+1})~\Delta t ~.
     }
 \Eeq
 To get the derivative of $p$ with respect to $J$, where $J = \det(\BF)$,
@@ -251,7 +251,7 @@ we note that
 Therefore,
 \Beq
     \boxed{
-    \Partial{p}{J} = \cfrac{3~\kappa}{J} ~.
+    \Partial{p}{J} = \cfrac{\kappa}{J} ~.
     }
 \Eeq
 

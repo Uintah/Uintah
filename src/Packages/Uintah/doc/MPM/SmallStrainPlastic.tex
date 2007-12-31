@@ -3,7 +3,8 @@
 \begin{document}
 \DeclareGraphicsExtensions{.jpg,.pdf}
 \maketitle
-
+\tableofcontents
+\section{Preamble}
 Let $\boldsymbol{F}$ be the deformation gradient, $\boldsymbol{\sigma}$ be the 
 Cauchy stress, and $\boldsymbol{d}$ be the rate of deformation tensor.  We
 first decompose the deformation gradient into a stretch and a rotations using
@@ -58,7 +59,7 @@ equation for the deviatoric stress.  However, we will assume that the volumetric
 of the Cauchy stress can be computed using an equation of state.  Then the final
 Cauchy stress will be given by
 \Beq
-  \Bsig = \left[p(J) - J~\Deriv{p(J)}{J}~\alpha~(T-T_0)\right]~\Bone + \Bs ~;~~ 
+  \Bsig = \left[p(J) - 3~J~\Deriv{p(J)}{J}~\alpha~(T-T_0)\right]~\Bone + \Bs ~;~~ 
   J = \det(\BF)~.
 \Eeq
 (Note that we assume that the plastic part of the deformation is volume preserving.
@@ -556,8 +557,8 @@ The following stress update algorithm is used for each (plastic) time step:
      = T_n + 
      \cfrac{\chi_{n+1}~\Delta\gamma_{n+1}}{\rho_{n+1}~C_p}~\sigma^{n+1}_y~h^{\alpha}_{n+1} \\
     p_{n+1} & = p(J_{n+1}) \\ 
-    \kappa_{n+1} & = \left[\Deriv{p(J)}{J}\right]_{n+1} \\
-    \Bsig_{n+1} & = \left[p_{n+1} - J~\kappa_{n+1}~\alpha~(T_{n+1}-T_0)\right]~\Bone + \Bs_{n+1}
+    \kappa_{n+1} & = J_{n+1}~\left[\Deriv{p(J)}{J}\right]_{n+1} \\
+    \Bsig_{n+1} & = \left[p_{n+1} - 3~\kappa_{n+1}~\alpha~(T_{n+1}-T_0)\right]~\Bone + \Bs_{n+1}
     \Eal
   \Eeq
 \end{enumerate}
