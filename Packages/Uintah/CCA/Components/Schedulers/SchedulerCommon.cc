@@ -197,7 +197,7 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
   trackingVarsPrintLocation_ = PRINT_AFTER_EXEC;
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if(params){
-    params->getWithDefault("small_messages", d_useSmallMessages, false);
+    params->getWithDefault("small_messages", d_useSmallMessages, true);
     if (d_useSmallMessages && d_myworld->myrank() == 0)
       cout << "   Using theoretical scheduler\n";
     ProblemSpecP track = params->findBlock("VarTracker");
