@@ -48,8 +48,13 @@ void TST::outputProblemSpec(ProblemSpecP& ps){
 double TST::computeRhoMicro(double press, double gamma,
                             double cv, double Temp,double rho_guess){
   /*
-   * This is solved by use of cubic equation solver
-   * c's are the coefficients of the cubic equation
+   *       (gamma-1)*cv*Temp           a
+   *   P = ------------------  -  ------------
+   *             v - b            (v+ub)(v+wb)
+   * 
+   *  This is solved by use of cubic equation solver
+   *  c's are the coefficients of the cubic equation
+   *
    */
   double k  = (gamma-1)*cv*Temp;
   double c1 = -press;
@@ -59,9 +64,17 @@ double TST::computeRhoMicro(double press, double gamma,
 
   double p = fabs(c3/c1 - pow(c2/c1, 2.)/3.);
   double q = pow((c2/c1),3.)/13.5 - c2*c3/(c1*c1)/3. + c4/c1;
-
-  double phi = acos(-q / pow(p,1.5) * 2.5980762113533159402911695122588); 
+  double cos_val = -q / pow(p,1.5) * 2.5980762113533159402911695122588;
   //2.59807621135331594 = sqrt(27)/2.0; 
+
+  if(cos_val >  1.0){ 
+    cos_val = 1.0;
+  }
+  if(cos_val < -1.0){ 
+    cos_val = -1.0;  
+  } 
+
+  double phi = acos(cos_val);
 
   double sp_v = 2.*sqrt(p/3.)*cos(phi/3.) - c2/c1/3.;
 
