@@ -52,7 +52,7 @@ namespace SCIRun {
 
 MemStats::MemStats()
 {
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
     a=DefaultAllocator();
     if(a){
 	nbins=GetNbins(a);
@@ -93,7 +93,7 @@ void MemStats::init_tcl(GuiInterface* gui)
 
 void MemStats::tcl_command(GuiArgs& args, void*)
 {
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
     if(args.count() < 2){
 	args.error("memstats needs a minor command");
 	return;

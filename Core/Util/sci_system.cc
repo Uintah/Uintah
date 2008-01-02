@@ -46,19 +46,21 @@
 
 #ifdef __linux  /* This file is for linux only. */
 
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <string.h>
+#  include <sys/wait.h>
+#  include <sys/types.h>
 
-#include <Core/Malloc/Allocator.h>
-using namespace SCIRun;
-#include <pthread.h>
+#  include <stdio.h>
+#  include <stddef.h>
+#  include <stdlib.h>
+#  include <unistd.h>
+#  include <signal.h>
+#  include <errno.h>
+#  include <string.h>
+#  include <pthread.h>
+
+#  include <Core/Malloc/Allocator.h>
+
+//using namespace SCIRun;
 
 /*
  This file is straight out of the glibc-2.2.1 distribution, with the 
@@ -74,13 +76,6 @@ using namespace SCIRun;
 
  - Chris Moulding */
 
-/* - cm commented out
-#ifndef	HAVE_GNU_LD 
-#define	__environ	environ
-#endif
-   - cm
-*/
-
 /* -- Dd for AIX xlC */
 #ifdef _AIX
 #  define	__environ	environ
@@ -93,6 +88,7 @@ using namespace SCIRun;
 #    define __sigemptyset sigemptyset
 #  endif /* __sigemptyset */
 #endif /* PDT_PARSER */
+
 /* -- end Dd */
 
 /* - BW for PGI */
@@ -132,14 +128,9 @@ pid_t __fork(void);
    of the system call. -bigler
 */
 static int
-sci_system_linuxthreads( const char * line )
+sci_system_linuxthreads(const char *line)
+/* - cm */
 {
-
-#if defined(REDSTORM)
-  printf( "ERROR: system call does not work on RedStorm... Bye.\n" );
-  exit( 1 );
-#else
-
   int status, save;
   pid_t pid;
   struct sigaction sa, intr, quit;
@@ -221,12 +212,14 @@ sci_system_linuxthreads( const char * line )
   // need the pipe to communicate.
   int pipe_fd[2];
   if (pipe(pipe_fd) == -1) {
-    fprintf(stderr,"sci_system.cc: Error in piping\n");
+    fprintf(stderr,"sci_system.cc:Error in piping\n");
     return 1;
   }
 
+#if !defined( DISABLE_SCI_MALLOC )
   // Recursively lock the allocator, to keep other threads out.
   LockAllocator(DefaultAllocator());
+#endif
   pid = __fork ();
   if (pid == (pid_t) 0)
     {
@@ -234,8 +227,8 @@ sci_system_linuxthreads( const char * line )
 
       // Close unneeded read pipe.
       if (close(pipe_fd[0]) == -1) {
-	fprintf(stderr, "sci_system.cc: Error in closing read pipe in child\n");
-	fprintf(stderr, "sci_system.cc: If this actually has a problem, the parent will block.\n");
+	fprintf(stderr, "sci_system.cc:Error in closing read pipe in child\n");
+	fprintf(stderr, "sci_system.cc:If this actually has a problem, the parent will block.\n");
 	exit(1);
       }
 
@@ -250,13 +243,13 @@ sci_system_linuxthreads( const char * line )
       // Send signal to parent that we are past the fork
       char to_parent[1] = {'n'};
       if (write(pipe_fd[1], to_parent, 1) != 1) {
-	fprintf(stderr, "sci_system.cc: Error in writing to pipe in child\n");
-	fprintf(stderr, "sci_system.cc: If this actually has a problem, the parent will block.\n");
+	fprintf(stderr, "sci_system.cc:Error in writing to pipe in child\n");
+	fprintf(stderr, "sci_system.cc:If this actually has a problem, the parent will block.\n");
 	exit(1);
       }
 
       if (close(pipe_fd[1]) == -1) {
-	fprintf(stderr, "sci_system.cc: Error in closing write pipe in child\n");
+	fprintf(stderr, "sci_system.cc:Error in closing write pipe in child\n");
 	exit(1);
       }
       
@@ -283,7 +276,9 @@ sci_system_linuxthreads( const char * line )
     {
       /* The fork failed.  */
       status = -1;
+#if !defined( DISABLE_SCI_MALLOC )
       UnLockAllocator(DefaultAllocator());
+#endif
     }
   else
     /* Parent side.  */
@@ -291,20 +286,23 @@ sci_system_linuxthreads( const char * line )
       
       // Wait for signal from child that it is past the fork
       if (close(pipe_fd[1]) == -1) {
-	fprintf(stderr, "sci_system.cc: Error in closing write pipe in parent\n");
+	fprintf(stderr, "sci_system.cc:Error in closing write pipe in parent\n");
 	return 1;
       }
       char from_child[1];
       if (read(pipe_fd[0], from_child, 1) != 1) {
-	fprintf(stderr, "sci_system.cc: Error in reading from pipe in parent\n");
+	fprintf(stderr, "sci_system.cc:Error in reading from pipe in parent\n");
+#if !defined( DISABLE_SCI_MALLOC )
 	UnLockAllocator(DefaultAllocator());
+#endif
 	return 1;
       }
       // We can unlock the allocator, because the child has
+#if !defined( DISABLE_SCI_MALLOC )
       UnLockAllocator(DefaultAllocator());
-
+#endif
       if (close(pipe_fd[0]) == -1) {
-	fprintf(stderr, "sci_system.cc: Error in closing read pipe in parent\n");
+	fprintf(stderr, "sci_system.cc:Error in closing read pipe in parent\n");
 	return 1;
       }
       
@@ -354,11 +352,11 @@ sci_system_linuxthreads( const char * line )
 	return -1;
     }
   return status;
-#endif // REDSTORM
 }
 /* -cm commented
   weak_alias (__libc_system, system)
    -cm */
+
 
 int
 sci_system(const char *line)

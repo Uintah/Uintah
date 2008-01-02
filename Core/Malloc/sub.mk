@@ -33,8 +33,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Malloc
 
-SRCS     += $(SRCDIR)/Allocator.cc $(SRCDIR)/AllocOS.cc \
-	$(SRCDIR)/malloc.cc $(SRCDIR)/new.cc 
+SRCS     += $(SRCDIR)/Allocator.cc \
+            $(SRCDIR)/AllocOS.cc   \
+            $(SRCDIR)/malloc.cc    \
+            $(SRCDIR)/new.cc       \
+            $(SRCDIR)/Trace.cc
 
 PSELIBS := 
 LIBS := $(THREAD_LIBRARY)

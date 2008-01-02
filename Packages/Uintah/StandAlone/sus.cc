@@ -46,6 +46,8 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/hypre_defs.h>
 
+#include <Core/Malloc/Allocator.h>
+
 #ifdef USE_VAMPIR
 #  include <Packages/Uintah/Core/Parallel/Vampir.h>
 #endif
@@ -369,7 +371,13 @@ main( int argc, char** argv )
 
   bool thrownException = false;
   
-  
+#if defined(SCI_MALLOC_TRACE)
+  ostringstream traceFilename;
+  traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank() << ".txt";
+  mallocTraceInfo.setOutputFilename( traceFilename.str().c_str(),
+                                     "this could be some important info to log..." );
+#endif
+
  if( Uintah::Parallel::getMPIRank() == 0 ) {
     // helpful for cleaning out old stale udas
     time_t t = time(NULL) ;

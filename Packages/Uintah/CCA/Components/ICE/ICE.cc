@@ -3910,7 +3910,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch,gac, 2);
           new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch,gac, 2);
           new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch,gac, 2);
-          double Time= dataArchiver->getCurrentTime();
+          //double Time = dataArchiver->getCurrentTime();
          
           computeTauX(patch, vol_fracX_FC, vel_CC,viscosity,dx, tau_X_FC);
           computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);

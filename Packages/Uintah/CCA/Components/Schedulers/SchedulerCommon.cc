@@ -978,7 +978,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
   d_sharedState->setCopyDataTimestep(true);  //-- do we still need this?  - BJW
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
 #endif
   this->compile(); 
@@ -995,7 +995,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   
   start = Time::currentSeconds();
   this->execute();
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
 #endif
 

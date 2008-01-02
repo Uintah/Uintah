@@ -67,11 +67,6 @@ using SCIRun::GeomMaterial;
 using SCIRun::Material;
 using SCIRun::to_string;
 using SCIRun::ColorMapHandle;
-using SCIRun::Allocator;
-using SCIRun::AuditAllocator;
-using SCIRun::DumpAllocator;
-
-using SCIRun::default_allocator;
 
 static string control_name("Control Widget");
 			 
