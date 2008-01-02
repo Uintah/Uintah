@@ -683,7 +683,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   tg->setIteration(iteration);
   currentTG_ = tgnum;
 
-  if (d_myworld->myrank() == 0 ) cout << " iteration " << iteration << endl;
   if (graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
