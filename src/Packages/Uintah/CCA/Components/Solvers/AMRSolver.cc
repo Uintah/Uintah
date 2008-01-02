@@ -46,7 +46,7 @@ AMRSolver::readParameters(ProblemSpecP& params,
                           const string& varname)
   
 {
-  HypreSolverParams* p = scinew HypreSolverParams();
+  HypreSolverParams* p = new HypreSolverParams();
   bool found=false;
 
   /* Scan and set parameters */
