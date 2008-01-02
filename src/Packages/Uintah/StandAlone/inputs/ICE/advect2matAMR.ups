@@ -206,14 +206,22 @@
           <Variable name = "vol_frac_CC"  value = "3" matl = "all" />
         </Refinement_Criteria_Thresholds>
       </ICE>
+      
       <Regridder>
         <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[5,5,1]]  </lattice_refinement_ratio>
-        <cell_stability_dilation>   [2,2,0]   </cell_stability_dilation>   
-        <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
-      </Regridder> 
+        <cell_refinement_ratio>    [[2,2,1]]   </cell_refinement_ratio>
+        <cell_stability_dilation>   [2,2,0]    </cell_stability_dilation>   
+        <cell_deletion_dilation>   [1,1,0]     </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,0]     </min_boundary_cells>
+ 
+
+        <type>BNR</type>
+        
+        <min_patch_size>           [[10,10,1]] </min_patch_size>
+        <patch_split_tolerance>     1          </patch_split_tolerance>
+        <patch_combine_tolerance>   1          </patch_combine_tolerance>
+        <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
+      </Regridder>
     </AMR>
 
 
@@ -224,7 +232,6 @@
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
-
 
     <!--____________________________________________________________________-->
     <!--     MaterialProperties and Initial Conditions                      -->
@@ -249,7 +256,7 @@
                 </box>
              </difference>
                <res>           [2,2,2]                  </res>
-               <velocity>      [100,100,0]                  </velocity>
+               <velocity>      [100,100,0]              </velocity>
                <density>       1.7899909957225715000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -264,7 +271,7 @@
            <geom_object>
                 <box label="blobInMiddle">              </box>
                <res>            [2,2,2]                 </res>
-               <velocity>       [100,100,0]              </velocity>
+               <velocity>       [100,100,0]             </velocity>
                <density>        1.789990995722571500e+00</density>
                <pressure>       101325.0                </pressure>
                <temperature>    300.0                   </temperature>
