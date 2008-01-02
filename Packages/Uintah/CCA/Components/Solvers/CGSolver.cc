@@ -866,7 +866,7 @@ private:
 SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& varname)
 {
 
-  CGSolverParams* p = scinew CGSolverParams();
+  CGSolverParams* p = new CGSolverParams();
   if(params){
     for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
         param = param->findNextBlock("Parameters")) {
