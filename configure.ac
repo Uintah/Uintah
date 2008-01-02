@@ -860,6 +860,7 @@ case $host in
     fi
     NUM_CPUS=2
     IS_OSX="yes"
+    DEF_OSX="#define IS_OSX 1"
     ;;
   *-aix*)
     NUM_CPUS=4
@@ -883,6 +884,7 @@ case $host in
 esac
 
 AC_SUBST(IS_OSX)
+AC_SUBST(DEF_OSX)
 AC_SUBST(IS_WIN)
 AC_SUBST(IS_AIX)
 AC_SUBST(MAKE_ARCHIVES)
@@ -1086,6 +1088,9 @@ else
 fi
 
 if test "$enable_sci_malloc_trace" = "yes"; then
+  if test "$IS_OSX"; then
+      AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
+  fi
   DEF_MALLOC_TRACE="#define SCI_MALLOC_TRACE 1"
 else
   DEF_MALLOC_TRACE=""
@@ -4040,7 +4045,7 @@ if test "$sci_required_insight" = "yes"; then
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKNumerics -lITKStatistics -lITKBasicFilters -lITKSpatialObject -lITKEXPAT -lITKCommon -lITKniftiio -litkgdcm -lITKznz -litkvnl -litkvnl_inst -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKNumerics -lITKStatistics -lITKBasicFilters -lITKSpatialObject -lITKEXPAT -lITKCommon -lITKniftiio -litkgdcm -lITKznz -litkvnl -litkvnl_inst -litkvnl_algo -litkvcl -litksys -lITKDICOMParser"
 
     if test "$IS_WIN" = "yes"; then
 	libBegin=""

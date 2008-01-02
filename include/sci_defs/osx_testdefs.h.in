@@ -32,4 +32,6 @@
 
 @DEF_NEED_OSX_HACK@
 
+@DEF_OSX@
+
 #endif
