@@ -27,7 +27,7 @@
 
   <DataArchiver>
     <filebase>test_cyl_pene_no_ero.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <!--
     <outputInterval>2.0e-5</outputInterval>
     -->
