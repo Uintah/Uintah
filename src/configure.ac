@@ -1088,7 +1088,7 @@ else
 fi
 
 if test "$enable_sci_malloc_trace" = "yes"; then
-  if test "$IS_OSX"; then
+  if test "$IS_OSX" = "yes"; then
       AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
   fi
   DEF_MALLOC_TRACE="#define SCI_MALLOC_TRACE 1"

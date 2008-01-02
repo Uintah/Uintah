@@ -7141,7 +7141,7 @@ else
 fi
 
 if test "$enable_sci_malloc_trace" = "yes"; then
-  if test "$IS_OSX"; then
+  if test "$IS_OSX" = "yes"; then
       { { echo "$as_me:$LINENO: error: Malloc trace is not supported on Mac OSX..." >&5
 echo "$as_me: error: Malloc trace is not supported on Mac OSX..." >&2;}
    { (exit 1); exit 1; }; }
