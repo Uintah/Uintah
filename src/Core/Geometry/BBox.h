@@ -53,8 +53,10 @@
 
 // some compilers define the min and max macro, and the BBox::min/max will get confused.
 #ifdef min
-#undef min
-#undef max
+#  undef min
+#endif
+#ifdef max
+#  undef max
 #endif
 
 namespace SCIRun {

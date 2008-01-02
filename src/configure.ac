@@ -568,9 +568,14 @@ SCI_ARG_ENABLE(largesos,
   [largesos=${largesos='no'}])
 SCI_ARG_ENABLE(sci-malloc,
   AC_HELP_STRING(--enable-sci-malloc,
-                 Use SCI memory allocation/deallocation checks),
+                 Use SCI memory allocation/deallocation checks.  Note: you cannot use sci-malloc-trace at the same time.),
   [enable_sci_malloc="$enableval"],
   [enable_sci_malloc=${enable_sci_malloc='no'}])
+SCI_ARG_ENABLE(sci-trace,
+  AC_HELP_STRING(--enable-sci-malloc-trace,
+                 Use SCI memory trace functionality.  Note: you cannot use sci-malloc at the same time.),
+  [enable_sci_malloc_trace="$enableval"],
+  [enable_sci_malloc_trace=${enable_sci_malloc_trace='no'}])
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3)),
@@ -639,6 +644,10 @@ SCI_ARG_ENABLE(no-dynamic-cast,
   [enable_no_dynamic_cast="$enableval"],
   [enable_no_dynamic_cast=${enable_no_dynamic_cast='no'}])
 
+
+if test "$enable_sci_malloc" = "yes" -a "$enable_sci_malloc_trace" = "yes"; then
+   AC_MSG_ERROR( "You cannot use both --enable-sci-malloc-trace and --enable-sci-malloc!" )
+fi
 
 if test "$enable_rpath" = "no"; then
    AC_MSG_WARN("You have removed the rpath flag from some libraries.")
@@ -1033,7 +1042,7 @@ case $host in
      *-darwin*)
 	SO_OR_ARCHIVE_EXTENSION=dylib
 	if test "$enable_sci_malloc" = "yes"; then
-	   AC_MSG_WARN(sci_malloc does not work under mac osx. use -enable-sci-malloc=force)
+	   AC_MSG_WARN(sci_malloc does not work under mac osx. use --enable-sci-malloc=force)
 	   AC_MSG_WARN(sci-malloc disabled)
 	   enable_sci_malloc="no"
         elif test "$enable_sci_malloc" = "force"; then
@@ -1076,6 +1085,12 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
+if test "$enable_sci_malloc_trace" = "yes"; then
+  DEF_MALLOC_TRACE="#define SCI_MALLOC_TRACE 1"
+else
+  DEF_MALLOC_TRACE=""
+fi
+
 if test "$enable_scinew_line_numbers" = "yes"; then
   DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
 else
@@ -1093,6 +1108,7 @@ AC_SUBST(TIME_IMPL)
 
 AC_SUBST(DEF_MALLOC)
 AC_SUBST(DEF_MALLOC_LINENUMBERS)
+AC_SUBST(DEF_MALLOC_TRACE)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)

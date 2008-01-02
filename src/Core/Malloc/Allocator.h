@@ -43,11 +43,25 @@
 #ifndef Malloc_Allocator_h
 #define Malloc_Allocator_h 1
 
-#ifndef _WIN32
-#  include <sgi_stl_warnings_off.h>
-#  include <unistd.h>
-#  include <sgi_stl_warnings_on.h>
+#include <sci_defs/malloc_defs.h>
+
+// If ENABLE_SCI_TRACE is defined, DISABLE_SCI_MALLOC must also be defined.
+// The SCI trace facility will not work if SCI Malloc is turned on.
+//
+// For more information on using the SCI Memory Trace facility, see Trace.h.
+
+#if SCI_MALLOC_TRACE == 1 && ( !defined(DISABLE_SCI_MALLOC) || DISABLE_SCI_MALLOC != 1 )
+#  error SCI_MALLOC_TRACE and !DISABLE_SCI_MALLOC may not both be set!
 #endif
+
+#if defined( SCI_MALLOC_TRACE )
+#  include <Core/Malloc/Trace.h>
+#elif !defined( DISABLE_SCI_MALLOC )
+#  ifndef _WIN32
+#    include <sgi_stl_warnings_off.h>
+#    include <unistd.h>
+#    include <sgi_stl_warnings_on.h>
+#  endif
 
 #include <stdlib.h>
 
@@ -62,17 +76,19 @@ void MakeDefaultAllocator();
 
 void PrintTag(void*);
 
-// these functions are for use in tracking down memory leaks
-//   in the MALLOC_STATS file, unfreed memory will be listed with
-//   the specified tag
+//
+// These functions are for use in tracking down memory leaks.  In the
+// MALLOC_STATS file, non-freed memory will be listed with the specified
+// tag...
+//
 const char* AllocatorSetDefaultTagMalloc(const char* tag);
 const char* AllocatorSetDefaultTagNew(const char* tag);
-int AllocatorSetDefaultTagLineNumber(int line_number);
-void AllocatorResetDefaultTagMalloc();
-void AllocatorResetDefaultTagNew();
-void AllocatorResetDefaultTagLineNumber();
+int         AllocatorSetDefaultTagLineNumber(int line_number);
+void        AllocatorResetDefaultTagMalloc();
+void        AllocatorResetDefaultTagNew();
+void        AllocatorResetDefaultTagLineNumber();
 const char* AllocatorSetDefaultTag(const char* tag);
-void AllocatorResetDefaultTag();
+void        AllocatorResetDefaultTag();
 
 // append the num to the MallocStats file if MallocStats are dumped to a file
 // (negative appends nothing)
@@ -98,7 +114,7 @@ void GetGlobalStats(Allocator*,
 		    size_t& nmmap, size_t& sizemmap,
 		    size_t& nmunmap, size_t& sizemunmap,
 		    size_t& highwater_alloc, size_t& highwater_mmap);
-int GetNbins(Allocator*);
+int  GetNbins(Allocator*);
 void GetBinStats(Allocator*, int binno, size_t& minsize, size_t& maxsize,
 		 size_t& nalloc, size_t& nfree, size_t& ninlist);
 
@@ -115,16 +131,19 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
   
 } // End namespace SCIRun
 
+#  ifdef _WIN32
+#    define scinew new
+#  else
+     void* operator new(size_t, SCIRun::Allocator*, const char*, int);
+     void* operator new[](size_t, SCIRun::Allocator*, const char*, int);
+#    define scinew new(SCIRun::default_allocator, __FILE__, __LINE__)
+#  endif
 
-#ifdef _WIN32
-#define scinew new
 #else
-void* operator new(size_t, SCIRun::Allocator*, const char*, int);
-void* operator new[](size_t, SCIRun::Allocator*, const char*, int);
-#define scinew new(SCIRun::default_allocator, __FILE__, __LINE__)
-#endif
+   // Not tracing and not using sci malloc...
+#  define scinew new
 
+#endif // SCI_MALLOC_TRACE
 
-
-#endif
+#endif // Malloc_Allocator_h 1
  

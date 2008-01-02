@@ -52,53 +52,56 @@ const int ALIGN=16;
 */
 
 #include <sci_defs/bits_defs.h>
-#include <sci_defs/malloc_defs.h>
+
 #include <Core/Malloc/Allocator.h>
-#include <Core/Malloc/AllocPriv.h>
-#include <Core/Malloc/AllocOS.h>
 
-#if defined(__sun) || defined(_WIN32)
-#  include <string.h>
-#  define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
-#  include <string.h>
-#else
-#  error "Need bcopy idfdef for this architecture"
-#endif
+#if !defined( DISABLE_SCI_MALLOC )
 
-#ifndef _WIN32
-#  include <sys/param.h>
-// irix64 KCC stuff
-#  include <strings.h>
-#endif
-#include <stdio.h>
+#  include <Core/Malloc/AllocPriv.h>
+#  include <Core/Malloc/AllocOS.h>
 
-#ifdef SCI_PTHREAD
-#include <pthread.h>
-#endif
+#  if defined(__sun) || defined(_WIN32)
+#    include <string.h>
+#    define bcopy(src,dest,n) memcpy(dest,src,n)
+#  elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
+#    include <string.h>
+#  else
+#    error "Need bcopy idfdef for this architecture"
+#  endif
+
+#  ifndef _WIN32
+#    include <sys/param.h>
+//   irix64 KCC stuff
+#    include <strings.h>
+#  endif
+#  include <stdio.h>
+
+#  ifdef SCI_PTHREAD
+#    include <pthread.h>
+#  endif
 
 /* we use UCONV to avoid compiler warnings. */
 // NOTE(boulos): On Darwin systems, even if it's not a 64-bit build
 // the compiler will generate warnings (so we use %ld for that case as
 // well)
-#if defined(SCI_64BITS) || defined(__APPLE__)
-#define UCONV "%ld"
-#else
-#define UCONV "%d"
-#endif
+#  if defined(SCI_64BITS) || defined(__APPLE__)
+#    define UCONV "%ld"
+#  else
+#    define UCONV "%d"
+#  endif
 
 namespace SCIRun {
 
 // Dd: For AIX
-#ifdef STATSIZE
-#  undef STATSIZE
-#endif
+#  ifdef STATSIZE
+#    undef STATSIZE
+#  endif
 
-#define STATSIZE (4096+BUFSIZ)
+#  define STATSIZE (4096+BUFSIZ)
 
-#ifndef DISABLE_SCI_MALLOC
-  static char trace_buffer[STATSIZE];
-#endif
+#  ifndef DISABLE_SCI_MALLOC
+     static char trace_buffer[STATSIZE];
+#  endif
 
 Allocator* default_allocator=0;
 
@@ -162,15 +165,15 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
         bytes_inuse+=p->reqsize;
         bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
         if(out){
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
             fprintf(out, "%p: "UCONV" bytes (%s:%d)\n",
                     (char*)p+sizeof(Tag)+sizeof(Sentinel),
                     p->reqsize, p->tag, p->linenum);
-#else
+#  else
             fprintf(out, "%p: "UCONV" bytes (%s)\n",
                     (char*)p+sizeof(Tag)+sizeof(Sentinel),
                     p->reqsize, p->tag);
-#endif
+#  endif
         }
     }
 }
@@ -283,7 +286,8 @@ inline AllocBin* Allocator::get_bin(size_t size)
   }
 }
 
-#if defined(SCI_NOTHREAD) || defined(DISABLE_SCI_MALLOC)
+#  if defined(SCI_NOTHREAD) || defined(DISABLE_SCI_MALLOC)
+
 void Allocator::initlock()
 {
 }
@@ -305,8 +309,8 @@ void LockAllocator(Allocator * /*a*/)
 void UnLockAllocator(Allocator * /*a*/)
 {
 }
-#else
-#  ifdef SCI_PTHREAD
+#  else
+#    ifdef SCI_PTHREAD
 
 // This is code taken from Core/Thread/RecursiveMutex_default.cc
 // I'm using this code to make sure that if a thread locks the allocator
@@ -411,9 +415,9 @@ void UnLockAllocator(Allocator *a)
   a->unlock();
 }
 
-#  else
+#    else
 
-#    ifdef __sgi
+#      ifdef __sgi
 
 void Allocator::initlock()
 {
@@ -444,11 +448,11 @@ void UnLockAllocator(Allocator *a)
   a->unlock();
 }
 
-#    else  // !__sgi
-#      error ERROR: undefined allocator lock mode (Malloc/Allocator.cc).
-#    endif // __sgi
-#  endif // SCI_PTHREAD
-#endif // SCI_NOTHREAD ||| DISABLE_SCI_MALLOC
+#      else  // !__sgi
+#        error ERROR: undefined allocator lock mode (Malloc/Allocator.cc).
+#      endif // __sgi
+#    endif // SCI_PTHREAD
+#  endif // SCI_NOTHREAD ||| DISABLE_SCI_MALLOC
 
 void MakeDefaultAllocator()
 {
@@ -465,7 +469,7 @@ void AllocError(const char* msg)
 
 Allocator* MakeAllocator()
 {
-#ifndef DISABLE_SCI_MALLOC
+#  ifndef DISABLE_SCI_MALLOC
   // Compute the size of the allocator structures
   size_t size=sizeof(Allocator);
   int nsmall=NSMALL_BINS;
@@ -582,9 +586,9 @@ Allocator* MakeAllocator()
 
   a->dieing = false;
   return a;
-#else
+#  else
   return NULL;
-#endif // DISABLE_SCI_MALLOC
+#  endif // DISABLE_SCI_MALLOC
 }
 
 void* Allocator::alloc(size_t size, const char* tag, int linenum)
@@ -596,13 +600,13 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
 
   // Find a block that this will fit in...
   AllocBin* obj_bin=get_bin(size);
-#ifndef DEBUG
+#  ifndef DEBUG
   if(obj_bin->maxsize < size || size < obj_bin->minsize){
     fprintf(stderr, "maxsize: "UCONV"\n", obj_bin->maxsize);
     fprintf(stderr, "size: "UCONV"\n", size);
     AllocError("Bins messed up...");
   }
-#endif
+#  endif
   lock();
 
   if(!obj_bin->free)
@@ -615,9 +619,9 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
   // Tell the hunk that we are using this one...
   obj->hunk->ninuse++;
   obj->tag=tag;
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
   obj->linenum = linenum;
-#endif
+#  endif
   obj->next=obj_bin->inuse;
   if(obj_bin->inuse)
     obj_bin->inuse->prev=obj;
@@ -663,11 +667,11 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
   }
 
   if(trace_out)
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
     fprintf(trace_out, "A %p "UCONV" (%s:%d)\n", d, size, tag, linenum);
-#else
+#  else
   fprintf(trace_out, "A %p "UCONV" (%s)\n", d, size, tag);
-#endif
+#  endif
 
   if(do_shutdown)
     shutdown();
@@ -734,9 +738,9 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
     obj=(Tag*)hunk->data;
     obj->bin=&big_bin;
     obj->tag="never used (big object)";
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
     obj->linenum=0;
-#endif
+#  endif
     obj->next=big_bin.free;
     if(big_bin.free)
       big_bin.free->prev=obj;
@@ -776,9 +780,9 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
   // Tell the hunk that we are using this one...
   obj->hunk->ninuse++;
   obj->tag=tag;
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
   obj->linenum = linenum;
-#endif
+#  endif
   obj->next=big_bin.inuse;
   obj->prev=0;
   if(big_bin.inuse)
@@ -824,11 +828,11 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
   }
 
   if(trace_out)
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
     fprintf(trace_out, "A %p "UCONV" (%s:%d)\n",d, size, tag, linenum);
-#else
+#  else
   fprintf(trace_out, "A %p "UCONV" (%s)\n",d, size, tag);
-#endif
+#  endif
 
   if(do_shutdown)
     shutdown();
@@ -874,13 +878,13 @@ void* Allocator::realloc(void* dobj, size_t newsize)
         *p++=i;
     }
     if(trace_out)
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
       fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s:%d)\n", dobj,
               oldsize, dobj, newsize, oldobj->tag, oldobj->linenum);
-#else
+#  else
     fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
             oldsize, dobj, newsize, oldobj->tag);
-#endif
+#  endif
 
     return dobj;
   }
@@ -893,13 +897,13 @@ void* Allocator::realloc(void* dobj, size_t newsize)
   bcopy(dobj, nobj, minsize);
   free(dobj);
   if(trace_out)
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
     fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s:%d)\n", dobj,
             oldsize, nobj, newsize, oldobj->tag, oldobj->linenum);
-#else
+#  else
   fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
           oldsize, nobj, newsize, oldobj->tag);
-#endif
+#  endif
 
   return nobj;
 }
@@ -922,9 +926,9 @@ void* Allocator::memalign(size_t alignment, size_t size, const char* ctag)
   tag->hunk=0;
   tag->reqsize=size;
   tag->tag=ctag;
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
   tag->linenum=0;
-#endif
+#  endif
   Sentinel* sent1=(Sentinel*)m;
   m+=sizeof(Sentinel);
   sent1->first_word=sent1->second_word=SENT_VAL_INUSE;
@@ -955,11 +959,11 @@ void Allocator::free(void* dobj)
 
   // Make sure that it is still intact...
   if(trace_out)
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
     fprintf(trace_out, "F %p "UCONV" (%s:%d)\n", dobj, obj->reqsize, obj->tag, obj->linenum);
-#else
+#  else
   fprintf(trace_out, "F %p "UCONV" (%s)\n", dobj, obj->reqsize, obj->tag);
-#endif
+#  endif
 
   if(!lazy)
     audit(obj, OBJFREEING);
@@ -1041,9 +1045,9 @@ void Allocator::fill_bin(AllocBin* bin)
       Tag* t=(Tag*)p;
       t->bin=bin;
       t->tag="never used";
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
       t->linenum=0;
-#endif
+#  endif
       t->next=bin->free;
       if(bin->free)
         bin->free->prev=t;
@@ -1086,11 +1090,11 @@ void Allocator::init_bin(AllocBin* bin, size_t maxsize, size_t minsize)
 }
 
 static void printObjectAllocMessage(Tag* obj) {
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
   fprintf(stderr, "Object was allocated with this tag:\n%s at this line number:%d\n", obj->tag, obj->linenum);
-#else
+#  else
   fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
-#endif
+#  endif
 
 }
 
@@ -1241,11 +1245,11 @@ void PrintTag(void* dobj)
   dd-=sizeof(Tag);
   Tag* obj=(Tag*)dd;
 
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
   fprintf(stderr, "tag %p: allocated by: %s at %d\n", obj, obj->tag, obj->linenum);
-#else
+#  else
   fprintf(stderr, "tag %p: allocated by: %s\n", obj, obj->tag);
-#endif
+#  endif
   fprintf(stderr, "requested object size: "UCONV" bytes\n", obj->reqsize);
   fprintf(stderr, "maximum bin size: "UCONV" bytes\n", obj->bin->maxsize);
   fprintf(stderr, "range of object: %p - "UCONV"\n", dobj,
@@ -1424,13 +1428,13 @@ void AuditDefaultAllocator()
 static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 {
   for(Tag* p=bin->inuse;p!=0;p=p->next){
-#ifdef USE_TAG_LINENUM
+#  ifdef USE_TAG_LINENUM
     fprintf(fp, "%p "UCONV" %s:%d\n", (p+sizeof(Tag)+sizeof(Sentinel)),
             p->reqsize, p->tag, p->linenum);
-#else
+#  else
     fprintf(fp, "%p "UCONV" %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
             p->reqsize, p->tag);
-#endif
+#  endif
   }
 }
 
@@ -1468,3 +1472,5 @@ void Allocator::noninline_unlock()
 }
 
 } // End namespace SCIRun
+
+#endif // !defined( DISABLE_SCI_MALLOC )

@@ -506,7 +506,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   double tstart = Time::currentSeconds();
   string url;
 
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
   const char* tag = AllocatorSetDefaultTag("QUERY");
 #endif
 
@@ -574,8 +574,12 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     }
     if (psubset == 0 || psubset->numParticles() != dfi->numParticles)
     {
-     d_psetDB[key] = psubset =
-       scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
+      psubset = scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
+      //      cout << "numParticles: " << dfi->numParticles << "\n";
+      //      cout << "d_pset size: " << d_psetDB.size() << "\n";
+      //      cout << "1. key is: " << key.first << "\n";
+      //      cout << "2. key is: " << key.second << "\n";
+      d_psetDB[key] = psubset;
     }
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
@@ -614,7 +618,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
   }
 
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
 #endif
   dbg << "DataArchive::query() completed in "
@@ -661,7 +665,7 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
   TimeData& td = getTimeData(timeIndex);
   d_lock.unlock();
   const TypeDescription* type = 0;
-  Patch::VariableBasis basis;
+  Patch::VariableBasis basis = Patch::NodeBased; // not sure if this is a reasonable default...
   Patch::selectType patches;
   
   level->selectPatches(low, high, patches);
@@ -1218,11 +1222,13 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
 
   timedata.parsePatch(patch);
 
-  int numMatls;
+  int numMatls = -1;
 
-  for (unsigned i = 0; i < timedata.d_matlInfo[patch->getLevel()->getIndex()].size(); i++) 
-    if (timedata.d_matlInfo[patch->getLevel()->getIndex()][i]) 
+  for (unsigned i = 0; i < timedata.d_matlInfo[patch->getLevel()->getIndex()].size(); i++) {
+    if (timedata.d_matlInfo[patch->getLevel()->getIndex()][i]) {
       numMatls++;
+    }
+  }
 
   dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
 

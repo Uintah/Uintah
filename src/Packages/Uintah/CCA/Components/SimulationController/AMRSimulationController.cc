@@ -110,8 +110,9 @@ void AMRSimulationController::run()
 
    setStartSimTime(t);
    initSimulationStatsVars();
+#ifndef DISABLE_SCI_MALLOC
    AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
-
+#endif
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
    
@@ -187,7 +188,7 @@ void AMRSimulationController::run()
        ostringstream fn;
        fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
        string filename(fn.str());
-#ifndef _WIN32
+#if !defined( _WIN32 ) && !defined( DISABLE_SCI_MALLOC )
        DumpAllocator(DefaultAllocator(), filename.c_str());
 #endif
      }
@@ -238,8 +239,9 @@ void AMRSimulationController::run()
      // number so components can tell what timestep they are on. 
      d_sharedState->setElapsedTime(t);
      d_sharedState->incrementCurrentTopLevelTimeStep();
+#ifndef DISABLE_SCI_MALLOC
      AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
-
+#endif
      // Each component has their own init_delt specified.  On a switch
      // from one component to the next, we need to adjust the delt to
      // that specified in the input file.  To detect the switch of components,

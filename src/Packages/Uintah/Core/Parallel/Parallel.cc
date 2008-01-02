@@ -16,8 +16,6 @@ using namespace Uintah;
 using SCIRun::Thread;
 using SCIRun::Time;
 using SCIRun::InternalError;
-using SCIRun::AllocatorSetDefaultTagMalloc;
-using SCIRun::AllocatorMallocStatsAppendNumber;
 
 using std::cerr;
 using std::cout;
@@ -25,8 +23,9 @@ using std::string;
 using std::ostringstream;
 
 #define THREADED_MPI_AVAILABLE
+
 #if defined(__digital__) || defined(_AIX)
-#undef THREADED_MPI_AVAILABLE
+#  undef THREADED_MPI_AVAILABLE
 #endif
 
 //static bool            allowThreads;
@@ -187,8 +186,8 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #endif
 
      int status;
-#ifndef _WIN32
-     const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
+#if !defined( _WIN32 ) && ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
+     const char* oldtag = SCIRun::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 #ifdef __sgi
      if(Thread::isInitialized()){
@@ -222,9 +221,9 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
        MpiError("MPI_Comm_rank", status);
-#ifndef _WIN32
-     AllocatorSetDefaultTagMalloc(oldtag);
-     AllocatorMallocStatsAppendNumber(worldRank);
+#if !defined( _WIN32 ) && ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
+     SCIRun::AllocatorSetDefaultTagMalloc(oldtag);
+     SCIRun::AllocatorMallocStatsAppendNumber(worldRank);
 #endif
      rootContext = scinew ProcessorGroup(0, worldComm, true,
 					 worldRank,worldSize);

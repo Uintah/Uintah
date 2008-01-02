@@ -51,14 +51,20 @@ X::~X()
 }
 
 
+#if 0
+
 void* operator new(size_t, SCIRun::Allocator*, const char*);
 #ifdef _BOOL
 void* operator new[](size_t, SCIRun::Allocator*, const char*);
 #endif
 
+#endif
+
 int
 main(char **, int )
 {
+  printf( "Warning... test14 has been disabled.\n" );
+
 #if 0
     char* p=new char[100];
     delete[] p;
