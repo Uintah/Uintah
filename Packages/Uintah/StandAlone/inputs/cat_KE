@@ -1,0 +1,32 @@
+#!/bin/csh
+
+if( $#argv == 0 ) then
+  echo " usage:  cat_KE  <uda>"
+  echo " This script concatenates the <uda>/KineticEnergy.dat file to the master KineticEnergy/sus_totalKE.dat" 
+  exit
+endif
+
+set uda = $argv
+set master_dat = "KineticEnergy/sus_totalKE.dat" 
+
+if( ! -e $uda) then
+  echo " usage:  cat_KE  <uda>"
+  echo " The directory $uda does not exist now exiting"
+  exit
+endif
+
+echo "working on $uda"
+
+# If the KineticEnergy.dat file exists
+if( -e $uda/KineticEnergy.dat ) then
+  touch $master_dat
+  cp $master_dat $master_dat.tmp
+
+  cat $uda/KineticEnergy.dat >> $master_dat.tmp 
+
+  sort $master_dat.tmp | uniq > $master_dat
+  
+  /bin/rm $master_dat.tmp
+endif
+
+exit
