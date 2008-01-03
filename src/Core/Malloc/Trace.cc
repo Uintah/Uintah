@@ -139,14 +139,14 @@ MallocTraceInfo_S::print( const char * infoString, void * addr, int size /* = -1
 //////////////////////////////////////////////////////////////////////////////////////////
 
 const char *
-AllocatorSetDefaultTagMalloc( const char * tag )
+SCIRun::AllocatorSetDefaultTagMalloc( const char * tag )
 {
   return mallocTraceInfo.set( tag );
 }
 
 // Not sure what this is supposed to do...
 void
-AllocatorMallocStatsAppendNumber( int worldRank )
+SCIRun::AllocatorMallocStatsAppendNumber( int worldRank )
 {
 }
 

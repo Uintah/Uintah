@@ -45,33 +45,36 @@
 #include <Core/Malloc/AllocPriv.h>
 
 #if defined(__sun) || defined(_WIN32)
-#include <string.h>
-#define bzero(p,sz)  memset(p,0, sz);
+#  include <string.h>
+#  define bzero(p,sz)  memset(p,0, sz);
 #elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
+//  do nothing
 #else
-#error "Need bcopy define for this architecture"
+#  error "Need bcopy define for this architecture"
 #endif
 
 #ifndef _WIN32
 // irix64 KCC stuff
-#include <strings.h>
-#ifdef __GNUG__ 
-#define THROWCLAUSE throw()
+#  include <strings.h>
+#  ifdef __GNUG__ 
+#    define THROWCLAUSE throw()
+#  else
+#    define THROWCLAUSE
+#  endif
 #else
-#define THROWCLAUSE
-#endif
-#else
-#define THROWCLAUSE
+#  define THROWCLAUSE
 #endif
 
 extern "C" {
-void* malloc(size_t size) THROWCLAUSE;
-void free(void* ptr) THROWCLAUSE;
-void* calloc(size_t, size_t) THROWCLAUSE;
-void* realloc(void* p, size_t s) THROWCLAUSE;
-void* memalign(size_t, size_t) THROWCLAUSE;
-void* valloc(size_t) THROWCLAUSE;
+  void* malloc(size_t size) THROWCLAUSE;
+  void free(void* ptr) THROWCLAUSE;
+  void* calloc(size_t, size_t) THROWCLAUSE;
+  void* realloc(void* p, size_t s) THROWCLAUSE;
+  void* memalign(size_t, size_t) THROWCLAUSE;
+  void* valloc(size_t) THROWCLAUSE;
 }
+
+#ifndef DISABLE_SCI_MALLOC
 
 using namespace SCIRun;
 
@@ -91,8 +94,6 @@ void AllocatorResetDefaultTagMalloc()
 }
 
 }
-
-#ifndef DISABLE_SCI_MALLOC
 
 void* malloc(size_t size) THROWCLAUSE
 {
