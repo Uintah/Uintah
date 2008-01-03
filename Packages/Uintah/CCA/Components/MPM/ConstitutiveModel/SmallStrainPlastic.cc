@@ -255,7 +255,7 @@ void SmallStrainPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","small_strain_large_rotation_plastic");
+    cm_ps->setAttribute("type","small_strain_plastic");
   }
   
   cm_ps->appendElement("bulk_modulus",d_initialData.Bulk);
