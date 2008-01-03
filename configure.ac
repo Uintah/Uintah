@@ -1092,6 +1092,7 @@ if test "$enable_sci_malloc_trace" = "yes"; then
       AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
   fi
   DEF_MALLOC_TRACE="#define SCI_MALLOC_TRACE 1"
+  TRACE_ON="yes"
 else
   DEF_MALLOC_TRACE=""
 fi
@@ -1114,6 +1115,7 @@ AC_SUBST(TIME_IMPL)
 AC_SUBST(DEF_MALLOC)
 AC_SUBST(DEF_MALLOC_LINENUMBERS)
 AC_SUBST(DEF_MALLOC_TRACE)
+AC_SUBST(TRACE_ON)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)

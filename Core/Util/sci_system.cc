@@ -60,8 +60,6 @@
 
 #  include <Core/Malloc/Allocator.h>
 
-//using namespace SCIRun;
-
 /*
  This file is straight out of the glibc-2.2.1 distribution, with the 
  exception that I've made some very minor changes: commented out some
@@ -218,7 +216,7 @@ sci_system_linuxthreads(const char *line)
 
 #if !defined( DISABLE_SCI_MALLOC )
   // Recursively lock the allocator, to keep other threads out.
-  LockAllocator(DefaultAllocator());
+  SCIRun::LockAllocator( SCIRun::DefaultAllocator() );
 #endif
   pid = __fork ();
   if (pid == (pid_t) 0)
@@ -277,7 +275,7 @@ sci_system_linuxthreads(const char *line)
       /* The fork failed.  */
       status = -1;
 #if !defined( DISABLE_SCI_MALLOC )
-      UnLockAllocator(DefaultAllocator());
+      SCIRun::UnLockAllocator( SCIRun::DefaultAllocator() );
 #endif
     }
   else
@@ -293,13 +291,13 @@ sci_system_linuxthreads(const char *line)
       if (read(pipe_fd[0], from_child, 1) != 1) {
 	fprintf(stderr, "sci_system.cc:Error in reading from pipe in parent\n");
 #if !defined( DISABLE_SCI_MALLOC )
-	UnLockAllocator(DefaultAllocator());
+	SCIRun::UnLockAllocator( SCIRun::DefaultAllocator() );
 #endif
 	return 1;
       }
       // We can unlock the allocator, because the child has
 #if !defined( DISABLE_SCI_MALLOC )
-      UnLockAllocator(DefaultAllocator());
+      SCIRun::UnLockAllocator( SCIRun::DefaultAllocator() );
 #endif
       if (close(pipe_fd[0]) == -1) {
 	fprintf(stderr, "sci_system.cc:Error in closing read pipe in parent\n");
