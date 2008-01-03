@@ -47,28 +47,32 @@ using namespace Uintah;
 
 bool verbose = false;
 bool d_printCell_coords = false;
+bool d_doheatflux = false;
+bool d_dovelocity = false;
   
 void
 usage(const std::string& badarg, const std::string& progname)
 {
-    if(badarg != "")
-        cerr << "Error parsing argument: " << badarg << endl;
-    cerr << "Usage: " << progname << " [options] "
-         << "-uda <archive file>\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "  -h,--help\n";
-    cerr << "  -v,--variable <variable name> [defaults to cellType]\n";
-    cerr << "  -tx,--timeextract <path to timeextract> [defaults to just timeextract]\n";
-    cerr << "  -m,--material <material number> [defaults to 1]\n";
-    cerr << "  -timestep,--timestep [int] (timestep used for face lookup int) [defaults to 1]\n";
-    cerr << "  -container,--container [int] (container cell type int) [defaults to -3 (i.e. not present)]\n";
-    cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
-    cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to Nx,Ny,Nz]\n";
-    cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
-    cerr << "  -o,--out <outputfilename> [defaults to stdout]\n"; 
-    cerr << "  -vv,--verbose (prints status of output)\n";
-//    cerr << "  -cellCoords (prints the cell centered coordinates on that level)\n";
-    exit(1);
+  if(badarg != "")
+    cerr << "Error parsing argument: " << badarg << endl;
+  cerr << "Usage: " << progname << " [options] "
+       << "-uda <archive file>\n\n";
+  cerr << "Valid options are:\n";
+  cerr << "  -h,--help\n";
+  cerr << "  -v,--variable <variable name> [defaults to cellType]\n";
+  cerr << "  -tx,--timeextract <path to timeextract> [defaults to just timeextract]\n";
+  cerr << "  -m,--material <material number> [defaults to 1]\n";
+  cerr << "  -timestep,--timestep [int] (timestep used for face lookup int) [defaults to 1]\n";
+  cerr << "  -container,--container [int] (container cell type int) [defaults to -3 (i.e. not present)]\n";
+  cerr << "  -doheatflux [do heat flux extraction]\n";
+  cerr << "  -dovelocity [do velocity extraction at face boundary (one off)]\n";
+  cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
+  cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to Nx,Ny,Nz]\n";
+  cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
+  cerr << "  -o,--out <outputfilename> [defaults to stdout]\n"; 
+  cerr << "  -vv,--verbose (prints status of output)\n";
+  //    cerr << "  -cellCoords (prints the cell centered coordinates on that level)\n";
+  exit(1);
 }
 
 // arguments are the dataarchive, the successive arguments are the same as 
@@ -109,249 +113,336 @@ void printData(DataArchive* archive, string& variable_name,
   bool cellNotFound = false;
   //__________________________________
   
-    if (verbose)
-      cout << "Outputting for time["<<timestep<<"] = " << times[timestep]<< endl;
+  if (verbose)
+    cout << "Outputting for time["<<timestep<<"] = " << times[timestep]<< endl;
 
-    //__________________________________
-    //  does the requested level exist
-    bool levelExists = false;
-    GridP grid = archive->queryGrid(timestep); 
-    int numLevels = grid->numLevels();
+  //__________________________________
+  //  does the requested level exist
+  bool levelExists = false;
+  GridP grid = archive->queryGrid(timestep); 
+  int numLevels = grid->numLevels();
    
-    for (int L = 0;L < numLevels; L++) {
-      const LevelP level = grid->getLevel(L);
-      if (level->getIndex() == levelIndex){
-        levelExists = true;
+  for (int L = 0;L < numLevels; L++) {
+    const LevelP level = grid->getLevel(L);
+    if (level->getIndex() == levelIndex){
+      levelExists = true;
+    }
+  }
+  if (!levelExists){
+    cerr<< " Level " << levelIndex << " does not exist at this timestep " << timestep << endl;
+  }
+    
+  if(levelExists){   // only extract data if the level exists
+    const LevelP level = grid->getLevel(levelIndex);
+    //__________________________________
+    // User input starting and ending indicies    
+        
+    IntVector low, high;
+    level->findCellIndexRange(low, high);
+    if (var_start == IntVector(0,0,0)) {
+      //  domain usually starts from 0,0,0, reset it anyway if not user
+      //  specified
+      var_start = low + IntVector(1,1,1);
+    }
+    if (var_end == IntVector(0,0,0)) {
+      var_end = high - IntVector(2,2,2);
+    }
+    if (verbose) {
+      cout <<" Search index from "<<var_start << " to " << var_end <<endl;
+    }
+          
+    // find the corresponding patches
+    Level::selectType patches;
+    level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+    if( patches.size() == 0){
+      cerr << " Could not find any patches on Level " << level->getIndex()
+           << " that contain cells along line: " << var_start << " and " << var_end 
+           << " Double check the starting and ending indices "<< endl;
+      exit(1);
+    }
+
+    // query all the data up front
+    vector<Variable*> vars(patches.size());
+    for (int p = 0; p < patches.size(); p++) {
+      switch (variable_type->getType()) {
+      case Uintah::TypeDescription::CCVariable:
+        vars[p] = scinew CCVariable<T>;
+        archive->query( *(CCVariable<T>*)vars[p], variable_name, 
+                        material, patches[p], timestep);
+        break;
+      case Uintah::TypeDescription::NCVariable:
+        vars[p] = scinew NCVariable<T>;
+        archive->query( *(NCVariable<T>*)vars[p], variable_name, 
+                        material, patches[p], timestep);
+        break;
+      case Uintah::TypeDescription::SFCXVariable:
+        vars[p] = scinew SFCXVariable<T>;
+        archive->query( *(SFCXVariable<T>*)vars[p], variable_name, 
+                        material, patches[p], timestep);
+        break;
+      case Uintah::TypeDescription::SFCYVariable:
+        vars[p] = scinew SFCYVariable<T>;
+        archive->query( *(SFCYVariable<T>*)vars[p], variable_name, 
+                        material, patches[p], timestep);
+        break;
+      case Uintah::TypeDescription::SFCZVariable:
+        vars[p] = scinew SFCZVariable<T>;
+        archive->query( *(SFCZVariable<T>*)vars[p], variable_name, 
+                        material, patches[p], timestep);
+        break;
+      default:
+        cerr << "Unknown variable type: " << variable_type->getName() << endl;
+      }
+          
+    }
+
+    for (CellIterator ci(var_start, var_end+IntVector(1,1,1)); !ci.done(); ci++) {
+      IntVector c = *ci;
+
+      // find out which patch it's on (to keep the printing in sorted order.
+      // alternatively, we could just iterate through the patches)
+      int p = 0;
+      for (; p < patches.size(); p++) {
+        IntVector low = patches[p]->getLowIndex();
+        IntVector high = patches[p]->getHighIndex();
+        if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+            c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+          break;
+      }
+      if (p == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+      int p_xm = 0;
+      for (; p_xm < patches.size(); p_xm++) {
+        IntVector low = patches[p_xm]->getLowIndex();
+        IntVector high = patches[p_xm]->getHighIndex();
+        if (c.x()-1 >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+            c.x()-1 < high.x() && c.y() < high.y() && c.z() < high.z())
+          break;
+      }
+      if (p_xm == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+      int p_ym = 0;
+      for (; p_ym < patches.size(); p_ym++) {
+        IntVector low = patches[p_ym]->getLowIndex();
+        IntVector high = patches[p_ym]->getHighIndex();
+        if (c.x() >= low.x() && c.y()-1 >= low.y() && c.z() >= low.z() && 
+            c.x() < high.x() && c.y()-1 < high.y() && c.z() < high.z())
+          break;
+      }
+      if (p_ym == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+      int p_zm = 0;
+      for (; p_zm < patches.size(); p_zm++) {
+        IntVector low = patches[p_zm]->getLowIndex();
+        IntVector high = patches[p_zm]->getHighIndex();
+        if (c.x() >= low.x() && c.y() >= low.y() && c.z()-1 >= low.z() && 
+            c.x() < high.x() && c.y() < high.y() && c.z()-1 < high.z())
+          break;
+      }
+      if (p_zm == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+      int p_xp = 0;
+      for (; p_xp < patches.size(); p_xp++) {
+        IntVector low = patches[p_xp]->getLowIndex();
+        IntVector high = patches[p_xp]->getHighIndex();
+        if (c.x()+1 >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+            c.x()+1 < high.x() && c.y() < high.y() && c.z() < high.z())
+          break;
+      }
+      if (p_xp == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+      int p_yp = 0;
+      for (; p_yp < patches.size(); p_yp++) {
+        IntVector low = patches[p_yp]->getLowIndex();
+        IntVector high = patches[p_yp]->getHighIndex();
+        if (c.x() >= low.x() && c.y()+1 >= low.y() && c.z() >= low.z() && 
+            c.x() < high.x() && c.y()+1 < high.y() && c.z() < high.z())
+          break;
+      }
+      if (p_yp == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+      int p_zp = 0;
+      for (; p_zp < patches.size(); p_zp++) {
+        IntVector low = patches[p_zp]->getLowIndex();
+        IntVector high = patches[p_zp]->getHighIndex();
+        if (c.x() >= low.x() && c.y() >= low.y() && c.z()+1 >= low.z() && 
+            c.x() < high.x() && c.y() < high.y() && c.z()+1 < high.z())
+          break;
+      }
+      if (p_zp == patches.size()) {
+        cellNotFound = true;
+        continue;
+      }
+          
+      int val = -3;
+      int val_xm = -3, val_xp = -3, val_ym = -3;
+      int val_yp = -3, val_zm = -3, val_zp = -3;
+      Vector dx = patches[p]->dCell();
+      Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
+      switch (variable_type->getType()) {
+      case Uintah::TypeDescription::CCVariable: 
+        val = (*dynamic_cast<CCVariable<int>*>(vars[p]))[c]; 
+        val_xm = (*dynamic_cast<CCVariable<int>*>(vars[p_xm]))[c-IntVector(1,0,0)]; 
+        val_xp = (*dynamic_cast<CCVariable<int>*>(vars[p_xp]))[c+IntVector(1,0,0)]; 
+        val_ym = (*dynamic_cast<CCVariable<int>*>(vars[p_ym]))[c-IntVector(0,1,0)]; 
+        val_yp = (*dynamic_cast<CCVariable<int>*>(vars[p_yp]))[c+IntVector(0,1,0)]; 
+        val_zm = (*dynamic_cast<CCVariable<int>*>(vars[p_zm]))[c-IntVector(0,0,1)]; 
+        val_zp = (*dynamic_cast<CCVariable<int>*>(vars[p_zp]))[c+IntVector(0,0,1)]; 
+        break;
+      case Uintah::TypeDescription::NCVariable: 
+        break;
+      case Uintah::TypeDescription::SFCXVariable: 
+        shift.x(-dx.x()/2.0); 
+        break;
+      case Uintah::TypeDescription::SFCYVariable: 
+        shift.y(-dx.y()/2.0); 
+        break;
+      case Uintah::TypeDescription::SFCZVariable: 
+        shift.z(-dx.z()/2.0); 
+        break;
+      default: break;
+      }
+          
+      if(d_printCell_coords){
+        Point point = level->getCellPosition(c);
+        Vector here = point.asVector() + shift;
+        out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
+      }else if (d_doheatflux){
+        if ((val == container)&&(!(val_xm == container)))
+          out << path_to_timeextract << " -v htfluxRadX -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadX_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_xp == container)))
+          out << path_to_timeextract << " -v htfluxRadX -i "
+              <<c.x()+1 << " "<< c.y() << " " << c.z() <<" -o htfluxRadX_"
+              <<c.x()+1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_ym == container)))
+          out << path_to_timeextract << " -v htfluxRadY -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadY_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_yp == container)))
+          out << path_to_timeextract << " -v htfluxRadY -i "
+              <<c.x() << " "<< c.y()+1 << " " << c.z() <<" -o htfluxRadY_"
+              <<c.x() << "_"<< c.y()+1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_zm == container)))
+          out << path_to_timeextract << " -v htfluxRadZ -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadZ_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_zp == container)))
+          out << path_to_timeextract << " -v htfluxRadZ -i "
+              <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o htfluxRadZ_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()+1<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+      } else if (d_dovelocity){
+        //Taking (delta x)/2 Cell Centered velocity components 
+        if ((val == container)&&(!(val_xm == container))){
+          out << path_to_timeextract << " -v newCCUVelocity -i "
+              <<c.x()-1 << " "<< c.y() << " " << c.z() <<" -o newCCUVelocity_"
+              <<c.x()-1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCVVelocity -i "
+              <<c.x()-1 << " "<< c.y() << " " << c.z() <<" -o newCCVVelocity_"
+              <<c.x()-1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCWVelocity -i "
+              <<c.x()-1 << " "<< c.y() << " " << c.z() <<" -o newCCWVelocity_"
+              <<c.x()-1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        }
+        if ((val == container)&&(!(val_xp == container))){
+          out << path_to_timeextract << " -v newCCUVelocity -i "
+              <<c.x()+1 << " "<< c.y() << " " << c.z() <<" -o newCCUVelocity_"
+              <<c.x()+1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCVVelocity -i "
+              <<c.x()+1 << " "<< c.y() << " " << c.z() <<" -o newCCVVelocity_"
+              <<c.x()+1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCWVelocity -i "
+              <<c.x()+1 << " "<< c.y() << " " << c.z() <<" -o newCCWVelocity_"
+              <<c.x()+1 << "_"<< c.y() << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        }
+        if ((val == container)&&(!(val_ym == container))){
+          out << path_to_timeextract << " -v newCCUVelocity -i "
+              <<c.x() << " "<< c.y()-1 << " " << c.z() <<" -o newCCUVelocity_"
+              <<c.x() << "_"<< c.y()-1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCVVelocity -i "
+              <<c.x() << " "<< c.y()-1 << " " << c.z() <<" -o newCCVVelocity_"
+              <<c.x() << "_"<< c.y()-1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCWVelocity -i "
+              <<c.x() << " "<< c.y()-1 << " " << c.z() <<" -o newCCWVelocity_"
+              <<c.x() << "_"<< c.y()-1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        }
+        if ((val == container)&&(!(val_yp == container))){
+          out << path_to_timeextract << " -v newCCUVelocity -i "
+              <<c.x() << " "<< c.y()+1 << " " << c.z() <<" -o newCCUVelocity_"
+              <<c.x() << "_"<< c.y()+1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCVVelocity -i "
+              <<c.x() << " "<< c.y()+1 << " " << c.z() <<" -o newCCVVelocity_"
+              <<c.x() << "_"<< c.y()+1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCWVelocity -i "
+              <<c.x() << " "<< c.y()+1 << " " << c.z() <<" -o newCCWVelocity_"
+              <<c.x() << "_"<< c.y()+1 << "_" << c.z()<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        }
+        if ((val == container)&&(!(val_zm == container))){
+          out << path_to_timeextract << " -v newCCUVelocity -i "
+              <<c.x() << " "<< c.y() << " " << c.z()-1 <<" -o newCCUVelocity_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()-1<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCVVelocity -i "
+              <<c.x() << " "<< c.y() << " " << c.z()-1 <<" -o newCCVVelocity_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()-1<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCWVelocity -i "
+              <<c.x() << " "<< c.y() << " " << c.z()-1 <<" -o newCCWVelocity_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()-1<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        }
+        if ((val == container)&&(!(val_zp == container))){
+          out << path_to_timeextract << " -v newCCUVelocity -i "
+              <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o newCCUVelocity_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()+1 <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCVVelocity -i "
+              <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o newCCVVelocity_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()+1 <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+          out << path_to_timeextract << " -v newCCWVelocity -i "
+              <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o newCCWVelocity_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()+1 <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl; 
+        }
+
       }
     }
-    if (!levelExists){
-      cerr<< " Level " << levelIndex << " does not exist at this timestep " << timestep << endl;
-    }
-    
-    if(levelExists){   // only extract data if the level exists
-      const LevelP level = grid->getLevel(levelIndex);
-      //__________________________________
-      // User input starting and ending indicies    
-        
-        IntVector low, high;
-        level->findCellIndexRange(low, high);
-        if (var_start == IntVector(0,0,0)) {
-        //  domain usually starts from 0,0,0, reset it anyway if not user
-        //  specified
-          var_start = low + IntVector(1,1,1);
-        }
-        if (var_end == IntVector(0,0,0)) {
-          var_end = high - IntVector(2,2,2);
-        }
-        if (verbose) {
-          cout <<" Search index from "<<var_start << " to " << var_end <<endl;
-        }
-          
-        // find the corresponding patches
-        Level::selectType patches;
-        level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
-        if( patches.size() == 0){
-          cerr << " Could not find any patches on Level " << level->getIndex()
-               << " that contain cells along line: " << var_start << " and " << var_end 
-               << " Double check the starting and ending indices "<< endl;
-          exit(1);
-        }
+    for (unsigned i = 0; i < vars.size(); i++)
+      delete vars[i];
 
-        // query all the data up front
-        vector<Variable*> vars(patches.size());
-        for (int p = 0; p < patches.size(); p++) {
-          switch (variable_type->getType()) {
-          case Uintah::TypeDescription::CCVariable:
-            vars[p] = scinew CCVariable<T>;
-            archive->query( *(CCVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], timestep);
-            break;
-          case Uintah::TypeDescription::NCVariable:
-            vars[p] = scinew NCVariable<T>;
-            archive->query( *(NCVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], timestep);
-            break;
-          case Uintah::TypeDescription::SFCXVariable:
-            vars[p] = scinew SFCXVariable<T>;
-            archive->query( *(SFCXVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], timestep);
-            break;
-          case Uintah::TypeDescription::SFCYVariable:
-            vars[p] = scinew SFCYVariable<T>;
-            archive->query( *(SFCYVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], timestep);
-            break;
-          case Uintah::TypeDescription::SFCZVariable:
-            vars[p] = scinew SFCZVariable<T>;
-            archive->query( *(SFCZVariable<T>*)vars[p], variable_name, 
-                            material, patches[p], timestep);
-            break;
-          default:
-            cerr << "Unknown variable type: " << variable_type->getName() << endl;
-          }
-          
-        }
-
-        for (CellIterator ci(var_start, var_end+IntVector(1,1,1)); !ci.done(); ci++) {
-          IntVector c = *ci;
-
-          // find out which patch it's on (to keep the printing in sorted order.
-          // alternatively, we could just iterate through the patches)
-          int p = 0;
-          for (; p < patches.size(); p++) {
-            IntVector low = patches[p]->getLowIndex();
-            IntVector high = patches[p]->getHighIndex();
-            if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
-                c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
-              break;
-          }
-          if (p == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          int p_xm = 0;
-          for (; p_xm < patches.size(); p_xm++) {
-            IntVector low = patches[p_xm]->getLowIndex();
-            IntVector high = patches[p_xm]->getHighIndex();
-            if (c.x()-1 >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
-                c.x()-1 < high.x() && c.y() < high.y() && c.z() < high.z())
-              break;
-          }
-          if (p_xm == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          int p_ym = 0;
-          for (; p_ym < patches.size(); p_ym++) {
-            IntVector low = patches[p_ym]->getLowIndex();
-            IntVector high = patches[p_ym]->getHighIndex();
-            if (c.x() >= low.x() && c.y()-1 >= low.y() && c.z() >= low.z() && 
-                c.x() < high.x() && c.y()-1 < high.y() && c.z() < high.z())
-              break;
-          }
-          if (p_ym == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          int p_zm = 0;
-          for (; p_zm < patches.size(); p_zm++) {
-            IntVector low = patches[p_zm]->getLowIndex();
-            IntVector high = patches[p_zm]->getHighIndex();
-            if (c.x() >= low.x() && c.y() >= low.y() && c.z()-1 >= low.z() && 
-                c.x() < high.x() && c.y() < high.y() && c.z()-1 < high.z())
-              break;
-          }
-          if (p_zm == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          int p_xp = 0;
-          for (; p_xp < patches.size(); p_xp++) {
-            IntVector low = patches[p_xp]->getLowIndex();
-            IntVector high = patches[p_xp]->getHighIndex();
-            if (c.x()+1 >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
-                c.x()+1 < high.x() && c.y() < high.y() && c.z() < high.z())
-              break;
-          }
-          if (p_xp == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          int p_yp = 0;
-          for (; p_yp < patches.size(); p_yp++) {
-            IntVector low = patches[p_yp]->getLowIndex();
-            IntVector high = patches[p_yp]->getHighIndex();
-            if (c.x() >= low.x() && c.y()+1 >= low.y() && c.z() >= low.z() && 
-                c.x() < high.x() && c.y()+1 < high.y() && c.z() < high.z())
-              break;
-          }
-          if (p_yp == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          int p_zp = 0;
-          for (; p_zp < patches.size(); p_zp++) {
-            IntVector low = patches[p_zp]->getLowIndex();
-            IntVector high = patches[p_zp]->getHighIndex();
-            if (c.x() >= low.x() && c.y() >= low.y() && c.z()+1 >= low.z() && 
-                c.x() < high.x() && c.y() < high.y() && c.z()+1 < high.z())
-              break;
-          }
-          if (p_zp == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          
-          int val = -3;
-          int val_xm = -3, val_xp = -3, val_ym = -3;
-          int val_yp = -3, val_zm = -3, val_zp = -3;
-          Vector dx = patches[p]->dCell();
-          Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
-          switch (variable_type->getType()) {
-          case Uintah::TypeDescription::CCVariable: 
-            val = (*dynamic_cast<CCVariable<int>*>(vars[p]))[c]; 
-            val_xm = (*dynamic_cast<CCVariable<int>*>(vars[p_xm]))[c-IntVector(1,0,0)]; 
-            val_xp = (*dynamic_cast<CCVariable<int>*>(vars[p_xp]))[c+IntVector(1,0,0)]; 
-            val_ym = (*dynamic_cast<CCVariable<int>*>(vars[p_ym]))[c-IntVector(0,1,0)]; 
-            val_yp = (*dynamic_cast<CCVariable<int>*>(vars[p_yp]))[c+IntVector(0,1,0)]; 
-            val_zm = (*dynamic_cast<CCVariable<int>*>(vars[p_zm]))[c-IntVector(0,0,1)]; 
-            val_zp = (*dynamic_cast<CCVariable<int>*>(vars[p_zp]))[c+IntVector(0,0,1)]; 
-          break;
-          case Uintah::TypeDescription::NCVariable: 
-          break;
-          case Uintah::TypeDescription::SFCXVariable: 
-            shift.x(-dx.x()/2.0); 
-          break;
-          case Uintah::TypeDescription::SFCYVariable: 
-            shift.y(-dx.y()/2.0); 
-          break;
-          case Uintah::TypeDescription::SFCZVariable: 
-            shift.z(-dx.z()/2.0); 
-          break;
-          default: break;
-          }
-          
-         if(d_printCell_coords){
-            Point point = level->getCellPosition(c);
-            Vector here = point.asVector() + shift;
-            out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
-          }else{
-            if ((val == container)&&(!(val_xm == container)))
-            out << path_to_timeextract << " -v htfluxRadX -i "
-                <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadX_"
-                <<c.x() << "_"<< c.y() << "_" << c.z()<<".dat " 
-                <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
-            if ((val == container)&&(!(val_xp == container)))
-            out << path_to_timeextract << " -v htfluxRadX -i "
-                <<c.x()+1 << " "<< c.y() << " " << c.z() <<" -o htfluxRadX_"
-                <<c.x()+1 << "_"<< c.y() << "_" << c.z()<<".dat " 
-                <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
-            if ((val == container)&&(!(val_ym == container)))
-            out << path_to_timeextract << " -v htfluxRadY -i "
-                <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadY_"
-                <<c.x() << "_"<< c.y() << "_" << c.z()<<".dat " 
-                <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
-            if ((val == container)&&(!(val_yp == container)))
-            out << path_to_timeextract << " -v htfluxRadY -i "
-                <<c.x() << " "<< c.y()+1 << " " << c.z() <<" -o htfluxRadY_"
-                <<c.x() << "_"<< c.y()+1 << "_" << c.z()<<".dat " 
-                <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
-            if ((val == container)&&(!(val_zm == container)))
-            out << path_to_timeextract << " -v htfluxRadZ -i "
-                <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadZ_"
-                <<c.x() << "_"<< c.y() << "_" << c.z()<<".dat " 
-                <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
-            if ((val == container)&&(!(val_zp == container)))
-            out << path_to_timeextract << " -v htfluxRadZ -i "
-                <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o htfluxRadZ_"
-                <<c.x() << "_"<< c.y() << "_" << c.z()+1<<".dat " 
-                <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
-          }
-        }
-        for (unsigned i = 0; i < vars.size(); i++)
-          delete vars[i];
-
-    } // if level exists
+  } // if level exists
     
 } 
 
@@ -409,8 +500,10 @@ int main(int argc, char** argv)
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
-//    } else if (s == "--cellCoords" || s == "-cellCoords" ) {
-//      d_printCell_coords = true;
+    } else if (s == "-doheatflux" ) {
+      d_doheatflux = true;
+    } else if ( s== "-dovelocity" ) {
+      d_dovelocity = true;
     }else {
       usage(s, argv[0]);
     }
@@ -419,6 +512,18 @@ int main(int argc, char** argv)
   if(input_uda_name == ""){
     cerr << "No archive file specified\n";
     usage("", argv[0]);
+  }
+
+  // ---------------------------
+  // Bullet proofing
+  if (d_doheatflux && d_dovelocity){
+    cout << "Error!  You can only specify heat flux or velocity, not both\n";
+    cout << "Aborting.\n";
+    exit(-1);
+  }  else if (d_doheatflux) {
+    cout << "face extract for heat flux \n";
+  }  else if (d_dovelocity) {
+    cout << "face extract for velocity \n";
   }
 
   try {
