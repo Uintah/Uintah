@@ -937,7 +937,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     H.zero();
     a.zero();
  
-    getExchangeCoefficients( K, H);
+    getConstantExchangeCoefficients( K, H);
     Ghost::GhostType  gn = Ghost::None;
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );

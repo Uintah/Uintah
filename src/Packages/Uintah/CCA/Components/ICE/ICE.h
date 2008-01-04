@@ -779,9 +779,14 @@ namespace Uintah {
                       const CCVariable<double>& rho_micro_CC, 
                       CCVariable<double>& press_CC);
                       
-      void getExchangeCoefficients( FastMatrix& K,
+      void getConstantExchangeCoefficients( FastMatrix& K,
                                     FastMatrix& H ); 
-
+     
+      void getVariableExchangeCoefficients( FastMatrix& ,
+                                           FastMatrix& H,
+                                           IntVector & c,
+                                           StaticArray<constCCVariable<double> >& mass  );
+                                           
       bool areAllValuesPositive( CCVariable<double> & src, 
                                  IntVector& neg_cell );
                                                                        
