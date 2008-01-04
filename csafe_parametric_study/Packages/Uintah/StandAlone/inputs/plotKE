@@ -17,8 +17,8 @@ endif
 
 #__________________________________
 # bulletproofing
-if ( (! -e $pudaKE) || (! -e $susKE) ) then
-  echo "plotKE:  One of the input files doesn't exist ($pudaKE, $susKE)"
+if ( (! -e $pudaKE)  ) then
+  echo "plotKE:  The input files doesn't exist ($pudaKE)"
   exit(1)
 endif
 
@@ -37,6 +37,7 @@ endif
 
 #__________________________________
 # plot script
+# Note:  if susKE doesn't exist then it will be ignored
 awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $pudaKE >> gp
 cat >> gp << fin
 set timestamp "%m/%d/%y %H:%M" offset 80,-2 
@@ -45,14 +46,15 @@ set grid
 set title 'Kinetic Energy of the Steel Container vs Time'
 set xlabel 'Time (s)'
 set ylabel 'Kinetic Energy (J)'
-plot '$susKE'  using (\$1-t0):(\$2)                 t 'total KE (sus)' w lines,\
-     '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linespoints,\
+plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linespoints,\
      '$pudaKE' using (\$1-t0):(0.5*\$3*\$2*\$2)     t 'center of mass KE (puda)' w linespoints,\
-     '$pudaKE' using (\$1-t0):(\$4-0.5*\$3*\$2*\$2) t 'relative to center of mass KE (puda)' w linespoints
+     '$pudaKE' using (\$1-t0):(\$4-0.5*\$3*\$2*\$2) t 'relative to center of mass KE (puda)' w linespoints,\
+     '$susKE'  using (\$1-t0):(\$2)                 t 'total KE (sus)' w lines
 fin
 if ($hardcopy == "n") then
   echo "pause -1 'Hit return to exit'" >> gp
 endif
+
 
 #__________________________________
 # plot 
