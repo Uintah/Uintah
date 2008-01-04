@@ -208,15 +208,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if(!solver) {
     throw InternalError("ICE:couldn't get solver port", __FILE__, __LINE__);
   }
-  
-  //__________________________________
-  //  If using Changwei's model
-#ifdef CHANGWEI  
-  if (d_myworld->myrank() == 0){
-    cout << "------------------------------Using Changwei's version of exchange"<< endl;
-  }
-#endif      
-      
+
   //__________________________________
   //  Custom BC setup
   d_customBC_var_basket->usingLodi = 
@@ -386,13 +378,18 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   }     
   cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
+  //_________________________________
   // Exchange Coefficients
-  if (d_myworld->myrank() == 0) 
+  if (d_myworld->myrank() == 0){
     cout << "numMatls " << d_sharedState->getNumMatls() << endl;
+  }
+  
   d_exchCoeff->problemSetup(mat_ps, sharedState);
-
-  cout_norm << "Pulled out exchange coefficients of the input file" << endl;
-
+  
+  if (d_myworld->myrank() == 0 && (d_exchCoeff->d_heatExchCoeffModel != "constant")){
+    cout << "------------------------------Using Variable heat exchange coefficients"<< endl;
+  }
+  
   //__________________________________
   // Set up turbulence models - needs to be done after materials are initialized
   d_turbulence = TurbulenceFactory::create(cfd_ice_ps, sharedState);
@@ -3331,7 +3328,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
 
     K.zero();
-    getExchangeCoefficients( K, junk);
+    getConstantExchangeCoefficients( K, junk);
     Ghost::GhostType  gac = Ghost::AroundCells;    
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -4658,7 +4655,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     H.zero();
     a.zero();
 
-    getExchangeCoefficients( K, H);
+    getConstantExchangeCoefficients( K, H);
 
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -4757,38 +4754,16 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }
 
       //---------- E N E R G Y   E X C H A N G E   
-#ifndef CHANGWEI  
+      if(d_exchCoeff->d_heatExchCoeffModel != "constant"){
+        getVariableExchangeCoefficients( K, H, c, mass_L);
+      }
       for(int m = 0; m < numALLMatls; m++) {
         tmp = delT*sp_vol_CC[m][c] / cv[m][c];
         for(int n = 0; n < numALLMatls; n++)  {
           beta(m,n) = vol_frac_CC[n][c] * H(n,m)*tmp;
           a(m,n) = -beta(m,n);
         }
-      }
-#endif      
-#ifdef CHANGWEI
-      for(int m = 0; m < numALLMatls; m++) {
-        tmp = delT*sp_vol_CC[m][c] / cv[m][c];
-        for(int n = 0; n < numALLMatls; n++)  {
-        
-          double ratio = pow(mass_L[n][c]/mass_L[m][c], 2.0);
-        
-          ratio = ratio >= 1.0 ? ratio : 1.0/ratio;
-          
-          if(ratio > 1e12){
-            ratio = 1e12;
-          }
-          if(ratio < 1e5){
-            ratio = 1e5;
-          }  
-          if(m==n){
-            ratio = 0.0;
-          }
-          beta(m,n) = vol_frac_CC[n][c] * ratio * tmp;
-          a(m,n) = -beta(m,n);
-        }
-      }
-#endif      
+      }  
       
       //   Form matrix (a) diagonal terms
       for(int m = 0; m < numALLMatls; m++) {
@@ -5658,9 +5633,10 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
 }
 
 /*_____________________________________________________________________
- Function~  ICE::getExchangeCoefficients--
+ Function~  ICE::getConstantExchangeCoefficients--
+ This routine returns the constant exchange coefficients
  _____________________________________________________________________  */
-void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
+void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 {
   int numMatls  = d_sharedState->getNumMatls();
 
@@ -5708,6 +5684,48 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
     for (int j = i + 1; j < numMatls; j++) {
       K(i,j) = K(j,i) = *it++;
       H(i,j) = H(j,i) = *it1++;
+    }
+  }
+}
+
+/*_____________________________________________________________________
+ Function~  ICE::getVariableExchangeCoefficients--
+ This routine returns the  exchange coefficients
+ _____________________________________________________________________  */
+void ICE::getVariableExchangeCoefficients( FastMatrix& ,
+                                           FastMatrix& H,
+                                           IntVector & c,
+                                           StaticArray<constCCVariable<double> >& mass_L  )
+{
+  int numMatls  = d_sharedState->getNumMatls();
+
+  //__________________________________
+  // Momentum  (do nothing for now)
+  
+  //__________________________________
+  // Heat coefficient
+  for (int m = 0; m < numMatls; m++ )  {
+    H(m,m) = 0.0;
+    for (int n = m + 1; n < numMatls; n++) {
+    
+      double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);
+    
+      //massRatioSqr = massRatioSqr >= 1.0 ? massRatioSqr : 1.0/massRatioSqr;
+      
+      if(massRatioSqr >= 1.0){
+        H(n,m) = H(m,n) = massRatioSqr;
+      }else{
+        H(n,m) = H(m,n) = 1.0/massRatioSqr;
+      }
+      
+      // upper limit clamp
+      if(massRatioSqr > 1e12){
+        H(n,m) = H(m,n) = 1e12;
+      }
+      // lower limit clamp
+      if(massRatioSqr < 1e5){
+        H(n,m) = H(m,n) = 1e5;
+      }
     }
   }
 }

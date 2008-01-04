@@ -12,6 +12,7 @@ static DebugStream cout_norm("ICE_NORMAL_COUT", false);
 
 ExchangeCoefficients::ExchangeCoefficients()
 {
+  d_heatExchCoeffModel = "constant"; // default
   d_convective = false;
   d_K_mom.clear();
   d_K_heat.clear();
@@ -27,7 +28,7 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
 {
   if(sharedState->getNumMatls() >1){
     //__________________________________
-    // Pull out the exchange coefficients
+    // Pull out the constant Coeff exchange coefficients
     ProblemSpecP exch_ps = ps->findBlock("exchange_properties");
     if (!exch_ps){
       throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
@@ -59,6 +60,21 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
+    
+    //__________________________________
+    // variable coefficient models
+    exch_ps->get("heatExchangeCoeff",d_heatExchCoeffModel);
+    
+    if(d_heatExchCoeffModel !="constant" &&
+       d_heatExchCoeffModel !="variable" &&
+       d_heatExchCoeffModel !="Variable"){
+       ostringstream warn;
+        warn<<"ERROR\n Heat exchange coefficient model (" << d_heatExchCoeffModel 
+            <<") does not exist.\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    
     //__________________________________
     //  convective heat transfer
     d_convective = false;
@@ -74,6 +90,8 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
 void ExchangeCoefficients::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP exch_prop_ps = ps->appendChild("exchange_properties");
+  exch_prop_ps->appendElement("heatExchangeCoeff",d_heatExchCoeffModel);
+  
   ProblemSpecP exch_coeff_ps = 
     exch_prop_ps->appendChild("exchange_coefficients");
   

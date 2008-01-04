@@ -23,6 +23,8 @@ namespace Uintah {
     int conv_solid_matlindex();
     vector<double> K_mom();
     vector<double> K_heat();
+    string d_heatExchCoeffModel;
+    
   private:
     vector<double> d_K_mom, d_K_heat;
     bool d_convective;
