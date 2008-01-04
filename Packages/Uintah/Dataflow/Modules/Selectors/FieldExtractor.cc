@@ -310,7 +310,9 @@ FieldExtractor::execute()
 
   SCIRun::Handle<FieldExtractorAlgo> algo;
 
-  if (subtype->getType() == Uintah::TypeDescription::double_type)
+  if (subtype->getType() == Uintah::TypeDescription::int_type)
+    algo = new FieldExtractorAlgoT<int>;
+  else if (subtype->getType() == Uintah::TypeDescription::double_type)
     algo = new FieldExtractorAlgoT<double>;
   else if (subtype->getType() == Uintah::TypeDescription::float_type)
     algo = new FieldExtractorAlgoT<float>;
