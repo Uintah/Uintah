@@ -1910,8 +1910,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
             IntVector c = *iter;
             double cp = cv[c] * gamma[c];
             double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
-            
-            double inv_diffusionCoeff = min(inv_thermalDiffusivity, 1.0/viscosity[c]);
+            double kinematicViscosity = viscosity[c] * sp_vol_CC[c];
+            double inv_diffusionCoeff = min(inv_thermalDiffusivity, 1.0/kinematicViscosity);
             double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_diffusionCoeff;
             delt_diff = std::min(A, delt_diff);
             if (delt_diff < 1e-20 && badCell == IntVector(0,0,0)) {
