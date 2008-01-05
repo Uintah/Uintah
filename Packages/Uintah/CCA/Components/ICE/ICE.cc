@@ -54,10 +54,6 @@
 
 #define SET_CFI_BC 0
 
-//#define CHANGWEI 1   // to invoke changwei's modifications to heat exchange
-#undef CHANGWEI
-
-
 using std::vector;
 using std::max;
 using std::min;
@@ -5706,26 +5702,24 @@ void ICE::getVariableExchangeCoefficients( FastMatrix& ,
   // Heat coefficient
   for (int m = 0; m < numMatls; m++ )  {
     H(m,m) = 0.0;
-    for (int n = m + 1; n < numMatls; n++) {
-    
-      double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);
-    
+    for (int n = m + 1; n < numMatls; n++) {    
+      double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);    
       //massRatioSqr = massRatioSqr >= 1.0 ? massRatioSqr : 1.0/massRatioSqr;
-      
-      if(massRatioSqr >= 1.0){
-        H(n,m) = H(m,n) = massRatioSqr;
-      }else{
-        H(n,m) = H(m,n) = 1.0/massRatioSqr;
+     
+      if(massRatioSqr < 1.0){
+        massRatioSqr = 1.0/massRatioSqr;
       }
-      
+
       // upper limit clamp
       if(massRatioSqr > 1e12){
-        H(n,m) = H(m,n) = 1e12;
+        massRatioSqr = 1e12;
       }
       // lower limit clamp
       if(massRatioSqr < 1e5){
-        H(n,m) = H(m,n) = 1e5;
+        massRatioSqr = 1e5;
       }
+      
+      H(n,m) = H(m,n) = massRatioSqr;
     }
   }
 }
