@@ -8,7 +8,8 @@ SRCS     += \
 	$(SRCDIR)/AnalysisModuleFactory.cc \
 	$(SRCDIR)/AnalysisModule.cc \
 	$(SRCDIR)/lineExtract.cc \
-	$(SRCDIR)/pointExtract.cc
+	$(SRCDIR)/pointExtract.cc \
+       $(SRCDIR)/vorticity.cc
 
 PSELIBS := \
 	Core/Geometry                    \
