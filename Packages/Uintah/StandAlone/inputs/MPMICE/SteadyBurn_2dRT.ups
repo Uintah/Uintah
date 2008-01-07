@@ -2,10 +2,10 @@
 <!-- @version: -->
 <Uintah_specification>
   <!-- The tuna can problem -->
-  <!--   <Solver>   hypre   </Solver> -->
-
+  <Solver>   hypre   </Solver>
+  
   <Meta>
-    <title> Eddings Cylinder Problem 2-D Using Steady Burn Model </title>
+    <title> Exploding Container 2-D Using Steady Burn Model </title>
   </Meta>
 
   <SimulationComponent>
@@ -16,13 +16,14 @@
   <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
   <!--____________________________________________________________________-->
   <Time>
-    <maxTime>             0.0055    </maxTime>
+    <maxTime>             0.003    </maxTime>
     <initTime>            0.0       </initTime>
     <delt_min>            0.0       </delt_min>
     <delt_max>            1.0       </delt_max>
     <delt_init>           1.e-10    </delt_init>
-    <max_delt_increase>   0.5       </max_delt_increase>
-    <timestep_multiplier> 0.60      </timestep_multiplier>
+    <max_Timesteps>       310       </max_Timesteps>
+    <max_delt_increase>   0.7       </max_delt_increase>
+    <timestep_multiplier> 0.70      </timestep_multiplier>
   </Time>
 
   <!--____________________________________________________________________-->
@@ -31,22 +32,9 @@
   <Grid>
     <BoundaryConditions>
       <Face side="x-">
-        <BCType id="0" label="Pressure"       var="Neumann">
-          <value>   0.0        </value>
+        <BCType id="all" label="Symmetric" var="symmetry">
         </BCType>
-        <BCType id="all" label="Velocity"      var="Neumann">
-          <value>   [0.,0.,0.] </value>
-        </BCType>
-        <BCType id="all" label="Temperature"   var="Neumann">
-          <value>   0.0        </value>
-        </BCType>
-        <BCType id="all" label="Density"       var="Neumann">
-          <value>   0.0        </value>
-        </BCType>
-        <BCType id= "all" label="SpecificVol"  var = "computeFromDensity">
-          <value>   0.0        </value>
-        </BCType>
-      </Face>      
+      </Face>     
       <Face side="x+">
         <BCType id="0" label="Pressure" var="Neumann">
           <value>   0.0        </value>
@@ -66,20 +54,7 @@
       </Face>
 
       <Face side="y-">
-        <BCType id="0" label="Pressure" var="Neumann">
-          <value>   0.0        </value>
-        </BCType>
-        <BCType id="all" label="Velocity" var="Neumann">
-          <value>   [0.,0.,0.] </value>
-        </BCType>
-        <BCType id="all" label="Temperature" var="Neumann">
-          <value>   0.0        </value>
-        </BCType>
-        <BCType id="all" label="Density" var="Neumann">
-          <value>   0.0        </value>
-        </BCType>
-        <BCType id= "all" label="SpecificVol"  var = "computeFromDensity">
-          <value>   0.0        </value>
+        <BCType id="all" label="Symmetric" var="symmetry">
         </BCType>
       </Face>
       <Face side="y+">
@@ -111,11 +86,11 @@
     </BoundaryConditions>
     <Level>
       <Box label="1">
-        <lower>        [-0.099, -0.099, -0.0005]    </lower>
-        <upper>        [ 0.099,  0.099,  0.0005]    </upper>
+        <lower>        [ 0.000,  0.000, -0.0005]    </lower>
+        <upper>        [ 0.090,  0.090,  0.0005]    </upper>
         <extraCells>   [ 1, 1, 1]                   </extraCells>
-        <patches>      [ 6, 6, 1]                  </patches>
-        <resolution>   [ 198, 198, 1]           </resolution>
+        <patches>      [ 2, 2, 1]                   </patches>
+        <resolution>   [ 90, 90, 1]               </resolution>
       </Box>
     </Level>
   </Grid>
@@ -125,7 +100,9 @@
   <!--____________________________________________________________________-->
   <DataArchiver>
     <filebase>Steady.uda</filebase>
-    <outputInterval> 1.0e-5 </outputInterval>
+    <!-- <outputInterval> 1.0e-5 </outputInterval> -->
+    <outputTimestepInterval> 100 </outputTimestepInterval>
+    <compression> gzip </compression>
     <save label="rho_CC"/>
     <save label="sp_vol_CC"/>
     <save label="press_CC"/>
@@ -138,22 +115,22 @@
     <save label="p.particleID"/>
     <save label="SteadyBurn.BurningCell"/>
     <save label="totalMassBurned"/>
-    <!--
-      <save label="p.temperature"/>
-      <save label="p.velocity"/>
-      <save label="p.stress"/>
-      <save label="g.mass"/>
-      <save label = "p.porosity"/>
-      <save label = "p.damage" material = "0"/>
-      <save label = "p.plasticStrain" material = "0"/>
-      <save label = "p.strainRate" material = "0"/>
-      <save label = "g.stressFS"/>
-      <save label = "delP_Dilatate"/>
-      <save label = "delP_MassX"/>
-      <save label = "mom_source_CC"/>
-      <save label = "intE_source_CC"/>
-      <save label = "p.localized"/>
-      -->
+<!--
+    <save label="p.temperature"/>
+    <save label="p.velocity"/>
+    <save label="p.stress"/>
+    <save label="g.mass"/>
+    <save label= "p.porosity"/>
+    <save label= "p.damage" material = "0"/>
+    <save label= "p.plasticStrain" material = "0"/>
+    <save label= "p.strainRate" material = "0"/>
+    <save label= "g.stressFS"/>
+    <save label= "delP_Dilatate"/>
+    <save label= "delP_MassX"/>
+    <save label= "mom_source_CC"/>
+    <save label= "intE_source_CC"/>
+    <save label= "p.localized"/>
+-->
     <checkpoint cycle="2" timestepInterval="3000"/>
   </DataArchiver>
 
@@ -168,8 +145,8 @@
 
     <ICE>
       <TimeStepControl>
-        <Scheme_for_delT_calc> aggressive    </Scheme_for_delT_calc>
-        <knob_for_speedSound>  0.000        </knob_for_speedSound>
+        <Scheme_for_delT_calc> aggressive  </Scheme_for_delT_calc>
+        <knob_for_speedSound>  0.000       </knob_for_speedSound>
       </TimeStepControl>
                  
       <ImplicitSolver>
@@ -190,7 +167,7 @@
         </Parameters>
       </ImplicitSolver>
       <advection type="SecondOrder"/>
-      <ClampSpecificVolume>     true          </ClampSpecificVolume>
+      <ClampSpecificVolume>  true  </ClampSpecificVolume>
     </ICE>
   </CFD>
 
@@ -204,7 +181,7 @@
 
   <MPM>
     <time_integrator>               explicit    </time_integrator>
-    <interpolator>                   gimp       </interpolator>
+    <interpolator>                  gimp        </interpolator>
     <minimum_particle_mass>         3.e-10      </minimum_particle_mass>
     <maximum_particle_velocity>     1.e3        </maximum_particle_velocity>
     <artificial_damping_coeff>      0.0         </artificial_damping_coeff>
@@ -229,12 +206,12 @@
     <MPM>
       <material name = "Steel Ring">
         <!-- MATL 0 -->
-        <density>              7830.0 </density>
-        <toughness>            80.e6  </toughness>
-        <thermal_conductivity> 38     </thermal_conductivity>
-        <specific_heat>        477    </specific_heat>
-        <room_temp>            294.0  </room_temp>
-        <melt_temp>            1793.0 </melt_temp>
+        <density>              7830.0  </density>
+        <toughness>            80.e6   </toughness>
+        <thermal_conductivity> 38      </thermal_conductivity>
+        <specific_heat>        477     </specific_heat>
+        <room_temp>            294.0   </room_temp>
+        <melt_temp>            1793.0  </melt_temp>
 
         <constitutive_model type="elastic_plastic">
           <isothermal>                    false    </isothermal>
@@ -267,14 +244,14 @@
           <stability_check     type="drucker_becker"/>
 
           <plasticity_model type="johnson_cook">
-            <A>       792.0e6 </A>
-            <B>       510.0e6 </B>
-            <C>       0.014   </C>
-            <n>       0.26    </n>
-            <m>       1.03    </m>
-            <T_r>     298.0   </T_r>
-            <T_m>     1793.0  </T_m>
-            <epdot_0> 1.0     </epdot_0>
+            <A>       792.0e6   </A>
+            <B>       510.0e6   </B>
+            <C>       0.014     </C>
+            <n>       0.26      </n>
+            <m>       1.03      </m>
+            <T_r>     298.0     </T_r>
+            <T_m>     1793.0    </T_m>
+            <epdot_0> 1.0       </epdot_0>
           </plasticity_model>
 
           <damage_model type="johnson_cook">
@@ -311,9 +288,9 @@
               <radius>           0.05100             </radius>
             </cylinder>
           </difference>
-          <res>                 [2,2,2]         </res>
-          <velocity>            [0.0,0.0,0.0]   </velocity>
-          <temperature>         560             </temperature>
+          <res>               [2,2,2]         </res>
+          <velocity>          [0.0,0.0,0.0]   </velocity>
+          <temperature>       560             </temperature>
         </geom_object>
       </material>
 
@@ -376,12 +353,13 @@
             <cylinder>
               <bottom>           [0.0,0.0,-.0508]   </bottom>
               <top>              [0.0,0.0, .0508]   </top>
-              <radius>           1.e-20             </radius>
+              <radius>           0.03810            </radius>
+              <!-- If no center bore, set radius = 1e-20 --> 
             </cylinder>
           </difference>
-          <res>                [2,2,2]         </res>
-          <velocity>           [0.0,0.0,0.0]   </velocity>
-          <temperature>        300.0           </temperature>
+          <res>              [2,2,2]         </res>
+          <velocity>         [0.0,0.0,0.0]   </velocity>
+          <temperature>      300.0           </temperature>
         </geom_object>
       </material>
 
@@ -428,9 +406,10 @@
     </ICE>
 
     <exchange_properties>
+      <heatExchangeCoeff>  variable  </heatExchangeCoeff>
       <exchange_coefficients>
-        <momentum>  [0,   1e10, 1e10 ]     </momentum>
-        <heat>      [1e5, 1e5,  1e5  ]     </heat>
+        <momentum>  [0,   1e10, 1e10 ]   </momentum>
+        <heat>      [1e5, 1e5,  1e5  ]   </heat>
       </exchange_coefficients>
     </exchange_properties>
   </MaterialProperties>
