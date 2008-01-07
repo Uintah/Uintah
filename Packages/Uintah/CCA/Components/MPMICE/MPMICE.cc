@@ -594,6 +594,9 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
                                                               all_matls);
 
+  if(d_ice->d_analysisModule){                                                        
+    d_ice->d_analysisModule->scheduleDoAnalysis( sched, level);
+  }
   // only do on finest level until we get AMR MPM
   if (level->getIndex() == level->getGrid()->numLevels()-1)
     sched->scheduleParticleRelocation(level,
