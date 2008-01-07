@@ -94,6 +94,7 @@ WARNING
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
+    const MaterialSubset* d_matl_sub;
   };
 }
 

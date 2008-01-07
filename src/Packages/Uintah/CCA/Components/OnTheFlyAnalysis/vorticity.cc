@@ -66,6 +66,7 @@ void vorticity::problemSetup(const ProblemSpecP& prob_spec,
   
   v_lb->vorticityLabel = VarLabel::create("vorticity", CCVariable<Vector>::getTypeDescription());
   
+  // determine which material index to compute
   d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
   
   vector<int> m(1);
@@ -73,6 +74,7 @@ void vorticity::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
+  d_matl_sub = d_matl_set->getUnion();
 }
 
 //______________________________________________________________________
@@ -80,13 +82,8 @@ void vorticity::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level)
 {
   return;  // do nothing
-  cout_doing << "vorticity::scheduleInitialize " << endl;
-  Task* t = scinew Task("vorticity::initialize", 
-                  this, &vorticity::initialize);
-  
-  sched->addTask(t, level->eachPatch(), d_matl_set);
 }
-//______________________________________________________________________
+
 void vorticity::initialize(const ProcessorGroup*, 
                            const PatchSubset* patches,
                            const MaterialSubset*,
@@ -109,8 +106,8 @@ void vorticity::scheduleDoAnalysis(SchedulerP& sched,
   
   Ghost::GhostType gac = Ghost::AroundCells;
   
-  t->requires(Task::NewDW, I_lb->vel_CCLabel, gac,1);
-  t->computes(v_lb->vorticityLabel);
+  t->requires(Task::NewDW, I_lb->vel_CCLabel, d_matl_sub, gac,1);
+  t->computes(v_lb->vorticityLabel, d_matl_sub);
   
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -119,7 +116,7 @@ void vorticity::scheduleDoAnalysis(SchedulerP& sched,
 // Compute the vorticity field.
 void vorticity::doAnalysis(const ProcessorGroup* pg,
                            const PatchSubset* patches,
-                           const MaterialSubset*,
+                           const MaterialSubset* matl_sub ,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {       
@@ -129,17 +126,19 @@ void vorticity::doAnalysis(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     
     cout_doing << pg->myrank() << " " 
-                << "Doing doAnalysis (vorticity)\t\t\t\tL-"
-                << level->getIndex()
-                << " patch " << patch->getGridIndex()<< endl;
+               << "Doing doAnalysis (vorticity)\t\t\t\tL-"
+               << level->getIndex()
+               << " patch " << patch->getGridIndex()<< endl;
+                
     Ghost::GhostType gac = Ghost::AroundCells;
     
     CCVariable<Vector> vorticity;
-    constCCVariable<Vector> vel_CC;     //  To Do: use a different index beside 0
-
-    new_dw->get(vel_CC, I_lb->vel_CCLabel, 0,patch,gac, 1);
+    constCCVariable<Vector> vel_CC;
     
-    new_dw->allocateAndPut(vorticity,v_lb->vorticityLabel, 0 ,patch);
+    int indx = d_matl->getDWIndex();
+    new_dw->get(vel_CC,               I_lb->vel_CCLabel,    indx,patch,gac, 1);
+    new_dw->allocateAndPut(vorticity, v_lb->vorticityLabel, indx,patch);
+    
     vorticity.initialize(Vector(0.0));
     
     //__________________________________
@@ -161,15 +160,15 @@ void vorticity::doAnalysis(const ProcessorGroup* pg,
       IntVector frt = c + IntVector(0,0,1);   // front
       IntVector bck = c - IntVector(0,0,1);   // back
                         
-       // First-order central difference     
-      double du_dy = (vel_CC[ t ].x() - vel_CC[ b ].x())/delY;
-      double du_dz = (vel_CC[frt].x() - vel_CC[bck].x())/delZ;
+       // second-order central difference     
+      double du_dy = (vel_CC[ t ].x() - vel_CC[ b ].x())/(2.0 * delY);
+      double du_dz = (vel_CC[frt].x() - vel_CC[bck].x())/(2.0 * delZ);
 
-      double dv_dx = (vel_CC[ r ].y() - vel_CC[ l ].y())/delX;
-      double dv_dz = (vel_CC[frt].y() - vel_CC[bck].y())/delZ;    
+      double dv_dx = (vel_CC[ r ].y() - vel_CC[ l ].y())/(2.0 * delX);
+      double dv_dz = (vel_CC[frt].y() - vel_CC[bck].y())/(2.0 * delZ);    
 
-      double dw_dx = (vel_CC[ r ].z() - vel_CC[ l ].z())/delX;
-      double dw_dy = (vel_CC[ t ].z() - vel_CC[ b ].z())/delY;
+      double dw_dx = (vel_CC[ r ].z() - vel_CC[ l ].z())/(2.0 * delX);
+      double dw_dy = (vel_CC[ t ].z() - vel_CC[ b ].z())/(2.0 * delY);
       
       double omega_x = dw_dy - dv_dz;
       double omega_y = du_dz - dw_dx;
