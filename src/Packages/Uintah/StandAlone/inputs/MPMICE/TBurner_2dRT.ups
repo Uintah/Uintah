@@ -5,7 +5,7 @@
    <Solver>   hypre   </Solver>
       
    <Meta>
-       <title> Unsteady T-Burner Test </title>
+       <title> Unsteady T-Burner 2-D Test </title>
    </Meta>    
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
@@ -14,10 +14,10 @@
        <maxTime>             0.25    </maxTime>
        <initTime>            0.0     </initTime>
        <delt_min>            0.0     </delt_min>
-       <delt_max>            2.0e-6 </delt_max>
+       <delt_max>            2.0e-6  </delt_max>
        <delt_init>           1e-10   </delt_init>
+       <max_Timesteps>       410     </max_Timesteps>
        <max_delt_increase>   1       </max_delt_increase>
-<!--   <max_iterations>      300     </max_iterations> -->
        <timestep_multiplier> 0.5     </timestep_multiplier>
    </Time>    
     <!--____________________________________________________________________-->
@@ -118,11 +118,8 @@
            <lower>        [-0.411, -0.069, -0.0015]   </lower>
            <upper>        [ 0.411,  0.069,  0.0015]   </upper>
            <extraCells>   [1,1,1]                     </extraCells>
-           <patches>      [8,2,1]                     </patches> 
-<!--
-           <autoPatch>      1                         </autoPatch>
--->
-           <resolution>   [274, 46, 1]                 </resolution>
+           <patches>      [4,1,1]                     </patches> 
+           <resolution>   [274, 46, 1]                </resolution>
         </Box>
       </Level>
     </Grid>
@@ -132,33 +129,21 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>TBurner.uda</filebase>
-      <outputInterval>  4.0e-5 </outputInterval>
-      <compression>     gzip   </compression>
-<!--
-      <save label = "rho_CC"/> 
-      <save label = "sp_vol_CC"/>
--->
+      <!-- <outputInterval>  4.0e-5 </outputInterval> -->
+      <outputTimestepInterval> 100 </outputTimestepInterval>
+      <compression>  gzip  </compression>
       <save label="press_CC"/>
       <save label="temp_CC"/>
-<!--
-      <save label = "vol_frac_CC"/>
---> 
       <save label="vel_CC"/>
-<!--
-      <save label = "speedSound_CC"/>
-      <save label = "g.mass"/>
--->
-
       <save label="p.x"/>
       <save label="p.mass"/>
-<!--
-      <save label = "p.temperature"/>
--->
-      <save label="p.particleID"/>  
-<!--
-      <save label = "p.velocity"/>
-
-      <save label = "p.stress"/>
+      <save label="p.particleID"/> 
+<!-- To run a simulation, you SHOULD comment out the labels below to save data storage. -->      
+<!--  Below this line -->
+      <save label = "vol_frac_CC"/>
+      <save label = "rho_CC"/> 
+      <save label = "sp_vol_CC"/>
+      <save label = "speedSound_CC"/>
       <save label = "mom_source_CC"/>
       <save label = "intE_source_CC"/>
       <save label = "UnsteadyBurn.SurfTemp"/>
@@ -166,15 +151,14 @@
       <save label = "UnsteadyBurn.PartSurfTempGrad"/>
       <save label = "UnsteadyBurn.PartSurfTemp"/>
       <save label = "UnsteadyBurn.BurningCell"/>
-      <save label = "p.porosity"/>
-      <save label = "p.damage" material = "0"/>
-      <save label = "p.plasticStrain" material = "0"/>
-      <save label = "p.strainRate" material = "0"/>
+      <save label = "g.mass"/>
       <save label = "g.stressFS"/>
+      <save label = "p.temperature"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
       <save label = "delP_Dilatate"/>
       <save label = "delP_MassX"/>
-      <save label = "p.localized"/>
--->
+<!--  Above this line -->
       <checkpoint cycle="2" timestepInterval="1000"/>
     </DataArchiver>
 
@@ -186,8 +170,7 @@
 
     <CFD>
        <cfl>0.1</cfl>
-       <ICE>
-        
+       <ICE>        
 
       <TimeStepControl>
          <Scheme_for_delT_calc> aggressive    </Scheme_for_delT_calc>
@@ -195,20 +178,20 @@
        </TimeStepControl> 
         
        <ImplicitSolver>
-         <max_outer_iterations>      20     </max_outer_iterations>
-         <outer_iteration_tolerance> 1.1e-7 </outer_iteration_tolerance>
-         <iters_before_timestep_restart> 16 </iters_before_timestep_restart>
+         <max_outer_iterations>           20   </max_outer_iterations>
+         <outer_iteration_tolerance>  1.01e-7  </outer_iteration_tolerance>
+         <iters_before_timestep_restart>  16   </iters_before_timestep_restart>
          <Parameters>
-            <tolerance>1.e-7      </tolerance>
-            <norm>     LInfinity  </norm>
-            <criteria> Absolute   </criteria>
-            <solver>         cg     </solver>
-            <preconditioner> pfmg   </preconditioner>
-            <maxiterations>  200    </maxiterations>
-            <npre>           1      </npre>
-            <npost>          1      </npost>
-            <skip>           1      </skip>
-            <jump>           0      </jump>
+            <tolerance>      1.e-7     </tolerance>
+            <norm>           LInfinity </norm>
+            <criteria>       Absolute  </criteria>
+            <solver>         cg        </solver>
+            <preconditioner> pfmg      </preconditioner>
+            <maxiterations>  200       </maxiterations>
+            <npre>           1         </npre>
+            <npost>          1         </npost>
+            <skip>           1         </skip>
+            <jump>           0         </jump>
          </Parameters>
        </ImplicitSolver>
 
@@ -228,11 +211,11 @@
     </PhysicalConstants>
 
     <MPM>
-        <time_integrator>           explicit      </time_integrator>
-        <artificial_viscosity>      true          </artificial_viscosity>
-        <interpolator>                   gimp       </interpolator>
-        <minimum_particle_mass>     1.e-10        </minimum_particle_mass>
-        <maximum_particle_velocity> 1.e4          </maximum_particle_velocity>
+        <time_integrator>            explicit     </time_integrator>
+        <artificial_viscosity>           true     </artificial_viscosity>
+        <interpolator>                   gimp     </interpolator>
+        <minimum_particle_mass>          1.e-10   </minimum_particle_mass>
+        <maximum_particle_velocity>      1.e4     </maximum_particle_velocity>
         <artificial_damping_coeff>       0.0      </artificial_damping_coeff>
         <artificial_viscosity>           true     </artificial_viscosity>
         <accumulate_strain_energy>       false    </accumulate_strain_energy>
@@ -241,8 +224,8 @@
         <do_contact_friction_heating>    false    </do_contact_friction_heating>
         <create_new_particles>           false    </create_new_particles>
         <erosion algorithm="ZeroStress"/>
-        <DoThermalExpansion>             false       </DoThermalExpansion>
-        <testForNegTemps_mpm>            false       </testForNegTemps_mpm>
+        <DoThermalExpansion>             false    </DoThermalExpansion>
+        <testForNegTemps_mpm>            false    </testForNegTemps_mpm>
 
     </MPM>
 
@@ -261,7 +244,7 @@
            <melt_temp>            688.0  </melt_temp>
 
            <constitutive_model type="comp_neo_hook">
-               <shear_modulus> 8e8 </shear_modulus>
+               <shear_modulus> 8e8  </shear_modulus>
                <bulk_modulus>  20e8 </bulk_modulus>               
            </constitutive_model>
 
@@ -276,16 +259,16 @@
                   <max>        [-0.4096,  2.00,  2.00]   </max>
                </box>
              </union>
-             <res>                 [2,2,2]         </res>
-             <velocity>            [0.0,0.0,0.0]   </velocity>
-             <temperature>         300.0           </temperature>
+             <res>           [2,2,2]        </res>
+             <velocity>      [0.0,0.0,0.0]  </velocity>
+             <temperature>   300.0          </temperature>
            </geom_object>
          </material>
 
          <contact>
            <type>        approach </type>
            <vel_fields>  [0]    </vel_fields>
-           <mu>          0.0      </mu>
+           <mu>          0.0    </mu>
          </contact>
 
        </MPM>
@@ -293,33 +276,33 @@
        <ICE>
          <material name="Product">
            <EOS type="ideal_gas"/>
-           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
-           <thermal_conductivity>   0.0                 </thermal_conductivity>
-           <specific_heat>          855.349794238683    </specific_heat>
-           <gamma>                  1.4                 </gamma>
-           <speed_of_sound>         376.0               </speed_of_sound>
-           <isSurroundingMatl>      true                </isSurroundingMatl>
+           <dynamic_viscosity>      0.0               </dynamic_viscosity>
+           <thermal_conductivity>   0.0               </thermal_conductivity>
+           <specific_heat>          855.349794238683  </specific_heat>
+           <gamma>                  1.4               </gamma>
+           <speed_of_sound>         376.0             </speed_of_sound>
+           <isSurroundingMatl>      true              </isSurroundingMatl>
 
            <geom_object>
              <difference label="High_Gas">
                <box>
-                 <min>        [ 0.150, -2.00, -2.00] </min>
-                 <max>        [ 2.000,  2.00,  2.00] </max>
+                 <min>  [ 0.150, -2.00, -2.00]  </min>
+                 <max>  [ 2.000,  2.00,  2.00]  </max>
                </box>
                <union label="HMX"/>
              </difference>
-             <res>                [2,2,2]            </res>
-             <velocity>           [0.0,0.0,0.0]      </velocity>
-             <temperature>        3160.0             </temperature>
-             <density>            3.194398415        </density>
-             <pressure>           3453662.625        </pressure>
+             <res>                [2,2,2]          </res>
+             <velocity>           [0.0,0.0,0.0]    </velocity>
+             <temperature>        3160.0           </temperature>
+             <density>            3.194398415      </density>
+             <pressure>           3453662.625      </pressure>
            </geom_object>
 
            <geom_object>
              <difference label="Low_Gas">
                <box>
-                 <min>        [-2.00, -2.00, -2.00] </min>
-                 <max>        [ 2.00,  2.00,  2.00] </max>
+                 <min>   [-2.00, -2.00, -2.00]  </min>
+                 <max>   [ 2.00,  2.00,  2.00]  </max>
                </box>
                <union>
                  <difference label="High_Gas"/>
