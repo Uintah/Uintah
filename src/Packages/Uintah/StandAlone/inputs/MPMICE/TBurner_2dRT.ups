@@ -6,11 +6,16 @@
       
    <Meta>
        <title> Unsteady T-Burner 2-D Test </title>
-   </Meta>    
+   </Meta> 
+   
+    <SimulationComponent>
+        <type>  mpmice  </type>
+    </SimulationComponent>   
+    
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
-   <Time>
+    <Time>
        <maxTime>             0.25    </maxTime>
        <initTime>            0.0     </initTime>
        <delt_min>            0.0     </delt_min>
@@ -19,7 +24,8 @@
        <max_Timesteps>       410     </max_Timesteps>
        <max_delt_increase>   1       </max_delt_increase>
        <timestep_multiplier> 0.5     </timestep_multiplier>
-   </Time>    
+    </Time>
+        
     <!--____________________________________________________________________-->
     <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
@@ -127,7 +133,7 @@
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+    <DataArchiver>
       <filebase>TBurner.uda</filebase>
       <!-- <outputInterval>  4.0e-5 </outputInterval> -->
       <outputTimestepInterval> 100 </outputTimestepInterval>
@@ -159,7 +165,9 @@
       <save label = "delP_Dilatate"/>
       <save label = "delP_MassX"/>
 <!--  Above this line -->
-      <checkpoint cycle="2" timestepInterval="1000"/>
+
+      <!-- <checkpoint cycle="2" timestepInterval="3000"/> -->
+      <checkpoint cycle="2" timestepInterval="100"/>
     </DataArchiver>
 
 
@@ -167,7 +175,6 @@
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
-
     <CFD>
        <cfl>0.1</cfl>
        <ICE>        
