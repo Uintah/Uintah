@@ -412,7 +412,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress_new;
     constParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pvolumeold,pmass;
-    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> pvolume_deformed,pdTdt;
     constNCVariable<Vector> dispNew;
     
     DataWarehouse* parent_old_dw =
@@ -427,6 +427,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
     new_dw->allocateTemporary(deformationGradient_new,pset);
 
@@ -625,7 +626,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<double> pvolume;
-    ParticleVariable<double> pvolume_deformed;
+    ParticleVariable<double> pvolume_deformed, pdTdt;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
@@ -642,6 +643,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
@@ -742,6 +744,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
+  task->computes(lb->pdTdtLabel_preReloc,  matlset);  
   task->computes(lb->pVolumeDeformedLabel, matlset);
 
 }
@@ -767,6 +770,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->dispNewLabel,   matlset,Ghost::AroundCells,1);
                                                                                 
   task->computes(lb->pStressLabel_preReloc,                matlset);
+  task->computes(lb->pdTdtLabel_preReloc,                  matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
   task->computes(lb->pVolumeDeformedLabel,                 matlset);
   task->computes(pVolChangeHeatRateLabel_preReloc,         matlset);

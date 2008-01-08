@@ -147,7 +147,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeLabel_preReloc,             matlset);
-  task->computes(lb->pdTdtLabel_preReloc,   matlset);
+  task->computes(lb->pdTdtLabel_preReloc,               matlset);
 }
 
 void 
