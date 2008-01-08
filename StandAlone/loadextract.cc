@@ -394,18 +394,26 @@ void loadextract::printData(
           IntVector c, c3(-1,-1,-1), diff;
           double pres[2] = {101325.0, 101325.0};
 	  double xx[2][3];
-          int side, nside = 1;
+          int side, nside = 1, side1, dside, side1st;
           if(ifc>=iface_shell) nside = 2;
 
           //if(ifc==3199) cout<<"nside "<<nside<<" "<<iface_shell<<endl;
 
           int p;
+          if(faces[ifc]->x[0][2]>faces[ifc]->x[1][2]||ifc<iface_shell){
+            side = 0;
+            dside = 1;
+          }else{
+            side = 1;
+            dside = -1;
+          }
+          side1st = side;
 
-          for(side=0; side<nside; side++){
+          for(side1=0; side1<nside; side1++){
 
 	    for(k=0; k<3; k++) xx[side][k] = faces[ifc]->x[side][k];
 	    
-            if(side) c3 = c;
+            if(side1) c3 = c;
 
 	    do{
 	      p = 0;
@@ -426,8 +434,8 @@ void loadextract::printData(
 		}
 	      }
               if(p == patches.size()) break;
-              for(k=0; k<3; k++) xx[1][k] = 2.0*xx[1][k] - xx[0][k];
-	    }while(!diff.x()&&!diff.y()&&!diff.z()&&side);
+              for(k=0; k<3; k++) xx[side][k] = 2.0*xx[side][k] - xx[side1st][k];
+	    }while(!diff.x()&&!diff.y()&&!diff.z()&&side1);
 
             if(p == patches.size()) break;
           
@@ -461,7 +469,8 @@ void loadextract::printData(
 	  //    <<" "<<x1.x()<<" "<<x1.y()<<" "<<x1.z()<<" "<<val<<endl;
           
           pres[side] = val;
-	  } // for(side
+          side += dside;
+	  } // for(side1
 	  if (p == patches.size()) {
 	    cellNotFound = true;
 	    continue;
@@ -541,7 +550,7 @@ void loadextract::output(){
 	      //write_curve[i] = write_curve[i]&&itn->second->x[1]>0.15;
 	    //}
 	  }
-          if(!write_curve[i]||maxpres<10000.0*presconv) //1.0e-6)
+          if(!write_curve[i])//||maxpres<10000.0*presconv) //1.0e-6)
 	    write_curve[i] = false;
           else
 		fprintf(lcoutput,"%d, 1.0, 0.0, %d, %d, %d, %d\n",i+1, faces[i]->node_id[0],faces[i]->node_id[1],faces[i]->node_id[2],faces[i]->node_id[3]);
