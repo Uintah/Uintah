@@ -250,7 +250,7 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
 template<class T>
 int maxIntVect(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
                int material, int levelIndex,
-               IntVector& nijk0, IntVector& dimen,
+               IntVector& nijk0, IntVector& dimen, float scalex,
                unsigned long time_step, FILE* VTK_FILE, int ifirst, int& nummat) 
 
 {
@@ -424,13 +424,13 @@ int maxIntVect(DataArchive* archive, string& variable_name, const Uintah::TypeDe
 	      Point pt = level->getCellPosition(c);
 	      Vector here = pt.asVector();
 	      float rl;
-	      rl = (float)here.x();
+	      rl = scalex*(float)here.x();
 	      swap_4((char*)&rl);
 	      fwrite(&rl,sizeof(float),1,VTK_FILE);
-	      rl = (float)here.y();
+	      rl = scalex*(float)here.y();
 	      swap_4((char*)&rl);
 	      fwrite(&rl,sizeof(float),1,VTK_FILE);
-	      rl = (float)here.z();
+	      rl = scalex*(float)here.z();
 	      swap_4((char*)&rl);
 	      fwrite(&rl,sizeof(float),1,VTK_FILE);
 	    }
@@ -456,13 +456,13 @@ int maxIntVect(DataArchive* archive, string& variable_name, const Uintah::TypeDe
 		Point pt = level->getCellPosition(c);
 		Vector here = pt.asVector();
 		float rl;
-		rl = (float)here.x();
+		rl = scalex*(float)here.x();
 		swap_4((char*)&rl);
 		fwrite(&rl,sizeof(float),1,VTK_FILE);
-		rl = (float)here.y();
+		rl = scalex*(float)here.y();
 		swap_4((char*)&rl);
 		fwrite(&rl,sizeof(float),1,VTK_FILE);
-		rl = (float)here.z();
+		rl = scalex*(float)here.z();
 		swap_4((char*)&rl);
 		fwrite(&rl,sizeof(float),1,VTK_FILE);
 	      } // for(i j k
@@ -609,6 +609,7 @@ int main(int argc, char** argv)
   int di = 1;
 
   int material = 0;
+  float scalex = 1.0;
   
   //__________________________________
   // Parse arguments
@@ -633,6 +634,8 @@ int main(int argc, char** argv)
       time_end = val;
     } else if (s == "-ifirst") {
       ifirst = atoi(argv[++i]);
+    } else if (s == "-scalex") {
+      scalex = atof(argv[++i]);
     } else if (s == "-delta") {
       di = atoi(argv[++i]);
     } else if (s == "-istart" || s == "--indexs") {
@@ -832,7 +835,7 @@ int main(int argc, char** argv)
 	     {
 	     if(p==0&&levelIndex==0){
 	       npts=maxIntVect<double>(archive, variable_name, td, material,
-				       levelIndex, nijk0, dimen,
+				       levelIndex, nijk0, dimen, scalex,
 				       time_step, VTK_FILE, ifirst, nummat);
 	       nimax = dimen.x(); njmax = dimen.y(); nkmax = dimen.z();
 	       vol_frac.resize(nummat);
@@ -865,17 +868,17 @@ int main(int argc, char** argv)
 	   break;
            case Uintah::TypeDescription::float_type:
 	     npts = maxIntVect<float>(archive, variable_name, td, material,
-				      levelIndex, var_start, var_end,
+				      levelIndex, var_start, var_end, scalex,
 				      time_step, VTK_FILE, ifirst, nummat);
 	     break;
            case Uintah::TypeDescription::int_type:
 	     npts = maxIntVect<int>(archive, variable_name, td, material,
-				    levelIndex, var_start, var_end,
+				    levelIndex, var_start, var_end, scalex,
 				    time_step, VTK_FILE, ifirst, nummat);
 	     break;
            case Uintah::TypeDescription::Vector:
 	     npts = maxIntVect<Vector>(archive, variable_name, td, material,
-				       levelIndex, var_start, var_end,
+				       levelIndex, var_start, var_end, scalex,
 				       time_step, VTK_FILE, ifirst, nummat);    
 	     break;
            /*case Uintah::TypeDescription::Other:
