@@ -5644,7 +5644,8 @@ void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 
   vector<double> d_K_mom = d_exchCoeff->K_mom();
   vector<double> d_K_heat = d_exchCoeff->K_heat();
-  vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
+  vector<double>::iterator it_m=d_K_mom.begin();
+  vector<double>::iterator it_h=d_K_heat.begin();
 
   //__________________________________
   // bulletproofing
@@ -5654,10 +5655,12 @@ void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
     test = true;
     desc = "momentum";
   }  
-  if (num_coeff !=(int)d_K_heat.size()) {
+  
+  if (num_coeff !=(int)d_K_heat.size() && d_exchCoeff->d_heatExchCoeffModel == "constant") {
     test = true;
     desc = desc + " energy";
   }
+
   if(test) {   
     ostringstream warn;
     warn << "\nThe number of exchange coefficients (" << desc << ") is incorrect.\n";
@@ -5674,14 +5677,28 @@ void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
+  //__________________________________
   // Fill in the upper triangular matrix
+  // momentum
   for (int i = 0; i < numMatls; i++ )  {
-    K(i,i) = H(i,i) = 0.0;
+    K(i,i) = 0.0;
     for (int j = i + 1; j < numMatls; j++) {
-      K(i,j) = K(j,i) = *it++;
-      H(i,j) = H(j,i) = *it1++;
+      K(i,j) = K(j,i) = *it_m++;
     }
   }
+  
+  // heat
+  if(d_exchCoeff->d_heatExchCoeffModel == "constant") {
+    for (int i = 0; i < numMatls; i++ )  {
+      K(i,i) = H(i,i) = 0.0;
+      for (int j = i + 1; j < numMatls; j++) {
+        K(i,j) = K(j,i) = *it_m++;
+        H(i,j) = H(j,i) = *it_h++;
+      }
+    }
+  }
+  
+  
 }
 
 /*_____________________________________________________________________
