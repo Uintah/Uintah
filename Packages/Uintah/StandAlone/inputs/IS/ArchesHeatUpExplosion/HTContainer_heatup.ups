@@ -76,6 +76,9 @@
     <use_load_curves>               true     </use_load_curves>
     <DoThermalExpansion>            false    </DoThermalExpansion>
     <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
+    <artificial_viscosity>           true       </artificial_viscosity>
+    <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
+    <artificial_viscosity_coeff2>    1.6        </artificial_viscosity_coeff2>
   </MPM>
   <!--____________________________________________________________________-->
   <!--     A M R                                                          -->
