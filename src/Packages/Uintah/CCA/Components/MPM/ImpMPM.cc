@@ -344,6 +344,9 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
   t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
+  if(flags->d_artificial_viscosity){
+    t->computes(lb->p_qLabel);        //  only used for imp -> exp transition
+  }
   t->computes(d_sharedState->get_delt_label());
 
   t->computes(lb->pExternalHeatFluxLabel);
@@ -1226,6 +1229,11 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pErosionLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc);
+
+  if(flags->d_artificial_viscosity){
+    t->requires(Task::OldDW, lb->p_qLabel,               Ghost::None);
+    t->computes(lb->p_qLabel_preReloc);
+  }
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
@@ -3246,8 +3254,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Vector> pvelocity, pacceleration;
       constParticleVariable<Vector> pDispOld,psize;
       ParticleVariable<Vector> pvelnew,paccNew,pDisp,psizeNew;
-      constParticleVariable<double> pmass, pvolume,pTempOld,pEro;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pEroNew;
+      constParticleVariable<double> pmass, pvolume,pTempOld,pEro,pq;
+      ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pEroNew,pqNew;
       ParticleVariable<double> pTempPreNew;
   
       // Get the arrays of grid data on which the new part. values depend
@@ -3286,7 +3294,13 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       psizeNew.copyData(psize);
       pEroNew.copyData(pEro);
       pTempPreNew.copyData(pTempOld);
-     
+
+      if(flags->d_artificial_viscosity){
+        old_dw->get(pq,                    lb->p_qLabel,                 pset);
+        new_dw->allocateAndPut(pqNew,      lb->p_qLabel_preReloc,        pset);
+        pqNew.copyData(pq);
+      }
+
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
       double Cp=mpm_matl->getSpecificHeat();
 
