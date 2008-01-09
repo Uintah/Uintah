@@ -5703,23 +5703,26 @@ void ICE::getVariableExchangeCoefficients( FastMatrix& ,
   for (int m = 0; m < numMatls; m++ )  {
     H(m,m) = 0.0;
     for (int n = m + 1; n < numMatls; n++) {    
-      double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);    
-      //massRatioSqr = massRatioSqr >= 1.0 ? massRatioSqr : 1.0/massRatioSqr;
-     
-      if(massRatioSqr < 1.0){
-        massRatioSqr = 1.0/massRatioSqr;
+      double massRatioSqr = pow(mass_L[n][c]/mass_L[m][c], 2.0);  
+
+      // 1e5  is the lower limit clamp
+      // 1e12 is the upper limit clamp
+      if (massRatioSqr < 1e-12){
+	H(n,m) = H(m,n) = 1e12;
+      }
+      else if (massRatioSqr >= 1e-12 && massRatioSqr < 1e-5){
+	H(n,m) = H(m,n) = 1./massRatioSqr;
+      }
+      else if (massRatioSqr >= 1e-5 && massRatioSqr < 1e5){
+	H(n,m) = H(m,n) = 1e5;
+      }
+      else if (massRatioSqr >= 1e5 && massRatioSqr < 1e12){
+	H(n,m) = H(m,n) = massRatioSqr;
+      }
+      else if (massRatioSqr >= 1e12){
+	H(n,m) = H(m,n) = 1e12;
       }
 
-      // upper limit clamp
-      if(massRatioSqr > 1e12){
-        massRatioSqr = 1e12;
-      }
-      // lower limit clamp
-      if(massRatioSqr < 1e5){
-        massRatioSqr = 1e5;
-      }
-      
-      H(n,m) = H(m,n) = massRatioSqr;
     }
   }
 }
