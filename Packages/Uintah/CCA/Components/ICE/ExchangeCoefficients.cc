@@ -33,33 +33,6 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
     if (!exch_ps){
       throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
     }
-
-    ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
-    d_K_mom.clear();
-    d_K_heat.clear(); 
-    exch_co_ps->require("momentum",d_K_mom);
-    exch_co_ps->require("heat",d_K_heat);
-    
-    
-    // Bullet Proofing
-    for (int i = 0; i<(int)d_K_mom.size(); i++) {
-      cout_norm << "K_mom = " << d_K_mom[i] << endl;
-      if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
-        ostringstream warn;
-        warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-    }
-    
-    // Bullet Proofing
-    for (int i = 0; i<(int)d_K_heat.size(); i++) {
-      cout_norm << "K_heat = " << d_K_heat[i] << endl;
-      if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
-        ostringstream warn;
-        warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-    }
     
     //__________________________________
     // variable coefficient models
@@ -72,6 +45,40 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
         warn<<"ERROR\n Heat exchange coefficient model (" << d_heatExchCoeffModel 
             <<") does not exist.\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    //__________________________________
+    //  constant coefficient model
+    ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
+
+    // momentum
+    d_K_mom.clear();
+    exch_co_ps->require("momentum",d_K_mom);
+    
+    // Bullet Proofing
+    for (int i = 0; i<(int)d_K_mom.size(); i++) {
+      cout_norm << "K_mom = " << d_K_mom[i] << endl;
+      if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
+        ostringstream warn;
+        warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }
+    
+    // heat
+    if(d_heatExchCoeffModel == "constant"){
+      d_K_heat.clear();
+      exch_co_ps->require("heat",d_K_heat);
+    
+      // Bullet Proofing
+      for (int i = 0; i<(int)d_K_heat.size(); i++) {
+        cout_norm << "K_heat = " << d_K_heat[i] << endl;
+        if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
+          ostringstream warn;
+          warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        }
+      }
     }
     
     
