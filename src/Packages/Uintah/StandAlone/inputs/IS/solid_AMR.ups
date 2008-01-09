@@ -332,9 +332,10 @@
       </ICE>       
 
       <exchange_properties>  
+         <heatExchangeCoeff>  variable     </heatExchangeCoeff>
          <exchange_coefficients>
            <momentum>  [0, 1e15, 1e9 ]     </momentum>
-           <heat>      [0, 1e10, 1e10 ]     </heat>   
+       <!--<heat>      [0, 1e10, 1e10 ]    </heat>   -->
         </exchange_coefficients>
       </exchange_properties> 
     </MaterialProperties>
