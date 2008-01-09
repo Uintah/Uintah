@@ -105,7 +105,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
-    d_artificial_viscosity = false;
     cerr << "artificial viscosity is not implemented" << endl;
     cerr << "with implicit time integration" << endl;
   }

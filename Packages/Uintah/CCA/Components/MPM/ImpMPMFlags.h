@@ -42,7 +42,6 @@ namespace Uintah {
     string d_solver_type;
     bool d_temp_solve;
     bool d_interpolateParticleTempToGridEveryStep;
-     
 
   private:
 
