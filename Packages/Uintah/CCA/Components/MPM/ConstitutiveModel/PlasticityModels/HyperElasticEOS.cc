@@ -25,7 +25,7 @@ HyperElasticEOS::~HyperElasticEOS()
 void HyperElasticEOS::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("equation_of_state");
-  eos_ps->setAttribute("type","default_hypo");
+  eos_ps->setAttribute("type","default_hyper");
 }
 	 
 
