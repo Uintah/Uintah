@@ -458,6 +458,8 @@ namespace Uintah {
       const VarLabel* d_uFmmsLabel;
       const VarLabel* d_vFmmsLabel;
       const VarLabel* d_wFmmsLabel;
+      //Helper variable
+      const VarLabel* d_zerosrcVarLabel;
 
     }; // End class ArchesLabel
 } // End namespace Uintah
