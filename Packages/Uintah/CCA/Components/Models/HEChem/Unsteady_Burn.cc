@@ -56,8 +56,9 @@ Unsteady_Burn::Unsteady_Burn(const ProcessorGroup* myworld,
 
 Unsteady_Burn::~Unsteady_Burn(){
   delete Ilb;
-  //delete Mlb; /* don't delete it here, or complain "double free or corruption" */
+  delete Mlb;
   delete MIlb;
+  delete d_saveConservedVars;
 
   VarLabel::destroy(BurningCellLabel);
   VarLabel::destroy(TsLabel);
@@ -105,8 +106,9 @@ void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSet
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-                    child = child->findNextBlock("save")) {
+  for (ProblemSpecP child = DA_ps->findBlock("save"); 
+       child != 0; 
+       child = child->findNextBlock("save") ){
     map<string,string> var_attr;
     child->getAttributes(var_attr);
     if (var_attr["label"] == "totalMassBurned"){
@@ -167,7 +169,7 @@ void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 
 
 void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
-  cout_doing << "Unsteady_Burn::scheduleInitialize" << endl;
+  printSchedule(level,"Unsteady_Burn::scheduleInitialize\t\t\t");
   Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(BurningCellLabel, react_matl);
@@ -189,19 +191,19 @@ void Unsteady_Burn::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t UNSTEADY_BURN" << endl; 
 
-    CCVariable<double> BurningCell;
+    CCVariable<double> BurningCell; // buring flag for cells
     new_dw->allocateAndPut(BurningCell, BurningCellLabel, m0, patch);
     BurningCell.initialize(0.0);
 
-    CCVariable<double> Ts;
+    CCVariable<double> Ts; // temperature at burning surface
     new_dw->allocateAndPut(Ts, TsLabel, m0, patch);
     Ts.initialize(INIT_TS);
 
-    CCVariable<double> Beta;
+    CCVariable<double> Beta; // temperature gradient at burning surface
     new_dw->allocateAndPut(Beta, BetaLabel, m0, patch);
     Beta.initialize(INIT_BETA);
 
-    ParticleVariable<double> pBeta, pTs;
+    ParticleVariable<double> pBeta, pTs; // particle-centered values
     ParticleSubset* pset_gn = new_dw->getParticleSubset(m0, patch);
     new_dw->allocateAndPut(pBeta, PartBetaLabel, pset_gn);
     new_dw->allocateAndPut(pTs,   PartTsLabel,   pset_gn);
@@ -219,11 +221,19 @@ void Unsteady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, co
   // None necessary...
 }
 
-
-void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& level, const ModelInfo* mi){
-  Task* t = scinew Task("Unsteady_Burn::computeModelSources", this, &Unsteady_Burn::computeModelSources, mi);
-  cout_doing << "Unsteady_Burn::scheduleComputeModelSources" << endl;
+//______________________________________________________________________
+// only perform this task on the finest level
+void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
+                                                const LevelP& level, 
+                                                const ModelInfo* mi){
+  if(level->hasFinerLevel()){
+    return;  
+  }
   
+  Task* t = scinew Task("Unsteady_Burn::computeModelSources", this, 
+                        &Unsteady_Burn::computeModelSources, mi);
+  
+  printSchedule(level,"Unsteady_Burn::scheduleComputeModelSources\t\t\t");  
   t->requires( Task::OldDW, mi->delT_Label);
 
   Ghost::GhostType gac = Ghost::AroundCells;  
@@ -325,11 +335,12 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing massExchange on patch "<< patch->getID()<<"\t\t\t\t Unsteady_Burn"<<endl;
+    printTask(patches,patch,"Doing computeModelSources\t\t\t\t");
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
+    
     /* reactant */
     new_dw->getModifiable(mass_src_0,     mi->mass_source_CCLabel,     m0, patch);    
     new_dw->getModifiable(momentum_src_0, mi->momentum_source_CCLabel, m0, patch); 
@@ -371,7 +382,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
     ParticleSubset* pset_gn = old_dw->getParticleSubset(m0, patch);
     old_dw->get(px_gn, Mlb->pXLabel, pset_gn);
   
-    /* Indicating cells containing how many particles */
+    /* Indicating how many particles a cell contains */
     CCVariable<double> pFlag;
     new_dw->allocateTemporary(pFlag, patch, gac, ngc_p);
     pFlag.initialize(0.0);
@@ -420,9 +431,9 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
     }
     setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
 
-    /* Initialize Cell-centered Ts and Beta with OLD particle centered beta value, 
-       The CC value takes the largest particle beta value in the cell that
-       must be less than the INIT values   */
+    /* Initialize Cell-Centered Ts and Beta with OLD Particle-Centered beta value, 
+       The CC Beta takes the largest Particle-Centered Beta in the cell which
+       must be less than the INIT value   */
     for(ParticleSubset::iterator iter=pset_gn->begin(), iter_end=pset_gn->end(); iter != iter_end; iter++){
       particleIndex idx = *iter;
       IntVector c;
@@ -498,8 +509,8 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
         
         /* If particles in a cell are newly ignited, their initial values 
            (Ts and Beta) are copied from a neighboring cell that has been 
-           burning the longest time. Or, if no such cell, then they take the 
-           INIT values   */ 
+           burning the longest time. Or, if no such cell, they take the 
+           INIT values */ 
         IntVector mostBurntCell;
         double maxBurning = 0.0;
         /* if the cell did not burn in the last timestep */
@@ -668,8 +679,25 @@ void Unsteady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const
   // Not implemented yet
 }
 
-void Unsteady_Burn::setMPMLabel(MPMLabel* MLB){
-  Mlb = MLB;
+//______________________________________________________________________
+void Unsteady_Burn::printSchedule(const LevelP& level,
+                                const string& where){
+  if (cout_doing.active()){
+    cout_doing << d_myworld->myrank() << " " 
+               << where << "L-"
+               << level->getIndex()<< endl;
+  }  
+}
+//______________________________________________________________________
+void Unsteady_Burn::printTask(const PatchSubset* patches,
+                            const Patch* patch,
+                            const string& where){
+  if (cout_doing.active()){
+    cout_doing << d_myworld->myrank() << " " 
+               << where << " STEADY_BURN L-"
+               << getLevel(patches)->getIndex()
+               << " patch " << patch->getGridIndex()<< endl;
+  }  
 }
 
 

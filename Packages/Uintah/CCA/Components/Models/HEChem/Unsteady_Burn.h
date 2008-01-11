@@ -86,11 +86,9 @@ WARNING
     
     virtual void scheduleTestConservation(SchedulerP&,
                                           const PatchSet* patches,
-                                          const ModelInfo* mi);
-
-    virtual void setMPMLabel(MPMLabel* MLB);    
+                                          const ModelInfo* mi); 
     
-    
+ 
   private:    
     void computeModelSources(const ProcessorGroup*, const PatchSubset*,
                              const MaterialSubset*, DataWarehouse*, 
@@ -105,6 +103,13 @@ WARNING
     
     double computeBurnedMass(double To, double P, double Vc, double surfArea, double delT,
                              double solidMass, double& beta, double& Ts, Vector& dx);
+                             
+    void printSchedule(const LevelP& level,
+                       const string& where); 
+    
+    void printTask(const PatchSubset* patches,
+                   const Patch* patch,
+                 const string& where);
     
     Unsteady_Burn(const Unsteady_Burn&);
     Unsteady_Burn& operator=(const Unsteady_Burn&);
