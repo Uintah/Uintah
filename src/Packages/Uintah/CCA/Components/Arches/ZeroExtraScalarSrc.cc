@@ -57,6 +57,7 @@ ZeroExtraScalarSrc::sched_addExtraScalarSrc(SchedulerP& sched,
       		    timelabels);
 
   tsk->modifies(d_scalar_nonlin_src_label);
+  tsk->modifies(d_lab->d_zerosrcVarLabel);
 
   sched->addTask(tsk, patches, matls);
   
@@ -81,6 +82,10 @@ ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,
                           matlIndex, patch);
 
+    CCVariable<double> zerosrcVar;
+    new_dw->getModifiable(zerosrcVar, d_lab->d_zerosrcVarLabel, 
+    			  matlIndex, patch);
+
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
 
@@ -91,6 +96,7 @@ ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ);
 
           scalarNonlinSrc[currCell] += 0.0;
+	  zerosrcVar[currCell] += 0.0;
         }
       }
     }
