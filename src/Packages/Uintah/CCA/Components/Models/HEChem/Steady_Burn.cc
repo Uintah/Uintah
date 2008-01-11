@@ -94,8 +94,9 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
   ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
-  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
-       child = child->findNextBlock("save")) {
+  for (ProblemSpecP child = DA_ps->findBlock("save");
+       child != 0;
+       child = child->findNextBlock("save") ){
     map<string,string> var_attr;
     child->getAttributes(var_attr);
     if (var_attr["label"] == "totalMassBurned"){
@@ -187,8 +188,9 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
                                               const LevelP& level, 
                                               const ModelInfo* mi){
   
-  if (level->hasFinerLevel())
+  if (level->hasFinerLevel()){
     return;  
+  }
   
   Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
                         &Steady_Burn::computeModelSources, mi);
@@ -198,7 +200,6 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
-
   Ghost::GhostType  gp;
   int ngc_p;
   d_sharedState->getParticleGhostLayer(gp, ngc_p);
@@ -285,7 +286,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   Ghost::GhostType  gp;
   int ngc_p;
   d_sharedState->getParticleGhostLayer(gp, ngc_p);
-
+  
+  /* Patch Iteration */
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
@@ -316,13 +318,13 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,   m0, patch, gn,  0);   
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,     m0, patch, gn,  0);
     new_dw->get(NCsolidMass,     MIlb->gMassLabel,      m0, patch, gac, 1);
-
-
+    
+    /* Indicating how many particles a cell contains */
     constParticleVariable<Point>  px;
     ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gp,ngc_p, Mlb->pXLabel);
-    old_dw->get(px, Mlb->pXLabel, pset);    
-    /* Product Data */
-       
+    old_dw->get(px, Mlb->pXLabel, pset);
+        
+    /* Product Data */   
     /* Misc */
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gac, 1);
     old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);
@@ -379,14 +381,14 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         MaxMass = std::max(MaxMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]);
         MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]); 
       }
-
+      
+      /* test whether the current cell satisfies burning criteria */
       bool   burning = 0;
       double maxProductVolFrac  = -1.0;
       double maxReactantVolFrac = -1.0;
       double productPress = 0.0;
       double Tzero = 0.0;
-      double temp_vf = 0.0;
-      
+      double temp_vf = 0.0;      
       /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
       if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){ 
         /* near interface and containing particles */
@@ -428,7 +430,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
        
         double surfArea = computeSurfaceArea(rhoGradVector, dx); 
-        double Tsurf = 800.0;  // initial guess for the surface temperature.
+        double Tsurf = 850.0;  // initial guess for the surface temperature.
+        if(Tsurf < Tmin || Tsurf > Tmax)
+          Tsurf = (Tmin+Tmax)/2.0;
         
         double burnedMass = computeBurnedMass(Tzero, Tsurf,  productPress, solidSp_vol[c], 
                                               surfArea, delT, solidMass[c]);
@@ -547,6 +551,27 @@ void Steady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
 
 void Steady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
   // Not implemented yet
+}
+
+//______________________________________________________________________
+void Steady_Burn::printSchedule(const LevelP& level,
+                                const string& where){
+  if (cout_doing.active()){
+    cout_doing << d_myworld->myrank() << " " 
+               << where << "L-"
+               << level->getIndex()<< endl;
+  }  
+}
+//______________________________________________________________________
+void Steady_Burn::printTask(const PatchSubset* patches,
+                            const Patch* patch,
+                            const string& where){
+  if (cout_doing.active()){
+    cout_doing << d_myworld->myrank() << " " 
+               << where << " STEADY_BURN L-"
+               << getLevel(patches)->getIndex()
+               << " patch " << patch->getGridIndex()<< endl;
+  }  
 }
 
 /****************************************************************************/
@@ -691,25 +716,3 @@ double Steady_Burn::BisectionNewton(double Ts){
     Ts = (IL+IR)/2.0; //Bisection Step
   }
 }
-
-//______________________________________________________________________
-void Steady_Burn::printSchedule(const LevelP& level,
-                                const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " " 
-               << where << "L-"
-               << level->getIndex()<< endl;
-  }  
-}
-//______________________________________________________________________
-void Steady_Burn::printTask(const PatchSubset* patches,
-                            const Patch* patch,
-                            const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " " 
-               << where << " STEADY_BURN L-"
-               << getLevel(patches)->getIndex()
-               << " patch " << patch->getGridIndex()<< endl;
-  }  
-}
-//______________________________________________________________________
