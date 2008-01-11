@@ -722,6 +722,10 @@ ArchesLabel::ArchesLabel()
   d_wFmmsLabel = VarLabel::create("wFmms",
 				   SFCZVariable<double>::getTypeDescription());
 
+  //A helper variable 
+  d_zerosrcVarLabel = VarLabel::create("zerosrcVar", 
+			       CCVariable<double>::getTypeDescription() );
+
 
 }
 
@@ -987,6 +991,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uFmmsLabel);
   VarLabel::destroy(d_vFmmsLabel);
   VarLabel::destroy(d_wFmmsLabel);
+
+  VarLabel::destroy(d_zerosrcVarLabel);
+
 
   VarLabel::destroy(d_ummsLnErrorLabel);
   VarLabel::destroy(d_totalummsLnErrorLabel);
