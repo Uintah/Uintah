@@ -716,6 +716,8 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->computes(d_lab->d_wFmmsLabel);
     
   }
+  //Helper variable
+  tsk->computes(d_lab->d_zerosrcVarLabel);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1923,8 +1925,13 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       uFmms.initialize(0.0);
       vFmms.initialize(0.0);
       wFmms.initialize(0.0);
+
       
     }
+    //Reaction rate term for CO2, read in from table
+    CCVariable<double> zerosrcVar;
+    new_dw->allocateAndPut(zerosrcVar, d_lab->d_zerosrcVarLabel, matlIndex, patch);
+    zerosrcVar.initialize(0.0);
 
   }
 }
