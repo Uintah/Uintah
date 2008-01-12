@@ -5690,9 +5690,8 @@ void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
   // heat
   if(d_exchCoeff->d_heatExchCoeffModel == "constant") {
     for (int i = 0; i < numMatls; i++ )  {
-      K(i,i) = H(i,i) = 0.0;
+      H(i,i) = 0.0;
       for (int j = i + 1; j < numMatls; j++) {
-        K(i,j) = K(j,i) = *it_m++;
         H(i,j) = H(j,i) = *it_h++;
       }
     }
