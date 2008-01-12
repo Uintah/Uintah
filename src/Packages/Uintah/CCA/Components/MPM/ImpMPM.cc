@@ -1858,8 +1858,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     printTask(patches, patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t\t");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<double> S(interpolator->size());
+    int i_size = interpolator->size();
+    vector<IntVector> ni(i_size);
+    vector<double> S(i_size);
 
     NCVariable<double> gmassglobal,gvolumeglobal;
     new_dw->allocateAndPut(gmassglobal, lb->gMassLabel,
@@ -1990,7 +1991,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
         // Add each particles contribution to the local mass & velocity 
         // Must use the node indices
-        for(int k = 0; k < 8; k++) {
+        for(int k = 0; k < i_size; k++) {
           if(patch->containsNode(ni[k])) {
             gmass[m][ni[k]]          += pmass[idx]          * S[k];
             gmassglobal[ni[k]]       += pmass[idx]          * S[k];
@@ -2319,6 +2320,8 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
     new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
     visited.initialize(0);
 
+    int n8or27 = flags->d_8or27;
+
     for (int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
@@ -2332,14 +2335,14 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        IntVector cell,ni[8];
+        IntVector cell,ni[n8or27];
         patch->findCell(px[idx],cell);
         if (visited[cell] == 0 ) {
           visited[cell] = 1;
           patch->findNodesFromCell(cell,ni);
           vector<int> dof(0);
           int l2g_node_num;
-          for (int k = 0; k < 8; k++) {
+          for (int k = 0; k < n8or27; k++) {
             if (patch->containsNode(ni[k]) ) {
               l2g_node_num = l2g[ni[k]] - global_offset; //subtract global offset in order to map into array correctly
               dof.push_back(l2g_node_num);
@@ -2716,6 +2719,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     oodx[2] = 1.0/dx.z();
     
     int numMPMMatls = d_sharedState->getNumMPMMatls();
+    int n8or27 = flags->d_8or27;
 
     StaticArray<NCVariable<Vector> > int_force(numMPMMatls);
     NCVariable<Vector> INT_FORCE;
@@ -2758,7 +2762,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 
           stressvol  = pstress[idx]*pvol[idx];
 
-          for (int k = 0; k < 8; k++){
+          for (int k = 0; k < n8or27; k++){
             if(patch->containsNode(ni[k])){
               Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                                             d_S[k].z()*oodx[2]);
@@ -3235,6 +3239,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double thermal_energy = 0.0;
     //double thermal_energy2 = 0.0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
+    int n8or27 = flags->d_8or27;
 
     double move_particles=1.;
     if(!flags->d_doGridReset){
@@ -3317,7 +3322,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         double tempRate = 0.;
 
         // Accumulate the contribution from each surrounding vertex
-        for (int k = 0; k < 8; k++) {
+        for (int k = 0; k < n8or27; k++) {
           disp      += dispNew[ni[k]]       * S[k];
           acc       += gacceleration[ni[k]] * S[k];
           tempRate += gTemperatureRate[ni[k]]* S[k];
@@ -3408,6 +3413,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
     // This task is done for visualization only
     int numMatls = d_sharedState->getNumMPMMatls();
+    int n8or27 = flags->d_8or27;
 
     constNCVariable<double>   GVOLUME;
     new_dw->get(GVOLUME, lb->gVolumeLabel,
@@ -3466,7 +3472,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
         stressvol  = pstress[idx]*pvol[idx];
 
-        for (int k = 0; k < 8; k++){
+        for (int k = 0; k < n8or27; k++){
           if(patch->containsNode(ni[k])){
            gstress[m][ni[k]]       += stressvol * S[k];
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);           int_force[m][ni[k]] -= div * stressvol;
