@@ -379,12 +379,8 @@ namespace Uintah {
       }
     }
 
-    
     double artificialBulkViscosity(double Dkk, double c, double rho,
                                    double dx) const;
-
-    void BtDB(const double B[6][24], const double D[6][6], 
-              double Km[24][24]) const;
 
   protected:
 
