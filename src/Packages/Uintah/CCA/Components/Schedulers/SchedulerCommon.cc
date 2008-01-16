@@ -66,7 +66,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   numOldDWs = 0;
 
   emit_taskgraph = false;
-  d_useSmallMessages = false;
+  d_useSmallMessages = true;
   memlogfile = 0;
   restartable = false;
   for(int i=0;i<Task::TotalDWs;i++)
