@@ -14,6 +14,9 @@ ENDIF(WIN32)
 
 PROJECT(UINTAH)
 
+SET(UINTAH_SRC_PATH ${UINTAH_SOURCE_DIR} CACHE IINTERNAL "Path to Uintah source tree.")
+SET(UINTAH_LIB_PATH ${UINTAH_BINARY_DIR}/lib CACHE INTERNAL "Path to Uintah Libraries.")
+
 #-----------------------------------------------------------------------------
 # Test for some required system information.
 INCLUDE (CMakeBackwardCompatibilityC)
