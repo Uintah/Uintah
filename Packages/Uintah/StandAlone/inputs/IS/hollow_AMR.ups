@@ -16,7 +16,6 @@
         <gainThreshold>         0.0   </gainThreshold>
         <levelIndependent>      true  </levelIndependent>
         <doSpaceCurve>          true  </doSpaceCurve>
-        <outputNthProc>         8     </outputNthProc>
         <timeRefinementWeight> false  </timeRefinementWeight>
    </LoadBalancer>
 
@@ -31,7 +30,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          2.1e-8      </delt_init>
        <!--<max_iterations>     30000       </max_iterations> -->
-       <timestep_multiplier>0.5         </timestep_multiplier>
+       <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>    
     <!--____________________________________________________________________-->
     <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
