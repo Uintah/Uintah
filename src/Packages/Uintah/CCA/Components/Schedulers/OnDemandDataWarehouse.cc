@@ -460,7 +460,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
         // make room for other multiple subsets pointing into one variable - additional subsets 
         // referenced at the index above the last index of the previous subset
         if (data[i] > 0 && foreign_particles > 0) {
-          cout << d_myworld->myrank() << "  adjusting particles by " << foreign_particles << endl;
+          //cout << d_myworld->myrank() << "  adjusting particles by " << foreign_particles << endl;
           for (ParticleSubset::iterator iter = subset->begin(); iter != subset->end(); iter++) {
             *iter = *iter + foreign_particles;
           }
