@@ -746,11 +746,13 @@ bool DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 int
 DynamicLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
+  // if on a copy-data timestep and we ask about an old patch, that could cause problems
+  if (d_sharedState->isCopyDataTimestep() && patch->getID() < d_assignmentBasePatch)
+    return -patch->getID();
+ 
   ASSERTRANGE(patch->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size());
   int proc = d_processorAssignment[patch->getRealPatch()->getGridIndex()];
-  //cout << group->myrank() << " Requesting patch " << patch->getGridIndex()
-  //   << " which is stored on processor " << proc << endl;
-  //int proc = (patch->getLevelIndex()*num_procs)/patch->getLevel()->numPatches();
+
   ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
 }
@@ -774,11 +776,8 @@ DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
     return -999;
 
   int proc = d_oldAssignment[patch->getGridIndex()];
-  //cout << d_myworld->myrank() << " Requesting patch " <<patch->getGridIndex()
-  //   << " which *used to be* stored on processor " << proc << endl;
   ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
-  //return getPatchwiseProcessorAssignment(patch, d_myworld);
 }
 
 bool 
