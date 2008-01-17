@@ -2,7 +2,7 @@
 // File:          scijump_SCIJumpFramework_Impl.cxx
 // Symbol:        scijump.SCIJumpFramework-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for scijump.SCIJumpFramework
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -298,7 +298,7 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
   }
   */
 
-  scijump::BabelComponentInfo bci;
+  scijump::BabelComponentInfo bci = scijump::BabelComponentInfo::_create();
   bcm->createInstance(bci, name, type, tm);
 #if FWK_DEBUG
   ASSERT(bci._not_nil());
@@ -328,7 +328,9 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
     */
 #endif
 
-    components[name] = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(bci);
+    sci::cca::core::ComponentInfo ci;
+    ci = bci;
+    components[name] = ci;
   }
 
 #if 0 // from Plume
