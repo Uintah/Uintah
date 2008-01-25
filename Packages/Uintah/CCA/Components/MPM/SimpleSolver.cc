@@ -27,7 +27,8 @@ void SimpleSolver::initialize()
 void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                               const PatchSet* perproc_patches,
                                               const PatchSubset* patches,
-                                              const int DOFsPerNode)
+                                              const int DOFsPerNode,
+                                              const int n8or27)
 {
 
   int numProcessors = d_myworld->size();

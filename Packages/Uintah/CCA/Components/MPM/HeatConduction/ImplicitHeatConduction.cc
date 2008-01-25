@@ -256,7 +256,7 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
 
   map<int,int> dof_diag;
   d_HC_solver->createLocalToGlobalMapping(pg,d_perproc_patches,
-                                            patches,1);
+                                            patches,1,d_flag->d_8or27);
   int global_offset=0; 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -264,11 +264,16 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
       cout_doing <<"Doing createHCMatrix on patch " << patch->getID()
                  << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
-    
-    
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
-    
+
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
+
     Array3<int> l2g(lowIndex,highIndex);
     d_HC_solver->copyL2G(l2g,patch);
     //set global offset if this is the first patch
@@ -360,8 +365,14 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       cout_doing <<"Doing applyHCBoundaryConditions " <<"\t\t\t\t IMPM"
                  << "\n" << "\n";
     }
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     // Apply grid boundary conditions to the temperature before storing the 
@@ -450,8 +461,14 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -500,8 +517,14 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
 
     Vector dx = patch->dCell();
@@ -593,8 +616,14 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
 
     LinearInterpolator* interpolator = scinew LinearInterpolator(patch);                                                                                
@@ -681,10 +710,14 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
       cout_doing <<"Doing adjustHCQAndHCKForBCs on patch " << patch->getID()
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
-    IntVector nodes = patch->getNInteriorNodes();
-
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
 
     d_HC_solver->copyL2G(l2g,patch);
@@ -764,8 +797,14 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
     delt_vartype dt;
     old_dw->get(dt, d_sharedState->get_delt_label(),patch->getLevel());
                                                                                 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(d_flag->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(d_flag->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     NCVariable<double> tempRate;

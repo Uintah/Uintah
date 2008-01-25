@@ -73,6 +73,9 @@ namespace Uintah {
 
     void BnltDBnl(double Bnl[3][24], double sig[3][3], double Kg[24][24]) const;
 
+    void BnltDBnlGIMP(double Bnl[3][81], double sig[3][3],
+                      double Kg[81][81]) const;
+
     void BtDB(const double B[6][24], const double D[6][6], 
               double Km[24][24]) const;
 
@@ -82,6 +85,10 @@ namespace Uintah {
     void loadBMats(Array3<int> l2g, int dof[24], double B[6][24], 
                    double Bnl[3][24], vector<Vector> d_S, 
                    vector<IntVector> ni, double oodx[3]) const;
+
+    void loadBMatsGIMP(Array3<int> l2g, int dof[81], double B[6][81], 
+                       double Bnl[3][81], vector<Vector> d_S, 
+                       vector<IntVector> ni, double oodx[3]) const;
 
     ///////////////////////////////////////////////////////////////////////
     /*! Initialize the common quantities that all the implicit constituive

@@ -33,6 +33,7 @@ CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMFlags* Mflag)
   ps->require("shear_modulus",d_initialData.Shear);
   ps->get("active",d_active); 
   ps->get("useModifiedEOS",d_useModifiedEOS); 
+  d_8or27=Mflag->d_8or27;
 }
 
 CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
@@ -163,8 +164,15 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
 //       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+   IntVector lowIndex,highIndex;
+   if(d_8or27==8){
+     lowIndex = patch->getInteriorNodeLowIndex();
+     highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+   } else if(d_8or27==27){
+     lowIndex = patch->getNodeLowIndex();
+     highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+   }
+
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
@@ -213,11 +221,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
     double rho_orig = matl->getInitialDensity();
     
-    double B[6][24];
-    double Bnl[3][24];
-    int dof[24];
-    double v[576];
-
     if(matl->getIsRigid()){
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
@@ -250,10 +253,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
-
-        // Fill in the B and Bnl matrices and the dof vector
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
-        loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
         // Assign zero internal heating by default - modify if necessary.
         pdTdt[idx] = 0.0;
@@ -303,78 +302,81 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         D[4][4] =  -.5*coef2 + mubar;
         D[4][5] = 0.;
         D[5][5] =  -.5*coef2 + mubar;
+        D[1][0] = D[0][1];
+        D[2][0] = D[0][2];
+        D[3][0] = D[0][3];
+        D[4][0] = D[0][4];
+        D[5][0] = D[0][5];
+        D[1][1] = D[1][1];
+        D[2][1] = D[1][2];
+        D[3][1] = D[1][3];
+        D[4][1] = D[1][4];
+        D[1][2] = D[2][1];
+        D[2][2] = D[2][2];
+        D[3][2] = D[2][3];
+        D[1][3] = D[3][1];
+        D[2][3] = D[3][2];
+        D[4][3] = D[3][4];
 
-        // kmat = B.transpose()*D*B*volold
-        double kmat[24][24];
-        BtDB(B,D,kmat);
-        // kgeo = Bnl.transpose*sig*Bnl*volnew;
         double sig[3][3];
         for (int i = 0; i < 3; i++) {
           for (int j = 0; j < 3; j++) {
             sig[i][j]=pstress[idx](i,j);
           }
         }
-        double kgeo[24][24];
-        BnltDBnl(Bnl,sig,kgeo);
 
-        // Print out stuff
-        /*
-        cout.setf(ios::scientific,ios::floatfield);
-        cout.precision(10);
-        cout << "B = " << endl;
-        for(int kk = 0; kk < 24; kk++) {
-          for (int ll = 0; ll < 6; ++ll) {
-            cout << B[ll][kk] << " " ;
-          }
-          cout << endl;
-        }
-        cout << "Bnl = " << endl;
-        for(int kk = 0; kk < 24; kk++) {
-          for (int ll = 0; ll < 3; ++ll) {
-            cout << Bnl[ll][kk] << " " ;
-          }
-          cout << endl;
-        }
-        cout << "D = " << endl;
-        for(int kk = 0; kk < 6; kk++) {
-          for (int ll = 0; ll < 6; ++ll) {
-            cout << D[ll][kk] << " " ;
-          }
-          cout << endl;
-        }
-        cout << "Kmat = " << endl;
-        for(int kk = 0; kk < 24; kk++) {
-          for (int ll = 0; ll < 24; ++ll) {
-            cout << kmat[ll][kk] << " " ;
-          }
-          cout << endl;
-        }
-        cout << "Kgeo = " << endl;
-        for(int kk = 0; kk < 24; kk++) {
-          for (int ll = 0; ll < 24; ++ll) {
-            cout << kgeo[ll][kk] << " " ;
-          }
-          cout << endl;
-        }
-        */
         double volold = (pmass[idx]/rho_orig);
         double volnew = volold*J;
+        int nDOF=3*d_8or27;
+
+        if(d_8or27==8){
+          double B[6][24];
+          double Bnl[3][24];
+          int dof[24];
+          double v[576];
+          double kmat[24][24];
+          double kgeo[24][24];
+
+          // Fill in the B and Bnl matrices and the dof vector
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, psize[idx]);
+          loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
+          // kmat = B.transpose()*D*B*volold
+          BtDB(B,D,kmat);
+          // kgeo = Bnl.transpose*sig*Bnl*volnew;
+          BnltDBnl(Bnl,sig,kgeo);
+
+          for (int I = 0; I < nDOF;I++){
+            for (int J = 0; J < nDOF; J++){
+              v[nDOF*I+J] = kmat[I][J]*volold + kgeo[I][J]*volnew;
+            }
+          }
+          solver->fillMatrix(nDOF,dof,nDOF,dof,v);
+        } else{
+          double B[6][81];
+          double Bnl[3][81];
+          int dof[81];
+          double v[6561];
+          double kmat[81][81];
+          double kgeo[81][81];
+
+          // Fill in the B and Bnl matrices and the dof vector
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, psize[idx]);
+          loadBMatsGIMP(l2g,dof,B,Bnl,d_S,ni,oodx);
+          // kmat = B.transpose()*D*B*volold
+          BtDBGIMP(B,D,kmat);
+          // kgeo = Bnl.transpose*sig*Bnl*volnew;
+          BnltDBnlGIMP(Bnl,sig,kgeo);
+
+          for (int I = 0; I < nDOF;I++){
+            for (int J = 0; J < nDOF; J++){
+              v[nDOF*I+J] = kmat[I][J]*volold + kgeo[I][J]*volnew;
+            }
+          }
+          solver->fillMatrix(nDOF,dof,nDOF,dof,v);
+        }  // endif 8or27
 
         pvolume_deformed[idx] = volnew;
 
-        for(int ii = 0;ii<24;ii++){
-          for(int jj = 0;jj<24;jj++){
-            kmat[ii][jj]*=volold;
-            kgeo[ii][jj]*=volnew;
-          }
-        }
-
-        for (int I = 0; I < 24;I++){
-          for (int J = 0; J < 24; J++){
-            v[24*I+J] = kmat[I][J] + kgeo[I][J];
-          }
-        }
-        solver->fillMatrix(24,dof,24,dof,v);
       }  // end of loop over particles
     }
     delete interpolator;
