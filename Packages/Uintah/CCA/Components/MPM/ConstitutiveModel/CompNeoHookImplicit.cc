@@ -302,21 +302,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         D[4][4] =  -.5*coef2 + mubar;
         D[4][5] = 0.;
         D[5][5] =  -.5*coef2 + mubar;
-        D[1][0] = D[0][1];
-        D[2][0] = D[0][2];
-        D[3][0] = D[0][3];
-        D[4][0] = D[0][4];
-        D[5][0] = D[0][5];
-        D[1][1] = D[1][1];
-        D[2][1] = D[1][2];
-        D[3][1] = D[1][3];
-        D[4][1] = D[1][4];
-        D[1][2] = D[2][1];
-        D[2][2] = D[2][2];
-        D[3][2] = D[2][3];
-        D[1][3] = D[3][1];
-        D[2][3] = D[3][2];
-        D[4][3] = D[3][4];
 
         double sig[3][3];
         for (int i = 0; i < 3; i++) {
@@ -358,6 +343,23 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
           double v[6561];
           double kmat[81][81];
           double kgeo[81][81];
+
+          // the code that computes kmat doesn't yet know that D is symmetric
+          D[1][0] = D[0][1];
+          D[2][0] = D[0][2];
+          D[3][0] = D[0][3];
+          D[4][0] = D[0][4];
+          D[5][0] = D[0][5];
+          D[1][1] = D[1][1];
+          D[2][1] = D[1][2];
+          D[3][1] = D[1][3];
+          D[4][1] = D[1][4];
+          D[1][2] = D[2][1];
+          D[2][2] = D[2][2];
+          D[3][2] = D[2][3];
+          D[1][3] = D[3][1];
+          D[2][3] = D[3][2];
+          D[4][3] = D[3][4];
 
           // Fill in the B and Bnl matrices and the dof vector
           interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, psize[idx]);
