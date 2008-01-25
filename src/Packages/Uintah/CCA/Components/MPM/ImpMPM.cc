@@ -2296,7 +2296,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
                           DataWarehouse* new_dw)
 {
   map<int,int> dof_diag;
-  d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
+  d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3,flags->d_8or27);
   int global_offset=0;
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int pp=0;pp<patches->size();pp++){
@@ -2306,9 +2306,14 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 		 << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
 
-    
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(flags->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(flags->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
 
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
@@ -2375,8 +2380,15 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,
               "Doing applyBoundaryConditions\t\t\t\t");
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+
+    if(flags->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(flags->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
 
@@ -2576,8 +2588,14 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(flags->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(flags->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
 
@@ -2653,8 +2671,14 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(flags->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(flags->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
 
     bool firstTimeThrough=true;
@@ -2801,8 +2825,14 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 		 <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(flags->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(flags->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
 
@@ -2915,8 +2945,14 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(flags->d_8or27==8){
+      lowIndex = patch->getInteriorNodeLowIndex();
+      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    } else if(flags->d_8or27==27){
+      lowIndex = patch->getNodeLowIndex();
+      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
  
@@ -3055,8 +3091,14 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 		<<"\t\t\t IMPM"<< "\n" << "\n";
    }
 
-   IntVector lowIndex = patch->getInteriorNodeLowIndex();
-   IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+   IntVector lowIndex,highIndex;
+   if(flags->d_8or27==8){
+     lowIndex = patch->getInteriorNodeLowIndex();
+     highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+   } else if(flags->d_8or27==27){
+     lowIndex = patch->getNodeLowIndex();
+     highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+   }
    Array3<int> l2g(lowIndex,highIndex);
    d_solver->copyL2G(l2g,patch);
 

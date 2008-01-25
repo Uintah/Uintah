@@ -29,7 +29,8 @@ namespace Uintah {
     virtual void createLocalToGlobalMapping(const ProcessorGroup* pg,
                                             const PatchSet* perproc_patches,
                                             const PatchSubset* patches,
-                                            const int DOFsPerNode) = 0;
+                                            const int DOFsPerNode,
+                                            const int n8or27) = 0;
 
     virtual void solve(vector<double>& guess) = 0;
 

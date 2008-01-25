@@ -106,7 +106,8 @@ void
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                            const PatchSet* perproc_patches,
                                            const PatchSubset* patches,
-                                           const int DOFsPerNode)
+                                           const int DOFsPerNode,
+                                           const int n8or27)
 {
   TAU_PROFILE("MPMPetscSolver::createLocalToGlobalMapping", " ", TAU_USER);
   int numProcessors = d_myworld->size();
@@ -119,8 +120,14 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
     for (int ps = 0; ps<patchsub->size(); ps++) {
       const Patch* patch = patchsub->get(ps);
-      IntVector plowIndex = patch->getInteriorNodeLowIndex();
-      IntVector phighIndex = patch->getInteriorNodeHighIndex();
+      IntVector plowIndex,phighIndex;
+      if(n8or27==8){
+        plowIndex = patch->getInteriorNodeLowIndex();
+        phighIndex = patch->getInteriorNodeHighIndex();
+      } else if(n8or27==27){
+        plowIndex = patch->getNodeLowIndex();
+        phighIndex = patch->getNodeHighIndex();
+      }
 
       long nn = (phighIndex[0]-plowIndex[0])*
                 (phighIndex[1]-plowIndex[1])*
@@ -135,8 +142,14 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex() + IntVector(1,1,1);
+    IntVector lowIndex,highIndex;
+    if(n8or27==8){
+        lowIndex = patch->getInteriorNodeLowIndex();
+        highIndex = patch->getInteriorNodeHighIndex();
+    } else if(n8or27==27){
+        lowIndex = patch->getNodeLowIndex();
+        highIndex = patch->getNodeHighIndex();
+    }
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalNodes=0;
@@ -145,8 +158,14 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
-      IntVector plow = neighbor->getInteriorNodeLowIndex();
-      IntVector phigh = neighbor->getInteriorNodeHighIndex();
+      IntVector plow,phigh;
+      if(n8or27==8){
+        plow = patch->getInteriorNodeLowIndex();
+        phigh = patch->getInteriorNodeHighIndex();
+      } else if(n8or27==27){
+        plow = patch->getNodeLowIndex();
+        phigh = patch->getNodeHighIndex();
+      }
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
