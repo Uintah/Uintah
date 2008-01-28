@@ -180,6 +180,7 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount,
 	cerrLock.unlock();
       }
       handlers[idx]->finishedCommunication(pg);
+      ASSERT(handlers[idx]!=0);
       delete handlers[idx];
       handlers[idx]=0;
     }
@@ -243,7 +244,9 @@ void CommRecMPI::waitall(const ProcessorGroup * pg)
   for(int i=0;i<(int)ids.size();i++){
     if(handlers[i]) {
       handlers[i]->finishedCommunication(pg);
+      ASSERT(handlers[i]!=0);
       delete handlers[i];
+      handlers[i]=0;
     }
   }
   ids.clear();

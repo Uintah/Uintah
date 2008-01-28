@@ -1,11 +1,14 @@
 
 #include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 
 using namespace Uintah;
 
+#include <iostream>
+using namespace std;
 PackBufferInfo::PackBufferInfo()
   : BufferInfo()
 {
@@ -30,7 +33,6 @@ PackBufferInfo::get_type(void*& out_buf, int& out_count,
       MPI_Pack_size(counts[i], datatypes[i], comm, &packed_size);
       total_packed_size += packed_size;
     }
-    
     packedBuffer = scinew PackedBuffer(total_packed_size);
     packedBuffer->addReference();
 
@@ -59,7 +61,7 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
   int position = 0;
   int bufsize = packedBuffer->getBufSize();
   for (int i = 0; i < (int)startbufs.size(); i++) {
-    if(counts[i])
+    if(counts[i]>0)
       MPI_Pack(startbufs[i], counts[i], datatypes[i], buf, bufsize,
 	       &position, comm);
   }
@@ -80,7 +82,8 @@ PackBufferInfo::unpack(MPI_Comm comm)
   int position = 0;
   int bufsize = packedBuffer->getBufSize();
   for (int i = 0; i < (int)startbufs.size(); i++) {
-    MPI_Unpack(buf, bufsize, &position, startbufs[i], counts[i], datatypes[i], comm);
+    if(counts[i]>0)
+      MPI_Unpack(buf, bufsize, &position, startbufs[i], counts[i], datatypes[i], comm);
   }
 }
 

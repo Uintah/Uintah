@@ -22,10 +22,16 @@ BufferInfo::~BufferInfo()
  MPITypeLock.lock();
    
   if(free_datatype)
+  {
+    ASSERT(datatype!=MPI_DATATYPE_NULL);
     MPI_Type_free(&datatype);
+  }
   for(int i=0;i<(int)datatypes.size();i++){
     if(free_datatypes[i])
+    {
+      ASSERT(datatypes[i]!=MPI_DATATYPE_NULL);
       MPI_Type_free(&datatypes[i]);
+    }
   }
 
  MPITypeLock.unlock();
@@ -42,13 +48,14 @@ BufferInfo::count() const
 
 void
 BufferInfo::add(void* startbuf, int count, MPI_Datatype datatype,
-		bool free_datatype)
+		bool free_datatype, bool free)
 {
   ASSERT(!have_datatype);
   startbufs.push_back(startbuf);
   counts.push_back(count);
   datatypes.push_back(datatype);
-  free_datatypes.push_back(free_datatype);
+  if(free)
+    free_datatypes.push_back(free_datatype);
 } 
 
 void
