@@ -25,7 +25,6 @@
 
    <LoadBalancer>
         <timestepInterval>2</timestepInterval>
-        <outputNthProc>1</outputNthProc>
    </LoadBalancer>
 
    <ParticleTest1>
