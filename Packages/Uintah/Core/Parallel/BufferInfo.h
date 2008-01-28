@@ -44,7 +44,7 @@ namespace Uintah {
     void get_type(void*&, int&, MPI_Datatype&);
 
     void add(void* startbuf, int count, MPI_Datatype datatype,
-	     bool free_datatype);
+	     bool free_datatype,bool free=true);
 
     void addSendlist(RefCounted*);
     Sendlist* takeSendlist();
