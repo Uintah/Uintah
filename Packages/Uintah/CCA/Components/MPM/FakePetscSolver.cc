@@ -31,7 +31,8 @@ void
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 					   const PatchSet* perproc_patches,
 					   const PatchSubset* patches,
-                                           const int DOFsPerNode)
+                                           const int DOFsPerNode,
+                                           const int n8or27)
 {
   throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::createLocalToGlobalMapping()!", __FILE__, __LINE__ );
 }
