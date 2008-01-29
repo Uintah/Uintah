@@ -810,10 +810,6 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
   ParticleSubset* psubset = 
     scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
 
-  if (d_myworld->myrank() == 0 && patch->getID() == 39)
-    cout << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << low << ", " << high << ")\n";
-  
-
   psetDBType::key_type key(patch, matlIndex, low, high, getID());
   if(d_psetDB.find(key) != d_psetDB.end()) {
     if (d_myworld->myrank() == 0) {
