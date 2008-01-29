@@ -69,8 +69,8 @@ itcl_class Uintah_Visualization_ParticleVis {
 
         set f1 [$dof.tabs add -label "Geometry"]
 
-        make_labeled_radio $f1.geom "Particle Display type" $n \
-             top $this-drawspheres { {Points 0} {"Spheres (picking mode)" 1} }
+        make_labeled_radio $f1.geom "Particle Display type" $n top 1\
+            $this-drawspheres { {Points 0} {"Spheres (picking mode)" 1 } }
         pack $f1.geom -side top -fill x
 
         frame $f1.rad -relief flat
@@ -108,7 +108,7 @@ itcl_class Uintah_Visualization_ParticleVis {
         pack $f2.f.chk -side left -anchor w -expand yes -fill x
 
         make_labeled_radio $f2.f.shaft "Shaft style:" $n \
-                top $this-drawcylinders { {Lines 0} {Cylinders 1} }
+                top 1 $this-drawcylinders { {Lines 0} {Cylinders 1} }
         pack $f2.f.shaft -side left -padx 5 -anchor w
 
         frame $f2.ls -relief flat

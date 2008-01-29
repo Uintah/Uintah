@@ -70,12 +70,12 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	pack $w.f1 -side top -fill x -padx 2 -pady 2
 
 	make_labeled_radio $w.f1.type "NodeHedgehog type:" $n \
-		top $this-type \
+		top 1 $this-type \
 		{2D 3D}
 	pack $w.f1.type -side left -padx 2 -anchor w
 	
 	make_labeled_radio $w.f1.shaft "Shaft style:" $n \
-		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
+		top 1 $this-drawcylinders { {Lines 0} {Cylinders 1} }
 	pack $w.f1.shaft -side left -padx 2 -anchor w
 
 	frame $w.f1.b

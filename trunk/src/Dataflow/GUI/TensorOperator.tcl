@@ -244,7 +244,7 @@ ____________________________________________
     method eigen2D_ui {w} {
 	set n "$this-c needexecute"
 
-	make_labeled_radio $w.rp "Plane" $n left \
+	make_labeled_radio $w.rp "Plane" $n left 1\
 		$this-planeSelect {{"xy" 2} {"xz" 1} {"yz" 0}}
 
 	frame $w.calc

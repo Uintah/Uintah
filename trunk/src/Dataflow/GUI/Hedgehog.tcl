@@ -47,12 +47,12 @@ itcl_class Uintah_Visualization_Hedgehog {
 	pack $w.f -side top -fill x -padx 2 -pady 2
 
 	make_labeled_radio $w.f.type "Hedgehog type:" $n \
-		top $this-type \
+		top 1 $this-type \
 		{2D 3D}
 	pack $w.f.type -side left -padx 5 -anchor w
 
 	make_labeled_radio $w.f.shaft "Shaft style:" $n \
-		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
+		top 1 $this-drawcylinders { {Lines 0} {Cylinders 1} }
 	pack $w.f.shaft -side left -padx 5 -anchor w
 	
 	button $w.f.findxy -text "Find XY" -command "$this-c findxy"
