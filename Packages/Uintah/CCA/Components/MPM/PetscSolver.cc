@@ -145,10 +145,10 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     IntVector lowIndex,highIndex;
     if(n8or27==8){
         lowIndex = patch->getInteriorNodeLowIndex();
-        highIndex = patch->getInteriorNodeHighIndex();
+        highIndex = patch->getInteriorNodeHighIndex() + IntVector(1,1,1);
     } else if(n8or27==27){
         lowIndex = patch->getNodeLowIndex();
-        highIndex = patch->getNodeHighIndex();
+        highIndex = patch->getNodeHighIndex() + IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
@@ -334,8 +334,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     //allocate the diagonal
     int low,high;
     MatGetOwnershipRange(d_A,&low,&high);
-    for(int i=low;i<high;i++)
-    {
+    for(int i=low;i<high;i++) {
       MatSetValue(d_A,i,i,0,ADD_VALUES);
     }
     flushMatrix();
@@ -372,7 +371,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   delete[] diag;
   delete[] onnz;
 }
-
 
 void MPMPetscSolver::destroyMatrix(bool recursion)
 {
