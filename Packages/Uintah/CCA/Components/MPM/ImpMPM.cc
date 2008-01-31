@@ -2340,7 +2340,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        IntVector cell,ni[n8or27];
+        IntVector cell,ni[27];
         patch->findCell(px[idx],cell);
         if (visited[cell] == 0 ) {
           visited[cell] = 1;
