@@ -3110,13 +3110,16 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     double dispIncNorm  = 0.;
     double dispIncQNorm = 0.;
     vector<double> getQ;
-    int begin = d_solver->getRHS(getQ);
+
+    d_solver->getRHS(getQ);
+    int global_offset=l2g[lowIndex]; 
+
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector n = *iter;
-      int l2g_node_num = l2g[n] - begin;
+      int l2g_node_num = l2g[n] - global_offset;
       dispIncNorm += Dot(dispInc[n],dispInc[n]);
       dispIncQNorm += dispInc[n].x()*getQ[l2g_node_num] +
-      dispInc[n].y()*getQ[l2g_node_num+1] +  dispInc[n].z()*getQ[l2g_node_num+2];
+      dispInc[n].y()*getQ[l2g_node_num+1] + dispInc[n].z()*getQ[l2g_node_num+2];
     }
     // We are computing both dispIncQNorm0 and dispIncNormMax (max residuals)
     // We are computing both dispIncQNorm and dispIncNorm (current residuals)
