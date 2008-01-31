@@ -36,8 +36,8 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
 //______________________________________________________________________              
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
-                            ProblemSpecP& params,
-                            const bool doAMR)
+                             ProblemSpecP& params,
+                             const bool doAMR)
   : ModelInterface(myworld), params(params)
 {
   d_doAMR = doAMR;
@@ -75,13 +75,13 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
-  ps->getWithDefault("sinusoidalInitialize",   sinusoidalInitialize,  false);
-  ps->getWithDefault("linearInitialize",       linearInitialize,      false);
-  ps->getWithDefault("cubicInitialize",        cubicInitialize,       false);
-  ps->getWithDefault("quadraticInitialize",    quadraticInitialize,   false);
+  ps->getWithDefault("sinusoidalInitialize",      sinusoidalInitialize,     false);
+  ps->getWithDefault("linearInitialize",          linearInitialize,         false);
+  ps->getWithDefault("cubicInitialize",           cubicInitialize,          false);
+  ps->getWithDefault("quadraticInitialize",       quadraticInitialize,      false);
   ps->getWithDefault("exponentialInitialize_1D",  exponentialInitialize_1D, false);
   ps->getWithDefault("exponentialInitialize_2D",  exponentialInitialize_2D, false);
-  ps->getWithDefault("triangularInitialize",      triangularInitialize,      false);
+  ps->getWithDefault("triangularInitialize",      triangularInitialize,     false);
   
   if(sinusoidalInitialize){
     ps->getWithDefault("freq",freq,IntVector(0,0,0));
@@ -91,11 +91,13 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   }
   if(quadraticInitialize || exponentialInitialize_1D || exponentialInitialize_2D){
     ps->getWithDefault("coeff",coeff,Vector(0,0,0));
-    cerr<<"coeff:"<<coeff<<endl;
   }
   
   uniformInitialize = true;
-  if(sinusoidalInitialize || linearInitialize || quadraticInitialize || cubicInitialize || exponentialInitialize_1D|| exponentialInitialize_2D || triangularInitialize){
+  if(sinusoidalInitialize    || linearInitialize || 
+     quadraticInitialize     || cubicInitialize || 
+     exponentialInitialize_1D|| exponentialInitialize_2D || 
+     triangularInitialize){
     uniformInitialize = false;
   }
 }
@@ -262,8 +264,8 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 //______________________________________________________________________
 //      S C H E D U L E   I N I T I A L I Z E
 void PassiveScalar::scheduleInitialize(SchedulerP& sched,
-                                   const LevelP& level,
-                                   const ModelInfo*)
+                                       const LevelP& level,
+                                       const ModelInfo*)
 {
   cout_doing << "PassiveScalar::scheduleInitialize " << endl;
   Task* t = scinew Task("PassiveScalar::initialize", 
@@ -277,10 +279,10 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
 //______________________________________________________________________
 //       I N I T I A L I Z E
 void PassiveScalar::initialize(const ProcessorGroup*, 
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw)
+                               const PatchSubset* patches,
+                               const MaterialSubset*,
+                               DataWarehouse*,
+                               DataWarehouse* new_dw)
 {
   cout_doing << "Doing Initialize \t\t\t\t\tPASSIVE_SCALAR" << endl;
   for(int p=0;p<patches->size();p++){
@@ -310,22 +312,6 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         } // Over cells
       }
 
-      // come back and check this. (a little fishy, why do we init the region only if its unifor or linear initialize?)
-      // Todd any ideas why you wrote this for loop ???
-      
-      if(region->linearInitialize){
-      
-        for(CellIterator iter = patch->getExtraCellIterator();
-            !iter.done(); iter++){
-          IntVector c = *iter;
-          Point p = patch->cellPosition(c);            
-          if(region->piece->inside(p)) {
-            f[c] = region->initialScalar;
-          }
-        } // Over cells
-      }
-
-      
       //__________________________________
       // Sinusoidal & linear initialization
       if(!region->uniformInitialize){
@@ -341,22 +327,22 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         }
         
         Vector coeff = region->coeff;
-	cerr<<"coeff"<<region->coeff<<endl;
+        cerr<<"coeff"<<region->coeff<<endl;
         if( (region->quadraticInitialize || region->exponentialInitialize_1D ||  region->exponentialInitialize_2D)
-	   && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
-	  cerr<<"coeff"<<coeff<<endl;
+           && coeff.x()==0 && coeff.y()==0 && coeff.z()==0){
+          cerr<<"coeff"<<coeff<<endl;
           throw ProblemSetupException("PassiveScalar: you need to specify a <coeff> for this initialization", __FILE__, __LINE__);
         }
 
-	if(region->exponentialInitialize_1D &&  ( (coeff.x()*coeff.y()!=0) || (coeff.y()*coeff.z()!=0) || (coeff.x()*coeff.z()!=0) )  ) {
-	  throw ProblemSetupException("PassiveScalar: 1D Exponential Initialize. This profile is designed for 1D problems only. Try exponentialInitialize_2D instead",__FILE__, __LINE__);
-	}
-	  
+        if(region->exponentialInitialize_1D &&  ( (coeff.x()*coeff.y()!=0) || (coeff.y()*coeff.z()!=0) || (coeff.x()*coeff.z()!=0) )  ) {
+          throw ProblemSetupException("PassiveScalar: 1D Exponential Initialize. This profile is designed for 1D problems only. Try exponentialInitialize_2D instead",__FILE__, __LINE__);
+        }
+          
 
-	if(region->exponentialInitialize_2D && (coeff.x()!=0) && (coeff.y()!=0) && (coeff.z()!=0) ) {
-	    throw ProblemSetupException("PassiveScalar: 2D Exponential Initialize. This profile is designed for 2D problems only, one <coeff> must equal zero",__FILE__, __LINE__);
-	}
-	
+        if(region->exponentialInitialize_2D && (coeff.x()!=0) && (coeff.y()!=0) && (coeff.z()!=0) ) {
+            throw ProblemSetupException("PassiveScalar: 2D Exponential Initialize. This profile is designed for 2D problems only, one <coeff> must equal zero",__FILE__, __LINE__);
+        }
+        
         Point lo = region->piece->getBoundingBox().lower();
         Point hi = region->piece->getBoundingBox().upper();
         Vector dist = hi.asVector() - lo.asVector();
@@ -370,17 +356,20 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             Vector d = (p.asVector() - lo.asVector() )/dist;
             
             if(region->sinusoidalInitialize){
-              f[c] = sin( 2.0 * freq.x() * d.x() * M_PI) + sin( 2.0 * freq.y() * d.y() * M_PI)  + sin( 2.0 * freq.z() * d.z() * M_PI);
+              f[c] = sin( 2.0 * freq.x() * d.x() * M_PI) + 
+                     sin( 2.0 * freq.y() * d.y() * M_PI)  + 
+                     sin( 2.0 * freq.z() * d.z() * M_PI);
             }
-            if(region->linearInitialize){
-              f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
+            if(region->linearInitialize){  // f[c] = kx + b
+              f[c] = (slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z() )
+                   +  region->initialScalar; 
             }
-	    if(region->triangularInitialize){
-	      if(d.x() <= 0.5)
-		f[c] = slope.x()*d.x();
-	      else
-		f[c] = slope.x()*(1.0-d.x());
-	    }
+            if(region->triangularInitialize){
+              if(d.x() <= 0.5)
+                f[c] = slope.x()*d.x();
+              else
+                f[c] = slope.x()*(1.0-d.x());
+            }
             if(region->quadraticInitialize){
               if(d.x() <= 0.5)
                 f[c] = pow(d.x(),2) - d.x();
@@ -395,43 +384,39 @@ void PassiveScalar::initialize(const ProcessorGroup*,
                 f[c] = -1.3333333*pow( (1.0 - d.x()),3) + pow( (1.0 - d.x()),2);
               } 
             }
-	    
-
-	    
-	    // This is a 2-D profile	    
-	    
+            
+            // This is a 2-D profile        
             if(region->exponentialInitialize_2D) {
-	      double coeff1, coeff2, d1, d2;
-	      if (coeff.x()==0) {
-		coeff1 = coeff.y();
-		coeff2 = coeff.z();
-		d1 = d.y();
-		d2 = d.z();
-	      }
-      	      else if (coeff.y()==0) {
-		coeff1 = coeff.x();
-		coeff2 = coeff.z();
-		d1 = d.x();
-		d2 = d.z();
-	      }
-	      else if (coeff.z()==0) {
-		coeff1 = coeff.y();
-		coeff2 = coeff.x();
-		d1 = d.y();
-		d2 = d.x();
-	      }
-	      f[c] = coeff1 * exp(-1.0/( d1 * ( 1.0 - d1 ) + 1e-100) )
-		 * coeff2 * exp(-1.0/( d2 * ( 1.0 - d2 ) + 1e-100) );
+              double coeff1, coeff2, d1, d2;
+              if (coeff.x()==0) {
+                coeff1 = coeff.y();
+                coeff2 = coeff.z();
+                d1 = d.y();
+                d2 = d.z();
+              }
+              else if (coeff.y()==0) {
+                coeff1 = coeff.x();
+                coeff2 = coeff.z();
+                d1 = d.x();
+                d2 = d.z();
+              }
+              else if (coeff.z()==0) {
+                coeff1 = coeff.y();
+                coeff2 = coeff.x();
+                d1 = d.y();
+                d2 = d.x();
+              }
+              f[c] = coeff1 * exp(-1.0/( d1 * ( 1.0 - d1 ) + 1e-100) )
+                   * coeff2 * exp(-1.0/( d2 * ( 1.0 - d2 ) + 1e-100) );
             }
 
-	    // This is a 1-D profile - Donot use it for 2-D
-	    
-	    if (region->exponentialInitialize_1D ){
-	      f[c] = coeff.x() * exp(-1.0/( d.x() * ( 1.0 - d.x() ) + 1e-100) )
-		+ coeff.y() * exp(-1.0/( d.y() * ( 1.0 - d.y() ) + 1e-100) )
-                 + coeff.z() * exp(-1.0/( d.z() * ( 1.0 - d.z() ) + 1e-100) );
-	    }
-
+            // This is a 1-D profile - Donot use it for 2-D
+            
+            if (region->exponentialInitialize_1D ){
+              f[c] = coeff.x() * exp(-1.0/( d.x() * ( 1.0 - d.x() ) + 1e-100) )
+                   + coeff.y() * exp(-1.0/( d.y() * ( 1.0 - d.y() ) + 1e-100) )
+                   + coeff.z() * exp(-1.0/( d.z() * ( 1.0 - d.z() ) + 1e-100) );
+            }
           }
         }
       }  // sinusoidal Initialize  
@@ -462,8 +447,8 @@ void PassiveScalar::initialize(const ProcessorGroup*,
 
 //______________________________________________________________________     
 void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
-                                                   const LevelP& level,
-                                                   const MaterialSet* /*ice_matls*/)
+                                                            const LevelP& level,
+                                                            const MaterialSet* /*ice_matls*/)
 {
   cout_doing << "PASSIVE_SCALAR::scheduleModifyThermoTransportProperties" << endl;
   Task* t = scinew Task("PassiveScalar::modifyThermoTransportProperties", 
@@ -494,17 +479,17 @@ void PassiveScalar::modifyThermoTransportProperties(const ProcessorGroup*,
 
 //______________________________________________________________________
 void PassiveScalar::computeSpecificHeat(CCVariable<double>& ,
-                                    const Patch* ,
-                                    DataWarehouse* ,
-                                    const int )
+                                        const Patch* ,
+                                        DataWarehouse* ,
+                                        const int )
 { 
   //none
 } 
 
 //______________________________________________________________________
 void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const ModelInfo* mi)
+                                                const LevelP& level,
+                                                const ModelInfo* mi)
 {
   cout_doing << "PASSIVE_SCALAR::scheduleComputeModelSources " << endl;
   Task* t = scinew Task("PassiveScalar::computeModelSources", 
@@ -526,11 +511,11 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
 
 //______________________________________________________________________
 void PassiveScalar::computeModelSources(const ProcessorGroup*, 
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* /*matls*/,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const ModelInfo* mi)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* /*matls*/,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw,
+                                        const ModelInfo* mi)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -599,16 +584,16 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
 }
 //__________________________________      
 void PassiveScalar::scheduleComputeStableTimestep(SchedulerP&,
-                                      const LevelP&,
-                                      const ModelInfo*)
+                                                  const LevelP&,
+                                                  const ModelInfo*)
 {
   // None necessary...
 }
 
 //______________________________________________________________________
 void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const ModelInfo* mi)
+                                             const PatchSet* patches,
+                                             const ModelInfo* mi)
 {
   const Level* level = getLevel(patches);
   int L = level->getIndex();
@@ -717,10 +702,10 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
  Function~  PassiveScalar::errorEstimate--
 ______________________________________________________________________*/
 void PassiveScalar::errorEstimate(const ProcessorGroup*,
-			             const PatchSubset* patches,
-			             const MaterialSubset*,
-			             DataWarehouse*,
-			             DataWarehouse* new_dw,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*,
+                                  DataWarehouse* new_dw,
                                   bool)
 {
   cout_doing << "Doing errorEstimate \t\t\t\t\t PassiveScalar"<< endl;
