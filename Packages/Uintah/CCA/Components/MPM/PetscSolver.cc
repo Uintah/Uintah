@@ -114,6 +114,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
   d_totalNodes = 0;
+  //compute the total number of nodes and the global offset for each patch
   for (int p = 0; p < perproc_patches->size(); p++) {
     d_startIndex[p] = d_totalNodes;
     int mytotal = 0;
@@ -154,31 +155,34 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     l2g.initialize(-1234);
     long totalNodes=0;
     const Level* level = patch->getLevel();
+
     Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
+    //For each neighbor and myself
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       IntVector plow,phigh;
       if(n8or27==8){
-        plow = patch->getInteriorNodeLowIndex();
-        phigh = patch->getInteriorNodeHighIndex();
+        plow = neighbor->getInteriorNodeLowIndex();
+        phigh = neighbor->getInteriorNodeHighIndex();
       } else if(n8or27==27){
-        plow = patch->getNodeLowIndex();
-        phigh = patch->getNodeHighIndex();
+        plow = neighbor->getNodeLowIndex();
+        phigh = neighbor->getNodeHighIndex();
       }
+      //intersect my patch with my neighbor patch
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
                                  || ( high.z() < low.z() ) )
          throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-      
+     
+      //global start for this neighbor
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
-      
+     
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
-                        + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
-
+                       + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
 
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
         int idx_slab = petscglobalIndex;
