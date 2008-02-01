@@ -447,6 +447,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         pdTdt[idx]=0;
         pstress_new[idx] = Matrix3(0.0);
         pvolume_deformed[idx] = pvolumeold[idx];
+        pdTdt[idx] = 0.;
       }
     }
     else{
@@ -456,6 +457,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         pdTdt[idx]=0;
 
         dispGrad.set(0.0);
+        pdTdt[idx] = 0.;
 
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
@@ -670,16 +672,18 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolume[idx];
+        pdTdt[idx] = 0.;
       }
     }
     else{
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-        
+
         dispGrad.set(0.0);
+        pdTdt[idx] = 0.;
+
         // Get the node indices that surround the cell
-        
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
