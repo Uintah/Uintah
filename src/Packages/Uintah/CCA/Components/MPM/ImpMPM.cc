@@ -3084,6 +3084,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw)
 {
+  int global_offset=0;
   for(int p=0;p<patches->size();p++){
    const Patch* patch = patches->get(p);
    if (cout_doing.active()) {
@@ -3112,7 +3113,8 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     vector<double> getQ;
 
     d_solver->getRHS(getQ);
-    int global_offset=l2g[lowIndex]; 
+    if(p==0)
+      global_offset=l2g[lowIndex]; 
 
     for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector n = *iter;
