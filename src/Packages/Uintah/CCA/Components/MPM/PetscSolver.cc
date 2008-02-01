@@ -102,6 +102,30 @@ void MPMPetscSolver::initialize()
   if(argc>0)
     delete argv;
 }
+/**************************************************************
+ * Creates a mapping from nodal coordinates, IntVector(x,y,z), 
+ * to global matrix coordinates.  The matrix is laid out as 
+ * follows:
+ *
+ * Proc 0 patches
+ *    patch 0 nodes
+ *    patch 1 nodes
+ *    ...
+ * Proc 1 patches
+ *    patch 0 nodes
+ *    patch 1 nodes
+ *    ...
+ * ...
+ *
+ * Thus the entrance at node xyz provides the global index into the
+ * matrix for that nodes entry.  And each processor owns a 
+ * consecutive block of those rows.  In order to translate a 
+ * nodal position to the processors local position (needed when using 
+ * a local array) the global index
+ * of the processors first patch must be subtracted from the global
+ * index of the node in question.  This will provide a zero-based index 
+ * into each processors data.
+ *************************************************************/
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                            const PatchSet* perproc_patches,
