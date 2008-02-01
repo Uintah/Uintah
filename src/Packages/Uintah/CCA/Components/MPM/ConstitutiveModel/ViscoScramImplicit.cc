@@ -444,6 +444,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
+        pdTdt[idx]=0;
         pstress_new[idx] = Matrix3(0.0);
         pvolume_deformed[idx] = pvolumeold[idx];
       }
@@ -452,6 +453,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
+        pdTdt[idx]=0;
 
         dispGrad.set(0.0);
 
@@ -657,6 +659,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
       pVolHeatRate_new[idx] = 0.0;
       pVeHeatRate_new[idx]  = 0.0;
       pCrHeatRate_new[idx]  = 0.0;
+      pdTdt[idx]            = 0.0;
     }
 
 
