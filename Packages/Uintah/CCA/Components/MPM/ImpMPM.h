@@ -78,17 +78,17 @@ public:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& mat_ps,
                             GridP& grid, SimulationStateP&);
-	 
+
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
   virtual void scheduleInitialize(const LevelP& level, SchedulerP&);
 
   virtual void switchInitialize(const LevelP& level, SchedulerP&);
-	 
+
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
-	 
+
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(          const LevelP& level, SchedulerP&);
@@ -119,7 +119,7 @@ public:
   {
 
         delete lb;
-	lb = Mlb;
+        lb = Mlb;
   };
 
 
@@ -161,19 +161,19 @@ private:
                                        DataWarehouse* new_dw);
 
   void scheduleInitializeHeatFluxBCs(const LevelP& level,
-				     SchedulerP&);
-	 
+                                     SchedulerP&);
+
   void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   void initializeHeatFluxBC(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -298,10 +298,10 @@ private:
                                        DataWarehouse* new_dw);
 
   void getDisplacementIncrement(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw);
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
   void getTemperatureIncrement(const ProcessorGroup*,
                                const PatchSubset* patches,
@@ -323,7 +323,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
-			
+
   //////////
   // Insert Documentation Here:
   void updateTotalDisplacement(        const ProcessorGroup*,
@@ -343,10 +343,10 @@ private:
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   void refine(                         const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -369,10 +369,10 @@ private:
   //////////
   // Insert Documentation Here:
   void interpolateStressToGrid(        const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   void scheduleComputeStressTensor( SchedulerP&, const PatchSet*,
                                     const MaterialSet*, const bool recursion);
@@ -384,7 +384,7 @@ private:
                                       const MaterialSet*);
 
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+                                       const MaterialSet*);
 
   void scheduleFormQ(               SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
@@ -396,7 +396,7 @@ private:
                                      const MaterialSet*);
 
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
-				    const MaterialSet*);
+                                       const MaterialSet*);
 
   void scheduleApplyExternalLoads(             SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
@@ -477,7 +477,7 @@ private:
                                                const MaterialSet*);
 
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
+                                       const MaterialSet*);
 
   void scheduleInterpolateStressToGrid(        SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
@@ -491,7 +491,7 @@ private:
 
   ImpMPM(const ImpMPM&);
   ImpMPM& operator=(const ImpMPM&);
-	 
+
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   ImpMPMFlags* flags;
