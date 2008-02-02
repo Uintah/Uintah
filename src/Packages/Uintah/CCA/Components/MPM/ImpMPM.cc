@@ -143,7 +143,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
 
-   
    ProblemSpecP mpm_ps = 0;
    ProblemSpecP restart_mat_ps = 0;
 
@@ -154,7 +153,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
     restart_mat_ps = restart_prob_spec;
   else
     restart_mat_ps = prob_spec;
-
 
 #if 0
    if (restart_prob_spec)
@@ -215,7 +213,9 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    ProblemSpecP child = mpm_mat_ps->findBlock("contact");
 
    d_con_type = "null";
-   child->get("type",d_con_type);
+   if(child){
+     child->getWithDefault("type",d_con_type, "null");
+   }
    d_rigid_body = false;
 
    if (d_con_type == "rigid"){
@@ -262,7 +262,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    
    d_recompileSubsched = true;
 
-
    heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
    heatConductionModel->problemSetup(flags->d_solver_type);
@@ -276,8 +275,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    if (d_switchCriteria) {
      d_switchCriteria->problemSetup(restart_mat_ps,restart_prob_spec,d_sharedState);
    }
-    
-   
+
    // Pull out from Time section
    d_initialDt = 10000.0;
    ProblemSpecP time_ps = restart_mat_ps->findBlock("Time");
