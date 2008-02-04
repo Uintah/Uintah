@@ -531,6 +531,8 @@ void ArchesTable::setup(const bool cerrSwitch)
   }
 
   // Free up the input deps
+  delete idx;
+  delete w;
   for(int i=0;i<(int)in_inds.size();i++)
     delete in_inds[i];
   for(int i=1;i<(int)in_axes.size();i++)
