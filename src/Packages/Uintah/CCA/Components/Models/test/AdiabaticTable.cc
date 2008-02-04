@@ -94,6 +94,7 @@ AdiabaticTable::~AdiabaticTable()
     delete region;
 
   }
+  delete d_scalar;
 }
 
 //__________________________________
