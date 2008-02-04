@@ -1027,7 +1027,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool restart    = false;
   Vector dx = level->dCell();
   double vol = dx.x() * dx.y() * dx.z();
-  solver_parameters->setResidualNormalizationFactor(vol);
+  d_solver_parameters->setResidualNormalizationFactor(vol);
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance && !restart) {
   //__________________________________
@@ -1040,12 +1040,12 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
                               all_matls);
       
-      solver->scheduleSolve(level, d_subsched, press_matlSet,
+      d_solver->scheduleSolve(level, d_subsched, press_matlSet,
                             lb->matrixLabel,   Task::NewDW,
                             lb->imp_delPLabel, modifies_X,
                             lb->rhsLabel,      Task::OldDW,
                             whichInitialGuess, Task::OldDW,
-                            solver_parameters);
+                            d_solver_parameters);
       
       scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
                               mpm_matls, 

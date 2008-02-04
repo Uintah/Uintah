@@ -1010,8 +1010,8 @@ namespace Uintah {
       ICE(const ICE&);
       ICE& operator=(const ICE&);
       
-      SolverInterface* solver;
-      SolverParameters* solver_parameters;    
+      SolverInterface* d_solver;
+      SolverParameters* d_solver_parameters;    
 
       //______________________________________________________________________
       //        models

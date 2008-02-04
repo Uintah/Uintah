@@ -200,8 +200,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if(!dataArchiver){
     throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);
   }
-  solver = dynamic_cast<SolverInterface*>(getPort("solver"));
-  if(!solver) {
+  d_solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  if(!d_solver) {
     throw InternalError("ICE:couldn't get solver port", __FILE__, __LINE__);
   }
 
@@ -265,8 +265,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
     d_delT_knob = 0.5;      // default value when running implicit
-    solver_parameters = solver->readParameters(impSolver, "implicitPressure");
-    solver_parameters->setSolveOnExtraCells(false);
+    d_solver_parameters = d_solver->readParameters(impSolver, "implicitPressure");
+    d_solver_parameters->setSolveOnExtraCells(false);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
     impSolver->getWithDefault("iters_before_timestep_restart",    
@@ -296,9 +296,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     } 
     
-    if(d_doAMR  && solver->getName() != "hypreamr"){
+    if(d_doAMR  && d_solver->getName() != "hypreamr"){
       ostringstream msg;
-      msg << "\n ERROR: " << solver->getName()
+      msg << "\n ERROR: " << d_solver->getName()
           << " cannot be used with an AMR grid \n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }

@@ -403,12 +403,12 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       // so just pass in the coarsest level as it always exists.
       const VarLabel* whichInitialGuess = NULL; 
       
-      solver->scheduleSolve(grid->getLevel(0), d_subsched, press_matlSet,
+      d_solver->scheduleSolve(grid->getLevel(0), d_subsched, press_matlSet,
                             lb->matrixLabel,   Task::NewDW,
                             lb->imp_delPLabel, modifies_X,
                             lb->rhsLabel,      Task::OldDW,
                             whichInitialGuess, Task::NewDW,
-                            solver_parameters);
+                            d_solver_parameters);
       
 #else
       const PatchSet* perProcPatches = 
