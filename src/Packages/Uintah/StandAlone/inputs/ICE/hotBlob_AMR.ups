@@ -210,17 +210,22 @@
       <Regridder>
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <cell_stability_dilation>   [2,2,0]    </cell_stability_dilation>   
+        <cell_stability_dilation>   [2,2,0]   </cell_stability_dilation>   
         <cell_deletion_dilation>   [1,1,0]    </cell_deletion_dilation>   
         <min_boundary_cells>       [1,1,0]    </min_boundary_cells>
  
-
         <type>BNR</type>
         
         <min_patch_size>           [[10,10,1]] </min_patch_size>
-        <patch_split_tolerance>     1        </patch_split_tolerance>
-        <patch_combine_tolerance>   1        </patch_combine_tolerance>
-        <patches_per_level_per_proc> 8       </patches_per_level_per_proc>
+        <patch_split_tolerance>     1          </patch_split_tolerance>
+        <patch_combine_tolerance>   1          </patch_combine_tolerance>
+        <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
+        
+        <!-- RT: Needed so the restart grid is identical to the original grid-->        
+        <max_timestep_interval>       0       </max_timestep_interval>
+        <cell_regrid_dilation>     [0,0,0]   </cell_regrid_dilation>
+        <!-- RT: -->
+        
       </Regridder>
     </AMR>
     <!--____________________________________________________________________-->
