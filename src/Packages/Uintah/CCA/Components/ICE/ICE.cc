@@ -170,8 +170,6 @@ ICE::~ICE()
     delete d_modelInfo;
   }
   releasePort("solver");
-  delete d_solver_parameters;
-  
 }
 
 bool ICE::restartableTimesteps()
