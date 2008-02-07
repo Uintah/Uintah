@@ -313,7 +313,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
               IntVector l = low, h = high;
               l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
               h = Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), high);
-              patch->cullIntersection(basis, req->var->getBoundaryLayer(), neighbor, l, h);
+              patch->cullIntersection(basis, req->var->getBoundaryLayer(), neighbor->getRealPatch(), l, h);
               if (l == h)
                 continue; 
             }
