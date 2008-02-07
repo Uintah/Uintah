@@ -425,6 +425,7 @@ main( int argc, char** argv )
              << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
       }
       cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
+      cout.flush();
       Time::waitFor( (double)sleepTime );
     }
 #endif
