@@ -107,8 +107,6 @@ SerialMPM::~SerialMPM()
   delete thermalContactModel;
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
-  if(d_loadCurveIndex)
-    delete d_loadCurveIndex;
 
 }
 
@@ -398,6 +396,9 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
   d_loadCurveIndex = scinew MaterialSubset();
+  d_loadCurveIndex->add(0);
+  d_loadCurveIndex->addReference();
+
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -424,6 +425,9 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->modifies(lb->pExternalForceLabel);
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
   }
+
+  if(d_loadCurveIndex->removeReference())
+    delete d_loadCurveIndex;
 }
 
 void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
