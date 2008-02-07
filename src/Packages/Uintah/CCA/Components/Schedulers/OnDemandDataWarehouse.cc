@@ -1049,7 +1049,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
       ParticleSubset* pset;
 
       if (relPatch && relPatch != neighbor) {
-        relPatch->cullIntersection(Patch::CellBased, IntVector(0,0,0), neighbor, newLow, newHigh);
+        relPatch->cullIntersection(Patch::CellBased, IntVector(0,0,0), realNeighbor, newLow, newHigh);
         if (newLow == newHigh) {
           continue;
         }
