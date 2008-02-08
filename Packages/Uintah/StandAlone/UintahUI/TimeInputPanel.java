@@ -243,8 +243,8 @@ public class TimeInputPanel extends JPanel
     pw.println(tab1+"<maxTime> "+ maxTimeEntry.getValue()+
                     " </maxTime>");
     if (maxNofStepsEntry.getValue() > 0) {
-      pw.println(tab1+"<max_iterations> "+ maxNofStepsEntry.getValue()+
-                      " </max_iterations>");
+      pw.println(tab1+"<max_Timesteps> "+ maxNofStepsEntry.getValue()+
+                      " </max_Timesteps>");
     }
     pw.println(tab1+"<delt_init> "+ deltInitEntry.getValue()+ " </delt_init>");
     pw.println(tab1+"<delt_min> "+ deltMinEntry.getValue()+ " </delt_min>");

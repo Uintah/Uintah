@@ -8,7 +8,7 @@ using namespace std;
 namespace Uintah {
 
 valarray<double> cgSolve(SparseMatrix<double, int>& A, 
-			 valarray<double>& b, int /*conflag*/)
+                         valarray<double>& b, int /*conflag*/)
 {
   
   valarray<double> M(A.Rows());
@@ -46,15 +46,16 @@ valarray<double> cgSolve(SparseMatrix<double, int>& A,
   double rho_i_2 = 0.;
 
 
-  for (int i = 1; i<=max_iterations; i++) {
+  for( int i = 1; i <= max_iterations; i++ ) {
     // Solve for Mz = r
-      z = M*residual;
+    z = M*residual;
 
     // do the dot product of the residual and the z vector
     rho_i_1 = inner_product(&residual[0],&residual[residual.size()],&z[0],0.);
 
-    if (i == 1)
+    if (i == 1) {
       p = z;
+    }
     else {
       double beta = rho_i_1/rho_i_2;
       p = z + p*beta;
@@ -106,7 +107,7 @@ double eigenvalue(SparseMatrix<double,int>& A, valarray<double>& eigenvector)
   //  It is the largest unless there is a shift.  The
   //  eigenvector is used in the computation via the
   //   power method.
-	
+        
   
   valarray<double> y_new(A.Rows());
 

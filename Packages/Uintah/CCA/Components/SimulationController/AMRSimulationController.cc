@@ -57,7 +57,8 @@ AMRSimulationController::~AMRSimulationController()
 {
 }
 
-void AMRSimulationController::run()
+void
+AMRSimulationController::run()
 {
    bool log_dw_mem=false;
 #ifndef DISABLE_SCI_MALLOC
@@ -116,20 +117,15 @@ void AMRSimulationController::run()
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
    
-   bool first=true;
-   int  iterations = 0;
+   bool   first = true;
+   int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
    double delt = 0;
 
-   // if we end the simulation for a timestep, decide whether to march max_iterations
-   // or to end at a certain timestep
-   int max_iterations = d_timeinfo->max_iterations;
-   if (d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep() < max_iterations) {
-     max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
-   }
    double start,time[4]={0};
    
-   while( t < d_timeinfo->maxTime && iterations < max_iterations && 
-          (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
+   while( ( t < d_timeinfo->maxTime ) && 
+          ( iterations < d_sharedState->maxTimestep ) && 
+          ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
      if(dbg_barrier.active())
      {
        for(int i=0;i<4;i++)
@@ -344,7 +340,8 @@ void AMRSimulationController::run()
 }
 
 //______________________________________________________________________
-void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel)
+void
+AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel)
 {
   //amrout << "Start AMRSimulationController::subCycleCompile, level=" << numLevel << '\n';
   // We are on (the fine) level numLevel
@@ -423,7 +420,8 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
   }
 }
 
-void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
+void
+AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
 {
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
   // timestep work, and 1 for the errorEstimate and stableTimestep, where n
@@ -541,7 +539,8 @@ AMRSimulationController::needRecompile(double time, double delt,
   return recompile;
 }
 //______________________________________________________________________
-void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
+void
+AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 {
   double start = Time::currentSeconds();
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
@@ -672,7 +671,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 }
 
 //______________________________________________________________________
-void AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
+void
+AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
 {
   if(d_myworld->myrank() == 0)
     cout << "Compiling taskgraph...\n";
@@ -752,7 +752,8 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   d_sharedState->setNeedAddMaterial(0);
 }
 //______________________________________________________________________
-void AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
+void
+AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
   TAU_PROFILE("AMRSimulationController::executeTimestep()"," ", TAU_USER);
   // If the timestep needs to be
@@ -823,8 +824,9 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
   } while(!success);
 }
 
-void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,
-                                                            SchedulerP& sched)
+void
+AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
+                                                        SchedulerP& sched )
 {
   for (int i = 0; i < grid->numLevels(); i++) {
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
@@ -837,11 +839,12 @@ void AMRSimulationController::scheduleComputeStableTimestep(const GridP& grid,
   sched->addTask(task, d_lb->getPerProcessorPatchSet(grid), d_sharedState->allMaterials());
 }
 
-void AMRSimulationController::coarsenDelt(const ProcessorGroup*,
-                                          const PatchSubset* patches,
-                                          const MaterialSubset* /*matls*/,
-                                          DataWarehouse* /*old_dw*/,
-                                          DataWarehouse* new_dw)
+void
+AMRSimulationController::coarsenDelt( const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* /*matls*/,
+                                      DataWarehouse* /*old_dw*/,
+                                      DataWarehouse* new_dw )
 {
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
