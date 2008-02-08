@@ -1,6 +1,9 @@
 
 #include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
+#include <Core/Thread/Thread.h>
+
 #include <sci_values.h>
 #include <string>
 #include <iostream>
@@ -31,12 +34,12 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
 
   {
     // max_iterations is deprecated now... verify that it isn't used....
-    max_iterations = 0;
-    if( time_ps->get( "max_iterations", max_iterations ) != null ) {
+    int max_iterations = 0;
+    if( time_ps->get( "max_iterations", max_iterations ).get_rep() != NULL ) {
       cerr << "\n";
       cerr << "The 'max_iterations' flag is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
       cerr << "\n";
-      Thread::exitAll(1);      
+      SCIRun::Thread::exitAll(1);      
     }
   }
 
