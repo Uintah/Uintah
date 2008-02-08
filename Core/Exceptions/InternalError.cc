@@ -51,7 +51,7 @@ InternalError::InternalError(const std::string& message, const char* file, int l
 {
   std::ostringstream s;
   s << "An InternalError exception was thrown (" << message << ").\n"
-    << file << ":" << line << "\n";
+    << "Error occurred in file: " << file << " on line " << line << ".\n";
   message_ = s.str();
 
 #ifdef EXCEPTIONS_CRASH
