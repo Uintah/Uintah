@@ -26,6 +26,7 @@
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/RegularColorMap.h>
+
 #if 0
 #undef Exception
 #undef SCI_ASSERTION_LEVEL
@@ -38,14 +39,14 @@
 #undef None
 
 #ifdef Success
-#undef Success
+#  undef Success
 #endif
 
-//CSAFE libraries
 #include <Core/Math/MinMax.h>
 #include <Core/Exceptions/Exception.h>
-//using SCICore::Exceptions::Exception;
-using namespace SCIRun;
+#include <Core/Util/FileUtils.h>
+
+// CSAFE libraries
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -64,23 +65,27 @@ using namespace SCIRun;
 // general
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <iomanip>
+#include   <iostream>
+#include   <string>
+#include   <vector>
+#include   <sstream>
+#include   <iomanip>
 #include <sgi_stl_warnings_on.h>
 
 #include <sci_values.h>
 
 
 using namespace std;
+using namespace SCIRun;
 using namespace Uintah;
 using namespace rtrt;
 
 bool debug = false;
 
-bool write_data = false;
+bool         write_data        = false;
+const string writeDir          = "uintahout";
+const string writeFilenameBase = "spheredata";
+
 
 // don't know if this is the way to do it --bigler
 extern "C" void AuditDefaultAllocator() {
@@ -196,18 +201,17 @@ void usage(const std::string& badarg, const std::string& progname)
     return;
 }
 
-void writeData(float *spheres, int nspheres, int ndata, int tindex) {
-  char buf[200];
-  sprintf(buf, "uintahout/spheredata%03d.raw", tindex);
-  cerr << "Writing out dataset to "<<buf<<"\n";
-  FILE *out = fopen(buf, "wb");
+void
+writeData(float *spheres, int nspheres, int ndata, const string & filename )
+{
+  FILE *out = fopen(filename.c_str(), "wb");
   if (!out) {
-    cerr << "Could not open "<<buf<<" for writing.\n";
+    cerr << "Could not open '" << filename << "' for writing.\n";
     return;
   }
   int nvalues = nspheres * ndata;
   size_t wrote = fwrite(spheres, sizeof(float), nvalues, out);
-  if (wrote != nvalues) {
+  if (wrote != (size_t)nvalues) {
     cerr << "Only wrote out "<<wrote<<" floats instead of "<<nvalues<<"\n";
     return;
   }
@@ -343,10 +347,25 @@ void append_spheres(rtrt::Array1<SphereData> &data_group,
   if (debug) cerr << "End of append_spheres\n";
 } // end append_spheres()
 
-GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
-                                int colordata, int gridcellsize,
-                                int griddepth, RegularColorMap *cmap,
-                                int timestep) {
+GridSpheres *
+create_GridSpheres( rtrt::Array1<SphereData> data_group,
+                    int colordata, int gridcellsize,
+                    int griddepth, RegularColorMap *cmap,
+                    int timestep)
+{
+  char filename[1000];
+
+  sprintf( filename, "%s/%s_t%06d.raw", writeDir.c_str(), writeFilenameBase.c_str(), timestep );
+  cerr << "Writing out dataset to: '" << filename << "'.\n";
+  
+  if( validFile( filename ) ) {
+    printf( "\n\n" );
+    printf( "WARNING: %s already exists... Please move data files out of the\n", filename );
+    printf( "         way so that they are not overwritten.\n" );
+    printf( "         SKIPPING WRITING FILE!\n\n\n" );
+    return NULL;
+  }
+
   // need from the group
   // 1. total number of spheres
   // 2. make sure the numvars is the same
@@ -420,7 +439,7 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
 
   cerr << "Total number of spheres: " << total_spheres << endl;
   if (write_data) {
-    writeData(data, total_spheres, numvars, timestep);
+    writeData( data, total_spheres, numvars, filename );
   }
   return new GridSpheres(data, mins, maxs, total_spheres, numvars, gridcellsize, griddepth, radius, cmap, data_group[0].var_names);  
 }
@@ -738,7 +757,6 @@ public:
     for(int i = 0; i < sphere_data.size(); i++) {
       sphere_data_all->add(sphere_data[i]);
     }
-    cerr << "Read Patch(" << patch->getID() << ")\n";
     amutex->unlock();
     sema->up();
   }
@@ -844,6 +862,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       i++;
       var_include.push_back(argv[i]);
     } else if (s == "-writedata") {
+
+      if( !validDir( writeDir ) ) {
+        printf( "ERROR: The sphere file data directory '%s/' is not valid.\n", writeDir.c_str() );
+        printf( "       Please make sure this directory exists and then run again.\n" );
+        Thread::exitAll( 0 );
+      }
+
       write_data = true;
     } else {
       if(filebase!="") {
@@ -928,7 +953,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     rtrt::Array1<SphereData> sphere_data;
     
     // for all timesteps
-    for(int t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
+    for( int t = time_step_lower; t <= time_step_upper; t += time_step_inc ) {
       //      AuditDefaultAllocator();    
       double time = times[t];
       cerr << "Started timestep t["<<t<<"] = "<<time<<"\n";
@@ -991,21 +1016,23 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       //alltime->add(timeblock2);
       thread_sema->down(rtrt::Min(nworkers,5));
       cout << "Adding timestep.\n";
-      GridSpheres* obj = create_GridSpheres(sphere_data,colordata,
-                                            gridcellsize,griddepth, cmap,
-                                            t);
+      GridSpheres* obj = create_GridSpheres( sphere_data, colordata,
+                                             gridcellsize, griddepth, cmap,
+                                             index[t] );
       thread_sema->up(rtrt::Min(nworkers,5));
       if (total_allocated != total_freed) {
         cerr << "total_allocated != total_freed\n";
         cerr << "total_allocated = "<<total_allocated
              <<", total_freed = "<<total_freed<<endl;
       }
-      display->attach(obj);
-      alltime->add((Object*)obj);
-      prepro_sema->down();
-      Thread *thrd = scinew Thread(scinew Preprocessor(obj,prepro_sema),
-                                   "rtrt::uintahparticle:Preprocessor Thread");
-      thrd->detach();
+      if( obj ) {
+        display->attach(obj);
+        alltime->add((Object*)obj);
+        prepro_sema->down();
+        Thread *thrd = scinew Thread(scinew Preprocessor(obj,prepro_sema),
+                                     "rtrt::uintahparticle:Preprocessor Thread");
+        thrd->detach();
+      }
       //      cerr << "Finished timestep t["<<t<<"]\n";
     } // end timestep
     all->add(alltime);
@@ -1061,18 +1088,4 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   scene->select_shadow_mode( No_Shadows );
   return scene;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
