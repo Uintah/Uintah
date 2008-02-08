@@ -177,7 +177,7 @@ namespace Uintah {
         cerr << ie.message() << "\n";
         cerr << "This most likely means that the simulation UDA that you have specified\n";
         cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
-        cerr << "in <uda>/checkpoints/ for timestep directorys (t######) to verify.\n";
+        cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
         cerr << "\n";
         Thread::exitAll(1);
       }
