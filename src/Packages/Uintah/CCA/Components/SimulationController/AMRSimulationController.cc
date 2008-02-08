@@ -124,7 +124,7 @@ AMRSimulationController::run()
    double start,time[4]={0};
    
    while( ( t < d_timeinfo->maxTime ) && 
-          ( iterations < d_sharedState->maxTimestep ) && 
+          ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
      if(dbg_barrier.active())
      {
