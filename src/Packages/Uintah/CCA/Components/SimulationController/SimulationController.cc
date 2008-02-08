@@ -19,6 +19,7 @@
 #include <Core/OS/Dir.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
+#include <Core/Thread/Thread.h>
 
 #ifndef _WIN32
 #  include <sys/param.h>
@@ -166,7 +167,20 @@ namespace Uintah {
 
       vector<int> indices;
       vector<double> times;
-      d_archive->queryTimesteps(indices, times);
+
+      try {
+        d_archive->queryTimesteps(indices, times);
+      } catch( InternalError & ie ) {
+        cerr << "\n";
+        cerr << "An internal error was caught while trying to restart:\n";
+        cerr << "\n";
+        cerr << ie.message() << "\n";
+        cerr << "This most likely means that the simulation UDA that you have specified\n";
+        cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
+        cerr << "in <uda>/checkpoints/ for timestep directorys (t######) to verify.\n";
+        cerr << "\n";
+        Thread::exitAll(1);
+      }
 
       // find the right time to query the grid
       if (d_restartTimestep == 0) {
