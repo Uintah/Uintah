@@ -37,7 +37,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     int max_iterations = 0;
     if( time_ps->get( "max_iterations", max_iterations ).get_rep() != NULL ) {
       cerr << "\n";
-      cerr << "The 'max_iterations' flag is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
+      cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
       cerr << "\n";
       SCIRun::Thread::exitAll(1);      
     }
