@@ -31,7 +31,7 @@
        <delt_min>           1.0e-12     </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          2.1e-8      </delt_init>
-       <max_iterations>     30000       </max_iterations>
+       <max_Timesteps>     30000       </max_Timesteps>
        <timestep_multiplier>0.5         </timestep_multiplier>
    </Time>    
     <!--____________________________________________________________________-->

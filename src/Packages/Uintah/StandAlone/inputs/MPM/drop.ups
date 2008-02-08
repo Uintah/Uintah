@@ -10,7 +10,7 @@
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <max_iterations>3000000</max_iterations>
+       <max_Timesteps>3000000</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
    <DataArchiver>

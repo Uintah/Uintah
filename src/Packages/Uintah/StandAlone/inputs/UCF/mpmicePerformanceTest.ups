@@ -19,7 +19,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           0.1         </delt_max>
        <delt_init>          0.00001     </delt_init>
-       <max_iterations>     25          </max_iterations>
+       <max_Timesteps>     25          </max_Timesteps>
        <timestep_multiplier>0.4         </timestep_multiplier>
    </Time>
    
