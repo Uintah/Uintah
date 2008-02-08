@@ -97,9 +97,10 @@ DataArchive::queryTimesteps( std::vector<int>& index,
     d_lock.lock();
     if(d_timeData.size() == 0){
       ProblemSpecP ts = d_indexDoc->findBlock("timesteps");
-      if(ts == 0)
-        throw InternalError("DataArchive::queryTimestepstimes:steps node not found in index.xml",
+      if(ts == 0) {
+        throw InternalError("DataArchive::queryTimesteps 'timesteps' node not found in index.xml",
                             __FILE__, __LINE__);
+      }
       for(ProblemSpecP t = ts->getFirstChild(); t != 0; t = t->getNextSibling()){
         if(t->getNodeType() == ProblemSpec::ELEMENT_NODE){
           map<string,string> attributes;
