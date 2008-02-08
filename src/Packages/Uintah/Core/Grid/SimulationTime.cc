@@ -29,11 +29,20 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   if(!time_ps->get("max_wall_time",max_wall_time))
     max_wall_time=0;
 
+  {
+    // max_iterations is deprecated now... verify that it isn't used....
+    max_iterations = 0;
+    if( time_ps->get( "max_iterations", max_iterations ) != null ) {
+      cerr << "\n";
+      cerr << "The 'max_iterations' flag is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
+      cerr << "\n";
+      Thread::exitAll(1);      
+    }
+  }
+
   // use INT_MAX -1, for some reason SGI optimizer doesn't like INT_MAX
   // in the SimulationController while loop
-  max_iterations = INT_MAX-1;
   maxTimestep = INT_MAX-1;
-  time_ps->get( "max_iterations", max_iterations );
   time_ps->get( "max_Timesteps", maxTimestep );
   time_ps->get( "override_restart_delt", override_restart_delt);
 
@@ -43,12 +52,6 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   if (!time_ps->get("end_on_max_time_exactly", end_on_max_time))
     end_on_max_time = false;
 
-  if( max_iterations < 1 )
-    {
-      cerr << "Negative number of time steps is not allowed.\n";
-      cerr << "resetting to INT_MAX time steps\n";
-      max_iterations = INT_MAX-1;
-    }
   if( maxTimestep < 1 )
     {
       cerr << "Negative maxTimesteps is not allowed.\n";

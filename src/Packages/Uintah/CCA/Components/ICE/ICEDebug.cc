@@ -308,7 +308,7 @@ void    ICE::printData_driver( int matl,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
-  int L;
+  int L = -1;
   for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
     if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
       onRightLevel = true;
@@ -410,7 +410,7 @@ void    ICE::printVector_driver(int matl,
   int levelIndx = level->getIndex(); 
   
   bool onRightLevel = false;
-  int L;
+  int L = -1;
   for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
     if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
       onRightLevel = true;
@@ -794,7 +794,7 @@ void    ICE::printStencil( int /*matl*/,
   int levelIndx = level->getIndex();
     
   bool onRightLevel = false;
-  int L;
+  int L = -1;
   for (int l = 0; l<(int) d_dbgLevel.size(); l++) {
     if(levelIndx == d_dbgLevel[l] || d_dbgLevel[l] == -9) {
       onRightLevel = true;
