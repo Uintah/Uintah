@@ -4,10 +4,14 @@
 
   -scene scenes/tstdemo -type nrrdlist demo/t-rad -gridconfig demo/fire-rad.cfg -varnames 7 x y z p.mass p.temperature "Material index" radius -minmax -0.00125 -0.10125 -0.00125 0.10125 0.30125 0.10125 -min 300 -max 2100 -rate 10 -radius_index 6 -repeatlast 15
 
-  demo/t-rad looks like this:
+  demo/t-rad looks like this (a list of nrrd pairs (volume/particles) for each timestep):
 
 /usr/sci/data/CSAFE/DEMO/jp8/temp_CC/temp_CC_0173.nrrd
 /usr/sci/data/CSAFE/DEMO/jp8/radius/littleendian/sd173.raw
+
+  Generate the volume NRRD using uda2nrrd.  You will need some of the
+  information that uda2nrrd prints out for filling in the command line
+  (above) min max, etc.
   
 */
 
@@ -192,7 +196,7 @@ int get_material_nrrd(char * filename,
 
   // Ok, now we loop over the data and get ourselves a colormap.
   float *data = (float*)(nrrd->data);
-  for(int i = 0; i < nrrd->axis[1].size; i++) {
+  for(int i = 0; i < (int)nrrd->axis[1].size; i++) {
     float r,g,b,a,pos;
     r = AIR_CLAMP(0,*data,1); data++;
     g = AIR_CLAMP(0,*data,1); data++;
@@ -259,7 +263,7 @@ int get_alpha_nrrd(char * filename, Array1<AlphaPos> &alphas) {
   
   // Ok, now we loop over the data and get ourselves a colormap.
   float *data = (float*)(nrrd->data);
-  for(int i = 0; i < nrrd->axis[1].size; i++) {
+  for(int i = 0; i < (int)nrrd->axis[1].size; i++) {
     float a, pos;
     a = AIR_CLAMP(0,*data,1); data++;
     pos = AIR_CLAMP(0,*data,1); data++;
@@ -338,11 +342,12 @@ HVolumeVis<float,VMCell<float> > *create_volume_from_nrrd(char *filename,
     cout << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
     cout << "total = " << nz * ny * nz << endl;
     cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
-    for (int i = 0; i<n->dim; i++)
+    for(int i = 0; i < (int)n->dim; i++ ) {
       if (!(AIR_EXISTS_D(n->axis[i].spacing))) {
         cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
         n->axis[i].spacing = 1;
       }
+    }
     data.resize(nx,ny,nz); // resize the bricked data
     if (!use_global_minmax) {
       // get the physical bounds
@@ -471,7 +476,7 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
     cerr << "Num Variables found in " << buf << " is " << numvars << endl;
     mins = (float*)malloc(numvars*sizeof(float));
     maxs = (float*)malloc(numvars*sizeof(float));
-    if (numvars != mins_vec.size() || numvars != maxs_vec.size()) {
+    if (numvars != (int)mins_vec.size() || numvars != (int)maxs_vec.size()) {
       cerr << "There was a problem in read_spheres\n";
       return 0;
     }
@@ -544,8 +549,14 @@ GridSpheres* read_spheres(char* spherefile, int datanum,
 
   // make sure the data file is the correct size
   if (found_header) {
-    if (nspheres != (int)(statbuf.st_size/(numvars*sizeof(float)))) {
-      cerr << "Size of file does not match that for " << nspheres << " spheres.\nIf the number of variables is not 3 please specify -numvars [number] on the command line\n";
+
+    // For whatever reason, if entries_in_file isn't a double, then it rounds... sigh.
+    double entries_in_file = ((double)statbuf.st_size) / ( numvars * sizeof(float) );
+
+    if( nspheres != entries_in_file ) {
+      cerr.precision(20);
+      cerr << "Size of file (" << entries_in_file << ") does not match that for " << nspheres 
+           << " spheres.\nIf the number of variables is not 3 please specify -numvars [number] on the command line\n";
       exit(1);
     }
   }
