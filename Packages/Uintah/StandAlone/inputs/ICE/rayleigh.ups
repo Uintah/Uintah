@@ -20,7 +20,7 @@
        <delt_max>           0.00025    </delt_max> <!--- you MUST manually compute what this should be-->
        <delt_init>          1.0e-5     </delt_init>
        <max_delt_increase>  1.0        </max_delt_increase>
-       <max_iterations>      10000       </max_iterations>
+       <max_Timesteps>      10000       </max_Timesteps>
        <timestep_multiplier>1.0        </timestep_multiplier>
    </Time>
    

@@ -33,7 +33,7 @@
      <initTime>0.0</initTime>
      <delt_min>5.e-8</delt_min>
      <delt_max>5.e-8</delt_max>
-     <max_iterations>     100          </max_iterations>
+     <max_Timesteps>     100          </max_Timesteps>
      <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 

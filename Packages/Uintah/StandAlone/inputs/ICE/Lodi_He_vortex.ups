@@ -18,7 +18,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-      <!-- <max_iterations>  10 </max_iterations> -->
+      <!-- <max_Timesteps>  10 </max_Timesteps> -->
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->

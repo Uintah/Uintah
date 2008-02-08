@@ -11,7 +11,7 @@
 
    <Time>
        <maxTime>0.01</maxTime>
-        <max_iterations> 10 </max_iterations>
+        <max_Timesteps> 10 </max_Timesteps>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>

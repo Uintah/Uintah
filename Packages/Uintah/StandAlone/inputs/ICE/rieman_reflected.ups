@@ -29,7 +29,7 @@
        <delt_init>          1.0e-6      </delt_init>
        <max_delt_increase>  1.0         </max_delt_increase>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <!--<max_iterations>     2         </max_iterations>-->
+       <!--<max_Timesteps>     2         </max_Timesteps>-->
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
