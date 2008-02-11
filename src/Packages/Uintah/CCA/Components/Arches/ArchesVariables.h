@@ -138,6 +138,10 @@ namespace Uintah {
     SFCYVariable<double> vFmms;
     SFCZVariable<double> wFmms;
 
+    //rate Variables for species transport
+    CCVariable<double> co2Rate;
+    CCVariable<double> so2Rate;
+
     }; // End class ArchesVariables
    
 } // End namespace Uintah
