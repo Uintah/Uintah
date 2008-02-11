@@ -89,7 +89,8 @@ class DataArchive;
       void postGridSetup( GridP& grid, double& t);
 
       //! adjust delt based on timeinfo and other parameters
-      void adjustDelT(double& delt, double prev_delt, int iterations, double t);
+      //    'first' is whether this is the first time adjustDelT is called.
+      void adjustDelT(double& delt, double prev_delt, bool first, double t);
       void initSimulationStatsVars ( void );
       void printSimulationStats    ( int timestep, double delt, double time );
 

@@ -153,16 +153,14 @@ AMRSimulationController::run()
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
      int totalFine=1;
-     if (!d_sharedState->isLockstepAMR())
+     if (!d_sharedState->isLockstepAMR()) {
        for(int i=1;i<currentGrid->numLevels();i++) {
          totalFine *= currentGrid->getLevel(i)->getRefinementRatioMaxDim();
        }
-     
-     if (iterations != 0) {
-       // will be set in SimCont::postGridSetup
-       d_sharedState->d_prev_delt = delt;
      }
-     iterations ++;
+     
+     d_sharedState->d_prev_delt = delt;
+     iterations++;
  
      // get delt and adjust it
      delt_vartype delt_var;
@@ -172,7 +170,7 @@ AMRSimulationController::run()
      delt = delt_var;
      
      // delt adjusted based on timeinfo parameters
-     adjustDelT(delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), t);
+     adjustDelT(delt, d_sharedState->d_prev_delt, first, t);
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
      // printSimulationStats( d_sharedState, delt, t );
