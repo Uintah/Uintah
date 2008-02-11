@@ -43,7 +43,7 @@ POSSIBLE REVISIONS
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-
+  class ExtraScalarSolver;
 class MixingModel {
 
 public:
@@ -91,8 +91,8 @@ public:
       virtual bool getSulfurChem() const = 0;
       virtual bool getSootPrecursors() const = 0;
       virtual bool getTabulatedSoot() const = 0;
-
-
+      virtual void setCalcExtraScalars(bool calcExtraScalars) = 0; 
+      virtual void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) = 0;  
 
 protected :
 
