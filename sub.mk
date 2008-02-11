@@ -28,6 +28,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/ExtraScalarSrc.cc \
         $(SRCDIR)/ExtraScalarSrcFactory.cc \
         $(SRCDIR)/ZeroExtraScalarSrc.cc \
+	$(SRCDIR)/CO2RateSrc.cc \
         $(SRCDIR)/SmagorinskyModel.cc \
         $(SRCDIR)/ScaleSimilarityModel.cc \
         $(SRCDIR)/IncDynamicProcedure.cc \
@@ -36,7 +37,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/OdtClosure.cc \
         $(SRCDIR)/OdtData.cc \
         $(SRCDIR)/Source.cc \
-        $(SRCDIR)/TurbulenceModel.cc
+        $(SRCDIR)/TurbulenceModel.cc 
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc $(SRCDIR)/Filter.cc

@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrcFactory.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
 #include <Packages/Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
+#include <Packages/Uintah/CCA/Components/Arches/CO2RateSrc.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
@@ -22,8 +23,12 @@ ExtraScalarSrc* ExtraScalarSrcFactory::create(const ArchesLabel* label,
                                               const VarLabel* d_src_label,
                                               const std::string d_src_name)
 {
-      if (d_src_name == "zero_src") 
+      if (d_src_name == "zero_src"){ 
         return(scinew ZeroExtraScalarSrc(label, MAlb, d_src_label));
+      }
+      else if (d_src_name == "co2_rate_src"){
+        return(scinew CO2RateSrc(label, MAlb, d_src_label));
+      }
       else {
         throw ProblemSetupException("Unknown extra scalar source " +
                                     d_src_name, __FILE__, __LINE__);

@@ -453,6 +453,10 @@ namespace Uintah {
       const VarLabel* d_enthalpyEfficiencyLabel;
       const VarLabel* d_totalRadSrcLabel;
       const VarLabel* d_normTotalRadSrcLabel;
+      const VarLabel* d_CO2FlowRateESLabel;
+      const VarLabel* d_carbonEfficiencyESLabel;
+
+ 
 
       //mms force term labels
       const VarLabel* d_uFmmsLabel;
@@ -460,6 +464,10 @@ namespace Uintah {
       const VarLabel* d_wFmmsLabel;
       //Helper variable
       const VarLabel* d_zerosrcVarLabel;
+
+      //rate Labels
+      const VarLabel* d_co2RateLabel;
+      const VarLabel* d_so2RateLabel;
 
     }; // End class ArchesLabel
 } // End namespace Uintah

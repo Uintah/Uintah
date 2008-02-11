@@ -80,6 +80,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
   d_discretize = scinew Discretization();
   
   db->require("name",d_scalar_name);
+  
   d_scalar_label = VarLabel::create(d_scalar_name,
                                     CCVariable<double>::getTypeDescription());
   d_scalar_temp_label = VarLabel::create(d_scalar_name+"Temp",
@@ -95,7 +96,14 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("diffusion",d_scalar_diffusion,true);
   db->getWithDefault("density_weighted",d_scalar_density_weighted,true);
   db->getWithDefault("useforDensity",d_scalar_useforden,false);
-
+  db->getWithDefault("carbon_balance", d_carbon_balance, false);
+  //I am anticipating that we might have several source terms that 
+  // could be read from the table.  For a specific scalar, one would 
+  // have to associate the source term variable from the table to this
+  // precomputed table source name and add "if" statements accordingly in 
+  // explicitsolver.cc and properties.cc (and maybe elsewhere)
+  db->getWithDefault("PrecompTabSrcName", d_precompTabSrcName, "null");
+  
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
     if (conv_scheme == "central-upwind") d_conv_scheme = 0;

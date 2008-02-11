@@ -59,6 +59,15 @@ public:
                                    const PatchSet* patches,
 				   const MaterialSet* matls,
 				   const TimeIntegratorLabel* timelabels);
+      
+      inline const string getTableName(){
+	      return d_tableName;
+      }
+
+      inline void setTableIndex(int tableIndex){
+	      d_tableIndex = tableIndex;
+      }
+
 protected:
 
 private:
@@ -71,6 +80,9 @@ private:
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
 			     const TimeIntegratorLabel* timelabels);
+
+      string d_tableName;
+      int d_tableIndex; 
 
 }; // End class ZeroExtraScalarSrc
 } // End namespace Uintah

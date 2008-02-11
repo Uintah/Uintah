@@ -513,6 +513,8 @@ Arches::sched_paramInit(const LevelP& level,
       for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
         tsk->computes(d_extraScalars[i]->getScalarLabel());
 
+    tsk->computes(d_lab->d_co2RateLabel);	
+
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -567,6 +569,10 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
+    
+    CCVariable<double> co2Rate;
+    new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+    co2Rate.initialize(0.0);
 
     // Variables for mms analysis
     if (d_doMMS){

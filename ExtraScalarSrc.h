@@ -61,6 +61,10 @@ public:
                                            const PatchSet* patches,
 					   const MaterialSet* matls,
 				     const TimeIntegratorLabel* timelabels) = 0;
+
+      virtual inline const string getTableName() = 0;
+      virtual inline void setTableIndex(int tableIndex) = 0;  
+					     
 protected:
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;

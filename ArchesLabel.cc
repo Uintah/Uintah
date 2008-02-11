@@ -695,9 +695,13 @@ ArchesLabel::ArchesLabel()
   // carbon balance labels
   d_CO2FlowRateLabel = VarLabel::create("CO2FlowRate",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
+  d_CO2FlowRateESLabel = VarLabel::create("CO2FlowRateES",
+     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_SO2FlowRateLabel = VarLabel::create("SO2FlowRate",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_carbonEfficiencyLabel = VarLabel::create("carbonEfficiency",
+	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
+  d_carbonEfficiencyESLabel = VarLabel::create("carbonEfficiencyES",
 	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
   d_sulfurEfficiencyLabel = VarLabel::create("sulfurEfficiency",
 	  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription()); 
@@ -725,6 +729,13 @@ ArchesLabel::ArchesLabel()
   //A helper variable 
   d_zerosrcVarLabel = VarLabel::create("zerosrcVar", 
 			       CCVariable<double>::getTypeDescription() );
+
+  //rate Labels ~ may require a more elegant solution later?
+  d_co2RateLabel = VarLabel::create("co2Rate", 
+  				    CCVariable<double>::getTypeDescription());
+  d_so2RateLabel = VarLabel::create("so2Rate", 
+  				    CCVariable<double>::getTypeDescription());
+  
 
 
 }
@@ -994,6 +1005,8 @@ ArchesLabel::~ArchesLabel()
 
   VarLabel::destroy(d_zerosrcVarLabel);
 
+  VarLabel::destroy(d_co2RateLabel);
+  VarLabel::destroy(d_so2RateLabel);
 
   VarLabel::destroy(d_ummsLnErrorLabel);
   VarLabel::destroy(d_totalummsLnErrorLabel);
