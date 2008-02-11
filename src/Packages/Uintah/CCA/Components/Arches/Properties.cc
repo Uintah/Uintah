@@ -93,10 +93,13 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                d_calcVariance);
     d_reactingFlow = false;
   }
-  else if (mixModel == "NewStaticMixingTable")
+  else if (mixModel == "NewStaticMixingTable"){
     d_mixingModel = scinew NewStaticMixingTable(d_calcReactingScalar,
                                                 d_calcEnthalpy,
                                                 d_calcVariance);
+    d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
+    d_mixingModel->setExtraScalars(d_extraScalars);
+  }
   else if (mixModel == "StandardTable")
     d_mixingModel = scinew StandardTable(d_calcReactingScalar,
                                          d_calcEnthalpy,
@@ -107,7 +110,8 @@ Properties::problemSetup(const ProblemSpecP& params)
 						  d_calcVariance);
      d_reactingFlow = false;
   }
-  
+
+
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
 	|| mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
 	|| mixModel == "meanMixingModel" )
@@ -125,6 +129,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   }
 
 
+  d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
   d_co_output = d_mixingModel->getCOOutput();
   d_sulfur_chem = d_mixingModel->getSulfurChem();
   d_soot_precursors = d_mixingModel->getSootPrecursors();
@@ -325,6 +330,9 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->computes(d_lab->d_absorpINLabel);
       tsk->computes(d_lab->d_sootFVINLabel);
     }
+    tsk->modifies(d_lab->d_co2RateLabel);
+    //tsk->modifies(d_lab->d_so2RateLabel);
+
   }
   else {
     tsk->modifies(d_lab->d_drhodfCPLabel);
@@ -377,6 +385,11 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->modifies(d_lab->d_absorpINLabel);
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
+
+    tsk->modifies(d_lab->d_co2RateLabel);
+    //tsk->modifies(d_lab->d_so2RateLabel);
+  
+    //tsk->modifies(d_lab->d_tabReactionRateLabel);
   }
 
   if (d_MAlab) {
@@ -392,7 +405,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->requires(Task::NewDW, d_extraScalars->at(i)->getScalarLabel(), 
       		    Ghost::None, Arches::ZEROGHOSTCELLS);
     } 
-  
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -487,6 +500,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
+
+    CCVariable<double> co2Rate;
+    CCVariable<double> so2Rate;
 
     bool foundExtrascalar = false;
     bool usemeforden = false;
@@ -647,6 +663,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			         matlIndex, patch);
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
+      new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+      //new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+      //new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+
     }
     else {
       new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
@@ -713,8 +733,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
 
-    }
+      new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+      //new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
 
+    }
     drhodf.initialize(0.0);
     if (d_reactingFlow) {
       temperature.initialize(0.0); 
@@ -764,6 +786,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       if (!d_DORadiationCalc)
         absorption.initialize(0.0);
       sootFV.initialize(0.0);
+    }
+
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)){
+    //co2Rate.initialize(0.0);
+    //so2Rate.initialize(0.0);
     }
 
     if (d_MAlab && !initialize) {
@@ -944,6 +971,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  }
 	  // density underrelaxation is bogus here and has been removed
 	  new_density[currCell] = local_den;
+
+	  //write the rates:
+	  co2Rate[currCell] = outStream.getCO2RATE();
+	  //so2Rate[currCell] = outStream.getSO2RATE();
+	   
 
 	}
       }
