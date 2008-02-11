@@ -137,7 +137,23 @@ public:
 	//warning!  This assumes (for now) that only one scalar
 	//           can be used from all Extrascalars.  
       }
+      inline const string getPrecompTabSrcName(){
+	//if true, will use this scalar to compute rho
+	return d_precompTabSrcName;
+	//warning!  This assumes (for now) that only one scalar
+	//           can be used from all Extrascalars.  
+      }
+
+      inline std::vector<ExtraScalarSrc*> getExtraScalarSources() {
+	      return d_extraScalarSources;
+      }
+
+      inline const bool doCarbonBalance(){
+    	      return d_carbon_balance;
+      }
+
 protected:
+
 
 private:
 
@@ -214,11 +230,13 @@ private:
       const VarLabel* d_scalar_coef_label;
       const VarLabel* d_scalar_diff_coef_label;
       const VarLabel* d_scalar_nonlin_src_label;
+      string d_precompTabSrcName;
 
       bool d_calcExtraScalarSrcs;
       ExtraScalarSrc* d_extraScalarSrc;
       vector<ExtraScalarSrc*> d_extraScalarSources;
-
+      vector<string> d_tabSrcNames;
+      bool d_carbon_balance; 
 
 }; // End class ExtraScalarSolver
 } // End namespace Uintah
