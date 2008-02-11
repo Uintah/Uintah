@@ -5,6 +5,9 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <iostream>
 #include <math.h>
 #include <Core/Math/MiscMath.h>
@@ -184,9 +187,9 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_sootFV=tableLookUp(mixFrac, mixFracVars, current_heat_loss, soot_index);
 
   outStream.d_heatLoss = current_heat_loss;
+  outStream.d_co2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2rate_index);
 
 }
-
 
 
 double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double current_heat_loss, int var_index)
@@ -398,6 +401,10 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   c2h2_index = -1;
   ch4_index = -1;
   soot_index = -1;
+
+  co2rate_index = -1;
+  so2rate_index = -1;
+
   for (int ii = 0; ii < d_varscount; ii++) {
     fd >> vars_names[ii];
     if(vars_names[ii]==  "density")
@@ -442,7 +449,8 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     else if(vars_names[ii]== "HS2")	hs2_index 	 = ii;
     else if(vars_names[ii]== "H2S2")	h2s2_index	 = ii;
 
-
+    //else if(vars_names[ii]== "rate_CO2") co2rate_index   = ii;
+    else if(vars_names[ii]== "rate_SO2") so2rate_index   = ii;
 
     else if(vars_names[ii]== "CO")
 	    co_index = ii;
@@ -452,8 +460,31 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
 	     ch4_index = ii;
     else if(vars_names[ii]== "sootFV")
 	     soot_index = ii;
+
+    if (d_calcExtraScalars){
+	  //This is going to be very source term specific.  
+	  //It might be nice to make this more generic in the future.
+
+          std::vector<ExtraScalarSolver*>::iterator iss; 
+	  for ( iss=d_extraScalars->begin(); iss!=d_extraScalars->end(); ++iss ){
+
+                  std::vector<ExtraScalarSrc*> extraScalarSources = (*iss)->getExtraScalarSources();
+		  std::vector<ExtraScalarSrc*>::iterator j;
+		  for (j=extraScalarSources.begin(); j!=extraScalarSources.end(); ++j ){
+		  	  const string myname = (*j)->getTableName();
+ 			  if (vars_names[ii]==myname){
+				(*j)->setTableIndex(ii);
+			  	//there has to be a better way to do this!
+				if ( myname == "rate_CO2" )
+					co2rate_index = ii;
+			  }
+		  }
+	  }
+    }
+
     cout<<vars_names[ii]<<endl;
   }
+  
   if ((F_index == -1)||(Rho_index == -1)) 
     throw InvalidValue("No mixture fraction or density found in table "
                        + inputfile, __FILE__, __LINE__);
@@ -557,6 +588,9 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   cout << "C2H2 index is " << c2h2_index << endl;
   cout << "CH4 index is "  << ch4_index  << endl;
   cout << "sootFV index is "  << soot_index  << endl;
+
+  cout << "CO2 rxn rate index is " << co2rate_index << endl;
+  cout << "SO2 rxn rate index is " << so2rate_index << endl;
 
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);
