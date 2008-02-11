@@ -59,6 +59,20 @@ public:
                                    const PatchSet* patches,
 				   const MaterialSet* matls,
 				   const TimeIntegratorLabel* timelabels);
+
+      inline const string getTableName(){
+	      return d_tableName;
+      }
+/*
+      inline const int getTableIndex(){
+	      return d_tableIndex;
+      }
+*/
+      inline void setTableIndex(int tableIndex){
+	      d_tableIndex = tableIndex;
+      }
+
+
 protected:
 
 private:
@@ -72,6 +86,8 @@ private:
 			     DataWarehouse* new_dw,
 			     const TimeIntegratorLabel* timelabels);
 
+	string	d_tableName;
+	int d_tableIndex;
 }; // End class CO2RateSrc
 } // End namespace Uintah
 

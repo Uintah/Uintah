@@ -208,6 +208,9 @@ public:
       inline bool getCarbonBalance() const{
 	return d_carbon_balance;
 	  }
+      inline bool getCarbonBalanceES() const{
+	return d_carbon_balance_es;
+	  }
 	  
 	  inline bool getSulfurBalance() const{
 	return d_sulfur_balance;
@@ -834,8 +837,9 @@ private:
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
 
-      bool d_carbon_balance;
-	  bool d_sulfur_balance;
+      bool d_carbon_balance;    //Use table value of CO2
+      bool d_carbon_balance_es; //Extra scalar for carbon balance
+      bool d_sulfur_balance;
       string d_mms;
       double d_airDensity, d_heDensity;
       Vector d_gravity;

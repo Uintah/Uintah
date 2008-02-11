@@ -37,6 +37,17 @@ CO2RateSrc::~CO2RateSrc()
 void 
 CO2RateSrc::problemSetup(const ProblemSpecP& params)
 {
+
+	ProblemSpecP db = params;
+	//Get the name of what to look for in the table
+	// we "require" this because this source is specifically 
+	// designed for a table-read source term.
+	db->require("tableName", d_tableName);
+
+	//Initialize
+ 	setTableIndex(-1);
+
+
 }
 //****************************************************************************
 // Schedule source computation
@@ -94,7 +105,6 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-	  
           scalarNonlinSrc[currCell] += CO2rate[currCell];
         }
       }
