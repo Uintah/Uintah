@@ -146,6 +146,10 @@ namespace Uintah {
       inline double getHS2()     const { return d_hs2;  }
       inline double getH2S2()    const { return d_h2s2; }
 
+      inline double getCO2RATE() const { 
+	      return d_co2rate; }
+      inline double getSO2RATE() const { return d_so2rate; }
+
 
       inline double getCO() const {
         return d_co;
@@ -255,6 +259,9 @@ namespace Uintah {
       double d_tnine;
       double d_qrg;
       double d_qrs;
+
+      double d_co2rate;
+      double d_so2rate;
       int d_CO2index; //Set to 0 in constructor.
                       //Value changed in ***MixingModel::computeProps
       int d_H2Oindex; //Set to 0 in constructor.
