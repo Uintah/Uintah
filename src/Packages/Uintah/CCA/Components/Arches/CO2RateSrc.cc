@@ -105,7 +105,7 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-          scalarNonlinSrc[currCell] += CO2rate[currCell];
+          scalarNonlinSrc[currCell] += CO2rate[currCell]*44000;
         }
       }
     }
