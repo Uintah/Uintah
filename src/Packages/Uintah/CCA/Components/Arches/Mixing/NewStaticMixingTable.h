@@ -44,7 +44,8 @@ POSSIBLE REVISIONS
 
 namespace Uintah {
   class InletStream;
-  
+  class ExtraScalarSolver;
+   
 class NewStaticMixingTable: public MixingModel{
 
 public:
@@ -110,6 +111,14 @@ public:
 	return d_f_stoich;
       }
 
+      inline void setCalcExtraScalars(bool calcExtraScalars) {
+        d_calcExtraScalars=calcExtraScalars;
+      }
+
+      inline void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) {
+         d_extraScalars = extraScalars;
+      }
+
 protected :
 
 private:
@@ -151,6 +160,7 @@ private:
       int h2so_index, hosho_index, hs2_index, h2s2_index;
 
       int co_index, ch4_index, c2h2_index;
+      int co2rate_index, so2rate_index;
       bool d_co_output;
       bool d_sulfur_chem;
       bool d_soot_precursors;
@@ -169,6 +179,9 @@ private:
       int T_index, Rho_index, Cp_index, Hs_index;
       double d_H_fuel, d_H_air;
       double d_f_stoich, d_carbon_fuel, d_carbon_air;
+      bool d_calcExtraScalars;
+      std::vector<ExtraScalarSolver*>* d_extraScalars;
+
 }; // end class NewStaticMixingTable
 
 } // end namespace Uintah
