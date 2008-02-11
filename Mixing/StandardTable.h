@@ -48,6 +48,7 @@ namespace Uintah {
   class InletStream;
   class TableInterface;
   class VarLabel;
+  class ExtraScalarSolver;
   
 class StandardTable: public MixingModel{
 
@@ -115,6 +116,14 @@ public:
 	return 0.0;
       }
 
+      inline void setCalcExtraScalars(bool calcExtraScalars) {
+        d_calcExtraScalars=calcExtraScalars;
+      }
+
+      inline void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) {
+         d_extraScalars = extraScalars;
+      }
+
 protected :
 
 private:
@@ -150,6 +159,10 @@ private:
       VarLabel* label;
     };
     std::vector<TableValue*> tablevalues;
+    bool d_calcExtraScalars;
+    std::vector<ExtraScalarSolver*>* d_extraScalars;
+
+
 }; // end class StandardTable
 
 } // end namespace Uintah
