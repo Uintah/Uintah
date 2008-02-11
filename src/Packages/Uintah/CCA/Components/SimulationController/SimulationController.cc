@@ -330,22 +330,21 @@ namespace Uintah {
 
   }
   
-  void SimulationController::adjustDelT(double& delt, double prev_delt, int iterations, double t) 
+  void SimulationController::adjustDelT(double& delt, double prev_delt, bool first, double t) 
   {
 #if 0
-    cout << "maxTime = " << d_timeinfo->maxTime << endl;
-    cout << "initTime = " << d_timeinfo->initTime << endl;
-    cout << "delt_min = " << d_timeinfo->delt_min << endl;
-    cout << "delt_max = " << d_timeinfo->delt_max << endl;
-    cout << "timestep_multiplier = " << d_timeinfo->delt_factor << endl;
-    cout << "delt_init = " << d_timeinfo->max_initial_delt << endl;
-    cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << endl;
-    cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << endl;
-    cout << "iterations = " << iterations << endl;
-    cout << "delt = " << delt << endl;
-    cout << "prev_delt = " << prev_delt << endl;
+    cout << "maxTime = " << d_timeinfo->maxTime << "\n";
+    cout << "initTime = " << d_timeinfo->initTime << "\n";
+    cout << "delt_min = " << d_timeinfo->delt_min << "\n";
+    cout << "delt_max = " << d_timeinfo->delt_max << "\n";
+    cout << "timestep_multiplier = " << d_timeinfo->delt_factor << "\n";
+    cout << "delt_init = " << d_timeinfo->max_initial_delt << "\n";
+    cout << "initial_delt_range = " << d_timeinfo->initial_delt_range << "\n";
+    cout << "max_delt_increase = " << d_timeinfo->max_delt_increase << "\n";
+    cout << "first = " << first << "\n";
+    cout << "delt = " << delt << "\n";
+    cout << "prev_delt = " << prev_delt << "\n";
 #endif
-
 
     delt *= d_timeinfo->delt_factor;
       
@@ -355,30 +354,32 @@ namespace Uintah {
              << " to minimum: " << d_timeinfo->delt_min << '\n';
       delt = d_timeinfo->delt_min;
     }
-    if(iterations > 0 && d_timeinfo->max_delt_increase < 1.e90
-       && delt > (1+d_timeinfo->max_delt_increase)*prev_delt){
+    if( !first && 
+        d_timeinfo->max_delt_increase < 1.e90 &&
+        delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
       if(d_myworld->myrank() == 0)
-        cerr << "WARNING: lowering delt from " << delt 
+        cerr << "WARNING (a): lowering delt from " << delt 
              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
              << " (maximum increase of " << d_timeinfo->max_delt_increase
              << ")\n";
       delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
     }
-    if(t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt){
+    if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
       if(d_myworld->myrank() == 0)
-        cerr << "WARNING: lowering delt from " << delt 
+        cerr << "WARNING (b): lowering delt from " << delt 
              << " to maximum: " << d_timeinfo->max_initial_delt
              << " (for initial timesteps)\n";
       delt = d_timeinfo->max_initial_delt;
     }
-    if(delt > d_timeinfo->delt_max){
-      if(d_myworld->myrank() == 0)
-        cerr << "WARNING: lowering delt from " << delt 
+    if( delt > d_timeinfo->delt_max ) {
+      if(d_myworld->myrank() == 0) {
+        cerr << "WARNING (c): lowering delt from " << delt 
              << " to maximum: " << d_timeinfo->delt_max << '\n';
+      }
       delt = d_timeinfo->delt_max;
     }
     // clamp timestep to output/checkpoint
-    if (d_timeinfo->timestep_clamping && d_output) {
+    if( d_timeinfo->timestep_clamping && d_output ) {
       double orig_delt = delt;
       double nextOutput = d_output->getNextOutputTime();
       double nextCheckpoint = d_output->getNextCheckpointTime();
@@ -390,7 +391,7 @@ namespace Uintah {
       }
       if (delt != orig_delt) {
         if(d_myworld->myrank() == 0)
-          cerr << "WARNING: lowering delt from " << orig_delt 
+          cerr << "WARNING (d): lowering delt from " << orig_delt 
                << " to " << delt
                << " to line up with output/checkpoint time\n";
       }
@@ -502,7 +503,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
     *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
 #endif
-    *mallocPerProcStream << endl;
+    *mallocPerProcStream << "\n";
     if ( mallocPerProcStream != &dbg ) {
       delete mallocPerProcStream;
     }
@@ -676,7 +677,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
     //mean = d_sumOfWallTimes / (d_n-2);
     //         ofstream timefile("avg_elapsed_wallTime.txt");
-    //         timefile << mean << " +- " << stdDev << endl;
+    //         timefile << mean << " +- " << stdDev << "\n";
   }
   */
   
@@ -685,7 +686,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     if (istats.active() && d_myworld->size() > 1) {
       for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
         if (toReduce[i] > 0)
-          istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << endl;
+          istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
       }
     } 
   
@@ -724,7 +725,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
     
 #endif
-    dbg << message.str() << endl;
+    dbg << message.str() << "\n";
     dbg.flush();
     cout.flush();
 
@@ -734,11 +735,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
           if (maxReduce[i].val > 0)
             stats << statLabels[i] << " avg: " << avgReduce[i] << " max: " << maxReduce[i].val << " maxloc:" << maxReduce[i].loc
-                  << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << endl;
+                  << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << "\n";
         }
       }
       if(d_n>2)
-        stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  endl;
+        stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
     } 
 
 
@@ -780,7 +781,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
       }
       
-      dbgTime << "to calculate." << endl;
+      dbgTime << "to calculate." << "\n";
     }
  
     d_prevWallTime = d_wallTime;
