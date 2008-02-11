@@ -148,7 +148,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   outStream.d_cp=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Cp_index);  
   outStream.d_enthalpy=adiab_enthalpy;
   outStream.d_co2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2_index);  
-  outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);  
+  outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);
 
   if (d_sulfur_chem) {
     outStream.d_h2s=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2s_index);
@@ -187,8 +187,10 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_sootFV=tableLookUp(mixFrac, mixFracVars, current_heat_loss, soot_index);
 
   outStream.d_heatLoss = current_heat_loss;
-  outStream.d_co2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2rate_index);
-
+  //need a better way to do this:
+  if (co2rate_index != -1){
+  	outStream.d_co2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2rate_index);
+	}
 }
 
 
