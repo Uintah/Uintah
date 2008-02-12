@@ -45,14 +45,14 @@ if test ! -x "sus"; then
    exit
 fi
 
-#Set the default TestData directory
+# Set the default TestData directory
 DIR=dbg
 
-#Set up MPI 
+# Set up MPI 
 MPI=''
 MPI_RUN="no"
 
-#Set the default inputs directory
+# Set the default inputs directory
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
 if test ! -d "$INPUTS"; then
@@ -65,7 +65,7 @@ fi
 
 input_file=
 
-#Set the test results directory
+# Set the test results directory
 results=TestResults
 if test ! -d $results; then
     echo
@@ -198,7 +198,7 @@ if test $# = 0; then
 fi
 
 echo
-echo "Using the $DIR gold standard directory."
+echo "Using the >> $DIR << gold standard directory."
 
 # Set up the various test cases
 
@@ -215,7 +215,7 @@ arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="jp8cyl"
 examples_test_cases="poisson1 poisson2"
 
-#IRIX tests
+# IRIX tests
 OS=`uname -s`
 if test $OS = "IRIX64"; then
   mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz testConvertMPMICEAdd"
@@ -255,6 +255,9 @@ num_proc () {
 }
 
 run_test () {
+
+    echo; date
+
     cd $results
     cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
     input_file=../$n.ups.rt
@@ -301,14 +304,15 @@ run_test () {
 compare_results () {
     cd $results
     
-    #Inside of the component directory find the location of the 
-    #gold standard uda and pass it to compare_uda
+    # Inside of the component directory find the location of the 
+    # gold standard uda and pass it to compare_uda
     
     uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
     goldStandard=`find $test_dir/$DIR/$CASE -maxdepth 3 -type d -name $uda_tmp`
     echo "Comparing $uda results against $goldStandard"
     
-    ../compare_uda $goldStandard $uda &> $n.compare
+    echo "../compare_uda $goldStandard $uda" > $n.compare 2>&1
+    ../compare_uda $goldStandard $uda >> $n.compare 2>&1
     
     compare=`grep "passed" $n.compare`
     if test -n "$compare"; then
@@ -348,16 +352,13 @@ run_restart () {
 }
 
 mpm_test () {
-    echo
-    echo "MPM Tests: '$CASE'"
-    echo 
-    echo "  Testing $mpm_test_cases"
+    echo; echo "Testing $mpm_test_cases"
     
     for n in $mpm_test_cases; do
         run_test
         uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
         compare_results 
-       run_restart
+        run_restart
     done
 }
 
@@ -544,6 +545,7 @@ fi
 
 echo
 echo "Running tests using gold standard:  $test_dir"
+echo "Starting tests at: `date`"
 echo
 
 if test "$do_mpm" -eq 1; then
@@ -611,3 +613,5 @@ fi
 if test "$do_remove" -eq 1; then
     REMOVE
 fi
+
+echo "Ending tests at:   `date`"
