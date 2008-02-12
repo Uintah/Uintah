@@ -12,7 +12,15 @@ echo "*************************"
 echo
 echo "Checking input files"
 echo
-diff -B -b $TEST_UDADIR/input.xml $COMPARE_UDADIR/input.xml
+
+if [ -a $COMPARE_UDADIR/input.xml.orig ]; then
+  echo "comparing input.xml.orig"
+  sdiff -Ws $TEST_UDADIR/input.xml.orig $COMPARE_UDADIR/input.xml.orig
+else
+  echo "comparing input.xml"
+  sdiff -Ws $TEST_UDADIR/input.xml $COMPARE_UDADIR/input.xml
+fi
+
 if [ $? != "0" ]; then
     echo
     echo "  Input files differ."
