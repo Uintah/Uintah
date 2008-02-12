@@ -431,8 +431,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
        
         double surfArea = computeSurfaceArea(rhoGradVector, dx); 
         double Tsurf = 850.0;  // initial guess for the surface temperature.
-        if(Tsurf < Tmin || Tsurf > Tmax)
-          Tsurf = (Tmin+Tmax)/2.0;
         
         double burnedMass = computeBurnedMass(Tzero, Tsurf,  productPress, solidSp_vol[c], 
                                               surfArea, delT, solidMass[c]);
