@@ -174,7 +174,7 @@ if [ "$force" != "-f" -a "$do_uda" = "false" ]; then
   if [ $yesno = "y" -o $yesno = "yes" ]; then
     do_input="true"
     echo "Replacing $testname input file"
-    cp $replacement_dir/$testname/*.uda/input.xml $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
+    cp $replacement_dir/$testname/*.uda/input*.xml $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
   fi
 fi
 
