@@ -22,18 +22,20 @@ def which_tests (test):
     return test[-1]
 def nullCallback (test, susdir, inputsdir, compare_root, mode, max_parallelism):
     pass
-
+    
+#______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
+ 
   if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
     print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <mode> " \
-	     "<max_parallelsim> <test>" % argv[0]
+             "<max_parallelsim> <test>" % argv[0]
     print "    where <mode> is 'dbg' or 'opt' and <test> is optional"
     exit(1)
 
   # setup up parameter variables
-  susdir =  path.normpath(path.join(getcwd(), argv[1]))
+  susdir        = path.normpath(path.join(getcwd(), argv[1]))
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   mode = argv[4]
   max_parallelism = float(argv[5])
@@ -47,10 +49,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   # performance tests are run only by passing "performance" if you pass
   # "do_perf" in the non-default-tests array
-  do_restart = 1  
-  do_dbg = 1
+  do_restart     = 1  
+  do_dbg         = 1
   do_comparisons = 1
-  do_memory = 1
+  do_memory      = 1
   do_performance = 0
 
   if mode == "dbg" and do_dbg == 0:
@@ -88,7 +90,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   inputpath = path.normpath(path.join(getcwd(), inputs_root()))
 
-  
+  #__________________________________
+  # bulletproofing
   try:
     chdir(helperspath)
   except Exception:
@@ -103,7 +106,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print "%s/sus does not exist" % (susdir)
     print "Please give a valid <susdir> argument"
     exit(1)
-  
 
   try:
     chdir(gold_standard)
@@ -121,6 +123,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     mkdir(ALGO)
     system("chmod -R 775 %s" % ALGO)
     
+  # set environmental variables
   environ['PATH'] = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
@@ -155,6 +158,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   # this is to see if any tests actually ran (so we can say tests skipped)
   ran_any_tests = 0
 
+  #__________________________________
+  # Loop over tests 
+  
   solotest_found = 0
   for test in TESTS:
     if solotest != "" and nameoftest(test) != solotest:
@@ -168,8 +174,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     # allow the user to change the defaults for what runs for individual tests
     test_comparisons = do_comparisons
-    test_memory = do_memory
-    test_restart = do_restart
+    test_memory      = do_memory
+    test_restart     = do_restart
     test_performance = do_performance
     
     non_default_tests = which_tests(test)
@@ -191,7 +197,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         test_memory = 0
         test_performance = 1
 
-
     if skip_debug == 1 and mode == "dbg":
       continue
 
@@ -200,7 +205,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     testname = nameoftest(test)
     ran_any_tests = 1
 
-    # make sure that this test exists in the gold standard
+    # make sure that this test's gold standard exists
     try:
       chdir(compare_root)
       chdir(testname)
@@ -217,7 +222,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print "%s does not exist" % (inputsdir)
       print "Please give a valid <inputsdir> argument"
       exit(1)
-
 
     chdir(resultsdir)
 
@@ -240,7 +244,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     inputxml = path.basename(input(test))
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
     symlink(inputpath, "inputs")
-    # Run normal test
+    
+    #__________________________________
+    # Run test and perform all comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism, tests_to_do, "no")
     system("rm inputs")
@@ -250,8 +256,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != 1:
         mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
       system("cp `ls -1 | grep -v uda` %s/%s-results/%s/" % (outputpath, ALGO, testname))
-    # rc of 2 means it failed comparison or memory test, so try to run restart
-    # anyway
+    
+    # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
       # Prepare for restart test
       if rc == 2:
@@ -261,7 +267,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
       # call the callback function before running each test
       callback(test, susdir, inputsdir, compare_root, mode, max_parallelism);
-
+      
+      #__________________________________
       # Run restart test
       if test_restart == 1:
         symlink(inputpath, "inputs")
@@ -301,7 +308,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if ran_any_tests == 0:
     print "Didn't run any tests!"
     exit(3)
-    
+  
+  #__________________________________  
+  # If the test successfully ran and passed all tests  
   if failcode == 0:
     if solotest != "":
       print ""
@@ -314,7 +323,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print "Some tests failed"
   return failcode
 
-
+#______________________________________________________________________
+# runSusTest() 
 # parameters are basically strings, except for tests_to_do which is a list of
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
@@ -330,11 +340,11 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
       print "Skipping test %s because %s processors exceeds maximum of %s" % (testname, np, max_parallelism);
     return -1; 
 
-  do_comparison_test = tests_to_do[0]
-  do_memory_test = tests_to_do[1]
+  do_comparison_test  = tests_to_do[0]
+  do_memory_test      = tests_to_do[1]
   do_performance_test = tests_to_do[2]
-  cu_rc = 0
-  pf_rc = 0
+  cu_rc  = 0
+  pf_rc  = 0
   mem_rc = 0
 
 
@@ -407,12 +417,12 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
     sus_log_msg = '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     compare_msg = '\t<A href=\"%s/compare_sus_runs.log.txt\">See compare_sus_runs.log</A> for more comparison information.' % (logpath)
     memory_msg  = '\t<A href=\"%s/mem_leak_check.log.txt\">See mem_leak_check.log</a> for more comparison information.' % (logpath)
-    perf_msg = '\t<A href=\"%s/performance_check.log.txt\">See performance_check.log</a> for more comparison information.' % (logpath)
+    perf_msg    = '\t<A href=\"%s/performance_check.log.txt\">See performance_check.log</a> for more comparison information.' % (logpath)
   else:
     sus_log_msg = '\tSee %s/sus.log.txt for details' % (logpath)
     compare_msg = '\tSee %s/compare_sus_runs.log.txt for more comparison information.' % (logpath)
     memory_msg  = '\tSee %s/mem_leak_check.log.txt for more comparison information.' % (logpath)
-    perf_msg  = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
+    perf_msg    = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
 
   # actually run the test!
   print "Command Line: %s %s" % (command, susinput)
@@ -433,7 +443,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if restart == "yes":
-	print "\t\tMake sure the problem makes checkpoints before finishing"
+        print "\t\tMake sure the problem makes checkpoints before finishing"
     print sus_log_msg
     system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
@@ -450,7 +460,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
     else:
       ts_file = "timestamp"
     system("tail -n3 sus.log.txt > %s" % ts_file)
- 
+    
+    #__________________________________
+    # performance test
     if do_performance_test == 1:
       print "\tPerforming performance test on %s" % (date())
       pf_rc = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
@@ -462,19 +474,21 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
       if pf_rc == 0:
         print "\tPerformance tests passed."
         if short_message != "":
-	  print "\t%s" % (short_message)    
+          print "\t%s" % (short_message)    
       elif pf_rc == 5 * 256:
         print "\t* Warning, no timestamp file created.  No performance test performed."
       elif pf_rc == 2*256:
         print "\t*** Warning, test %s failed performance test." % (testname)
         if short_message != "":
-	  print "\t%s" % (short_message)
+          print "\t%s" % (short_message)
+          
         print perf_msg
         print "%s" % replace_msg
       else:
-	print "\tPerformance tests passed. (Note: no previous performace stats)."
+        print "\tPerformance tests passed. (Note: no previous performace stats)."
 
-
+    #__________________________________
+    # uda comparison
     if do_comparison_test == 1:
       print "\tComparing udas on %s" % (date())
 
@@ -483,63 +497,68 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
 
       cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
       if cu_rc != 0:
-	  if cu_rc == 10 * 256:
-     	    print "\t*** Input file (or its defaults) was the only difference"
- 	    print "%s" % replace_msg
-	  elif cu_rc == 1 * 256 or cu_rc == 5*256:
-    	    print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
-            print compare_msg
-	    if restart != "yes":
- 	    	print "%s" % replace_msg
-	  elif cu_rc == 65280: # (-1 return code)
-	    print "\tComparison tests passed.  (Note: No dat files to compare.)"
-          else:
-	    print "\tComparison tests passed.  (Note: No previous gold standard.)"
+        if cu_rc == 10 * 256:
+          print "\t*** Input file (or its defaults) was the only difference"
+          print "%s" % replace_msg
+        elif cu_rc == 1 * 256 or cu_rc == 5*256:
+          print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
+          print compare_msg
+          if restart != "yes":
+           print "%s" % replace_msg
+        elif cu_rc == 65280: # (-1 return code)
+          print "\tComparison tests passed.  (Note: No dat files to compare.)"
+        else:
+          print "\tComparison tests passed.  (Note: No previous gold standard.)"
       else:
         print "\tComparison tests passed."
-
+    #__________________________________
+    # Memory leak test
     if do_memory_test == 1:
-	mem_rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
-	try:
-	  short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
-	  short_message = rstrip(short_message_file.readline(500))
-	except Exception:
-	  short_message = ""
+      mem_rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
+      try:
+        short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
+        short_message = rstrip(short_message_file.readline(500))
+      except Exception:
+        short_message = ""
 
-        if mem_rc == 0:
-	    print "\tMemory leak tests passed."
-	    if short_message != "":
-		print "\t%s" % (short_message)    
-	elif mem_rc == 5 * 256:
-	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
-	elif mem_rc == 256:
-	    print "\t*** Warning, test %s failed memory leak test." % (testname)
-            print memory_msg
-	elif mem_rc == 2*256:
-	    print "\t*** Warning, test %s failed memory highwater test." % (testname)
-	    if short_message != "":
-		print "\t%s" % (short_message)
-            print memory_msg
- 	    print "%s" % replace_msg
-	else:
-	    print "\tMemory leak tests passed. (Note: no previous memory usage stats)."
-
+      if mem_rc == 0:
+          print "\tMemory leak tests passed."
+          if short_message != "":
+            print "\t%s" % (short_message)    
+      elif mem_rc == 5 * 256:
+          print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
+      elif mem_rc == 256:
+          print "\t*** Warning, test %s failed memory leak test." % (testname)
+          print memory_msg
+      elif mem_rc == 2*256:
+          print "\t*** Warning, test %s failed memory highwater test." % (testname)
+          if short_message != "":
+            print "\t%s" % (short_message)
+          print memory_msg
+          print "%s" % replace_msg
+      else:
+          print "\tMemory leak tests passed. (Note: no previous memory usage stats)."
+    #__________________________________
+    # print error codes
     # if comparison tests fail, return here, so mem_leak tests can run
     if cu_rc == 5*256 or cu_rc == 1*256:
-        system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
-        # debug
-        return_code = 2;
+      system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      # debug
+      return_code = 2;
+        
     if pf_rc == 2*256:
-        # For the present, hard code the PERFORMANCE as the algo, as
-        # performance is a test set and not an algorithm.  This follows the
-        # current model of performance tests (all in one test file), but will
-        # need to change if the model changes
-        system("echo '  -- %s%s test failed performance tests' >> %s/PERFORMANCE-short.log" % (testname,restart_text,startpath))
-        return_code = 2;
+      # For the present, hard code the PERFORMANCE as the algo, as
+      # performance is a test set and not an algorithm.  This follows the
+      # current model of performance tests (all in one test file), but will
+      # need to change if the model changes
+      system("echo '  -- %s%s test failed performance tests' >> %s/PERFORMANCE-short.log" % (testname,restart_text,startpath))
+      return_code = 2;
+    
     if mem_rc == 1*256 or mem_rc == 2*256:
-        # debug
-        system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
-        return_code = 2;
+      # debug
+      system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      return_code = 2;
+    
     if return_code != 0:
       # as the file is only created if a certain test fails, change the permissions here as we are certain the file exists
       system("chmod gu+rw,a+r %s/%s-short.log > /dev/null 2>&1" % (startpath, ALGO))
