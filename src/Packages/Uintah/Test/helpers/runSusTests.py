@@ -172,30 +172,38 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
 
-    # allow the user to change the defaults for what runs for individual tests
+    #__________________________________
+    # What tests should be run
+    # defaults
     test_comparisons = do_comparisons
     test_memory      = do_memory
     test_restart     = do_restart
     test_performance = do_performance
     
-    non_default_tests = which_tests(test)
+    # override defaults
+    non_default_tests = [which_tests(test)]
     skip_debug = 0
-
     for ndt in non_default_tests:
-      if ndt == "no_comp":
+      if ndt == "no_Uda_comparison":
         test_comparisons = 0
-      if ndt == "no_mem":
+      if ndt == "no_memoryTest":
         test_memory = 0
       if ndt == "no_restart":
         test_restart = 0
       if ndt == "no_dbg":
         skip_debug = 1
-      if ndt == "do_perf":
-        test_restart = 0
-        skip_debug = 1
+      if ndt == "do_performance_test":
+        test_restart     = 0
+        skip_debug       = 1
         test_comparisons = 0
-        test_memory = 0
+        test_memory      = 0
         test_performance = 1
+      if ndt == "doesTestrun":
+        test_restart     = 0
+        skip_debug       = 0
+        test_comparisons = 0
+        test_memory      = 0
+        test_performance = 0
 
     if skip_debug == 1 and mode == "dbg":
       continue
@@ -443,18 +451,20 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
     if restart == "yes":
-        print "\t\tMake sure the problem makes checkpoints before finishing"
+      print "\t\tMake sure the problem makes checkpoints before finishing"
     print sus_log_msg
     system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
-    # Sus completed successfully - now do comp, mem, and perf tests
+    # Sus completed successfully - now run memory,compar_uda and performance tests
 
     # get the time from sus.log
     # /usr/bin/time outputs 3 lines, the one called 'real' is what we want
     # it is the third line from the bottom
 
     # save this file independent of performance tests being done
+    print "\tSuccessfully ran to completion"
+
     if restart == "yes":
       ts_file = "restart_timestamp"
     else:
