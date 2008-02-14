@@ -181,7 +181,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     test_performance = do_performance
     
     # override defaults
-    non_default_tests = [which_tests(test)]
+    non_default_tests = which_tests(test)
     skip_debug = 0
     for ndt in non_default_tests:
       if ndt == "no_Uda_comparison":
