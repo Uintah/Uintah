@@ -198,7 +198,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         test_comparisons = 0
         test_memory      = 0
         test_performance = 1
-      if ndt == "doesTestrun":
+      if ndt == "doesTestRun":
         test_restart     = 0
         skip_debug       = 0
         test_comparisons = 0
