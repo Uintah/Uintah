@@ -311,7 +311,7 @@ compare_results () {
     # gold standard uda and pass it to compare_uda
     
     uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
-    goldStandard=`find $test_dir/$DIR/$CASE -maxdepth 3 -type d -name $uda_tmp`
+    goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
     echo "Comparing $uda results against $goldStandard"
     
     echo "../compare_uda $goldStandard $uda" > $n.compare 2>&1
@@ -514,17 +514,8 @@ examples_test () {
     echo; echo "Testing $examples_test_cases"
     
     for n in $examples_test_cases; do
-        echo; echo "Running sus -poisson1 $INPUTS/$CASE/$n.ups"
+        run_test
         uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        sus -poisson1 $INPUTS/$CASE/$n.ups &> $n.out
-        success=`grep "successfully" $n.out`
-        if test -n "$success"; then 
-            echo $success
-        else
-            echo; echo "FAILURE running sus . . ."
-            continue
-        fi
-
         compare_results
         run_restart
         MPI=""
@@ -539,7 +530,7 @@ if test -n "$ALL"; then
    do_mpmice=1
    do_mpmice_amr=1
    do_models=1
-   do_smpm=1
+   do_smpm=0
    do_impm=1
    do_arches=1
    do_mpmarches=1
