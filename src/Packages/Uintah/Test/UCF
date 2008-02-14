@@ -11,13 +11,10 @@ UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do
            ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_performance_test"]), \
            ("dlb_mpm",        "mpmDLBTest.ups",     8, "NONE"), \
            ("dlb_mpmice",     "mpmiceDLBTest.ups",  8, "NONE"), \
-           ("switcher",       "JP8-switch.ups",     8, "NONE")
-           
+           ("switcher",       "JP8-switch.ups",     8, "NONE") 
 ]
 
-TESTS = [ 
-           ("periodic_disks", "periodic_disks.ups", 6, "Linux") 
-        ]
+TESTS = [ ]
 
 #______________________________________________________________________
 # Scalability tests -
