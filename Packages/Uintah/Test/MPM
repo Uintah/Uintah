@@ -12,6 +12,7 @@ TESTS = [
            ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux"),    \
            ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux"),    \
            ("foam_crush",                     "foam_crush.ups",                     4,  "Linux"),    \
+           ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux"),    \
            ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux"),    \
            ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux"),    \
            ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux"),    \
