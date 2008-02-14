@@ -3,16 +3,21 @@
 from sys import argv,exit
 from helpers.runSusTests import runSusTests
 
-TESTS = [   ("advect_mpmice", "advect.ups", 1, "ALL"),	\
-            ("thermx", "thermx.ups", 1, "IRIX64"),     \
-            ("massX", "massX.ups", 1, "ALL"),     \
-            ("guni2d", "guni2dRT.ups", 4, "ALL"),     \
-            ("Steady2d", "SteadyBurn_2dRT.ups", 4, "ALL"),     \
-            ("TBurner2d", "TBurner_2dRT.ups", 4, "ALL"),     \
-            ("TRWnoz", "TRWnoz.ups", 1, "ALL"),     \
-            ("testConvertMPMICEAdd", "testConvertMPMICEAdd.ups", 1, "ALL"),\
-            ("advect_2L_MI", "advect_2L_MI.ups", 1, "ALL"),\
-            ("thermx8patch", "thermx8patch.ups", 8, "IRIX64"),     \
+TESTS = [   ("massX",                 "massX.ups",                 1,  "Linux"),   \
+            ("guni2d",                "guni2dRT.ups",              4,  "Linux"),   \
+            ("Steady2d",              "SteadyBurn_2dRT.ups",       4,  "Linux"),   \
+            ("TBurner2d",             "TBurner_2dRT.ups",          4,  "Linux"),   \
+            ("TRWnoz",                "TRWnoz.ups",                1,  "Linux"),   \
+            ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Linux"),   \
+            ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux"),   \
+            ("advect_mpmice",         "advect.ups",                1,  "Darwin", ["doesTestRun"]),  \
+            ("massX",                 "massX.ups",                 1,  "Darwin", ["doesTestRun"]),  \
+            ("guni2d",                "guni2dRT.ups",              4,  "Darwin", ["doesTestRun"]),  \
+            ("Steady2d",              "SteadyBurn_2dRT.ups",       4,  "Darwin", ["doesTestRun"]),  \
+            ("TBurner2d",             "TBurner_2dRT.ups",          4,  "Darwin", ["doesTestRun"]),  \
+            ("TRWnoz",                "TRWnoz.ups",                1,  "Darwin", ["doesTestRun"]),  \
+            ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Darwin", ["doesTestRun"]),  \
+            ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Darwin", ["doesTestRun"]),  \
     	]
 
 exit(runSusTests(argv, TESTS, "MPMICE"))
