@@ -1,0 +1,53 @@
+# Sources of Core/Datatypes classes
+SET(SCIRUNCoreDatatypes_SRCS
+  share.h
+  builtin.h
+  Clipper.h     Clipper.cc
+  ColumnMatrix.h ColumnMatrix.cc       
+  CurveMesh.h
+  Field.h	Field.cc
+  FieldAlgo.h
+  FieldIndex.h
+  FieldInterfaceAux.h FieldInterfaceAux.cc
+  GenericField.h  
+  HexVolMesh.h
+  Image.h	 Image.cc
+  ImageMesh.h
+  LatVolMesh.h
+  LockArray3.h
+  MaskedLatVolMesh.h
+  Matrix.h	Matrix.cc
+  MultiLevelField.h  
+  Mesh.h	Mesh.cc
+  PropertyManager.h PropertyManager.cc
+  SearchGrid.h  SearchGrid.cc
+  SparseRowMatrix.h SparseRowMatrix.cc
+  String.h      String.cc            
+  Color.h	Color.cc              
+  Datatype.h    Datatype.cc
+  DenseColMajMatrix.h DenseColMajMatrix.cc
+  DenseMatrix.h DenseMatrix.cc
+  FieldInterface.h 
+  FieldIterator.h
+  MeshTypes.h
+  MatrixOperations.h MatrixOperations.cc
+  NrrdData.h    NrrdData.cc 
+  PrismVolMesh.h
+  PointCloudMesh.h         
+  QuadSurfMesh.h   
+  ScanlineMesh.h
+  StructCurveMesh.h
+  StructHexVolMesh.h
+  StructQuadSurfMesh.h
+  TetVolMesh.h
+  TriSurfMesh.h
+  TypeName.h	 TypeName.cc
+  cd_templates.cc
+  cd_templates_fields_0.cc
+  cd_templates_fields_1.cc
+  cd_templates_fields_2.cc
+  cd_templates_fields_3.cc
+  cd_templates_fields_4.cc
+  cd_templates_fields_5.cc
+  cd_templates_fields_6.cc
+)

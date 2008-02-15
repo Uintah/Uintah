@@ -1,0 +1,931 @@
+/*
+ *
+ * NetInterface: Provides access to the network
+ * $Id$
+ *
+ * Written by:
+ *   Author: Eric Luke
+ *   Department of Computer Science
+ *   University of Utah
+ *   Date: January 2001
+ *
+ */
+
+#include <unistd.h>
+#include <errno.h>
+#include <Network/NetInterface.h>
+#include <Malloc/Allocator.h>
+#include <Properties/ClientProperties.h>
+#include <Rendering/RenderGroup.h>
+#include <Rendering/Renderer.h>
+
+using namespace SemotusVisum::Logging;
+using namespace SemotusVisum::Properties;
+
+using namespace std;
+
+namespace SemotusVisum {
+namespace Network {
+
+using namespace Message;
+
+NetListener::NetListener( NetInterface &net, int port ) :
+  port(port), net(net), mbox(net.connectMBox) {
+
+  /* Create a socket */
+  listenSocket = OpenTcpPort( ANY_ADDRESS, port );
+  if ( listenSocket == ASIP_NO_SOCKET )
+    Log::log( Logging::ERROR, "Cannot open listening socket!" );
+}
+
+NetListener::~NetListener() {
+  
+  /* Close our listening socket */
+  Disconnect( &listenSocket );
+}
+
+void
+NetListener::run() {
+
+  Socket newSocket = NO_SOCKET;
+  PTPConnection *ptpc = NULL;
+  char * clientName = NULL;
+
+  std::cerr << "NetListener: " << getpid() << endl;
+  while (1) {
+    
+    /* Listen to the socket */
+    newSocket = Accept( listenSocket );
+
+    Log::log( Logging::MESSAGE, "Got a client connection." );
+    
+    if ( newSocket != NO_SOCKET ) {
+      /* When we get a connection, notify the NetInterface */
+      
+      ptpc = scinew PTPConnection( newSocket );
+      
+      if ( ptpc != NULL ) {
+	clientName =
+	  const_cast<char *>( AddressImage( PeerAddress( newSocket ) ) );
+	if ( clientName[0] != 0 )
+	  net.addConnection( *ptpc, clientName );
+	else
+	  Log::log( Logging::ERROR,
+		    "Could not get client host name!" );
+      }
+      else {
+	Log::log( Logging::ERROR,
+		  "Could not create new point-to-point connection!" );
+      }
+    }
+    else {
+      /* Error - log it */
+      Log::log( Logging::ERROR, "Could not accept socket connection!");
+    }
+    
+  }
+}
+
+/* The singleton Network Interface */
+NetInterface
+NetInterface::net;
+
+/* Data marker for the end of XML data and the beginning of raw data. */
+const char * const
+NetInterface::dataMarker = "\001\002\003\004\005";
+
+NetInterface::NetInterface() :
+  connectMBox( "ConnectionMailbox", MAX_PENDING_ITEMS ),
+  netConnectionLock( "NetConnectionMutex" ),
+  haveConnections( "ConnectionBlock" ),
+  enableMulticast( true ) {
+  haveConnections.lock(); // We have no connections yet.
+  
+  /* Add a callback to get the handshake info from clients. */
+  NetDispatchManager::getInstance(). 
+    registerCallback( Message::HANDSHAKE,
+		      NetInterface::getHandshake,
+		      NULL,
+		      true );
+}
+  
+NetInterface::~NetInterface() {
+
+  /* Unlock the HaveConnections mutex... */
+  haveConnections.unlock();
+  
+  /* Take care of the network listener */
+  // Should we also explicitly stop the listener thread?
+  delete listener;
+}
+
+
+void
+NetInterface::listen(int port) {
+  
+  /* Create a network listener */
+  listener = scinew NetListener( *this, port );
+
+  /* Bind it to a thread */
+  SemotusVisum::Thread::Thread * t =
+    scinew SemotusVisum::Thread::Thread( listener, "NetListener" );
+  t->detach();
+
+}
+
+
+void
+NetInterface::stop() {
+  
+
+}
+
+
+void   
+NetInterface::listenMulticast(int port) {
+  // Right now, we don't listen to the multicast group - we just write...
+}
+
+
+void
+NetInterface::getHandshake( void * obj, MessageData *input ) {
+
+  std::cerr << " =========GOT HANDSHAKE FROM CLIENT!============ " << endl;
+  Log::log( Logging::DEBUG, "Receiving client handshake data.");
+
+  // Create a handshake from the data.
+  Handshake * h = (Handshake *)(input->message);
+  
+  if ( h == NULL ) {
+    Log::log( Logging::ERROR, "Problem with handshake" );
+  }
+  else {
+    // Create a client properties object
+    ClientProperties * cp = scinew ClientProperties;
+    
+    // Populate it
+    if ( ClientProperties::getFormats( *h, *cp ) == false ) {
+      
+      Log::log( Logging::ERROR, "Problem with handshake data" );
+      
+      // There was a problem with the handshake. Delete the object.
+      delete cp;
+      delete h;
+    }
+    else {
+      // Grab the nickname of the client.
+      char * nick = h->getNickname();
+      if ( nick == NULL )
+	nick = "NoName";
+
+#if 1
+      /* Send a message to all clients about the addition. */
+      GetClientList g;
+      g.clientAdded( nick, input->clientName );
+      g.finish();
+      char buffer[1000];
+      snprintf( buffer, 1000, "Sending client add of %s:%s to all clients\n",
+		nick, input->clientName );
+      Log::log( Logging::DEBUG, buffer );
+      net.sendDataToAllClients( g );
+#endif
+      // Now set the nickname of the net connection.
+      NetConnection *nc = net.getConnection( input->clientName );
+      if ( nc == NULL ) {
+	Log::log( Logging::ERROR,
+		  "No net connection with the given client name in handshake");
+      }
+      else {
+	char buffer[1000];
+	snprintf(buffer, 1000, "Client %s's nickname is %s",
+		 input->clientName, nick );
+	Log::log( Logging::MESSAGE, buffer );
+	nc->setNickname( nick );
+      }
+    }
+    
+    // We automatically add the client properties object to a static
+    // list at creation. Thus, we are done.
+  }
+}
+
+void
+NetInterface::getClientList( void * obj, MessageData *input ) {
+  
+  // We assume that the client list message is okay.
+
+  // Build a client list.
+  GetClientList g;
+  net.netConnectionLock.readLock();
+  
+  for ( list<NetConnection *>::iterator i = net.clientConnections.begin();
+	i != net.clientConnections.end(); i++ ) {
+    g.addClient( (*i)->getNickname(), (*i)->getName() );
+  }
+  
+  g.finish();
+  
+  net.netConnectionLock.readUnlock();
+
+  // Send the list to the new client
+  net.sendDataToClient( input->clientName, g );
+}
+
+  
+void
+NetInterface::getChat( void * obj, MessageData *input ) {
+
+  Log::log( Logging::DEBUG, "Got a chat message!" );
+  
+  // Create a chat message from the data.
+  Chat * c = (Chat *)(input->message);
+
+  if ( c == NULL ) {
+    Log::log( Logging::ERROR, "Problem with chat" );
+  }
+  else {
+    // Look up client that sent the message
+    char * client = input->clientName;
+    NetConnection *nc = net.getConnection( client );
+    char * clientName = NULL;
+    
+    if ( nc == NULL ) {
+      Log::log( Logging::ERROR, "Got a chat message from an unknown client" );
+      clientName = strdup( client );
+    }
+    else {
+      char * nick = nc->getNickname();
+      if ( nick == NULL ) {
+	clientName = strdup( client );
+      }
+      else {
+	clientName = scinew char[ strlen( client ) + strlen( nick ) + 10 ];
+	sprintf(clientName, "%s@%s", nick, client );
+      }
+    }
+    
+    // Build a new outgoing chat message
+    Chat Cout(true);
+
+    Cout.setName( clientName );
+    Cout.setText( c->getText() );
+    Cout.finish();
+    
+    // Relay chat info to clients
+    net.sendDataToAllClients( Cout );
+    
+    delete clientName;
+  }
+}
+
+  
+bool
+NetInterface::sendDataToClient(const char * clientName,
+			       const char * data,
+			       const DataTypes dataType,
+			       const int numBytes,
+			       bool copy )  {
+  
+  /* Find the client in the list of network connections */
+  list<NetConnection*>::iterator i;
+  NetConnection *connection = NULL;
+  
+  for ( i = clientConnections.begin();
+        i != clientConnections.end();
+        i++ ) {
+
+    if ( !( strcmp( clientName, (*i)->getName() ) ) ) {
+      connection = *i;
+      break;
+    }
+    
+  }
+ 
+ 
+  char buffer[1000];
+  snprintf(buffer, 1000, "Trying to send data to %s", clientName );
+  Log::log( Logging::DEBUG, buffer );
+  /* If the client exists, write the data to the connection */
+  if ( connection != NULL ) {
+
+    if ( copy )
+      Log::log( Logging::DEBUG, "Sending copied data!");
+    else
+      Log::log( Logging::DEBUG, "Sending original data!" );
+    
+    bool result;
+    //    cerr << "\tsending data" << endl;
+
+    if ( copy ) {
+      char * _data = scinew char[ numBytes ];
+      memcpy( _data, data, numBytes );
+      result =
+	connection->getMailbox().trySend( dataItem( _data,
+						    numBytes,
+						    true,
+						    dataType ) );
+    }
+    else
+      result =
+	connection->getMailbox().trySend( dataItem( data,
+						    numBytes,
+						    false,
+						    dataType ) );
+    //    cerr << "\tdone sending data" << endl;
+    
+    /* If the mailbox was full, log it. */
+    if ( result == false ) {
+      char *buffer = scinew char[ strlen(clientName) + 256 ];
+      sprintf( buffer,
+	       "Dropped data send to client: %s - Mailbox full [%d/%d]",
+	       clientName,
+	       connection->getMailbox().numItems(),
+	       connection->getMailbox().size() );
+      
+      Log::log( Logging::WARNING, buffer );
+      delete buffer;
+    }
+    return true;
+  }
+  
+  /* Otherwise log the error */
+  else {
+    char *buffer = scinew char[ strlen(clientName) + 40 ];
+    sprintf( buffer, "Data sent to unknown client: %s", clientName );
+    
+    Log::log( Logging::WARNING, buffer );
+    delete buffer;
+    return false;
+  }
+}
+
+void
+NetInterface::sendDataToClients( list<char *>  &clients,
+				 const char * data,
+				 const DataTypes dataType,
+				 const int numBytes,
+				 bool  oneTime,
+				 bool  copy ) {
+
+  /** FIXME - we create a multicast group, and await callbacks.
+      We probably should have a CreateMulticastGroup() function
+      and an AddToMulticastGroup() function. Then, we can have a
+      sendDataToGroup() function that splits up all this nonsense.
+  */
+  static bool callbackRegistered = false;
+  
+  // If multicast is enabled, and this is not a single shot:
+  if ( enableMulticast && !oneTime ) {
+    
+    // If the number of clients is >= 2
+    if ( clients.size() > 1 ) {
+      char * group;
+      int port;
+      int ttl;
+      
+      // Find a clear group:port, ttl
+      getMulticastGroup( group, port, ttl );
+
+      // Create the multicast group
+      multicastGroup *mg = scinew multicastGroup( NULL /*FIXME*/,
+					       group,
+					       port );
+      multicastClients.push_front( mg );
+      
+      // Send enable message to clients
+      Multicast m( false );
+      m.setParams( group, port, ttl );
+      m.finish();
+      
+      list<char *>::const_iterator i;
+
+      for ( i = clients.begin(); i != clients.end(); i++ ) {
+
+	sendDataToClient( (char *)*i, m );
+	
+      }
+      
+      
+      // Set up callback from dispatch manager.
+      if ( !callbackRegistered ) {
+	NetDispatchManager::getInstance().
+	  registerCallback( MULTICAST,
+			    multicastResponseCallback,
+			    (void *)&net,
+			    true );
+	callbackRegistered = true;
+      }
+    }
+  }
+
+  // Send data via PTP until we get a response.
+  list<NetConnection*>::iterator i;
+  list<char *>::const_iterator j;
+  
+  for ( i = clientConnections.begin();
+	i != clientConnections.end();
+	i++ ) {
+    for ( j = clients.begin(); j != clients.end(); j++ )
+      if ( !strcmp( (*i)->getName(), (char *)*j ) ) {
+	sendDataToClient( (*i)->getName(), data,  dataType, numBytes, copy );
+	break;
+      }
+  }
+}
+
+multicastGroup * 
+NetInterface::createMulticastGroup( list<char *> &clients,
+				    const char * _group, const int _port ) {
+  static bool callbackRegistered = false;
+  char * group;
+  int port;
+  int ttl;
+  char buffer[ 100 ];
+
+  std::cerr << "Port: " << _port << endl;
+  
+  // Find a clear group:port, ttl unless they're specified.
+  if ( _group == NULL || _port == -1 )
+    getMulticastGroup( group, port, ttl );
+  else {
+    group = strdup(_group); port = _port;
+  }
+
+  // Create a multicast connection
+  MulticastConnection *mc = scinew MulticastConnection( group, port );
+
+  std::cerr << "Created MC: " << group << ":" << port << endl;
+  // Create a net connection
+  snprintf( buffer, 100, "%s:%d", group, port );
+  NetConnection * nc = scinew NetConnection( *mc, buffer, WRITE_ONLY );
+  
+  // Create the multicast group
+  multicastGroup *mg = scinew multicastGroup( nc,
+					   group,
+					   port );
+  multicastClients.push_front( mg );
+
+  std::cerr << "Created NC" << endl;
+  // Set up callback from dispatch manager.
+  if ( !callbackRegistered ) {
+    NetDispatchManager::getInstance().
+      registerCallback( MULTICAST,
+			multicastResponseCallback,
+			(void *)&net,
+			true );
+    callbackRegistered = true;
+  }
+  std::cerr << "Created Callback" << endl;
+  // Add clients to multicast group
+  list<char *>::const_iterator i;
+  for ( i = clients.begin(); i != clients.end(); i++ )
+    addToMulticastGroup( (char *)*i, mg );
+
+  return mg;
+}
+
+ 
+void 
+NetInterface::addToMulticastGroup( const char * client, multicastGroup * mg ) {
+  
+  // Send enable message to client
+  Multicast m( false );
+  m.setParams( mg->name, mg->port, 5 );
+  m.finish();
+  std::cerr << "Created MM" << endl;
+  sendDataToClient( client, m );
+  std::cerr << "Sent MM" << endl;
+  // Place clients in a 'multicast possible' list
+  multicastPossible * mp =
+    scinew multicastPossible( client, mg->name, mg->port );
+  std::cerr << "Created MP" << endl;
+  //multiPossibles.push_front( *mp );
+  mg->addOtherClient( mp );
+}
+
+void
+NetInterface::deleteFromMulticastGroup( const char * client,
+					multicastGroup *mg ) {
+
+  if ( mg->deleteClient( client ) ) {
+    
+    // Send a disable message to client.
+    Multicast m( false );
+    m.setDisconnect( true );
+    m.finish();
+    
+    sendDataToClient( client, m );
+  }
+  else 
+    Log::log( Logging::WARNING,
+	      "Trying to remove a client that is not in a multicast group" );
+}
+
+  
+bool
+NetInterface::sendDataToGroup( const multicastGroup *mg, const char * data,
+			       const DataTypes dataType, const int numBytes ) {
+  bool result = true;
+
+  if ( !mg ) return false;
+
+  /* FIXME - If the data is too large ( >~ 65000 bytes ) it won't all fit
+   * in a single message. For right now, we will just transmit it via
+   * the PTP connection. In the future, we may want to break up the message
+   * into pieces...
+   */
+  if ( numBytes > MAX_MULTICAST_MSG_SIZE ) {
+    char buffer[ 256 ];
+    snprintf( buffer, 256,
+	      "Multicast message of size %d is too large! Reverting to PTP",
+	      numBytes );
+    Log::log( Logging::WARNING, buffer );
+    list<char *>::const_iterator i;
+    bool retval = true;
+    for ( i = mg->clientNames.begin(); i != mg->clientNames.end(); i++ )
+      if ( sendDataToClient( *i, data, dataType, numBytes ) == false )
+	retval = false;
+    
+    return retval;
+  }
+  
+  /* First, send data to everybody in the multicast group */
+  result =
+    mg->group->getMailbox().
+    trySend( dataItem( data, numBytes, false, dataType ) );
+
+  /* If the mailbox was full, log it. */
+  if ( result == false ) {
+    char *buffer = scinew char[ strlen(mg->name) + 256 ];
+    snprintf( buffer, strlen(mg->name) + 256,
+	      "Dropped data send to multicast: %s:%d - Mailbox full [%d/%d]",
+	      mg->name, mg->port,
+	      mg->group->getMailbox().numItems(),
+	      mg->group->getMailbox().size() );
+    
+    Log::log( Logging::WARNING, buffer );
+    delete buffer;
+  }
+  
+  /* Now, send data to everybody in the PTP group */
+  list<multicastPossible*>::const_iterator i;
+
+  bool retval = true; 
+  for ( i = mg->otherClients.begin(); i != mg->otherClients.end(); i++ )
+    if ( sendDataToClient( (*i)->clientName, data, dataType, numBytes ) ==
+	 false )
+      retval = false;
+  return retval;
+}
+
+#if 1
+void
+NetInterface::sendDataToAllClients(const char * data,
+				   const DataTypes dataType,
+				   const int numBytes,
+				   bool copy ) {
+  char buffer[1000];
+  Log::log( Logging::DEBUG, "Sending data to all clients!" );
+  
+  /* Find the client in the list of network connections */
+  list<NetConnection*>::iterator i;
+
+  for ( i = clientConnections.begin();
+	i != clientConnections.end();
+	i++ ) {
+    snprintf( buffer, 1000, "Sending data to %s", (*i)->getName() );
+    Log::log( Logging::DEBUG, buffer );
+    sendDataToClient( (*i)->getName(), data,  dataType, numBytes, copy );
+  }
+    
+}
+#endif
+
+NetInterface&
+NetInterface::getInstance() {
+  static bool callbackRegistered = false;
+  
+  // Add callbacks for the goodbye, chat, and getClientList messages.
+  if ( !callbackRegistered ) {
+    NetDispatchManager::getInstance().
+      registerCallback( Message::GOODBYE,
+			NetConnection::goodbyeCallback,
+			NULL,
+			true );
+    NetDispatchManager::getInstance().
+      registerCallback( Message::CHAT,
+			NetInterface::getChat,
+			NULL,
+			true );
+    NetDispatchManager::getInstance().
+      registerCallback( Message::GET_CLIENT_LIST,
+			NetInterface::getClientList,
+			NULL,
+			true );
+    
+    callbackRegistered = true;			
+  }
+  
+  return net;
+}
+
+char *
+NetInterface::waitForConnections() {
+  haveConnections.lock(); // This blocks until we have a connection.
+  haveConnections.unlock(); // Release our hold on this.
+
+  char * temp;
+  
+  netConnectionLock.readLock();
+  temp = (*(clientConnections.begin()))->getName();
+  netConnectionLock.readUnlock();
+
+  newConnects = false; // No new connections.
+  
+  return temp;
+}
+
+list<char *>*
+NetInterface::getClientNames() {
+  list<char *> *theList = scinew list<char *>;
+
+  if ( !theList )
+    return NULL;
+
+  
+  netConnectionLock.readLock();
+
+  // If we have no connections, return NULL.
+  if ( clientConnections.size() == 0 ) {
+    netConnectionLock.readUnlock();
+    delete theList;
+    return NULL;
+  }
+
+  char * temp;
+  
+  // For each connection in the list
+  for ( list<NetConnection *>::const_iterator i = clientConnections.begin();
+	i != clientConnections.end();
+	i++ ) {
+    
+    // Duplicate the name
+    temp = strdup( (*i)->getName() );
+    
+    // Add it to the name list.
+    theList->push_front( temp );
+  }
+  
+  
+  netConnectionLock.readUnlock();
+
+  return theList;
+}
+
+void
+NetInterface::addConnection( Connection &c, const char * hostname ) {
+
+  /* Assures all connection names are unique */
+  static int connectionNumber = 0;
+
+  char *buffer = scinew char[ strlen( hostname ) + 10 ];
+  if ( buffer == NULL ) {
+    perror( "Couldn't allocate buffer space!" );
+    return;
+  }
+  sprintf( buffer, "%s:%d", hostname, connectionNumber );
+  connectionNumber++;
+
+  // Log the connection
+  char *buf = scinew char[ strlen(buffer) + 40 ];
+  if ( buf == NULL ) {
+    perror( "Couldn't allocate buf space!" );
+    return;
+  }
+  sprintf( buf, "Adding connection to client %s", buffer );
+  
+  Log::log( Logging::MESSAGE, buf );
+  delete buf;
+
+  /* Send client the list of currently connected clients - THIS DOES NOT
+     INCLUDE THE CURRENT CLIENT! That is sent later... */
+#if 1
+  GetClientList g;
+  netConnectionLock.readLock();
+  
+  for ( list<NetConnection *>::iterator i = clientConnections.begin();
+	i != clientConnections.end(); i++ ) {
+    g.addClient( (*i)->getNickname(), (*i)->getName() );
+  }
+
+  g.finish();
+  
+  netConnectionLock.readUnlock();
+#endif
+  /* Lock the list of client connections */
+  netConnectionLock.writeLock();
+
+  /* Add the client connection */
+  clientConnections.push_front( scinew NetConnection( c, buffer ) );
+  
+  /* Unlock the client list */
+  netConnectionLock.writeUnlock();
+
+  /* Send the handshake to the client. */
+  ServerProperties::sendHandshake( buffer );
+  
+  if ( clientConnections.size() == 1 ) // Our first connection.
+    haveConnections.unlock();
+#if 1
+  else 
+    // Send list of other clients to new client
+    sendDataToClient( buffer, g ); 
+#endif
+  
+  delete buffer;
+
+  newConnects = true; // We have new connections!
+
+}
+
+void
+NetInterface::removeConnection( NetConnection *nc ) {
+
+  std::cerr << "NI: Removing connection " << nc->getName() << endl;
+  std::cerr << "Before remove: " << clientConnections.size();
+
+  /* We also remove the connection from any render groups. This is ugly
+     and shouldn't be here for cleanliness, but we want to keep this fully
+     automated. */
+  Rendering::RenderGroup * rg =
+    Rendering::RenderGroup::getRenderGroup( nc->getName() );
+  if ( rg != NULL ) {
+    char buffer[ 1000 ];
+    snprintf( buffer, 1000, "Removing client %s from render group %s",
+	      nc->getName(),
+	      (rg->getRenderer()!=NULL) ?
+	           rg->getRenderer()->getName() : "unknown" );
+    Log::log( Logging::MESSAGE, buffer );
+    rg->removeClient( nc->getName() );
+  }
+  
+  // Remove it from the list - does not delete the connection.
+  netConnectionLock.writeLock();
+  clientConnections.remove( nc );
+  netConnectionLock.writeUnlock();
+  Log::log( Logging::DEBUG, "Removing connection from net interface" );
+  std::cerr << "\tAfter remove: " << clientConnections.size() << endl;
+
+  
+  
+  /* FIXME - We also need to remove the client properties for this client
+     from the global list. */
+  
+  
+  
+  if ( clientConnections.empty() )
+    haveConnections.lock(); // We have no connections.
+  else {
+    /* Send a message to all clients about the subtraction. */
+    GetClientList g;
+    g.clientSubtracted( nc->getNickname(), nc->getName() );
+    g.finish();
+    sendDataToAllClients( g );
+  }
+}
+
+NetConnection *
+NetInterface::getConnection( const char * client ) {
+
+  if ( client == NULL ) return NULL;
+  
+  list<NetConnection*>::iterator i;
+  NetConnection *retval = NULL;
+  
+  netConnectionLock.readLock();
+  for ( i = clientConnections.begin(); i != clientConnections.end(); i++ ) {
+    if ( !strcmp( client, (*i)->getName() ) ) {
+      retval = *i;
+      break;
+    }
+  }
+  netConnectionLock.readUnlock();
+
+  return retval;
+}
+
+  
+void
+NetInterface::sendMulticast( bool enable, const char * clientName ) {
+
+  // If multicast isn't enabled, do nothing.
+  if ( enableMulticast == false && enable == true )
+    return;
+
+  // Build a disconnect multicast message.
+  Multicast m(false);
+  m.setDisconnect( true );
+  m.finish();
+
+  // Send it
+  sendDataToClient( clientName, m );
+
+}
+
+void
+NetInterface::getMulticastGroup( char * &group, int &port, int &ttl ) {
+  static int currentPort = DEFAULT_MULTICAST_PORT;
+
+  group = strdup( DEFAULT_MULTICAST_GROUP );
+  port = currentPort++;
+  ttl = DEFAULT_MULTICAST_TTL;
+}
+
+void
+NetInterface::multicastCallback( MessageData *md ) {
+
+  char buffer[ 1000 ];
+  Multicast * mm = (Multicast *)(md->message);
+  
+  // If the message is a 'disconnect', remove the client from the
+  // multicast group (setting them back to PTP if necessary)
+  if ( mm->isDisconnect() ) {
+    char * group;
+    int port;
+    int ttl;
+    mm->getParams( group, port, ttl );
+    snprintf( buffer, 1000,
+	      "Client %s disconnected from group %s:%d", md->clientName,
+	      group, port );
+    Log::log( Logging::MESSAGE, buffer );
+	      
+    
+    list<multicastGroup*>::iterator i;
+    for ( i = multicastClients.begin(); i != multicastClients.end(); i++ ) {
+      if ( (*i)->removeClient( md->clientName ) ) {
+	// If we have no more multicast-enabled clients in this group,
+	// disband it.
+	if ( (*i)->clientNames.size() == 0 ) {
+	  multicastClients.erase( i );
+	  snprintf( buffer, 1000, "Deleting multicast group %s:%d",
+		    (*i)->name, (*i)->port );
+	  Log::log( Logging::MESSAGE, buffer );
+	}
+	return;
+      }
+    }
+    
+    snprintf( buffer, 1000,
+	      "Non-multicast client %s tried to remove itself from a multicast group", md->clientName );
+    Log::log( Logging::MESSAGE, buffer );
+  }
+  else if ( mm->isOkay() ) {
+    
+    // Else if the message is a 'Yes', move that client from a multicast-
+    // possible list to the appropriate multicast group.
+    list<multicastGroup *>::iterator j;
+    for ( j = multicastClients.begin(); j != multicastClients.end(); j++ ) {
+      if ( (*j)->switchClient( md->clientName ) ) {
+	snprintf( buffer, 1000,
+		  "Switching client %s to multicast group %s:%d",
+		  md->clientName, (*j)->name, (*j)->port );
+	Log::log( Logging::DEBUG, buffer );
+	return;
+      }
+    }
+    if ( j == multicastClients.end() ) {
+      // No relevent multicast groups exist. Tell the client to
+      // disconnect (bugger off!)
+      sendMulticast( false, md->clientName );
+      return;
+    }   
+    snprintf( buffer, 1000,
+	      "Non-multicast client %s tried to add itself to a multicast group", md->clientName );
+    Log::log( Logging::MESSAGE, buffer ); 
+  }
+  else if ( mm->isRequest() ) {
+
+    // Else if the message is a 'No', update the 'answered' flag in the
+    // multicast possible list.
+    
+    list<multicastGroup*>::iterator i;
+    multicastPossible * mp = NULL;
+    for ( i = multicastClients.begin(); i != multicastClients.end(); i++ ) {
+      if ( (mp = (*i)->hasClient( md->clientName ) ) != NULL )
+	mp->answered = true;
+      return;
+    }
+    
+    snprintf( buffer, 1000,
+	      "Non-multicast client %s tried to refuse to join a multicast group", md->clientName );
+    Log::log( Logging::MESSAGE, buffer );  
+  }
+  else {
+
+    // Else - this is an error. Note that in the log.
+    Log::log( Logging::ERROR, "Bad message response to multicast" );
+  }
+}
+
+}  
+}

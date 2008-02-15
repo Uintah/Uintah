@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!-- 
+Prompt user for an XML  file and then invoke a
+cgi program to return the results of validating the file.
+
+Note: This is a valid XHTML file - keep it that way.
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>Validation Form for SCIRun documents.</title>
+<link href="http://www.w3.org/StyleSheets/Core/Modernist" rel='stylesheet' type="text/css" />
+</head>
+
+<body>
+
+<h2 class="center">Validation Tool for SCIRun XML Files</h2>
+
+<h3>Introduction</h3>
+
+<p>This tool may be used to <dfn>validate</dfn> various types of XML files, e.g.</p>
+
+<ul>
+<li>XML Module descriptions</li>
+<li>XHTML files</li>
+<li>DocBook documents</li>
+</ul>
+
+<p>Basically this tool determines if a document is:</p> 
+<ol>
+<li>A <dfn>well formed</dfn> XML document (e.g. no missing end tags).</li>
+<li>Follows the rules of the document's language (which is specified in the
+document's <tt>&lt;!DOCTYPE ...&gt;</tt> declaration).</li>
+</ol>
+
+<p>If your document is not valid then this tool will report a
+series of error messages otherwise it just reports some document statistics
+(e.g. number of elements).</p>
+
+<p>Note: Multi-file documents are not yet handled correctly.</p>
+
+<p>Please read Notes section below.</p>
+
+<h3>Instructions</h3>
+
+<ol>
+<li>Either type in the name of an XML file in the text
+box below or press the "Browse..." button to locate a file.</li>  
+<li>Then press the "Validate" button.</li>
+</ol>
+
+<p>The results of validation will be returned in a new page.</p>
+
+<form method="post" enctype="multipart/form-data" action="./cgi-bin/srvalidate.cgi">
+
+<p>Choose an XML file:<input type="text" size="50" name="XML_File"/></p>
+
+<center><p><input type="submit" value="Validate"/></p></center>
+
+</form>
+
+<h3>Notes</h3>
+
+<ul>
+<li><p>You may recieve fatal and/or non-fatal errors.  Fatal errors terminate
+the validation while non-fatal errors do not.</p></li>
+
+<li><p>Non-fatal errors are usually related to an <em>incomplete</em> document
+(missing elements/content -- please add missing content, especially for
+module descriptions).</p></li>
+
+<li><p>Fatal errors are usually due to violations of XML composition rules.</p>
+</li>
+
+<li><p>Note that fatal error messages are often misleading.  You may need to
+search around a bit to find the real location of the problem.</p></li>
+
+<li><p>Multi-file documents are not yet handled correctly.</p></li>
+
+<li><p>This utility expects the document's DTD to be
+specified in the <tt>&lt;DOCTYPE...&gt;</tt> declaration via an http url in
+either a <tt>PUBLIC</tt> or <tt>SYSTEM</tt> identifier, as in:</p>
+<pre>
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;
+</pre>
+
+<p>or</p>
+
+<pre>
+&lt;!DOCTYPE html SYSTEM
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;
+</pre>
+
+<p>XML Module descriptions are handled specially though.  They don't use an
+http type url.  They are expected to contain a <tt>&lt;DOCTYPE...&gt;</tt>
+declaration though, something like this:</p>
+
+<pre>
+&lt;!DOCTYPE html SYSTEM "../../../doc/Utilities/XML/component.dtd"&gt;
+</pre>
+
+</li>
+
+<li><p>Send complaints to <a href="mailto:dustman@cvrti.utah.edu">me</a>.</p></li>
+
+</ul>
+
+<hr class="solid"/>
+
+<p><a href="http://validator.w3.org/check/referer"><img src="http://www.w3.org/Icons/valid-xhtml10" alt="Valid XHTML 1.0!" height="31" width="88" /></a>
+</p>
+
+</body>
+
+</html>

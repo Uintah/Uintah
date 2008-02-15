@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section os="linux" id="sec.rpminst">
+  <title>Installation from RPMs</title>
+
+  <para>Two SCIRun <firstterm>Problem Solving Environment</firstterm>s
+  (<acronym>PSE</acronym>), BioPSE and Fusion, are available via
+  RPMs. RPMs are available for each supported Linux distribution.
+  Customized SCIRun <acronym>PSE</acronym>s can be built from source
+  code, see <xref linkend="sec.source_inst"/></para>
+
+  <para>The BioPSE RPM includes SCIRun packages BioPSE,
+  MatlabInterface, Teem, and Insight.  The BioPSE RPM includes ITK
+  libraries required by the Insight package.  Matlab software must be
+  present to use modules of the MatlabInterface package.</para>
+
+  <para>The Fusion RPM includes SCIRun packages Fusion, DataIO, and
+  Teem.  The Fusion RPM includes the HDF5 libraries.  The
+  SCIRun/Fusion RPM has been built to use MDSplus software but MDSplus
+  software must be installed separately.  See <xref
+  linkend="sec.mdsplus_inst"/> for MDSplus software installation
+  instructions.</para>
+
+  <para>The version of SCIRun included in all RPMs has been configured
+  to support BLAS but BLAS libraries must be installed separately.
+  See <xref linkend="sec.blas_lapack_inst"/> for BLAS installation
+  instructions (BLAS/ATLAS and LAPACK are often pre-installed in Linux
+  distributions).</para>
+
+  <para>Root privileges are required to install the SCIRun
+  <acronym>RPM</acronym>s.  SCIRun is installed in
+  <filename>/usr/local/SCIRun/bin</filename>.</para>
+
+  <para>
+    Follow these steps to install SCIRun:
+    <orderedlist>
+      <listitem>
+	<para><link linkend="sec.rpm_download">Download</link> a
+	SCIRun RPM distribution, documentation, and sample data
+	sets.</para>
+      </listitem>
+      <listitem>
+	<para><link linkend="sec.rpm_install">Install</link> SCIRun
+	using the <command>rpm</command> command.</para>
+      </listitem>
+      <listitem>
+	<para><link linkend="sec.rpm_data">Install</link> SCIRun's
+	sample data sets.</para>
+      </listitem>
+      <listitem>
+	<para><link linkend="sec.rpm_docs">Install</link> SCIRun's
+	documentation.</para>
+      </listitem>
+    </orderedlist>
+  </para>
+
+  <para>Be sure to read <xref linkend="sec.prepare" /> after
+  installing, but before starting, SCIRun.</para>
+
+  <section id="sec.rpm_download">
+    <title>Downloading</title>
+    <para>
+      From <acronym>SCI</acronym>'s <ulink
+      url="http://software.sci.utah.edu/archive_entry.html">software
+      archive</ulink> page download the following files:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <filename>SCIRunBioPSE-<!--%= doc.version
+	    %-->-<replaceable>system</replaceable>.rpm</filename> or
+	    <filename>SCIRunFusion-<!--%= doc.version
+	    %-->-<replaceable>system</replaceable>.rpm</filename>
+	  </para>
+	  <para>Above, <replaceable>system</replaceable> is the Linux
+	  system of interest.</para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>
+	    if updating an existing
+	    <filename>SCIRunData/1.24.0b</filename> directory.
+	  </para>
+	  <para>
+	    <filename>SCIRunData.<!--%= doc.version
+	    %-->.tar.gz</filename>, which contains all datasets for
+	    SCIRun <!--%= doc.version %-->.
+	  </para>
+	  <para>
+	    <filename>FusionData.<!--%= doc.version
+	    %-->.tar.gz</filename> for Fusion users.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <filename>SCIRunDocs.<!--%= doc.version %-->.tar.gz</filename>
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+
+  </section>
+
+  <section id="sec.rpm_install">
+    <title>Installing</title>
+    <para>
+      The following procedure installs SCIRun in directory
+      <filename>/usr/local/SCIRun</filename>.  After intallation is complete,
+      commands for starting SCIRun and its PowerApps can be found in
+      <filename>/usr/local/SCIRun/bin</filename>
+      (<filename>/usr/local/SCIRun/bin/scirun</filename>,
+      <filename>/usr/local/SCIRun/bin/BioImage, etc.</filename>)
+    </para>
+    <para>
+      Use the <command>su</command> command to become the root user.
+      Then <command>cd</command> to the directory containing the
+      SCIRun RPM and type:
+      <literallayout class="monospaced">
+rpm -ivh SCIRun-<!--%= doc.version %-->-<replaceable>system</replaceable>.rpm
+      </literallayout>
+    </para>
+    <para>The RPM should take approximately one minute to
+    install.</para>
+    <para>
+      Type <command>exit</command> to leave the root account.
+    </para>
+    <para>
+      SCIRun can be removed using the <command>rpm</command> command:
+      <literallayout class="monospaced">
+rpm -e SCIRun
+      </literallayout>
+      Read  <xref
+      linkend="sec.prepare"/> before
+      <link linkend="sec.starting">starting</link> SCIRun.
+    </para>
+  </section>
+
+  <section id="sec.rpm_data">
+    <title>SCIRun's Sample Data Sets</title>
+    <para>
+      The following instructions install the sample data sets into
+      <filename>/usr/local/SCIRunData/<!--%= doc.version
+      %--></filename>.
+    </para>
+    <para>
+      Use the <command>su</command> command to become the root user.  Then
+      <command>cd</command> to the directory containing the 
+      dataset tarball and:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    If installing
+	    <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>
+	    type:
+	    <literallayout class="monospaced">
+mv /usr/local/SCIRunData/1.24.0b /usr/local/SCIRunData/1.24.1
+gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If installing <filename>SCIRunData.<!--%= doc.version
+	    %-->.tar.gz</filename> type:
+	    <literallayout class="monospaced">
+gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If installing <filename>FusionData.<!--%= doc.version
+	    %-->.tar.gz</filename> type:
+	    <literallayout class="monospaced">
+gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)
+	    </literallayout>
+	  </para>
+	</listitem>
+      </itemizedlist>
+      Type <command>exit</command> to leave the root account.
+    </para>
+  </section>
+
+  <section id="sec.rpm_docs">
+    <title>SCIRun's Documentation</title>
+    <para>
+      The following procedure installs the documentation
+      in the directory <filename>/usr/local</filename>
+    </para>
+    <para>
+      Use the <command>su</command> command to become the root user.  Then
+      <command>cd</command> to the directory containing the compressed
+      documentation tarball and type:
+      <literallayout class="monospaced">
+gunzip -c SCIRunDocs.<!--%= doc.version %-->.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+      </literallayout>
+      This will create <filename>/usr/local/SCIRunDocs.<!--%= doc.version %--></filename> (the
+      SCIRun documentation directory). Type <command>exit</command> to leave the
+      root account.
+    </para>
+    <para>
+      Open <filename>/usr/local/SCIRunDocs.<!--%= doc.version %-->/doc/index.html</filename>
+      with a web browser to view SCIRun's online documentation.
+    </para>
+  </section>
+
+</section>

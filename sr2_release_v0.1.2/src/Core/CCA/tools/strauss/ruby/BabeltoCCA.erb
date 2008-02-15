@@ -1,0 +1,97 @@
+
+START HEADER
+
+#include <Core/CCA/spec/cca_sidl.h>
+#include <CCA/Components/BabelTest/<%= package%>/<%= package%>_<%= portname%>.hh>
+#include <SIDL_String.h>
+
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+
+using namespace std;
+
+namespace SCIRun {
+  class <%= bridgeC%> : public BridgeComponent{
+  public:
+    <%= bridgeC%>();
+    virtual ~<%= bridgeC%>();
+    virtual void setServices(const BridgeServices* svc);
+  private:
+    <%= bridgeC%>(const <%= bridgeC%>&);
+    <%= bridgeC%>& operator=(const <%= bridgeC%>&);
+    BridgeServices* services;
+  };
+} //end of namespace
+
+namespace somethingspc {
+  class <%= portname%> {
+  public:
+    <%= portname%>();
+    ~<%= portname%>();
+    <%= methodret%> <%= methodname%>(<% outDefArgs(methodname,doc,method(:babelType))%>);
+    ::SCIRun::BridgeServices* mysvcs;
+  };
+
+} //end of namespace
+
+END HEADER
+
+using namespace somethingspc;
+using namespace SCIRun;
+using namespace <%= package%>;
+using namespace std;
+
+extern "C" BridgeComponent* make_Bridge_<%= makename%>()
+{
+  return static_cast<BridgeComponent*>(new <%= bridgeC%>());
+}
+
+static BridgeServices* st_svcs;
+
+<% print babelType(methodret)%> skel_<%= package%>_<%= portname%>_<%= methodname%>( struct <%= package%>_<%= portname%>__object* self <% commaoutDefArgs(methodname,doc,method(:babelType))%>)
+{
+  <% ifNEQPrint(babelType(methodret),"void",babelType(methodret)+" _result;")%> 
+  somethingspc::<%= portname%>* _this = reinterpret_cast< somethingspc::<%= portname%>*>(self->d_data);
+  <% ifNEQPrint(babelType(methodret),"void"," _result = ")%>_this-><%= methodname%>(<% outCallArgs(methodname,doc)%>);
+  <% ifEQPrint(methodret,"string",'result = SIDL_String_strdup(_result.c_str());')%>
+  <% ifNEQPrint(babelType(methodret),"void","return _result;")%>
+}
+
+void skel_<%= package%>_<%= portname%>__ctor(struct <%= package%>_<%= portname%>__object* self ) {
+  self->d_data = reinterpret_cast< void*>(new somethingspc::<%= portname%>());
+}
+
+void skel_<%= package%>_<%= portname%>__dtor(struct <%= package%>_<%= portname%>__object* self ) {
+  delete ( reinterpret_cast< somethingspc::<%= portname%>*>(self->d_data) );
+}
+
+<%= bridgeC%>::<%= bridgeC%>(){
+}
+
+<%= bridgeC%>::~<%= bridgeC%>(){
+}
+
+void <%= bridgeC%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+  st_svcs = const_cast<BridgeServices*>(svc);
+
+  <%= package%>::<%= portname%> dp = <%= package%>::<%= portname%>::_create();
+  dp._get_ior()-><% if(portname=="IDPort") then print 'd_gov_cca_ports_idport.' end%>d_epv->f_<%= methodname%> = <% if(portname=="IDPort") then print "(char* (*)(void*))" end%>(skel_<%= package%>_<%= portname%>_<%= methodname%>);
+  dp._get_ior()->d_epv->f__ctor = (skel_<%= package%>_<%= portname%>__ctor);
+  dp._get_ior()->d_epv->f__dtor = (skel_<%= package%>_<%= portname%>__dtor);
+  services->addProvidesPort((void*)&dp,"pport","gov.cca.ports.<%= portname%>",Babel);
+  services->registerUsesPort("uport","sci.cca.ports.<%= portname%>",CCA);
+}
+
+somethingspc::<%= portname%>::<%= portname%>(){
+}
+
+somethingspc::<%= portname%>::~<%= portname%>(){
+}
+
+<%= methodret%> somethingspc::<%= portname%>::<%= methodname%>(<% outDefArgs(methodname,doc,method(:babelType))%>) {
+  sci::cca::Port::pointer pp = st_svcs->getCCAPort("uport");
+  sci::cca::ports::<%= portname %>::pointer sp=pidl_cast<sci::cca::ports::<%= portname%>::pointer>(pp);
+  return sp-><%= methodname%>(<% outCallArgs(methodname,doc)%>);
+}
+

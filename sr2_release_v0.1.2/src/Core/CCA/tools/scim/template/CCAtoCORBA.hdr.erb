@@ -1,0 +1,37 @@
+
+#include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+#include <SCIRun/Bridge/BridgeComponent.h>
+#include <SCIRun/Corba/Services.h>
+#include <SCIRun/Corba/Component.h>
+
+using namespace std;
+using namespace SSIDL;
+
+namespace SCIRun {
+
+  class <%= rndBridgeName%> : public BridgeComponent{
+  public:
+    <%= rndBridgeName%>();
+    virtual ~<%= rndBridgeName%>();
+    virtual void setServices(const BridgeServices* svc);
+  private:
+    <%= rndBridgeName%>(const <%= rndBridgeName%>&);
+    <%= rndBridgeName%>& operator=(const <%= rndBridgeName%>&);
+    BridgeServices* services;
+  };
+
+<port> 
+  class <%= $inPortName%>: public sci::cca::ports::<%= $inPortName%>{
+  public:
+    <%= $inPortName%>(sci::cca::CorbaServices::pointer& svc) : mysvcs(svc) {}
+    ~<%= $inPortName%>() {}
+    <method>  
+    <%= $inMethodType%> <%= $inMethodName%>(<%= outDefArgs(method(:ccaType))%>);
+    </method>
+    sci::cca::CorbaServices::pointer mysvcs;
+  };
+</port>
+} //namespace SCIRun
+
+
