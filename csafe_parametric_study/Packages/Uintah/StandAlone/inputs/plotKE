@@ -19,7 +19,6 @@ endif
 # bulletproofing
 if ( (! -e $pudaKE)  ) then
   echo "plotKE:  The input files doesn't exist ($pudaKE)"
-  exit(1)
 endif
 
 echo "" > gp
