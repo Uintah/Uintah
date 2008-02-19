@@ -1,15 +1,18 @@
 
 
 #include <sci_defs/mpi_defs.h>
+
+#include <stdlib.h>
 #include <mpi.h>
 #include <iostream>
 #include <vector>
 #include <queue>
+
 #ifndef _WIN32
-#include <unistd.h>
-#include <sys/time.h>
+#  include <unistd.h>
+#  include <sys/time.h>
 #endif
-#include <stdlib.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Runnable.h>
@@ -17,8 +20,8 @@
 #include <Core/Thread/ConditionVariable.h>
 
 #ifdef _WIN32
-#include <windows.h>
-#define usleep(x) Sleep(x/1000)
+#  include <windows.h>
+#  define usleep(x) Sleep(x/1000)
 #endif
 
 #define debug_main
@@ -32,7 +35,9 @@ int message_size = 5*1024*1024;
 
 void do_some_work(int myid);
 
-int main(int argc, char** argv){
+int
+main(int argc, char** argv)
+{
   int thread_supported = 0;
   char *send_buf; 
   char *send_buf2;
@@ -116,7 +121,9 @@ int main(int argc, char** argv){
   return 0;
 }
 
-void do_some_work(int myid){
+void
+do_some_work(int myid)
+{
   const int sleep_time_constant = 5000000;
   //const int sleep_time_constant = 1000000;
   int sleep_time_total = 0;
