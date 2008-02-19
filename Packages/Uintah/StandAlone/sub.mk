@@ -286,6 +286,16 @@ PROGRAM := Packages/Uintah/StandAlone/gambitFileReader
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
+# mpi_test
+
+LIBS := $(MPI_LIBRARY) $(M_LIBRARY) 
+PSELIBS := 
+SRCS := $(SRCDIR)/mpi_test.cc
+PROGRAM := Packages/Uintah/StandAlone/mpi_test
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+##############################################
 # Uintah
 # Convenience targets for Specific executables 
 uintah: sus \
@@ -375,3 +385,4 @@ compare_mms: Packages/Uintah/StandAlone/tools/compare_mms/compare_mms
 
 compare_scalar: Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar
 
+mpi_test: Packages/Uintah/StandAlone/mpi_test
