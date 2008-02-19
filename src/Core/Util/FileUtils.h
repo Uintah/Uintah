@@ -41,6 +41,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <sstream>
 
 using std::string;
 using std::vector;
@@ -80,7 +81,9 @@ SCISHARE bool validDir( const string & filename );
 SCISHARE bool isSymLink( const string & filename );
 
 // Creates a temp file (in directoryPath), writes to it, checks the resulting files size, and then deletes it...
-SCISHARE bool testFilesystem( const string & directoryPath );
+// Informational messages about the test are returned in the 'error_stream'.  If 'verbose'  is set, then
+// non-error information will be returned.
+SCISHARE bool testFilesystem( const string & directoryPath, std::stringstream & error_stream, bool verbose = false );
 
 SCISHARE string autocomplete( const string & instr );
 SCISHARE string canonicalize( const string & filename );
