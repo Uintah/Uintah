@@ -493,7 +493,10 @@ main( int argc, char** argv )
     LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
     lbc->attachPort("sim", sim);
     if(reg)
+    {
       reg->attachPort("load balancer", lbc);
+      lbc->attachPort("regridder",reg);
+    }
     
     //__________________________________
     // Output

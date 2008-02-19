@@ -87,7 +87,7 @@ WARNING
 
     //! Reads the problem spec file for the LoadBalancer section, and looks 
     //! for entries such as outputNthProc, dynamicAlgorithm, and interval.
-    virtual void problemSetup(ProblemSpecP&, SimulationStateP& state) = 0;
+    virtual void problemSetup(ProblemSpecP&, GridP& grid, SimulationStateP& state) = 0;
 
     //! Creates the Load Balancer's Neighborhood.  
     //! This is a vector of patches that represent any patch that this load 
@@ -125,6 +125,17 @@ WARNING
     enum {
       check = 0, init, regrid, restart
     };
+
+  //cost profiling functions
+    //update the contribution for this patch
+    virtual void addContribution(const PatchSubset* patches, double cost) {};
+    //finalize the contributions (updates the weight, should be called once per timestep)
+    virtual void finalizeContributions(const GridP currentgrid) {};
+    //initializes the weights in regions in the new grid that are not in the old level
+    virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {};
+    //resets counters to zero
+    virtual void resetCostProfiler() {};
+    
   private:
     LoadBalancer(const LoadBalancer&);
     LoadBalancer& operator=(const LoadBalancer&);

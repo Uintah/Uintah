@@ -122,7 +122,8 @@ AMRSimulationController::run()
    double delt = 0;
 
    double start,time[4]={0};
-   
+  
+   d_lb->resetCostProfiler();
    while( ( t < d_timeinfo->maxTime ) && 
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
@@ -139,6 +140,7 @@ AMRSimulationController::run()
      TAU_PROFILE_TIMER_DYNAMIC(iteration_timer, tmpname, "", TAU_USER);
      TAU_PROFILE_START(iteration_timer); 
 #endif
+     
      if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (d_restarting))) {
        doRegridding(currentGrid, false);
      }
@@ -293,6 +295,10 @@ AMRSimulationController::run()
      printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep()-1,delt,t);
      // Execute the current timestep, restarting if necessary
      executeTimestep(t, delt, currentGrid, totalFine);
+   
+     // Update the profiler weights
+     d_lb->finalizeContributions(currentGrid);
+     
      if(dbg_barrier.active())
      {
        start=Time::currentSeconds();

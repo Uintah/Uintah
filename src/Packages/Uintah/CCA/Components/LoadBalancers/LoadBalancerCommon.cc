@@ -356,7 +356,7 @@ LoadBalancerCommon::inNeighborhood(const Patch* patch)
 }
 
 void
-LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
+LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state)
 {
   d_sharedState = state;
   d_scheduler = dynamic_cast<Scheduler*>(getPort("scheduler"));

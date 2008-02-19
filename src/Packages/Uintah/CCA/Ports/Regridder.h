@@ -1,14 +1,17 @@
 #ifndef UINTAH_HOMEBREW_REGRIDDER_H
 #define UINTAH_HOMEBREW_REGRIDDER_H
 
+#include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-
 #include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <vector>
+using namespace std;
+using SCIRun::IntVector;
 
 namespace Uintah {
 
@@ -82,6 +85,8 @@ WARNING
     virtual bool isLoadBalanced() { return false; }
 
     virtual bool useDynamicDilation() = 0;
+
+    virtual vector<IntVector> getMinPatchSize() = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

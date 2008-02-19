@@ -238,10 +238,6 @@ namespace Uintah {
 
   void SimulationController::postGridSetup( GridP& grid, double& t)
   {
-    // initialize load balancer.  Do here since we have the dimensionality in the shared state,
-    // and we want that at initialization time.
-    d_lb = d_scheduler->getLoadBalancer();
-    d_lb->problemSetup(d_ups, d_sharedState);
     
     // set up regridder with initial information about grid.
     // do before sim - so that Switcher (being a sim) can reset the state of the regridder
@@ -249,6 +245,12 @@ namespace Uintah {
     if (d_regridder) {
       d_regridder->problemSetup(d_ups, grid, d_sharedState);
     }
+    
+    // initialize load balancer.  Do here since we have the dimensionality in the shared state,
+    // and we want that at initialization time. In addition do it after regridding since we need to 
+    // know the minimum patch size that the regridder will create
+    d_lb = d_scheduler->getLoadBalancer();
+    d_lb->problemSetup(d_ups, grid, d_sharedState);
 
     // Initialize the CFD and/or MPM components
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));

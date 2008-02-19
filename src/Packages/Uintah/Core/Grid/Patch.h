@@ -261,7 +261,9 @@ WARNING
      IntVector getInteriorCellHighIndex() const {
        return d_inHighIndex;
      }
-
+     int getInteriorVolume() const {
+       return Region(d_inLowIndex,d_inHighIndex).getVolume(); 
+     }
      void setExtraIndices(const IntVector& l, const IntVector& h);
 
      // required for fortran interface

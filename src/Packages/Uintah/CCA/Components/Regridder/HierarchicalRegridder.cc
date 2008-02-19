@@ -267,6 +267,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid)
   GatherSubPatches(oldGrid, tempsched);
   
   Grid* newGrid = CreateGrid2(oldGrid);  
+
+  //initialize the weights on new patches
+  lb_->initializeWeights(oldGrid,newGrid);
   return newGrid;
 }
 
