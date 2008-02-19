@@ -59,6 +59,7 @@ WARNING
     /***** these should be private (public for testing)*******/
     void RunBR(vector<IntVector> &flags, vector<Region> &patches);
     void PostFixup(vector<Region> &patches);
+    vector<IntVector> getMinPatchSize() {return d_minPatchSize;}
   protected:
     void problemSetup_BulletProofing(const int k);
     void AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags,

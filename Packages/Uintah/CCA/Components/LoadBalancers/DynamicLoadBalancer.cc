@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/Regridder.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -29,7 +30,7 @@ static DebugStream dbg("DynamicLoadBalancer", false);
 static DebugStream stats("LBStats",false);
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
-   : LoadBalancerCommon(myworld), sfc(myworld)
+   : LoadBalancerCommon(myworld), sfc(myworld), d_costProfiler(myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
@@ -215,7 +216,7 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<doubl
 
   // find out how many particles per patch, and store that number
   // along with the patch number in particleList
-  for(int l=0;l<grid->numLevels();l++){
+  for(int l=0;l<grid->numLevels();l++) {
     const LevelP& level = grid->getLevel(l);
     for (Level::const_patchIterator iter = level->patchesBegin(); 
         iter != level->patchesEnd(); iter++) {
@@ -223,7 +224,6 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<doubl
       int id = patch->getGridIndex();
       if (d_processorAssignment[id] != myrank)
         continue;
-      
       int thisPatchParticles = 0;
 
       if (dw) {
@@ -243,44 +243,41 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<doubl
 
   if (d_myworld->size() > 1) {
     //construct a mpi datatype for the PatchInfo
-    MPI_Datatype particletype;
-    MPI_Type_contiguous(2, MPI_INT, &particletype);
-    MPI_Type_commit(&particletype);
     vector<int> displs(num_procs, 0);
     vector<int> recvcounts(num_procs,0); // init the counts to 0
 
     // order patches by processor #, to determine recvcounts easily
-    vector<int> sorted_processorAssignment = d_processorAssignment;
-    sort(sorted_processorAssignment.begin(), sorted_processorAssignment.end());
+    //vector<int> sorted_processorAssignment = d_processorAssignment;
+    //sort(sorted_processorAssignment.begin(), sorted_processorAssignment.end());
     vector<PatchInfo> all_particles(num_patches);
 
     for (int i = 0; i < (int)d_processorAssignment.size(); i++) {
-      recvcounts[sorted_processorAssignment[i]]++;
+      recvcounts[d_processorAssignment[i]]+=sizeof(PatchInfo);
     }
-
+    
     for (unsigned i = 1; i < displs.size(); i++) {
       displs[i] = displs[i-1]+recvcounts[i-1];
     }
-
-    MPI_Allgatherv(&particleList[0], particleList.size(), particletype,
-                    &all_particles[0], &recvcounts[0], &displs[0], particletype,
+    
+    MPI_Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
+                    &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE,
                     d_myworld->getComm());
-    MPI_Type_free(&particletype);
-
+    
     if (dbg.active() && d_myworld->myrank() == 0) {
       for (unsigned i = 0; i < all_particles.size(); i++) {
         PatchInfo& pi = all_particles[i];
         dbg << d_myworld->myrank() << "  Post gather index " << i << ": " << pi.id << " numP : " << pi.numParticles << endl;
       }
     }
-
     for (int i = 0; i < num_patches; i++) {
       num_particles[all_particles[i].id] = all_particles[i].numParticles;
     }
   }
   else {
     for (int i = 0; i < num_patches; i++)
+    {
       num_particles[particleList[i].id] = particleList[i].numParticles;
+    }
   }
 
   // add the number of particles to the cost array
@@ -445,7 +442,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
   }
   int level_offset=0;
+
+  vector<double> previousProcCosts(num_procs,0);
+  double previous_total_cost=0;
   for(int l=0;l<grid->numLevels();l++){
+          
     const LevelP& level = grid->getLevel(l);
     int num_patches = level->numPatches();
     vector<int> order(num_patches);
@@ -458,141 +459,177 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
-#if 1
-    double avgCostPerProc = 0;
-    avgCostPerProc = total_cost / num_procs;
 
-    int currentProc = 0;
-    double currentProcCost = 0;
+    //hard maximum cost for assigning a patch to a processor
+    double hardMaxCost = DBL_MAX;    
+    double myMaxCost = DBL_MAX;
+    int minProcLoc = -1;
     
-    for (int p = 0; p < num_patches; p++) {
-      int index;
-      if (d_doSpaceCurve) {
-        index = order[p];
-        //cout << d_myworld->myrank() << ": mapping " << order[p] << " to " << index << " startingPatch:" << startingPatch << endl;
-      }
-      else {
-        // not attempting space-filling curve
-        index = p;
-      }
-      
-      // assign the patch to a processor.  When we advance procs,
-      // re-update the cost, so we use all procs (and don't go over)
-      double patchCost = patch_costs[l][index];
-      double notakeimb=fabs(currentProcCost-avgCostPerProc);
-      double takeimb=fabs(currentProcCost+patchCost-avgCostPerProc);
-
-      if (notakeimb<takeimb) {
-        // move to next proc and add this patch
-        currentProc++;
-        d_tempAssignment[level_offset+index] = currentProc;
-        //update average (this ensures we don't over/under fill to much)
-        total_cost -= currentProcCost;
-        avgCostPerProc = total_cost / (num_procs-currentProc);
-        currentProcCost = patchCost;
-      }
-      else {
-        // add patch to currentProc
-        ASSERTRANGE(currentProc,0,d_myworld->size());
-        d_tempAssignment[level_offset+index] = currentProc;
-        currentProcCost += patchCost;
-      }
-      if (d_myworld->myrank() == 0)
-        lb << "Level " << l << " Patch " << index << "-> proc " << currentProc 
-            << " PatchCost: " << patchCost << ", ProcCost: "
-            << currentProcCost << " group cost " << total_cost << "  avg cost " << avgCostPerProc << endl;
-    }
-#else
-    //partition patches recursivly into halves until I have my patchset
-    int remainingProcessors=num_procs;
-    int remainingPatches=num_patches;
-    int remainingCost=total_cost;
-    int startingPatch=0;
-    int startingProc=0;
-
-    while(remainingProcessors>1 && remainingPatches>0)
+    if(!force)  //use initial load balance to start the iteration
     {
-      //compute a split point where both sides have approximatly the same cost
-      int halfProc=remainingProcessors/2+remainingProcessors%2;
-      double halfCost=remainingCost/2;
-      double cost=0;
-      int p=0;
-      double takeimb=fabs(cost+patch_costs[l][order[startingPatch+p]]-halfCost);
-      double notakeimb=fabs(cost-halfCost);
+      double avgCost = (total_cost+previous_total_cost) / num_procs;
+      //compute costs of current load balance
+      vector<double> currentProcCosts(num_procs);
 
-      //if we do not have enough patches on the left side for all processors 
-      //  or if there is enough patches for the right side
-      //     and taking the patch causes less imbalance than not taking it
-      while(p<halfProc || remainingPatches-p>remainingProcessors-halfProc && notakeimb>takeimb)
+      for(int p=0;p<patch_costs[l].size();p++)
       {
-        //assign this patch to left side
-        cost+=patch_costs[l][order[startingPatch+p++]];
-        
-        //break out if there are no more patches
-        if(p==remainingPatches)
-           break;
-        
-        //update imbalance
-        takeimb=fabs(cost+patch_costs[l][order[startingPatch+p]]-halfCost);
-        notakeimb=fabs(cost-halfCost);
+        //copy assignment from current load balance
+        d_tempAssignment[level_offset+p]=d_processorAssignment[level_offset+p];
+        //add assignment to current costs
+        currentProcCosts[d_processorAssignment[level_offset+p]] += patch_costs[l][p];
       }
 
-      if(lb.active())
+      //compute maximum of current load balance
+      hardMaxCost=currentProcCosts[0];
+      for(int i=1;i<num_procs;i++)
       {
-        lb << d_myworld->myrank() << "  RemainingPatches:" << remainingPatches << " RemainingCost:" << remainingCost << " RemainingProcs:" << remainingProcessors << " cost:" << cost
-              << " halfCost:" << halfCost << " halfProc:" << halfProc << " startProc:" << startingProc << " startingPatch:" << startingPatch
-              << endl;
+        if(currentProcCosts[i]+previousProcCosts[i]>hardMaxCost)
+          hardMaxCost=currentProcCosts[i]+previousProcCosts[i];
       }
-      if(d_myworld->myrank()<startingProc+halfProc)
+      double range=hardMaxCost-avgCost;
+      myMaxCost=hardMaxCost-range/d_myworld->size()*d_myworld->myrank();
+    }
+
+    //temperary vector to assign the load balance in
+    vector<int> temp_assignment(d_tempAssignment);
+    vector<int> maxList(num_procs);
+    
+    int iter=0;
+    double improvement=1;
+    //iterate the load balancing algorithm until the max can no longer be lowered
+    while(improvement>0)
+    {
+      double remainingCost=total_cost+previous_total_cost;
+      double avgCostPerProc = remainingCost / num_procs;
+
+      int currentProc = 0;
+      vector<double> currentProcCosts(num_procs,0);
+      double currentMaxCost = 0;
+    
+      for (int p = 0; p < num_patches; p++) {
+        int index;
+        if (d_doSpaceCurve) {
+          index = order[p];
+        }
+        else {
+          // not attempting space-filling curve
+          index = p;
+        }
+      
+        // assign the patch to a processor.  When we advance procs,
+        // re-update the cost, so we use all procs (and don't go over)
+        double patchCost = patch_costs[l][index];
+        double notakeimb=fabs(previousProcCosts[currentProc]+currentProcCosts[currentProc]-avgCostPerProc);
+        double takeimb=fabs(previousProcCosts[currentProc]+currentProcCosts[currentProc]+patchCost-avgCostPerProc);
+        
+        if ( previousProcCosts[currentProc]+currentProcCosts[currentProc]+patchCost<myMaxCost && takeimb<=notakeimb) {
+          // add patch to currentProc
+          temp_assignment[level_offset+index] = currentProc;
+          currentProcCosts[currentProc] += patchCost;
+        }
+        else {
+          if(previousProcCosts[currentProc]+currentProcCosts[currentProc]>currentMaxCost)
+          {
+            currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
+          }
+          // move to next proc and add this patch
+          currentProc++;
+          
+          if(currentProc>=num_procs)
+            break;
+
+          temp_assignment[level_offset+index] = currentProc;
+          //update average (this ensures we don't over/under fill to much)
+          remainingCost -= (currentProcCosts[currentProc]+previousProcCosts[currentProc]);
+          avgCostPerProc = remainingCost / (num_procs-currentProc);
+          currentProcCosts[currentProc] = patchCost;
+        }
+      }
+
+      //check if last proc is the max
+      if(currentProc<num_procs && previousProcCosts[currentProc]+currentProcCosts[currentProc]>currentMaxCost)
+        currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
+     
+      //if the max was lowered and the assignments are valid
+      if(currentMaxCost<myMaxCost && currentProc<num_procs)
       {
-        //continue on left side
-        remainingProcessors=halfProc;
-        remainingPatches=p;
-        remainingCost=cost;
-        //startingProc remains the same
-        //startingPatch remains the same
+        //take this assignment
+        d_tempAssignment.swap(temp_assignment);
+     
+        //update myMaxCost
+        myMaxCost=currentMaxCost;
       }
       else
       {
-        //continue on right side
-        remainingProcessors-=halfProc;
-        remainingPatches-=p;
-        remainingCost-=cost;
-        startingProc+=halfProc;
-        startingPatch+=p;
+        //my assignment is not valid so set myMaxCost high
+        myMaxCost=DBL_MAX;
       }
-    }
-    
-    if(lb.active() )
-      lb << d_myworld->myrank() << " Level:" << l << " Final Cost:" << remainingCost  << " startingPatch:" << startingPatch << endl;
-    
-    vector<int> startPatch(num_procs+1,-999999);
-    startPatch[num_procs]=num_patches;
-    
-    ASSERT((startingProc==d_myworld->myrank() && remainingProcessors==1) || remainingPatches==0);
-    //allgather patchsets
-    MPI_Allgather(&startingPatch,1,MPI_INT,&startPatch[0],1,MPI_INT,d_myworld->getComm());
+        
 
-    //set d_tempAssignment array
-    int processor=0;
-    for(int p=0;p<num_patches;p++)
+      //update my max
+      if(hardMaxCost==DBL_MAX) //on first iteration everyone performed the same work
+      {
+        hardMaxCost=currentMaxCost;
+      }
+      else
+      {
+        //if currentProc is not in range
+        if(currentProc>=num_procs)
+        {
+          //my max is not valid
+          myMaxCost=DBL_MAX;
+        }
+              
+        double_int maxInfo(myMaxCost,d_myworld->myrank());
+        double_int min;
+        //gather the maxes
+        //change to all reduce with loc
+        MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
+        
+        //set improvement
+        improvement=hardMaxCost-min.val;
+        
+        if(min.val<hardMaxCost)
+        {
+          //set hardMax
+          hardMaxCost=min.val;
+          //set minloc
+          minProcLoc=min.loc;
+        }
+      }
+     
+      //compute average cost per proc
+      double average=(total_cost+previous_total_cost)/num_procs;
+      //set new myMax by having each processor search at even intervals in the range
+      double range=hardMaxCost-average;
+      myMaxCost=hardMaxCost-range/d_myworld->size()*d_myworld->myrank();
+      iter++;
+    }
+
+    //minProcLoc is only equal to -1 if everyone has the same array (ie first iteration)
+    if(minProcLoc!=-1)
     {
-      while(p>=startPatch[processor+1])
-         processor++;
-    
-      if(lb.active() && d_myworld->myrank()==0 )
-        lb << "On Level:" << l << " Patch:" << order[p] << " assigning to:" << processor << " cost:" << patch_costs[l][order[p]] << endl;
-      
-      d_tempAssignment[level_offset+order[p]] = processor;
+      //broadcast load balance
+      MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
     }
     
-#endif
+    if(!d_levelIndependent)
+    {
+      //update previousProcCost
+
+      //loop through the assignments for this level and add costs to previousProcCosts
+      for(int p=0;p<num_patches;p++)
+      {
+        previousProcCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
+      }
+      previous_total_cost+=total_cost;
+    }
     
     if(stats.active() && d_myworld->myrank()==0)
     {
       //calculate lb stats:
-      int totalCost=0;
-      vector<int> procCosts(num_procs,0);
+      double totalCost=0;
+      vector<double> procCosts(num_procs,0);
       for(int p=0;p<num_patches;p++)
       {
         totalCost+=patch_costs[l][p];
@@ -602,31 +639,28 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double meanCost=totalCost/num_procs;
       double minCost=procCosts[0];
       double maxCost=procCosts[0];
+      if(d_myworld->myrank()==0)
+        stats << "Level:" << l << " ProcCosts:";
+      
       for(int p=0;p<num_procs;p++)
       {
         if(minCost>procCosts[p])
            minCost=procCosts[p];
         else if(maxCost<procCosts[p])
            maxCost=procCosts[p];
+        
+        if(d_myworld->myrank()==0)
+          stats << procCosts[p] << " ";
       }
-      double stdCost=0;
-      double sumXsquared=0;
-      for(int p=0;p<num_procs;p++)
-      {
-        double diffSquared=procCosts[p]-meanCost;
-        diffSquared*=diffSquared;
-        sumXsquared+=diffSquared;
-      }
-      stdCost=sqrt(sumXsquared/num_procs);
+        if(d_myworld->myrank()==0)
+          stats << endl;
 
-      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " relstdev:" << stdCost/meanCost << " Min:" << minCost << " Max:" << maxCost << endl;
+      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << (maxCost-meanCost)/meanCost <<  endl;
     }  
     
     level_offset+=num_patches;
   }
-
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
-
   time = Time::currentSeconds() - time;
   if (d_myworld->myrank() == 0)
     dbg << " Time to LB: " << time << endl;
@@ -642,45 +676,90 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch
   // and have possiblyDynamicallyRelocate change the load balancing
   
   int num_procs = d_myworld->size();
-  vector<double> currentProcCosts(num_procs);
-  vector<double> tempProcCosts(num_procs);
+  int num_levels = patch_costs.size();
+  
+  vector<vector<double> > currentProcCosts(num_levels);
+  vector<vector<double> > tempProcCosts(num_levels);
 
-  // add the number of particles to the cost array
-  unsigned cost_level = 0;
-  unsigned cost_index = 0;
-  for (unsigned i = 0; i < d_tempAssignment.size(); i++, cost_index++) {
-    if (patch_costs[cost_level].size() <= cost_index) {
-      cost_index = 0;
-      cost_level++;
+  int i=0;
+  for(int l=0;l<num_levels;l++)
+  {
+    currentProcCosts[l].resize(num_procs);
+    tempProcCosts[l].resize(num_procs);
+
+    currentProcCosts[l].assign(num_procs,0);
+    tempProcCosts[l].assign(num_procs,0);
+    
+    for(int p=0;p<patch_costs[l].size();p++,i++)
+    {
+      currentProcCosts[l][d_processorAssignment[i]] += patch_costs[l][p];
+      tempProcCosts[l][d_tempAssignment[i]] += patch_costs[l][p];
     }
-    currentProcCosts[d_processorAssignment[i]] += patch_costs[cost_level][cost_index];
-    tempProcCosts[d_tempAssignment[i]] += patch_costs[cost_level][cost_index];
   }
   
-  // use (avg/max) for lb%
-  double avg_current = 0;
-  double max_current = 0;
-  double avg_temp = 0;
-  double max_temp = 0;
-
-  for (int i = 0; i < d_myworld->size(); i++) {
-    if (currentProcCosts[i] > max_current) max_current = currentProcCosts[i];
-    if (tempProcCosts[i] > max_temp) max_temp = tempProcCosts[i];
-    avg_current += currentProcCosts[i];
-    avg_temp += tempProcCosts[i];
-  }
-  avg_current /= d_myworld->size();
-  avg_temp /= d_myworld->size();
+  double total_max_current=0, total_avg_current=0;
+  double total_max_temp=0, total_avg_temp=0;
   
-  double curLB = avg_current/max_current;
-  double tmpLB = avg_temp/max_temp;
+  if(d_levelIndependent)
+  {
+    double avg_current = 0;
+    double max_current = 0;
+    double avg_temp = 0;
+    double max_temp = 0;
+    for(int l=0;l<num_levels;l++)
+    {
+      avg_current = 0;
+      max_current = 0;
+      avg_temp = 0;
+      max_temp = 0;
+      for (int i = 0; i < d_myworld->size(); i++) 
+      {
+        if (currentProcCosts[l][i] > max_current) 
+          max_current = currentProcCosts[l][i];
+        if (tempProcCosts[l][i] > max_temp) 
+          max_temp = tempProcCosts[l][i];
+        avg_current += currentProcCosts[l][i];
+        avg_temp += tempProcCosts[l][i];
+      }
 
+      avg_current /= d_myworld->size();
+      avg_temp /= d_myworld->size();
+
+      total_max_current+=max_current;
+      total_avg_current+=avg_current;
+      total_max_temp+=max_temp;
+      total_avg_temp+=avg_temp;
+    }
+  }
+  else
+  {
+      for(int i=0;i<d_myworld->size();i++)
+      {
+        double current_cost=0, temp_cost=0;
+        for(int l=0;l<num_levels;l++)
+        {
+          current_cost+=currentProcCosts[l][i];
+          temp_cost+=currentProcCosts[l][i];
+        }
+        if(current_cost>total_max_current)
+          total_max_current=current_cost;
+        if(temp_cost>total_max_temp)
+          total_max_temp=temp_cost;
+        total_avg_current+=current_cost;
+        total_avg_temp+=temp_cost;
+      }
+      total_avg_current/=d_myworld->size();
+      total_avg_temp/=d_myworld->size();
+  }
+    
+  
   if (d_myworld->myrank() == 0)
-    dbg << "CurrLB: " << curLB << " tmp " << tmpLB
-        << " threshold: " << tmpLB-curLB << " minT " << d_lbThreshold << endl;
+  {
+    stats << "Total:"  << " maxCur:" << total_max_current << " maxTemp:"  << total_max_temp << " avgCur:" << total_avg_current << " avgTemp:" << total_avg_temp <<endl;
+  }
 
   // if tmp - cur is positive, it is an improvement
-  if (tmpLB - curLB > d_lbThreshold)
+  if( (total_max_current-total_max_temp)/total_max_current>d_lbThreshold)
     return true;
   else
     return false;
@@ -912,11 +991,11 @@ DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, Pro
   if (d_myworld->myrank() == 0) {
     int startPatch = (*grid->getLevel(0)->patchesBegin())->getID();
     dbg << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
-    if (lb.active()) {
+    /*if (lb.active()) {
       for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
         lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
       }
-    }
+    }*/
   }
 }
 
@@ -1007,41 +1086,68 @@ void DynamicLoadBalancer::sortPatches(vector<Region> &patches, vector<double> &c
   //random? cyclicic?
 }
 
-// There are 2 cases which call this function:
-// 1) from possiblyDynamicallyReallocate, not regrid
-// 2) from possiblyDynamicallyReallocate, after regrid
-// 
-//    patches only matters during a regrid.  In this case, 'grid' is the old grid.
+//if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
 void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region> >&patches, vector<vector<double> >&costs,
                                    bool during_regrid)
 {
   costs.clear();
-  if (during_regrid) {
-    costs.resize(patches.size());
-    for (unsigned l = 0; l < patches.size(); l++) 
+  costs.resize(grid->numLevels());
+
+  if(d_profile && d_costProfiler.hasData())
+  {
+    if(during_regrid)
     {
-      for(vector<Region>::const_iterator patch=patches[l].begin();patch!=patches[l].end();patch++)
+      //for each level
+      for (int l=0; l<patches.size();l++) 
       {
-        costs[l].push_back(d_patchCost+patch->getVolume()*d_cellCost);
+        d_costProfiler.getWeights(l,patches[l],costs[l]);
       }
     }
-    if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
+    else
     {
-      collectParticlesForRegrid(grid, patches, costs);
+      //for each level
+      for (int l=0; l<grid->numLevels();l++) 
+      {
+        LevelP level=grid->getLevel(l);
+        vector<Region> patches(level->numPatches());
+        
+        for(int p=0; p<level->numPatches();p++)
+        {
+          const Patch *patch=level->getPatch(p);
+          patches[p]=Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
+        }
+        d_costProfiler.getWeights(l,patches,costs[l]);
+      }
     }
   }
-  else {
-    costs.resize(grid->numLevels());
-    for (int l = 0; l < grid->numLevels(); l++) 
-    {
-      for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
+  else
+  {
+    if (during_regrid) {
+      costs.resize(patches.size());
+      for (unsigned l = 0; l < patches.size(); l++) 
       {
-        costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getVolume()*d_cellCost);
+        for(vector<Region>::const_iterator patch=patches[l].begin();patch!=patches[l].end();patch++)
+        {
+          costs[l].push_back(d_patchCost+patch->getVolume()*d_cellCost);
+        }
+      }
+      if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
+      {
+        collectParticlesForRegrid(grid, patches, costs);
       }
     }
-    if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
-    {
-      collectParticles(grid, costs);
+    else {
+      for (int l = 0; l < grid->numLevels(); l++) 
+      {
+        for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
+        {
+          costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getVolume()*d_cellCost);
+        }
+      }
+      if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
+      {
+        collectParticles(grid, costs);
+      }
     }
   }
   
@@ -1141,14 +1247,14 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
 }
 
 void
-DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
+DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationStateP& state)
 {
-  LoadBalancerCommon::problemSetup(pspec, state);
+  LoadBalancerCommon::problemSetup(pspec, grid, state);
 
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   string dynamicAlgo;
   double interval = 0;
-  int timestepInterval = 0;
+  int timestepInterval = 10;
   double threshold = 0.0;
   bool spaceCurve = false;
   
@@ -1159,11 +1265,16 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     if (timestepInterval != 0 && !p->get("interval", interval))
       interval = 0.0; // default
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "static");
-    p->getWithDefault("cellCost", d_cellCost, 2);
-    p->getWithDefault("particleCost", d_particleCost, 1);
-    p->getWithDefault("patchCost", d_patchCost, 0);
-    p->getWithDefault("gainThreshold", threshold, 0.0);
-    p->getWithDefault("doSpaceCurve", spaceCurve, false);
+    p->getWithDefault("cellCost", d_cellCost, 1);
+    p->getWithDefault("particleCost", d_particleCost, 1.25);
+    p->getWithDefault("patchCost", d_patchCost, 16);
+    p->getWithDefault("gainThreshold", threshold, 0.05);
+    p->getWithDefault("doSpaceCurve", spaceCurve, true);
+    int timestepWindow;
+    p->getWithDefault("profileTimestepWindow",timestepWindow,10);
+    d_costProfiler.setTimestepWindow(timestepWindow);
+    p->getWithDefault("doCostProfiling",d_profile,true);
+    p->getWithDefault("levelIndependent",d_levelIndependent,true);
   }
 
   if (dynamicAlgo == "cyclic")
@@ -1197,4 +1308,22 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   sfc.SetMergeMode(1);
   sfc.SetCleanup(BATCHERS);
   sfc.SetMergeParameters(3000,500,2,.15);  //Should do this by profiling
+
+  //set costProfiler mps
+  Regridder *regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+  if(regridder)
+  {
+    d_costProfiler.setMinPatchSize(regridder->getMinPatchSize());
+  }
+  else
+  {
+    //query mps from a patch
+    const Patch *patch=grid->getLevel(0)->getPatch(0);
+
+    vector<IntVector> mps;
+    mps.push_back(patch->getInteriorCellHighIndex()-patch->getInteriorCellLowIndex());
+    
+    d_costProfiler.setMinPatchSize(mps);
+  }
 }
+

@@ -132,6 +132,7 @@ MPIScheduler::createSubScheduler()
   newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
+  newsched->d_sharedState=d_sharedState;
   return newsched;
 }
 
@@ -265,10 +266,21 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   
   double dtask = Time::currentSeconds()-taskstart;
   
-  //if i have a sub scheduler do not add my task time to the total time
+  //if i do not have a sub scheduler 
   if(!task->getTask()->getHasSubScheduler())
-    mpi_info_.totaltask += dtask;
-
+  {
+    //add my task time to the total time
+    mpi_info_.totaltask += dtask;  
+    //if(d_myworld->myrank()==0)
+    //  cout << "adding: " << dtask << " to counters, new total: " << mpi_info_.totaltask << endl;
+    if(!d_sharedState->isCopyDataTimestep() && task->getTask()->getType()!=Task::Output)
+    {
+      //if(d_myworld->myrank()==0 && task->getPatches()!=0)
+      //  cout << d_myworld->myrank() << " adding: " << task->getTask()->getName() << " to profile:" << dtask << " on patches:" << *(task->getPatches()) << endl;
+      //add contribution for patchlist
+      getLoadBalancer()->addContribution(task->getPatches(),dtask);
+    }
+  }
 
   postMPISends( task, iteration );
   task->done(dws); // should this be timed with taskstart? - BJW
@@ -284,6 +296,8 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
  
   if(parentScheduler) //add my timings to the parent scheduler
   {
+  //  if(d_myworld->myrank()==0)
+  //    cout << "adding: " << mpi_info_.totaltask << " to parent counters, new total: " << parentScheduler->mpi_info_.totaltask << endl;
     parentScheduler->mpi_info_.totaltask+=mpi_info_.totaltask;
     parentScheduler->mpi_info_.totaltestmpi+=mpi_info_.totaltestmpi;
     parentScheduler->mpi_info_.totalrecv+=mpi_info_.totalrecv;
@@ -938,6 +952,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   finalizeTimestep();
+  
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler

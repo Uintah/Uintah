@@ -2,7 +2,9 @@
 #define UINTAH_HOMEBREW_DynamicLoadBalancer_H
 
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SFC.h>
 #include <set>
@@ -68,7 +70,7 @@ namespace Uintah {
     virtual int getPatchwiseProcessorAssignment(const Patch* patch);
     virtual int getOldProcessorAssignment(const VarLabel* var,
 					  const Patch* patch, const int matl);
-    virtual void problemSetup(ProblemSpecP& pspec, SimulationStateP& state);
+    virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
     /// call one of the assignPatches functions.
@@ -92,8 +94,30 @@ namespace Uintah {
     //! Simulation.  Returns true if we need to re-load balance (if we have a 
     //! different number of procs than were saved to disk
     virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string, const GridP& grid);
-    
+   
+  //cost profiling functions
+    //update the contribution for this patch
+    void addContribution(const PatchSubset* patches ,double cost) {d_costProfiler.addContribution(patches,cost);}
+    //finalize the contributions (updates the weight, should be called once per timestep)
+    void finalizeContributions(const GridP currentGrid) { d_costProfiler.finalizeContributions(currentGrid);}
+    //initializes the regions in the new level that are not in the old level
+    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {
+            d_costProfiler.initializeWeights(oldgrid,newgrid); }
+    //resets the profiler counters to zero
+    void resetCostProfiler() {d_costProfiler.reset();}
+
   private:
+
+  struct double_int
+  {
+     double val;
+     int loc;
+     double_int(double val, int loc): val(val), loc(loc) {}
+     double_int(): val(0), loc(-1) {}
+  };
+
+    vector<IntVector> d_minPatchSize;
+    CostProfiler d_costProfiler;
     enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
 
     DynamicLoadBalancer(const DynamicLoadBalancer&);
@@ -130,6 +154,8 @@ namespace Uintah {
 
     double d_lbInterval;
     double d_lastLbTime;
+
+    bool d_levelIndependent;
     
     int d_lbTimestepInterval;
     int d_lastLbTimestep;
@@ -144,9 +170,11 @@ namespace Uintah {
     double d_patchCost;     //cost weight per patch
     
     int d_dynamicAlgorithm;
+
     bool d_doSpaceCurve;
     bool d_collectParticles;
     bool d_checkAfterRestart;
+    bool d_profile;
 
     SFC <double> sfc;
   };

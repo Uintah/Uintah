@@ -254,6 +254,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 #if SCI_ASSERTION_LEVEL > 0
   newGrid->performConsistencyCheck();
 #endif
+
+  //initialize the weights on new patches
+  lb_->initializeWeights(oldGrid,newGrid);
+  
   return newGrid;
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
@@ -574,10 +578,10 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   IntVector lastSize = d_minPatchSize[size - 1];
   if (size < d_maxLevels) {
     d_minPatchSize.reserve(d_maxLevels);
-    for (int i = size; i < d_maxLevels; i++)
+    for (int i = size; i < d_maxLevels-1; i++)
       d_minPatchSize.push_back(lastSize);
   }
-  
+   
   //calculate the minimum patch size on level 0
   IntVector min_size(INT_MAX,INT_MAX,INT_MAX);
 

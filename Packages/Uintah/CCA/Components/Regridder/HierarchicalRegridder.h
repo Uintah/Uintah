@@ -52,6 +52,8 @@ class VarLabel;
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid);
 
+    virtual vector<IntVector> getMinPatchSize() {return d_patchSize;};
+
   private:
     Grid* CreateGrid2(Grid* oldGrid);
     void GatherSubPatches(const GridP& origGrid, SchedulerP& sched);
