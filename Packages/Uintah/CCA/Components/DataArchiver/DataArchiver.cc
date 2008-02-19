@@ -30,17 +30,17 @@
 #include <Core/Thread/Time.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iomanip>
-#include <errno.h>
-#include <fstream>
-#include <iostream>
-#include <stdio.h>
-#include <sstream>
-#include <vector>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <math.h>
+#include   <iomanip>
+#include   <errno.h>
+#include   <fstream>
+#include   <iostream>
+#include   <stdio.h>
+#include   <sstream>
+#include   <vector>
+#include   <sys/types.h>
+#include   <sys/stat.h>
+#include   <fcntl.h>
+#include   <math.h>
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
@@ -487,7 +487,12 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
         // Try to remove the old dir...
         if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
-          if( !testFilesystem( restartFromDir.getName() ) ) {
+          stringstream error_stream;          
+          if( !testFilesystem( restartFromDir.getName(), error_stream, true ) ) {
+
+            cout << error_stream.str();
+            cout.flush();
+
             // The file system just gave us some problems...
             if( Parallel::usingMPI() ) {
               printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
@@ -994,7 +999,10 @@ DataArchiver::beginOutputTimestep( double time, double delt,
         // Try to remove the expired checkpoint directory...
         if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
-          if( !testFilesystem( expiredDir.getName() ) ) {
+          stringstream error_stream;          
+          if( !testFilesystem( expiredDir.getName(), error_stream, true ) ) {
+            cout << error_stream.str();
+            cout.flush();
             // The file system just gave us some problems...
             if( Parallel::usingMPI() ) {
               printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );

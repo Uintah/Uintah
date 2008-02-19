@@ -318,7 +318,7 @@ isSymLink( const string & filename )
 
 // Creates a temp file (in directoryPath), writes to it, and then deletes it...
 bool
-testFilesystem( const string & directoryPath )
+testFilesystem( const string & directoryPath, stringstream & error_stream, bool verbose /* = false */ )
 {
   FILE * fp;
 
@@ -327,9 +327,9 @@ testFilesystem( const string & directoryPath )
   // Create a temporary file
   fp = fopen( fileName.c_str(), "w" );
   if( fp == NULL ) {
-    printf( "ERROR: testFilesystem() failed to create a temporary file in %s\n", directoryPath.c_str() );
-    printf( "       errno is %d\n", errno );
-      return false;
+    error_stream << "ERROR: testFilesystem() failed to create a temporary file in " << directoryPath << "\n";
+    error_stream << "       errno is %d" << errno << "\n";
+    return false;
   }
 
   // Write to the file
@@ -337,8 +337,8 @@ testFilesystem( const string & directoryPath )
   for( int cnt = 0; cnt < 1000; cnt++ ) {
     int numWritten = fwrite( myStr, 1, 11, fp );
     if( numWritten != 11 ) {
-      printf( "ERROR: testFilesystem() failed to write data to temp file in %s\n", directoryPath.c_str() );
-      printf( "       iteration: %d, errno is %d\n", cnt, errno );
+      error_stream << "ERROR: testFilesystem() failed to write data to temp file in " << directoryPath << "\n";
+      error_stream << "       iteration: " << cnt << ", errno is " << errno << "\n";
       return false;
     }
   }
@@ -346,26 +346,28 @@ testFilesystem( const string & directoryPath )
   // Close the file
   int result = fclose( fp );
   if (result != 0) {
-    printf( "WARNING: fclose() failed while testing filesystem.\n" );
-    printf( "         errno is %d\n", errno );
+    error_stream << "WARNING: fclose() failed while testing filesystem.\n";
+    error_stream << "         errno is " << errno << "\n";
     return false;
   }
 
   // Check the files size
   struct stat buf;
   if( stat(fileName.c_str(), &buf) == 0 ) {
-    printf( "FILESYSTEM CHECK: Test file size is: %d\n", (int)buf.st_size );
+    if( verbose ) {
+      error_stream << "FILESYSTEM CHECK: Test file size is: " << (int)buf.st_size << "\n";
+    }
   } else {
-    printf( "WARNING: stat() failed while testing filesystem.\n" );
-    printf( "         errno is %d\n", errno );
+    error_stream << "WARNING: stat() failed while testing filesystem.\n";
+    error_stream << "         errno is " << errno << "\n";
     return false;
   }
 
   // Delete the file
   int rc = remove( fileName.c_str() );
   if (rc != 0) {
-    printf( "WARNING: remove() failed while testing filesystem.\n" );
-    printf( "         errno is %d\n", errno );
+    error_stream << "WARNING: remove() failed while testing filesystem.\n";
+    error_stream << "         errno is " << errno << "\n";
     return false;
   }
   return true;

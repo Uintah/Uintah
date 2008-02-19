@@ -1,15 +1,48 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
 
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+#include <sci_defs/mpi_defs.h>
 #include <mpi.h>
+
+#include <unistd.h>
 
 #include <vector>
 #include <iostream>
 #include <string>
 #include <sstream>
 
+#include <Core/Util/FileUtils.h>
+
 using namespace std;
-        
-int rank;
-int procs;
+
+const int HOST_NAME_SIZE = 100;
+char      hostname[ HOST_NAME_SIZE ];
+int       rank;
+int       procs;
 
 stringstream error_stream;
 
@@ -20,11 +53,12 @@ int allgather_test();
 int gather_test();
 int point2pointasync_test();
 int point2pointsync_test();
+int fileSystem_test();
 
 int
 testme(int (*testfunc)(void),char* name)
 {
-  if(rank==0) {
+  if( rank == 0 ) {
     cout << "Testing '" << name << "': ";
     cout.flush();
   }
@@ -34,8 +68,8 @@ testme(int (*testfunc)(void),char* name)
   
   MPI_Allreduce(&pass,&all_pass,1,MPI_INT,MPI_LOR,MPI_COMM_WORLD);
  
-  if(rank==0) {
-    if(all_pass) {
+  if( rank == 0) {
+    if( all_pass ) {
       cout << "Passed\n" ;
     }
     else {
@@ -58,6 +92,8 @@ testme(int (*testfunc)(void),char* name)
 int
 main( int argc, char** argv )
 {
+  gethostname( (char*)&hostname, HOST_NAME_SIZE );
+
   MPI_Init(&argc,&argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &procs);
@@ -66,13 +102,14 @@ main( int argc, char** argv )
     cout << "Testing mpi communication on " << procs << " processors." << endl;
   }
  
-  testme(allreduce_test,"MPI_Allreduce");
-  testme(reduce_test,"MPI_Reduce");
-  testme(broadcast_test,"MPI_Bcast");
-  testme(allgather_test,"MPI_Allgather");
-  testme(gather_test,"MPI_Gather");
-  testme(point2pointasync_test,"PointToPointAsync");
-  testme(point2pointsync_test,"PointToPointSync");
+  testme( allreduce_test,        "MPI_Allreduce" );
+  testme( reduce_test,           "MPI_Reduce" );
+  testme( broadcast_test,        "MPI_Bcast" );
+  testme( allgather_test,        "MPI_Allgather" );
+  testme( gather_test,           "MPI_Gather" );
+  testme( point2pointasync_test, "Point To Point Async" );
+  testme( point2pointsync_test,  "Point To Point Sync" );
+  testme( fileSystem_test,       "File System" );
   
   MPI_Finalize();
   return 0;
@@ -175,10 +212,32 @@ gather_test()
 
 // Each Processor sends its rank to each other processor
 int
+fileSystem_test()
+{
+  int pass = true;
+
+  string host = string( hostname ).substr( 0, 3 );
+
+  printf("host is %s\n", host.c_str());
+
+  if( host == "inf" ) {
+    bool raid1 = SCIRun::testFilesystem( "/usr/csafe/raid1", error_stream );
+    bool raid2 = SCIRun::testFilesystem( "/usr/csafe/raid2", error_stream );
+    bool raid3 = SCIRun::testFilesystem( "/usr/csafe/raid3", error_stream );
+    bool raid4 = SCIRun::testFilesystem( "/usr/csafe/raid4", error_stream );
+
+    pass = raid1 && raid2 && raid3 && raid4;
+  }
+  
+  return pass;
+}
+
+// Each Processor sends its rank to each other processor
+int
 point2pointasync_test()
 {
-  int pass=true;
-  vector<int> messages(procs);
+  int                 pass = true;
+  vector<int>         messages(procs);
   vector<MPI_Request> srequest(procs),rrequest(procs);
   
   for(int p=0;p<procs;p++)
