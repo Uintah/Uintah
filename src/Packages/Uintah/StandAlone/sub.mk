@@ -234,19 +234,6 @@ LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
-# async_mpi_test.cc
-
-SRCS := $(SRCDIR)/async_mpi_test.cc
-PROGRAM := Packages/Uintah/StandAlone/async_mpi_test
-PSELIBS := \
-        Core/Thread \
-        Packages/Uintah/Core/Parallel
-
-LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
 # restart_merger
 
 SRCS := $(SRCDIR)/restart_merger.cc
@@ -282,16 +269,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/gambitFileReader.cc
 PROGRAM := Packages/Uintah/StandAlone/gambitFileReader
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-##############################################
-# mpi_test
-
-LIBS := $(MPI_LIBRARY) $(M_LIBRARY) 
-PSELIBS := 
-SRCS := $(SRCDIR)/mpi_test.cc
-PROGRAM := Packages/Uintah/StandAlone/mpi_test
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -359,7 +336,7 @@ partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 
 selectpart: prereqs Packages/Uintah/StandAlone/selectpart
 
-async_mpi_test: prereqs Packages/Uintah/StandAlone/async_mpi_test
+async_mpi_test: prereqs Packages/Uintah/StandAlone/tools/mpi_test/async_mpi_test
 
 extractV: prereqs Packages/Uintah/StandAlone/tools/extractors/extractV
 
@@ -385,4 +362,4 @@ compare_mms: Packages/Uintah/StandAlone/tools/compare_mms/compare_mms
 
 compare_scalar: Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar
 
-mpi_test: Packages/Uintah/StandAlone/mpi_test
+mpi_test: Packages/Uintah/StandAlone/tools/mpi_test/mpi_test

@@ -7,6 +7,7 @@ SUBDIRS := \
 	$(SRCDIR)/dumpfields  \
 	$(SRCDIR)/extractors  \
         $(SRCDIR)/graphview   \
+        $(SRCDIR)/mpi_test    \
 	$(SRCDIR)/pfs         \
 	$(SRCDIR)/puda        \
 	$(SRCDIR)/radiusMaker \
