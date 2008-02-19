@@ -3,7 +3,8 @@
 from sys import argv,exit
 from helpers.runSusTests import runSusTests
 
-TESTS = [   ("HePlume", "HePlume.ups", 1.1,"ALL"), \
+TESTS = [   ("HePlume", "HePlume.ups", 1.1, "Linux",  ["doesTestrun"]), \
+            ("HePlume", "HePlume.ups", 1.1, "Darwin", ["doesTestRun"]), \
             ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux")
     	]
 
