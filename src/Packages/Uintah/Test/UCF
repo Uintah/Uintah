@@ -7,6 +7,17 @@ from helpers.modUPS import modUPS
 
 #______________________________________________________________________
 #Performance and other UCF related tests
+
+#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  flags: 
+#       no_uda_comparison:      - skip the uda comparisons
+#       no_memoryTest:          - skip all memory checks
+#       no_restart:             - skip the restart tests
+#       no_dbg:                 - skip all debug compilation tests
+#       no_opt:                 - skip all optimized compilation tests
+#       do_performance_test:    - Run the performance test
+#       doesTestRun:            - Checks if a test successfully runs
+
 UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do_performance_test"]),  \
            ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_performance_test"]), \
            ("dlb_mpm",        "mpmDLBTest.ups",     8, "NONE"), \

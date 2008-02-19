@@ -9,6 +9,16 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
                            "methane_explicit_table.ups", \
                            ["<patches>[2,2,2]</patches>", \
                             "<maxTime>10.0</maxTime>"])
+                            
+#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  flags: 
+#       no_uda_comparison:      - skip the uda comparisons
+#       no_memoryTest:          - skip all memory checks
+#       no_restart:             - skip the restart tests
+#       no_dbg:                 - skip all debug compilation tests
+#       no_opt:                 - skip all optimized compilation tests
+#       do_performance_test:    - Run the performance test
+#       doesTestRun:            - Checks if a test successfully runs
 
 UNUSED_TESTS = []
 TESTS = [
