@@ -12,6 +12,17 @@ hotBlob_AMR_3L_ups = modUPS("%s/ICE" % inputs_root(), \
 
 UNUSED = [  ]
 
+#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  flags: 
+#       no_uda_comparison:      - skip the uda comparisons
+#       no_memoryTest:          - skip all memory checks
+#       no_restart:             - skip the restart tests
+#       no_dbg:                 - skip all debug compilation tests
+#       no_opt:                 - skip all optimized compilation tests
+#       do_performance_test:    - Run the performance test
+#       doesTestRun:            - Checks if a test successfully runs
+ 
+
 TESTS = [   ("advect",          "advect.ups",           1, "Linux"),      \
             ("advect",          "advect.ups",           1, "Darwin", ["doesTestRun"]),  \
             ("rieman_sm",       "rieman_sm.ups",        1, "Linux"),      \
