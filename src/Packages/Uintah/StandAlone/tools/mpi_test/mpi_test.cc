@@ -218,13 +218,11 @@ fileSystem_test()
 
   string host = string( hostname ).substr( 0, 3 );
 
-  printf("host is %s\n", host.c_str());
-
   if( host == "inf" ) {
-    bool raid1 = SCIRun::testFilesystem( "/usr/csafe/raid1", error_stream );
-    bool raid2 = SCIRun::testFilesystem( "/usr/csafe/raid2", error_stream );
-    bool raid3 = SCIRun::testFilesystem( "/usr/csafe/raid3", error_stream );
-    bool raid4 = SCIRun::testFilesystem( "/usr/csafe/raid4", error_stream );
+    bool raid1 = SCIRun::testFilesystem( "/usr/csafe/raid1", error_stream, rank );
+    bool raid2 = SCIRun::testFilesystem( "/usr/csafe/raid2", error_stream, rank );
+    bool raid3 = SCIRun::testFilesystem( "/usr/csafe/raid3", error_stream, rank );
+    bool raid4 = SCIRun::testFilesystem( "/usr/csafe/raid4", error_stream, rank );
 
     pass = raid1 && raid2 && raid3 && raid4;
   }

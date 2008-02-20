@@ -488,7 +488,7 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
         if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
           stringstream error_stream;          
-          if( !testFilesystem( restartFromDir.getName(), error_stream, true ) ) {
+          if( !testFilesystem( restartFromDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
 
             cout << error_stream.str();
             cout.flush();
@@ -1000,7 +1000,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
         if( !Dir::removeDir( expiredDir.getName().c_str() ) ) {
           // Something strange happened... let's test the filesystem...
           stringstream error_stream;          
-          if( !testFilesystem( expiredDir.getName(), error_stream, true ) ) {
+          if( !testFilesystem( expiredDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
             cout << error_stream.str();
             cout.flush();
             // The file system just gave us some problems...
