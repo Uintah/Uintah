@@ -4,12 +4,14 @@ TEST=$1
 TEST_DIR=$2
 COMPARE_ROOT=$3
 SUS_DIR=$4
+ABS_TOL=$5 # Absolute tolerance 
+REL_TOL=$6 # Relative tolerance
 
 WD=`pwd`
 cd $TEST_DIR
 UDADIR=`ls -d *.uda`
 cd $WD
-
+command
 TEST_UDADIR=$TEST_DIR/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
 
@@ -52,7 +54,7 @@ if [ -d "$TEST_UDADIR" ]; then
 #    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
   else
       echo "Testing $TEST"
-      compare_sus_runs_by_udas $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR
+      compare_sus_runs_by_udas $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR $ABS_TOL $REL_TOL
       exit $?
   fi
 else
