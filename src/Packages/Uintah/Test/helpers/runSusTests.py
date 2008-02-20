@@ -18,9 +18,9 @@ def inputs_root ():
     return argv[2]
 def date ():
     return asctime(localtime(time()))
-def which_tests (test):
+def userFlags (test):
     return test[-1]
-def nullCallback (test, susdir, inputsdir, compare_root, mode, max_parallelism):
+def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
     
 #______________________________________________________________________
@@ -29,51 +29,40 @@ def nullCallback (test, susdir, inputsdir, compare_root, mode, max_parallelism):
 def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
  
   if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
-    print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <mode> " \
+    print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> " \
              "<max_parallelsim> <test>" % argv[0]
-    print "    where <mode> is 'dbg' or 'opt' and <test> is optional"
+    print "    where <test> is optional"
     exit(1)
-
-  # setup up parameter variables
+  #__________________________________
+  # setup variables and paths
   susdir        = path.normpath(path.join(getcwd(), argv[1]))
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
-  mode = argv[4]
+  helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
+  inputpath     = path.normpath(path.join(getcwd(), inputs_root()))
+  startpath     = getcwd()
+  
+  dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
-
-  if max_parallelism < 1:
-    max_parallelism = 1;
+  
+  #__________________________________
+  # set environmental variables
+  environ['PATH']              = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
+  environ['SCI_SIGNALMODE']    = 'exit'
+  environ['SCI_EXCEPTIONMODE'] = 'abort'
+  environ['MPI_TYPE_MAX']      = '10000'
+  environ['outputlinks']       = "0"  #display html links on output
 
   solotest = ""
   if len(argv) == 7:
     solotest = argv[6]
   
-  # performance tests are run only by passing "performance" if you pass
-  # "do_perf" in the non-default-tests array
-  do_restart     = 1  
-  do_dbg         = 1
-  do_comparisons = 1
-  do_memory      = 1
-  do_performance = 0
-
-  if mode == "dbg" and do_dbg == 0:
-    print "Skipping %s tests because we're in debug mode" % ALGO
-    return 3
-
-  if mode == "opt":
-    do_memory = 0
-
-  startpath = getcwd()
-
-  # whether or not to display html links on output
-  environ['outputlinks']="0"
-  
   # If run from startTester, tell it to output logs in web dir
   # otherwise, save it in the build, and display links
   try:
 
-    # if webpath exists, use that, otherwise, use BUILDROOT/mode
-    outputpath = "%s-%s" % (environ['HTMLLOG'], mode)
-    weboutputpath = "%s-%s" % (environ['WEBLOG'], mode)
+    # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
+    outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
+    weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
     try:
       # make outputpath/dbg or opt dirs
       environ['outputlinks'] ="1"
@@ -85,13 +74,12 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   except Exception:
     outputpath = startpath
     weboutputpath = startpath
-  
-  helperspath = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
-
-  inputpath = path.normpath(path.join(getcwd(), inputs_root()))
 
   #__________________________________
   # bulletproofing
+  if max_parallelism < 1:
+    max_parallelism = 1;
+  
   try:
     chdir(helperspath)
   except Exception:
@@ -114,7 +102,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print "Please give a valid <testdata_goldstandard> argument"
     exit(1)
   compare_root = "%s/%s" % (gold_standard, ALGO)
-
+  
   try:
     chdir(compare_root)
   except Exception:
@@ -122,15 +110,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     chdir(gold_standard)
     mkdir(ALGO)
     system("chmod -R 775 %s" % ALGO)
-    
-  # set environmental variables
-  environ['PATH'] = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
-  environ['SCI_SIGNALMODE'] = 'exit'
-  environ['SCI_EXCEPTIONMODE'] = 'abort'
-
+  
   resultsdir = "%s/%s-results" % (startpath, ALGO)
-
   chdir(startpath)
+  
   try:
     mkdir(resultsdir)
   except Exception:
@@ -143,77 +126,89 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, ALGO)) != 1:
     mkdir("%s/%s-results" % (outputpath, ALGO))
 
-  environ['MPI_TYPE_MAX'] = '10000'
-
   print ""
   if solotest == "":
-    print "Performing %s-%s tests." % (ALGO, mode)
+    print "Performing %s-%s tests." % (ALGO, dbg_opt)
   else:
-    print "Performing %s-%s test %s." % (ALGO, mode, solotest)
+    print "Performing %s-%s test %s." % (ALGO, dbg_opt, solotest)
   print "===================================="
   print ""
 
-  failcode = 0
-
-  # this is to see if any tests actually ran (so we can say tests skipped)
-  ran_any_tests = 0
-
-  #__________________________________
-  # Loop over tests 
   
+
+  #______________________________________________________________________
+  # Loop over tests 
+  ran_any_tests  = 0
+  failcode       = 0
   solotest_found = 0
+ 
   for test in TESTS:
-    if solotest != "" and nameoftest(test) != solotest:
+  
+    testname = nameoftest(test)
+    
+    if solotest != "" and testname != solotest:
       continue
 
-    solotest_found = 1 # if there is a solotest, that is
-
-    # if test can be run on this OS
     if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
-
+      
+    solotest_found = 1
     #__________________________________
-    # What tests should be run
     # defaults
-    test_comparisons = do_comparisons
-    test_memory      = do_memory
-    test_restart     = do_restart
-    test_performance = do_performance
+    do_uda_comparisons = 1
+    do_memory      = 1
+    do_restart     = 1
+    do_performance = 0
+    do_debug = 1
+    do_opt   = 1
     
-    # override defaults
-    non_default_tests = which_tests(test)
-    skip_debug = 0
-    for ndt in non_default_tests:
-      if ndt == "no_Uda_comparison":
-        test_comparisons = 0
-      if ndt == "no_memoryTest":
-        test_memory = 0
-      if ndt == "no_restart":
-        test_restart = 0
-      if ndt == "no_dbg":
-        skip_debug = 1
-      if ndt == "do_performance_test":
-        test_restart     = 0
-        skip_debug       = 1
-        test_comparisons = 0
-        test_memory      = 0
-        test_performance = 1
-      if ndt == "doesTestRun":
-        test_restart     = 0
-        skip_debug       = 0
-        test_comparisons = 0
-        test_memory      = 0
-        test_performance = 0
+    #__________________________________
+    # override defaults if the flags has been specified
+    if len(test) == 5:
+      flags = userFlags(test)
+      print "len(test): %s" % len(test)
 
-    if skip_debug == 1 and mode == "dbg":
+      for f in flags:
+        print "f %s" % f;
+        if f == "no_uda_comparison":
+          do_uda_comparisons = 0
+        if f == "no_memoryTest":
+          do_memory = 0
+        if f == "no_restart":
+          do_restart = 0
+        if f == "no_dbg":
+          do_debug = 0
+        if f == "no_opt":
+          do_opt = 0
+        if f == "do_performance_test":
+          do_restart         = 0
+          do_debug           = 0
+          do_uda_comparisons = 0
+          do_memory          = 0
+          do_performance     = 1
+        if f == "doesTestRun":
+          do_restart         = 1
+          do_uda_comparisons = 0
+          do_memory          = 0
+          do_performance     = 0
+
+    tests_to_do = [do_uda_comparisons, do_memory, do_performance]
+
+    if do_debug == 0 and dbg_opt == "dbg":
       continue
-
-    tests_to_do = [test_comparisons, test_memory, do_performance]
-
-    testname = nameoftest(test)
+    if do_opt == 0 and dbg_opt == "opt":
+      continue
+      
+    if dbg_opt == "opt":
+      do_memory = 0
+      
+    tests_to_do = [do_uda_comparisons, do_memory, do_performance]
+    
     ran_any_tests = 1
 
-    # make sure that this test's gold standard exists
+    #__________________________________
+    # bulletproofing
+    # does gold standard exists
     try:
       chdir(compare_root)
       chdir(testname)
@@ -242,21 +237,20 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     system("echo '%s/replace_gold_standard %s %s/%s-results %s $1' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
-
     chdir(testname)
 
 
     # call the callback function before running each test
-    list = callback(test, susdir, inputsdir, compare_root, mode, max_parallelism)
+    list = callback(test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism)
 
     inputxml = path.basename(input(test))
     system("cp %s/%s %s" % (inputsdir, input(test), inputxml))
     symlink(inputpath, "inputs")
     
     #__________________________________
-    # Run test and perform all comparisons on the uda
+    # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism, tests_to_do, "no")
+    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, "no")
     system("rm inputs")
 
     # copy results to web server
@@ -274,14 +268,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       chdir("restart")
 
       # call the callback function before running each test
-      callback(test, susdir, inputsdir, compare_root, mode, max_parallelism);
+      callback(test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism);
       
       #__________________________________
       # Run restart test
-      if test_restart == 1:
+      if do_restart == 1:
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism, tests_to_do, "yes")
+        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, "yes")
 
         if rc > 0:
           failcode = 1
@@ -322,10 +316,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if failcode == 0:
     if solotest != "":
       print ""
-      print "%s-%s test %s passed successfully!" % (ALGO, mode, solotest)
+      print "%s-%s test %s passed successfully!" % (ALGO, dbg_opt, solotest)
     else:
       print ""
-      print "All %s-%s tests passed successfully!" % (ALGO, mode)
+      print "All %s-%s tests passed successfully!" % (ALGO, dbg_opt)
   else:
     print ""
     print "Some tests failed"
@@ -337,7 +331,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism, tests_to_do, restart = "no"):
+def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, restart = "no"):
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -348,12 +342,12 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
       print "Skipping test %s because %s processors exceeds maximum of %s" % (testname, np, max_parallelism);
     return -1; 
 
-  do_comparison_test  = tests_to_do[0]
-  do_memory_test      = tests_to_do[1]
-  do_performance_test = tests_to_do[2]
-  cu_rc  = 0
-  pf_rc  = 0
-  mem_rc = 0
+  do_uda_comparison_test  = tests_to_do[0]
+  do_memory_test          = tests_to_do[1]
+  do_performance_test     = tests_to_do[2]
+  cu_rc  = 0   # compare_uda return code
+  pf_rc  = 0   # performance return code
+  mem_rc = 0   # memory return code
 
 
   output_to_browser=1
@@ -499,10 +493,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
 
     #__________________________________
     # uda comparison
-    if do_comparison_test == 1:
+    if do_uda_comparison_test == 1:
       print "\tComparing udas on %s" % (date())
 
-      if mode == "dbg":
+      if dbg_opt == "dbg":
         environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
 
       cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
@@ -523,6 +517,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism
         print "\tComparison tests passed."
     #__________________________________
     # Memory leak test
+    
+    
     if do_memory_test == 1:
       mem_rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
       try:
