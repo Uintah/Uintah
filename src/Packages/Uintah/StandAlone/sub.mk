@@ -283,7 +283,8 @@ uintah: sus \
         partextract \
         partvarRange \
         selectpart \
-	async_mpi_test \
+        async_mpi_test \
+        mpi_test \
         extractV \
         extractF \
         extractS \
@@ -320,7 +321,7 @@ link_regression_tester:
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
-tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar
+tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar
 
 puda: prereqs Packages/Uintah/StandAlone/tools/puda/puda
 
@@ -337,6 +338,8 @@ partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 selectpart: prereqs Packages/Uintah/StandAlone/selectpart
 
 async_mpi_test: prereqs Packages/Uintah/StandAlone/tools/mpi_test/async_mpi_test
+
+mpi_test: prereqs Packages/Uintah/StandAlone/tools/mpi_test/mpi_test
 
 extractV: prereqs Packages/Uintah/StandAlone/tools/extractors/extractV
 
