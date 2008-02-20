@@ -2,6 +2,8 @@
 
 TEST_UDADIR=$1
 COMPARE_UDADIR=$2
+ABS_TOL=$3  # Absolute tolerance
+REL_TOL=$4  # Relative tolerance
 
 if [ ! -d "$TEST_UDADIR" ]; then
   echo "$TEST_UDADIR doesn't exist"
@@ -33,18 +35,15 @@ if [ $retval != "0" ]; then
     fi
 fi
 
-abs_error_allowable=1e-9
-rel_error_allowable=1e-6
-
 WD=`pwd`
 cd $TEST_UDADIR
 dats=`ls -1 *.dat`
 testdat=`ls -1 *.dat | head -n 1`
 cd $WD
 
-echo "compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ $dats"
+#echo "compare_dat_files.pl $ABS_TOL $REL_TOL $TEST_UDADIR/ $COMPARE_UDADIR/ $dats"
 
-compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ $dats
+compare_dat_files.pl $ABS_TOL $REL_TOL $TEST_UDADIR/ $COMPARE_UDADIR/ $dats
 
 retval=$?
 

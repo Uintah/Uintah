@@ -3,7 +3,7 @@
 from os import environ,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import asctime,localtime,time
 from sys import argv,exit
-from string import upper,rstrip
+from string import upper,rstrip,rsplit
 from modUPS import modUPS
 
 def nameoftest (test):
@@ -161,38 +161,48 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     do_performance = 0
     do_debug = 1
     do_opt   = 1
+    abs_tolerance = 1e-9   # defaults used in compare_uda
+    rel_tolerance = 1e-6     
     
     #__________________________________
     # override defaults if the flags has been specified
     if len(test) == 5:
       flags = userFlags(test)
-      print "len(test): %s" % len(test)
-
-      for f in flags:
-        print "f %s" % f;
-        if f == "no_uda_comparison":
+      print "User Flags:"
+      
+      for i in range(len(flags)):
+        print i,flags[i]
+        
+        if flags[i] == "no_uda_comparison":
           do_uda_comparisons = 0
-        if f == "no_memoryTest":
+        if flags[i] == "no_memoryTest":
           do_memory = 0
-        if f == "no_restart":
+        if flags[i] == "no_restart":
           do_restart = 0
-        if f == "no_dbg":
+        if flags[i] == "no_dbg":
           do_debug = 0
-        if f == "no_opt":
+        if flags[i] == "no_opt":
           do_opt = 0
-        if f == "do_performance_test":
+        if flags[i] == "do_performance_test":
           do_restart         = 0
           do_debug           = 0
           do_uda_comparisons = 0
           do_memory          = 0
           do_performance     = 1
-        if f == "doesTestRun":
+        if flags[i] == "doesTestRun":
           do_restart         = 1
           do_uda_comparisons = 0
           do_memory          = 0
           do_performance     = 0
-
-    tests_to_do = [do_uda_comparisons, do_memory, do_performance]
+        
+        # parse the flags for 
+        #    abs_tolerance=<number>
+        #    rel_tolerance=<number>  
+        tmp = flags[i].rsplit('=')
+        if tmp[0] == "abs_tolerance":
+          abs_tolerance = tmp[1]
+        if tmp[0] == "rel_tolerance":
+          rel_tolerance = tmp[1]
 
     if do_debug == 0 and dbg_opt == "dbg":
       continue
@@ -203,6 +213,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       do_memory = 0
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
+    tolerances = [abs_tolerance, rel_tolerance]
     
     ran_any_tests = 1
 
@@ -250,7 +261,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, "no")
+    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, "no")
     system("rm inputs")
 
     # copy results to web server
@@ -275,7 +286,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       if do_restart == 1:
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, "yes")
+        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, "yes")
 
         if rc > 0:
           failcode = 1
@@ -331,7 +342,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, restart = "no"):
+def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, restart = "no"):
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -499,7 +510,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       if dbg_opt == "dbg":
         environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
 
-      cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
+      abs_tol= tolerances[0]
+      rel_tol= tolerances[1]
+      cu_rc = system("compare_sus_runs %s %s %s %s %s %s> compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol))
       if cu_rc != 0:
         if cu_rc == 10 * 256:
           print "\t*** Input file (or its defaults) was the only difference"
@@ -517,8 +530,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         print "\tComparison tests passed."
     #__________________________________
     # Memory leak test
-    
-    
     if do_memory_test == 1:
       mem_rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
       try:

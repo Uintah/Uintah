@@ -4,10 +4,17 @@ if (@ARGV <= 4) {
     print "usage: compare_dat_files {abs error allowed} {rel error allowed} {uda directory 1} {uda directory 2} {dat file names}\n";
 }
 
+
+
 $allowable_abs_error = $ARGV[0];
 $allowable_rel_error = $ARGV[1];
 $uda_dir1 = $ARGV[2];
 $uda_dir2 = $ARGV[3];
+
+print "Using absolute tolerance:" . $allowable_abs_error . "\n";
+print "Using relative tolerance:" . $allowable_rel_error . "\n";
+
+
 $greatest_rel_error = 0;
 $greatest_abs_error = 0;
 $first_significant_rel_error = 0;
