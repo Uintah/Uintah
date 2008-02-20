@@ -92,7 +92,7 @@ ProblemSpecReader::readInputFile()
 
       stringstream error_stream;
       
-      if( !testFilesystem( directory, error_stream, true ) ) {
+      if( !testFilesystem( directory, error_stream, Parallel::getMPIRank() ) ) {
         cout << error_stream.str();
         cout.flush();
       }

@@ -318,26 +318,36 @@ isSymLink( const string & filename )
 
 // Creates a temp file (in directoryPath), writes to it, and then deletes it...
 bool
-testFilesystem( const string & directoryPath, stringstream & error_stream, bool verbose /* = false */ )
+testFilesystem( const string & directoryPath,
+                stringstream & error_stream,
+                int procNumber /* = -1 ... ie, non-MPI test...*/ )
 {
   FILE * fp;
 
   string fileName = directoryPath + "/scirun_filesystem_check_temp_file";
+  if( procNumber != -1 ) {
+    stringstream fn;
+    fn << fileName;
+    fn << "_" << procNumber;
+    fileName = fn.str();
+  }
 
   // Create a temporary file
   fp = fopen( fileName.c_str(), "w" );
   if( fp == NULL ) {
-    error_stream << "ERROR: testFilesystem() failed to create a temporary file in " << directoryPath << "\n";
+    error_stream << "ERROR: testFilesystem() failed to create a temp file (" << fileName << ") in " 
+                 << directoryPath << "\n";
     error_stream << "       errno is %d" << errno << "\n";
     return false;
   }
 
   // Write to the file
   const char * myStr = "hello world";
-  for( int cnt = 0; cnt < 1000; cnt++ ) {
+  for( int cnt = 0; cnt < 1001; cnt++ ) {
     int numWritten = fwrite( myStr, 1, 11, fp );
     if( numWritten != 11 ) {
-      error_stream << "ERROR: testFilesystem() failed to write data to temp file in " << directoryPath << "\n";
+      error_stream << "ERROR: testFilesystem() failed to write data to temp file (" << fileName << ") in " 
+                   << directoryPath << "\n";
       error_stream << "       iteration: " << cnt << ", errno is " << errno << "\n";
       return false;
     }
@@ -354,11 +364,11 @@ testFilesystem( const string & directoryPath, stringstream & error_stream, bool 
   // Check the files size
   struct stat buf;
   if( stat(fileName.c_str(), &buf) == 0 ) {
-    if( verbose ) {
-      error_stream << "FILESYSTEM CHECK: Test file size is: " << (int)buf.st_size << "\n";
+    if( buf.st_size != 11011 ) {
+      error_stream << "ERROR: Test file size is: " << (int)buf.st_size << ", but should be 11011 bytes!\n";
     }
   } else {
-    error_stream << "WARNING: stat() failed while testing filesystem.\n";
+    error_stream << "ERROR: stat() failed while testing filesystem.\n";
     error_stream << "         errno is " << errno << "\n";
     return false;
   }
@@ -366,10 +376,11 @@ testFilesystem( const string & directoryPath, stringstream & error_stream, bool 
   // Delete the file
   int rc = remove( fileName.c_str() );
   if (rc != 0) {
-    error_stream << "WARNING: remove() failed while testing filesystem.\n";
+    error_stream << "ERROR: remove() failed while testing filesystem.\n";
     error_stream << "         errno is " << errno << "\n";
     return false;
   }
+
   return true;
 }
 
