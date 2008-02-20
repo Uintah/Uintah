@@ -12,6 +12,8 @@ from helpers.runSusTests import runSusTests
 #       no_opt:                 - skip all optimized compilation tests
 #       do_performance_test:    - Run the performance test
 #       doesTestRun:            - Checks if a test successfully runs
+#       abs_tolerance=XXX       - absolute tolerance used in comparisons
+#       rel_tolerance=XXX       - relative tolerance used in comparisons
 
 TESTS = [   ("pipeFlow2mat", "pipeFlow2mat.ups", 2, "ALL")
     	]
