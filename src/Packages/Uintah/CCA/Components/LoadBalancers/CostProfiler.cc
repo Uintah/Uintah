@@ -228,7 +228,7 @@ void CostProfiler::getWeights(int l, const vector<Region> &regions, vector<doubl
   //allreduce sum weights
   if(d_myworld->size()>1)
     MPI_Allreduce(&partial_weights[0],&weights[0],weights.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
-  
+ 
 }
 
 void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
@@ -242,7 +242,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
   for(int l=1;l<newgrid->numLevels();l++)
   {
     vector<Region> old_level;
-  
+
     if(oldgrid && oldgrid->numLevels()>l)
     {
       //create old_level vector
@@ -275,15 +275,19 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     }
     
     //compute regions in new level that are not in old
+    
     deque<Region> new_regions, dnew, dold(old_level.begin(),old_level.end());
     
-    //create dnew 
+    //create dnew to contain a subset of the new patches
     for(int p=0; p<newgrid->getLevel(l)->numPatches(); p++) 
     {
-      const Patch* patch = newgrid->getLevel(l)->getPatch(p);
-      dnew.push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
+      if(p%d_myworld->size()==d_myworld->myrank())
+      {
+        const Patch* patch = newgrid->getLevel(l)->getPatch(p);
+        dnew.push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
+      }
     }
-
+    
     //compute difference
     new_regions=Region::difference(dnew, dold);
     
@@ -291,22 +295,18 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     int i=0;
     for(deque<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
     {
-      //distribute costs modularly over all processors
-      if(i++%d_myworld->size()==d_myworld->myrank())
-      {
-        IntVector low=it->getLow()/d_minPatchSize[l];
-        IntVector high=it->getHigh()/d_minPatchSize[l];
+      IntVector low=it->getLow()/d_minPatchSize[l];
+      IntVector high=it->getHigh()/d_minPatchSize[l];
       
-        //loop through datapoints
-        for(CellIterator iter(low,high); !iter.done(); iter++)
-        {
-          //add cost to current contribution
-          costs[l][*iter].zoweight=average_cost;
-          costs[l][*iter].foweight=average_cost;
-          costs[l][*iter].soweight=average_cost;
-          costs[l][*iter].toweight=average_cost;
-        } //end cell iteration
-      } //end if 
+      //loop through datapoints
+      for(CellIterator iter(low,high); !iter.done(); iter++)
+      {
+        //add cost to current contribution
+        costs[l][*iter].zoweight=average_cost;
+        costs[l][*iter].foweight=average_cost;
+        costs[l][*iter].soweight=average_cost;
+        costs[l][*iter].toweight=average_cost;
+      } //end cell iteration
     } //end region iteration
   }// end levels iteration
 }
