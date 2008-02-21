@@ -6,17 +6,16 @@
    <Meta>
        <title>Colliding Disks</title>
    </Meta>
-   
+
    <SimulationComponent>
         <type> mpm </type>
    </SimulationComponent>
-   
    <Time>
        <maxTime>0.2</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.6</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>periodic_disks.uda</filebase>
@@ -33,6 +32,7 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
     </MPM>
 
     <PhysicalConstants>
@@ -114,13 +114,12 @@
            <Box label = "1">
               <lower>[0,0,0]</lower>
               <upper>[1.0,1.0,.15]</upper>
-               <resolution>[20,20,3]</resolution>
+              <resolution>[20,20,3]</resolution>
               <patches>[3,2,1]</patches>
+              <extraCells> [0,0,1]</extraCells>
            </Box>
            <periodic>[1,1,0]</periodic>
        </Level>
     </Grid>
 
-
 </Uintah_specification>
-
