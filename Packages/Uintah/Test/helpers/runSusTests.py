@@ -1,7 +1,7 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 
 from os import environ,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
-from time import asctime,localtime,time
+from time import asctime,localtime,strftime,time
 from sys import argv,exit
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
@@ -141,9 +141,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   ran_any_tests  = 0
   failcode       = 0
   solotest_found = 0
+  comp_time0 = time()
  
   for test in TESTS:
-  
+    print "__________________"
     testname = nameoftest(test)
     
     if solotest != "" and testname != solotest:
@@ -151,7 +152,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
-      
+    test_time0 = time() 
     solotest_found = 1
     #__________________________________
     # defaults
@@ -302,7 +303,13 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
     chdir("..")
-  
+    
+    # timer
+    test_timer = time() - test_time0
+    minutes, seconds = divmod(test_timer, 60)
+    hours, minutes = divmod(minutes, 60)
+    print "Test Timer: %d:%d:%d" %(hours,minutes,seconds)
+    
   chdir("..")
 
   system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
@@ -323,7 +330,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     exit(3)
   
   #__________________________________  
-  # If the test successfully ran and passed all tests  
+  # If the test successfully ran and passed all tests 
+  
   if failcode == 0:
     if solotest != "":
       print ""
@@ -334,6 +342,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   else:
     print ""
     print "Some tests failed"
+    
+  comp_timer = time() - comp_time0 
+  minutes, seconds = divmod(comp_timer, 60)
+  hours, minutes = divmod(minutes, 60)
+  print "Component Timer %d:%d:%d" %(hours,minutes,seconds)
   return failcode
 
 #______________________________________________________________________
@@ -397,13 +410,14 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     command = "/usr/bin/time -p %s %s %s/sus -mpi" % (MPIHEAD, int(np), susdir)
     mpimsg = " (mpi %s proc)" % (int(np))
 
+  time0 =time()
   if restart == "yes":
-    print "Running restart test for %s%s on %s" % (testname, mpimsg, date())
+    print "Running restart test  ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
     susinput = "-restart ../*.uda.000 -t 0 -copy"
     startpath = "../../.."
     restart_text = " (restart)"
   else:
-    print "Running test %s%s on %s" % (testname, mpimsg, date())
+    print "Running test  ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
     susinput = "%s" % (inputxml)
     restart_text = " "
 
@@ -438,12 +452,13 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     perf_msg    = '\tSee %s/performance_check.log.txt for more performance information.' % (logpath)
 
   # actually run the test!
-  print "Command Line: %s %s" % (command, susinput)
+  short_cmd = command.replace(susdir+'/','')
+  print "Command Line: %s %s" % (short_cmd, susinput)
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
 
 
   # determine path of replace_msg in 2 places to not have 2 different msgs.
-  replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: "
+  replace_msg = "\tTo replace the goldStandards run:\n\t "
 
   if restart == "yes":
     chdir("..")
@@ -505,7 +520,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     #__________________________________
     # uda comparison
     if do_uda_comparison_test == 1:
-      print "\tComparing udas on %s" % (date())
+      print "\tComparing udas"
 
       if dbg_opt == "dbg":
         environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
@@ -515,7 +530,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       cu_rc = system("compare_sus_runs %s %s %s %s %s %s> compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol))
       if cu_rc != 0:
         if cu_rc == 10 * 256:
-          print "\t*** Input file (or its defaults) was the only difference"
+          print "\t*** Input file(s) differs from the goldstandard"
           print "%s" % replace_msg
         elif cu_rc == 1 * 256 or cu_rc == 5*256:
           print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
