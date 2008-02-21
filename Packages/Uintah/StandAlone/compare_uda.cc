@@ -68,8 +68,8 @@ void usage(const std::string& badarg, const std::string& progname)
 	 << " [options] <archive file 1> <archive file 2>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
-    cerr << "  -abs_tolerance [double] (allowable absolute differance of any number, default: 1e-9)\n";
-    cerr << "  -rel_tolerance [double] (allowable relative differance of any number, default: 1e-6)\n";
+    cerr << "  -abs_tolerance [double] (allowable absolute difference of any number, default: 1e-9)\n";
+    cerr << "  -rel_tolerance [double] (allowable relative difference of any number, default: 1e-6)\n";
     cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
     cerr << "  -skip_unknown_types (skip variable comparisons" 
 	  << " of unknown types without error)\n";
@@ -128,6 +128,8 @@ void displayProblemLocation(const string& var, int matl,
 
 bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
 {
+  // Return false only if BOTH absolute and relative comparisons fail.
+
   double max_abs = fabs(a);
   if (fabs(b) > max_abs) max_abs = fabs(b);
   if (fabs(a - b) > abs_tolerance) {
