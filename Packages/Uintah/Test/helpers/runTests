@@ -16,6 +16,9 @@ fi
 failed=0
 dbg_failed=0
 opt_failed=0
+
+dbg_passFail="passed"
+opt_passFail="passed"
 use_html=1
 
 #remove files from previous tests if necessary
@@ -23,41 +26,41 @@ rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$B
 
 #if VERBOSE is on, then have all output go to stdout instead of log
 
-
-
+#__________________________________
 # if weekly tests, do not do dbg
 if [ "$WEEKLY" != "1" ]; then
   WKLY_STRING=" "
-  # make debug header to the webpage referred to by the mail message
   echo "" >> "$HTMLLOG"
   echo "/--------------------------\\" >> "$HTMLLOG"
   echo "|    DEBUG TEST SUMMARY    |" >> "$HTMLLOG"
   echo "\\--------------------------/" >> "$HTMLLOG"
 
-
+  # compile and run
   if [ $VERBOSE = "yes" ]; then
-
     build_and_run "dbg" "$DBG_CONFIGURE"
   else
     build_and_run "dbg" "$DBG_CONFIGURE" > "$BUILDROOT"/dbg/log 2>&1
   fi
+  
+  # set flags
   if [ $? != 0 ]; then
     failed=1
     dbg_failed=1
-    echo "Debug tests failed!" >> "$HTMLLOG"
-  else
-    echo "Debug tests passed!" >> "$HTMLLOG"
+    dbg_passFail="failed"
   fi
+  echo "Debug tests $dbg_passFail!" >> "$HTMLLOG"
 else
   WKLY_STRING=" Weekly"
 fi
 
-#opt webpage header
+#__________________________________
+# optimized
 echo "" >> "$HTMLLOG"
 echo "/--------------------------\\" >> "$HTMLLOG"
 echo "|  OPTIMIZED TEST SUMMARY   |" >> "$HTMLLOG"
 echo "\\--------------------------/" >> "$HTMLLOG"
    
+# compile and run   
 if [ $VERBOSE = "yes" ]; then
   build_and_run "opt" "$OPT_CONFIGURE"
 else
@@ -68,41 +71,36 @@ retval=$?
 if [ $retval != 0 ]; then
   failed=1
   opt_failed=1
-  echo "Optimized tests failed!" >> "$HTMLLOG"
-else
-  echo "Optimized tests passed!" >> "$HTMLLOG"
+  opt_passFail="failed"
 fi
+echo "Optimized tests $opt_passFail!" >> "$HTMLLOG"
+
 
 if [ $failed = "0" ]; then
   echo "All tests passed!" >> "$BUILDROOT"/log
   echo "All tests passed!" >> "$HTMLLOG"
 fi
 
-# make outputs to the file which will be sent in the mail
+#__________________________________
+# Build the log that will be sent out in the email
 echo "" >> "$BUILDROOT"/log
 
 if [ "$WEEKLY" != "1" ]; then
   echo "/--------------------------\\" >> "$BUILDROOT"/log
-  if [ $dbg_failed != "0" ]; then
-    echo "| DEBUG TESTS - failed     |" >> "$BUILDROOT"/log
-  else
-    echo "| DEBUG TESTS - passed     |" >> "$BUILDROOT"/log
-  fi
+  echo "| DEBUG TESTS - $dbg_passFail     |" >> "$BUILDROOT"/log
   echo "\\--------------------------/" >> "$BUILDROOT"/log
   echo "" >> "$BUILDROOT"/log
 
   cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
 
-echo "" >> "$BUILDROOT"/log
+  echo "" >> "$BUILDROOT"/log
 fi
-    echo "/--------------------------\\" >> "$BUILDROOT"/log
-if [ $opt_failed != "0" ]; then
-    echo "| OPTIMIZED TESTS - failed |" >> "$BUILDROOT"/log
-else
-    echo "| OPTIMIZED TESTS - passed |" >> "$BUILDROOT"/log
-fi
-    echo "\\--------------------------/" >> "$BUILDROOT"/log
+
+echo "/--------------------------\\" >> "$BUILDROOT"/log
+echo "| OPTIMIZED TESTS - $opt_passFail |" >> "$BUILDROOT"/log
+echo "\\--------------------------/" >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
+
 cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
 
 echo "</pre></body></html>" >> "$HTMLLOG"
@@ -111,57 +109,61 @@ echo "" >> "$BUILDROOT"/log
 #chmod -R g+w "$BUILDROOT"
 chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
 
+#__________________________________
+# 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
-    if [ $failed = "0" ]; then
-	subject="SUCCESS:$WKLY_STRING Regression tests on `hostname`"
-    else
-	subject="FAILURE:$WKLY_STRING  Regression tests on `hostname`***"
-    fi
+  if [ $failed = "0" ]; then
+    subject="SUCCESS:$WKLY_STRING Regression tests on `hostname`"
+  else
+    subject="FAILURE:$WKLY_STRING  Regression tests on `hostname`***"
+  fi
 
-    cat > "$BUILDROOT"/mail.msg <<EOF
+  cat > "$BUILDROOT"/mail.msg <<EOF
 Subject: $subject
 To: $SEND_MAIL_TO
 EOF
-    if [ "$REPLY_TO" != "" ]; then
-        echo "Reply-To: $REPLY_TO" >> "$BUILDROOT"/mail.msg
-    fi
-    cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
+  if [ "$REPLY_TO" != "" ]; then
+    echo "Reply-To: $REPLY_TO" >> "$BUILDROOT"/mail.msg
+  fi
+  cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
-    if [ $use_html = "1" ]; then
-	echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
-	echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
-    fi
-    sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+  if [ $use_html = "1" ]; then
+    echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
+    echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
+  fi
+  sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
 #   rm -f "$BUILDROOT"/mail.msg
 fi
 
+#__________________________________
+#
 remake_file=""
 if [ -f "$BUILDROOT"/dbg/remake_failed_scirun.log ]; then
-    remake_file="$BUILDROOT"/dbg/remake_failed_scirun.log
+  remake_file="$BUILDROOT"/dbg/remake_failed_scirun.log
 elif [ -f  "$BUILDROOT"/opt/remake_failed_scirun.log ]; then
-    remake_file="$BUILDROOT"/opt/remake_failed_scirun.log
+  remake_file="$BUILDROOT"/opt/remake_failed_scirun.log
 fi
 
 if [ "$MAIL_REMAKE_LOG_TO" != "" -a "$remake_file" != "" ]; then
-    subject="Failed to compile scirun with Uintah on `hostname`"
+  subject="Failed to compile scirun with Uintah on `hostname`"
 
-    cat > "$BUILDROOT"/make_mail.msg <<EOF
+  cat > "$BUILDROOT"/make_mail.msg <<EOF
 Subject: $subject
 To: $MAIL_REMAKE_LOG_TO
 $remake_file:
 
 EOF
-    cat $remake_file >> "$BUILDROOT"/make_mail.msg
+  cat $remake_file >> "$BUILDROOT"/make_mail.msg
 
-    sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/make_mail.msg
-    rm -f "$BUILDROOT"/make_mail.msg
+  sendmail "$MAIL_REMAKE_LOG_TO" < "$BUILDROOT"/make_mail.msg
+  rm -f "$BUILDROOT"/make_mail.msg
 fi
 
 if [ $failed = "0" ]; then
-    if [ -d "${BUILD_DIR}/last_successful.lock" ]; then
-	rm -r "${BUILD_DIR}/last_successful.lock" 
-    fi
-    ln -s "$BUILDROOT" "${BUILD_DIR}/last_successful.lock"
+  if [ -d "${BUILD_DIR}/last_successful.lock" ]; then
+    rm -r "${BUILD_DIR}/last_successful.lock" 
+  fi
+  ln -s "$BUILDROOT" "${BUILD_DIR}/last_successful.lock"
 fi
 
 cd "$BUILD_DIR"
