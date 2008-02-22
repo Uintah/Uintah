@@ -13,11 +13,11 @@ PARALLELISM=$4
 OS=`uname -s`
 
 if [ "$#" -lt 4 ]; then
-    echo "usage: setupTests <SCIRUN-ROOT> <SCIRUN-BUILD-ROOT> <dbg or opt> <maxProcs>"
-    exit 1
+  echo "usage: setupTests <SCIRUN-ROOT> <SCIRUN-BUILD-ROOT> <dbg or opt> <maxProcs>"
+  exit 1
 fi
 
-# output links
+# setup symbolic links
 rm -f susdir inputs goldStandard TestScripts
 ln -s "$BUILDROOT/Packages/Uintah/StandAlone" susdir
 ln -s "$SCIRUNROOT/src/Packages/Uintah/StandAlone/inputs" inputs
@@ -27,14 +27,13 @@ ln -s "$SCIRUNROOT/src/Packages/Uintah/Test" TestScripts
 dir=`pwd`
 cd TestScripts
 for test in *; do
-    if [ -f "$test" -a -x "$test" ]; then
-        cd $dir
-	doTestScript="do${test}tests"
-        echo "#!/bin/tcsh" > "$doTestScript"
-        echo "setenv OS $OS" >> "$doTestScript"
-        echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALL\
-ELISM "'$1' >> "$doTestScript"
-        /bin/chmod a+x "$doTestScript"
-	cd TestScripts
-    fi
+  if [ -f "$test" -a -x "$test" ]; then
+    cd $dir
+    doTestScript="do${test}tests"
+    echo "#!/bin/tcsh" > "$doTestScript"
+    echo "setenv OS $OS" >> "$doTestScript"
+    echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+    /bin/chmod a+x "$doTestScript"
+    cd TestScripts
+  fi
 done
