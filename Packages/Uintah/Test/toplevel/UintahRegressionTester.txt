@@ -75,6 +75,9 @@ or otherwise you could run
 
 startTester <options>
 
+or
+
+echo "startTester -j 1" | at now
 ****************************************************************************
 Top-Level Scripts
 ****************************************************************************
@@ -95,22 +98,27 @@ need password-less access to csf.cs.utah.edu.  This will normally require
 an ssh authentication agent.  See section on SSH authentication for more
 details.
 
-Usage:
-
-	startTester [-sendmail | -sendmailto "emails" | -j # -weekly | 
-                     -use_tree "tree" | -use_prevtree | -verbose | -help]
-
-Options:
-
-  -sendmail:              sends mail to the default people
-  -sendmailto "emails":   sends mail to emails - "comma-separated list"
-  -j #:                   use max of # processors
-  -weekly:                runs weekly tests, signified by a .wk extension
-  -use_tree "tree":       use "tree" instead of downloading new one
-  -use_prevtree:          use previous tree instead of downloading new one
-                          This is the build pointed to by last_ran.lock
-  -verbose:               verbose output to stdout, and mail not sent
-  -help:                  outputs options message
+Usage: startTester should only be run by at(1) or cron(1)
+    To run immediately, use "at now" with the path to this script as stdin.
+    Options:
+        -sendmail:        Send error messages to the default people
+        -sendmailto       "emails":  Send error messages to these people
+        -j #:             Use # number of processors maximum
+        -malloc_strict:   Have debug runs use malloc_strict
+        -use_tree "tree": Use the given tree instead of checking one out
+        -use_prevtree:    Use the previous (last_ran.lock) checkout and/or build
+        -build_only:      Test the compilation only.  Don't run the tests.
+        -no_compile:      Run the tests only; assume the build is already done.
+        -verbose:         Display verbose output
+        -weekly:          Run longer regression tests (meant for once a week)
+        -build_dir:       Change the directory where SCIRun is downloaded to.
+        -test_data:       Change the GoldStandard directory.
+        -user <user>:     Run the tests in Test/users/<user>/ instead of Test/
+          You must use either the -use_tree or -build_dir options and
+          the -test_data option
+        -help:            Display this option summary
+        
+        
 
 Important Variables used:
   SCRIPT_DIR              directory where script lives: used in path
