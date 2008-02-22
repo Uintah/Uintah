@@ -144,7 +144,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   comp_time0 = time()
  
   for test in TESTS:
-    print "__________________"
+
     testname = nameoftest(test)
     
     if solotest != "" and testname != solotest:
@@ -152,6 +152,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     if testOS(test) != environ['OS'] and testOS(test) != "ALL":
       continue
+      
+    print "__________________"
     test_time0 = time() 
     solotest_found = 1
     #__________________________________
