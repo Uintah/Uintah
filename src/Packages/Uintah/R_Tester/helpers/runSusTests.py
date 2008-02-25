@@ -5,6 +5,7 @@ from time import asctime,localtime,strftime,time
 from sys import argv,exit
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
+from commands import getoutput
 
 def nameoftest (test):
     return test[0]
@@ -43,6 +44,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   dbg_opt         = argv[4]
   max_parallelism = float(argv[5])
+  svn_revision    = getoutput("svn info ../src |grep Revision")
   
   #__________________________________
   # set environmental variables
@@ -312,6 +314,13 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     hours, minutes = divmod(minutes, 60)
     print "Test Timer: %d:%d:%d" %(hours,minutes,seconds)
     
+    # If the test passed put an svn revision stamp in the goldstandard
+    user = environ['USER']
+    if failcode == 0 and user == "csafe-tester":
+      print "Updating the svn revision file %s" %svn_revision
+      svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
+      system( "echo 'This test last passed with %s'> %s" %(svn_revision, svn_file))  
+    
   chdir("..")
 
   system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
@@ -332,7 +341,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     exit(3)
   
   #__________________________________  
-  # If the test successfully ran and passed all tests 
+  # If the tests successfully ran and passed all tests 
   
   if failcode == 0:
     if solotest != "":
