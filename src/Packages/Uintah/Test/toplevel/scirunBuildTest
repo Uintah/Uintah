@@ -109,7 +109,7 @@ if [ $retval != "0" ]; then
   exit 1
 fi
 
-PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
 
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
   DBG_CONFIGURE="'--enable-debug' '--enable-64bit'"

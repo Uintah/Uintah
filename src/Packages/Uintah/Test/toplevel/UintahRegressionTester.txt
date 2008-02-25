@@ -305,7 +305,7 @@ Side Effects:
 specified in the environment variables
 
 --------
-runTests - Uintah/Test/helpers/runTests, sh script
+runTests - Uintah/R_Tester/helpers/runTests, sh script
 --------
 called by startTester, but can also be run from the command line, but it 
 would be much easier to call startTester with the -use_tree option
@@ -345,7 +345,7 @@ If the tests were successful, then it will place a lock in BUILD_DIR pointing
 to BUILDROOT.  It is called last_successful.lock
 
 -------------  
-build_and_run - Uintah/Test/helpers/build_and_run
+build_and_run - Uintah/R_Tester/helpers/build_and_run
 -------------
 called by runTests, but can also be run from the command line.
 
@@ -356,7 +356,7 @@ message is displayed saying this.  If no sus, then try without arches
 (uses useFakeArches.pl script).
 
 If any of these strategies is successful, it runs all the files (test scripts)
-in Packages/Uintah/Test.  build_and_run actually creates scripts to run
+in Packages/Uintah/R_Tester.  build_and_run actually creates scripts to run
 each of these tests.
 
 Environment variables that must be set
@@ -379,7 +379,7 @@ Files Created:
   configure.log        Output of running configure
   make.log             Output of running make.
   summary.log          Summary of test results (these are posted on the web)
-  do*tests             Script created to run tests in Packages/Uintah/Test
+  do*tests             Script created to run tests in Packages/Uintah/R_Tester
                        where * is a test in that directory.
   remake_with_arches.log
   remake_failed_scirun.log
@@ -403,7 +403,7 @@ Overview:
   These scripts (doARCHEStests, doICEtests, etc.) are output of the regression
 tester itself.  They (currently) provide an interface between the sh scripts
 and the python scripts.  Each script simply calls its corresponding test in
-Packages/Uintah/Tests and passes appropriate arguments.
+Packages/Uintah/R_Testers and passes appropriate arguments.
 
 Usage:
  
@@ -418,7 +418,7 @@ Low-Level Scripts
 Scripts that are further down the script hierarchy
 
 -------
-cleanup - Uintah/Test/helpers/cleanup (sh script)
+cleanup - Uintah/R_Tester/helpers/cleanup (sh script)
 -------
 Called from runTests, but could be called from the command line
 
@@ -447,7 +447,7 @@ successful (due to not owning the files), send email to people to
 clean it up.
 
 ----------------
-useFakeArches.pl Uintah/Test/helpers/useFakeArches.pl (perl script)
+useFakeArches.pl Uintah/R_Tester/helpers/useFakeArches.pl (perl script)
 ----------------
 This is called from build_and_run, and probably only makes sense to use from
 there, or when trying to build Uintah without ARCHES.
@@ -464,13 +464,13 @@ and removes mention of Arches from the LIBS needed.
 
 
 -----------------------
-* (MPM,ARCHES,ICE,etc.) Uintah/Test/* (python scripts)
+* (MPM,ARCHES,ICE,etc.) Uintah/R_Tester/* (python scripts)
 -----------------------
 These are called from the do*tests, as mentioned above but can also be called
 from the command line with similar arguments to the do*tests.
 
 Overview:
-  For any script file in the Uintah/Test folder (executable permissions set),
+  For any script file in the Uintah/R_Tester folder (executable permissions set),
 the regression tester will create a do*tests, and run it every time.
 
 Usage:
@@ -535,7 +535,7 @@ exit(runSusTests(argv, TESTS, "arches", chemfileCallback))
 
 
 ------
-modUPS.py Uintah/Test/helpers/modUPS.py - python script
+modUPS.py Uintah/R_Tester/helpers/modUPS.py - python script
 ------
 Called by a * script (above), if desired.
 
@@ -570,7 +570,7 @@ modUPS will be changed.  Thus, in the future, modUPS may need to be refined.
 modUPS returns "tmp/MOD-filename".
 
 --------------
-runSusTests.py - Uintah/Test/helpers/runSusTests.py (python script)
+runSusTests.py - Uintah/R_Tester/helpers/runSusTests.py (python script)
 --------------
 This should be run either by the regression tester, or by a do*tests script,
 or a derivation thereof.
@@ -649,7 +649,7 @@ its output in compare_sus_runs.log.txt.  If we are in debug mode, it tests
 for memory leaks.  mem_leak_check saves its output in mem_leak_check.log.txt
 
 ----------------
-compare_sus_runs - Uintah/Test/helpers/compare_sus_runs - sh script
+compare_sus_runs - Uintah/R_Tester/helpers/compare_sus_runs - sh script
 ----------------
 called by runSusTest (within runSusTests.py), can also be run from the command
 line.
@@ -662,8 +662,7 @@ Usage:
 
   testname     - name of test
   testdir      - directory where test is in
-  compare_root - folder where testdir/testname should be - i.e,
-    OS/TestData/mode/ALGO
+  compare_root - folder where testdir/testname should be - i.e, OS/TestData/mode/ALGO
   susdir       - folder were sus and compare_uda are located.
 
   It will only work if the helpers script directory is in the path.
@@ -676,7 +675,7 @@ compare_dats and compare_udas on the input.
 
 
 --------------
-mem_leak_check - Uintah/Test/helpers/mem_leak_check - sh script
+mem_leak_check - Uintah/R_Tester/helpers/mem_leak_check - sh script
 --------------
 called by runSusTest (within runSusTests.py), can also be run from the command
 line.
@@ -700,7 +699,7 @@ posted, if it returns a percentage less that -5%, than it replaces the stats
 in the goldStandard.
 
 ------------
-compare_dats - Uintah/Test/helpers/compare_dats - sh script
+compare_dats - Uintah/R_Tester/helpers/compare_dats - sh script
 ------------
 called by compare_sus_runs - can also be run from the command line.
 
@@ -717,7 +716,7 @@ Usage:
    compare_sus_runs 
 
 ------------
-compare_udas - Uintah/Test/helpers/compare_udas - sh script
+compare_udas - Uintah/R_Tester/helpers/compare_udas - sh script
 ------------
 called by compare_sus_runs.  Can also be run from the command line.
 
@@ -729,7 +728,7 @@ Usage:
 
 
 --------------------
-compare_dat_files.pl - Uintah/Test/helpers/compare_dat_files.pl - perl script
+compare_dat_files.pl - Uintah/R_Tester/helpers/compare_dat_files.pl - perl script
 --------------------
 called by compare_dats.  Could probably be called by the command line, but
   just use compare_dats instead.  
@@ -752,7 +751,7 @@ Usage:
 
 
 --------------------
-highwater_percent.pl - Uintah/Test/helpers/highwater_percent.pl - perl script
+highwater_percent.pl - Uintah/R_Tester/helpers/highwater_percent.pl - perl script
 --------------------
 called by mem_leak_check.  Also could be called by the command line.
 
@@ -765,13 +764,13 @@ Usage:
   highwater_percent.pl <malloc_stats_file> <compare_malloc_file>
 
 ------------------
-highwater_check.pl - Uintah/Test/helpers/highwater_check.pl - perl script
+highwater_check.pl - Uintah/R_Tester/helpers/highwater_check.pl - perl script
 ------------------
 Seems to be obsolete by highwater_percent.pl
 
 ---------------------
 replace_gold_standard - resultsdir/replace_gold_standard - sh script (A)
---------------------- - Uintah/Test/helpers/replace_gold_standard -  (B)
+--------------------- - Uintah/R_Tester/helpers/replace_gold_standard -  (B)
 A)Script created by runSusTests.  To be run at the command line, when deemed
   necessary.
 
@@ -794,14 +793,14 @@ These are items that are not scripts themselves, but may give a little insight
 to the tester.
 
 -----------
-__init__.py - Uintah/Test/helpers/__init__.py
+__init__.py - Uintah/R_Tester/helpers/__init__.py
 -----------
 The existence of this file alone (it is virtually empty), helps to create a 
 python package for helpers.  This makes it so the python scripts can call each
 other's functions.
 
 ------
-sub.mk - Uintah/Test/sub.mk and Uintah/Test/helpers/sub.mk
+sub.mk - Uintah/R_Tester/sub.mk and Uintah/R_Tester/helpers/sub.mk
 ------
 It appears that the compare_dat_files script used to be a C++ program, and 
 these sub.mk files would have aided in its compilation.
@@ -855,7 +854,7 @@ Note: The absolute and relative tolerance tests must both fail
 
 
 ----------
-setupTests - Uintah/Test/helpers/setupTests - sh script
+setupTests - Uintah/R_Tester/helpers/setupTests - sh script
 ----------
 Overview:
   setupTests is not actually used by the regression tester, but can be used 
@@ -870,7 +869,7 @@ maxProcs	   is the max number of procs to use in these tests
 
 Side effects:
   Creates 4 links and as many do*tests as there are executable files in
-Uintah/Test.  The 4 links point to the directory where sus lives, the input
+Uintah/R_Tester.  The 4 links point to the directory where sus lives, the input
 files are, the goldStandard for this OS and mode (dbg/opt) are, and the 
 TestScripts live.  These are all created in the current directory.  If some
 of these files/links already exist, they are overwritten.

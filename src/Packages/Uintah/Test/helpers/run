@@ -19,7 +19,7 @@ cd "${BUILDROOT}/${mode}"
 
 # these should be links
 if [ ! -d TestScripts ]; then
-  ln -s ../src/Packages/Uintah/Test TestScripts
+  ln -s ../src/Packages/Uintah/R_Tester TestScripts
 fi
 
 if [ ! -d susdir ]; then
@@ -44,7 +44,7 @@ cd TestScripts
 # select files desired by a particular user
 if [ "$USER" != "" ]; then
   if [ ! -d users/$USER ]; then
-    echo "src/Packages/Uintah/Test/users/$USER does not exist."
+    echo "src/Packages/Uintah/R_Tester/users/$USER does not exist."
     echo "Please create and place tests there and run again."
     exit 1
   fi
@@ -138,7 +138,7 @@ for test in *$USER_FLAG; do
 done
 
 if [ "$USER" != "" ]; then
-  cd "${BUILDROOT}/${mode}/TestScripts"
+  cd "${BUILDROOT}/${mode}/R_TesterScripts"
   rm *$USER_FLAG
 fi
 
