@@ -167,7 +167,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     do_debug = 1
     do_opt   = 1
     abs_tolerance = 1e-9   # defaults used in compare_uda
-    rel_tolerance = 1e-6     
+    rel_tolerance = 1e-6    
+    startFrom = "inputFile"
     
     #__________________________________
     # override defaults if the flags has been specified
@@ -175,6 +176,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       flags = userFlags(test)
       print "User Flags:"
       
+      #  parse the user flags
       for i in range(len(flags)):
         print i,flags[i]
         
@@ -199,7 +201,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           do_uda_comparisons = 0
           do_memory          = 0
           do_performance     = 0
-        
+        if flags[i] == "startFromCheckpoint":
+          startFrom          = "checkpoint"
         # parse the flags for 
         #    abs_tolerance=<number>
         #    rel_tolerance=<number>  
@@ -231,6 +234,16 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     except Exception:
       chdir(compare_root)
       mkdir(testname)
+    
+    if startFrom == "checkpoint":
+      try:
+        here = "%s/CheckPoints/%s/%s/%s.uda.000/" %(startpath,ALGO,testname,testname)
+        chdir(here)
+      except Exception:
+        print "checkpoint uda %s does not exist" % here
+        print "This file must exist when using 'startFromCheckpoint' option"
+        exit(1)
+      
 
     # need to set the inputs dir here, since it could be different per test
     inputsdir = "%s/%s" % (inputpath, ALGO)
@@ -266,7 +279,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # Run test and perform comparisons on the uda
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
-    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, "no")
+    rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom)
     system("rm inputs")
 
     # copy results to web server
@@ -291,7 +304,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       if do_restart == 1:
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
-        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, "yes")
+        startFrom = "restart"
+        rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom)
 
         if rc > 0:
           failcode = 1
@@ -320,6 +334,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print "Updating the svn revision file %s" %svn_revision
       svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
       system( "echo 'This test last passed with %s'> %s" %(svn_revision, svn_file))  
+    #__________________________________
+    # end of test loop
     
   chdir("..")
 
@@ -356,8 +372,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
   comp_timer = time() - comp_time0 
   minutes, seconds = divmod(comp_timer, 60)
-  hours, minutes = divmod(minutes, 60)
-  print "Component Timer %d:%d:%d" %(hours,minutes,seconds)
+  hours, minutes   = divmod(minutes, 60)
+  print "Component Timer %d:%d:%d" % (hours,minutes,seconds)
   return failcode
 
 #______________________________________________________________________
@@ -366,7 +382,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # 3 ints stating whether to do comparison, memory, and performance tests
 # in that order
 
-def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, restart = "no"):
+def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom):
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -404,10 +420,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # if doing performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
     inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
-                      "<outputTimestepInterval>0</outputTimestepInterval>",
-                      '<checkpoint interval="0"/>'])
+                                    "<outputTimestepInterval>0</outputTimestepInterval>",
+                                    '<checkpoint interval="0"/>'])
 
-    # will create a file in tmp/filename, copy it back
+    # create a file in tmp/filename, copy it back
     system("cp %s ." % inputxml)
     inputxml = path.basename(inputxml)
 
@@ -421,22 +437,33 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     command = "/usr/bin/time -p %s %s %s/sus -mpi" % (MPIHEAD, int(np), susdir)
     mpimsg = " (mpi %s proc)" % (int(np))
 
-  time0 =time()
-  if restart == "yes":
+  time0 =time()  #timer
+  
+  #__________________________________ 
+  # setup input for sus
+  if startFrom == "restart":
     print "Running restart test  ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
-    susinput = "-restart ../*.uda.000 -t 0 -copy"
-    startpath = "../../.."
+    susinput     = "-restart ../*.uda.000 -t 0 -copy"
+    startpath    = "../../.."
     restart_text = " (restart)"
-  else:
+    
+  if startFrom == "inputFile":
     print "Running test  ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
-    susinput = "%s" % (inputxml)
+    susinput     = "%s" % (inputxml)
     restart_text = " "
+ 
+  if startFrom == "checkpoint":
+    print "Running test from checkpoint ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
+    susinput     = "-restart %s/CheckPoints/%s/%s/*.uda.000" %  (startpath,ALGO,testname)
+    restart_text = " "
+  #________________________________
+  
 
   # set sus to exit upon crashing (and not wait for a prompt)
   environ['SCI_SIGNALMODE'] = "exit"
 
   if do_memory_test == 1:
-    if restart == "yes":
+    if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"        
     else:
       malloc_stats_file = "malloc_stats"
@@ -471,7 +498,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # determine path of replace_msg in 2 places to not have 2 different msgs.
   replace_msg = "\tTo replace the goldStandards run:\n\t "
 
-  if restart == "yes":
+  if startFrom == "restart":
     chdir("..")
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
     chdir("restart")
@@ -481,8 +508,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   return_code = 0
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
-    if restart == "yes":
+    
+    if startFrom == "restart":
       print "\t\tMake sure the problem makes checkpoints before finishing"
+    
     print sus_log_msg
     system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
@@ -496,7 +525,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # save this file independent of performance tests being done
     print "\tSuccessfully ran to completion"
 
-    if restart == "yes":
+    if startFrom == "restart":
       ts_file = "restart_timestamp"
     else:
       ts_file = "timestamp"
@@ -546,7 +575,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         elif cu_rc == 1 * 256 or cu_rc == 5*256:
           print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
           print compare_msg
-          if restart != "yes":
+          if startFrom != "restart":
            print "%s" % replace_msg
         elif cu_rc == 65280: # (-1 return code)
           print "\tComparison tests passed.  (Note: No dat files to compare.)"

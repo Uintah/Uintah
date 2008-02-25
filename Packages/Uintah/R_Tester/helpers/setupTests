@@ -3,7 +3,7 @@
 # usage setupTests <SCIRUN-ROOT> <SCIRUN-BUILD-ROOT> <dbg or opt> <maxProcs>
 # will set up tests in cwd.
 
-# outputs links to susdir, TestScripts, goldStandard, inputs
+# Symbolic links to susdir, TestScripts, goldStandard, inputs, CheckPoints
 # creates do*tests for all tests in Packages/Uintah/R_Tester
 
 SCIRUNROOT=$1
@@ -18,11 +18,12 @@ if [ "$#" -lt 4 ]; then
 fi
 
 # setup symbolic links
-rm -f susdir inputs goldStandard TestScripts
+rm -f susdir inputs goldStandard TestScripts CheckPoints
 ln -s "$BUILDROOT/Packages/Uintah/StandAlone" susdir
 ln -s "$SCIRUNROOT/src/Packages/Uintah/StandAlone/inputs" inputs
 ln -s "/home/csafe/csafe-tester/$OS/TesterData/$mode" goldStandard
 ln -s "$SCIRUNROOT/src/Packages/Uintah/R_Tester" TestScripts
+ln -s "/home/csafe/csafe-tester/CheckPoints" CheckPoints
 
 dir=`pwd`
 cd TestScripts
