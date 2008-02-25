@@ -4,7 +4,7 @@
 # will set up tests in cwd.
 
 # outputs links to susdir, TestScripts, goldStandard, inputs
-# creates do*tests for all tests in Packages/Uintah/Test
+# creates do*tests for all tests in Packages/Uintah/R_Tester
 
 SCIRUNROOT=$1
 BUILDROOT=$2
@@ -21,8 +21,8 @@ fi
 rm -f susdir inputs goldStandard TestScripts
 ln -s "$BUILDROOT/Packages/Uintah/StandAlone" susdir
 ln -s "$SCIRUNROOT/src/Packages/Uintah/StandAlone/inputs" inputs
-ln -s "/home/csafe/csafe-tester/$OS/TestData/$mode" goldStandard
-ln -s "$SCIRUNROOT/src/Packages/Uintah/Test" TestScripts
+ln -s "/home/csafe/csafe-tester/$OS/TesterData/$mode" goldStandard
+ln -s "$SCIRUNROOT/src/Packages/Uintah/R_Tester" TestScripts
 
 dir=`pwd`
 cd TestScripts

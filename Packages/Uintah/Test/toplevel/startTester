@@ -386,7 +386,7 @@ echo "Using build: ${BUILDROOT}" >> $HTMLLOG
 echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 
-PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
 export PATH DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
 
 if [ $VERBOSE == "yes" ]; then
