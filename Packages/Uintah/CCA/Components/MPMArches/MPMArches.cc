@@ -105,6 +105,13 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
 
 
    ProblemSpecP db = prob_spec->findBlock("Multimaterial");
+
+   if( db.get_rep() == NULL ) { // Make sure the Multimaterial block exists...
+     printf("\n");
+     printf("ERROR: It appears that the <Multimaterial> tag is missing from the problem specification (.ups file)...\n");
+     printf("\n");
+   }
+
    db->require("heatExchange", d_calcEnergyExchange);
    db->require("fluidThermalConductivity", d_tcond);
    db->require("turbulentPrandtNo",prturb);
