@@ -2928,8 +2928,8 @@ GGT::loadRouteCB( int /*id*/ )
   // glui is screwy when you have this type of window where you want
   // either the "ok" button or "return" to do the same thing.  By
   // removing the callbacks like this, you avoid an infinite loop.
-  activeGGT->getStringButton->callback = NULL;
-  activeGGT->getStringText_->callback = NULL;
+  activeGGT->getStringButton->callback = (GLUI_Update_CB) NULL;
+  activeGGT->getStringText_->callback  = (GLUI_Update_CB) NULL;
 
   string routeName = activeGGT->stealth_->loadPath( activeGGT->inputString_ );
 
@@ -2965,8 +2965,8 @@ GGT::newRouteCB( int /*id*/ )
   // glui is screwy when you have this type of window where you want
   // either the "ok" button or "return" to do the same thing.  By
   // removing the callbacks like this, you avoid an infinite loop.
-  activeGGT->getStringButton->callback = NULL;
-  activeGGT->getStringText_->callback = NULL;
+  activeGGT->getStringButton->callback = (GLUI_Update_CB) NULL;
+  activeGGT->getStringText_->callback  = (GLUI_Update_CB) NULL;
 
   //  activeGGT->getStringWindow->hide();
 
@@ -2999,8 +2999,8 @@ GGT::saveRouteCB( int /*id*/ )
   // glui is screwy when you have this type of window where you want
   // either the "ok" button or "return" to do the same thing.  By
   // removing the callbacks like this, you avoid an infinite loop.
-  activeGGT->getStringButton->callback = NULL;
-  activeGGT->getStringText_->callback = NULL;
+  activeGGT->getStringButton->callback = (GLUI_Update_CB) NULL;
+  activeGGT->getStringText_->callback  = (GLUI_Update_CB) NULL;
 
   //  activeGGT->getStringWindow->hide();
   
