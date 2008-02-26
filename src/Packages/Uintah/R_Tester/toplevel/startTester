@@ -348,11 +348,11 @@ fi
 
 # where the webpage will be, and init webpage
 if [ "$WEEKLY" == "0" ]; then
-    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/SCIRun.${ID}
-    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/SCIRun.${ID}
+    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/SCIRun.${ID}.html
+    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/SCIRun.${ID}.html
 else
-    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/Weekly/SCIRun.${ID}
-    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/Weekly/SCIRun.${ID}
+    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/Weekly/SCIRun.${ID}.html
+    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/Weekly/SCIRun.${ID}.html
 fi
 
 # I got tired of duplicating arguments to configure, so here are the common to all platforms, and then under each OS type, the
@@ -366,12 +366,13 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
 #	OPT_CONFIGURE="'--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' $OPT_CONFIGURE $COMMON"
         OPT_CONFIGURE="--enable-optimize='-O3 -G0 -OPT:div_split=OFF:Olimit=0:roundoff=3:alias=typed' $OPT_CONFIGURE $COMMON"
 elif [ "$OS" == "Linux" ]; then
-        COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/petsc-install/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/hypre-2.0.0-install --with-mpi=/usr/local/lam-mpi --with-atlas=/usr/local/atlas --with-lapack=/usr/local/atlas"
+        export PETSC_ARCH=linux-gnu-c-opt
+        COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/petsc-install/petsc-2.3.3-p1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/hypre-2.0.0-install --with-mpi=/usr/local/lam-mpi --with-atlas=/usr/local/atlas --with-lapack=/usr/local/atlas"
 	DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
 	OPT_CONFIGURE="$COMMON '--enable-optimize=-march=pentium4 -msse -msse2 -O3' $OPT_CONFIGURE"
 else
 # Darwin
-        COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/powerpc-apple-darwin8-gcc-4.0.1/hypre-1.9.0b --with-mpi=/usr/local/lam-7.1.1"
+        COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC/gcc-4.0.1-lam-32bit/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC/gcc-4.0.1-lam-32bit/hypre-2.0.0-install --with-mpi=/usr/local/lam-7.1.1"
 	DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
 	OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
 fi
