@@ -17,7 +17,7 @@ fi
 
 cd "${BUILDROOT}/${mode}"
 
-# these should be links
+# Symbolic links
 if [ ! -d TestScripts ]; then
   ln -s ../src/Packages/Uintah/R_Tester TestScripts
 fi
@@ -28,6 +28,10 @@ fi
 
 if [ ! -d inputs ]; then
   ln -s ../src/Packages/Uintah/StandAlone/inputs inputs
+fi
+
+if [ ! -d CheckPoints ]; then
+  ln -s /home/csafe/csafe-tester/CheckPoints CheckPoints
 fi
 
 # remove this in case it points to the wrong place
