@@ -495,7 +495,7 @@ It will need 755 permissions.
 
 Example:
 
-#!/usr/local/bin/python
+#!/usr/bin/python
 
 from sys import argv,exit
 from helpers.runSusTests import runSusTests
