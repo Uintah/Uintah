@@ -22,7 +22,7 @@ UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "A
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
 TESTS = [  
-           ("disks2mat4patch4proc",           "disks2mat4patch.ups",                4,  "Linux"),    \
+           ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux"),    \
            ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux"),    \
            ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux"),    \
            ("foam_crush",                     "foam_crush.ups",                     4,  "Linux"),    \
@@ -40,7 +40,7 @@ TESTS = [
            ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux"),    \
            ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux"),    \
            
-           ("disks2mat4patch4proc",           "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
+           ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
            ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
            ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Darwin", ["doesTestRun"]),    \
            ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Darwin", ["doesTestRun"]),    \
