@@ -1,9 +1,14 @@
 //
-// Store the symbols in a file:
+// 
+// StackTrace.cc 
 //
-// > nm a.out | c++filt >! a.symbols 
+//   Used to display actual function names when looking at abridged
+//   stack traces.  See README for more information.
 //
-// Make sure that you regenerate the symbols list after recompiling the program!
+// Author: J. Davison de St. Germain
+// Date:   Feb. 27, 2008
+// 
+// Copyright (C) 2008 - C-SAFE, University of Utah
 //
 
 #include <execinfo.h>
