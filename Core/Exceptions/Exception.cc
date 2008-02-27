@@ -45,28 +45,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #ifndef _WIN32
-#include <unistd.h>
+#  include <unistd.h>
 #else
-#define strcasecmp stricmp
-#include <io.h>
-#include <process.h>
-#include "StackWalker.h"
-#endif
-#include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <sgi_stl_warnings_on.h>
-#include <string.h>
-#ifdef HAVE_EXC
-#include <libexc.h>
-#elif defined(__GNUC__) && defined(__linux)
-#include <execinfo.h>
-#include <cxxabi.h>
-#include <dlfcn.h>
+#  define strcasecmp stricmp
+#  include <io.h>
+#  include <process.h>
+#  include "StackWalker.h"
 #endif
 
+#include <sgi_stl_warnings_off.h>
+#include   <iostream>
+#include   <iomanip>
+#include   <sstream>
+#include <sgi_stl_warnings_on.h>
+
+#ifdef HAVE_EXC
+#  include <libexc.h>
+#elif (defined(__GNUC__) && defined(__linux))
+#  include <execinfo.h>
+#  include <cxxabi.h>
+#  include <dlfcn.h>
+#elif defined(REDSTORM)
+#  include <execinfo.h>
+#endif
 
 #if defined(_AIX)
 // Needed for strcasecmp on aix 4.3 (on 5.1 we don't need this.)
@@ -210,7 +213,7 @@ void Exception::sci_throw(const Exception& exc)
 string getStackTrace(void* context /*=0*/)
 {
   ostringstream stacktrace;
-#if defined(HAVE_EXC) || (defined(__GNUC__) && defined(__linux))
+#if defined(HAVE_EXC) || (defined(__GNUC__) && defined(__linux)) || defined(REDSTORM)
   static const int MAXSTACK = 100;
 #endif
 
@@ -232,6 +235,24 @@ string getStackTrace(void* context /*=0*/)
     for(int i=1;i<nframes;i++)
       stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
   }
+#elif defined(REDSTORM)
+
+  // FYI, RedStorm doesn't seem to provide the function names as might be expected
+  // when using backtrace_symbols.  So in the Uintah/tools/StackTrace/ directory
+  // is code to get the function names.
+  void * callstack[ MAXSTACK ];
+  int    nframes = backtrace( callstack, MAXSTACK );
+
+  if( nframes == 0 ){
+    stacktrace << "Backtrace not available!\n";
+  } else {
+    char ** strs = backtrace_symbols( callstack, nframes );
+    for( int pos = 0; pos < nframes; ++pos ) {
+      stacktrace << callstack[ pos ] << "\n";
+    }
+    free(strs);
+  }
+
 #elif defined(__GNUC__) && defined(__linux)
   static void *addresses[MAXSTACK];
   int n = backtrace( addresses, MAXSTACK );
