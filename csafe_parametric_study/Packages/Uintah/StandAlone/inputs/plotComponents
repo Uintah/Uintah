@@ -87,26 +87,35 @@ endif
 # generate the  plot script
 cat >> gp << fin
 set multiplot
-set size 1.0,0.5 # for three plots
-set origin 0.0,0.5
+set size 1.0,0.25 # for 4 plots
 set autoscale
 
 set grid xtics ytics
-set title "$date : $machine : $procs Processors \n Averaged over all processors"
+set label "$date : $machine : $procs Processors " at screen 0.1,0.96
 set xlabel 'Elaspsed Time'
 set ylabel 'Time'
 
-plot '.data' using 1:2 t 'Task Execution' with lines,\
-     '.data' using 1:4 t 'Global Communication' with lines,\
-     '.data' using 1:6 t 'Local Communication' with lines,\
-     '.data' using 1:8 t 'Waiting' with lines 
-     
 set origin 0.0,0.0
-set title 'Maximum'
-plot '.data' using 1:3 t 'Task Execution' with lines,\
-     '.data' using 1:5 t 'Global Communication' with lines,\
-     '.data' using 1:7 t 'Local Communication' with lines,\
-     '.data' using 1:9 t 'Waiting' with lines 
+set label 'Task Execution' at screen 0.1,0.2
+plot '.data' using 1:3 t 'max' with lines,\
+     '.data' using 1:2 t 'ave' with lines
+
+unset xlabel
+unset xtics
+set origin 0.0,0.25
+set label 'Global Communication' at screen 0.1,0.45
+plot '.data' using 1:5 t 'max' with lines,\
+     '.data' using 1:4 t 'ave' with lines
+
+set origin 0.0,0.5
+set label 'Local Communication' at screen 0.1,0.7
+plot '.data' using 1:7 t 'max' with lines,\
+     '.data' using 1:6 t 'ave' with lines
+     
+set origin 0.0,0.75
+set label 'Waiting' at screen 0.1,0.94
+plot '.data' using 1:9 t 'max' with lines,\
+     '.data' using 1:8 t 'ave' with lines
 set nomultiplot
 
 fin
