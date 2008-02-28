@@ -72,6 +72,7 @@ plot '.data' using 1:4 lw 3 t           'CPU hrs' with impulse,\
 #__________________________________
 set size 1.0,0.33 
 set origin 0.0,0.0
+unset y2label
 set ylabel 'Processors' textcolor lt 1
 plot '.data' using 1:2 lw 3 t           'CPUs' with impulse
 set nomultiplot
